@@ -1,0 +1,362 @@
+ Volume in drive C is OS
+ Volume Serial Number is 1A08-D42A
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker
+
+08/12/2025  02:57 PM    <DIR>          .
+08/12/2025  12:03 PM    <DIR>          ..
+08/12/2025  02:57 PM                 0 dir.txt
+08/12/2025  02:57 PM    <DIR>          icons
+08/12/2025  02:53 PM            62,386 index.html
+08/12/2025  02:54 PM             2,601 Manifest.json
+08/12/2025  11:28 AM    <DIR>          netlify
+08/12/2025  02:55 PM             6,790 sw.js
+               4 File(s)         71,777 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git
+
+08/12/2025  02:57 PM    <DIR>          ..
+08/12/2025  12:29 PM                46 COMMIT_EDITMSG
+08/12/2025  11:43 AM               300 config
+08/12/2025  11:33 AM                73 description
+08/12/2025  11:42 AM                21 HEAD
+08/12/2025  11:33 AM    <DIR>          hooks
+08/12/2025  12:29 PM               299 index
+08/12/2025  11:33 AM    <DIR>          info
+08/12/2025  11:39 AM    <DIR>          logs
+08/12/2025  12:29 PM    <DIR>          objects
+08/12/2025  11:43 AM    <DIR>          refs
+               5 File(s)            739 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\hooks
+
+08/12/2025  11:33 AM    <DIR>          .
+08/12/2025  11:33 AM               478 applypatch-msg.sample
+08/12/2025  11:33 AM               896 commit-msg.sample
+08/12/2025  11:33 AM             4,726 fsmonitor-watchman.sample
+08/12/2025  11:33 AM               189 post-update.sample
+08/12/2025  11:33 AM               424 pre-applypatch.sample
+08/12/2025  11:33 AM             1,649 pre-commit.sample
+08/12/2025  11:33 AM               416 pre-merge-commit.sample
+08/12/2025  11:33 AM             1,374 pre-push.sample
+08/12/2025  11:33 AM             4,898 pre-rebase.sample
+08/12/2025  11:33 AM               544 pre-receive.sample
+08/12/2025  11:33 AM             1,492 prepare-commit-msg.sample
+08/12/2025  11:33 AM             2,783 push-to-checkout.sample
+08/12/2025  11:33 AM             2,308 sendemail-validate.sample
+08/12/2025  11:33 AM             3,650 update.sample
+              14 File(s)         25,827 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\info
+
+08/12/2025  11:33 AM    <DIR>          .
+08/12/2025  11:33 AM               240 exclude
+               1 File(s)            240 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\logs
+
+08/12/2025  11:39 AM    <DIR>          .
+08/12/2025  12:29 PM             1,701 HEAD
+08/12/2025  11:43 AM    <DIR>          refs
+               1 File(s)          1,701 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\logs\refs
+
+08/12/2025  11:43 AM    <DIR>          .
+08/12/2025  11:39 AM    <DIR>          ..
+08/12/2025  11:42 AM    <DIR>          heads
+08/12/2025  11:43 AM    <DIR>          remotes
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\logs\refs\heads
+
+08/12/2025  11:42 AM    <DIR>          .
+08/12/2025  11:43 AM    <DIR>          ..
+08/12/2025  12:29 PM             1,327 main
+               1 File(s)          1,327 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\logs\refs\remotes
+
+08/12/2025  11:43 AM    <DIR>          .
+08/12/2025  11:43 AM    <DIR>          ..
+08/12/2025  11:43 AM    <DIR>          origin
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\logs\refs\remotes\origin
+
+08/12/2025  11:43 AM    <DIR>          .
+08/12/2025  11:43 AM    <DIR>          ..
+08/12/2025  12:29 PM               750 main
+               1 File(s)            750 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects
+
+08/12/2025  12:29 PM    <DIR>          .
+08/12/2025  12:07 PM    <DIR>          05
+08/12/2025  12:07 PM    <DIR>          0b
+08/12/2025  12:07 PM    <DIR>          0d
+08/12/2025  12:28 PM    <DIR>          13
+08/12/2025  11:35 AM    <DIR>          17
+08/12/2025  12:14 PM    <DIR>          20
+08/12/2025  12:15 PM    <DIR>          30
+08/12/2025  12:15 PM    <DIR>          39
+08/12/2025  12:15 PM    <DIR>          43
+08/12/2025  12:07 PM    <DIR>          49
+08/12/2025  12:21 PM    <DIR>          78
+08/12/2025  11:36 AM    <DIR>          7e
+08/12/2025  11:36 AM    <DIR>          81
+08/12/2025  12:29 PM    <DIR>          83
+08/12/2025  12:07 PM    <DIR>          8a
+08/12/2025  12:21 PM    <DIR>          aa
+08/12/2025  12:15 PM    <DIR>          af
+08/12/2025  12:07 PM    <DIR>          bc
+08/12/2025  11:36 AM    <DIR>          bd
+08/12/2025  11:39 AM    <DIR>          d8
+08/12/2025  12:14 PM    <DIR>          e8
+08/12/2025  12:21 PM    <DIR>          ef
+08/12/2025  12:29 PM    <DIR>          f4
+08/12/2025  11:35 AM    <DIR>          f6
+08/12/2025  11:33 AM    <DIR>          info
+08/12/2025  11:33 AM    <DIR>          pack
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\05
+
+08/12/2025  12:07 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:07 PM                52 dbdf9a4758b314fc55d7abd7cf5e7ab1c2336d
+               1 File(s)             52 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\0b
+
+08/12/2025  12:07 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:07 PM               180 fb7f4f11ae771099258d3f4c2c2ba088e41980
+               1 File(s)            180 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\0d
+
+08/12/2025  12:07 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:07 PM                52 c0df93937fa1d574a65a2ba5f4afd6955a5b44
+               1 File(s)             52 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\13
+
+08/12/2025  12:28 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:28 PM            17,133 178bf8dc54c61a6748674e2303cfba8db4b522
+               1 File(s)         17,133 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\17
+
+08/12/2025  11:35 AM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  11:35 AM            17,067 4843f33e44edc6a875bb5186b65783921c6384
+               1 File(s)         17,067 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\20
+
+08/12/2025  12:14 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:14 PM            17,064 0a2a58e1bbd05f467859cabdffaa5a2073e1ca
+               1 File(s)         17,064 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\30
+
+08/12/2025  12:15 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:15 PM                52 4c068db37abc034290e6b0f1b16b48d9df435f
+               1 File(s)             52 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\39
+
+08/12/2025  12:15 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:15 PM                88 fd2b6861d92ad52281002ed3a380b2e6ae6033
+               1 File(s)             88 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\43
+
+08/12/2025  12:15 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:15 PM                51 01e0a85cb95bcbb5a0af5005f8488a1370e76c
+               1 File(s)             51 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\49
+
+08/12/2025  12:07 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:07 PM            17,073 809b63c8becfef401d22349ec035e20a1ab006
+               1 File(s)         17,073 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\78
+
+08/12/2025  12:21 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:25 PM                89 6c9cd876c52515ff648be9170598b5e785c6b9
+               1 File(s)             89 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\7e
+
+08/12/2025  11:36 AM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  11:36 AM                51 a15f244ce21f1cf66091213f723bdb51433142
+               1 File(s)             51 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\81
+
+08/12/2025  11:36 AM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  11:36 AM                52 4984c4045cac76c0ee63e0246ccce234fc49de
+               1 File(s)             52 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\83
+
+08/12/2025  12:29 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:29 PM                88 0f2b0e510fd98eb435dbbe4fc76d147d313882
+               1 File(s)             88 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\8a
+
+08/12/2025  12:07 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:07 PM                89 ce5de241f45939803363e2c72eb1d2e08fef43
+               1 File(s)             89 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\aa
+
+08/12/2025  12:21 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:25 PM            17,064 a409ac599abff1f88001de9521c091dcb10855
+               1 File(s)         17,064 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\af
+
+08/12/2025  12:15 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:15 PM               192 91067a9489890a7931354a731516dfbc6ca9ac
+               1 File(s)            192 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\bc
+
+08/12/2025  12:07 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:07 PM             2,359 a3b233e064bb2a1fc54c0aadbee2a50a40e2e5
+               1 File(s)          2,359 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\bd
+
+08/12/2025  11:36 AM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  11:36 AM                88 bfa041a4d5d82d5b7dee8f50da013a420899b8
+               1 File(s)             88 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\d8
+
+08/12/2025  11:39 AM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  11:39 AM               141 95ba0520559f930c87de1dc288a43ad774e362
+               1 File(s)            141 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\e8
+
+08/12/2025  12:14 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:14 PM             2,352 8eb10375e9b381a101f12459d3509623e362c9
+               1 File(s)          2,352 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\ef
+
+08/12/2025  12:21 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:21 PM               189 340f18125922d6fb7a45375f68fe9a4bfa8043
+               1 File(s)            189 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\f4
+
+08/12/2025  12:29 PM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  12:29 PM               185 e4f82fbd22e25056768da4738b13ce6db32779
+               1 File(s)            185 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\f6
+
+08/12/2025  11:35 AM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+08/12/2025  11:35 AM             2,148 e5dc01e28a4eed6d34114065cf959fb683f5b0
+               1 File(s)          2,148 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\info
+
+08/12/2025  11:33 AM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\objects\pack
+
+08/12/2025  11:33 AM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          ..
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\refs
+
+08/12/2025  11:43 AM    <DIR>          .
+08/12/2025  12:29 PM    <DIR>          heads
+08/12/2025  11:43 AM    <DIR>          remotes
+08/12/2025  11:33 AM    <DIR>          tags
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\refs\heads
+
+08/12/2025  12:29 PM    <DIR>          .
+08/12/2025  11:43 AM    <DIR>          ..
+08/12/2025  12:29 PM                41 main
+               1 File(s)             41 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\refs\remotes
+
+08/12/2025  11:43 AM    <DIR>          .
+08/12/2025  11:43 AM    <DIR>          ..
+08/12/2025  12:29 PM    <DIR>          origin
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\refs\remotes\origin
+
+08/12/2025  12:29 PM    <DIR>          .
+08/12/2025  11:43 AM    <DIR>          ..
+08/12/2025  12:29 PM                41 main
+               1 File(s)             41 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\.git\refs\tags
+
+08/12/2025  11:33 AM    <DIR>          .
+08/12/2025  11:43 AM    <DIR>          ..
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\icons
+
+08/12/2025  02:57 PM    <DIR>          .
+08/12/2025  02:57 PM    <DIR>          ..
+08/02/2025  07:22 PM         1,151,128 icon-192.png
+08/02/2025  07:22 PM         1,151,128 icon-512.png
+               2 File(s)      2,302,256 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\netlify
+
+08/12/2025  11:28 AM    <DIR>          .
+08/12/2025  02:57 PM    <DIR>          ..
+08/12/2025  11:28 AM    <DIR>          functions
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\TLIke\Documents\Side Projects\TV Tracker\netlify\functions
+
+08/12/2025  11:28 AM    <DIR>          .
+08/12/2025  11:28 AM    <DIR>          ..
+08/12/2025  12:13 PM            11,498 tmdb.js
+               1 File(s)         11,498 bytes
+
+     Total Files Listed:
+              56 File(s)      2,510,096 bytes
+             124 Dir(s)  27,336,167,424 bytes free

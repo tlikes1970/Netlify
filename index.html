@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Brutally Honest TV & Movie Tracker</title>
+  <title>StreamTracker - Your Personal TV & Movie Organizer</title>
   <style>
     :root {
       --bg: #fff; --text: #000; --primary: #ff6b6b; --card: #f9f9f9; --border: #ddd;
@@ -625,7 +625,7 @@
 <body>
   <div class="main-container">
     <div class="header">
-      <h1 class="title" id="welcomeText">Brutally Honest Tracker</h1>
+      <h1 class="title" id="welcomeText">StreamTracker - Your Personal TV & Movie Organizer</h1>
       <div class="user-section">
         <input type="text" id="displayNameInput" class="name-input" placeholder="Enter your streaming alias...">
         <button id="darkModeToggle">🌙 Go Dark Like Your Soul</button>
@@ -919,7 +919,7 @@
       document.getElementById('displayNameInput').oninput = (e) => {
         appData.settings.displayName = e.target.value;
         document.getElementById('welcomeText').textContent = 
-          e.target.value ? `${e.target.value}'s Chaos` : 'Brutally Honest Tracker';
+          e.target.value ? `${e.target.value}'s Chaos` : 'StreamTracker - Your Personal TV & Movie Organizer';
         saveAppData();
       };
       
@@ -1255,8 +1255,7 @@
         
         if (!response.ok && response.status === 404) {
           console.log('Netlify function not found, using CORS proxy');
-          const apiUrl = `https://api.themoviedb.org/3/genre/${type}/list?api_key=b7247bb415b50f25b5e35e2566430b96`;
-          response = await fetch(CORS_PROXY + encodeURIComponent(apiUrl));
+
         }
         
         if (!response.ok) {
