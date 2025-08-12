@@ -1056,15 +1056,21 @@
       
       let clickCount = 0;
       let clickTimer = null;
+      let adminActive = false;
       
-      // Triple-click title to reveal admin button
+      // Triple-click title to toggle admin button
       title.onclick = () => {
         clickCount++;
         clearTimeout(clickTimer);
         
         if (clickCount === 3) {
-          adminBtn.style.display = 'flex';
-          showNotification('👑 Admin mode activated!', 'success');
+          adminActive = !adminActive;
+          adminBtn.style.display = adminActive ? 'flex' : 'none';
+          
+          const message = adminActive ? 
+            '👑 Admin mode activated!' : 
+            '👑 Admin mode deactivated!';
+          showNotification(message, 'success');
           clickCount = 0;
         } else {
           clickTimer = setTimeout(() => { clickCount = 0; }, 1000);
