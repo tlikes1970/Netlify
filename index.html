@@ -800,13 +800,12 @@
 
     // Anti-tampering check
     const _0x2f9a = () => {
-      if(window.location.hostname !== 'zippy-meerkat-329c02.netlify.app' && 
-         !window.location.hostname.includes('localhost') && 
-         !window.location.hostname.includes('127.0.0.1')) {
-        console.warn('⚠️  Unauthorized deployment detected');
-        return false;
-      }
-      return true;
+      const hostname = window.location.hostname;
+      return hostname === 'brutally-honest-tv-movie-tracker.netlify.app' || 
+             hostname === 'zippy-meerkat-329c02.netlify.app' || // old domain
+             hostname.includes('localhost') || 
+             hostname.includes('127.0.0.1') ||
+             hostname.includes('netlify.app'); // any netlify subdomain
     };
 
     // Sarcastic messages (obfuscated)
