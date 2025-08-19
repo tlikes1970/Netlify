@@ -925,9 +925,13 @@
       if (saved) {
         try {
           const parsedData = JSON.parse(saved);
-          // Ensure watched arrays exist (backwards compatibility)
+          // Ensure all required data structures exist (backwards compatibility)
+          if (!parsedData.tv) parsedData.tv = { watching: [], wishlist: [], watched: [] };
+          if (!parsedData.movies) parsedData.movies = { watching: [], wishlist: [], watched: [] };
           if (!parsedData.tv.watched) parsedData.tv.watched = [];
           if (!parsedData.movies.watched) parsedData.movies.watched = [];
+          if (!parsedData.settings) parsedData.settings = { theme: 'light', displayName: '' };
+          
           Object.assign(appData, parsedData);
         } catch (e) {
           console.error('Error loading data:', e);
@@ -1248,16 +1252,16 @@
       const card = document.createElement('div');
       card.className = 'show-card';
       
-      const title = item.name || item.title || 'Unknown Title';
+      const title = (item.name || item.title || 'Unknown Title').replace(/'/g, "\\'");
       const date = item.first_air_date || item.release_date || '';
       const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
-      const overview = item.overview || 'No description available.';
+      const overview = (item.overview || 'No description available.').replace(/'/g, "\\'");
       const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
       
       const category = mediaType === 'tv' ? 'tv' : 'movies';
-      const isInWatching = appData[category].watching.some(show => show.id === item.id);
-      const isInWishlist = appData[category].wishlist.some(show => show.id === item.id);
-      const isInWatched = appData[category].watched.some(show => show.id === item.id);
+      const isInWatching = appData[category] && appData[category].watching && appData[category].watching.some(show => show.id === item.id);
+      const isInWishlist = appData[category] && appData[category].wishlist && appData[category].wishlist.some(show => show.id === item.id);
+      const isInWatched = appData[category] && appData[category].watched && appData[category].watched.some(show => show.id === item.id);
       
       const posterHtml = item.poster_path ? 
         `<img src="${TMDB_IMG_BASE}${item.poster_path}" alt="${title}" class="show-poster" onclick="openTMDBLink(${item.id}, '${mediaType}')">` : 
@@ -1266,18 +1270,19 @@
       let actionsHtml = '';
       
       if (isSearchResult) {
+        const itemJson = JSON.stringify(item).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         actionsHtml = `
           <div class="show-actions">
             <div class="action-row">
-              <button onclick="addToList(${JSON.stringify(item).replace(/"/g, '&quot;')}, 'watching')" ${isInWatching ? 'disabled' : ''}>
+              <button onclick="addToList(JSON.parse('${itemJson}'), 'watching')" ${isInWatching ? 'disabled' : ''}>
                 ${isInWatching ? '✓ Watching' : '▶️ Watching'}
               </button>
-              <button onclick="addToList(${JSON.stringify(item).replace(/"/g, '&quot;')}, 'wishlist')" ${isInWishlist ? 'disabled' : ''}>
+              <button onclick="addToList(JSON.parse('${itemJson}'), 'wishlist')" ${isInWishlist ? 'disabled' : ''}>
                 ${isInWishlist ? '✓ In Wishlist' : '📖 Want to Watch'}
               </button>
             </div>
             <div class="action-row">
-              <button onclick="addToList(${JSON.stringify(item).replace(/"/g, '&quot;')}, 'watched')" ${isInWatched ? 'disabled' : ''}>
+              <button onclick="addToList(JSON.parse('${itemJson}'), 'watched')" ${isInWatched ? 'disabled' : ''}>
                 ${isInWatched ? '✓ Watched' : '✅ Mark Watched'}
               </button>
               <button onclick="openTMDBLink(${item.id}, '${mediaType}')" class="secondary">
@@ -1285,7 +1290,7 @@
               </button>
             </div>
             <div class="share-buttons">
-              <button class="share-btn" onclick="shareShow('${title}', ${item.id}, '${mediaType}')">📤 Share</button>
+              <button class="share-btn" onclick="shareShow('${title.replace(/'/g, "\\'")}', ${item.id}, '${mediaType}')">📤 Share</button>
             </div>
           </div>
         `;
@@ -1370,12 +1375,13 @@
             </div>
             
             <div class="share-buttons">
-              <button class="share-btn" onclick="shareShow('${title}', ${item.id}, '${mediaType}')">📤 Share</button>
+              <button class="share-btn" onclick="shareShow('${title.replace(/'/g, "\\'")}', ${item.id}, '${mediaType}')">📤 Share</button>
             </div>
           </div>
         `;
       }
       
+      const safeTitle = title.replace(/'/g, "\\'");
       card.innerHTML = `
         ${posterHtml}
         <div class="show-details">
@@ -1715,6 +1721,12 @@
       const statusFilter = document.getElementById('statusFilter').value;
       const tagFilter = document.getElementById('tagFilter').value;
       const ratingFilter = document.getElementById('ratingFilter').value;
+      
+      // Ensure data exists before filtering
+      if (!appData.tv[currentActiveTab] || !appData.movies[currentActiveTab]) {
+        console.warn('Filter data not available for tab:', currentActiveTab);
+        return;
+      }
       
       const allItems = [...appData.tv[currentActiveTab], ...appData.movies[currentActiveTab]];
       
