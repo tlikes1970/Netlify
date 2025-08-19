@@ -230,12 +230,14 @@
     .show-poster { 
       width: 90px; height: 135px; border-radius: 10px; 
       object-fit: cover; margin-right: 20px; flex-shrink: 0;
+      cursor: pointer;
     }
     
     .poster-placeholder { 
       width: 90px; height: 135px; background: #f0f0f0; 
       border-radius: 10px; display: flex; align-items: center; justify-content: center; 
       margin-right: 20px; color: #999; font-size: 12px; font-weight: bold; flex-shrink: 0;
+      cursor: pointer;
     }
     
     .show-details { flex: 1; display: flex; flex-direction: column; }
@@ -243,7 +245,14 @@
     .show-title { 
       font-size: 20px; font-weight: bold; margin: 0 0 10px 0; 
       cursor: pointer; color: var(--primary);
+      display: flex; align-items: center; gap: 10px;
     }
+    
+    .external-link {
+      font-size: 14px; opacity: 0.7; transition: opacity 0.3s ease;
+    }
+    
+    .external-link:hover { opacity: 1; }
     
     .show-meta { 
       color: #666; font-size: 14px; margin-bottom: 12px;
@@ -255,6 +264,109 @@
     }
     
     .show-overview.expanded { max-height: none; }
+    
+    .rating-container {
+      display: flex; align-items: center; gap: 10px; margin: 10px 0;
+      flex-wrap: wrap;
+    }
+    
+    .star-rating {
+      display: flex; gap: 2px;
+    }
+    
+    .star {
+      font-size: 18px; cursor: pointer; transition: all 0.2s ease;
+      color: #ddd;
+    }
+    
+    .star:hover, .star.active { 
+      color: #ffd700; transform: scale(1.1);
+    }
+    
+    .like-dislike {
+      display: flex; gap: 8px; align-items: center;
+    }
+    
+    .like-btn, .dislike-btn {
+      padding: 6px 12px; font-size: 12px; border-radius: 15px;
+      border: none; cursor: pointer; transition: all 0.3s ease;
+    }
+    
+    .like-btn {
+      background: #ddd; color: #666;
+    }
+    
+    .like-btn.active {
+      background: linear-gradient(45deg, #2ed573, #1dd1a1);
+      color: white;
+    }
+    
+    .dislike-btn {
+      background: #ddd; color: #666;
+    }
+    
+    .dislike-btn.active {
+      background: linear-gradient(45deg, #ff4757, #ff3742);
+      color: white;
+    }
+    
+    .notes-container {
+      margin: 10px 0;
+    }
+    
+    .notes-field {
+      width: 100%; min-height: 50px; padding: 10px;
+      border: 2px dashed var(--border); border-radius: 10px;
+      background: var(--card); color: var(--text); resize: vertical;
+      font-family: inherit; font-size: 13px;
+    }
+    
+    .char-count {
+      font-size: 11px; color: #999; text-align: right; margin-top: 5px;
+    }
+    
+    .char-count.warning { color: var(--warning); }
+    .char-count.danger { color: var(--danger); }
+    
+    .tags-container {
+      margin: 10px 0;
+    }
+    
+    .tag-input {
+      width: 100%; padding: 8px; font-size: 12px;
+      margin-bottom: 8px; border: 2px solid var(--border);
+      border-radius: 10px; background: var(--bg); color: var(--text);
+    }
+    
+    .tags-display {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    
+    .tag {
+      background: var(--purple); color: white; padding: 4px 8px;
+      border-radius: 15px; font-size: 11px; font-weight: bold;
+      display: flex; align-items: center; gap: 5px;
+    }
+    
+    .tag-remove {
+      cursor: pointer; font-weight: bold;
+    }
+    
+    .episode-tracker {
+      background: var(--card); padding: 12px; border-radius: 10px;
+      border: 2px dashed var(--border); margin: 10px 0;
+    }
+    
+    .episode-inputs {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 8px; margin-top: 8px;
+    }
+    
+    .episode-inputs input {
+      padding: 8px; font-size: 12px; text-align: center;
+      border: 2px solid var(--border); border-radius: 8px;
+      background: var(--bg); color: var(--text);
+    }
     
     .show-actions { 
       display: flex; gap: 12px; flex-wrap: wrap; align-items: center; 
@@ -922,8 +1034,8 @@
       const isInWatched = appData[category] && appData[category].watched && appData[category].watched.some(show => show.id === item.id);
       
       const posterHtml = item.poster_path ? 
-        `<img src="${TMDB_IMG_BASE}${item.poster_path}" alt="${title}" class="show-poster">` : 
-        `<div class="poster-placeholder">No Image<br>Available 📷</div>`;
+        `<img src="${TMDB_IMG_BASE}${item.poster_path}" alt="${title}" class="show-poster" onclick="openTMDBLink(${item.id}, '${mediaType}')">` : 
+        `<div class="poster-placeholder" onclick="openTMDBLink(${item.id}, '${mediaType}')">No Image<br>Available 📷</div>`;
       
       let actionsHtml = '';
       
@@ -939,16 +1051,60 @@
             <button onclick="addToList(${JSON.stringify(item).replace(/"/g, '&quot;')}, 'watched')" ${isInWatched ? 'disabled' : ''}>
               ${isInWatched ? '✓ Watched' : '✅ Mark Watched'}
             </button>
+            <button onclick="openTMDBLink(${item.id}, '${mediaType}')" class="secondary">🔗 TMDB Info</button>
           </div>
         `;
       } else {
-        // For list items, show move buttons
+        // For list items, show enhanced features
+        const userRating = item.userRating || 0;
+        const notes = item.notes || '';
+        const tags = item.tags || [];
+        const likeStatus = item.likeStatus || 'none';
+        const currentSeason = item.currentSeason || '';
+        const currentEpisode = item.currentEpisode || '';
+        
         actionsHtml = `
+          <div class="rating-container">
+            <span>Your Rating:</span>
+            <div class="star-rating">
+              ${[1,2,3,4,5].map(star => 
+                `<span class="star ${star <= userRating ? 'active' : ''}" onclick="setRating(${item.id}, ${star})">⭐</span>`
+              ).join('')}
+            </div>
+            <div class="like-dislike">
+              <button class="like-btn ${likeStatus === 'like' ? 'active' : ''}" onclick="setLikeStatus(${item.id}, 'like')">👍</button>
+              <button class="dislike-btn ${likeStatus === 'dislike' ? 'active' : ''}" onclick="setLikeStatus(${item.id}, 'dislike')">👎</button>
+            </div>
+          </div>
+          
+          ${mediaType === 'tv' ? `
+            <div class="episode-tracker">
+              <strong>Episode Progress:</strong>
+              <div class="episode-inputs">
+                <input type="number" placeholder="Season" min="1" value="${currentSeason}" onchange="updateEpisodeProgress(${item.id}, 'season', this.value)">
+                <input type="number" placeholder="Episode" min="1" value="${currentEpisode}" onchange="updateEpisodeProgress(${item.id}, 'episode', this.value)">
+              </div>
+            </div>
+          ` : ''}
+          
+          <div class="tags-container">
+            <input type="text" class="tag-input" placeholder="Add tags (horror, comedy, etc.)" onkeydown="handleTagInput(event, ${item.id})">
+            <div class="tags-display" id="tags-${item.id}">
+              ${tags.map(tag => `<span class="tag">${tag} <span class="tag-remove" onclick="removeTag(${item.id}, '${tag}')">×</span></span>`).join('')}
+            </div>
+          </div>
+          
+          <div class="notes-container">
+            <textarea class="notes-field" placeholder="Your thoughts on this (250 chars)..." maxlength="250" onchange="updateNotes(${item.id}, this.value)">${notes}</textarea>
+            <div class="char-count ${notes.length > 200 ? 'warning' : ''} ${notes.length > 240 ? 'danger' : ''}">${notes.length}/250</div>
+          </div>
+          
           <div class="show-actions">
             <button onclick="moveItem(${item.id}, 'watching')" ${isInWatching ? 'disabled' : ''}>→ Watching</button>
             <button onclick="moveItem(${item.id}, 'wishlist')" ${isInWishlist ? 'disabled' : ''}>→ Wishlist</button>
             <button onclick="moveItem(${item.id}, 'watched')" ${isInWatched ? 'disabled' : ''}>→ Watched</button>
             <button class="danger" onclick="removeItem(${item.id})">🗑️ Remove</button>
+            <button onclick="openTMDBLink(${item.id}, '${mediaType}')" class="secondary">🔗 TMDB</button>
           </div>
         `;
       }
@@ -956,7 +1112,10 @@
       card.innerHTML = `
         ${posterHtml}
         <div class="show-details">
-          <h4 class="show-title">${title}</h4>
+          <h4 class="show-title" onclick="openTMDBLink(${item.id}, '${mediaType}')">
+            ${title}
+            <span class="external-link">🔗</span>
+          </h4>
           <div class="show-meta">⭐ ${rating} ${date ? `• ${date.split('-')[0]}` : ''} • ${mediaType.toUpperCase()}</div>
           <div class="show-overview" onclick="this.classList.toggle('expanded')">${overview}</div>
           ${actionsHtml}
@@ -964,6 +1123,100 @@
       `;
       
       return card;
+    }
+
+    function openTMDBLink(id, mediaType) {
+      const url = `https://www.themoviedb.org/${mediaType}/${id}`;
+      window.open(url, '_blank');
+      showNotification('Opening TMDB details! 🔗', 'info');
+    }
+
+    function setRating(itemId, rating) {
+      let item = findItem(itemId);
+      if (item) {
+        item.userRating = rating;
+        saveAppData();
+        updateUI();
+        showNotification(`Rated "${item.title}" ${rating} stars! ⭐`, 'success');
+      }
+    }
+
+    function setLikeStatus(itemId, status) {
+      let item = findItem(itemId);
+      if (item) {
+        item.likeStatus = item.likeStatus === status ? 'none' : status;
+        saveAppData();
+        updateUI();
+        
+        const messages = {
+          like: 'You liked this! 👍',
+          dislike: 'You disliked this! 👎',
+          none: 'Rating cleared! 🤷‍♂️'
+        };
+        showNotification(`${item.title}: ${messages[item.likeStatus]}`, 'success');
+      }
+    }
+
+    function updateNotes(itemId, notes) {
+      let item = findItem(itemId);
+      if (item) {
+        item.notes = notes;
+        saveAppData();
+      }
+    }
+
+    function updateEpisodeProgress(itemId, type, value) {
+      let item = findItem(itemId);
+      if (item) {
+        if (type === 'season') {
+          item.currentSeason = value;
+        } else if (type === 'episode') {
+          item.currentEpisode = value;
+        }
+        saveAppData();
+        showNotification(`Updated ${type} progress! 📺`, 'success');
+      }
+    }
+
+    function handleTagInput(event, itemId) {
+      if (event.key === 'Enter') {
+        const tagValue = event.target.value.trim();
+        if (tagValue) {
+          addTag(itemId, tagValue);
+          event.target.value = '';
+        }
+      }
+    }
+
+    function addTag(itemId, tagValue) {
+      let item = findItem(itemId);
+      if (item && !item.tags.includes(tagValue)) {
+        item.tags.push(tagValue);
+        saveAppData();
+        updateUI();
+        showNotification(`Added tag "${tagValue}" to ${item.title}! 🏷️`, 'success');
+      }
+    }
+
+    function removeTag(itemId, tagValue) {
+      let item = findItem(itemId);
+      if (item) {
+        item.tags = item.tags.filter(tag => tag !== tagValue);
+        saveAppData();
+        updateUI();
+        showNotification(`Removed tag "${tagValue}" from ${item.title}! 🗑️`, 'success');
+      }
+    }
+
+    function findItem(itemId) {
+      let found = null;
+      ['tv', 'movies'].forEach(category => {
+        ['watching', 'wishlist', 'watched'].forEach(list => {
+          const item = appData[category][list].find(s => s.id === itemId);
+          if (item) found = item;
+        });
+      });
+      return found;
     }
 
     function addToList(item, listType) {
@@ -978,7 +1231,13 @@
         date: item.first_air_date || item.release_date,
         rating: item.vote_average,
         media_type: mediaType,
-        date_added: new Date().toISOString()
+        date_added: new Date().toISOString(),
+        userRating: 0,
+        likeStatus: 'none',
+        notes: '',
+        tags: [],
+        currentSeason: '',
+        currentEpisode: ''
       };
       
       if (!appData[category][listType].some(show => show.id === item.id)) {
@@ -1202,6 +1461,60 @@
       };
       reader.readAsText(file);
     }
+
+    function setupEasterEgg() {
+      const tips = [
+        "Pro tip: Having 500 items in your wishlist doesn't count as productivity! 🎯",
+        "Fun fact: 'I'll watch it later' is the most common lie in streaming! 🤥",
+        "Reality check: You have more shows bookmarked than days in the year! 📅",
+        "Hot take: Your 'Currently Watching' list is more fiction than fantasy movies! 📚",
+        "Reminder: Netflix doesn't pay you to collect shows like Pokémon cards! 🃏",
+        "News flash: Starting 20 shows doesn't make you a 'multimedia enthusiast'! 📺"
+      ];
+
+      let clickCount = 0;
+      
+      document.getElementById('easterEgg').onclick = () => {
+        clickCount++;
+        if (clickCount % 3 === 0) {
+          showRandomTip(tips);
+        }
+      };
+      
+      // Also handle feedback button if it exists
+      const feedbackBtn = document.getElementById('feedbackBtn');
+      if (feedbackBtn) {
+        feedbackBtn.onclick = () => {
+          showNotification('Feedback feature coming soon! For now, enjoy the sassy tips! 💬', 'info');
+        };
+      }
+    }
+
+    function showRandomTip(tips) {
+      const tip = tips[Math.floor(Math.random() * tips.length)];
+      const bubble = document.createElement('div');
+      bubble.style.cssText = `
+        position: fixed; bottom: 80px; right: 20px; z-index: 1500;
+        background: var(--purple); color: white; padding: 15px 20px;
+        border-radius: 20px; max-width: 300px; font-size: 13px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        animation: bubble-bounce 0.5s ease;
+      `;
+      bubble.textContent = tip;
+      document.body.appendChild(bubble);
+      
+      // Make tip linger longer (7 seconds)
+      setTimeout(() => {
+        if (bubble.parentNode) bubble.parentNode.removeChild(bubble);
+      }, 7000);
+    }
   </script>
+
+  <style>
+    @keyframes bubble-bounce {
+      0% { transform: scale(0) translateY(20px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+  </style>
 </body>
 </html>
