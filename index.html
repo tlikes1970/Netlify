@@ -1016,8 +1016,14 @@
       });
       
       if (item && fromList !== newListType) {
+        // Remove from current list
         appData[category][fromList] = appData[category][fromList].filter(s => s.id !== itemId);
-        appData[category][newListType].push(item);
+        
+        // Add to new list (avoid duplicates)
+        if (!appData[category][newListType].some(s => s.id === itemId)) {
+          appData[category][newListType].push(item);
+        }
+        
         saveAppData();
         updateUI();
         
@@ -1026,7 +1032,16 @@
           wishlist: 'Want to Watch',
           watched: 'Already Watched'
         };
-        showNotification(`Moved "${item.title}" to ${listNames[newListType]}! 📦`, 'success');
+        showNotification(`Moved "${item.title}" from ${listNames[fromList]} to ${listNames[newListType]}! 📦`, 'success');
+        
+        console.log(`Moved item ${itemId} from ${fromList} to ${newListType}`, {
+          item: item.title,
+          fromList,
+          newListType,
+          category
+        });
+      } else if (fromList === newListType) {
+        showNotification(`"${item?.title}" is already in that list! 🤷‍♂️`, 'warning');
       }
     }
 
@@ -1089,11 +1104,14 @@
         updateList('wishlistList', [...appData.tv.wishlist, ...appData.movies.wishlist]);
         updateList('watchedList', [...appData.tv.watched, ...appData.movies.watched]);
         
-        console.log('UI updated successfully:', {
-          watching: totalWatching,
-          wishlist: totalWishlist,
-          watched: totalWatched
-        });
+        // Only log on significant changes, not every update
+        if (totalWatching + totalWishlist + totalWatched > 0) {
+          console.log('UI updated:', {
+            watching: totalWatching,
+            wishlist: totalWishlist,
+            watched: totalWatched
+          });
+        }
       } catch (error) {
         console.error('Error updating UI:', error);
       }
