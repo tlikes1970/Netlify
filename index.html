@@ -1,34 +1,461 @@
-• Type "*trek*" = shows containing "trek"<br><br>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Primary Meta Tags -->
+  <title>TV Tracker V2 - Your Brutally Honest Entertainment Companion</title>
+  <meta name="title" content="TV Tracker V2 - Your Brutally Honest Entertainment Companion">
+  <meta name="description" content="Track your TV shows and movies with sassy commentary, custom tags, episode tracking, and more. Never lose track of your binge-watching again!">
+  <meta name="keywords" content="tv tracker, movie tracker, streaming, watchlist, tv shows, movies, entertainment, episode tracker">
+  <meta name="author" content="TV Tracker">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://tv-movie-tracker.netlify.app/">
+  <meta property="og:title" content="TV Tracker V2 - Your Brutally Honest Entertainment Companion">
+  <meta property="og:description" content="Track your TV shows and movies with sassy commentary, custom tags, episode tracking, and more. Never lose track of your binge-watching again!">
+  <meta property="og:image" content="https://tv-movie-tracker.netlify.app/icons/og-image.png">
+  
+  <!-- PWA Meta Tags -->
+  <meta name="application-name" content="TV Tracker">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TV Tracker">
+  <meta name="theme-color" content="#ff6b6b">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  
+  <style>
+    :root {
+      --bg: #fff; --text: #000; --primary: #ff6b6b; --card: #f9f9f9; --border: #ddd;
+      --success: #51cf66; --warning: #ffd43b; --danger: #ff6b6b; --purple: #845ec2;
+      --blue: #4dabf7; --orange: #ff8c42; --green: #51cf66;
+    }
+    
+    * { box-sizing: border-box; }
+    
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: var(--text); margin: 0; padding: 20px; min-height: 100vh;
+      transition: all 0.3s ease;
+    }
+    
+    .dark-mode { 
+      --bg: #1a1a1a; --text: #f5f5f5; --card: #2d2d2d; --border: #444;
+      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+    }
+    
+    .main-container {
+      max-width: 1200px; margin: 0 auto; background: var(--bg); 
+      border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .header { 
+      display: flex; justify-content: space-between; align-items: center; 
+      padding: 20px 0; border-bottom: 3px dashed var(--primary); margin-bottom: 30px;
+      position: relative; flex-wrap: wrap; gap: 15px;
+    }
+    
+    .header::after {
+      content: "🛋️"; position: absolute; right: 20px; top: 15px; 
+      font-size: 28px; animation: couch-bounce 3s ease-in-out infinite;
+    }
+    
+    @keyframes couch-bounce {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-5px) rotate(-5deg); }
+    }
+    
+    .title { 
+      font-size: 2.5em; font-weight: bold; color: var(--primary); 
+      margin: 0; cursor: pointer; flex-shrink: 0;
+    }
+    
+    .user-section {
+      display: flex; align-items: center; gap: 15px; flex-wrap: wrap;
+    }
+    
+    .name-container {
+      display: flex; flex-direction: column; align-items: flex-end;
+      transition: all 0.3s ease;
+    }
+    
+    .name-instruction {
+      font-size: 12px; color: var(--primary); font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .name-input {
+      padding: 12px; border: 2px solid var(--primary); border-radius: 25px;
+      background: var(--card); color: var(--text); font-weight: bold;
+    }
+    
+    .name-container.hidden {
+      opacity: 0; transform: scale(0.8); pointer-events: none;
+    }
+    
+    .tab-container { 
+      display: flex; background: var(--card); border-radius: 15px; 
+      padding: 8px; margin: 30px 0; gap: 5px;
+    }
+    
+    .tab { 
+      flex: 1; padding: 18px 30px; border: none; background: transparent; 
+      color: var(--text); cursor: pointer; border-radius: 10px; font-weight: bold;
+      transition: all 0.3s ease; font-size: 16px; text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    
+    .tab.active { 
+      background: linear-gradient(45deg, var(--primary), var(--purple)); 
+      color: white; transform: scale(1.05);
+    }
+    
+    .tab-badge {
+      background: rgba(255,255,255,0.9); color: var(--primary);
+      padding: 4px 10px; border-radius: 12px; font-size: 12px;
+      font-weight: bold; min-width: 20px;
+    }
+    
+    .tab.active .tab-badge {
+      background: rgba(255,255,255,1); color: var(--primary);
+    }
+    
+    button { 
+      margin: 8px; padding: 12px 20px; border: none; border-radius: 25px; 
+      background: linear-gradient(45deg, var(--primary), var(--purple)); 
+      color: white; cursor: pointer; font-weight: bold; font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    
+    button:hover { 
+      transform: translateY(-3px) scale(1.05); 
+    }
+    
+    button:disabled { 
+      background: #666; cursor: not-allowed; transform: none; opacity: 0.6;
+    }
+    
+    button.danger { background: linear-gradient(45deg, #ff4757, #ff3742); }
+    button.success { background: linear-gradient(45deg, #2ed573, #1dd1a1); }
+    button.secondary { background: linear-gradient(45deg, #747d8c, #57606f); }
+    
+    .search-container { 
+      background: var(--card); padding: 25px; border-radius: 20px; 
+      margin: 30px 0; border: 2px solid var(--primary);
+    }
+    
+    .search-row {
+      display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;
+    }
+    
+    .search-input {
+      flex: 1; min-width: 250px; padding: 12px 15px;
+      border: 2px solid var(--border); border-radius: 15px;
+      background: var(--bg); color: var(--text); font-size: 16px;
+    }
+    
+    .search-help {
+      font-size: 12px; color: #666; margin-top: 5px; font-style: italic;
+    }
+    
+    .tooltip {
+      position: relative; display: inline-block; cursor: help;
+      color: var(--primary); font-weight: bold; text-decoration: underline;
+    }
+    
+    .tooltip .tooltiptext {
+      visibility: hidden; width: 300px; background-color: var(--purple);
+      color: white; text-align: left; border-radius: 10px;
+      padding: 15px; position: absolute; z-index: 1000;
+      bottom: 125%; left: 50%; margin-left: -150px;
+      opacity: 0; transition: opacity 0.3s; font-style: normal;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+    
+    .tooltip .tooltiptext::after {
+      content: ""; position: absolute; top: 100%; left: 50%;
+      margin-left: -5px; border-width: 5px;
+      border-style: solid; border-color: var(--purple) transparent transparent transparent;
+    }
+    
+    .tooltip:hover .tooltiptext {
+      visibility: visible; opacity: 1;
+    }
+    
+    input, select { 
+      padding: 12px 15px; margin: 5px; border: 2px solid var(--border); 
+      border-radius: 15px; background: var(--bg); color: var(--text);
+    }
+    
+    .section { margin: 40px 0; }
+    
+    .section-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; cursor: pointer; padding: 10px 0;
+    }
+    
+    .section h3 { 
+      color: var(--primary); margin: 0; font-size: 1.8em;
+    }
+    
+    .section-subtitle {
+      font-size: 14px; color: #666; font-style: italic;
+      margin-top: 5px; font-weight: normal;
+    }
+    
+    .count { 
+      background: linear-gradient(45deg, var(--primary), var(--purple)); 
+      color: white; padding: 8px 15px; border-radius: 20px; 
+      font-size: 16px; font-weight: bold; cursor: pointer;
+    }
+    
+    .list-container { 
+      background: var(--card); border-radius: 15px; padding: 20px; 
+      min-height: 80px; border: 3px dashed var(--border);
+    }
+    
+    .show-card { 
+      display: flex; border: 2px solid var(--border); 
+      border-radius: 15px; padding: 20px; margin: 15px 0; 
+      background: var(--bg);
+    }
+    
+    .show-poster { 
+      width: 90px; height: 135px; border-radius: 10px; 
+      object-fit: cover; margin-right: 20px; flex-shrink: 0;
+    }
+    
+    .poster-placeholder { 
+      width: 90px; height: 135px; background: #f0f0f0; 
+      border-radius: 10px; display: flex; align-items: center; justify-content: center; 
+      margin-right: 20px; color: #999; font-size: 12px; font-weight: bold; flex-shrink: 0;
+    }
+    
+    .show-details { flex: 1; display: flex; flex-direction: column; }
+    
+    .show-title { 
+      font-size: 20px; font-weight: bold; margin: 0 0 10px 0; 
+      cursor: pointer; color: var(--primary);
+    }
+    
+    .show-meta { 
+      color: #666; font-size: 14px; margin-bottom: 12px;
+    }
+    
+    .show-overview { 
+      font-size: 14px; line-height: 1.6; margin-bottom: 15px; 
+      max-height: 60px; overflow: hidden; cursor: pointer;
+    }
+    
+    .show-overview.expanded { max-height: none; }
+    
+    .show-actions { 
+      display: flex; gap: 12px; flex-wrap: wrap; align-items: center; 
+      margin-top: 15px;
+    }
+    
+    .show-actions button { padding: 8px 15px; font-size: 12px; margin: 2px; }
+    
+    .empty-state { 
+      text-align: center; color: #666; padding: 40px 20px; 
+      font-style: italic; font-size: 18px;
+    }
+    
+    .sassy-empty { 
+      font-weight: bold; color: var(--primary);
+    }
+    
+    .stats { 
+      display: flex; gap: 20px; margin: 30px 0; flex-wrap: wrap;
+    }
+    
+    .stat { 
+      background: var(--card); padding: 25px; border-radius: 15px; 
+      text-align: center; flex: 1; min-width: 140px; 
+      border: 2px solid var(--primary); cursor: pointer;
+    }
+    
+    .stat:hover { 
+      transform: translateY(-5px); 
+    }
+    
+    .stat-num { 
+      font-size: 2.5em; font-weight: bold; color: var(--primary); 
+    }
+    
+    .stat-label { 
+      font-size: 12px; color: #666; font-weight: bold; 
+      text-transform: uppercase;
+    }
+    
+    .notification {
+      position: fixed; top: 20px; right: 20px; z-index: 1000;
+      padding: 15px 25px; border-radius: 10px; color: white;
+      font-weight: bold; animation: slide-in 0.5s ease, slide-out 0.5s ease 2.5s forwards;
+    }
+    
+    @keyframes slide-in {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slide-out {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
+    }
+    
+    .notification.success { background: var(--success); }
+    .notification.error { background: var(--danger); }
+    .notification.warning { background: var(--warning); color: #000; }
+    .notification.info { background: var(--purple); }
+    
+    .loading-container {
+      text-align: center; padding: 40px;
+    }
+    
+    .loading-spinner {
+      width: 50px; height: 50px; border: 5px solid var(--border);
+      border-top: 5px solid var(--primary); border-radius: 50%;
+      animation: spin 1s linear infinite; margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      font-weight: bold; color: var(--primary); font-size: 16px;
+    }
+    
+    .easter-egg {
+      position: fixed; bottom: 20px; right: 20px; 
+      background: var(--purple); color: white; padding: 12px; 
+      border-radius: 50%; cursor: pointer; z-index: 1000;
+      font-size: 18px; width: 50px; height: 50px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    
+    .feedback-button {
+      position: fixed; bottom: 90px; right: 20px; 
+      background: var(--primary); color: white; padding: 15px; 
+      border-radius: 50%; cursor: pointer; z-index: 1001;
+      font-size: 20px; width: 60px; height: 60px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .main-container { 
+        padding: 15px; margin: 10px; border-radius: 15px;
+      }
+      
+      .header { 
+        flex-direction: column; text-align: center; gap: 10px;
+      }
+      
+      .header::after { display: none; }
+      
+      .title { font-size: 2em; }
+      
+      .tab-container {
+        flex-direction: column;
+      }
+      
+      .tab {
+        padding: 15px 20px;
+      }
+      
+      .search-row {
+        flex-direction: column;
+      }
+      
+      .search-input {
+        min-width: auto;
+      }
+      
+      .show-card { 
+        flex-direction: column; padding: 15px; text-align: center;
+      }
+      
+      .show-poster, .poster-placeholder { 
+        width: 70px; height: 105px; margin: 0 auto 15px auto; 
+      }
+      
+      .stats { 
+        flex-direction: column; gap: 10px;
+      }
+      
+      .stat { 
+        min-width: auto; padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="header">
+      <h1 class="title" id="welcomeText">TV Tracker V2</h1>
+      <div class="user-section">
+        <div class="name-container" id="nameContainer">
+          <div class="name-instruction">👆 Add your name for a personal touch!</div>
+          <input type="text" id="displayNameInput" class="name-input" placeholder="Your name here...">
+        </div>
+        <button id="darkModeToggle">🌙 Go Dark</button>
+      </div>
+    </div>
+
+    <div class="tab-container">
+      <button id="homeTab" class="tab active">
+        🏠 Home
+        <span class="tab-badge">Overview</span>
+      </button>
+      <button id="watchingTab" class="tab">
+        ▶️ Currently Watching
+        <span class="tab-badge" id="watchingBadge">0</span>
+      </button>
+      <button id="wishlistTab" class="tab">
+        📖 Want to Watch
+        <span class="tab-badge" id="wishlistBadge">0</span>
+      </button>
+      <button id="watchedTab" class="tab">
+        ✅ Already Watched
+        <span class="tab-badge" id="watchedBadge">0</span>
+      </button>
+    </div>
+
+    <!-- HOME TAB -->
+    <div id="homeSection" class="tab-section">
+      <div class="search-container">
+        <div class="search-row">
+          <input type="text" id="searchInput" class="search-input" placeholder="Search for shows or movies...">
+          <select id="genreFilter"><option value="">All Genres</option></select>
+          <button id="searchBtn">🔍 Search</button>
+          <button id="clearSearchBtn" class="secondary" style="display: none;">✖️ Clear</button>
+        </div>
+        
+        <div class="search-help">
+          💡 <strong><span class="tooltip">Wildcards:<span class="tooltiptext">
+            <strong>Wildcard = when your brain is mush and you only remember part of the title.</strong><br><br>
+            <strong>Examples:</strong><br>
+            • Type "star*" = shows starting with "star"<br>
+            • Type "*wars" = shows ending with "wars"<br>
+            • Type "*trek*" = shows containing "trek"<br><br>
             Basically, it's search for dummies when you can't remember the full title! 🧠
           </span></span></strong> "star*" = starts with "star" | "*wars" = ends with "wars" | "*trek*" = contains "trek"
         </div>
         
-        <div class="pagination">
+        <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
           <button id="prevPageBtn" disabled>← Previous</button>
           <span id="pageInfo" style="font-weight: bold; color: var(--primary);">Page 1</span>
           <button id="nextPageBtn" disabled>Next →</button>
-        </div>
-      </div>
-
-      <div class="filter-container">
-        <div class="filter-row">
-          <select id="statusFilter">
-            <option value="">All Status</option>
-            <option value="ongoing">Currently Airing</option>
-            <option value="ended">Completed Series</option>
-            <option value="unknown">Status Unknown</option>
-          </select>
-          <select id="tagFilter">
-            <option value="">All Tags</option>
-          </select>
-          <select id="ratingFilter">
-            <option value="">All Ratings</option>
-            <option value="5">5 Stars</option>
-            <option value="4">4+ Stars</option>
-            <option value="3">3+ Stars</option>
-            <option value="unrated">Unrated</option>
-          </select>
-          <button id="clearFiltersBtn" class="secondary">Clear Filters</button>
         </div>
       </div>
 
@@ -56,7 +483,7 @@
         </div>
       </div>
 
-      <div style="background: var(--card); padding: 20px; border-radius: 20px; margin: 25px 0; border: 2px solid var(--primary);">
+      <div style="background: var(--card); padding: 25px; border-radius: 20px; margin: 30px 0; border: 2px solid var(--primary);">
         <h3 style="color: var(--primary); margin-top: 0;">💾 Backup Your Questionable Taste</h3>
         <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
           <input type="file" id="importFile" accept=".json" style="max-width: 200px;">
@@ -115,31 +542,6 @@
   <div class="easter-egg" id="easterEgg">🎭</div>
   <div class="feedback-button" id="feedbackBtn">💬</div>
 
-  <!-- Feedback Modal -->
-  <div class="modal" id="feedbackModal" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>🎯 Your Brutally Honest Feedback</h3>
-        <button class="close-btn" id="closeFeedback">✕</button>
-      </div>
-      <div class="modal-body">
-        <p><strong>Help make this app less terrible!</strong> 😈</p>
-        <textarea id="feedbackText" placeholder="What confused you? What's missing? Be brutally honest..." style="width: 100%; height: 120px; padding: 15px; border: 2px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); resize: vertical; font-family: inherit; font-size: 14px;"></textarea>
-        <div style="margin: 20px 0;">
-          <p><strong>Overall experience:</strong></p>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;" id="ratingButtons">
-            <button class="rating-btn" data-rating="1">😤 Terrible</button>
-            <button class="rating-btn" data-rating="2">😕 Meh</button>
-            <button class="rating-btn" data-rating="3">🙂 Decent</button>
-            <button class="rating-btn" data-rating="4">😍 Love it</button>
-            <button class="rating-btn" data-rating="5">🤯 Mind blown</button>
-          </div>
-        </div>
-        <button id="submitFeedback" style="width: 100%; margin: 15px 0; padding: 15px; font-size: 16px; font-weight: bold;">📤 Submit Feedback</button>
-      </div>
-    </div>
-  </div>
-
   <script>
     // Core Application Logic
     const TMDB_IMG_BASE = 'https://image.tmdb.org/t/p/w200';
@@ -180,23 +582,12 @@
       "Entertainment Addiction", "Viewing Disorder", "Screen Time Shame"
     ];
 
-    const tips = [
-      "Pro tip: Having 500 items in your wishlist doesn't count as productivity! 🎯",
-      "Fun fact: 'I'll watch it later' is the most common lie in streaming! 🤥",
-      "Reality check: You have more shows bookmarked than days in the year! 📅",
-      "Hot take: Your 'Currently Watching' list is more fiction than fantasy movies! 📚",
-      "Reminder: Netflix doesn't pay you to collect shows like Pokémon cards! 🃏",
-      "News flash: Starting 20 shows doesn't make you a 'multimedia enthusiast'! 📺",
-      "Breaking: Local person discovers tags feature, organizes entire life! 🏷️"
-    ];
-
     // Initialize app
     document.addEventListener('DOMContentLoaded', () => {
       loadAppData();
       setupEventListeners();
       loadGenres();
       updateUI();
-      setupEasterEgg();
       updateDarkModeButton();
     });
 
@@ -210,7 +601,7 @@
         if (notification.parentNode) {
           notification.parentNode.removeChild(notification);
         }
-      }, 4500);
+      }, 3000);
     }
 
     function getRandomMessage(array) {
@@ -226,7 +617,7 @@
       if (saved) {
         try {
           const parsedData = JSON.parse(saved);
-          // Ensure all required data structures exist (backwards compatibility)
+          // Ensure backwards compatibility
           if (!parsedData.tv) parsedData.tv = { watching: [], wishlist: [], watched: [] };
           if (!parsedData.movies) parsedData.movies = { watching: [], wishlist: [], watched: [] };
           if (!parsedData.tv.watched) parsedData.tv.watched = [];
@@ -278,7 +669,6 @@
     }
 
     function setupEventListeners() {
-      // Dark mode toggle
       document.getElementById('darkModeToggle').onclick = () => {
         document.body.classList.toggle('dark-mode');
         appData.settings.theme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
@@ -329,12 +719,6 @@
         currentPage++;
         performSearch();
       };
-      
-      // Filter functionality
-      document.getElementById('statusFilter').onchange = applyFilters;
-      document.getElementById('tagFilter').onchange = applyFilters;
-      document.getElementById('ratingFilter').onchange = applyFilters;
-      document.getElementById('clearFiltersBtn').onclick = clearFilters;
       
       // Data management
       document.getElementById('exportBtn').onclick = exportData;
@@ -465,34 +849,7 @@
         }
         
         const data = await response.json();
-        
-        // Enhance results with additional TMDB data
-        const enhancedResults = await Promise.all(
-          (data.results || []).map(async (item) => {
-            try {
-              const detailEndpoint = item.media_type === 'tv' ? `tv/${item.id}` : `movie/${item.id}`;
-              const detailResponse = await fetch(`${API_BASE}?endpoint=${detailEndpoint}`);
-              
-              if (detailResponse.ok) {
-                const details = await detailResponse.json();
-                return {
-                  ...item,
-                  status: details.status,
-                  number_of_seasons: details.number_of_seasons,
-                  number_of_episodes: details.number_of_episodes,
-                  last_air_date: details.last_air_date,
-                  next_episode_to_air: details.next_episode_to_air,
-                  genres: details.genres
-                };
-              }
-            } catch (e) {
-              console.log('Failed to fetch details for:', item.name || item.title);
-            }
-            return item;
-          })
-        );
-        
-        return enhancedResults;
+        return data.results || [];
       } catch (error) {
         console.error('Fetch error:', error);
         throw new Error('Search temporarily unavailable. Our servers are probably binge-watching something! 📺');
@@ -549,15 +906,14 @@
       });
     }
 
-    // CLEAN createShowCard function - NO DUPLICATE DECLARATIONS
     function createShowCard(item, isSearchResult = false) {
       const card = document.createElement('div');
       card.className = 'show-card';
       
-      const title = (item.name || item.title || 'Unknown Title').replace(/'/g, "\\'");
+      const title = item.name || item.title || 'Unknown Title';
       const date = item.first_air_date || item.release_date || '';
       const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
-      const overview = (item.overview || 'No description available.').replace(/'/g, "\\'");
+      const overview = item.overview || 'No description available.';
       const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
       
       const category = mediaType === 'tv' ? 'tv' : 'movies';
@@ -566,119 +922,33 @@
       const isInWatched = appData[category] && appData[category].watched && appData[category].watched.some(show => show.id === item.id);
       
       const posterHtml = item.poster_path ? 
-        `<img src="${TMDB_IMG_BASE}${item.poster_path}" alt="${title}" class="show-poster" onclick="openTMDBLink(${item.id}, '${mediaType}')">` : 
-        `<div class="poster-placeholder" onclick="openTMDBLink(${item.id}, '${mediaType}')">No Image<br>Available 📷</div>`;
-      
-      // Status badge - SINGLE DECLARATION
-      let statusBadge = '';
-      if (item.status) {
-        const statusClass = item.status === 'Ended' ? 'ended' : 
-                          item.status === 'Returning Series' ? 'ongoing' : 'unknown';
-        statusBadge = `<span class="status-badge status-${statusClass}">${item.status}</span>`;
-      }
-      
-      // Series info - SINGLE DECLARATION
-      let seriesInfo = '';
-      if (mediaType === 'tv' && item.number_of_seasons) {
-        seriesInfo = `<span>📺 ${item.number_of_seasons} Season${item.number_of_seasons > 1 ? 's' : ''}</span>`;
-        if (item.last_air_date) {
-          seriesInfo += `<span>📅 Last: ${item.last_air_date}</span>`;
-        }
-      }
+        `<img src="${TMDB_IMG_BASE}${item.poster_path}" alt="${title}" class="show-poster">` : 
+        `<div class="poster-placeholder">No Image<br>Available 📷</div>`;
       
       let actionsHtml = '';
       
       if (isSearchResult) {
-        // Search result buttons
         actionsHtml = `
           <div class="show-actions">
-            <div class="action-row">
-              <button onclick="addToList(${JSON.stringify(item).replace(/"/g, '&quot;')}, 'watching')" ${isInWatching ? 'disabled' : ''}>
-                ${isInWatching ? '✓ Watching' : '▶️ Watching'}
-              </button>
-              <button onclick="addToList(${JSON.stringify(item).replace(/"/g, '&quot;')}, 'wishlist')" ${isInWishlist ? 'disabled' : ''}>
-                ${isInWishlist ? '✓ In Wishlist' : '📖 Want to Watch'}
-              </button>
-            </div>
-            <div class="action-row">
-              <button onclick="addToList(${JSON.stringify(item).replace(/"/g, '&quot;')}, 'watched')" ${isInWatched ? 'disabled' : ''}>
-                ${isInWatched ? '✓ Watched' : '✅ Mark Watched'}
-              </button>
-              <button onclick="openTMDBLink(${item.id}, '${mediaType}')" class="secondary">
-                🔗 TMDB Info
-              </button>
-            </div>
-            <div class="share-buttons">
-              <button class="share-btn" onclick="shareShow('${title.replace(/'/g, "\\'")}', ${item.id}, '${mediaType}')">📤 Share</button>
-            </div>
+            <button onclick="addToList(${JSON.stringify(item).replace(/"/g, '&quot;')}, 'watching')" ${isInWatching ? 'disabled' : ''}>
+              ${isInWatching ? '✓ Watching' : '▶️ Watching'}
+            </button>
+            <button onclick="addToList(${JSON.stringify(item).replace(/"/g, '&quot;')}, 'wishlist')" ${isInWishlist ? 'disabled' : ''}>
+              ${isInWishlist ? '✓ In Wishlist' : '📖 Want to Watch'}
+            </button>
+            <button onclick="addToList(${JSON.stringify(item).replace(/"/g, '&quot;')}, 'watched')" ${isInWatched ? 'disabled' : ''}>
+              ${isInWatched ? '✓ Watched' : '✅ Mark Watched'}
+            </button>
           </div>
         `;
       } else {
-        // Full list card with all features
-        const userRating = item.userRating || 0;
-        const notes = item.notes || '';
-        const tags = item.tags || [];
-        const progress = item.progress || '';
-        const currentSeason = item.currentSeason || '';
-        const currentEpisode = item.currentEpisode || '';
-        const likeStatus = item.likeStatus || 'none';
-        
+        // For list items, show move buttons
         actionsHtml = `
           <div class="show-actions">
-            ${mediaType === 'tv' ? `
-              <div class="episode-tracker">
-                <strong>Episode Progress:</strong>
-                <div class="episode-inputs">
-                  <input type="number" placeholder="Season" min="1" value="${currentSeason}" onchange="updateEpisodeProgress(${item.id}, 'season', this.value)">
-                  <input type="number" placeholder="Episode" min="1" value="${currentEpisode}" onchange="updateEpisodeProgress(${item.id}, 'episode', this.value)">
-                </div>
-              </div>
-            ` : ''}
-            
-            <div class="rating-container">
-              <span>Your Rating:</span>
-              <div class="star-rating">
-                ${[1,2,3,4,5].map(star => 
-                  `<span class="star ${star <= userRating ? 'active' : ''}" onclick="setRating(${item.id}, ${star})">⭐</span>`
-                ).join('')}
-              </div>
-              <div class="like-dislike">
-                <button class="like ${likeStatus === 'like' ? 'active' : ''}" onclick="setLikeStatus(${item.id}, 'like')">👍</button>
-                <button class="dislike ${likeStatus === 'dislike' ? 'active' : ''}" onclick="setLikeStatus(${item.id}, 'dislike')">👎</button>
-              </div>
-            </div>
-            
-            <div class="tags-container">
-              <input type="text" class="tag-input" placeholder="Add tags (horror, comedy, etc.)" onkeydown="handleTagInput(event, ${item.id})">
-              <div class="tags-display" id="tags-${item.id}">
-                ${tags.map(tag => `<span class="tag">${tag} <span class="tag-remove" onclick="removeTag(${item.id}, '${tag}')">×</span></span>`).join('')}
-              </div>
-            </div>
-            
-            <div class="notes-container">
-              <textarea class="notes-field" placeholder="What I loved about this (250 chars)..." maxlength="250" onchange="updateNotes(${item.id}, this.value)">${notes}</textarea>
-              <div class="char-count ${notes.length > 200 ? 'warning' : ''} ${notes.length > 240 ? 'danger' : ''}">${notes.length}/250</div>
-            </div>
-            
-            <div class="action-row">
-              <button onclick="moveItem(${item.id}, 'watching')" ${isInWatching ? 'disabled' : ''}>→ Watching</button>
-              <button onclick="moveItem(${item.id}, 'wishlist')" ${isInWishlist ? 'disabled' : ''}>→ Wishlist</button>
-              <button onclick="moveItem(${item.id}, 'watched')" ${isInWatched ? 'disabled' : ''}>→ Watched</button>
-            </div>
-            
-            <div class="action-row">
-              <button class="favorite ${item.favorite ? 'active' : ''}" onclick="toggleFavorite(${item.id})">⭐ ${item.favorite ? 'Favorited' : 'Favorite'}</button>
-              <button class="danger" onclick="removeItem(${item.id})">🗑️ Remove</button>
-              <button onclick="openTMDBLink(${item.id}, '${mediaType}')" class="secondary">🔗 TMDB</button>
-            </div>
-            
-            <div class="action-row">
-              <input type="text" placeholder="Progress notes..." value="${progress}" onchange="updateProgress(${item.id}, this.value)">
-            </div>
-            
-            <div class="share-buttons">
-              <button class="share-btn" onclick="shareShow('${title.replace(/'/g, "\\'")}', ${item.id}, '${mediaType}')">📤 Share</button>
-            </div>
+            <button onclick="moveItem(${item.id}, 'watching')" ${isInWatching ? 'disabled' : ''}>→ Watching</button>
+            <button onclick="moveItem(${item.id}, 'wishlist')" ${isInWishlist ? 'disabled' : ''}>→ Wishlist</button>
+            <button onclick="moveItem(${item.id}, 'watched')" ${isInWatched ? 'disabled' : ''}>→ Watched</button>
+            <button class="danger" onclick="removeItem(${item.id})">🗑️ Remove</button>
           </div>
         `;
       }
@@ -686,54 +956,14 @@
       card.innerHTML = `
         ${posterHtml}
         <div class="show-details">
-          <h4 class="show-title" onclick="openTMDBLink(${item.id}, '${mediaType}')">
-            ${title}
-            <span class="external-link">🔗</span>
-          </h4>
-          <div class="show-meta">
-            <span>⭐ ${rating}</span>
-            ${date ? `<span>📅 ${date.split('-')[0]}</span>` : ''}
-            <span>${mediaType.toUpperCase()}</span>
-            ${seriesInfo}
-          </div>
-          ${statusBadge ? `<div class="show-status">${statusBadge}</div>` : ''}
+          <h4 class="show-title">${title}</h4>
+          <div class="show-meta">⭐ ${rating} ${date ? `• ${date.split('-')[0]}` : ''} • ${mediaType.toUpperCase()}</div>
           <div class="show-overview" onclick="this.classList.toggle('expanded')">${overview}</div>
+          ${actionsHtml}
         </div>
-        ${actionsHtml}
       `;
       
       return card;
-    }
-
-    function openTMDBLink(id, mediaType) {
-      const url = `https://www.themoviedb.org/${mediaType}/${id}`;
-      window.open(url, '_blank');
-      showNotification('Opening TMDB details! 🔗', 'info');
-    }
-
-    function shareShow(title, id, mediaType) {
-      const url = `https://www.themoviedb.org/${mediaType}/${id}`;
-      const text = `Check out "${title}" - I'm tracking it on TV Tracker! ${url}`;
-      
-      if (navigator.share) {
-        navigator.share({
-          title: `Check out "${title}"`,
-          text: text,
-          url: url
-        }).catch(() => {
-          copyToClipboard(text);
-        });
-      } else {
-        copyToClipboard(text);
-      }
-    }
-
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        showNotification('Share link copied to clipboard! 📋', 'success');
-      }).catch(() => {
-        showNotification('Could not copy to clipboard 😅', 'warning');
-      });
     }
 
     function addToList(item, listType) {
@@ -748,18 +978,7 @@
         date: item.first_air_date || item.release_date,
         rating: item.vote_average,
         media_type: mediaType,
-        date_added: new Date().toISOString(),
-        progress: '',
-        favorite: false,
-        userRating: 0,
-        notes: '',
-        tags: [],
-        likeStatus: 'none',
-        currentSeason: '',
-        currentEpisode: '',
-        status: item.status || '',
-        number_of_seasons: item.number_of_seasons || 0,
-        last_air_date: item.last_air_date || ''
+        date_added: new Date().toISOString()
       };
       
       if (!appData[category][listType].some(show => show.id === item.id)) {
@@ -830,262 +1049,6 @@
       }
     }
 
-    function toggleFavorite(itemId) {
-      let item = null;
-      
-      ['tv', 'movies'].forEach(category => {
-        ['watching', 'wishlist', 'watched'].forEach(list => {
-          const found = appData[category][list].find(s => s.id === itemId);
-          if (found) item = found;
-        });
-      });
-      
-      if (item) {
-        item.favorite = !item.favorite;
-        saveAppData();
-        updateUI();
-        
-        const action = item.favorite ? 'favorited' : 'unfavorited';
-        showNotification(`${item.title} ${action}! ${item.favorite ? '⭐' : '💔'}`, 'success');
-      }
-    }
-
-    function setRating(itemId, rating) {
-      let item = null;
-      
-      ['tv', 'movies'].forEach(category => {
-        ['watching', 'wishlist', 'watched'].forEach(list => {
-          const found = appData[category][list].find(s => s.id === itemId);
-          if (found) item = found;
-        });
-      });
-      
-      if (item) {
-        item.userRating = rating;
-        saveAppData();
-        updateUI();
-        showNotification(`Rated "${item.title}" ${rating} stars! ⭐`, 'success');
-      }
-    }
-
-    function setLikeStatus(itemId, status) {
-      let item = null;
-      
-      ['tv', 'movies'].forEach(category => {
-        ['watching', 'wishlist', 'watched'].forEach(list => {
-          const found = appData[category][list].find(s => s.id === itemId);
-          if (found) item = found;
-        });
-      });
-      
-      if (item) {
-        item.likeStatus = item.likeStatus === status ? 'none' : status;
-        saveAppData();
-        updateUI();
-        
-        const messages = {
-          like: 'You liked this! 👍',
-          dislike: 'You disliked this! 👎',
-          none: 'Rating cleared! 🤷‍♂️'
-        };
-        showNotification(`${item.title}: ${messages[item.likeStatus]}`, 'success');
-      }
-    }
-
-    function updateNotes(itemId, notes) {
-      let item = null;
-      
-      ['tv', 'movies'].forEach(category => {
-        ['watching', 'wishlist', 'watched'].forEach(list => {
-          const found = appData[category][list].find(s => s.id === itemId);
-          if (found) item = found;
-        });
-      });
-      
-      if (item) {
-        item.notes = notes;
-        saveAppData();
-      }
-    }
-
-    function updateProgress(itemId, progress) {
-      let item = null;
-      
-      ['tv', 'movies'].forEach(category => {
-        ['watching', 'wishlist', 'watched'].forEach(list => {
-          const found = appData[category][list].find(s => s.id === itemId);
-          if (found) item = found;
-        });
-      });
-      
-      if (item) {
-        item.progress = progress;
-        saveAppData();
-      }
-    }
-
-    function updateEpisodeProgress(itemId, type, value) {
-      let item = null;
-      
-      ['tv', 'movies'].forEach(category => {
-        ['watching', 'wishlist', 'watched'].forEach(list => {
-          const found = appData[category][list].find(s => s.id === itemId);
-          if (found) item = found;
-        });
-      });
-      
-      if (item) {
-        if (type === 'season') {
-          item.currentSeason = value;
-        } else if (type === 'episode') {
-          item.currentEpisode = value;
-        }
-        saveAppData();
-      }
-    }
-
-    function handleTagInput(event, itemId) {
-      if (event.key === 'Enter') {
-        const tagValue = event.target.value.trim();
-        if (tagValue) {
-          addTag(itemId, tagValue);
-          event.target.value = '';
-        }
-      }
-    }
-
-    function addTag(itemId, tagValue) {
-      let item = null;
-      
-      ['tv', 'movies'].forEach(category => {
-        ['watching', 'wishlist', 'watched'].forEach(list => {
-          const found = appData[category][list].find(s => s.id === itemId);
-          if (found) item = found;
-        });
-      });
-      
-      if (item && !item.tags.includes(tagValue)) {
-        item.tags.push(tagValue);
-        saveAppData();
-        updateUI();
-        updateTagFilter();
-        showNotification(`Added tag "${tagValue}" to ${item.title}! 🏷️`, 'success');
-      }
-    }
-
-    function removeTag(itemId, tagValue) {
-      let item = null;
-      
-      ['tv', 'movies'].forEach(category => {
-        ['watching', 'wishlist', 'watched'].forEach(list => {
-          const found = appData[category][list].find(s => s.id === itemId);
-          if (found) item = found;
-        });
-      });
-      
-      if (item) {
-        item.tags = item.tags.filter(tag => tag !== tagValue);
-        saveAppData();
-        updateUI();
-        updateTagFilter();
-        showNotification(`Removed tag "${tagValue}" from ${item.title}! 🗑️`, 'success');
-      }
-    }
-
-    function updateTagFilter() {
-      const allTags = new Set();
-      
-      ['tv', 'movies'].forEach(category => {
-        ['watching', 'wishlist', 'watched'].forEach(list => {
-          appData[category][list].forEach(item => {
-            if (item.tags) {
-              item.tags.forEach(tag => allTags.add(tag));
-            }
-          });
-        });
-      });
-      
-      const tagFilter = document.getElementById('tagFilter');
-      const currentValue = tagFilter.value;
-      tagFilter.innerHTML = '<option value="">All Tags</option>';
-      
-      Array.from(allTags).sort().forEach(tag => {
-        tagFilter.innerHTML += `<option value="${tag}">${tag}</option>`;
-      });
-      
-      tagFilter.value = currentValue;
-    }
-
-    function applyFilters() {
-      if (currentActiveTab === 'home') return;
-      
-      const statusFilter = document.getElementById('statusFilter').value;
-      const tagFilter = document.getElementById('tagFilter').value;
-      const ratingFilter = document.getElementById('ratingFilter').value;
-      
-      // Ensure data exists before filtering
-      if (!appData.tv[currentActiveTab] || !appData.movies[currentActiveTab]) {
-        console.warn('Filter data not available for tab:', currentActiveTab);
-        return;
-      }
-      
-      const allItems = [...appData.tv[currentActiveTab], ...appData.movies[currentActiveTab]];
-      
-      let filteredItems = allItems.filter(item => {
-        // Status filter
-        if (statusFilter && item.status) {
-          const itemStatus = item.status.toLowerCase();
-          if (statusFilter === 'ongoing' && !itemStatus.includes('returning')) return false;
-          if (statusFilter === 'ended' && !itemStatus.includes('ended')) return false;
-          if (statusFilter === 'unknown' && itemStatus !== '') return false;
-        }
-        
-        // Tag filter
-        if (tagFilter && (!item.tags || !item.tags.includes(tagFilter))) return false;
-        
-        // Rating filter
-        if (ratingFilter) {
-          const userRating = item.userRating || 0;
-          if (ratingFilter === 'unrated' && userRating > 0) return false;
-          if (ratingFilter !== 'unrated' && userRating < parseInt(ratingFilter)) return false;
-        }
-        
-        return true;
-      });
-      
-      updateFilteredList(currentActiveTab + 'List', filteredItems);
-      
-      if (filteredItems.length !== allItems.length) {
-        showNotification(`Filtered to ${filteredItems.length} items! 🔍`, 'info');
-      }
-    }
-
-    function clearFilters() {
-      document.getElementById('statusFilter').value = '';
-      document.getElementById('tagFilter').value = '';
-      document.getElementById('ratingFilter').value = '';
-      updateUI();
-      showNotification('Filters cleared! 🧹', 'success');
-    }
-
-    function updateFilteredList(containerId, items) {
-      const container = document.getElementById(containerId);
-      
-      if (items.length === 0) {
-        const emptyMessages = {
-          watchingList: 'No items match your filters! Try lowering your standards! 🤷‍♂️',
-          wishlistList: 'No items match your filters! Time to be less picky! 😏',
-          watchedList: 'No items match your filters! Your achievements are hiding! 🕵️‍♂️'
-        };
-        container.innerHTML = `<div class="empty-state sassy-empty">${emptyMessages[containerId] || 'No matches found!'}</div>`;
-      } else {
-        container.innerHTML = '';
-        items.forEach(item => {
-          container.appendChild(createShowCard(item, false));
-        });
-      }
-    }
-
     function updateUI() {
       try {
         const totalWatching = appData.tv.watching.length + appData.movies.watching.length;
@@ -1126,13 +1089,10 @@
         updateList('wishlistList', [...appData.tv.wishlist, ...appData.movies.wishlist]);
         updateList('watchedList', [...appData.tv.watched, ...appData.movies.watched]);
         
-        updateTagFilter();
-        
         console.log('UI updated successfully:', {
           watching: totalWatching,
           wishlist: totalWishlist,
-          watched: totalWatched,
-          data: appData
+          watched: totalWatched
         });
       } catch (error) {
         console.error('Error updating UI:', error);
@@ -1224,851 +1184,6 @@
       };
       reader.readAsText(file);
     }
-
-    function setupEasterEgg() {
-      let clickCount = 0;
-      let tipTimeout = null;
-      
-      document.getElementById('easterEgg').onclick = () => {
-        clickCount++;
-        if (clickCount % 3 === 0) {
-          showRandomTip();
-        }
-      };
-      
-      // Feedback modal functionality
-      const feedbackBtn = document.getElementById('feedbackBtn');
-      const feedbackModal = document.getElementById('feedbackModal');
-      const closeFeedback = document.getElementById('closeFeedback');
-      const submitFeedback = document.getElementById('submitFeedback');
-      const ratingBtns = document.querySelectorAll('.rating-btn');
-      
-      let selectedRating = 0;
-      
-      feedbackBtn.onclick = () => {
-        feedbackModal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-      };
-      
-      closeFeedback.onclick = () => {
-        feedbackModal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-      };
-      
-      // Close on background click
-      feedbackModal.onclick = (e) => {
-        if (e.target === feedbackModal) {
-          feedbackModal.style.display = 'none';
-          document.body.style.overflow = 'auto';
-        }
-      };
-      
-      // Rating selection
-      ratingBtns.forEach(btn => {
-        btn.onclick = () => {
-          ratingBtns.forEach(b => b.classList.remove('selected'));
-          btn.classList.add('selected');
-          selectedRating = parseInt(btn.dataset.rating);
-        };
-      });
-      
-      // Submit feedback
-      submitFeedback.onclick = async () => {
-        const feedbackText = document.getElementById('feedbackText').value.trim();
-        
-        if (!feedbackText && selectedRating === 0) {
-          showNotification('Come on, give us SOMETHING to work with! 🙄', 'warning');
-          return;
-        }
-        
-        // Store feedback locally
-        const feedback = {
-          text: feedbackText,
-          rating: selectedRating,
-          timestamp: new Date().toISOString(),
-          url: window.location.href,
-          version: '2.0'
-        };
-        
-        // Save to localStorage
-        const existingFeedback = JSON.parse(localStorage.getItem('userFeedback') || '[]');
-        existingFeedback.push(feedback);
-        localStorage.setItem('userFeedback', JSON.stringify(existingFeedback));
-        
-        // Send to server
-        try {
-          console.log('🚀 Sending V2 feedback to server:', feedback);
-          const response = await fetch('https://tv-movie-tracker.netlify.app/.netlify/functions/feedback', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(feedback)
-          });
-          
-          if (response.ok) {
-            console.log('✅ V2 feedback sent successfully');
-          }
-        } catch (error) {
-          console.error('❌ Failed to send V2 feedback:', error);
-        }
-        
-        showNotification('Feedback submitted! We\'ll try not to disappoint you further! 🎯', 'success');
-        feedbackModal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-        
-        // Clear form
-        document.getElementById('feedbackText').value = '';
-        ratingBtns.forEach(b => b.classList.remove('selected'));
-        selectedRating = 0;
-      };
-    }
-
-    function showRandomTip() {
-      const tip = getRandomMessage(tips);
-      const bubble = document.createElement('div');
-      bubble.className = 'tip-bubble';
-      bubble.textContent = tip;
-      document.body.appendChild(bubble);
-      
-      // Make tip linger longer (was 4 seconds, now 7 seconds)
-      setTimeout(() => {
-        if (bubble.parentNode) bubble.parentNode.removeChild(bubble);
-      }, 7000);
-    }
-
-    // Handle window resize for responsive design
-    window.addEventListener('resize', () => {
-      // Force a small delay to ensure proper layout recalculation
-      setTimeout(() => {
-        updateUI();
-      }, 100);
-    });
-
-    // Handle orientation change
-    window.addEventListener('orientationchange', () => {
-      setTimeout(() => {
-        updateUI();
-      }, 500);
-    });
-
-    // Add CSS for selected rating buttons
-    const style = document.createElement('style');
-    style.textContent = `
-      .rating-btn.selected {
-        background: linear-gradient(45deg, #ffd700, #ffed4e) !important;
-        color: #000 !important;
-        transform: scale(1.05);
-      }
-      
-      .like.active {
-        background: linear-gradient(45deg, #2ed573, #1dd1a1) !important;
-      }
-      
-      .dislike.active {
-        background: linear-gradient(45deg, #ff4757, #ff3742) !important;
-      }
-    `;
-    document.head.appendChild(style);
   </script>
 </body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <!-- Primary Meta Tags -->
-  <title>TV Tracker V2 - Your Brutally Honest Entertainment Companion</title>
-  <meta name="title" content="TV Tracker V2 - Your Brutally Honest Entertainment Companion">
-  <meta name="description" content="Track your TV shows and movies with sassy commentary, custom tags, episode tracking, and more. Never lose track of your binge-watching again!">
-  <meta name="keywords" content="tv tracker, movie tracker, streaming, watchlist, tv shows, movies, entertainment, episode tracker">
-  <meta name="author" content="TV Tracker">
-  
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://tv-movie-tracker.netlify.app/">
-  <meta property="og:title" content="TV Tracker V2 - Your Brutally Honest Entertainment Companion">
-  <meta property="og:description" content="Track your TV shows and movies with sassy commentary, custom tags, episode tracking, and more. Never lose track of your binge-watching again!">
-  <meta property="og:image" content="https://tv-movie-tracker.netlify.app/icons/og-image.png">
-  
-  <!-- PWA Meta Tags -->
-  <meta name="application-name" content="TV Tracker">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="TV Tracker">
-  <meta name="theme-color" content="#ff6b6b">
-  
-  <!-- Favicons -->
-  <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
-  <link rel="manifest" href="/manifest.json">
-  
-  <style>
-    :root {
-      --bg: #fff; --text: #000; --primary: #ff6b6b; --card: #f9f9f9; --border: #ddd;
-      --success: #51cf66; --warning: #ffd43b; --danger: #ff6b6b; --purple: #845ec2;
-      --blue: #4dabf7; --orange: #ff8c42; --green: #51cf66;
-    }
-    
-    * { box-sizing: border-box; }
-    
-    body { 
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: var(--text); margin: 0; padding: 15px; min-height: 100vh;
-      transition: all 0.3s ease;
-    }
-    
-    .dark-mode { 
-      --bg: #1a1a1a; --text: #f5f5f5; --card: #2d2d2d; --border: #444;
-      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
-    }
-    
-    .main-container {
-      max-width: 1400px; margin: 0 auto; background: var(--bg); 
-      border-radius: 20px; padding: 25px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      transition: all 0.3s ease;
-    }
-    
-    .header { 
-      display: flex; justify-content: space-between; align-items: center; 
-      padding: 15px 0; border-bottom: 3px dashed var(--primary); margin-bottom: 25px;
-      position: relative; flex-wrap: wrap; gap: 15px;
-    }
-    
-    .header::after {
-      content: "🛋️"; position: absolute; right: 20px; top: 10px; 
-      font-size: 24px; animation: couch-bounce 3s ease-in-out infinite;
-    }
-    
-    @keyframes couch-bounce {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-5px) rotate(-5deg); }
-    }
-    
-    .title { 
-      font-size: clamp(1.8em, 4vw, 2.5em); font-weight: bold; color: var(--primary); 
-      margin: 0; cursor: pointer; flex-shrink: 0;
-    }
-    
-    .user-section {
-      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-    }
-    
-    .name-container {
-      display: flex; flex-direction: column; align-items: flex-end;
-      transition: all 0.3s ease;
-    }
-    
-    .name-instruction {
-      font-size: 11px; color: var(--primary); font-weight: bold;
-      margin-bottom: 5px;
-    }
-    
-    .name-input {
-      padding: 10px 15px; border: 2px solid var(--primary); border-radius: 25px;
-      background: var(--card); color: var(--text); font-weight: bold; font-size: 14px;
-    }
-    
-    .name-container.hidden {
-      opacity: 0; transform: scale(0.8); pointer-events: none;
-    }
-    
-    .tab-container { 
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      background: var(--card); border-radius: 15px; 
-      padding: 8px; margin: 25px 0; gap: 5px;
-    }
-    
-    .tab { 
-      padding: 15px 20px; border: none; background: transparent; 
-      color: var(--text); cursor: pointer; border-radius: 10px; font-weight: bold;
-      transition: all 0.3s ease; font-size: 14px; text-align: center;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    
-    .tab.active { 
-      background: linear-gradient(45deg, var(--primary), var(--purple)); 
-      color: white; transform: scale(1.02);
-    }
-    
-    .tab-badge {
-      background: rgba(255,255,255,0.9); color: var(--primary);
-      padding: 3px 8px; border-radius: 12px; font-size: 11px;
-      font-weight: bold; min-width: 20px;
-    }
-    
-    .tab.active .tab-badge {
-      background: rgba(255,255,255,1); color: var(--primary);
-    }
-    
-    button { 
-      margin: 4px; padding: 10px 16px; border: none; border-radius: 20px; 
-      background: linear-gradient(45deg, var(--primary), var(--purple)); 
-      color: white; cursor: pointer; font-weight: bold; font-size: 13px;
-      transition: all 0.3s ease; border: 2px solid transparent;
-    }
-    
-    button:hover { 
-      transform: translateY(-2px) scale(1.02); 
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-    
-    button:disabled { 
-      background: #666; cursor: not-allowed; transform: none; opacity: 0.6;
-    }
-    
-    button.danger { background: linear-gradient(45deg, #ff4757, #ff3742); }
-    button.success { background: linear-gradient(45deg, #2ed573, #1dd1a1); }
-    button.secondary { background: linear-gradient(45deg, #747d8c, #57606f); }
-    button.like { background: linear-gradient(45deg, #2ed573, #1dd1a1); }
-    button.dislike { background: linear-gradient(45deg, #ff4757, #ff3742); }
-    
-    .search-container { 
-      background: var(--card); padding: 20px; border-radius: 20px; 
-      margin: 25px 0; border: 2px solid var(--primary);
-    }
-    
-    .search-row {
-      display: grid; grid-template-columns: 1fr auto auto auto; gap: 12px; margin-bottom: 15px;
-      align-items: center;
-    }
-    
-    .search-input {
-      padding: 12px 15px; border: 2px solid var(--border); border-radius: 15px;
-      background: var(--bg); color: var(--text); font-size: 15px;
-      transition: border-color 0.3s ease;
-    }
-    
-    .search-input:focus {
-      outline: none; border-color: var(--primary);
-    }
-    
-    .search-help {
-      font-size: 12px; color: #666; font-style: italic; margin-bottom: 10px;
-      position: relative;
-    }
-    
-    .tooltip {
-      position: relative; display: inline-block; cursor: help;
-      color: var(--primary); font-weight: bold; text-decoration: underline;
-    }
-    
-    .tooltip .tooltiptext {
-      visibility: hidden; width: 300px; background-color: var(--purple);
-      color: white; text-align: left; border-radius: 10px;
-      padding: 15px; position: absolute; z-index: 1000;
-      bottom: 125%; left: 50%; margin-left: -150px;
-      opacity: 0; transition: opacity 0.3s; font-style: normal;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-    }
-    
-    .tooltip .tooltiptext::after {
-      content: ""; position: absolute; top: 100%; left: 50%;
-      margin-left: -5px; border-width: 5px;
-      border-style: solid; border-color: var(--purple) transparent transparent transparent;
-    }
-    
-    .tooltip:hover .tooltiptext {
-      visibility: visible; opacity: 1;
-    }
-    
-    .pagination {
-      display: flex; gap: 10px; align-items: center; justify-content: center;
-      margin-top: 15px; flex-wrap: wrap;
-    }
-    
-    input, select { 
-      padding: 10px 12px; margin: 4px; border: 2px solid var(--border); 
-      border-radius: 12px; background: var(--bg); color: var(--text);
-      font-size: 14px; transition: border-color 0.3s ease;
-    }
-    
-    input:focus, select:focus {
-      outline: none; border-color: var(--primary);
-    }
-    
-    .section { margin: 30px 0; }
-    
-    .section-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 20px; padding: 10px 0; flex-wrap: wrap; gap: 10px;
-    }
-    
-    .section h3 { 
-      color: var(--primary); margin: 0; font-size: clamp(1.3em, 3vw, 1.8em);
-      display: flex; align-items: center; gap: 10px;
-    }
-    
-    .section-subtitle {
-      font-size: 13px; color: #666; font-style: italic;
-      margin-top: 5px; font-weight: normal;
-    }
-    
-    .count { 
-      background: linear-gradient(45deg, var(--primary), var(--purple)); 
-      color: white; padding: 6px 12px; border-radius: 15px; 
-      font-size: 14px; font-weight: bold; cursor: pointer;
-    }
-    
-    .list-container { 
-      background: var(--card); border-radius: 15px; padding: 20px; 
-      min-height: 80px; border: 2px dashed var(--border);
-    }
-    
-    .show-card { 
-      display: grid; grid-template-columns: auto 1fr auto;
-      gap: 20px; border: 2px solid var(--border); 
-      border-radius: 15px; padding: 20px; margin: 15px 0; 
-      background: var(--bg); align-items: start;
-      transition: all 0.3s ease;
-    }
-    
-    .show-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    }
-    
-    .show-poster { 
-      width: 80px; height: 120px; border-radius: 10px; 
-      object-fit: cover; cursor: pointer;
-    }
-    
-    .poster-placeholder { 
-      width: 80px; height: 120px; background: #f0f0f0; 
-      border-radius: 10px; display: flex; align-items: center; justify-content: center; 
-      color: #999; font-size: 11px; font-weight: bold; text-align: center;
-    }
-    
-    .show-details { 
-      display: flex; flex-direction: column; gap: 10px; min-width: 0;
-    }
-    
-    .show-title { 
-      font-size: 18px; font-weight: bold; margin: 0; 
-      cursor: pointer; color: var(--primary);
-      display: flex; align-items: center; gap: 10px;
-    }
-    
-    .external-link {
-      font-size: 14px; opacity: 0.7; transition: opacity 0.3s ease;
-    }
-    
-    .external-link:hover { opacity: 1; }
-    
-    .show-meta { 
-      color: #666; font-size: 13px; display: flex; flex-wrap: wrap; gap: 10px;
-    }
-    
-    .show-overview { 
-      font-size: 13px; line-height: 1.5; max-height: 60px; overflow: hidden; 
-      cursor: pointer; transition: max-height 0.3s ease;
-    }
-    
-    .show-overview.expanded { max-height: none; }
-    
-    .show-status {
-      display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0;
-    }
-    
-    .status-badge {
-      padding: 4px 10px; border-radius: 12px; font-size: 11px;
-      font-weight: bold; color: white;
-    }
-    
-    .status-ongoing { background: var(--success); }
-    .status-ended { background: var(--danger); }
-    .status-unknown { background: #666; }
-    
-    .episode-tracker {
-      background: var(--card); padding: 12px; border-radius: 10px;
-      border: 2px dashed var(--border); margin: 10px 0;
-    }
-    
-    .episode-inputs {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-      gap: 8px; margin-bottom: 10px;
-    }
-    
-    .episode-inputs input {
-      margin: 0; padding: 8px; font-size: 12px;
-      text-align: center;
-    }
-    
-    .rating-container {
-      display: flex; align-items: center; gap: 10px; margin: 10px 0;
-      flex-wrap: wrap;
-    }
-    
-    .star-rating {
-      display: flex; gap: 2px;
-    }
-    
-    .star {
-      font-size: 18px; cursor: pointer; transition: all 0.2s ease;
-      color: #ddd;
-    }
-    
-    .star:hover, .star.active { 
-      color: #ffd700; transform: scale(1.1);
-    }
-    
-    .like-dislike {
-      display: flex; gap: 8px; align-items: center;
-    }
-    
-    .notes-container {
-      margin: 10px 0;
-    }
-    
-    .notes-field {
-      width: 100%; min-height: 50px; padding: 10px;
-      border: 2px dashed var(--border); border-radius: 10px;
-      background: var(--card); color: var(--text); resize: vertical;
-      font-family: inherit; font-size: 13px;
-    }
-    
-    .char-count {
-      font-size: 11px; color: #999; text-align: right; margin-top: 5px;
-    }
-    
-    .char-count.warning { color: var(--warning); }
-    .char-count.danger { color: var(--danger); }
-    
-    .tags-container {
-      margin: 10px 0;
-    }
-    
-    .tag-input {
-      width: 100%; padding: 8px; font-size: 12px;
-      margin-bottom: 8px;
-    }
-    
-    .tags-display {
-      display: flex; flex-wrap: wrap; gap: 6px;
-    }
-    
-    .tag {
-      background: var(--purple); color: white; padding: 4px 8px;
-      border-radius: 15px; font-size: 11px; font-weight: bold;
-      display: flex; align-items: center; gap: 5px;
-    }
-    
-    .tag-remove {
-      cursor: pointer; font-weight: bold;
-    }
-    
-    .show-actions { 
-      display: flex; flex-direction: column; gap: 10px; min-width: 200px;
-    }
-    
-    .action-row {
-      display: flex; gap: 8px; flex-wrap: wrap;
-    }
-    
-    .show-actions button { 
-      flex: 1; min-width: 80px; padding: 8px 12px; font-size: 11px; 
-      margin: 2px; white-space: nowrap;
-    }
-    
-    .show-actions input { 
-      flex: 1; min-width: 120px; padding: 6px 10px; font-size: 11px; 
-      margin: 2px;
-    }
-    
-    .favorite.active { 
-      background: linear-gradient(45deg, #ffd700, #ffed4e); 
-      color: #000;
-    }
-    
-    .empty-state { 
-      text-align: center; color: #666; padding: 40px 20px; 
-      font-style: italic; font-size: 16px;
-    }
-    
-    .sassy-empty { 
-      font-weight: bold; color: var(--primary);
-    }
-    
-    .stats { 
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 15px; margin: 25px 0;
-    }
-    
-    .stat { 
-      background: var(--card); padding: 20px; border-radius: 15px; 
-      text-align: center; border: 2px solid var(--primary); cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    
-    .stat:hover { 
-      transform: translateY(-3px); 
-      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-    }
-    
-    .stat-num { 
-      font-size: 2.2em; font-weight: bold; color: var(--primary); 
-      margin-bottom: 5px;
-    }
-    
-    .stat-label { 
-      font-size: 11px; color: #666; font-weight: bold; 
-      text-transform: uppercase; letter-spacing: 0.5px;
-    }
-    
-    .notification {
-      position: fixed; top: 20px; right: 20px; z-index: 2000;
-      padding: 15px 25px; border-radius: 10px; color: white;
-      font-weight: bold; max-width: 350px;
-      animation: slide-in 0.5s ease, slide-out 0.5s ease 4s forwards;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-    }
-    
-    @keyframes slide-in {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    
-    @keyframes slide-out {
-      from { transform: translateX(0); opacity: 1; }
-      to { transform: translateX(100%); opacity: 0; }
-    }
-    
-    .notification.success { background: var(--success); }
-    .notification.error { background: var(--danger); }
-    .notification.warning { background: var(--warning); color: #000; }
-    .notification.info { background: var(--purple); }
-    
-    .loading-container {
-      text-align: center; padding: 40px;
-    }
-    
-    .loading-spinner {
-      width: 40px; height: 40px; border: 4px solid var(--border);
-      border-top: 4px solid var(--primary); border-radius: 50%;
-      animation: spin 1s linear infinite; margin: 0 auto 15px;
-    }
-    
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    
-    .loading-text {
-      font-weight: bold; color: var(--primary); font-size: 14px;
-    }
-    
-    .easter-egg {
-      position: fixed; bottom: 20px; right: 20px; 
-      background: var(--purple); color: white; padding: 12px; 
-      border-radius: 50%; cursor: pointer; z-index: 1000;
-      font-size: 18px; width: 50px; height: 50px;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.3s ease;
-    }
-    
-    .easter-egg:hover {
-      transform: scale(1.1);
-    }
-    
-    .feedback-button {
-      position: fixed; bottom: 90px; right: 20px; 
-      background: var(--primary); color: white; padding: 12px; 
-      border-radius: 50%; cursor: pointer; z-index: 1001;
-      font-size: 16px; width: 50px; height: 50px;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.3s ease;
-    }
-    
-    .feedback-button:hover {
-      transform: scale(1.1);
-    }
-    
-    .modal {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-      background: rgba(0,0,0,0.8); z-index: 3000; 
-      display: flex; align-items: center; justify-content: center;
-      padding: 20px;
-    }
-    
-    .modal-content {
-      background: var(--bg); border-radius: 20px; 
-      max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto;
-      border: 2px solid var(--primary);
-    }
-    
-    .modal-header {
-      padding: 20px 25px 0; display: flex; justify-content: space-between; 
-      align-items: center; border-bottom: 2px dashed var(--primary); margin-bottom: 20px;
-    }
-    
-    .modal-header h3 {
-      margin: 0; color: var(--primary); font-size: 1.4em;
-    }
-    
-    .close-btn {
-      background: none; border: none; font-size: 20px; 
-      cursor: pointer; color: var(--text); padding: 5px; margin: 0;
-    }
-    
-    .modal-body {
-      padding: 0 25px 25px;
-    }
-    
-    .tip-bubble {
-      position: fixed; bottom: 80px; right: 20px; z-index: 1500;
-      background: var(--purple); color: white; padding: 15px 20px;
-      border-radius: 20px; max-width: 300px; font-size: 13px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-      animation: bubble-bounce 0.5s ease;
-    }
-    
-    @keyframes bubble-bounce {
-      0% { transform: scale(0) translateY(20px); opacity: 0; }
-      100% { transform: scale(1) translateY(0); opacity: 1; }
-    }
-    
-    .filter-container {
-      background: var(--card); padding: 15px; border-radius: 15px;
-      margin: 15px 0; border: 2px solid var(--border);
-    }
-    
-    .filter-row {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 10px; align-items: center;
-    }
-    
-    .share-buttons {
-      display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0;
-    }
-    
-    .share-btn {
-      padding: 6px 12px; font-size: 11px; border-radius: 15px;
-      background: var(--blue); color: white; border: none;
-      cursor: pointer; transition: all 0.3s ease;
-    }
-    
-    .share-btn:hover {
-      transform: translateY(-2px);
-    }
-    
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .main-container { 
-        padding: 15px; margin: 10px; border-radius: 15px;
-      }
-      
-      .header { 
-        flex-direction: column; text-align: center; gap: 10px;
-      }
-      
-      .header::after { display: none; }
-      
-      .title { font-size: 2em; }
-      
-      .tab-container {
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-      }
-      
-      .tab {
-        padding: 12px 15px; font-size: 12px;
-      }
-      
-      .search-row {
-        grid-template-columns: 1fr;
-      }
-      
-      .show-card { 
-        grid-template-columns: 1fr;
-        gap: 15px; padding: 15px; text-align: center;
-      }
-      
-      .show-poster, .poster-placeholder { 
-        width: 60px; height: 90px; margin: 0 auto;
-      }
-      
-      .show-actions {
-        min-width: auto;
-      }
-      
-      .stats { 
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-      }
-      
-      .stat { padding: 15px; }
-      
-      .stat-num { font-size: 1.8em; }
-    }
-    
-    @media (orientation: landscape) and (max-height: 500px) {
-      .main-container {
-        padding: 10px;
-      }
-      
-      .header {
-        padding: 10px 0;
-        margin-bottom: 15px;
-      }
-      
-      .tab-container {
-        margin: 15px 0;
-      }
-      
-      .section {
-        margin: 20px 0;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="main-container">
-    <div class="header">
-      <h1 class="title" id="welcomeText">TV Tracker V2</h1>
-      <div class="user-section">
-        <div class="name-container" id="nameContainer">
-          <div class="name-instruction">👆 Add your name for a personal touch!</div>
-          <input type="text" id="displayNameInput" class="name-input" placeholder="Your name here...">
-        </div>
-        <button id="darkModeToggle">🌙 Go Dark</button>
-      </div>
-    </div>
-
-    <div class="tab-container">
-      <button id="homeTab" class="tab active">
-        🏠 Home
-        <span class="tab-badge">Overview</span>
-      </button>
-      <button id="watchingTab" class="tab">
-        ▶️ Currently Watching
-        <span class="tab-badge" id="watchingBadge">0</span>
-      </button>
-      <button id="wishlistTab" class="tab">
-        📖 Want to Watch
-        <span class="tab-badge" id="wishlistBadge">0</span>
-      </button>
-      <button id="watchedTab" class="tab">
-        ✅ Already Watched
-        <span class="tab-badge" id="watchedBadge">0</span>
-      </button>
-    </div>
-
-    <!-- HOME TAB -->
-    <div id="homeSection" class="tab-section">
-      <div class="search-container">
-        <div class="search-row">
-          <input type="text" id="searchInput" class="search-input" placeholder="Search for shows or movies...">
-          <select id="genreFilter"><option value="">All Genres</option></select>
-          <button id="searchBtn">🔍 Search</button>
-          <button id="clearSearchBtn" class="secondary" style="display: none;">✖️ Clear</button>
-        </div>
-        
-        <div class="search-help">
-          💡 <strong><span class="tooltip">Wildcards:<span class="tooltiptext">
-            <strong>Wildcard = when your brain is mush and you only remember part of the title.</strong><br><br>
-            <strong>Examples:</strong><br>
-            • Type "star*" = shows starting with "star"<br>
-            • Type "*wars" = shows ending with "wars"<br>
-            • Type "*trek*" = shows containing "trek"
+</html>
