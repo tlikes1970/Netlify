@@ -368,6 +368,23 @@
       background: var(--bg); color: var(--text);
     }
     
+    .series-status {
+      background: var(--card); padding: 10px; border-radius: 8px;
+      margin: 8px 0; font-size: 12px; border-left: 4px solid var(--primary);
+    }
+    
+    .status-ongoing { border-left-color: var(--success); }
+    .status-ended { border-left-color: var(--danger); }
+    .status-upcoming { border-left-color: var(--warning); }
+    
+    .episode-info {
+      font-weight: bold; color: var(--primary);
+    }
+    
+    .air-date {
+      color: #666; font-style: italic;
+    }
+    
     .show-actions { 
       display: flex; gap: 12px; flex-wrap: wrap; align-items: center; 
       margin-top: 15px;
@@ -961,7 +978,51 @@
         }
         
         const data = await response.json();
-        return data.results || [];
+        
+        // Enhance results with detailed TMDB data for TV shows
+        const enhancedResults = await Promise.all(
+          (data.results || []).map(async (item) => {
+            try {
+              if (item.media_type === 'tv' || item.first_air_date) {
+                // Get detailed TV show info
+                const detailResponse = await fetch(`${API_BASE}?endpoint=tv/${item.id}`);
+                if (detailResponse.ok) {
+                  const details = await detailResponse.json();
+                  return {
+                    ...item,
+                    status: details.status,
+                    number_of_seasons: details.number_of_seasons,
+                    number_of_episodes: details.number_of_episodes,
+                    last_air_date: details.last_air_date,
+                    first_air_date: details.first_air_date,
+                    next_episode_to_air: details.next_episode_to_air,
+                    last_episode_to_air: details.last_episode_to_air,
+                    in_production: details.in_production,
+                    genres: details.genres,
+                    networks: details.networks
+                  };
+                }
+              } else if (item.media_type === 'movie' || item.release_date) {
+                // Get movie details
+                const detailResponse = await fetch(`${API_BASE}?endpoint=movie/${item.id}`);
+                if (detailResponse.ok) {
+                  const details = await detailResponse.json();
+                  return {
+                    ...item,
+                    status: details.status,
+                    release_date: details.release_date,
+                    genres: details.genres
+                  };
+                }
+              }
+            } catch (e) {
+              console.log('Failed to fetch details for:', item.name || item.title);
+            }
+            return item;
+          })
+        );
+        
+        return enhancedResults;
       } catch (error) {
         console.error('Fetch error:', error);
         throw new Error('Search temporarily unavailable. Our servers are probably binge-watching something! 📺');
@@ -1084,6 +1145,7 @@
                 <input type="number" placeholder="Season" min="1" value="${currentSeason}" onchange="updateEpisodeProgress(${item.id}, 'season', this.value)">
                 <input type="number" placeholder="Episode" min="1" value="${currentEpisode}" onchange="updateEpisodeProgress(${item.id}, 'episode', this.value)">
               </div>
+              ${getSeriesStatusInfo(item)}
             </div>
           ` : ''}
           
@@ -1219,6 +1281,87 @@
       return found;
     }
 
+    function getSeriesStatusInfo(item) {
+      if (!item || item.media_type !== 'tv') return '';
+      
+      const status = item.status;
+      const lastAirDate = item.last_air_date;
+      const nextEpisode = item.next_episode_to_air;
+      const lastEpisode = item.last_episode_to_air;
+      const seasons = item.number_of_seasons;
+      const inProduction = item.in_production;
+      
+      let statusClass = 'status-ongoing';
+      let statusText = '';
+      
+      if (status === 'Ended' || status === 'Canceled') {
+        statusClass = 'status-ended';
+        if (lastEpisode) {
+          const lastEp = lastEpisode;
+          statusText = `<div class="episode-info">Series Complete</div>
+                       <div class="air-date">Final: S${lastEp.season_number}E${lastEp.episode_number} - ${formatDate(lastEp.air_date)}</div>`;
+        } else if (lastAirDate) {
+          statusText = `<div class="episode-info">Series Complete</div>
+                       <div class="air-date">Last aired: ${formatDate(lastAirDate)}</div>`;
+        } else {
+          statusText = `<div class="episode-info">Series Complete</div>
+                       <div class="air-date">${seasons ? `${seasons} seasons total` : 'Status: Ended'}</div>`;
+        }
+      } else if (status === 'Returning Series' || inProduction) {
+        statusClass = 'status-ongoing';
+        if (nextEpisode) {
+          const nextEp = nextEpisode;
+          statusText = `<div class="episode-info">Currently Airing</div>
+                       <div class="air-date">Next: S${nextEp.season_number}E${nextEp.episode_number} - ${formatDate(nextEp.air_date)}</div>`;
+        } else if (lastEpisode) {
+          const lastEp = lastEpisode;
+          statusText = `<div class="episode-info">Season ${lastEp.season_number} Ongoing</div>
+                       <div class="air-date">Latest: S${lastEp.season_number}E${lastEp.episode_number} - ${formatDate(lastEp.air_date)}</div>`;
+        } else if (lastAirDate) {
+          statusText = `<div class="episode-info">Currently Airing</div>
+                       <div class="air-date">Last episode: ${formatDate(lastAirDate)}</div>`;
+        } else {
+          statusText = `<div class="episode-info">Returning Series</div>
+                       <div class="air-date">${seasons ? `${seasons} seasons so far` : 'Status: Ongoing'}</div>`;
+        }
+      } else if (status === 'In Production') {
+        statusClass = 'status-upcoming';
+        const firstAir = item.first_air_date;
+        if (firstAir && new Date(firstAir) > new Date()) {
+          statusText = `<div class="episode-info">Coming Soon</div>
+                       <div class="air-date">Premieres: ${formatDate(firstAir)}</div>`;
+        } else {
+          statusText = `<div class="episode-info">In Production</div>
+                       <div class="air-date">Release date TBA</div>`;
+        }
+      } else {
+        // Unknown status, show what we have
+        if (lastAirDate) {
+          statusText = `<div class="episode-info">${status || 'Status Unknown'}</div>
+                       <div class="air-date">Last aired: ${formatDate(lastAirDate)}</div>`;
+        } else {
+          statusText = `<div class="episode-info">${status || 'Status Unknown'}</div>
+                       <div class="air-date">${seasons ? `${seasons} seasons` : 'Air dates unknown'}</div>`;
+        }
+      }
+      
+      return `<div class="series-status ${statusClass}">${statusText}</div>`;
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'Date unknown';
+      try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        });
+      } catch (e) {
+        return dateString;
+      }
+    }
+
     function addToList(item, listType) {
       const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
       const category = mediaType === 'tv' ? 'tv' : 'movies';
@@ -1237,7 +1380,16 @@
         notes: '',
         tags: [],
         currentSeason: '',
-        currentEpisode: ''
+        currentEpisode: '',
+        // Enhanced episode/series tracking data
+        status: item.status,
+        number_of_seasons: item.number_of_seasons,
+        number_of_episodes: item.number_of_episodes,
+        last_air_date: item.last_air_date,
+        first_air_date: item.first_air_date,
+        next_episode_to_air: item.next_episode_to_air,
+        last_episode_to_air: item.last_episode_to_air,
+        in_production: item.in_production
       };
       
       if (!appData[category][listType].some(show => show.id === item.id)) {
