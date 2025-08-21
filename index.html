@@ -5,25 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <!-- Primary Meta Tags -->
-  <title>Showly - TV & Movie Tracker</title>
-  <meta name="title" content="Showly - TV & Movie Tracker">
+  <title>Flicklet - TV & Movie Tracker</title>
+  <meta name="title" content="Flicklet - TV & Movie Tracker">
   <meta name="description" content="Search, track, and rate shows & films fast. Never lose track of your binge-watching again!">
   <meta name="keywords" content="tv tracker, movie tracker, streaming, watchlist, tv shows, movies, entertainment, episode tracker">
-  <meta name="author" content="Showly">
+  <meta name="author" content="Flicklet">
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://tv-movie-tracker.netlify.app/">
-  <meta property="og:title" content="Showly - TV & Movie Tracker">
+  <meta property="og:title" content="Flicklet - TV & Movie Tracker">
   <meta property="og:description" content="Search, track, and rate shows & films fast. Never lose track of your binge-watching again!">
   <meta property="og:image" content="https://tv-movie-tracker.netlify.app/icons/og-image.png">
   
   <!-- PWA Meta Tags -->
-  <meta name="application-name" content="Showly">
+  <meta name="application-name" content="Flicklet">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Showly">
+  <meta name="apple-mobile-web-app-title" content="Flicklet">
   <meta name="theme-color" content="#ff6b6b">
   
   <!-- PWA Manifest -->
@@ -641,7 +641,7 @@
           <button id="clearAllBtn" class="danger">🗑️ Nuclear Option</button>
         </div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-          <button id="aboutBtn" class="secondary">ℹ️ About Showly</button>
+          <button id="aboutBtn" class="secondary">ℹ️ About Flicklet</button>
           <button id="usageStatsBtn" class="secondary">📊 Usage Stats</button>
           <button onclick="toggleContentFilter()" class="secondary" id="filterBtn">🎭 Show All Content</button>
         </div>
@@ -748,7 +748,7 @@
     function testNotification() {
       if ('Notification' in window) {
         if (Notification.permission === 'granted') {
-          new Notification('Showly', {
+          new Notification('Flicklet', {
             body: 'Your favorite show has a new episode! 📺✨',
             icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23ff6b6b"/><text x="50" y="55" font-size="40" text-anchor="middle" fill="white">📺</text></svg>'
           });
@@ -791,7 +791,7 @@
       modal.style.boxShadow = '0 20px 60px rgba(0,0,0,0.3)';
       modal.style.border = '2px solid var(--primary)';
       
-      modal.innerHTML = '<h2 style="color: var(--primary); margin: 0 0 20px 0; font-size: 24px; text-align: center;">About Showly 📺</h2><div style="line-height: 1.6; font-size: 14px;"><div style="margin-bottom: 20px;"><strong style="color: var(--primary);">Why Showly exists:</strong><br>Because tracking your TV shows and movies shouldn\'t be harder than actually watching them! Created for people who start 20 shows and finish... maybe 3.</div><div style="margin-bottom: 20px;"><strong style="color: var(--primary);">💾 Your Data:</strong><br>Showly is browser-based, so your data stays on your device. If you use it on your phone, that data won\'t magically appear on your computer (and vice versa). Use the Export/Import feature to transfer your collection between devices!</div><div style="margin-bottom: 20px;"><strong style="color: var(--primary);">🚀 Coming Soon:</strong><br>Native mobile app with cloud sync, so your questionable taste follows you everywhere!</div><div style="margin-bottom: 25px;"><strong style="color: var(--primary);">🐛 Found a bug or have feedback?</strong><br>We\'re constantly improving Showly based on user feedback. Your input helps make this the best TV/movie tracker out there!</div></div><div style="text-align: center;"><button style="background: linear-gradient(45deg, var(--primary), var(--purple)); color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; font-weight: bold; font-size: 14px;" onclick="this.closest(\'.backdrop\').remove()">Got it! 👍</button></div>';
+      modal.innerHTML = '<h2 style="color: var(--primary); margin: 0 0 20px 0; font-size: 24px; text-align: center;">About Flicklet 📺</h2><div style="line-height: 1.6; font-size: 14px;"><div style="margin-bottom: 20px;"><strong style="color: var(--primary);">Why Flicklet exists:</strong><br>Because tracking your TV shows and movies shouldn\'t be harder than actually watching them! Created for people who start 20 shows and finish... maybe 3.</div><div style="margin-bottom: 20px;"><strong style="color: var(--primary);">💾 Your Data:</strong><br>Flicklet is browser-based, so your data stays on your device. If you use it on your phone, that data won\'t magically appear on your computer (and vice versa). Use the Export/Import feature to transfer your collection between devices!</div><div style="margin-bottom: 20px;"><strong style="color: var(--primary);">🚀 Coming Soon:</strong><br>Native mobile app with cloud sync, so your questionable taste follows you everywhere!</div><div style="margin-bottom: 25px;"><strong style="color: var(--primary);">🐛 Found a bug or have feedback?</strong><br>We\'re constantly improving Flicklet based on user feedback. Your input helps make this the best TV/movie tracker out there!</div></div><div style="text-align: center;"><button style="background: linear-gradient(45deg, var(--primary), var(--purple)); color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; font-weight: bold; font-size: 14px;" onclick="this.closest(\'.backdrop\').remove()">Got it! 👍</button></div>';
       
       backdrop.className = 'backdrop';
       backdrop.appendChild(modal);
@@ -831,7 +831,7 @@
       modal.style.boxShadow = '0 20px 60px rgba(0,0,0,0.3)';
       modal.style.border = '2px solid var(--primary)';
       
-      modal.innerHTML = '<h2 style="color: var(--primary); margin: 0 0 20px 0; font-size: 24px; text-align: center;">📊 Your Showly Stats</h2><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin: 20px 0;"><div style="text-align: center; padding: 15px; background: var(--card); border-radius: 10px; border: 1px solid var(--border);"><div style="font-size: 24px; font-weight: bold; color: var(--primary);">' + totalShows + '</div><div style="font-size: 12px; color: #666;">Total Shows</div></div><div style="text-align: center; padding: 15px; background: var(--card); border-radius: 10px; border: 1px solid var(--border);"><div style="font-size: 24px; font-weight: bold; color: var(--primary);">' + (stats.rating || 0) + '</div><div style="font-size: 12px; color: #666;">Ratings Given</div></div><div style="text-align: center; padding: 15px; background: var(--card); border-radius: 10px; border: 1px solid var(--border);"><div style="font-size: 24px; font-weight: bold; color: var(--primary);">' + (stats.share || 0) + '</div><div style="font-size: 12px; color: #666;">Shows Shared</div></div></div><h3 style="color: var(--primary); font-size: 16px; margin: 20px 0 10px 0;">Feature Usage:</h3><div style="background: var(--card); padding: 15px; border-radius: 10px; font-size: 14px; border: 1px solid var(--border);">No usage data yet. Start using features to see stats!</div><div style="text-align: center; margin-top: 25px;"><button style="background: linear-gradient(45deg, var(--primary), var(--purple)); color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; font-weight: bold; font-size: 14px;" onclick="this.closest(\'.backdrop\').remove()">Close</button></div>';
+      modal.innerHTML = '<h2 style="color: var(--primary); margin: 0 0 20px 0; font-size: 24px; text-align: center;">📊 Your Flicklet Stats</h2><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin: 20px 0;"><div style="text-align: center; padding: 15px; background: var(--card); border-radius: 10px; border: 1px solid var(--border);"><div style="font-size: 24px; font-weight: bold; color: var(--primary);">' + totalShows + '</div><div style="font-size: 12px; color: #666;">Total Shows</div></div><div style="text-align: center; padding: 15px; background: var(--card); border-radius: 10px; border: 1px solid var(--border);"><div style="font-size: 24px; font-weight: bold; color: var(--primary);">' + (stats.rating || 0) + '</div><div style="font-size: 12px; color: #666;">Ratings Given</div></div><div style="text-align: center; padding: 15px; background: var(--card); border-radius: 10px; border: 1px solid var(--border);"><div style="font-size: 24px; font-weight: bold; color: var(--primary);">' + (stats.share || 0) + '</div><div style="font-size: 12px; color: #666;">Shows Shared</div></div></div><h3 style="color: var(--primary); font-size: 16px; margin: 20px 0 10px 0;">Feature Usage:</h3><div style="background: var(--card); padding: 15px; border-radius: 10px; font-size: 14px; border: 1px solid var(--border);">No usage data yet. Start using features to see stats!</div><div style="text-align: center; margin-top: 25px;"><button style="background: linear-gradient(45deg, var(--primary), var(--purple)); color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; font-weight: bold; font-size: 14px;" onclick="this.closest(\'.backdrop\').remove()">Close</button></div>';
       
       backdrop.className = 'backdrop';
       backdrop.appendChild(modal);
@@ -927,7 +927,7 @@
         const randomSass = getRandomMessage(sassyTitles);
         document.getElementById('welcomeText').textContent = `${name}'s ${randomSass}`;
       } else {
-        document.getElementById('welcomeText').textContent = 'Showly';
+        document.getElementById('welcomeText').textContent = 'Flicklet';
       }
     }
 
@@ -1473,11 +1473,11 @@
       if (!item) return;
       
       const title = item.title || item.name;
-      const shareText = `Check out "${title}" on Showly! 🎬\n\nI'm tracking this ${item.media_type === 'tv' ? 'TV show' : 'movie'} and thought you might like it too!`;
+      const shareText = `Check out "${title}" on Flicklet! 🎬\n\nI'm tracking this ${item.media_type === 'tv' ? 'TV show' : 'movie'} and thought you might like it too!`;
       
       if (navigator.share) {
         navigator.share({
-          title: `${title} - Showly`,
+          title: `${title} - Flicklet`,
           text: shareText,
           url: window.location.href
         }).then(() => {
@@ -1712,7 +1712,7 @@
         
         if ('Notification' in window && Notification.permission === 'granted') {
           setTimeout(() => {
-            new Notification('Showly', {
+            new Notification('Flicklet', {
               body: `"${newItem.title}" added to your ${listNames[listType]} list! 🎬`,
               icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23ff6b6b"/><text x="50" y="55" font-size="40" text-anchor="middle" fill="white">📺</text></svg>'
             });
