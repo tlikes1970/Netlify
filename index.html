@@ -543,30 +543,26 @@
       0% { transform: scale(0) translateY(20px); opacity: 0; }
       100% { transform: scale(1) translateY(0); opacity: 1; }
     }
-	<style>
-  /* compact inline capsule for Episode Progress */
-  .episode-compact{
-    display:inline-flex; align-items:center; gap:8px;
-    padding:6px 10px; margin-left:8px;
-    border:1px dashed var(--border); border-radius:8px;
-    background:var(--card);
-  }
-  /* hide the section header inside the compact capsule */
-  .episode-compact h1,.episode-compact h2,.episode-compact h3,.episode-compact h4,
-  .episode-compact .section-title { display:none !important; }
 
-  /* keep only status; kill the Season/Episode inputs inside the capsule too */
-  .episode-compact input[placeholder="Season"],
-  .episode-compact input[placeholder="Episode"] { display:none !important; }
-</style>
+    /* ---------- ONLY FOR THE EPISODE PILL ALIGNMENT ---------- */
+    .ep-compact{
+      display:inline-flex !important; align-items:center; gap:6px;
+      padding:6px 10px !important; margin:0 !important;
+      border:1px dashed var(--border) !important; border-radius:8px !important;
+      background:var(--card) !important; width:auto !important;
+      justify-self:end; /* when placed in grid, hug right */
+    }
+    /* hide the big label + inputs, keep series status */
+    .ep-compact > strong { display:none !important; }
+    .ep-compact .episode-inputs { display:none !important; }
 
+    /* grid layout for the tags row: left = input+button, right = pill */
+    .tags-row-grid{display:grid; grid-template-columns:1fr auto; align-items:center; column-gap:12px;}
+    .tags-row-grid input{width:100%;}
+    /* make the tag list span the full width below the first row */
+    .tags-row-grid .tags-display{grid-column:1 / -1;}
+    /* --------------------------------------------------------- */
   </style>
-  <style>
-  /* temp hide just the fields, keep the section */
-  input[placeholder="Season"],
-  input[placeholder="Episode"] { display: none !important; }
-</style>
-
 </head>
 <body>
   <div class="main-container">
@@ -605,16 +601,17 @@
 
     <!-- HOME TAB -->
     <div id="homeSection" class="tab-section">
-	<!-- Firebase Auth Section -->
-    <div id="authSection" class="search-container" style="display: none;">
-    <h3 style="color: var(--primary); margin: 0 0 15px 0;">🔐 Sign In to Sync Your Data</h3>
-    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-    <button id="googleSignIn" style="background: #4285f4;">📱 Sign in with Google</button>
-    <button id="emailSignIn" style="background: var(--purple);">📧 Sign in with Email</button>
-    <button id="signOut" style="background: var(--danger); display: none;">🚪 Sign Out</button>
-    </div>
-    <div id="authStatus" style="margin-top: 10px; font-weight: bold;"></div>
-    </div>
+      <!-- Firebase Auth Section -->
+      <div id="authSection" class="search-container" style="display: none;">
+        <h3 style="color: var(--primary); margin: 0 0 15px 0;">🔐 Sign In to Sync Your Data</h3>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+          <button id="googleSignIn" style="background: #4285f4;">📱 Sign in with Google</button>
+          <button id="emailSignIn" style="background: var(--purple);">📧 Sign in with Email</button>
+          <button id="signOut" style="background: var(--danger); display: none;">🚪 Sign Out</button>
+        </div>
+        <div id="authStatus" style="margin-top: 10px; font-weight: bold;"></div>
+      </div>
+
       <div class="search-container">
         <button id="testNotification" class="notification-test">🔔 Test Push Notifications</button>
         
@@ -723,8 +720,13 @@
         </div>
         <div id="watchedList" class="list-container">
           <div class="empty-state sassy-empty">Nothing completed yet? Commitment issues much? 😏</div>
-  <div class="easter-egg" id="easterEgg">🎭</div>
-  <div class="feedback-button" id="feedbackBtn">💬</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="easter-egg" id="easterEgg">🎭</div>
+    <div class="feedback-button" id="feedbackBtn">💬</div>
+  </div>
 
   <script>
     // Core Application Logic
@@ -2018,7 +2020,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       loadAppData();
       setupEventListeners();
-	  // Firebase Auth Event Listeners
+      // Firebase Auth Event Listeners
       document.getElementById('googleSignIn').onclick = signInWithGoogle;
       document.getElementById('emailSignIn').onclick = signInWithEmail;  
       document.getElementById('signOut').onclick = signOut;
@@ -2026,191 +2028,200 @@
       updateUI();
       updateDarkModeButton();
       initPushNotifications();
-	  // Show auth section on load
+      // Show auth section on load
       document.getElementById('authSection').style.display = 'block';
       
       if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission();
       }
     });
-	// Move Episode Progress next to "Your Rating:" inside each card
-(() => {
-  // Loop through each card we render
-  const cards = document.querySelectorAll('.show-card, .movie-card, .card');
-  cards.forEach(card => {
-    // find the Episode Progress container in this card
-    const header = Array.from(card.querySelectorAll('h1,h2,h3,h4,strong'))
-      .find(el => /episode progress/i.test(el.textContent || ''));
-    if (!header) return;
 
-    const epContainer =
-      header.closest('.card, .section, fieldset, div') || header.parentElement;
-    if (!epContainer) return;
+    /* === EPISODE PILL: place to the right of the tags row === */
+    (function placeEpisodePill() {
+      function move() {
+        document.querySelectorAll('.show-card, .movie-card, .card').forEach(card => {
+          const ep = card.querySelector('.episode-tracker');
+          if (!ep) return;
 
-    // find the "Your Rating:" row in this card
-    const ratingLabel = Array.from(card.querySelectorAll('*'))
-      .find(el => /your rating/i.test(el.textContent || ''));
-    const ratingRow = ratingLabel ? ratingLabel.parentElement : null;
-    if (!ratingRow) return;
+          const tags = card.querySelector('.tags-container');
+          if (!tags) return;
 
-    // style compact and append after rating controls
-    epContainer.classList.add('episode-compact');
-    ratingRow.appendChild(epContainer);
-  });
-})();
+          // Make the row a 2-col grid (input+button | pill)
+          tags.classList.add('tags-row-grid');
 
+          // Compact view for the pill
+          ep.classList.add('ep-compact');
+
+          // Ensure the tags list spans full width below
+          const tagsDisplay = tags.querySelector('.tags-display');
+
+          // Insert the pill BEFORE the tags display so it sits in the first row, right column
+          if (tagsDisplay && ep.nextSibling !== tagsDisplay) {
+            tags.insertBefore(ep, tagsDisplay);
+          } else if (!tagsDisplay && !tags.contains(ep)) {
+            tags.appendChild(ep);
+          }
+        });
+      }
+      document.addEventListener('DOMContentLoaded', move);
+      window.addEventListener('load', move);
+      setTimeout(move, 300);
+      setTimeout(move, 1200);
+    })();
   </script>
-  <!-- Firebase v9 Compat SDK -->
-<!-- Firebase v9 SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script>
-// Firebase Configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM",
-  authDomain: "flicklet-71dff.firebaseapp.com",
-  projectId: "flicklet-71dff",
-  storageBucket: "flicklet-71dff.firebasestorage.app",
-  messagingSenderId: "1034923556763",
-  appId: "1:1034923556763:web:bba5489cd1d9412c9c2b3e"
-};
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+  <!-- Firebase v9 SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-// Initialize services
-const auth = firebase.auth();
-// Ensure profile exists + bump lastLoginAt on every session
-firebase.auth().onAuthStateChanged(async (user) => {
-  if (!user) return;
-  try {
-    const ref = firebase.firestore().collection('users').doc(user.uid);
-    const snap = await ref.get();
+  <script>
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM",
+    authDomain: "flicklet-71dff.firebaseapp.com",
+    projectId: "flicklet-71dff",
+    storageBucket: "flicklet-71dff.firebasestorage.app",
+    messagingSenderId: "1034923556763",
+    appId: "1:1034923556763:web:bba5489cd1d9412c9c2b3e"
+  };
 
-    const payload = {
-      uid: user.uid,
-      email: user.email || null,
-      displayName: user.displayName || null,
-      photoURL: user.photoURL || null,
-      provider: (user.providerData && user.providerData[0])
-        ? user.providerData[0].providerId
-        : null,
-      lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
-    };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
 
-    if (!snap.exists) {
-      payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-    }
-
-    await ref.set(payload, { merge: true });
-  } catch (e) {
-    console.error('profile upsert on auth state:', e);
-  }
-});
-
-const db = firebase.firestore();
-
-console.log('🔥 Firebase initialized successfully!');
-
-// Firebase Authentication Functions
-let currentUser = null;
-
-// Monitor auth state changes
-auth.onAuthStateChanged((user) => {
-  currentUser = user;
-  updateAuthUI(user);
-  
-  if (user) {
-    console.log('✅ User signed in:', user.email);
-    // loadUserData(user.uid); // We'll add this next
-  } else {
-    console.log('❌ User signed out');
-  }
-});
-
-function updateAuthUI(user) {
-  const authSection = document.getElementById('authSection');
-  const authStatus = document.getElementById('authStatus');
-  const signOut = document.getElementById('signOut');
-  const googleSignIn = document.getElementById('googleSignIn');
-  const emailSignIn = document.getElementById('emailSignIn');
-  
-  if (authSection) {
-    if (user) {
-      authStatus.textContent = `✅ Signed in as: ${user.email}`;
-      authStatus.style.color = 'var(--success)';
-      signOut.style.display = 'inline-block';
-      googleSignIn.style.display = 'none';
-      emailSignIn.style.display = 'none';
-    } else {
-      authStatus.textContent = '❌ Not signed in - data stays local only';
-      authStatus.style.color = 'var(--danger)';
-      signOut.style.display = 'none';
-      googleSignIn.style.display = 'inline-block';
-      emailSignIn.style.display = 'inline-block';
-    }
-  }
-}
-
-// Google Sign In
-async function signInWithGoogle() {
-  try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    const result = await auth.signInWithPopup(provider);
-
-    // upsert /users/{uid}
-    await firebase.firestore().collection('users').doc(result.user.uid).set({
-      uid: result.user.uid,
-      email: result.user.email || null,
-      displayName: result.user.displayName || null,
-      photoURL: result.user.photoURL || null,
-      provider: (result.user.providerData && result.user.providerData[0])
-        ? result.user.providerData[0].providerId
-        : null,
-      lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    }, { merge: true });
-
-    showNotification(`Welcome ${result.user.displayName || 'there'}! 🎉`, 'success');
-  } catch (error) {
-    console.error('Google sign in error:', error);
-    showNotification('Google sign in failed. Try again! 🤷', 'error');
-  }
-}
-
-// Email Sign In
-async function signInWithEmail() {
-  const email = prompt('Enter your email:');
-  const password = prompt('Enter your password:');
-  
-  if (email && password) {
+  // Initialize services
+  const auth = firebase.auth();
+  // Ensure profile exists + bump lastLoginAt on every session
+  firebase.auth().onAuthStateChanged(async (user) => {
+    if (!user) return;
     try {
-      await auth.signInWithEmailAndPassword(email, password);
-      showNotification('Welcome back! 🎉', 'success');
-    } catch (error) {
-      if (error.code === 'auth/user-not-found') {
-        try {
-          await auth.createUserWithEmailAndPassword(email, password);
-          showNotification('Account created! Welcome! 🎉', 'success');
-        } catch (createError) {
-          showNotification('Failed to create account. Try again! 😅', 'error');
-        }
+      const ref = firebase.firestore().collection('users').doc(user.uid);
+      const snap = await ref.get();
+
+      const payload = {
+        uid: user.uid,
+        email: user.email || null,
+        displayName: user.displayName || null,
+        photoURL: user.photoURL || null,
+        provider: (user.providerData && user.providerData[0])
+          ? user.providerData[0].providerId
+          : null,
+        lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+
+      if (!snap.exists) {
+        payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+
+      await ref.set(payload, { merge: true });
+    } catch (e) {
+      console.error('profile upsert on auth state:', e);
+    }
+  });
+
+  const db = firebase.firestore();
+
+  console.log('🔥 Firebase initialized successfully!');
+
+  // Firebase Authentication Functions
+  let currentUser = null;
+
+  // Monitor auth state changes
+  auth.onAuthStateChanged((user) => {
+    currentUser = user;
+    updateAuthUI(user);
+    
+    if (user) {
+      console.log('✅ User signed in:', user.email);
+      // loadUserData(user.uid); // We'll add this next
+    } else {
+      console.log('❌ User signed out');
+    }
+  });
+
+  function updateAuthUI(user) {
+    const authSection = document.getElementById('authSection');
+    const authStatus = document.getElementById('authStatus');
+    const signOut = document.getElementById('signOut');
+    const googleSignIn = document.getElementById('googleSignIn');
+    const emailSignIn = document.getElementById('emailSignIn');
+    
+    if (authSection) {
+      if (user) {
+        authStatus.textContent = `✅ Signed in as: ${user.email}`;
+        authStatus.style.color = 'var(--success)';
+        signOut.style.display = 'inline-block';
+        googleSignIn.style.display = 'none';
+        emailSignIn.style.display = 'none';
       } else {
-        showNotification('Sign in failed. Check your credentials! 🔑', 'error');
+        authStatus.textContent = '❌ Not signed in - data stays local only';
+        authStatus.style.color = 'var(--danger)';
+        signOut.style.display = 'none';
+        googleSignIn.style.display = 'inline-block';
+        emailSignIn.style.display = 'inline-block';
       }
     }
   }
-}
 
-// Sign Out
-async function signOut() {
-  try {
-    await auth.signOut();
-    showNotification('Signed out successfully! 👋', 'success');
-  } catch (error) {
-    showNotification('Sign out failed! 🤔', 'error');
+  // Google Sign In
+  async function signInWithGoogle() {
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      const result = await auth.signInWithPopup(provider);
+
+      // upsert /users/{uid}
+      await firebase.firestore().collection('users').doc(result.user.uid).set({
+        uid: result.user.uid,
+        email: result.user.email || null,
+        displayName: result.user.displayName || null,
+        photoURL: result.user.photoURL || null,
+        provider: (result.user.providerData && result.user.providerData[0])
+          ? result.user.providerData[0].providerId
+          : null,
+        lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      showNotification(`Welcome ${result.user.displayName || 'there'}! 🎉`, 'success');
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      showNotification('Google sign in failed. Try again! 🤷', 'error');
+    }
   }
-}
-</script>
+
+  // Email Sign In
+  async function signInWithEmail() {
+    const email = prompt('Enter your email:');
+    const password = prompt('Enter your password:');
+    
+    if (email && password) {
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+        showNotification('Welcome back! 🎉', 'success');
+      } catch (error) {
+        if (error.code === 'auth/user-not-found') {
+          try {
+            await auth.createUserWithEmailAndPassword(email, password);
+            showNotification('Account created! Welcome! 🎉', 'success');
+          } catch (createError) {
+            showNotification('Failed to create account. Try again! 😅', 'error');
+          }
+        } else {
+          showNotification('Sign in failed. Check your credentials! 🔑', 'error');
+        }
+      }
+    }
+  }
+
+  // Sign Out
+  async function signOut() {
+    try {
+      await auth.signOut();
+      showNotification('Signed out successfully! 👋', 'success');
+    } catch (error) {
+      showNotification('Sign out failed! 🤔', 'error');
+    }
+  }
+  </script>
 </body>
+</html>
