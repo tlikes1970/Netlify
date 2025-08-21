@@ -782,25 +782,68 @@
 
     // Test notification function
     function testNotification() {
-      if ('Notification' in window) {
-        if (Notification.permission === 'granted') {
-          new Notification('Flicklet', {
-            body: 'Your favorite show has a new episode! 📺✨',
-            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23ff6b6b"/><text x="50" y="55" font-size="40" text-anchor="middle" fill="white">📺</text></svg>'
-          });
-        } else if (Notification.permission !== 'denied') {
-          Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-              testNotification();
-            }
-          });
-        } else {
-          showNotification('Notifications are blocked. Please enable them in your browser settings.', 'warning');
-        }
-      } else {
-        showNotification('This browser does not support notifications.', 'warning');
-      }
+  // Check if notifications are supported
+  if (!('Notification' in window)) {
+    showNotification('This browser does not support notifications.', 'warning');
+    return;
+  }
+  
+  // Check current permission
+  if (Notification.permission === 'granted') {
+    // Show test notification
+    try {
+      const notification = new Notification('Flicklet Test! 📺', {
+        body: 'Your notifications are working perfectly! 🎉',
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-72.png',
+        tag: 'flicklet-test',
+        requireInteraction: false
+      });
+      
+      // Auto-close after 4 seconds
+      setTimeout(() => notification.close(), 4000);
+      
+      showNotification('Test notification sent! Check your system notifications.', 'success');
+    } catch (error) {
+      console.error('Notification error:', error);
+      showNotification('Notification failed to display.', 'error');
     }
+  } else if (Notification.permission === 'denied') {
+    showNotification('Notifications are blocked. Please enable them in your browser settings.', 'warning');
+    showNotificationInstructions();
+  } else {
+    // Request permission
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        testNotification(); // Retry now that we have permission
+      } else {
+        showNotification('Notification permission denied.', 'warning');
+      }
+    });
+  }
+}
+function showNotificationInstructions() {
+  const instructions = {
+    'Chrome': 'Click the 🔒 icon in the address bar → Notifications → Allow',
+    'Firefox': 'Click the shield icon → Permissions → Notifications → Allow',
+    'Safari': 'Safari → Preferences → Websites → Notifications → Allow',
+    'Edge': 'Click the 🔒 icon in the address bar → Notifications → Allow'
+  };
+  
+  const browser = getBrowserName();
+  const instruction = instructions[browser] || 'Check your browser settings for notification permissions';
+  
+  showNotification(`Enable notifications: ${instruction}`, 'info');
+}
+
+function getBrowserName() {
+  const userAgent = navigator.userAgent;
+  if (userAgent.includes('Chrome') && !userAgent.includes('Edge')) return 'Chrome';
+  if (userAgent.includes('Firefox')) return 'Firefox';
+  if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) return 'Safari';
+  if (userAgent.includes('Edge')) return 'Edge';
+  return 'Unknown';
+}
 
     // Simple modal functions - NO closeModal references
     function showAboutModal() {
