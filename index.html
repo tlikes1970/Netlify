@@ -2081,10 +2081,24 @@ async function signInWithGoogle() {
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
     const result = await auth.signInWithPopup(provider);
-    showNotification(`Welcome ${result.user.displayName}! 🎉`, 'success');
+
+    // upsert /users/{uid}
+    await firebase.firestore().collection('users').doc(result.user.uid).set({
+      uid: result.user.uid,
+      email: result.user.email || null,
+      displayName: result.user.displayName || null,
+      photoURL: result.user.photoURL || null,
+      provider: (result.user.providerData && result.user.providerData[0])
+        ? result.user.providerData[0].providerId
+        : null,
+      lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    showNotification(`Welcome ${result.user.displayName || 'there'}! 🎉`, 'success');
   } catch (error) {
     console.error('Google sign in error:', error);
-    showNotification('Google sign in failed. Try again! 😅', 'error');
+    showNotification('Google sign in failed. Try again! 🤷', 'error');
   }
 }
 
