@@ -1130,16 +1130,19 @@
     }
 
     async function fetchShowData(query, page = 1, genreFilter = '') {
-      const type = 'multi';
-      let endpoint = `search/${type}`;
-      let params = `endpoint=${endpoint}&page=${page}`;
-      
-      if (query) params += `&query=${encodeURIComponent(query)}`;
+      let endpoint, params;
+  
       if (genreFilter && !query) {
-        endpoint = `discover/tv`;
-        params = `endpoint=${endpoint}&page=${page}&genre=${genreFilter}`;
+         // Genre browsing
+         endpoint = 'discover/tv';
+         params = `endpoint=${endpoint}&page=${page}&with_genres=${genreFilter}`;
+      } else {
+        // Search
+        endpoint = 'search/multi';
+        params = `endpoint=${endpoint}&page=${page}`;
+        if (query) params += `&query=${encodeURIComponent(query)}`;
       }
-      
+         
       try {
         const response = await fetch(`${API_BASE}?${params}`);
         
