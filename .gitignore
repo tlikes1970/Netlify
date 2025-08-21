@@ -2,4 +2,10 @@ node_modules/
 android/app/build/ 
 ios/build/ 
 dist/ 
-.DS_Store 
+.DS_Store
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
