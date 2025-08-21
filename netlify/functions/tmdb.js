@@ -4,7 +4,7 @@ exports.handler = async (event, context) => {
   
   // Domain restrictions - allow your actual domain and localhost
   const allowedOrigins = [
-    'https://tv-movie-tracker.netlify.app', // Your actual domain
+    'https://flicklet.netlify.app', // Your actual domain
     'https://zippy-meerkat-329c02.netlify.app', // Old domain (temporary)
     'http://localhost:3000',
     'http://127.0.0.1:3000',
