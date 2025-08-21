@@ -543,6 +543,23 @@
       0% { transform: scale(0) translateY(20px); opacity: 0; }
       100% { transform: scale(1) translateY(0); opacity: 1; }
     }
+	<style>
+  /* compact inline capsule for Episode Progress */
+  .episode-compact{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:6px 10px; margin-left:8px;
+    border:1px dashed var(--border); border-radius:8px;
+    background:var(--card);
+  }
+  /* hide the section header inside the compact capsule */
+  .episode-compact h1,.episode-compact h2,.episode-compact h3,.episode-compact h4,
+  .episode-compact .section-title { display:none !important; }
+
+  /* keep only status; kill the Season/Episode inputs inside the capsule too */
+  .episode-compact input[placeholder="Season"],
+  .episode-compact input[placeholder="Episode"] { display:none !important; }
+</style>
+
   </style>
   <style>
   /* temp hide just the fields, keep the section */
@@ -2016,6 +2033,32 @@
         Notification.requestPermission();
       }
     });
+	// Move Episode Progress next to "Your Rating:" inside each card
+(() => {
+  // Loop through each card we render
+  const cards = document.querySelectorAll('.show-card, .movie-card, .card');
+  cards.forEach(card => {
+    // find the Episode Progress container in this card
+    const header = Array.from(card.querySelectorAll('h1,h2,h3,h4,strong'))
+      .find(el => /episode progress/i.test(el.textContent || ''));
+    if (!header) return;
+
+    const epContainer =
+      header.closest('.card, .section, fieldset, div') || header.parentElement;
+    if (!epContainer) return;
+
+    // find the "Your Rating:" row in this card
+    const ratingLabel = Array.from(card.querySelectorAll('*'))
+      .find(el => /your rating/i.test(el.textContent || ''));
+    const ratingRow = ratingLabel ? ratingLabel.parentElement : null;
+    if (!ratingRow) return;
+
+    // style compact and append after rating controls
+    epContainer.classList.add('episode-compact');
+    ratingRow.appendChild(epContainer);
+  });
+})();
+
   </script>
   <!-- Firebase v9 Compat SDK -->
 <!-- Firebase v9 SDK -->
