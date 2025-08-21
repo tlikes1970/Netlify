@@ -6,7 +6,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Showly Advanced Features', () => {
   
   test('Can add shows to watchlist', async ({ page }) => {
-    await page.goto('https://tv-movie-tracker.netlify.app');
+    await page.goto('/');
     
     // Search for a show
     await page.fill('#searchInput', 'Breaking Bad');
@@ -23,7 +23,7 @@ test.describe('Showly Advanced Features', () => {
   });
 
   test('About modal opens and closes', async ({ page }) => {
-    await page.goto('https://tv-movie-tracker.netlify.app');
+    await page.goto('/');
     
     // Open About modal
     await page.click('#aboutBtn');
@@ -36,7 +36,7 @@ test.describe('Showly Advanced Features', () => {
   });
 
   test('Stats modal opens correctly', async ({ page }) => {
-    await page.goto('https://tv-movie-tracker.netlify.app');
+    await page.goto('/');
     
     await page.click('#usageStatsBtn');
     await expect(page.locator('.backdrop')).toBeVisible();
@@ -49,7 +49,7 @@ test.describe('Showly Advanced Features', () => {
   });
 
   test('Notification test button works', async ({ page }) => {
-    await page.goto('https://tv-movie-tracker.netlify.app');
+    await page.goto('/');
     
     await page.click('#testNotification');
     // Should show some kind of notification or permission request
@@ -57,7 +57,7 @@ test.describe('Showly Advanced Features', () => {
   });
 
   test('Search clear functionality', async ({ page }) => {
-    await page.goto('https://tv-movie-tracker.netlify.app');
+    await page.goto('/');
     
     // Enter search term
     await page.fill('#searchInput', 'test search');
@@ -75,7 +75,7 @@ test.describe('Showly Advanced Features', () => {
   });
 
   test('Wildcard search works', async ({ page }) => {
-    await page.goto('https://tv-movie-tracker.netlify.app');
+    await page.goto('/');
     
     // Test wildcard search
     await page.fill('#searchInput', 'star*');
@@ -86,7 +86,7 @@ test.describe('Showly Advanced Features', () => {
   });
 
   test('Export functionality available', async ({ page }) => {
-    await page.goto('https://tv-movie-tracker.netlify.app');
+    await page.goto('/');
     
     // Export button should be visible and clickable
     await expect(page.locator('#exportBtn')).toBeVisible();
@@ -96,7 +96,7 @@ test.describe('Showly Advanced Features', () => {
   test('Mobile responsive design', async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto('https://tv-movie-tracker.netlify.app');
+    await page.goto('/');
     
     // Should still be functional on mobile
     await expect(page.locator('.title')).toBeVisible();
@@ -110,7 +110,7 @@ test.describe('Showly Advanced Features', () => {
 
   test('Performance check - loads under 3 seconds', async ({ page }) => {
     const startTime = Date.now();
-    await page.goto('https://tv-movie-tracker.netlify.app');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
     const loadTime = Date.now() - startTime;
     
@@ -118,7 +118,7 @@ test.describe('Showly Advanced Features', () => {
   });
 
   test('All key elements present on load', async ({ page }) => {
-    await page.goto('https://tv-movie-tracker.netlify.app');
+    await page.goto('/');
     
     // Check all critical UI elements
     await expect(page.locator('.title')).toContainText('Showly');
