@@ -2032,6 +2032,34 @@ firebase.initializeApp(firebaseConfig);
 
 // Initialize services
 const auth = firebase.auth();
+// Ensure profile exists + bump lastLoginAt on every session
+firebase.auth().onAuthStateChanged(async (user) => {
+  if (!user) return;
+  try {
+    const ref = firebase.firestore().collection('users').doc(user.uid);
+    const snap = await ref.get();
+
+    const payload = {
+      uid: user.uid,
+      email: user.email || null,
+      displayName: user.displayName || null,
+      photoURL: user.photoURL || null,
+      provider: (user.providerData && user.providerData[0])
+        ? user.providerData[0].providerId
+        : null,
+      lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+
+    if (!snap.exists) {
+      payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    }
+
+    await ref.set(payload, { merge: true });
+  } catch (e) {
+    console.error('profile upsert on auth state:', e);
+  }
+});
+
 const db = firebase.firestore();
 
 console.log('🔥 Firebase initialized successfully!');
