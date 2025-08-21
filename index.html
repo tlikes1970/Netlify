@@ -1022,9 +1022,59 @@ function getBrowserName() {
       document.getElementById('darkModeToggle').textContent = isDark ? '☀️ Go Light' : '🌙 Go Dark';
     }
 
-    function saveAppData() {
-      localStorage.setItem('tvMovieTrackerData', JSON.stringify(appData));
+    async function saveAppData() {
+  // Always save locally as backup
+  localStorage.setItem('tvMovieTrackerData', JSON.stringify(appData));
+  
+  // If user is signed in, also save to Firestore
+  if (currentUser) {
+    try {
+      const userRef = db.collection('users').doc(currentUser.uid);
+      
+      await userRef.set({
+        watchlists: {
+          tv: appData.tv,
+          movies: appData.movies
+        },
+        settings: appData.settings,
+        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      
+      console.log('✅ Data synced to cloud');
+    } catch (error) {
+      console.error('❌ Failed to sync to cloud:', error);
+      showNotification('Failed to sync to cloud. Data saved locally.', 'warning');
     }
+  }
+}
+async function loadUserDataFromCloud(userId) {
+  try {
+    const userRef = db.collection('users').doc(userId);
+    const doc = await userRef.get();
+    
+    if (doc.exists) {
+      const cloudData = doc.data();
+      if (cloudData.watchlists) {
+        // Merge cloud data with local data
+        if (cloudData.watchlists.tv) appData.tv = cloudData.watchlists.tv;
+        if (cloudData.watchlists.movies) appData.movies = cloudData.watchlists.movies;
+        if (cloudData.settings) appData.settings = { ...appData.settings, ...cloudData.settings };
+        
+        console.log('✅ Loaded data from cloud');
+        updateUI();
+        
+        // Save merged data locally
+        localStorage.setItem('tvMovieTrackerData', JSON.stringify(appData));
+        showNotification('Data synced from cloud! 📁', 'success');
+      }
+    } else {
+      console.log('No cloud data found, using local data');
+    }
+  } catch (error) {
+    console.error('❌ Failed to load from cloud:', error);
+    showNotification('Failed to load cloud data. Using local data.', 'warning');
+  }
+}
 
     function setupEventListeners() {
       document.getElementById('darkModeToggle').onclick = () => {
