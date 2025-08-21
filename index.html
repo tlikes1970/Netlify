@@ -581,19 +581,19 @@
     </div>
 
     <div class="tab-container">
-      <button id="homeTab" class="tab active">
+      <button id="homeTab" class="tab active" data-testid="home-tab">
         🏠 Home
         <span class="tab-badge">Overview</span>
       </button>
-      <button id="watchingTab" class="tab">
+      <button id="watchingTab" class="tab"data-testid="watching-tab">
         ▶️ Currently Watching
         <span class="tab-badge" id="watchingBadge">0</span>
       </button>
-      <button id="wishlistTab" class="tab">
+      <button id="wishlistTab" class="tab"data-testid="wishlist-tab">
         📖 Want to Watch
         <span class="tab-badge" id="wishlistBadge">0</span>
       </button>
-      <button id="watchedTab" class="tab">
+      <button id="watchedTab" class="tab" data-testid="watched-tab">
         ✅ Already Watched
         <span class="tab-badge" id="watchedBadge">0</span>
       </button>
@@ -605,9 +605,9 @@
       <div id="authSection" class="search-container" style="display: none;">
         <h3 style="color: var(--primary); margin: 0 0 15px 0;">🔐 Sign In to Sync Your Data</h3>
         <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-          <button id="googleSignIn" style="background: #4285f4;">📱 Sign in with Google</button>
-          <button id="emailSignIn" style="background: var(--purple);">📧 Sign in with Email</button>
-          <button id="signOut" style="background: var(--danger); display: none;">🚪 Sign Out</button>
+          <button id="googleSignIn" data-testid="google-signin-button" style="background: #4285f4;">📱 Sign in with Google</button>
+          <button id="emailSignIn" data-testid="email-signin-button" style="background: var(--purple);">📧 Sign in with Email</button>
+          <button id="signOut" data-testid="signout-button" style="background: var(--danger); display: none;">🚪 Sign Out</button>
         </div>
         <div id="authStatus" style="margin-top: 10px; font-weight: bold;"></div>
       </div>
@@ -616,9 +616,9 @@
         <button id="testNotification" class="notification-test">🔔 Test Push Notifications</button>
         
         <div class="search-row">
-          <input type="text" id="searchInput" class="search-input" placeholder="Search for shows or movies...">
+          <input type="text" id="searchInput" class="search-input" data-testid="search-input" placeholder="Search for shows or movies...">
           <select id="genreFilter"><option value="">All Genres</option></select>
-          <button id="searchBtn">🔍 Search</button>
+          <<button id="searchBtn" data-testid="search-button">🔍 Search</button>
           <button id="clearSearchBtn" class="secondary" style="display: none;">✖️ Clear</button>
         </div>
         
@@ -668,12 +668,12 @@
         <h3 style="color: var(--primary); margin-top: 0;">💾 Backup Your Questionable Taste</h3>
         <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px;">
           <input type="file" id="importFile" accept=".json" style="max-width: 200px;">
-          <button id="exportBtn" class="success">📤 Export My Shame</button>
-          <button id="clearAllBtn" class="danger">🗑️ Nuclear Option</button>
+          <button id="exportBtn" class="success" data-testid="export-button">📤 Export My Shame</button>
+          <button id="clearAllBtn" class="danger" data-testid="clear-all-button">🗑️ Nuclear Option</button>
         </div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-          <button id="aboutBtn" class="secondary">ℹ️ About Flicklet</button>
-          <button id="usageStatsBtn" class="secondary">📊 Usage Stats</button>
+          <button id="aboutBtn" class="secondary" data-testid="about-button">ℹ️ About Flicklet</button>
+          <button id="usageStatsBtn" class="secondary" data-testid="stats-button">📊 Usage Stats</button>
           <button onclick="toggleContentFilter()" class="secondary" id="filterBtn">🎭 Show All Content</button>
         </div>
       </div>
@@ -1293,7 +1293,9 @@
       const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
       const overview = item.overview || 'No description available.';
       const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
-      
+      card.setAttribute('data-testid', `show-card-${item.id}`);
+      card.setAttribute('data-show-title', title);
+      card.setAttribute('data-media-type', mediaType);
       const category = mediaType === 'tv' ? 'tv' : 'movies';
       const isInWatching = appData[category] && appData[category].watching && appData[category].watching.some(show => show.id === item.id);
       const isInWishlist = appData[category] && appData[category].wishlist && appData[category].wishlist.some(show => show.id === item.id);
