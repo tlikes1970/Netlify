@@ -13,10 +13,10 @@
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://tv-movie-tracker.netlify.app/">
+  <meta property="og:url" content="https://Flicklet.netlify.app/">
   <meta property="og:title" content="Flicklet - TV & Movie Tracker">
   <meta property="og:description" content="Search, track, and rate shows & films fast. Never lose track of your binge-watching again!">
-  <meta property="og:image" content="https://tv-movie-tracker.netlify.app/icons/icon-512.png">
+  <meta property="og:image" content="https://Flicklet.netlify.app/icons/icon-512.png">
   <meta name="twitter:image" content="/icons/icon-512.png">
   
   <!-- PWA Meta Tags -->
@@ -582,6 +582,16 @@
 
     <!-- HOME TAB -->
     <div id="homeSection" class="tab-section">
+	<!-- Firebase Auth Section -->
+    <div id="authSection" class="search-container" style="display: none;">
+    <h3 style="color: var(--primary); margin: 0 0 15px 0;">🔐 Sign In to Sync Your Data</h3>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+    <button id="googleSignIn" style="background: #4285f4;">📱 Sign in with Google</button>
+    <button id="emailSignIn" style="background: var(--purple);">📧 Sign in with Email</button>
+    <button id="signOut" style="background: var(--danger); display: none;">🚪 Sign Out</button>
+    </div>
+    <div id="authStatus" style="margin-top: 10px; font-weight: bold;"></div>
+    </div>
       <div class="search-container">
         <button id="testNotification" class="notification-test">🔔 Test Push Notifications</button>
         
@@ -696,7 +706,7 @@
   <script>
     // Core Application Logic
     const TMDB_IMG_BASE = 'https://image.tmdb.org/t/p/w200';
-    const API_BASE = 'https://'/.netlify/functions/tmdb';
+    const API_BASE = '/.netlify/functions/tmdb';
     
     let currentPage = 1, searchCache = [], currentActiveTab = 'home';
     
@@ -1985,14 +1995,131 @@
     document.addEventListener('DOMContentLoaded', () => {
       loadAppData();
       setupEventListeners();
+	  // Firebase Auth Event Listeners
+      document.getElementById('googleSignIn').onclick = signInWithGoogle;
+      document.getElementById('emailSignIn').onclick = signInWithEmail;  
+      document.getElementById('signOut').onclick = signOut;
       loadGenres();
       updateUI();
       updateDarkModeButton();
       initPushNotifications();
+	  // Show auth section on load
+      document.getElementById('authSection').style.display = 'block';
       
       if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission();
       }
     });
   </script>
+  <!-- Firebase v9 Compat SDK -->
+<!-- Firebase v9 SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM",
+  authDomain: "flicklet-71dff.firebaseapp.com",
+  projectId: "flicklet-71dff",
+  storageBucket: "flicklet-71dff.firebasestorage.app",
+  messagingSenderId: "1034923556763",
+  appId: "1:1034923556763:web:bba5489cd1d9412c9c2b3e"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+// Initialize services
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+console.log('🔥 Firebase initialized successfully!');
+
+// Firebase Authentication Functions
+let currentUser = null;
+
+// Monitor auth state changes
+auth.onAuthStateChanged((user) => {
+  currentUser = user;
+  updateAuthUI(user);
+  
+  if (user) {
+    console.log('✅ User signed in:', user.email);
+    // loadUserData(user.uid); // We'll add this next
+  } else {
+    console.log('❌ User signed out');
+  }
+});
+
+function updateAuthUI(user) {
+  const authSection = document.getElementById('authSection');
+  const authStatus = document.getElementById('authStatus');
+  const signOut = document.getElementById('signOut');
+  const googleSignIn = document.getElementById('googleSignIn');
+  const emailSignIn = document.getElementById('emailSignIn');
+  
+  if (authSection) {
+    if (user) {
+      authStatus.textContent = `✅ Signed in as: ${user.email}`;
+      authStatus.style.color = 'var(--success)';
+      signOut.style.display = 'inline-block';
+      googleSignIn.style.display = 'none';
+      emailSignIn.style.display = 'none';
+    } else {
+      authStatus.textContent = '❌ Not signed in - data stays local only';
+      authStatus.style.color = 'var(--danger)';
+      signOut.style.display = 'none';
+      googleSignIn.style.display = 'inline-block';
+      emailSignIn.style.display = 'inline-block';
+    }
+  }
+}
+
+// Google Sign In
+async function signInWithGoogle() {
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const result = await auth.signInWithPopup(provider);
+    showNotification(`Welcome ${result.user.displayName}! 🎉`, 'success');
+  } catch (error) {
+    console.error('Google sign in error:', error);
+    showNotification('Google sign in failed. Try again! 😅', 'error');
+  }
+}
+
+// Email Sign In
+async function signInWithEmail() {
+  const email = prompt('Enter your email:');
+  const password = prompt('Enter your password:');
+  
+  if (email && password) {
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      showNotification('Welcome back! 🎉', 'success');
+    } catch (error) {
+      if (error.code === 'auth/user-not-found') {
+        try {
+          await auth.createUserWithEmailAndPassword(email, password);
+          showNotification('Account created! Welcome! 🎉', 'success');
+        } catch (createError) {
+          showNotification('Failed to create account. Try again! 😅', 'error');
+        }
+      } else {
+        showNotification('Sign in failed. Check your credentials! 🔑', 'error');
+      }
+    }
+  }
+}
+
+// Sign Out
+async function signOut() {
+  try {
+    await auth.signOut();
+    showNotification('Signed out successfully! 👋', 'success');
+  } catch (error) {
+    showNotification('Sign out failed! 🤔', 'error');
+  }
+}
+</script>
 </body>
