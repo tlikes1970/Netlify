@@ -28,7 +28,7 @@ test.describe('Showly Advanced Features', () => {
     // Open About modal
     await page.click('#aboutBtn');
     await expect(page.locator('.backdrop')).toBeVisible();
-    await expect(page.locator('text="About Showly 📺"')).toBeVisible();
+    await expect(page.getByText('About Flicklet 📺')).toBeVisible();
     
     // Close modal
     await page.click('text="Got it! 👍"');
@@ -40,7 +40,7 @@ test.describe('Showly Advanced Features', () => {
     
     await page.click('#usageStatsBtn');
     await expect(page.locator('.backdrop')).toBeVisible();
-    await expect(page.locator('text="📊 Your Showly Stats"')).toBeVisible();
+    await expect(page.getByText('📊 Your Flicklet Stats')).toBeVisible();
     await expect(page.locator('text="Total Shows"')).toBeVisible();
     
     // Close modal
@@ -121,7 +121,7 @@ test.describe('Showly Advanced Features', () => {
     await page.goto('/');
     
     // Check all critical UI elements
-    await expect(page.locator('.title')).toContainText('Showly');
+    await expect(page.locator('.title')).toContainText('Flicklet');
     await expect(page.locator('#searchInput')).toBeVisible();
     await expect(page.locator('#searchBtn')).toBeVisible();
     await expect(page.locator('#darkModeToggle')).toBeVisible();
