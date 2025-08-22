@@ -2222,13 +2222,13 @@ async function loadUserDataFromCloud(userId) {
   let currentUser = null;
 
   // Monitor auth state changes
-  auth.onAuthStateChanged((user) => {
+  auth.onAuthStateChanged(async (user) => {
     currentUser = user;
     updateAuthUI(user);
     
     if (user) {
       console.log('✅ User signed in:', user.email);
-      // loadUserData(user.uid); // We'll add this next
+      await loadUserDataFromCloud(user.uid);
     } else {
       console.log('❌ User signed out');
     }
