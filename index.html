@@ -51,10 +51,23 @@
     .btn.success{background:linear-gradient(45deg,#2ed573,#1dd1a1)}
     .btn.danger{background:linear-gradient(45deg,#ff4d4f,#ff2d55)}
 
-    .stats{display:grid; grid-template-columns:repeat(4,minmax(140px,1fr)); gap:12px; margin:14px 0}
+    .stats{
+      display:grid; 
+      grid-template-columns:repeat(4,minmax(140px,1fr)); 
+      grid-template-rows: auto auto;
+      gap:12px; 
+      margin:14px 0;
+    }
+    
     .stat{background:var(--card); border:2px solid var(--primary); border-radius:12px; padding:14px; text-align:center}
     .stat-num{font-size:1.8rem; color:var(--primary); font-weight:900}
     .stat-label{font-size:.72rem; color:#80808f; text-transform:uppercase; font-weight:900; letter-spacing:.6px}
+
+    /* Make the binge time meter span 2 columns and center it */
+    #bingeMeter {
+      grid-column: 2 / 4; /* spans columns 2 and 3 */
+      grid-row: 2;
+    }
 
     .list-container{background:var(--card); border:3px dashed var(--border); border-radius:12px; padding:12px; min-height:80px}
 
@@ -127,7 +140,7 @@
 
         <!-- Auth UI -->
         <div id="authBox" class="auth-box" style="display:block;">
-          <button id="googleSignInBtn" class="btn" data-testid="google-signin">🔐 Continue with Google</button>
+          <button id="googleSignInBtn" class="btn" data-testid="google-signin">🔑 Continue with Google</button>
           <button id="emailSignInBtn" class="btn secondary" data-testid="email-signin">✉️ Email Sign-In</button>
         </div>
         <div id="signedBox" class="auth-box" style="display:none; gap:8px; align-items:center">
@@ -172,7 +185,7 @@
           <div class="stat-label" data-i18n="currently_watching">Currently Watching</div>
         </div>
         <div class="stat" onclick="switchToTab('wishlist')" data-testid="wishlist-stat">
-          <div class="stat-num" id="totalWishlistCount">0</div>
+          <div class="stat-num" id="totalWishlistCount">2</div>
           <div class="stat-label" data-i18n="want_to_watch">Want to Watch</div>
         </div>
         <div class="stat" onclick="switchToTab('watched')" data-testid="watched-stat">
@@ -180,7 +193,7 @@
           <div class="stat-label" data-i18n="already_watched">Already Watched</div>
         </div>
         <div class="stat" data-testid="total-stat">
-          <div class="stat-num" id="totalCount">0</div>
+          <div class="stat-num" id="totalCount">2</div>
           <div class="stat-label">Total</div>
         </div>
       </div>
@@ -237,7 +250,7 @@
       es:{ app_title:'Flicklet', subtitle:'Seguimiento de series y películas', binge_total:'Tiempo total de maratón',
            currently_watching:'Viendo actualmente', want_to_watch:'Quiero ver', already_watched:'Ya visto',
            streaming_on:'En', clear:'Limpiar', series_complete:'Serie terminada', coming_soon:'Próximamente',
-           currently_airing:'En emisión', next:'Próx.', last:'Últ.', start:'Comenzar' }
+           currently_airing:'En emisión', next:'Prós.', last:'Últ.', start:'Comenzar' }
     };
     function t(k){ const lang = appData?.settings?.lang || 'en'; return (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k; }
     function applyTranslations(){ document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); if(k) el.textContent=t(k); }); }
@@ -879,7 +892,7 @@ function updateWelcomeText(){
        saveAppData(); 
        updateWelcomeText();
        if(val) {
-         showNotification('Name saved! 👤', 'success');
+         showNotification('Name saved! 💤', 'success');
        }
      };
 
@@ -916,9 +929,6 @@ function updateWelcomeText(){
      document.getElementById('filterBtn').onclick=toggleContentFilter;
    });
 
-   // tiny helpers
-   window.updateUI = updateUI;
-   window.updateBingeBanner = updateBingeBanner;
  </script>
 </body>
 </html>
