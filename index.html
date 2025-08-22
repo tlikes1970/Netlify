@@ -461,35 +461,63 @@
 
     /* ============== Card helpers ============== */
     function getSeriesPill(item){
-      if(!item || (item.media_type!=='tv' && !item.first_air_date)) return '';
-      const status   = item.status || '';
-      const lastAir  = item.last_episode_to_air?.air_date || item.last_air_date || null;
-      const nextEp   = item.next_episode_to_air || null;
-      const inProd   = !!item.in_production;
-      const totalEp  = Number.isFinite(item.number_of_episodes) ? item.number_of_episodes : null;
-      const curS = parseInt(item.currentSeason ?? 0,10) || null;
-      const curE = parseInt(item.currentEpisode ?? 0,10) || null;
+  if (!item || (item.media_type!=='tv' && !item.first_air_date)) return '';
 
-      let cls='status-ongoing';
-      let label=t('currently_airing');
+  const status    = (item.status || '').toLowerCase();            // e.g. 'returning series', 'ended', 'in production', 'planned'
+  const nextAir   = item.next_episode_to_air?.air_date || null;
+  const lastAir   = item.last_episode_to_air?.air_date || item.last_air_date || null;
+  const firstAir  = item.first_air_date || null;
 
-      if(status==='Ended' || status==='Canceled'){
-        cls='status-ended';
-        label=`${t('series_complete')}${lastAir ? ` • ${formatDateShort(lastAir)}` : ''}`;
-      }else if(status==='In Production' || inProd){
-        cls='status-upcoming';
-        label=t('coming_soon');
-      }else{
-        cls='status-ongoing';
-        const progress = (curS && curE && totalEp) ? `S${curS}E${curE} of ${totalEp}` :
-                         (curS && curE) ? `S${curS}E${curE}` : null;
-        const whenNext = nextEp?.air_date ? `${t('next')}: ${formatDateShort(nextEp.air_date)}` :
-                         lastAir ? `${t('last')}: ${formatDateShort(lastAir)}` : null;
-        label = [progress || t('currently_airing'), whenNext].filter(Boolean).join(' • ');
-      }
-      const title = [status || null, lastAir ? `Last: ${formatDateShort(lastAir)}` : null].filter(Boolean).join(' • ');
-      return `<span class="series-pill ${cls}" title="${title}">${label}</span>`;
-    }
+  const today = new Date(); today.setHours(0,0,0,0);
+  const firstAirFuture = firstAir ? (new Date(firstAir) > today) : false;
+
+  // Classify
+  let mode; // 'ended' | 'upcoming' | 'ongoing'
+  if (['ended','canceled','cancelled'].includes(status)) {
+    mode = 'ended';
+  } else if (
+    ['planned','pilot'].includes(status) ||
+    firstAirFuture ||
+    (status === 'in production' && !lastAir) // only "coming soon" if nothing has aired yet
+  ) {
+    mode = 'upcoming';
+  } else {
+    // returning series, or in production *with* aired episodes
+    mode = 'ongoing';
+  }
+
+  let label = '', cls = '';
+  if (mode === 'ended') {
+    cls   = 'status-ended';
+    label = `${t('series_complete')}${lastAir ? ` • ${formatDateShort(lastAir)}` : ''}`;
+  } else if (mode === 'upcoming') {
+    cls   = 'status-upcoming';
+    // show a date if we have one (prefer first_air_date, otherwise next if provided)
+    const when = firstAir || nextAir;
+    label = `${t('coming_soon')}${when ? ` • ${formatDateShort(when)}` : ''}`;
+  } else {
+    cls = 'status-ongoing';
+    const s = item.currentSeason ? parseInt(item.currentSeason,10) : null;
+    const e = item.currentEpisode ? parseInt(item.currentEpisode,10) : null;
+    const total = Number.isFinite(item.number_of_episodes) ? item.number_of_episodes : null;
+
+    const progress = (s && e && total) ? `S${s}E${e} of ${total}` :
+                     (s && e) ? `S${s}E${e}` : null;
+
+    const when = nextAir ? `${t('next')}: ${formatDateShort(nextAir)}` :
+                 (lastAir ? `${t('last')}: ${formatDateShort(lastAir)}` : null);
+
+    label = [progress || t('currently_airing'), when].filter(Boolean).join(' • ');
+  }
+
+  const title = [
+    item.status || null,
+    nextAir ? `Next: ${formatDateShort(nextAir)}` : null,
+    lastAir ? `Last: ${formatDateShort(lastAir)}` : null
+  ].filter(Boolean).join(' • ');
+
+  return `<span class="series-pill ${cls}" title="${title}">${label}</span>`;
+}
 
     async function ensureTvDetails(item, card){
       if(item.media_type!=='tv' && !item.first_air_date) return;
