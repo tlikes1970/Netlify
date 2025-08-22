@@ -1298,7 +1298,9 @@ async function loadUserDataFromCloud(userId) {
                     last_episode_to_air: details.last_episode_to_air,
                     in_production: details.in_production,
                     genres: details.genres,
-                    networks: details.networks
+                    networks: details.networks,
+					episode_run_time: details.episode_run_time || [45],
+                    runtime: details.episode_run_time ? details.episode_run_time[0] : 45
                   };
                 }
               } else if (item.media_type === 'movie' || item.release_date) {
@@ -1309,7 +1311,8 @@ async function loadUserDataFromCloud(userId) {
                     ...item,
                     status: details.status,
                     release_date: details.release_date,
-                    genres: details.genres
+                    genres: details.genres,
+					runtime: details.runtime || 120
                   };
                 }
               }
@@ -1389,6 +1392,7 @@ async function loadUserDataFromCloud(userId) {
       card.setAttribute('data-testid', `show-card-${item.id}`);
       card.setAttribute('data-show-title', title);
       card.setAttribute('data-media-type', mediaType);
+	  card.setAttribute('data-runtime-minutes', item.runtime || (mediaType === 'tv' ? 45 : 120));
       const category = mediaType === 'tv' ? 'tv' : 'movies';
       const isInWatching = appData[category] && appData[category].watching && appData[category].watching.some(show => show.id === item.id);
       const isInWishlist = appData[category] && appData[category].wishlist && appData[category].wishlist.some(show => show.id === item.id);
@@ -1931,8 +1935,53 @@ async function loadUserDataFromCloud(userId) {
         updateList('watchedList', [...appData.tv.watched, ...appData.movies.watched]);
       } catch (error) {
         console.error('Error updating UI:', error);
+		updateBingeMeter();
       }
     }
+	
+	function calculateBingeTime() {
+  const allCards = document.querySelectorAll('.show-card[data-runtime-minutes]');
+  let totalMinutes = 0;
+  let showCount = 0;
+  
+  allCards.forEach(card => {
+    const runtime = parseInt(card.getAttribute('data-runtime-minutes') || '0');
+    totalMinutes += runtime;
+    showCount++;
+  });
+  
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  
+  let timeStr = '';
+  if (days > 0) timeStr += `${days}d `;
+  if (remainingHours > 0) timeStr += `${remainingHours}h `;
+  if (minutes > 0) timeStr += `${minutes}m`;
+  
+  return { totalMinutes, timeStr: timeStr || '0m', showCount };
+}
+
+function updateBingeMeter() {
+  const stats = calculateBingeTime();
+  
+  // Find or create binge meter in stats section
+  const statsContainer = document.querySelector('.stats');
+  let bingeMeter = document.getElementById('bingeMeter');
+  
+  if (!bingeMeter) {
+    bingeMeter = document.createElement('div');
+    bingeMeter.id = 'bingeMeter';
+    bingeMeter.className = 'stat';
+    statsContainer.appendChild(bingeMeter);
+  }
+  
+  bingeMeter.innerHTML = `
+    <div class="stat-num">${stats.timeStr}</div>
+    <div class="stat-label">Total Binge Time</div>
+  `;
+}
 
     function updateList(containerId, items) {
       const container = document.getElementById(containerId);
