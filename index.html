@@ -1,371 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Primary Meta Tags -->
   <title>Flicklet - TV & Movie Tracker</title>
-  <meta name="title" content="Flicklet - TV & Movie Tracker">
-  <meta name="description" content="Search, track, and rate shows & films fast. Never lose track of your binge-watching again!">
-  <meta name="keywords" content="tv tracker, movie tracker, streaming, watchlist, tv shows, movies, entertainment, episode tracker">
-  <meta name="author" content="Flicklet">
+  <meta name="description" content="Search, track, and rate shows & films fast. Never lose track of your binge-watching again!" />
 
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://Flicklet.netlify.app/">
-  <meta property="og:title" content="Flicklet - TV & Movie Tracker">
-  <meta property="og:description" content="Search, track, and rate shows & films fast. Never lose track of your binge-watching again!">
-  <meta property="og:image" content="https://Flicklet.netlify.app/icons/icon-512.png">
-  <meta name="twitter:image" content="/icons/icon-512.png">
-
-  <!-- PWA Meta Tags -->
-  <meta name="application-name" content="Flicklet">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Flicklet">
-  <meta name="theme-color" content="#ff6b6b">
-
-  <!-- PWA Manifest + Favicon -->
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" href="/icons/icon-512.png">
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="/icons/icon-512.png" />
 
   <style>
-    .flash-focus {
-      outline: 3px solid rgba(255, 255, 0, .9);
-      box-shadow: 0 0 0 6px rgba(255,255,0,.25);
-      transition: box-shadow .3s;
+    :root{
+      --bg:#fff; --text:#000; --primary:#ff6b6b; --card:#f9f9f9; --border:#ddd;
+      --success:#51cf66; --warning:#ffd43b; --danger:#ff6b6b; --purple:#845ec2;
     }
-    :root {
-      --bg: #fff; --text: #000; --primary: #ff6b6b; --card: #f9f9f9; --border: #ddd;
-      --success: #51cf66; --warning: #ffd43b; --danger: #ff6b6b; --purple: #845ec2;
-      --blue: #4dabf7; --orange: #ff8c42; --green: #51cf66;
+    *{box-sizing:border-box}
+    body{
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      color:var(--text); margin:0; padding:20px; min-height:100vh;
     }
-
-    * { box-sizing: border-box; }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: var(--text); margin: 0; padding: 20px; min-height: 100vh;
-      transition: all 0.3s ease;
+    .dark-mode{
+      --bg:#1a1a1a; --text:#f5f5f5; --card:#2d2d2d; --border:#444;
+      background:linear-gradient(135deg,#2c3e50 0%,#34495e 100%) !important;
     }
-
-    .dark-mode {
-      --bg: #1a1a1a; --text: #f5f5f5; --card: #2d2d2d; --border: #444;
-      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+    .main-container{
+      max-width:1200px; margin:0 auto; background:var(--bg); border-radius:20px; padding:30px;
+      box-shadow:0 20px 60px rgba(0,0,0,.3);
     }
-
-    .main-container {
-      max-width: 1200px; margin: 0 auto; background: var(--bg);
-      border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      transition: all 0.3s ease;
+    .header{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; border-bottom:3px dashed var(--primary); padding-bottom:18px; margin-bottom:24px}
+    .title{margin:0; font-size:2.4rem; color:var(--primary); font-weight:800}
+    .subtitle{margin-top:4px; color:#777}
+    .user-section{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    #langToggle{
+      padding:8px 10px; border-radius:14px; border:2px solid var(--border);
+      background:var(--card); color:var(--text); font-weight:700;
     }
 
-    .header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 20px 0; border-bottom: 3px dashed var(--primary); margin-bottom: 30px;
-      position: relative; flex-wrap: wrap; gap: 15px;
+    .tab-container{display:flex; gap:6px; background:var(--card); padding:8px; border-radius:12px; margin:18px 0}
+    .tab{flex:1; border:0; background:transparent; padding:14px; border-radius:10px; font-weight:700; cursor:pointer}
+    .tab.active{background:linear-gradient(45deg,var(--primary),var(--purple)); color:#fff}
+    .tab-badge{background:#fff; color:var(--primary); border-radius:12px; padding:2px 8px; font-size:12px; margin-left:6px}
+
+    .search-container{background:var(--card); border:2px solid var(--primary); border-radius:16px; padding:16px; margin:18px 0}
+    .search-row{display:flex; gap:10px; flex-wrap:wrap}
+    .search-input{flex:1; min-width:240px; padding:10px; border-radius:12px; border:2px solid var(--border); background:var(--bg); color:var(--text)}
+    button{
+      border:0; background:linear-gradient(45deg,var(--primary),var(--purple)); color:#fff; border-radius:20px;
+      padding:10px 16px; font-weight:700; cursor:pointer
     }
+    button.secondary{background:linear-gradient(45deg,#747d8c,#57606f)}
+    button.success{background:linear-gradient(45deg,#2ed573,#1dd1a1)}
+    button.danger{background:linear-gradient(45deg,#ff4757,#ff3742)}
 
-    .header::after {
-      content: "🛋️"; position: absolute; right: 20px; top: 15px;
-      font-size: 28px; animation: couch-bounce 3s ease-in-out infinite;
+    .stats{display:flex; flex-wrap:wrap; gap:14px; margin:18px 0}
+    .stat{flex:1; min-width:140px; background:var(--card); border:2px solid var(--primary); border-radius:14px; padding:16px; text-align:center}
+    .stat-num{font-size:2rem; color:var(--primary); font-weight:800}
+    .stat-label{font-size:.75rem; color:#777; text-transform:uppercase; font-weight:800}
+
+    .list-container{background:var(--card); border:3px dashed var(--border); border-radius:12px; padding:16px; min-height:80px}
+    .show-card{display:flex; gap:16px; border:2px solid var(--border); border-radius:12px; padding:16px; margin:12px 0; background:var(--bg)}
+    .show-poster{width:90px; height:135px; border-radius:8px; object-fit:cover; cursor:pointer}
+    .poster-placeholder{width:90px; height:135px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:#eee; color:#777; font-size:12px}
+    .show-details{flex:1; display:flex; flex-direction:column}
+    .show-title{margin:0 0 6px 0; color:var(--primary); font-size:1.15rem; display:flex; gap:8px; align-items:center; cursor:pointer}
+    .show-meta{color:#888; font-size:.9rem; margin-bottom:8px}
+    .show-overview{font-size:.95rem; line-height:1.5; margin-bottom:10px}
+    .rating-container{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .star-rating .star{cursor:pointer; filter:grayscale(1)}
+    .star-rating .star.active{filter:none}
+    .like-btn,.dislike-btn{padding:6px 12px; border-radius:14px; background:#ddd; color:#444}
+    .like-btn.active{background:linear-gradient(45deg,#2ed573,#1dd1a1); color:#fff}
+    .dislike-btn.active{background:linear-gradient(45deg,#ff4757,#ff3742); color:#fff}
+
+    /* pill at far right of rating row */
+    .series-pill{margin-left:auto; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:800; white-space:nowrap; border:1px solid transparent}
+    .series-pill.status-ongoing {background:rgba(81,207,102,.15);  color:#37b24d; border-color:#37b24d}
+    .series-pill.status-ended   {background:rgba(255,71,87,.15);   color:#ff4757; border-color:#ff4757}
+    .series-pill.status-upcoming{background:rgba(255,212,59,.15);  color:#f59f00; border-color:#f59f00}
+
+    .tags-container button:empty{display:none !important}
+
+    .empty-state{padding:30px; text-align:center; color:#777}
+    .sassy-empty{color:var(--primary); font-weight:800}
+
+    .notification{
+      position:fixed; right:20px; top:20px; z-index:1000; color:#fff; font-weight:800;
+      padding:12px 16px; border-radius:10px; background:var(--purple); animation:fadeout .4s ease 2.6s forwards
     }
+    .notification.success{background:var(--success)}
+    .notification.warning{background:var(--warning); color:#000}
+    .notification.error{background:var(--danger)}
+    @keyframes fadeout{to{opacity:0; transform:translateX(120%)}}
 
-    @keyframes couch-bounce {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-5px) rotate(-5deg); }
-    }
-
-    .title {
-      font-size: 2.5em; font-weight: bold; color: var(--primary);
-      margin: 0; cursor: pointer; flex-shrink: 0;
-    }
-
-    .subtitle { font-size: 1.1em; font-style: italic; color: #666; margin-top: 5px; }
-
-    .user-section { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
-
-    .name-container { display: flex; flex-direction: column; align-items: flex-end; transition: all 0.3s ease; }
-    .name-instruction { font-size: 12px; color: var(--primary); font-weight: bold; margin-bottom: 5px; }
-    .name-input { padding: 12px; border: 2px solid var(--primary); border-radius: 25px; background: var(--card); color: var(--text); font-weight: bold; }
-    .name-container.hidden { opacity: 0; transform: scale(0.8); pointer-events: none; }
-
-    .tab-container { display: flex; background: var(--card); border-radius: 15px; padding: 8px; margin: 30px 0; gap: 5px; }
-
-    .tab {
-      flex: 1; padding: 18px 30px; border: none; background: transparent;
-      color: var(--text); cursor: pointer; border-radius: 10px; font-weight: bold;
-      transition: all 0.3s ease; font-size: 16px; text-align: center;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .tab.active { background: linear-gradient(45deg, var(--primary), var(--purple)); color: white; transform: scale(1.05); }
-
-    .tab-badge { background: rgba(255,255,255,0.9); color: var(--primary); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; min-width: 20px; }
-    .tab.active .tab-badge { background: rgba(255,255,255,1); color: var(--primary); }
-
-    button {
-      margin: 8px; padding: 12px 20px; border: none; border-radius: 25px;
-      background: linear-gradient(45deg, var(--primary), var(--purple));
-      color: white; cursor: pointer; font-weight: bold; font-size: 14px;
-      transition: all 0.3s ease;
-    }
-    button:hover { transform: translateY(-3px) scale(1.05); }
-    button:disabled { background: #666; cursor: not-allowed; transform: none; opacity: 0.6; }
-    button.danger { background: linear-gradient(45deg, #ff4757, #ff3742); }
-    button.success { background: linear-gradient(45deg, #2ed573, #1dd1a1); }
-    button.secondary { background: linear-gradient(45deg, #747d8c, #57606f); }
-
-    .search-container { background: var(--card); padding: 25px; border-radius: 20px; margin: 30px 0; border: 2px solid var(--primary); }
-    .search-row { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
-    .search-input { flex: 1; min-width: 250px; padding: 12px 15px; border: 2px solid var(--border); border-radius: 15px; background: var(--bg); color: var(--text); font-size: 16px; }
-
-    .tooltip { position: relative; display: inline-block; cursor: help; color: var(--primary); font-weight: bold; text-decoration: underline; }
-    .tooltip .tooltiptext {
-      visibility: hidden; width: 300px; background-color: var(--purple); color: white;
-      text-align: left; border-radius: 10px; padding: 15px; position: absolute; z-index: 1000;
-      bottom: 125%; left: 50%; margin-left: -150px; opacity: 0; transition: opacity 0.3s; font-style: normal; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-    }
-    .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: var(--purple) transparent transparent transparent; }
-    .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
-
-    input, select { padding: 12px 15px; margin: 5px; border: 2px solid var(--border); border-radius: 15px; background: var(--bg); color: var(--text); }
-
-    .section { margin: 40px 0; }
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; cursor: pointer; padding: 10px 0; }
-    .section h3 { color: var(--primary); margin: 0; font-size: 1.8em; }
-    .section-subtitle { font-size: 14px; color: #666; font-style: italic; margin-top: 5px; font-weight: normal; }
-
-    .count { background: linear-gradient(45deg, var(--primary), var(--purple)); color: white; padding: 8px 15px; border-radius: 20px; font-size: 16px; font-weight: bold; cursor: pointer; }
-    .list-container { background: var(--card); border-radius: 15px; padding: 20px; min-height: 80px; border: 3px dashed var(--border); }
-    .show-card { display: flex; border: 2px solid var(--border); border-radius: 15px; padding: 20px; margin: 15px 0; background: var(--bg); }
-    .show-poster { width: 90px; height: 135px; border-radius: 10px; object-fit: cover; margin-right: 20px; flex-shrink: 0; cursor: pointer; }
-    .poster-placeholder { width: 90px; height: 135px; background: #f0f0f0; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 20px; color: #999; font-size: 12px; font-weight: bold; flex-shrink: 0; cursor: pointer; }
-
-    .show-details { flex: 1; display: flex; flex-direction: column; }
-    .show-title { font-size: 20px; font-weight: bold; margin: 0 0 10px 0; cursor: pointer; color: var(--primary); display: flex; align-items: center; gap: 10px; }
-    .external-link { font-size: 14px; opacity: 0.7; transition: opacity 0.3s ease; }
-    .external-link:hover { opacity: 1; }
-    .show-meta { color: #666; font-size: 14px; margin-bottom: 12px; }
-    .show-overview { font-size: 14px; line-height: 1.6; margin-bottom: 15px; max-height: 60px; overflow: hidden; cursor: pointer; }
-    .show-overview.expanded { max-height: none; }
-
-    .rating-container { display: flex; align-items: center; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
-    .star-rating { display: flex; gap: 2px; }
-    .star { font-size: 18px; cursor: pointer; transition: all 0.2s ease; color: #ddd; }
-    .star:hover, .star.active { color: #ffd700; transform: scale(1.1); }
-
-    .like-dislike { display: flex; gap: 8px; align-items: center; }
-    .like-btn, .dislike-btn { padding: 6px 12px; font-size: 12px; border-radius: 15px; border: none; cursor: pointer; transition: all 0.3s ease; }
-    .like-btn { background: #ddd; color: #666; }
-    .like-btn.active { background: linear-gradient(45deg, #2ed573, #1dd1a1); color: white; }
-    .dislike-btn { background: #ddd; color: #666; }
-    .dislike-btn.active { background: linear-gradient(45deg, #ff4757, #ff3742); color: white; }
-
-    .notes-container { margin: 10px 0; }
-    .notes-field { width: 100%; min-height: 50px; padding: 10px; border: 2px dashed var(--border); border-radius: 10px; background: var(--card); color: var(--text); resize: vertical; font-family: inherit; font-size: 13px; }
-    .char-count { font-size: 11px; color: #999; text-align: right; margin-top: 5px; }
-    .char-count.warning { color: var(--warning); }
-    .char-count.danger { color: var(--danger); }
-
-    .tags-container { margin: 10px 0; }
-    .tag-input { width: 100%; padding: 8px; font-size: 12px; margin-bottom: 8px; border: 2px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); }
-    .tags-display { display: flex; flex-wrap: wrap; gap: 6px; }
-    .tag { background: var(--purple); color: white; padding: 4px 8px; border-radius: 15px; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-    .tag-remove { cursor: pointer; font-weight: bold; }
-
-    /* remove accidental empty/ghost buttons next to Add Tag */
-    .tags-container button:empty { display:none !important; width:0 !important; padding:0 !important; margin:0 !important; border:0 !important; }
-
-    .episode-tracker { background: var(--card); padding: 12px; border-radius: 10px; border: 2px dashed var(--border); margin: 10px 0; }
-    .episode-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px; margin-top: 8px; }
-    .episode-inputs input { padding: 8px; font-size: 12px; text-align: center; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); }
-
-    .series-status { background: var(--card); padding: 10px; border-radius: 8px; margin: 8px 0; font-size: 12px; border-left: 4px solid var(--primary); }
-    .status-ongoing { border-left-color: var(--success); }
-    .status-ended { border-left-color: var(--danger); }
-    .status-upcoming { border-left-color: var(--warning); }
-    .episode-info { font-weight: bold; color: var(--primary); }
-    .air-date { color: #666; font-style: italic; }
-
-    .show-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 15px; }
-    .show-actions button { padding: 8px 15px; font-size: 12px; margin: 2px; }
-
-    .empty-state { text-align: center; color: #666; padding: 40px 20px; font-style: italic; font-size: 18px; }
-    .sassy-empty { font-weight: bold; color: var(--primary); }
-
-    .stats { display: flex; gap: 20px; margin: 30px 0; flex-wrap: wrap; }
-    .stat { background: var(--card); padding: 25px; border-radius: 15px; text-align: center; flex: 1; min-width: 140px; border: 2px solid var(--primary); cursor: pointer; }
-    .stat:hover { transform: translateY(-5px); }
-    .stat-num { font-size: 2.5em; font-weight: bold; color: var(--primary); }
-    .stat-label { font-size: 12px; color: #666; font-weight: bold; text-transform: uppercase; }
-
-    .notification {
-      position: fixed; top: 20px; right: 20px; z-index: 1000;
-      padding: 15px 25px; border-radius: 10px; color: white; font-weight: bold;
-      animation: slide-in 0.5s ease, slide-out 0.5s ease 2.5s forwards;
-    }
-    @keyframes slide-in { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    @keyframes slide-out { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
-    .notification.success { background: var(--success); }
-    .notification.error { background: var(--danger); }
-    .notification.warning { background: var(--warning); color: #000; }
-    .notification.info { background: var(--purple); }
-
-    .loading-container { text-align: center; padding: 40px; }
-    .loading-spinner { width: 50px; height: 50px; border: 5px solid var(--border); border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .loading-text { font-weight: bold; color: var(--primary); font-size: 16px; }
-
-    .easter-egg { position: fixed; bottom: 20px; right: 20px; background: var(--purple); color: white; padding: 12px; border-radius: 50%; cursor: pointer; z-index: 1000; font-size: 18px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; }
-    .feedback-button { position: fixed; bottom: 90px; right: 20px; background: var(--primary); color: white; padding: 15px; border-radius: 50%; cursor: pointer; z-index: 1001; font-size: 20px; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .main-container { padding: 15px; margin: 10px; border-radius: 15px; }
-      .header { flex-direction: column; text-align: center; gap: 10px; }
-      .header::after { display: none; }
-      .title { font-size: 2em; }
-      .tab-container { flex-direction: column; }
-      .tab { padding: 15px 20px; }
-      .search-row { flex-direction: column; }
-      .search-input { min-width: auto; }
-      .show-card { flex-direction: column; padding: 15px; text-align: center; }
-      .show-poster, .poster-placeholder { width: 70px; height: 105px; margin: 0 auto 15px auto; }
-      .stats { flex-direction: column; gap: 10px; }
-      .stat { min-width: auto; padding: 15px; }
-    }
-
-    @keyframes bubble-bounce { 0% { transform: scale(0) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
-
-    /* Obnoxious rainbow binge button */
-    #bingeBanner .binge-cta, #bingeBanner #startBingeBtn,
-    button#startBingeBtn,
-    #bingeBanner .binge-cta#startBingeBtn {
-      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57, #ff9ff3, #54a0ff) !important;
-      background-size: 400% 400% !important;
-      animation: rainbow-pulse 3s ease-in-out infinite !important;
-      border: 2px solid white !important;
-      box-shadow: 0 0 15px rgba(255, 107, 107, 0.6) !important;
-      color: white !important;
-      transform-origin: center !important;
-    }
-    #bingeBanner .binge-cta:hover { animation-duration: 1s !important; box-shadow: 0 0 25px rgba(255, 107, 107, 1) !important; transform: scale(1.05) !important; }
-    @keyframes rainbow-pulse {
-      0%, 100% { background-position: 0% 50%; transform: scale(1); }
-      25% { background-position: 100% 50%; transform: scale(1.02); }
-      50% { background-position: 0% 50%; transform: scale(1.05); }
-      75% { background-position: 100% 50%; transform: scale(1.02); }
-    }
-    #bingeBanner{
-      display:flex; align-items:center; gap:12px;
-      padding:4px 0; border:none !important; box-shadow:none !important;
-      animation:none !important;
-    }
-    #bingeBanner .binge-time{
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-variant-numeric: tabular-nums;
-      font-weight: 800; letter-spacing:.3px;
-      color: var(--warning); /* yellow */
-      font-size: 1.05rem;
-    }
-    #bingeBanner .binge-label{
-      color:#e5e7eb; /* soft white/grey */
-      opacity:.95; font-size:.95rem;
-    }
+    /* Binge banner */
+    #bingeBanner{display:flex; align-items:center; gap:12px; padding:4px 0}
+    #bingeBanner .binge-time{font-family:ui-monospace,Menlo,monospace; font-weight:800; color:var(--warning)}
+    #bingeBanner .binge-label{color:#e5e7eb; opacity:.95}
     #bingeBanner .binge-cta{
-      padding: 8px 14px;             /* smaller button */
-      font-size: .9rem;
-      border-radius: 18px;
+      padding:8px 14px; font-size:.9rem; border-radius:18px; color:#fff;
+      background:linear-gradient(45deg,#ff6b6b,#4ecdc4,#45b7d1,#96ceb4,#feca57,#ff9ff3,#54a0ff);
+      background-size:400% 400%; animation:rainbow 3s ease-in-out infinite; border:2px solid #fff
+    }
+    @keyframes rainbow{
+      0%,100%{background-position:0% 50%}
+      50%{background-position:100% 50%}
     }
 
-    /* --- Series status pill moved up into rating row --- */
-    .rating-container{ align-items:center; gap:10px; }
-    .series-pill{
-      margin-left:auto; /* shove it to the right end of the row */
-      padding:6px 10px; border-radius:9999px;
-      font-size:12px; font-weight:700; white-space:nowrap;
-      border:1px solid transparent;
-    }
-    .series-pill.status-ongoing{  background:rgba(81,207,102,.15);  color:#37b24d; border-color:#37b24d; }
-    .series-pill.status-ended{    background:rgba(255,71,87,.15);   color:#ff4757; border-color:#ff4757; }
-    .series-pill.status-upcoming{ background:rgba(255,212,59,.15);  color:#f59f00; border-color:#f59f00; }
-
-    /* keep the card flash effect */
-    .flash-focus {
-      outline: 3px solid rgba(255,255,0,.9);
-      box-shadow: 0 0 0 6px rgba(255,255,0,.25);
-      transition: box-shadow .3s;
-    }
+    /* basic modal */
+    .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; z-index:10000}
+    .modal{background:var(--bg); color:var(--text); max-width:680px; width:92%; border-radius:14px; border:2px solid var(--primary); padding:18px}
+    .modal h3{margin:0 0 10px 0; color:var(--primary)}
+    .modal .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:14px}
   </style>
 </head>
+
 <body>
   <div class="main-container">
     <div class="header">
       <div>
-        <h1 class="title" id="welcomeText" data-testid="app-title">Flicklet</h1>
-        <div class="subtitle">TV & Movie Tracker</div>
-        <!-- Binge banner -->
+        <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
+        <div class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
+        <!-- In-your-face binge banner -->
         <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
       </div>
       <div class="user-section">
-        <div class="name-container" id="nameContainer">
+        <div id="nameContainer" class="name-container">
           <div class="name-instruction">👆 Add your name for a personal touch!</div>
-          <input type="text" id="displayNameInput" class="name-input" placeholder="Your name here...">
+          <input id="displayNameInput" class="name-input" placeholder="Your name here..." />
         </div>
         <button id="darkModeToggle">🌙 Go Dark</button>
+        <select id="langToggle" aria-label="Language" title="Language">
+          <option value="en">EN</option>
+          <option value="es">ES</option>
+        </select>
       </div>
     </div>
 
     <div class="tab-container">
-      <button id="homeTab" class="tab active" data-testid="home-tab">🏠 Home <span class="tab-badge">Overview</span></button>
-      <button id="watchingTab" class="tab" data-testid="watching-tab">▶️ Currently Watching <span class="tab-badge" id="watchingBadge">0</span></button>
-      <button id="wishlistTab" class="tab" data-testid="wishlist-tab">📖 Want to Watch <span class="tab-badge" id="wishlistBadge">0</span></button>
-      <button id="watchedTab" class="tab" data-testid="watched-tab">✅ Already Watched <span class="tab-badge" id="watchedBadge">0</span></button>
+      <button id="homeTab" class="tab active" data-testid="home-tab">🏠 Home</button>
+      <button id="watchingTab" class="tab" data-testid="watching-tab">▶️ <span data-i18n="currently_watching">Currently Watching</span> <span class="tab-badge" id="watchingBadge">0</span></button>
+      <button id="wishlistTab" class="tab" data-testid="wishlist-tab">📖 <span data-i18n="want_to_watch">Want to Watch</span> <span class="tab-badge" id="wishlistBadge">0</span></button>
+      <button id="watchedTab" class="tab" data-testid="watched-tab">✅ <span data-i18n="already_watched">Already Watched</span> <span class="tab-badge" id="watchedBadge">0</span></button>
     </div>
 
-    <!-- HOME TAB -->
     <div id="homeSection" class="tab-section">
-      <!-- Firebase Auth Section -->
-      <div id="authSection" class="search-container" style="display: none;">
-        <h3 id="authTitle" style="color: var(--primary); margin: 0 0 15px 0;">🔐 Sign In to Sync Your Data</h3>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-          <button id="googleSignIn" data-testid="google-signin-button" style="background: #4285f4;">📱 Sign in with Google</button>
-          <button id="emailSignIn" data-testid="email-signin-button" style="background: var(--purple);">📧 Sign in with Email</button>
-          <button id="signOut" data-testid="signout-button" style="background: var(--danger); display: none;">🚪 Sign Out</button>
+      <!-- Auth box -->
+      <div id="authSection" class="search-container" style="display:none">
+        <h3 id="authTitle" data-i18n="sign_in_title">🔐 Sign In to Sync Your Data</h3>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+          <button id="googleSignIn" style="background:#4285f4">📱 Sign in with Google</button>
+          <button id="emailSignIn"  class="secondary">📧 Sign in with Email</button>
+          <button id="signOut" class="danger" style="display:none">🚪 Sign Out</button>
         </div>
-        <div id="authStatus" style="margin-top: 10px; font-weight: bold;"></div>
+        <div id="authStatus" style="margin-top:8px; font-weight:800"></div>
       </div>
 
       <div class="search-container">
         <div class="search-row">
-          <input type="text" id="searchInput" class="search-input" data-testid="search-input" placeholder="Search for shows or movies...">
+          <input id="searchInput" class="search-input" data-testid="search-input" placeholder="Search for shows or movies..." />
           <select id="genreFilter"><option value="">All Genres</option></select>
           <button id="searchBtn" data-testid="search-button">🔍 Search</button>
-          <button id="clearSearchBtn" class="secondary" style="display: none;">✖️ Clear</button>
-        </div>
-
-        <div class="search-help">
-          💡 <strong><span class="tooltip">Wildcards:<span class="tooltiptext">
-            <strong>Wildcard = when your brain is mush and you only remember part of the title.</strong><br><br>
-            <strong>Examples:</strong><br>
-            • Type "star*" = shows starting with "star"<br>
-            • Type "*wars" = shows ending with "wars"<br>
-            • Type "*trek*" = shows containing "trek"<br><br>
-            Basically, it's search for dummies when you can't remember the full title! 🧠
-          </span></span></strong> "star*" = starts with "star" | "*wars" = ends with "wars" | "*trek*" = contains "trek"
-        </div>
-
-        <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
-          <button id="prevPageBtn" disabled>← Previous</button>
-          <span id="pageInfo" style="font-weight: bold; color: var(--primary);">Page 1</span>
-          <button id="nextPageBtn" disabled>Next →</button>
+          <button id="clearSearchBtn" class="secondary" style="display:none">✖️ <span data-i18n="clear">Clear</span></button>
         </div>
       </div>
 
-      <div id="searchResults" class="section" style="display: none;">
+      <div id="searchResults" class="section" style="display:none">
         <h3>🎯 Search Results <span class="count" id="resultsCount">0</span></h3>
         <div id="searchResultsList" class="list-container"></div>
       </div>
@@ -373,904 +174,629 @@
       <div class="stats">
         <div class="stat" onclick="switchToTab('watching')">
           <div class="stat-num" id="totalWatchingCount">0</div>
-          <div class="stat-label">Currently Watching</div>
+          <div class="stat-label" data-i18n="currently_watching">Currently Watching</div>
         </div>
         <div class="stat" onclick="switchToTab('wishlist')">
           <div class="stat-num" id="totalWishlistCount">0</div>
-          <div class="stat-label">Want to Watch</div>
+          <div class="stat-label" data-i18n="want_to_watch">Want to Watch</div>
         </div>
         <div class="stat" onclick="switchToTab('watched')">
           <div class="stat-num" id="totalWatchedCount">0</div>
-          <div class="stat-label">Already Watched</div>
+          <div class="stat-label" data-i18n="already_watched">Already Watched</div>
         </div>
         <div class="stat">
           <div class="stat-num" id="totalCount">0</div>
-          <div class="stat-label">Total Collection</div>
+          <div class="stat-label">Total</div>
         </div>
       </div>
 
-      <div style="background: var(--card); padding: 25px; border-radius: 20px; margin: 30px 0; border: 2px solid var(--primary);">
-        <h3 style="color: var(--primary); margin-top: 0;">💾 Backup Your Questionable Taste</h3>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px;">
-          <input type="file" id="importFile" accept=".json" style="max-width: 200px;">
-          <button id="exportBtn" class="success" data-testid="export-button">📤 Export My Shame</button>
+      <div class="search-container">
+        <h3 style="color:var(--primary); margin-top:0">💾 Backup Your Questionable Taste</h3>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:8px">
+          <input id="importFile" type="file" accept=".json" style="max-width:220px" />
+          <button id="exportBtn" class="success" data-testid="export-button">📤 Export</button>
           <button id="clearAllBtn" class="danger" data-testid="clear-all-button">🗑️ Nuclear Option</button>
         </div>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
           <button id="aboutBtn" class="secondary" data-testid="about-button">ℹ️ About Flicklet</button>
           <button id="usageStatsBtn" class="secondary" data-testid="stats-button">📊 Usage Stats</button>
-          <button onclick="toggleContentFilter()" class="secondary" id="filterBtn">🎭 Show All Content</button>
+          <button id="filterBtn" class="secondary">🎭 Show All Content</button>
         </div>
       </div>
     </div>
 
-    <!-- CURRENTLY WATCHING TAB -->
-    <div id="watchingSection" class="tab-section" style="display: none;">
+    <div id="watchingSection" class="tab-section" style="display:none">
       <div class="section">
-        <div class="section-header">
-          <div>
-            <h3>▶️ Currently Watching <span class="count" id="watchingCount">0</span></h3>
-            <div class="section-subtitle">Shows and movies you're actually committed to... for now</div>
-          </div>
-        </div>
-        <div id="watchingList" class="list-container">
-          <div class="empty-state sassy-empty">No shows yet? What are you, productive or something? 🙄</div>
-        </div>
+        <div class="section-header"><h3>▶️ <span data-i18n="currently_watching">Currently Watching</span> <span class="count" id="watchingCount">0</span></h3></div>
+        <div id="watchingList" class="list-container"><div class="empty-state sassy-empty">No shows yet? What are you, productive or something? 🙄</div></div>
       </div>
     </div>
 
-    <!-- WANT TO WATCH TAB -->
-    <div id="wishlistSection" class="tab-section" style="display: none;">
+    <div id="wishlistSection" class="tab-section" style="display:none">
       <div class="section">
-        <div class="section-header">
-          <div>
-            <h3>📖 Want to Watch <span class="count" id="wishlistCount">0</span></h3>
-            <div class="section-subtitle">Your digital hoarding collection of "I'll definitely watch this someday"</div>
-          </div>
-        </div>
-        <div id="wishlistList" class="list-container">
-          <div class="empty-state sassy-empty">Your wishlist is emptier than a Netflix comedy special 💀</div>
-        </div>
+        <div class="section-header"><h3>📖 <span data-i18n="want_to_watch">Want to Watch</span> <span class="count" id="wishlistCount">0</span></h3></div>
+        <div id="wishlistList" class="list-container"><div class="empty-state sassy-empty">Your wishlist is emptier than a Netflix comedy special 💀</div></div>
       </div>
     </div>
 
-    <!-- ALREADY WATCHED TAB -->
-    <div id="watchedSection" class="tab-section" style="display: none;">
+    <div id="watchedSection" class="tab-section" style="display:none">
       <div class="section">
-        <div class="section-header">
-          <div>
-            <h3>✅ Already Watched <span class="count" id="watchedCount">0</span></h3>
-            <div class="section-subtitle">Your bragging rights collection and relationship argument ammunition</div>
-          </div>
-        </div>
-        <div id="watchedList" class="list-container">
-          <div class="empty-state sassy-empty">Nothing completed yet? Commitment issues much? 😏</div>
-        </div>
+        <div class="section-header"><h3>✅ <span data-i18n="already_watched">Already Watched</span> <span class="count" id="watchedCount">0</span></h3></div>
+        <div id="watchedList" class="list-container"><div class="empty-state sassy-empty">Nothing completed yet? Commitment issues much? 😏</div></div>
       </div>
     </div>
-
-    <div class="easter-egg" id="easterEgg">🎭</div>
-    <div class="feedback-button" id="feedbackBtn">💬</div>
   </div>
 
-  <script>
-    // Safety no-op so guarded calls never throw during startup order shenanigans
-    window.updateBingeMeter = window.updateBingeMeter || function(){};
-
-    // Core Application Logic
-    const TMDB_IMG_BASE = 'https://image.tmdb.org/t/p/w200';
-    const API_BASE = '/.netlify/functions/tmdb';
-
-    let currentPage = 1, searchCache = [], currentActiveTab = 'home';
-
-    const appData = {
-      tv: { watching: [], wishlist: [], watched: [] },
-      movies: { watching: [], wishlist: [], watched: [] },
-      settings: { theme: 'light', displayName: '' }
-    };
-
-    // Content filtering
-    let showMoviesOnly = false;
-    let showTVOnly = false;
-
-    // Simple modal helpers + notifications omitted for brevity above…
-    function showNotification(message, type='success') {
-      const el = document.createElement('div');
-      el.className = `notification ${type}`;
-      el.textContent = message;
-      document.body.appendChild(el);
-      setTimeout(() => el.parentNode && el.parentNode.removeChild(el), 3000);
-    }
-
-    function loadAppData() {
-      const saved = localStorage.getItem('tvMovieTrackerData');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (!parsed.tv) parsed.tv = { watching: [], wishlist: [], watched: [] };
-          if (!parsed.movies) parsed.movies = { watching: [], wishlist: [], watched: [] };
-          if (!parsed.tv.watched) parsed.tv.watched = [];
-          if (!parsed.movies.watched) parsed.movies.watched = [];
-          if (!parsed.settings) parsed.settings = { theme: 'light', displayName: '' };
-          Object.assign(appData, parsed);
-        } catch (e) { console.error('Error loading data:', e); showNotification("Failed to load your data. Starting fresh! 🔥", 'warning'); }
-      }
-      if (appData.settings.theme === 'dark') document.body.classList.add('dark-mode');
-      if (appData.settings.displayName) {
-        document.getElementById('displayNameInput').value = appData.settings.displayName;
-        updateWelcomeText(); hideNameContainer();
-      }
-    }
-
-    function updateWelcomeText() {
-      const name = appData.settings.displayName;
-      const sassyTitles = ["Chaos","Digital Hoarding","Commitment Issues","Questionable Taste","Binge Empire","Streaming Madness","Watch List Anarchy","Media Obsession","Entertainment Addiction","Viewing Disorder","Screen Time Shame"];
-      document.getElementById('welcomeText').textContent = name ? `${name}'s ${sassyTitles[Math.floor(Math.random()*sassyTitles.length)]}` : 'Flicklet';
-    }
-    function hideNameContainer(){ const c = document.getElementById('nameContainer'); if (appData.settings.displayName && c) c.classList.add('hidden'); }
-    function updateDarkModeButton(){ const isDark = document.body.classList.contains('dark-mode'); document.getElementById('darkModeToggle').textContent = isDark ? '☀️ Go Light' : '🌙 Go Dark'; }
-
-    async function saveAppData() {
-      localStorage.setItem('tvMovieTrackerData', JSON.stringify(appData));
-      if (currentUser) {
-        try {
-          const userRef = db.collection('users').doc(currentUser.uid);
-          await userRef.set({
-            watchlists:{ tv: appData.tv, movies: appData.movies },
-            settings: appData.settings,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
-          console.log('✅ Data synced to cloud');
-        } catch (e) { console.error('❌ Failed to sync to cloud:', e); showNotification('Failed to sync to cloud. Data saved locally.', 'warning'); }
-      }
-    }
-
-    async function loadUserDataFromCloud(userId) {
-      try {
-        const doc = await db.collection('users').doc(userId).get();
-        if (doc.exists) {
-          const cloud = doc.data();
-          if (cloud.watchlists) {
-            if (cloud.watchlists.tv) appData.tv = cloud.watchlists.tv;
-            if (cloud.watchlists.movies) appData.movies = cloud.watchlists.movies;
-            if (cloud.settings) appData.settings = { ...appData.settings, ...cloud.settings };
-            console.log('✅ Loaded data from cloud');
-            updateUI();
-            localStorage.setItem('tvMovieTrackerData', JSON.stringify(appData));
-            showNotification('Data synced from cloud! 📁', 'success');
-          }
-        } else {
-          console.log('No cloud data found, using local data');
-        }
-      } catch (e) {
-        console.error('❌ Failed to load from cloud:', e);
-        showNotification('Failed to load cloud data. Using local data.', 'warning');
-      }
-    }
-
-    function setupEventListeners() {
-      document.getElementById('darkModeToggle').onclick = () => {
-        document.body.classList.toggle('dark-mode');
-        appData.settings.theme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
-        updateDarkModeButton(); saveAppData();
-        const isDark = document.body.classList.contains('dark-mode');
-        showNotification(isDark ? "Welcome to the dark side 😈" : "Returning to the light! ☀️", 'success');
-      };
-
-      document.getElementById('displayNameInput').oninput = (e) => {
-        appData.settings.displayName = e.target.value;
-        updateWelcomeText(); saveAppData();
-        if (e.target.value.trim()) setTimeout(() => hideNameContainer(), 1000);
-      };
-
-      document.getElementById('homeTab').onclick = () => switchToTab('home');
-      document.getElementById('watchingTab').onclick = () => switchToTab('watching');
-      document.getElementById('wishlistTab').onclick = () => switchToTab('wishlist');
-      document.getElementById('watchedTab').onclick = () => switchToTab('watched');
-
-      document.getElementById('searchBtn').onclick = performSearch;
-      document.getElementById('searchInput').onkeydown = (e) => { if (e.key === 'Enter') performSearch(); };
-
-      // (removed) test notification button hook
-
-      document.getElementById('clearSearchBtn').onclick = clearSearch;
-      document.getElementById('searchInput').oninput = updateClearButton;
-      document.getElementById('genreFilter').onchange = updateClearButton;
-
-      document.getElementById('prevPageBtn').onclick = () => { if (currentPage > 1) { currentPage--; performSearch(); } };
-      document.getElementById('nextPageBtn').onclick = () => { currentPage++; performSearch(); };
-
-      document.getElementById('exportBtn').onclick = exportData;
-      document.getElementById('importFile').onchange = importData;
-      document.getElementById('clearAllBtn').onclick = () => {
-        if (confirm('Are you SURE you want to delete everything? This nuclear option cannot be undone! 💥')) {
-          appData.tv = { watching: [], wishlist: [], watched: [] };
-          appData.movies = { watching: [], wishlist: [], watched: [] };
-          saveAppData(); updateUI(); showNotification("Boom! Everything deleted. Hope you're happy! 💀", 'error');
-        }
-      };
-
-      document.getElementById('aboutBtn').onclick = showAboutModal;
-      document.getElementById('usageStatsBtn').onclick = showStatsModal;
-
-      setupEasterEgg();
-    }
-
-    function updateClearButton() {
-      const hasContent = document.getElementById('searchInput').value.trim() || document.getElementById('genreFilter').value;
-      document.getElementById('clearSearchBtn').style.display = hasContent ? 'inline-block' : 'none';
-    }
-
-    function switchToTab(tab) {
-      currentActiveTab = tab;
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.getElementById(tab + 'Tab').classList.add('active');
-      document.querySelectorAll('.tab-section').forEach(s => s.style.display = 'none');
-      document.getElementById(tab + 'Section').style.display = 'block';
-      if (tab !== 'home') document.getElementById('searchResults').style.display = 'none';
-      const messages = {
-        home: "Back to the beginning.",
-        watching: 'Time to face your current commitments! 📺',
-        wishlist: 'Welcome to your digital hoarding paradise! 📚',
-        watched: 'Behold your completed conquests! 🏆'
-      };
-      showNotification(messages[tab], 'success');
-    }
-
-    async function performSearch() {
-      const query = document.getElementById('searchInput').value.trim();
-      const genre = document.getElementById('genreFilter').value;
-      if (!query && !genre) { showNotification('Please enter a search term or select a genre, genius! 🤔', 'warning'); return; }
-
-      const container = document.getElementById('searchResultsList');
-      container.innerHTML = `<div class="loading-container"><div class="loading-spinner"></div><div class="loading-text">Finding shows you'll probably abandon after 2 episodes...</div></div>`;
-      document.getElementById('searchResults').style.display = 'block';
-
-      try {
-        let processedQuery = query, isWildcard = false, wildcardType = 'none';
-        if (query.includes('*')) {
-          isWildcard = true;
-          if      (query.startsWith('*') && query.endsWith('*')) { wildcardType = 'contains'; processedQuery = query.slice(1, -1); }
-          else if (query.startsWith('*')) { wildcardType = 'endsWith'; processedQuery = query.slice(1); }
-          else if (query.endsWith('*'))   { wildcardType = 'startsWith'; processedQuery = query.slice(0, -1); }
-          if (processedQuery.length === 0) { showNotification('Wildcard search needs some text! Try "star*" or "*wars" 🤔', 'warning'); return; }
-          showNotification(`🔍 Wildcard search: ${wildcardType} "${processedQuery}"`, 'info');
-        }
-
-        const searchTerm = isWildcard ? processedQuery : query;
-        const results = await fetchShowData(searchTerm, currentPage, genre);
-
-        let filteredResults = results;
-        if (isWildcard && results.length > 0) {
-          const pat = processedQuery.toLowerCase();
-          filteredResults = results.filter(item => {
-            const title = (item.name || item.title || '').toLowerCase();
-            switch(wildcardType){
-              case 'contains':  return title.includes(pat);
-              case 'endsWith':  return title.endsWith(pat);
-              case 'startsWith':return title.startsWith(pat);
-              default:          return title.includes(pat);
-            }
-          });
-          if (filteredResults.length !== results.length) showNotification(`Filtered to ${filteredResults.length} shows matching "${query}" 🎯`, 'success');
-        }
-
-        searchCache = filteredResults;
-        displaySearchResults(filteredResults);
-        updatePagination();
-
-        if (filteredResults.length === 0) {
-          showNotification(isWildcard ? `No shows found matching "${query}". Try a different pattern! 🔍` : 'No results found. Try lowering your standards! 📉', 'warning');
-        } else if (!isWildcard) {
-          showNotification(`Found ${filteredResults.length} options for your viewing pleasure! 🎯`, 'success');
-        }
-      } catch (error) {
-        container.innerHTML = `<div style="color: red; text-align: center; padding: 40px; font-weight: bold;">Search failed: ${error.message}<br><br>Maybe try turning it off and on again? 🤷‍♂️</div>`;
-        showNotification('Search failed. The internet is judging you! 🌐', 'error');
-      }
-    }
-
-    async function fetchShowData(query, page=1, genreFilter='') {
-      let endpoint, params;
-      if (genreFilter && !query) {
-        endpoint = 'discover/tv'; params = `endpoint=${endpoint}&page=${page}&with_genres=${genreFilter}`;
-      } else {
-        endpoint = 'search/multi'; params = `endpoint=${endpoint}&page=${page}`; if (query) params += `&query=${encodeURIComponent(query)}`;
-      }
-      try {
-        const response = await fetch(`${API_BASE}?${params}`);
-        if (!response.ok) throw new Error(`Search service unavailable (${response.status}). Please try again later.`);
-        const data = await response.json();
-
-        const enhancedResults = await Promise.all((data.results || []).map(async (item) => {
-          try {
-            if (item.media_type === 'tv' || item.first_air_date) {
-              const detailResponse = await fetch(`${API_BASE}?endpoint=tv/${item.id}`);
-              if (detailResponse.ok) {
-                const details = await detailResponse.json();
-                return {
-                  ...item,
-                  status: details.status,
-                  number_of_seasons: details.number_of_seasons,
-                  number_of_episodes: details.number_of_episodes,
-                  last_air_date: details.last_air_date,
-                  first_air_date: details.first_air_date,
-                  next_episode_to_air: details.next_episode_to_air,
-                  last_episode_to_air: details.last_episode_to_air,
-                  in_production: details.in_production,
-                  genres: details.genres,
-                  networks: details.networks,
-                  episode_run_time: details.episode_run_time || [45],
-                  runtime: details.episode_run_time ? details.episode_run_time[0] : 45
-                };
-              }
-            } else if (item.media_type === 'movie' || item.release_date) {
-              const detailResponse = await fetch(`${API_BASE}?endpoint=movie/${item.id}`);
-              if (detailResponse.ok) {
-                const details = await detailResponse.json();
-                return {
-                  ...item,
-                  status: details.status,
-                  release_date: details.release_date,
-                  genres: details.genres,
-                  runtime: details.runtime || 120
-                };
-              }
-            }
-          } catch (e) { console.log('Failed to fetch details for:', item.name || item.title); }
-          return item;
-        }));
-        return enhancedResults;
-      } catch (error) { console.error('Fetch error:', error); throw new Error('Search temporarily unavailable. Our servers are probably binge-watching something! 📺'); }
-    }
-
-    async function loadGenres() {
-      try {
-        const response = await fetch(`${API_BASE}?endpoint=genre/tv/list`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        const data = await response.json();
-        const select = document.getElementById('genreFilter');
-        select.innerHTML = '<option value="">All Genres</option>';
-        if (data.genres && data.genres.length > 0) data.genres.forEach(g => select.innerHTML += `<option value="${g.id}">${g.name}</option>`);
-      } catch (e) {
-        console.error('Error loading genres:', e);
-        const select = document.getElementById('genreFilter');
-        const fallback = [{id:10759,name:'Action & Adventure'},{id:16,name:'Animation'},{id:35,name:'Comedy'},{id:80,name:'Crime'},{id:99,name:'Documentary'},{id:18,name:'Drama'},{id:10765,name:'Sci-Fi & Fantasy'}];
-        select.innerHTML = '<option value="">All Genres</option>'; fallback.forEach(g => select.innerHTML += `<option value="${g.id}">${g.name}</option>`);
-      }
-    }
-
-    function displaySearchResults(results) {
-      const container = document.getElementById('searchResultsList');
-      document.getElementById('resultsCount').textContent = results.length;
-      if (results.length === 0) { container.innerHTML = '<div class="empty-state sassy-empty">No results found. Maybe try something that actually exists? 🤨</div>'; return; }
-      container.innerHTML = '';
-      results.forEach(item => container.appendChild(createShowCard(item, true)));
-    }
-
-    function formatDateShort(d){ if(!d) return ''; try{ const dt=new Date(d); return dt.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}); } catch(e){ return d; } }
-
-    function createShowCard(item, isSearchResult=false) {
-      const card = document.createElement('div');
-      card.className = 'show-card';
-
-      const title = item.name || item.title || 'Unknown Title';
-      const date = item.first_air_date || item.release_date || '';
-      const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
-      const overview = item.overview || 'No description available.';
-      const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
-
-      card.setAttribute('data-testid', `show-card-${item.id}`);
-      card.setAttribute('data-show-title', title);
-      card.setAttribute('data-media-type', mediaType);
-
-      // Hardened runtime calc
-      const runtimeMinutes =
-        Number(item.runtime) ||
-        (mediaType === 'tv'
-          ? (Array.isArray(item.episode_run_time) && Number(item.episode_run_time[0])) || 45
-          : 120);
-      card.setAttribute('data-runtime-minutes', String(runtimeMinutes));
-
-      if (isSearchResult) card.setAttribute('data-context', 'search');
-
-      const category = mediaType === 'tv' ? 'tv' : 'movies';
-      const isInWatching = appData[category]?.watching?.some(show => show.id === item.id);
-      const isInWishlist = appData[category]?.wishlist?.some(show => show.id === item.id);
-      const isInWatched  = appData[category]?.watched ?.some(show => show.id === item.id);
-
-      const posterHtml = item.poster_path
-        ? `<img src="${TMDB_IMG_BASE}${item.poster_path}" alt="${title}" class="show-poster" onclick="openTMDBLink(${item.id}, '${mediaType}')">`
-        : `<div class="poster-placeholder" onclick="openTMDBLink(${item.id}, '${mediaType}')">No Image<br>Available 📷</div>`;
-
-      let actionsHtml = '';
-      if (isSearchResult) {
-        const safe = JSON.stringify(item).replace(/"/g, '&quot;');
-        actionsHtml = `
-          <div class="show-actions">
-            <button onclick="addToList(${safe}, 'watching')" ${isInWatching ? 'disabled' : ''}>${isInWatching ? '✓ Currently Watching' : '▶️ Currently Watching'}</button>
-            <button onclick="addToList(${safe}, 'wishlist')" ${isInWishlist ? 'disabled' : ''}>${isInWishlist ? '✓ In Want to Watch' : '📖 Want to Watch'}</button>
-            <button onclick="addToList(${safe}, 'watched')" ${isInWatched ? 'disabled' : ''}>${isInWatched ? '✓ Already Watched' : '✅ Mark as Watched'}</button>
-            <button onclick="shareShow(null, ${safe})" class="secondary">📤 Share</button>
-            <button onclick="openTMDBLink(${item.id}, '${mediaType}')" class="secondary">🔗 TMDB Info</button>
-          </div>`;
-      } else {
-        const userRating = item.userRating || 0;
-        const notes = item.notes || '';
-        const tags = item.tags || [];
-        const likeStatus = item.likeStatus || 'none';
-        const currentSeason = item.currentSeason || '';
-        const currentEpisode = item.currentEpisode || '';
-actionsHtml = `
-  <div class="rating-container">
-    <span>Your Rating:</span>
-    <div class="star-rating">
-      ${[1,2,3,4,5].map(star => `
-        <span class="star ${star <= userRating ? 'active' : ''}"
-              onclick="setRating(${item.id}, ${star})"
-              data-rating="${star}">⭐</span>`).join('')}
-    </div>
-    <div class="like-dislike">
-      <button class="like-btn ${likeStatus === 'like' ? 'active' : ''}" onclick="setLikeStatus(${item.id}, 'like')">👍</button>
-      <button class="dislike-btn ${likeStatus === 'dislike' ? 'active' : ''}" onclick="setLikeStatus(${item.id}, 'dislike')">👎</button>
-    </div>
-    ${mediaType === 'tv' ? getSeriesPill(item) : ''}
-  </div>
-
-  ${mediaType === 'tv' ? `
-    <div class="episode-tracker">
-      <strong>Episode Progress:</strong>
-      <div class="episode-inputs">
-        <input type="number" placeholder="Season" min="1" value="${currentSeason}" onchange="updateEpisodeProgress(${item.id}, 'season', this.value)">
-        <input type="number" placeholder="Episode" min="1" value="${currentEpisode}" onchange="updateEpisodeProgress(${item.id}, 'episode', this.value)">
-      </div>
-    </div>` : ''}
-
-  <div class="tags-container">
-    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-      <input type="text" class="tag-input" placeholder="Add tags (horror, comedy, etc.)" id="tagInput-${item.id}" style="flex: 1;">
-      <button onclick="addTagFromInput(${item.id})" style="padding: 6px 12px; font-size: 12px; margin: 0;">Add Tag</button>
-    </div>
-    <div class="tags-display" id="tags-${item.id}">
-      ${tags.map(tag => `<span class="tag">${tag} <span class="tag-remove" onclick="removeTag(${item.id}, '${tag}')">×</span></span>`).join('')}
-    </div>
-  </div>
-
-  <div class="notes-container">
-    <textarea class="notes-field" placeholder="Your thoughts on this (250 chars)..." maxlength="250" onchange="updateNotes(${item.id}, this.value)" spellcheck="true">${notes}</textarea>
-    <div class="char-count ${notes.length > 200 ? 'warning' : ''} ${notes.length > 240 ? 'danger' : ''}">${notes.length}/250</div>
-  </div>
-
-  <div class="show-actions">
-    <button onclick="moveItem(${item.id}, 'watching')" ${isInWatching ? 'disabled' : ''}>→ Currently Watching</button>
-    <button onclick="moveItem(${item.id}, 'wishlist')" ${isInWishlist ? 'disabled' : ''}>→ Want to Watch</button>
-    <button onclick="moveItem(${item.id}, 'watched')" ${isInWatched ? 'disabled' : ''}>→ Already Watched</button>
-    <button class="danger" onclick="removeItemFromCurrentList(${item.id})" title="Remove from current list only">🗑️ Remove</button>
-    <button onclick="shareShow(${item.id})" class="secondary" title="Share this show">📤 Share</button>
-  </div>`;
-      }
-
-      card.innerHTML = `
-        ${posterHtml}
-        <div class="show-details">
-          <h4 class="show-title" onclick="openTMDBLink(${item.id}, '${mediaType}')">${title}<span class="external-link">🔗</span></h4>
-          <div class="show-meta">⭐ ${rating} ${date ? `• ${date.split('-')[0]}` : ''} • ${mediaType.toUpperCase()}</div>
-          <div class="show-overview" onclick="this.classList.toggle('expanded')">${overview}</div>
-          ${actionsHtml}
-        </div>`;
-      return card;
-    }
-
-    function openTMDBLink(id, mediaType){ window.open(`https://www.themoviedb.org/${mediaType}/${id}`,'_blank'); showNotification('Opening TMDB details! 🔗','info'); }
-
-    function setRating(itemId, rating) {
-      const item = findItem(itemId); if (!item) return;
-      item.userRating = rating; saveAppData();
-      document.querySelectorAll(`[onclick*="setRating(${itemId}"]`).forEach(star => {
-        const r = parseInt(star.getAttribute('data-rating')); star.classList.toggle('active', r <= rating);
-      });
-      showNotification(`Rated "${item.title}" ${rating} stars! ⭐`, 'success');
-    }
-
-    function addTagFromInput(itemId){ const input = document.getElementById(`tagInput-${itemId}`); if (input){ const v = input.value.trim(); if (v){ addTag(itemId, v); input.value=''; } } }
-
-    function removeItemFromCurrentList(itemId) {
-      const item = findItem(itemId); if (!item) return;
-      if (confirm(`Remove "${item.title}" from your current list? 🗑️`)) {
-        let removed = false;
-        const tab = currentActiveTab;
-        ['tv','movies'].forEach(category => {
-          if (tab==='watching'){ const i = appData[category].watching.findIndex(s=>s.id===itemId); if (i!==-1){ appData[category].watching.splice(i,1); removed=true; } }
-          else if (tab==='wishlist'){ const i = appData[category].wishlist.findIndex(s=>s.id===itemId); if (i!==-1){ appData[category].wishlist.splice(i,1); removed=true; } }
-          else if (tab==='watched'){ const i = appData[category].watched.findIndex(s=>s.id===itemId); if (i!==-1){ appData[category].watched.splice(i,1); removed=true; } }
-        });
-        if (removed){ saveAppData(); updateUI(); showNotification(`"${item.title}" removed from current list! 🚀`, 'success'); }
-      }
-    }
-
-    function removeItem(itemId) {
-      if (!confirm('Remove this item from ALL lists? It\'s probably for the best... 🗑️')) return;
-      let victim = null;
-      ['tv','movies'].forEach(cat => ['watching','wishlist','watched'].forEach(list => {
-        const found = appData[cat][list].find(s => s.id === itemId); if (found) victim = found;
-        appData[cat][list] = appData[cat][list].filter(s => s.id !== itemId);
-      }));
-      saveAppData(); updateUI();
-      showNotification(`"${victim?.title || 'Item'}" has been yeeted into the void! 🚀`, 'success');
-    }
-
-    function shareShow(itemId, itemData=null) {
-      const item = itemId ? findItem(itemId) : itemData; if (!item) return;
-      const title = item.title || item.name;
-      const shareText = `Check out "${title}" on Flicklet! 🎬\n\nI'm tracking this ${item.media_type === 'tv' ? 'TV show' : 'movie'} and thought you might like it too!`;
-      if (navigator.share) {
-        navigator.share({ title: `${title} - Flicklet`, text: shareText, url: window.location.href })
-          .then(() => { showNotification('Shared successfully! 📤', 'success'); })
-          .catch(() => fallbackShare(shareText));
-      } else { fallbackShare(shareText); }
-    }
-    function fallbackShare(text){ if (navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>{ showNotification('Share text copied to clipboard! 📋', 'success'); }); } else { const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); showNotification('Share text copied to clipboard! 📋', 'success'); } }
-
-    function updateNotes(itemId, notes){ const item=findItem(itemId); if (item){ item.notes = notes; saveAppData(); } }
-    function updateEpisodeProgress(itemId, type, value){ const item=findItem(itemId); if (!item) return; if (type==='season') item.currentSeason=value; else if (type==='episode') item.currentEpisode=value; saveAppData(); showNotification(`Updated ${type} progress! 📺`, 'success'); }
-
-    function addTag(itemId, tagValue){ const item=findItem(itemId); if (item && !item.tags.includes(tagValue)){ item.tags.push(tagValue); saveAppData(); updateUI(); showNotification(`Added tag "${tagValue}" to ${item.title}! 🏷️`, 'success'); } }
-    function removeTag(itemId, tagValue){ const item=findItem(itemId); if (item){ item.tags=item.tags.filter(t=>t!==tagValue); saveAppData(); updateUI(); showNotification(`Removed tag "${tagValue}" from ${item.title}! 🗑️`, 'success'); } }
-
-    function findItem(itemId){ let found=null; ['tv','movies'].forEach(cat=>['watching','wishlist','watched'].forEach(list=>{ const it=appData[cat][list].find(s=>s.id===itemId); if(it) found=it; })); return found; }
-
-    // New pill logic: shows last air date on ended; X-of-Y on ongoing when we have progress
-    function getSeriesPill(item){
-      if (!item || item.media_type !== 'tv') return '';
-      const status   = item.status || '';
-      const lastAir  = item.last_air_date || item.last_episode_to_air?.air_date || null;
-      const nextEp   = item.next_episode_to_air || null;
-      const inProd   = !!item.in_production;
-      const totalPlanned = Number.isFinite(item.number_of_episodes) ? item.number_of_episodes : null;
-
-      const curS = parseInt(item.currentSeason ?? 0, 10) || null;
-      const curE = parseInt(item.currentEpisode ?? 0, 10) || null;
-
-      let cls = 'status-ongoing';
-      let label = 'Currently Airing';
-
-      if (status === 'Ended' || status === 'Canceled') {
-        cls   = 'status-ended';
-        label = 'Series Complete' + (lastAir ? ` • ${formatDateShort(lastAir)}` : '');
-      } else if (status === 'In Production' || inProd) {
-        cls   = 'status-upcoming';
-        label = 'Coming Soon';
-      } else {
-        // Ongoing / returning
-        cls = 'status-ongoing';
-        if (curS && curE && totalPlanned) {
-          label = `S${curS}E${curE} of ${totalPlanned}`;
-        } else if (curS && curE) {
-          label = `S${curS}E${curE}`;
-        } else if (nextEp) {
-          label = `Next: S${nextEp.season_number}E${nextEp.episode_number}`;
-        } else if (lastAir) {
-          label = 'Currently Airing';
-        }
-      }
-
-      const title = [status || null, lastAir ? `Last air: ${formatDateShort(lastAir)}` : null]
-        .filter(Boolean).join(' • ');
-
-      return `<span class="series-pill ${cls}" title="${title}">${label}</span>`;
-    }
-
-    function updateUI() {
-      try {
-        const totalWatching = appData.tv.watching.length + appData.movies.watching.length;
-        const totalWishlist = appData.tv.wishlist.length + appData.movies.wishlist.length;
-        const totalWatched  = appData.tv.watched.length  + appData.movies.watched.length;
-
-        const watchingBadge = document.getElementById('watchingBadge');
-        const wishlistBadge = document.getElementById('wishlistBadge');
-        const watchedBadge  = document.getElementById('watchedBadge');
-
-        if (watchingBadge) watchingBadge.textContent = totalWatching;
-        if (wishlistBadge) wishlistBadge.textContent = totalWishlist;
-        if (watchedBadge)  watchedBadge.textContent  = totalWatched;
-
-        const totalWatchingCount = document.getElementById('totalWatchingCount');
-        const totalWishlistCount = document.getElementById('totalWishlistCount');
-        const totalWatchedCount  = document.getElementById('totalWatchedCount');
-        const totalCount         = document.getElementById('totalCount');
-
-        if (totalWatchingCount) totalWatchingCount.textContent = totalWatching;
-        if (totalWishlistCount) totalWishlistCount.textContent = totalWishlist;
-        if (totalWatchedCount)  totalWatchedCount.textContent  = totalWatched;
-        if (totalCount)         totalCount.textContent         = totalWatching + totalWishlist + totalWatched;
-
-        const watchingCount = document.getElementById('watchingCount');
-        const wishlistCount = document.getElementById('wishlistCount');
-        const watchedCount  = document.getElementById('watchedCount');
-
-        if (watchingCount) watchingCount.textContent = totalWatching;
-        if (wishlistCount) wishlistCount.textContent = totalWishlist;
-        if (watchedCount)  watchedCount.textContent  = totalWatched;
-
-        updateList('watchingList', [...appData.tv.watching,  ...appData.movies.watching]);
-        updateList('wishlistList', [...appData.tv.wishlist,  ...appData.movies.wishlist]);
-        updateList('watchedList',  [...appData.tv.watched,   ...appData.movies.watched]);
-
-        requestAnimationFrame(() => {
-          if (typeof updateBingeMeter === 'function') updateBingeMeter();
-          if (typeof updateBingeBanner === 'function') updateBingeBanner();
-        });
-      } catch (error) { console.error('Error updating UI:', error); }
-    }
-
-    function calculateBingeTime({ scope='watching' } = {}) {
-      let roots = [];
-      if (scope === 'watching') {
-        const w = document.getElementById('watchingList'); if (w) roots = [w];
-      } else {
-        roots = Array.from(document.querySelectorAll('#watchingList, #wishlistList, #watchedList'));
-        if (roots.length === 0) roots = [document];
-      }
-      const cards = roots.flatMap(r => Array.from(r.querySelectorAll('.show-card[data-runtime-minutes]'))).filter(el => el.getAttribute('data-context') !== 'search');
-      let totalMinutes = 0; for (const c of cards) totalMinutes += Number(c.getAttribute('data-runtime-minutes')) || 0;
-      const hours = Math.floor(totalMinutes / 60), minutes = totalMinutes % 60, days = Math.floor(hours / 24), remainingHours = hours % 24;
-      let timeStr = ''; if (days) timeStr += `${days}d `; if (remainingHours) timeStr += `${remainingHours}h `; timeStr += `${minutes}m`;
-      return { totalMinutes, timeStr: timeStr || '0m', showCount: cards.length };
-    }
-
-    // Stat tile in the stats grid
-    function updateBingeMeter() {
-      const stats = calculateBingeTime();
-      const statsContainer = document.querySelector('.stats'); if (!statsContainer) return;
-      let bingeMeter = document.getElementById('bingeMeter');
-      if (!bingeMeter) { bingeMeter = document.createElement('div'); bingeMeter.id = 'bingeMeter'; bingeMeter.className = 'stat'; statsContainer.appendChild(bingeMeter); }
-      bingeMeter.innerHTML = `<div class="stat-num">${stats.timeStr}</div><div class="stat-label">Total Binge Time</div>`;
-    }
-
-    function updateBingeBanner() {
-      const stats = calculateBingeTime({ scope: 'watching' });
-      let banner = document.getElementById('bingeBanner'); if (!banner) return;
-
-      const sassyMessages = [
-        "of questionable life choices queued! 🎭",
-        "of commitment issues detected! 🙄",
-        "of procrastination quantified! 🤡",
-        "of streaming shame calculated! 📺",
-        "of binge regret incoming! 🍿"
-      ];
-      const randomMessage = sassyMessages[Math.floor(Math.random() * sassyMessages.length)];
-
-      banner.innerHTML = `
-        <span class="binge-time" id="bingeTimeText">${stats.timeStr}</span>
-        <span class="binge-label">${randomMessage}</span>
-        <button class="binge-cta" id="startBingeBtn" type="button" aria-label="Jump to Currently Watching">Start ▶</button>
-      `;
-
-      setupBingeButtonClick();
-    }
-
-    function setupBingeButtonClick() {
-      const bingeBtn = document.getElementById('startBingeBtn');
-      if (!bingeBtn) return;
-      bingeBtn.onclick = () => {
-        switchToTab('watching');
-        setTimeout(() => {
-          const list = document.getElementById('watchingList');
-          if (!list) return;
-          const scroller = document.scrollingElement || document.documentElement;
-          const top = list.getBoundingClientRect().top + window.pageYOffset - 80;
-          scroller.scrollTo({ top, behavior: 'smooth' });
-          const firstCard = list.querySelector('.show-card');
-          if (firstCard) {
-            firstCard.classList.add('flash-focus');
-            setTimeout(() => firstCard.classList.remove('flash-focus'), 1200);
-          }
-        }, 100);
-        showNotification('Time to face your binge commitments! 🍿', 'info');
-      };
-    }
-
-    function updateList(containerId, items) {
-      const container = document.getElementById(containerId);
-      if (!container) { console.error('Container not found:', containerId); return; }
-
-      let filteredItems = items;
-      if (showTVOnly) filteredItems = items.filter(item => item.media_type === 'tv');
-      else if (showMoviesOnly) filteredItems = items.filter(item => item.media_type === 'movie');
-
-      if (filteredItems.length === 0) {
-        const emptyMessages = {
-          watchingList: 'No shows yet? What are you, productive or something? 🙄',
-          wishlistList: 'Your wishlist is emptier than a Netflix comedy special 💀',
-          watchedList: 'Nothing completed yet? Commitment issues much? 😏'
-        };
-        let message = emptyMessages[containerId];
-        if (items.length > 0 && filteredItems.length === 0) message = showTVOnly ? 'No TV shows in this category! 📺' : 'No movies in this category! 🎬';
-        container.innerHTML = `<div class="empty-state sassy-empty">${message}</div>`;
-      } else {
-        container.innerHTML = '';
-        filteredItems.forEach(item => {
-          try { container.appendChild(createShowCard(item, false)); }
-          catch (error) { console.error('Error creating card for item:', item, error); }
-        });
-      }
-    }
-
-    function clearSearch(){ document.getElementById('searchInput').value=''; document.getElementById('genreFilter').value=''; document.getElementById('clearSearchBtn').style.display='none'; document.getElementById('searchResults').style.display='none'; currentPage=1; document.getElementById('pageInfo').textContent='Page 1'; document.getElementById('prevPageBtn').disabled=true; document.getElementById('nextPageBtn').disabled=true; searchCache=[]; showNotification('Search cleared! Back to square one! 🔄','success'); }
-    function updatePagination(){ document.getElementById('pageInfo').textContent=`Page ${currentPage}`; document.getElementById('prevPageBtn').disabled=currentPage===1; document.getElementById('nextPageBtn').disabled=searchCache.length<20; }
-
-    function exportData(){ const blob=new Blob([JSON.stringify(appData,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`showly-backup-${new Date().toISOString().split('T')[0]}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showNotification('Your questionable taste has been exported! 📤','success'); }
-    function importData(e){ const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=(ev)=>{ try{ const imported=JSON.parse(ev.target.result); if(!confirm('Import data? This will overwrite your current collection of digital hoarding! 💾')) return; if(!imported.tv.watched) imported.tv.watched=[]; if(!imported.movies.watched) imported.movies.watched=[]; Object.assign(appData, imported); saveAppData(); updateUI(); showNotification('Data imported! Your taste is still questionable! 🎉','success'); } catch(err){ showNotification('Invalid file format. Even your backups are broken! 💥','error'); } }; reader.readAsText(file); }
-
-    function setupEasterEgg(){
-      const tips=["Pro tip: Having 500 items in your wishlist doesn't count as productivity! 🎯","Fun fact: 'I'll watch it later' is the most common lie in streaming! 🤥","Reality check: You have more shows bookmarked than days in the year! 📅","Hot take: Your 'Currently Watching' list is more fiction than fantasy movies! 📚","Reminder: Netflix doesn't pay you to collect shows like Pokémon cards! 🃏","News flash: Starting 20 shows doesn't make you a 'multimedia enthusiast'! 📺"];
-      let clicks=0; setTimeout(()=>{ const egg=document.getElementById('easterEgg'); const fb=document.getElementById('feedbackBtn'); if(egg){ egg.onclick=()=>{ if(++clicks%3===0) showRandomTip(tips); }; } if(fb){ fb.onclick=()=> showNotification('Feedback feature coming soon! For now, enjoy the sassy tips! 💬','info'); } },500);
-    }
-  </script>
-
-  <!-- Firebase v9 SDK -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <script>
-    // Firebase Configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM",
-      authDomain: "flicklet-71dff.firebaseapp.com",
-      projectId: "flicklet-71dff",
-      storageBucket: "flicklet-71dff.firebasestorage.app",
-      messagingSenderId: "1034923556763",
-      appId: "1:1034923556763:web:bba5489cd1d9412c9c2b3e"
+    // ---- i18n (snark included) ----
+    const I18N = {
+      en:{
+        app_title:'Flicklet',
+        subtitle:'TV & Movie Tracker',
+        sign_in_title:'🔐 Sign In to Sync Your Data',
+        cloud_on:'Cloud Sync: On',
+        binge_total:'Total Binge Time',
+        start:'Start',
+        currently_watching:'Currently Watching',
+        want_to_watch:'Want to Watch',
+        already_watched:'Already Watched',
+        streaming_on:'Streaming',
+        clear:'Clear',
+        series_complete:'Series Complete',
+        coming_soon:'Coming Soon',
+        currently_airing:'Currently Airing',
+        next:'Next',
+        last:'Last'
+      },
+      es:{
+        app_title:'Flicklet',
+        subtitle:'Seguimiento de series y películas',
+        sign_in_title:'🔐 Inicia sesión para sincronizar tus datos',
+        cloud_on:'Sincronización en la nube: activa',
+        binge_total:'Tiempo total de maratón',
+        start:'Comenzar',
+        currently_watching:'Viendo actualmente',
+        want_to_watch:'Quiero ver',
+        already_watched:'Ya visto',
+        streaming_on:'En',
+        clear:'Limpiar',
+        series_complete:'Serie terminada',
+        coming_soon:'Próximamente',
+        currently_airing:'En emisión',
+        next:'Próx.',
+        last:'Últ.'
+      }
     };
+    function t(k){ const lang = appData?.settings?.lang || 'en'; return (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k; }
+    function applyTranslations(){ document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); if(k) el.textContent=t(k); }); }
+    function formatDateShort(dateStr){
+      if(!dateStr) return '';
+      const lang = (appData?.settings?.lang === 'es') ? 'es-ES' : 'en-US';
+      const d = new Date(dateStr); if(Number.isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString(lang,{month:'short', day:'numeric', year:'numeric'});
+    }
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-
-    // Initialize services
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    // upsert /users/{uid} on any auth state
-    firebase.auth().onAuthStateChanged(async (user) => {
-      if (!user) return;
-      try {
-        const ref = firebase.firestore().collection('users').doc(user.uid);
-        const snap = await ref.get();
-        const payload = {
-          uid: user.uid,
-          email: user.email || null,
-          displayName: user.displayName || null,
-          photoURL: user.photoURL || null,
-          provider: (user.providerData && user.providerData[0]) ? user.providerData[0].providerId : null,
-          lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
-        };
-        if (!snap.exists) payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-        await ref.set(payload, { merge: true });
-      } catch (e) { console.error('profile upsert on auth state:', e); }
+    // ---- Firebase ----
+    firebase.initializeApp({
+      apiKey:"AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM",
+      authDomain:"flicklet-71dff.firebaseapp.com",
+      projectId:"flicklet-71dff",
+      storageBucket:"flicklet-71dff.firebasestorage.app",
+      messagingSenderId:"1034923556763",
+      appId:"1:1034923556763:web:bba5489cd1d9412c9c2b3e"
     });
-
-    console.log('🔥 Firebase initialized successfully!');
-
-    // Firebase Authentication Functions
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
     let currentUser = null;
 
-    // Monitor auth state changes
-    auth.onAuthStateChanged(async (user) => {
+    auth.onAuthStateChanged(async (user)=>{
       currentUser = user;
       updateAuthUI(user);
-      if (user) {
-        console.log('✅ User signed in:', user.email);
-        await loadUserDataFromCloud(user.uid);
-      } else {
-        console.log('❌ User signed out');
+      if(user){
+        try{
+          await db.collection('users').doc(user.uid).set({
+            profile:{ email:user.email||'', displayName:user.displayName||'', photoURL:user.photoURL||'' },
+            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+          },{merge:true});
+          await loadUserDataFromCloud(user.uid);
+        }catch(e){ console.warn(e); }
       }
     });
 
-    function updateAuthUI(user) {
-      const authSection = document.getElementById('authSection');
-      const authTitle = document.getElementById('authTitle');
-      const authStatus = document.getElementById('authStatus');
-      const signOutBtn = document.getElementById('signOut');
-      const googleSignIn = document.getElementById('googleSignIn');
-      const emailSignIn = document.getElementById('emailSignIn');
-      if (!authSection) return;
-      if (user) {
-        if (authTitle) authTitle.style.display = 'none'; // hide the big headline when signed in
-        authStatus.textContent = `✅ Signed in as: ${user.email}`;
-        authStatus.style.color = 'var(--success)';
-        signOutBtn.style.display = 'inline-block';
-        googleSignIn.style.display = 'none';
-        emailSignIn.style.display = 'none';
-      } else {
-        if (authTitle) { authTitle.style.display = ''; authTitle.textContent = '🔐 Sign In to Sync Your Data'; }
-        authStatus.textContent = '❌ Not signed in - data stays local only';
-        authStatus.style.color = 'var(--danger)';
-        signOutBtn.style.display = 'none';
-        googleSignIn.style.display = 'inline-block';
-        emailSignIn.style.display = 'inline-block';
+    // ---- App data & helpers ----
+    const TMDB_IMG_BASE = 'https://image.tmdb.org/t/p/w200';
+    const API_BASE      = '/.netlify/functions/tmdb';
+    const appData = { tv:{watching:[],wishlist:[],watched:[]}, movies:{watching:[],wishlist:[],watched:[]}, settings:{theme:'light', displayName:'', lang:'en'} };
+    let currentActiveTab = 'home';
+    let searchCache = [];
+    let currentPage = 1;
+    let showTVOnly=false, showMoviesOnly=false;
+
+    function showNotification(msg,type='info'){
+      const n=document.createElement('div'); n.className=`notification ${type}`; n.textContent=msg; document.body.appendChild(n);
+      setTimeout(()=>n.remove(),2800);
+    }
+    function openModal(title, html){
+      const wrap=document.createElement('div'); wrap.className='modal-backdrop';
+      wrap.innerHTML=`<div class="modal"><h3>${title}</h3><div class="modal-body">${html}</div><div class="modal-actions"><button class="secondary" id="modalClose">Close</button></div></div>`;
+      document.body.appendChild(wrap);
+      wrap.addEventListener('click',e=>{ if(e.target===wrap) wrap.remove(); });
+      wrap.querySelector('#modalClose').onclick=()=>wrap.remove();
+    }
+    function showRandomTip(arr){ showNotification(arr[Math.floor(Math.random()*arr.length)], 'info'); }
+
+    function loadAppData(){
+      try{
+        const saved=localStorage.getItem('tvMovieTrackerData');
+        if(saved){
+          const parsed=JSON.parse(saved);
+          if(!parsed.tv) parsed.tv={watching:[],wishlist:[],watched:[]};
+          if(!parsed.movies) parsed.movies={watching:[],wishlist:[],watched:[]};
+          if(!parsed.settings) parsed.settings={theme:'light',displayName:'',lang:'en'};
+          Object.assign(appData, parsed);
+        }
+      }catch(e){ console.warn(e); }
+      if(appData.settings.theme==='dark') document.body.classList.add('dark-mode');
+      document.getElementById('displayNameInput').value = appData.settings.displayName || '';
+      document.getElementById('langToggle').value = appData.settings.lang || 'en';
+      updateWelcomeText(); applyTranslations();
+    }
+    async function saveAppData(){
+      localStorage.setItem('tvMovieTrackerData', JSON.stringify(appData));
+      if(!currentUser) return;
+      try{
+        await db.collection('users').doc(currentUser.uid).set({
+          watchlists:{ tv:appData.tv, movies:appData.movies },
+          settings:appData.settings,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+      }catch(e){ console.warn('cloud sync failed', e); }
+    }
+    async function loadUserDataFromCloud(uid){
+      try{
+        const snap=await db.collection('users').doc(uid).get();
+        if(snap.exists){
+          const cloud=snap.data();
+          if(cloud.watchlists){ appData.tv=cloud.watchlists.tv||appData.tv; appData.movies=cloud.watchlists.movies||appData.movies; }
+          if(cloud.settings){ appData.settings={...appData.settings, ...cloud.settings}; }
+          localStorage.setItem('tvMovieTrackerData', JSON.stringify(appData));
+          document.getElementById('langToggle').value = appData.settings.lang || 'en';
+          applyTranslations();
+          updateUI();
+          showNotification('Data synced from cloud! 📁','success');
+        }
+      }catch(e){ console.warn(e); }
+    }
+
+    function updateAuthUI(user){
+      const s=document.getElementById('authSection');
+      if(!s) return;
+      const title=document.getElementById('authTitle');
+      const status=document.getElementById('authStatus');
+      const g=document.getElementById('googleSignIn'), e=document.getElementById('emailSignIn'), o=document.getElementById('signOut');
+      if(user){
+        if(title){ title.style.display='none'; }
+        status.textContent=`✅ Signed in as: ${user.email}`; status.style.color='var(--success)';
+        g.style.display='none'; e.style.display='none'; o.style.display='inline-block';
+      }else{
+        if(title){ title.style.display=''; title.textContent=t('sign_in_title'); }
+        status.textContent='❌ Not signed in - data stays local only'; status.style.color='var(--danger)';
+        g.style.display='inline-block'; e.style.display='inline-block'; o.style.display='none';
       }
     }
 
-    async function signInWithGoogle() {
-      try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        const result = await auth.signInWithPopup(provider);
-        await firebase.firestore().collection('users').doc(result.user.uid).set({
-          uid: result.user.uid,
-          email: result.user.email || null,
-          displayName: result.user.displayName || null,
-          photoURL: result.user.photoURL || null,
-          provider: (result.user.providerData && result.user.providerData[0]) ? result.user.providerData[0].providerId : null,
-          lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        }, { merge: true });
-        showNotification(`Welcome ${result.user.displayName || 'there'}! 🎉`, 'success');
-      } catch (error) {
-        console.error('Google sign in error:', error);
-        showNotification('Google sign in failed. Try again! 🤷', 'error');
-      }
+    // ---- Search / fetch with language ----
+    async function fetchShowData(query, page=1, genre=''){
+      const langParam = (appData.settings.lang==='es') ? '&language=es-ES' : '&language=en-US';
+      let endpoint, params;
+      if(genre && !query){ endpoint='discover/tv'; params=`endpoint=${endpoint}&page=${page}&with_genres=${genre}`; }
+      else{ endpoint='search/multi'; params=`endpoint=${endpoint}&page=${page}${query?`&query=${encodeURIComponent(query)}`:''}`; }
+
+      const response = await fetch(`${API_BASE}?${params}${langParam}`);
+      if(!response.ok) throw new Error(`Search failed: ${response.status}`);
+      const data = await response.json();
+
+      const enhanced = await Promise.all((data.results||[]).map(async (item)=>{
+        try{
+          if(item.media_type==='tv' || item.first_air_date){
+            const r = await fetch(`${API_BASE}?endpoint=tv/${item.id}${langParam}`);
+            if(r.ok){ const d=await r.json(); return {...item,
+              status:d.status, number_of_seasons:d.number_of_seasons, number_of_episodes:d.number_of_episodes,
+              last_air_date:d.last_air_date, first_air_date:d.first_air_date,
+              next_episode_to_air:d.next_episode_to_air, last_episode_to_air:d.last_episode_to_air,
+              in_production:d.in_production, genres:d.genres, networks:d.networks||[],
+              episode_run_time:d.episode_run_time||[45],
+              runtime:d.episode_run_time ? d.episode_run_time[0] : 45
+            }; }
+          }else if(item.media_type==='movie' || item.release_date){
+            const r = await fetch(`${API_BASE}?endpoint=movie/${item.id}${langParam}`);
+            if(r.ok){ const d=await r.json(); return {...item, status:d.status, release_date:d.release_date, genres:d.genres, runtime:d.runtime||120}; }
+          }
+        }catch(_){/* ignore detail failures */}
+        return item;
+      }));
+      return enhanced;
     }
 
-    async function signInWithEmail() {
-      const email = prompt('Enter your email:');
-      const password = prompt('Enter your password:');
-      if (email && password) {
-        try { await auth.signInWithEmailAndPassword(email, password); showNotification('Welcome back! 🎉', 'success'); }
-        catch (error) {
-          if (error.code === 'auth/user-not-found') {
-            try { await auth.createUserWithEmailAndPassword(email, password); showNotification('Account created! Welcome! 🎉', 'success'); }
-            catch (createError) { showNotification('Failed to create account. Try again! 😅', 'error'); }
-          } else { showNotification('Sign in failed. Check your credentials! 🔑', 'error'); }
+    async function loadGenres(){
+      const langParam = (appData.settings.lang==='es') ? '&language=es-ES' : '&language=en-US';
+      try{
+        const r=await fetch(`${API_BASE}?endpoint=genre/tv/list${langParam}`);
+        const data=await r.json();
+        const sel=document.getElementById('genreFilter'); sel.innerHTML='<option value="">All Genres</option>';
+        (data.genres||[]).forEach(g=> sel.innerHTML += `<option value="${g.id}">${g.name}</option>`);
+      }catch(_){}
+    }
+
+    async function performSearch(){
+      const q=document.getElementById('searchInput').value.trim();
+      const g=document.getElementById('genreFilter').value;
+      if(!q && !g){ showNotification('Type something. Anything. 🥴','warning'); return; }
+      document.getElementById('searchResults').style.display='block';
+      const list=document.getElementById('searchResultsList');
+      list.innerHTML='<div class="empty-state">Searching…</div>';
+      try{
+        const results=await fetchShowData(q,currentPage,g);
+        searchCache=results; displaySearchResults(results);
+      }catch(e){ list.innerHTML=`<div class="empty-state">Search died: ${e.message}</div>`; }
+    }
+    function displaySearchResults(results){
+      const c=document.getElementById('searchResultsList');
+      document.getElementById('resultsCount').textContent=results.length;
+      if(!results.length){ c.innerHTML='<div class="empty-state sassy-empty">No results. Raise your standards later.</div>'; return; }
+      c.innerHTML=''; results.forEach(item=> c.appendChild(createShowCard(item,true)));
+    }
+
+    // ---- Card building ----
+    function getSeriesPill(item){
+      if(!item || item.media_type!=='tv') return '';
+      const status   = item.status || '';
+      const lastAir  = item.last_episode_to_air?.air_date || item.last_air_date || null;
+      const nextEp   = item.next_episode_to_air || null;
+      const inProd   = !!item.in_production;
+      const totalEp  = Number.isFinite(item.number_of_episodes) ? item.number_of_episodes : null;
+      const curS = parseInt(item.currentSeason ?? 0,10) || null;
+      const curE = parseInt(item.currentEpisode ?? 0,10) || null;
+
+      let cls='status-ongoing';
+      let label=t('currently_airing');
+
+      if(status==='Ended' || status==='Canceled'){
+        cls='status-ended';
+        label=`${t('series_complete')}${lastAir ? ` • ${formatDateShort(lastAir)}` : ''}`;
+      }else if(status==='In Production' || inProd){
+        cls='status-upcoming';
+        label=t('coming_soon');
+      }else{
+        cls='status-ongoing';
+        const progress = (curS && curE && totalEp) ? `S${curS}E${curE} of ${totalEp}` :
+                         (curS && curE) ? `S${curS}E${curE}` : null;
+        const whenNext = nextEp?.air_date ? `${t('next')}: ${formatDateShort(nextEp.air_date)}` :
+                         lastAir ? `${t('last')}: ${formatDateShort(lastAir)}` : null;
+        label = [progress || t('currently_airing'), whenNext].filter(Boolean).join(' • ');
+      }
+      const title = [status || null, lastAir ? `Last air: ${formatDateShort(lastAir)}` : null].filter(Boolean).join(' • ');
+      return `<span class="series-pill ${cls}" title="${title}">${label}</span>`;
+    }
+
+    function createShowCard(item, isSearch=false){
+      const card=document.createElement('div'); card.className='show-card';
+      const title=item.name||item.title||'Unknown Title';
+      const date = item.first_air_date || item.release_date || '';
+      const rating=item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+      const mediaType=item.media_type || (item.first_air_date ? 'tv' : 'movie');
+
+      const poster = item.poster_path
+        ? `<img class="show-poster" src="${TMDB_IMG_BASE}${item.poster_path}" alt="${title}" onclick="openTMDBLink(${item.id},'${mediaType}')">`
+        : `<div class="poster-placeholder" onclick="openTMDBLink(${item.id},'${mediaType}')">No Image</div>`;
+
+      const runtimeMinutes = Number(item.runtime) || (mediaType==='tv'
+            ? (Array.isArray(item.episode_run_time) && Number(item.episode_run_time[0])) || 45
+            : 120);
+      card.setAttribute('data-runtime-minutes', String(runtimeMinutes));
+
+      const networkNames = (item.networks||[]).map(n=>n.name).join(', ');
+
+      let actions = '';
+      if(isSearch){
+        const safe=JSON.stringify(item).replace(/"/g,'&quot;');
+        actions = `
+          <div class="show-actions">
+            <button onclick="addToList(${safe}, 'watching')">▶️ ${t('currently_watching')}</button>
+            <button onclick="addToList(${safe}, 'wishlist')">📖 ${t('want_to_watch')}</button>
+            <button onclick="addToList(${safe}, 'watched')">✅ ${t('already_watched')}</button>
+          </div>`;
+      }else{
+        const likeStatus=item.likeStatus||'none';
+        const userRating=item.userRating||0;
+        actions = `
+          <div class="rating-container">
+            <span>Your Rating:</span>
+            <div class="star-rating">
+              ${[1,2,3,4,5].map(n=>`<span class="star ${n<=userRating?'active':''}" data-rating="${n}" onclick="setRating(${item.id},${n})">⭐</span>`).join('')}
+            </div>
+            <div class="like-dislike">
+              <button class="like-btn ${likeStatus==='like'?'active':''}" onclick="setLikeStatus(${item.id}, 'like')">👍</button>
+              <button class="dislike-btn ${likeStatus==='dislike'?'active':''}" onclick="setLikeStatus(${item.id}, 'dislike')">👎</button>
+            </div>
+            ${mediaType==='tv' ? getSeriesPill(item) : ''}
+          </div>
+
+          <div class="tags-container">
+            <div style="display:flex; gap:8px; margin-bottom:8px">
+              <input id="tagInput-${item.id}" class="tag-input" placeholder="Add tags (horror, comedy, etc.)" />
+              <button onclick="addTagFromInput(${item.id})" style="padding:6px 10px">Add Tag</button>
+            </div>
+            <div id="tags-${item.id}" class="tags-display">
+              ${(item.tags||[]).map(tag=>`<span class="tag">${tag} <span class="tag-remove" onclick="removeTag(${item.id}, '${tag}')">×</span></span>`).join('')}
+            </div>
+          </div>
+
+          <div class="show-actions">
+            <button onclick="moveItem(${item.id}, 'watching')">→ ${t('currently_watching')}</button>
+            <button onclick="moveItem(${item.id}, 'wishlist')">→ ${t('want_to_watch')}</button>
+            <button onclick="moveItem(${item.id}, 'watched')">→ ${t('already_watched')}</button>
+            <button class="danger" onclick="removeItemFromCurrentList(${item.id})">🗑️ Remove</button>
+          </div>`;
+      }
+
+      card.innerHTML = `
+        ${poster}
+        <div class="show-details">
+          <h4 class="show-title" onclick="openTMDBLink(${item.id},'${mediaType}')">${title} <span style="opacity:.6">🔗</span></h4>
+          <div class="show-meta">⭐ ${rating} ${date?`• ${date.split('-')[0]}`:''} • ${mediaType.toUpperCase()} ${networkNames?`• ${t('streaming_on')}: ${networkNames}`:''}</div>
+          <div class="show-overview">${item.overview||'No description.'}</div>
+          ${actions}
+        </div>`;
+      return card;
+    }
+
+    function openTMDBLink(id, type){ window.open(`https://www.themoviedb.org/${type}/${id}`,'_blank'); }
+
+    // ---- Lists / state ops ----
+    function addToList(item, list){
+      const cat = (item.media_type==='tv'||item.first_air_date)?'tv':'movies';
+      const exists = appData[cat][list].some(s=>s.id===item.id);
+      if(!exists) appData[cat][list].unshift(item);
+      saveAppData(); updateUI();
+    }
+    function moveItem(id, dest){
+      const item=findItem(id); if(!item) return;
+      ['tv','movies'].forEach(cat=> ['watching','wishlist','watched'].forEach(lst=>{
+        appData[cat][lst]=appData[cat][lst].filter(s=>s.id!==id);
+      }));
+      const cat=item.media_type==='tv'?'tv':'movies';
+      appData[cat][dest].unshift(item);
+      saveAppData(); updateUI();
+    }
+    function setRating(id, rating){ const it=findItem(id); if(!it) return; it.userRating=rating; saveAppData(); updateUI(); }
+    function setLikeStatus(id,status){ const it=findItem(id); if(!it) return; it.likeStatus=status; saveAppData(); updateUI(); }
+    function addTagFromInput(id){ const inp=document.getElementById(`tagInput-${id}`); if(!inp) return; const v=inp.value.trim(); if(!v) return; const it=findItem(id); it.tags=it.tags||[]; if(!it.tags.includes(v)) it.tags.push(v); inp.value=''; saveAppData(); updateUI(); }
+    function removeTag(id,tag){ const it=findItem(id); if(!it) return; it.tags=(it.tags||[]).filter(t=>t!==tag); saveAppData(); updateUI(); }
+    function removeItemFromCurrentList(id){
+      const item=findItem(id); if(!item) return;
+      if(!confirm(`Remove "${item.title||item.name}" from this list?`)) return;
+      ['tv','movies'].forEach(cat=> ['watching','wishlist','watched'].forEach(lst=>{
+        appData[cat][lst]=appData[cat][lst].filter(s=>s.id!==id);
+      }));
+      saveAppData(); updateUI();
+    }
+    function findItem(id){
+      for(const cat of ['tv','movies']){
+        for(const lst of ['watching','wishlist','watched']){
+          const f=appData[cat][lst].find(s=>s.id===id);
+          if(f) return f;
         }
       }
+      return null;
     }
 
-    async function signOut() {
-      try { await auth.signOut(); showNotification('Signed out successfully! 👋', 'success'); }
-      catch (error) { showNotification('Sign out failed! 🤔', 'error'); }
+    // ---- UI update, banner & meter ----
+    function calculateBingeTime({scope='watching'}={}){
+      let roots=[];
+      if(scope==='watching'){ const w=document.getElementById('watchingList'); if(w) roots=[w]; }
+      else { roots=[document]; }
+      const cards=roots.flatMap(r=> Array.from(r.querySelectorAll('.show-card[data-runtime-minutes]')));
+      const total = cards.reduce((m,c)=> m + (parseInt(c.getAttribute('data-runtime-minutes'))||0), 0);
+      const h=Math.floor(total/60), m=total%60, d=Math.floor(h/24), rh=h%24;
+      let str=''; if(d) str+=`${d}d `; if(rh) str+=`${rh}h `; str+=`${m}m`;
+      return { totalMinutes:total, timeStr:str, showCount:cards.length };
+    }
+    function updateBingeMeter(){
+      const stats=calculateBingeTime();
+      const container=document.querySelector('.stats'); if(!container) return;
+      let el=document.getElementById('bingeMeter');
+      if(!el){ el=document.createElement('div'); el.id='bingeMeter'; el.className='stat'; container.appendChild(el); }
+      el.innerHTML=`<div class="stat-num">${stats.timeStr}</div><div class="stat-label">${t('binge_total')}</div>`;
+    }
+    function updateBingeBanner(){
+      const stats=calculateBingeTime({scope:'watching'});
+      const banner=document.getElementById('bingeBanner'); if(!banner) return;
+      const es = [
+        "de decisiones cuestionables en cola. 🎭",
+        "de procrastinación medida con precisión. 🤡",
+        "de vergüenza en streaming calculada. 📺",
+        "de maratón sin arrepentimientos (mentira). 🍿"
+      ];
+      const en = [
+        "of questionable life choices queued! 🎭",
+        "of procrastination precisely measured. 🤡",
+        "of streaming shame calculated. 📺",
+        "of binge you definitely won’t regret. 🍿"
+      ];
+      const msg = (appData.settings.lang==='es' ? es : en)[Math.floor(Math.random()*4)];
+      banner.innerHTML = `
+        <span class="binge-time" id="bingeTimeText">${stats.timeStr}</span>
+        <span class="binge-label">${msg}</span>
+        <button class="binge-cta" id="startBingeBtn" type="button" aria-label="${t('start')}">${t('start')} ▶</button>
+      `;
+      const btn=document.getElementById('startBingeBtn');
+      if(btn) btn.onclick=()=>{
+        switchToTab('watching');
+        setTimeout(()=>{
+          const list=document.getElementById('watchingList');
+          if(list) list.scrollIntoView({behavior:'smooth',block:'start'});
+        },120);
+      };
     }
 
-    // Initialize app
-    document.addEventListener('DOMContentLoaded', () => {
-      loadAppData();
-      setupEventListeners();
-      // Firebase Auth Event Listeners
-      document.getElementById('googleSignIn').onclick = signInWithGoogle;
-      document.getElementById('emailSignIn').onclick = signInWithEmail;
-      document.getElementById('signOut').onclick = signOut;
-      loadGenres();
+    function updateUI(){
+      const totals={
+        watching: appData.tv.watching.length + appData.movies.watching.length,
+        wishlist: appData.tv.wishlist.length + appData.movies.wishlist.length,
+        watched:  appData.tv.watched.length  + appData.movies.watched.length
+      };
+      ['watching','wishlist','watched'].forEach(k=>{
+        const b=document.getElementById(k+'Badge'); if(b) b.textContent=totals[k];
+        const c=document.getElementById(k+'Count'); if(c) c.textContent=totals[k];
+      });
+      const totalCount=document.getElementById('totalCount');
+      if(totalCount) totalCount.textContent=totals.watching+totals.wishlist+totals.watched;
+
+      // lists (apply filters)
+      const watching=[...appData.tv.watching,...appData.movies.watching];
+      const wishlist=[...appData.tv.wishlist,...appData.movies.wishlist];
+      const watched =[...appData.tv.watched, ...appData.movies.watched];
+
+      function filter(items){
+        if(showTVOnly) return items.filter(it=> (it.media_type||'tv')==='tv');
+        if(showMoviesOnly) return items.filter(it=> (it.media_type||'movie')==='movie');
+        return items;
+      }
+      updateList('watchingList', filter(watching));
+      updateList('wishlistList', filter(wishlist));
+      updateList('watchedList',  filter(watched));
+
+      updateBingeMeter();
+      updateBingeBanner();
+      applyTranslations();
+    }
+
+    function updateList(containerId, items){
+      const c=document.getElementById(containerId); if(!c) return;
+      if(!items.length){
+        const msg = containerId==='watchingList' ? 'No shows yet? What are you, productive or something? 🙄'
+                  : containerId==='wishlistList' ? 'Your wishlist is emptier than a Netflix comedy special 💀'
+                  : 'Nothing completed yet? Commitment issues much? 😏';
+        c.innerHTML=`<div class="empty-state sassy-empty">${msg}</div>`;
+        return;
+      }
+      c.innerHTML=''; items.forEach(it=> c.appendChild(createShowCard(it,false)));
+    }
+
+    // ---- Tabs / UI wiring ----
+    function switchToTab(tab){
+      currentActiveTab=tab;
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.getElementById(tab+'Tab').classList.add('active');
+      document.querySelectorAll('.tab-section').forEach(s=> s.style.display='none');
+      document.getElementById(tab+'Section').style.display='block';
+    }
+
+    function updateWelcomeText(){
+      const n=(appData.settings.displayName||'').trim();
+      const pool=["Chaos","Questionable Taste","Binge Empire","Streaming Madness","Watch List Anarchy"];
+      document.getElementById('welcomeText').textContent = n ? `${n}'s ${pool[Math.floor(Math.random()*pool.length)]}` : t('app_title');
+    }
+
+    // ---- Misc actions ----
+    function toggleContentFilter(){
+      const btn=document.getElementById('filterBtn');
+      if(!showTVOnly && !showMoviesOnly){ showTVOnly=true; btn.textContent='📺 Show TV Only'; }
+      else if(showTVOnly){ showTVOnly=false; showMoviesOnly=true; btn.textContent='🎬 Show Movies Only'; }
+      else { showMoviesOnly=false; btn.textContent='🎭 Show All Content'; }
       updateUI();
-      updateDarkModeButton();
-      // reveal auth section; it'll self-tune in updateAuthUI
-      document.getElementById('authSection').style.display = 'block';
-      if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+    }
+    function showAboutModal(){
+      openModal('About Flicklet', `
+        <p><strong>Flicklet</strong> helps you track TV & movies, syncs to the cloud, and throws shade while you procrastinate.</p>
+        <p>Built with Capacitor + Firebase + TMDB.</p>
+      `);
+    }
+    function showStatsModal(){
+      const totals={
+        tv: appData.tv.watching.length+appData.tv.wishlist.length+appData.tv.watched.length,
+        movies: appData.movies.watching.length+appData.movies.wishlist.length+appData.movies.watched.length
+      };
+      const binge=calculateBingeTime();
+      openModal('Usage Stats', `
+        <ul>
+          <li>Total items: <strong>${totals.tv+totals.movies}</strong></li>
+          <li>TV: <strong>${totals.tv}</strong> • Movies: <strong>${totals.movies}</strong></li>
+          <li>${t('binge_total')}: <strong>${binge.timeStr}</strong></li>
+        </ul>
+      `);
+    }
+
+    // ---- bootstrap ----
+    document.addEventListener('DOMContentLoaded', ()=>{
+      loadAppData(); loadGenres(); updateUI();
+
+      // buttons
+      document.getElementById('homeTab').onclick = ()=>switchToTab('home');
+      document.getElementById('watchingTab').onclick = ()=>switchToTab('watching');
+      document.getElementById('wishlistTab').onclick = ()=>switchToTab('wishlist');
+      document.getElementById('watchedTab').onclick = ()=>switchToTab('watched');
+
+      document.getElementById('darkModeToggle').onclick = ()=>{
+        document.body.classList.toggle('dark-mode');
+        appData.settings.theme = document.body.classList.contains('dark-mode')?'dark':'light';
+        saveAppData();
+      };
+      document.getElementById('langToggle').addEventListener('change', (e)=>{
+        appData.settings.lang = e.target.value || 'en';
+        saveAppData(); applyTranslations(); loadGenres(); updateUI();
+      });
+
+      // auth buttons
+      document.getElementById('googleSignIn').onclick = async ()=>{
+        try{ await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+        catch(e){ showNotification('Google sign-in failed.','error'); }
+      };
+      document.getElementById('emailSignIn').onclick = async ()=>{
+        const email=prompt('Email?'); const pw=prompt('Password?');
+        if(!email||!pw) return;
+        try{ await auth.signInWithEmailAndPassword(email,pw); }
+        catch(e){ if(e.code==='auth/user-not-found'){ await auth.createUserWithEmailAndPassword(email,pw); } }
+      };
+      document.getElementById('signOut').onclick = ()=>auth.signOut();
+
+      // search
+      document.getElementById('searchBtn').onclick=performSearch;
+      document.getElementById('clearSearchBtn').onclick=()=>{ document.getElementById('searchInput').value=''; document.getElementById('genreFilter').value=''; document.getElementById('searchResults').style.display='none'; };
+      document.getElementById('searchInput').addEventListener('keydown', e=>{ if(e.key==='Enter') performSearch(); });
+
+      // backup/actions
+      document.getElementById('exportBtn').onclick=()=>{
+        const blob=new Blob([JSON.stringify(appData,null,2)],{type:'application/json'});
+        const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`flicklet-backup.json`;
+        document.body.appendChild(a); a.click(); a.remove();
+      };
+      document.getElementById('importFile').onchange=(e)=>{
+        const f=e.target.files[0]; if(!f) return; const r=new FileReader();
+        r.onload=()=>{ try{ const d=JSON.parse(r.result); Object.assign(appData,d); saveAppData(); updateUI(); }catch{ showNotification('Broken file.','error'); } };
+        r.readAsText(f);
+      };
+      document.getElementById('clearAllBtn').onclick=()=>{
+        if(!confirm('This wipes everything. You sure?')) return;
+        appData.tv={watching:[],wishlist:[],watched:[]}; appData.movies={watching:[],wishlist:[],watched:[]}; saveAppData(); updateUI();
+      };
+      document.getElementById('aboutBtn').onclick=showAboutModal;
+      document.getElementById('usageStatsBtn').onclick=showStatsModal;
+      document.getElementById('filterBtn').onclick=toggleContentFilter;
+
+      // show auth box now; updateAuthUI will adjust
+      document.getElementById('authSection').style.display='block';
     });
 
-    /* === EPISODE PILL placement (right of tags row) === */
-    (function placeEpisodePill() {
-      function move() {
-        document.querySelectorAll('.show-card, .movie-card, .card').forEach(card => {
-          const ep = card.querySelector('.episode-tracker'); if (!ep) return;
-          const tags = card.querySelector('.tags-container'); if (!tags) return;
-          tags.classList.add('tags-row-grid');
-          ep.classList.add('ep-compact');
-          const tagsDisplay = tags.querySelector('.tags-display');
-          if (tagsDisplay && ep.nextSibling !== tagsDisplay) tags.insertBefore(ep, tagsDisplay);
-          else if (!tagsDisplay && !tags.contains(ep)) tags.appendChild(ep);
-        });
-      }
-      // Export globals for console use
-      window.calculateBingeTime = calculateBingeTime;
-      window.updateBingeMeter   = updateBingeMeter;
-      window.updateBingeBanner  = updateBingeBanner;
-      window.loadUserDataFromCloud = loadUserDataFromCloud;
-
-      document.addEventListener('DOMContentLoaded', move);
-      window.addEventListener('load', move);
-      setTimeout(move, 300);
-      setTimeout(move, 1200);
-    })();
+    // Export a couple for debugging if you want
+    window.updateUI = updateUI;
+    window.updateBingeBanner = updateBingeBanner;
   </script>
 </body>
 </html>
