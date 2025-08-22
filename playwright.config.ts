@@ -9,7 +9,7 @@ export default defineConfig({
   reporter: 'html',
 
   use: {
-    // Use Netlify by default; override in CI/local with PLAYWRIGHT_BASE_URL
+    // Use Netlify by default; override locally with PLAYWRIGHT_BASE_URL
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'https://flicklet.netlify.app',
     trace: 'on-first-retry',
   },
@@ -20,10 +20,10 @@ export default defineConfig({
     { name: 'webkit',   use: { ...devices['Desktop Safari'] } },
   ],
 
-  // If you run against a local server instead of Netlify, uncomment:
+  // If you want to run against a local dev server instead of Netlify:
   // webServer: {
   //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
+  //   url: 'http://localhost:8888',
   //   reuseExistingServer: !process.env.CI,
   // },
 });

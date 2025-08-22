@@ -543,6 +543,25 @@
       0% { transform: scale(0) translateY(20px); opacity: 0; }
       100% { transform: scale(1) translateY(0); opacity: 1; }
     }
+
+    /* ---------- ONLY FOR THE EPISODE PILL ALIGNMENT ---------- */
+    .ep-compact{
+      display:inline-flex !important; align-items:center; gap:6px;
+      padding:6px 10px !important; margin:0 !important;
+      border:1px dashed var(--border) !important; border-radius:8px !important;
+      background:var(--card) !important; width:auto !important;
+      justify-self:end; /* when placed in grid, hug right */
+    }
+    /* hide the big label + inputs, keep series status */
+    .ep-compact > strong { display:none !important; }
+    .ep-compact .episode-inputs { display:none !important; }
+
+    /* grid layout for the tags row: left = input+button, right = pill */
+    .tags-row-grid{display:grid; grid-template-columns:1fr auto; align-items:center; column-gap:12px;}
+    .tags-row-grid input{width:100%;}
+    /* make the tag list span the full width below the first row */
+    .tags-row-grid .tags-display{grid-column:1 / -1;}
+    /* --------------------------------------------------------- */
   </style>
 </head>
 <body>
@@ -562,19 +581,19 @@
     </div>
 
     <div class="tab-container">
-      <button id="homeTab" class="tab active">
+      <button id="homeTab" class="tab active" data-testid="home-tab">
         🏠 Home
         <span class="tab-badge">Overview</span>
       </button>
-      <button id="watchingTab" class="tab">
+      <button id="watchingTab" class="tab"data-testid="watching-tab">
         ▶️ Currently Watching
         <span class="tab-badge" id="watchingBadge">0</span>
       </button>
-      <button id="wishlistTab" class="tab">
+      <button id="wishlistTab" class="tab"data-testid="wishlist-tab">
         📖 Want to Watch
         <span class="tab-badge" id="wishlistBadge">0</span>
       </button>
-      <button id="watchedTab" class="tab">
+      <button id="watchedTab" class="tab" data-testid="watched-tab">
         ✅ Already Watched
         <span class="tab-badge" id="watchedBadge">0</span>
       </button>
@@ -582,23 +601,24 @@
 
     <!-- HOME TAB -->
     <div id="homeSection" class="tab-section">
-	<!-- Firebase Auth Section -->
-    <div id="authSection" class="search-container" style="display: none;">
-    <h3 style="color: var(--primary); margin: 0 0 15px 0;">🔐 Sign In to Sync Your Data</h3>
-    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-    <button id="googleSignIn" style="background: #4285f4;">📱 Sign in with Google</button>
-    <button id="emailSignIn" style="background: var(--purple);">📧 Sign in with Email</button>
-    <button id="signOut" style="background: var(--danger); display: none;">🚪 Sign Out</button>
-    </div>
-    <div id="authStatus" style="margin-top: 10px; font-weight: bold;"></div>
-    </div>
+      <!-- Firebase Auth Section -->
+      <div id="authSection" class="search-container" style="display: none;">
+        <h3 style="color: var(--primary); margin: 0 0 15px 0;">🔐 Sign In to Sync Your Data</h3>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+          <button id="googleSignIn" data-testid="google-signin-button" style="background: #4285f4;">📱 Sign in with Google</button>
+          <button id="emailSignIn" data-testid="email-signin-button" style="background: var(--purple);">📧 Sign in with Email</button>
+          <button id="signOut" data-testid="signout-button" style="background: var(--danger); display: none;">🚪 Sign Out</button>
+        </div>
+        <div id="authStatus" style="margin-top: 10px; font-weight: bold;"></div>
+      </div>
+
       <div class="search-container">
         <button id="testNotification" class="notification-test">🔔 Test Push Notifications</button>
         
         <div class="search-row">
-          <input type="text" id="searchInput" class="search-input" placeholder="Search for shows or movies...">
+          <input type="text" id="searchInput" class="search-input" data-testid="search-input" placeholder="Search for shows or movies...">
           <select id="genreFilter"><option value="">All Genres</option></select>
-          <button id="searchBtn">🔍 Search</button>
+          <<button id="searchBtn" data-testid="search-button">🔍 Search</button>
           <button id="clearSearchBtn" class="secondary" style="display: none;">✖️ Clear</button>
         </div>
         
@@ -648,12 +668,12 @@
         <h3 style="color: var(--primary); margin-top: 0;">💾 Backup Your Questionable Taste</h3>
         <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px;">
           <input type="file" id="importFile" accept=".json" style="max-width: 200px;">
-          <button id="exportBtn" class="success">📤 Export My Shame</button>
-          <button id="clearAllBtn" class="danger">🗑️ Nuclear Option</button>
+          <button id="exportBtn" class="success" data-testid="export-button">📤 Export My Shame</button>
+          <button id="clearAllBtn" class="danger" data-testid="clear-all-button">🗑️ Nuclear Option</button>
         </div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-          <button id="aboutBtn" class="secondary">ℹ️ About Flicklet</button>
-          <button id="usageStatsBtn" class="secondary">📊 Usage Stats</button>
+          <button id="aboutBtn" class="secondary" data-testid="about-button">ℹ️ About Flicklet</button>
+          <button id="usageStatsBtn" class="secondary" data-testid="stats-button">📊 Usage Stats</button>
           <button onclick="toggleContentFilter()" class="secondary" id="filterBtn">🎭 Show All Content</button>
         </div>
       </div>
@@ -700,8 +720,13 @@
         </div>
         <div id="watchedList" class="list-container">
           <div class="empty-state sassy-empty">Nothing completed yet? Commitment issues much? 😏</div>
-  <div class="easter-egg" id="easterEgg">🎭</div>
-  <div class="feedback-button" id="feedbackBtn">💬</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="easter-egg" id="easterEgg">🎭</div>
+    <div class="feedback-button" id="feedbackBtn">💬</div>
+  </div>
 
   <script>
     // Core Application Logic
@@ -757,25 +782,68 @@
 
     // Test notification function
     function testNotification() {
-      if ('Notification' in window) {
-        if (Notification.permission === 'granted') {
-          new Notification('Flicklet', {
-            body: 'Your favorite show has a new episode! 📺✨',
-            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23ff6b6b"/><text x="50" y="55" font-size="40" text-anchor="middle" fill="white">📺</text></svg>'
-          });
-        } else if (Notification.permission !== 'denied') {
-          Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-              testNotification();
-            }
-          });
-        } else {
-          showNotification('Notifications are blocked. Please enable them in your browser settings.', 'warning');
-        }
-      } else {
-        showNotification('This browser does not support notifications.', 'warning');
-      }
+  // Check if notifications are supported
+  if (!('Notification' in window)) {
+    showNotification('This browser does not support notifications.', 'warning');
+    return;
+  }
+  
+  // Check current permission
+  if (Notification.permission === 'granted') {
+    // Show test notification
+    try {
+      const notification = new Notification('Flicklet Test! 📺', {
+        body: 'Your notifications are working perfectly! 🎉',
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-72.png',
+        tag: 'flicklet-test',
+        requireInteraction: false
+      });
+      
+      // Auto-close after 4 seconds
+      setTimeout(() => notification.close(), 4000);
+      
+      showNotification('Test notification sent! Check your system notifications.', 'success');
+    } catch (error) {
+      console.error('Notification error:', error);
+      showNotification('Notification failed to display.', 'error');
     }
+  } else if (Notification.permission === 'denied') {
+    showNotification('Notifications are blocked. Please enable them in your browser settings.', 'warning');
+    showNotificationInstructions();
+  } else {
+    // Request permission
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        testNotification(); // Retry now that we have permission
+      } else {
+        showNotification('Notification permission denied.', 'warning');
+      }
+    });
+  }
+}
+function showNotificationInstructions() {
+  const instructions = {
+    'Chrome': 'Click the 🔒 icon in the address bar → Notifications → Allow',
+    'Firefox': 'Click the shield icon → Permissions → Notifications → Allow',
+    'Safari': 'Safari → Preferences → Websites → Notifications → Allow',
+    'Edge': 'Click the 🔒 icon in the address bar → Notifications → Allow'
+  };
+  
+  const browser = getBrowserName();
+  const instruction = instructions[browser] || 'Check your browser settings for notification permissions';
+  
+  showNotification(`Enable notifications: ${instruction}`, 'info');
+}
+
+function getBrowserName() {
+  const userAgent = navigator.userAgent;
+  if (userAgent.includes('Chrome') && !userAgent.includes('Edge')) return 'Chrome';
+  if (userAgent.includes('Firefox')) return 'Firefox';
+  if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) return 'Safari';
+  if (userAgent.includes('Edge')) return 'Edge';
+  return 'Unknown';
+}
 
     // Simple modal functions - NO closeModal references
     function showAboutModal() {
@@ -954,9 +1022,59 @@
       document.getElementById('darkModeToggle').textContent = isDark ? '☀️ Go Light' : '🌙 Go Dark';
     }
 
-    function saveAppData() {
-      localStorage.setItem('tvMovieTrackerData', JSON.stringify(appData));
+    async function saveAppData() {
+  // Always save locally as backup
+  localStorage.setItem('tvMovieTrackerData', JSON.stringify(appData));
+  
+  // If user is signed in, also save to Firestore
+  if (currentUser) {
+    try {
+      const userRef = db.collection('users').doc(currentUser.uid);
+      
+      await userRef.set({
+        watchlists: {
+          tv: appData.tv,
+          movies: appData.movies
+        },
+        settings: appData.settings,
+        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      
+      console.log('✅ Data synced to cloud');
+    } catch (error) {
+      console.error('❌ Failed to sync to cloud:', error);
+      showNotification('Failed to sync to cloud. Data saved locally.', 'warning');
     }
+  }
+}
+async function loadUserDataFromCloud(userId) {
+  try {
+    const userRef = db.collection('users').doc(userId);
+    const doc = await userRef.get();
+    
+    if (doc.exists) {
+      const cloudData = doc.data();
+      if (cloudData.watchlists) {
+        // Merge cloud data with local data
+        if (cloudData.watchlists.tv) appData.tv = cloudData.watchlists.tv;
+        if (cloudData.watchlists.movies) appData.movies = cloudData.watchlists.movies;
+        if (cloudData.settings) appData.settings = { ...appData.settings, ...cloudData.settings };
+        
+        console.log('✅ Loaded data from cloud');
+        updateUI();
+        
+        // Save merged data locally
+        localStorage.setItem('tvMovieTrackerData', JSON.stringify(appData));
+        showNotification('Data synced from cloud! 📁', 'success');
+      }
+    } else {
+      console.log('No cloud data found, using local data');
+    }
+  } catch (error) {
+    console.error('❌ Failed to load from cloud:', error);
+    showNotification('Failed to load cloud data. Using local data.', 'warning');
+  }
+}
 
     function setupEventListeners() {
       document.getElementById('darkModeToggle').onclick = () => {
@@ -1180,7 +1298,9 @@
                     last_episode_to_air: details.last_episode_to_air,
                     in_production: details.in_production,
                     genres: details.genres,
-                    networks: details.networks
+                    networks: details.networks,
+					episode_run_time: details.episode_run_time || [45],
+                    runtime: details.episode_run_time ? details.episode_run_time[0] : 45
                   };
                 }
               } else if (item.media_type === 'movie' || item.release_date) {
@@ -1191,7 +1311,8 @@
                     ...item,
                     status: details.status,
                     release_date: details.release_date,
-                    genres: details.genres
+                    genres: details.genres,
+					runtime: details.runtime || 120
                   };
                 }
               }
@@ -1268,7 +1389,10 @@
       const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
       const overview = item.overview || 'No description available.';
       const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
-      
+      card.setAttribute('data-testid', `show-card-${item.id}`);
+      card.setAttribute('data-show-title', title);
+      card.setAttribute('data-media-type', mediaType);
+	  card.setAttribute('data-runtime-minutes', item.runtime || (mediaType === 'tv' ? 45 : 120));
       const category = mediaType === 'tv' ? 'tv' : 'movies';
       const isInWatching = appData[category] && appData[category].watching && appData[category].watching.some(show => show.id === item.id);
       const isInWishlist = appData[category] && appData[category].wishlist && appData[category].wishlist.some(show => show.id === item.id);
@@ -1811,8 +1935,53 @@
         updateList('watchedList', [...appData.tv.watched, ...appData.movies.watched]);
       } catch (error) {
         console.error('Error updating UI:', error);
+		updateBingeMeter();
       }
     }
+	
+	function calculateBingeTime() {
+  const allCards = document.querySelectorAll('.show-card[data-runtime-minutes]');
+  let totalMinutes = 0;
+  let showCount = 0;
+  
+  allCards.forEach(card => {
+    const runtime = parseInt(card.getAttribute('data-runtime-minutes') || '0');
+    totalMinutes += runtime;
+    showCount++;
+  });
+  
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  
+  let timeStr = '';
+  if (days > 0) timeStr += `${days}d `;
+  if (remainingHours > 0) timeStr += `${remainingHours}h `;
+  if (minutes > 0) timeStr += `${minutes}m`;
+  
+  return { totalMinutes, timeStr: timeStr || '0m', showCount };
+}
+
+function updateBingeMeter() {
+  const stats = calculateBingeTime();
+  
+  // Find or create binge meter in stats section
+  const statsContainer = document.querySelector('.stats');
+  let bingeMeter = document.getElementById('bingeMeter');
+  
+  if (!bingeMeter) {
+    bingeMeter = document.createElement('div');
+    bingeMeter.id = 'bingeMeter';
+    bingeMeter.className = 'stat';
+    statsContainer.appendChild(bingeMeter);
+  }
+  
+  bingeMeter.innerHTML = `
+    <div class="stat-num">${stats.timeStr}</div>
+    <div class="stat-label">Total Binge Time</div>
+  `;
+}
 
     function updateList(containerId, items) {
       const container = document.getElementById(containerId);
@@ -1995,7 +2164,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       loadAppData();
       setupEventListeners();
-	  // Firebase Auth Event Listeners
+      // Firebase Auth Event Listeners
       document.getElementById('googleSignIn').onclick = signInWithGoogle;
       document.getElementById('emailSignIn').onclick = signInWithEmail;  
       document.getElementById('signOut').onclick = signOut;
@@ -2003,123 +2172,200 @@
       updateUI();
       updateDarkModeButton();
       initPushNotifications();
-	  // Show auth section on load
+      // Show auth section on load
       document.getElementById('authSection').style.display = 'block';
       
       if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission();
       }
     });
+
+    /* === EPISODE PILL: place to the right of the tags row === */
+    (function placeEpisodePill() {
+      function move() {
+        document.querySelectorAll('.show-card, .movie-card, .card').forEach(card => {
+          const ep = card.querySelector('.episode-tracker');
+          if (!ep) return;
+
+          const tags = card.querySelector('.tags-container');
+          if (!tags) return;
+
+          // Make the row a 2-col grid (input+button | pill)
+          tags.classList.add('tags-row-grid');
+
+          // Compact view for the pill
+          ep.classList.add('ep-compact');
+
+          // Ensure the tags list spans full width below
+          const tagsDisplay = tags.querySelector('.tags-display');
+
+          // Insert the pill BEFORE the tags display so it sits in the first row, right column
+          if (tagsDisplay && ep.nextSibling !== tagsDisplay) {
+            tags.insertBefore(ep, tagsDisplay);
+          } else if (!tagsDisplay && !tags.contains(ep)) {
+            tags.appendChild(ep);
+          }
+        });
+      }
+      document.addEventListener('DOMContentLoaded', move);
+      window.addEventListener('load', move);
+      setTimeout(move, 300);
+      setTimeout(move, 1200);
+    })();
   </script>
-  <!-- Firebase v9 Compat SDK -->
-<!-- Firebase v9 SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script>
-// Firebase Configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM",
-  authDomain: "flicklet-71dff.firebaseapp.com",
-  projectId: "flicklet-71dff",
-  storageBucket: "flicklet-71dff.firebasestorage.app",
-  messagingSenderId: "1034923556763",
-  appId: "1:1034923556763:web:bba5489cd1d9412c9c2b3e"
-};
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+  <!-- Firebase v9 SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-// Initialize services
-const auth = firebase.auth();
-const db = firebase.firestore();
+  <script>
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM",
+    authDomain: "flicklet-71dff.firebaseapp.com",
+    projectId: "flicklet-71dff",
+    storageBucket: "flicklet-71dff.firebasestorage.app",
+    messagingSenderId: "1034923556763",
+    appId: "1:1034923556763:web:bba5489cd1d9412c9c2b3e"
+  };
 
-console.log('🔥 Firebase initialized successfully!');
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
 
-// Firebase Authentication Functions
-let currentUser = null;
-
-// Monitor auth state changes
-auth.onAuthStateChanged((user) => {
-  currentUser = user;
-  updateAuthUI(user);
-  
-  if (user) {
-    console.log('✅ User signed in:', user.email);
-    // loadUserData(user.uid); // We'll add this next
-  } else {
-    console.log('❌ User signed out');
-  }
-});
-
-function updateAuthUI(user) {
-  const authSection = document.getElementById('authSection');
-  const authStatus = document.getElementById('authStatus');
-  const signOut = document.getElementById('signOut');
-  const googleSignIn = document.getElementById('googleSignIn');
-  const emailSignIn = document.getElementById('emailSignIn');
-  
-  if (authSection) {
-    if (user) {
-      authStatus.textContent = `✅ Signed in as: ${user.email}`;
-      authStatus.style.color = 'var(--success)';
-      signOut.style.display = 'inline-block';
-      googleSignIn.style.display = 'none';
-      emailSignIn.style.display = 'none';
-    } else {
-      authStatus.textContent = '❌ Not signed in - data stays local only';
-      authStatus.style.color = 'var(--danger)';
-      signOut.style.display = 'none';
-      googleSignIn.style.display = 'inline-block';
-      emailSignIn.style.display = 'inline-block';
-    }
-  }
-}
-
-// Google Sign In
-async function signInWithGoogle() {
-  try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    const result = await auth.signInWithPopup(provider);
-    showNotification(`Welcome ${result.user.displayName}! 🎉`, 'success');
-  } catch (error) {
-    console.error('Google sign in error:', error);
-    showNotification('Google sign in failed. Try again! 😅', 'error');
-  }
-}
-
-// Email Sign In
-async function signInWithEmail() {
-  const email = prompt('Enter your email:');
-  const password = prompt('Enter your password:');
-  
-  if (email && password) {
+  // Initialize services
+  const auth = firebase.auth();
+  // Ensure profile exists + bump lastLoginAt on every session
+  firebase.auth().onAuthStateChanged(async (user) => {
+    if (!user) return;
     try {
-      await auth.signInWithEmailAndPassword(email, password);
-      showNotification('Welcome back! 🎉', 'success');
-    } catch (error) {
-      if (error.code === 'auth/user-not-found') {
-        try {
-          await auth.createUserWithEmailAndPassword(email, password);
-          showNotification('Account created! Welcome! 🎉', 'success');
-        } catch (createError) {
-          showNotification('Failed to create account. Try again! 😅', 'error');
-        }
+      const ref = firebase.firestore().collection('users').doc(user.uid);
+      const snap = await ref.get();
+
+      const payload = {
+        uid: user.uid,
+        email: user.email || null,
+        displayName: user.displayName || null,
+        photoURL: user.photoURL || null,
+        provider: (user.providerData && user.providerData[0])
+          ? user.providerData[0].providerId
+          : null,
+        lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+
+      if (!snap.exists) {
+        payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+
+      await ref.set(payload, { merge: true });
+    } catch (e) {
+      console.error('profile upsert on auth state:', e);
+    }
+  });
+
+  const db = firebase.firestore();
+
+  console.log('🔥 Firebase initialized successfully!');
+
+  // Firebase Authentication Functions
+  let currentUser = null;
+
+  // Monitor auth state changes
+  auth.onAuthStateChanged(async (user) => {
+    currentUser = user;
+    updateAuthUI(user);
+    
+    if (user) {
+      console.log('✅ User signed in:', user.email);
+      await loadUserDataFromCloud(user.uid);
+    } else {
+      console.log('❌ User signed out');
+    }
+  });
+
+  function updateAuthUI(user) {
+    const authSection = document.getElementById('authSection');
+    const authStatus = document.getElementById('authStatus');
+    const signOut = document.getElementById('signOut');
+    const googleSignIn = document.getElementById('googleSignIn');
+    const emailSignIn = document.getElementById('emailSignIn');
+    
+    if (authSection) {
+      if (user) {
+        authStatus.textContent = `✅ Signed in as: ${user.email}`;
+        authStatus.style.color = 'var(--success)';
+        signOut.style.display = 'inline-block';
+        googleSignIn.style.display = 'none';
+        emailSignIn.style.display = 'none';
       } else {
-        showNotification('Sign in failed. Check your credentials! 🔑', 'error');
+        authStatus.textContent = '❌ Not signed in - data stays local only';
+        authStatus.style.color = 'var(--danger)';
+        signOut.style.display = 'none';
+        googleSignIn.style.display = 'inline-block';
+        emailSignIn.style.display = 'inline-block';
       }
     }
   }
-}
 
-// Sign Out
-async function signOut() {
-  try {
-    await auth.signOut();
-    showNotification('Signed out successfully! 👋', 'success');
-  } catch (error) {
-    showNotification('Sign out failed! 🤔', 'error');
+  // Google Sign In
+  async function signInWithGoogle() {
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      const result = await auth.signInWithPopup(provider);
+
+      // upsert /users/{uid}
+      await firebase.firestore().collection('users').doc(result.user.uid).set({
+        uid: result.user.uid,
+        email: result.user.email || null,
+        displayName: result.user.displayName || null,
+        photoURL: result.user.photoURL || null,
+        provider: (result.user.providerData && result.user.providerData[0])
+          ? result.user.providerData[0].providerId
+          : null,
+        lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      showNotification(`Welcome ${result.user.displayName || 'there'}! 🎉`, 'success');
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      showNotification('Google sign in failed. Try again! 🤷', 'error');
+    }
   }
-}
-</script>
+
+  // Email Sign In
+  async function signInWithEmail() {
+    const email = prompt('Enter your email:');
+    const password = prompt('Enter your password:');
+    
+    if (email && password) {
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+        showNotification('Welcome back! 🎉', 'success');
+      } catch (error) {
+        if (error.code === 'auth/user-not-found') {
+          try {
+            await auth.createUserWithEmailAndPassword(email, password);
+            showNotification('Account created! Welcome! 🎉', 'success');
+          } catch (createError) {
+            showNotification('Failed to create account. Try again! 😅', 'error');
+          }
+        } else {
+          showNotification('Sign in failed. Check your credentials! 🔑', 'error');
+        }
+      }
+    }
+  }
+
+  // Sign Out
+  async function signOut() {
+    try {
+      await auth.signOut();
+      showNotification('Signed out successfully! 👋', 'success');
+    } catch (error) {
+      showNotification('Sign out failed! 🤔', 'error');
+    }
+  }
+  </script>
 </body>
+</html>
