@@ -2,91 +2,100 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Flicklet - TV & Movie Tracker</title>
   <meta name="description" content="Search, track, and rate shows & films fast. Never lose track of your binge-watching again!" />
-
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" href="/icons/icon-512.png" />
 
   <style>
     :root{
-      --bg:#fff; --text:#000; --primary:#ff6b6b; --card:#f9f9f9; --border:#ddd;
-      --success:#51cf66; --warning:#ffd43b; --danger:#ff6b6b; --purple:#845ec2;
+      --bg:#ffffff; --text:#121212; --primary:#ff6b6b; --card:#f7f7f9; --border:#dedee3;
+      --success:#51cf66; --warning:#ffd43b; --danger:#ff4d4f; --purple:#845ec2;
     }
     *{box-sizing:border-box}
     body{
       font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
       background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-      color:var(--text); margin:0; padding:20px; min-height:100vh;
+      margin:0; padding:20px; color:var(--text); min-height:100vh;
     }
     .dark-mode{
-      --bg:#1a1a1a; --text:#f5f5f5; --card:#2d2d2d; --border:#444;
+      --bg:#1a1a1a; --text:#f5f5f5; --card:#232323; --border:#383838;
       background:linear-gradient(135deg,#2c3e50 0%,#34495e 100%) !important;
     }
+
     .main-container{
-      max-width:1200px; margin:0 auto; background:var(--bg); border-radius:20px; padding:30px;
-      box-shadow:0 20px 60px rgba(0,0,0,.3);
-    }
-    .header{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; border-bottom:3px dashed var(--primary); padding-bottom:18px; margin-bottom:24px}
-    .title{margin:0; font-size:2.4rem; color:var(--primary); font-weight:800}
-    .subtitle{margin-top:4px; color:#777}
-    .user-section{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
-    #langToggle{
-      padding:8px 10px; border-radius:14px; border:2px solid var(--border);
-      background:var(--card); color:var(--text); font-weight:700;
+      max-width:1100px; margin:0 auto; background:var(--bg); border-radius:20px; padding:24px;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
     }
 
-    .tab-container{display:flex; gap:6px; background:var(--card); padding:8px; border-radius:12px; margin:18px 0}
-    .tab{flex:1; border:0; background:transparent; padding:14px; border-radius:10px; font-weight:700; cursor:pointer}
+    .header{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; border-bottom:3px dashed var(--primary); padding-bottom:16px; margin-bottom:18px}
+    .title{margin:0; font-size:2.1rem; color:var(--primary); font-weight:800; letter-spacing:.2px}
+    .subtitle{margin:2px 0 8px; color:#8a8a98; font-weight:600}
+    .user-section{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    #langToggle{padding:8px 10px; border-radius:14px; border:2px solid var(--border); background:var(--card); color:var(--text); font-weight:700}
+
+    .tab-container{display:flex; gap:6px; background:var(--card); padding:8px; border-radius:12px; margin:14px 0}
+    .tab{flex:1; border:0; background:transparent; padding:12px 10px; border-radius:10px; font-weight:800; cursor:pointer}
     .tab.active{background:linear-gradient(45deg,var(--primary),var(--purple)); color:#fff}
     .tab-badge{background:#fff; color:var(--primary); border-radius:12px; padding:2px 8px; font-size:12px; margin-left:6px}
 
-    .search-container{background:var(--card); border:2px solid var(--primary); border-radius:16px; padding:16px; margin:18px 0}
-    .search-row{display:flex; gap:10px; flex-wrap:wrap}
-    .search-input{flex:1; min-width:240px; padding:10px; border-radius:12px; border:2px solid var(--border); background:var(--bg); color:var(--text)}
-    button{
-      border:0; background:linear-gradient(45deg,var(--primary),var(--purple)); color:#fff; border-radius:20px;
-      padding:10px 16px; font-weight:700; cursor:pointer
+    .search-container{background:var(--card); border:2px solid var(--primary); border-radius:14px; padding:12px; margin:14px 0}
+    .search-row{display:grid; grid-template-columns:1fr 180px auto auto; gap:8px}
+    .search-input{padding:10px 12px; border-radius:12px; border:2px solid var(--border); background:var(--bg); color:var(--text)}
+    .btn{border:0; background:linear-gradient(45deg,var(--primary),var(--purple)); color:#fff; border-radius:18px; padding:10px 14px; font-weight:800; cursor:pointer}
+    .btn.secondary{background:linear-gradient(45deg,#737d8c,#57606f)}
+    .btn.success{background:linear-gradient(45deg,#2ed573,#1dd1a1)}
+    .btn.danger{background:linear-gradient(45deg,#ff4d4f,#ff2d55)}
+
+    .stats{display:grid; grid-template-columns:repeat(4,minmax(140px,1fr)); gap:12px; margin:14px 0}
+    .stat{background:var(--card); border:2px solid var(--primary); border-radius:12px; padding:14px; text-align:center}
+    .stat-num{font-size:1.8rem; color:var(--primary); font-weight:900}
+    .stat-label{font-size:.72rem; color:#80808f; text-transform:uppercase; font-weight:900; letter-spacing:.6px}
+
+    .list-container{background:var(--card); border:3px dashed var(--border); border-radius:12px; padding:12px; min-height:80px}
+
+    /* Less cramped cards */
+    .show-card{
+      display:grid; grid-template-columns:92px 1fr; gap:16px;
+      border:2px solid var(--border); border-radius:12px; padding:14px; margin:12px 0; background:var(--bg)
     }
-    button.secondary{background:linear-gradient(45deg,#747d8c,#57606f)}
-    button.success{background:linear-gradient(45deg,#2ed573,#1dd1a1)}
-    button.danger{background:linear-gradient(45deg,#ff4757,#ff3742)}
+    .show-poster{width:92px; height:138px; border-radius:8px; object-fit:cover; cursor:pointer}
+    .poster-placeholder{width:92px; height:138px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:#e9e9ee; color:#777; font-size:12px}
 
-    .stats{display:flex; flex-wrap:wrap; gap:14px; margin:18px 0}
-    .stat{flex:1; min-width:140px; background:var(--card); border:2px solid var(--primary); border-radius:14px; padding:16px; text-align:center}
-    .stat-num{font-size:2rem; color:var(--primary); font-weight:800}
-    .stat-label{font-size:.75rem; color:#777; text-transform:uppercase; font-weight:800}
-
-    .list-container{background:var(--card); border:3px dashed var(--border); border-radius:12px; padding:16px; min-height:80px}
-    .show-card{display:flex; gap:16px; border:2px solid var(--border); border-radius:12px; padding:16px; margin:12px 0; background:var(--bg)}
-    .show-poster{width:90px; height:135px; border-radius:8px; object-fit:cover; cursor:pointer}
-    .poster-placeholder{width:90px; height:135px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:#eee; color:#777; font-size:12px}
-    .show-details{flex:1; display:flex; flex-direction:column}
-    .show-title{margin:0 0 6px 0; color:var(--primary); font-size:1.15rem; display:flex; gap:8px; align-items:center; cursor:pointer}
-    .show-meta{color:#888; font-size:.9rem; margin-bottom:8px}
-    .show-overview{font-size:.95rem; line-height:1.5; margin-bottom:10px}
-    .rating-container{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .show-details{display:grid; grid-template-rows:auto auto auto 1fr; gap:6px; min-width:0}
+    .show-title{margin:0; color:var(--primary); font-size:1.05rem; font-weight:900; display:flex; gap:8px; align-items:center; cursor:pointer; line-height:1.2}
+    .show-meta{color:#8a8a98; font-size:.88rem; display:flex; flex-wrap:wrap; gap:8px}
+    .show-overview{
+      font-size:.95rem; line-height:1.45; color:var(--text);
+      display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+    }
+    .rating-container{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:6px}
     .star-rating .star{cursor:pointer; filter:grayscale(1)}
     .star-rating .star.active{filter:none}
-    .like-btn,.dislike-btn{padding:6px 12px; border-radius:14px; background:#ddd; color:#444}
+    .like-btn,.dislike-btn{padding:6px 12px; border-radius:14px; background:#dedee3; color:#444}
     .like-btn.active{background:linear-gradient(45deg,#2ed573,#1dd1a1); color:#fff}
     .dislike-btn.active{background:linear-gradient(45deg,#ff4757,#ff3742); color:#fff}
 
-    /* pill at far right of rating row */
-    .series-pill{margin-left:auto; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:800; white-space:nowrap; border:1px solid transparent}
-    .series-pill.status-ongoing {background:rgba(81,207,102,.15);  color:#37b24d; border-color:#37b24d}
-    .series-pill.status-ended   {background:rgba(255,71,87,.15);   color:#ff4757; border-color:#ff4757}
-    .series-pill.status-upcoming{background:rgba(255,212,59,.15);  color:#f59f00; border-color:#f59f00}
+    /* status pill */
+    .series-pill{margin-left:auto; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:900; white-space:nowrap; border:1px solid transparent}
+    .series-pill.status-ongoing {background:rgba(81,207,102,.16);  color:#2f9e44; border-color:#2f9e44}
+    .series-pill.status-ended   {background:rgba(255,77,79,.16);  color:#d63031; border-color:#d63031}
+    .series-pill.status-upcoming{background:rgba(255,212,59,.16); color:#b08900; border-color:#b08900}
 
-    .tags-container button:empty{display:none !important}
-
-    .empty-state{padding:30px; text-align:center; color:#777}
-    .sassy-empty{color:var(--primary); font-weight:800}
+    /* Binge banner (front page) */
+    #bingeBanner{display:flex; align-items:center; gap:12px; padding:4px 0}
+    #bingeBanner .binge-time{font-family:ui-monospace,Menlo,monospace; font-weight:900; color:#ffd43b}
+    #bingeBanner .binge-label{color:#e5e7eb; opacity:.95}
+    #bingeBanner .binge-cta{
+      padding:8px 12px; font-size:.88rem; border-radius:16px; color:#fff;
+      background:linear-gradient(45deg,#ff6b6b,#4ecdc4,#45b7d1,#96ceb4,#feca57,#ff9ff3,#54a0ff);
+      background-size:400% 400%; animation:rainbow 3s ease-in-out infinite; border:2px solid rgba(255,255,255,.85)
+    }
+    @keyframes rainbow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 
     .notification{
-      position:fixed; right:20px; top:20px; z-index:1000; color:#fff; font-weight:800;
+      position:fixed; right:20px; top:20px; z-index:1000; color:#fff; font-weight:900;
       padding:12px 16px; border-radius:10px; background:var(--purple); animation:fadeout .4s ease 2.6s forwards
     }
     .notification.success{background:var(--success)}
@@ -94,24 +103,10 @@
     .notification.error{background:var(--danger)}
     @keyframes fadeout{to{opacity:0; transform:translateX(120%)}}
 
-    /* Binge banner */
-    #bingeBanner{display:flex; align-items:center; gap:12px; padding:4px 0}
-    #bingeBanner .binge-time{font-family:ui-monospace,Menlo,monospace; font-weight:800; color:var(--warning)}
-    #bingeBanner .binge-label{color:#e5e7eb; opacity:.95}
-    #bingeBanner .binge-cta{
-      padding:8px 14px; font-size:.9rem; border-radius:18px; color:#fff;
-      background:linear-gradient(45deg,#ff6b6b,#4ecdc4,#45b7d1,#96ceb4,#feca57,#ff9ff3,#54a0ff);
-      background-size:400% 400%; animation:rainbow 3s ease-in-out infinite; border:2px solid #fff
-    }
-    @keyframes rainbow{
-      0%,100%{background-position:0% 50%}
-      50%{background-position:100% 50%}
-    }
-
-    /* basic modal */
+    /* Modal */
     .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; z-index:10000}
     .modal{background:var(--bg); color:var(--text); max-width:680px; width:92%; border-radius:14px; border:2px solid var(--primary); padding:18px}
-    .modal h3{margin:0 0 10px 0; color:var(--primary)}
+    .modal h3{margin:0 0 10px; color:var(--primary)}
     .modal .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:14px}
   </style>
 </head>
@@ -122,15 +117,10 @@
       <div>
         <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
         <div class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
-        <!-- In-your-face binge banner -->
         <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
       </div>
       <div class="user-section">
-        <div id="nameContainer" class="name-container">
-          <div class="name-instruction">👆 Add your name for a personal touch!</div>
-          <input id="displayNameInput" class="name-input" placeholder="Your name here..." />
-        </div>
-        <button id="darkModeToggle">🌙 Go Dark</button>
+        <button id="darkModeToggle" class="btn">🌙 Go Dark</button>
         <select id="langToggle" aria-label="Language" title="Language">
           <option value="en">EN</option>
           <option value="es">ES</option>
@@ -146,23 +136,12 @@
     </div>
 
     <div id="homeSection" class="tab-section">
-      <!-- Auth box -->
-      <div id="authSection" class="search-container" style="display:none">
-        <h3 id="authTitle" data-i18n="sign_in_title">🔐 Sign In to Sync Your Data</h3>
-        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
-          <button id="googleSignIn" style="background:#4285f4">📱 Sign in with Google</button>
-          <button id="emailSignIn"  class="secondary">📧 Sign in with Email</button>
-          <button id="signOut" class="danger" style="display:none">🚪 Sign Out</button>
-        </div>
-        <div id="authStatus" style="margin-top:8px; font-weight:800"></div>
-      </div>
-
       <div class="search-container">
         <div class="search-row">
-          <input id="searchInput" class="search-input" data-testid="search-input" placeholder="Search for shows or movies..." />
+          <input id="searchInput" class="search-input" data-testid="search-input" placeholder="Search for shows or movies…" />
           <select id="genreFilter"><option value="">All Genres</option></select>
-          <button id="searchBtn" data-testid="search-button">🔍 Search</button>
-          <button id="clearSearchBtn" class="secondary" style="display:none">✖️ <span data-i18n="clear">Clear</span></button>
+          <button id="searchBtn" class="btn" data-testid="search-button">🔍 Search</button>
+          <button id="clearSearchBtn" class="btn secondary" data-testid="clear-search">✖️ <span data-i18n="clear">Clear</span></button>
         </div>
       </div>
 
@@ -194,13 +173,13 @@
         <h3 style="color:var(--primary); margin-top:0">💾 Backup Your Questionable Taste</h3>
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:8px">
           <input id="importFile" type="file" accept=".json" style="max-width:220px" />
-          <button id="exportBtn" class="success" data-testid="export-button">📤 Export</button>
-          <button id="clearAllBtn" class="danger" data-testid="clear-all-button">🗑️ Nuclear Option</button>
+          <button id="exportBtn" class="btn success" data-testid="export-button">📤 Export</button>
+          <button id="clearAllBtn" class="btn danger" data-testid="clear-all-button">🗑️ Nuclear Option</button>
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
-          <button id="aboutBtn" class="secondary" data-testid="about-button">ℹ️ About Flicklet</button>
-          <button id="usageStatsBtn" class="secondary" data-testid="stats-button">📊 Usage Stats</button>
-          <button id="filterBtn" class="secondary">🎭 Show All Content</button>
+          <button id="aboutBtn" class="btn secondary" data-testid="about-button">ℹ️ About Flicklet</button>
+          <button id="usageStatsBtn" class="btn secondary" data-testid="stats-button">📊 Usage Stats</button>
+          <button id="filterBtn" class="btn secondary">🎭 Show All Content</button>
         </div>
       </div>
     </div>
@@ -233,44 +212,14 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <script>
-    // ---- i18n (snark included) ----
+    /* ============== i18n (with snark) ============== */
     const I18N = {
-      en:{
-        app_title:'Flicklet',
-        subtitle:'TV & Movie Tracker',
-        sign_in_title:'🔐 Sign In to Sync Your Data',
-        cloud_on:'Cloud Sync: On',
-        binge_total:'Total Binge Time',
-        start:'Start',
-        currently_watching:'Currently Watching',
-        want_to_watch:'Want to Watch',
-        already_watched:'Already Watched',
-        streaming_on:'Streaming',
-        clear:'Clear',
-        series_complete:'Series Complete',
-        coming_soon:'Coming Soon',
-        currently_airing:'Currently Airing',
-        next:'Next',
-        last:'Last'
-      },
-      es:{
-        app_title:'Flicklet',
-        subtitle:'Seguimiento de series y películas',
-        sign_in_title:'🔐 Inicia sesión para sincronizar tus datos',
-        cloud_on:'Sincronización en la nube: activa',
-        binge_total:'Tiempo total de maratón',
-        start:'Comenzar',
-        currently_watching:'Viendo actualmente',
-        want_to_watch:'Quiero ver',
-        already_watched:'Ya visto',
-        streaming_on:'En',
-        clear:'Limpiar',
-        series_complete:'Serie terminada',
-        coming_soon:'Próximamente',
-        currently_airing:'En emisión',
-        next:'Próx.',
-        last:'Últ.'
-      }
+      en:{ app_title:'Flicklet', subtitle:'TV & Movie Tracker', sign_in_title:'🔐 Sign In to Sync Your Data', binge_total:'Total Binge Time', start:'Start',
+          currently_watching:'Currently Watching', want_to_watch:'Want to Watch', already_watched:'Already Watched', streaming_on:'Streaming',
+          clear:'Clear', series_complete:'Series Complete', coming_soon:'Coming Soon', currently_airing:'Currently Airing', next:'Next', last:'Last' },
+      es:{ app_title:'Flicklet', subtitle:'Seguimiento de series y películas', sign_in_title:'🔐 Inicia sesión para sincronizar tus datos', binge_total:'Tiempo total de maratón', start:'Comenzar',
+          currently_watching:'Viendo actualmente', want_to_watch:'Quiero ver', already_watched:'Ya visto', streaming_on:'En',
+          clear:'Limpiar', series_complete:'Serie terminada', coming_soon:'Próximamente', currently_airing:'En emisión', next:'Próx.', last:'Últ.' }
     };
     function t(k){ const lang = appData?.settings?.lang || 'en'; return (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k; }
     function applyTranslations(){ document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); if(k) el.textContent=t(k); }); }
@@ -281,7 +230,7 @@
       return d.toLocaleDateString(lang,{month:'short', day:'numeric', year:'numeric'});
     }
 
-    // ---- Firebase ----
+    /* ============== Firebase ============== */
     firebase.initializeApp({
       apiKey:"AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM",
       authDomain:"flicklet-71dff.firebaseapp.com",
@@ -308,7 +257,7 @@
       }
     });
 
-    // ---- App data & helpers ----
+    /* ============== App state ============== */
     const TMDB_IMG_BASE = 'https://image.tmdb.org/t/p/w200';
     const API_BASE      = '/.netlify/functions/tmdb';
     const appData = { tv:{watching:[],wishlist:[],watched:[]}, movies:{watching:[],wishlist:[],watched:[]}, settings:{theme:'light', displayName:'', lang:'en'} };
@@ -321,14 +270,6 @@
       const n=document.createElement('div'); n.className=`notification ${type}`; n.textContent=msg; document.body.appendChild(n);
       setTimeout(()=>n.remove(),2800);
     }
-    function openModal(title, html){
-      const wrap=document.createElement('div'); wrap.className='modal-backdrop';
-      wrap.innerHTML=`<div class="modal"><h3>${title}</h3><div class="modal-body">${html}</div><div class="modal-actions"><button class="secondary" id="modalClose">Close</button></div></div>`;
-      document.body.appendChild(wrap);
-      wrap.addEventListener('click',e=>{ if(e.target===wrap) wrap.remove(); });
-      wrap.querySelector('#modalClose').onclick=()=>wrap.remove();
-    }
-    function showRandomTip(arr){ showNotification(arr[Math.floor(Math.random()*arr.length)], 'info'); }
 
     function loadAppData(){
       try{
@@ -342,7 +283,6 @@
         }
       }catch(e){ console.warn(e); }
       if(appData.settings.theme==='dark') document.body.classList.add('dark-mode');
-      document.getElementById('displayNameInput').value = appData.settings.displayName || '';
       document.getElementById('langToggle').value = appData.settings.lang || 'en';
       updateWelcomeText(); applyTranslations();
     }
@@ -374,37 +314,25 @@
     }
 
     function updateAuthUI(user){
-      const s=document.getElementById('authSection');
-      if(!s) return;
-      const title=document.getElementById('authTitle');
-      const status=document.getElementById('authStatus');
-      const g=document.getElementById('googleSignIn'), e=document.getElementById('emailSignIn'), o=document.getElementById('signOut');
-      if(user){
-        if(title){ title.style.display='none'; }
-        status.textContent=`✅ Signed in as: ${user.email}`; status.style.color='var(--success)';
-        g.style.display='none'; e.style.display='none'; o.style.display='inline-block';
-      }else{
-        if(title){ title.style.display=''; title.textContent=t('sign_in_title'); }
-        status.textContent='❌ Not signed in - data stays local only'; status.style.color='var(--danger)';
-        g.style.display='inline-block'; e.style.display='inline-block'; o.style.display='none';
-      }
+      // We no longer show a big "Sign in to sync" banner; if needed add a tiny status somewhere.
     }
 
-    // ---- Search / fetch with language ----
+    /* ============== Search / fetch with language ============== */
+    function langQuery(){ return appData.settings.lang==='es' ? '&language=es-ES' : '&language=en-US'; }
+
     async function fetchShowData(query, page=1, genre=''){
-      const langParam = (appData.settings.lang==='es') ? '&language=es-ES' : '&language=en-US';
       let endpoint, params;
       if(genre && !query){ endpoint='discover/tv'; params=`endpoint=${endpoint}&page=${page}&with_genres=${genre}`; }
       else{ endpoint='search/multi'; params=`endpoint=${endpoint}&page=${page}${query?`&query=${encodeURIComponent(query)}`:''}`; }
 
-      const response = await fetch(`${API_BASE}?${params}${langParam}`);
+      const response = await fetch(`${API_BASE}?${params}${langQuery()}`);
       if(!response.ok) throw new Error(`Search failed: ${response.status}`);
       const data = await response.json();
 
       const enhanced = await Promise.all((data.results||[]).map(async (item)=>{
         try{
           if(item.media_type==='tv' || item.first_air_date){
-            const r = await fetch(`${API_BASE}?endpoint=tv/${item.id}${langParam}`);
+            const r = await fetch(`${API_BASE}?endpoint=tv/${item.id}${langQuery()}`);
             if(r.ok){ const d=await r.json(); return {...item,
               status:d.status, number_of_seasons:d.number_of_seasons, number_of_episodes:d.number_of_episodes,
               last_air_date:d.last_air_date, first_air_date:d.first_air_date,
@@ -414,7 +342,7 @@
               runtime:d.episode_run_time ? d.episode_run_time[0] : 45
             }; }
           }else if(item.media_type==='movie' || item.release_date){
-            const r = await fetch(`${API_BASE}?endpoint=movie/${item.id}${langParam}`);
+            const r = await fetch(`${API_BASE}?endpoint=movie/${item.id}${langQuery()}`);
             if(r.ok){ const d=await r.json(); return {...item, status:d.status, release_date:d.release_date, genres:d.genres, runtime:d.runtime||120}; }
           }
         }catch(_){/* ignore detail failures */}
@@ -424,9 +352,8 @@
     }
 
     async function loadGenres(){
-      const langParam = (appData.settings.lang==='es') ? '&language=es-ES' : '&language=en-US';
       try{
-        const r=await fetch(`${API_BASE}?endpoint=genre/tv/list${langParam}`);
+        const r=await fetch(`${API_BASE}?endpoint=genre/tv/list${langQuery()}`);
         const data=await r.json();
         const sel=document.getElementById('genreFilter'); sel.innerHTML='<option value="">All Genres</option>';
         (data.genres||[]).forEach(g=> sel.innerHTML += `<option value="${g.id}">${g.name}</option>`);
@@ -452,9 +379,9 @@
       c.innerHTML=''; results.forEach(item=> c.appendChild(createShowCard(item,true)));
     }
 
-    // ---- Card building ----
+    /* ============== Card helpers ============== */
     function getSeriesPill(item){
-      if(!item || item.media_type!=='tv') return '';
+      if(!item || (item.media_type!=='tv' && !item.first_air_date)) return '';
       const status   = item.status || '';
       const lastAir  = item.last_episode_to_air?.air_date || item.last_air_date || null;
       const nextEp   = item.next_episode_to_air || null;
@@ -480,16 +407,54 @@
                          lastAir ? `${t('last')}: ${formatDateShort(lastAir)}` : null;
         label = [progress || t('currently_airing'), whenNext].filter(Boolean).join(' • ');
       }
-      const title = [status || null, lastAir ? `Last air: ${formatDateShort(lastAir)}` : null].filter(Boolean).join(' • ');
+      const title = [status || null, lastAir ? `Last: ${formatDateShort(lastAir)}` : null].filter(Boolean).join(' • ');
       return `<span class="series-pill ${cls}" title="${title}">${label}</span>`;
+    }
+
+    // Ensure details exist for cards coming from old local data; updates pill + networks when fetched
+    async function ensureTvDetails(item, card){
+      if(item.media_type!=='tv' && !item.first_air_date) return;
+      const needs = !(item.status && (item.next_episode_to_air || item.last_air_date) && item.networks);
+      if(!needs) return;
+      try{
+        const r = await fetch(`${API_BASE}?endpoint=tv/${item.id}${langQuery()}`);
+        if(!r.ok) return;
+        const d = await r.json();
+        Object.assign(item, {
+          status:d.status, number_of_seasons:d.number_of_seasons, number_of_episodes:d.number_of_episodes,
+          last_air_date:d.last_air_date, first_air_date:d.first_air_date,
+          next_episode_to_air:d.next_episode_to_air, last_episode_to_air:d.last_episode_to_air,
+          in_production:d.in_production, genres:d.genres, networks:d.networks||[],
+          episode_run_time:d.episode_run_time||[45],
+          runtime: item.runtime ?? (d.episode_run_time ? d.episode_run_time[0] : 45)
+        });
+        // Update pill + meta in-place
+        const meta = card.querySelector('.show-meta');
+        const pillWrap = card.querySelector('.rating-container');
+        if(meta){
+          const networkNames=(item.networks||[]).map(n=>n.name).join(', ');
+          const date = item.first_air_date || item.release_date || '';
+          const rating = item.vote_average ? Number(item.vote_average).toFixed(1) : 'N/A';
+          const mediaType=item.media_type||'tv';
+          meta.innerHTML = `⭐ ${rating}${date?` • ${date.split('-')[0]}`:''} • ${mediaType.toUpperCase()} ${networkNames?`• ${t('streaming_on')}: ${networkNames}`:''}`;
+        }
+        if(pillWrap){
+          const old = pillWrap.querySelector('.series-pill');
+          if(old) old.remove();
+          pillWrap.insertAdjacentHTML('beforeend', getSeriesPill(item));
+        }
+      }catch(_){}
     }
 
     function createShowCard(item, isSearch=false){
       const card=document.createElement('div'); card.className='show-card';
       const title=item.name||item.title||'Unknown Title';
       const date = item.first_air_date || item.release_date || '';
-      const rating=item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+      const rating=item.vote_average ? Number(item.vote_average).toFixed(1) : 'N/A';
       const mediaType=item.media_type || (item.first_air_date ? 'tv' : 'movie');
+
+      card.setAttribute('data-id', String(item.id));
+      card.setAttribute('data-media-type', mediaType);
 
       const poster = item.poster_path
         ? `<img class="show-poster" src="${TMDB_IMG_BASE}${item.poster_path}" alt="${title}" onclick="openTMDBLink(${item.id},'${mediaType}')">`
@@ -507,9 +472,9 @@
         const safe=JSON.stringify(item).replace(/"/g,'&quot;');
         actions = `
           <div class="show-actions">
-            <button onclick="addToList(${safe}, 'watching')">▶️ ${t('currently_watching')}</button>
-            <button onclick="addToList(${safe}, 'wishlist')">📖 ${t('want_to_watch')}</button>
-            <button onclick="addToList(${safe}, 'watched')">✅ ${t('already_watched')}</button>
+            <button class="btn" onclick="addToList(${safe}, 'watching')">▶️ ${t('currently_watching')}</button>
+            <button class="btn" onclick="addToList(${safe}, 'wishlist')">📖 ${t('want_to_watch')}</button>
+            <button class="btn" onclick="addToList(${safe}, 'watched')">✅ ${t('already_watched')}</button>
           </div>`;
       }else{
         const likeStatus=item.likeStatus||'none';
@@ -527,21 +492,11 @@
             ${mediaType==='tv' ? getSeriesPill(item) : ''}
           </div>
 
-          <div class="tags-container">
-            <div style="display:flex; gap:8px; margin-bottom:8px">
-              <input id="tagInput-${item.id}" class="tag-input" placeholder="Add tags (horror, comedy, etc.)" />
-              <button onclick="addTagFromInput(${item.id})" style="padding:6px 10px">Add Tag</button>
-            </div>
-            <div id="tags-${item.id}" class="tags-display">
-              ${(item.tags||[]).map(tag=>`<span class="tag">${tag} <span class="tag-remove" onclick="removeTag(${item.id}, '${tag}')">×</span></span>`).join('')}
-            </div>
-          </div>
-
-          <div class="show-actions">
-            <button onclick="moveItem(${item.id}, 'watching')">→ ${t('currently_watching')}</button>
-            <button onclick="moveItem(${item.id}, 'wishlist')">→ ${t('want_to_watch')}</button>
-            <button onclick="moveItem(${item.id}, 'watched')">→ ${t('already_watched')}</button>
-            <button class="danger" onclick="removeItemFromCurrentList(${item.id})">🗑️ Remove</button>
+          <div class="show-actions" style="margin-top:6px; display:flex; gap:8px; flex-wrap:wrap">
+            <button class="btn secondary" onclick="moveItem(${item.id}, 'watching')">→ ${t('currently_watching')}</button>
+            <button class="btn secondary" onclick="moveItem(${item.id}, 'wishlist')">→ ${t('want_to_watch')}</button>
+            <button class="btn secondary" onclick="moveItem(${item.id}, 'watched')">→ ${t('already_watched')}</button>
+            <button class="btn danger" onclick="removeItemFromCurrentList(${item.id})">🗑️ Remove</button>
           </div>`;
       }
 
@@ -553,12 +508,15 @@
           <div class="show-overview">${item.overview||'No description.'}</div>
           ${actions}
         </div>`;
+
+      // Fetch missing details for old items and update pill/meta
+      ensureTvDetails(item, card);
       return card;
     }
 
     function openTMDBLink(id, type){ window.open(`https://www.themoviedb.org/${type}/${id}`,'_blank'); }
 
-    // ---- Lists / state ops ----
+    /* ============== List ops ============== */
     function addToList(item, list){
       const cat = (item.media_type==='tv'||item.first_air_date)?'tv':'movies';
       const exists = appData[cat][list].some(s=>s.id===item.id);
@@ -576,8 +534,6 @@
     }
     function setRating(id, rating){ const it=findItem(id); if(!it) return; it.userRating=rating; saveAppData(); updateUI(); }
     function setLikeStatus(id,status){ const it=findItem(id); if(!it) return; it.likeStatus=status; saveAppData(); updateUI(); }
-    function addTagFromInput(id){ const inp=document.getElementById(`tagInput-${id}`); if(!inp) return; const v=inp.value.trim(); if(!v) return; const it=findItem(id); it.tags=it.tags||[]; if(!it.tags.includes(v)) it.tags.push(v); inp.value=''; saveAppData(); updateUI(); }
-    function removeTag(id,tag){ const it=findItem(id); if(!it) return; it.tags=(it.tags||[]).filter(t=>t!==tag); saveAppData(); updateUI(); }
     function removeItemFromCurrentList(id){
       const item=findItem(id); if(!item) return;
       if(!confirm(`Remove "${item.title||item.name}" from this list?`)) return;
@@ -596,7 +552,7 @@
       return null;
     }
 
-    // ---- UI update, banner & meter ----
+    /* ============== Binge calc / banner / meter ============== */
     function calculateBingeTime({scope='watching'}={}){
       let roots=[];
       if(scope==='watching'){ const w=document.getElementById('watchingList'); if(w) roots=[w]; }
@@ -645,18 +601,25 @@
       };
     }
 
+    /* ============== UI update (with counts patch) ============== */
     function updateUI(){
       const totals={
         watching: appData.tv.watching.length + appData.movies.watching.length,
         wishlist: appData.tv.wishlist.length + appData.movies.wishlist.length,
         watched:  appData.tv.watched.length  + appData.movies.watched.length
       };
-      ['watching','wishlist','watched'].forEach(k=>{
-        const b=document.getElementById(k+'Badge'); if(b) b.textContent=totals[k];
-        const c=document.getElementById(k+'Count'); if(c) c.textContent=totals[k];
+
+      // PATCH: write to badges, section headers, and top summary tiles
+      const idMap = {
+        watching: ['watchingBadge','watchingCount','totalWatchingCount'],
+        wishlist: ['wishlistBadge','wishlistCount','totalWishlistCount'],
+        watched:  ['watchedBadge','watchedCount','totalWatchedCount'],
+      };
+      Object.entries(idMap).forEach(([key, ids]) => {
+        ids.forEach(id => { const el=document.getElementById(id); if(el) el.textContent = totals[key]; });
       });
-      const totalCount=document.getElementById('totalCount');
-      if(totalCount) totalCount.textContent=totals.watching+totals.wishlist+totals.watched;
+      const totalCountEl=document.getElementById('totalCount');
+      if(totalCountEl) totalCountEl.textContent = totals.watching + totals.wishlist + totals.watched;
 
       // lists (apply filters)
       const watching=[...appData.tv.watching,...appData.movies.watching];
@@ -689,7 +652,7 @@
       c.innerHTML=''; items.forEach(it=> c.appendChild(createShowCard(it,false)));
     }
 
-    // ---- Tabs / UI wiring ----
+    /* ============== Tabs / controls / modals ============== */
     function switchToTab(tab){
       currentActiveTab=tab;
       document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -704,13 +667,19 @@
       document.getElementById('welcomeText').textContent = n ? `${n}'s ${pool[Math.floor(Math.random()*pool.length)]}` : t('app_title');
     }
 
-    // ---- Misc actions ----
     function toggleContentFilter(){
       const btn=document.getElementById('filterBtn');
       if(!showTVOnly && !showMoviesOnly){ showTVOnly=true; btn.textContent='📺 Show TV Only'; }
       else if(showTVOnly){ showTVOnly=false; showMoviesOnly=true; btn.textContent='🎬 Show Movies Only'; }
       else { showMoviesOnly=false; btn.textContent='🎭 Show All Content'; }
       updateUI();
+    }
+    function openModal(title, html){
+      const wrap=document.createElement('div'); wrap.className='modal-backdrop';
+      wrap.innerHTML=`<div class="modal"><h3>${title}</h3><div class="modal-body">${html}</div><div class="modal-actions"><button class="btn secondary" id="modalClose">Close</button></div></div>`;
+      document.body.appendChild(wrap);
+      wrap.addEventListener('click',e=>{ if(e.target===wrap) wrap.remove(); });
+      wrap.querySelector('#modalClose').onclick=()=>wrap.remove();
     }
     function showAboutModal(){
       openModal('About Flicklet', `
@@ -733,42 +702,42 @@
       `);
     }
 
-    // ---- bootstrap ----
+    /* ============== bootstrap ============== */
     document.addEventListener('DOMContentLoaded', ()=>{
       loadAppData(); loadGenres(); updateUI();
 
-      // buttons
+      // tabs
       document.getElementById('homeTab').onclick = ()=>switchToTab('home');
       document.getElementById('watchingTab').onclick = ()=>switchToTab('watching');
       document.getElementById('wishlistTab').onclick = ()=>switchToTab('wishlist');
       document.getElementById('watchedTab').onclick = ()=>switchToTab('watched');
 
+      // theme + language
       document.getElementById('darkModeToggle').onclick = ()=>{
         document.body.classList.toggle('dark-mode');
         appData.settings.theme = document.body.classList.contains('dark-mode')?'dark':'light';
         saveAppData();
       };
-      document.getElementById('langToggle').addEventListener('change', (e)=>{
+      document.getElementById('langToggle').addEventListener('change', async (e)=>{
         appData.settings.lang = e.target.value || 'en';
-        saveAppData(); applyTranslations(); loadGenres(); updateUI();
+        saveAppData(); applyTranslations(); await loadGenres();
+        // Refresh visible details/pills to pick up localized metadata
+        document.querySelectorAll('.show-card[data-media-type="tv"]').forEach(card=>{
+          const id=card.getAttribute('data-id');
+          const item=findItem(Number(id));
+          if(item) ensureTvDetails(item, card);
+        });
+        // Re-run search if results are shown
+        if(document.getElementById('searchResults').style.display!=='none'){ performSearch(); }
+        updateUI();
       });
-
-      // auth buttons
-      document.getElementById('googleSignIn').onclick = async ()=>{
-        try{ await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-        catch(e){ showNotification('Google sign-in failed.','error'); }
-      };
-      document.getElementById('emailSignIn').onclick = async ()=>{
-        const email=prompt('Email?'); const pw=prompt('Password?');
-        if(!email||!pw) return;
-        try{ await auth.signInWithEmailAndPassword(email,pw); }
-        catch(e){ if(e.code==='auth/user-not-found'){ await auth.createUserWithEmailAndPassword(email,pw); } }
-      };
-      document.getElementById('signOut').onclick = ()=>auth.signOut();
 
       // search
       document.getElementById('searchBtn').onclick=performSearch;
-      document.getElementById('clearSearchBtn').onclick=()=>{ document.getElementById('searchInput').value=''; document.getElementById('genreFilter').value=''; document.getElementById('searchResults').style.display='none'; };
+      document.getElementById('clearSearchBtn').onclick=()=>{
+        document.getElementById('searchInput').value=''; document.getElementById('genreFilter').value='';
+        document.getElementById('searchResults').style.display='none';
+      };
       document.getElementById('searchInput').addEventListener('keydown', e=>{ if(e.key==='Enter') performSearch(); });
 
       // backup/actions
@@ -789,14 +758,11 @@
       document.getElementById('aboutBtn').onclick=showAboutModal;
       document.getElementById('usageStatsBtn').onclick=showStatsModal;
       document.getElementById('filterBtn').onclick=toggleContentFilter;
-
-      // show auth box now; updateAuthUI will adjust
-      document.getElementById('authSection').style.display='block';
     });
 
-    // Export a couple for debugging if you want
+    // Expose for quick console checks
     window.updateUI = updateUI;
     window.updateBingeBanner = updateBingeBanner;
   </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97330555adf6bd48',t:'MTc1NTg3MjUzMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
