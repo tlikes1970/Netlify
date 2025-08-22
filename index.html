@@ -779,32 +779,48 @@
       updateUI();
     }
 
-    function openModal(title, html){
-      const wrap=document.createElement('div'); wrap.className='modal-backdrop';
-      wrap.innerHTML=`<div class="modal"><h3>${title}</h3><div class="modal-body">${html}</div><div class="modal-actions"><button class="btn secondary" id="modalClose">Close</button></div></div>`;
-      document.body.appendChild(wrap);
-      wrap.addEventListener('click',e=>{ if(e.target===wrap) wrap.remove(); });
-      wrap.querySelector('#modalClose').onclick=()=>wrap.remove();
-    }
-    function showAboutModal(){
-      openModal('About Flicklet', `
-        <p><strong>Flicklet</strong> helps you track TV & movies, syncs to the cloud, and throws shade while you procrastinate.</p>
-        <p>Built with Capacitor + Firebase + TMDB.</p>
-      `);
-    }
-    function showStatsModal(){
-      const totals={
-        tv: appData.tv.watching.length+appData.tv.wishlist.length+appData.tv.watched.length,
-        movies: appData.movies.watching.length+appData.movies.wishlist.length+appData.movies.watched.length
-      };
-      const binge=calculateBingeTime();
-      openModal('Usage Stats', `
-        <ul>
-          <li>Total items: <strong>${totals.tv+totals.movies}</strong></li>
-          <li>TV: <strong>${totals.tv}</strong> • Movies: <strong>${totals.movies}</strong></li>
-          <li>${t('binge_total')}: <strong>${binge.timeStr}</strong></li>
-        </ul>
-      `);
+function openModal(title, html, testId = 'generic-modal') {
+  const wrap = document.createElement('div');
+  wrap.className = 'modal-backdrop';
+  wrap.setAttribute('data-testid', 'modal-backdrop');
+
+  wrap.innerHTML = `
+    <div class="modal" data-testid="${testId}">
+      <h3>${title}</h3>
+      <div class="modal-body">${html}</div>
+      <div class="modal-actions">
+        <button class="btn secondary" data-testid="modal-close" type="button">Close</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(wrap);
+
+  const close = () => wrap.remove();
+  wrap.addEventListener('click', (e) => { if (e.target === wrap) close(); });
+  wrap.querySelector('[data-testid="modal-close"]').addEventListener('click', close);
+}
+
+function showAboutModal() {
+  openModal('About Flicklet', `
+    <p><strong>Flicklet</strong> tracks TV & movies, syncs to the cloud, and provides premium-grade snark while you procrastinate.</p>
+    <p>Built with Capacitor + Firebase + TMDB.</p>
+  `, 'about-modal');
+}
+
+function showStatsModal() {
+  const totals = {
+    tv: appData.tv.watching.length + appData.tv.wishlist.length + appData.tv.watched.length,
+    movies: appData.movies.watching.length + appData.movies.wishlist.length + appData.movies.watched.length
+  };
+  const binge = calculateBingeTime();
+  openModal('Usage Stats', `
+    <ul>
+      <li>Total items: <strong>${totals.tv + totals.movies}</strong></li>
+      <li>TV: <strong>${totals.tv}</strong> • Movies: <strong>${totals.movies}</strong></li>
+      <li>${t('binge_total')}: <strong>${binge.timeStr}</strong></li>
+    </ul>
+  `, 'stats-modal');
     }
 
     /* ============== bootstrap ============== */
