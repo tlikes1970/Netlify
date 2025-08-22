@@ -35,6 +35,9 @@
     .user-section{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
     #langToggle{padding:8px 10px; border-radius:14px; border:2px solid var(--border); background:var(--card); color:var(--text); font-weight:700}
 
+    .auth-box, .name-container{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px}
+    .name-container input{max-width:260px}
+
     .tab-container{display:flex; gap:6px; background:var(--card); padding:8px; border-radius:12px; margin:14px 0}
     .tab{flex:1; border:0; background:transparent; padding:12px 10px; border-radius:10px; font-weight:800; cursor:pointer}
     .tab.active{background:linear-gradient(45deg,var(--primary),var(--purple)); color:#fff}
@@ -55,7 +58,7 @@
 
     .list-container{background:var(--card); border:3px dashed var(--border); border-radius:12px; padding:12px; min-height:80px}
 
-    /* Less cramped cards */
+    /* Cards */
     .show-card{
       display:grid; grid-template-columns:92px 1fr; gap:16px;
       border:2px solid var(--border); border-radius:12px; padding:14px; margin:12px 0; background:var(--bg)
@@ -66,10 +69,7 @@
     .show-details{display:grid; grid-template-rows:auto auto auto 1fr; gap:6px; min-width:0}
     .show-title{margin:0; color:var(--primary); font-size:1.05rem; font-weight:900; display:flex; gap:8px; align-items:center; cursor:pointer; line-height:1.2}
     .show-meta{color:#8a8a98; font-size:.88rem; display:flex; flex-wrap:wrap; gap:8px}
-    .show-overview{
-      font-size:.95rem; line-height:1.45; color:var(--text);
-      display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
-    }
+    .show-overview{font-size:.95rem; line-height:1.45; color:var(--text); display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden}
     .rating-container{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:6px}
     .star-rating .star{cursor:pointer; filter:grayscale(1)}
     .star-rating .star.active{filter:none}
@@ -83,7 +83,7 @@
     .series-pill.status-ended   {background:rgba(255,77,79,.16);  color:#d63031; border-color:#d63031}
     .series-pill.status-upcoming{background:rgba(255,212,59,.16); color:#b08900; border-color:#b08900}
 
-    /* Binge banner (front page) */
+    /* Binge banner */
     #bingeBanner{display:flex; align-items:center; gap:12px; padding:4px 0}
     #bingeBanner .binge-time{font-family:ui-monospace,Menlo,monospace; font-weight:900; color:#ffd43b}
     #bingeBanner .binge-label{color:#e5e7eb; opacity:.95}
@@ -118,6 +118,22 @@
         <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
         <div class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
         <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
+
+        <!-- Name entry -->
+        <div id="nameContainer" class="name-container" style="display:block;">
+          <input id="displayNameInput" class="search-input" placeholder="Enter your name here" />
+          <button id="saveNameBtn" class="btn secondary">Save</button>
+        </div>
+
+        <!-- Auth UI -->
+        <div id="authBox" class="auth-box" style="display:block;">
+          <button id="googleSignInBtn" class="btn">🔐 Continue with Google</button>
+          <button id="emailSignInBtn" class="btn secondary">✉️ Email Sign-In</button>
+        </div>
+        <div id="signedBox" class="auth-box" style="display:none; gap:8px; align-items:center">
+          <span>✅ Signed in as: <strong class="signed-email"></strong></span>
+          <button id="signOutBtn" class="btn secondary" type="button">Sign Out</button>
+        </div>
       </div>
       <div class="user-section">
         <button id="darkModeToggle" class="btn">🌙 Go Dark</button>
@@ -214,12 +230,14 @@
   <script>
     /* ============== i18n (with snark) ============== */
     const I18N = {
-      en:{ app_title:'Flicklet', subtitle:'TV & Movie Tracker', sign_in_title:'🔐 Sign In to Sync Your Data', binge_total:'Total Binge Time', start:'Start',
-          currently_watching:'Currently Watching', want_to_watch:'Want to Watch', already_watched:'Already Watched', streaming_on:'Streaming',
-          clear:'Clear', series_complete:'Series Complete', coming_soon:'Coming Soon', currently_airing:'Currently Airing', next:'Next', last:'Last' },
-      es:{ app_title:'Flicklet', subtitle:'Seguimiento de series y películas', sign_in_title:'🔐 Inicia sesión para sincronizar tus datos', binge_total:'Tiempo total de maratón', start:'Comenzar',
-          currently_watching:'Viendo actualmente', want_to_watch:'Quiero ver', already_watched:'Ya visto', streaming_on:'En',
-          clear:'Limpiar', series_complete:'Serie terminada', coming_soon:'Próximamente', currently_airing:'En emisión', next:'Próx.', last:'Últ.' }
+      en:{ app_title:'Flicklet', subtitle:'TV & Movie Tracker', binge_total:'Total Binge Time',
+           currently_watching:'Currently Watching', want_to_watch:'Want to Watch', already_watched:'Already Watched',
+           streaming_on:'Streaming', clear:'Clear', series_complete:'Series Complete', coming_soon:'Coming Soon',
+           currently_airing:'Currently Airing', next:'Next', last:'Last', start:'Start' },
+      es:{ app_title:'Flicklet', subtitle:'Seguimiento de series y películas', binge_total:'Tiempo total de maratón',
+           currently_watching:'Viendo actualmente', want_to_watch:'Quiero ver', already_watched:'Ya visto',
+           streaming_on:'En', clear:'Limpiar', series_complete:'Serie terminada', coming_soon:'Próximamente',
+           currently_airing:'En emisión', next:'Próx.', last:'Últ.', start:'Comenzar' }
     };
     function t(k){ const lang = appData?.settings?.lang || 'en'; return (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k; }
     function applyTranslations(){ document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); if(k) el.textContent=t(k); }); }
@@ -243,19 +261,83 @@
     const db   = firebase.firestore();
     let currentUser = null;
 
-    auth.onAuthStateChanged(async (user)=>{
-      currentUser = user;
-      updateAuthUI(user);
-      if(user){
-        try{
-          await db.collection('users').doc(user.uid).set({
-            profile:{ email:user.email||'', displayName:user.displayName||'', photoURL:user.photoURL||'' },
-            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
-          },{merge:true});
-          await loadUserDataFromCloud(user.uid);
-        }catch(e){ console.warn(e); }
+    // --- Login helpers ---
+    function login() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      return auth.signInWithPopup(provider);
+    }
+    function emailLogin() {
+      const email = prompt('Email:'); if (!email) return;
+      const pw = prompt('Password:'); if (!pw) return;
+      return auth.signInWithEmailAndPassword(email, pw)
+        .catch(() => auth.createUserWithEmailAndPassword(email, pw));
+    }
+    window.login = login; window.emailLogin = emailLogin;
+
+    // --- Firestore sanitize (no undefined allowed) ---
+    function sanitizeForFirestore(value) {
+      if (value === undefined) return undefined;
+      if (value === null) return null;
+      const t = typeof value;
+      if (t === 'string' || t === 'boolean') return value;
+      if (t === 'number') return Number.isFinite(value) ? value : null;
+      if (value instanceof Date) return value;
+      if (Array.isArray(value)) return value.map(sanitizeForFirestore).filter(v => v !== undefined);
+      if (t === 'object') {
+        const out = {};
+        for (const [k, v] of Object.entries(value)) {
+          const c = sanitizeForFirestore(v);
+          if (c !== undefined) out[k] = c;
+        }
+        return out;
       }
-    });
+      return undefined;
+    }
+
+    async function loadUserDataFromCloud(uid) {
+      try {
+        const snap = await db.collection('users').doc(uid).get();
+        if (!snap.exists) return;
+        const cloud = snap.data() || {};
+        if (cloud.watchlists) {
+          if (cloud.watchlists.tv)     appData.tv     = cloud.watchlists.tv;
+          if (cloud.watchlists.movies) appData.movies = cloud.watchlists.movies;
+        }
+        if (cloud.settings) appData.settings = { ...appData.settings, ...cloud.settings };
+
+        const cleaned = sanitizeForFirestore({
+          tv: appData.tv, movies: appData.movies, settings: appData.settings
+        });
+        appData.tv       = cleaned.tv       || { watching:[], wishlist:[], watched:[] };
+        appData.movies   = cleaned.movies   || { watching:[], wishlist:[], watched:[] };
+        appData.settings = cleaned.settings || appData.settings;
+
+        localStorage.setItem('tvMovieTrackerData', JSON.stringify(appData));
+        document.getElementById('langToggle').value = appData.settings.lang || 'en';
+        applyTranslations();
+        updateUI();
+        showNotification('Data synced from cloud! 📁','success');
+      } catch (e) {
+        console.warn('load cloud failed', e);
+        showNotification('Failed to load cloud data. Using local.','warning');
+      }
+    }
+
+    async function saveAppData() {
+      localStorage.setItem('tvMovieTrackerData', JSON.stringify(appData));
+      if (!currentUser) return;
+      try {
+        const payload = sanitizeForFirestore({
+          watchlists:{ tv: appData.tv, movies: appData.movies },
+          settings: appData.settings,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        await db.collection('users').doc(currentUser.uid).set(payload,{merge:true});
+      } catch (error) {
+        console.error('cloud sync failed', error);
+        showNotification('Cloud sync failed. Data saved locally.', 'warning');
+      }
+    }
 
     /* ============== App state ============== */
     const TMDB_IMG_BASE = 'https://image.tmdb.org/t/p/w200';
@@ -286,36 +368,34 @@
       document.getElementById('langToggle').value = appData.settings.lang || 'en';
       updateWelcomeText(); applyTranslations();
     }
-    async function saveAppData(){
-      localStorage.setItem('tvMovieTrackerData', JSON.stringify(appData));
-      if(!currentUser) return;
-      try{
-        await db.collection('users').doc(currentUser.uid).set({
-          watchlists:{ tv:appData.tv, movies:appData.movies },
-          settings:appData.settings,
-          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true});
-      }catch(e){ console.warn('cloud sync failed', e); }
-    }
-    async function loadUserDataFromCloud(uid){
-      try{
-        const snap=await db.collection('users').doc(uid).get();
-        if(snap.exists){
-          const cloud=snap.data();
-          if(cloud.watchlists){ appData.tv=cloud.watchlists.tv||appData.tv; appData.movies=cloud.watchlists.movies||appData.movies; }
-          if(cloud.settings){ appData.settings={...appData.settings, ...cloud.settings}; }
-          localStorage.setItem('tvMovieTrackerData', JSON.stringify(appData));
-          document.getElementById('langToggle').value = appData.settings.lang || 'en';
-          applyTranslations();
-          updateUI();
-          showNotification('Data synced from cloud! 📁','success');
-        }
-      }catch(e){ console.warn(e); }
+
+    /* ============== Auth UI / listener ============== */
+    function updateAuthUI(user){
+      const loginBox  = document.getElementById('authBox');
+      const signedBox = document.getElementById('signedBox');
+      if (user) {
+        loginBox.style.display = 'none';
+        signedBox.style.display = 'flex';
+        signedBox.querySelector('.signed-email').textContent = user.email || 'Signed in';
+      } else {
+        loginBox.style.display = 'flex';
+        signedBox.style.display = 'none';
+      }
     }
 
-    function updateAuthUI(user){
-      // We no longer show a big "Sign in to sync" banner; if needed add a tiny status somewhere.
-    }
+    auth.onAuthStateChanged(async (user)=>{
+      currentUser = user;
+      updateAuthUI(user);
+      if(user){
+        try{
+          await db.collection('users').doc(user.uid).set({
+            profile:{ email:user.email||'', displayName:user.displayName||'', photoURL:user.photoURL||'' },
+            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+          },{merge:true});
+          await loadUserDataFromCloud(user.uid);
+        }catch(e){ console.warn(e); }
+      }
+    });
 
     /* ============== Search / fetch with language ============== */
     function langQuery(){ return appData.settings.lang==='es' ? '&language=es-ES' : '&language=en-US'; }
@@ -345,7 +425,7 @@
             const r = await fetch(`${API_BASE}?endpoint=movie/${item.id}${langQuery()}`);
             if(r.ok){ const d=await r.json(); return {...item, status:d.status, release_date:d.release_date, genres:d.genres, runtime:d.runtime||120}; }
           }
-        }catch(_){/* ignore detail failures */}
+        }catch(_){}
         return item;
       }));
       return enhanced;
@@ -411,7 +491,6 @@
       return `<span class="series-pill ${cls}" title="${title}">${label}</span>`;
     }
 
-    // Ensure details exist for cards coming from old local data; updates pill + networks when fetched
     async function ensureTvDetails(item, card){
       if(item.media_type!=='tv' && !item.first_air_date) return;
       const needs = !(item.status && (item.next_episode_to_air || item.last_air_date) && item.networks);
@@ -509,7 +588,6 @@
           ${actions}
         </div>`;
 
-      // Fetch missing details for old items and update pill/meta
       ensureTvDetails(item, card);
       return card;
     }
@@ -591,14 +669,10 @@
         <span class="binge-label">${msg}</span>
         <button class="binge-cta" id="startBingeBtn" type="button" aria-label="${t('start')}">${t('start')} ▶</button>
       `;
-      const btn=document.getElementById('startBingeBtn');
-      if(btn) btn.onclick=()=>{
+      document.getElementById('startBingeBtn')?.addEventListener('click', ()=>{
         switchToTab('watching');
-        setTimeout(()=>{
-          const list=document.getElementById('watchingList');
-          if(list) list.scrollIntoView({behavior:'smooth',block:'start'});
-        },120);
-      };
+        setTimeout(()=>document.getElementById('watchingList')?.scrollIntoView({behavior:'smooth',block:'start'}), 120);
+      });
     }
 
     /* ============== UI update (with counts patch) ============== */
@@ -609,19 +683,17 @@
         watched:  appData.tv.watched.length  + appData.movies.watched.length
       };
 
-      // PATCH: write to badges, section headers, and top summary tiles
       const idMap = {
         watching: ['watchingBadge','watchingCount','totalWatchingCount'],
         wishlist: ['wishlistBadge','wishlistCount','totalWishlistCount'],
         watched:  ['watchedBadge','watchedCount','totalWatchedCount'],
       };
-      Object.entries(idMap).forEach(([key, ids]) => {
-        ids.forEach(id => { const el=document.getElementById(id); if(el) el.textContent = totals[key]; });
+      Object.entries(idMap).forEach(([key, ids])=>{
+        ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent = totals[key]; });
       });
       const totalCountEl=document.getElementById('totalCount');
       if(totalCountEl) totalCountEl.textContent = totals.watching + totals.wishlist + totals.watched;
 
-      // lists (apply filters)
       const watching=[...appData.tv.watching,...appData.movies.watching];
       const wishlist=[...appData.tv.wishlist,...appData.movies.wishlist];
       const watched =[...appData.tv.watched, ...appData.movies.watched];
@@ -661,10 +733,14 @@
       document.getElementById(tab+'Section').style.display='block';
     }
 
+    function hideNameContainer(){ document.getElementById('nameContainer').style.display='none'; }
+    function showNameContainer(){ document.getElementById('nameContainer').style.display='flex'; }
+
     function updateWelcomeText(){
       const n=(appData.settings.displayName||'').trim();
       const pool=["Chaos","Questionable Taste","Binge Empire","Streaming Madness","Watch List Anarchy"];
       document.getElementById('welcomeText').textContent = n ? `${n}'s ${pool[Math.floor(Math.random()*pool.length)]}` : t('app_title');
+      if (n) hideNameContainer(); else showNameContainer();
     }
 
     function toggleContentFilter(){
@@ -674,6 +750,7 @@
       else { showMoviesOnly=false; btn.textContent='🎭 Show All Content'; }
       updateUI();
     }
+
     function openModal(title, html){
       const wrap=document.createElement('div'); wrap.className='modal-backdrop';
       wrap.innerHTML=`<div class="modal"><h3>${title}</h3><div class="modal-body">${html}</div><div class="modal-actions"><button class="btn secondary" id="modalClose">Close</button></div></div>`;
@@ -713,24 +790,39 @@
       document.getElementById('watchedTab').onclick = ()=>switchToTab('watched');
 
       // theme + language
-      document.getElementById('darkModeToggle').onclick = ()=>{
+      const darkBtn = document.getElementById('darkModeToggle');
+      const setDarkLabel = () => {
+        const dark = document.body.classList.contains('dark-mode');
+        darkBtn.textContent = dark ? '☀️ Go Light' : '🌙 Go Dark';
+      };
+      setDarkLabel();
+      darkBtn.onclick = ()=>{
         document.body.classList.toggle('dark-mode');
         appData.settings.theme = document.body.classList.contains('dark-mode')?'dark':'light';
-        saveAppData();
+        setDarkLabel(); saveAppData();
       };
+
       document.getElementById('langToggle').addEventListener('change', async (e)=>{
         appData.settings.lang = e.target.value || 'en';
         saveAppData(); applyTranslations(); await loadGenres();
-        // Refresh visible details/pills to pick up localized metadata
+        // refresh on-card details for localized metadata
         document.querySelectorAll('.show-card[data-media-type="tv"]').forEach(card=>{
-          const id=card.getAttribute('data-id');
-          const item=findItem(Number(id));
-          if(item) ensureTvDetails(item, card);
+          const id=card.getAttribute('data-id'); const item=findItem(Number(id)); if(item) ensureTvDetails(item, card);
         });
-        // Re-run search if results are shown
         if(document.getElementById('searchResults').style.display!=='none'){ performSearch(); }
         updateUI();
       });
+
+      // name save
+      document.getElementById('saveNameBtn').onclick = ()=>{
+        const val = (document.getElementById('displayNameInput').value||'').trim();
+        appData.settings.displayName = val; saveAppData(); updateWelcomeText();
+      };
+
+      // auth buttons (inline)
+      document.getElementById('googleSignInBtn').onclick = ()=>login();
+      document.getElementById('emailSignInBtn').onclick  = ()=>emailLogin();
+      document.getElementById('signOutBtn').onclick      = ()=>auth.signOut();
 
       // search
       document.getElementById('searchBtn').onclick=performSearch;
@@ -760,9 +852,9 @@
       document.getElementById('filterBtn').onclick=toggleContentFilter;
     });
 
-    // Expose for quick console checks
+    // tiny helpers
     window.updateUI = updateUI;
     window.updateBingeBanner = updateBingeBanner;
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97330555adf6bd48',t:'MTc1NTg3MjUzMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
