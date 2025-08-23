@@ -137,30 +137,47 @@
     .modal .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:14px}
 
     /* Mobile search row fix */
-    @media (max-width: 768px) {
-      .search-row {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 8px !important;
-      }
+@media (max-width: 768px) {
+  /* Search row stacks vertically on mobile */
+  .search-row {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
 
-      .search-input {
-        width: 100% !important;
-      }
+  .search-input {
+    width: 100% !important;
+  }
 
-      .search-filters {
-        display: flex !important;
-        gap: 8px !important;
-      }
+  .search-filters {
+    display: flex !important;
+    gap: 8px !important;
+  }
 
-      #genreFilter {
-        flex: 1 !important;
-      }
+  #genreFilter {
+    flex: 1 !important;
+  }
 
-      .search-container .btn {
-        flex: 1 !important;
-      }
-    }
+  .search-container .btn {
+    flex: 1 !important;
+  }
+
+  /* Make all show-card action buttons uniform on mobile */
+  .show-card .btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin: 0 !important;
+    text-align: center !important;
+  }
+
+  /* Add spacing between stacked buttons */
+  .show-card .btn + .btn {
+    margin-top: 8px !important;
+  }
+}
+
 </style>
 </head>
 
