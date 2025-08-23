@@ -135,37 +135,64 @@
     .modal h3{margin:0 0 10px; color:var(--primary)}
     .modal .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:14px}
 
-    /* ========== Mobile layout fixes ========== */
-    @media (max-width: 768px) {
-      /* Search row: stack vertically */
-      .search-row {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 8px !important;
-      }
-      .search-input { width: 100% !important; }
-      .search-filters { display: flex !important; gap: 8px !important; }
-      #genreFilter { flex: 1 !important; }
-      .search-container .btn { flex: 1 !important; }
+/* ========== Mobile layout fixes ========== */
+@media (max-width: 768px) {
+  /* Search row: stack vertically */
+  .search-row {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .search-input { width: 100% !important; }
+  .search-filters { display: flex !important; gap: 8px !important; }
+  #genreFilter { flex: 1 !important; }
+  .search-container .btn { flex: 1 !important; }
 
-      /* Show actions: full-width, stacked, centered, with ellipsis */
-      .show-actions {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 8px !important;
-      }
-      .show-actions .btn {
-        display: block !important;         /* robust with Safari */
-        width: 100% !important;
-        margin: 0 !important;
-        box-sizing: border-box !important;
-        text-align: center !important;
-        white-space: nowrap !important;    /* keep on one line */
-        overflow: hidden !important;       /* hide overflow */
-        text-overflow: ellipsis !important;/* show … */
-        min-height: 40px !important;
-      }
-    }
+  /* Fix text spillover on mobile cards */
+  .show-card {
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+  
+  /* Truncate metadata text (streaming info) */
+  .show-meta {
+    font-size: 0.75rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+  }
+  
+  /* Truncate status pills */
+  .series-pill {
+    font-size: 0.6rem !important;
+    max-width: 150px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  
+  /* Fix button text spillover */
+  .show-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+  .show-actions .btn {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    padding: 8px 4px !important;
+    font-size: 0.65rem !important;
+    line-height: 1.2 !important;
+    min-height: 32px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
   </style>
 
 </head>
