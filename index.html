@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" href="/icons/icon-512.png" />
 
-  <style>
+<style>
     :root{
       --bg:#ffffff; --text:#121212; --primary:#ff6b6b; --card:#f7f7f9; --border:#dedee3;
       --success:#51cf66; --warning:#ffd43b; --danger:#ff4d4f; --purple:#845ec2;
@@ -51,37 +51,37 @@
     .btn.success{background:linear-gradient(45deg,#2ed573,#1dd1a1)}
     .btn.danger{background:linear-gradient(45deg,#ff4d4f,#ff2d55)}
 
-.stats{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px; 
-  margin: 14px 0;
-}
+    .stats{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px; 
+      margin: 14px 0;
+    }
 
-.stat {
-  flex: 1 1 calc(25% - 9px); /* 4 items per row */
-  min-width: 140px;
-  background: var(--card);
-  border: 2px solid var(--primary);
-  border-radius: 12px;
-  padding: 14px;
-  text-align: center;
-}
+    .stat {
+      flex: 1 1 calc(25% - 9px); /* 4 items per row */
+      min-width: 140px;
+      background: var(--card);
+      border: 2px solid var(--primary);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
 
-#bingeMeter {
-  flex-basis: calc(50% - 6px) !important; /* make it wider */
-  order: 10; /* put it last so it goes to next row */
-}
+    #bingeMeter {
+      flex-basis: calc(50% - 6px) !important; /* make it wider */
+      order: 10; /* put it last so it goes to next row */
+    }
 
-@media (max-width: 768px) {
-  .stat {
-    flex: 1 1 calc(50% - 6px); /* 2 per row on mobile */
-  }
-  
-  #bingeMeter {
-    flex-basis: 100% !important; /* full width on mobile */
-  }
-}
+    @media (max-width: 768px) {
+      .stat {
+        flex: 1 1 calc(50% - 6px); /* 2 per row on mobile */
+      }
+      
+      #bingeMeter {
+        flex-basis: 100% !important; /* full width on mobile */
+      }
+    }
 
     .list-container{background:var(--card); border:3px dashed var(--border); border-radius:12px; padding:12px; min-height:80px}
 
@@ -135,7 +135,33 @@
     .modal{background:var(--bg); color:var(--text); max-width:680px; width:92%; border-radius:14px; border:2px solid var(--primary); padding:18px}
     .modal h3{margin:0 0 10px; color:var(--primary)}
     .modal .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:14px}
-  </style>
+
+    /* Mobile search row fix */
+    @media (max-width: 768px) {
+      .search-row {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
+
+      .search-input {
+        width: 100% !important;
+      }
+
+      .search-filters {
+        display: flex !important;
+        gap: 8px !important;
+      }
+
+      #genreFilter {
+        flex: 1 !important;
+      }
+
+      .search-container .btn {
+        flex: 1 !important;
+      }
+    }
+</style>
 </head>
 
 <body>
