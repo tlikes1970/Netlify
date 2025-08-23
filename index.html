@@ -51,23 +51,37 @@
     .btn.success{background:linear-gradient(45deg,#2ed573,#1dd1a1)}
     .btn.danger{background:linear-gradient(45deg,#ff4d4f,#ff2d55)}
 
-    .stats{
-      display:grid; 
-      grid-template-columns:repeat(4,minmax(140px,1fr)); 
-      grid-template-rows: auto auto;
-      gap:12px; 
-      margin:14px 0;
-    }
-    
-    .stat{background:var(--card); border:2px solid var(--primary); border-radius:12px; padding:14px; text-align:center}
-    .stat-num{font-size:1.8rem; color:var(--primary); font-weight:900}
-    .stat-label{font-size:.72rem; color:#80808f; text-transform:uppercase; font-weight:900; letter-spacing:.6px}
+.stats{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px; 
+  margin: 14px 0;
+}
 
-    /* Make the binge time meter span 2 columns and center it */
-    #bingeMeter {
-      grid-column: 2 / 4; /* spans columns 2 and 3 */
-      grid-row: 2;
-    }
+.stat {
+  flex: 1 1 calc(25% - 9px); /* 4 items per row */
+  min-width: 140px;
+  background: var(--card);
+  border: 2px solid var(--primary);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+}
+
+#bingeMeter {
+  flex-basis: calc(50% - 6px) !important; /* make it wider */
+  order: 10; /* put it last so it goes to next row */
+}
+
+@media (max-width: 768px) {
+  .stat {
+    flex: 1 1 calc(50% - 6px); /* 2 per row on mobile */
+  }
+  
+  #bingeMeter {
+    flex-basis: 100% !important; /* full width on mobile */
+  }
+}
 
     .list-container{background:var(--card); border:3px dashed var(--border); border-radius:12px; padding:12px; min-height:80px}
 
