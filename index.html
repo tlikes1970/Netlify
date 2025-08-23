@@ -138,53 +138,56 @@
 
     /* Mobile: search row + uniform buttons fix */
     @media (max-width: 768px) {
-      .search-row {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 8px !important;
-      }
+  /* Search row remains stacked */
+  .search-row {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
 
-      .search-input {
-        width: 100% !important;
-      }
+  .search-input {
+    width: 100% !important;
+  }
 
-      .search-filters {
-        display: flex !important;
-        gap: 8px !important;
-      }
+  .search-filters {
+    display: flex !important;
+    gap: 8px !important;
+  }
 
-      #genreFilter {
-        flex: 1 !important;
-      }
+  #genreFilter {
+    flex: 1 !important;
+  }
 
-      .search-container .btn {
-        flex: 1 !important;
-      }
+  .search-container .btn {
+    flex: 1 !important;
+  }
 
-      /* Uniform buttons inside show cards */
-      .show-card .btn {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 100% !important;
-        max-width: none !important;
-        align-self: stretch !important;
-        margin: 0 !important;
-        box-sizing: border-box !important;
-        text-align: center !important;
-      }
+  /* Equal-width action buttons in show cards */
+  .show-card .btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    white-space: normal !important;    /* allow wrapping */
+    text-align: center !important;
+    min-height: 40px !important;        /* keeps them visually even */
+  }
 
-      .show-card .btn > span,
-      .show-card .btn > a {
-        display: block !important;
-        width: 100% !important;
-        max-width: none !important;
-      }
+  /* Apply to inner elements too */
+  .show-card .btn > span,
+  .show-card .btn > a {
+    display: block !important;
+    width: 100% !important;
+  }
 
-      .show-card .btn + .btn {
-        margin-top: 8px !important;
-      }
-    }
+  /* Spacing between stacked buttons */
+  .show-card .btn + .btn {
+    margin-top: 8px !important;
+  }
+}
+
 </style>
 
 </head>
