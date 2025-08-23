@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" href="/icons/icon-512.png" />
 
-<style>
+<<style>
     :root{
       --bg:#ffffff; --text:#121212; --primary:#ff6b6b; --card:#f7f7f9; --border:#dedee3;
       --success:#51cf66; --warning:#ffd43b; --danger:#ff4d4f; --purple:#845ec2;
@@ -136,59 +136,64 @@
     .modal h3{margin:0 0 10px; color:var(--primary)}
     .modal .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:14px}
 
-    /* Mobile: search row + uniform buttons fix */
+    /* Mobile: search row + uniform buttons fix with centered ellipsis */
     @media (max-width: 768px) {
-  /* Search row remains stacked */
-  .search-row {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 8px !important;
-  }
+      .search-row {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
 
-  .search-input {
-    width: 100% !important;
-  }
+      .search-input {
+        width: 100% !important;
+      }
 
-  .search-filters {
-    display: flex !important;
-    gap: 8px !important;
-  }
+      .search-filters {
+        display: flex !important;
+        gap: 8px !important;
+      }
 
-  #genreFilter {
-    flex: 1 !important;
-  }
+      #genreFilter {
+        flex: 1 !important;
+      }
 
-  .search-container .btn {
-    flex: 1 !important;
-  }
+      .search-container .btn {
+        flex: 1 !important;
+      }
 
-  /* Equal-width action buttons in show cards */
-  .show-card .btn {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 100% !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-    white-space: normal !important;    /* allow wrapping */
-    text-align: center !important;
-    min-height: 40px !important;        /* keeps them visually even */
-  }
+      /* Equal-width action buttons with centered ellipsis */
+      .show-card .btn {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        text-align: center !important;
+        text-align-last: center !important;
+        min-height: 40px !important;
+      }
 
-  /* Apply to inner elements too */
-  .show-card .btn > span,
-  .show-card .btn > a {
-    display: block !important;
-    width: 100% !important;
-  }
+      .show-card .btn > span,
+      .show-card .btn > a {
+        display: inline-block !important;
+        width: 100% !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        text-align: center !important;
+        text-align-last: center !important;
+      }
 
-  /* Spacing between stacked buttons */
-  .show-card .btn + .btn {
-    margin-top: 8px !important;
-  }
-}
-
+      .show-card .btn + .btn {
+        margin-top: 8px !important;
+      }
+    }
 </style>
+
 
 </head>
 
