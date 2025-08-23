@@ -683,13 +683,21 @@
      let str=''; if(d) str+=`${d}d `; if(rh) str+=`${rh}h `; str+=`${m}m`;
      return { totalMinutes:total, timeStr:str, showCount:cards.length };
    }
-   function updateBingeMeter(){
-     const stats=calculateBingeTime();
-     const container=document.querySelector('.stats'); if(!container) return;
-     let el=document.getElementById('bingeMeter');
-     if(!el){ el=document.createElement('div'); el.id='bingeMeter'; el.className='stat'; container.appendChild(el); }
-     el.innerHTML=`<div class="stat-num">${stats.timeStr}</div><div class="stat-label">${t('binge_total')}</div>`;
-   }
+function updateBingeMeter(){
+  const stats=calculateBingeTime();
+  const container=document.querySelector('.stats'); if(!container) return;
+  let el=document.getElementById('bingeMeter');
+  if(!el){ 
+    el=document.createElement('div'); 
+    el.id='bingeMeter'; 
+    el.className='stat';
+    // FORCE the grid positioning via JavaScript
+    el.style.gridColumn = '2 / 4';
+    el.style.gridRow = '2';
+    container.appendChild(el); 
+  }
+  el.innerHTML=`<div class="stat-num">${stats.timeStr}</div><div class="stat-label">${t('binge_total')}</div>`;
+}
    function updateBingeBanner(){
      const stats=calculateBingeTime({scope:'watching'});
      const banner=document.getElementById('bingeBanner'); if(!banner) return;
