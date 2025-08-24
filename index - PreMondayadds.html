@@ -591,7 +591,7 @@
         <!-- Feedback / Mardi -->
         <div class="feedback-card">
           <h3>Feedback</h3>
-          <p>Tell us what's working and what's not. Be blunt.</p>
+          <p>Tell us what’s working and what’s not. Be blunt.</p>
           <div style="display: flex; gap: 8px; flex-wrap: wrap">
             <input
               id="feedbackInput"
@@ -791,7 +791,7 @@
           series_complete: "Serie terminada",
           coming_soon: "Próximamente",
           currently_airing: "En emisión",
-          next: "Próx.",
+          next: "Prós.",
           last: "Últ.",
           start: "Comenzar",
           because_you_liked: "Porque te gustó",
@@ -1106,18 +1106,23 @@
       });
 
       /* ======= Sign-in modal + Name onboarding ======= */
+      // (Chunk C begins right after this comment)
+    </script>
+
+    <script>
+      /* ======= Sign-in modal + Name onboarding ======= */
       function openModal(title, html, testId = "generic-modal") {
         const wrap = document.createElement("div");
         wrap.className = "modal-backdrop";
         wrap.setAttribute("data-testid", "modal-backdrop");
         wrap.innerHTML = `
-          <div class="modal" data-testid="${testId}">
-            <h3>${title}</h3>
-            <div class="modal-body">${html}</div>
-            <div class="modal-actions">
-              <button class="btn secondary" data-testid="modal-close" type="button">Close</button>
-            </div>
-          </div>`;
+                        <div class="modal" data-testid="${testId}">
+                          <h3>${title}</h3>
+                          <div class="modal-body">${html}</div>
+                          <div class="modal-actions">
+                            <button class="btn secondary" data-testid="modal-close" type="button">Close</button>
+                          </div>
+                        </div>`;
         document.body.appendChild(wrap);
 
         const close = () => wrap.remove();
@@ -1136,10 +1141,13 @@
         openModal(
           "Welcome! What should we call you?",
           `
-            <p>This will personalize your headers and stats.</p>
-            <input id="onboardName" class="search-input" placeholder="Display name"
-                   value="${(current || "").replace(/"/g, "&quot;")}" />
-          `,
+                          <p>This will personalize your headers and stats.</p>
+                          <input id="onboardName" class="search-input" placeholder="Display name"
+                                 value="${(current || "").replace(
+                                   /"/g,
+                                   "&quot;"
+                                 )}" />
+                        `,
           "name-onboarding"
         );
 
@@ -1165,13 +1173,13 @@
         openModal(
           "Sign in to sync",
           `
-            <p>Sign in to back up your lists and sync across devices.</p>
-            <div style="display:flex; gap:8px; flex-wrap:wrap">
-              <button id="googleBtn" class="btn">🔒 Continue with Google</button>
-              <button id="emailBtn" class="btn secondary">✉️ Email Sign-In</button>
-              <button id="signOutBtn" class="btn danger" style="display:none">Sign Out</button>
-            </div>
-          `,
+                          <p>Sign in to back up your lists and sync across devices.</p>
+                          <div style="display:flex; gap:8px; flex-wrap:wrap">
+                            <button id="googleBtn" class="btn">🔑 Continue with Google</button>
+                            <button id="emailBtn" class="btn secondary">✉️ Email Sign-In</button>
+                            <button id="signOutBtn" class="btn danger" style="display:none">Sign Out</button>
+                          </div>
+                        `,
           "auth-modal"
         );
 
@@ -1427,7 +1435,7 @@
           if (!liked.length) return "";
           const anchor = liked[Math.floor(Math.random() * liked.length)];
           const title = anchor.name || anchor.title || "this";
-          return `${t("because_you_liked")} "${title}"`;
+          return `${t("because_you_liked")} “${title}”`;
         }
       }
 
@@ -1442,15 +1450,15 @@
         openModal(
           "Notes & Tags",
           `
-            <label>Notes</label>
-            <textarea id="notesText" style="width:100%; min-height:120px;">${escapeHtml(
-              currentNotes
-            )}</textarea>
-            <label style="margin-top:8px; display:block;">Tags (comma-separated)</label>
-            <input id="tagsInput" class="search-input" value="${escapeHtml(
-              currentTags
-            )}" />
-          `,
+                          <label>Notes</label>
+                          <textarea id="notesText" style="width:100%; min-height:120px;">${escapeHtml(
+                            currentNotes
+                          )}</textarea>
+                          <label style="margin-top:8px; display:block;">Tags (comma-separated)</label>
+                          <input id="tagsInput" class="search-input" value="${escapeHtml(
+                            currentTags
+                          )}" />
+                        `,
           "notes-tags-modal"
         );
 
@@ -1723,72 +1731,74 @@
           const likeStatus = item.likeStatus || "none";
           const userRating = item.userRating || 0;
           actions = `
-            <div class="rating-container">
-              <span>Your Rating:</span>
-              <div class="star-rating">
-                ${[1, 2, 3, 4, 5]
-                  .map(
-                    (n) =>
-                      `<span class="star ${
-                        n <= userRating ? "active" : ""
-                      }" data-rating="${n}" onclick="setRating(${
-                        item.id
-                      },${n})">⭐</span>`
-                  )
-                  .join("")}
-              </div>
-              <div class="like-dislike">
-                <button class="like-btn ${
-                  likeStatus === "like" ? "active" : ""
-                }" onclick="setLikeStatus(${
+                          <div class="rating-container">
+                            <span>Your Rating:</span>
+                            <div class="star-rating">
+                              ${[1, 2, 3, 4, 5]
+                                .map(
+                                  (n) =>
+                                    `<span class="star ${
+                                      n <= userRating ? "active" : ""
+                                    }" data-rating="${n}" onclick="setRating(${
+                                      item.id
+                                    },${n})">⭐</span>`
+                                )
+                                .join("")}
+                            </div>
+                            <div class="like-dislike">
+                              <button class="like-btn ${
+                                likeStatus === "like" ? "active" : ""
+                              }" onclick="setLikeStatus(${
             item.id
           }, 'like')">👍</button>
-                <button class="dislike-btn ${
-                  likeStatus === "dislike" ? "active" : ""
-                }" onclick="setLikeStatus(${
+                              <button class="dislike-btn ${
+                                likeStatus === "dislike" ? "active" : ""
+                              }" onclick="setLikeStatus(${
             item.id
           }, 'dislike')">👎</button>
-              </div>
-              ${mediaType === "tv" ? getSeriesPill(item) : ""}
-            </div>
+                            </div>
+                            ${mediaType === "tv" ? getSeriesPill(item) : ""}
+                          </div>
 
-            <div class="show-actions" style="margin-top:6px; display:flex; gap:8px; flex-wrap:wrap">
-              <button class="btn secondary" onclick="moveItem(${
-                item.id
-              }, 'watching')">→ ${t("currently_watching")}</button>
-              <button class="btn secondary" onclick="moveItem(${
-                item.id
-              }, 'wishlist')">→ ${t("want_to_watch")}</button>
-              <button class="btn secondary" onclick="moveItem(${
-                item.id
-              }, 'watched')">→ ${t("already_watched")}</button>
-              <button class="btn" onclick="openNotesTagsModal(${
-                item.id
-              })">✎ Notes/Tags</button>
-              <button class="btn danger" onclick="removeItemFromCurrentList(${
-                item.id
-              })">🗑️ Remove</button>
-            </div>`;
+                          <div class="show-actions" style="margin-top:6px; display:flex; gap:8px; flex-wrap:wrap">
+                            <button class="btn secondary" onclick="moveItem(${
+                              item.id
+                            }, 'watching')">→ ${t(
+            "currently_watching"
+          )}</button>
+                            <button class="btn secondary" onclick="moveItem(${
+                              item.id
+                            }, 'wishlist')">→ ${t("want_to_watch")}</button>
+                            <button class="btn secondary" onclick="moveItem(${
+                              item.id
+                            }, 'watched')">→ ${t("already_watched")}</button>
+                            <button class="btn" onclick="openNotesTagsModal(${
+                              item.id
+                            })">✎ Notes/Tags</button>
+                            <button class="btn danger" onclick="removeItemFromCurrentList(${
+                              item.id
+                            })">🗑️ Remove</button>
+                          </div>`;
         }
 
         card.innerHTML = `
-          ${poster}
-          <div class="show-details">
-            <h4 class="show-title" onclick="openTMDBLink(${
-              item.id
-            },'${mediaType}')">${escapeHtml(
+                        ${poster}
+                        <div class="show-details">
+                          <h4 class="show-title" onclick="openTMDBLink(${
+                            item.id
+                          },'${mediaType}')">${escapeHtml(
           title
         )} <span style="opacity:.6">🔗</span></h4>
-            <div class="show-meta">⭐ ${rating} ${
+                          <div class="show-meta">⭐ ${rating} ${
           date ? `• ${date.split("-")[0]}` : ""
         } • ${mediaType.toUpperCase()} ${
           networkNames ? `• ${t("streaming_on")}: ${networkNames}` : ""
         }</div>
-            <div class="show-overview">${escapeHtml(
-              item.overview || "No description."
-            )}</div>
-            ${actions}
-          </div>`;
+                          <div class="show-overview">${escapeHtml(
+                            item.overview || "No description."
+                          )}</div>
+                          ${actions}
+                        </div>`;
         ensureTvDetails(item, card);
         return card;
       }
@@ -1957,13 +1967,13 @@
               ];
         const msg = msgs[Math.floor(Math.random() * msgs.length)];
         banner.innerHTML = `
-          <span class="binge-time" id="bingeTimeText">${
-            stats.timeStr
-          }</span>
-          <span class="binge-label">${msg}</span>
-          <button class="binge-cta" id="startBingeBtn" type="button" aria-label="${t(
-            "start"
-          )}">${t("start")} ▶</button>`;
+                        <span class="binge-time" id="bingeTimeText">${
+                          stats.timeStr
+                        }</span>
+                        <span class="binge-label">${msg}</span>
+                        <button class="binge-cta" id="startBingeBtn" type="button" aria-label="${t(
+                          "start"
+                        )}">${t("start")} ▶</button>`;
         document
           .getElementById("startBingeBtn")
           ?.addEventListener("click", () => {
@@ -1993,17 +2003,17 @@
         };
         const total = totals.watching + totals.wishlist + totals.watched;
         document.getElementById("statsBasicBody").innerHTML = `
-          <ul>
-            <li>Total items: <strong>${total}</strong></li>
-            <li>Watching: <strong>${
-              totals.watching
-            }</strong> • Wishlist: <strong>${
+                        <ul>
+                          <li>Total items: <strong>${total}</strong></li>
+                          <li>Watching: <strong>${
+                            totals.watching
+                          }</strong> • Wishlist: <strong>${
           totals.wishlist
         }</strong> • Watched: <strong>${totals.watched}</strong></li>
-            <li>${t("binge_total")}: <strong>${
+                          <li>${t("binge_total")}: <strong>${
           calculateBingeTime().timeStr
         }</strong></li>
-          </ul>`;
+                        </ul>`;
 
         const proWrap = document.getElementById("statsPro");
         proWrap.style.display = appData.settings.pro ? "block" : "none";
@@ -2162,7 +2172,7 @@
       function addToListFromCache(id, list) {
         const it = searchItemCache.get(Number(id));
         if (!it) {
-          showNotification("Couldn't read item details. Try again.", "warning");
+          showNotification("Couldn’t read item details. Try again.", "warning");
           return;
         }
         addToList(it, list);
@@ -2235,208 +2245,6 @@
       let showTVOnly = false,
         showMoviesOnly = false;
       let activeTagFilters = new Set();
-
-      /* ============== Personality Patch Script ============== */
-      (function() {
-        // ---------- Big pools (edit as you like) ----------
-        const FORTUNES = [
-          "You are a Chaotic Good. You like drama but call it 'cinema.'",
-          "Binge Minimalist: 90% planning, 10% watching.",
-          "Comfort, chaos, and clever twists. In that order.",
-          "On your 14th rewatch arc. Brave.",
-          "63% fueled by snacks and unresolved plotlines.",
-          "Human embodiment of 'skip intro'.",
-          "Your spirit animal is a loading spinner.",
-          "You collect pilots like Pokémon.",
-          "You claim you hate cliffhangers. You don't.",
-          "You alphabetize your watchlist and then ignore it.",
-          "You believe 'one more episode' is a contract with destiny.",
-          "You rate with your heart, not the stars.",
-          "You're here to procrastinate responsibly.",
-          "You love a slow burn and fast Wi‑Fi.",
-          "You're allergic to laugh tracks.",
-          "You pause for snacks like it's a ritual.",
-          "You are a spoiler ninja and an ending apologist.",
-          "You think 'limited series' means limits don't apply to you.",
-          "You fast‑forward opening credits but respect end credits.",
-          "You crave vibes > plot. Bold choice.",
-          "You treat 'recommended for you' as a dare.",
-          "You chase vibes like a sommelier of scenes.",
-          "You watch with subtitles; you are cultured (and quiet).",
-          "You fear the finale but press play anyway.",
-          "You bookmark chaos and call it variety.",
-          "You own three blankets. All 'the good one'.",
-          "You pretend the algorithm is your friend.",
-          "You rewatch comfort episodes like vitamins.",
-          "You hoard tabs and storylines with equal skill.",
-          "You skip recaps, then Google plot summaries. Iconic.",
-        ];
-
-        const QUOTES = [
-          `"I am serious... and don't call me Shirley." — *Airplane!*`,
-          `"Streaming is a lifestyle, not a choice." — Ancient Proverb`,
-          `"Binge now. Cry later." — You, last night at 2AM`,
-          `"One does not simply watch one episode." — Boromir, probably`,
-          `"You had me at 'skip recap.'"`,
-          `"Art is long, episodes are longer." — Someone with no plans`,
-          `"We were on a break! From reality."`,
-          `"I came, I saw, I queued it."`,
-          `"To stream, perchance to nap." — Hamlet (director's cut)`,
-          `"In this house we respect the 'Are you still watching?' prompt."`,
-          `"The algorithm thinks I'm complicated. It's right."`,
-          `"If found, return to the couch."`,
-          `"My love language is 'skip ad.'"`,
-          `"I contain multitudes and several watchlists."`,
-          `"Sundays are for pilots and denial."`,
-          `"Ctrl+Z for life, play for comfort."`,
-          `"I fear no man, but I fear finales."`,
-          `"This app gets me. Terrifying."`,
-          `"Plot holes are just cardio for the brain."`,
-          `"We accept the dopamine we think we deserve."`,
-          `"I have never finished anything. Except seasons."`,
-          `"Today's vibe: closed captions and open snacks."`,
-          `"Foreshadowing? I hardly know her."`,
-          `"Character development is my cardio."`,
-          `"If the title card hits, I'm staying."`,
-          `"Minimalism, but for episodes."`,
-          `"'Are you still watching?' yes, Netflix, I'm thriving."`,
-          `"I ship productivity with naps."`,
-          `"Comfort show supremacy."`,
-          `"This queue is a personality test I'm failing."`,
-        ];
-
-        // ---------- Utilities ----------
-        const STORAGE_KEYS = {
-          QUOTE_DECK: "__flicklet_quote_deck_v1__",
-        };
-
-        function dayOfYear(d = new Date()) {
-          const start = new Date(d.getFullYear(), 0, 0);
-          const diff = d - start;
-          return Math.floor(diff / 86400000); // ms->days
-        }
-
-        // Cheap stable hash for a string
-        function hashString(str) {
-          let h = 2166136261 >>> 0;
-          for (let i = 0; i < str.length; i++) {
-            h ^= str.charCodeAt(i);
-            h = Math.imul(h, 16777619);
-          }
-          return h >>> 0;
-        }
-
-        // Fisher‑Yates shuffle
-        function shuffle(arr) {
-          const a = arr.slice();
-          for (let i = a.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [a[i], a[j]] = [a[j], a[i]];
-          }
-          return a;
-        }
-
-        // ---------- Horoscope (daily, deterministic) ----------
-        function pickDailyHoroscope() {
-          // Try to personalize with displayName if it exists in your appData
-          let name = "";
-          try {
-            name = (window.appData?.settings?.displayName || "").trim();
-          } catch {}
-          const seed = (dayOfYear() + hashString(name)).toString();
-          const idx = hashString(seed) % FORTUNES.length;
-          return FORTUNES[idx];
-        }
-
-        // ---------- Quotes (deck‑based, no repeats until exhausted) ----------
-        function getQuoteDeck() {
-          try {
-            const raw = localStorage.getItem(STORAGE_KEYS.QUOTE_DECK);
-            if (raw) {
-              const deck = JSON.parse(raw);
-              if (Array.isArray(deck) && deck.every(Number.isInteger))
-                return deck;
-            }
-          } catch {}
-          // Build a fresh shuffled deck of indices
-          const fresh = shuffle([...QUOTES.keys()]);
-          localStorage.setItem(
-            STORAGE_KEYS.QUOTE_DECK,
-            JSON.stringify(fresh)
-          );
-          return fresh;
-        }
-
-        function drawQuote() {
-          const deck = getQuoteDeck();
-          const next = deck.shift();
-          const quote = QUOTES[next] || QUOTES[0];
-          // Save remaining deck; if empty, rebuild next time
-          try {
-            if (deck.length) {
-              localStorage.setItem(
-                STORAGE_KEYS.QUOTE_DECK,
-                JSON.stringify(deck)
-              );
-            } else {
-              localStorage.removeItem(STORAGE_KEYS.QUOTE_DECK);
-            }
-          } catch {}
-          return quote;
-        }
-
-        // ---------- DOM injection (idempotent) ----------
-        function ensureBlocks() {
-          const home = document.getElementById("homeSection");
-          if (!home) return false;
-
-          const stats =
-            home.querySelector(".stats") || home.firstElementChild;
-          const anchor = stats || home;
-
-          if (!document.getElementById("personalityForecast")) {
-            const card = document.createElement("div");
-            card.className = "feedback-card";
-            card.id = "personalityForecast";
-            card.innerHTML = `
-        <h3>🧠 Streaming Horoscope</h3>
-        <p id="fakeFortune" style="margin:0; font-style:italic;"></p>
-      `;
-            anchor.insertAdjacentElement("afterend", card);
-          }
-
-          if (!document.getElementById("quoteBlock")) {
-            const block = document.createElement("blockquote");
-            block.className = "feedback-card";
-            block.id = "quoteBlock";
-            block.style.textAlign = "center";
-            block.style.fontStyle = "italic";
-            block.innerHTML = `<p id="randomQuote">"Loading quote of questionable value..."</p>`;
-            const insertAfter =
-              document.getElementById("personalityForecast") || anchor;
-            insertAfter.insertAdjacentElement("afterend", block);
-          }
-
-          const hEl = document.getElementById("fakeFortune");
-          const qEl = document.getElementById("randomQuote");
-          if (hEl) hEl.textContent = pickDailyHoroscope();
-          if (qEl) qEl.textContent = drawQuote();
-
-          return true;
-        }
-
-        const start = () => {
-          if (!ensureBlocks()) requestAnimationFrame(ensureBlocks);
-        };
-
-        if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", start, {
-            once: true,
-          });
-        } else {
-          start();
-        }
-      })();
     </script>
 
     <script>
