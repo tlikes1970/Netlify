@@ -23,6 +23,7 @@
         --mardi1: #6a0dad;
         --mardi2: #28a745;
         --mardi3: #ffd43b;
+        --focus: #1a73e8;
       }
       * {
         box-sizing: border-box;
@@ -85,7 +86,7 @@
         justify-content: space-between;
         gap: 12px;
         flex-wrap: wrap;
-        border-bottom: 3px dashed var(--primary);
+        border-bottom: 3px solid var(--primary);
         padding-bottom: 16px;
         margin-bottom: 12px;
       }
@@ -146,15 +147,33 @@
         margin-left: 6px;
       }
 
-      .btn {
-        border: 0;
-        background: linear-gradient(45deg, var(--primary), var(--purple));
-        color: #fff;
-        border-radius: 18px;
-        padding: 10px 14px;
-        font-weight: 800;
-        cursor: pointer;
-      }
+              .btn {
+          border: 0;
+          background: linear-gradient(45deg, var(--primary), var(--purple));
+          color: #fff;
+          border-radius: 18px;
+          padding: 10px 14px;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:active {
+          transform: translateY(0);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:focus {
+          outline: 3px solid var(--focus, #1a73e8);
+          outline-offset: 2px;
+        }
       .btn.secondary {
         background: linear-gradient(45deg, #737d8c, #57606f);
       }
@@ -218,6 +237,18 @@
       .stats .stat {
         display: none;
       }
+      .stat-num {
+        font-size: 1.8rem;
+        color: var(--primary);
+        font-weight: 900;
+      }
+      .stat-label {
+        font-size: 0.72rem;
+        color: #80808f;
+        text-transform: uppercase;
+        font-weight: 900;
+        letter-spacing: 0.6px;
+      }
       #bingeMeter {
         display: block !important;
         flex-basis: 100% !important;
@@ -226,7 +257,7 @@
 
       .list-container {
         background: var(--card);
-        border: 3px dashed var(--border);
+        border: 3px solid var(--border);
         border-radius: 12px;
         padding: 12px;
         min-height: 80px;
@@ -454,6 +485,12 @@
 
       /* Mobile */
       @media (max-width: 768px) {
+        body {
+          padding: 16px;
+        }
+        .main-container {
+          padding: 16px;
+        }
         .search-row {
           display: flex !important;
           flex-direction: column !important;
@@ -461,6 +498,7 @@
         }
         .search-input {
           width: 100% !important;
+          font-size: 16px;
         }
         .search-filters {
           display: flex !important;
@@ -469,8 +507,16 @@
         #genreFilter {
           flex: 1 !important;
         }
+        .search-container {
+          background: var(--card);
+          border: 2px solid var(--primary);
+          border-radius: 14px;
+          padding: 12px;
+          margin: 14px 0;
+        }
         .search-container .btn {
           flex: 1 !important;
+          min-height: 44px;
         }
 
         .show-actions {
@@ -487,13 +533,203 @@
           white-space: normal !important;
           overflow: hidden !important;
           text-overflow: ellipsis !important;
-          min-height: 40px !important;
+          min-height: 44px !important;
+        }
+        
+        .show-card {
+          grid-template-columns: 80px 1fr;
+          gap: 12px;
+          padding: 12px;
+        }
+        .show-poster {
+          width: 80px;
+          height: 120px;
+        }
+        .poster-placeholder {
+          width: 80px;
+          height: 120px;
+        }
+        .show-title {
+          font-size: 1rem;
+        }
+        .show-meta {
+          font-size: 0.85rem;
+        }
+        .show-overview {
+          font-size: 0.9rem;
+        }
+        .rating-container {
+          gap: 4px;
+        }
+        .star-btn {
+          padding: 4px;
+          min-width: 32px;
+        }
+      }
+
+      /* iPhone specific */
+      @media (max-width: 428px) {
+        body {
+          padding: 12px;
+        }
+        .main-container {
+          padding: 12px;
+        }
+        .search-row {
+          gap: 6px !important;
+        }
+        .search-input {
+          padding: 8px 10px;
+        }
+        .btn {
+          padding: 8px 12px;
+          font-size: 14px;
+        }
+        .show-card {
+          grid-template-columns: 70px 1fr;
+          gap: 10px;
+          padding: 10px;
+        }
+        .show-poster {
+          width: 70px;
+          height: 105px;
+        }
+        .poster-placeholder {
+          width: 70px;
+          height: 105px;
+        }
+        .show-title {
+          font-size: 0.95rem;
+        }
+        .show-meta {
+          font-size: 0.8rem;
+        }
+        .show-overview {
+          font-size: 0.85rem;
+        }
+      }
+
+      /* iPhone notch/safe area support */
+      @supports (padding: max(0px)) {
+        body {
+          padding-left: max(12px, env(safe-area-inset-left));
+          padding-right: max(12px, env(safe-area-inset-right));
+          padding-top: max(12px, env(safe-area-inset-top));
+          padding-bottom: max(12px, env(safe-area-inset-bottom));
+        }
+      }
+
+      /* iOS-specific button styling */
+      .btn {
+        -webkit-appearance: none;
+        touch-action: manipulation;
+        user-select: none;
+      }
+      .btn:active {
+        transform: scale(0.98);
+      }
+
+      /* Missing CSS classes */
+      .section {
+        margin: 20px 0;
+      }
+      .section-header {
+        margin-bottom: 12px;
+      }
+      .section-header h3 {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .tab-section {
+        display: none;
+      }
+      .tab-section.active {
+        display: block;
+      }
+      .count {
+        background: var(--primary);
+        color: white;
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 12px;
+        margin-left: 6px;
+      }
+      .binge-banner {
+        background: linear-gradient(45deg, var(--mardi1), var(--mardi3));
+        color: white;
+        padding: 12px 16px;
+        border-radius: 10px;
+        margin: 14px 0;
+        text-align: center;
+        animation: fadeout 0.4s ease 2.6s forwards;
+      }
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+      }
+      .modal-content {
+        background: var(--bg);
+        color: var(--text);
+        max-width: 680px;
+        width: 92%;
+        border-radius: 14px;
+        border: 2px solid var(--primary);
+        padding: 18px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .modal h3 {
+        margin: 0 0 10px;
+        color: var(--primary);
+      }
+      .empty-state {
+        text-align: center;
+        color: #666;
+        padding: 20px;
+        font-style: italic;
+      }
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--purple);
+        color: white;
+        padding: 12px 16px;
+        border-radius: 10px;
+        z-index: 1000;
+        animation: fadeout 0.4s ease 2.6s forwards;
+      }
+      .notification.success {
+        background: var(--success);
+      }
+      .notification.warning {
+        background: var(--warning);
+        color: #000;
+      }
+      .notification.error {
+        background: var(--danger);
+      }
+      @keyframes fadeout {
+        to {
+          opacity: 0;
+          transform: translateY(-10px);
         }
       }
 
       .feedback-card {
         background: var(--card);
-        border: 2px dashed var(--primary);
+        border: 2px solid var(--primary);
         border-radius: 14px;
         padding: 12px;
         margin: 14px 0;
@@ -583,7 +819,24 @@
         cursor: pointer;
         font-size: 1.1rem;
       }
-      .star-btn.active { filter: saturate(1.4); }
+      .star-btn.active { 
+        filter: saturate(1.2) brightness(1.1); 
+        color: #0066cc; 
+        transform: scale(1.1); 
+        text-shadow: 0 0 6px rgba(0, 102, 204, 0.6);
+        font-weight: bold;
+        font-size: 1.3rem;
+      }
+      
+      .star-btn {
+        border: none;
+        background: none;
+        padding: 2px;
+        line-height: 1;
+        cursor: pointer;
+        font-size: 1.1rem;
+        color: #333;
+      }
       </style>
   </head>
 
@@ -593,9 +846,9 @@
     <div class="main-container" id="appRoot">
       <header class="header" role="banner">
         <div>
-          <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
+          <h1 id="welcomeText" class="title">Flicklet</h1>
           <div class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
-          <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
+  
         </div>
         <div class="user-section">
           <button id="darkModeToggle" class="btn" title="Theme" data-i18n="go_dark">🌙 Go Dark</button>
@@ -628,12 +881,13 @@
             id="searchInput"
             class="search-input"
             aria-label="Search shows or movies"
-            placeholder="Search for shows or movies…"
+            placeholder=""
+            data-i18n="search_placeholder"
           />
           <select id="genreFilter">
-            <option value="">All Genres</option>
+            <option value="" data-i18n="all_genres">All Genres</option>
           </select>
-          <button id="searchBtn" class="btn">🔍 Search</button>
+          <button id="searchBtn" class="btn">🔍 <span data-i18n="search">Search</span></button>
           <button id="clearSearchBtn" class="btn secondary">
             ✖️ <span data-i18n="clear">Clear</span>
           </button>
@@ -646,7 +900,7 @@
       </div>
 
       <div class="tab-container">
-        <button id="homeTab" class="tab active">🏠 Home</button>
+        <button id="homeTab" class="tab active">🏠 <span data-i18n="home">Home</span></button>
         <button id="watchingTab" class="tab">
           ▶️ <span data-i18n="currently_watching">Currently Watching</span>
           <span class="tab-badge" id="watchingBadge">0</span>
@@ -659,8 +913,8 @@
           ✅ <span data-i18n="already_watched">Already Watched</span>
           <span class="tab-badge" id="watchedBadge">0</span>
         </button>
-        <button id="discoverTab" class="tab">✨ Discover</button>
-        <button id="settingsTab" class="tab">⚙️ Settings</button>
+        <button id="discoverTab" class="tab">✨ <span data-i18n="discover">Discover</span></button>
+        <button id="settingsTab" class="tab">⚙️ <span data-i18n="settings">Settings</span></button>
       </div>
 
       <!-- Results -->
@@ -673,31 +927,9 @@
 
       <!-- Home -->
       <div id="homeSection" class="tab-section">
-        <div class="stats">
-          <div class="stat" id="bingeMeter"></div>
-        </div>
-
-        <!-- Feedback / Mardi -->
-        <div class="feedback-card">
-          <h3>Feedback</h3>
-          <p>Tell us what's working and what's not. Be blunt.</p>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap">
-            <input
-              id="feedbackInput"
-              class="search-input"
-              placeholder="Your feedback…"
-            />
-            <button id="feedbackSendBtn" class="btn">Send</button>
-            <button
-              id="mardiOnBtn"
-              class="btn secondary"
-              title="Toggle Mardi Gras theme"
-            >
-              🎭 Mardi Gras
-            </button>
-          </div>
-        </div>
-      </header>
+        <!-- Content will be inserted by JavaScript: quotes, horoscope, then feedback -->
+      </div>
+    </header>
 
       <main id="main" role="main">
 
@@ -831,8 +1063,8 @@
               ><input type="checkbox" id="notifDigest" /> Monthly stats
               digest</label
             >
-          </div>
-
+                      </div>
+  
           <h4>Stats</h4>
           <div id="statsBasic" class="feedback-card">
             <div id="statsBasicBody">Loading…</div>
@@ -841,7 +1073,7 @@
             <strong>Pro</strong>
             <div id="statsProBody">Loading…</div>
           </div>
-        </div>
+          </div>
       </div>
     </div>
 
@@ -873,6 +1105,28 @@
           last: "Last",
           start: "Start",
           because_you_liked: "Because you liked",
+          search_placeholder: "Search for shows or movies...",
+          all_genres: "All Genres",
+          search: "Search",
+          notes_tags: "Notes/Tags",
+          remove: "Remove",
+          welcome_title: "Welcome! What should we call you?",
+          welcome_subtitle: "This will personalize your headers and stats.",
+          display_name: "Display name",
+          save: "Save",
+          sign_in_title: "Sign in to sync",
+          sign_in_subtitle: "Sign in to back up your lists and sync across devices.",
+          continue_google: "Continue with Google",
+          email_signin: "Email Sign-In",
+          sign_out: "Sign Out",
+          home: "Home",
+          discover: "Discover",
+          settings: "Settings",
+          no_items: "No items.",
+          no_description: "No description.",
+          already_in_list: "Already in {list}.",
+          moved_to: "Moved to {list}.",
+          added_to: "Added to {list}.",
         },
         es: {
           go_dark: "🌙 Modo oscuro",
@@ -892,6 +1146,28 @@
           last: "Últ.",
           start: "Comenzar",
           because_you_liked: "Porque te gustó",
+          search_placeholder: "Buscar series o películas...",
+          all_genres: "Todos los géneros",
+          search: "Buscar",
+          notes_tags: "Notas/Etiquetas",
+          remove: "Eliminar",
+          welcome_title: "¡Bienvenido! ¿Cómo te llamamos?",
+          welcome_subtitle: "Esto personalizará tus encabezados y estadísticas.",
+          display_name: "Nombre para mostrar",
+          save: "Guardar",
+          sign_in_title: "Iniciar sesión para sincronizar",
+          sign_in_subtitle: "Inicia sesión para respaldar tus listas y sincronizar entre dispositivos.",
+          continue_google: "Continuar con Google",
+          email_signin: "Iniciar sesión con email",
+          sign_out: "Cerrar sesión",
+          home: "Inicio",
+          discover: "Descubrir",
+          settings: "Configuración",
+          no_items: "No hay elementos.",
+          no_description: "Sin descripción.",
+          already_in_list: "Ya está en {list}.",
+          moved_to: "Movido a {list}.",
+          added_to: "Agregado a {list}.",
         },
       };
       function t(k) {
@@ -939,9 +1215,7 @@
 
       const appData = {
         tv: { watching: [], wishlist: [], watched: [] },
-        movies: {
-          go_dark: "🌙 Modo oscuro",
-          go_light: "☀️ Modo claro", watching: [], wishlist: [], watched: [] },
+        movies: { watching: [], wishlist: [], watched: [] },
         settings: {
           theme: "light",
           displayName: "",
@@ -975,8 +1249,15 @@
       function updateWelcomeText() {
         try {
           const n = (appData?.settings?.displayName || "").trim();
+          console.log("updateWelcomeText called with displayName:", n);
+          
+
+          
           const el = document.getElementById("welcomeText");
-          if (!el) return;
+          if (!el) {
+            console.log("welcomeText element not found");
+            return;
+          }
           const pool = [
             "Chaos",
             "Questionable Taste",
@@ -984,9 +1265,15 @@
             "Streaming Madness",
             "Watch List",
           ];
-          el.textContent = n
+          const newText = n
             ? `${n}'s ${pool[Math.floor(Math.random() * pool.length)]}`
             : t("app_title");
+          console.log("Setting welcome text to:", newText);
+          
+
+          
+          el.textContent = newText;
+
         } catch (e) {
           console.warn("updateWelcomeText failed:", e);
         }
@@ -1024,7 +1311,10 @@
           document.body.classList.add("dark-mode");
         const langSel = document.getElementById("langToggle");
         if (langSel) langSel.value = appData.settings.lang || "en";
-        updateWelcomeText();
+        // Only update welcome text if we have a display name
+        if (appData.settings.displayName && appData.settings.displayName.trim()) {
+          updateWelcomeText();
+        }
         applyTranslations();
       }
 
@@ -1053,24 +1343,38 @@
           const snap = await db.collection("users").doc(uid).get();
           if (!snap.exists) return;
           const cloud = snap.data() || {};
+          
+          // Preserve local settings before any cloud operations
+          const localDisplayName = (appData.settings?.displayName || "").trim();
+          const localLanguage = (appData.settings?.lang || "en");
+          console.log("Cloud sync - local display name:", localDisplayName);
+          console.log("Cloud sync - local language:", localLanguage);
+          
           if (cloud.watchlists) {
             if (cloud.watchlists.tv) appData.tv = cloud.watchlists.tv;
             if (cloud.watchlists.movies)
               appData.movies = cloud.watchlists.movies;
           }
-          if (cloud.settings) {
-            const localName = (appData.settings?.displayName || "").trim();
-            const incoming = { ...cloud.settings };
-            // If cloud name is blank, keep the local one
-            if (!incoming.displayName || !incoming.displayName.trim()) {
-              incoming.displayName = localName;
+                      if (cloud.settings) {
+              const incoming = { ...cloud.settings };
+              console.log("Cloud sync - incoming settings:", incoming);
+              // Always preserve local display name if it exists
+              if (localDisplayName) {
+                incoming.displayName = localDisplayName;
+                console.log("Cloud sync - preserving local name:", localDisplayName);
+              }
+              // Always preserve local language setting
+              if (localLanguage) {
+                incoming.lang = localLanguage;
+                console.log("Cloud sync - preserving local language:", localLanguage);
+              }
+              appData.settings = { ...appData.settings, ...incoming };
+              console.log("Cloud sync - after merge:", appData.settings);
             }
-            appData.settings = { ...appData.settings, ...incoming };
-          }
 
           if (typeof cloud.pro === "boolean") appData.settings.pro = cloud.pro;
 
-          // sanitize & persist
+          // Ensure display name is preserved after sanitization
           const cleaned = sanitizeForFirestore({
             tv: appData.tv,
             movies: appData.movies,
@@ -1087,12 +1391,23 @@
             watched: [],
           };
           appData.settings = cleaned.settings || appData.settings;
+          
+          // Restore local settings if they were lost during sanitization
+          if (localDisplayName && (!appData.settings.displayName || !appData.settings.displayName.trim())) {
+            appData.settings.displayName = localDisplayName;
+          }
+          if (localLanguage && (!appData.settings.lang || appData.settings.lang !== localLanguage)) {
+            appData.settings.lang = localLanguage;
+          }
 
           localStorage.setItem("tvMovieTrackerData", JSON.stringify(appData));
           const langSel = document.getElementById("langToggle");
           if (langSel) langSel.value = appData.settings.lang || "en";
+          
           applyTranslations();
+          updateWelcomeText?.();
           if (typeof updateUI === "function") updateUI();
+          
           showNotification("Cloud sync OK", "success");
         } catch (e) {
           console.warn("load cloud failed", e);
@@ -1101,14 +1416,25 @@
       }
 
       async function saveAppData() {
+        console.log("🔍 saveAppData called - current language setting:", appData.settings.lang);
         localStorage.setItem("tvMovieTrackerData", JSON.stringify(appData));
         const langSel = document.getElementById("langToggle");
-        if (langSel) langSel.value = appData.settings.lang || "en";
+        if (langSel) {
+          console.log("🔍 Setting langToggle dropdown to:", appData.settings.lang || "en");
+          langSel.value = appData.settings.lang || "en";
+        }
 
+        console.log("🔍 Before applyTranslations - language:", appData.settings.lang);
         applyTranslations?.();
+        console.log("🔍 After applyTranslations - language:", appData.settings.lang);
+        
+        console.log("🔍 Before updateWelcomeText - language:", appData.settings.lang);
         updateWelcomeText?.();
-        setAccountLabel?.(currentUser);
+        console.log("🔍 After updateWelcomeText - language:", appData.settings.lang);
+        
+        console.log("🔍 Before updateUI - language:", appData.settings.lang);
         updateUI?.();
+        console.log("🔍 After updateUI - language:", appData.settings.lang);
 
         if (!currentUser) return;
         try {
@@ -1193,8 +1519,9 @@
 
             await loadUserDataFromCloud(user.uid);
 
-            // Seed manual displayName if still empty
-            if (!(appData?.settings?.displayName || "").trim()) {
+            // Only seed displayName if user hasn't manually set one
+            const currentDisplayName = (appData?.settings?.displayName || "").trim();
+            if (!currentDisplayName) {
               const guess =
                 (user.displayName && user.displayName.trim()) ||
                 (user.email && user.email.split("@")[0]) ||
@@ -1245,8 +1572,14 @@
       }
 
       function showNameModal(force = false) {
+        console.log("🔍 showNameModal called with force:", force);
         const current = (appData.settings.displayName || "").trim();
-        if (!force && current) return;
+        console.log("🔍 showNameModal current displayName:", current);
+        if (!force && current) {
+          console.log("🔍 showNameModal: User already has name, returning");
+          return;
+        }
+        console.log("🔍 showNameModal: Proceeding to show modal...");
 
         openModal(
           "Welcome! What should we call you?",
@@ -1289,6 +1622,17 @@
           else showSignInModal();
         };
         document.querySelector(".modal .modal-actions").prepend(saveBtn);
+
+        // Add Enter key handler to the name input
+        const nameInput = document.getElementById("onboardName");
+        if (nameInput) {
+          nameInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              saveBtn.click();
+            }
+          });
+        }
       }
 
       function showSignInModal() {
@@ -1474,9 +1818,6 @@
             opt.textContent = g.name;
             sel.appendChild(opt);
           });
-        } catch (_) {}
-      }">${g.name}</option>`)
-          );
         } catch (_) {}
       }
 
@@ -1808,7 +2149,10 @@
         } catch (_) {}
       }
 
-      function createShowCard(item, isSearch = false) {
+      function createShowCard(item, isSearch = false, listTab = null) {
+        // Use the passed listTab if available, otherwise fall back to currentActiveTab
+        const activeTab = listTab || currentActiveTab;
+        console.log("🔍 createShowCard - activeTab:", activeTab, "for item:", item.name || item.title);
         const card = document.createElement("div");
         card.className = "show-card";
         const title = item.name || item.title || "Unknown Title";
@@ -1843,11 +2187,12 @@
         } else {
           const likeStatus = item.likeStatus || "none";
           const userRating = item.userRating || 0;
+
           const stars = [1,2,3,4,5].map((n) =>
             `<button type="button" class="star-btn ${n <= userRating ? "active" : ""}"
                     aria-label="Rate ${n} out of 5"
                     aria-pressed="${n <= userRating}"
-                    data-action="rate" data-id="${item.id}" data-rating="${n}">⭐</button>`
+                    data-action="rate" data-id="${item.id}" data-rating="${n}">${n <= userRating ? "★" : "☆"}</button>`
           ).join("");
           actions = `
             <div class="rating-container">
@@ -1861,9 +2206,9 @@
             </div>
 
             <div class="show-actions" style="margin-top:6px; display:flex; gap:8px; flex-wrap:wrap">
-              <button class="btn secondary" data-action="move" data-id="${item.id}" data-list="watching">→ ${t("currently_watching")}</button>
-              <button class="btn secondary" data-action="move" data-id="${item.id}" data-list="wishlist">→ ${t("want_to_watch")}</button>
-              <button class="btn secondary" data-action="move" data-id="${item.id}" data-list="watched">→ ${t("already_watched")}</button>
+                      ${activeTab !== "watching" ? `<button class="btn secondary" data-action="move" data-id="${item.id}" data-list="watching">→ ${t("currently_watching")}</button>` : ''}
+        ${activeTab !== "wishlist" ? `<button class="btn secondary" data-action="move" data-id="${item.id}" data-list="wishlist">→ ${t("want_to_watch")}</button>` : ''}
+        ${activeTab !== "watched" ? `<button class="btn secondary" data-action="move" data-id="${item.id}" data-list="watched">→ ${t("already_watched")}</button>` : ''}
               <button class="btn" data-action="notes" data-id="${item.id}">✎ Notes/Tags</button>
               <button class="btn danger" data-action="remove" data-id="${item.id}">🗑️ Remove</button>
             </div>`;
@@ -1891,6 +2236,31 @@
             networkNames ? ` • ${t("streaming_on")}: ${networkNames}` : ""
           ].join("");
         }
+
+        // Add direct click handlers to star rating buttons
+        const starButtons = card.querySelectorAll(".star-btn");
+        starButtons.forEach(starBtn => {
+          starBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const rating = Number(starBtn.getAttribute("data-rating"));
+            const id = Number(starBtn.getAttribute("data-id"));
+            setRating(id, rating);
+            
+            // Update the visual state of all stars in this card
+            const allStars = card.querySelectorAll(".star-btn");
+            allStars.forEach((star, index) => {
+              const starRating = index + 1;
+              if (starRating <= rating) {
+                star.classList.add("active");
+                star.setAttribute("aria-pressed", "true");
+              } else {
+                star.classList.remove("active");
+                star.setAttribute("aria-pressed", "false");
+              }
+            });
+          });
+        });
 
         ensureTvDetails(item, card);
         return card;
@@ -1947,32 +2317,87 @@
         saveAppData();
         updateUI();
 
-        showNotification(
-          `${foundElsewhere ? "Moved to" : "Added to"} ${list.replace(
-            "wishlist",
-            "Want to Watch"
-          )}.`,
-          "success"
-        );
+        // Generate snarky feedback message for adding from search
+        const title = norm.name || norm.title || "This show";
+        let message = "";
+        
+        if (list === "watching") {
+          message = `"${title}" is now in the spotlight! ✨`;
+        } else if (list === "wishlist") {
+          message = `"${title}" added to the queue! 📋`;
+        } else if (list === "watched") {
+          message = `"${title}" marked as watched! ✅`;
+        }
+        
+        if (message) {
+          showNotification(message, "success");
+        }
       }
 
       function moveItem(id, dest) {
         const item = findItem(id);
         if (!item) return;
+        
+        // Find where the item currently is
+        let currentList = null;
         ["tv", "movies"].forEach((cat) =>
           ["watching", "wishlist", "watched"].forEach((lst) => {
+            if (appData[cat][lst].some((s) => s.id === id)) {
+              currentList = lst;
+            }
             appData[cat][lst] = appData[cat][lst].filter((s) => s.id !== id);
           })
         );
+        
         const cat = item.media_type === "tv" ? "tv" : "movies";
         appData[cat][dest].unshift(item);
         saveAppData?.();
         updateUI?.();
+        
+        // Generate snarky feedback message
+        const title = item.name || item.title || "This show";
+        let message = "";
+        
+        if (dest === "watching") {
+          if (currentList === "wishlist") {
+            message = `"${title}" must be in the front of the line! 🚀`;
+          } else if (currentList === "watched") {
+            message = `"${title}" is back from the dead! 🧟‍♂️`;
+          } else {
+            message = `"${title}" is now in the spotlight! ✨`;
+          }
+        } else if (dest === "wishlist") {
+          if (currentList === "watching") {
+            message = `Successfully put "${title}" in the backseat! 🚗`;
+          } else if (currentList === "watched") {
+            message = `"${title}" is back on the wishlist! 📝`;
+          } else {
+            message = `"${title}" added to the queue! 📋`;
+          }
+        } else if (dest === "watched") {
+          if (currentList === "watching") {
+            message = `Well, at least we can say we accomplished something! 👏`;
+          } else if (currentList === "wishlist") {
+            message = `"${title}" jumped straight to completion! 🎯`;
+          } else {
+            message = `"${title}" marked as watched! ✅`;
+          }
+        }
+        
+        if (message) {
+          showNotification(message, "success");
+        }
       }
       function setRating(id, rating) {
+        console.log("🔍 setRating called with id:", id, "rating:", rating);
         const it = findItem(id);
-        if (!it) return;
+        if (!it) {
+          console.log("❌ setRating: Item not found");
+          return;
+        }
+        console.log("🔍 setRating: Found item:", it.name || it.title);
         it.userRating = rating;
+        console.log("🔍 setRating: Set userRating to:", it.userRating);
         saveAppData?.();
         updateUI?.();
       }
@@ -2160,6 +2585,21 @@
         document.getElementById(tab + "Section").style.display = "block";
 
         if (tab === "discover") renderDiscover();
+        if (tab === "settings") {
+          // Populate the display name input with current value
+          const displayNameInput = document.getElementById("displayNameInput");
+          if (displayNameInput) {
+            displayNameInput.value = appData?.settings?.displayName || "";
+            
+            // Add Enter key handling
+            displayNameInput.addEventListener("keydown", (e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                document.getElementById("saveNameBtn")?.click();
+              }
+            });
+          }
+        }
       }
 
       window.switchToTab = switchToTab;
@@ -2199,8 +2639,15 @@
           c.innerHTML = `<div class="empty-state">No items.</div>`;
           return;
         }
+        
+        // Determine which tab this list belongs to based on containerId
+        let listTab = "home";
+        if (containerId === "watchingList") listTab = "watching";
+        else if (containerId === "wishlistList") listTab = "wishlist";
+        else if (containerId === "watchedList") listTab = "watched";
+        
         c.innerHTML = "";
-        items.forEach((it) => c.appendChild(createShowCard(it, false)));
+        items.forEach((it) => c.appendChild(createShowCard(it, false, listTab)));
       }
 
       function updateUI() {
@@ -2250,9 +2697,16 @@
         updateList("wishlistList", wishlist);
         updateList("watchedList", watched);
 
-        updateBingeMeter?.();
-        updateBingeBanner?.();
+        // updateBingeMeter?.(); // Disabled - removed from home page
+        // updateBingeBanner?.(); // Disabled - removed from front page
+        
+        // Ensure home page blocks are inserted (quotes, horoscope, feedback)
+        console.log("🔍 updateUI: About to call ensureBlocks...");
+        const blocksResult = ensureBlocks?.();
+        console.log("🔍 updateUI: ensureBlocks result:", blocksResult);
+        
         applyTranslations?.();
+        
         rebuildStats?.();
       }
       // Cache search results so we don't inline JSON into onclick
@@ -2489,14 +2943,37 @@
         }
 
         // ---------- DOM injection (idempotent) ----------
-        function ensureBlocks() {
+        window.ensureBlocks = function() {
           const home = document.getElementById("homeSection");
-          if (!home) return false;
+          if (!home) {
+            console.log("❌ ensureBlocks: homeSection not found");
+            return false;
+          }
 
-          const stats =
-            home.querySelector(".stats") || home.firstElementChild;
-          const anchor = stats || home;
+          console.log("🔍 ensureBlocks: homeSection found, inserting content...");
+          
+          // If home section is empty, create a container div first
+          if (!home.firstElementChild) {
+            const container = document.createElement("div");
+            container.id = "homeContentContainer";
+            home.appendChild(container);
+            console.log("🔍 ensureBlocks: Created homeContentContainer");
+          }
+          
+          const anchor = home.firstElementChild;
 
+          // Insert quotes first (after tabs, before feedback)
+          if (!document.getElementById("quoteBlock")) {
+            const block = document.createElement("blockquote");
+            block.className = "feedback-card";
+            block.id = "quoteBlock";
+            block.style.textAlign = "center";
+            block.style.fontStyle = "italic";
+            block.innerHTML = `<p id="randomQuote">"Loading quote of questionable value..."</p>`;
+            anchor.insertAdjacentElement("afterend", block);
+          }
+
+          // Insert horoscope second (after quotes)
           if (!document.getElementById("personalityForecast")) {
             const card = document.createElement("div");
             card.className = "feedback-card";
@@ -2505,19 +2982,30 @@
         <h3>🧠 Streaming Horoscope</h3>
         <p id="fakeFortune" style="margin:0; font-style:italic;"></p>
       `;
-            anchor.insertAdjacentElement("afterend", card);
+            const insertAfter = document.getElementById("quoteBlock") || anchor;
+            insertAfter.insertAdjacentElement("afterend", card);
           }
 
-          if (!document.getElementById("quoteBlock")) {
-            const block = document.createElement("blockquote");
-            block.className = "feedback-card";
-            block.id = "quoteBlock";
-            block.style.textAlign = "center";
-            block.style.fontStyle = "italic";
-            block.innerHTML = `<p id="randomQuote">"Loading quote of questionable value..."</p>`;
-            const insertAfter =
-              document.getElementById("personalityForecast") || anchor;
-            insertAfter.insertAdjacentElement("afterend", block);
+          // Insert feedback section last (at the bottom)
+          if (!document.getElementById("feedbackSection")) {
+            const feedbackCard = document.createElement("div");
+            feedbackCard.className = "feedback-card";
+            feedbackCard.id = "feedbackSection";
+            feedbackCard.innerHTML = `
+              <h3>Feedback</h3>
+              <p>Tell us what's working and what's not. Be blunt.</p>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                <input
+                  id="feedbackInput"
+                  class="search-input"
+                  placeholder="Your feedback…"
+                />
+                <button id="feedbackSendBtn" class="btn">Send</button>
+
+              </div>
+            `;
+            const insertAfter = document.getElementById("personalityForecast") || document.getElementById("quoteBlock") || anchor;
+            insertAfter.insertAdjacentElement("afterend", feedbackCard);
           }
 
           const hEl = document.getElementById("fakeFortune");
@@ -2529,7 +3017,13 @@
         }
 
         const start = () => {
-          if (!ensureBlocks()) requestAnimationFrame(ensureBlocks);
+          console.log("🚀 start() function called");
+          const result = ensureBlocks();
+          console.log("🚀 start() ensureBlocks result:", result);
+          if (!result) {
+            console.log("🚀 start() scheduling retry with requestAnimationFrame");
+            requestAnimationFrame(ensureBlocks);
+          }
         };
 
         if (document.readyState === "loading") {
@@ -2555,8 +3049,14 @@
         tryImportFromShareLink?.();
         loadAppData?.();
         loadGenres?.();
+        
+        // Show home tab by default FIRST
+        switchToTab("home");
+        
+        // Then update UI (which will call ensureBlocks)
         updateUI?.();
         checkUpcomingEpisodes?.();
+        
         // Paint account button based on currentUser if auth has already resolved
         if (typeof setAccountLabel === "function") setAccountLabel(currentUser);
 
@@ -2570,13 +3070,28 @@
 
         
         // --- delegated actions for cards & search results
+        console.log("🔍 Setting up click event listener...");
+        
+        // Try both event delegation and direct binding
         document.addEventListener("click", (e) => {
+          console.log("🔍 Click detected on:", e.target.tagName, e.target.className, e.target.getAttribute("data-action"));
+          console.log("🔍 Target element:", e.target);
+          console.log("🔍 Target outerHTML:", e.target.outerHTML);
+          
           const btn = e.target.closest("[data-action]");
-          if (!btn) return;
+          console.log("🔍 Closest data-action element:", btn);
+          
+          if (!btn) {
+            console.log("🔍 No data-action found, returning");
+            return;
+          }
+          
           const action = btn.getAttribute("data-action");
           const id = Number(btn.getAttribute("data-id"));
           const list = btn.getAttribute("data-list");
           const mediaType = btn.getAttribute("data-media-type");
+          
+          console.log("🔍 Action detected:", action, "id:", id);
           if (action === "addFromCache") {
             addToListFromCache(id, list);
           } else if (action === "move") {
@@ -2586,7 +3101,9 @@
           } else if (action === "remove") {
             removeItemFromCurrentList(id);
           } else if (action === "rate") {
+            console.log("🔍 Star rating clicked:", action, "id:", id);
             const rating = Number(btn.getAttribute("data-rating"));
+            console.log("🔍 Rating value:", rating);
             setRating(id, rating);
           } else if (action === "like") {
             setLikeStatus(id, "like");
@@ -2627,12 +3144,35 @@
         // --- language switch (re-load genres, refresh cards, rerun search if open)
         const langSel = document.getElementById("langToggle");
         if (langSel) {
-          langSel.value = appData?.settings?.lang || "en";
-          langSel.addEventListener("change", async (e) => {
+          // DEBUG: Check if there are existing event listeners
+          console.log("🔍 Setting up language toggle event listener...");
+          
+          // Remove any existing event listeners to prevent conflicts
+          const newLangSel = langSel.cloneNode(true);
+          langSel.parentNode.replaceChild(newLangSel, langSel);
+          const cleanLangSel = document.getElementById("langToggle");
+          
+          console.log("🔍 Cleaned event listeners, setting up new one...");
+          cleanLangSel.value = appData?.settings?.lang || "en";
+          cleanLangSel.addEventListener("change", async (e) => {
+            console.log("🌍 Language changed to:", e.target.value);
             if (window.appData?.settings)
               appData.settings.lang = e.target.value || "en";
+            console.log("🌍 New language setting:", appData.settings.lang);
+            
+            // DEBUG: Check what happens between setting language and saveAppData
+            console.log("🌍 Language set, waiting 100ms...");
+            await new Promise(resolve => setTimeout(resolve, 100));
+            console.log("🌍 After 100ms delay - language setting:", appData.settings.lang);
+            
+            // DEBUG: Check if saveAppData is causing the issue
+            console.log("🌍 About to call saveAppData...");
             saveAppData?.();
+            console.log("🌍 After saveAppData - language setting:", appData.settings.lang);
+            
+            console.log("🌍 Applying translations...");
             applyTranslations?.();
+            console.log("🌍 Loading genres...");
             await loadGenres?.();
 
             // refresh visible TV cards with richer details in selected lang
@@ -2657,18 +3197,25 @@
 
         // --- ensure display name prompt on first boot (no extra auth listener here)
         (function ensureDisplayNameOnBoot() {
+          console.log("🔍 ensureDisplayNameOnBoot: Checking for display name...");
           const hasName =
             (appData?.settings?.displayName || "").trim().length > 0;
+          console.log("🔍 ensureDisplayNameOnBoot: Has name?", hasName, "appData:", appData);
+          
           if (!hasName) {
+            console.log("🔍 ensureDisplayNameOnBoot: No name found, will prompt...");
             // If user is already signed in, the top-level auth listener (outside) may seed displayName.
             // Still, prompt after a short delay if we remain nameless.
             setTimeout(() => {
               const stillNoName = !(
                 appData?.settings?.displayName || ""
               ).trim();
-              if (stillNoName && typeof showNameModal === "function")
+              console.log("🔍 ensureDisplayNameOnBoot: After delay, still no name?", stillNoName);
+              if (stillNoName && typeof showNameModal === "function") {
+                console.log("🔍 ensureDisplayNameOnBoot: Calling showNameModal...");
                 showNameModal(true);
-            }, 250);
+              }
+            }, 1000); // Increased delay to ensure appData is loaded
           }
         })();
 
@@ -2678,21 +3225,63 @@
           accountBtn.onclick = showSignInModal;
         }
 
+        // --- Save name button
+        bind("saveNameBtn", () => {
+          const val = (document.getElementById("displayNameInput")?.value || "").trim();
+          if (!val) return showNotification?.("Enter a name first.", "warning");
+          if (appData?.settings) {
+            console.log("Before saving - appData.settings:", appData.settings);
+            appData.settings.displayName = val;
+            console.log("After setting name - appData.settings:", appData.settings);
+            saveAppData?.();
+            console.log("After saveAppData - localStorage:", localStorage.getItem("tvMovieTrackerData"));
+            updateWelcomeText?.();
+            showNotification?.("Name saved!", "success");
+          }
+        });
+        
+
+
         // --- feedback
         const feedbackSendBtn = document.getElementById("feedbackSendBtn");
         if (feedbackSendBtn) {
-          feedbackSendBtn.onclick = () => {
+          feedbackSendBtn.onclick = async () => {
             const txt = (
               document.getElementById("feedbackInput")?.value || ""
             ).trim();
             if (!txt)
               return showNotification?.("Type feedback first.", "warning");
-            // TODO: send to backend
-            showNotification?.("Thanks for the feedback.", "success");
-            const inp = document.getElementById("feedbackInput");
-            if (inp) inp.value = "";
+            
+            try {
+              // Send to centralized backend via Netlify function
+              const response = await fetch('/.netlify/functions/feedback', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  comment: txt,
+                  timestamp: new Date().toISOString(),
+                  user: appData?.settings?.displayName || 'Anonymous',
+                  version: '1.0.0'
+                })
+              });
+              
+              if (response.ok) {
+                showNotification?.("Feedback sent successfully!", "success");
+                const inp = document.getElementById("feedbackInput");
+                if (inp) inp.value = "";
+              } else {
+                showNotification?.("Failed to send feedback. Please try again.", "error");
+              }
+            } catch (error) {
+              console.error('Feedback submission error:', error);
+              showNotification?.("Failed to send feedback. Please try again.", "error");
+            }
           };
         }
+
+
 
         // --- search controls
         bind("searchBtn", performSearch);
