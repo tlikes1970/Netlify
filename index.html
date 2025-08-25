@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Flicklet" />
     <title>Flicklet - TV & Movie Tracker</title>
     <meta
       name="description"
@@ -42,6 +45,19 @@
         line-height: 1.5;
         min-height: 100svh;
         overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      /* iPhone status bar and safe area support */
+      @supports (padding: max(0px)) {
+        body {
+          padding-left: max(20px, env(safe-area-inset-left));
+          padding-right: max(20px, env(safe-area-inset-right));
+          padding-top: max(20px, env(safe-area-inset-top));
+          padding-bottom: max(20px, env(safe-area-inset-bottom));
+        }
       }
       .dark-mode {
         --bg: #1a1a1a;
@@ -155,6 +171,24 @@
         padding: 10px 14px;
         font-weight: 800;
         cursor: pointer;
+        -webkit-appearance: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        user-select: none;
+      }
+      
+      /* Ensure buttons work properly on iOS */
+      .btn:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+      }
+      
+      /* Prevent text selection on buttons */
+      .btn, .tab, .tag-pill {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
       }
       .btn.secondary {
         background: linear-gradient(45deg, #737d8c, #57606f);
@@ -182,6 +216,16 @@
         display: grid;
         grid-template-columns: 1fr 180px auto auto;
         gap: 8px;
+        align-items: center;
+      }
+      
+      /* Responsive search row */
+      @media (max-width: 768px) {
+        .search-row {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 8px !important;
+        }
       }
       .search-input {
         padding: 10px 12px;
@@ -243,6 +287,26 @@
         padding: 14px;
         margin: 12px 0;
         background: var(--bg);
+        overflow: hidden;
+      }
+      
+      /* Ensure cards work on small screens */
+      @media (max-width: 480px) {
+        .show-card {
+          grid-template-columns: 70px 1fr !important;
+          gap: 12px !important;
+          padding: 12px !important;
+        }
+        
+        .show-poster {
+          width: 70px !important;
+          height: 105px !important;
+        }
+        
+        .poster-placeholder {
+          width: 70px !important;
+          height: 105px !important;
+        }
       }
       .show-poster {
         width: 92px;
@@ -453,25 +517,41 @@
         margin-top: 14px;
       }
 
-      /* Mobile */
+      /* Mobile & iPhone */
       @media (max-width: 768px) {
+        body {
+          padding: 16px !important;
+        }
+        
+        .main-container {
+          padding: 16px !important;
+          border-radius: 16px !important;
+        }
+        
         .search-row {
           display: flex !important;
           flex-direction: column !important;
           gap: 8px !important;
         }
+        
         .search-input {
           width: 100% !important;
+          font-size: 16px !important; /* Prevents zoom on iOS */
         }
+        
         .search-filters {
           display: flex !important;
           gap: 8px !important;
         }
+        
         #genreFilter {
           flex: 1 !important;
+          font-size: 16px !important;
         }
+        
         .search-container .btn {
           flex: 1 !important;
+          min-height: 44px !important; /* iOS touch target */
         }
 
         .show-actions {
@@ -479,6 +559,7 @@
           flex-direction: column !important;
           gap: 8px !important;
         }
+        
         .show-actions .btn {
           display: block !important;
           width: 100% !important;
@@ -488,7 +569,118 @@
           white-space: normal !important;
           overflow: hidden !important;
           text-overflow: ellipsis !important;
-          min-height: 40px !important;
+          min-height: 44px !important; /* iOS touch target */
+        }
+        
+        .show-card {
+          grid-template-columns: 80px 1fr !important;
+          gap: 12px !important;
+          padding: 12px !important;
+        }
+        
+        .show-poster {
+          width: 80px !important;
+          height: 120px !important;
+        }
+        
+        .poster-placeholder {
+          width: 80px !important;
+          height: 120px !important;
+        }
+        
+        .show-title {
+          font-size: 1rem !important;
+        }
+        
+        .show-meta {
+          font-size: 0.8rem !important;
+        }
+        
+        .show-overview {
+          font-size: 0.9rem !important;
+          -webkit-line-clamp: 2 !important;
+        }
+        
+        .rating-container {
+          flex-direction: column !important;
+          align-items: flex-start !important;
+          gap: 8px !important;
+        }
+        
+        .star-rating {
+          gap: 4px !important;
+        }
+        
+        .star-btn {
+          min-width: 44px !important;
+          min-height: 44px !important;
+        }
+        
+        .like-btn, .dislike-btn {
+          min-width: 44px !important;
+          min-height: 44px !important;
+        }
+      }
+      
+      /* iPhone-specific fixes */
+      @media (max-width: 428px) {
+        body {
+          padding: 12px !important;
+        }
+        
+        .main-container {
+          padding: 12px !important;
+          border-radius: 12px !important;
+        }
+        
+        .header {
+          flex-direction: column !important;
+          align-items: flex-start !important;
+          gap: 16px !important;
+        }
+        
+        .title {
+          font-size: 1.8rem !important;
+        }
+        
+        .user-section {
+          width: 100% !important;
+          justify-content: space-between !important;
+        }
+        
+        .tab-container {
+          flex-wrap: wrap !important;
+          gap: 4px !important;
+        }
+        
+        .tab {
+          min-width: calc(50% - 2px) !important;
+          font-size: 0.9rem !important;
+          padding: 10px 8px !important;
+        }
+        
+        .top-search {
+          padding: 10px !important;
+          margin: 8px 0 !important;
+        }
+        
+        .search-row {
+          gap: 6px !important;
+        }
+        
+        .btn {
+          padding: 12px 16px !important;
+          font-size: 0.9rem !important;
+        }
+      }
+      
+      /* iPhone notch support */
+      @supports (padding: max(0px)) {
+        body {
+          padding-left: max(12px, env(safe-area-inset-left)) !important;
+          padding-right: max(12px, env(safe-area-inset-right)) !important;
+          padding-top: max(12px, env(safe-area-inset-top)) !important;
+          padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
         }
       }
 
