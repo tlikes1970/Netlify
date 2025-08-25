@@ -734,6 +734,19 @@
         padding: 12px;
         margin: 14px 0;
       }
+      
+      .feedback-form {
+        margin-top: 12px;
+      }
+      
+      .feedback-form .hidden {
+        display: none;
+      }
+      
+      .feedback-form textarea {
+        flex: 1;
+        min-width: 200px;
+      }
     
       .form-error {
         color: #b00020;
@@ -2994,15 +3007,23 @@
             feedbackCard.innerHTML = `
               <h3>Feedback</h3>
               <p>Tell us what's working and what's not. Be blunt.</p>
-              <div style="display: flex; gap: 8px; flex-wrap: wrap">
-                <input
-                  id="feedbackInput"
-                  class="search-input"
-                  placeholder="Your feedback…"
-                />
-                <button id="feedbackSendBtn" class="btn">Send</button>
-
-              </div>
+              <form name="feedback" method="POST" data-netlify="true" data-netlify-recaptcha="true" netlify-honeypot="bot-field" class="feedback-form">
+                <input type="hidden" name="form-name" value="feedback" />
+                <p class="hidden">
+                  <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+                </p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                  <textarea
+                    name="message"
+                    class="search-input"
+                    placeholder="Your feedback…"
+                    rows="3"
+                    required
+                    style="resize: vertical; min-height: 60px;"
+                  ></textarea>
+                  <button type="submit" class="btn">Send</button>
+                </div>
+              </form>
             `;
             const insertAfter = document.getElementById("personalityForecast") || document.getElementById("quoteBlock") || anchor;
             insertAfter.insertAdjacentElement("afterend", feedbackCard);
@@ -3242,44 +3263,7 @@
         
 
 
-        // --- feedback
-        const feedbackSendBtn = document.getElementById("feedbackSendBtn");
-        if (feedbackSendBtn) {
-          feedbackSendBtn.onclick = async () => {
-            const txt = (
-              document.getElementById("feedbackInput")?.value || ""
-            ).trim();
-            if (!txt)
-              return showNotification?.("Type feedback first.", "warning");
-            
-            try {
-              // Send to centralized backend via Netlify function
-              const response = await fetch('/.netlify/functions/feedback', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  comment: txt,
-                  timestamp: new Date().toISOString(),
-                  user: appData?.settings?.displayName || 'Anonymous',
-                  version: '1.0.0'
-                })
-              });
-              
-              if (response.ok) {
-                showNotification?.("Feedback sent successfully!", "success");
-                const inp = document.getElementById("feedbackInput");
-                if (inp) inp.value = "";
-              } else {
-                showNotification?.("Failed to send feedback. Please try again.", "error");
-              }
-            } catch (error) {
-              console.error('Feedback submission error:', error);
-              showNotification?.("Failed to send feedback. Please try again.", "error");
-            }
-          };
-        }
+        // --- feedback handled by Netlify Forms
 
 
 
