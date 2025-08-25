@@ -940,6 +940,13 @@
 
       <!-- Home -->
       <div id="homeSection" class="tab-section">
+        <!-- Hidden form for Netlify to detect -->
+        <form name="feedback" method="POST" data-netlify="true" style="display: none;">
+          <input type="hidden" name="form-name" value="feedback" />
+          <textarea name="message"></textarea>
+          <button type="submit">Send</button>
+        </form>
+        
         <!-- Content will be inserted by JavaScript: quotes, horoscope, then feedback -->
       </div>
     </header>
