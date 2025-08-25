@@ -3007,7 +3007,8 @@
             feedbackCard.innerHTML = `
               <h3>Feedback</h3>
               <p>Tell us what's working and what's not. Be blunt.</p>
-              <form name="feedback" method="POST" netlify class="feedback-form">
+              <form name="feedback" method="POST" data-netlify="true" class="feedback-form">
+                <input type="hidden" name="form-name" value="feedback" />
                 <div style="display: flex; gap: 8px; flex-wrap: wrap">
                   <textarea
                     name="message"
