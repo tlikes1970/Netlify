@@ -90,15 +90,8 @@
         gap: 12px;
         flex-wrap: wrap;
         border-bottom: 3px solid var(--primary);
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        background: var(--bg);
-        padding: 20px 24px 16px 24px;
-        margin: 0 auto 12px auto;
-        border-radius: 20px 20px 0 0;
-        max-width: 1100px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+        padding-bottom: 16px;
+        margin-bottom: 12px;
       }
       
       .header-left {
@@ -200,27 +193,77 @@
       }
 
             /* Sticky top search */
-      .top-search {
-        background: var(--bg);
+      /* =======================
+         Sticky Elements Styling
+         ======================= */
+
+      /* Sticky Search Bar */
+      .searchbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;                  /* stay above everything else */
+        background: var(--bg);         /* solid background while scrolling */
         border: 2px solid var(--primary);
-        border-radius: 12px;
+        border-radius: 14px;
         padding: 10px;
-        margin: 16px 0 8px 0;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        width: 100%;
-        max-width: 600px;
-        /* Debug: Make it obvious when sticky works */
-        transition: all 0.3s ease;
+        margin: 0 0 10px 0;            /* margin below but no top margin */
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* subtle separation */
       }
-      
-      /* Debug: Show when header becomes sticky */
-      .header:not([style*="position: sticky"]) {
-        background: rgba(255, 0, 0, 0.1) !important;
-      }
+
+      /* Search row layout */
       .search-row {
         display: grid;
         grid-template-columns: 1fr 180px auto auto;
         gap: 8px;
+      }
+
+      @media (max-width: 768px) {
+        .search-row {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .search-row .btn {
+          width: 100%;                 /* full width buttons on mobile */
+        }
+      }
+
+      /* Sticky Tabs Bar */
+      .tabs {
+        position: sticky;
+        top: 76px;                     /* sits below searchbar height */
+        z-index: 9;
+        display: flex;
+        gap: 6px;
+        background: var(--card);
+        border-radius: 12px;
+        padding: 6px;
+        margin: 0 0 12px 0;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      }
+
+      /* Tab Buttons */
+      .tab {
+        flex: 1;
+        border: 0;
+        background: transparent;
+        padding: 10px;
+        border-radius: 10px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .tab.active {
+        background: linear-gradient(45deg, var(--primary), var(--purple));
+        color: #fff;
+      }
+
+      /* Keep search results visually below everything */
+      #searchResults {
+        position: relative;
+        z-index: 5;
+        margin-top: 6px;
       }
       .search-input {
         padding: 10px 12px;
@@ -879,13 +922,14 @@
     <div id="liveRegion" class="sr-only" role="status" aria-live="polite"></div>
 
 
+    <div class="main-container" id="appRoot">
       <header class="header" role="banner">
         <div class="header-left">
           <h1 id="welcomeText" class="title">Flicklet</h1>
           <div class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
           
           <!-- Search Bar Integrated into Header -->
-          <div class="top-search">
+          <div class="searchbar">
             <div class="search-row">
               <label class="sr-only" for="searchInput">Search shows or movies</label>
               <input
@@ -933,13 +977,11 @@
         </div>
       </header>
 
-    <div class="main-container" id="appRoot">
-
 
 
 
       
-      <div class="tab-container">
+      <div class="tabs">
         <button id="homeTab" class="tab active">🏠 <span data-i18n="home">Home</span></button>
         <button id="watchingTab" class="tab">
           ▶️ <span data-i18n="currently_watching">Currently Watching</span>
