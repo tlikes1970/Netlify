@@ -84,10 +84,11 @@
         border-radius: 20px;
         padding: 24px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-        overflow-y: visible;   /* critical for iOS sticky */
-        /* transform: none;    <-- make sure no transforms are on ancestors */
+           /* critical for iOS sticky */
+        /*     <-- make sure no transforms are on ancestors */
         /* contain: none;      <-- avoid paint/size contain on ancestors near sticky */
-      }
+      
+  overflow-y: visible;}
       
       /* 5) Mobile layout: stack tabs into a neat grid without messing sticky */
       @media (max-width: 768px) {
@@ -97,18 +98,27 @@
           border-radius: 16px !important;
           overflow-x: hidden !important;
           max-width: calc(100vw - 20px) !important;
-        }
+        
+  overflow-y: visible;}
         body {
           padding: 10px !important;
           overflow-x: hidden !important;
         }
         .tab-container {
-          display: grid !important;
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+
+          
           grid-template-columns: 1fr 1fr !important;  /* two columns; change to 1fr for single col */
           gap: 8px !important;
-          overflow-x: visible !important;             /* no horizontal scroller on mobile */
+                       /* no horizontal scroller on mobile */
           padding: 12px !important;
-        }
+        
+  }
         .tab {
           width: 100% !important;
           padding: 14px 12px !important;
@@ -121,8 +131,9 @@
         .main-container,
         .page-wrap,
         .content-wrap {
-          overflow-y: visible !important;
-        }
+          
+        
+  overflow-y: visible;}
       }
       
       @media (max-width: 480px) {
@@ -131,14 +142,23 @@
           margin: 8px !important;
           border-radius: 12px !important;
           max-width: calc(100vw - 16px) !important;
-        }
+        
+  overflow-y: visible;}
         body {
           padding: 8px !important;
         }
         .tab-container {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+
           padding: 8px 6px !important;
           gap: 4px !important;
-        }
+        
+  }
         .tab {
           padding: 12px 8px !important;
           font-size: 0.8rem !important;
@@ -190,17 +210,25 @@
       /* 4) Tabs: desktop = single row with horizontal scroll, mobile = stacked grid.
             Key point: don't add overflow-y here; only overflow-x on desktop */
       .tab-container {
-        display: flex;
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+
+        
         gap: 8px;
         flex-wrap: nowrap;
-        overflow-x: auto;      /* desktop: scroll sideways if too many */
-        overflow-y: visible;   /* never clip the Y-axis */
+              /* desktop: scroll sideways if too many */
+           /* never clip the Y-axis */
         -webkit-overflow-scrolling: touch; /* smooth inertial scroll */
         background: var(--card);
         padding: 8px;
         border-radius: 12px;
         margin: 14px 0;
-      }
+      
+  }
       .tab {
         flex: 0 0 auto;        /* keep them inline on desktop */
         border: 0;
@@ -263,11 +291,16 @@
 
             /* 3) iOS-friendly sticky bar */
       .top-search {
-        position: -webkit-sticky;  /* Safari quirk */
-        position: sticky;
-        top: env(safe-area-inset-top, 0);
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  top: env(safe-area-inset-top, 0);
+
+          /* Safari quirk */
+        
+        
         z-index: 100;
-        margin: 0;                 /* remove margins on sticky node */
+                         /* remove margins on sticky node */
         background: var(--bg);
         border: 2px solid var(--primary);
         border-radius: 14px;
@@ -633,7 +666,8 @@
         }
         .main-container {
           padding: 16px;
-        }
+        
+  overflow-y: visible;}
         .search-row {
           display: flex !important;
           flex-direction: column !important;
@@ -717,7 +751,8 @@
         }
         .main-container {
           padding: 12px;
-        }
+        
+  overflow-y: visible;}
         .search-row {
           gap: 6px !important;
         }
@@ -1037,7 +1072,23 @@
         font-size: 1.1rem;
         color: #333;
       }
-      </style>
+      
+@media (max-width: 768px){
+  .tab-container{
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+  }
+  .tab{
+    width: 100% !important;
+    white-space: normal;
+    justify-content: center;
+  }
+}
+
+</style>
   </head>
 
   <body>
@@ -1080,7 +1131,8 @@
       <!-- Optional gap above/below the sticky bar to replace removed margin -->
       <div class="top-search-spacer" aria-hidden="true"></div>
       <!-- Sticky Top Search -->
-      <div class="top-search">
+      <div class=\"top-search-spacer\" aria-hidden=\"true\"></div>
+<div class="top-search">
         <div class="search-row">
           <input
             id="searchInput"
