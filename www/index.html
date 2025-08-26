@@ -28,9 +28,10 @@
       * {
         box-sizing: border-box;
       }
-      html,
-      body {
-        height: 100%;
+      /* 1) Make the viewport the scroller. Do NOT force 100% heights unless needed. */
+      html, body {
+        height: auto;
+        overflow-y: auto;      /* let the viewport scroll */
       }
       body {
         font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
@@ -43,7 +44,7 @@
         min-height: 100svh;
         overflow-x: hidden;
         /* Ensure sticky positioning works */
-        overflow-y: visible;
+        overflow-y: auto;
 
       }
       .dark-mode {
@@ -75,6 +76,7 @@
         ) !important;
       }
 
+      /* 2) Ensure no ancestor of the sticky uses vertical overflow or transforms */
       .main-container {
         max-width: 1100px;
         margin: 0 auto;
@@ -82,12 +84,12 @@
         border-radius: 20px;
         padding: 24px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-        /* Ensure sticky positioning works */
-        position: relative;
-        overflow: visible;
+        overflow-y: visible;   /* critical for iOS sticky */
+        /* transform: none;    <-- make sure no transforms are on ancestors */
+        /* contain: none;      <-- avoid paint/size contain on ancestors near sticky */
       }
       
-      /* Mobile container constraints */
+      /* 5) Mobile layout: stack tabs into a neat grid without messing sticky */
       @media (max-width: 768px) {
         .main-container {
           padding: 16px !important;
@@ -101,19 +103,25 @@
           overflow-x: hidden !important;
         }
         .tab-container {
-          max-width: 100% !important;
-          overflow-x: auto !important;
-          -webkit-overflow-scrolling: touch !important;
+          display: grid !important;
+          grid-template-columns: 1fr 1fr !important;  /* two columns; change to 1fr for single col */
+          gap: 8px !important;
+          overflow-x: visible !important;             /* no horizontal scroller on mobile */
           padding: 12px !important;
-          gap: 6px !important;
         }
         .tab {
+          width: 100% !important;
           padding: 14px 12px !important;
           font-size: 0.85rem !important;
           min-height: 44px !important;
-          flex-shrink: 0 !important;
-          white-space: nowrap !important;
-          min-width: fit-content !important;
+          justify-content: center !important;         /* if they're buttons */
+        }
+
+        /* Safety: nuke any accidental Y overflow on common wrappers */
+        .main-container,
+        .page-wrap,
+        .content-wrap {
+          overflow-y: visible !important;
         }
       }
       
@@ -179,22 +187,29 @@
         font-weight: 700;
       }
 
+      /* 4) Tabs: desktop = single row with horizontal scroll, mobile = stacked grid.
+            Key point: don't add overflow-y here; only overflow-x on desktop */
       .tab-container {
         display: flex;
-        gap: 6px;
+        gap: 8px;
+        flex-wrap: nowrap;
+        overflow-x: auto;      /* desktop: scroll sideways if too many */
+        overflow-y: visible;   /* never clip the Y-axis */
+        -webkit-overflow-scrolling: touch; /* smooth inertial scroll */
         background: var(--card);
         padding: 8px;
         border-radius: 12px;
         margin: 14px 0;
       }
       .tab {
-        flex: 1;
+        flex: 0 0 auto;        /* keep them inline on desktop */
         border: 0;
         background: transparent;
         padding: 12px 10px;
         border-radius: 10px;
         font-weight: 800;
         cursor: pointer;
+        white-space: nowrap;
       }
       .tab.active {
         background: linear-gradient(45deg, var(--primary), var(--purple));
@@ -246,18 +261,23 @@
         background: linear-gradient(45deg, #ff4d4f, #ff2d55);
       }
 
-            /* Sticky top search */
-      /* Sticky top search */
+            /* 3) iOS-friendly sticky bar */
       .top-search {
+        position: -webkit-sticky;  /* Safari quirk */
         position: sticky;
-        top: 0;
-        z-index: 50;
+        top: env(safe-area-inset-top, 0);
+        z-index: 100;
+        margin: 0;                 /* remove margins on sticky node */
         background: var(--bg);
         border: 2px solid var(--primary);
         border-radius: 14px;
         padding: 12px;
-        margin: 12px 0;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 1px 0 rgba(0,0,0,.08);
+      }
+      
+      /* Optional gap above/below the sticky bar to replace removed margin */
+      .top-search-spacer {
+        height: 12px;
       }
       .search-row {
         display: grid;
@@ -1057,6 +1077,8 @@
         </div>
       </header>
 
+      <!-- Optional gap above/below the sticky bar to replace removed margin -->
+      <div class="top-search-spacer" aria-hidden="true"></div>
       <!-- Sticky Top Search -->
       <div class="top-search">
         <div class="search-row">
