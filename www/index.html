@@ -192,19 +192,17 @@
 
             /* Sticky top search */
       .top-search {
-        position: fixed !important;
-        top: 80px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
+        position: sticky !important;
+        top: 0 !important;
         z-index: 1000 !important;
         background: var(--bg) !important;
         border: 3px solid var(--primary);
         border-radius: 14px;
         padding: 12px;
-        margin: 12px 0;
+        margin: 12px auto;
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-        width: calc(100% - 48px) !important;
-        max-width: 1052px !important;
+        max-width: 1100px;
+        width: calc(100% - 48px);
       }
       .search-row {
         display: grid;
@@ -866,6 +864,32 @@
   <body>
     <a href="#main" class="skip-link">Skip to main content</a>
     <div id="liveRegion" class="sr-only" role="status" aria-live="polite"></div>
+    <!-- Sticky Top Search - Outside main container for proper sticky behavior -->
+    <div class="top-search">
+      <div class="search-row">
+        <label class="sr-only" for="searchInput">Search shows or movies</label>
+        <input
+          id="searchInput"
+          class="search-input"
+          aria-label="Search shows or movies"
+          placeholder=""
+          data-i18n="search_placeholder"
+        />
+        <select id="genreFilter">
+          <option value="" data-i18n="all_genres">All Genres</option>
+        </select>
+        <button id="searchBtn" class="btn">🔍 <span data-i18n="search">Search</span></button>
+        <button id="clearSearchBtn" class="btn secondary">
+          ✖️ <span data-i18n="clear">Clear</span>
+        </button>
+      </div>
+      <div
+        id="tagFilterRow"
+        class="tag-filters"
+        aria-label="Tag filters"
+      ></div>
+    </div>
+
     <div class="main-container" id="appRoot">
       <header class="header" role="banner">
         <div>
@@ -897,35 +921,9 @@
       </div>
     </header>
 
-      <!-- Sticky Top Search -->
-      <div class="top-search">
 
-        <div class="search-row">
-          <label class="sr-only" for="searchInput">Search shows or movies</label>
-          <input
-            id="searchInput"
-            class="search-input"
-            aria-label="Search shows or movies"
-            placeholder=""
-            data-i18n="search_placeholder"
-          />
-          <select id="genreFilter">
-            <option value="" data-i18n="all_genres">All Genres</option>
-          </select>
-          <button id="searchBtn" class="btn">🔍 <span data-i18n="search">Search</span></button>
-          <button id="clearSearchBtn" class="btn secondary">
-            ✖️ <span data-i18n="clear">Clear</span>
-          </button>
-        </div>
-        <div
-          id="tagFilterRow"
-          class="tag-filters"
-          aria-label="Tag filters"
-        ></div>
-      </div>
 
-      <!-- Spacer to prevent content from hiding behind fixed search bar -->
-      <div style="height: 120px;"></div>
+
       
       <div class="tab-container">
         <button id="homeTab" class="tab active">🏠 <span data-i18n="home">Home</span></button>
