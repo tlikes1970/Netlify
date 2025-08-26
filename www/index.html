@@ -42,6 +42,8 @@
         line-height: 1.5;
         min-height: 100svh;
         overflow-x: hidden;
+        /* Ensure sticky positioning works */
+        overflow-y: visible;
 
       }
       .dark-mode {
@@ -80,7 +82,9 @@
         border-radius: 20px;
         padding: 24px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-
+        /* Ensure sticky positioning works properly */
+        position: relative;
+        overflow: visible;
       }
 
       .header {
@@ -188,15 +192,18 @@
 
             /* Sticky top search */
       .top-search {
-        position: sticky;
-        top: 0;
-        z-index: 50;
-        background: var(--bg);
-        border: 2px solid var(--primary);
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 1000 !important;
+        background: var(--bg) !important;
+        border: 3px solid var(--primary);
         border-radius: 14px;
         padding: 12px;
         margin: 12px 0;
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+        /* Ensure sticky positioning works */
+        transform: translateZ(0);
+        will-change: transform;
       }
       .search-row {
         display: grid;
@@ -946,7 +953,6 @@
       <div id="homeSection" class="tab-section">
         <!-- Content will be inserted by JavaScript: quotes, horoscope, then feedback -->
       </div>
-    </header>
 
       <main id="main" role="main">
 
