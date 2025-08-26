@@ -95,6 +95,18 @@
         border-bottom: 3px solid var(--primary);
         padding-bottom: 16px;
         margin-bottom: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: var(--bg);
+        padding: 20px 24px 16px 24px;
+        margin: -24px -24px 12px -24px;
+        border-radius: 20px 20px 0 0;
+      }
+      
+      .header-left {
+        flex: 1;
+        max-width: 600px;
       }
       .title {
         margin: 0;
@@ -192,10 +204,7 @@
 
             /* Sticky top search */
       .top-search {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 1000 !important;
-        background: var(--bg) !important;
+        background: var(--bg);
         border: 2px solid var(--primary);
         border-radius: 12px;
         padding: 10px;
@@ -868,7 +877,7 @@
 
     <div class="main-container" id="appRoot">
       <header class="header" role="banner">
-        <div>
+        <div class="header-left">
           <h1 id="welcomeText" class="title">Flicklet</h1>
           <div class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
           
@@ -1237,7 +1246,7 @@
       const API_BASE = DEV
         ? "https://api.themoviedb.org/3"
         : "/.netlify/functions/tmdb";
-      const TMDB_KEY = "";
+      const TMDB_KEY = "b7247bb415b50f25b5e35e2566430b96";
 
       const appData = {
         tv: { watching: [], wishlist: [], watched: [] },
