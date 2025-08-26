@@ -28,10 +28,9 @@
       * {
         box-sizing: border-box;
       }
-      /* 1) Make the viewport the scroller. Do NOT force 100% heights unless needed. */
-      html, body {
-        height: auto;
-        overflow-y: auto;      /* let the viewport scroll */
+      html,
+      body {
+        height: 100%;
       }
       body {
         font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
@@ -44,7 +43,7 @@
         min-height: 100svh;
         overflow-x: hidden;
         /* Ensure sticky positioning works */
-        overflow-y: auto;
+        overflow-y: visible;
 
       }
       .dark-mode {
@@ -76,7 +75,6 @@
         ) !important;
       }
 
-      /* 2) Ensure no ancestor of the sticky uses vertical overflow or transforms */
       .main-container {
         max-width: 1100px;
         margin: 0 auto;
@@ -84,86 +82,6 @@
         border-radius: 20px;
         padding: 24px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-           /* critical for iOS sticky */
-        /*     <-- make sure no transforms are on ancestors */
-        /* contain: none;      <-- avoid paint/size contain on ancestors near sticky */
-      
-  overflow-y: visible;}
-      
-      /* 5) Mobile layout: stack tabs into a neat grid without messing sticky */
-      @media (max-width: 768px) {
-        .main-container {
-          padding: 16px !important;
-          margin: 10px !important;
-          border-radius: 16px !important;
-          overflow-x: hidden !important;
-          max-width: calc(100vw - 20px) !important;
-        
-  overflow-y: visible;}
-        body {
-          padding: 10px !important;
-          overflow-x: hidden !important;
-        }
-        .tab-container {
-  display: flex;
-  gap: 8px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: visible;
-  -webkit-overflow-scrolling: touch;
-
-          
-          grid-template-columns: 1fr 1fr !important;  /* two columns; change to 1fr for single col */
-          gap: 8px !important;
-                       /* no horizontal scroller on mobile */
-          padding: 12px !important;
-        
-  }
-        .tab {
-          width: 100% !important;
-          padding: 14px 12px !important;
-          font-size: 0.85rem !important;
-          min-height: 44px !important;
-          justify-content: center !important;         /* if they're buttons */
-        }
-
-        /* Safety: nuke any accidental Y overflow on common wrappers */
-        .main-container,
-        .page-wrap,
-        .content-wrap {
-          
-        
-  overflow-y: visible;}
-      }
-      
-      @media (max-width: 480px) {
-        .main-container {
-          padding: 12px !important;
-          margin: 8px !important;
-          border-radius: 12px !important;
-          max-width: calc(100vw - 16px) !important;
-        
-  overflow-y: visible;}
-        body {
-          padding: 8px !important;
-        }
-        .tab-container {
-  display: flex;
-  gap: 8px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: visible;
-  -webkit-overflow-scrolling: touch;
-
-          padding: 8px 6px !important;
-          gap: 4px !important;
-        
-  }
-        .tab {
-          padding: 12px 8px !important;
-          font-size: 0.8rem !important;
-          min-height: 40px !important;
-        }
       }
 
       .header {
@@ -207,37 +125,22 @@
         font-weight: 700;
       }
 
-      /* 4) Tabs: desktop = single row with horizontal scroll, mobile = stacked grid.
-            Key point: don't add overflow-y here; only overflow-x on desktop */
       .tab-container {
-  display: flex;
-  gap: 8px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: visible;
-  -webkit-overflow-scrolling: touch;
-
-        
-        gap: 8px;
-        flex-wrap: nowrap;
-              /* desktop: scroll sideways if too many */
-           /* never clip the Y-axis */
-        -webkit-overflow-scrolling: touch; /* smooth inertial scroll */
+        display: flex;
+        gap: 6px;
         background: var(--card);
         padding: 8px;
         border-radius: 12px;
         margin: 14px 0;
-      
-  }
+      }
       .tab {
-        flex: 0 0 auto;        /* keep them inline on desktop */
+        flex: 1;
         border: 0;
         background: transparent;
         padding: 12px 10px;
         border-radius: 10px;
         font-weight: 800;
         cursor: pointer;
-        white-space: nowrap;
       }
       .tab.active {
         background: linear-gradient(45deg, var(--primary), var(--purple));
@@ -289,28 +192,18 @@
         background: linear-gradient(45deg, #ff4d4f, #ff2d55);
       }
 
-            /* 3) iOS-friendly sticky bar */
+            /* Sticky top search */
+      /* Sticky top search */
       .top-search {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 0;
-  top: env(safe-area-inset-top, 0);
-
-          /* Safari quirk */
-        
-        
-        z-index: 100;
-                         /* remove margins on sticky node */
+        position: sticky;
+        top: 0;
+        z-index: 50;
         background: var(--bg);
         border: 2px solid var(--primary);
         border-radius: 14px;
         padding: 12px;
-        box-shadow: 0 1px 0 rgba(0,0,0,.08);
-      }
-      
-      /* Optional gap above/below the sticky bar to replace removed margin */
-      .top-search-spacer {
-        height: 12px;
+        margin: 12px 0;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
       }
       .search-row {
         display: grid;
@@ -326,22 +219,36 @@
           flex-direction: column !important;
           gap: 8px !important;
         }
-        .search-input {
-          width: 100% !important;
-        }
-        .search-filters {
-          display: flex !important;
-          gap: 8px !important;
-        }
-        #genreFilter {
-          flex: 1 !important;
-        }
-        .search-container .btn {
-          flex: 1 !important;
-        }
       }
-      
-
+      .tab-container {
+        display: flex;
+        gap: 6px;
+        background: var(--card);
+        padding: 8px;
+        border-radius: 12px;
+        margin: 14px 0;
+      }
+      .tab {
+        flex: 1;
+        border: 0;
+        background: transparent;
+        padding: 12px 10px;
+        border-radius: 10px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .tab.active {
+        background: linear-gradient(45deg, var(--primary), var(--purple));
+        color: #fff;
+      }
+      .tab-badge {
+        background: #fff;
+        color: var(--primary);
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 12px;
+        margin-left: 6px;
+      }
 
       .search-input {
         padding: 10px 12px;
@@ -357,35 +264,16 @@
         margin-top: 8px;
       }
       .tag-pill {
-        padding: 8px 12px;
+        padding: 6px 10px;
         border-radius: 999px;
         border: 2px solid var(--border);
         background: var(--card);
         cursor: pointer;
         font-weight: 700;
-        transition: all 0.2s ease;
-        position: relative;
-        overflow: hidden;
       }
-      
-      .tag-pill:hover {
-        background: var(--primary);
-        color: #fff;
-        border-color: var(--primary);
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-      }
-      
-      .tag-pill:active {
-        transform: translateY(0);
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-      }
-      
       .tag-pill.active {
         border-color: var(--primary);
         color: var(--primary);
-        background: rgba(255, 107, 107, 0.1);
-        box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
       }
 
       .stats {
@@ -666,8 +554,7 @@
         }
         .main-container {
           padding: 16px;
-        
-  overflow-y: visible;}
+        }
         .search-row {
           display: flex !important;
           flex-direction: column !important;
@@ -751,8 +638,7 @@
         }
         .main-container {
           padding: 12px;
-        
-  overflow-y: visible;}
+        }
         .search-row {
           gap: 6px !important;
         }
@@ -1072,23 +958,7 @@
         font-size: 1.1rem;
         color: #333;
       }
-      
-@media (max-width: 768px){
-  .tab-container{
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px !important;
-    overflow-x: visible !important;
-    overflow-y: visible !important;
-  }
-  .tab{
-    width: 100% !important;
-    white-space: normal;
-    justify-content: center;
-  }
-}
-
-</style>
+      </style>
   </head>
 
   <body>
@@ -1128,11 +998,8 @@
         </div>
       </header>
 
-      <!-- Optional gap above/below the sticky bar to replace removed margin -->
-      <div class="top-search-spacer" aria-hidden="true"></div>
       <!-- Sticky Top Search -->
-      <div class=\"top-search-spacer\" aria-hidden=\"true\"></div>
-<div class="top-search">
+      <div class="top-search">
         <div class="search-row">
           <input
             id="searchInput"
@@ -1186,7 +1053,26 @@
           <div class="stat" id="bingeMeter"></div>
         </div>
 
-
+        <!-- Feedback / Mardi -->
+        <div class="feedback-card">
+          <h3>Feedback</h3>
+          <p>Tell us what's working and what's not. Be blunt.</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap">
+            <input
+              id="feedbackInput"
+              class="search-input"
+              placeholder="Your feedback…"
+            />
+            <button id="feedbackSendBtn" class="btn">Send</button>
+            <button
+              id="mardiOnBtn"
+              class="btn secondary"
+              title="Toggle Mardi Gras theme"
+            >
+              🎭 Mardi Gras
+            </button>
+          </div>
+        </div>
       </div>
 
       <main id="main" role="main">
@@ -3315,7 +3201,35 @@
         
         
         
-        // --- Search bar is now handled by CSS sticky positioning
+        // --- SEARCH BAR VISIBILITY ENFORCEMENT
+        (function() {
+          const searchBar = document.querySelector(".top-search");
+          if (searchBar) {
+            // Ensure search bar is always visible
+            const ensureVisibility = () => {
+              if (searchBar.style.display === "none") {
+                searchBar.style.display = "block";
+                console.log("🔒 Search bar was hidden, restored visibility");
+              }
+              if (searchBar.style.visibility === "hidden") {
+                searchBar.style.visibility = "visible";
+                console.log("🔒 Search bar was invisible, restored visibility");
+              }
+              if (searchBar.style.opacity === "0") {
+                searchBar.style.opacity = "1";
+                console.log("🔒 Search bar was transparent, restored opacity");
+              }
+            };
+            
+            // Check every 100ms
+            setInterval(ensureVisibility, 100);
+            
+            // Also check on scroll
+            window.addEventListener('scroll', ensureVisibility);
+            
+            console.log("🔒 Search bar visibility enforcement active");
+          }
+        })();
         
         // --- small util
         const bind = (id, fn) => {
