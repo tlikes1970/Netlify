@@ -192,8 +192,10 @@
 
             /* Sticky top search */
       .top-search {
-        position: sticky !important;
+        position: fixed !important;
         top: 0 !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
         z-index: 1000 !important;
         background: var(--bg) !important;
         border: 3px solid var(--primary);
@@ -201,9 +203,8 @@
         padding: 12px;
         margin: 12px 0;
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-        /* Ensure sticky positioning works */
-        transform: translateZ(0);
-        will-change: transform;
+        width: calc(100% - 48px) !important;
+        max-width: 1052px !important;
       }
       .search-row {
         display: grid;
@@ -923,6 +924,9 @@
         ></div>
       </div>
 
+      <!-- Spacer to prevent content from hiding behind fixed search bar -->
+      <div style="height: 80px;"></div>
+      
       <div class="tab-container">
         <button id="homeTab" class="tab active">🏠 <span data-i18n="home">Home</span></button>
         <button id="watchingTab" class="tab">
@@ -3079,6 +3083,36 @@
 
         
         
+        
+        // --- SEARCH BAR VISIBILITY ENFORCEMENT
+        (function() {
+          const searchBar = document.querySelector(".top-search");
+          if (searchBar) {
+            // Ensure search bar is always visible
+            const ensureVisibility = () => {
+              if (searchBar.style.display === "none") {
+                searchBar.style.display = "block";
+                console.log("🔒 Search bar was hidden, restored visibility");
+              }
+              if (searchBar.style.visibility === "hidden") {
+                searchBar.style.visibility = "visible";
+                console.log("🔒 Search bar was invisible, restored visibility");
+              }
+              if (searchBar.style.opacity === "0") {
+                searchBar.style.opacity = "1";
+                console.log("🔒 Search bar was transparent, restored opacity");
+              }
+            };
+            
+            // Check every 100ms
+            setInterval(ensureVisibility, 100);
+            
+            // Also check on scroll
+            window.addEventListener('scroll', ensureVisibility);
+            
+            console.log("🔒 Search bar visibility enforcement active");
+          }
+        })();
         
         // --- small util
         const bind = (id, fn) => {
