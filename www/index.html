@@ -82,6 +82,9 @@
         border-radius: 20px;
         padding: 24px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+        /* Ensure sticky positioning works */
+        position: relative;
+        overflow: visible;
       }
       
       /* Mobile container constraints */
@@ -98,19 +101,19 @@
           overflow-x: hidden !important;
         }
         .tab-container {
-          flex-direction: column !important;
           max-width: 100% !important;
-          overflow-x: visible !important;
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch !important;
           padding: 12px !important;
           gap: 6px !important;
         }
         .tab {
-          width: 100% !important;
           padding: 14px 12px !important;
           font-size: 0.85rem !important;
           min-height: 44px !important;
-          text-align: center !important;
-          white-space: normal !important;
+          flex-shrink: 0 !important;
+          white-space: nowrap !important;
+          min-width: fit-content !important;
         }
       }
       
@@ -125,16 +128,13 @@
           padding: 8px !important;
         }
         .tab-container {
-          flex-direction: column !important;
           padding: 8px 6px !important;
           gap: 4px !important;
         }
         .tab {
-          width: 100% !important;
           padding: 12px 8px !important;
           font-size: 0.8rem !important;
           min-height: 40px !important;
-          text-align: center !important;
         }
       }
 
