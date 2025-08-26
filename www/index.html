@@ -90,9 +90,26 @@
           padding: 16px !important;
           margin: 10px !important;
           border-radius: 16px !important;
+          overflow-x: hidden !important;
+          max-width: calc(100vw - 20px) !important;
         }
         body {
           padding: 10px !important;
+          overflow-x: hidden !important;
+        }
+        .tab-container {
+          max-width: 100% !important;
+          flex-direction: column !important;
+          padding: 12px !important;
+          gap: 8px !important;
+        }
+        .tab {
+          padding: 16px 14px !important;
+          font-size: 0.9rem !important;
+          min-height: 48px !important;
+          width: 100% !important;
+          text-align: center !important;
+          justify-content: center !important;
         }
       }
       
@@ -101,9 +118,19 @@
           padding: 12px !important;
           margin: 8px !important;
           border-radius: 12px !important;
+          max-width: calc(100vw - 16px) !important;
         }
         body {
           padding: 8px !important;
+        }
+        .tab-container {
+          padding: 8px !important;
+          gap: 6px !important;
+        }
+        .tab {
+          padding: 14px 12px !important;
+          font-size: 0.85rem !important;
+          min-height: 44px !important;
         }
       }
 
@@ -257,42 +284,7 @@
         }
       }
       
-      /* Mobile tab improvements */
-      @media (max-width: 768px) {
-        .tab-container {
-          padding: 12px !important;
-          gap: 6px !important;
-          margin: 0 !important;
-          max-width: 100% !important;
-          overflow-x: auto !important;
-          -webkit-overflow-scrolling: touch !important;
-        }
-        .tab {
-          padding: 14px 12px !important;
-          font-size: 0.85rem !important;
-          min-height: 44px !important;
-          flex-shrink: 0 !important;
-          white-space: nowrap !important;
-          min-width: fit-content !important;
-        }
-        .tab-badge {
-          font-size: 10px !important;
-          padding: 2px 5px !important;
-        }
-      }
-      
-      /* Extra small mobile fixes */
-      @media (max-width: 480px) {
-        .tab-container {
-          padding: 8px 6px !important;
-          gap: 4px !important;
-        }
-        .tab {
-          padding: 12px 8px !important;
-          font-size: 0.8rem !important;
-          min-height: 40px !important;
-        }
-      }
+
 
       .search-input {
         padding: 10px 12px;
