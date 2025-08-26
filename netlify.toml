@@ -1,5 +1,5 @@
 [build]
-publish = "."
+publish = "www"
 functions = "netlify/functions"
 command = "echo 'Static site - no build required'"
 

@@ -54,17 +54,18 @@
           #34495e 100%
         ) !important;
       }
-      .mardi .header {
+      /* Mardi Gras colors are now permanent - no more toggle needed */
+      .header {
         border-color: var(--mardi3) !important;
       }
-      .mardi .btn {
+      .btn {
         background: linear-gradient(
           45deg,
           var(--mardi1),
           var(--mardi3)
         ) !important;
       }
-      body.mardi {
+      body {
         background: linear-gradient(
           135deg,
           var(--mardi1),
@@ -184,17 +185,19 @@
         background: linear-gradient(45deg, #ff4d4f, #ff2d55);
       }
 
-      /* Sticky top search */
+      /* Sticky top search - SIMPLIFIED */
       .top-search {
         position: sticky;
         top: 0;
-        z-index: 50;
-        background: var(--bg);
-        border: 2px solid var(--primary);
-        border-radius: 14px;
-        padding: 12px;
-        margin: 12px 0;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+        z-index: 1000;
+        background: white;
+        border: 3px solid red;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 10px;
+        display: block;
+        visibility: visible;
+        opacity: 1;
       }
       .search-row {
         display: grid;
@@ -866,11 +869,11 @@
         <div class="user-section">
           <button id="darkModeToggle" class="btn" title="Theme" data-i18n="go_dark">🌙 Go Dark</button>
           <button
-            id="mardiToggle"
+            id="quickAddBtn"
             class="btn secondary"
-            title="Mardi Gras mode"
+            title="Quick Add Show"
           >
-            🎭 Mardi
+            ➕ Quick Add
           </button>
           <button
             id="accountBtn"
@@ -886,8 +889,9 @@
         </div>
       </div>
 
-      <!-- Sticky Top Search -->
-      <div class="top-search">
+            <!-- Sticky Top Search - SIMPLIFIED -->
+      <div class="top-search" style="position: sticky; top: 0; z-index: 1000; background: white; border: 3px solid red; padding: 15px; margin: 15px 0; border-radius: 10px;">
+        <div style="color: red; font-weight: bold; font-size: 18px; text-align: center; margin-bottom: 10px;">🔍 SEARCH BAR - SIMPLIFIED VERSION</div>
         <div class="search-row">
           <label class="sr-only" for="searchInput">Search shows or movies</label>
           <input
@@ -2582,17 +2586,21 @@
 
       /* Tabs + list rendering + search */
       function switchToTab(tab) {
+        console.log("🔍 switchToTab() called with tab:", tab);
         currentActiveTab = tab;
 
-        // Hide/clear search so tab change is obvious
+        // Only hide search results, don't clear the search input
+        // This allows users to keep their search term when switching tabs
         try {
           const results = document.getElementById("searchResults");
           if (results) {
+            console.log("🔍 Hiding search results for tab switch");
             results.style.display = "none";
             results.innerHTML = "";
           }
-          const qEl = document.getElementById("searchInput");
-          if (qEl) qEl.value = "";
+          // Don't clear the search input - let users keep their search term
+          // const qEl = document.getElementById("searchInput");
+          // if (qEl) qEl.value = "";
         } catch {}
 
         document
@@ -2731,6 +2739,113 @@
       }
       // Cache search results so we don't inline JSON into onclick
       const searchItemCache = new Map();
+      
+      // AGGRESSIVE SEARCH BAR PROTECTION - Prevent it from disappearing
+      (function() {
+        const searchInput = document.getElementById("searchInput");
+        const topSearch = document.querySelector(".top-search");
+        
+        if (searchInput && topSearch) {
+          console.log("🔒 Setting up aggressive search bar protection");
+          
+          // Store the original search value
+          let originalSearchValue = "";
+          
+          // Function to restore search if it gets cleared
+          const protectSearch = () => {
+            if (searchInput.value !== originalSearchValue) {
+              console.log("🔒 Search input was modified, restoring value:", originalSearchValue);
+              searchInput.value = originalSearchValue;
+            }
+            
+            // Ensure search bar is always visible
+            if (topSearch.style.display === "none") {
+              console.log("🔒 Search bar was hidden, making it visible");
+              topSearch.style.display = "";
+            }
+            
+            // Ensure search input is always visible
+            if (searchInput.style.display === "none") {
+              console.log("🔒 Search input was hidden, making it visible");
+              searchInput.style.display = "";
+            }
+          };
+          
+          // Update stored value when user types
+          searchInput.addEventListener("input", () => {
+            originalSearchValue = searchInput.value;
+          });
+          
+          // Protect search bar every 50ms
+          setInterval(protectSearch, 50);
+          
+          // Also protect on any DOM changes
+          const observer = new MutationObserver(protectSearch);
+          observer.observe(document.body, { 
+            childList: true, 
+            subtree: true, 
+            attributes: true,
+            attributeFilter: ['style', 'value']
+          });
+          
+          console.log("🔒 Search bar protection active - it cannot be hidden or cleared");
+        }
+      })();
+      
+      // CONTINUOUS MONITORING: Check search bar every 100ms
+      (function() {
+        console.log("🔍 Setting up continuous search bar monitoring...");
+        
+        setInterval(() => {
+          const searchBar = document.querySelector(".top-search");
+          const searchInput = document.getElementById("searchInput");
+          
+          if (!searchBar) {
+            console.log("🚨 ALERT: Search bar (.top-search) is GONE from DOM!");
+            return;
+          }
+          
+          if (!searchInput) {
+            console.log("🚨 ALERT: Search input (#searchInput) is GONE from DOM!");
+            return;
+          }
+          
+          const searchBarStyle = window.getComputedStyle(searchBar);
+          const inputStyle = window.getComputedStyle(searchInput);
+          
+          if (searchBarStyle.display === "none") {
+            console.log("🚨 ALERT: Search bar has display: none!");
+          }
+          
+          if (inputStyle.display === "none") {
+            console.log("🚨 ALERT: Search input has display: none!");
+          }
+          
+          if (searchBarStyle.visibility === "hidden") {
+            console.log("🚨 ALERT: Search bar has visibility: hidden!");
+          }
+          
+          if (inputStyle.visibility === "hidden") {
+            console.log("🚨 ALERT: Search input has visibility: hidden!");
+          }
+          
+          if (searchBarStyle.opacity === "0") {
+            console.log("🚨 ALERT: Search bar has opacity: 0!");
+          }
+          
+          if (inputStyle.opacity === "0") {
+            console.log("🚨 ALERT: Search input has opacity: 0!");
+          }
+          
+          // Check if search bar is outside viewport
+          const rect = searchBar.getBoundingClientRect();
+          if (rect.top < -100 || rect.bottom < 0) {
+            console.log("🚨 ALERT: Search bar is outside viewport! Top:", rect.top, "Bottom:", rect.bottom);
+          }
+        }, 100);
+        
+        console.log("🔍 Continuous monitoring active - checking every 100ms");
+      })();
 
       function cacheSearchItem(it) {
         if (it && it.id != null) searchItemCache.set(Number(it.id), it);
@@ -2796,9 +2911,16 @@
       }
 
       function clearSearch() {
+        console.log("🔒 clearSearch() called - PROTECTED: only clearing results, not input");
         const qEl = document.getElementById("searchInput");
         const out = document.getElementById("searchResults");
-        if (qEl) qEl.value = "";
+        
+        // PROTECTED: Don't clear the search input value
+        // if (qEl) {
+        //   console.log("🔍 Clearing search input value from:", qEl.value);
+        //   qEl.value = "";
+        // }
+        
         if (out) {
           out.innerHTML = "";
           out.style.display = "none";

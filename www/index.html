@@ -42,6 +42,7 @@
         line-height: 1.5;
         min-height: 100svh;
         overflow-x: hidden;
+
       }
       .dark-mode {
         --bg: #1a1a1a;
@@ -79,6 +80,7 @@
         border-radius: 20px;
         padding: 24px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+
       }
 
       .header {
@@ -184,7 +186,7 @@
         background: linear-gradient(45deg, #ff4d4f, #ff2d55);
       }
 
-      /* Sticky top search */
+            /* Sticky top search */
       .top-search {
         position: sticky;
         top: 0;
@@ -885,9 +887,11 @@
           </select>
         </div>
       </div>
+    </header>
 
       <!-- Sticky Top Search -->
       <div class="top-search">
+
         <div class="search-row">
           <label class="sr-only" for="searchInput">Search shows or movies</label>
           <input
@@ -1764,6 +1768,14 @@
         }
         throw new Error(`TMDB request failed: ${r.status}`);
       }
+      
+
+
+
+        
+
+        
+
 
       async function fetchShowData(query, page = 1, genre = "") {
         let endpoint, params;
@@ -3007,11 +3019,8 @@
             feedbackCard.innerHTML = `
               <h3>Feedback</h3>
               <p>Tell us what's working and what's not. Be blunt.</p>
-              <form name="feedback" method="POST" data-netlify="true" data-netlify-recaptcha="true" netlify-honeypot="bot-field" class="feedback-form">
+              <form name="feedback" method="POST" data-netlify="true" class="feedback-form">
                 <input type="hidden" name="form-name" value="feedback" />
-                <p class="hidden">
-                  <label>Don't fill this out if you're human: <input name="bot-field" /></label>
-                </p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap">
                   <textarea
                     name="message"
@@ -3060,6 +3069,11 @@
     <script>
       /* ============== bootstrap ============== */
       document.addEventListener("DOMContentLoaded", () => {
+        // --- SEARCH BAR PROTECTION - Prevent it from disappearing
+
+        
+        
+        
         // --- small util
         const bind = (id, fn) => {
           const el = document.getElementById(id);
