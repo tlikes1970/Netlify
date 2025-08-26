@@ -97,30 +97,20 @@
           padding: 10px !important;
           overflow-x: hidden !important;
         }
-        .top-search {
-          position: fixed !important;
-          top: 10px !important;
-          left: 10px !important;
-          right: 10px !important;
-          z-index: 1000 !important;
-          margin: 0 !important;
-          width: calc(100vw - 20px) !important;
-          max-width: none !important;
-        }
         .tab-container {
           max-width: 100% !important;
-          flex-direction: column !important;
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch !important;
           padding: 12px !important;
-          gap: 8px !important;
-          margin-top: 80px !important;
+          gap: 6px !important;
         }
         .tab {
-          padding: 16px 14px !important;
-          font-size: 0.9rem !important;
-          min-height: 48px !important;
-          width: 100% !important;
-          text-align: center !important;
-          justify-content: center !important;
+          padding: 14px 12px !important;
+          font-size: 0.85rem !important;
+          min-height: 44px !important;
+          flex-shrink: 0 !important;
+          white-space: nowrap !important;
+          min-width: fit-content !important;
         }
       }
       
@@ -134,25 +124,14 @@
         body {
           padding: 8px !important;
         }
-        .top-search {
-          position: fixed !important;
-          top: 8px !important;
-          left: 8px !important;
-          right: 8px !important;
-          z-index: 1000 !important;
-          margin: 0 !important;
-          width: calc(100vw - 16px) !important;
-          max-width: none !important;
-        }
         .tab-container {
-          padding: 8px !important;
-          gap: 6px !important;
-          margin-top: 70px !important;
+          padding: 8px 6px !important;
+          gap: 4px !important;
         }
         .tab {
-          padding: 14px 12px !important;
-          font-size: 0.85rem !important;
-          min-height: 44px !important;
+          padding: 12px 8px !important;
+          font-size: 0.8rem !important;
+          min-height: 40px !important;
         }
       }
 
