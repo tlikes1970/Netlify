@@ -98,16 +98,21 @@
           overflow-x: hidden !important;
         }
         .top-search {
-          position: sticky !important;
-          top: 0 !important;
-          z-index: 50 !important;
-          margin: 8px 0 !important;
+          position: fixed !important;
+          top: 10px !important;
+          left: 10px !important;
+          right: 10px !important;
+          z-index: 1000 !important;
+          margin: 0 !important;
+          width: calc(100vw - 20px) !important;
+          max-width: none !important;
         }
         .tab-container {
           max-width: 100% !important;
           flex-direction: column !important;
           padding: 12px !important;
           gap: 8px !important;
+          margin-top: 80px !important;
         }
         .tab {
           padding: 16px 14px !important;
@@ -130,14 +135,19 @@
           padding: 8px !important;
         }
         .top-search {
-          position: sticky !important;
-          top: 0 !important;
-          z-index: 50 !important;
-          margin: 6px 0 !important;
+          position: fixed !important;
+          top: 8px !important;
+          left: 8px !important;
+          right: 8px !important;
+          z-index: 1000 !important;
+          margin: 0 !important;
+          width: calc(100vw - 16px) !important;
+          max-width: none !important;
         }
         .tab-container {
           padding: 8px !important;
           gap: 6px !important;
+          margin-top: 70px !important;
         }
         .tab {
           padding: 14px 12px !important;
