@@ -3241,35 +3241,7 @@
         
         
         
-        // --- SEARCH BAR VISIBILITY ENFORCEMENT
-        (function() {
-          const searchBar = document.querySelector(".top-search");
-          if (searchBar) {
-            // Ensure search bar is always visible
-            const ensureVisibility = () => {
-              if (searchBar.style.display === "none") {
-                searchBar.style.display = "block";
-                console.log("🔒 Search bar was hidden, restored visibility");
-              }
-              if (searchBar.style.visibility === "hidden") {
-                searchBar.style.visibility = "visible";
-                console.log("🔒 Search bar was invisible, restored visibility");
-              }
-              if (searchBar.style.opacity === "0") {
-                searchBar.style.opacity = "1";
-                console.log("🔒 Search bar was transparent, restored opacity");
-              }
-            };
-            
-            // Check every 100ms
-            setInterval(ensureVisibility, 100);
-            
-            // Also check on scroll
-            window.addEventListener('scroll', ensureVisibility);
-            
-            console.log("🔒 Search bar visibility enforcement active");
-          }
-        })();
+        // --- Search bar is now handled by CSS sticky positioning
         
         // --- small util
         const bind = (id, fn) => {
