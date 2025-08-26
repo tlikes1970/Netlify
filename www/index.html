@@ -193,78 +193,63 @@
       }
 
             /* Sticky top search */
-      /* =======================
-         Sticky Elements Styling
-         ======================= */
-
-      /* Sticky Search Bar */
-      .searchbar {
+      /* Sticky top search */
+      .top-search {
         position: sticky;
         top: 0;
-        z-index: 10;                  /* stay above everything else */
-        background: var(--bg);         /* solid background while scrolling */
+        z-index: 50;
+        background: var(--bg);
         border: 2px solid var(--primary);
         border-radius: 14px;
-        padding: 10px;
-        margin: 0 0 10px 0;            /* margin below but no top margin */
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* subtle separation */
+        padding: 12px;
+        margin: 12px 0;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
       }
-
-      /* Search row layout */
       .search-row {
         display: grid;
         grid-template-columns: 1fr 180px auto auto;
         gap: 8px;
+        align-items: center;
       }
-
+      
+      /* Responsive search row */
       @media (max-width: 768px) {
         .search-row {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-        .search-row .btn {
-          width: 100%;                 /* full width buttons on mobile */
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 8px !important;
         }
       }
-
-      /* Sticky Tabs Bar */
-      .tabs {
-        position: sticky;
-        top: 76px;                     /* sits below searchbar height */
-        z-index: 9;
+      .tab-container {
         display: flex;
         gap: 6px;
         background: var(--card);
+        padding: 8px;
         border-radius: 12px;
-        padding: 6px;
-        margin: 0 0 12px 0;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        margin: 14px 0;
       }
-
-      /* Tab Buttons */
       .tab {
         flex: 1;
         border: 0;
         background: transparent;
-        padding: 10px;
+        padding: 12px 10px;
         border-radius: 10px;
         font-weight: 800;
         cursor: pointer;
-        transition: background 0.2s;
       }
-
       .tab.active {
         background: linear-gradient(45deg, var(--primary), var(--purple));
         color: #fff;
       }
-
-      /* Keep search results visually below everything */
-      #searchResults {
-        position: relative;
-        z-index: 5;
-        margin-top: 6px;
+      .tab-badge {
+        background: #fff;
+        color: var(--primary);
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 12px;
+        margin-left: 6px;
       }
+
       .search-input {
         padding: 10px 12px;
         border-radius: 12px;
@@ -318,6 +303,21 @@
         flex-basis: 100% !important;
         order: 0 !important;
       }
+
+      .stat-num {
+        font-size: 1.8rem;
+        color: var(--primary);
+        font-weight: 900;
+      }
+      .stat-label {
+        font-size: 0.72rem;
+        color: #80808f;
+        text-transform: uppercase;
+        font-weight: 900;
+        letter-spacing: 0.6px;
+      }
+
+
 
       .list-container {
         background: var(--card);
@@ -791,6 +791,50 @@
         }
       }
 
+      /* Banners */
+      #bingeBanner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 4px 0;
+      }
+      #bingeBanner .binge-time {
+        font-family: ui-monospace, Menlo, monospace;
+        font-weight: 900;
+        color: #ffd43b;
+      }
+      #bingeBanner .binge-label {
+        color: #555;
+      }
+      #bingeBanner .binge-cta {
+        padding: 8px 12px;
+        font-size: 0.88rem;
+        border-radius: 16px;
+        color: #fff;
+        background: linear-gradient(
+          45deg,
+          #ff6b6b,
+          #4ecdc4,
+          #45b7d1,
+          #96ceb4,
+          #feca57,
+          #ff9ff3,
+          #54a0ff
+        );
+        background-size: 400% 400%;
+        animation: rainbow 3s ease-in-out infinite;
+        border: 2px solid rgba(255, 255, 255, 0.85);
+      }
+      @keyframes rainbow {
+        0%,
+        100% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+      }
+
       .feedback-card {
         background: var(--card);
         border: 2px solid var(--primary);
@@ -924,38 +968,15 @@
 
     <div class="main-container" id="appRoot">
       <header class="header" role="banner">
-        <div class="header-left">
-          <h1 id="welcomeText" class="title">Flicklet</h1>
+        <div>
+          <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
           <div class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
-          
-          <!-- Search Bar Integrated into Header -->
-          <div class="searchbar">
-            <div class="search-row">
-              <label class="sr-only" for="searchInput">Search shows or movies</label>
-              <input
-                id="searchInput"
-                class="search-input"
-                aria-label="Search shows or movies"
-                placeholder=""
-                data-i18n="search_placeholder"
-              />
-              <select id="genreFilter">
-                <option value="" data-i18n="all_genres">All Genres</option>
-              </select>
-              <button id="searchBtn" class="btn">🔍 <span data-i18n="search">Search</span></button>
-              <button id="clearSearchBtn" class="btn secondary">
-                ✖️ <span data-i18n="clear">Clear</span>
-              </button>
-            </div>
-            <div
-              id="tagFilterRow"
-              class="tag-filters"
-              aria-label="Tag filters"
-            ></div>
-          </div>
+          <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
         </div>
         <div class="user-section">
-          <button id="darkModeToggle" class="btn" title="Theme" data-i18n="go_dark">🌙 Go Dark</button>
+          <button id="darkModeToggle" class="btn" title="Theme">
+            🌙 Go Dark
+          </button>
           <button
             id="mardiToggle"
             class="btn secondary"
@@ -977,11 +998,30 @@
         </div>
       </header>
 
+      <!-- Sticky Top Search -->
+      <div class="top-search">
+        <div class="search-row">
+          <input
+            id="searchInput"
+            class="search-input"
+            placeholder="Search for shows or movies…"
+          />
+          <select id="genreFilter">
+            <option value="">All Genres</option>
+          </select>
+          <button id="searchBtn" class="btn">🔍 Search</button>
+          <button id="clearSearchBtn" class="btn secondary">
+            ✖️ <span data-i18n="clear">Clear</span>
+          </button>
+        </div>
+        <div
+          id="tagFilterRow"
+          class="tag-filters"
+          aria-label="Tag filters"
+        ></div>
+      </div>
 
-
-
-      
-      <div class="tabs">
+      <div class="tab-container">
         <button id="homeTab" class="tab active">🏠 <span data-i18n="home">Home</span></button>
         <button id="watchingTab" class="tab">
           ▶️ <span data-i18n="currently_watching">Currently Watching</span>
@@ -1009,7 +1049,30 @@
 
       <!-- Home -->
       <div id="homeSection" class="tab-section">
-        <!-- Content will be inserted by JavaScript: quotes, horoscope, then feedback -->
+        <div class="stats">
+          <div class="stat" id="bingeMeter"></div>
+        </div>
+
+        <!-- Feedback / Mardi -->
+        <div class="feedback-card">
+          <h3>Feedback</h3>
+          <p>Tell us what's working and what's not. Be blunt.</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap">
+            <input
+              id="feedbackInput"
+              class="search-input"
+              placeholder="Your feedback…"
+            />
+            <button id="feedbackSendBtn" class="btn">Send</button>
+            <button
+              id="mardiOnBtn"
+              class="btn secondary"
+              title="Toggle Mardi Gras theme"
+            >
+              🎭 Mardi Gras
+            </button>
+          </div>
+        </div>
       </div>
 
       <main id="main" role="main">

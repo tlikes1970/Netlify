@@ -42,6 +42,9 @@
         line-height: 1.5;
         min-height: 100svh;
         overflow-x: hidden;
+        /* Ensure sticky positioning works */
+        overflow-y: visible;
+
       }
       .dark-mode {
         --bg: #1a1a1a;
@@ -54,18 +57,17 @@
           #34495e 100%
         ) !important;
       }
-      /* Mardi Gras colors are now permanent - no more toggle needed */
-      .header {
+      .mardi .header {
         border-color: var(--mardi3) !important;
       }
-      .btn {
+      .mardi .btn {
         background: linear-gradient(
           45deg,
           var(--mardi1),
           var(--mardi3)
         ) !important;
       }
-      body {
+      body.mardi {
         background: linear-gradient(
           135deg,
           var(--mardi1),
@@ -90,6 +92,11 @@
         border-bottom: 3px solid var(--primary);
         padding-bottom: 16px;
         margin-bottom: 12px;
+      }
+      
+      .header-left {
+        flex: 1;
+        max-width: 600px;
       }
       .title {
         margin: 0;
@@ -185,25 +192,64 @@
         background: linear-gradient(45deg, #ff4d4f, #ff2d55);
       }
 
-      /* Sticky top search - SIMPLIFIED */
+            /* Sticky top search */
+      /* Sticky top search */
       .top-search {
         position: sticky;
         top: 0;
-        z-index: 1000;
-        background: white;
-        border: 3px solid red;
-        padding: 15px;
-        margin: 15px 0;
-        border-radius: 10px;
-        display: block;
-        visibility: visible;
-        opacity: 1;
+        z-index: 50;
+        background: var(--bg);
+        border: 2px solid var(--primary);
+        border-radius: 14px;
+        padding: 12px;
+        margin: 12px 0;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
       }
       .search-row {
         display: grid;
         grid-template-columns: 1fr 180px auto auto;
         gap: 8px;
+        align-items: center;
       }
+      
+      /* Responsive search row */
+      @media (max-width: 768px) {
+        .search-row {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 8px !important;
+        }
+      }
+      .tab-container {
+        display: flex;
+        gap: 6px;
+        background: var(--card);
+        padding: 8px;
+        border-radius: 12px;
+        margin: 14px 0;
+      }
+      .tab {
+        flex: 1;
+        border: 0;
+        background: transparent;
+        padding: 12px 10px;
+        border-radius: 10px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .tab.active {
+        background: linear-gradient(45deg, var(--primary), var(--purple));
+        color: #fff;
+      }
+      .tab-badge {
+        background: #fff;
+        color: var(--primary);
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 12px;
+        margin-left: 6px;
+      }
+
       .search-input {
         padding: 10px 12px;
         border-radius: 12px;
@@ -257,6 +303,21 @@
         flex-basis: 100% !important;
         order: 0 !important;
       }
+
+      .stat-num {
+        font-size: 1.8rem;
+        color: var(--primary);
+        font-weight: 900;
+      }
+      .stat-label {
+        font-size: 0.72rem;
+        color: #80808f;
+        text-transform: uppercase;
+        font-weight: 900;
+        letter-spacing: 0.6px;
+      }
+
+
 
       .list-container {
         background: var(--card);
@@ -730,6 +791,50 @@
         }
       }
 
+      /* Banners */
+      #bingeBanner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 4px 0;
+      }
+      #bingeBanner .binge-time {
+        font-family: ui-monospace, Menlo, monospace;
+        font-weight: 900;
+        color: #ffd43b;
+      }
+      #bingeBanner .binge-label {
+        color: #555;
+      }
+      #bingeBanner .binge-cta {
+        padding: 8px 12px;
+        font-size: 0.88rem;
+        border-radius: 16px;
+        color: #fff;
+        background: linear-gradient(
+          45deg,
+          #ff6b6b,
+          #4ecdc4,
+          #45b7d1,
+          #96ceb4,
+          #feca57,
+          #ff9ff3,
+          #54a0ff
+        );
+        background-size: 400% 400%;
+        animation: rainbow 3s ease-in-out infinite;
+        border: 2px solid rgba(255, 255, 255, 0.85);
+      }
+      @keyframes rainbow {
+        0%,
+        100% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+      }
+
       .feedback-card {
         background: var(--card);
         border: 2px solid var(--primary);
@@ -859,21 +964,25 @@
   <body>
     <a href="#main" class="skip-link">Skip to main content</a>
     <div id="liveRegion" class="sr-only" role="status" aria-live="polite"></div>
+
+
     <div class="main-container" id="appRoot">
       <header class="header" role="banner">
         <div>
-          <h1 id="welcomeText" class="title">Flicklet</h1>
+          <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
           <div class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
-  
+          <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
         </div>
         <div class="user-section">
-          <button id="darkModeToggle" class="btn" title="Theme" data-i18n="go_dark">🌙 Go Dark</button>
+          <button id="darkModeToggle" class="btn" title="Theme">
+            🌙 Go Dark
+          </button>
           <button
-            id="quickAddBtn"
+            id="mardiToggle"
             class="btn secondary"
-            title="Quick Add Show"
+            title="Mardi Gras mode"
           >
-            ➕ Quick Add
+            🎭 Mardi
           </button>
           <button
             id="accountBtn"
@@ -887,24 +996,20 @@
             <option value="es">ES</option>
           </select>
         </div>
-      </div>
+      </header>
 
-            <!-- Sticky Top Search - SIMPLIFIED -->
-      <div class="top-search" style="position: sticky; top: 0; z-index: 1000; background: white; border: 3px solid red; padding: 15px; margin: 15px 0; border-radius: 10px;">
-        <div style="color: red; font-weight: bold; font-size: 18px; text-align: center; margin-bottom: 10px;">🔍 SEARCH BAR - SIMPLIFIED VERSION</div>
+      <!-- Sticky Top Search -->
+      <div class="top-search">
         <div class="search-row">
-          <label class="sr-only" for="searchInput">Search shows or movies</label>
           <input
             id="searchInput"
             class="search-input"
-            aria-label="Search shows or movies"
-            placeholder=""
-            data-i18n="search_placeholder"
+            placeholder="Search for shows or movies…"
           />
           <select id="genreFilter">
-            <option value="" data-i18n="all_genres">All Genres</option>
+            <option value="">All Genres</option>
           </select>
-          <button id="searchBtn" class="btn">🔍 <span data-i18n="search">Search</span></button>
+          <button id="searchBtn" class="btn">🔍 Search</button>
           <button id="clearSearchBtn" class="btn secondary">
             ✖️ <span data-i18n="clear">Clear</span>
           </button>
@@ -944,16 +1049,31 @@
 
       <!-- Home -->
       <div id="homeSection" class="tab-section">
-        <!-- Hidden form for Netlify to detect -->
-        <form name="feedback" method="POST" data-netlify="true" style="display: none;">
-          <input type="hidden" name="form-name" value="feedback" />
-          <textarea name="message"></textarea>
-          <button type="submit">Send</button>
-        </form>
-        
-        <!-- Content will be inserted by JavaScript: quotes, horoscope, then feedback -->
+        <div class="stats">
+          <div class="stat" id="bingeMeter"></div>
+        </div>
+
+        <!-- Feedback / Mardi -->
+        <div class="feedback-card">
+          <h3>Feedback</h3>
+          <p>Tell us what's working and what's not. Be blunt.</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap">
+            <input
+              id="feedbackInput"
+              class="search-input"
+              placeholder="Your feedback…"
+            />
+            <button id="feedbackSendBtn" class="btn">Send</button>
+            <button
+              id="mardiOnBtn"
+              class="btn secondary"
+              title="Toggle Mardi Gras theme"
+            >
+              🎭 Mardi Gras
+            </button>
+          </div>
+        </div>
       </div>
-    </header>
 
       <main id="main" role="main">
 
@@ -1235,7 +1355,7 @@
       const API_BASE = DEV
         ? "https://api.themoviedb.org/3"
         : "/.netlify/functions/tmdb";
-      const TMDB_KEY = "";
+      const TMDB_KEY = "b7247bb415b50f25b5e35e2566430b96";
 
       const appData = {
         tv: { watching: [], wishlist: [], watched: [] },
@@ -1775,6 +1895,14 @@
         }
         throw new Error(`TMDB request failed: ${r.status}`);
       }
+      
+
+
+
+        
+
+        
+
 
       async function fetchShowData(query, page = 1, genre = "") {
         let endpoint, params;
@@ -2586,21 +2714,17 @@
 
       /* Tabs + list rendering + search */
       function switchToTab(tab) {
-        console.log("🔍 switchToTab() called with tab:", tab);
         currentActiveTab = tab;
 
-        // Only hide search results, don't clear the search input
-        // This allows users to keep their search term when switching tabs
+        // Hide/clear search so tab change is obvious
         try {
           const results = document.getElementById("searchResults");
           if (results) {
-            console.log("🔍 Hiding search results for tab switch");
             results.style.display = "none";
             results.innerHTML = "";
           }
-          // Don't clear the search input - let users keep their search term
-          // const qEl = document.getElementById("searchInput");
-          // if (qEl) qEl.value = "";
+          const qEl = document.getElementById("searchInput");
+          if (qEl) qEl.value = "";
         } catch {}
 
         document
@@ -2739,113 +2863,6 @@
       }
       // Cache search results so we don't inline JSON into onclick
       const searchItemCache = new Map();
-      
-      // AGGRESSIVE SEARCH BAR PROTECTION - Prevent it from disappearing
-      (function() {
-        const searchInput = document.getElementById("searchInput");
-        const topSearch = document.querySelector(".top-search");
-        
-        if (searchInput && topSearch) {
-          console.log("🔒 Setting up aggressive search bar protection");
-          
-          // Store the original search value
-          let originalSearchValue = "";
-          
-          // Function to restore search if it gets cleared
-          const protectSearch = () => {
-            if (searchInput.value !== originalSearchValue) {
-              console.log("🔒 Search input was modified, restoring value:", originalSearchValue);
-              searchInput.value = originalSearchValue;
-            }
-            
-            // Ensure search bar is always visible
-            if (topSearch.style.display === "none") {
-              console.log("🔒 Search bar was hidden, making it visible");
-              topSearch.style.display = "";
-            }
-            
-            // Ensure search input is always visible
-            if (searchInput.style.display === "none") {
-              console.log("🔒 Search input was hidden, making it visible");
-              searchInput.style.display = "";
-            }
-          };
-          
-          // Update stored value when user types
-          searchInput.addEventListener("input", () => {
-            originalSearchValue = searchInput.value;
-          });
-          
-          // Protect search bar every 50ms
-          setInterval(protectSearch, 50);
-          
-          // Also protect on any DOM changes
-          const observer = new MutationObserver(protectSearch);
-          observer.observe(document.body, { 
-            childList: true, 
-            subtree: true, 
-            attributes: true,
-            attributeFilter: ['style', 'value']
-          });
-          
-          console.log("🔒 Search bar protection active - it cannot be hidden or cleared");
-        }
-      })();
-      
-      // CONTINUOUS MONITORING: Check search bar every 100ms
-      (function() {
-        console.log("🔍 Setting up continuous search bar monitoring...");
-        
-        setInterval(() => {
-          const searchBar = document.querySelector(".top-search");
-          const searchInput = document.getElementById("searchInput");
-          
-          if (!searchBar) {
-            console.log("🚨 ALERT: Search bar (.top-search) is GONE from DOM!");
-            return;
-          }
-          
-          if (!searchInput) {
-            console.log("🚨 ALERT: Search input (#searchInput) is GONE from DOM!");
-            return;
-          }
-          
-          const searchBarStyle = window.getComputedStyle(searchBar);
-          const inputStyle = window.getComputedStyle(searchInput);
-          
-          if (searchBarStyle.display === "none") {
-            console.log("🚨 ALERT: Search bar has display: none!");
-          }
-          
-          if (inputStyle.display === "none") {
-            console.log("🚨 ALERT: Search input has display: none!");
-          }
-          
-          if (searchBarStyle.visibility === "hidden") {
-            console.log("🚨 ALERT: Search bar has visibility: hidden!");
-          }
-          
-          if (inputStyle.visibility === "hidden") {
-            console.log("🚨 ALERT: Search input has visibility: hidden!");
-          }
-          
-          if (searchBarStyle.opacity === "0") {
-            console.log("🚨 ALERT: Search bar has opacity: 0!");
-          }
-          
-          if (inputStyle.opacity === "0") {
-            console.log("🚨 ALERT: Search input has opacity: 0!");
-          }
-          
-          // Check if search bar is outside viewport
-          const rect = searchBar.getBoundingClientRect();
-          if (rect.top < -100 || rect.bottom < 0) {
-            console.log("🚨 ALERT: Search bar is outside viewport! Top:", rect.top, "Bottom:", rect.bottom);
-          }
-        }, 100);
-        
-        console.log("🔍 Continuous monitoring active - checking every 100ms");
-      })();
 
       function cacheSearchItem(it) {
         if (it && it.id != null) searchItemCache.set(Number(it.id), it);
@@ -2911,16 +2928,9 @@
       }
 
       function clearSearch() {
-        console.log("🔒 clearSearch() called - PROTECTED: only clearing results, not input");
         const qEl = document.getElementById("searchInput");
         const out = document.getElementById("searchResults");
-        
-        // PROTECTED: Don't clear the search input value
-        // if (qEl) {
-        //   console.log("🔍 Clearing search input value from:", qEl.value);
-        //   qEl.value = "";
-        // }
-        
+        if (qEl) qEl.value = "";
         if (out) {
           out.innerHTML = "";
           out.style.display = "none";
@@ -3186,6 +3196,41 @@
     <script>
       /* ============== bootstrap ============== */
       document.addEventListener("DOMContentLoaded", () => {
+        // --- SEARCH BAR PROTECTION - Prevent it from disappearing
+
+        
+        
+        
+        // --- SEARCH BAR VISIBILITY ENFORCEMENT
+        (function() {
+          const searchBar = document.querySelector(".top-search");
+          if (searchBar) {
+            // Ensure search bar is always visible
+            const ensureVisibility = () => {
+              if (searchBar.style.display === "none") {
+                searchBar.style.display = "block";
+                console.log("🔒 Search bar was hidden, restored visibility");
+              }
+              if (searchBar.style.visibility === "hidden") {
+                searchBar.style.visibility = "visible";
+                console.log("🔒 Search bar was invisible, restored visibility");
+              }
+              if (searchBar.style.opacity === "0") {
+                searchBar.style.opacity = "1";
+                console.log("🔒 Search bar was transparent, restored opacity");
+              }
+            };
+            
+            // Check every 100ms
+            setInterval(ensureVisibility, 100);
+            
+            // Also check on scroll
+            window.addEventListener('scroll', ensureVisibility);
+            
+            console.log("🔒 Search bar visibility enforcement active");
+          }
+        })();
+        
         // --- small util
         const bind = (id, fn) => {
           const el = document.getElementById(id);
