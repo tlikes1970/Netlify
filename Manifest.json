@@ -1,6 +1,6 @@
 {
-  "name": "StreamTracker - Your Personal TV & Movie Organizer",
-  "short_name": "StreamTracker",
+  "name": "Flicklet - TV & Movie Tracker",
+  "short_name": "Flicklet",
   "description": "Track your TV shows and movies with brutally honest commentary and full functionality. Never lose track of your binge-watching again!",
   "start_url": "/",
   "display": "standalone",
