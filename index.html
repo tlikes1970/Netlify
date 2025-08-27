@@ -10,9 +10,9 @@
     />
     
     <!-- Icons for different platforms -->
-    <link rel="icon" href="/icons/icon-512.png" />
-    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-    <!-- Manifest temporarily disabled due to 404 errors -->
+    <link rel="icon" href="icons/icon-512.png" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="manifest" href="manifest.json" />
 
     <style>
       :root {
@@ -81,12 +81,12 @@
       }
 
       .main-container {
-        max-width: 1100px;
+        max-width: 1200px;
         margin: 0 auto;
         background: var(--bg);
-        border-radius: 20px;
-        padding: 24px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
       }
 
       .header {
@@ -164,13 +164,15 @@
           border: 0;
           background: linear-gradient(45deg, var(--primary), var(--purple));
           color: #fff;
-          border-radius: 18px;
-          padding: 10px 14px;
-          font-weight: 800;
+          border-radius: 8px;
+          padding: 8px 16px;
+          font-weight: 600;
+          font-size: 13px;
           cursor: pointer;
           transition: all 0.2s ease;
           position: relative;
           overflow: hidden;
+          letter-spacing: 0.3px;
         }
         
         .btn:hover {
@@ -224,6 +226,23 @@
           flex-direction: column !important;
           gap: 8px !important;
         }
+        .search-row .search-input {
+          order: 1;
+        }
+        .search-row .genre-filter {
+          order: 2;
+        }
+        /* Create a button container for side-by-side layout */
+        .search-row .search-btn,
+        .search-row .clear-search-btn {
+          order: 3;
+          display: inline-block !important;
+          width: auto !important;
+          flex: 0 0 auto !important;
+        }
+        .search-row .search-btn {
+          margin-right: 8px;
+        }
       }
       .tab-container {
         display: flex;
@@ -237,10 +256,12 @@
         flex: 1;
         border: 0;
         background: transparent;
-        padding: 12px 10px;
-        border-radius: 10px;
-        font-weight: 800;
+        padding: 10px 8px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
         cursor: pointer;
+        transition: all 0.2s ease;
       }
       .tab.active {
         background: linear-gradient(45deg, var(--primary), var(--purple));
@@ -256,11 +277,26 @@
       }
 
       .search-input {
-        padding: 10px 12px;
-        border-radius: 12px;
-        border: 2px solid var(--border);
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
         background: var(--bg);
         color: var(--text);
+        font-size: 14px;
+        width: 100%;
+        min-width: 300px;
+      }
+      .search-help {
+        margin-bottom: 8px;
+        color: #666;
+        font-size: 12px;
+        text-align: center;
+      }
+      .share-instructions {
+        margin-top: 4px;
+        color: #666;
+        font-size: 11px;
+        text-align: center;
       }
       .tag-filters {
         display: flex;
@@ -1073,6 +1109,9 @@
 
       <!-- Sticky Top Search -->
       <div class="top-search">
+        <div class="search-help">
+          <small>💡 <span data-i18n="search_tips">Search tips: Use * for wildcards (e.g., "marvel*" for Marvel shows)</span></small>
+        </div>
         <div class="search-row">
           <input
             id="searchInput"
@@ -1080,11 +1119,11 @@
             placeholder=""
             data-i18n-placeholder="search_placeholder"
           />
-          <select id="genreFilter">
+          <select id="genreFilter" class="genre-filter">
             <option value="" data-i18n="all_genres">All Genres</option>
           </select>
-          <button id="searchBtn" class="btn">🔍 <span data-i18n="search">Search</span></button>
-          <button id="clearSearchBtn" class="btn secondary">
+          <button id="searchBtn" class="btn search-btn">🔍 <span data-i18n="search">Search</span></button>
+          <button id="clearSearchBtn" class="btn secondary clear-search-btn">
             ✖️ <span data-i18n="clear">Clear</span>
           </button>
         </div>
@@ -1127,20 +1166,7 @@
           <div class="stat" id="bingeMeter"></div>
         </div>
 
-        <!-- Mardi Gras Toggle -->
-        <div class="feedback-card">
-          <h3>🎭 <span data-i18n="theme">Theme</span> Toggle</h3>
-          <p data-i18n="theme_description">Switch between different visual themes for the app.</p>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap">
-            <button
-              id="mardiOnBtn"
-              class="btn secondary"
-              title="Toggle Mardi Gras theme"
-            >
-              🎭 <span data-i18n="mardi_gras_mode">Mardi Gras</span>
-            </button>
-          </div>
-        </div>
+
       </div>
 
       <main id="main" role="main">
@@ -1217,14 +1243,17 @@
             <label style="display: flex; gap: 6px; align-items: center">
               <input type="checkbox" id="proToggle" /> <span data-i18n="pro_simulate">Pro (simulate)</span>
             </label>
-            <div id="proFeatures" style="display: none; margin-top: 8px; padding: 8px; background: var(--card); border-radius: 8px; font-size: 0.9rem;">
-              <strong data-i18n="pro_features">Pro Features:</strong>
-              <ul style="margin: 4px 0; padding-left: 20px;">
-                <li data-i18n="pro_feature_analytics">Advanced analytics & insights</li>
-                <li data-i18n="pro_feature_categories">Custom watchlist categories</li>
-                <li data-i18n="pro_feature_export">Export to multiple formats</li>
-                <li data-i18n="pro_feature_support">Priority customer support</li>
-                <li data-i18n="pro_feature_early_access">Early access to new features</li>
+            <div id="proFeatures" style="display: none; margin-top: 8px; padding: 12px; background: var(--card); border-radius: 8px; font-size: 0.9rem; border: 2px solid var(--primary);">
+              <strong data-i18n="pro_features">🚀 Pro Features:</strong>
+              <ul style="margin: 6px 0; padding-left: 20px;">
+                <li data-i18n="pro_feature_analytics">📊 Advanced analytics & binge insights</li>
+                <li data-i18n="pro_feature_categories">🏷️ Custom watchlist categories & tags</li>
+                <li data-i18n="pro_feature_export">📤 Export to CSV, JSON & PDF formats</li>
+                <li data-i18n="pro_feature_support">🎯 Priority customer support</li>
+                <li data-i18n="pro_feature_early_access">⚡ Early access to new features</li>
+                <li data-i18n="pro_feature_backup">☁️ Cloud backup & cross-device sync</li>
+                <li data-i18n="pro_feature_recommendations">🎬 Personalized AI recommendations</li>
+                <li data-i18n="pro_feature_stats">📈 Detailed watching statistics</li>
               </ul>
             </div>
           </div>
@@ -1268,6 +1297,9 @@
               data-i18n-placeholder="share_link"
               readonly
             />
+            <div class="share-instructions">
+              <small data-i18n="share_instructions">Click to generate a shareable link for your current list</small>
+            </div>
           </div>
 
           <h4 data-i18n="notifications">Notifications</h4>
@@ -1332,6 +1364,7 @@
           start: "Start",
           because_you_liked: "Because you liked",
           search_placeholder: "Search for shows or movies...",
+          search_tips: "Search tips: Use * for wildcards (e.g., \"marvel*\" for Marvel shows)",
           all_genres: "All Genres",
           search: "Search",
           notes_tags: "Notes/Tags",
@@ -1369,6 +1402,7 @@
           nuclear_option: "Nuclear Option",
           share_this_list: "Share This List",
           share_link: "Share link",
+          share_instructions: "Click to generate a shareable link for your current list",
           choose_file: "Choose File",
                   no_file_chosen: "No file chosen",
         next: "Next",
@@ -1502,6 +1536,9 @@
           pro_feature_export: "Export to multiple formats",
           pro_feature_support: "Priority customer support",
           pro_feature_early_access: "Early access to new features",
+          pro_feature_backup: "Cloud backup & cross-device sync",
+          pro_feature_recommendations: "Personalized AI recommendations",
+          pro_feature_stats: "Detailed watching statistics",
           pro: "Pro",
           // Genre translations
           action: "Action",
@@ -1599,6 +1636,7 @@
           start: "Comenzar",
           because_you_liked: "Porque te gustó",
           search_placeholder: "Buscar series o películas...",
+          search_tips: "Consejos de búsqueda: Usa * para comodines (ej: \"marvel*\" para series de Marvel)",
           all_genres: "Todos los géneros",
           search: "Buscar",
           notes_tags: "Notas/Etiquetas",
@@ -1636,6 +1674,7 @@
           nuclear_option: "Opción nuclear",
           share_this_list: "Compartir esta lista",
           share_link: "Enlace de compartir",
+          share_instructions: "Haz clic para generar un enlace compartible para tu lista actual",
           choose_file: "Elegir Archivo",
                   no_file_chosen: "Ningún archivo elegido",
         next: "Próximo",
@@ -1769,6 +1808,9 @@
           pro_feature_export: "Exportar a múltiples formatos",
           pro_feature_support: "Soporte prioritario al cliente",
           pro_feature_early_access: "Acceso temprano a nuevas funciones",
+          pro_feature_backup: "Respaldo en la nube y sincronización entre dispositivos",
+          pro_feature_recommendations: "Recomendaciones personalizadas con IA",
+          pro_feature_stats: "Estadísticas detalladas de visualización",
           pro: "Pro",
         },
       };
@@ -2817,6 +2859,9 @@
           if (fileInput) {
             updateFileLabel(fileInput);
           }
+          
+          // Refresh search results if they're visible
+          refreshSearchResults();
         }, 600);
       }
 
@@ -3653,7 +3698,9 @@
           
           list.innerHTML = "";
           filteredRecs.forEach((it) => {
-            const card = createShowCard(it, false);
+            // Cache the item before creating the card
+            cacheSearchItem(it);
+            const card = createShowCard(it, true); // true => search-mode actions (move buttons)
             const meta = card.querySelector(".show-meta");
             if (meta && it.because) {
               const el = document.createElement("div");
@@ -3818,6 +3865,26 @@
         if (out) {
           out.innerHTML = "";
           out.style.display = "none";
+        }
+      }
+
+      function refreshSearchResults() {
+        const out = document.getElementById("searchResults");
+        if (out && out.style.display !== "none") {
+          // Re-render search results with current language
+          const results = Array.from(out.children);
+          if (results.length > 0) {
+            out.innerHTML = "";
+            results.forEach((it) => {
+              const itemId = it.querySelector('[data-action]')?.getAttribute('data-id');
+              if (itemId) {
+                const cachedItem = searchItemCache.get(Number(itemId));
+                if (cachedItem) {
+                  out.appendChild(createShowCard(cachedItem, true));
+                }
+              }
+            });
+          }
         }
       }
 
@@ -4044,8 +4111,8 @@
             feedbackCard.innerHTML = `
                           <h3 data-i18n="feedback">Feedback</h3>
             <p data-i18n="feedback_working">Tell us what's working and what's not. Be blunt.</p>
-              <form name="feedback" method="POST" data-netlify="true" class="feedback-form">
-                <input type="hidden" name="form-name" value="feedback" />
+              <form name="feedback" method="POST" class="feedback-form" onsubmit="handleFeedbackSubmit(event)">
+                <input type="hidden" name="theme" id="feedbackThemeInput" />
                 <div style="display: flex; gap: 8px; flex-wrap: wrap">
                   <textarea
                     name="message"
@@ -4135,6 +4202,12 @@
         }
         
         // Language toggle is now handled by the onchange event directly
+        
+        // Restore theme from localStorage if available
+        const savedTheme = localStorage.getItem("flicklet-theme");
+        if (savedTheme === "dark") {
+          document.body.classList.add("dark-mode");
+        }
         
         // Ensure language dropdown is properly initialized
         const ensureLanguageDropdown = () => {
@@ -4277,6 +4350,53 @@
 
 
         // --- feedback handled by Netlify Forms
+      function handleFeedbackSubmit(event) {
+        event.preventDefault(); // Prevent default form submission
+        
+        // Store current theme before form submission
+        const currentTheme = document.body.classList.contains("dark-mode") ? "dark" : "light";
+        const themeInput = document.getElementById("feedbackThemeInput");
+        if (themeInput) {
+          themeInput.value = currentTheme;
+        }
+        
+        // Store theme in localStorage as backup
+        localStorage.setItem("flicklet-theme", currentTheme);
+        
+        // Get form data
+        const form = event.target;
+        const formData = new FormData(form);
+        
+        // Convert to JSON for the Netlify function
+        const feedbackData = {
+          message: formData.get('message'),
+          theme: formData.get('theme'),
+          timestamp: new Date().toISOString()
+        };
+        
+        // Submit to Netlify function
+        fetch('/.netlify/functions/feedback', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(feedbackData)
+        })
+        .then(response => {
+          if (response.ok) {
+            showNotification('Feedback submitted successfully!', 'success');
+            form.reset();
+          } else {
+            showNotification('Failed to submit feedback. Please try again.', 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Feedback submission error:', error);
+          showNotification('Failed to submit feedback. Please try again.', 'error');
+        });
+        
+        return false;
+      }
 
 
 
