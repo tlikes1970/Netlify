@@ -8,6 +8,11 @@
       name="description"
       content="Search, track, and rate shows & films fast."
     />
+    
+    <!-- Icons for different platforms -->
+    <link rel="icon" href="/icons/icon-512.png" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <!-- Manifest temporarily disabled due to 404 errors -->
 
     <style>
       :root {
@@ -2742,6 +2747,16 @@
           appData.settings.lang = newLang;
         }
         
+        // Ensure language dropdown options are preserved
+        const langToggle = document.getElementById("langToggle");
+        if (langToggle && langToggle.children.length < 2) {
+          // Restore options if they were lost
+          langToggle.innerHTML = `
+            <option value="en">EN</option>
+            <option value="es">ES</option>
+          `;
+        }
+        
         // Apply translations FIRST (before rehydration)
         applyTranslations?.();
         
@@ -2842,7 +2857,14 @@
           index === self.findIndex(t => t.id === item.id)
         );
 
-        const scored = uniquePool
+        // Get all user's current items to exclude from recommendations
+        const userItems = getAllItems();
+        const userItemIds = new Set(userItems.map(item => item.id || item.tmdbId));
+
+        // Filter out items that are already on user's lists
+        const availablePool = uniquePool.filter(item => !userItemIds.has(item.id));
+
+        const scored = availablePool
           .map((it) => {
             const g = (it.genres || it.genre_ids || []).map((x) =>
               typeof x === "number" ? { id: x } : x
@@ -2860,7 +2882,7 @@
 
         // If no personalized recommendations, fall back to top-rated content
         if (scored.length === 0) {
-          const fallback = uniquePool
+          const fallback = availablePool
             .filter(it => (Number(it.vote_average) || 0) >= 7)
             .sort((a, b) => (Number(b.vote_average) || 0) - (Number(a.vote_average) || 0))
             .slice(0, 10);
@@ -3615,8 +3637,22 @@
             list.innerHTML = t("not_enough_signals");
             return;
           }
+          
+          // Apply tag filters to recommendations if they exist
+          const filteredRecs = typeof filterByTags === "function" ? filterByTags(recs) : recs;
+          
+          if (!filteredRecs.length) {
+            // Check if it's due to tag filtering or no available recommendations
+            if (recs.length === 0) {
+              list.innerHTML = t("not_enough_signals");
+            } else {
+              list.innerHTML = t("no_results");
+            }
+            return;
+          }
+          
           list.innerHTML = "";
-          recs.forEach((it) => {
+          filteredRecs.forEach((it) => {
             const card = createShowCard(it, false);
             const meta = card.querySelector(".show-meta");
             if (meta && it.because) {
@@ -4099,7 +4135,25 @@
         }
         
         // Language toggle is now handled by the onchange event directly
-
+        
+        // Ensure language dropdown is properly initialized
+        const ensureLanguageDropdown = () => {
+          const langToggle = document.getElementById("langToggle");
+          if (langToggle && langToggle.children.length < 2) {
+            langToggle.innerHTML = `
+              <option value="en">EN</option>
+              <option value="es">ES</option>
+            `;
+            // Set the current language
+            if (appData?.settings?.lang) {
+              langToggle.value = appData.settings.lang;
+            }
+          }
+        };
+        
+        // Call it immediately and also after a delay to catch any late modifications
+        ensureLanguageDropdown();
+        setTimeout(ensureLanguageDropdown, 100);
         
         // Paint account button based on currentUser if auth has already resolved
         if (typeof setAccountLabel === "function") setAccountLabel(currentUser);
