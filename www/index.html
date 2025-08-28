@@ -2578,9 +2578,10 @@
           "Sign in to sync",
           `
             <p>Sign in to back up your lists and sync across devices.</p>
-            <div style="display:flex; gap:12px; justify-content:center; align-items:center; max-width:300px; margin:0 auto">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; justify-content:center; align-items:center; max-width:300px; margin:0 auto">
               <button id="googleBtn" class="btn" style="font-size:14px; padding:10px 16px">🔒 Google</button>
-              <button id="emailBtn" class="btn secondary" style="font-size:14px; padding:10px 16px">✉️ Email</button>
+              <button id="appleBtn" class="btn secondary" style="font-size:14px; padding:10px 16px">🍎 Apple</button>
+              <button id="emailBtn" class="btn secondary" style="font-size:14px; padding:10px 16px; grid-column: 1 / -1">✉️ Email</button>
               <button id="signOutBtn" class="btn danger" style="display:none">Sign Out</button>
             </div>
           `,
