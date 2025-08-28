@@ -2582,7 +2582,7 @@
               <button id="googleBtn" class="btn" style="font-size:14px; padding:10px 16px">🔒 Google</button>
               <button id="appleBtn" class="btn secondary" style="font-size:14px; padding:10px 16px">🍎 Apple</button>
               <button id="emailBtn" class="btn secondary" style="font-size:14px; padding:10px 16px; grid-column: 1 / -1">✉️ Email</button>
-              <button id="signOutBtn" class="btn danger" style="display:none">Sign Out</button>
+              <button id="signOutBtn" class="btn secondary" style="display:none; font-size:14px; padding:10px 16px">Sign Out</button>
             </div>
           `,
           "auth-modal"
@@ -2597,7 +2597,9 @@
           google.style.display = "none";
           apple.style.display = "none";
           email.style.display = "none";
-          out.style.display = "inline-block";
+          out.style.display = "block";
+          out.style.gridColumn = "1 / -1";
+          out.style.margin = "0 auto";
           out.onclick = () =>
             auth.signOut().then(() => {
               showNotification(t("signed_out"), "success");
