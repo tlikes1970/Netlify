@@ -588,21 +588,77 @@
       .modal {
         background: var(--bg);
         color: var(--text);
-        max-width: 680px;
-        width: 92%;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
         border-radius: 14px;
         border: 2px solid var(--primary);
-        padding: 18px;
+        padding: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        position: relative;
+        overflow: auto;
+        box-sizing: border-box;
+        margin: auto;
+        text-align: center;
       }
       .modal h3 {
         margin: 0 0 10px;
         color: var(--primary);
+        word-wrap: break-word;
+        overflow-wrap: break-word;
       }
       .modal .modal-actions {
         display: flex;
-        justify-content: flex-end;
+        justify-content: center;
         gap: 8px;
         margin-top: 14px;
+        flex-wrap: wrap;
+        overflow: visible;
+        max-width: 100%;
+        padding: 8px 0;
+      }
+      
+      .modal .modal-body {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        max-width: 100%;
+        overflow: hidden;
+        text-align: center;
+      }
+      
+      .modal input[type="text"],
+      .modal .search-input {
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+        display: block;
+        text-align: center;
+      }
+      
+      .modal-content-wrapper {
+        text-align: center;
+        margin-bottom: 16px;
+      }
+      
+      .modal-instruction {
+        margin-bottom: 16px;
+        color: var(--text);
+        opacity: 0.8;
+      }
+      
+      .modal-input {
+        width: 100%;
+        max-width: 300px;
+        padding: 12px;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 16px;
+        text-align: center;
+        margin: 0 auto;
+        display: block;
+        box-sizing: border-box;
       }
 
       /* Mobile */
@@ -787,34 +843,8 @@
         text-align: center;
         animation: fadeout 0.4s ease 2.6s forwards;
       }
-      .modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        padding: 20px;
-      }
-      .modal-content {
-        background: var(--bg);
-        color: var(--text);
-        max-width: 680px;
-        width: 92%;
-        border-radius: 14px;
-        border: 2px solid var(--primary);
-        padding: 18px;
-        max-height: 90vh;
-        overflow-y: auto;
-      }
-      .modal h3 {
-        margin: 0 0 10px;
-        color: var(--primary);
-      }
+
+
       .empty-state {
         text-align: center;
         color: #666;
@@ -2112,21 +2142,22 @@
             console.log("welcomeText element not found");
             return;
           }
-          const pool = [
-            "Chaos",
-            "Questionable Taste",
-            "Binge Empire",
-            "Streaming Madness",
-            "Watch List",
-          ];
-          const newText = n
-            ? `${n}'s ${pool[Math.floor(Math.random() * pool.length)]}`
-            : t("app_title");
-  
           
-
-          
-          el.textContent = newText;
+          // Only update if user has a display name, otherwise keep "Flicklet"
+          if (n) {
+            const pool = [
+              "Chaos",
+              "Questionable Taste",
+              "Binge Empire",
+              "Streaming Madness",
+              "Watch List",
+            ];
+            const newText = `${n}'s ${pool[Math.floor(Math.random() * pool.length)]}`;
+            el.textContent = newText;
+          } else {
+            // Keep the original "Flicklet" title
+            el.textContent = t("app_title");
+          }
 
         } catch (e) {
           console.warn("updateWelcomeText failed:", e);
@@ -2346,8 +2377,27 @@
           .signInWithEmailAndPassword(email, pw)
           .catch(() => auth.createUserWithEmailAndPassword(email, pw));
       }
+      
+      function appleLogin() {
+        const provider = new firebase.auth.OAuthProvider('apple.com');
+        return auth.signInWithPopup(provider).catch((err) => {
+          const msg = String(err?.message || "");
+          const code = err?.code || "";
+          const coopBlocked =
+            msg.includes("Cross-Origin-Opener-Policy") ||
+            msg.includes("window.close") ||
+            msg.includes("message channel closed") ||
+            code === "auth/popup-closed-by-user" ||
+            code === "auth/popup-blocked" ||
+            code === "auth/cancelled-popup-request";
+          if (coopBlocked) return auth.signInWithRedirect(provider);
+          throw err;
+        });
+      }
+      
       window.login = login;
       window.emailLogin = emailLogin;
+      window.appleLogin = appleLogin;
 
       function setAccountLabel(u) {
         const btn = document.getElementById("accountBtn");
@@ -2470,9 +2520,11 @@
         openModal(
           "Welcome! What should we call you?",
           `
-            <p>This will personalize your headers and stats.</p>
-            <input id="onboardName" class="search-input" placeholder="Display name"
-                   value="${(current || "").replace(/"/g, "&quot;")}" />
+            <div class="modal-content-wrapper">
+              <p class="modal-instruction">This will personalize your headers and stats.</p>
+              <input id="onboardName" class="modal-input" placeholder="Display name"
+                     value="${(current || "").replace(/"/g, "&quot;")}" />
+            </div>
           `,
           "name-onboarding"
         );
@@ -2526,9 +2578,9 @@
           "Sign in to sync",
           `
             <p>Sign in to back up your lists and sync across devices.</p>
-            <div style="display:flex; gap:8px; flex-wrap:wrap">
-              <button id="googleBtn" class="btn">🔒 Continue with Google</button>
-              <button id="emailBtn" class="btn secondary">✉️ Email Sign-In</button>
+            <div style="display:flex; gap:12px; justify-content:center; align-items:center; max-width:300px; margin:0 auto">
+              <button id="googleBtn" class="btn" style="font-size:14px; padding:10px 16px">🔒 Google</button>
+              <button id="emailBtn" class="btn secondary" style="font-size:14px; padding:10px 16px">✉️ Email</button>
               <button id="signOutBtn" class="btn danger" style="display:none">Sign Out</button>
             </div>
           `,
@@ -2536,11 +2588,13 @@
         );
 
         const google = document.getElementById("googleBtn");
+        const apple = document.getElementById("appleBtn");
         const email = document.getElementById("emailBtn");
         const out = document.getElementById("signOutBtn");
 
         if (currentUser) {
           google.style.display = "none";
+          apple.style.display = "none";
           email.style.display = "none";
           out.style.display = "inline-block";
           out.onclick = () =>
@@ -2552,6 +2606,17 @@
         } else {
           google.onclick = () =>
             login()
+              .then(() => {
+                showNotification(t("signed_in"), "success");
+                document.querySelector(".modal-backdrop")?.remove();
+                // auth listener will call setAccountLabel and sync
+              })
+              .catch((e) =>
+                showNotification(e.message || t("login_failed"), "error")
+              );
+
+          apple.onclick = () =>
+            appleLogin()
               .then(() => {
                 showNotification(t("signed_in"), "success");
                 document.querySelector(".modal-backdrop")?.remove();
@@ -3884,6 +3949,14 @@
                 }
               }
             });
+          }
+        }
+        
+        // Also refresh discover section if it's visible
+        const discoverSection = document.getElementById("discoverSection");
+        if (discoverSection && discoverSection.style.display !== "none") {
+          if (typeof renderDiscover === "function") {
+            renderDiscover();
           }
         }
       }
