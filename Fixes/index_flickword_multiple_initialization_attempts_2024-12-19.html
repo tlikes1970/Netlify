@@ -2502,7 +2502,7 @@
           const dd = String(now.getUTCDate()).padStart(2, '0');
           const iso = `${yyyy}-${mm}-${dd}`;
           
-          const flickwordUrl = `../features/flickword.html?date=${iso}`;
+          const flickwordUrl = `/features/flickword.html?date=${iso}`;
           console.log('🎯 FlickWord URL:', flickwordUrl);
           
           // Open in new tab
@@ -6647,9 +6647,8 @@
         // updateBingeMeter?.(); // Disabled - removed from home page
         // updateBingeBanner?.(); // Disabled - removed from front page
         
-        // DISABLED - Old content generation conflicts with new layout
         // Ensure home page blocks are inserted (quotes, horoscope, feedback)
-        // const blocksResult = ensureBlocks?.();
+        const blocksResult = ensureBlocks?.();
         
         applyTranslations?.();
         

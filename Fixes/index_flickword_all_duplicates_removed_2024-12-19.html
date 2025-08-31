@@ -1591,24 +1591,7 @@
             // Ensure tab visibility is properly set after initialization
             setTimeout(() => {
               this.updateTabVisibility();
-              // Force show home tab content after initialization
-              const homeTab = document.getElementById('homeSection');
-              if (homeTab) {
-                homeTab.style.display = 'block';
-                homeTab.style.visibility = 'visible';
-                homeTab.style.opacity = '1';
-                console.log('🎯 Forced home tab visibility after initialization');
-              }
             }, 100);
-            
-            // Initialize FlickWord integration IMMEDIATELY after tab visibility
-            console.log('🎯 Initializing FlickWord integration immediately');
-            try {
-              this.initializeFlickWord();
-              console.log('✅ FlickWord initialization completed successfully');
-            } catch (error) {
-              console.error('❌ FlickWord initialization failed:', error);
-            }
             
             // Call start function to initialize ensureBlocks
             if (typeof start === 'function') {
@@ -1624,31 +1607,14 @@
             
             console.log('✅ App initialized successfully');
             
-            // Initialize the left-side username display if username exists
-            if (this.appData?.settings?.displayName) {
-              console.log('🆕 Initializing left-side username display');
-              this.updateLeftSideUsername();
-            }
-            
-            // Ensure home content is visible on initial load
-            setTimeout(() => {
-              const homeSection = document.getElementById('homeSection');
-              if (homeSection) {
-                homeSection.style.display = 'block';
-                homeSection.style.visibility = 'visible';
-                homeSection.style.opacity = '1';
-                console.log('🎯 Home section visibility enforced on initial load');
-              }
-              
-              // Fallback FlickWord initialization after home visibility
-              console.log('🎯 Fallback FlickWord initialization check');
-              if (!document.getElementById('playFlickwordBtn')?.onclick) {
-                console.log('🎯 FlickWord button not initialized, running fallback');
-                this.initializeFlickWord();
-              } else {
-                console.log('✅ FlickWord button already initialized');
-              }
-            }, 200);
+                    // Initialize the left-side username display if username exists
+        if (this.appData?.settings?.displayName) {
+          console.log('🆕 Initializing left-side username display');
+          this.updateLeftSideUsername();
+        }
+
+        // Initialize FlickWord integration
+        this.initializeFlickWord();
             
             // Check if user should be prompted to login AFTER all functions are loaded
             setTimeout(() => {
@@ -2235,7 +2201,7 @@
             }
           });
           
-          // Handle the current tab - show it instead of hiding it
+          // Hide the current tab
           let currentTabId = '';
           switch (this.currentTab) {
             case 'home':
@@ -2265,34 +2231,20 @@
           if (currentTabId) {
             const currentTab = document.getElementById(currentTabId);
             if (currentTab) {
-              // Show the current tab instead of hiding it
-              currentTab.style.display = 'block';
-              currentTab.style.visibility = 'visible';
-              currentTab.style.opacity = '1';
-              currentTab.style.position = 'static';
-              currentTab.style.left = 'auto';
-              currentTab.classList.remove('hidden');
-              console.log(`🎯 Showing current tab: ${currentTabId}`);
+              // Use multiple hiding methods to ensure it's hidden
+              currentTab.style.display = 'none';
+              currentTab.style.visibility = 'hidden';
+              currentTab.style.opacity = '0';
+              currentTab.style.position = 'absolute';
+              currentTab.style.left = '-9999px';
+              currentTab.classList.add('hidden');
+              console.log(`🎯 Hidden current tab: ${currentTabId} with multiple methods`);
             } else {
               console.log(`❌ Current tab not found: ${currentTabId}`);
             }
           }
           
-          // SPECIAL CASE: Always ensure home tab is visible when currentTab is 'home'
-          if (this.currentTab === 'home') {
-            const homeTab = document.getElementById('homeSection');
-            if (homeTab) {
-              homeTab.style.display = 'block';
-              homeTab.style.visibility = 'visible';
-              homeTab.style.opacity = '1';
-              homeTab.style.position = 'static';
-              homeTab.style.left = 'auto';
-              homeTab.classList.remove('hidden');
-              console.log(`🎯 Home tab visibility enforced for currentTab: home`);
-            }
-          }
-          
-          console.log(`🎯 Tab visibility update complete - showing ${currentTabId}, other tabs remain visible`);
+          console.log(`🎯 Tab visibility update complete - hiding ${currentTabId}, showing other tabs`);
         },
 
         updateHeaderWithUsername() {
@@ -2467,17 +2419,9 @@
         },
 
         setupFlickWordEventListeners() {
-          console.log('🎯 Setting up FlickWord event listeners');
           const playBtn = document.getElementById('playFlickwordBtn');
-          console.log('🎯 Play button found:', !!playBtn);
           if (playBtn) {
-            playBtn.addEventListener('click', () => {
-              console.log('🎯 Play button clicked!');
-              this.openFlickWord();
-            });
-            console.log('✅ Click listener added to play button');
-          } else {
-            console.log('❌ Play button not found!');
+            playBtn.addEventListener('click', () => this.openFlickWord());
           }
 
           // Listen for FlickWord results
@@ -2502,16 +2446,10 @@
           const dd = String(now.getUTCDate()).padStart(2, '0');
           const iso = `${yyyy}-${mm}-${dd}`;
           
-          const flickwordUrl = `../features/flickword.html?date=${iso}`;
-          console.log('🎯 FlickWord URL:', flickwordUrl);
+          const flickwordUrl = `/features/flickword.html?date=${iso}`;
           
           // Open in new tab
-          const newWindow = window.open(flickwordUrl, '_blank');
-          if (newWindow) {
-            console.log('✅ FlickWord window opened successfully');
-          } else {
-            console.log('❌ Failed to open FlickWord window - popup blocked?');
-          }
+          window.open(flickwordUrl, '_blank');
         },
 
         startDailyCountdown() {
@@ -3133,7 +3071,7 @@
       <!-- Home -->
       <div id="homeSection" class="tab-section">
         <!-- Daily Word Challenge (Full Width) -->
-        <div id="flickwordCard" class="flickword-card">
+        <div id="flickwordCard" class="flickword-card" style="display: none;">
           <div class="flickword-header">
             <h3 class="flickword-title">🎯 Daily Word Challenge</h3>
             <div class="flickword-countdown" id="dailyCountdown">⏱ 00:00:00</div>
@@ -6647,9 +6585,8 @@
         // updateBingeMeter?.(); // Disabled - removed from home page
         // updateBingeBanner?.(); // Disabled - removed from front page
         
-        // DISABLED - Old content generation conflicts with new layout
         // Ensure home page blocks are inserted (quotes, horoscope, feedback)
-        // const blocksResult = ensureBlocks?.();
+        const blocksResult = ensureBlocks?.();
         
         applyTranslations?.();
         
