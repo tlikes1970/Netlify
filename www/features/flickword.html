@@ -243,14 +243,18 @@ function makeKey(label, extraClasses='', handler){
   btn.type='button';
   btn.textContent=label;
   btn.className=('key '+extraClasses).trim();
-  if(label.length===1){
+  
+  // Check for special keys first (before length check)
+  if(label === '⌫'){
+    btn.onclick=()=>backspace(); // Explicitly call backspace function
+  } else if(label === 'Enter'){
+    btn.onclick=()=>submit(); // Explicitly call submit function
+  } else if(label.length===1){
     const st = game.status[label];
     if(st==='correct') btn.classList.add('correct');
     else if(st==='present') btn.classList.add('present');
     else if(st==='absent') btn.classList.add('absent');
     btn.onclick=()=>onKey(label);
-  } else if(label === '⌫'){
-    btn.onclick=handler; // Backspace should use the handler, not onKey
   } else if(handler){
     btn.onclick=handler;
   }
@@ -258,8 +262,26 @@ function makeKey(label, extraClasses='', handler){
 }
 
 // ===== Input =====
-function onKey(l){ if(game.done||game.current.length>=5) return; game.current+=l; renderGrid(); }
-function backspace(){ if(game.done||!game.current) return; game.current=game.current.slice(0,-1); renderGrid(); }
+function onKey(l){ 
+  console.log('onKey called with:', l, 'type:', typeof l, 'length:', l.length);
+  
+  // Prevent backspace character from being added
+  if (l === '⌫' || l === 'Backspace') {
+    console.log('Backspace character detected in onKey, ignoring');
+    return;
+  }
+  
+  if(game.done||game.current.length>=5) return; 
+  game.current+=l; 
+  renderGrid(); 
+}
+function backspace(){ 
+  console.log('backspace called, current before:', game.current);
+  if(game.done||!game.current) return; 
+  game.current=game.current.slice(0,-1); 
+  console.log('current after backspace:', game.current);
+  renderGrid(); 
+}
 
 // ===== Submit & Validation =====
 async function submit(){
@@ -363,6 +385,33 @@ function showCustomNotification(message, type = 'info') {
     }
   }, 3000);
 }
+
+// ===== Keyboard Event Handling =====
+document.addEventListener('keydown', function(e) {
+  console.log('Keydown event:', e.key, 'type:', typeof e.key, 'length:', e.key.length);
+  
+  if (game.done) return;
+  
+  if (e.key === 'Backspace') {
+    console.log('Backspace key detected, preventing default and calling backspace()');
+    e.preventDefault();
+    e.stopPropagation();
+    backspace();
+    return false;
+  } else if (e.key === 'Enter') {
+    console.log('Enter key detected, preventing default and calling submit()');
+    e.preventDefault();
+    e.stopPropagation();
+    submit();
+    return false;
+  } else if (e.key.length === 1 && e.key.match(/[a-zA-Z]/)) {
+    console.log('Letter key detected:', e.key, 'calling onKey()');
+    e.preventDefault();
+    e.stopPropagation();
+    onKey(e.key.toLowerCase());
+    return false;
+  }
+}, true); // Use capture phase to ensure we get the event first
 
 // ===== Auto-start game when page loads =====
 document.addEventListener('DOMContentLoaded', function() {

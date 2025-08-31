@@ -100,6 +100,164 @@
         margin-bottom: 12px;
       }
       
+      /* Mobile header layout */
+      .header-mobile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        width: 100%;
+      }
+      
+      .header-title-center {
+        text-align: center;
+        order: 1;
+      }
+      
+      .header-user-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        order: 2;
+      }
+      
+      .header-left-controls,
+      .header-right-controls {
+        flex: 1;
+      }
+      
+      .header-right-controls {
+        text-align: right;
+      }
+      
+      /* Modal Styles */
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      
+
+      
+      .modal-content {
+        background: var(--card);
+        border: 2px solid var(--primary);
+        border-radius: 16px;
+        padding: 24px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+      
+      .modal h3 {
+        margin: 0 0 16px 0;
+        color: var(--primary);
+        font-size: 24px;
+      }
+      
+      .modal p {
+        margin: 0 0 12px 0;
+        line-height: 1.5;
+      }
+      
+      .modal ul {
+        margin: 12px 0;
+        padding-left: 20px;
+      }
+      
+      .modal li {
+        margin: 8px 0;
+        line-height: 1.4;
+      }
+      
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+        margin: 20px 0;
+      }
+      
+      .modal .btn {
+        margin-top: 20px;
+        width: 100%;
+      }
+      
+
+      
+
+      
+
+      
+
+      
+      /* Binge Banner */
+      .binge-banner {
+        background: var(--primary);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        font-size: 14px;
+      }
+      
+      .binge-banner #bingeTimeText {
+        font-weight: 600;
+      }
+      
+      .binge-banner #startBingeBtn {
+        background: white;
+        color: var(--primary);
+        border: none;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      
+      /* Mobile header responsive adjustments */
+      @media (max-width: 768px) {
+        .header {
+          padding: 16px;
+          gap: 16px;
+        }
+        
+        .header-mobile {
+          gap: 20px;
+        }
+        
+        .header-title-center .title {
+          font-size: 1.8rem;
+        }
+        
+        .header-title-center .subtitle {
+          font-size: 14px;
+        }
+        
+        .header-user-controls {
+          gap: 16px;
+        }
+        
+        .header-left-controls .btn,
+        .header-right-controls select {
+          padding: 8px 12px;
+          font-size: 14px;
+        }
+      }
+      
       .header-left {
         flex: 1;
         max-width: 600px;
@@ -199,6 +357,19 @@
         font-weight: 600;
         font-size: 14px;
         font-family: monospace;
+        margin-bottom: 8px;
+      }
+      
+      .countdown-subtitle {
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-style: italic;
+        text-align: center;
+        margin-bottom: 16px;
+        line-height: 1.4;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
       }
 
       .flickword-stats {
@@ -235,28 +406,241 @@
         text-align: center;
       }
 
-      .flickword-hint {
-        margin-top: 12px;
-        font-size: 14px;
-        color: var(--text-secondary);
-        font-style: italic;
-      }
+        .flickword-snark {
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-style: italic;
+    text-align: center;
+    padding: 8px 16px;
+    background: var(--bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
 
       /* Mobile responsiveness for FlickWord */
       @media (max-width: 768px) {
         .flickword-stats {
-          flex-direction: column;
-          gap: 12px;
+          flex-direction: row;
+          gap: 8px;
+          justify-content: space-between;
+          flex-wrap: wrap;
         }
         
         .stat-item {
           min-width: auto;
+          flex: 1;
+          padding: 8px;
+        }
+        
+        .stat-label {
+          font-size: 10px;
+        }
+        
+        .stat-value {
+          font-size: 16px;
         }
         
         .flickword-header {
           flex-direction: column;
           gap: 12px;
           text-align: center;
+        }
+        
+        /* Mobile countdown timer - smaller and more readable */
+        .flickword-countdown {
+          font-size: 12px;
+          padding: 6px 10px;
+          border-radius: 16px;
+          background: var(--primary);
+          color: white;
+          font-weight: 700;
+        }
+        
+        /* Mobile countdown subtitle */
+        .countdown-subtitle {
+          font-size: 11px;
+          margin-bottom: 12px;
+          max-width: 100%;
+        }
+        
+        /* Mobile countdown subtitle - keep original text but style it */
+        .countdown-subtitle {
+          font-size: 11px;
+        }
+      }
+      
+      /* Extra small mobile devices */
+      @media (max-width: 480px) {
+        .flickword-stats {
+          gap: 4px;
+        }
+        
+        .stat-item {
+          padding: 6px;
+        }
+        
+        .stat-label {
+          font-size: 9px;
+        }
+        
+        .stat-value {
+          font-size: 14px;
+        }
+        
+        /* Extra small mobile countdown timer */
+        .flickword-countdown {
+          font-size: 11px;
+          padding: 4px 8px;
+          border-radius: 14px;
+          background: var(--primary);
+          color: white;
+          font-weight: 700;
+        }
+        
+        /* Extra small mobile countdown subtitle */
+        .countdown-subtitle {
+          font-size: 10px;
+          margin-bottom: 10px;
+        }
+        
+
+      }
+
+      /* Full Width Layout - No Grid */
+      .main-content-row,
+      .secondary-content-row {
+        /* Grid layout removed - using full width */
+      }
+
+      /* Card Spacing for Single Column Layout */
+      .flickword-card,
+      .quote-card,
+      .horoscope-card,
+      .feedback-card {
+        margin-bottom: 20px;
+      }
+
+      /* Quote Card Styling */
+      .quote-card {
+        background: var(--card);
+        border: 2px solid var(--primary);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+      }
+
+      .quote-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      }
+
+      .quote-title {
+        margin: 0 0 12px 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .quote-content {
+        font-size: 16px;
+        color: var(--text-secondary);
+        font-style: italic;
+        line-height: 1.5;
+      }
+
+      /* Horoscope Card Styling */
+      .horoscope-card {
+        background: var(--card);
+        border: 2px solid var(--primary);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+      }
+
+      .horoscope-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      }
+
+      .horoscope-title {
+        margin: 0 0 12px 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .horoscope-content {
+        font-size: 16px;
+        color: var(--text-secondary);
+        line-height: 1.5;
+      }
+
+      /* Feedback Card Styling */
+      .feedback-card {
+        background: var(--card);
+        border: 2px solid var(--primary);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+      }
+
+      .feedback-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      }
+
+      .feedback-title {
+        margin: 0 0 12px 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .feedback-content {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+        line-height: 1.5;
+      }
+
+      .feedback-input {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .feedback-input textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 14px;
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      .feedback-input textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+
+      /* Mobile Responsiveness for New Layout */
+      @media (max-width: 768px) {
+        .main-content-row,
+        .secondary-content-row {
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+        
+        .quote-card,
+        .horoscope-card,
+        .feedback-card {
+          padding: 16px;
         }
       }
 
@@ -344,29 +728,64 @@
         align-items: center;
       }
       
+      .search-input-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        grid-column: 1 / 3;
+      }
+      
+      .search-button-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        grid-column: 3 / 5;
+      }
+      
       /* Responsive search row */
       @media (max-width: 768px) {
         .search-row {
           display: flex !important;
           flex-direction: column !important;
+          gap: 12px !important;
+        }
+        
+        .search-input-group {
+          display: flex !important;
           gap: 8px !important;
+          align-items: center !important;
+          width: 100% !important;
         }
+        
         .search-row .search-input {
-          order: 1;
+          flex: 1 !important;
+          min-width: 0 !important;
+          margin-bottom: 0 !important;
         }
+        
         .search-row .genre-filter {
-          order: 2;
+          width: auto !important;
+          min-width: 120px !important;
+          margin-bottom: 0 !important;
         }
-        /* Create a button container for side-by-side layout */
+        
+        .search-button-group {
+          display: flex !important;
+          gap: 8px !important;
+          justify-content: center !important;
+          width: 100% !important;
+        }
+        
+        /* Force buttons to stay horizontal on mobile */
         .search-row .search-btn,
         .search-row .clear-search-btn {
-          order: 3;
           display: inline-block !important;
           width: auto !important;
-          flex: 0 0 auto !important;
-        }
-        .search-row .search-btn {
-          margin-right: 8px;
+          margin: 0 !important;
+          float: none !important;
+          position: relative !important;
+          flex: 1 !important;
+          max-width: 120px !important;
         }
       }
       .tab-container {
@@ -978,6 +1397,41 @@
         display: block;
         box-sizing: border-box;
       }
+      
+      /* Auth modal specific styling to override flexbox */
+      [data-testid="auth-modal"] .modal {
+        display: block !important;
+        flex-direction: unset !important;
+        justify-content: unset !important;
+        align-items: unset !important;
+      }
+      
+      [data-testid="auth-modal"] .modal-body {
+        display: block !important;
+        clear: both !important;
+        overflow: hidden !important;
+      }
+      
+      [data-testid="auth-modal"] .modal-actions {
+        display: block !important;
+        text-align: center !important;
+        margin-top: 20px !important;
+        clear: both !important;
+        position: relative !important;
+        z-index: 10 !important;
+        border-top: 1px solid var(--border) !important;
+        padding-top: 16px !important;
+      }
+      
+      [data-testid="auth-modal"] .modal-actions button {
+        width: 80px !important;
+        flex: 0 0 80px !important;
+        font-size: 12px !important;
+        padding: 8px 16px !important;
+        min-height: 44px !important;
+        background: #6c757d !important;
+        color: white !important;
+      }
 
       /* Mobile */
       @media (max-width: 768px) {
@@ -1013,6 +1467,47 @@
         .search-container .btn {
           flex: 1 !important;
           min-height: 44px;
+        }
+        
+        /* Force search buttons horizontal on mobile */
+        .search-container .search-btn,
+        .search-container .clear-search-btn {
+          display: inline-block !important;
+          flex: 0 0 auto !important;
+          width: auto !important;
+          margin: 0 4px !important;
+          float: left !important;
+          position: relative !important;
+        }
+        
+        /* Create a button row container */
+        .search-container::after {
+          content: '';
+          display: table;
+          clear: both;
+        }
+        
+        /* Override any flexbox stacking */
+        .search-container {
+          display: block !important;
+        }
+        
+        .search-container .btn {
+          display: inline-block !important;
+          float: left !important;
+          clear: none !important;
+        }
+        
+        /* Nuclear option: force all search buttons horizontal */
+        .search-container .search-btn,
+        .search-container .clear-search-btn,
+        .search-row .search-btn,
+        .search-row .clear-search-btn {
+          display: inline-block !important;
+          float: left !important;
+          clear: none !important;
+          width: auto !important;
+          margin: 0 4px !important;
         }
 
         .show-actions {
@@ -1073,6 +1568,15 @@
         }
         .search-row {
           gap: 6px !important;
+        }
+        
+        /* Ensure search buttons stay horizontal on small mobile */
+        .search-row .search-btn,
+        .search-row .clear-search-btn {
+          display: inline-block !important;
+          width: auto !important;
+          flex: 0 0 auto !important;
+          margin: 0 2px !important;
         }
         .search-input {
           padding: 8px 10px;
@@ -1449,6 +1953,31 @@
             // Ensure tab visibility is properly set after initialization
             setTimeout(() => {
               this.updateTabVisibility();
+              // Force show home tab content after initialization
+              const homeTab = document.getElementById('homeSection');
+              if (homeTab) {
+                homeTab.style.display = 'block';
+                homeTab.style.visibility = 'visible';
+                homeTab.style.opacity = '1';
+                console.log('🎯 Forced home tab visibility after initialization');
+              }
+            }, 100);
+            
+            // Initialize FlickWord integration IMMEDIATELY after tab visibility
+            console.log('🎯 Initializing FlickWord integration immediately');
+            try {
+              this.initializeFlickWord();
+              console.log('✅ FlickWord initialization completed successfully');
+            } catch (error) {
+              console.error('❌ FlickWord initialization failed:', error);
+            }
+            
+                    // Initialize binge banner
+        this.initializeBingeBanner();
+            
+            // Process i18n attributes to fix translation display
+            setTimeout(() => {
+              processI18nAttributes();
             }, 100);
             
             // Call start function to initialize ensureBlocks
@@ -1465,14 +1994,31 @@
             
             console.log('✅ App initialized successfully');
             
-                    // Initialize the left-side username display if username exists
-        if (this.appData?.settings?.displayName) {
-          console.log('🆕 Initializing left-side username display');
-          this.updateLeftSideUsername();
-        }
-
-        // Initialize FlickWord integration
-        this.initializeFlickWord();
+            // Initialize the left-side username display if username exists
+            if (this.appData?.settings?.displayName) {
+              console.log('🆕 Initializing left-side username display');
+              this.updateLeftSideUsername();
+            }
+            
+            // Ensure home content is visible on initial load
+            setTimeout(() => {
+              const homeSection = document.getElementById('homeSection');
+              if (homeSection) {
+                homeSection.style.display = 'block';
+                homeSection.style.visibility = 'visible';
+                homeSection.style.opacity = '1';
+                console.log('🎯 Home section visibility enforced on initial load');
+              }
+              
+              // Fallback FlickWord initialization after home visibility
+              console.log('🎯 Fallback FlickWord initialization check');
+              if (!document.getElementById('playFlickwordBtn')?.onclick) {
+                console.log('🎯 FlickWord button not initialized, running fallback');
+                this.initializeFlickWord();
+              } else {
+                console.log('✅ FlickWord button already initialized');
+              }
+            }, 200);
             
             // Check if user should be prompted to login AFTER all functions are loaded
             setTimeout(() => {
@@ -1835,12 +2381,14 @@
           setTimeout(() => {
             const hEl = document.getElementById("fakeFortune");
             const qEl = document.getElementById("randomQuote");
-            if (hEl && typeof pickDailyHoroscope === 'function') {
-              hEl.textContent = pickDailyHoroscope();
-            }
-            if (qEl && typeof drawQuote === 'function') {
-              qEl.textContent = drawQuote();
-            }
+                    // DISABLED - Old content generation conflicts with new layout
+        // if (hEl && typeof pickDailyHoroscope === 'function') {
+        //   hEl.textContent = pickDailyHoroscope();
+        // }
+                    // DISABLED - Old content generation conflicts with new layout
+        // if (qEl && typeof drawQuote === 'function') {
+        //   qEl.textContent = drawQuote();
+        // }
             
             const fileInput = document.getElementById("importFile");
             if (fileInput && typeof updateFileLabel === 'function') {
@@ -2040,24 +2588,10 @@
         updateTabVisibility() {
           console.log('🎯 updateTabVisibility called, currentTab:', this.currentTab);
           
-          // Hide all tabs first
+          // Get all tab elements
           const allTabs = ['homeTab', 'watchingTab', 'wishlistTab', 'watchedTab', 'discoverTab'];
-          allTabs.forEach(tabId => {
-            const tab = document.getElementById(tabId);
-            if (tab) {
-              tab.style.display = 'block';
-              tab.style.visibility = 'visible';
-              tab.style.opacity = '1';
-              tab.style.position = 'static';
-              tab.style.left = 'auto';
-              tab.classList.remove('hidden');
-              console.log(`✅ Showing tab: ${tabId}`);
-            } else {
-              console.log(`❌ Tab not found: ${tabId}`);
-            }
-          });
           
-          // Hide the current tab
+          // Hide the current tab (user doesn't need to see it)
           let currentTabId = '';
           switch (this.currentTab) {
             case 'home':
@@ -2084,21 +2618,28 @@
               return;
           }
           
-          if (currentTabId) {
-            const currentTab = document.getElementById(currentTabId);
-            if (currentTab) {
-              // Use multiple hiding methods to ensure it's hidden
-              currentTab.style.display = 'none';
-              currentTab.style.visibility = 'hidden';
-              currentTab.style.opacity = '0';
-              currentTab.style.position = 'absolute';
-              currentTab.style.left = '-9999px';
-              currentTab.classList.add('hidden');
-              console.log(`🎯 Hidden current tab: ${currentTabId} with multiple methods`);
+          // Hide the current tab and show all others
+          allTabs.forEach(tabId => {
+            const tab = document.getElementById(tabId);
+            if (tab) {
+              if (tabId === currentTabId) {
+                // Hide current tab
+                tab.style.display = 'none';
+                console.log(`🚫 Hiding current tab: ${tabId}`);
+              } else {
+                // Show other tabs
+                tab.style.display = 'block';
+                tab.style.visibility = 'visible';
+                tab.style.opacity = '1';
+                tab.style.position = 'static';
+                tab.style.left = 'auto';
+                tab.classList.remove('hidden');
+                console.log(`✅ Showing tab: ${tabId}`);
+              }
             } else {
-              console.log(`❌ Current tab not found: ${currentTabId}`);
+              console.log(`❌ Tab not found: ${tabId}`);
             }
-          }
+          });
           
           console.log(`🎯 Tab visibility update complete - hiding ${currentTabId}, showing other tabs`);
         },
@@ -2271,13 +2812,21 @@
           // Start countdown and update stats
           this.startDailyCountdown();
           this.updateFlickWordStats();
-          this.updateWordHint();
+          this.updateFlickwordSnark();
         },
 
         setupFlickWordEventListeners() {
+          console.log('🎯 Setting up FlickWord event listeners');
           const playBtn = document.getElementById('playFlickwordBtn');
+          console.log('🎯 Play button found:', !!playBtn);
           if (playBtn) {
-            playBtn.addEventListener('click', () => this.openFlickWord());
+            playBtn.addEventListener('click', () => {
+              console.log('🎯 Play button clicked!');
+              this.openFlickWord();
+            });
+            console.log('✅ Click listener added to play button');
+          } else {
+            console.log('❌ Play button not found!');
           }
 
           // Listen for FlickWord results
@@ -2302,30 +2851,106 @@
           const dd = String(now.getUTCDate()).padStart(2, '0');
           const iso = `${yyyy}-${mm}-${dd}`;
           
-          const flickwordUrl = `/features/flickword.html?date=${iso}`;
+          const flickwordUrl = `../features/flickword.html?date=${iso}`;
+          console.log('🎯 FlickWord URL:', flickwordUrl);
           
           // Open in new tab
-          window.open(flickwordUrl, '_blank');
+          const newWindow = window.open(flickwordUrl, '_blank');
+          if (newWindow) {
+            console.log('✅ FlickWord window opened successfully');
+          } else {
+            console.log('❌ Failed to open FlickWord window - popup blocked?');
+          }
         },
 
         startDailyCountdown() {
           const countdownEl = document.getElementById('dailyCountdown');
+          const hoursLeftEl = document.getElementById('hoursLeft');
           if (!countdownEl) return;
 
           function tick() {
             const now = new Date();
             const reset = new Date(now);
-            // Reset at 00:00 UTC so everyone shares the same daily word window
-            reset.setUTCHours(24, 0, 0, 0);
+            
+            // Reset at midnight (00:00) in the user's local timezone
+            reset.setHours(24, 0, 0, 0);
+            
             const diff = Math.max(0, Math.floor((reset - now) / 1000));
-            const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+            const h = Math.floor(diff / 3600);
             const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
             const s = String(diff % 60).padStart(2, '0');
-            countdownEl.textContent = `⏱ ${h}:${m}:${s}`;
+            
+            // Show countdown with timezone info
+            countdownEl.textContent = `⏱ ${String(h).padStart(2, '0')}:${m}:${s}`;
+            
+            // Update the hours text in the subtitle
+            if (hoursLeftEl) {
+              if (h === 0) {
+                hoursLeftEl.textContent = 'minutes';
+              } else if (h === 1) {
+                hoursLeftEl.textContent = '1 hour';
+              } else {
+                hoursLeftEl.textContent = `${h} hours`;
+              }
+            }
+            
+            // Add tooltip showing when it resets
+            const resetTime = reset.toLocaleTimeString();
+            countdownEl.title = `Next word available at ${resetTime} (your local time)`;
           }
           
           tick();
           setInterval(tick, 1000);
+        },
+        
+
+        
+        updateUsageStats() {
+          // Get counts from app data
+          const watching = this.appData?.watching?.length || 0;
+          const wishlist = this.appData?.wishlist?.length || 0;
+          const watched = this.appData?.watched?.length || 0;
+          const total = watching + wishlist + watched;
+          
+          // Update display
+          const totalEl = document.getElementById('totalItemsCount');
+          const watchingEl = document.getElementById('totalWatchingCount');
+          const wishlistEl = document.getElementById('totalWishlistCount');
+          const watchedEl = document.getElementById('totalWatchedCount');
+          
+          if (totalEl) totalEl.textContent = total;
+          if (watchingEl) watchingEl.textContent = watching;
+          if (wishlistEl) wishlistEl.textContent = wishlist;
+          if (watchedEl) watchedEl.textContent = watched;
+        },
+        
+
+        
+        initializeBingeBanner() {
+          const startBingeBtn = document.getElementById('startBingeBtn');
+          if (startBingeBtn) {
+            startBingeBtn.onclick = () => {
+              const watchingSection = document.getElementById('watchingSection');
+              if (watchingSection) {
+                watchingSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            };
+          }
+          
+          // Update binge time
+          this.updateBingeTime();
+        },
+        
+        updateBingeTime() {
+          const bingeTimeText = document.getElementById('bingeTimeText');
+          if (bingeTimeText) {
+            const watching = this.appData?.watching?.length || 0;
+            if (watching > 0) {
+              bingeTimeText.textContent = `${watching}h`;
+            } else {
+              bingeTimeText.textContent = '0h';
+            }
+          }
         },
 
         updateFlickWordStats() {
@@ -2370,18 +2995,32 @@
           if (gamesPlayedEl) gamesPlayedEl.textContent = gamesPlayed;
         },
 
-        updateWordHint() {
-          const hintEl = document.getElementById('wordHint');
-          if (!hintEl) return;
+        updateFlickwordSnark() {
+          const snarkEl = document.getElementById('flickwordSnark');
+          if (!snarkEl) return;
           
-          // Get today's word first letter (this matches the game logic)
-          const now = new Date();
-          const start = new Date("2023-01-01");
-          const days = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-          const words = ["bliss", "crane", "flick", "gravy", "masks", "toast", "crown", "spine", "tiger", "pride"];
-          const todayWord = words[days % words.length];
+          // Array of snarky game/language remarks
+          const snarkyRemarks = [
+            "🎯 Ready to prove your vocabulary isn't just emojis?",
+            "🧠 Time to exercise those brain cells instead of binge-watching",
+            "📚 Because reading is fundamental (and so is winning)",
+            "🎲 Roll the dice on today's word challenge",
+            "⚡ Quick, before your brain goes into sleep mode",
+            "🎪 Step right up and test your linguistic luck",
+            "🔤 English is hard, but you're harder",
+            "🎭 The word is your stage, perform or perish",
+            "🎨 Paint with letters, not just pixels",
+            "🚀 Launch your vocabulary into orbit",
+            "🎪 Welcome to the daily word circus",
+            "🎯 Target acquired: your vocabulary",
+            "🎲 Fortune favors the wordy",
+            "🎪 The show must go on... with words",
+            "🎭 All the world's a stage, and all the words are players"
+          ];
           
-          hintEl.textContent = todayWord.charAt(0).toUpperCase();
+          // Pick a random snarky remark
+          const randomSnark = snarkyRemarks[Math.floor(Math.random() * snarkyRemarks.length)];
+          snarkEl.textContent = randomSnark;
         },
 
         handleFlickWordResult(result) {
@@ -2440,15 +3079,15 @@
           // Create and show a modal asking for username
           const modalHTML = `
             <div class="modal-backdrop" id="usernamePromptModal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-              <div class="modal" style="background: var(--card); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
-                <h3 style="margin: 0 0 16px 0; color: var(--text);">Welcome! 👋</h3>
-                <p style="margin: 0 0 20px 0; color: var(--text); line-height: 1.5;">What would you like us to call you?</p>
+              <div class="modal" style="background: var(--card); border-radius: 12px; padding: 20px; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+                <h3 style="margin: 0 0 12px 0; color: var(--text);">Welcome! 👋</h3>
+                <p style="margin: 0 0 16px 0; color: var(--text); line-height: 1.5;">What would you like us to call you?</p>
                 <input 
                   type="text" 
                   id="newUsernameInput" 
                   class="search-input" 
                   placeholder="Enter your name"
-                  style="width: 100%; margin: 15px 0;"
+                  style="width: 100%; margin: 12px 0;"
                 />
                 <div style="display: flex; gap: 10px; justify-content: flex-end;">
                   <button class="btn secondary" onclick="closeUsernamePromptModal()" style="min-width: 80px;">Skip</button>
@@ -2712,9 +3351,13 @@
               auth.signOut().then(() => {
                 this.performSignOut();
                 modal.remove();
+                this.showNotification('Signed out successfully', 'success');
               }).catch((error) => {
                 console.error('Sign out error:', error);
-                this.showNotification('Failed to sign out', 'error');
+                // Try fallback sign out even if Firebase fails
+                this.performSignOut();
+                modal.remove();
+                this.showNotification('Signed out (offline mode)', 'info');
               });
             } else {
               // Fallback sign out
@@ -2815,68 +3458,70 @@
     <!-- Main Container -->
     <div class="main-container" id="appRoot">
       <header class="header" role="banner">
-        <!-- New left-side container for username and snarky phrase -->
-        <div id="usernameSnarkContainer" style="text-align: left; min-width: 200px;">
-          <div id="dynamicUsername" style="font-size: 18px; font-weight: bold; color: #e74c3c; margin-bottom: 4px;">Welcome!</div>
-          <div id="dynamicSnark" style="font-size: 14px; color: #7f8c8d; font-style: italic;">Ready to track your shows</div>
-        </div>
-        
-        <div>
-          <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
-          <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
-          <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
-        </div>
-        <div class="user-section">
-          <button id="darkModeToggle" class="btn" title="Theme">
-            <span id="themeIcon">🌙</span>
-          </button>
-          <button
-            id="mardiToggle"
-            class="btn secondary"
-            title="Mardi Gras mode"
-          >
-            🎭
-          </button>
+        <!-- Mobile-optimized header layout -->
+        <div class="header-mobile">
+          <!-- Centered title section -->
+          <div class="header-title-center">
+            <h1 id="welcomeText" class="title">Flicklet</h1>
+                          <div id="snarkySubtitle" class="subtitle">TV & Movie Tracker</div>
+                              <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
+          </div>
           
-          <!-- Settings button in bottom left -->
-          <button id="settingsTab" class="btn secondary" title="Settings">
-            ⚙️
-          </button>
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <button
-              id="accountBtn"
-              class="btn secondary"
-              title="Sign in / Account"
-            >
-              👤 <span data-i18n="sign_in_account">Sign In</span>
+          <!-- Left and right user controls -->
+          <div class="header-user-controls">
+            <div class="header-left-controls">
+              <button id="accountBtn" class="btn secondary" title="Sign in / Account">
+                👤 Sign In
+              </button>
+            </div>
+                      <div class="header-right-controls">
+            <button id="darkModeToggle" class="btn" title="Theme">
+              <span id="themeIcon">🌙</span>
+            </button>
+            <button id="mardiToggle" class="btn secondary" title="Mardi Gras mode">
+              🎭
+            </button>
+            <button id="settingsTab" class="btn secondary" title="Settings">
+              ⚙️
             </button>
             <select id="langToggle" aria-label="Language" title="Language" onchange="changeLanguage(this.value).catch(console.error)">
               <option value="en">EN</option>
               <option value="es">ES</option>
             </select>
           </div>
+          </div>
+        </div>
+        
+        <!-- Hidden username container for other functionality -->
+        <div id="usernameSnarkContainer" style="display: none;">
+          <div id="dynamicUsername" style="font-size: 18px; font-weight: bold; color: #e74c3c; margin-bottom: 4px;">Welcome!</div>
+          <div id="dynamicSnark" style="font-size: 14px; color: #7f8c8d; font-style: italic;">Ready to track your shows</div>
         </div>
       </header>
 
       <!-- Sticky Top Search -->
       <div class="top-search">
         <div class="search-help">
-          <small>💡 <span data-i18n="search_tips">Search tips: Use * for wildcards (e.g., "marvel*" for Marvel shows)</span></small>
+          <small>💡 Search tips: Use * for wildcards (e.g., "marvel*" for Marvel shows)</small>
         </div>
         <div class="search-row">
-          <input
-            id="searchInput"
-            class="search-input"
-            placeholder=""
-            data-i18n-placeholder="search_placeholder"
-          />
-          <select id="genreFilter" class="genre-filter">
-            <option value="" data-i18n="all_genres">All Genres</option>
-          </select>
-          <button id="searchBtn" class="btn search-btn">🔍 <span data-i18n="search">Search</span></button>
-          <button id="clearSearchBtn" class="btn secondary clear-search-btn">
-            ✖️ <span data-i18n="clear">Clear</span>
-          </button>
+          <div class="search-input-group">
+            <input
+              id="searchInput"
+              class="search-input"
+              placeholder="Search for shows or movies..."
+              data-i18n-placeholder="search_placeholder"
+            />
+            <select id="genreFilter" class="genre-filter">
+              <option value="">All Genres</option>
+            </select>
+          </div>
+          <div class="search-button-group">
+            <button id="searchBtn" class="btn search-btn">🔍 Search</button>
+            <button id="clearSearchBtn" class="btn secondary clear-search-btn">
+              ❌ Close
+            </button>
+          </div>
         </div>
         <div
           id="tagFilterRow"
@@ -2886,79 +3531,96 @@
       </div>
 
       <div class="tab-container">
-        <button id="homeTab" class="tab active">🏠 <span data-i18n="home">Home</span></button>
+        <button id="homeTab" class="tab active">🏠 Home</button>
         <button id="watchingTab" class="tab">
-          ▶️ <span data-i18n="currently_watching">Currently Watching</span>
+          ▶️ Currently Watching
           <span class="tab-badge" id="watchingBadge">0</span>
         </button>
         <button id="wishlistTab" class="tab">
-          📖 <span data-i18n="want_to_watch">Want to Watch</span>
+          📖 Want to Watch
           <span class="tab-badge" id="wishlistBadge">0</span>
         </button>
         <button id="watchedTab" class="tab">
-          ✅ <span data-i18n="already_watched">Already Watched</span>
+          ✅ Already Watched
           <span class="tab-badge" id="watchedBadge">0</span>
         </button>
-        <button id="discoverTab" class="tab">✨ <span data-i18n="discover">Discover</span></button>
-      </div>
-
-      <!-- FlickWord Daily Challenge Card -->
-      <div id="flickwordCard" class="flickword-card" style="display: none;">
-        <div class="flickword-header">
-          <h3 class="flickword-title">🎯 Daily Word Challenge</h3>
-          <div class="flickword-countdown" id="dailyCountdown">⏱ 00:00:00</div>
-        </div>
-        <div class="flickword-stats">
-          <div class="stat-item">
-            <span class="stat-label">🔥 Streak</span>
-            <span class="stat-value" id="streakCount">0</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">🏆 Best</span>
-            <span class="stat-value" id="bestScore">-</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">📊 Played</span>
-            <span class="stat-value" id="gamesPlayed">0</span>
-          </div>
-        </div>
-        <div class="flickword-actions">
-          <button id="playFlickwordBtn" class="btn primary">Play Today's Word</button>
-          <div class="flickword-hint">💡 Hint: Today's word starts with "<span id="wordHint">?</span>"</div>
-        </div>
+        <button id="discoverTab" class="tab">✨ Discover</button>
       </div>
 
       <!-- Results -->
       <div id="searchResults" class="section" style="display: none">
                   <h3>
-            🎯 <span data-i18n="search_results">Search Results</span> <span class="count" id="resultsCount">0</span>
+            🎯 Search Results <span class="count" id="resultsCount">0</span>
           </h3>
         <div id="searchResultsList" class="list-container"></div>
       </div>
 
+
+
       <!-- Home -->
       <div id="homeSection" class="tab-section">
-        <div class="stats">
-          <div class="stat" id="bingeMeter"></div>
+      
+
+        <!-- Daily Word Challenge (Full Width) -->
+        <div id="flickwordCard" class="flickword-card">
+          <div class="flickword-header">
+            <h3 class="flickword-title">🎯 Daily Word Challenge</h3>
+            <div class="flickword-countdown" id="dailyCountdown">⏱ 00:00:00</div>
+                      <div class="countdown-subtitle" id="countdownSubtitle">Hurry! Only <span id="hoursLeft">hours</span> left!</div>
+          </div>
+          <div class="flickword-stats">
+            <div class="stat-item">
+              <span class="stat-label">🔥 Streak</span>
+              <span class="stat-value" id="streakCount">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">🏆 Best</span>
+              <span class="stat-value" id="bestScore">-</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">📊 Played</span>
+              <span class="stat-value" id="gamesPlayed">0</span>
+            </div>
+          </div>
+          <div class="flickword-actions">
+            <button id="playFlickwordBtn" class="btn primary">Play Today's Word</button>
+            <div class="flickword-snark" id="flickwordSnark">🎯 Ready to prove your vocabulary isn't just emojis?</div>
+          </div>
         </div>
 
+        <!-- Daily Quote (Full Width) -->
+        <div class="quote-card">
+          <h3 class="quote-title">💭 Daily Quote</h3>
+          <div class="quote-content">
+            "I contain multitudes and several watchlists."
+          </div>
+        </div>
+
+        <!-- Streaming Horoscope (Full Width) -->
+        <div class="horoscope-card">
+          <h3 class="horoscope-title">🧠 Streaming Horoscope</h3>
+          <div class="horoscope-content">
+            You pretend the algorithm is your friend.
+          </div>
+        </div>
+
+        <!-- Feedback Section (Full Width) -->
+        <div class="feedback-card">
+          <h3 class="feedback-title">💬 Feedback</h3>
+          <div class="feedback-content">
+            Tell us what's working and what's not. Be blunt.
+          </div>
+          <div class="feedback-input">
+            <textarea placeholder="Your feedback..." rows="3"></textarea>
+            <button class="btn primary">Send</button>
+          </div>
+        </div>
 
       </div>
 
       <main id="main" role="main">
 
-      <!-- Watching -->
-      <div id="watchingSection" class="tab-section" style="display: none">
-        <div class="section">
-          <div class="section-header">
-            <h3>
-              ▶️ <span data-i18n="currently_watching">Currently Watching</span>
-              <span class="count" id="watchingCount">0</span>
-            </h3>
-          </div>
-          <div id="watchingList" class="list-container"></div>
-        </div>
-      </div>
+
 
       <!-- Wishlist -->
       <div id="wishlistSection" class="tab-section" style="display: none">
@@ -4449,7 +5111,7 @@
             <h3 id="modal-title">${title}</h3>
             <div class="modal-body">${html}</div>
             <div class="modal-actions">
-              <button class="btn secondary" data-testid="modal-close" type="button" style="width: 120px !important; flex: 0 0 120px !important; font-size: 14px !important; padding: 12px 18px !important; min-height: 44px !important;">Close</button>
+              <button class="btn secondary" data-testid="modal-close" type="button">Close</button>
             </div>
           </div>`;
         document.body.appendChild(wrap);
@@ -4464,35 +5126,11 @@
         const modalEl = wrap.querySelector('.modal');
         modalEl.focus();
         
-        // Style the modal actions container for consistent button layout
-        const modalActions = wrap.querySelector('.modal-actions');
-        if (modalActions) {
-          if (testId === "auth-modal") {
-            // For the main sign-in modal, ensure buttons are centered and have consistent spacing
-            modalActions.style.display = 'flex';
-            modalActions.style.justifyContent = 'center';
-            modalActions.style.gap = '12px';
-            modalActions.style.flexWrap = 'wrap';
-          }
-        }
+
         const closeBtn = wrap.querySelector('[data-testid="modal-close"]');
         closeBtn.addEventListener("click", close);
         
-        // Style the close button to match other buttons in the modal
-        if (testId === "email-login-modal") {
-          closeBtn.style.width = "120px";
-          closeBtn.style.flex = "0 0 120px";
-          closeBtn.style.fontSize = "14px";
-          closeBtn.style.padding = "12px 18px";
-          closeBtn.style.minHeight = "44px";
-        } else if (testId === "auth-modal") {
-          // Make the main sign-in modal's close button match the email modal's close button
-          closeBtn.style.width = "120px";
-          closeBtn.style.flex = "0 0 120px";
-          closeBtn.style.fontSize = "14px";
-          closeBtn.style.padding = "12px 18px";
-          closeBtn.style.minHeight = "44px";
-        }
+
       }
 
       function showNameModal(force = false) {
@@ -4562,12 +5200,22 @@
           "Sign in to sync",
           `
             <p style="margin-bottom: 20px;">Sign in to back up your lists and sync across devices.</p>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; justify-content:center; align-items:center; max-width:320px; margin:0 auto;">
-              <button id="googleBtn" class="btn" style="font-size:14px; padding:12px 18px; min-height:44px;">🔒 Google</button>
-              <button id="appleBtn" class="btn secondary" style="font-size:14px; padding:12px 18px; min-height:44px;">🍎 Apple</button>
-              <button id="emailBtn" class="btn secondary" style="font-size:14px; padding:12px 18px; min-height:44px; grid-column: 1 / -1;">✉️ Email</button>
-              <button id="signOutBtn" class="btn secondary" style="display:none; font-size:14px; padding:12px 18px; min-height:44px;">Sign Out</button>
+            
+            <!-- Top row: Google and Apple buttons -->
+            <div style="display: flex; gap: 16px; justify-content: center; margin-bottom: 20px;">
+              <button id="googleBtn" class="btn" style="font-size: 14px; padding: 12px 18px; min-height: 44px; flex: 1; max-width: 140px;">🔒 Google</button>
+              <button id="appleBtn" class="btn secondary" style="font-size: 14px; padding: 12px 18px; min-height: 44px; flex: 1; max-width: 140px;">🍎 Apple</button>
             </div>
+            
+            <!-- Middle row: Email button -->
+            <div style="display: flex; justify-content: center; margin-bottom: 16px;">
+              <button id="emailBtn" class="btn secondary" style="font-size: 14px; padding: 12px 18px; min-height: 44px; width: 100%; max-width: 200px;">✉️ Email</button>
+            </div>
+            
+            <!-- Help text -->
+            <p style="margin-top: 16px; font-size: 12px; color: #666; text-align: center;">
+              <a href="#" onclick="showHelpModal(); return false;" style="color: #007bff; text-decoration: none;">Need help signing in?</a>
+            </p>
           `,
           "auth-modal"
         );
@@ -4664,6 +5312,29 @@
               });
           };
         }
+      }
+
+      function showHelpModal() {
+        openModal(
+          "Sign In Help",
+          `
+            <div style="text-align: left; max-width: 400px;">
+              <h4 style="margin-bottom: 16px;">How to sign in:</h4>
+              <ul style="margin-bottom: 20px; padding-left: 20px;">
+                <li><strong>Google:</strong> Use your Google account (Gmail, etc.)</li>
+                <li><strong>Apple:</strong> Use your Apple ID (iPhone, iPad, etc.)</li>
+                <li><strong>Email:</strong> Create a new account with email/password</li>
+              </ul>
+              <p style="font-size: 14px; color: #666;">
+                Signing in allows you to:
+                <br>• Save your watchlists across devices
+                <br>• Access your data from anywhere
+                <br>• Never lose your progress
+              </p>
+            </div>
+          `,
+          "help-modal"
+        );
       }
 
       function escapeHtml(str) {
@@ -4948,7 +5619,8 @@
           const hEl = document.getElementById("fakeFortune");
           const qEl = document.getElementById("randomQuote");
           if (hEl) {
-            hEl.textContent = pickDailyHoroscope();
+            // DISABLED - Old content generation conflicts with new layout
+        // hEl.textContent = pickDailyHoroscope();
           }
           if (qEl) {
             qEl.textContent = drawQuote();
@@ -6403,8 +7075,9 @@
         // updateBingeMeter?.(); // Disabled - removed from home page
         // updateBingeBanner?.(); // Disabled - removed from front page
         
+        // DISABLED - Old content generation conflicts with new layout
         // Ensure home page blocks are inserted (quotes, horoscope, feedback)
-        const blocksResult = ensureBlocks?.();
+        // const blocksResult = ensureBlocks?.();
         
         applyTranslations?.();
         
@@ -6444,7 +7117,7 @@
             return;
           }
 
-          out.style.display = "";
+          out.style.display = "block";
           out.innerHTML = t("searching");
 
           if (typeof tmdbGet !== "function") {
@@ -6707,94 +7380,98 @@
         }
 
         // ---------- DOM injection (idempotent) ----------
-        window.ensureBlocks = function() {
-          const home = document.getElementById("homeSection");
-          if (!home) {
+        // DISABLED - Old content generation conflicts with new layout
+        // window.ensureBlocks = function() {
+        //   const home = document.getElementById("homeSection");
+        //   if (!home) {
     
-            return false;
-          }
+        //     return false;
+        //   }
 
 
           
-          // If home section is empty, create a container div first
-          if (!home.firstElementChild) {
-            const container = document.createElement("div");
-            container.id = "homeContentContainer";
-            home.appendChild(container);
+        //   // If home section is empty, create a container div first
+        //   if (!home.firstElementChild) {
+        //     const container = document.createElement("div");
+        //     container.id = "homeContentContainer";
+        //     home.appendChild(container);
     
-          }
+        //   }
           
-          const anchor = home.firstElementChild;
+        //   const anchor = home.firstElementChild;
 
-          // Insert quotes first (after tabs, before feedback)
-          if (!document.getElementById("quoteBlock")) {
-            const block = document.createElement("blockquote");
-            block.className = "feedback-card";
-            block.id = "quoteBlock";
-            block.style.textAlign = "center";
-            block.style.fontStyle = "italic";
-            block.innerHTML = `<p id="randomQuote">"${t("quote_loading")}"</p>`;
-            anchor.insertAdjacentElement("afterend", block);
-          }
+        //   // Insert quotes first (after tabs, before feedback)
+        //   if (!document.getElementById("quoteBlock")) {
+        //     const block = document.createElement("blockquote");
+        //     block.className = "feedback-card";
+        //     block.id = "quoteBlock";
+        //     block.style.textAlign = "center";
+        //     block.style.fontStyle = "italic";
+        //     block.innerHTML = `<p id="randomQuote">"${t("quote_loading")}"</p>`;
+        //     anchor.insertAdjacentElement("afterend", block);
+        //   }
 
-          // Insert horoscope second (after quotes)
-          if (!document.getElementById("personalityForecast")) {
-            const card = document.createElement("div");
-            card.className = "feedback-card";
-            card.id = "personalityForecast";
-            card.innerHTML = `
-                    <h3>🧠 <span data-i18n="streaming_horoscope">Streaming Horoscope</span></h3>
-        <p id="fakeFortune" style="margin:0; font-style:italic;"></p>
-      `;
-            const insertAfter = document.getElementById("quoteBlock") || anchor;
-            insertAfter.insertAdjacentElement("afterend", card);
-          }
+        //   // Insert horoscope second (after quotes)
+        //   if (!document.getElementById("personalityForecast")) {
+        //     const card = document.createElement("div");
+        //     card.id = "personalityForecast";
+        //     card.innerHTML = `
+        //             <h3>🧠 <span data-i18n="streaming_horoscope">Streaming Horoscope</span></h3>
+        // <p id="fakeFortune" style="margin:0; font-style:italic;"></p>
+        //   `;
+        //     const insertAfter = document.getElementById("quoteBlock") || anchor;
+        //     insertAfter.insertAdjacentElement("afterend", card);
+        //   }
 
-          // Insert feedback section last (at the bottom)
-          if (!document.getElementById("feedbackSection")) {
-            const feedbackCard = document.createElement("div");
-            feedbackCard.className = "feedback-card";
-            feedbackCard.id = "feedbackSection";
-            feedbackCard.innerHTML = `
-                          <h3 data-i18n="feedback">Feedback</h3>
-            <p data-i18n="feedback_working">Tell us what's working and what's not. Be blunt.</p>
-              <form name="feedback" method="POST" class="feedback-form" onsubmit="handleFeedbackSubmit(event)">
-                <input type="hidden" name="theme" id="feedbackThemeInput" />
-                <div style="display: flex; gap: 8px; flex-wrap: wrap">
-                  <textarea
-                    name="message"
-                    class="search-input"
-                    placeholder=""
-                    data-i18n-placeholder="feedback_placeholder"
-                    rows="3"
-                    required
-                    style="resize: vertical; min-height: 60px;"
-                  ></textarea>
-                  <button type="submit" class="btn" data-i18n="send">Send</button>
-                </div>
-              </form>
-            `;
-            const insertAfter = document.getElementById("personalityForecast") || document.getElementById("quoteBlock") || anchor;
-            insertAfter.insertAdjacentElement("afterend", feedbackCard);
-          }
+        //   // Insert feedback section last (at the bottom)
+        //   if (!document.getElementById("feedbackSection")) {
+        //     const feedbackCard = document.createElement("div");
+        //     feedbackCard.className = "feedback-card";
+        //     feedbackCard.id = "feedbackSection";
+        //     feedbackCard.innerHTML = `
+        //                       <h3 data-i18n="feedback">Feedback</h3>
+        //     <p data-i18n="feedback_working">Tell us what's working and what's not. Be blunt.</p>
+        //       <form name="feedback" method="POST" class="feedback-form" onsubmit="handleFeedbackSubmit(event)">
+        //         <input type="hidden" name="theme" id="feedbackThemeInput" />
+        //         <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        //           <textarea
+        //             name="message"
+        //             class="search-input"
+        //             placeholder=""
+        //             data-i18n-placeholder="feedback_placeholder"
+        //             rows="3"
+        //             required
+        //             style="resize: vertical; min-height: 60px;"
+        //           ></textarea>
+        //           <button type="submit" class="btn" data-i18n="send">Send</button>
+        //         </div>
+        //       </form>
+        //     `;
+        //     const insertAfter = document.getElementById("personalityForecast") || document.getElementById("quoteBlock") || anchor;
+        //     insertAfter.insertAdjacentElement("afterend", feedbackCard);
+        //   }
 
-          const hEl = document.getElementById("fakeFortune");
-          const qEl = document.getElementById("randomQuote");
-          if (hEl) hEl.textContent = pickDailyHoroscope();
-          if (qEl) qEl.textContent = drawQuote();
+        //   const hEl = document.getElementById("fakeFortune");
+        //   const qEl = document.getElementById("randomQuote");
+        //   // DISABLED - Old content generation conflicts with new layout
+        // // if (hEl) hEl.textContent = pickDailyHoroscope();
+        //     // DISABLED - Old content generation conflicts with new layout
+        // // if (qEl) qEl.textContent = drawQuote();
 
-          return true;
-        }
+        //   return true;
+        // }
 
-        const start = () => {
-          console.log("🚀 start() function called");
-          const result = ensureBlocks();
-          if (!result) {
-            requestAnimationFrame(ensureBlocks);
-          }
-        };
+        // DISABLED - Old content generation conflicts with new layout
+        // const start = () => {
+        //   console.log("🚀 start() function called");
+        //   const result = ensureBlocks();
+        //   if (!result) {
+        //     requestAnimationFrame(ensureBlocks);
+        //   }
+        // };
 
         // start() function will be called by FlickletApp.init() or the fallback initialization
+        // DISABLED - Old content generation conflicts with new layout
       })();
     </script>
 
@@ -7178,6 +7855,139 @@
         // FlickletApp.init() already called at the beginning if available
 
       });
+      
+      // Global modal functions
+      function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+          modal.style.display = 'none';
+        }
+      }
+      
+      // Global translation function for search only
+      function t(key) {
+        const translations = {
+          searching: 'Searching...',
+          no_results: 'No results found',
+          search_failed: 'Search failed',
+          search_results_cleared: 'Search results cleared due to language change.',
+          please_search_again: 'Please search again to see results in the new language.'
+        };
+        return translations[key] || key;
+      }
+      
+      // Fix the i18n display issue by processing data-i18n attributes
+      function processI18nAttributes() {
+        // Handle data-i18n attributes
+        const i18nElements = document.querySelectorAll('[data-i18n]');
+        i18nElements.forEach(element => {
+          const key = element.getAttribute('data-i18n');
+          if (key === 'app_title') {
+            element.textContent = 'Flicklet';
+          } else if (key === 'subtitle') {
+            element.textContent = 'TV & Movie Tracker';
+          } else if (key === 'sign_in_account') {
+            element.textContent = 'Sign In';
+          } else if (key === 'search') {
+            element.textContent = 'Search';
+          } else if (key === 'clear') {
+            element.textContent = 'Close';
+          } else if (key === 'all_genres') {
+            element.textContent = 'All Genres';
+          } else if (key === 'search_tips') {
+            element.textContent = 'Search tips: Use * for wildcards (e.g., "marvel*" for Marvel shows)';
+          } else if (key === 'home') {
+            element.textContent = 'Home';
+          } else if (key === 'currently_watching') {
+            element.textContent = 'Currently Watching';
+          } else if (key === 'want_to_watch') {
+            element.textContent = 'Want to Watch';
+          } else if (key === 'already_watched') {
+            element.textContent = 'Already Watched';
+          } else if (key === 'discover') {
+            element.textContent = 'Discover';
+          } else if (key === 'search_results') {
+            element.textContent = 'Search Results';
+          } else if (key === 'discover_description') {
+            element.textContent = 'Recommendations based on your likes and ratings.';
+          } else if (key === 'settings') {
+            element.textContent = 'Settings';
+          } else if (key === 'save_name') {
+            element.textContent = 'Save';
+          } else if (key === 'pro_simulate') {
+            element.textContent = 'Pro (simulate)';
+          } else if (key === 'pro_features') {
+            element.textContent = '🚀 Pro Features:';
+          } else if (key === 'pro_feature_analytics') {
+            element.textContent = '📊 Advanced analytics & binge insights';
+          } else if (key === 'pro_feature_categories') {
+            element.textContent = '🏷️ Custom watchlist categories & tags';
+          } else if (key === 'pro_feature_export') {
+            element.textContent = '📤 Export to CSV, JSON & PDF formats';
+          } else if (key === 'pro_feature_support') {
+            element.textContent = '🎯 Priority customer support';
+          } else if (key === 'pro_feature_early_access') {
+            element.textContent = '⚡ Early access to new features';
+          } else if (key === 'pro_feature_backup') {
+            element.textContent = '☁️ Cloud backup & cross-device sync';
+          } else if (key === 'pro_feature_recommendations') {
+            element.textContent = '🎬 Personalized AI recommendations';
+          } else if (key === 'pro_feature_stats') {
+            element.textContent = '📈 Detailed watching statistics';
+          } else if (key === 'backup_import') {
+            element.textContent = 'Backup & Import';
+          } else if (key === 'share_selected') {
+            element.textContent = 'Select Items to Share';
+          } else if (key === 'nuclear_option') {
+            element.textContent = 'Nuclear Option';
+          } else if (key === 'notifications') {
+            element.textContent = 'Notifications';
+          } else if (key === 'episode_alerts') {
+            element.textContent = 'Upcoming episode alerts';
+          } else if (key === 'weekly_discover') {
+            element.textContent = 'Weekly discover picks';
+          } else if (key === 'monthly_digest') {
+            element.textContent = 'Monthly stats digest';
+          } else if (key === 'select_all_everything') {
+            element.textContent = 'Select All Everything';
+          } else if (key === 'generate_share_link') {
+            element.textContent = 'Select what to share';
+          } else if (key === 'close') {
+            element.textContent = 'Close';
+          } else if (key === 'stats') {
+            element.textContent = 'Stats';
+          } else if (key === 'loading') {
+            element.textContent = 'Loading…';
+          } else if (key === 'pro') {
+            element.textContent = 'Pro';
+          }
+        });
+        
+        // Handle data-i18n-placeholder attributes
+        const placeholderElements = document.querySelectorAll('[data-i18n-placeholder]');
+        placeholderElements.forEach(element => {
+          const key = element.getAttribute('data-i18n-placeholder');
+          if (key === 'search_placeholder') {
+            element.placeholder = 'Search for shows or movies...';
+          }
+        });
+      }
+      
+      // Call it immediately and also after DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', processI18nAttributes);
+      } else {
+        processI18nAttributes();
+      }
+      
+      // Also call it after a delay to catch any late elements
+      setTimeout(processI18nAttributes, 100);
+      setTimeout(processI18nAttributes, 500);
+      setTimeout(processI18nAttributes, 1000);
+      setTimeout(processI18nAttributes, 2000);
+      
+      // Also call it when the window loads
+      window.addEventListener('load', processI18nAttributes);
     </script>
   </body>
 </html>
