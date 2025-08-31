@@ -81,29 +81,38 @@
       /* Mobile-first approach: scale everything down proportionally */
       .tile{width:48px;height:48px;font-size:18px}
       
-      /* Responsive keyboard keys that scale with screen width */
-      .key{min-width:calc(8vw - 4px);height:40px;font-size:clamp(12px, 3.5vw, 16px);padding:0 2px}
+      /* Responsive keyboard keys that scale with screen width - bigger and more usable */
+      .key{min-width:calc(9vw - 2px);height:44px;font-size:clamp(14px, 4vw, 18px);padding:0 4px}
       
-      /* Reduce gaps to fit more keys */
-      .kb-row{gap:2px;justify-content:center;flex-wrap:nowrap}
+      /* Better gaps to fit more keys without cutting off */
+      .kb-row{gap:3px;justify-content:center;flex-wrap:nowrap}
       
       /* Container adjustments */
       #gameWrapper{padding:12px;margin:8px auto;max-width:100vw;box-sizing:border-box}
-      #keyboard{max-width:100vw;overflow:hidden;padding:0 4px;box-sizing:border-box}
+      #keyboard{max-width:100vw;overflow:hidden;padding:0 6px;box-sizing:border-box}
       
       /* Ensure all rows center properly */
       .kb-row:first-child{justify-content:center}
       .kb-row:last-child{justify-content:center}
       
-      /* Special handling for Enter and Backspace keys */
-      .key.enter,.key.back{min-width:calc(10vw - 4px)}
+      /* Special handling for Enter and Backspace keys - bigger for easier tapping */
+      .key.enter,.key.back{min-width:calc(12vw - 2px)}
     }
     
     /* Extra small mobile devices */
     @media (max-width:360px){
-      .key{min-width:calc(7vw - 2px);height:36px;font-size:clamp(10px, 3vw, 14px)}
+      .key{min-width:calc(8.5vw - 1px);height:40px;font-size:clamp(12px, 3.5vw, 16px)}
       .tile{width:44px;height:44px;font-size:16px}
+      .kb-row{gap:2px}
+    }
+    
+    /* Extra extra small mobile devices */
+    @media (max-width:320px){
+      .key{min-width:calc(8vw);height:38px;font-size:clamp(11px, 3.2vw, 15px)}
+      .tile{width:42px;height:42px;font-size:15px}
       .kb-row{gap:1px}
+      #gameWrapper{padding:8px;margin:4px auto}
+      #keyboard{padding:0 2px}
     }
   </style>
 </head>
