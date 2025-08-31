@@ -100,6 +100,67 @@
         margin-bottom: 12px;
       }
       
+      /* Mobile header layout */
+      .header-mobile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        width: 100%;
+      }
+      
+      .header-title-center {
+        text-align: center;
+        order: 1;
+      }
+      
+      .header-user-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        order: 2;
+      }
+      
+      .header-left-controls,
+      .header-right-controls {
+        flex: 1;
+      }
+      
+      .header-right-controls {
+        text-align: right;
+      }
+      
+      /* Mobile header responsive adjustments */
+      @media (max-width: 768px) {
+        .header {
+          padding: 16px;
+          gap: 16px;
+        }
+        
+        .header-mobile {
+          gap: 20px;
+        }
+        
+        .header-title-center .title {
+          font-size: 1.8rem;
+        }
+        
+        .header-title-center .subtitle {
+          font-size: 14px;
+        }
+        
+        .header-user-controls {
+          gap: 16px;
+        }
+        
+        .header-left-controls .btn,
+        .header-right-controls select {
+          padding: 8px 12px;
+          font-size: 14px;
+        }
+      }
+      
       .header-left {
         flex: 1;
         max-width: 600px;
@@ -199,6 +260,19 @@
         font-weight: 600;
         font-size: 14px;
         font-family: monospace;
+        margin-bottom: 8px;
+      }
+      
+      .countdown-subtitle {
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-style: italic;
+        text-align: center;
+        margin-bottom: 16px;
+        line-height: 1.4;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
       }
 
       .flickword-stats {
@@ -250,12 +324,24 @@
       /* Mobile responsiveness for FlickWord */
       @media (max-width: 768px) {
         .flickword-stats {
-          flex-direction: column;
-          gap: 12px;
+          flex-direction: row;
+          gap: 8px;
+          justify-content: space-between;
+          flex-wrap: wrap;
         }
         
         .stat-item {
           min-width: auto;
+          flex: 1;
+          padding: 8px;
+        }
+        
+        .stat-label {
+          font-size: 10px;
+        }
+        
+        .stat-value {
+          font-size: 16px;
         }
         
         .flickword-header {
@@ -263,6 +349,65 @@
           gap: 12px;
           text-align: center;
         }
+        
+        /* Mobile countdown timer - smaller and more readable */
+        .flickword-countdown {
+          font-size: 12px;
+          padding: 6px 10px;
+          border-radius: 16px;
+          background: var(--primary);
+          color: white;
+          font-weight: 700;
+        }
+        
+        /* Mobile countdown subtitle */
+        .countdown-subtitle {
+          font-size: 11px;
+          margin-bottom: 12px;
+          max-width: 100%;
+        }
+        
+        /* Mobile countdown subtitle - keep original text but style it */
+        .countdown-subtitle {
+          font-size: 11px;
+        }
+      }
+      
+      /* Extra small mobile devices */
+      @media (max-width: 480px) {
+        .flickword-stats {
+          gap: 4px;
+        }
+        
+        .stat-item {
+          padding: 6px;
+        }
+        
+        .stat-label {
+          font-size: 9px;
+        }
+        
+        .stat-value {
+          font-size: 14px;
+        }
+        
+        /* Extra small mobile countdown timer */
+        .flickword-countdown {
+          font-size: 11px;
+          padding: 4px 8px;
+          border-radius: 14px;
+          background: var(--primary);
+          color: white;
+          font-weight: 700;
+        }
+        
+        /* Extra small mobile countdown subtitle */
+        .countdown-subtitle {
+          font-size: 10px;
+          margin-bottom: 10px;
+        }
+        
+
       }
 
       /* Full Width Layout - No Grid */
@@ -486,29 +631,64 @@
         align-items: center;
       }
       
+      .search-input-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        grid-column: 1 / 3;
+      }
+      
+      .search-button-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        grid-column: 3 / 5;
+      }
+      
       /* Responsive search row */
       @media (max-width: 768px) {
         .search-row {
           display: flex !important;
           flex-direction: column !important;
+          gap: 12px !important;
+        }
+        
+        .search-input-group {
+          display: flex !important;
           gap: 8px !important;
+          align-items: center !important;
+          width: 100% !important;
         }
+        
         .search-row .search-input {
-          order: 1;
+          flex: 1 !important;
+          min-width: 0 !important;
+          margin-bottom: 0 !important;
         }
+        
         .search-row .genre-filter {
-          order: 2;
+          width: auto !important;
+          min-width: 120px !important;
+          margin-bottom: 0 !important;
         }
-        /* Create a button container for side-by-side layout */
+        
+        .search-button-group {
+          display: flex !important;
+          gap: 8px !important;
+          justify-content: center !important;
+          width: 100% !important;
+        }
+        
+        /* Force buttons to stay horizontal on mobile */
         .search-row .search-btn,
         .search-row .clear-search-btn {
-          order: 3;
           display: inline-block !important;
           width: auto !important;
-          flex: 0 0 auto !important;
-        }
-        .search-row .search-btn {
-          margin-right: 8px;
+          margin: 0 !important;
+          float: none !important;
+          position: relative !important;
+          flex: 1 !important;
+          max-width: 120px !important;
         }
       }
       .tab-container {
@@ -1156,6 +1336,47 @@
           flex: 1 !important;
           min-height: 44px;
         }
+        
+        /* Force search buttons horizontal on mobile */
+        .search-container .search-btn,
+        .search-container .clear-search-btn {
+          display: inline-block !important;
+          flex: 0 0 auto !important;
+          width: auto !important;
+          margin: 0 4px !important;
+          float: left !important;
+          position: relative !important;
+        }
+        
+        /* Create a button row container */
+        .search-container::after {
+          content: '';
+          display: table;
+          clear: both;
+        }
+        
+        /* Override any flexbox stacking */
+        .search-container {
+          display: block !important;
+        }
+        
+        .search-container .btn {
+          display: inline-block !important;
+          float: left !important;
+          clear: none !important;
+        }
+        
+        /* Nuclear option: force all search buttons horizontal */
+        .search-container .search-btn,
+        .search-container .clear-search-btn,
+        .search-row .search-btn,
+        .search-row .clear-search-btn {
+          display: inline-block !important;
+          float: left !important;
+          clear: none !important;
+          width: auto !important;
+          margin: 0 4px !important;
+        }
 
         .show-actions {
           display: flex !important;
@@ -1215,6 +1436,15 @@
         }
         .search-row {
           gap: 6px !important;
+        }
+        
+        /* Ensure search buttons stay horizontal on small mobile */
+        .search-row .search-btn,
+        .search-row .clear-search-btn {
+          display: inline-block !important;
+          width: auto !important;
+          flex: 0 0 auto !important;
+          margin: 0 2px !important;
         }
         .search-input {
           padding: 8px 10px;
@@ -2218,24 +2448,10 @@
         updateTabVisibility() {
           console.log('🎯 updateTabVisibility called, currentTab:', this.currentTab);
           
-          // Hide all tabs first
+          // Get all tab elements
           const allTabs = ['homeTab', 'watchingTab', 'wishlistTab', 'watchedTab', 'discoverTab'];
-          allTabs.forEach(tabId => {
-            const tab = document.getElementById(tabId);
-            if (tab) {
-              tab.style.display = 'block';
-              tab.style.visibility = 'visible';
-              tab.style.opacity = '1';
-              tab.style.position = 'static';
-              tab.style.left = 'auto';
-              tab.classList.remove('hidden');
-              console.log(`✅ Showing tab: ${tabId}`);
-            } else {
-              console.log(`❌ Tab not found: ${tabId}`);
-            }
-          });
           
-          // Handle the current tab - show it instead of hiding it
+          // Hide the current tab (user doesn't need to see it)
           let currentTabId = '';
           switch (this.currentTab) {
             case 'home':
@@ -2262,37 +2478,30 @@
               return;
           }
           
-          if (currentTabId) {
-            const currentTab = document.getElementById(currentTabId);
-            if (currentTab) {
-              // Show the current tab instead of hiding it
-              currentTab.style.display = 'block';
-              currentTab.style.visibility = 'visible';
-              currentTab.style.opacity = '1';
-              currentTab.style.position = 'static';
-              currentTab.style.left = 'auto';
-              currentTab.classList.remove('hidden');
-              console.log(`🎯 Showing current tab: ${currentTabId}`);
+          // Hide the current tab and show all others
+          allTabs.forEach(tabId => {
+            const tab = document.getElementById(tabId);
+            if (tab) {
+              if (tabId === currentTabId) {
+                // Hide current tab
+                tab.style.display = 'none';
+                console.log(`🚫 Hiding current tab: ${tabId}`);
+              } else {
+                // Show other tabs
+                tab.style.display = 'block';
+                tab.style.visibility = 'visible';
+                tab.style.opacity = '1';
+                tab.style.position = 'static';
+                tab.style.left = 'auto';
+                tab.classList.remove('hidden');
+                console.log(`✅ Showing tab: ${tabId}`);
+              }
             } else {
-              console.log(`❌ Current tab not found: ${currentTabId}`);
+              console.log(`❌ Tab not found: ${tabId}`);
             }
-          }
+          });
           
-          // SPECIAL CASE: Always ensure home tab is visible when currentTab is 'home'
-          if (this.currentTab === 'home') {
-            const homeTab = document.getElementById('homeSection');
-            if (homeTab) {
-              homeTab.style.display = 'block';
-              homeTab.style.visibility = 'visible';
-              homeTab.style.opacity = '1';
-              homeTab.style.position = 'static';
-              homeTab.style.left = 'auto';
-              homeTab.classList.remove('hidden');
-              console.log(`🎯 Home tab visibility enforced for currentTab: home`);
-            }
-          }
-          
-          console.log(`🎯 Tab visibility update complete - showing ${currentTabId}, other tabs remain visible`);
+          console.log(`🎯 Tab visibility update complete - hiding ${currentTabId}, showing other tabs`);
         },
 
         updateHeaderWithUsername() {
@@ -2516,18 +2725,38 @@
 
         startDailyCountdown() {
           const countdownEl = document.getElementById('dailyCountdown');
+          const hoursLeftEl = document.getElementById('hoursLeft');
           if (!countdownEl) return;
 
           function tick() {
             const now = new Date();
             const reset = new Date(now);
-            // Reset at 00:00 UTC so everyone shares the same daily word window
-            reset.setUTCHours(24, 0, 0, 0);
+            
+            // Reset at midnight (00:00) in the user's local timezone
+            reset.setHours(24, 0, 0, 0);
+            
             const diff = Math.max(0, Math.floor((reset - now) / 1000));
-            const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+            const h = Math.floor(diff / 3600);
             const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
             const s = String(diff % 60).padStart(2, '0');
-            countdownEl.textContent = `⏱ ${h}:${m}:${s}`;
+            
+            // Show countdown with timezone info
+            countdownEl.textContent = `⏱ ${String(h).padStart(2, '0')}:${m}:${s}`;
+            
+            // Update the hours text in the subtitle
+            if (hoursLeftEl) {
+              if (h === 0) {
+                hoursLeftEl.textContent = 'minutes';
+              } else if (h === 1) {
+                hoursLeftEl.textContent = '1 hour';
+              } else {
+                hoursLeftEl.textContent = `${h} hours`;
+              }
+            }
+            
+            // Add tooltip showing when it resets
+            const resetTime = reset.toLocaleTimeString();
+            countdownEl.title = `Next word available at ${resetTime} (your local time)`;
           }
           
           tick();
@@ -2932,9 +3161,13 @@
               auth.signOut().then(() => {
                 this.performSignOut();
                 modal.remove();
+                this.showNotification('Signed out successfully', 'success');
               }).catch((error) => {
                 console.error('Sign out error:', error);
-                this.showNotification('Failed to sign out', 'error');
+                // Try fallback sign out even if Firebase fails
+                this.performSignOut();
+                modal.remove();
+                this.showNotification('Signed out (offline mode)', 'info');
               });
             } else {
               // Fallback sign out
@@ -3035,46 +3268,35 @@
     <!-- Main Container -->
     <div class="main-container" id="appRoot">
       <header class="header" role="banner">
-        <!-- New left-side container for username and snarky phrase -->
-        <div id="usernameSnarkContainer" style="text-align: left; min-width: 200px;">
-          <div id="dynamicUsername" style="font-size: 18px; font-weight: bold; color: #e74c3c; margin-bottom: 4px;">Welcome!</div>
-          <div id="dynamicSnark" style="font-size: 14px; color: #7f8c8d; font-style: italic;">Ready to track your shows</div>
+        <!-- Mobile-optimized header layout -->
+        <div class="header-mobile">
+          <!-- Centered title section -->
+          <div class="header-title-center">
+            <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
+            <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
+            <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
+          </div>
+          
+          <!-- Left and right user controls -->
+          <div class="header-user-controls">
+            <div class="header-left-controls">
+              <button id="accountBtn" class="btn secondary" title="Sign in / Account">
+                👤 <span data-i18n="sign_in_account">Sign In</span>
+              </button>
+            </div>
+            <div class="header-right-controls">
+              <select id="langToggle" aria-label="Language" title="Language" onchange="changeLanguage(this.value).catch(console.error)">
+                <option value="en">EN</option>
+                <option value="es">ES</option>
+              </select>
+            </div>
+          </div>
         </div>
         
-        <div>
-          <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
-          <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
-          <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
-        </div>
-        <div class="user-section">
-          <button id="darkModeToggle" class="btn" title="Theme">
-            <span id="themeIcon">🌙</span>
-          </button>
-          <button
-            id="mardiToggle"
-            class="btn secondary"
-            title="Mardi Gras mode"
-          >
-            🎭
-          </button>
-          
-          <!-- Settings button in bottom left -->
-          <button id="settingsTab" class="btn secondary" title="Settings">
-            ⚙️
-          </button>
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <button
-              id="accountBtn"
-              class="btn secondary"
-              title="Sign in / Account"
-            >
-              👤 <span data-i18n="sign_in_account">Sign In</span>
-            </button>
-            <select id="langToggle" aria-label="Language" title="Language" onchange="changeLanguage(this.value).catch(console.error)">
-              <option value="en">EN</option>
-              <option value="es">ES</option>
-            </select>
-          </div>
+        <!-- Hidden username container for other functionality -->
+        <div id="usernameSnarkContainer" style="display: none;">
+          <div id="dynamicUsername" style="font-size: 18px; font-weight: bold; color: #e74c3c; margin-bottom: 4px;">Welcome!</div>
+          <div id="dynamicSnark" style="font-size: 14px; color: #7f8c8d; font-style: italic;">Ready to track your shows</div>
         </div>
       </header>
 
@@ -3084,19 +3306,23 @@
           <small>💡 <span data-i18n="search_tips">Search tips: Use * for wildcards (e.g., "marvel*" for Marvel shows)</span></small>
         </div>
         <div class="search-row">
-          <input
-            id="searchInput"
-            class="search-input"
-            placeholder=""
-            data-i18n-placeholder="search_placeholder"
-          />
-          <select id="genreFilter" class="genre-filter">
-            <option value="" data-i18n="all_genres">All Genres</option>
-          </select>
-          <button id="searchBtn" class="btn search-btn">🔍 <span data-i18n="search">Search</span></button>
-          <button id="clearSearchBtn" class="btn secondary clear-search-btn">
-            ✖️ <span data-i18n="clear">Clear</span>
-          </button>
+          <div class="search-input-group">
+            <input
+              id="searchInput"
+              class="search-input"
+              placeholder=""
+              data-i18n-placeholder="search_placeholder"
+            />
+            <select id="genreFilter" class="genre-filter">
+              <option value="" data-i18n="all_genres">All Genres</option>
+            </select>
+          </div>
+          <div class="search-button-group">
+            <button id="searchBtn" class="btn search-btn">🔍 <span data-i18n="search">Search</span></button>
+            <button id="clearSearchBtn" class="btn secondary clear-search-btn">
+              ❌ <span data-i18n="clear">Close</span>
+            </button>
+          </div>
         </div>
         <div
           id="tagFilterRow"
@@ -3137,6 +3363,7 @@
           <div class="flickword-header">
             <h3 class="flickword-title">🎯 Daily Word Challenge</h3>
             <div class="flickword-countdown" id="dailyCountdown">⏱ 00:00:00</div>
+                      <div class="countdown-subtitle" id="countdownSubtitle">Hurry! Only <span id="hoursLeft">hours</span> left before you miss your chance!</div>
           </div>
           <div class="flickword-stats">
             <div class="stat-item">
@@ -4805,12 +5032,22 @@
           "Sign in to sync",
           `
             <p style="margin-bottom: 20px;">Sign in to back up your lists and sync across devices.</p>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; justify-content:center; align-items:center; max-width:320px; margin:0 auto;">
-              <button id="googleBtn" class="btn" style="font-size:14px; padding:12px 18px; min-height:44px;">🔒 Google</button>
-              <button id="appleBtn" class="btn secondary" style="font-size:14px; padding:12px 18px; min-height:44px;">🍎 Apple</button>
-              <button id="emailBtn" class="btn secondary" style="font-size:14px; padding:12px 18px; min-height:44px; grid-column: 1 / -1;">✉️ Email</button>
-              <button id="signOutBtn" class="btn secondary" style="display:none; font-size:14px; padding:12px 18px; min-height:44px;">Sign Out</button>
+            
+            <!-- Top row: Google and Apple buttons -->
+            <div style="display: flex; gap: 16px; justify-content: center; margin-bottom: 20px;">
+              <button id="googleBtn" class="btn" style="font-size: 14px; padding: 12px 18px; min-height: 44px; flex: 1; max-width: 140px;">🔒 Google</button>
+              <button id="appleBtn" class="btn secondary" style="font-size: 14px; padding: 12px 18px; min-height: 44px; flex: 1; max-width: 140px;">🍎 Apple</button>
             </div>
+            
+            <!-- Middle row: Email button -->
+            <div style="display: flex; justify-content: center; margin-bottom: 16px;">
+              <button id="emailBtn" class="btn secondary" style="font-size: 14px; padding: 12px 18px; min-height: 44px; width: 100%; max-width: 200px;">✉️ Email</button>
+            </div>
+            
+            <!-- Help text -->
+            <p style="margin-top: 16px; font-size: 12px; color: #666; text-align: center;">
+              <a href="#" onclick="showHelpModal(); return false;" style="color: #007bff; text-decoration: none;">Need help signing in?</a> ❓
+            </p>
           `,
           "auth-modal"
         );
@@ -4907,6 +5144,29 @@
               });
           };
         }
+      }
+
+      function showHelpModal() {
+        openModal(
+          "Sign In Help",
+          `
+            <div style="text-align: left; max-width: 400px;">
+              <h4 style="margin-bottom: 16px;">How to sign in:</h4>
+              <ul style="margin-bottom: 20px; padding-left: 20px;">
+                <li><strong>Google:</strong> Use your Google account (Gmail, etc.)</li>
+                <li><strong>Apple:</strong> Use your Apple ID (iPhone, iPad, etc.)</li>
+                <li><strong>Email:</strong> Create a new account with email/password</li>
+              </ul>
+              <p style="font-size: 14px; color: #666;">
+                Signing in allows you to:
+                <br>• Save your watchlists across devices
+                <br>• Access your data from anywhere
+                <br>• Never lose your progress
+              </p>
+            </div>
+          `,
+          "help-modal"
+        );
       }
 
       function escapeHtml(str) {
