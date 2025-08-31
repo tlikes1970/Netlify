@@ -1366,12 +1366,6 @@
             
             console.log('✅ App initialized successfully');
             
-            // Initialize the left-side username display if username exists
-            if (this.appData?.settings?.displayName) {
-              console.log('🆕 Initializing left-side username display');
-              this.updateLeftSideUsername();
-            }
-            
             // Check if user should be prompted to login AFTER all functions are loaded
             setTimeout(() => {
               this.checkAndPromptLogin();
@@ -2002,16 +1996,17 @@
         },
 
         updateHeaderWithUsername() {
-          // DISABLED - Old header update system conflicts with new layout
-          console.log('🚫 updateHeaderWithUsername disabled - using new independent system');
-          return;
+          // Prevent multiple rapid calls - debounce mechanism
+          if (this._headerUpdateTimeout) {
+            clearTimeout(this._headerUpdateTimeout);
+          }
+          
+          this._headerUpdateTimeout = setTimeout(() => {
+            this._performHeaderUpdate();
+          }, 50); // 50ms debounce
         },
 
         _performHeaderUpdate() {
-          // DISABLED - Old header update system conflicts with new layout
-          console.log('🚫 _performHeaderUpdate disabled - using new independent system');
-          return;
-          
           console.log('🔤 _performHeaderUpdate called');
           console.log('🔍 FlickletApp appData:', this.appData);
           console.log('🔍 FlickletApp appData.settings:', this.appData?.settings);
@@ -2089,62 +2084,6 @@
           }
         },
 
-        // NEW INDEPENDENT USERNAME SYSTEM - Updates left-side container only
-        updateLeftSideUsername() {
-          console.log('🆕 updateLeftSideUsername called - updating left container only');
-          
-          // Find the left-side container elements
-          const dynamicUsername = document.getElementById('dynamicUsername');
-          const dynamicSnark = document.getElementById('dynamicSnark');
-          
-          console.log('🔍 Left container elements found:', { 
-            dynamicUsername: !!dynamicUsername, 
-            dynamicSnark: !!dynamicSnark 
-          });
-          
-          if (!dynamicUsername || !dynamicSnark) {
-            console.log('❌ Left container elements not found, returning early');
-            return;
-          }
-          
-          // Get username from appData
-          const displayName = this.appData?.settings?.displayName;
-          console.log('👤 Display name from appData:', displayName);
-          
-          if (displayName && displayName.trim()) {
-            // User has a username - show it with a snarky saying
-            console.log('✅ Updating left container with username:', displayName);
-            
-            dynamicUsername.textContent = displayName;
-            
-            // Array of snarky sayings
-            const snarkySayings = [
-              "because apparently you need help keeping track of your life",
-              "watching you waste time, one episode at a time",
-              "judging your taste in entertainment since forever",
-              "keeping track of your questionable life choices",
-              "because your memory is shorter than a goldfish's",
-              "helping you remember what you're supposed to be watching",
-              "because binge-watching is totally a personality trait",
-              "keeping you organized, one show at a time",
-              "because someone has to remember what you're watching",
-              "your personal TV memory bank (you're welcome)"
-            ];
-            
-            // Pick a random snarky saying
-            const randomSnark = snarkySayings[Math.floor(Math.random() * snarkySayings.length)];
-            
-            dynamicSnark.textContent = randomSnark;
-            console.log('💬 Updated left container with snark:', randomSnark);
-            
-          } else {
-            // No username - show default welcome message
-            console.log('🔄 No username, showing default welcome message');
-            dynamicUsername.textContent = 'Welcome!';
-            dynamicSnark.textContent = 'Ready to track your shows';
-          }
-        },
-
         handlePostLoginUsernameSetup(user) {
           console.log('👤 Handling post-login username setup for user:', user.email);
           
@@ -2162,8 +2101,8 @@
               console.log('✅ Populated username input field with:', existingUsername);
             }
             
-            // Update the left-side container with the username
-            this.updateLeftSideUsername();
+            // Update the header with the username
+            this.updateHeaderWithUsername();
             
           } else {
             // No username exists - prompt user to enter one
@@ -5327,12 +5266,12 @@
         
         showNotification(`Name saved as "${newName}"`, "success");
         
-        // Update the left-side container to show the new username
+        // Update the header to show the new username
         // Use a small delay to ensure data is fully synced
         setTimeout(() => {
-          if (window.FlickletApp && typeof window.FlickletApp.updateLeftSideUsername === 'function') {
-            console.log('🔄 Updating left-side container after username save (delayed)');
-            window.FlickletApp.updateLeftSideUsername();
+          if (window.FlickletApp && typeof window.FlickletApp.updateHeaderWithUsername === 'function') {
+            console.log('🔄 Updating header after username save (delayed)');
+            window.FlickletApp.updateHeaderWithUsername();
           }
         }, 50);
       }
