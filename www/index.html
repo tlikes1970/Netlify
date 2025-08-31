@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+31<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -1234,6 +1234,15 @@
       .feedback-form textarea {
         flex: 1;
         min-width: 200px;
+      }
+      
+      .feedback-subtitle {
+        font-size: 0.9em;
+        color: var(--text-secondary);
+        text-align: center;
+        margin: 8px 0 16px 0;
+        font-style: italic;
+        opacity: 0.8;
       }
     
       .form-error {
@@ -3235,9 +3244,9 @@
           moved_to: "Moved to {list}.",
           added_to: "Added to {list}.",
           // Additional English translations
-          feedback: "Feedback",
-          feedback_placeholder: "Your feedback...",
-          send: "Send",
+          feedback: "Share Your Thoughts",
+          feedback_placeholder: "Share your thoughts, feedback, quotes, confessions, or just vent here...",
+          send: "Share It!",
           search_results: "Search Results",
           no_results: "No results",
           searching: "Searching...",
@@ -3313,7 +3322,8 @@
           could_not_read_item: "Couldn't read item details. Try again.",
           upcoming_episode_alert: "Upcoming: {title} • {date}",
           streaming_horoscope: "Streaming Horoscope",
-          feedback_working: "Tell us what's working and what's not. Be blunt.",
+          feedback_working: "Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!",
+        feedback_subtitle: "💬 App feedback • 💭 Random thoughts • 💬 Quote submissions • 🤫 Anonymous confessions • 😤 Venting welcome",
           quote_loading: "Loading quote of questionable value...",
           // Quote translations
           quote_1: "I am serious... and don't call me Shirley.",
@@ -6982,9 +6992,10 @@
             feedbackCard.className = "feedback-card";
             feedbackCard.id = "feedbackSection";
             feedbackCard.innerHTML = `
-                          <h3 data-i18n="feedback">Feedback</h3>
-            <p data-i18n="feedback_working">Tell us what's working and what's not. Be blunt.</p>
-              <form name="feedback" method="POST" class="feedback-form" onsubmit="handleFeedbackSubmit(event)">
+                                                      <h3 data-i18n="feedback">Share Your Thoughts</h3>
+                                                          <p data-i18n="feedback_working">Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!</p>
+                              <p class="feedback-subtitle" data-i18n="feedback_subtitle">💬 App feedback • 💭 Random thoughts • 💬 Quote submissions • 🤫 Anonymous confessions • 😤 Venting welcome</p>
+                              <form name="feedback" class="feedback-form" onsubmit="handleFeedbackSubmit(event)">
                 <input type="hidden" name="theme" id="feedbackThemeInput" />
                 <div style="display: flex; gap: 8px; flex-wrap: wrap">
                   <textarea
@@ -6996,7 +7007,7 @@
                     required
                     style="resize: vertical; min-height: 60px;"
                   ></textarea>
-                  <button type="submit" class="btn" data-i18n="send">Send</button>
+                  <button type="submit" class="btn" data-i18n="send">Share It!</button>
                 </div>
               </form>
             `;
@@ -7239,7 +7250,15 @@
           timestamp: new Date().toISOString()
         };
         
-        // Submit to Netlify function
+        // For local development, just show success message
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          console.log('Local development mode - showing success message');
+          showNotification('Thanks for sharing! Your thoughts have been received. 💭 (Local mode)', 'success');
+          form.reset();
+          return false;
+        }
+        
+        // Submit to Netlify function (production only)
         fetch('/.netlify/functions/feedback', {
           method: 'POST',
           headers: {
@@ -7249,15 +7268,15 @@
         })
         .then(response => {
           if (response.ok) {
-            showNotification('Feedback submitted successfully!', 'success');
+            showNotification('Thanks for sharing! Your thoughts have been received. 💭', 'success');
             form.reset();
           } else {
-            showNotification('Failed to submit feedback. Please try again.', 'error');
+            showNotification('Oops! Something went wrong. Please try sharing again. 😅', 'error');
           }
         })
         .catch(error => {
           console.error('Feedback submission error:', error);
-          showNotification('Failed to submit feedback. Please try again.', 'error');
+          showNotification('Failed to submit feedback. Please try sharing again. 😅', 'error');
         });
         
         return false;
@@ -7265,41 +7284,7 @@
 
 
 
-        // --- search controls
-        console.log(`🔍 Setting up search controls...`);
-        console.log(`🔍 bind function available:`, typeof bind);
-        console.log(`🔍 performSearch function available:`, typeof performSearch);
-        console.log(`🔍 This code is running!`);
-        alert(`Search controls setup is running!`);
-        
-        const searchBtn = document.getElementById("searchBtn");
-        if (searchBtn) {
-          console.log(`✅ Search button found, binding performSearch`);
-          searchBtn.onclick = performSearch;
-        } else {
-          console.log(`❌ Search button not found`);
-        }
-        
-        const clearSearchBtn = document.getElementById("clearSearchBtn");
-        if (clearSearchBtn) {
-          console.log(`✅ Clear search button found, binding clearSearch`);
-          clearSearchBtn.onclick = clearSearch;
-        } else {
-          console.log(`❌ Clear search button not found`);
-        }
-        
-        const searchInput = document.getElementById("searchInput");
-        if (searchInput) {
-          console.log(`✅ Search input found, adding keydown listener`);
-          searchInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-              console.log(`⌨️ Enter key pressed, calling performSearch`);
-              performSearch?.();
-            }
-          });
-        } else {
-          console.log(`❌ Search input not found`);
-        }
+        // --- search controls (REMOVED - duplicate code that was breaking search functionality)
 
         // --- backup / import / clear / share
         bind("exportBtn", () => {
