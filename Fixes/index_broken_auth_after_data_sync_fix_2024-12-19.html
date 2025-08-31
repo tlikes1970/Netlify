@@ -722,84 +722,6 @@
         justify-content: center;
         z-index: 10000;
       }
-
-      /* Share Modal Specific Styles */
-      .share-modal {
-        text-align: left;
-      }
-
-      .share-list-section {
-        margin-bottom: 20px;
-        padding: 15px;
-        background: var(--card);
-        border-radius: 8px;
-        border: 1px solid var(--border);
-      }
-
-      .share-list-section h4 {
-        margin: 0 0 15px 0;
-        color: var(--primary);
-        font-size: 1.1rem;
-      }
-
-      .share-items-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .share-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px 12px;
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        transition: all 0.2s ease;
-      }
-
-      .share-item:hover {
-        background: var(--hover);
-        border-color: var(--primary);
-      }
-
-      .share-item input[type="checkbox"] {
-        margin: 0;
-        transform: scale(1.2);
-      }
-
-      .share-item-info {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-
-      .share-item-title {
-        font-weight: 600;
-        color: var(--text);
-      }
-
-      .share-item-meta {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-      }
-
-      .select-all-controls {
-        border: 2px solid var(--primary);
-      }
-
-      .select-all-controls label {
-        cursor: pointer;
-        padding: 5px 10px;
-        border-radius: 6px;
-        transition: background 0.2s ease;
-      }
-
-      .select-all-controls label:hover {
-        background: var(--hover);
-      }
       .modal {
         background: var(--bg);
         color: var(--text);
@@ -1355,12 +1277,6 @@
               start();
             }
             
-            // Run global initialization after centralized system is ready
-            setTimeout(() => {
-              console.log('🌍 Running global initialization after centralized system...');
-              this.runGlobalInitialization();
-            }, 500);
-            
             console.log('✅ App initialized successfully');
             
             // Check if user should be prompted to login AFTER all functions are loaded
@@ -1414,6 +1330,9 @@
 
         loadData() {
           try {
+            console.log('🔄 FlickletApp.loadData() called');
+            console.log('📊 Initial appData state:', this.appData);
+            
             // Try to load from centralized storage first
             const saved = localStorage.getItem('flicklet-data');
             if (saved) {
@@ -1429,9 +1348,28 @@
                 this.appData.settings.lang = (oldData.settings && oldData.settings.lang) || 'en';
                 this.appData.settings.theme = (oldData.settings && oldData.settings.theme) || 'light';
                 this.appData.settings.pro = (oldData.settings && oldData.settings.pro) || false;
+                
+                // Also load the actual TV and movie lists
+                if (oldData.tv) {
+                  this.appData.tv = oldData.tv;
+                }
+                if (oldData.movies) {
+                  this.appData.movies = oldData.movies;
+                }
+                
                 console.log('💾 Data loaded from legacy localStorage');
               }
             }
+            
+            // Sync with global appData for compatibility
+            if (typeof window.appData !== 'undefined') {
+              window.appData.tv = this.appData.tv;
+              window.appData.movies = this.appData.movies;
+              window.appData.settings = this.appData.settings;
+              console.log('🔄 Synced with global appData');
+            }
+            
+            console.log('📊 Final appData state:', this.appData);
           } catch (error) {
             console.error('❌ Failed to load data:', error);
           }
@@ -1451,164 +1389,23 @@
                 pro: this.appData.settings.pro,
                 notif: this.appData.settings.notif
               },
-              tv: { watching: [], wishlist: [], watched: [] },
-              movies: { watching: [], wishlist: [], watched: [] }
+              tv: this.appData.tv || { watching: [], wishlist: [], watched: [] },
+              movies: this.appData.movies || { watching: [], wishlist: [], watched: [] }
             };
             localStorage.setItem('tvMovieTrackerData', JSON.stringify(legacyData));
             
-            console.log('💾 Data saved to both storage formats');
+            // Sync with global appData for compatibility
+            if (typeof window.appData !== 'undefined') {
+              window.appData.tv = this.appData.tv;
+              window.appData.movies = this.appData.movies;
+              window.appData.settings = this.appData.settings;
+            }
+            
+            console.log('💾 Data saved to both storage formats and synced with global appData');
           } catch (error) {
             console.error('❌ Failed to save data:', error);
             this.showNotification('Failed to save data', 'error');
           }
-        },
-
-        runGlobalInitialization() {
-          console.log('🌍 Running global initialization...');
-          
-          // Run the global initialization code that was in the fallback sequence
-          if (typeof loadAppData === 'function') {
-            console.log('🔄 Calling loadAppData');
-            loadAppData();
-            
-            // Update header with username after data is loaded
-            setTimeout(() => {
-              if (this.updateHeaderWithUsername) {
-                this.updateHeaderWithUsername();
-              }
-            }, 100);
-          }
-          
-          if (typeof tryImportFromShareLink === 'function') {
-            console.log('🔄 Calling tryImportFromShareLink');
-            tryImportFromShareLink();
-          }
-          
-          if (typeof loadGenres === 'function') {
-            console.log('🔄 Calling loadGenres');
-            loadGenres();
-          }
-          
-          // Set up search controls
-          console.log('🔍 Setting up search controls...');
-          const searchBtn = document.getElementById("searchBtn");
-          if (searchBtn) {
-            console.log('✅ Search button found, binding performSearch');
-            searchBtn.onclick = performSearch;
-          } else {
-            console.log('❌ Search button not found');
-          }
-          
-          const clearSearchBtn = document.getElementById("clearSearchBtn");
-          if (clearSearchBtn) {
-            console.log('✅ Clear search button found, binding clearSearch');
-            clearSearchBtn.onclick = clearSearch;
-          } else {
-            console.log('❌ Clear search button not found');
-          }
-          
-          const searchInput = document.getElementById("searchInput");
-          if (searchInput) {
-            console.log('✅ Search input found, adding keydown listener');
-            searchInput.addEventListener("keydown", (e) => {
-              if (e.key === "Enter") {
-                console.log('⌨️ Enter key pressed, calling performSearch');
-                performSearch?.();
-              }
-            });
-          } else {
-            console.log('❌ Search input not found');
-          }
-          
-          // Set up event delegation for move buttons and other card actions
-          console.log('🎯 Setting up event delegation for card actions...');
-          document.addEventListener("click", (e) => {
-            const btn = e.target.closest("[data-action]");
-            if (!btn) {
-              return;
-            }
-            
-            const action = btn.getAttribute("data-action");
-            const id = Number(btn.getAttribute("data-id"));
-            const list = btn.getAttribute("data-list");
-            const mediaType = btn.getAttribute("data-media-type");
-            
-            console.log(`🎯 Action detected: action=${action}, id=${id}, list=${list}, mediaType=${mediaType}`);
-            
-            if (action === "addFromCache") {
-              console.log('➕ Calling addToListFromCache');
-              addToListFromCache(id, list);
-            } else if (action === "move") {
-              console.log('🔄 Calling moveItem');
-              moveItem(id, list);
-            } else if (action === "notes") {
-              console.log('📝 Calling openNotesTagsModal');
-              openNotesTagsModal(id);
-            } else if (action === "remove") {
-              console.log('🗑️ Calling removeItemFromCurrentList');
-              removeItemFromCurrentList(id);
-            } else if (action === "rate") {
-              console.log('⭐ Calling setRating');
-              const rating = Number(btn.getAttribute("data-rating"));
-              setRating(id, rating);
-            } else if (action === "like") {
-              console.log('👍 Calling setLikeStatus');
-              setLikeStatus(id, "like");
-            } else if (action === "dislike") {
-              console.log('👎 Calling setLikeStatus');
-              setLikeStatus(id, "dislike");
-            } else if (action === "open") {
-              console.log('🔗 Calling openTMDBLink');
-              openTMDBLink(id, mediaType);
-            }
-          });
-          
-          console.log('✅ Global initialization complete');
-        
-        // Set up share button bindings
-        console.log('🔗 Setting up share button bindings...');
-        
-        // Check if functions exist before binding
-        console.log('🔍 Checking function availability:');
-        console.log('  - openShareSelectionModal:', typeof openShareSelectionModal);
-        console.log('  - generateShareLinkFromSelected:', typeof generateShareLinkFromSelected);
-        console.log('  - closeShareSelectionModal:', typeof closeShareSelectionModal);
-        
-        try {
-          bind("shareListBtn", openShareSelectionModal);
-          bind("generateShareLinkBtn", generateShareLinkFromSelected);
-          bind("closeShareModalBtn", closeShareSelectionModal);
-          console.log('✅ Share button bindings set up');
-          
-          // Also add direct event listeners as backup
-          const generateBtn = document.getElementById('generateShareLinkBtn');
-          if (generateBtn) {
-            // Remove any existing listeners first
-            generateBtn.removeEventListener('click', generateShareLinkFromSelected);
-            generateBtn.addEventListener('click', generateShareLinkFromSelected);
-            console.log('✅ Direct event listener added to generate button');
-          }
-        } catch (error) {
-          console.error('❌ Error setting up share button bindings:', error);
-        }
-        
-        // Also add direct event listeners as fallback
-        try {
-          const shareBtn = document.getElementById('shareListBtn');
-          if (shareBtn) {
-            console.log('🔗 Adding direct event listener to share button');
-            shareBtn.addEventListener('click', openShareSelectionModal);
-            console.log('✅ Direct event listener added to share button');
-          } else {
-            console.error('❌ Share button not found for direct binding');
-          }
-          
-          // Debug: Check all elements with 'share' in the ID
-          const allElements = document.querySelectorAll('[id*="share"]');
-          console.log('🔍 Found elements with "share" in ID:', allElements);
-        } catch (error) {
-          console.error('❌ Error setting up direct event listeners:', error);
-        }
         },
 
         applyTheme() {
@@ -1638,120 +1435,6 @@
             // Don't call this.applyTranslations() yet - wait for the function to be available
             console.log('🌐 Language set to:', this.appData.settings.lang);
           }
-        },
-
-        changeLanguage(newLang) {
-          console.log(`🌍 Centralized changeLanguage called with: ${newLang}`);
-          
-          // Update the centralized app data
-          if (this.appData?.settings) {
-            this.appData.settings.lang = newLang;
-          }
-          
-          // Apply translations
-          this.applyLanguage();
-          
-          // Handle the complex language change logic directly here
-          // Set a flag to prevent dropdown resets during language change
-          window.isChangingLanguage = true;
-          
-          // Update global app data if available
-          if (window.appData?.settings) {
-            window.appData.settings.lang = newLang;
-          }
-          if (appData?.settings) {
-            appData.settings.lang = newLang;
-          }
-          
-          // Ensure language dropdown options are preserved
-          const langToggle = document.getElementById("langToggle");
-          if (langToggle && langToggle.children.length < 2) {
-            langToggle.innerHTML = `
-              <option value="en">EN</option>
-              <option value="es">ES</option>
-            `;
-          }
-          
-          // Apply translations FIRST (before rehydration)
-          if (typeof applyTranslations === 'function') {
-            applyTranslations();
-          }
-          
-          // Show loading state for lists
-          const currentTab = document.querySelector(".tab.active")?.id?.replace("Tab", "");
-          if (currentTab && ["watching", "wishlist", "watched"].includes(currentTab)) {
-            const listContainer = document.getElementById(currentTab + "List");
-            if (listContainer) {
-              listContainer.innerHTML = `<div style="text-align: center; padding: 20px;">${t("loading")}...</div>`;
-            }
-          }
-          
-          // Try to rehydrate lists with localized TMDB data
-          if (typeof rehydrateListsForLocale === 'function') {
-            rehydrateListsForLocale(newLang).then(() => {
-              // Save and update UI after rehydration
-              if (typeof saveAppData === 'function') saveAppData();
-              if (typeof updateUI === 'function') updateUI();
-            }).catch(error => {
-              console.warn("Failed to rehydrate lists for locale:", error);
-              // Still save and update UI even if rehydration fails
-              if (typeof saveAppData === 'function') saveAppData();
-              if (typeof updateUI === 'function') updateUI();
-            });
-          } else {
-            // Fallback: just save and update UI
-            if (typeof saveAppData === 'function') saveAppData();
-            if (typeof updateUI === 'function') updateUI();
-          }
-          
-          // Force refresh of genre dropdown
-          setTimeout(() => {
-            if (typeof loadGenres === "function") {
-              loadGenres();
-            }
-          }, 200);
-          
-          // Show notification
-          const langName = newLang === "es" ? "Spanish" : "English";
-          this.showNotification(`Language changed to ${langName}`, "success");
-          
-          // Clear the flag after operations complete
-          setTimeout(() => {
-            window.isChangingLanguage = false;
-          }, 3000);
-          
-          // Final refresh of horoscope and quote
-          setTimeout(() => {
-            const hEl = document.getElementById("fakeFortune");
-            const qEl = document.getElementById("randomQuote");
-            if (hEl && typeof pickDailyHoroscope === 'function') {
-              hEl.textContent = pickDailyHoroscope();
-            }
-            if (qEl && typeof drawQuote === 'function') {
-              qEl.textContent = drawQuote();
-            }
-            
-            const fileInput = document.getElementById("importFile");
-            if (fileInput && typeof updateFileLabel === 'function') {
-              updateFileLabel(fileInput);
-            }
-            
-            // Clear search cache to force fresh results in new language
-            if (typeof window.searchItemCache !== 'undefined' && window.searchItemCache.clear) {
-              console.log('🗑️ Clearing search cache for language change');
-              console.log('📊 Cache size before clearing:', window.searchItemCache.size);
-              window.searchItemCache.clear();
-              console.log('📊 Cache size after clearing:', window.searchItemCache.size);
-            } else {
-              console.log('⚠️ searchItemCache not available globally');
-            }
-            
-            // Refresh search results if they're visible
-            if (typeof refreshSearchResults === 'function') {
-              console.log('🔄 Refreshing search results for language change');
-              refreshSearchResults();
-            }
-          }, 600);
         },
 
         applyMardiGras() {
@@ -1921,9 +1604,6 @@
           
           // Update tab visibility based on current tab
           this.updateTabVisibility();
-          
-          // Update header with username and snarky saying
-          this.updateHeaderWithUsername();
         },
 
         updateTabVisibility() {
@@ -1964,10 +1644,6 @@
             case 'discover':
               currentTabId = 'discoverTab';
               break;
-            case 'settings':
-              // Settings tab is handled separately, don't hide any main tabs
-              console.log('⚙️ Settings tab active - no main tabs to hide');
-              return;
             default:
               console.log('⚠️ Unknown currentTab:', this.currentTab);
               return;
@@ -1992,184 +1668,6 @@
           console.log(`🎯 Tab visibility update complete - hiding ${currentTabId}, showing other tabs`);
         },
 
-        updateHeaderWithUsername() {
-          // Prevent multiple rapid calls - debounce mechanism
-          if (this._headerUpdateTimeout) {
-            clearTimeout(this._headerUpdateTimeout);
-          }
-          
-          this._headerUpdateTimeout = setTimeout(() => {
-            this._performHeaderUpdate();
-          }, 50); // 50ms debounce
-        },
-
-        _performHeaderUpdate() {
-          console.log('🔤 _performHeaderUpdate called');
-          console.log('🔍 FlickletApp appData:', this.appData);
-          console.log('🔍 FlickletApp appData.settings:', this.appData?.settings);
-          console.log('🔍 FlickletApp appData.settings.displayName:', this.appData?.settings?.displayName);
-          
-          const welcomeText = document.getElementById('welcomeText');
-          const snarkySubtitle = document.getElementById('snarkySubtitle');
-          
-          console.log('🔍 Found elements:', { welcomeText: !!welcomeText, snarkySubtitle: !!snarkySubtitle });
-          
-          if (!welcomeText || !snarkySubtitle) {
-            console.log('❌ Missing header elements, returning early');
-            return;
-          }
-          
-          // Log what the header currently shows BEFORE updating
-          console.log('📝 Header BEFORE update:', {
-            title: welcomeText.textContent,
-            subtitle: snarkySubtitle.textContent
-          });
-          
-          const displayName = this.appData?.settings?.displayName;
-          console.log('👤 Display name found:', displayName);
-          
-          if (displayName && displayName.trim()) {
-            // User has a username - show it with a snarky saying
-            console.log('✅ Updating header with username:', displayName);
-            
-            // Add visual debugging - make the update obvious
-            welcomeText.style.backgroundColor = '#00ff00';
-            welcomeText.style.color = '#000000';
-            welcomeText.style.padding = '5px';
-            welcomeText.style.borderRadius = '3px';
-            welcomeText.style.fontWeight = 'bold';
-            
-            welcomeText.textContent = displayName;
-            
-            // Array of snarky sayings
-            const snarkySayings = [
-              "because apparently you need help keeping track of your life",
-              "watching you waste time, one episode at a time",
-              "judging your taste in entertainment since forever",
-              "keeping track of your questionable life choices",
-              "because your memory is shorter than a goldfish's",
-              "helping you remember what you're supposed to be watching",
-              "because binge-watching is totally a personality trait",
-              "keeping you organized, one show at a time",
-              "because someone has to remember what you're watching",
-              "your personal TV memory bank (you're welcome)"
-            ];
-            
-            // Pick a random snarky saying
-            const randomSnark = snarkySayings[Math.floor(Math.random() * snarkySayings.length)];
-            
-            // Add visual debugging to subtitle too
-            snarkySubtitle.style.backgroundColor = '#ff00ff';
-            snarkySubtitle.style.color = '#ffffff';
-            snarkySubtitle.style.padding = '5px';
-            snarkySubtitle.style.borderRadius = '3px';
-            snarkySubtitle.style.fontWeight = 'bold';
-            
-            snarkySubtitle.textContent = randomSnark;
-            console.log('💬 Updated subtitle with snark:', randomSnark);
-            
-            // Log what the header shows AFTER updating
-            console.log('📝 Header AFTER update:', {
-              title: welcomeText.textContent,
-              subtitle: snarkySubtitle.textContent
-            });
-
-          } else {
-            // No username - show default Flicklet title
-            console.log('🔄 No username, showing default Flicklet title');
-            welcomeText.textContent = 'Flicklet';
-            snarkySubtitle.textContent = 'TV & Movie Tracker';
-            
-            // Log what the header shows AFTER updating
-            console.log('📝 Header AFTER update:', {
-              title: welcomeText.textContent,
-              subtitle: snarkySubtitle.textContent
-            });
-
-          }
-        },
-
-        handlePostLoginUsernameSetup(user) {
-          console.log('👤 Handling post-login username setup for user:', user.email);
-          
-          // Check if user already has a username in appData
-          const existingUsername = this.appData?.settings?.displayName;
-          
-          if (existingUsername && existingUsername.trim()) {
-            // User already has a username - populate the input field and update header
-            console.log('✅ Found existing username:', existingUsername);
-            
-            // Populate the username input field
-            const displayNameInput = document.getElementById('displayNameInput');
-            if (displayNameInput) {
-              displayNameInput.value = existingUsername;
-              console.log('✅ Populated username input field with:', existingUsername);
-            }
-            
-            // Update the header with the username
-            this.updateHeaderWithUsername();
-            
-          } else {
-            // No username exists - prompt user to enter one
-            console.log('❌ No username found, prompting user to enter one');
-            
-            // Show a modal to prompt for username
-            this.showUsernamePromptModal(user.email);
-          }
-        },
-
-        showUsernamePromptModal(userEmail) {
-          console.log('📝 Showing username prompt modal for:', userEmail);
-          
-          // Create and show a modal asking for username
-          const modalHTML = `
-            <div class="modal-backdrop" id="usernamePromptModal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-              <div class="modal" style="background: var(--card); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
-                <h3 style="margin: 0 0 16px 0; color: var(--text);">Welcome! 👋</h3>
-                <p style="margin: 0 0 20px 0; color: var(--text); line-height: 1.5;">What would you like us to call you?</p>
-                <input 
-                  type="text" 
-                  id="newUsernameInput" 
-                  class="search-input" 
-                  placeholder="Enter your name"
-                  style="width: 100%; margin: 15px 0;"
-                />
-                <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                  <button class="btn secondary" onclick="closeUsernamePromptModal()" style="min-width: 80px;">Skip</button>
-                  <button class="btn primary" onclick="saveUsernameFromPrompt()" style="min-width: 80px;">Save</button>
-                </div>
-              </div>
-            </div>
-          `;
-          
-          // Insert the modal
-          document.body.insertAdjacentHTML('beforeend', modalHTML);
-          console.log('✅ Modal HTML inserted into DOM');
-          
-          // Check if modal was created
-          const modal = document.getElementById('usernamePromptModal');
-          if (modal) {
-            console.log('✅ Modal element found in DOM');
-            console.log('🔍 Modal display style:', modal.style.display);
-            console.log('🔍 Modal visibility:', modal.style.visibility);
-            console.log('🔍 Modal z-index:', modal.style.zIndex);
-          } else {
-            console.log('❌ Modal element NOT found in DOM');
-          }
-          
-          // Focus the input field
-          setTimeout(() => {
-            const input = document.getElementById('newUsernameInput');
-            if (input) {
-              input.focus();
-              input.select();
-              console.log('✅ Input field focused and selected');
-            } else {
-              console.log('❌ Input field not found');
-            }
-          }, 100);
-        },
-
         initFirebase() {
           console.log('🔥 Initializing Firebase...');
           // Initialize Firebase if available
@@ -2182,9 +1680,6 @@
               if (user) {
                 console.log('✅ User signed in, updating UI');
                 this.showNotification('Signed in successfully', 'success');
-                
-                // Handle username setup after login
-                this.handlePostLoginUsernameSetup(user);
               } else {
                 console.log('❌ No user signed in');
               }
@@ -2219,7 +1714,7 @@
           
           // Set up tab event listeners
           console.log('🔧 Setting up tab event listeners...');
-          const bindTab = (id, fn) => {
+          const bind = (id, fn) => {
             const el = document.getElementById(id);
             if (el) {
               el.onclick = fn;
@@ -2230,11 +1725,11 @@
           };
 
           // Bind tab click handlers
-          bindTab("homeTab", () => this.switchTab("home"));
-          bindTab("watchingTab", () => this.switchTab("watching"));
-          bindTab("wishlistTab", () => this.switchTab("wishlist"));
-          bindTab("watchedTab", () => this.switchTab("watched"));
-          bindTab("discoverTab", () => this.switchTab("discover"));
+          bind("homeTab", () => this.switchTab("home"));
+          bind("watchingTab", () => this.switchTab("watching"));
+          bind("wishlistTab", () => this.switchTab("wishlist"));
+          bind("watchedTab", () => this.switchTab("watched"));
+          bind("discoverTab", () => this.switchTab("discover"));
           
           // Settings button is now in the header, not in tab container
           const settingsBtn = document.getElementById('settingsTab');
@@ -2501,7 +1996,7 @@
       <header class="header" role="banner">
         <div>
           <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
-          <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
+          <div class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
           <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
         </div>
         <div class="user-section">
@@ -2652,22 +2147,22 @@
           <div class="section">
             <h3>⚙️ <span data-i18n="settings">Settings</span></h3>
 
-          <div style="margin-bottom: 20px;">
-            <label for="displayNameInput" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);">
-              What would you like us to call you?
-            </label>
-            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
-              <input
-                id="displayNameInput"
-                class="search-input"
-                placeholder="Enter your name"
-                style="width: 25%; min-width: 150px; max-width: 200px;"
-              />
-              <button id="saveNameBtn" class="btn secondary" onclick="saveDisplayName()">
-                💾 <span data-i18n="save_name">Save</span>
-              </button>
-
-            </div>
+          <div
+            style="
+              display: flex;
+              gap: 10px;
+              flex-wrap: wrap;
+              align-items: center;
+              margin-bottom: 8px;
+            "
+          >
+            <input
+              id="displayNameInput"
+              class="search-input"
+              placeholder=""
+              data-i18n-placeholder="display_name_placeholder"
+            />
+            <button id="saveNameBtn" class="btn secondary" data-i18n="save_name">Save</button>
             <label style="display: flex; gap: 6px; align-items: center">
               <input type="checkbox" id="proToggle" /> <span data-i18n="pro_simulate">Pro (simulate)</span>
             </label>
@@ -2687,35 +2182,50 @@
           </div>
 
           <h4 data-i18n="backup_import">Backup & Import</h4>
-          <div style="margin-bottom: 20px;">
-            <div style="margin-bottom: 15px;">
-              <button
-                id="shareListBtn"
-                class="btn primary"
-                onclick="openShareSelectionModal()"
-                style="width: 25%; min-width: 150px; margin-bottom: 8px;"
-              >
-                🔗 <span data-i18n="share_selected">Select Items to Share</span>
-              </button>
-              <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-                Click here to select what TV shows and movies to share with your friends
-              </p>
-            </div>
-            
-            <div>
-              <button id="clearAllBtn" class="btn danger" style="width: 25%; min-width: 150px; margin-bottom: 8px;">
-                🗑️ <span data-i18n="nuclear_option">Nuclear Option</span>
-              </button>
-              <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-                Clear all your data and start fresh (this action cannot be undone)
-              </p>
+          <div
+            style="
+              display: flex;
+              gap: 10px;
+              flex-wrap: wrap;
+              align-items: center;
+              margin-bottom: 8px;
+            "
+          >
+            <label for="importFile" class="file-input-label">
+              <span data-i18n="choose_file">Choose File</span>
+              <input
+                id="importFile"
+                type="file"
+                accept=".json"
+                style="max-width: 220px"
+                onchange="updateFileLabel(this)"
+              />
+              <span id="fileLabel" class="file-label" data-i18n="no_file_chosen">No file chosen</span>
+            </label>
+            <button id="exportBtn" class="btn success">📤 <span data-i18n="export">Export</span></button>
+            <button id="clearAllBtn" class="btn danger">
+              🗑️ <span data-i18n="nuclear_option">Nuclear Option</span>
+            </button>
+            <button
+              id="shareListBtn"
+              class="btn"
+              title="Generate share link for current tab"
+            >
+              🔗 <span data-i18n="share_this_list">Share This List</span>
+            </button>
+            <input
+              id="shareLinkOut" aria-label="Share link output"
+              class="search-input"
+              placeholder=""
+              data-i18n-placeholder="share_link"
+              readonly
+            />
+            <div class="share-instructions">
+              <small data-i18n="share_instructions">Click to generate a shareable link for your current list</small>
             </div>
           </div>
 
           <h4 data-i18n="notifications">Notifications</h4>
-          <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-            Choose which types of notifications you'd like to receive about your TV shows and movies
-          </p>
           <div
             style="
               display: flex;
@@ -2734,70 +2244,7 @@
             <label
               ><input type="checkbox" id="notifDigest" /> <span data-i18n="monthly_digest">Monthly stats digest</span></label
             >
-          </div>
-
-          <!-- Share Selection Modal -->
-          <div id="shareSelectionModal" class="modal-backdrop" style="display: none;">
-            <div class="modal share-modal" style="max-width: 800px; max-height: 80vh;">
-              <h3>🔗 <span data-i18n="share_selected">Share Selected Items</span></h3>
-              
-              <!-- Select All Controls -->
-              <div class="select-all-controls" style="margin-bottom: 20px; padding: 15px; background: var(--card); border-radius: 8px;">
-                <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
-                  <label style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="selectAllWatching" />
-                    <strong>📺 <span data-i18n="currently_watching">Currently Watching</span></strong>
-                  </label>
-                  <label style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="selectAllWishlist" />
-                    <strong>📖 <span data-i18n="want_to_watch">Want to Watch</span></strong>
-                  </label>
-                  <label style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="selectAllWatched" />
-                    <strong>✅ <span data-i18n="already_watched">Already Watched</span></strong>
-                  </label>
-                  <label style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="selectAllEverything" />
-                    <strong>🌟 <span data-i18n="select_all_everything">Select All Everything</span></strong>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Items Lists -->
-              <div class="share-items-container" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
-                <!-- Currently Watching -->
-                <div class="share-list-section">
-                  <h4>📺 <span data-i18n="currently_watching">Currently Watching</span></h4>
-                  <div id="shareWatchingList" class="share-items-list"></div>
-                </div>
-                
-                <!-- Want to Watch -->
-                <div class="share-list-section">
-                  <h4>📖 <span data-i18n="want_to_watch">Want to Watch</span></h4>
-                  <div id="shareWishlistList" class="share-items-list"></div>
-                </div>
-                
-                <!-- Already Watched -->
-                <div class="share-list-section">
-                  <h4>✅ <span data-i18n="already_watched">Already Watched</span></h4>
-                  <div id="shareWatchedList" class="share-items-list"></div>
-                </div>
-              </div>
-
-                            <!-- Action Buttons -->
-              <div class="modal-actions" style="display: flex; gap: 10px; justify-content: center;">
-                <button id="generateShareLinkBtn" class="btn success" style="display: none;" onclick="generateShareLinkFromSelected()">
-                  📋 <span data-i18n="generate_share_link">Select what to share</span>
-                </button>
-                <button id="copyShareBtn" class="btn primary" style="display: none;" onclick="copyShareList()">
-                  📋 Copy
-                </button>
-                <button id="closeShareModalBtn" class="btn secondary">
-                  ✖️ <span data-i18n="close">Close</span>
-                </button>
-              </div>
-            </div>
-          </div>
+                      </div>
   
           <h4 data-i18n="stats">Stats</h4>
           <div id="statsBasic" class="feedback-card">
@@ -2871,17 +2318,14 @@
           no_results: "No results",
           searching: "Searching...",
           search_failed: "Search failed",
-          search_results_cleared: "Search results cleared due to language change.",
-          please_search_again: "Please search again to see results in the new language.",
           episode_alerts: "Episode alerts",
           weekly_discover: "Weekly discover picks",
           monthly_digest: "Monthly stats digest",
           backup_import: "Backup & Import",
           nuclear_option: "Nuclear Option",
           share_this_list: "Share This List",
-          share_selected: "Select Items to Share",
           share_link: "Share link",
-          share_instructions: "Click to select which shows and movies to share",
+          share_instructions: "Click to generate a shareable link for your current list",
           choose_file: "Choose File",
                   no_file_chosen: "No file chosen",
         next: "Next",
@@ -2932,11 +2376,6 @@
           invalid_file: "Invalid file.",
           all_data_cleared: "All data cleared.",
           share_link_generated: "Share link generated.",
-          generate_share_link: "Select what to share",
-          select_all_everything: "Select All Everything",
-          close: "Close",
-          no_items_selected: "No items selected",
-          no_items_in_list: "No items in this list",
           switch_to_share: "Switch to Watching/Wishlist/Watched to share.",
           imported_from_link: "Imported list from link",
           could_not_read_item: "Couldn't read item details. Try again.",
@@ -3151,17 +2590,14 @@
           no_results: "Sin resultados",
           searching: "Buscando...",
           search_failed: "Búsqueda falló",
-          search_results_cleared: "Resultados de búsqueda borrados debido al cambio de idioma.",
-          please_search_again: "Por favor busca de nuevo para ver resultados en el nuevo idioma.",
           episode_alerts: "Alertas de episodios",
           weekly_discover: "Descubrimientos semanales",
           monthly_digest: "Resumen mensual",
           backup_import: "Respaldo e importación",
           nuclear_option: "Opción nuclear",
           share_this_list: "Compartir esta lista",
-          share_selected: "Compartir Elementos Seleccionados",
           share_link: "Enlace de compartir",
-          share_instructions: "Haz clic para seleccionar qué series y películas compartir",
+          share_instructions: "Haz clic para generar un enlace compartible para tu lista actual",
           choose_file: "Elegir Archivo",
                   no_file_chosen: "Ningún archivo elegido",
         next: "Próximo",
@@ -3212,11 +2648,6 @@
           invalid_file: "Archivo inválido.",
           all_data_cleared: "Todos los datos borrados.",
           share_link_generated: "Enlace de compartir generado.",
-          generate_share_link: "Generar Enlace de Compartir",
-          select_all_everything: "Seleccionar Todo",
-          close: "Cerrar",
-          no_items_selected: "No hay elementos seleccionados",
-          no_items_in_list: "No hay elementos en esta lista",
           switch_to_share: "Cambia a Ver/Lista de deseos/Visto para compartir.",
           imported_from_link: "Lista importada desde enlace",
           could_not_read_item: "No se pudieron leer los detalles del item. Intenta de nuevo.",
@@ -3603,14 +3034,10 @@
 
       function updateWelcomeText() {
         try {
-          // DISABLED: This function conflicts with our dynamic header system
-          // The header is now managed by FlickletApp.updateHeaderWithUsername()
-          console.log('🚫 updateWelcomeText disabled - header managed by FlickletApp');
-          return;
-          
-          // OLD CODE (disabled):
-          /*
           const n = (appData?.settings?.displayName || "").trim();
+  
+          
+
           
           const el = document.getElementById("welcomeText");
           if (!el) {
@@ -3633,7 +3060,6 @@
             // Keep the original "Flicklet" title
             el.textContent = t("app_title");
           }
-          */
 
         } catch (e) {
           console.warn("updateWelcomeText failed:", e);
@@ -3679,19 +3105,6 @@
           updateWelcomeText();
         }
         applyTranslations();
-        
-        // Sync data with FlickletApp if available
-        if (window.FlickletApp && window.FlickletApp.appData) {
-          console.log('🔄 Syncing appData with FlickletApp after loadAppData');
-          // Update FlickletApp's appData with the loaded data
-          window.FlickletApp.appData = { ...appData };
-          console.log('✅ FlickletApp appData synced:', window.FlickletApp.appData);
-          
-          // Update the header with the synced data
-          if (typeof window.FlickletApp.updateHeaderWithUsername === 'function') {
-            window.FlickletApp.updateHeaderWithUsername();
-          }
-        }
         
         // Refresh the current tab content after app data is loaded
         setTimeout(() => {
@@ -3797,7 +3210,7 @@
         }
           
           applyTranslations();
-          // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
+          updateWelcomeText?.();
           if (typeof updateUI === "function") updateUI();
           
           showNotification(t("cloud_sync_ok"), "success");
@@ -3826,7 +3239,7 @@
         }
 
         applyTranslations?.();
-        // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
+        updateWelcomeText?.();
         updateUI?.();
 
         if (!currentUser) return;
@@ -4069,7 +3482,7 @@
                 // Auto-set the name from profile
                 appData.settings.displayName = guess.trim();
                 if (typeof saveAppData === "function") saveAppData();
-                // if (typeof updateWelcomeText === "function") updateWelcomeText(); // DISABLED - conflicts with dynamic header system
+                if (typeof updateWelcomeText === "function") updateWelcomeText();
                 if (typeof rebuildStats === "function") rebuildStats();
                 localStorage.setItem("__flicklet_onboarded__", "1");
                 setAccountLabel(user);
@@ -4188,7 +3601,7 @@
           }
           appData.settings.displayName = v;
           saveAppData();
-          // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
+          updateWelcomeText?.();
           rebuildStats?.();
           localStorage.setItem("__flicklet_onboarded__", "1");
           document.querySelector(".modal-backdrop")?.remove();
@@ -4812,517 +4225,28 @@
       }
 
       /* ============== Shareable lists (read-only links) ============== */
-      function openShareSelectionModal() {
-        console.log('🔗 Opening share selection modal');
-        
-        // Check if modal exists
-        const modal = document.getElementById('shareSelectionModal');
-        if (!modal) {
-          console.error('❌ Share selection modal not found!');
-          return;
-        }
-        
-        console.log('✅ Modal found, populating...');
-        
-        // Populate the modal with all items from all lists
-        populateShareModal();
-        
-        // Show the modal
-        modal.style.display = 'flex';
-        console.log('✅ Modal displayed');
-        
-        // Add click outside to close functionality
-        modal.onclick = function(e) {
-          if (e.target === modal) {
-            closeShareSelectionModal();
-          }
-        };
-      }
-
-      function populateShareModal() {
-        console.log('📋 Populating share modal with items');
-        
-        // Get all items from all lists
-        const watchingItems = [...(appData.tv.watching || []), ...(appData.movies.watching || [])];
-        const wishlistItems = [...(appData.tv.wishlist || []), ...(appData.movies.wishlist || [])];
-        const watchedItems = [...(appData.tv.watched || []), ...(appData.movies.watched || [])];
-        
-        console.log(`📊 Found ${watchingItems.length} watching, ${wishlistItems.length} wishlist, ${watchedItems.length} watched items`);
-        
-        // Populate each list section
-        populateShareList('shareWatchingList', watchingItems, 'watching');
-        populateShareList('shareWishlistList', wishlistItems, 'wishlist');
-        populateShareList('shareWatchedList', watchedItems, 'watched');
-        
-        // Set up select all functionality
-        setupSelectAllControls();
-        
-        // Update generate button state
-        updateGenerateButtonState();
-      }
-
-      function populateShareList(containerId, items, listType) {
-        const container = document.getElementById(containerId);
-        if (!container) {
-          console.error(`❌ Container not found: ${containerId}`);
-          return;
-        }
-        
-        container.innerHTML = '';
-        
-        if (items.length === 0) {
-          container.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-secondary); font-style: italic;">
-            ${t("no_items_in_list") || "No items in this list"}
-          </div>`;
-          return;
-        }
-        
-        items.forEach((item, index) => {
-          const itemDiv = document.createElement('div');
-          itemDiv.className = 'share-item';
-          itemDiv.innerHTML = `
-            <input type="checkbox" id="share_${listType}_${index}" data-list="${listType}" data-index="${index}" onchange="updateGenerateButtonState()">
-            <div class="share-item-info">
-              <div class="share-item-title">${item.title || item.name || 'Unknown Title'}</div>
-              <div class="share-item-meta">
-                ${item.media_type === 'tv' ? '📺 TV Series' : '🎬 Movie'} • 
-                ${item.first_air_date ? new Date(item.first_air_date).getFullYear() : 'Unknown Year'}
-                ${item.vote_average ? ` • ⭐ ${item.vote_average}/10` : ''}
-              </div>
-            </div>
-          `;
-          container.appendChild(itemDiv);
-        });
-      }
-
-      function setupSelectAllControls() {
-        // Select all for watching
-        const selectAllWatching = document.getElementById('selectAllWatching');
-        if (selectAllWatching) {
-          selectAllWatching.onchange = function() {
-            const checkboxes = document.querySelectorAll('#shareWatchingList input[type="checkbox"]');
-            checkboxes.forEach(cb => cb.checked = this.checked);
-            updateGenerateButtonState();
-          };
-        }
-        
-        // Select all for wishlist
-        const selectAllWishlist = document.getElementById('selectAllWishlist');
-        if (selectAllWishlist) {
-          selectAllWishlist.onchange = function() {
-            const checkboxes = document.querySelectorAll('#shareWishlistList input[type="checkbox"]');
-            checkboxes.forEach(cb => cb.checked = this.checked);
-            updateGenerateButtonState();
-          };
-        }
-        
-        // Select all for watched
-        const selectAllWatched = document.getElementById('selectAllWatched');
-        if (selectAllWatched) {
-          selectAllWatched.onchange = function() {
-            const checkboxes = document.querySelectorAll('#shareWatchedList input[type="checkbox"]');
-            checkboxes.forEach(cb => cb.checked = this.checked);
-            updateGenerateButtonState();
-          };
-        }
-        
-        // Select all everything
-        const selectAllEverything = document.getElementById('selectAllEverything');
-        if (selectAllEverything) {
-          selectAllEverything.onchange = function() {
-            const allCheckboxes = document.querySelectorAll('.share-items-list input[type="checkbox"]');
-            allCheckboxes.forEach(cb => cb.checked = this.checked);
-            
-            // Also check the individual select all checkboxes
-            if (this.checked) {
-              selectAllWatching.checked = true;
-              selectAllWishlist.checked = true;
-              selectAllWatched.checked = true;
-            } else {
-              selectAllWatching.checked = false;
-              selectAllWishlist.checked = false;
-              selectAllWatched.checked = false;
-            }
-            
-            updateGenerateButtonState();
-          };
-        }
-      }
-
-      function updateGenerateButtonState() {
-        const generateBtn = document.getElementById('generateShareLinkBtn');
-        if (!generateBtn) return;
-        
-        const checkedBoxes = document.querySelectorAll('.share-items-list input[type="checkbox"]:checked');
-        const hasCheckedItems = checkedBoxes.length > 0;
-        
-        generateBtn.disabled = !hasCheckedItems;
-        
-        // Show "Copy" button when items are selected
-        const copyBtn = document.getElementById("copyShareBtn");
-        if (copyBtn) {
-          if (hasCheckedItems) {
-            copyBtn.style.display = "inline-block";
-          } else {
-            copyBtn.style.display = "none";
-          }
-        }
-      }
-
-      function generateShareLinkFromSelected() {
-        const checkedBoxes = document.querySelectorAll('.share-items-list input[type="checkbox"]:checked');
-        
-        if (checkedBoxes.length === 0) {
-          showNotification(t("no_items_selected") || "No items selected", "warning");
-          return;
-        }
-        
-        // Group selected items by list type
-        const selectedItems = {
-          watching: [],
-          wishlist: [],
-          watched: []
-        };
-        
-        checkedBoxes.forEach(checkbox => {
-          const listType = checkbox.getAttribute('data-list');
-          const index = parseInt(checkbox.getAttribute('data-index'));
-          
-          if (listType && !isNaN(index)) {
-            const listKey = listType === 'watching' ? 'watching' : listType === 'wishlist' ? 'wishlist' : 'watched';
-            const items = [...(appData.tv[listKey] || []), ...(appData.movies[listKey] || [])];
-            
-            if (items[index]) {
-              const item = items[index];
-              // Only include essential fields for sharing - this will make URLs much shorter!
-              const minimalItem = {
-                id: item.id,
-                title: item.title || item.name,
-                type: item.type || 'tv',
-                media_type: item.media_type || 'tv',
-                poster_path: item.poster_path,
-                overview: item.overview,
-                first_air_date: item.first_air_date,
-                vote_average: item.vote_average
-              };
-              selectedItems[listKey].push(minimalItem);
-            }
-          }
-        });
-        
-        console.log('📋 Selected items (minimal data):', selectedItems);
-        
-        // Create a human-readable text list instead of a complex URL
-        let shareText = "📺 My TV & Movie Lists\n\n";
-        
-        // Add items by list with clear headers
-        if (selectedItems.watching.length > 0) {
-          shareText += "🔴 Currently Watching:\n";
-          selectedItems.watching.forEach(item => {
-            const network = item.networks?.[0] || "Unknown Service";
-            shareText += `  • ${item.title} (${network})\n`;
-          });
-          shareText += "\n";
-        }
-        
-        if (selectedItems.wishlist.length > 0) {
-          shareText += "🟡 Want to Watch:\n";
-          selectedItems.wishlist.forEach(item => {
-            const network = item.networks?.[0] || "Unknown Service";
-            shareText += `  • ${item.title} (${network})\n`;
-          });
-          shareText += "\n";
-        }
-        
-        if (selectedItems.watched.length > 0) {
-          shareText += "🟢 Already Watched:\n";
-          selectedItems.watched.forEach(item => {
-            const network = item.networks?.[0] || "Unknown Service";
-            shareText += `  • ${item.title} (${network})\n`;
-          });
-          shareText += "\n";
-        }
-        
-        // Update the share output to show the text list
-        const shareLinkOut = document.getElementById("shareLinkOut");
-        if (shareLinkOut) {
-          shareLinkOut.value = shareText;
-          shareLinkOut.style.height = "auto";
-          shareLinkOut.style.minHeight = "200px";
-          shareLinkOut.style.fontFamily = "monospace";
-          shareLinkOut.style.whiteSpace = "pre-wrap";
-          shareLinkOut.style.resize = "vertical";
-          shareLinkOut.style.overflowY = "auto";
-        }
-        
-        // Hide "Select what to share" button, show "Copy" button
-        const generateBtn = document.getElementById("generateShareLinkBtn");
-        const copyBtn = document.getElementById("copyShareBtn");
-        
-        if (generateBtn && copyBtn) {
-          generateBtn.style.display = "none";
-          copyBtn.style.display = "inline-block";
-        }
-        
-        console.log('✅ Share text generated:', shareText);
-      }
-
-
-
-      function copyShareList() {
-        console.log('🔍 Copy button clicked!');
-        
-        // Generate the list first
-        const checkedBoxes = document.querySelectorAll('.share-items-list input[type="checkbox"]:checked');
-        
-        if (checkedBoxes.length === 0) {
-          showNotification("No items selected", "warning");
-          return;
-        }
-        
-        console.log('📝 Generating list for', checkedBoxes.length, 'items...');
-        
-        // Group selected items by list type
-        const selectedItems = {
-          watching: [],
-          wishlist: [],
-          watched: []
-        };
-        
-        checkedBoxes.forEach(checkbox => {
-          const listType = checkbox.getAttribute('data-list');
-          const index = parseInt(checkbox.getAttribute('data-index'));
-          
-          if (listType && !isNaN(index)) {
-            const listKey = listType === 'watching' ? 'watching' : listType === 'wishlist' ? 'wishlist' : 'watched';
-            const items = [...(appData.tv[listKey] || []), ...(appData.movies[listKey] || [])];
-            
-            if (items[index]) {
-              const item = items[index];
-              // Only include essential fields for sharing
-              const minimalItem = {
-                id: item.id,
-                title: item.title || item.name,
-                type: item.type || 'tv',
-                media_type: item.media_type || 'tv',
-                poster_path: item.poster_path,
-                overview: item.overview,
-                first_air_date: item.first_air_date,
-                vote_average: item.vote_average
-              };
-              selectedItems[listKey].push(minimalItem);
-            }
-          }
-        });
-        
-        console.log('📋 Selected items:', selectedItems);
-        
-        // Create the shareable text
-        let shareText = "📺 My TV & Movie Lists\n\n";
-        
-        if (selectedItems.watching.length > 0) {
-          shareText += "🔴 Currently Watching:\n";
-          selectedItems.watching.forEach(item => {
-            const network = item.networks?.[0] || "Unknown Service";
-            shareText += `  • ${item.title} (${network})\n`;
-          });
-          shareText += "\n";
-        }
-        
-        if (selectedItems.wishlist.length > 0) {
-          shareText += "🟡 Want to Watch:\n";
-          selectedItems.wishlist.forEach(item => {
-            const network = item.networks?.[0] || "Unknown Service";
-            shareText += `  • ${item.title} (${network})\n`;
-          });
-          shareText += "\n";
-        }
-        
-        if (selectedItems.watched.length > 0) {
-          shareText += "🟢 Already Watched:\n";
-          selectedItems.watched.forEach(item => {
-            const network = item.networks?.[0] || "Unknown Service";
-            shareText += `  • ${item.title} (${network})\n`;
-          });
-          shareText += "\n";
-        }
-        
-        console.log('📋 Share text generated:', shareText);
-        
-        // Copy the text to clipboard
-        navigator.clipboard.writeText(shareText).then(() => {
-          console.log('📋 Text copied to clipboard');
-          
-          // Show copy confirmation
-          showNotification('List copied', 'success');
-          
-          // Close the modal and return to settings page
-          closeShareSelectionModal();
-          
-          // Show instruction notification after returning to settings
-          setTimeout(() => {
-            showNotification('📤 Paste this in a text message or email to share', 'info');
-          }, 500);
-        }).catch(err => {
-          console.error('❌ Failed to copy:', err);
-          showNotification('Failed to copy list', 'error');
-        });
-      }
-
-      function saveDisplayName() {
-        const displayNameInput = document.getElementById("displayNameInput");
-        const newName = displayNameInput.value.trim();
-        
-        if (!newName) {
-          showNotification("Please enter a name", "warning");
-          return;
-        }
-        
-        // Check if user is logged in
-        if (!currentUser) {
-          showNotification("Please sign in to save your name", "warning");
-          return;
-        }
-        
-        // Check if username already exists for this login
-        const existingName = appData?.settings?.displayName;
-        if (existingName && existingName !== newName) {
-          // Show custom confirmation modal instead of browser confirm()
-          showUsernameOverwriteModal(existingName, newName);
-          return;
-        }
-        
-        // If no existing name or same name, save directly
-        saveUsernameDirectly(newName);
-        
-
-      }
-      
-      function showUsernameOverwriteModal(existingName, newName) {
-        // Create custom modal HTML
-        const modalHTML = `
-          <div class="modal-backdrop" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-            <div class="modal" style="background: var(--card); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
-              <h3 style="margin: 0 0 16px 0; color: var(--text);">⚠️ Username Already Exists</h3>
-              <p style="margin: 0 0 20px 0; color: var(--text); line-height: 1.5;">
-                A username <strong>"${existingName}"</strong> already exists for this account.<br><br>
-                Do you want to overwrite it with <strong>"${newName}"</strong>?
-              </p>
-              <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                <button class="btn secondary" onclick="closeUsernameOverwriteModal()" style="min-width: 80px;">
-                  Cancel
-                </button>
-                <button class="btn primary" onclick="confirmUsernameOverwrite('${newName}')" style="min-width: 80px;">
-                  Overwrite
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
-        
-        // Add modal to page
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-      }
-      
-      function closeUsernameOverwriteModal() {
-        // Remove all modal-backdrop elements to be safe
-        document.querySelectorAll('.modal-backdrop').forEach(modal => {
-          if (modal.querySelector('.modal h3')?.textContent.includes('Username Already Exists')) {
-            modal.remove();
-          }
-        });
-      }
-      
-      function confirmUsernameOverwrite(newName) {
-        // Close the modal
-        closeUsernameOverwriteModal();
-        
-        // Save the username
-        saveUsernameDirectly(newName);
-      }
-      
-      function saveUsernameDirectly(newName) {
-        // Save the new username
-        if (!appData.settings) appData.settings = {};
-        appData.settings.displayName = newName;
-        
-        // Also update FlickletApp's appData to keep them in sync
-        if (window.FlickletApp && window.FlickletApp.appData) {
-          if (!window.FlickletApp.appData.settings) {
-            window.FlickletApp.appData.settings = {};
-          }
-          window.FlickletApp.appData.settings.displayName = newName;
-          console.log('✅ Synced username to FlickletApp appData:', newName);
-        }
-        
-        // Save to localStorage
-        localStorage.setItem('flicklet-data', JSON.stringify(appData));
-        
-        // Save to Firebase if user is logged in
-        if (currentUser && saveAppData) {
-          saveAppData();
-        }
-        
-        showNotification(`Name saved as "${newName}"`, "success");
-        
-        // Update the header to show the new username
-        // Use a small delay to ensure data is fully synced
-        setTimeout(() => {
-          if (window.FlickletApp && typeof window.FlickletApp.updateHeaderWithUsername === 'function') {
-            console.log('🔄 Updating header after username save (delayed)');
-            window.FlickletApp.updateHeaderWithUsername();
-          }
-        }, 50);
-      }
-      
-      function closeUsernamePromptModal() {
-        const modal = document.getElementById('usernamePromptModal');
-        if (modal) {
-          modal.remove();
-        }
-      }
-      
-      function saveUsernameFromPrompt() {
-        const input = document.getElementById('newUsernameInput');
-        const newName = input?.value?.trim();
-        
-        if (!newName) {
-          showNotification("Please enter a name", "warning");
-          return;
-        }
-        
-        // Close the modal first
-        closeUsernamePromptModal();
-        
-        // Update the FlickletApp's appData first
-        if (window.FlickletApp && window.FlickletApp.appData) {
-          if (!window.FlickletApp.appData.settings) {
-            window.FlickletApp.appData.settings = {};
-          }
-          window.FlickletApp.appData.settings.displayName = newName;
-          console.log('✅ Updated FlickletApp appData with username:', newName);
-        }
-        
-        // Save the username using existing function
-        saveUsernameDirectly(newName);
-        
-        // Note: saveUsernameDirectly() already calls updateHeaderWithUsername()
-        // No need to call it again here
-      }
-      
-
-
-      function closeShareSelectionModal() {
-        const modal = document.getElementById('shareSelectionModal');
-        if (modal) {
-          modal.style.display = 'none';
-        }
-      }
-
-      // Legacy function for backward compatibility
       function generateShareLinkForCurrentTab() {
-        console.log('⚠️ Using legacy share function - redirecting to new modal');
-        openShareSelectionModal();
+        const tab = currentActiveTab;
+        let listKey = null;
+        if (tab === "watching") listKey = "watching";
+        if (tab === "wishlist") listKey = "wishlist";
+        if (tab === "watched") listKey = "watched";
+        if (!listKey)
+          return showNotification(
+            t("switch_to_share"),
+            "warning"
+          );
+
+        const payload = {
+          v: 1,
+          list: listKey,
+          tv: appData.tv[listKey],
+          movies: appData.movies[listKey],
+        };
+        const b64 = toB64Url(JSON.stringify(payload));
+        const url = `${location.origin}${location.pathname}#share=${b64}`;
+        document.getElementById("shareLinkOut").value = url;
+                  showNotification(t("share_link_generated"), "success");
       }
 
       function tryImportFromShareLink() {
@@ -5332,34 +4256,10 @@
         try {
           const decoded = JSON.parse(fromB64Url(m[1]));
           if (decoded && decoded.v === 1) {
-            if (decoded.selected && decoded.items) {
-              // New format: selected items from multiple lists
-              console.log('📥 Importing selected items from share link');
-              
-              // Import minimal data items - they'll be enhanced when needed
-              Object.keys(decoded.items).forEach(listKey => {
-                if (Array.isArray(decoded.items[listKey])) {
-                  // Add items to the appropriate list
-                  decoded.items[listKey].forEach(item => {
-                    if (item.media_type === 'tv') {
-                      if (!appData.tv[listKey]) appData.tv[listKey] = [];
-                      appData.tv[listKey].push(item);
-                    } else if (item.media_type === 'movie') {
-                      if (!appData.movies[listKey]) appData.movies[listKey] = [];
-                      appData.movies[listKey].push(item);
-                    }
-                  });
-                }
-              });
-            } else if (decoded.list) {
-              // Legacy format: single list
-              console.log('📥 Importing legacy format share link');
-              if (Array.isArray(decoded.tv))
-                appData.tv[decoded.list] = decoded.tv;
-              if (Array.isArray(decoded.movies))
-                appData.movies[decoded.list] = decoded.movies;
-            }
-            
+            if (Array.isArray(decoded.tv))
+              appData.tv[decoded.list] = decoded.tv;
+            if (Array.isArray(decoded.movies))
+              appData.movies[decoded.list] = decoded.movies;
             saveAppData?.();
             updateUI?.();
             showNotification(t("imported_from_link"), "success");
@@ -5602,9 +4502,15 @@
 
       /* Lists & ops */
       function getAllItems() {
+        // Try to use centralized data first, fallback to global
+        let dataSource = appData;
+        if (window.FlickletApp && window.FlickletApp.appData) {
+          dataSource = window.FlickletApp.appData;
+        }
+        
         return ["tv", "movies"].flatMap((cat) =>
           ["watching", "wishlist", "watched"].flatMap(
-            (lst) => appData[cat][lst] || []
+            (lst) => dataSource[cat][lst] || []
           )
         );
       }
@@ -5619,8 +4525,14 @@
         const cat =
           norm.media_type === "tv" || norm.first_air_date ? "tv" : "movies";
 
+        // Try to use centralized data first, fallback to global
+        let dataSource = appData;
+        if (window.FlickletApp && window.FlickletApp.appData) {
+          dataSource = window.FlickletApp.appData;
+        }
+
         // Already in target?
-        const inTarget = (appData[cat][list] || []).some(
+        const inTarget = (dataSource[cat][list] || []).some(
           (s) => Number(s.id) === Number(norm.id)
         );
         if (inTarget) {
@@ -5634,21 +4546,29 @@
         let foundElsewhere = false;
         ["tv", "movies"].forEach((c) => {
           ["watching", "wishlist", "watched"].forEach((lst) => {
-            const before = appData[c][lst].length;
-            appData[c][lst] = appData[c][lst].filter(
+            const before = dataSource[c][lst].length;
+            dataSource[c][lst] = dataSource[c][lst].filter(
               (s) => Number(s.id) !== Number(norm.id)
             );
-            if (appData[c][lst].length !== before) foundElsewhere = true;
+            if (dataSource[c][lst].length !== before) foundElsewhere = true;
           });
         });
 
         // Add to target
-        appData[cat][list].unshift(norm);
+        dataSource[cat][list].unshift(norm);
+        
+        // Sync both data sources
+        if (window.FlickletApp && window.FlickletApp.appData) {
+          // Update global appData to match
+          appData.tv = dataSource.tv;
+          appData.movies = dataSource.movies;
+        }
+        
         saveAppData();
         updateUI();
 
         // Generate snarky feedback message for adding from search
-        const title = norm.name || norm.title || "This show";
+        const title = norm.name || item.title || "This show";
         let message = "";
         
         if (list === "watching") {
@@ -5667,26 +4587,73 @@
       function moveItem(id, dest) {
         console.log(`🔄 moveItem called: id=${id}, dest=${dest}`);
         
+        // Try to use centralized data first, fallback to global
+        let dataSource = appData;
+        if (window.FlickletApp && window.FlickletApp.appData) {
+          dataSource = window.FlickletApp.appData;
+          console.log(`🎯 Using centralized FlickletApp data`);
+        } else {
+          console.log(`⚠️ Using global appData (fallback)`);
+        }
+        
+        console.log(`🔍 Data source structure:`, {
+          tv: {
+            watching: dataSource.tv?.watching?.length || 0,
+            wishlist: dataSource.tv?.wishlist?.length || 0,
+            watched: dataSource.tv?.watched?.length || 0
+          },
+          movies: {
+            watching: dataSource.movies?.watching?.length || 0,
+            wishlist: dataSource.movies?.wishlist?.length || 0,
+            watched: dataSource.movies?.watched?.length || 0
+          }
+        });
+        
         const item = findItem(id);
         if (!item) {
           console.log(`❌ Item not found: id=${id}`);
+          console.log(`🔍 Available items in all lists:`, getAllItems());
           return;
         }
+        
+        console.log(`✅ Found item:`, item);
         
         // Find where the item currently is
         let currentList = null;
         ["tv", "movies"].forEach((cat) =>
           ["watching", "wishlist", "watched"].forEach((lst) => {
-            if (appData[cat][lst].some((s) => s.id === id)) {
+            if (dataSource[cat][lst].some((s) => s.id === id)) {
               currentList = lst;
+              console.log(`📍 Item currently in: ${cat}.${lst}`);
             }
-            appData[cat][lst] = appData[cat][lst].filter((s) => s.id !== id);
+            dataSource[cat][lst] = dataSource[cat][lst].filter((s) => s.id !== id);
           })
         );
         
         const cat = item.media_type === "tv" ? "tv" : "movies";
-        appData[cat][dest].unshift(item);
+        console.log(`🎯 Moving to: ${cat}.${dest}`);
+        
+        // Ensure the destination array exists
+        if (!dataSource[cat][dest]) {
+          dataSource[cat][dest] = [];
+          console.log(`📝 Created empty array for ${cat}.${dest}`);
+        }
+        
+        dataSource[cat][dest].unshift(item);
+        console.log(`✅ Item moved to ${cat}.${dest}, new length: ${dataSource[cat][dest].length}`);
+        
+        // Sync both data sources
+        if (window.FlickletApp && window.FlickletApp.appData) {
+          // Update global appData to match
+          appData.tv = dataSource.tv;
+          appData.movies = dataSource.movies;
+          console.log(`🔄 Synced global appData with centralized data`);
+        }
+        
+        console.log(`💾 Calling saveAppData...`);
         saveAppData?.();
+        
+        console.log(`🔄 Calling updateUI...`);
         updateUI?.();
         
         // Generate snarky feedback message
@@ -5712,7 +4679,7 @@
         } else if (dest === "watched") {
           if (currentList === "watching") {
             message = `Well, at least we can say we accomplished something! 👏`;
-          } else if (currentList === "wishlist") {
+          } else if (currentList === "watched") {
             message = `"${title}" jumped straight to completion! 🎯`;
           } else {
             message = `"${title}" marked as watched! ✅`;
@@ -5720,8 +4687,11 @@
         }
         
         if (message) {
+          console.log(`💬 Showing notification: ${message}`);
           showNotification(message, "success");
         }
+        
+        console.log(`✅ moveItem completed successfully`);
       }
       function setRating(id, rating) {
         const it = findItem(id);
@@ -5753,9 +4723,15 @@
         updateUI?.();
       }
       function findItem(id) {
+        // Try to use centralized data first, fallback to global
+        let dataSource = appData;
+        if (window.FlickletApp && window.FlickletApp.appData) {
+          dataSource = window.FlickletApp.appData;
+        }
+        
         for (const cat of ["tv", "movies"]) {
           for (const lst of ["watching", "wishlist", "watched"]) {
-            const f = appData[cat][lst].find((s) => s.id === id);
+            const f = dataSource[cat][lst].find((s) => s.id === id);
             if (f) return f;
           }
         }
@@ -6064,8 +5040,6 @@
       }
       // Cache search results so we don't inline JSON into onclick
       const searchItemCache = new Map();
-      // Make it globally accessible for language switching
-      window.searchItemCache = searchItemCache;
 
       function cacheSearchItem(it) {
         if (it && it.id != null) searchItemCache.set(Number(it.id), it);
@@ -6141,26 +5115,11 @@
       }
 
       function refreshSearchResults() {
-        console.log('🔄 refreshSearchResults called');
         const out = document.getElementById("searchResults");
         if (out && out.style.display !== "none") {
-          console.log('📱 Search results container is visible');
-          // Check if we have cached results
+          // Re-render search results with current language
           const results = Array.from(out.children);
-          console.log('🔍 Found', results.length, 'search result elements');
           if (results.length > 0) {
-            // If cache is empty (was cleared for language change), show message
-            if (searchItemCache.size === 0) {
-              console.log('🗑️ Cache is empty, showing language change message');
-              out.innerHTML = `<div style="text-align: center; padding: 20px; color: #666;">
-                <p>${t("search_results_cleared") || "Search results cleared due to language change."}</p>
-                <p>${t("please_search_again") || "Please search again to see results in the new language."}</p>
-              </div>`;
-              return;
-            }
-            
-            console.log('🔄 Re-rendering', results.length, 'search results');
-            // Re-render search results with current language
             out.innerHTML = "";
             results.forEach((it) => {
               const itemId = it.querySelector('[data-action]')?.getAttribute('data-id');
@@ -6171,11 +5130,7 @@
                 }
               }
             });
-          } else {
-            console.log('📱 No search result elements found');
           }
-        } else {
-          console.log('📱 Search results container is not visible');
         }
         
         // Also refresh discover section if it's visible
@@ -6556,10 +5511,11 @@
         
         // Try both event delegation and direct binding
         document.addEventListener("click", (e) => {
-          
+          console.log(`🖱️ Click detected on:`, e.target);
           
           const btn = e.target.closest("[data-action]");
           if (!btn) {
+            console.log(`❌ No data-action found on clicked element`);
             return;
           }
           
@@ -6568,23 +5524,33 @@
           const list = btn.getAttribute("data-list");
           const mediaType = btn.getAttribute("data-media-type");
           
-  
+          console.log(`🎯 Action detected: action=${action}, id=${id}, list=${list}, mediaType=${mediaType}`);
+          
+
           if (action === "addFromCache") {
+            console.log(`➕ Calling addToListFromCache`);
             addToListFromCache(id, list);
           } else if (action === "move") {
+            console.log(`🔄 Calling moveItem`);
             moveItem(id, list);
           } else if (action === "notes") {
+            console.log(`📝 Calling openNotesTagsModal`);
             openNotesTagsModal(id);
           } else if (action === "remove") {
+            console.log(`🗑️ Calling removeItemFromCurrentList`);
             removeItemFromCurrentList(id);
           } else if (action === "rate") {
+            console.log(`⭐ Calling setRating`);
             const rating = Number(btn.getAttribute("data-rating"));
             setRating(id, rating);
           } else if (action === "like") {
+            console.log(`👍 Calling setLikeStatus`);
             setLikeStatus(id, "like");
           } else if (action === "dislike") {
+            console.log(`👎 Calling setLikeStatus`);
             setLikeStatus(id, "dislike");
           } else if (action === "open") {
+            console.log(`🔗 Calling openTMDBLink`);
             openTMDBLink(id, mediaType);
           }
         });
@@ -6633,7 +5599,7 @@
           if (appData?.settings) {
             appData.settings.displayName = val;
             saveAppData?.();
-            // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
+            updateWelcomeText?.();
             showNotification?.(t("name_saved"), "success");
           }
         });
@@ -6692,39 +5658,13 @@
 
 
         // --- search controls
-        console.log(`🔍 Setting up search controls...`);
-        console.log(`🔍 bind function available:`, typeof bind);
-        console.log(`🔍 performSearch function available:`, typeof performSearch);
-        console.log(`🔍 This code is running!`);
-        alert(`Search controls setup is running!`);
-        
-        const searchBtn = document.getElementById("searchBtn");
-        if (searchBtn) {
-          console.log(`✅ Search button found, binding performSearch`);
-          searchBtn.onclick = performSearch;
-        } else {
-          console.log(`❌ Search button not found`);
-        }
-        
-        const clearSearchBtn = document.getElementById("clearSearchBtn");
-        if (clearSearchBtn) {
-          console.log(`✅ Clear search button found, binding clearSearch`);
-          clearSearchBtn.onclick = clearSearch;
-        } else {
-          console.log(`❌ Clear search button not found`);
-        }
-        
+        bind("searchBtn", performSearch);
+        bind("clearSearchBtn", clearSearch);
         const searchInput = document.getElementById("searchInput");
         if (searchInput) {
-          console.log(`✅ Search input found, adding keydown listener`);
           searchInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-              console.log(`⌨️ Enter key pressed, calling performSearch`);
-              performSearch?.();
-            }
+            if (e.key === "Enter") performSearch?.();
           });
-        } else {
-          console.log(`❌ Search input not found`);
         }
 
         // --- backup / import / clear / share
@@ -6772,7 +5712,7 @@
           showNotification?.(t("all_data_cleared"), "warning");
         });
 
-        // Share button bindings moved to runGlobalInitialization
+        bind("shareListBtn", generateShareLinkForCurrentTab);
 
         // --- notification toggles
         const ep = document.getElementById("notifEpisodes");

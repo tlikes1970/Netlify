@@ -5266,13 +5266,9 @@
         showNotification(`Name saved as "${newName}"`, "success");
         
         // Update the header to show the new username
-        // Use a small delay to ensure data is fully synced
-        setTimeout(() => {
-          if (window.FlickletApp && typeof window.FlickletApp.updateHeaderWithUsername === 'function') {
-            console.log('🔄 Updating header after username save (delayed)');
-            window.FlickletApp.updateHeaderWithUsername();
-          }
-        }, 50);
+        if (window.FlickletApp && typeof window.FlickletApp.updateHeaderWithUsername === 'function') {
+          window.FlickletApp.updateHeaderWithUsername();
+        }
       }
       
       function closeUsernamePromptModal() {
@@ -5306,8 +5302,13 @@
         // Save the username using existing function
         saveUsernameDirectly(newName);
         
-        // Note: saveUsernameDirectly() already calls updateHeaderWithUsername()
-        // No need to call it again here
+        // Force update the header after a short delay to ensure data is saved
+        setTimeout(() => {
+          if (window.FlickletApp && typeof window.FlickletApp.updateHeaderWithUsername === 'function') {
+            console.log('🔄 Forcing header update after username save');
+            window.FlickletApp.updateHeaderWithUsername();
+          }
+        }, 100);
       }
       
 

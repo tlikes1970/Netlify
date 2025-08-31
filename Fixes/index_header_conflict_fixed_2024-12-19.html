@@ -1993,18 +1993,7 @@
         },
 
         updateHeaderWithUsername() {
-          // Prevent multiple rapid calls - debounce mechanism
-          if (this._headerUpdateTimeout) {
-            clearTimeout(this._headerUpdateTimeout);
-          }
-          
-          this._headerUpdateTimeout = setTimeout(() => {
-            this._performHeaderUpdate();
-          }, 50); // 50ms debounce
-        },
-
-        _performHeaderUpdate() {
-          console.log('🔤 _performHeaderUpdate called');
+          console.log('🔤 updateHeaderWithUsername called');
           console.log('🔍 FlickletApp appData:', this.appData);
           console.log('🔍 FlickletApp appData.settings:', this.appData?.settings);
           console.log('🔍 FlickletApp appData.settings.displayName:', this.appData?.settings?.displayName);
@@ -2031,14 +2020,6 @@
           if (displayName && displayName.trim()) {
             // User has a username - show it with a snarky saying
             console.log('✅ Updating header with username:', displayName);
-            
-            // Add visual debugging - make the update obvious
-            welcomeText.style.backgroundColor = '#00ff00';
-            welcomeText.style.color = '#000000';
-            welcomeText.style.padding = '5px';
-            welcomeText.style.borderRadius = '3px';
-            welcomeText.style.fontWeight = 'bold';
-            
             welcomeText.textContent = displayName;
             
             // Array of snarky sayings
@@ -2057,14 +2038,6 @@
             
             // Pick a random snarky saying
             const randomSnark = snarkySayings[Math.floor(Math.random() * snarkySayings.length)];
-            
-            // Add visual debugging to subtitle too
-            snarkySubtitle.style.backgroundColor = '#ff00ff';
-            snarkySubtitle.style.color = '#ffffff';
-            snarkySubtitle.style.padding = '5px';
-            snarkySubtitle.style.borderRadius = '3px';
-            snarkySubtitle.style.fontWeight = 'bold';
-            
             snarkySubtitle.textContent = randomSnark;
             console.log('💬 Updated subtitle with snark:', randomSnark);
             
@@ -3797,7 +3770,7 @@
         }
           
           applyTranslations();
-          // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
+          updateWelcomeText?.();
           if (typeof updateUI === "function") updateUI();
           
           showNotification(t("cloud_sync_ok"), "success");
@@ -3826,7 +3799,7 @@
         }
 
         applyTranslations?.();
-        // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
+        updateWelcomeText?.();
         updateUI?.();
 
         if (!currentUser) return;
@@ -4069,7 +4042,7 @@
                 // Auto-set the name from profile
                 appData.settings.displayName = guess.trim();
                 if (typeof saveAppData === "function") saveAppData();
-                // if (typeof updateWelcomeText === "function") updateWelcomeText(); // DISABLED - conflicts with dynamic header system
+                if (typeof updateWelcomeText === "function") updateWelcomeText();
                 if (typeof rebuildStats === "function") rebuildStats();
                 localStorage.setItem("__flicklet_onboarded__", "1");
                 setAccountLabel(user);
@@ -4188,7 +4161,7 @@
           }
           appData.settings.displayName = v;
           saveAppData();
-          // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
+          updateWelcomeText?.();
           rebuildStats?.();
           localStorage.setItem("__flicklet_onboarded__", "1");
           document.querySelector(".modal-backdrop")?.remove();
@@ -5266,13 +5239,9 @@
         showNotification(`Name saved as "${newName}"`, "success");
         
         // Update the header to show the new username
-        // Use a small delay to ensure data is fully synced
-        setTimeout(() => {
-          if (window.FlickletApp && typeof window.FlickletApp.updateHeaderWithUsername === 'function') {
-            console.log('🔄 Updating header after username save (delayed)');
-            window.FlickletApp.updateHeaderWithUsername();
-          }
-        }, 50);
+        if (window.FlickletApp && typeof window.FlickletApp.updateHeaderWithUsername === 'function') {
+          window.FlickletApp.updateHeaderWithUsername();
+        }
       }
       
       function closeUsernamePromptModal() {
@@ -5306,8 +5275,13 @@
         // Save the username using existing function
         saveUsernameDirectly(newName);
         
-        // Note: saveUsernameDirectly() already calls updateHeaderWithUsername()
-        // No need to call it again here
+        // Force update the header after a short delay to ensure data is saved
+        setTimeout(() => {
+          if (window.FlickletApp && typeof window.FlickletApp.updateHeaderWithUsername === 'function') {
+            console.log('🔄 Forcing header update after username save');
+            window.FlickletApp.updateHeaderWithUsername();
+          }
+        }, 100);
       }
       
 
@@ -6633,7 +6607,7 @@
           if (appData?.settings) {
             appData.settings.displayName = val;
             saveAppData?.();
-            // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
+            updateWelcomeText?.();
             showNotification?.(t("name_saved"), "success");
           }
         });

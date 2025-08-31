@@ -1470,13 +1470,6 @@
           if (typeof loadAppData === 'function') {
             console.log('🔄 Calling loadAppData');
             loadAppData();
-            
-            // Update header with username after data is loaded
-            setTimeout(() => {
-              if (this.updateHeaderWithUsername) {
-                this.updateHeaderWithUsername();
-              }
-            }, 100);
           }
           
           if (typeof tryImportFromShareLink === 'function') {
@@ -1921,9 +1914,6 @@
           
           // Update tab visibility based on current tab
           this.updateTabVisibility();
-          
-          // Update header with username and snarky saying
-          this.updateHeaderWithUsername();
         },
 
         updateTabVisibility() {
@@ -1992,184 +1982,6 @@
           console.log(`🎯 Tab visibility update complete - hiding ${currentTabId}, showing other tabs`);
         },
 
-        updateHeaderWithUsername() {
-          // Prevent multiple rapid calls - debounce mechanism
-          if (this._headerUpdateTimeout) {
-            clearTimeout(this._headerUpdateTimeout);
-          }
-          
-          this._headerUpdateTimeout = setTimeout(() => {
-            this._performHeaderUpdate();
-          }, 50); // 50ms debounce
-        },
-
-        _performHeaderUpdate() {
-          console.log('🔤 _performHeaderUpdate called');
-          console.log('🔍 FlickletApp appData:', this.appData);
-          console.log('🔍 FlickletApp appData.settings:', this.appData?.settings);
-          console.log('🔍 FlickletApp appData.settings.displayName:', this.appData?.settings?.displayName);
-          
-          const welcomeText = document.getElementById('welcomeText');
-          const snarkySubtitle = document.getElementById('snarkySubtitle');
-          
-          console.log('🔍 Found elements:', { welcomeText: !!welcomeText, snarkySubtitle: !!snarkySubtitle });
-          
-          if (!welcomeText || !snarkySubtitle) {
-            console.log('❌ Missing header elements, returning early');
-            return;
-          }
-          
-          // Log what the header currently shows BEFORE updating
-          console.log('📝 Header BEFORE update:', {
-            title: welcomeText.textContent,
-            subtitle: snarkySubtitle.textContent
-          });
-          
-          const displayName = this.appData?.settings?.displayName;
-          console.log('👤 Display name found:', displayName);
-          
-          if (displayName && displayName.trim()) {
-            // User has a username - show it with a snarky saying
-            console.log('✅ Updating header with username:', displayName);
-            
-            // Add visual debugging - make the update obvious
-            welcomeText.style.backgroundColor = '#00ff00';
-            welcomeText.style.color = '#000000';
-            welcomeText.style.padding = '5px';
-            welcomeText.style.borderRadius = '3px';
-            welcomeText.style.fontWeight = 'bold';
-            
-            welcomeText.textContent = displayName;
-            
-            // Array of snarky sayings
-            const snarkySayings = [
-              "because apparently you need help keeping track of your life",
-              "watching you waste time, one episode at a time",
-              "judging your taste in entertainment since forever",
-              "keeping track of your questionable life choices",
-              "because your memory is shorter than a goldfish's",
-              "helping you remember what you're supposed to be watching",
-              "because binge-watching is totally a personality trait",
-              "keeping you organized, one show at a time",
-              "because someone has to remember what you're watching",
-              "your personal TV memory bank (you're welcome)"
-            ];
-            
-            // Pick a random snarky saying
-            const randomSnark = snarkySayings[Math.floor(Math.random() * snarkySayings.length)];
-            
-            // Add visual debugging to subtitle too
-            snarkySubtitle.style.backgroundColor = '#ff00ff';
-            snarkySubtitle.style.color = '#ffffff';
-            snarkySubtitle.style.padding = '5px';
-            snarkySubtitle.style.borderRadius = '3px';
-            snarkySubtitle.style.fontWeight = 'bold';
-            
-            snarkySubtitle.textContent = randomSnark;
-            console.log('💬 Updated subtitle with snark:', randomSnark);
-            
-            // Log what the header shows AFTER updating
-            console.log('📝 Header AFTER update:', {
-              title: welcomeText.textContent,
-              subtitle: snarkySubtitle.textContent
-            });
-
-          } else {
-            // No username - show default Flicklet title
-            console.log('🔄 No username, showing default Flicklet title');
-            welcomeText.textContent = 'Flicklet';
-            snarkySubtitle.textContent = 'TV & Movie Tracker';
-            
-            // Log what the header shows AFTER updating
-            console.log('📝 Header AFTER update:', {
-              title: welcomeText.textContent,
-              subtitle: snarkySubtitle.textContent
-            });
-
-          }
-        },
-
-        handlePostLoginUsernameSetup(user) {
-          console.log('👤 Handling post-login username setup for user:', user.email);
-          
-          // Check if user already has a username in appData
-          const existingUsername = this.appData?.settings?.displayName;
-          
-          if (existingUsername && existingUsername.trim()) {
-            // User already has a username - populate the input field and update header
-            console.log('✅ Found existing username:', existingUsername);
-            
-            // Populate the username input field
-            const displayNameInput = document.getElementById('displayNameInput');
-            if (displayNameInput) {
-              displayNameInput.value = existingUsername;
-              console.log('✅ Populated username input field with:', existingUsername);
-            }
-            
-            // Update the header with the username
-            this.updateHeaderWithUsername();
-            
-          } else {
-            // No username exists - prompt user to enter one
-            console.log('❌ No username found, prompting user to enter one');
-            
-            // Show a modal to prompt for username
-            this.showUsernamePromptModal(user.email);
-          }
-        },
-
-        showUsernamePromptModal(userEmail) {
-          console.log('📝 Showing username prompt modal for:', userEmail);
-          
-          // Create and show a modal asking for username
-          const modalHTML = `
-            <div class="modal-backdrop" id="usernamePromptModal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-              <div class="modal" style="background: var(--card); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
-                <h3 style="margin: 0 0 16px 0; color: var(--text);">Welcome! 👋</h3>
-                <p style="margin: 0 0 20px 0; color: var(--text); line-height: 1.5;">What would you like us to call you?</p>
-                <input 
-                  type="text" 
-                  id="newUsernameInput" 
-                  class="search-input" 
-                  placeholder="Enter your name"
-                  style="width: 100%; margin: 15px 0;"
-                />
-                <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                  <button class="btn secondary" onclick="closeUsernamePromptModal()" style="min-width: 80px;">Skip</button>
-                  <button class="btn primary" onclick="saveUsernameFromPrompt()" style="min-width: 80px;">Save</button>
-                </div>
-              </div>
-            </div>
-          `;
-          
-          // Insert the modal
-          document.body.insertAdjacentHTML('beforeend', modalHTML);
-          console.log('✅ Modal HTML inserted into DOM');
-          
-          // Check if modal was created
-          const modal = document.getElementById('usernamePromptModal');
-          if (modal) {
-            console.log('✅ Modal element found in DOM');
-            console.log('🔍 Modal display style:', modal.style.display);
-            console.log('🔍 Modal visibility:', modal.style.visibility);
-            console.log('🔍 Modal z-index:', modal.style.zIndex);
-          } else {
-            console.log('❌ Modal element NOT found in DOM');
-          }
-          
-          // Focus the input field
-          setTimeout(() => {
-            const input = document.getElementById('newUsernameInput');
-            if (input) {
-              input.focus();
-              input.select();
-              console.log('✅ Input field focused and selected');
-            } else {
-              console.log('❌ Input field not found');
-            }
-          }, 100);
-        },
-
         initFirebase() {
           console.log('🔥 Initializing Firebase...');
           // Initialize Firebase if available
@@ -2182,9 +1994,6 @@
               if (user) {
                 console.log('✅ User signed in, updating UI');
                 this.showNotification('Signed in successfully', 'success');
-                
-                // Handle username setup after login
-                this.handlePostLoginUsernameSetup(user);
               } else {
                 console.log('❌ No user signed in');
               }
@@ -2501,7 +2310,7 @@
       <header class="header" role="banner">
         <div>
           <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
-          <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
+          <div class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
           <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
         </div>
         <div class="user-section">
@@ -2666,7 +2475,6 @@
               <button id="saveNameBtn" class="btn secondary" onclick="saveDisplayName()">
                 💾 <span data-i18n="save_name">Save</span>
               </button>
-
             </div>
             <label style="display: flex; gap: 6px; align-items: center">
               <input type="checkbox" id="proToggle" /> <span data-i18n="pro_simulate">Pro (simulate)</span>
@@ -2713,9 +2521,6 @@
           </div>
 
           <h4 data-i18n="notifications">Notifications</h4>
-          <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-            Choose which types of notifications you'd like to receive about your TV shows and movies
-          </p>
           <div
             style="
               display: flex;
@@ -3603,14 +3408,10 @@
 
       function updateWelcomeText() {
         try {
-          // DISABLED: This function conflicts with our dynamic header system
-          // The header is now managed by FlickletApp.updateHeaderWithUsername()
-          console.log('🚫 updateWelcomeText disabled - header managed by FlickletApp');
-          return;
-          
-          // OLD CODE (disabled):
-          /*
           const n = (appData?.settings?.displayName || "").trim();
+  
+          
+
           
           const el = document.getElementById("welcomeText");
           if (!el) {
@@ -3633,7 +3434,6 @@
             // Keep the original "Flicklet" title
             el.textContent = t("app_title");
           }
-          */
 
         } catch (e) {
           console.warn("updateWelcomeText failed:", e);
@@ -3679,19 +3479,6 @@
           updateWelcomeText();
         }
         applyTranslations();
-        
-        // Sync data with FlickletApp if available
-        if (window.FlickletApp && window.FlickletApp.appData) {
-          console.log('🔄 Syncing appData with FlickletApp after loadAppData');
-          // Update FlickletApp's appData with the loaded data
-          window.FlickletApp.appData = { ...appData };
-          console.log('✅ FlickletApp appData synced:', window.FlickletApp.appData);
-          
-          // Update the header with the synced data
-          if (typeof window.FlickletApp.updateHeaderWithUsername === 'function') {
-            window.FlickletApp.updateHeaderWithUsername();
-          }
-        }
         
         // Refresh the current tab content after app data is loaded
         setTimeout(() => {
@@ -3797,7 +3584,7 @@
         }
           
           applyTranslations();
-          // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
+          updateWelcomeText?.();
           if (typeof updateUI === "function") updateUI();
           
           showNotification(t("cloud_sync_ok"), "success");
@@ -3826,7 +3613,7 @@
         }
 
         applyTranslations?.();
-        // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
+        updateWelcomeText?.();
         updateUI?.();
 
         if (!currentUser) return;
@@ -4069,7 +3856,7 @@
                 // Auto-set the name from profile
                 appData.settings.displayName = guess.trim();
                 if (typeof saveAppData === "function") saveAppData();
-                // if (typeof updateWelcomeText === "function") updateWelcomeText(); // DISABLED - conflicts with dynamic header system
+                if (typeof updateWelcomeText === "function") updateWelcomeText();
                 if (typeof rebuildStats === "function") rebuildStats();
                 localStorage.setItem("__flicklet_onboarded__", "1");
                 setAccountLabel(user);
@@ -4188,7 +3975,7 @@
           }
           appData.settings.displayName = v;
           saveAppData();
-          // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
+          updateWelcomeText?.();
           rebuildStats?.();
           localStorage.setItem("__flicklet_onboarded__", "1");
           document.querySelector(".modal-backdrop")?.remove();
@@ -5187,73 +4974,15 @@
         // Check if username already exists for this login
         const existingName = appData?.settings?.displayName;
         if (existingName && existingName !== newName) {
-          // Show custom confirmation modal instead of browser confirm()
-          showUsernameOverwriteModal(existingName, newName);
-          return;
+          const confirmOverwrite = confirm(`A username "${existingName}" already exists for this account. Do you want to overwrite it with "${newName}"?`);
+          if (!confirmOverwrite) {
+            return;
+          }
         }
         
-        // If no existing name or same name, save directly
-        saveUsernameDirectly(newName);
-        
-
-      }
-      
-      function showUsernameOverwriteModal(existingName, newName) {
-        // Create custom modal HTML
-        const modalHTML = `
-          <div class="modal-backdrop" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-            <div class="modal" style="background: var(--card); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
-              <h3 style="margin: 0 0 16px 0; color: var(--text);">⚠️ Username Already Exists</h3>
-              <p style="margin: 0 0 20px 0; color: var(--text); line-height: 1.5;">
-                A username <strong>"${existingName}"</strong> already exists for this account.<br><br>
-                Do you want to overwrite it with <strong>"${newName}"</strong>?
-              </p>
-              <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                <button class="btn secondary" onclick="closeUsernameOverwriteModal()" style="min-width: 80px;">
-                  Cancel
-                </button>
-                <button class="btn primary" onclick="confirmUsernameOverwrite('${newName}')" style="min-width: 80px;">
-                  Overwrite
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
-        
-        // Add modal to page
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-      }
-      
-      function closeUsernameOverwriteModal() {
-        // Remove all modal-backdrop elements to be safe
-        document.querySelectorAll('.modal-backdrop').forEach(modal => {
-          if (modal.querySelector('.modal h3')?.textContent.includes('Username Already Exists')) {
-            modal.remove();
-          }
-        });
-      }
-      
-      function confirmUsernameOverwrite(newName) {
-        // Close the modal
-        closeUsernameOverwriteModal();
-        
-        // Save the username
-        saveUsernameDirectly(newName);
-      }
-      
-      function saveUsernameDirectly(newName) {
         // Save the new username
         if (!appData.settings) appData.settings = {};
         appData.settings.displayName = newName;
-        
-        // Also update FlickletApp's appData to keep them in sync
-        if (window.FlickletApp && window.FlickletApp.appData) {
-          if (!window.FlickletApp.appData.settings) {
-            window.FlickletApp.appData.settings = {};
-          }
-          window.FlickletApp.appData.settings.displayName = newName;
-          console.log('✅ Synced username to FlickletApp appData:', newName);
-        }
         
         // Save to localStorage
         localStorage.setItem('flicklet-data', JSON.stringify(appData));
@@ -5264,53 +4993,7 @@
         }
         
         showNotification(`Name saved as "${newName}"`, "success");
-        
-        // Update the header to show the new username
-        // Use a small delay to ensure data is fully synced
-        setTimeout(() => {
-          if (window.FlickletApp && typeof window.FlickletApp.updateHeaderWithUsername === 'function') {
-            console.log('🔄 Updating header after username save (delayed)');
-            window.FlickletApp.updateHeaderWithUsername();
-          }
-        }, 50);
       }
-      
-      function closeUsernamePromptModal() {
-        const modal = document.getElementById('usernamePromptModal');
-        if (modal) {
-          modal.remove();
-        }
-      }
-      
-      function saveUsernameFromPrompt() {
-        const input = document.getElementById('newUsernameInput');
-        const newName = input?.value?.trim();
-        
-        if (!newName) {
-          showNotification("Please enter a name", "warning");
-          return;
-        }
-        
-        // Close the modal first
-        closeUsernamePromptModal();
-        
-        // Update the FlickletApp's appData first
-        if (window.FlickletApp && window.FlickletApp.appData) {
-          if (!window.FlickletApp.appData.settings) {
-            window.FlickletApp.appData.settings = {};
-          }
-          window.FlickletApp.appData.settings.displayName = newName;
-          console.log('✅ Updated FlickletApp appData with username:', newName);
-        }
-        
-        // Save the username using existing function
-        saveUsernameDirectly(newName);
-        
-        // Note: saveUsernameDirectly() already calls updateHeaderWithUsername()
-        // No need to call it again here
-      }
-      
-
 
       function closeShareSelectionModal() {
         const modal = document.getElementById('shareSelectionModal');
@@ -6633,7 +6316,7 @@
           if (appData?.settings) {
             appData.settings.displayName = val;
             saveAppData?.();
-            // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
+            updateWelcomeText?.();
             showNotification?.(t("name_saved"), "success");
           }
         });
