@@ -140,7 +140,7 @@ function getDateFromURL() {
   return urlParams.get('date');
 }
 
-function getTodayWord(){
+async function getTodayWord(){
   // Check if date parameter is provided
   const dateParam = getDateFromURL();
   let targetDate;
@@ -153,10 +153,46 @@ function getTodayWord(){
     targetDate = new Date();
   }
   
-  // Use local timezone for consistent daily word calculation
+  // Create date string for caching
+  const dateStr = targetDate.toISOString().slice(0, 10);
+  
+  // Check if we already have a word for this date
+  const cachedWord = localStorage.getItem(`flickword:word:${dateStr}`);
+  if (cachedWord) {
+    console.log(`🎯 Using cached word for ${dateStr}: ${cachedWord}`);
+    return cachedWord.toUpperCase();
+  }
+  
+  // Try to get word from Datamuse API
+  try {
+    console.log(`🎯 Fetching new word from API for ${dateStr}`);
+    const response = await fetch('https://api.datamuse.com/words?sp=?????&max=1');
+    const data = await response.json();
+    
+    if (data && data.length > 0 && data[0].word) {
+      const word = data[0].word.toLowerCase();
+      
+      // Validate the word is exactly 5 letters
+      if (word.length === 5 && /^[a-z]+$/.test(word)) {
+        // Cache the word for this date
+        localStorage.setItem(`flickword:word:${dateStr}`, word);
+        console.log(`🎯 New word from API: ${word}`);
+        return word.toUpperCase();
+      }
+    }
+  } catch (error) {
+    console.warn('🎯 API failed, falling back to hardcoded list:', error);
+  }
+  
+  // Fallback to hardcoded list
   const start = new Date("2023-01-01T00:00:00");
   const days = Math.floor((targetDate - start)/(1000*60*60*24));
-  return WORDS[days % WORDS.length].toUpperCase();
+  const fallbackWord = WORDS[days % WORDS.length];
+  
+  // Cache the fallback word too
+  localStorage.setItem(`flickword:word:${dateStr}`, fallbackWord);
+  console.log(`🎯 Using fallback word: ${fallbackWord}`);
+  return fallbackWord.toUpperCase();
 }
 
 // ===== PostMessage Bridge =====
@@ -192,8 +228,8 @@ function reportResult(won, guesses) {
 }
 
 // ===== Game Functions =====
-function showGame(){
-  game.target=getTodayWord();
+async function showGame(){
+  game.target=await getTodayWord();
   game.guesses=[]; game.current=""; game.done=false; game.status={}; game.lastResults=[];
   renderGrid(); renderKeyboard();
 }
@@ -423,8 +459,8 @@ document.addEventListener('keydown', function(e) {
 }, true); // Use capture phase to ensure we get the event first
 
 // ===== Auto-start game when page loads =====
-document.addEventListener('DOMContentLoaded', function() {
-  showGame();
+document.addEventListener('DOMContentLoaded', async function() {
+  await showGame();
 });
 </script>
 </body>

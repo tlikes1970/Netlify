@@ -1,15 +1,4 @@
-
-      // Helper function for binding events
-      function bind(id, fn) {
-        const el = document.getElementById(id);
-        if (el) {
-          el.onclick = fn;
-          return true;
-        }
-        return false;
-      }
-
-      window.FlickletApp = {
+window.FlickletApp = {
         // Centralized state
         currentUser: null,
         currentTab: 'home',
@@ -184,32 +173,6 @@
             };
             localStorage.setItem('tvMovieTrackerData', JSON.stringify(legacyData));
             
-            // Save to Firebase if user is logged in
-            if (this.currentUser && typeof firebase !== 'undefined' && firebase.firestore) {
-              const db = firebase.firestore();
-              const firebaseData = {
-                settings: this.appData.settings,
-                lastLoginAt: new Date()
-              };
-              console.log('🔥 Saving to Firebase:', firebaseData);
-              
-              // Use update instead of set to avoid overwriting existing data
-              db.collection("users").doc(this.currentUser.uid).update(firebaseData).then(() => {
-                console.log('💾 Data updated in Firebase successfully');
-              }).catch((error) => {
-                console.error('❌ Failed to update Firebase:', error);
-                // If update fails (document doesn't exist), try set with merge
-                console.log('🔄 Trying set with merge as fallback...');
-                db.collection("users").doc(this.currentUser.uid).set(firebaseData, { merge: true }).then(() => {
-                  console.log('💾 Data saved to Firebase with merge successfully');
-                }).catch((setError) => {
-                  console.error('❌ Failed to save to Firebase with merge:', setError);
-                });
-              });
-            } else {
-              console.log('⚠️ Cannot save to Firebase - user not logged in or Firebase not available');
-            }
-            
             console.log('💾 Data saved to both storage formats');
           } catch (error) {
             console.error('❌ Failed to save data:', error);
@@ -325,50 +288,26 @@
           console.log('✅ Global initialization complete');
         
         // Set up share button bindings
-        console.log('🔗 Setting up share button bindings...');
-        
-        // Check if functions exist before binding
-        console.log('🔍 Checking function availability:');
-        console.log('  - openShareSelectionModal:', typeof openShareSelectionModal);
-        console.log('  - generateShareLinkFromSelected:', typeof generateShareLinkFromSelected);
-        console.log('  - closeShareSelectionModal:', typeof closeShareSelectionModal);
-        
-        try {
-          bind("shareListBtn", openShareSelectionModal);
-          bind("generateShareLinkBtn", generateShareLinkFromSelected);
-          bind("closeShareModalBtn", closeShareSelectionModal);
-          console.log('✅ Share button bindings set up');
-          
-          // Also add direct event listeners as backup
-          const generateBtn = document.getElementById('generateShareLinkBtn');
-          if (generateBtn) {
-            // Remove any existing listeners first
-            generateBtn.removeEventListener('click', generateShareLinkFromSelected);
-            generateBtn.addEventListener('click', generateShareLinkFromSelected);
-            console.log('✅ Direct event listener added to generate button');
-          }
-        } catch (error) {
-          console.error('❌ Error setting up share button bindings:', error);
-        }
-        
-        // Also add direct event listeners as fallback
-        try {
-          const shareBtn = document.getElementById('shareListBtn');
-          if (shareBtn) {
-            console.log('🔗 Adding direct event listener to share button');
-            shareBtn.addEventListener('click', openShareSelectionModal);
-            console.log('✅ Direct event listener added to share button');
-          } else {
-            console.error('❌ Share button not found for direct binding');
-          }
-          
-          // Debug: Check all elements with 'share' in the ID
-          const allElements = document.querySelectorAll('[id*="share"]');
-          console.log('🔍 Found elements with "share" in ID:', allElements);
-        } catch (error) {
-          console.error('❌ Error setting up direct event listeners:', error);
-        }
-        },
+console.log('🔗 Setting up share button bindings...');
+
+try {
+  function __safeBind(idOrEl, fn) {
+    var el = (typeof idOrEl === 'string') ? document.getElementById(idOrEl) : idOrEl;
+    if (!el) { console.warn('[share] element not found:', idOrEl); return false; }
+    el.addEventListener('click', fn, false);
+    return true;
+  }
+
+  // Adjust these IDs if yours differ
+  __safeBind('shareListBtn', openShareSelectionModal);
+  __safeBind('generateShareLinkBtn', generateShareLinkFromSelected);
+  __safeBind('closeShareModalBtn', closeShareSelectionModal);
+
+  console.log('✅ Share button bindings set up (safe)');
+} catch (e) {
+  console.error('❌ Error setting up share buttons:', e);
+}
+
 
         applyTheme() {
           if (this.appData.settings.theme === 'dark') {
@@ -885,16 +824,126 @@
             
             // Array of snarky sayings
             const snarkySayings = [
-              t("apparently_need_help"),
-              t("watching_waste_time"),
-              t("judging_taste"),
-              t("keeping_track_questionable"),
-              t("memory_shorter_goldfish"),
-              t("helping_remember"),
-              t("binge_watching_personality"),
-              t("keeping_organized"),
-              t("someone_remember"),
-              t("personal_tv_memory")
+              "because apparently you need help keeping track of your life",
+              "watching you waste time, one episode at a time",
+              "judging your taste in entertainment since forever",
+              "keeping track of your questionable life choices",
+              "because your memory is shorter than a goldfish's",
+              "helping you remember what you're supposed to be watching",
+              "because binge-watching is totally a personality trait",
+              "keeping you organized, one show at a time",
+              "because someone has to remember what you're watching",
+              "your personal TV memory bank (you're welcome)"
+			    "curating your queue so you don't have to pretend you did",
+  "like a to-do list, but for your procrastination",
+  "making your watchlist longer than your attention span",
+  "because 'I'll remember' has never been true",
+  "tidying your chaos, one cliffhanger at a time",
+  "because autoplay isn't a life plan",
+  "project-managing your couch time",
+  "because you needed a hobby—this is it now",
+  "keeping receipts on every 'I'll start it tonight'",
+  "where good intentions go to buffer",
+  "because your watchlist is a hydra",
+  "calmly judging your fifth rewatch",
+  "optimizing your 'one more episode' habit",
+  "a gentle nudge wrapped in side-eye",
+  "tracking plot twists and life choices",
+  "because season 3 deserves closure (unlike your inbox)",
+  "herding your shows like caffeinated cats",
+  "holding your place while you doomscroll",
+  "because 'skip intro' shouldn't apply to organization",
+  "the spreadsheet you swore you'd make, but prettier",
+  "your queue's guardian and enabler",
+  "proof that 'later' needs logistics",
+  "because cliffhangers shouldn't require detective work",
+  "turning 'what was I watching?' into 'oh right'",
+  "preventing accidental spoilers since just now",
+  "because vibes aren't version control",
+  "your backlog's accountability buddy",
+  "whispering 'finish what you started' politely",
+  "like a PA for your pillow fort",
+  "rescuing forgotten pilots from oblivion",
+  "because recommendations multiply unsupervised",
+  "benching mediocre shows like a coach",
+  "delivering closure, one finale at a time",
+  "because genre-hopping is a lifestyle",
+  "making room for your next obsession",
+  "cataloging plot armor and popcorn crumbs",
+  "because you paused for snacks and never returned",
+  "a low-sodium replacement for guilt",
+  "helping you cheat on your current show responsibly",
+  "because 'continue watching' is not a personality test",
+  "organizing your 'maybe later' museum",
+  "turning indecision into a queue",
+  "because trailers lied and we're coping",
+  "the map for your streaming labyrinth",
+  "because your friends asked 'did you finish?'",
+  "curating alibis for your weekend",
+  "putting structure around your chaos binge",
+  "reminding you that pilots deserve a second date",
+  "keeping your tastes eclectic and your list honest",
+  "because season gaps outlive memories",
+  "scheduling your next cliffhanger responsibly",
+  "like a bookmark for your brain",
+  "because you watch faster than you remember",
+  "offering closure to abandoned episode twos",
+  "keeping spoilers at bay with receipts",
+  "because you deserve better than scribbled notes",
+  "buffering your life, not just your stream",
+  "where 'soon' becomes 'started'",
+  "because background noise turned into a lifestyle",
+  "turning 'what now?' into 'watch this'",
+  "because multitasking murdered your memory",
+  "the adult version of a sticker chart",
+  "tracking plot, not your steps",
+  "because your queue shouldn't be a jump scare",
+  "wrangling side quests and spin-offs",
+  "because limited series aren't memory tests",
+  "picking up where your attention left off",
+  "making sense of mid-season breaks",
+  "because 'watch next' needs governance",
+  "sorting your shows like a librarian with sass",
+  "preventing accidental triple-watches",
+  "keeping canon and comfort rewatches in balance",
+  "because even cliffhangers need context",
+  "elevating your taste (or at least tracking it)",
+  "like bullet journaling, but for binges",
+  "wrangling recommendations from that one friend",
+  "because your remote isn't a project manager",
+  "turning FOMO into a plan",
+  "making 'try later' actually later",
+  "because subtitles don't help your memory",
+  "keeping 'just one more' accountable",
+  "corralling shows you swore you'd finish",
+  "because new seasons sneak up on people",
+  "your queue, but with standards",
+  "minimizing rewatch deja vu",
+  "because the algorithm doesn't take notes",
+  "bringing order to your streaming sprawl",
+  "because you're the main character of this watchlist",
+  "keeping your series monogamy optional",
+  "snark delivered, chaos managed",
+  "prioritizing plot over panic",
+  "because time is a flat watchlist",
+  "making room for surprise favorites",
+  "because your taste evolves—receipts included",
+  "smoothing out your binge logistics",
+  "because season finales deserve witnesses",
+  "quietly side-eyeing your guilty pleasures",
+  "turning recs into reality",
+  "because 'I'll circle back' needs a circle",
+  "giving your queue a backbone",
+  "because cliffhangers can't be trusted",
+  "documenting your character arcs (yours)",
+  "a tiny spreadsheet with jokes",
+  "because abandoned pilots haunt us all",
+  "gently steering you past filler episodes",
+  "your watchlist's designated adult",
+  "cataloging chaos with compassion",
+  "plotting your plots, tastefully",
+  "because future-you appreciates the receipts",
+  "keeping pace with your obsessions"
             ];
             
             // Pick a random snarky saying
@@ -947,8 +996,16 @@
           console.log('👤 Display name from appData:', displayName);
           
           if (!displayName || !displayName.trim()) {
-            // No custom display name - don't extract from email, show default welcome
-            console.log('🔄 No custom username found, showing default welcome message');
+            // No custom display name - try to extract from email
+            const email = this.currentUser?.email;
+            if (email) {
+              // Extract the part before @ and capitalize first letter
+              const emailName = email.split('@')[0];
+              // Take only the part before the first dot for cleaner display
+              const cleanName = emailName.split('.')[0];
+              displayName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+              console.log('📧 Extracted name from email:', displayName);
+            }
           }
           
           if (displayName && displayName.trim()) {
@@ -959,16 +1016,16 @@
             
             // Array of snarky sayings
             const snarkySayings = [
-              t("apparently_need_help"),
-              t("watching_waste_time"),
-              t("judging_taste"),
-              t("keeping_track_questionable"),
-              t("memory_shorter_goldfish"),
-              t("helping_remember"),
-              t("binge_watching_personality"),
-              t("keeping_organized"),
-              t("someone_remember"),
-              t("personal_tv_memory")
+              "because apparently you need help keeping track of your life",
+              "watching you waste time, one episode at a time",
+              "judging your taste in entertainment since forever",
+              "keeping track of your questionable life choices",
+              "because your memory is shorter than a goldfish's",
+              "helping you remember what you're supposed to be watching",
+              "because binge-watching is totally a personality trait",
+              "keeping you organized, one show at a time",
+              "because someone has to remember what you're watching",
+              "your personal TV memory bank (you're welcome)"
             ];
             
             // Pick a random snarky saying
@@ -985,23 +1042,80 @@
           }
         },
 
-        // FlickWord Integration Methods
-        initializeFlickWord() {
-          console.log('🎯 Initializing FlickWord integration');
-          
-          // Feature flag - set to false to disable FlickWord
-          const enableFlickWord = true;
-          
-          if (!enableFlickWord) {
-            console.log('🚫 FlickWord disabled by feature flag');
-            return;
-          }
+// FlickWord Integration Methods
+initializeFlickWord() {
+  console.log('🎯 Initializing FlickWord integration');
 
-          // Show the FlickWord container
-          const flickwordContainer = document.querySelector('.flickword-container');
-          if (flickwordContainer) {
-            flickwordContainer.style.display = 'block';
-          }
+  // Feature flag
+  const enableFlickWord = true;
+  if (!enableFlickWord) {
+    console.log('🚫 FlickWord disabled by feature flag');
+    return;
+  }
+
+  const home = document.getElementById('homeSection');
+  const flick = document.getElementById('flickwordCard');
+  if (!home || !flick) {
+    console.warn('FlickWord: homeSection or flickwordCard not found');
+    return;
+  }
+
+  // 1) Ensure the card physically lives inside Home
+  if (!home.contains(flick)) {
+    home.appendChild(flick);
+  }
+
+  // 2) Visibility control tied to active tab
+  const updateVisibility = () => {
+    const isHomeActive = document.getElementById('homeTab')?.classList.contains('active');
+    // Hide both visually and from the accessibility tree
+    flick.style.display = isHomeActive ? '' : 'none';
+    try { flick.toggleAttribute('hidden', !isHomeActive); } catch {}
+  };
+
+  updateVisibility();
+
+  // 3) Re-check visibility after any tab click
+  ['home','watching','wishlist','watched','discover','settings'].forEach(n => {
+    document.getElementById(n + 'Tab')?.addEventListener('click', () => {
+      // Defer to allow your existing tab switch to run first
+      setTimeout(updateVisibility, 0);
+    });
+  });
+
+  // 4) Also hook programmatic tab switches
+  const app = window.FlickletApp;
+  const originalSwitch =
+    (app && typeof app.switchToTab === 'function')
+      ? app.switchToTab
+      : (typeof window.switchToTab === 'function' ? window.switchToTab : null);
+
+  if (typeof originalSwitch === 'function' && !originalSwitch.__flickwordPatched) {
+    const wrapped = function(tab) {
+      const r = originalSwitch.call(this, tab);
+      updateVisibility();
+      return r;
+    };
+    wrapped.__flickwordPatched = true;
+    if (app && app.switchToTab) app.switchToTab = wrapped; else window.switchToTab = wrapped;
+  }
+
+  // 5) Safety: if the card is injected late by some other code, move it once found
+  const mo = new MutationObserver(() => {
+    const nowInHome = home.contains(document.getElementById('flickwordCard'));
+    if (!nowInHome) {
+      const found = document.getElementById('flickwordCard');
+      if (found) {
+        home.appendChild(found);
+        updateVisibility();
+        mo.disconnect();
+      }
+    } else {
+      mo.disconnect();
+    }
+  });
+  mo.observe(document.body, { childList: true, subtree: true });
+}
 
           // Set up event listeners
           this.setupFlickWordEventListeners();
@@ -1009,6 +1123,7 @@
           // Start countdown and update stats
           this.startDailyCountdown();
           this.updateFlickWordStats();
+          this.updateWordHint();
         },
         
         // Show welcome message for new users
@@ -1073,31 +1188,14 @@
 
           function tick() {
             const now = new Date();
-            const endOfDay = new Date(now);
-            // Set to end of day in user's timezone (23:59:59)
-            endOfDay.setHours(23, 59, 59, 999);
-            
-            const diff = Math.max(0, endOfDay - now);
-            const hoursLeft = Math.floor(diff / (1000 * 60 * 60));
-            const minutesLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const secondsLeft = Math.floor((diff % (1000 * 60)) / 1000);
-            
-            const h = String(hoursLeft).padStart(2, '0');
-            const m = String(minutesLeft).padStart(2, '0');
-            const s = String(secondsLeft).padStart(2, '0');
-            
-            countdownEl.textContent = `${h}:${m}:${s}`;
-            
-            // Update motivation message with hours left
-            const motivationEl = document.getElementById('flickwordMotivation');
-            if (motivationEl) {
-              const lang = this.appData?.settings?.lang || 'en';
-              if (lang === 'es') {
-                motivationEl.innerHTML = `<span data-i18n="hours_left_motivation">¡${hoursLeft} horas restantes para jugar el juego de hoy! ¡No te lo pierdas!</span>`;
-              } else {
-                motivationEl.innerHTML = `<span data-i18n="hours_left_motivation">${hoursLeft} hours left to play today's game! Don't miss out!</span>`;
-              }
-            }
+            const reset = new Date(now);
+            // Reset at 00:00 UTC so everyone shares the same daily word window
+            reset.setUTCHours(24, 0, 0, 0);
+            const diff = Math.max(0, Math.floor((reset - now) / 1000));
+            const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+            const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+            const s = String(diff % 60).padStart(2, '0');
+            countdownEl.textContent = `⏱ ${h}:${m}:${s}`;
           }
           
           tick();
@@ -1107,47 +1205,58 @@
         updateFlickWordStats() {
           // Load stats from localStorage
           const results = JSON.parse(localStorage.getItem('flickword:results') || '{}');
+          const today = new Date().toISOString().slice(0, 10);
           
-          // Get all game results sorted by date
-          const gameResults = Object.values(results).sort((a, b) => new Date(a.date) - new Date(b.date));
+          // Calculate streak
+          let streak = 0;
+          let currentDate = new Date();
           
-          // Calculate current streak (consecutive games won in a row)
-          let currentStreak = 0;
-          for (let i = gameResults.length - 1; i >= 0; i--) {
-            if (gameResults[i].won) {
-              currentStreak++;
+          while (true) {
+            const dateStr = currentDate.toISOString().slice(0, 10);
+            if (results[dateStr] && results[dateStr].won) {
+              streak++;
+              currentDate.setDate(currentDate.getDate() - 1);
             } else {
               break;
             }
           }
           
-          // Calculate best streak (highest consecutive games won since starting)
-          let bestStreak = 0;
-          let tempStreak = 0;
+          // Find best score (lowest number of guesses)
+          let bestScore = '-';
+          let gamesPlayed = 0;
           
-          gameResults.forEach(result => {
+          Object.values(results).forEach(result => {
             if (result.won) {
-              tempStreak++;
-              bestStreak = Math.max(bestStreak, tempStreak);
-            } else {
-              tempStreak = 0;
+              gamesPlayed++;
+              if (bestScore === '-' || result.guesses < bestScore) {
+                bestScore = result.guesses;
+              }
             }
           });
-          
-          // Calculate total games played (wins + losses)
-          let totalGamesPlayed = gameResults.length;
           
           // Update UI
           const streakEl = document.getElementById('streakCount');
           const bestScoreEl = document.getElementById('bestScore');
           const gamesPlayedEl = document.getElementById('gamesPlayed');
           
-          if (streakEl) streakEl.textContent = currentStreak;
-          if (bestScoreEl) bestScoreEl.textContent = bestStreak;
-          if (gamesPlayedEl) gamesPlayedEl.textContent = totalGamesPlayed;
+          if (streakEl) streakEl.textContent = streak;
+          if (bestScoreEl) bestScoreEl.textContent = bestScore;
+          if (gamesPlayedEl) gamesPlayedEl.textContent = gamesPlayed;
         },
 
-
+        updateWordHint() {
+          const hintEl = document.getElementById('wordHint');
+          if (!hintEl) return;
+          
+          // Get today's word first letter (this matches the game logic)
+          const now = new Date();
+          const start = new Date("2023-01-01");
+          const days = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+          const words = ["bliss", "crane", "flick", "gravy", "masks", "toast", "crown", "spine", "tiger", "pride"];
+          const todayWord = words[days % words.length];
+          
+          hintEl.textContent = todayWord.charAt(0).toUpperCase();
+        },
 
         handleFlickWordResult(result) {
           console.log('🎯 FlickWord result received:', result);
@@ -1173,64 +1282,28 @@
         handlePostLoginUsernameSetup(user) {
           console.log('👤 Handling post-login username setup for user:', user.email);
           
-          // Check if user already has a username in Firebase
-          if (typeof firebase !== 'undefined' && firebase.firestore) {
-            const db = firebase.firestore();
+          // Check if user already has a username in appData
+          const existingUsername = this.appData?.settings?.displayName;
+          
+          if (existingUsername && existingUsername.trim()) {
+            // User already has a username - populate the input field and update header
+            console.log('✅ Found existing username:', existingUsername);
             
-            // Add a small delay to ensure Firebase is fully synced
-            setTimeout(() => {
-              db.collection("users").doc(user.uid).get().then((doc) => {
-                console.log('🔍 Firebase user document exists:', doc.exists);
-                if (doc.exists) {
-                  const userData = doc.data();
-                  console.log('🔍 Firebase user data:', userData);
-                  console.log('🔍 Firebase user data keys:', Object.keys(userData));
-                  console.log('🔍 Firebase settings object:', userData?.settings);
-                  const existingUsername = userData?.settings?.displayName;
-                  console.log('🔍 Existing username from Firebase:', existingUsername);
-                  
-                  if (existingUsername && existingUsername.trim()) {
-                    // User already has a username - populate the input field and update header
-                    console.log('✅ Found existing username in Firebase:', existingUsername);
-                    
-                    // Update local appData with the username
-                    if (this.appData && this.appData.settings) {
-                      this.appData.settings.displayName = existingUsername;
-                    }
-                    
-                    // Populate the username input field
-                    const displayNameInput = document.getElementById('displayNameInput');
-                    if (displayNameInput) {
-                      displayNameInput.value = existingUsername;
-                      console.log('✅ Populated username input field with:', existingUsername);
-                    }
-                    
-                    // Update the left-side container with the username
-                    this.updateLeftSideUsername();
-                    
-                  } else {
-                    // No username exists - prompt user to enter one
-                    console.log('❌ No username found in Firebase, prompting user to enter one');
-                    
-                    // Show a modal to prompt for username
-                    this.showUsernamePromptModal(user.email);
-                  }
-                } else {
-                  // No user document exists - prompt user to enter one
-                  console.log('❌ No user document found in Firebase, prompting user to enter one');
-                  
-                  // Show a modal to prompt for username
-                  this.showUsernamePromptModal(user.email);
-                }
-              }).catch((error) => {
-                console.error('❌ Error checking Firebase for username:', error);
-                // Fallback - prompt user to enter one
-                this.showUsernamePromptModal(user.email);
-              });
-            }, 500); // 500ms delay to ensure Firebase is synced
+            // Populate the username input field
+            const displayNameInput = document.getElementById('displayNameInput');
+            if (displayNameInput) {
+              displayNameInput.value = existingUsername;
+              console.log('✅ Populated username input field with:', existingUsername);
+            }
+            
+            // Update the left-side container with the username
+            this.updateLeftSideUsername();
+            
           } else {
-            // Firebase not available - prompt user to enter one
-            console.log('❌ Firebase not available, prompting user to enter one');
+            // No username exists - prompt user to enter one
+            console.log('❌ No username found, prompting user to enter one');
+            
+            // Show a modal to prompt for username
             this.showUsernamePromptModal(user.email);
           }
         },
@@ -1302,11 +1375,6 @@
                 
                 // Handle username setup after login
                 this.handlePostLoginUsernameSetup(user);
-                
-                // Update username display after login
-                setTimeout(() => {
-                  this.updateLeftSideUsername();
-                }, 100);
               } else {
                 console.log('❌ No user signed in');
               }
@@ -1385,7 +1453,7 @@
           // Language toggle - already handled by HTML onchange attribute
           
           // Set up keyboard shortcuts
-          this.setupKeyboardShortcuts();
+          
 
           // Theme toggle
           const themeBtn = document.getElementById('darkModeToggle');
@@ -1530,9 +1598,8 @@
           const closeModalBtn = modal.querySelector('#closeModalBtn');
           
           signOutBtn.addEventListener('click', () => {
-            if (typeof firebase !== 'undefined' && firebase.auth) {
-              // Don't clear username from Firebase - let it persist for next login
-              firebase.auth().signOut().then(() => {
+            if (typeof auth !== 'undefined' && auth.signOut) {
+              auth.signOut().then(() => {
                 this.performSignOut();
                 modal.remove();
               }).catch((error) => {
@@ -1558,60 +1625,17 @@
           });
         },
 
-        clearUsernameFromFirebase() {
-          return new Promise((resolve, reject) => {
-            if (typeof firebase !== 'undefined' && firebase.firestore) {
-              try {
-                const db = firebase.firestore();
-                const user = firebase.auth().currentUser;
-                if (user) {
-                  console.log('🧹 Clearing username from Firebase before sign out...');
-                  // Clear the username from Firebase
-                  db.collection("users").doc(user.uid).update({
-                    settings: {
-                      displayName: "",
-                      lang: this.appData?.settings?.lang || 'en',
-                      theme: this.appData?.settings?.theme || 'light',
-                      pro: false,
-                      notif: {}
-                    }
-                  }).then(() => {
-                    console.log('✅ Username cleared from Firebase');
-                    resolve();
-                  }).catch((error) => {
-                    console.error('❌ Failed to clear username from Firebase:', error);
-                    reject(error);
-                  });
-                } else {
-                  console.log('⚠️ No user found for Firebase clearing');
-                  resolve();
-                }
-              } catch (error) {
-                console.error('❌ Error clearing username from Firebase:', error);
-                reject(error);
-              }
-            } else {
-              console.log('⚠️ Firebase not available for username clearing');
-              resolve();
-            }
-          });
-        },
-
         performSignOut() {
           console.log('🚪 Performing sign out cleanup...');
           
           // Clear user authentication state
           this.currentUser = null;
           
-          // Clear user-specific data from centralized appData (with safety checks)
-          if (this.appData && this.appData.lists) {
-            this.appData.lists.watching = [];
-            this.appData.lists.watched = [];
-            this.appData.lists.wishlist = [];
-          }
-          if (this.appData && this.appData.settings) {
-            this.appData.settings.displayName = '';
-          }
+          // Clear user-specific data from centralized appData
+          this.appData.lists.watching = [];
+          this.appData.lists.watched = [];
+          this.appData.lists.wishlist = [];
+          this.appData.settings.displayName = '';
           
           // Clear the global appData that the existing system uses
           if (typeof appData !== 'undefined') {
@@ -1627,15 +1651,10 @@
           // Update the account button
           this.updateAccountButton();
           
-          // Clear the username display
-          this.updateLeftSideUsername();
-          
           // Clear localStorage data
           localStorage.removeItem('flicklet-data');
           localStorage.removeItem('tvMovieTrackerData');
           localStorage.removeItem('flicklet-login-prompted');
-          
-          // Username will persist in Firebase for next login
           
           // Refresh the UI to show empty lists
           this.updateUI();

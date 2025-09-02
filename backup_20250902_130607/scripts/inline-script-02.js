@@ -206,27 +206,6 @@
           pro_feature_recommendations: "Personalized AI recommendations",
           pro_feature_stats: "Detailed watching statistics",
           pro: "Pro",
-          // Quote and FlickWord translations
-          quote_of_the_day: "Quote of the Day",
-          random_quote: "Random Quote",
-          daily_word_challenge: "Daily Word Challenge",
-          flickword_daily_challenge: "FlickWord Daily Challenge",
-          hours_left_motivation: "Hours left to play today's game!",
-          streak: "STREAK",
-          best: "BEST",
-          played: "PLAYED",
-          play_todays_word: "Play Today's Word",
-          // Snarky sayings translations
-          keeping_track_questionable: "keeping track of your questionable life choices",
-          apparently_need_help: "because apparently you need help keeping track of your life",
-          watching_waste_time: "watching you waste time, one episode at a time",
-          judging_taste: "judging your taste in entertainment since forever",
-          memory_shorter_goldfish: "because your memory is shorter than a goldfish's",
-          helping_remember: "helping you remember what you're supposed to be watching",
-          binge_watching_personality: "because binge-watching is totally a personality trait",
-          keeping_organized: "keeping you organized, one show at a time",
-          someone_remember: "because someone has to remember what you're watching",
-          personal_tv_memory: "your personal TV memory bank (you're welcome)",
           // Genre translations
           action: "Action",
           adventure: "Adventure",
@@ -507,26 +486,6 @@
           pro_feature_recommendations: "Recomendaciones personalizadas con IA",
           pro_feature_stats: "Estadísticas detalladas de visualización",
           pro: "Pro",
-          // Quote and FlickWord translations
-          quote_of_the_day: "Cita del Día",
-          daily_word_challenge: "Desafío de Palabra Diaria",
-          flickword_daily_challenge: "FlickWord Desafío Diario",
-          hours_left_motivation: "¡Horas restantes para jugar el juego de hoy!",
-          streak: "RACHA",
-          best: "MEJOR",
-          played: "JUGADOS",
-          play_todays_word: "Jugar Palabra de Hoy",
-          // Snarky sayings translations
-          keeping_track_questionable: "llevando la cuenta de tus dudosas decisiones de vida",
-          apparently_need_help: "porque aparentemente necesitas ayuda para llevar la cuenta de tu vida",
-          watching_waste_time: "viéndote perder el tiempo, un episodio a la vez",
-          judging_taste: "juzgando tu gusto en entretenimiento desde siempre",
-          memory_shorter_goldfish: "porque tu memoria es más corta que la de un pez dorado",
-          helping_remember: "ayudándote a recordar lo que se supone que estás viendo",
-          binge_watching_personality: "porque ver maratones es totalmente un rasgo de personalidad",
-          keeping_organized: "manteniéndote organizado, un show a la vez",
-          someone_remember: "porque alguien tiene que recordar lo que estás viendo",
-          personal_tv_memory: "tu banco de memoria personal de TV (de nada)",
         },
       };
       function t(k) {
@@ -3346,7 +3305,7 @@
             displayNameInput.addEventListener("keydown", (e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                document.getElementById("saveNameBtn")?.click();
+                document.getElementById("saveNameInput")?.click();
               }
             });
           }
@@ -3804,7 +3763,16 @@
           
           const anchor = home.firstElementChild;
 
-
+          // Insert quotes first (after tabs, before feedback)
+          if (!document.getElementById("quoteBlock")) {
+            const block = document.createElement("blockquote");
+            block.className = "feedback-card";
+            block.id = "quoteBlock";
+            block.style.textAlign = "center";
+            block.style.fontStyle = "italic";
+            block.innerHTML = `<p id="randomQuote">"${t("quote_loading")}"</p>`;
+            anchor.insertAdjacentElement("afterend", block);
+          }
 
           // Insert horoscope second (after quotes)
           if (!document.getElementById("personalityForecast")) {

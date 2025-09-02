@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+31<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -22,7 +22,8 @@
 
   <body>
     <!-- Centralized Flicklet App Object -->
-    <script src="scripts/inline-script-01.js"></script>
+	
+    <script src="scripts/inline-script-01.js?v=fix1"></script>
 
     <!-- Main Container -->
     <div class="main-container" id="appRoot">
@@ -33,12 +34,27 @@
           <div id="dynamicSnark" style="font-size: 14px; color: #7f8c8d; font-style: italic;">Ready to track your shows</div>
         </div>
         
-        <div class="header-center">
+        <div>
           <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
           <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
           <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
         </div>
         <div class="user-section">
+          <button id="darkModeToggle" class="btn theme-toggle" title="Toggle Dark/Light Mode">
+            <span id="themeIcon">🌙</span>
+          </button>
+          <button
+            id="mardiToggle"
+            class="btn secondary"
+            title="Mardi Gras mode"
+          >
+            🎭
+          </button>
+          
+          <!-- Settings button in bottom left -->
+          <button id="settingsTab" class="btn secondary" title="Settings">
+            ⚙️
+          </button>
           <div style="display: flex; align-items: center; gap: 12px;">
             <button
               id="accountBtn"
@@ -115,47 +131,29 @@
         <button id="discoverTab" class="tab" title="Get personalized recommendations based on your taste">✨ <span data-i18n="discover">Discover</span></button>
       </div>
 
-      <!-- Quote of the Day and FlickWord Container -->
-      <div class="quote-flickword-container">
-        <div class="left-column">
-          <div id="quoteCard" class="quote-card">
-            <h3 class="quote-title">💭 <span data-i18n="quote_of_the_day">Quote of the Day</span></h3>
-            <div class="quote-content" id="dailyQuote">
-              <p class="quote-text">"The best way to predict the future is to create it."</p>
-              <p class="quote-author">- Peter Drucker</p>
-            </div>
+      <!-- FlickWord Daily Challenge Card -->
+      <div id="flickwordCard" class="flickword-card" style="display: none;">
+        <div class="flickword-header">
+          <h3 class="flickword-title">🎯 Daily Word Challenge <span class="onboarding-hint"><span class="tooltip">A fun bonus game to play while you're here! Try to guess today's word.</span></span></h3>
+          <div class="flickword-countdown" id="dailyCountdown">⏱ 00:00:00</div>
+        </div>
+        <div class="flickword-stats">
+          <div class="stat-item">
+            <span class="stat-label">🔥 Streak</span>
+            <span class="stat-value" id="streakCount">0</span>
           </div>
-          <div id="randomQuoteCard" class="random-quote-card">
-            <h3 class="quote-title">🎲 <span data-i18n="random_quote">Random Quote</span></h3>
-            <div class="quote-content" id="randomQuote">
-              <p class="quote-text">"One does not simply watch one episode."</p>
-              <p class="quote-author">- Some dude</p>
-            </div>
+          <div class="stat-item">
+            <span class="stat-label">🏆 Best</span>
+            <span class="stat-value" id="bestScore">-</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">📊 Played</span>
+            <span class="stat-value" id="gamesPlayed">0</span>
           </div>
         </div>
-        <div id="flickwordCard" class="flickword-card">
-          <h3 class="flickword-title">🎯 <span data-i18n="flickword_daily_challenge">FlickWord Daily Challenge</span></h3>
-          <div class="flickword-timer-section">
-            <div class="flickword-countdown" id="dailyCountdown">00:00:00</div>
-            <div class="flickword-motivation" id="flickwordMotivation"><span data-i18n="hours_left_motivation">Hours left to play today's game!</span></div>
-          </div>
-          <div class="flickword-stats">
-            <div class="stat-item">
-              <span class="stat-label">🔥 <span data-i18n="streak">STREAK</span></span>
-              <span class="stat-value" id="streakCount">0</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">🏆 <span data-i18n="best">BEST</span></span>
-              <span class="stat-value" id="bestScore">-</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">📊 <span data-i18n="played">PLAYED</span></span>
-              <span class="stat-value" id="gamesPlayed">0</span>
-            </div>
-          </div>
-          <div class="flickword-actions">
-            <button id="playFlickwordBtn" class="btn primary" data-i18n="play_todays_word">Play Today's Word</button>
-          </div>
+        <div class="flickword-actions">
+          <button id="playFlickwordBtn" class="btn primary">Play Today's Word</button>
+          <div class="flickword-hint">💡 Hint: Today's word starts with "<span id="wordHint">?</span>"</div>
         </div>
       </div>
 
@@ -410,13 +408,6 @@
 
     <!-- Firebase (compat for simplicity) -->
       </main>
-
-    <!-- Floating Action Buttons - Outside main container -->
-    <button id="mardiToggle" class="fab" aria-label="Mardi">🎭</button>
-    <button id="darkModeToggle" class="fab" aria-label="Dark">
-      <span id="themeIcon">🌙</span>
-    </button>
-    <button id="settingsTab" class="fab-left" aria-label="Settings">⚙️</button>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>

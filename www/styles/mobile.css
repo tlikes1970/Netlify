@@ -151,9 +151,13 @@
   }
 
   /* FlickWord adjustments */
+  .flickword-container {
+    margin: 8px 0;
+  }
+  
   .flickword-card {
     padding: 12px;
-    margin: 8px 0;
+    margin: 0;
   }
 
   .flickword-title {
@@ -224,31 +228,7 @@
     display: none;
   }
 
-  /* Floating buttons - Mobile positioning */
-  #darkModeToggle,
-  #mardiToggle {
-    position: fixed !important;
-    bottom: 80px !important;
-    right: 20px !important;
-    width: 45px !important;
-    height: 45px !important;
-    font-size: 18px !important;
-    z-index: 1000 !important;
-  }
-
-  #darkModeToggle {
-    bottom: 130px !important; /* Stack above Mardi Gras button */
-  }
-
-  #settingsTab {
-    position: fixed !important;
-    bottom: 80px !important;
-    left: 20px !important;
-    width: 45px !important;
-    height: 45px !important;
-    font-size: 18px !important;
-    z-index: 1000 !important;
-  }
+  /* Floating buttons now handled by components.css */
 
   /* Ensure buttons are visible on mobile */
   #darkModeToggle:hover,
@@ -360,14 +340,7 @@
     height: 105px;
   }
 
-  /* Even smaller floating buttons for very small screens */
-  #darkModeToggle,
-  #mardiToggle,
-  #settingsTab {
-    width: 40px !important;
-    height: 40px !important;
-    font-size: 16px !important;
-  }
+  /* Floating buttons now handled by components.css */
 }
 
 /* Landscape mobile adjustments */
@@ -396,17 +369,5 @@
     min-width: 60px;
   }
 
-  /* Adjust floating buttons for landscape */
-  #darkModeToggle,
-  #mardiToggle {
-    bottom: 60px !important;
-  }
-
-  #darkModeToggle {
-    bottom: 110px !important;
-  }
-
-  #settingsTab {
-    bottom: 60px !important;
-  }
+  /* Floating buttons now handled by components.css */
 }
