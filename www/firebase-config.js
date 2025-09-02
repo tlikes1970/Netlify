@@ -1,32 +1,34 @@
-// firebase-config.js
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM",
-  authDomain: "flicklet-71dff.firebaseapp.com",
-  projectId: "flicklet-71dff",
-  storageBucket: "flicklet-71dff.firebasestorage.app",
-  messagingSenderId: "1034923556763",
-  appId: "1:1034923556763:web:bba5489cd1d9412c9c2b3e",
-  measurementId: "G-YL4TJ4FHJC"
+  // Add your Firebase config here
+  // For now, using placeholder values
+  apiKey: "your-api-key",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "your-app-id"
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-
-// Initialize Firebase Authentication and get a reference to the service
-export const auth = getAuth(app);
-
-// Initialize Cloud Firestore and get a reference to the service
-export const db = getFirestore(app);
-
-export default app;
+if (typeof firebase !== 'undefined') {
+  firebase.initializeApp(firebaseConfig);
+  
+  // Make Firebase available globally
+  window.db = firebase.firestore();
+  window.auth = firebase.auth();
+  
+  // Initialize Firebase function for app.js
+  window.initializeFirebase = function() {
+    console.log('🔥 Firebase initialized successfully');
+    return true;
+  };
+} else {
+  console.warn('⚠️ Firebase not loaded - authentication features will be disabled');
+  
+  // Provide fallback function
+  window.initializeFirebase = function() {
+    console.log('⚠️ Firebase not available - using fallback');
+    return false;
+  };
+}
