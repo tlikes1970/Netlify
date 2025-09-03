@@ -173,10 +173,12 @@
 }
 
 .search-row {
+  position: relative;
   display: flex;
   gap: 8px;
   align-items: center;
   flex-wrap: nowrap;
+  padding-top: 26px; /* room for tips */
 }
 
 .search-input {
@@ -218,20 +220,110 @@
 }
 
 .search-help {
-  margin-bottom: 8px;
-  color: #888;
-  font-size: 11px;
-  text-align: center;
-  padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
+  position: absolute !important;
+  top: 6px !important;
+  left: 14px !important;
+  font-size: 0.9rem !important;
+  line-height: 1.2 !important;
+  font-style: italic !important;
+  color: rgba(255,255,255,.65) !important;     /* dark theme */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  margin-bottom: 0 !important;
+  text-align: left !important;
+  border-radius: 0 !important;
+  pointer-events: auto !important;             /* allow clicks for tooltips */
+  z-index: 2 !important;
+  opacity: 0.7 !important;
+  transition: opacity 0.2s ease !important;
+}
+
+html[data-theme="light"] .search-help,
+.light-mode .search-help,
+html:not([data-theme="dark"]) .search-help{
+  color: #8a8a98 !important;           /* same neutral gray as snarky subtitle - works in both themes */
+  opacity: 1 !important;               /* full opacity in light mode for visibility */
 }
 
 .search-help:hover {
   opacity: 1;
+}
+
+/* Ensure tooltips work properly */
+.onboarding-hint,
+.keyboard-hint {
+  pointer-events: auto !important;
+  cursor: help !important;
+}
+
+.onboarding-hint::after,
+.keyboard-hint::before {
+  pointer-events: auto !important;
+}
+
+.tooltip {
+  pointer-events: none !important;
+  z-index: 1000 !important;
+}
+
+/* Remove any debug styling */
+body {
+  border: none !important;
+}
+
+.streaming-horoscope,
+.feedback-card {
+  border: none !important;
+}
+
+/* Remove the red line above search (header bottom border) */
+.header {
+  border-bottom: none !important;
+}
+
+/* Welcome Message */
+.welcome-message {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2.2rem;
+  font-weight: 500;
+  color: #e91e63;
+  text-align: center;
+  z-index: 10000;
+  opacity: 1;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+  max-width: 90%;
+  line-height: 1.4;
+  text-shadow: 0 2px 8px rgba(233, 30, 99, 0.25);
+  background: none;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  box-shadow: none;
+  animation: welcomePulse 2s ease-in-out infinite;
+}
+
+html[data-theme="light"] .welcome-message {
+  color: #9c27b0;
+  background: none;
+  text-shadow: 0 2px 8px rgba(156, 39, 176, 0.25);
+}
+
+.welcome-message.fade-out {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.95);
+}
+
+@keyframes welcomePulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.02); }
 }
 
 /* Show Cards */
@@ -747,77 +839,96 @@ select,
   box-sizing: border-box;
 }
 
-/* Clean Floating Action Buttons - Deterministic Positioning */
+/* === Floating Action Buttons (Working Version) ========================== */
 
-/* Bottom-RIGHT fabs (Mardi + Dark) */
-.fab {
+:root{
+  --page-max: 1200px;
+  --page-pad: 32px;
+  --fab-size: 50px;
+  --fab-gap: 10px;
+}
+
+/* Reserve space so fixed fabs don't cover content at the bottom */
+body{
+  padding-bottom: calc(env(safe-area-inset-bottom) + 120px);
+}
+
+/* ---------------- Bottom-RIGHT (Mardi + Dark) --------------------------- */
+.fab{
   position: fixed !important;
   z-index: 9999 !important;
-  width: 50px !important;
-  height: 50px !important;
+  width: var(--fab-size) !important;
+  height: var(--fab-size) !important;
   border-radius: 50% !important;
   display: grid !important;
   place-items: center !important;
   box-shadow: 0 4px 12px rgba(0,0,0,.15) !important;
-  border: 2px solid #ff0000 !important; /* Debug: red border */
+  border: none !important;
   cursor: pointer !important;
-  background: #ffffff !important; /* Debug: white background */
-  color: #000000 !important; /* Debug: black text */
-  bottom: 20px !important;
-  right: 20px !important;
+  background: #4a5568 !important;
+  color: white !important;
+  font-size: 24px !important;
 
-  /* Hard reset opposing edges to kill inherited rules */
-  left: auto !important;
-  top: auto !important;
+  bottom: max(20px, env(safe-area-inset-bottom)) !important;
+  right: max(
+    20px,
+    calc((100vw - min(100vw, var(--page-max))) / 2 + var(--page-pad) - 40px)
+  ) !important;
+
+  left: auto !important; 
+  top: auto !important; 
   margin: 0 !important;
+
+  --fab-shift: 0px;
+  transform: translateY(var(--fab-shift));
 }
 
-/* Stack dark mode above Mardi by a fixed gap */
-#darkModeToggle.fab {
-  transform: translateY(-60px) !important;
+/* Stack dark-mode above Mardi by size+gap */
+#darkModeToggle.fab{
+  --fab-shift: calc(-1 * (var(--fab-size) + var(--fab-gap)));
 }
 
-/* Bottom-LEFT Settings – mirror logic, and hard-reset FOUC rules */
-.fab-left {
+/* ---------------- Bottom-LEFT (Settings) -------------------------------- */
+.fab-left{
   position: fixed !important;
   z-index: 9999 !important;
-  width: 50px !important;
-  height: 50px !important;
+  width: var(--fab-size) !important;
+  height: var(--fab-size) !important;
   border-radius: 50% !important;
   display: grid !important;
   place-items: center !important;
   box-shadow: 0 4px 12px rgba(0,0,0,.15) !important;
-  border: 2px solid #00ff00 !important; /* Debug: green border */
+  border: none !important;
   cursor: pointer !important;
-  background: #ffffff !important; /* Debug: white background */
-  color: #000000 !important; /* Debug: black text */
-  bottom: 20px !important;
-  left: 20px !important;
+  background: #4a5568 !important;
+  color: white !important;
+  font-size: 24px !important;
 
-  /* Kill any stray right-side rules */
-  right: auto !important;
-  top: auto !important;
+  bottom: max(20px, env(safe-area-inset-bottom)) !important;
+  left: max(
+    20px,
+    calc((100vw - min(100vw, var(--page-max))) / 2 + var(--page-pad) - 40px)
+  ) !important;
+
+  right: auto !important; 
+  top: auto !important; 
   margin: 0 !important;
+
+  transform: translateY(0);
 }
 
-/* Hover effects */
-.fab:hover,
-.fab-left:hover {
-  transform: scale(1.1) !important;
+/* Hover without losing vertical stack offset */
+#darkModeToggle:hover,
+#mardiToggle:hover,
+#settingsTab:hover{
+  transform: translateY(var(--fab-shift)) scale(1.05) !important;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+  background: #2d3748 !important;
 }
 
-#darkModeToggle.fab:hover {
-  transform: translateY(-60px) scale(1.1) !important;
-}
-
-/* Mobile: scale size */
-@media (max-width: 600px) {
-  .fab,
-  .fab-left {
-    width: 45px !important;
-    height: 45px !important;
-  }
+/* Small screens: only size changes */
+@media (max-width: 600px){
+  :root{ --fab-size: 45px; }
 }
 
 /* Tab visibility control */
@@ -1286,18 +1397,7 @@ select,
   opacity: 0.8;
 }
 
-/* Welcome Message */
-.welcome-message {
-  text-align: center;
-  margin-bottom: 12px;
-  padding: 8px 16px;
-  background: linear-gradient(45deg, rgba(156, 39, 176, 0.1), rgba(132, 94, 194, 0.1));
-  border-radius: 12px;
-  border: 1px solid rgba(156, 39, 176, 0.2);
-  color: #6a4c93;
-  font-size: 13px;
-  animation: fadeInUp 0.6s ease-out;
-}
+
 
 @keyframes fadeInUp {
   from {
@@ -1625,4 +1725,6 @@ select,
     animation: none !important; 
   }
 }
+
+
 

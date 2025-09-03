@@ -15,8 +15,9 @@
     <link rel="manifest" href="manifest.json" />
 
     <link rel="stylesheet" href="styles/inline-style-01.css">
-  
-<link rel="stylesheet" href="styles/inline-style-02.css">
+    <link rel="stylesheet" href="styles/inline-style-02.css">
+    <link rel="stylesheet" href="styles/mobile.css">
+    <link rel="stylesheet" href="styles/components.css?v=fab1">
 
 </head>
 
@@ -55,11 +56,14 @@
         </div>
       </header>
 
+      <!-- Welcome Message -->
+      <div id="welcomeMessage" class="welcome-message">
+        Welcome to Flicklet! Start by searching for a show or movie you love.
+      </div>
+
       <!-- Sticky Top Search -->
       <div class="top-search">
-        <div id="welcomeMessage" class="welcome-message" style="display: none;">
-          <small>👋 <span data-i18n="welcome_message">Welcome to Flicklet! Start by searching for a show or movie you love.</span></small>
-        </div>
+
         <div class="search-help">
           <small>💡 <span data-i18n="search_tips">Search tips: Use * for wildcards (e.g., "marvel*" for Marvel shows)</span></small>
           <span class="onboarding-hint">
@@ -425,5 +429,35 @@
     <script src="scripts/inline-script-02.js"></script>
 
     <script src="scripts/inline-script-03.js"></script>
+
+    <script>
+    // Welcome message functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const welcomeMessage = document.getElementById('welcomeMessage');
+      if (!welcomeMessage) return;
+
+      let fadeTimeout;
+
+      const hideMessage = () => {
+        welcomeMessage.classList.add('fade-out');
+        setTimeout(() => {
+          welcomeMessage.style.display = 'none';
+        }, 500); // Match CSS transition duration
+      };
+
+      // Hide on any key press
+      const handleKeyPress = () => {
+        hideMessage();
+        document.removeEventListener('keydown', handleKeyPress);
+        clearTimeout(fadeTimeout);
+      };
+
+      // Auto-fade after 4 seconds
+      fadeTimeout = setTimeout(hideMessage, 4000);
+
+      // Hide on key press
+      document.addEventListener('keydown', handleKeyPress);
+    });
+    </script>
   </body>
 </html>

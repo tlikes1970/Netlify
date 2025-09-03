@@ -152,12 +152,15 @@
               const oldSaved = localStorage.getItem('tvMovieTrackerData');
               if (oldSaved) {
                 const oldData = JSON.parse(oldSaved);
-                // Convert old format to new format
+                // Convert old format to new format - load ALL data, not just settings
+                this.appData.tv = oldData.tv || { watching: [], wishlist: [], watched: [] };
+                this.appData.movies = oldData.movies || { watching: [], wishlist: [], watched: [] };
                 this.appData.settings.displayName = (oldData.settings && oldData.settings.displayName) || '';
                 this.appData.settings.lang = (oldData.settings && oldData.settings.lang) || 'en';
                 this.appData.settings.theme = (oldData.settings && oldData.settings.theme) || 'light';
                 this.appData.settings.pro = (oldData.settings && oldData.settings.pro) || false;
-                console.log('💾 Data loaded from legacy localStorage');
+                this.appData.settings.notif = oldData.settings?.notif || { enabled: true, types: { success: true, error: true, info: true } };
+                console.log('💾 Data loaded from legacy localStorage including TV/movies data');
               }
             }
           } catch (error) {
@@ -179,8 +182,8 @@
                 pro: this.appData.settings.pro,
                 notif: this.appData.settings.notif
               },
-              tv: { watching: [], wishlist: [], watched: [] },
-              movies: { watching: [], wishlist: [], watched: [] }
+              tv: this.appData.tv || { watching: [], wishlist: [], watched: [] },
+              movies: this.appData.movies || { watching: [], wishlist: [], watched: [] }
             };
             localStorage.setItem('tvMovieTrackerData', JSON.stringify(legacyData));
             
@@ -677,11 +680,13 @@
           this.currentTab = tabName;
           
           console.log(`🔄 Switching to tab: ${tabName}`);
+          console.log(`🔧 DEBUG: window.switchToTab exists:`, typeof window.switchToTab);
           
           // Use the existing switchToTab function to ensure proper content rendering
           if (typeof window.switchToTab === 'function') {
-            console.log('✅ Using existing switchToTab function');
+            console.log(`🔧 DEBUG: About to call window.switchToTab("${tabName}")`);
             window.switchToTab(tabName);
+            console.log(`🔧 DEBUG: window.switchToTab("${tabName}") completed`);
             
             // Update tab visibility after switching
             setTimeout(() => {
@@ -701,34 +706,22 @@
             // Activate the correct tab and show its section
             if (tabName === 'home') {
               const homeTab = document.getElementById('homeTab');
-              const homeSection = document.getElementById('homeSection');
               if (homeTab) homeTab.classList.add('active');
-              if (homeSection) homeSection.style.display = 'block';
             } else if (tabName === 'watching') {
               const watchingTab = document.getElementById('watchingTab');
-              const watchingSection = document.getElementById('watchingSection');
               if (watchingTab) watchingTab.classList.add('active');
-              if (watchingSection) watchingSection.style.display = 'block';
             } else if (tabName === 'wishlist') {
               const wishlistTab = document.getElementById('wishlistTab');
-              const wishlistSection = document.getElementById('wishlistSection');
               if (wishlistTab) wishlistTab.classList.add('active');
-              if (wishlistSection) wishlistSection.style.display = 'block';
             } else if (tabName === 'watched') {
               const watchedTab = document.getElementById('watchedTab');
-              const watchedSection = document.getElementById('watchedSection');
               if (watchedTab) watchedTab.classList.add('active');
-              if (watchedSection) watchedSection.style.display = 'block';
             } else if (tabName === 'discover') {
               const discoverTab = document.getElementById('discoverTab');
-              const discoverSection = document.getElementById('discoverSection');
               if (discoverTab) discoverTab.classList.add('active');
-              if (discoverSection) discoverSection.style.display = 'block';
             } else if (tabName === 'settings') {
               const settingsTab = document.getElementById('settingsTab');
-              const settingsSection = document.getElementById('settingsSection');
               if (settingsTab) settingsTab.classList.add('active');
-              if (settingsSection) settingsSection.style.display = 'block';
             }
             
             // Update tab visibility after switching
@@ -773,24 +766,20 @@
         updateTabVisibility() {
           console.log('🎯 updateTabVisibility called, currentTab:', this.currentTab);
           
-          // Hide all tabs first
-          const allTabs = ['homeTab', 'watchingTab', 'wishlistTab', 'watchedTab', 'discoverTab'];
-          allTabs.forEach(tabId => {
+          // This function should only manage tab button visibility, not section visibility
+          // Section visibility is handled by the old switchToTab function
+          
+          // Remove active class from all tab buttons
+          const allTabButtons = ['homeTab', 'watchingTab', 'wishlistTab', 'watchedTab', 'discoverTab'];
+          allTabButtons.forEach(tabId => {
             const tab = document.getElementById(tabId);
             if (tab) {
-              tab.style.display = 'block';
-              tab.style.visibility = 'visible';
-              tab.style.opacity = '1';
-              tab.style.position = 'static';
-              tab.style.left = 'auto';
-              tab.classList.remove('hidden');
-              console.log(`✅ Showing tab: ${tabId}`);
-            } else {
-              console.log(`❌ Tab not found: ${tabId}`);
+              tab.classList.remove('active');
+              console.log(`🔘 Removed active from tab button: ${tabId}`);
             }
           });
           
-          // Hide the current tab
+          // Add active class to current tab button
           let currentTabId = '';
           switch (this.currentTab) {
             case 'home':
@@ -809,8 +798,8 @@
               currentTabId = 'discoverTab';
               break;
             case 'settings':
-              // Settings tab is handled separately, don't hide any main tabs
-              console.log('⚙️ Settings tab active - no main tabs to hide');
+              // Settings doesn't have a tab button, handled separately
+              console.log('⚙️ Settings tab active - no tab button to activate');
               return;
             default:
               console.log('⚠️ Unknown currentTab:', this.currentTab);
@@ -820,20 +809,16 @@
           if (currentTabId) {
             const currentTab = document.getElementById(currentTabId);
             if (currentTab) {
-              // Use multiple hiding methods to ensure it's hidden
-              currentTab.style.display = 'none';
-              currentTab.style.visibility = 'hidden';
-              currentTab.style.opacity = '0';
-              currentTab.style.position = 'absolute';
-              currentTab.style.left = '-9999px';
-              currentTab.classList.add('hidden');
-              console.log(`🎯 Hidden current tab: ${currentTabId} with multiple methods`);
+              currentTab.classList.add('active');
+              console.log(`✅ Activated tab button: ${currentTabId}`);
             } else {
-              console.log(`❌ Current tab not found: ${currentTabId}`);
+              console.log(`❌ Tab button not found: ${currentTabId}`);
             }
           }
           
-          console.log(`🎯 Tab visibility update complete - hiding ${currentTabId}, showing other tabs`);
+
+          
+          console.log(`🎯 Tab button visibility update complete - activated ${currentTabId}`);
         },
 
         updateHeaderWithUsername() {
@@ -1187,51 +1172,71 @@
                   console.log('🔍 Firebase user data keys:', Object.keys(userData));
                   console.log('🔍 Firebase settings object:', userData?.settings);
                   const existingUsername = userData?.settings?.displayName;
-                  console.log('🔍 Existing username from Firebase:', existingUsername);
+                  const rootDisplayName = userData?.displayName;
+                  console.log('🔍 Existing username from Firebase settings:', existingUsername);
+                  console.log('🔍 Root displayName from Firebase:', rootDisplayName);
                   
-                  if (existingUsername && existingUsername.trim()) {
-                    // User already has a username - populate the input field and update header
-                    console.log('✅ Found existing username in Firebase:', existingUsername);
+                  // Check if user already has a username (either from Firebase or local data)
+                  const localUsername = (this.appData?.settings?.displayName || "").trim();
+                  const finalUsername = existingUsername && existingUsername.trim() ? existingUsername : localUsername;
+                  
+                  if (finalUsername) {
+                    // User already has a username - use it
+                    console.log('✅ Found existing username:', finalUsername, '(source:', existingUsername ? 'Firebase' : 'local', ')');
                     
                     // Update local appData with the username
                     if (this.appData && this.appData.settings) {
-                      this.appData.settings.displayName = existingUsername;
+                      this.appData.settings.displayName = finalUsername;
                     }
                     
                     // Populate the username input field
                     const displayNameInput = document.getElementById('displayNameInput');
                     if (displayNameInput) {
-                      displayNameInput.value = existingUsername;
-                      console.log('✅ Populated username input field with:', existingUsername);
+                      displayNameInput.value = finalUsername;
+                      console.log('✅ Populated username input field with:', finalUsername);
                     }
                     
                     // Update the left-side container with the username
                     this.updateLeftSideUsername();
                     
                   } else {
-                    // No username exists - prompt user to enter one
-                    console.log('❌ No username found in Firebase, prompting user to enter one');
+                    // No custom username exists - use email as fallback
+                    console.log('ℹ️ No custom username found, using email as fallback');
                     
-                    // Show a modal to prompt for username
-                    this.showUsernamePromptModal(user.email);
+                    // Use email as display name and update the header
+                    const emailName = user.email.split('@')[0];
+                    appData.settings.displayName = emailName;
+                    this.updateLeftSideUsername();
+                    
+                    // Save the fallback name to Firebase
+                    this.saveToFirebase();
                   }
                 } else {
-                  // No user document exists - prompt user to enter one
-                  console.log('❌ No user document found in Firebase, prompting user to enter one');
+                  // No user document exists - use email as fallback
+                  console.log('ℹ️ No user document found, using email as fallback');
                   
-                  // Show a modal to prompt for username
-                  this.showUsernamePromptModal(user.email);
+                  // Use email as display name and update the header
+                  const emailName = user.email.split('@')[0];
+                  appData.settings.displayName = emailName;
+                  this.updateLeftSideUsername();
+                  
+                  // Save the fallback name to Firebase
+                  this.saveToFirebase();
                 }
               }).catch((error) => {
                 console.error('❌ Error checking Firebase for username:', error);
-                // Fallback - prompt user to enter one
-                this.showUsernamePromptModal(user.email);
+                // Fallback - use email as display name
+                const emailName = user.email.split('@')[0];
+                appData.settings.displayName = emailName;
+                this.updateLeftSideUsername();
               });
             }, 500); // 500ms delay to ensure Firebase is synced
           } else {
-            // Firebase not available - prompt user to enter one
-            console.log('❌ Firebase not available, prompting user to enter one');
-            this.showUsernamePromptModal(user.email);
+            // Firebase not available - use email as fallback
+            console.log('ℹ️ Firebase not available, using email as fallback');
+            const emailName = user.email.split('@')[0];
+            appData.settings.displayName = emailName;
+            this.updateLeftSideUsername();
           }
         },
 
@@ -1354,7 +1359,10 @@
           const bindTab = (id, fn) => {
             const el = document.getElementById(id);
             if (el) {
-              el.onclick = fn;
+              el.addEventListener('click', (e) => {
+                console.log(`🔄 Tab clicked: ${id}`);
+                fn(e);
+              });
               console.log(`✅ Tab event listener set up for ${id}`);
             } else {
               console.error(`❌ Tab element not found: ${id}`);
@@ -1375,9 +1383,12 @@
           const settingsBtn = document.getElementById('settingsTab');
           if (settingsBtn) {
             const self = this;
-            settingsBtn.addEventListener('click', function() {
+            settingsBtn.addEventListener('click', function(e) {
               self.switchTab("settings");
             });
+            console.log('✅ Settings button event listener added');
+          } else {
+            console.log('❌ Settings button not found!');
           }
           
           console.log('✅ All tab event listeners set up');
@@ -1429,6 +1440,20 @@
             console.log('✅ Account button event listener set up successfully');
           } else {
             console.error('❌ Account button not found');
+          }
+
+          // Nuclear Option button - clear all data
+          const clearAllBtn = document.getElementById('clearAllBtn');
+          if (clearAllBtn) {
+            console.log('🗑️ Setting up Nuclear Option button event listener');
+            const self = this;
+            clearAllBtn.addEventListener('click', function() {
+              console.log('🗑️ Nuclear Option button clicked!');
+              self.showNuclearOptionModal();
+            });
+            console.log('✅ Nuclear Option button event listener set up successfully');
+          } else {
+            console.log('❌ Nuclear Option button not found');
           }
         },
 
@@ -1558,6 +1583,167 @@
           });
         },
 
+        showNuclearOptionModal() {
+          // Create a custom modal for nuclear option confirmation
+          const modal = document.createElement('div');
+          modal.className = 'modal-backdrop';
+          modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+          `;
+          
+          const modalContent = document.createElement('div');
+          modalContent.className = 'modal';
+          modalContent.style.cssText = `
+            background: var(--card);
+            padding: 24px;
+            border-radius: 12px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 2px solid #dc3545;
+          `;
+          
+          modalContent.innerHTML = `
+            <h3 style="margin: 0 0 16px 0; color: var(--text);">🗑️ Nuclear Option</h3>
+            <p style="margin: 0 0 20px 0; color: var(--text-secondary); line-height: 1.5;">
+              This will <strong>permanently delete</strong> all your TV shows, movies, and watchlists.<br>
+              <span style="color: #dc3545; font-weight: bold;">This action cannot be undone!</span>
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+              <button id="confirmNuclearBtn" class="btn danger" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">Yes, Delete Everything</button>
+              <button id="cancelNuclearBtn" class="btn secondary" style="background: var(--border); color: var(--text); border: 1px solid var(--border); padding: 10px 20px; border-radius: 6px; cursor: pointer;">Cancel</button>
+            </div>
+          `;
+          
+          modal.appendChild(modalContent);
+          document.body.appendChild(modal);
+          
+          // Add event listeners
+          const confirmBtn = modal.querySelector('#confirmNuclearBtn');
+          const cancelBtn = modal.querySelector('#cancelNuclearBtn');
+          
+          confirmBtn.addEventListener('click', async () => {
+            console.log('🗑️ User confirmed nuclear option');
+            modal.remove();
+            await this.performNuclearOption();
+          });
+          
+          cancelBtn.addEventListener('click', () => {
+            console.log('🗑️ User cancelled nuclear option');
+            modal.remove();
+          });
+          
+          // Close modal when clicking outside
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              modal.remove();
+            }
+          });
+        },
+
+        async performNuclearOption() {
+          console.log('🗑️ Performing nuclear option - clearing all data');
+          
+          // Clear all data locally
+          if (this.appData?.tv) {
+            this.appData.tv = { watching: [], wishlist: [], watched: [] };
+          }
+          if (this.appData?.movies) {
+            this.appData.movies = { watching: [], wishlist: [], watched: [] };
+          }
+          if (this.appData?.settings) {
+            this.appData.settings.displayName = '';
+          }
+          
+          // Save the cleared data locally first
+          this.saveData();
+          
+          // Also clear data from Firebase if user is signed in
+          if (this.currentUser && typeof firebase !== 'undefined' && firebase.firestore) {
+            console.log('🗑️ Clearing data from Firebase as well');
+            const db = firebase.firestore();
+            const firebaseData = {
+              watchlists: {
+                tv: { watching: [], wishlist: [], watched: [] },
+                movies: { watching: [], wishlist: [], watched: [] }
+              },
+              settings: {
+                displayName: '',
+                lang: this.appData?.settings?.lang || 'en',
+                theme: this.appData?.settings?.theme || 'light',
+                pro: false,
+                notif: {}
+              },
+              lastUpdated: new Date()
+            };
+            
+            try {
+              await db.collection("users").doc(this.currentUser.uid).update(firebaseData);
+              console.log('🗑️ Firebase data cleared successfully');
+            } catch (error) {
+              console.error('❌ Failed to clear Firebase data:', error);
+              // If update fails (document doesn't exist), try set with merge
+              console.log('🔄 Trying set with merge as fallback...');
+              try {
+                await db.collection("users").doc(this.currentUser.uid).set(firebaseData, { merge: true });
+                console.log('🗑️ Firebase data cleared with set/merge fallback');
+              } catch (fallbackError) {
+                console.error('❌ Failed to clear Firebase data with fallback:', fallbackError);
+              }
+            }
+          } else {
+            console.log('🗑️ No Firebase user or Firebase not available, skipping cloud clear');
+          }
+          
+          // Wait a moment for Firebase to process the update
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Update UI - call multiple UI update functions to ensure everything refreshes
+          this.updateLeftSideUsername();
+          
+          // Call the global updateUI function if available
+          if (typeof updateUI === 'function') {
+            console.log('🔄 Calling global updateUI function');
+            updateUI();
+          }
+          
+          // Force refresh all tab content by switching to current tab
+          console.log('🔄 Refreshing current tab:', this.currentTab);
+          this.switchTab(this.currentTab);
+          
+          // Also call the global switchToTab to ensure proper rendering
+          if (typeof window.switchToTab === 'function') {
+            console.log('🔄 Calling global switchToTab function');
+            window.switchToTab(this.currentTab);
+          }
+          
+          // Force refresh discover tab if it exists
+          if (typeof renderDiscover === 'function') {
+            console.log('🔄 Refreshing discover tab');
+            renderDiscover();
+          }
+          
+          // Show notification
+          this.showNotification('All data cleared successfully (local and cloud)', 'warning');
+          
+          console.log('🗑️ Nuclear option completed');
+          
+          // Auto-refresh the page to show cleared data
+          setTimeout(() => {
+            console.log('🔄 Auto-refreshing page to show cleared data');
+            window.location.reload();
+          }, 1500); // 1.5 second delay to let user see the success message
+        },
+
         clearUsernameFromFirebase() {
           return new Promise((resolve, reject) => {
             if (typeof firebase !== 'undefined' && firebase.firestore) {
@@ -1621,8 +1807,30 @@
             appData.settings.displayName = '';
           }
           
-          // Save the cleared data
-          this.saveData();
+          // Save the cleared data to localStorage only (don't save to Firebase)
+          // This preserves the username in Firebase while clearing local data
+          try {
+            // Save to centralized storage
+            localStorage.setItem('flicklet-data', JSON.stringify(this.appData));
+            
+            // Also save to legacy format for compatibility
+            const legacyData = {
+              settings: {
+                displayName: this.appData.settings.displayName,
+                lang: this.appData.settings.lang,
+                theme: this.appData.settings.theme,
+                pro: this.appData.settings.pro,
+                notif: this.appData.settings.notif
+              },
+              tv: this.appData.tv || { watching: [], wishlist: [], watched: [] },
+              movies: this.appData.movies || { watching: [], wishlist: [], watched: [] }
+            };
+            localStorage.setItem('tvMovieTrackerData', JSON.stringify(legacyData));
+            
+            console.log('💾 Data saved to localStorage only (Firebase data preserved)');
+          } catch (error) {
+            console.error('❌ Failed to save data to localStorage:', error);
+          }
           
           // Update the account button
           this.updateAccountButton();
@@ -1681,4 +1889,201 @@
       };
 
       // FlickletApp will be initialized after all functions are defined
+
+// ===== SETTINGS FAB HARDENING FIX =====
+// Ensure settings FAB never bubbles into other handlers
+(() => {
+  const btn = document.getElementById('settingsTab');
+  if (!btn) return;
+
+  // remove any old listeners you might have attached elsewhere
+  btn.replaceWith(btn.cloneNode(true));
+  const fresh = document.getElementById('settingsTab');
+
+  fresh.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();   // <-- key: block global delegators
+    if (window.FlickletApp?.switchTab) {
+      window.FlickletApp.switchTab('settings');
+    } else if (typeof self?.switchTab === 'function') {
+      self.switchTab('settings');
+    }
+  }, { capture: true });    // <-- capture to preempt other listeners
+})();
+
+// Harden openShareSelectionModal so it only opens from the actual Share button
+(() => {
+  const original = window.openShareSelectionModal;
+  if (typeof original !== 'function') return;
+
+  window.openShareSelectionModal = function (origin) {
+    // Is this an explicit click on the Share button?
+    const isUserClick =
+      (origin && origin.target && origin.target.closest?.('#shareListBtn')) ||
+      (typeof origin === 'string' && /^(user|btn)$/i.test(origin));
+
+    // Never auto-open while in Settings unless user clicked the Share button
+    const inSettings = !!(window.FlickletApp?.currentTab === 'settings');
+
+    if (!isUserClick && inSettings) {
+      console.debug('🛡️ Blocked auto share modal while in Settings.');
+      return;
+    }
+    
+    // Additional safety: force close any existing share modal before opening
+    // BUT only if it's NOT a legitimate user click
+    const shareModal = document.getElementById('shareSelectionModal');
+    if (shareModal && inSettings && !isUserClick) {
+      console.debug('🛡️ Force closing existing share modal in Settings (not user click).');
+      shareModal.style.setProperty('display', 'none', 'important');
+      shareModal.classList.remove('active');
+      return;
+    }
+    
+    // If this is a legitimate user click, set the interaction flag
+    if (isUserClick) {
+      // Set global interaction flags for the safety net
+      if (window.shareModalInteractionTracker) {
+        window.shareModalInteractionTracker.lastUserShareClick = Date.now();
+        window.shareModalInteractionTracker.userIsInteractingWithModal = true;
+        console.debug('🛡️ Setting interaction flags for legitimate user click');
+      }
+    }
+    
+    return original.apply(this, arguments);
+  };
+})();
+
+// Bind ONLY to the primary Share button; ignore anything else with "share" in id
+(() => {
+  const shareBtn = document.getElementById('shareListBtn');
+  if (!shareBtn) return;
+
+  // Remove any broad delegates you may have (optional safety)
+  // document.removeEventListener('click', someOldShareHandler, true);
+
+  shareBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();           // do not let generic body handlers run
+    if (typeof window.openShareSelectionModal === 'function') {
+      window.openShareSelectionModal(e /* pass real event as origin */);
+    }
+  }, { capture: true });
+})();
+
+// Disable any leftover auto-onboarding / URL import while in Settings
+(() => {
+  const blockIfInSettings = () =>
+    window.FlickletApp?.currentTab === 'settings';
+
+  // Patch a common URL-import helper if present
+  const tryImport = window.tryImportFromShareLink;
+  if (typeof tryImport === 'function') {
+    window.tryImportFromShareLink = function () {
+      if (blockIfInSettings()) {
+        console.debug('🛡️ Skipped URL share import on Settings.');
+        return;
+      }
+      return tryImport.apply(this, arguments);
+    };
+  }
+
+  // Optional: suppress any one-time "onboard to share" prompt if it exists
+  // by marking it complete. Safe no-op if you don't use it.
+  try { localStorage.setItem('fw_share_onboarded', '1'); } catch (_) {}
+})();
+
+// Global safety net: Force close share modal when in settings (but allow legitimate user opens)
+(() => {
+  // Create a global tracker object
+  window.shareModalInteractionTracker = {
+    lastUserShareClick: 0,
+    userIsInteractingWithModal: false
+  };
+  
+  // Wait for DOM to be ready before setting up event listeners
+  const setupShareButtonTracking = () => {
+    // Track when user legitimately clicks share button
+    const shareBtn = document.getElementById('shareListBtn');
+    console.debug('🛡️ Looking for share button:', shareBtn);
+    if (shareBtn) {
+      shareBtn.addEventListener('click', (e) => {
+        window.shareModalInteractionTracker.lastUserShareClick = Date.now();
+        window.shareModalInteractionTracker.userIsInteractingWithModal = true;
+        console.debug('🛡️ User clicked share button, setting interaction flag', e);
+      });
+      console.debug('🛡️ Share button event listener added');
+    } else {
+      console.debug('🛡️ Share button not found!');
+    }
+  };
+  
+  // Set up immediately if DOM is ready, otherwise wait
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupShareButtonTracking);
+  } else {
+    setupShareButtonTracking();
+  }
+  
+  // Track when user interacts with the modal
+  const setupModalTracking = () => {
+    const shareModal = document.getElementById('shareSelectionModal');
+    if (shareModal) {
+      shareModal.addEventListener('click', () => {
+        window.shareModalInteractionTracker.userIsInteractingWithModal = true;
+      });
+      
+      // Reset interaction flag when modal is closed
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+            const isHidden = shareModal.style.display === 'none' || 
+                            window.getComputedStyle(shareModal).display === 'none';
+            if (isHidden) {
+              window.shareModalInteractionTracker.userIsInteractingWithModal = false;
+            }
+          }
+        });
+      });
+      observer.observe(shareModal, { attributes: true, attributeFilter: ['style'] });
+    }
+  };
+  
+  // Set up modal tracking with DOM ready check
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupModalTracking);
+  } else {
+    setupModalTracking();
+  }
+  
+  const forceCloseShareModal = () => {
+    const shareModal = document.getElementById('shareSelectionModal');
+    const timeSinceUserClick = Date.now() - window.shareModalInteractionTracker.lastUserShareClick;
+    
+    console.debug('🛡️ Safety check:', {
+      shareModal: !!shareModal,
+      currentTab: window.FlickletApp?.currentTab,
+      userIsInteracting: window.shareModalInteractionTracker.userIsInteractingWithModal,
+      timeSinceUserClick: timeSinceUserClick,
+      lastUserShareClick: window.shareModalInteractionTracker.lastUserShareClick
+    });
+    
+    // Only close if we're in settings AND user is not actively interacting with modal
+    // AND it's been more than 5 seconds since user clicked share
+    if (shareModal && 
+        window.FlickletApp?.currentTab === 'settings' && 
+        !window.shareModalInteractionTracker.userIsInteractingWithModal && 
+        timeSinceUserClick > 5000) {
+      console.debug('🛡️ Global safety: Force closing share modal in Settings (no recent user interaction).');
+      shareModal.style.setProperty('display', 'none', 'important');
+      shareModal.classList.remove('active');
+    }
+  };
+  
+  // Run immediately and on any tab change
+  forceCloseShareModal();
+  
+  // Also run periodically as a safety net (less frequently)
+  setInterval(forceCloseShareModal, 5000);
+})();
     

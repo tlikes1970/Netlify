@@ -230,12 +230,7 @@
 
   /* Floating buttons now handled by components.css */
 
-  /* Ensure buttons are visible on mobile */
-  #darkModeToggle:hover,
-  #mardiToggle:hover,
-  #settingsTab:hover {
-    transform: scale(1.05) !important;
-  }
+  /* Hover effects moved to components.css */
 
   /* Hide desktop-specific elements on mobile */
   .desktop-only {

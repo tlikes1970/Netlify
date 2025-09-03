@@ -1163,59 +1163,7 @@
         border-left: 4px solid #e5e7eb !important;
       }
 
-      /* Theme toggle buttons in bottom right corner */
-      #darkModeToggle,
-      #mardiToggle {
-        position: fixed !important;
-        bottom: 20px !important;
-        right: 20px !important;
-        width: 50px !important;
-        height: 50px !important;
-        border-radius: 50% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 20px !important;
-        z-index: 1000 !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-        border: none !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease !important;
-      }
-
-      #darkModeToggle {
-        bottom: 80px !important; /* Stack above Mardi Gras button */
-      }
-
-      #darkModeToggle:hover,
-      #mardiToggle:hover {
-        transform: scale(1.1) !important;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
-      }
-      
-      /* Settings button in bottom left corner */
-      #settingsTab {
-        position: fixed !important;
-        bottom: 20px !important;
-        left: 20px !important;
-        width: 50px !important;
-        height: 50px !important;
-        border-radius: 50% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 20px !important;
-        z-index: 1000 !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-        border: none !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease !important;
-      }
-      
-      #settingsTab:hover {
-        transform: scale(1.1) !important;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
-      }
+      /* Floating button styles moved to components.css */
       
               /* Tab visibility control */
         .tab[style*="display: none"] {

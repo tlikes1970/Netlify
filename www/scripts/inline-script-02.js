@@ -969,9 +969,19 @@
           
           
           if (cloud.watchlists) {
-            if (cloud.watchlists.tv) appData.tv = cloud.watchlists.tv;
-            if (cloud.watchlists.movies)
+            // Only override local data if cloud data has content
+            if (cloud.watchlists.tv && 
+                (cloud.watchlists.tv.watching?.length > 0 || 
+                 cloud.watchlists.tv.wishlist?.length > 0 || 
+                 cloud.watchlists.tv.watched?.length > 0)) {
+              appData.tv = cloud.watchlists.tv;
+            }
+            if (cloud.watchlists.movies && 
+                (cloud.watchlists.movies.watching?.length > 0 || 
+                 cloud.watchlists.movies.wishlist?.length > 0 || 
+                 cloud.watchlists.movies.watched?.length > 0)) {
               appData.movies = cloud.watchlists.movies;
+            }
           }
                       if (cloud.settings) {
               const incoming = { ...cloud.settings };
@@ -1263,7 +1273,7 @@
                 { merge: true }
               );
 
-            await loadUserDataFromCloud(user.uid);
+            // await loadUserDataFromCloud(user.uid); // DISABLED - conflicts with new centralized system
 
             // Refresh the current tab content after cloud data is loaded
             setTimeout(() => {
@@ -3329,11 +3339,70 @@
         document
           .querySelectorAll(".tab")
           .forEach((t) => t.classList.remove("active"));
-        document.getElementById(tab + "Tab").classList.add("active");
+        
+        const tabElement = document.getElementById(tab + "Tab");
+        if (tabElement) {
+          tabElement.classList.add("active");
+        }
+        
         document
           .querySelectorAll(".tab-section")
-          .forEach((s) => (s.style.display = "none"));
-        document.getElementById(tab + "Section").style.display = "block";
+          .forEach((s) => {
+            console.log(`🔧 HIDING section: ${s.id}, current display: ${s.style.display}`);
+            s.style.display = "none";
+            s.classList.remove('active');
+          });
+        
+        const sectionElement = document.getElementById(tab + "Section");
+        if (sectionElement) {
+          // Show the current tab section
+          console.log(`🔧 SHOWING section: ${sectionElement.id}, setting display to block`);
+          sectionElement.style.display = "block";
+          // Don't add 'active' class to sections - only to tab buttons
+          
+          console.log(`✅ SETTINGS DEBUG: ${tab}Section is now visible`);
+          console.log(`✅ SETTINGS DEBUG: Element found:`, sectionElement);
+          console.log(`✅ SETTINGS DEBUG: Computed display:`, window.getComputedStyle(sectionElement).display);
+          console.log(`✅ SETTINGS DEBUG: Element rect:`, sectionElement.getBoundingClientRect());
+          
+          // If this is the settings section, force close any modals and scroll to top
+          if (tab === "settings") {
+            // Force close any share modals that might be open
+            const shareModal = document.getElementById('shareSelectionModal');
+            if (shareModal) {
+              console.log(`🔧 SETTINGS DEBUG: Force closing share modal`);
+              shareModal.style.setProperty('display', 'none', 'important');
+              shareModal.classList.remove('active');
+            }
+            
+            // Scroll to the header instead of the settings section
+            setTimeout(() => {
+              const header = document.querySelector('.header');
+              if (header) {
+                header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }, 100);
+          }
+        } else {
+          console.log(`❌ SETTINGS DEBUG: ${tab}Section element not found!`);
+        }
+
+        // Show/hide home page specific elements
+        const isHome = tab === "home";
+        const quoteFlickwordContainer = document.querySelector('.quote-flickword-container');
+        const feedbackSection = document.getElementById('feedbackSection');
+        
+        if (quoteFlickwordContainer) {
+          quoteFlickwordContainer.style.setProperty('display', isHome ? 'flex' : 'none', 'important');
+          console.log(`🎯 Quote/FlickWord container ${isHome ? 'shown' : 'hidden'} for tab: ${tab}`);
+        }
+        
+        if (feedbackSection) {
+          feedbackSection.style.setProperty('display', isHome ? 'block' : 'none', 'important');
+          console.log(`🎯 Feedback section ${isHome ? 'shown' : 'hidden'} for tab: ${tab}`);
+        }
 
         if (tab === "discover") renderDiscover();
         if (tab === "settings") {

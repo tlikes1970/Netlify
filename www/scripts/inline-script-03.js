@@ -283,16 +283,8 @@
           };
         }
 
-        bind("clearAllBtn", () => {
-          if (!confirm("This wipes everything. You sure?")) return;
-          if (appData?.tv)
-            appData.tv = { watching: [], wishlist: [], watched: [] };
-          if (appData?.movies)
-            appData.movies = { watching: [], wishlist: [], watched: [] };
-          saveAppData?.();
-          updateUI?.();
-          showNotification?.(t("all_data_cleared"), "warning");
-        });
+        // Nuclear Option moved to inline-script-01.js (FlickletApp)
+        // bind("clearAllBtn", () => { ... });
 
         // Share button bindings moved to runGlobalInitialization
 
