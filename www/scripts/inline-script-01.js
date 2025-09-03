@@ -1980,51 +1980,8 @@
         performSignOut() {
           console.log('🚪 Performing sign out cleanup...');
           
-          // Clear user authentication state
+          // Clear user authentication state only - preserve user data
           this.currentUser = null;
-          
-          // Clear user-specific data from centralized appData (with safety checks)
-          if (this.appData && this.appData.lists) {
-            this.appData.lists.watching = [];
-            this.appData.lists.watched = [];
-            this.appData.lists.wishlist = [];
-          }
-          if (this.appData && this.appData.settings) {
-            this.appData.settings.displayName = '';
-          }
-          
-          // Clear the global appData that the existing system uses
-          if (typeof appData !== 'undefined') {
-            console.log('🧹 Clearing global appData...');
-            appData.tv = { watching: [], wishlist: [], watched: [] };
-            appData.movies = { watching: [], wishlist: [], watched: [] };
-            appData.settings.displayName = '';
-          }
-          
-          // Save the cleared data to localStorage only (don't save to Firebase)
-          // This preserves the username in Firebase while clearing local data
-          try {
-            // Save to centralized storage
-            localStorage.setItem('flicklet-data', JSON.stringify(this.appData));
-            
-            // Also save to legacy format for compatibility
-            const legacyData = {
-              settings: {
-                displayName: this.appData.settings.displayName,
-                lang: this.appData.settings.lang,
-                theme: this.appData.settings.theme,
-                pro: this.appData.settings.pro,
-                notif: this.appData.settings.notif
-              },
-              tv: this.appData.tv || { watching: [], wishlist: [], watched: [] },
-              movies: this.appData.movies || { watching: [], wishlist: [], watched: [] }
-            };
-            localStorage.setItem('tvMovieTrackerData', JSON.stringify(legacyData));
-            
-            console.log('💾 Data saved to localStorage only (Firebase data preserved)');
-          } catch (error) {
-            console.error('❌ Failed to save data to localStorage:', error);
-          }
           
           // Update the account button
           this.updateAccountButton();
@@ -2032,14 +1989,12 @@
           // Clear the username display
           this.updateLeftSideUsername();
           
-          // Clear localStorage data (but preserve login prompt flag)
-          localStorage.removeItem('flicklet-data');
-          localStorage.removeItem('tvMovieTrackerData');
+          // Don't clear user data - let it persist for when they sign back in
           // Don't clear flicklet-login-prompted - let it persist so user isn't treated as new
           
           // Username will persist in Firebase for next login
           
-          // Refresh the UI to show empty lists
+          // Refresh the UI to show current data (not empty)
           this.updateUI();
           
           // Call existing updateUI function if available to refresh tab counts
@@ -2054,11 +2009,11 @@
             rebuildStats();
           }
           
-          // Switch to home tab to show empty state
+          // Switch to home tab
           this.switchTab('home');
           
-          this.showNotification('Signed out successfully - All data cleared', 'success');
-          console.log('✅ Sign out cleanup completed');
+          this.showNotification('Signed out successfully - Data preserved', 'success');
+          console.log('✅ Sign out cleanup completed - data preserved');
         },
 
         // Translation helper

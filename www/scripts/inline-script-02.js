@@ -3631,6 +3631,13 @@
             return;
           }
 
+          // Hide FlickWord container when searching
+          const quoteFlickwordContainer = document.querySelector('.quote-flickword-container');
+          if (quoteFlickwordContainer) {
+            quoteFlickwordContainer.style.display = 'none';
+            console.log('🙈 Hiding FlickWord container during search');
+          }
+
           out.style.display = "";
           out.innerHTML = t("searching");
 
@@ -3672,6 +3679,13 @@
         if (out) {
           out.innerHTML = "";
           out.style.display = "none";
+        }
+        
+        // Show FlickWord container when search is cleared (only if on home tab)
+        const quoteFlickwordContainer = document.querySelector('.quote-flickword-container');
+        if (quoteFlickwordContainer && window.FlickletApp && window.FlickletApp.currentTab === 'home') {
+          quoteFlickwordContainer.style.display = 'flex';
+          console.log('📖 Showing FlickWord container after clearing search');
         }
       }
 
