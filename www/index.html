@@ -17,13 +17,13 @@
     <link rel="stylesheet" href="styles/inline-style-01.css">
     <link rel="stylesheet" href="styles/inline-style-02.css">
     <link rel="stylesheet" href="styles/mobile.css">
-    <link rel="stylesheet" href="styles/components.css?v=fab1">
+    <link rel="stylesheet" href="styles/components.css?v=flickword-visibility-fix-1">
 
 </head>
 
   <body>
     <!-- Centralized Flicklet App Object -->
-    <script src="scripts/inline-script-01.js"></script>
+    <script src="scripts/inline-script-01.js?v=tab-spacing-fix-1"></script>
 
     <!-- Main Container -->
     <div class="main-container" id="appRoot">
@@ -40,7 +40,8 @@
           <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
         </div>
         <div class="user-section">
-          <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+            <div id="accountHint" style="font-size: 11px; color: #7f8c8d; text-align: center; opacity: 0.8;"></div>
             <button
               id="accountBtn"
               class="btn secondary"
@@ -275,7 +276,6 @@
               <button
                 id="shareListBtn"
                 class="btn primary"
-                onclick="openShareSelectionModal()"
                 style="width: 25%; min-width: 150px; margin-bottom: 8px;"
               >
                 🔗 <span data-i18n="share_selected">Select Items to Share</span>
@@ -426,9 +426,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-    <script src="scripts/inline-script-02.js"></script>
+    <script src="scripts/inline-script-02.js?v=data-persistence-fix-2"></script>
 
-    <script src="scripts/inline-script-03.js"></script>
+    <script src="scripts/inline-script-03.js?v=displayname-priority-fix-1"></script>
 
     <script>
     // Welcome message functionality

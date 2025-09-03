@@ -864,6 +864,39 @@
       }
 
       function loadAppData() {
+        // Skip loading if FlickletApp is managing data AND has actually loaded data with content
+        if (window.FlickletApp && window.FlickletApp.appData) {
+          // Check if the data actually has content (not just empty arrays)
+          const hasTvContent = window.FlickletApp.appData.tv && 
+            (window.FlickletApp.appData.tv.watching?.length > 0 || 
+             window.FlickletApp.appData.tv.wishlist?.length > 0 || 
+             window.FlickletApp.appData.tv.watched?.length > 0);
+          const hasMovieContent = window.FlickletApp.appData.movies && 
+            (window.FlickletApp.appData.movies.watching?.length > 0 || 
+             window.FlickletApp.appData.movies.wishlist?.length > 0 || 
+             window.FlickletApp.appData.movies.watched?.length > 0);
+          const hasDisplayName = window.FlickletApp.appData.settings && 
+            window.FlickletApp.appData.settings.displayName && 
+            window.FlickletApp.appData.settings.displayName.trim();
+          
+          if (hasTvContent || hasMovieContent || hasDisplayName) {
+            console.log('🚫 Skipping loadAppData - FlickletApp is managing data with actual content');
+            
+            // Sync the data to global appData for UI compatibility
+            if (window.FlickletApp.appData.tv) {
+              appData.tv = window.FlickletApp.appData.tv;
+            }
+            if (window.FlickletApp.appData.movies) {
+              appData.movies = window.FlickletApp.appData.movies;
+            }
+            if (window.FlickletApp.appData.settings) {
+              appData.settings = { ...appData.settings, ...window.FlickletApp.appData.settings };
+            }
+            console.log('✅ Synced FlickletApp data to global appData');
+            return;
+          }
+        }
+        
         try {
           const saved = localStorage.getItem("tvMovieTrackerData");
           if (saved) {
@@ -963,34 +996,51 @@
           if (!snap.exists) return;
           const cloud = snap.data() || {};
           
+          // Always load from Firebase when user signs in, regardless of local state
+          console.log('🔄 Loading user data from Firebase cloud storage');
+          
           // Preserve local settings before any cloud operations
           const localDisplayName = (appData.settings?.displayName || "").trim();
           const localLanguage = (appData.settings?.lang || "en");
           
           
           if (cloud.watchlists) {
-            // Only override local data if cloud data has content
+            // Only overwrite local data if Firebase has actual content
             if (cloud.watchlists.tv && 
                 (cloud.watchlists.tv.watching?.length > 0 || 
                  cloud.watchlists.tv.wishlist?.length > 0 || 
                  cloud.watchlists.tv.watched?.length > 0)) {
+              console.log('🔄 Firebase has TV data, using it');
               appData.tv = cloud.watchlists.tv;
+            } else {
+              console.log('🚫 Firebase TV data is empty, keeping local data');
             }
+            
             if (cloud.watchlists.movies && 
                 (cloud.watchlists.movies.watching?.length > 0 || 
                  cloud.watchlists.movies.wishlist?.length > 0 || 
                  cloud.watchlists.movies.watched?.length > 0)) {
+              console.log('🔄 Firebase has movie data, using it');
               appData.movies = cloud.watchlists.movies;
+            } else {
+              console.log('🚫 Firebase movie data is empty, keeping local data');
             }
           }
                       if (cloud.settings) {
               const incoming = { ...cloud.settings };
-              // Always preserve local display name if it exists
+
+              // Fallback for the mistaken top-level field during migration
+              if (!incoming.displayName && typeof cloud['settings.displayName'] === 'string') {
+                const stray = cloud['settings.displayName'].trim();
+                if (stray) incoming.displayName = stray;
+              }
+
+              // Only override with local if non-empty
               if (localDisplayName) {
                 incoming.displayName = localDisplayName;
               }
-              // Don't override language setting from cloud - let user's choice persist
-              appData.settings = { ...appData.settings, ...incoming };
+
+              appData.settings = { ...(appData.settings || {}), ...incoming };
             }
 
           if (typeof cloud.pro === "boolean") appData.settings.pro = cloud.pro;
@@ -1020,6 +1070,18 @@
           // Don't restore language setting - let user's choice persist
 
           localStorage.setItem("tvMovieTrackerData", JSON.stringify(appData));
+          
+          // Sync data to FlickletApp if it exists
+          if (window.FlickletApp && window.FlickletApp.appData) {
+            console.log('🔄 Syncing Firebase data to FlickletApp...');
+            window.FlickletApp.appData.tv = appData.tv;
+            window.FlickletApp.appData.movies = appData.movies;
+            window.FlickletApp.appData.settings = appData.settings;
+            
+            // Save to centralized storage
+            localStorage.setItem('flicklet-data', JSON.stringify(window.FlickletApp.appData));
+            console.log('✅ Data synced to FlickletApp and saved to centralized storage');
+          }
           
           // Prevent dropdown resets during language changes
           if (!window.isChangingLanguage) {
@@ -1120,6 +1182,7 @@
           signInBtn.style.marginBottom = "12px";
           signInBtn.style.fontSize = "14px";
           signInBtn.style.padding = "12px 18px";
+          signInBtn.style.height = "44px";
           signInBtn.style.minHeight = "44px";
           signInBtn.style.width = "160px";
           signInBtn.style.flex = "0 0 160px";
@@ -1155,13 +1218,7 @@
           };
 
           // Find the specific email modal and add the button there
-          const emailModal = document.querySelector('[data-testid="email-login-modal"] .modal .modal-actions');
-          if (emailModal) {
-            emailModal.prepend(signInBtn);
-          } else {
-            // Fallback to any modal if the specific one isn't found
-            // Find the specific email modal and add the button there
-          const emailModal = document.querySelector('[data-testid="email-login-modal"] .modal .modal-actions');
+          const emailModal = document.querySelector('[data-testid="email-login-modal"] .modal-actions');
           if (emailModal) {
             console.log('✅ Found email modal, adding sign-in button');
             // Style the modal actions container for better button layout
@@ -1185,7 +1242,6 @@
             } else {
               console.error('❌ No modal found to add button to');
             }
-          }
           }
 
           // Add Enter key handlers
@@ -1230,6 +1286,10 @@
       window.appleLogin = appleLogin;
 
       function setAccountLabel(u) {
+        // DISABLED - Old account button system conflicts with new FlickletApp.updateAccountButton()
+        console.log('🚫 setAccountLabel disabled - using new FlickletApp.updateAccountButton() system');
+        return;
+        
         const btn = document.getElementById("accountBtn");
         if (!btn) return;
         const manual = (appData?.settings?.displayName || "").trim();
@@ -1244,36 +1304,43 @@
       /* ============== Single global auth listener ============== */
       auth.onAuthStateChanged(async (user) => {
         currentUser = user;
-        setAccountLabel(user);
-        
-        // If user just signed in, close any open sign-in modals
+        // (Optional) kill the legacy painter if still present:
+        // setAccountLabel(user); // <-- REMOVE this call entirely
+
         if (user) {
+          const db = firebase.firestore();
+          const ref = db.collection("users").doc(user.uid);
+
+          // If user just signed in, close any open sign-in modals
           const signInModals = document.querySelectorAll('.modal-backdrop[data-testid="modal-backdrop"]');
           signInModals.forEach(modal => {
             if (modal.querySelector('[data-testid="auth-modal"]')) {
               modal.remove();
             }
           });
-        }
 
-        if (user) {
           try {
-            await db
-              .collection("users")
-              .doc(user.uid)
-              .set(
-                {
-                  profile: {
-                    email: user.email || "",
-                    displayName: user.displayName || "",
-                    photoURL: user.photoURL || "",
-                  },
-                  lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+            // 1) Base fields (never write empty displayName)
+            await ref.set(
+              {
+                profile: {
+                  email: user.email || "",
+                  photoURL: user.photoURL || "",
                 },
-                { merge: true }
-              );
+                provider: user.providerData?.[0]?.providerId || "",
+                lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+              },
+              { merge: true }
+            );
 
-            // await loadUserDataFromCloud(user.uid); // DISABLED - conflicts with new centralized system
+            // 2) Only write displayName if non-empty
+            const authName = (user.displayName || "").trim();
+            if (authName) {
+              await ref.set({ "profile.displayName": authName }, { merge: true });
+            }
+            // If authName is empty (email/password), we DO NOT touch profile.displayName.
+
+            await loadUserDataFromCloud(user.uid);
 
             // Refresh the current tab content after cloud data is loaded
             setTimeout(() => {
@@ -1299,6 +1366,10 @@
               }
             }, 300);
 
+            // DISABLED - Old auto-set system conflicts with new FlickletApp username prompt system
+            console.log('🚫 Old auto-set displayName system disabled - using new FlickletApp system');
+            return;
+            
             // Check if user needs to set a display name after successful authentication
             const currentDisplayName = (appData?.settings?.displayName || "").trim();
             if (!currentDisplayName) {
@@ -1315,7 +1386,7 @@
                 // if (typeof updateWelcomeText === "function") updateWelcomeText(); // DISABLED - conflicts with dynamic header system
                 if (typeof rebuildStats === "function") rebuildStats();
                 localStorage.setItem("__flicklet_onboarded__", "1");
-                setAccountLabel(user);
+                // setAccountLabel(user); // DISABLED - conflicts with new FlickletApp.updateAccountButton()
               } else {
                 // No profile name available - prompt user to set one
                 setTimeout(() => {
@@ -1329,8 +1400,10 @@
               }
             }
           } catch (e) {
-            console.warn("Cloud sync failed", e);
+            console.warn("auth-state update failed", e);
           }
+        } else {
+          // signed out flow...
         }
       });
 
@@ -1344,7 +1417,7 @@
             <h3 id="modal-title">${title}</h3>
             <div class="modal-body">${html}</div>
             <div class="modal-actions">
-              <button class="btn secondary" data-testid="modal-close" type="button" style="width: 120px !important; flex: 0 0 120px !important; font-size: 14px !important; padding: 12px 18px !important; min-height: 44px !important;">Close</button>
+              <button class="btn secondary" data-testid="modal-close" type="button" style="width: 120px !important; flex: 0 0 120px !important; font-size: 14px !important; padding: 12px 18px !important; height: 44px !important; min-height: 44px !important;">Close</button>
             </div>
           </div>`;
         document.body.appendChild(wrap);
@@ -2597,7 +2670,7 @@
         saveUsernameDirectly(newName);
       }
       
-      function saveUsernameDirectly(newName) {
+      async function saveUsernameDirectly(newName) {
         // Save the new username
         if (!appData.settings) appData.settings = {};
         appData.settings.displayName = newName;
@@ -2614,9 +2687,24 @@
         // Save to localStorage
         localStorage.setItem('flicklet-data', JSON.stringify(appData));
         
-        // Save to Firebase if user is logged in
-        if (currentUser && saveAppData) {
-          saveAppData();
+        // Save to Firebase using update with dot notation to avoid overwriting other settings
+        if (currentUser && typeof firebase !== 'undefined' && firebase.firestore) {
+          try {
+            const db = firebase.firestore();
+            await db.collection('users').doc(currentUser.uid).update({ 
+              'settings.displayName': newName 
+            });
+            console.log('✅ Username saved to Firebase using update with dot notation:', newName);
+            
+            // Clear the account button cache to force a fresh read
+            if (window.FlickletApp) {
+              window.FlickletApp._lastAccountBtnUid = null;
+              window.FlickletApp._lastAccountBtnDoc = null;
+              console.log('🧹 Cleared account button cache for fresh read');
+            }
+          } catch (error) {
+            console.error('❌ Failed to save username to Firebase:', error);
+          }
         }
         
         showNotification(`Name saved as "${newName}"`, "success");
@@ -2627,6 +2715,10 @@
           if (window.FlickletApp && typeof window.FlickletApp.updateLeftSideUsername === 'function') {
             console.log('🔄 Updating left-side container after username save (delayed)');
             window.FlickletApp.updateLeftSideUsername();
+          }
+          // Update account button
+          if (window.FlickletApp && typeof window.FlickletApp.updateAccountButton === "function") {
+            window.FlickletApp.updateAccountButton();
           }
         }, 50);
       }
@@ -2685,6 +2777,10 @@
         const hash = location.hash || "";
         const m = hash.match(/#share=([A-Za-z0-9_\-]+)/);
         if (!m) return;
+        
+        // Don't auto-open share modal during initialization
+        console.log('🔗 Share link detected in URL, but skipping auto-open during initialization');
+        return;
         try {
           const decoded = JSON.parse(fromB64Url(m[1]));
           if (decoded && decoded.v === 1) {
@@ -3336,73 +3432,17 @@
           if (qEl) qEl.value = "";
         } catch {}
 
-        document
-          .querySelectorAll(".tab")
-          .forEach((t) => t.classList.remove("active"));
+        // DISABLED: Tab button management is now handled by FlickletApp.updateTabVisibility()
+        // document
+        //   .querySelectorAll(".tab")
+        //   .forEach((t) => t.classList.remove("active"));
+        // document.getElementById(tab + "Tab").classList.add("active");
         
-        const tabElement = document.getElementById(tab + "Tab");
-        if (tabElement) {
-          tabElement.classList.add("active");
-        }
-        
+        // Only manage section visibility
         document
           .querySelectorAll(".tab-section")
-          .forEach((s) => {
-            console.log(`🔧 HIDING section: ${s.id}, current display: ${s.style.display}`);
-            s.style.display = "none";
-            s.classList.remove('active');
-          });
-        
-        const sectionElement = document.getElementById(tab + "Section");
-        if (sectionElement) {
-          // Show the current tab section
-          console.log(`🔧 SHOWING section: ${sectionElement.id}, setting display to block`);
-          sectionElement.style.display = "block";
-          // Don't add 'active' class to sections - only to tab buttons
-          
-          console.log(`✅ SETTINGS DEBUG: ${tab}Section is now visible`);
-          console.log(`✅ SETTINGS DEBUG: Element found:`, sectionElement);
-          console.log(`✅ SETTINGS DEBUG: Computed display:`, window.getComputedStyle(sectionElement).display);
-          console.log(`✅ SETTINGS DEBUG: Element rect:`, sectionElement.getBoundingClientRect());
-          
-          // If this is the settings section, force close any modals and scroll to top
-          if (tab === "settings") {
-            // Force close any share modals that might be open
-            const shareModal = document.getElementById('shareSelectionModal');
-            if (shareModal) {
-              console.log(`🔧 SETTINGS DEBUG: Force closing share modal`);
-              shareModal.style.setProperty('display', 'none', 'important');
-              shareModal.classList.remove('active');
-            }
-            
-            // Scroll to the header instead of the settings section
-            setTimeout(() => {
-              const header = document.querySelector('.header');
-              if (header) {
-                header.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              } else {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }
-            }, 100);
-          }
-        } else {
-          console.log(`❌ SETTINGS DEBUG: ${tab}Section element not found!`);
-        }
-
-        // Show/hide home page specific elements
-        const isHome = tab === "home";
-        const quoteFlickwordContainer = document.querySelector('.quote-flickword-container');
-        const feedbackSection = document.getElementById('feedbackSection');
-        
-        if (quoteFlickwordContainer) {
-          quoteFlickwordContainer.style.setProperty('display', isHome ? 'flex' : 'none', 'important');
-          console.log(`🎯 Quote/FlickWord container ${isHome ? 'shown' : 'hidden'} for tab: ${tab}`);
-        }
-        
-        if (feedbackSection) {
-          feedbackSection.style.setProperty('display', isHome ? 'block' : 'none', 'important');
-          console.log(`🎯 Feedback section ${isHome ? 'shown' : 'hidden'} for tab: ${tab}`);
-        }
+          .forEach((s) => (s.style.display = "none"));
+        document.getElementById(tab + "Section").style.display = "block";
 
         if (tab === "discover") renderDiscover();
         if (tab === "settings") {

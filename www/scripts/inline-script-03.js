@@ -70,8 +70,7 @@
           updateFileLabel(importFileInput);
         }
         
-        // 12. Paint account button based on currentUser if auth has already resolved
-        if (typeof setAccountLabel === "function") setAccountLabel(currentUser);
+        // 12. Account button is now handled by FlickletApp.updateAccountButton()
         
         // start() function will be called by FlickletApp.init() if available
         // --- SEARCH BAR PROTECTION - Prevent it from disappearing

@@ -107,6 +107,14 @@
           var(--mardi3)
         ) !important;
       }
+      .mardi .tab {
+        background: linear-gradient(
+          45deg,
+          var(--mardi1),
+          var(--mardi3)
+        ) !important;
+        color: #fff !important;
+      }
       body.mardi {
         background: linear-gradient(
           135deg,
@@ -251,7 +259,7 @@
 
       /* FlickWord Container Styling */
       .quote-flickword-container {
-        display: flex !important;
+        display: flex;
         align-items: stretch;
         gap: 16px;
         margin: 12px 0;
@@ -460,36 +468,56 @@
       /* Mobile responsiveness for FlickWord */
       @media (max-width: 768px) {
         .quote-flickword-container {
-          flex-direction: column;
-          gap: 8px;
+          flex-direction: column !important;
+          gap: 8px !important;
+          justify-content: flex-start !important;
         }
         
         .left-column {
-          flex: 1;
-          max-width: 100%;
-          min-width: auto;
+          flex: 1 !important;
+          max-width: 100% !important;
+          min-width: auto !important;
+          width: 100% !important;
         }
         
         .quote-card,
         .flickword-card {
-          flex: 1;
-          max-width: 100%;
-          min-width: auto;
+          flex: 1 !important;
+          max-width: 100% !important;
+          min-width: auto !important;
+          width: 100% !important;
+        }
+      }
+      
+      /* iPhone portrait specific fixes */
+      @media (max-width: 428px) {
+        .quote-flickword-container {
+          margin: 8px 0 !important;
+          gap: 6px !important;
         }
         
-        .flickword-stats {
-          flex-direction: column;
-          gap: 12px;
+        .left-column {
+          gap: 6px !important;
         }
         
-        .stat-item {
-          min-width: auto;
+        .quote-card,
+        .flickword-card {
+          padding: 12px !important;
+          margin: 0 !important;
         }
         
-        .flickword-header {
-          flex-direction: column;
-          gap: 12px;
-          text-align: center;
+        .quote-title,
+        .flickword-title {
+          font-size: 14px !important;
+          margin-bottom: 12px !important;
+        }
+        
+        .quote-text {
+          font-size: 13px !important;
+        }
+        
+        .quote-author {
+          font-size: 11px !important;
         }
       }
 

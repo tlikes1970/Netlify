@@ -9,10 +9,41 @@
         return false;
       }
 
+      // Utility for safe deep-merge of settings to prevent displayName overwrites
+      const safeMergeSettings = (existing = {}, incoming = {}) => {
+        const merged = { ...existing, ...incoming };
+        
+        // STRICT: Never write empty strings to displayName
+        if (!incoming.displayName || !incoming.displayName.trim()) {
+          // If incoming is empty, preserve existing or delete the field entirely
+          if (typeof existing.displayName === 'string' && existing.displayName.trim()) {
+            merged.displayName = existing.displayName;
+          } else {
+            // Remove the field entirely to avoid writing empty strings
+            delete merged.displayName;
+          }
+        } else {
+          // Only write if incoming has a valid non-empty value
+          merged.displayName = incoming.displayName.trim();
+        }
+        
+        // Additional safety: if somehow we still have an empty string, remove it
+        if (merged.displayName === '') {
+          delete merged.displayName;
+        }
+        
+        return merged;
+      };
+
       window.FlickletApp = {
         // Centralized state
         currentUser: null,
         currentTab: 'home',
+        // Cache for account button to avoid redundant reads and race conditions
+        _lastAccountBtnUid: null,
+        _lastAccountBtnDoc: null,
+        // Migration flag to ensure it only runs once per session
+        _migrationCompleted: false,
         appData: {
           settings: {
             displayName: '',
@@ -187,27 +218,34 @@
             };
             localStorage.setItem('tvMovieTrackerData', JSON.stringify(legacyData));
             
-            // Save to Firebase if user is logged in
+            // Save to Firebase if user is logged in - using safe merge to prevent displayName overwrites
             if (this.currentUser && typeof firebase !== 'undefined' && firebase.firestore) {
               const db = firebase.firestore();
-              const firebaseData = {
-                settings: this.appData.settings,
-                lastLoginAt: new Date()
-              };
-              console.log('🔥 Saving to Firebase:', firebaseData);
-              
-              // Use update instead of set to avoid overwriting existing data
-              db.collection("users").doc(this.currentUser.uid).update(firebaseData).then(() => {
-                console.log('💾 Data updated in Firebase successfully');
+              const ref = db.collection('users').doc(this.currentUser.uid);
+
+              // Get existing document and safely merge settings
+              ref.get().then(async (snap) => {
+                const existing = snap.exists ? (snap.data() || {}) : {};
+                const existingSettings = existing.settings || {};
+                const incomingSettings = (this.appData && this.appData.settings) || {};
+
+                const mergedSettings = safeMergeSettings(existingSettings, incomingSettings);
+
+                const payload = {
+                  lastLoginAt: new Date(),
+                  // only include settings if it has keys (avoid writing empty maps)
+                  ...(Object.keys(mergedSettings).length ? { settings: mergedSettings } : {}),
+                  // Preserve root displayName if it exists (for Google login)
+                  ...(existing.displayName && { displayName: existing.displayName }),
+                  // Preserve the entire profile object to prevent it from being cleared (for Email login)
+                  ...(existing.profile && { profile: existing.profile })
+                };
+
+                console.log('🔥 Saving to Firebase with safe merge:', payload);
+                await ref.set(payload, { merge: true });
+                console.log('💾 Data saved to Firebase with safe merge successfully');
               }).catch((error) => {
-                console.error('❌ Failed to update Firebase:', error);
-                // If update fails (document doesn't exist), try set with merge
-                console.log('🔄 Trying set with merge as fallback...');
-                db.collection("users").doc(this.currentUser.uid).set(firebaseData, { merge: true }).then(() => {
-                  console.log('💾 Data saved to Firebase with merge successfully');
-                }).catch((setError) => {
-                  console.error('❌ Failed to save to Firebase with merge:', setError);
-                });
+                console.error('❌ Failed to save to Firebase with safe merge:', error);
               });
             } else {
               console.log('⚠️ Cannot save to Firebase - user not logged in or Firebase not available');
@@ -337,7 +375,7 @@
         console.log('  - closeShareSelectionModal:', typeof closeShareSelectionModal);
         
         try {
-          bind("shareListBtn", openShareSelectionModal);
+          // Only bind non-share buttons to avoid conflicts
           bind("generateShareLinkBtn", generateShareLinkFromSelected);
           bind("closeShareModalBtn", closeShareSelectionModal);
           console.log('✅ Share button bindings set up');
@@ -354,23 +392,12 @@
           console.error('❌ Error setting up share button bindings:', error);
         }
         
-        // Also add direct event listeners as fallback
-        try {
-          const shareBtn = document.getElementById('shareListBtn');
-          if (shareBtn) {
-            console.log('🔗 Adding direct event listener to share button');
-            shareBtn.addEventListener('click', openShareSelectionModal);
-            console.log('✅ Direct event listener added to share button');
-          } else {
-            console.error('❌ Share button not found for direct binding');
-          }
-          
-          // Debug: Check all elements with 'share' in the ID
-          const allElements = document.querySelectorAll('[id*="share"]');
-          console.log('🔍 Found elements with "share" in ID:', allElements);
-        } catch (error) {
-          console.error('❌ Error setting up direct event listeners:', error);
-        }
+        // Skip adding direct event listener to share button - let the safety-checked version handle it
+        console.log('🔗 Skipping direct share button binding - using safety-checked version');
+        
+        // Debug: Check all elements with 'share' in the ID
+        const allElements = document.querySelectorAll('[id*="share"]');
+        console.log('🔍 Found elements with "share" in ID:', allElements);
         },
 
         applyTheme() {
@@ -689,9 +716,7 @@
             console.log(`🔧 DEBUG: window.switchToTab("${tabName}") completed`);
             
             // Update tab visibility after switching
-            setTimeout(() => {
-              this.updateTabVisibility();
-            }, 50);
+            this.updateTabVisibility();
           } else {
             console.log('⚠️ Using fallback tab switching logic');
             // Fallback tab switching logic to avoid infinite recursion
@@ -766,20 +791,22 @@
         updateTabVisibility() {
           console.log('🎯 updateTabVisibility called, currentTab:', this.currentTab);
           
-          // This function should only manage tab button visibility, not section visibility
+          // This function manages tab button visibility - hide current tab, show others
           // Section visibility is handled by the old switchToTab function
           
-          // Remove active class from all tab buttons
+          // Get all tab buttons
           const allTabButtons = ['homeTab', 'watchingTab', 'wishlistTab', 'watchedTab', 'discoverTab'];
+          
+          // First, remove all classes and show all tabs
           allTabButtons.forEach(tabId => {
             const tab = document.getElementById(tabId);
             if (tab) {
-              tab.classList.remove('active');
-              console.log(`🔘 Removed active from tab button: ${tabId}`);
+              tab.classList.remove('active', 'hidden');
+              console.log(`🔘 Reset tab button: ${tabId}`);
             }
           });
           
-          // Add active class to current tab button
+          // Determine which tab should be hidden (current tab)
           let currentTabId = '';
           switch (this.currentTab) {
             case 'home':
@@ -798,27 +825,47 @@
               currentTabId = 'discoverTab';
               break;
             case 'settings':
-              // Settings doesn't have a tab button, handled separately
-              console.log('⚙️ Settings tab active - no tab button to activate');
+              // Settings doesn't have a tab button, show all tabs
+              console.log('⚙️ Settings tab active - showing all tab buttons');
               return;
             default:
               console.log('⚠️ Unknown currentTab:', this.currentTab);
               return;
           }
           
+          // Hide the current tab and add active class to remaining tabs
           if (currentTabId) {
             const currentTab = document.getElementById(currentTabId);
             if (currentTab) {
-              currentTab.classList.add('active');
-              console.log(`✅ Activated tab button: ${currentTabId}`);
+              currentTab.classList.add('hidden');
+              console.log(`🙈 Hidden current tab: ${currentTabId}`);
+            }
+            
+            // Add active class to all remaining visible tabs
+            allTabButtons.forEach(tabId => {
+              if (tabId !== currentTabId) {
+                const tab = document.getElementById(tabId);
+                if (tab) {
+                  tab.classList.add('active');
+                  console.log(`✅ Activated remaining tab: ${tabId}`);
+                }
+              }
+            });
+          }
+          
+          // Also manage FlickWord/quote container visibility
+          const quoteFlickwordContainer = document.querySelector('.quote-flickword-container');
+          if (quoteFlickwordContainer) {
+            if (this.currentTab === 'home') {
+              quoteFlickwordContainer.style.display = 'flex';
+              console.log('📖 Showing FlickWord/quote container on home tab');
             } else {
-              console.log(`❌ Tab button not found: ${currentTabId}`);
+              quoteFlickwordContainer.style.display = 'none';
+              console.log('🙈 Hiding FlickWord/quote container on', this.currentTab, 'tab');
             }
           }
           
-
-          
-          console.log(`🎯 Tab button visibility update complete - activated ${currentTabId}`);
+          console.log('🎯 Tab visibility update complete - hidden', currentTabId, 'activated remaining tabs');
         },
 
         updateHeaderWithUsername() {
@@ -982,10 +1029,12 @@
             return;
           }
 
-          // Show the FlickWord container
-          const flickwordContainer = document.querySelector('.flickword-container');
-          if (flickwordContainer) {
-            flickwordContainer.style.display = 'block';
+          // Only show the FlickWord container if we're on the home tab
+          if (this.currentTab === 'home') {
+            const quoteFlickwordContainer = document.querySelector('.quote-flickword-container');
+            if (quoteFlickwordContainer) {
+              quoteFlickwordContainer.style.display = 'flex';
+            }
           }
 
           // Set up event listeners
@@ -1164,10 +1213,15 @@
             
             // Add a small delay to ensure Firebase is fully synced
             setTimeout(() => {
+              console.log('🔍 DEBUG: About to read Firebase document for username setup');
               db.collection("users").doc(user.uid).get().then((doc) => {
                 console.log('🔍 Firebase user document exists:', doc.exists);
                 if (doc.exists) {
                   const userData = doc.data();
+                  console.log('🔍 DEBUG: Raw Firebase document for username setup:', userData);
+                  console.log('🔍 DEBUG: Profile object for username setup:', userData.profile);
+                  console.log('🔍 DEBUG: Profile.displayName for username setup:', userData.profile?.displayName);
+                  
                   console.log('🔍 Firebase user data:', userData);
                   console.log('🔍 Firebase user data keys:', Object.keys(userData));
                   console.log('🔍 Firebase settings object:', userData?.settings);
@@ -1176,13 +1230,16 @@
                   console.log('🔍 Existing username from Firebase settings:', existingUsername);
                   console.log('🔍 Root displayName from Firebase:', rootDisplayName);
                   
-                  // Check if user already has a username (either from Firebase or local data)
+                  // Check if user already has a CUSTOM username (only from settings.displayName, not Google's displayName)
                   const localUsername = (this.appData?.settings?.displayName || "").trim();
+                  // Only use settings.displayName (user's custom choice), ignore Google's displayName
                   const finalUsername = existingUsername && existingUsername.trim() ? existingUsername : localUsername;
+                  console.log('🔧 DEBUG: finalUsername decision:', { existingUsername, localUsername, finalUsername });
                   
                   if (finalUsername) {
                     // User already has a username - use it
-                    console.log('✅ Found existing username:', finalUsername, '(source:', existingUsername ? 'Firebase' : 'local', ')');
+                    const source = existingUsername ? 'Firebase settings' : 'local';
+                    console.log('✅ Found existing username:', finalUsername, '(source:', source, ')');
                     
                     // Update local appData with the username
                     if (this.appData && this.appData.settings) {
@@ -1200,43 +1257,29 @@
                     this.updateLeftSideUsername();
                     
                   } else {
-                    // No custom username exists - use email as fallback
-                    console.log('ℹ️ No custom username found, using email as fallback');
+                    // No custom username exists - show username prompt modal
+                    console.log('❌ No username found, showing username prompt modal');
                     
-                    // Use email as display name and update the header
-                    const emailName = user.email.split('@')[0];
-                    appData.settings.displayName = emailName;
-                    this.updateLeftSideUsername();
-                    
-                    // Save the fallback name to Firebase
-                    this.saveToFirebase();
+                    // Show a modal to prompt for username
+                    this.showUsernamePromptModal(user.email);
                   }
                 } else {
-                  // No user document exists - use email as fallback
-                  console.log('ℹ️ No user document found, using email as fallback');
+                  // No user document exists - show username prompt modal
+                  console.log('❌ No user document found, showing username prompt modal');
                   
-                  // Use email as display name and update the header
-                  const emailName = user.email.split('@')[0];
-                  appData.settings.displayName = emailName;
-                  this.updateLeftSideUsername();
-                  
-                  // Save the fallback name to Firebase
-                  this.saveToFirebase();
+                  // Show a modal to prompt for username
+                  this.showUsernamePromptModal(user.email);
                 }
               }).catch((error) => {
                 console.error('❌ Error checking Firebase for username:', error);
-                // Fallback - use email as display name
-                const emailName = user.email.split('@')[0];
-                appData.settings.displayName = emailName;
-                this.updateLeftSideUsername();
+                // Fallback - show username prompt modal
+                this.showUsernamePromptModal(user.email);
               });
             }, 500); // 500ms delay to ensure Firebase is synced
           } else {
-            // Firebase not available - use email as fallback
-            console.log('ℹ️ Firebase not available, using email as fallback');
-            const emailName = user.email.split('@')[0];
-            appData.settings.displayName = emailName;
-            this.updateLeftSideUsername();
+            // Firebase not available - show username prompt modal
+            console.log('ℹ️ Firebase not available, showing username prompt modal');
+            this.showUsernamePromptModal(user.email);
           }
         },
 
@@ -1245,7 +1288,7 @@
           
           // Create and show a modal asking for username
           const modalHTML = `
-            <div class="modal-backdrop" id="usernamePromptModal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+            <div class="modal-backdrop" id="usernamePromptModal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
               <div class="modal" style="background: var(--card); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
                 <h3 style="margin: 0 0 16px 0; color: var(--text);">Welcome! 👋</h3>
                 <p style="margin: 0 0 20px 0; color: var(--text); line-height: 1.5;">What would you like us to call you?</p>
@@ -1290,65 +1333,213 @@
               console.log('❌ Input field not found');
             }
           }, 100);
+          
+          // Add click-outside-to-close functionality
+          setTimeout(() => {
+            const modal = document.getElementById('usernamePromptModal');
+            if (modal) {
+              modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                  console.log('🖱️ Clicked outside modal, closing');
+                  closeUsernamePromptModal();
+                }
+              });
+              console.log('✅ Click-outside-to-close functionality added');
+            }
+          }, 200);
         },
 
         initFirebase() {
           console.log('🔥 Initializing Firebase...');
-          // Initialize Firebase if available
-          if (typeof firebase !== 'undefined') {
-            console.log('✅ Firebase available, setting up auth listener');
-            firebase.auth().onAuthStateChanged((user) => {
-              console.log('👤 Firebase auth state changed:', user ? `User: ${user.email}` : 'No user');
-              this.currentUser = user;
-              this.updateAccountButton();
-              if (user) {
-                console.log('✅ User signed in, updating UI');
-                this.showNotification('Signed in successfully', 'success');
-                
-                // Handle username setup after login
-                this.handlePostLoginUsernameSetup(user);
-                
-                // Update username display after login
-                setTimeout(() => {
-                  this.updateLeftSideUsername();
-                }, 100);
-              } else {
-                console.log('❌ No user signed in');
-              }
-            });
-          } else {
-            console.log('❌ Firebase not available');
+          
+          // Wait for Firebase to be initialized by the old system
+          const waitForFirebase = () => {
+            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+              console.log('✅ Firebase available, setting up auth listener');
+              firebase.auth().onAuthStateChanged(async (user) => {
+                console.log('👤 Firebase auth state changed:', user ? `User: ${user.email}` : 'No user');
+                this.currentUser = user;
+                this.updateAccountButton();
+                if (user) {
+                  console.log('✅ User signed in, updating UI');
+                  this.showNotification('Signed in successfully', 'success');
+                  
+                  // Run migration once per user
+                  await this.runMigration();
+                  
+                  // Run cleanup for stray field
+                  await this.cleanupStrayField();
+                  
+                  // Handle username setup after login
+                  this.handlePostLoginUsernameSetup(user);
+                  
+                  // Update username display after login
+                  setTimeout(() => {
+                    this.updateLeftSideUsername();
+                  }, 100);
+                } else {
+                  console.log('❌ No user signed in');
+                }
+              });
+            } else {
+              console.log('⏳ Waiting for Firebase to be initialized...');
+              setTimeout(waitForFirebase, 100);
+            }
+          };
+          
+          waitForFirebase();
+        },
+
+        // Migration function to clean existing Firebase documents
+        async runMigration() {
+          if (!this.currentUser) {
+            return;
+          }
+
+          try {
+            console.log('🔄 Running Firebase document migration...');
+            const db = firebase.firestore();
+            const ref = db.collection('users').doc(this.currentUser.uid);
+            
+            const snap = await ref.get();
+            if (!snap.exists) {
+              console.log('📄 No document to migrate');
+              this._migrationCompleted = true;
+              return;
+            }
+
+            const data = snap.data();
+            let needsUpdate = false;
+            const updates = {};
+
+            // Check for empty settings.displayName and remove it
+            if (data.settings && data.settings.displayName === '') {
+              console.log('🧹 Removing empty settings.displayName');
+              updates['settings.displayName'] = firebase.firestore.FieldValue.delete();
+              needsUpdate = true;
+            }
+
+            // Check for duplicate top-level settings.displayName field and remove it
+            if (data['settings.displayName'] !== undefined) {
+              console.log('🧹 Removing duplicate top-level settings.displayName field');
+              updates['settings.displayName'] = firebase.firestore.FieldValue.delete();
+              needsUpdate = true;
+            }
+
+            // Check for empty profile.displayName and remove it
+            if (data.profile && data.profile.displayName === '') {
+              console.log('🧹 Removing empty profile.displayName');
+              updates['profile.displayName'] = firebase.firestore.FieldValue.delete();
+              needsUpdate = true;
+            }
+
+            if (needsUpdate) {
+              await ref.update(updates);
+              console.log('✅ Migration completed successfully');
+            } else {
+              console.log('✅ No migration needed');
+            }
+
+            // Only mark as completed if no updates were needed
+            if (!needsUpdate) {
+              this._migrationCompleted = true;
+            }
+          } catch (error) {
+            console.error('❌ Migration failed:', error);
+            this._migrationCompleted = true; // Don't retry on error
           }
         },
 
-        updateAccountButton() {
-          const accountBtn = document.getElementById('accountBtn');
-          if (accountBtn) {
-            console.log('🔧 Updating account button, currentUser:', this.currentUser);
-            if (this.currentUser) {
-              // Show friendly name instead of full email
-              const email = this.currentUser.email || 'Account';
-              let displayText = email;
-              
-              // If it's an email, extract just the name part
-              if (email.includes('@')) {
-                const emailName = email.split('@')[0];
-                // Take only the part before the first dot for cleaner display
-                const cleanName = emailName.split('.')[0];
-                displayText = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
-              }
-              
-              accountBtn.textContent = displayText;
-              accountBtn.title = `Signed in as ${email} - Click to sign out`;
-              console.log('✅ Account button updated to show friendly name:', displayText);
-            } else {
-              accountBtn.textContent = 'Sign In';
-              accountBtn.title = 'Click to sign in';
-              console.log('✅ Account button updated to show Sign In');
+        // One-time cleanup script to remove stray top-level settings.displayName field
+        async cleanupStrayField() {
+          const uid = this.currentUser?.uid;
+          if (!uid) return;
+          
+          try {
+            const ref = firebase.firestore().collection('users').doc(uid);
+            const snap = await ref.get();
+            if (!snap.exists) return;
+            
+            const data = snap.data() || {};
+            const stray = data['settings.displayName'];
+
+            // If the mistaken top-level key exists (even if empty), delete it
+            if (typeof stray === 'string') {
+              await ref.update({ 'settings.displayName': firebase.firestore.FieldValue.delete() });
+              console.log('🧹 Deleted stray top-level "settings.displayName" key');
             }
-          } else {
-            console.error('❌ Account button not found');
+          } catch (error) {
+            console.error('❌ Cleanup failed:', error);
           }
+        },
+
+        async updateAccountButton() {
+          const accountBtn = document.getElementById('accountBtn');
+          const accountHint = document.getElementById('accountHint');
+          if (!accountBtn) return;
+
+          // Logged out
+          if (!this.currentUser) {
+            this._lastAccountBtnUid = null;
+            this._lastAccountBtnDoc = null;
+            accountBtn.textContent = '👤 Sign In';
+            accountBtn.title = 'Click to sign in';
+            if (accountHint) accountHint.textContent = '';
+            return;
+          }
+
+          const email = this.currentUser.email || 'Account';
+          const providerId = (this.currentUser.providerData?.[0]?.providerId) || '';
+
+          // Helper: capitalize from email prefix if needed
+          const fromEmail = (em) => {
+            const prefix = (em || '').split('@')[0];
+            if (!prefix) return 'Account';
+            // split on ., _, - and collapse multi-delims
+            const parts = prefix.split(/[._-]+/).filter(Boolean);
+            return parts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+          };
+
+          let displayText = '';
+
+          if (providerId === 'google.com') {
+            // For Google users, use Google's displayName
+            displayText = this.currentUser.displayName?.trim() ||
+                         this.currentUser.providerData?.find(p => p.providerId === 'google.com')?.displayName?.trim() ||
+                         '';
+          } else if (providerId === 'password') {
+            // For email users, use profile.displayName (not settings.displayName)
+            displayText = await this.getDisplayNameForUser(this.currentUser.uid) || '';
+          }
+
+          // Final fallback to email-derived name
+          if (!displayText) {
+            displayText = fromEmail(email);
+          }
+
+          // Paint button and hint
+          accountBtn.textContent = `👤 ${displayText}`;
+          accountBtn.title = `Signed in as ${email}. Click to sign out.`;
+          if (accountHint) accountHint.textContent = 'click to log out';
+        },
+
+        async getDisplayNameForUser(uid) {
+          const db = firebase.firestore();
+          const ref = db.collection('users').doc(uid);
+          const snap = await ref.get(); // ok to use cache; we handle both keys
+          if (!snap.exists) return null;
+
+          const data = snap.data() || {};
+          const nested = (data.settings && typeof data.settings.displayName === 'string')
+            ? data.settings.displayName.trim() : '';
+          const stray = (typeof data['settings.displayName'] === 'string')
+            ? data['settings.displayName'].trim() : '';
+          const profileName = (data.profile && typeof data.profile.displayName === 'string')
+            ? data.profile.displayName.trim() : '';
+
+          // For account button: prefer profile > nested > stray
+          // (profile.displayName is the account identifier, settings.displayName is the personal greeting)
+          return profileName || nested || stray || null;
         },
 
         setupEventListeners() {
@@ -1418,6 +1609,7 @@
 
           // Account button - show sign in modal or name modal based on auth state
           const accountBtn = document.getElementById('accountBtn');
+          console.log('🔍 Looking for account button:', accountBtn);
           if (accountBtn) {
             console.log('🔧 Setting up account button event listener');
             const self = this; // Preserve 'this' context
@@ -1430,7 +1622,9 @@
               } else {
                 // User is not signed in, show sign in modal
                 console.log('🔑 User not signed in, showing sign in modal');
+                console.log('🔍 showSignInModal function type:', typeof showSignInModal);
                 if (typeof showSignInModal === 'function') {
+                  console.log('✅ Calling showSignInModal');
                   showSignInModal();
                 } else {
                   console.error('❌ showSignInModal function not available');
@@ -1838,10 +2032,10 @@
           // Clear the username display
           this.updateLeftSideUsername();
           
-          // Clear localStorage data
+          // Clear localStorage data (but preserve login prompt flag)
           localStorage.removeItem('flicklet-data');
           localStorage.removeItem('tvMovieTrackerData');
-          localStorage.removeItem('flicklet-login-prompted');
+          // Don't clear flicklet-login-prompted - let it persist so user isn't treated as new
           
           // Username will persist in Firebase for next login
           
@@ -1988,6 +2182,8 @@
     };
   }
 
+  // Note: openShareSelectionModal is already patched above with comprehensive safety system
+
   // Optional: suppress any one-time "onboard to share" prompt if it exists
   // by marking it complete. Safe no-op if you don't use it.
   try { localStorage.setItem('fw_share_onboarded', '1'); } catch (_) {}
@@ -2060,13 +2256,7 @@
     const shareModal = document.getElementById('shareSelectionModal');
     const timeSinceUserClick = Date.now() - window.shareModalInteractionTracker.lastUserShareClick;
     
-    console.debug('🛡️ Safety check:', {
-      shareModal: !!shareModal,
-      currentTab: window.FlickletApp?.currentTab,
-      userIsInteracting: window.shareModalInteractionTracker.userIsInteractingWithModal,
-      timeSinceUserClick: timeSinceUserClick,
-      lastUserShareClick: window.shareModalInteractionTracker.lastUserShareClick
-    });
+    // Safety check removed to reduce console spam
     
     // Only close if we're in settings AND user is not actively interacting with modal
     // AND it's been more than 5 seconds since user clicked share
