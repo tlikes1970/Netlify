@@ -2543,5 +2543,29 @@ html[data-theme="dark"] .notes-chip:hover {
   }
 }
 
+/* === MP-2: Desktop search row grid (≥641px), one clean line === */
+@media (min-width: 641px) {
+  /* Switch row to grid so controls never wrap between 1024–1920px */
+  .top-search .search-row {
+    display: grid !important;
+    grid-template-columns: minmax(320px, 1fr) max-content max-content max-content !important; /* [input][genre][Search][Clear] */
+    align-items: center !important;
+    column-gap: 8px !important; /* keep existing spacing */
+    flex-wrap: unset !important;
+  }
+
+  /* Let the input shrink within the grid instead of forcing a wrap */
+  .top-search .search-input {
+    min-width: 0 !important; /* override previous 300px min-width*/
+    width: 100% !important;
+  }
+
+  /* Ensure the genre select behaves like a compact fixed-width control */
+  .top-search .genre-filter {
+    width: max-content !important;     /* size to label/content */
+    min-width: 120px !important;       /* floor so it doesn't collapse */
+  }
+}
+
 
 

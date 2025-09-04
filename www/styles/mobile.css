@@ -366,3 +366,89 @@
 
   /* Floating buttons now handled by components.css */
 }
+
+/* === MP-2: Mobile card compaction (≤640px) === */
+@media (max-width: 640px) {
+  /* density tokens */
+  .mobile-v1 {
+    --card-pad-y: 8px;
+    --card-pad-x: 12px;
+    --card-gap: 8px;
+    --poster-w: 64px;
+    --actions-w: 44px;
+    --meta-title-size: 16px;
+    --meta-line: 1.2;
+  }
+
+  /* Row layout: [64px poster] [meta grows] [44px actions] */
+  .mobile-v1 .show-card {
+    display: grid;
+    grid-template-columns: var(--poster-w) 1fr var(--actions-w);
+    align-items: center;
+    column-gap: var(--card-gap);
+    padding: var(--card-pad-y) var(--card-pad-x);
+  }
+
+  /* Poster/thumb sizing */
+  .mobile-v1 .show-card .poster,
+  .mobile-v1 .show-card img.poster,
+  .mobile-v1 .show-card .thumb,
+  .mobile-v1 .show-card img.thumb {
+    width: var(--poster-w);
+    height: calc(var(--poster-w) * 1.5); /* ~96px for 64px wide */
+    object-fit: cover;
+    border-radius: 6px;
+    grid-column: 1;
+    align-self: start;
+  }
+
+  /* Meta column */
+  .mobile-v1 .show-card .meta {
+    grid-column: 2;
+    align-self: start;
+    min-width: 0; /* allow clamps to work */
+  }
+  .mobile-v1 .show-card .title {
+    font-size: var(--meta-title-size);
+    line-height: var(--meta-line);
+    margin: 0 0 2px 0;
+  }
+
+  /* Clamp long overviews to 2 lines */
+  .mobile-v1 .show-card .overview {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    margin-top: 2px;
+  }
+
+  /* Tighten generic text spacing in meta block */
+  .mobile-v1 .show-card .meta > * + * {
+    margin-top: 2px;
+  }
+
+  /* Actions column: fixed width, no wrapping tower */
+  .mobile-v1 .show-card .actions {
+    grid-column: 3;
+    width: var(--actions-w);
+    min-width: var(--actions-w);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    align-self: start;
+  }
+  .mobile-v1 .show-card .actions .btn,
+  .mobile-v1 .show-card .actions button,
+  .mobile-v1 .show-card .actions .icon-btn {
+    width: var(--actions-w);
+    min-width: var(--actions-w);
+    padding: 6px 0; /* preserve ≥40px overall with button line-height */
+  }
+
+  /* Safety: prevent stray paddings from inflating card height */
+  .mobile-v1 .show-card > :is(.meta, .actions, .poster) {
+    margin: 0;
+  }
+}

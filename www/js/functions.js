@@ -1,26 +1,32 @@
 /* ============== Core Application Functions (Cleaned) ============== */
 
-// ---- Mobile Layout Polish (safe init) ----
-try {
-  if (window.FLAGS?.mobilePolishEnabled) {
-    const addGuard = () => {
-      if (!document.body) return;
-      document.body.classList.add('mobile-v1');
-      console.log('📱 Mobile polish enabled - body.mobile-v1 class added');
-      console.log('📱 Viewport width:', window.innerWidth);
-      console.log('📱 Body classes:', document.body.className);
-    };
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', addGuard, { once: true });
-    } else {
-      addGuard();
-    }
-  } else {
-    console.log('📱 Mobile polish disabled');
-  }
-} catch (e) {
-  console.error('Mobile polish init failed', e);
+// ==== Mobile polish guard (feature-flagged) ====
+// Ensure a FLAGS bucket exists
+window.FLAGS = window.FLAGS || {};
+if (typeof window.FLAGS.mobilePolishGuard === 'undefined') {
+  window.FLAGS.mobilePolishGuard = true; // default ON
 }
+
+(function mobilePolishGate() {
+  if (!window.FLAGS.mobilePolishGuard) {
+    console.log('📱 Mobile polish guard disabled via FLAGS.mobilePolishGuard=false');
+    return;
+  }
+
+  const MOBILE_BP = 640; // px
+  const forced = localStorage.getItem('forceMobileV1') === '1';
+
+  function applyMobileFlag() {
+    const isMobileViewport = window.matchMedia(`(max-width: ${MOBILE_BP}px)`).matches;
+    const enable = forced || isMobileViewport;
+    document.body.classList.toggle('mobile-v1', enable);
+    console.log(`📱 Mobile polish ${enable ? 'ENABLED' : 'DISABLED'} — vw:${window.innerWidth}`);
+  }
+
+  applyMobileFlag();
+  window.addEventListener('resize', applyMobileFlag, { passive: true });
+  window.addEventListener('orientationchange', applyMobileFlag);
+})();
 
 // ---- Tab / Render Pipeline ----
 // window.switchToTab is implemented in inline-script-02.js

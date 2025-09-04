@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Polish Guard Test</title>
+    <style>
+        body { margin: 20px; font-family: Arial, sans-serif; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .pass { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .fail { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { margin: 5px; padding: 8px 16px; }
+        #viewport-info { font-weight: bold; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Mobile Polish Guard Test</h1>
+    
+    <div id="viewport-info">Viewport Width: <span id="viewport-width"></span>px</div>
+    
+    <div id="test-results"></div>
+    
+    <div>
+        <button onclick="testDesktop()">Test Desktop (1200px)</button>
+        <button onclick="testMobile()">Test Mobile (375px)</button>
+        <button onclick="testOverride()">Test Dev Override</button>
+        <button onclick="clearOverride()">Clear Override</button>
+        <button onclick="runAllTests()">Run All Tests</button>
+    </div>
+
+    <script>
+        // Include the mobile polish guard code
+        window.FLAGS = window.FLAGS || {};
+        if (typeof window.FLAGS.mobilePolishGuard === 'undefined') {
+            window.FLAGS.mobilePolishGuard = true; // default ON
+        }
+
+        (function mobilePolishGate() {
+            if (!window.FLAGS.mobilePolishGuard) {
+                console.log('📱 Mobile polish guard disabled via FLAGS.mobilePolishGuard=false');
+                return;
+            }
+
+            const MOBILE_BP = 640; // px
+            const forced = localStorage.getItem('forceMobileV1') === '1';
+
+            function applyMobileFlag() {
+                const isMobileViewport = window.matchMedia(`(max-width: ${MOBILE_BP}px)`).matches;
+                const enable = forced || isMobileViewport;
+                document.body.classList.toggle('mobile-v1', enable);
+                console.log(`📱 Mobile polish ${enable ? 'ENABLED' : 'DISABLED'} — vw:${window.innerWidth}`);
+            }
+
+            applyMobileFlag();
+            window.addEventListener('resize', applyMobileFlag, { passive: true });
+            window.addEventListener('orientationchange', applyMobileFlag);
+        })();
+
+        function updateViewportInfo() {
+            document.getElementById('viewport-width').textContent = window.innerWidth;
+        }
+
+        function addTestResult(message, passed) {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            div.textContent = message;
+            results.appendChild(div);
+        }
+
+        function addInfo(message) {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = 'test-result info';
+            div.textContent = message;
+            results.appendChild(div);
+        }
+
+        function testDesktop() {
+            document.body.style.width = '1200px';
+            window.dispatchEvent(new Event('resize'));
+            updateViewportInfo();
+            
+            const hasMobileClass = document.body.classList.contains('mobile-v1');
+            addTestResult(`Desktop (1200px): mobile-v1 class ${hasMobileClass ? 'present' : 'absent'} - ${hasMobileClass ? 'FAIL' : 'PASS'}`, !hasMobileClass);
+        }
+
+        function testMobile() {
+            document.body.style.width = '375px';
+            window.dispatchEvent(new Event('resize'));
+            updateViewportInfo();
+            
+            const hasMobileClass = document.body.classList.contains('mobile-v1');
+            addTestResult(`Mobile (375px): mobile-v1 class ${hasMobileClass ? 'present' : 'absent'} - ${hasMobileClass ? 'PASS' : 'FAIL'}`, hasMobileClass);
+        }
+
+        function testOverride() {
+            localStorage.setItem('forceMobileV1', '1');
+            document.body.style.width = '1200px';
+            window.dispatchEvent(new Event('resize'));
+            updateViewportInfo();
+            
+            const hasMobileClass = document.body.classList.contains('mobile-v1');
+            addTestResult(`Dev Override (1200px + forceMobileV1=1): mobile-v1 class ${hasMobileClass ? 'present' : 'absent'} - ${hasMobileClass ? 'PASS' : 'FAIL'}`, hasMobileClass);
+        }
+
+        function clearOverride() {
+            localStorage.removeItem('forceMobileV1');
+            addInfo('Dev override cleared');
+        }
+
+        function runAllTests() {
+            document.getElementById('test-results').innerHTML = '';
+            addInfo('Running all tests...');
+            
+            // Test desktop
+            testDesktop();
+            
+            // Test mobile
+            testMobile();
+            
+            // Test override
+            testOverride();
+            
+            // Clear override
+            clearOverride();
+            
+            // Test desktop again after clearing override
+            testDesktop();
+        }
+
+        // Initialize
+        updateViewportInfo();
+        addInfo('Mobile Polish Guard Test Page Loaded');
+    </script>
+</body>
+</html>
