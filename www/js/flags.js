@@ -8,6 +8,7 @@ window.FLAGS = Object.assign({
   flickwordModalEnabled: true,                // optional iframe modal
   frontSpotlightEnabled: true,                // replaces horoscope
   mobilePolishEnabled: true,                  // mobile layout polish v1
+  notesChipEnabled: true,                     // notes/tags chip on cards
 }, window.FLAGS || {});
 
 window.guard = (cond, fn) => { 

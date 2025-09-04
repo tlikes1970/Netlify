@@ -85,17 +85,23 @@
         <div class="search-row">
           <input
             id="searchInput"
-            class="search-input"
+            class="search-input search-area-input"
             placeholder=""
             data-i18n-placeholder="search_placeholder"
           />
-          <select id="genreFilter" class="genre-filter">
-            <option value="" data-i18n="all_genres">All Genres</option>
-          </select>
-          <button id="searchBtn" class="btn search-btn" aria-label="Search for TV shows and movies">🔍 <span data-i18n="search">Search</span></button>
-          <button id="clearSearchBtn" class="btn secondary clear-search-btn" aria-label="Clear search results">
-            ✖️ <span data-i18n="clear">Clear</span>
-          </button>
+          <div class="search-controls">
+            <select id="genreFilter" class="genre-filter search-area-genre">
+              <option value="" data-i18n="all_genres">All Genres</option>
+            </select>
+            <button id="searchBtn" class="btn search-btn search-area-search" aria-label="Search for TV shows and movies">
+              <span class="icon" aria-hidden="true">🔍</span>
+              <span class="label" data-i18n="search">Search</span>
+            </button>
+            <button id="clearSearchBtn" class="btn secondary clear-search-btn search-area-clear" aria-label="Clear search results">
+              <span class="icon" aria-hidden="true">✖️</span>
+              <span class="label" data-i18n="clear">Clear</span>
+            </button>
+          </div>
         </div>
         <div
           id="tagFilterRow"

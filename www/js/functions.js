@@ -1,11 +1,25 @@
 /* ============== Core Application Functions (Cleaned) ============== */
 
-// ---- Mobile Layout Polish ----
-if (window.FLAGS?.mobilePolishEnabled) {
-  document.body.classList.add('mobile-v1');
-  console.log('📱 Mobile polish enabled - body.mobile-v1 class added');
-} else {
-  console.log('📱 Mobile polish disabled');
+// ---- Mobile Layout Polish (safe init) ----
+try {
+  if (window.FLAGS?.mobilePolishEnabled) {
+    const addGuard = () => {
+      if (!document.body) return;
+      document.body.classList.add('mobile-v1');
+      console.log('📱 Mobile polish enabled - body.mobile-v1 class added');
+      console.log('📱 Viewport width:', window.innerWidth);
+      console.log('📱 Body classes:', document.body.className);
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', addGuard, { once: true });
+    } else {
+      addGuard();
+    }
+  } else {
+    console.log('📱 Mobile polish disabled');
+  }
+} catch (e) {
+  console.error('Mobile polish init failed', e);
 }
 
 // ---- Tab / Render Pipeline ----

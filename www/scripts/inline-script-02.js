@@ -1119,51 +1119,60 @@
       }
 
       async function saveAppData() {
-        // Use centralized save if available
-        if (window.FlickletApp && typeof window.FlickletApp.saveData === 'function') {
-          window.FlickletApp.saveData();
-          return;
-        }
-        
-        // Fallback to old system
-        localStorage.setItem("tvMovieTrackerData", JSON.stringify(appData));
-        
-        // Prevent dropdown resets during language changes
-        if (!window.isChangingLanguage) {
-          const langSel = document.getElementById("langToggle");
-          if (langSel) {
-            langSel.value = appData.settings.lang || "en";
-          }
-        }
-
-        applyTranslations?.();
-        // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
-        updateUI?.();
-
-        if (!currentUser) return;
         try {
-          const payload = sanitizeForFirestore({
-            watchlists: { tv: appData.tv, movies: appData.movies },
-            settings: appData.settings,
-            pro: !!appData.settings.pro,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-          });
-          await db
-            .collection("users")
-            .doc(currentUser.uid)
-            .set(payload, { merge: true });
-        } catch (error) {
-          console.error("cloud sync failed", error);
-          showNotification(t("cloud_sync_failed"), "warning");
+          if (window.FlickletApp && typeof window.FlickletApp.saveData === 'function') {
+            // Ensure we always return a Promise
+            return Promise.resolve(window.FlickletApp.saveData());
+          }
+          // Fallback to old system (sync), but still return a resolved Promise
+          localStorage.setItem("tvMovieTrackerData", JSON.stringify(appData));
+
+          // Prevent dropdown resets during language changes
+          if (!window.isChangingLanguage) {
+            const langSel = document.getElementById("langToggle");
+            if (langSel) {
+              langSel.value = appData.settings.lang || "en";
+            }
+          }
+
+          applyTranslations?.();
+          // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
+          updateUI?.();
+
+          if (!currentUser) return Promise.resolve();
+          try {
+            const payload = sanitizeForFirestore({
+              watchlists: { tv: appData.tv, movies: appData.movies },
+              settings: appData.settings,
+              pro: !!appData.settings.pro,
+              lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+            await db
+              .collection("users")
+              .doc(currentUser.uid)
+              .set(payload, { merge: true });
+            return Promise.resolve();
+          } catch (error) {
+            console.error("cloud sync failed", error);
+            showNotification(t("cloud_sync_failed"), "warning");
+            return Promise.resolve();
+          }
+        } catch (e) {
+          console.error('saveAppData failed', e);
+          return Promise.resolve(); // don't explode the call sites
         }
       }
 
       /* ============== Auth helpers ============== */
       function login() {
+        console.log('🔐 Starting Google login...');
         const provider = new firebase.auth.GoogleAuthProvider();
         return auth.signInWithPopup(provider).catch((err) => {
+          console.error('❌ Google popup login failed:', err);
           const msg = String(err?.message || "");
           const code = err?.code || "";
+          console.log('🔍 Error details - message:', msg, 'code:', code);
+          
           const coopBlocked =
             msg.includes("Cross-Origin-Opener-Policy") ||
             msg.includes("window.close") ||
@@ -1171,7 +1180,11 @@
             code === "auth/popup-closed-by-user" ||
             code === "auth/popup-blocked" ||
             code === "auth/cancelled-popup-request";
-          if (coopBlocked) return auth.signInWithRedirect(provider);
+          
+          if (coopBlocked) {
+            console.log('🔄 Popup blocked, trying redirect...');
+            return auth.signInWithRedirect(provider);
+          }
           throw err;
         });
       }
@@ -1281,10 +1294,14 @@
       }
       
       function appleLogin() {
+        console.log('🍎 Starting Apple login...');
         const provider = new firebase.auth.OAuthProvider('apple.com');
         return auth.signInWithPopup(provider).catch((err) => {
+          console.error('❌ Apple popup login failed:', err);
           const msg = String(err?.message || "");
           const code = err?.code || "";
+          console.log('🔍 Error details - message:', msg, 'code:', code);
+          
           const coopBlocked =
             msg.includes("Cross-Origin-Opener-Policy") ||
             msg.includes("window.close") ||
@@ -1292,7 +1309,11 @@
             code === "auth/popup-closed-by-user" ||
             code === "auth/popup-blocked" ||
             code === "auth/cancelled-popup-request";
-          if (coopBlocked) return auth.signInWithRedirect(provider);
+          
+          if (coopBlocked) {
+            console.log('🔄 Popup blocked, trying redirect...');
+            return auth.signInWithRedirect(provider);
+          }
           throw err;
         });
       }
@@ -1542,7 +1563,7 @@
         }
       }
 
-      function showSignInModal() {
+      window.showSignInModal = function showSignInModal() {
         openModal(
           "Sign in to sync",
           `
@@ -1597,9 +1618,11 @@
             }
           };
         } else {
-          google.onclick = () =>
+          google.onclick = () => {
+            console.log('🔐 Google login clicked');
             login()
               .then(() => {
+                console.log('✅ Google login successful');
                 showNotification(t("signed_in"), "success");
                 // Close all modals to ensure the sign-in modal is removed
                 const modals = document.querySelectorAll(".modal-backdrop");
@@ -1607,6 +1630,7 @@
                 // auth listener will call setAccountLabel and sync
               })
               .catch((e) => {
+                console.error('❌ Google login failed:', e);
                 let message = 'Sign in failed';
                 if (e.message) {
                   if (e.message.includes('popup')) {
@@ -1621,10 +1645,13 @@
                 }
                 showNotification(message, 'error');
               });
+          };
 
-          apple.onclick = () =>
+          apple.onclick = () => {
+            console.log('🍎 Apple login clicked');
             appleLogin()
               .then(() => {
+                console.log('✅ Apple login successful');
                 showNotification(t("signed_in"), "success");
                 // Close all modals to ensure the sign-in modal is removed
                 const modals = document.querySelectorAll(".modal-backdrop");
@@ -1632,6 +1659,7 @@
                 // auth listener will call setAccountLabel and sync
               })
               .catch((e) => {
+                console.error('❌ Apple login failed:', e);
                 let message = 'Sign in failed';
                 if (e.message) {
                   if (e.message.includes('popup')) {
@@ -1646,6 +1674,7 @@
                 }
                 showNotification(message, 'error');
               });
+          };
 
           email.onclick = () => {
             // Close the main sign-in modal first
@@ -2087,54 +2116,168 @@
       }
 
       /* ============== Notes & Tags ============== */
-      function openNotesTagsModal(itemId) {
+      
+      // Helper functions for live chip updates
+      function notesTagsCountForItem(item) {
+        const hasNotes = !!(item?.notes && String(item.notes).trim());
+        const tagsCount = Array.isArray(item?.tags) ? item.tags.length : (item?.tags ? String(item.tags).split(',').filter(Boolean).length : 0);
+        return (hasNotes ? 1 : 0) + (tagsCount || 0);
+      }
+
+      function updateNotesChipForItem(itemId) {
+        // Find the card by data-id
+        const card = document.querySelector(`.show-card[data-id="${itemId}"]`);
+
+        if (!card) return;
+
+        // Get the current item (uses your findItem)
         const item = findItem(itemId);
-        if (!item) return;
+        const count = item ? notesTagsCountForItem(item) : 0;
+
+        // Try to find an existing chip in the show-details area
+        let chip = card.querySelector('.notes-chip');
+
+        if (count <= 0) {
+          // remove chip if present
+          if (chip) chip.remove();
+          return;
+        }
+
+        // Create if missing
+        if (!chip) {
+          const showDetails = card.querySelector('.show-details');
+          if (!showDetails) return;
+          
+          // Insert after the title, before show-meta
+          const title = showDetails.querySelector('.show-title');
+          if (!title) return;
+          
+          chip = document.createElement('a');
+          chip.href = '#';
+          chip.className = 'notes-chip';
+          chip.setAttribute('aria-label', `View notes and tags (${count} items)`);
+          chip.addEventListener('click', (e)=>{ e.preventDefault(); openNotesTagsModal(itemId); });
+          
+          // Insert after the title
+          title.insertAdjacentElement('afterend', chip);
+        }
+
+        // Update label/text
+        chip.setAttribute('aria-label', `View notes and tags (${count} items)`);
+        chip.textContent = `📝 Notes • ${count}`;
+      }
+
+      window.openNotesTagsModal = function openNotesTagsModal(itemId) {
+        console.log('📝 openNotesTagsModal called with itemId:', itemId);
+        const item = findItem(itemId);
+        if (!item) {
+          console.log('📝 Item not found for id:', itemId);
+          return;
+        }
+        console.log('📝 Found item:', item.title || item.name);
         const currentNotes = item.notes || "";
         const currentTags = Array.isArray(item.tags)
           ? item.tags.join(", ")
           : item.tags || "";
-        openModal(
-          "Notes & Tags",
-          `
-            <label>Notes</label>
-            <textarea id="notesText" style="width:100%; min-height:120px;">${escapeHtml(
-              currentNotes
-            )}</textarea>
-            <label style="margin-top:8px; display:block;">Tags (comma-separated)</label>
-            <input id="tagsInput" class="search-input" value="${escapeHtml(
-              currentTags
-            )}" />
-          `,
-          "notes-tags-modal"
-        );
+        console.log('📝 Current notes:', currentNotes);
+        console.log('📝 Current tags:', currentTags);
+        
+        // Remove any existing notes modal first
+        const existingModal = document.querySelector('[data-testid="notes-tags-modal"]');
+        if (existingModal) {
+          existingModal.closest('.modal-backdrop')?.remove();
+        }
+        
+        // Create custom modal without default close button
+        const wrap = document.createElement("div");
+        wrap.className = "modal-backdrop";
+        wrap.style.display = "flex";
+        wrap.style.position = "fixed";
+        wrap.style.top = "0";
+        wrap.style.left = "0";
+        wrap.style.width = "100%";
+        wrap.style.height = "100%";
+        wrap.style.backgroundColor = "rgba(0,0,0,0.5)";
+        wrap.style.zIndex = "10000";
+        wrap.style.alignItems = "center";
+        wrap.style.justifyContent = "center";
+        wrap.innerHTML = `
+          <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" data-testid="notes-tags-modal" tabindex="-1">
+            <h3 id="modal-title">Notes & Tags</h3>
+            <div class="modal-body">
+              <label>Notes</label>
+              <textarea id="notesText" style="width:100%; min-height:120px;">${escapeHtml(currentNotes)}</textarea>
+              <label style="margin-top:8px; display:block;">Tags (comma-separated)</label>
+              <input id="tagsInput" class="search-input" value="${escapeHtml(currentTags)}" />
+            </div>
+            <div class="modal-actions">
+              <button class="btn secondary" onclick="closeNotesTagsModal()">Cancel</button>
+              <button class="btn danger" onclick="clearNotesTags(${itemId})">Clear</button>
+              <button class="btn" onclick="saveNotesTags(${itemId})">Save</button>
+            </div>
+          </div>`;
+        document.body.appendChild(wrap);
+        console.log('📝 Notes modal created and added to DOM');
+        
+        // Focus the modal
+        const modalEl = wrap.querySelector('.modal');
+        modalEl.focus();
+        console.log('📝 Notes modal focused');
+      }
 
-        const saveBtn = document.createElement("button");
-        saveBtn.className = "btn success";
-        saveBtn.textContent = "Save";
-        saveBtn.onclick = () => {
-          const notes = (
-            document.getElementById("notesText").value || ""
-          ).trim();
-          const tagsRaw = (
-            document.getElementById("tagsInput").value || ""
-          ).trim();
-          const tags = tagsRaw
-            ? tagsRaw
-                .split(",")
-                .map((s) => s.trim())
-                .filter(Boolean)
-            : [];
-          const it = findItem(itemId);
-          if (!it) return;
-          it.notes = notes;
-          it.tags = tags;
-          saveAppData?.();
-          updateTagFiltersUI?.();
-          updateUI?.();
-          document.querySelector(".modal-backdrop")?.remove();
-        };
-        document.querySelector(".modal .modal-actions").prepend(saveBtn);
+      window.saveNotesTags = async function saveNotesTags(itemId) {
+        console.log('📝 saveNotesTags called for itemId:', itemId);
+        const notes = (document.getElementById("notesText").value || "").trim();
+        const tagsRaw = (document.getElementById("tagsInput").value || "").trim();
+        const tags = tagsRaw ? tagsRaw.split(",").map((s) => s.trim()).filter(Boolean) : [];
+
+        const item = findItem(itemId);
+        if (!item) { console.log('⚠️ Item not found for saving'); return; }
+
+        console.log('📝 Before save - notes:', item.notes, 'tags:', item.tags);
+        item.notes = notes;
+        item.tags = tags;
+        console.log('📝 After save - notes:', item.notes, 'tags:', item.tags);
+
+        if (typeof saveAppData === 'function') {
+          await saveAppData();
+        }
+        updateTagFiltersUI?.();
+
+        // Live-update the chip without global re-render
+        updateNotesChipForItem(itemId);
+
+        closeNotesTagsModal();
+        console.log('✓ Notes & tags saved');
+      }
+
+      window.clearNotesTags = async function clearNotesTags(itemId) {
+        console.log('📝 clearNotesTags called for itemId:', itemId);
+        const item = findItem(itemId);
+        if (!item) { console.log('⚠️ Item not found for clearing'); return; }
+
+        console.log('📝 Before clear - notes:', item.notes, 'tags:', item.tags);
+        item.notes = "";
+        item.tags = [];
+        console.log('📝 After clear - notes:', item.notes, 'tags:', item.tags);
+
+        if (typeof saveAppData === 'function') {
+          await saveAppData();
+        }
+        updateTagFiltersUI?.();
+
+        // Live-update chip → disappears immediately
+        updateNotesChipForItem(itemId);
+
+        closeNotesTagsModal();
+        console.log('✓ Notes & tags cleared');
+      }
+
+      window.closeNotesTagsModal = function closeNotesTagsModal() {
+        // Remove all modal backdrops to be safe
+        document.querySelectorAll('.modal-backdrop').forEach(modal => {
+          modal.remove();
+        });
       }
 
       function updateTagFiltersUI() {
@@ -3047,6 +3190,24 @@
         } catch (_) {}
       }
 
+      // Helper function for notes chip
+      function renderNotesChip(item) {
+        if (!window.FLAGS?.notesChipEnabled) return '';
+        
+        const hasNotes = item.notes && item.notes.trim();
+        const hasTags = item.tags && item.tags.length > 0;
+        
+        if (!hasNotes && !hasTags) return '';
+        
+        const notesCount = hasNotes ? 1 : 0;
+        const tagsCount = hasTags ? item.tags.length : 0;
+        const totalCount = notesCount + tagsCount;
+        
+        return `<a href="#" class="notes-chip" onclick="openNotesTagsModal(${item.id}); return false;" aria-label="View notes and tags (${totalCount} items)">
+          📝 Notes • ${totalCount}
+        </a>`;
+      }
+
       function createShowCard(item, isSearch = false, listTab = null) {
         // Use the passed listTab if available, otherwise fall back to currentActiveTab
         const activeTab = listTab || currentActiveTab;
@@ -3058,6 +3219,7 @@
         const date = item.first_air_date || item.release_date || "";
         const rating = item.vote_average ? Number(item.vote_average).toFixed(1) : "N/A";
         const mediaType = item.media_type || (item.first_air_date ? "tv" : "movie");
+        
 
         card.setAttribute("data-id", String(item.id));
         card.setAttribute("data-media-type", mediaType);
@@ -3122,6 +3284,7 @@
                 ${escapeHtml(title)} <span aria-hidden="true" style="opacity:.6">🔗</span>
               </button>
             </h4>
+            ${renderNotesChip(item)}
             <div class="show-meta"></div>
             <div class="show-overview">${escapeHtml(item.overview || t("no_description"))}</div>
             ${actions}
