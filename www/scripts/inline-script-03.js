@@ -210,7 +210,8 @@
         }
         
         // For production, let Netlify handle the form submission
-        // The form will submit normally to Netlify Forms and redirect to /thank-you
+        // Don't prevent default - let the form submit to Netlify
+        // The form will submit normally and Netlify will process it
       }
 
 

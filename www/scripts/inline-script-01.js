@@ -342,8 +342,8 @@
         // Initialize FlickWord integration
         this.initializeFlickWord();
         
-        // Show welcome message for new users
-        this.showWelcomeMessage();
+        // Show welcome message for new users - DISABLED
+        // this.showWelcomeMessage();
             
             // Check if user should be prompted to login AFTER all functions are loaded
             setTimeout(() => {

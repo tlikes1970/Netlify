@@ -2814,6 +2814,39 @@
         }
       }
       
+      function showRemoveConfirmationModal(itemTitle, onConfirm) {
+        const modalHTML = `
+          <div class="modal-content">
+            <h3>🗑️ Remove Item</h3>
+            <p>Remove "${itemTitle}" from this list?</p>
+            <div class="modal-actions">
+              <button class="btn secondary" onclick="closeRemoveConfirmationModal()">Cancel</button>
+              <button class="btn danger" onclick="confirmRemoveItem()">Remove</button>
+            </div>
+          </div>
+        `;
+        
+        openModal("Remove Item", modalHTML, "remove-confirmation-modal");
+        
+        // Store the callback globally so the button can access it
+        window._removeConfirmationCallback = onConfirm;
+      }
+      
+      function closeRemoveConfirmationModal() {
+        const modal = document.querySelector('.modal-backdrop');
+        if (modal) {
+          modal.remove();
+        }
+        window._removeConfirmationCallback = null;
+      }
+      
+      function confirmRemoveItem() {
+        if (window._removeConfirmationCallback) {
+          window._removeConfirmationCallback();
+        }
+        closeRemoveConfirmationModal();
+      }
+      
       function saveUsernameFromPrompt() {
         const input = document.getElementById('newUsernameInput');
         const newName = input?.value?.trim();
@@ -3351,15 +3384,18 @@
       function removeItemFromCurrentList(id) {
         const item = findItem(id);
         if (!item) return;
-        if (!confirm(t("remove_confirmation").replace("{title}", item.title || item.name)))
-          return;
-        ["tv", "movies"].forEach((cat) =>
-          ["watching", "wishlist", "watched"].forEach((lst) => {
-            appData[cat][lst] = appData[cat][lst].filter((s) => s.id !== id);
-          })
-        );
-        saveAppData?.();
-        updateUI?.();
+        
+        // Show custom confirmation modal instead of browser confirm()
+        showRemoveConfirmationModal(item.title || item.name, () => {
+          // Proceed with removal
+          ["tv", "movies"].forEach((cat) =>
+            ["watching", "wishlist", "watched"].forEach((lst) => {
+              appData[cat][lst] = appData[cat][lst].filter((s) => s.id !== id);
+            })
+          );
+          saveAppData?.();
+          updateUI?.();
+        });
       }
       function findItem(id) {
         for (const cat of ["tv", "movies"]) {

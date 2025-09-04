@@ -62,10 +62,6 @@
         </div>
       </header>
 
-      <!-- Welcome Message -->
-      <div id="welcomeMessage" class="welcome-message">
-        Welcome to Flicklet! Start by searching for a show or movie you love.
-      </div>
 
       <!-- Sticky Top Search -->
       <div class="top-search">
@@ -406,7 +402,7 @@
           <div class="card">
             <h4>💬 Share Your Thoughts</h4>
             <p data-i18n="feedback_working">Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!</p>
-            <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/thank-you" class="feedback-form" onsubmit="handleFeedbackSubmit(event)">
+            <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="feedback-form" action="/thank-you">
               <input type="hidden" name="form-name" value="feedback" />
               <input type="hidden" name="theme" id="feedbackThemeInput" />
               <div style="display: none;">
