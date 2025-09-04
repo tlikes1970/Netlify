@@ -4103,8 +4103,12 @@
                                                       <h3 data-i18n="feedback">Share Your Thoughts</h3>
                                                           <p data-i18n="feedback_working">Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!</p>
                               <p class="feedback-subtitle" data-i18n="feedback_subtitle">💬 App feedback • 💭 Random thoughts • 💬 Quote submissions • 🤫 Anonymous confessions • 😤 Venting welcome</p>
-                              <form name="feedback" class="feedback-form" onsubmit="handleFeedbackSubmit(event)">
+                              <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="feedback-form" action="/thank-you">
+                <input type="hidden" name="form-name" value="feedback" />
                 <input type="hidden" name="theme" id="feedbackThemeInput" />
+                <div style="display: none;">
+                  <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+                </div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap">
                   <textarea
                     name="message"
