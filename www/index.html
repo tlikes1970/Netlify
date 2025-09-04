@@ -19,6 +19,9 @@
     <link rel="stylesheet" href="styles/mobile.css">
     <link rel="stylesheet" href="styles/components.css?v=flickword-visibility-fix-1">
 
+    <!-- Feature flags and safety guard -->
+    <script src="js/flags.js"></script>
+
 </head>
 
   <body>
@@ -36,6 +39,7 @@
         
         <div class="header-center">
           <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
+          <div id="proBadge" class="pro-badge" style="display: none;">PRO</div>
           <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
           <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
         </div>
@@ -46,6 +50,7 @@
               id="accountBtn"
               class="btn secondary"
               title="Sign in / Account"
+              aria-label="Account - sign in or manage your account"
             >
               👤 <span data-i18n="sign_in_account">Sign In</span>
             </button>
@@ -91,8 +96,8 @@
           <select id="genreFilter" class="genre-filter">
             <option value="" data-i18n="all_genres">All Genres</option>
           </select>
-          <button id="searchBtn" class="btn search-btn">🔍 <span data-i18n="search">Search</span></button>
-          <button id="clearSearchBtn" class="btn secondary clear-search-btn">
+          <button id="searchBtn" class="btn search-btn" aria-label="Search for TV shows and movies">🔍 <span data-i18n="search">Search</span></button>
+          <button id="clearSearchBtn" class="btn secondary clear-search-btn" aria-label="Clear search results">
             ✖️ <span data-i18n="clear">Clear</span>
           </button>
         </div>
@@ -104,20 +109,20 @@
       </div>
 
       <div class="tab-container">
-        <button id="homeTab" class="tab active" title="Overview of your TV & movie tracking">🏠 <span data-i18n="home">Home</span></button>
-        <button id="watchingTab" class="tab" title="Shows and movies you're currently watching">
+        <button id="homeTab" class="tab active" title="Overview of your TV & movie tracking" aria-label="Home tab - view dashboard and recommendations">🏠 <span data-i18n="home">Home</span></button>
+        <button id="watchingTab" class="tab" title="Shows and movies you're currently watching" aria-label="Watching tab - view shows and movies you're currently watching">
           ▶️ <span data-i18n="currently_watching">Currently Watching</span>
           <span class="tab-badge" id="watchingBadge">0</span>
         </button>
-        <button id="wishlistTab" class="tab" title="Shows and movies you want to watch later">
+        <button id="wishlistTab" class="tab" title="Shows and movies you want to watch later" aria-label="Wishlist tab - view shows and movies you want to watch">
           📖 <span data-i18n="want_to_watch">Want to Watch</span>
           <span class="tab-badge" id="wishlistBadge">0</span>
         </button>
-        <button id="watchedTab" class="tab" title="Shows and movies you've already finished">
+        <button id="watchedTab" class="tab" title="Shows and movies you've already finished" aria-label="Watched tab - view shows and movies you've completed">
           ✅ <span data-i18n="already_watched">Already Watched</span>
           <span class="tab-badge" id="watchedBadge">0</span>
         </button>
-        <button id="discoverTab" class="tab" title="Get personalized recommendations based on your taste">✨ <span data-i18n="discover">Discover</span></button>
+        <button id="discoverTab" class="tab" title="Get personalized recommendations based on your taste" aria-label="Discover tab - find new shows and movies">✨ <span data-i18n="discover">Discover</span></button>
       </div>
 
       <!-- Quote of the Day and FlickWord Container -->
@@ -141,26 +146,41 @@
         <div id="flickwordCard" class="flickword-card">
           <h3 class="flickword-title">🎯 <span data-i18n="flickword_daily_challenge">FlickWord Daily Challenge</span></h3>
           <div class="flickword-timer-section">
-            <div class="flickword-countdown" id="dailyCountdown">00:00:00</div>
+            <div class="flickword-countdown" id="fwCountdown">00:00:00</div>
             <div class="flickword-motivation" id="flickwordMotivation"><span data-i18n="hours_left_motivation">Hours left to play today's game!</span></div>
           </div>
           <div class="flickword-stats">
             <div class="stat-item">
               <span class="stat-label">🔥 <span data-i18n="streak">STREAK</span></span>
-              <span class="stat-value" id="streakCount">0</span>
+              <span class="stat-value" id="fwStreak">0</span>
             </div>
             <div class="stat-item">
               <span class="stat-label">🏆 <span data-i18n="best">BEST</span></span>
-              <span class="stat-value" id="bestScore">-</span>
+              <span class="stat-value" id="fwBest">-</span>
             </div>
             <div class="stat-item">
               <span class="stat-label">📊 <span data-i18n="played">PLAYED</span></span>
-              <span class="stat-value" id="gamesPlayed">0</span>
+              <span class="stat-value" id="fwPlayed">0</span>
             </div>
           </div>
           <div class="flickword-actions">
-            <button id="playFlickwordBtn" class="btn primary" data-i18n="play_todays_word">Play Today's Word</button>
+            <button id="fwPlayBtn" class="btn primary" data-i18n="play_todays_word">Play Today's Word</button>
           </div>
+        </div>
+      </div>
+
+      <!-- FlickWord Modal -->
+      <div id="fwModal" class="fw-modal" style="display: none;">
+        <div class="fw-modal-content">
+          <div class="fw-modal-header" id="fwModalHeader">
+            <div class="fw-modal-title">FlickWord</div>
+            <div class="fw-modal-controls">
+              <button id="fwMinimize" class="fw-control-btn minimize" title="Minimize">−</button>
+              <button id="fwMaximize" class="fw-control-btn maximize" title="Maximize">□</button>
+              <button id="fwClose" class="fw-control-btn close" title="Close">&times;</button>
+            </div>
+          </div>
+          <iframe id="fwFrame" src="" frameborder="0"></iframe>
         </div>
       </div>
 
@@ -177,8 +197,12 @@
         <div class="stats">
           <div class="stat" id="bingeMeter"></div>
         </div>
-
-
+        
+        <!-- Stats Section -->
+        <div id="statsBasicBody" data-i18n="loading">Loading…</div>
+        <div id="statsPro" style="display: none;">
+          <div id="statsProBody"></div>
+        </div>
       </div>
 
       <main id="main" role="main">
@@ -234,60 +258,143 @@
       <!-- Settings / Profile -->
               <div id="settingsSection" class="tab-section" style="display: none">
           <div class="section">
-            <h3>⚙️ <span data-i18n="settings">Settings</span></h3>
-
-          <div style="margin-bottom: 20px;">
-            <label for="displayNameInput" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);">
-              What would you like us to call you?
-            </label>
-            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
-              <input
-                id="displayNameInput"
-                class="search-input"
-                placeholder="Enter your name"
-                style="width: 25%; min-width: 150px; max-width: 200px;"
-              />
-              <button id="saveNameBtn" class="btn secondary" onclick="saveDisplayName()">
-                💾 <span data-i18n="save_name">Save</span>
-              </button>
-
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <h3>⚙️ <span data-i18n="settings">Settings</span></h3>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="displayNameInput" style="font-weight: 500; color: var(--text); white-space: nowrap;">
+                  What would you like us to call you?
+                </label>
+                <input
+                  id="displayNameInput"
+                  class="search-input"
+                  placeholder="Enter your name"
+                  style="width: 150px; min-width: 120px;"
+                />
+                <button id="saveNameBtn" class="btn secondary" onclick="saveDisplayName()">
+                  💾 <span data-i18n="save_name">Save</span>
+                </button>
+              </div>
             </div>
-            <label style="display: flex; gap: 6px; align-items: center">
-              <input type="checkbox" id="proToggle" /> <span data-i18n="pro_simulate">Pro (simulate)</span>
-            </label>
-            <div id="proFeatures" style="display: none; margin-top: 8px; padding: 12px; background: var(--card); border-radius: 8px; font-size: 0.9rem; border: 2px solid var(--primary);">
-              <strong data-i18n="pro_features">🚀 Pro Features:</strong>
-              <ul style="margin: 6px 0; padding-left: 20px;">
-                <li data-i18n="pro_feature_analytics">📊 Advanced analytics & binge insights</li>
-                <li data-i18n="pro_feature_categories">🏷️ Custom watchlist categories & tags</li>
-                <li data-i18n="pro_feature_export">📤 Export to CSV, JSON & PDF formats</li>
-                <li data-i18n="pro_feature_support">🎯 Priority customer support</li>
-                <li data-i18n="pro_feature_early_access">⚡ Early access to new features</li>
-                <li data-i18n="pro_feature_backup">☁️ Cloud backup & cross-device sync</li>
-                <li data-i18n="pro_feature_recommendations">🎬 Personalized AI recommendations</li>
-                <li data-i18n="pro_feature_stats">📈 Detailed watching statistics</li>
-              </ul>
+
+          <!-- Stats Section (moved to first) -->
+          <div id="statsCard" class="card">
+            <h4>📊 My Statistics</h4>
+            <div id="statsContent">
+              <div class="loading">Loading stats...</div>
             </div>
           </div>
 
-          <h4 data-i18n="backup_import">Backup & Import</h4>
-          <div style="margin-bottom: 20px;">
+          <!-- Manage Not Interested Section (moved to second) -->
+          <div class="card">
+            <h4>🚫 Not Interested Management</h4>
+            <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
+              Manage shows and movies you've marked as not interested. These won't appear in your recommendations.
+            </p>
+            <button id="manageNotInterestedBtn" class="btn" onclick="openNotInterestedModal()" style="width: 25%; min-width: 150px; margin-bottom: 8px;">
+              🚫 Manage Not Interested List
+            </button>
+          </div>
+
+          <!-- Notifications Section (moved to third) -->
+          <div class="card">
+            <h4>🔔 <span data-i18n="notifications">Notifications</span></h4>
+            <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
+              Choose which types of notifications you'd like to receive about your TV shows and movies
+            </p>
+            <p style="margin: 0 0 15px 0; font-size: 0.8rem; color: var(--text-tertiary); font-style: italic;">
+              These are basic notifications. Pro users get advanced notification features below.
+            </p>
+            <div
+              style="
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                align-items: center;
+                margin-bottom: 8px;
+              "
+            >
+              <label
+                ><input type="checkbox" id="notifEpisodes" /> <span data-i18n="episode_alerts">Upcoming episode alerts</span></label
+              >
+              <label
+                ><input type="checkbox" id="notifDiscover" /> <span data-i18n="weekly_discover">Weekly discover picks</span></label
+              >
+              <label
+                ><input type="checkbox" id="notifDigest" /> <span data-i18n="monthly_digest">Monthly stats digest</span></label
+              >
+            </div>
+          </div>
+
+          <!-- Pro Tier Offerings (moved to fourth) -->
+          <div class="card">
+            <h4>⭐ Pro Tier Offerings</h4>
+            <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
+              Unlock advanced features and premium content with Flicklet Pro. Get personalized recommendations, 
+              advanced analytics, priority support, and exclusive content.
+            </p>
+            
+            <!-- Preview Pro Button -->
+            <div style="margin-bottom: 20px;">
+              <button id="previewProBtn" class="btn primary" style="width: 25%; min-width: 150px; margin-bottom: 8px;" onclick="toggleProPreview()">
+                ⭐ Preview Pro Features
+              </button>
+              <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
+                Toggle Pro features on/off to see what's available
+              </p>
+            </div>
+            
             <div style="margin-bottom: 15px;">
+              <h5 style="margin: 0 0 8px 0; color: var(--text); font-size: 0.9rem;">✨ Pro Features Include:</h5>
+              <div id="proFeaturesList">
+                <!-- Dynamic Pro features list will be rendered here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Data Tools Section (moved to sixth) -->
+          <div id="dataTools" class="card">
+            <h4>🔧 Data Tools</h4>
+            
+            <!-- Share Items (moved to top) -->
+            <div style="margin-bottom: 20px;">
               <button
                 id="shareListBtn"
-                class="btn primary"
+                class="btn"
                 style="width: 25%; min-width: 150px; margin-bottom: 8px;"
+                onclick="openShareModal()"
               >
-                🔗 <span data-i18n="share_selected">Select Items to Share</span>
+                🔗 Select Items to Share
               </button>
               <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
                 Click here to select what TV shows and movies to share with your friends
               </p>
             </div>
             
-            <div>
-              <button id="clearAllBtn" class="btn danger" style="width: 25%; min-width: 150px; margin-bottom: 8px;">
-                🗑️ <span data-i18n="nuclear_option">Nuclear Option</span>
+            <!-- Export Data -->
+            <div style="margin-bottom: 20px;">
+              <button id="btnExport" class="btn" style="width: 25%; min-width: 150px; margin-bottom: 8px;">
+                📤 Export My Data (.json)
+              </button>
+              <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
+                Download all your lists, notes, and preferences as a JSON file
+              </p>
+            </div>
+            
+            <!-- Import Data -->
+            <div style="margin-bottom: 20px;">
+              <button class="btn" style="width: 25%; min-width: 150px; margin-bottom: 8px;" onclick="document.getElementById('fileImport').click()">
+                📥 Import My Data (.json)
+              </button>
+              <input id="fileImport" type="file" accept="application/json" style="display:none">
+              <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
+                Upload a JSON file to restore your data. Overwrites matching items.
+              </p>
+            </div>
+            
+            <!-- Nuclear Option -->
+            <div style="margin-bottom: 15px;">
+              <button id="clearAllBtn" class="btn" style="width: 25%; min-width: 150px; margin-bottom: 8px; background-color: #dc3545; color: white; border-color: #dc3545;">
+                🗑️ Nuclear Option
               </button>
               <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
                 Clear all your data and start fresh (this action cannot be undone)
@@ -295,46 +402,28 @@
             </div>
           </div>
 
-          <h4 data-i18n="notifications">Notifications</h4>
-          <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-            Choose which types of notifications you'd like to receive about your TV shows and movies
-          </p>
-          <div
-            style="
-              display: flex;
-              gap: 10px;
-              flex-wrap: wrap;
-              align-items: center;
-              margin-bottom: 8px;
-            "
-          >
-            <label
-              ><input type="checkbox" id="notifEpisodes" /> <span data-i18n="episode_alerts">Upcoming episode alerts</span></label
-            >
-            <label
-              ><input type="checkbox" id="notifDiscover" /> <span data-i18n="weekly_discover">Weekly discover picks</span></label
-            >
-            <label
-              ><input type="checkbox" id="notifDigest" /> <span data-i18n="monthly_digest">Monthly stats digest</span></label
-            >
-          </div>
-
-          <h4>🚫 Not Interested Management</h4>
-          <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-            Manage shows and movies you've marked as not interested. These won't appear in your recommendations.
-          </p>
-          <div style="margin-bottom: 15px;">
-            <button
-              id="manageNotInterestedBtn"
-              class="btn secondary"
-              onclick="openNotInterestedModal()"
-              style="width: 25%; min-width: 150px; margin-bottom: 8px;"
-            >
-              🚫 Manage Not Interested List
-            </button>
-            <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-              View and remove items from your not interested list
-            </p>
+          <!-- Share Your Thoughts Section (moved to last) -->
+          <div class="card">
+            <h4>💬 Share Your Thoughts</h4>
+            <p data-i18n="feedback_working">Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!</p>
+            <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/thank-you" class="feedback-form" onsubmit="handleFeedbackSubmit(event)">
+              <input type="hidden" name="form-name" value="feedback" />
+              <input type="hidden" name="theme" id="feedbackThemeInput" />
+              <div style="display: none;">
+                <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+              </div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                <textarea
+                  name="message"
+                  class="search-input"
+                  placeholder="Share your thoughts, feedback, quotes, or just vent! We're listening."
+                  rows="3"
+                  required
+                  style="resize: vertical; min-height: 60px;"
+                ></textarea>
+                <button type="submit" class="btn">📤 Share It!</button>
+              </div>
+            </form>
           </div>
 
           <!-- Share Selection Modal -->
@@ -400,14 +489,6 @@
             </div>
           </div>
   
-          <h4 data-i18n="stats">Stats</h4>
-          <div id="statsBasic" class="feedback-card">
-            <div id="statsBasicBody" data-i18n="loading">Loading…</div>
-          </div>
-          <div id="statsPro" class="feedback-card" style="display: none">
-            <strong data-i18n="pro">Pro</strong>
-            <div id="statsProBody" data-i18n="loading">Loading…</div>
-          </div>
           </div>
       </div>
     </div>
@@ -426,6 +507,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+    <script src="js/functions.js"></script>
     <script src="scripts/inline-script-02.js?v=data-persistence-fix-2"></script>
 
     <script src="scripts/inline-script-03.js?v=displayname-priority-fix-1"></script>

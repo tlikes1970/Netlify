@@ -1,10 +1,10 @@
 /* ============== Core Application Functions (Cleaned) ============== */
 
+// ---- Mobile Layout Polish ----
+if (window.FLAGS?.mobilePolishEnabled) document.body.classList.add('mobile-v1');
+
 // ---- Tab / Render Pipeline ----
-window.switchToTab = function switchToTab(tab) {
-  if (!window.FlickletApp) return console.error('[switchToTab] FlickletApp missing');
-  window.FlickletApp.switchToTab(tab);
-};
+// window.switchToTab is implemented in inline-script-02.js
 
 window.updateTabContent = function updateTabContent(tab) {
   if (tab === 'home') {
@@ -48,60 +48,47 @@ window.loadHomeContent = function loadHomeContent() {
   setTimeout(() => {
     try { startDailyCountdown?.(); } catch {}
     try { updateFlickWordStats?.(); } catch {}
-    try { loadHoroscope?.(); } catch {}
+    try { loadFrontSpotlight?.(); } catch {}
   }, 50);
 };
 
 // ---- Lists ----
 window.loadListContent = function loadListContent(listType) {
   const container = document.getElementById(`${listType}List`);
-  if (!container) {
-    console.error(`Container not found: ${listType}List`);
-    return;
-  }
+  if (!container) return;
+  
+  console.log(`📋 Loading ${listType} content`);
 
   const tvItems = appData.tv?.[listType] || [];
   const movieItems = appData.movies?.[listType] || [];
-  const items = [...tvItems, ...movieItems];
-
-  console.log(`📋 Loading ${listType} content: ${items.length} items`);
-
-  if (!items.length) {
-    container.innerHTML = `<div class="empty-state"><h3>No ${listType} items yet</h3><p>Search and add shows or movies to get started.</p></div>`;
+  const allItems = [...tvItems, ...movieItems];
+  
+  if (allItems.length === 0) {
+    container.innerHTML = `<div class="empty-state"><p>No items in ${listType} list.</p></div>`;
     return;
   }
 
-  container.innerHTML = items.map(createItemCard).join('');
-  console.log(`✅ ${listType} content loaded with ${items.length} items`);
-};
-
-window.createItemCard = function createItemCard(item) {
-  const posterUrl = item.poster_path
-    ? `https://image.tmdb.org/t/p/w92${item.poster_path}`
-    : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTIiIGhlaWdodD0iMTM4IiB2aWV3Qm94PSIwIDAgOTIgMTM4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI5MiIgaGVpZ2h0PSIxMzgiIGZpbGw9IiNmM2Y0ZjYiLz48dGV4dCB4PSI0NiIgeT0iNjkiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+';
-
-  const title = item.name || item.title || 'Untitled';
-  const date = item.first_air_date || item.release_date || '';
-  const mediaType = item.name ? 'tv' : 'movie';
-
-  return `
-    <div class="show-card" data-id="${item.id}" data-media-type="${mediaType}">
-      <img src="${posterUrl}" alt="${title}" class="show-poster" data-action="open" data-id="${item.id}" data-media-type="${mediaType}">
-      <div class="show-details">
-        <h3 class="show-title" data-action="open" data-id="${item.id}" data-media-type="${mediaType}">${title}</h3>
-        <div class="show-meta">${date}</div>
-        <p class="show-overview">${item.overview || 'No description available.'}</p>
-        <div class="show-actions">
-          <button class="btn" data-action="move" data-id="${item.id}" data-list="watching">Move to Watching</button>
-          <button class="btn" data-action="move" data-id="${item.id}" data-list="wishlist">Move to Wishlist</button>
-          <button class="btn" data-action="move" data-id="${item.id}" data-list="watched">Move to Watched</button>
-          <button class="btn" data-action="remove" data-id="${item.id}">Remove</button>
+  container.innerHTML = allItems.map(item => `
+    <div class="list-item" data-id="${item.id}">
+      <div class="item-info">
+        <h4>${item.name || item.title}</h4>
+        <p>${item.overview || 'No description available'}</p>
+      </div>
+      <div class="item-actions">
+        <button onclick="moveItem(${item.id}, '${getNextList(listType)}')" class="btn secondary">Move</button>
+        <button onclick="removeItemFromCurrentList(${item.id})" class="btn danger">Remove</button>
         </div>
       </div>
-    </div>`;
+  `).join('');
 };
 
-// ---- Discover / Settings ----
+function getNextList(currentList) {
+  const lists = ['watching', 'wishlist', 'watched'];
+  const currentIndex = lists.indexOf(currentList);
+  return lists[(currentIndex + 1) % lists.length];
+}
+
+// ---- Discover ----
 window.loadDiscoverContent = function loadDiscoverContent() {
   const section = document.getElementById('discoverSection');
   if (!section) return;
@@ -109,70 +96,351 @@ window.loadDiscoverContent = function loadDiscoverContent() {
 };
 
 window.loadSettingsContent = function loadSettingsContent() {
-  const section = document.getElementById('settingsSection');
-  if (!section) return;
-  section.innerHTML = `
-    <div class="settings-content">
-      <h3>⚙️ Settings</h3>
-      <div class="settings-section">
-        <h4>Theme</h4>
-        <button id="darkModeToggle" class="btn secondary"><span id="themeIcon">🌙</span> Toggle Dark/Light Mode</button>
-      </div>
-      <div class="settings-section">
-        <h4>Language</h4>
-        <select id="langToggle">
-          <option value="en">English</option>
-          <option value="es">Español</option>
-        </select>
-      </div>
-      <div class="settings-section">
-        <h4>Data</h4>
-        <button class="btn secondary" id="exportDataBtn">📤 Export Data</button>
-        <button class="btn secondary" id="importDataBtn">📥 Import Data</button>
-        <input id="importFile" type="file" accept="application/json" style="display:none;">
-      </div>
-    </div>`;
+  // Settings content is now in HTML, just add event handlers for new data tools
+  console.log('⚙️ Loading settings content - adding data tools handlers');
+  
+  // New robust export/import handlers
+  const btnExport = document.getElementById('btnExport');
+  const fileImport = document.getElementById('fileImport');
+  
+  console.log('🔍 Debug: btnExport element found:', btnExport);
+  console.log('🔍 Debug: fileImport element found:', fileImport);
+  
+  console.log('🔍 Debug: window.guard function exists:', typeof window.guard);
+  console.log('🔍 Debug: btnExport exists check:', !!btnExport);
+  
+  window.guard(!!btnExport, () => {
+    console.log('✅ Setting up export/import handlers');
 
-  document.getElementById('darkModeToggle')?.addEventListener('click', toggleDarkMode);
-  const langSel = document.getElementById('langToggle');
-  if (langSel) {
-    langSel.value = appData.settings.lang || 'en';
-    langSel.addEventListener('change', (e) => changeLanguage(e.target.value));
+    async function collectExport() {
+      // Get data from the actual localStorage keys the app uses
+      const flickletData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
+      const legacyData = JSON.parse(localStorage.getItem('tvMovieTrackerData') || '{}');
+      
+      const data = {
+        meta: { app: 'Flicklet', version: window.FlickletApp?.version || 'n/a', exportedAt: new Date().toISOString() },
+        // Use the most recent data available
+        appData: flickletData.tv || flickletData.movies ? flickletData : legacyData,
+        // Also include the legacy format for compatibility
+        legacyData: legacyData
+      };
+      return data;
+    }
+
+    function downloadJSON(obj, filename) {
+      const blob = new Blob([JSON.stringify(obj, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+      a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+    }
+
+    btnExport.addEventListener('click', async () => {
+      console.log('🚀 Export button clicked!');
+      try {
+        const data = await collectExport();
+        console.log('📊 Export data collected:', data);
+        downloadJSON(data, `flicklet-export-${new Date().toISOString().slice(0,10)}.json`);
+        console.log('💾 File download initiated');
+        window.showToast?.('Export created.');
+      } catch (error) {
+        console.error('❌ Export failed:', error);
+        window.showToast?.('Export failed: ' + error.message);
+      }
+    });
+
+    fileImport.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+  if (!file) return;
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+        
+        // Import the main app data
+        if (json.appData) {
+          localStorage.setItem('flicklet-data', JSON.stringify(json.appData));
+        }
+        
+        // Import legacy data for compatibility
+        if (json.legacyData) {
+          localStorage.setItem('tvMovieTrackerData', JSON.stringify(json.legacyData));
+        }
+        
+        // Legacy format support (for old exports)
+        if (json.lists)  localStorage.setItem('flicklet_lists', JSON.stringify(json.lists));
+        if (json.notes)  localStorage.setItem('flicklet_notes', JSON.stringify(json.notes));
+        if (json.prefs)  localStorage.setItem('flicklet_prefs', JSON.stringify(json.prefs));
+        
+        window.showToast?.('Import complete. Reloading…');
+        setTimeout(()=>location.reload(), 500);
+    } catch (err) {
+        console.error(err);
+        window.showToast?.('Import failed: invalid file.');
+      }
+    });
+  });
+
+  // Pro preview toggle
+  window.guard(!!document.getElementById('btnProTry'), () => {
+    document.getElementById('btnProTry').addEventListener('click', () => {
+      window.FLAGS.proEnabled = !window.FLAGS.proEnabled;
+      document.body.classList.toggle('is-pro', window.FLAGS.proEnabled);
+      showNotification?.(window.FLAGS.proEnabled ? 'Pro preview ON' : 'Pro preview OFF', 'success');
+      
+      // Update Pro state UI
+      window.updateProState?.();
+      
+      // Re-check advanced notifications visibility when Pro state changes
+      const advancedCard = document.getElementById('notifAdvancedCard');
+      if (advancedCard) {
+        if (window.FLAGS.proEnabled || window.FLAGS.notifAdvancedEnabled) {
+          advancedCard.style.display = 'block';
+          console.log('🔍 Debug: Advanced notifications card shown due to Pro state change');
+        } else {
+          advancedCard.style.display = 'none';
+          console.log('🔍 Debug: Advanced notifications card hidden due to Pro state change');
+        }
+      }
+    });
+  });
+
+  // Stats card functionality
+  window.guard(!!window.FLAGS.statsEnabled && !!document.getElementById('statsGrid'), () => {
+    const EL = document.getElementById('statsGrid');
+
+    function getCounts() {
+      // Get data from actual localStorage keys the app uses
+      const flickletData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
+      const legacyData = JSON.parse(localStorage.getItem('tvMovieTrackerData') || '{}');
+      
+      // Use the most recent data available
+      const appData = flickletData.tv || flickletData.movies ? flickletData : legacyData;
+      
+      const counts = {
+        watching: (appData.tv?.watching?.length || 0) + (appData.movies?.watching?.length || 0),
+        wishlist: (appData.tv?.wishlist?.length || 0) + (appData.movies?.wishlist?.length || 0),
+        watched: (appData.tv?.watched?.length || 0) + (appData.movies?.watched?.length || 0),
+        notes: 0 // Notes feature not implemented yet
+      };
+      counts.total = counts.watching + counts.wishlist + counts.watched;
+      return counts;
+    }
+
+    function render() {
+      const c = getCounts();
+      EL.innerHTML = `
+        <div class="stat"><b>${c.total}</b><span>Total items</span></div>
+        <div class="stat"><b>${c.watching}</b><span>Currently watching</span></div>
+        <div class="stat"><b>${c.wishlist}</b><span>Wishlist</span></div>
+        <div class="stat"><b>${c.watched}</b><span>Watched</span></div>
+        <div class="stat"><b>${c.notes}</b><span>Notes/Tags</span></div>
+      `;
+    }
+
+    window.addEventListener('storage', render);
+    render();
+  });
+
+  // Notifications engine
+  window.guard(!!window.FLAGS.notifEngineEnabled, () => {
+    const masterToggle = document.getElementById('notifMasterToggle');
+    
+    // Load master toggle state
+    if (masterToggle) {
+      masterToggle.checked = localStorage.getItem('flicklet_notif_master') !== 'false';
+      
+      masterToggle.addEventListener('change', (e) => {
+        localStorage.setItem('flicklet_notif_master', e.target.checked);
+        showNotification?.(e.target.checked ? 'Notifications enabled' : 'Notifications disabled', 'success');
+      });
+    }
+
+    function checkForUpcomingEpisodes() {
+      // Skip if master toggle is off
+      if (localStorage.getItem('flicklet_notif_master') === 'false') return;
+      
+      // Skip if we already checked recently (within 6 hours)
+      const lastCheck = localStorage.getItem('flicklet_last_notif');
+      const now = new Date();
+      if (lastCheck) {
+        const lastCheckDate = new Date(lastCheck);
+        const hoursSinceLastCheck = (now - lastCheckDate) / (1000 * 60 * 60);
+        if (hoursSinceLastCheck < 6) return;
+      }
+      
+      // Get watching items
+      const flickletData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
+      const legacyData = JSON.parse(localStorage.getItem('tvMovieTrackerData') || '{}');
+      const appData = flickletData.tv || flickletData.movies ? flickletData : legacyData;
+      
+      const watchingItems = [
+        ...(appData.tv?.watching || []),
+        ...(appData.movies?.watching || [])
+      ];
+      
+      // Check for episodes within 24 hours
+      const upcomingEpisodes = watchingItems.filter(item => {
+        if (!item.nextEpisodeAirDate) return false;
+        
+        const episodeDate = new Date(item.nextEpisodeAirDate);
+        const hoursUntilEpisode = (episodeDate - now) / (1000 * 60 * 60);
+        
+        return hoursUntilEpisode > 0 && hoursUntilEpisode <= 24;
+      });
+      
+      // Show notification if episodes found
+      if (upcomingEpisodes.length > 0) {
+        const episodeText = upcomingEpisodes.length === 1 ? 'episode' : 'episodes';
+        showNotification?.(`🎬 ${upcomingEpisodes.length} new ${episodeText} coming soon!`, 'success');
+      }
+      
+      // Update last check time
+      localStorage.setItem('flicklet_last_notif', now.toISOString());
+    }
+
+    // Run check on load
+    checkForUpcomingEpisodes();
+    
+    // Run check every 6 hours
+    setInterval(checkForUpcomingEpisodes, 6 * 60 * 60 * 1000);
+  });
+
+  // Accessibility - Add aria-labels to dynamic card action buttons
+  function addCardAccessibility() {
+    document.querySelectorAll('.card .actions button').forEach(btn => {
+      if (btn.textContent.includes('Remove') && !btn.getAttribute('aria-label')) {
+        btn.setAttribute('aria-label', 'Remove this item from your list');
+      }
+      if (btn.textContent.includes('Move to') && !btn.getAttribute('aria-label')) {
+        const targetList = btn.textContent.replace('Move to ', '');
+        btn.setAttribute('aria-label', `Move this item to ${targetList} list`);
+      }
+    });
   }
 
-  document.getElementById('exportDataBtn')?.addEventListener('click', exportData);
-  document.getElementById('importDataBtn')?.addEventListener('click', () => document.getElementById('importFile')?.click());
-  document.getElementById('importFile')?.addEventListener('change', importData);
+  // Call accessibility function after a short delay to ensure cards are rendered
+  setTimeout(addCardAccessibility, 100);
+
+  // Pro state management
+  function updateProState() {
+    const isPro = window.FLAGS.proEnabled;
+    const proBadge = document.getElementById('proBadge');
+    
+    // Show/hide PRO badge
+    if (proBadge) {
+      proBadge.style.display = isPro ? 'inline-block' : 'none';
+    }
+    
+    // Update Pro features
+    document.querySelectorAll('[data-pro="true"]').forEach(el => {
+      if (isPro) {
+        el.classList.add('pro-enabled');
+        el.classList.remove('locked');
+        el.removeAttribute('aria-disabled');
+      } else {
+        el.classList.remove('pro-enabled');
+        el.classList.add('locked');
+        el.setAttribute('aria-disabled', 'true');
+      }
+    });
+  }
+
+  // Call on load and when Pro state changes
+  updateProState();
+  window.updateProState = updateProState;
+  
+  // Toggle Pro preview function for the top button
+  window.toggleProPreview = function() {
+    window.FLAGS.proEnabled = !window.FLAGS.proEnabled;
+    document.body.classList.toggle('is-pro', window.FLAGS.proEnabled);
+    showNotification?.(window.FLAGS.proEnabled ? 'Pro preview ON' : 'Pro preview OFF', 'success');
+    
+    // Update Pro state UI
+    window.updateProState?.();
+    
+    // Update the Pro features list to show locked/unlocked states
+    window.renderProFeaturesList?.();
+    
+    // Re-check advanced notifications visibility when Pro state changes
+    const advancedCard = document.getElementById('notifAdvancedCard');
+    if (advancedCard) {
+      if (window.FLAGS.proEnabled || window.FLAGS.notifAdvancedEnabled) {
+        advancedCard.style.display = 'block';
+        console.log('🔍 Debug: Advanced notifications card shown due to Pro state change');
+      } else {
+        advancedCard.style.display = 'none';
+        console.log('🔍 Debug: Advanced notifications card hidden due to Pro state change');
+      }
+    }
+  };
+  
+  // Open share modal function
+  window.openShareModal = function() {
+    const modal = document.getElementById('shareSelectionModal');
+    if (modal) {
+      modal.style.display = 'flex';
+      // Load the share modal content
+      if (typeof window.populateShareModal === 'function') {
+        window.populateShareModal();
+      } else {
+        showNotification?.('Share feature loading...', 'info');
+      }
+    } else {
+      showNotification?.('Share feature coming soon!', 'info');
+    }
+  };
+
+
+  // Advanced notifications (PRO)
+  console.log('🔍 Debug: Checking advanced notifications conditions. FLAGS.notifAdvancedEnabled:', window.FLAGS.notifAdvancedEnabled, 'FLAGS.proEnabled:', window.FLAGS.proEnabled);
+  window.guard(!!(window.FLAGS.notifAdvancedEnabled || window.FLAGS.proEnabled), () => {
+    console.log('🔍 Debug: Advanced notifications guard condition met');
+    const advancedCard = document.getElementById('notifAdvancedCard');
+    const leadHoursInput = document.getElementById('leadHoursInput');
+    const notifScopeSelect = document.getElementById('notifScopeSelect');
+    
+    console.log('🔍 Debug: Advanced card element found:', advancedCard);
+    if (advancedCard) {
+      advancedCard.style.display = 'block';
+      console.log('🔍 Debug: Advanced notifications card display set to block');
+      
+      // Load saved preferences
+      leadHoursInput.value = localStorage.getItem('flicklet_notif_lead') || '24';
+      notifScopeSelect.value = localStorage.getItem('flicklet_notif_scope') || 'watching';
+      
+      // Save preferences on change
+      leadHoursInput.addEventListener('change', (e) => {
+        localStorage.setItem('flicklet_notif_lead', e.target.value);
+      });
+      
+      notifScopeSelect.addEventListener('change', (e) => {
+        localStorage.setItem('flicklet_notif_scope', e.target.value);
+      });
+      
+      // Visual feedback for Pro state
+      function updateProState() {
+        const isPro = window.FLAGS.proEnabled;
+        if (isPro) {
+          advancedCard.classList.remove('disabled');
+        } else {
+          advancedCard.classList.add('disabled');
+        }
+      }
+      
+      updateProState();
+      // Update when Pro state changes
+      document.addEventListener('click', (e) => {
+        if (e.target.id === 'btnProTry') {
+          setTimeout(updateProState, 100);
+        }
+      });
+    }
+  });
 };
 
 // ---- Data Import / Export ----
-window.exportData = function exportData() {
-  const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'flicklet-export.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-};
-
-window.importData = function importData(e) {
-  const file = e?.target?.files?.[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const data = JSON.parse(reader.result);
-      Object.assign(appData, data);
-      saveAppData();
-      showNotification('Data imported.', 'success');
-      if (window.FlickletApp) window.FlickletApp.updateUI();
-    } catch (err) {
-      console.error('Import failed:', err);
-      showNotification('Import failed.', 'error');
-    }
-  };
-  reader.readAsText(file);
-};
+// Old flaky handlers replaced by robust implementation above
 
 // ---- Item Management ----
 window.addToListFromCache = function addToListFromCache(id, list) {
@@ -211,74 +479,78 @@ window.moveItem = function moveItem(id, dest) {
 window.removeItemFromCurrentList = function removeItemFromCurrentList(id) {
   const mediaType = findItemMediaType(id);
   if (!mediaType) return;
-  const list = findItemList(id, mediaType);
-  if (!list) return;
-  appData[mediaType][list] = appData[mediaType][list].filter(i => i.id !== id);
+
+  const sourceList = findItemList(id, mediaType);
+  if (!sourceList) return;
+
+  const srcArr = appData[mediaType][sourceList];
+  const idx = srcArr.findIndex(i => i.id === id);
+  if (idx === -1) return;
+
+  srcArr.splice(idx, 1);
   saveAppData();
   if (window.FlickletApp) window.FlickletApp.updateUI();
-  showNotification('Removed.', 'success');
+  showNotification('Item removed.', 'success');
 };
 
-window.setRating = function setRating(id, rating) {
-  const mediaType = findItemMediaType(id);
-  if (!mediaType) return;
-  const list = findItemList(id, mediaType);
-  if (!list) return;
-  const item = appData[mediaType][list].find(i => i.id === id);
-  if (item) {
-    item.user_rating = rating;
+function findItemMediaType(id) {
+  if (appData.tv?.watching?.some(i => i.id === id) || 
+      appData.tv?.wishlist?.some(i => i.id === id) || 
+      appData.tv?.watched?.some(i => i.id === id)) {
+    return 'tv';
+  }
+  if (appData.movies?.watching?.some(i => i.id === id) || 
+      appData.movies?.wishlist?.some(i => i.id === id) || 
+      appData.movies?.watched?.some(i => i.id === id)) {
+    return 'movies';
+  }
+  return null;
+}
+
+function findItemList(id, mediaType) {
+  const lists = ['watching', 'wishlist', 'watched'];
+  for (const list of lists) {
+    if (appData[mediaType]?.[list]?.some(i => i.id === id)) {
+      return list;
+    }
+  }
+  return null;
+}
+
+// ---- Theme Management ----
+window.toggleDarkMode = function toggleDarkMode() {
+  const isDark = document.body.classList.contains('dark-mode');
+  document.body.classList.toggle('dark-mode');
+  
+  // Update app data
+  if (!appData.settings) appData.settings = {};
+  appData.settings.theme = isDark ? 'light' : 'dark';
     saveAppData();
-    showNotification('Rating saved.', 'success');
+  
+  // Update button text
+  const themeIcon = document.getElementById('themeIcon');
+  if (themeIcon) {
+    themeIcon.textContent = isDark ? '🌙' : '☀️';
   }
+  
+  showNotification(`Switched to ${isDark ? 'light' : 'dark'} mode.`, 'success');
 };
 
-window.setLikeStatus = function setLikeStatus(id, status) {
-  const mediaType = findItemMediaType(id);
-  if (!mediaType) return;
-  const list = findItemList(id, mediaType);
-  if (!list) return;
-  const item = appData[mediaType][list].find(i => i.id === id);
-  if (item) {
-    item.user_like = status; // 'like' | 'dislike'
-    saveAppData();
-    showNotification('Preference saved.', 'success');
+// ---- Language Management ----
+window.changeLanguage = function changeLanguage(lang) {
+  if (!appData.settings) appData.settings = {};
+  appData.settings.lang = lang;
+  saveAppData();
+  
+  // Apply translations
+  if (typeof applyTranslations === 'function') {
+    applyTranslations();
   }
+  
+  showNotification(`Language changed to ${lang}.`, 'success');
 };
 
-// ---- Modal Functions ----
-window.closeAccountModal = function closeAccountModal() {
-  const modal = document.getElementById('accountModal');
-  if (modal) {
-    modal.style.display = 'none';
-    modal.classList.remove('modal-backdrop');
-  }
-};
-
-window.closeSignInModal = function closeSignInModal() {
-  const modal = document.getElementById('signInModal');
-  if (modal) {
-    modal.style.display = 'none';
-    modal.classList.remove('modal-backdrop');
-  }
-};
-
-window.showAccountModal = function showAccountModal() {
-  const modal = document.getElementById('accountModal');
-  if (modal) {
-    modal.style.display = 'block';
-    modal.classList.add('modal-backdrop');
-  }
-};
-
-window.showSignInModal = function showSignInModal() {
-  const modal = document.getElementById('signInModal');
-  if (modal) {
-    modal.style.display = 'block';
-    modal.classList.add('modal-backdrop');
-  }
-};
-
-// ---- Home Page Functions ----
+// ---- FlickWord Game ----
 window.startDailyCountdown = function startDailyCountdown() {
   const countdownElement = document.getElementById('flickwordCountdown');
   if (!countdownElement) return;
@@ -288,234 +560,233 @@ window.startDailyCountdown = function startDailyCountdown() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(0, 0, 0, 0);
   
-  const updateCountdown = () => {
-    const timeLeft = tomorrow - new Date();
-    if (timeLeft <= 0) {
-      countdownElement.textContent = 'New word available!';
-      return;
-    }
-    
+  const timeLeft = tomorrow - now;
     const hours = Math.floor(timeLeft / (1000 * 60 * 60));
     const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
     
-    countdownElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  };
+  countdownElement.textContent = `${hours}h ${minutes}m`;
   
-  updateCountdown();
-  setInterval(updateCountdown, 1000);
+  // Update every minute
+  setTimeout(startDailyCountdown, 60000);
 };
 
 window.updateFlickWordStats = function updateFlickWordStats() {
-  const todayScore = document.getElementById('todayScore');
-  const bestStreak = document.getElementById('bestStreak');
-  const gamesPlayed = document.getElementById('gamesPlayed');
+  const todayScore = document.getElementById('flickwordTodayScore');
+  const bestStreak = document.getElementById('flickwordBestStreak');
+  const gamesPlayed = document.getElementById('flickwordGamesPlayed');
   
   if (todayScore) todayScore.textContent = appData.flickword?.todayScore || 0;
   if (bestStreak) bestStreak.textContent = appData.flickword?.bestStreak || '-';
   if (gamesPlayed) gamesPlayed.textContent = appData.flickword?.gamesPlayed || 0;
 };
 
-window.loadHoroscope = function loadHoroscope() {
-  const horoscopeText = document.getElementById('horoscopeText');
-  if (!horoscopeText) return;
-  
-  const horoscopes = [
-    "Your binge-watching energy is high today. Perfect for starting that new series!",
-    "The stars suggest you'll discover a hidden gem in your recommendations.",
-    "A classic rewatch is in your future. Time to revisit an old favorite!",
-    "Your streaming karma is excellent. Expect great new releases today.",
-    "The algorithm gods smile upon you. Your next obsession awaits!",
-    "A perfect day for catching up on that show everyone's talking about."
-  ];
-  
-  const randomHoroscope = horoscopes[Math.floor(Math.random() * horoscopes.length)];
-  horoscopeText.textContent = randomHoroscope;
-};
-
 window.startFlickWordGame = function startFlickWordGame() {
   showNotification('FlickWord game starting soon! 🎮', 'success');
 };
 
-window.submitFeedback = function submitFeedback() {
-  const feedbackText = document.getElementById('feedbackText');
-  if (!feedbackText || !feedbackText.value.trim()) {
-    showNotification('Please enter some feedback first!', 'warning');
-    return;
-  }
+// ---- Stats Card Renderer ----
+window.renderStatsCard = function renderStatsCard() {
+  if (!window.FLAGS?.statsEnabled) return;
   
-  showNotification('Thanks for your feedback! 💬', 'success');
-  feedbackText.value = '';
-};
-
-// ---- Search Results ----
-window.displaySearchResults = function displaySearchResults(results) {
-  const container = document.getElementById('searchResults');
-  if (!container) return;
+  const statsContent = document.getElementById('statsContent');
+  if (!statsContent) return;
   
-  if (!results || results.length === 0) {
-    container.style.display = 'none';
-    return;
-  }
-  
-  container.style.display = 'block';
-  container.innerHTML = results.map(createSearchResultCard).join('');
-  
-  // Show tabs for search results
-  if (typeof showTabsForSearch === 'function') {
-    showTabsForSearch();
-  }
-};
-
-window.createSearchResultCard = function createSearchResultCard(item) {
-  const posterUrl = item.poster_path
-    ? `https://image.tmdb.org/t/p/w92${item.poster_path}`
-    : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTIiIGhlaWdodD0iMTM4IiB2aWV3Qm94PSIwIDAgOTIgMTM4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI5MiIgaGVpZ2h0PSIxMzgiIGZpbGw9IiNmM2Y0ZjYiLz48dGV4dCB4PSI0NiIgeT0iNjkiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+';
-  
-  const title = item.name || item.title || 'Untitled';
-  const date = item.first_air_date || item.release_date || '';
-  const mediaType = item.name ? 'tv' : 'movie';
-  const lang = appData?.settings?.lang || 'en';
-  
-  // Language-specific button text
-  const buttonTexts = {
-    en: {
-      addWatching: 'Add to Watching',
-      addWishlist: 'Add to Wishlist', 
-      addWatched: 'Add to Watched',
-      notInterested: 'Not Interested'
-    },
-    es: {
-      addWatching: 'Agregar a Viendo',
-      addWishlist: 'Agregar a Lista',
-      addWatched: 'Agregar a Visto',
-      notInterested: 'No Interesado'
-    }
-  };
-  
-  const texts = buttonTexts[lang] || buttonTexts.en;
-  
-  return `
-    <div class="show-card" data-id="${item.id}" data-media-type="${mediaType}">
-      <img src="${posterUrl}" alt="${title}" class="show-poster" data-action="open" data-id="${item.id}" data-media-type="${mediaType}">
-      <div class="show-details">
-        <h3 class="show-title" data-action="open" data-id="${item.id}" data-media-type="${mediaType}">${title}</h3>
-        <div class="show-meta">${date}</div>
-        <p class="show-overview">${item.overview || 'No description available.'}</p>
-        <div class="show-actions">
-          <button class="btn" data-action="addFromCache" data-id="${item.id}" data-list="watching">${texts.addWatching}</button>
-          <button class="btn" data-action="addFromCache" data-id="${item.id}" data-list="wishlist">${texts.addWishlist}</button>
-          <button class="btn" data-action="addFromCache" data-id="${item.id}" data-list="watched">${texts.addWatched}</button>
-          <button class="btn" data-action="notInterested" data-id="${item.id}">${texts.notInterested}</button>
+  try {
+    const appData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
+    const tvWatching = appData.tv?.watching || [];
+    const tvWishlist = appData.tv?.wishlist || [];
+    const tvWatched = appData.tv?.watched || [];
+    const movieWatching = appData.movies?.watching || [];
+    const movieWishlist = appData.movies?.wishlist || [];
+    const movieWatched = appData.movies?.watched || [];
+    
+    const totalShows = tvWatching.length + tvWishlist.length + tvWatched.length;
+    const totalMovies = movieWatching.length + movieWishlist.length + movieWatched.length;
+    const totalItems = totalShows + totalMovies;
+    
+    statsContent.innerHTML = `
+      <div class="stats-grid">
+        <div class="stat">
+          <div class="stat-number">${tvWatching.length + movieWatching.length}</div>
+          <div class="stat-label">Currently Watching</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">${tvWishlist.length + movieWishlist.length}</div>
+          <div class="stat-label">Want to Watch</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">${tvWatched.length + movieWatched.length}</div>
+          <div class="stat-label">Already Watched</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">${totalItems}</div>
+          <div class="stat-label">Total Items</div>
         </div>
       </div>
-    </div>`;
-};
-
-window.showTabsForSearch = function showTabsForSearch() {
-  const tabContainer = document.querySelector('.tab-container');
-  if (tabContainer) {
-    tabContainer.style.display = 'flex';
+      <div style="margin-top: 15px; padding: 10px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border);">
+        <h5 style="margin: 0 0 10px 0; color: var(--text); font-size: 0.9rem;">📺 TV Shows Breakdown</h5>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 0.85rem; max-width: 75%;">
+          <div><strong>${tvWatching.length}</strong> Watching</div>
+          <div><strong>${tvWishlist.length}</strong> Want to Watch</div>
+          <div><strong>${tvWatched.length}</strong> Watched</div>
+        </div>
+        <h5 style="margin: 10px 0; color: var(--text); font-size: 0.9rem;">🎬 Movies Breakdown</h5>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 0.85rem; max-width: 75%;">
+          <div><strong>${movieWatching.length}</strong> Watching</div>
+          <div><strong>${movieWishlist.length}</strong> Want to Watch</div>
+          <div><strong>${movieWatched.length}</strong> Watched</div>
+        </div>
+      </div>
+    `;
+  } catch (error) {
+    console.error('Error rendering stats card:', error);
+    statsContent.innerHTML = '<div class="error">Failed to load stats</div>';
   }
 };
 
-window.hideTabsForSearch = function hideTabsForSearch() {
-  const tabContainer = document.querySelector('.tab-container');
-  if (tabContainer) {
-    tabContainer.style.display = 'flex';
-  }
+// ---- Pro Features List Renderer ----
+window.renderProFeaturesList = function renderProFeaturesList() {
+  const proFeaturesList = document.getElementById('proFeaturesList');
+  if (!proFeaturesList) return;
+  
+  const isProEnabled = window.FLAGS?.proEnabled || false;
+  
+  proFeaturesList.innerHTML = `
+    <div class="pro-features">
+      <div class="pro-feature ${isProEnabled ? 'unlocked' : 'locked'}">
+        <div class="pro-feature-icon">🔔</div>
+        <div class="pro-feature-content">
+          <div class="pro-feature-title">Smart Notifications</div>
+          ${isProEnabled ? '<div class="pro-feature-desc">Get notified exactly when you want - set custom lead times for new episodes, choose which lists to monitor, and never miss your favorite shows again.</div>' : ''}
+        </div>
+        <div class="pro-feature-status">${isProEnabled ? '✅' : '🔒'}</div>
+      </div>
+      
+      <div class="pro-feature ${isProEnabled ? 'unlocked' : 'locked'}">
+        <div class="pro-feature-icon">📊</div>
+        <div class="pro-feature-content">
+          <div class="pro-feature-title">Your Viewing Journey</div>
+          ${isProEnabled ? '<div class="pro-feature-desc">Discover your watching habits with beautiful charts showing your favorite genres, binge patterns, and viewing trends over time.</div>' : ''}
+        </div>
+        <div class="pro-feature-status">${isProEnabled ? '✅' : '🔒'}</div>
+      </div>
+      
+      <div class="pro-feature ${isProEnabled ? 'unlocked' : 'locked'}">
+        <div class="pro-feature-icon">🎨</div>
+        <div class="pro-feature-content">
+          <div class="pro-feature-title">Advanced Customization</div>
+          ${isProEnabled ? '<div class="pro-feature-desc">Unlock premium color schemes, custom accent colors, and advanced layout options to create your perfect viewing experience.</div>' : ''}
+        </div>
+        <div class="pro-feature-status">${isProEnabled ? '✅' : '🔒'}</div>
+      </div>
+      
+      <div class="pro-feature ${isProEnabled ? 'unlocked' : 'locked'}">
+        <div class="pro-feature-icon">👥</div>
+        <div class="pro-feature-content">
+          <div class="pro-feature-title">Social Features</div>
+          ${isProEnabled ? '<div class="pro-feature-desc">Connect with friends, compare your taste, share recommendations, and discover what your social circle is watching. See who has similar viewing habits!</div>' : ''}
+        </div>
+        <div class="pro-feature-status">${isProEnabled ? '✅' : '🔒'}</div>
+      </div>
+      
+      <div class="pro-feature ${isProEnabled ? 'unlocked' : 'locked'}">
+        <div class="pro-feature-icon">⚡</div>
+        <div class="pro-feature-content">
+          <div class="pro-feature-title">VIP Support</div>
+          ${isProEnabled ? '<div class="pro-feature-desc">Get help when you need it with priority support. Our team responds faster to Pro users and provides personalized assistance for any questions or issues.</div>' : ''}
+        </div>
+        <div class="pro-feature-status">${isProEnabled ? '✅' : '🔒'}</div>
+      </div>
+    </div>
+  `;
 };
 
-// ---- Item Actions ----
-window.addToListFromCache = function addToListFromCache(itemId, listType) {
-  const item = appData.searchCache.find(item => item.id === itemId);
-  if (!item) {
-    showNotification('Item not found in search cache', 'error');
+// ---- Front Spotlight (replaces Horoscope) ----
+window.loadFrontSpotlight = function loadFrontSpotlight() {
+  if (!window.FLAGS?.frontSpotlightEnabled) return;
+  
+  const frontSpotlight = document.getElementById('frontSpotlight');
+  const frontSpotlightList = document.getElementById('frontSpotlightList');
+  
+  if (!frontSpotlight || !frontSpotlightList) return;
+  
+  try {
+    const appData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
+    // Get watching shows from both tv and movies categories
+    const tvWatching = appData.tv?.watching || [];
+    const movieWatching = appData.movies?.watching || [];
+    const watching = [...tvWatching, ...movieWatching];
+    
+    console.log('🔍 Front spotlight data check:', {
+      tvWatching: tvWatching.length,
+      movieWatching: movieWatching.length,
+      totalWatching: watching.length,
+      sampleShow: watching[0]
+    });
+    
+    const now = new Date();
+    const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    
+    const upcomingEpisodes = [];
+    
+    // Test episode removed - now using real data
+    
+    watching.forEach(show => {
+      // Skip shows with invalid data
+      if (!show || (!show.name && !show.original_name)) {
+        console.log('⚠️ Skipping invalid show:', show);
     return;
   }
   
-  const mediaType = item.name ? 'tv' : 'movie';
-  
-  if (!appData[mediaType]) {
-    appData[mediaType] = {};
-  }
-  if (!appData[mediaType][listType]) {
-    appData[mediaType][listType] = [];
-  }
-  
-  // Check if already exists
-  if (appData[mediaType][listType].some(existing => existing.id === itemId)) {
-    showNotification('Item already in this list', 'warning');
-    return;
-  }
-  
-  appData[mediaType][listType].push(item);
-  saveAppData();
-  updateUI();
-  showNotification(`Added to ${listType} list!`, 'success');
-};
-
-window.notInterested = function notInterested(itemId) {
-  const item = appData.searchCache.find(item => item.id === itemId);
-  if (!item) {
-    showNotification('Item not found in search cache', 'error');
-    return;
-  }
-  
-  if (!appData.notInterested) {
-    appData.notInterested = [];
-  }
-  
-  if (appData.notInterested.some(existing => existing.id === itemId)) {
-    showNotification('Already marked as not interested', 'warning');
-    return;
-  }
-  
-  appData.notInterested.push(item);
-  saveAppData();
-  showNotification('Item marked as not interested', 'success');
-};
-
-// ---- Account Functions ----
-window.handleAccountClick = function handleAccountClick() {
-  if (appData.settings.displayName) {
-    showAccountModal();
-  } else {
-    showSignInModal();
-  }
-};
-
-// ---- Username Prompt ----
-window.promptForUsername = function promptForUsername() {
-  const currentName = appData.settings.displayName || '';
-  const newName = prompt('What should we call you?', currentName);
-  
-  if (newName && newName.trim()) {
-    appData.settings.displayName = newName.trim();
-    saveAppData();
-    updateHeaderWithUsername();
-    showNotification(`Welcome, ${newName}! 👋`, 'success');
-  }
-};
-
-window.updateHeaderWithUsername = function updateHeaderWithUsername() {
-  const name = appData.settings.displayName || 'User';
-  const usernameElement = document.getElementById('dynamicUsername');
-  const snarkElement = document.getElementById('dynamicSnark');
-  
-  if (usernameElement) {
-    usernameElement.textContent = `Welcome back, ${name}! 👋`;
-  }
-  
-  if (snarkElement) {
-    const snarkyMessages = [
-      'Let\'s find something to watch.',
-      'Ready to track your shows',
-      'Time to binge responsibly',
-      'Your watchlist awaits',
-      'Let\'s discover something amazing'
-    ];
-    const randomSnark = snarkyMessages[Math.floor(Math.random() * snarkyMessages.length)];
-    snarkElement.textContent = randomSnark;
+      const showName = show.name || show.original_name || 'Unknown Show';
+      // Check multiple possible fields for next air date
+      const nextAirDate = show.nextEpisodeAirDate || 
+                         show.next_air_date || 
+                         show.next_episode_to_air?.air_date ||
+                         show.next_episode_to_air?.first_air_date;
+      console.log('🔍 Checking show:', showName, 'nextAirDate:', nextAirDate, 'next_episode_to_air:', show.next_episode_to_air);
+      
+      if (!nextAirDate) return;
+      
+      const airDate = new Date(nextAirDate);
+      console.log('🔍 Air date parsed:', airDate, 'is valid:', !isNaN(airDate.getTime()));
+      
+      if (airDate >= now && airDate <= nextWeek) {
+        console.log('✅ Found upcoming episode:', showName);
+        upcomingEpisodes.push({
+          showName: showName,
+          airDate: airDate,
+          episodeInfo: show.nextEpisodeName || 'New Episode'
+        });
+      }
+    });
+    
+    upcomingEpisodes.sort((a, b) => a.airDate - b.airDate);
+    
+    if (upcomingEpisodes.length === 0) {
+      frontSpotlightList.innerHTML = '<div class="no-episodes">No upcoming episodes this week.</div>';
+    } else {
+      const top8 = upcomingEpisodes.slice(0, 8);
+      frontSpotlightList.innerHTML = top8.map(episode => `
+        <div class="front-spotlight-item">
+          <div class="show-info">
+            <div class="show-name">${episode.showName}</div>
+            <div class="episode-info">${episode.episodeInfo}</div>
+          </div>
+          <div class="air-date">
+            ${episode.airDate.toLocaleDateString('en-US', { 
+              weekday: 'short', 
+              month: 'short', 
+              day: 'numeric' 
+            })}
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    frontSpotlight.style.display = 'block';
+  } catch (error) {
+    console.error('Error loading front spotlight:', error);
+    frontSpotlight.style.display = 'none';
   }
 };

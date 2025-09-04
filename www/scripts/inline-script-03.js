@@ -90,12 +90,13 @@
         // Duplicate initialization sequence removed - using the one above
 
         // --- tabs
-        bind("homeTab", () => switchToTab("home"));
-        bind("watchingTab", () => switchToTab("watching"));
-        bind("wishlistTab", () => switchToTab("wishlist"));
-        bind("watchedTab", () => switchToTab("watched"));
-        bind("discoverTab", () => switchToTab("discover"));
-        bind("settingsTab", () => switchToTab("settings"));
+        // DISABLED: Old tab binding system - now handled by FlickletApp
+        // bind("homeTab", () => switchToTab("home"));
+        // bind("watchingTab", () => switchToTab("watching"));
+        // bind("wishlistTab", () => switchToTab("wishlist"));
+        // bind("watchedTab", () => switchToTab("watched"));
+        // bind("discoverTab", () => switchToTab("discover"));
+        // bind("settingsTab", () => switchToTab("settings"));
 
         
         // --- delegated actions for cards & search results
@@ -189,8 +190,6 @@
 
         // --- feedback handled by Netlify Forms
       function handleFeedbackSubmit(event) {
-        event.preventDefault(); // Prevent default form submission
-        
         // Store current theme before form submission
         const currentTheme = document.body.classList.contains("dark-mode") ? "dark" : "light";
         const themeInput = document.getElementById("feedbackThemeInput");
@@ -201,47 +200,17 @@
         // Store theme in localStorage as backup
         localStorage.setItem("flicklet-theme", currentTheme);
         
-        // Get form data
-        const form = event.target;
-        const formData = new FormData(form);
-        
-        // Convert to JSON for the Netlify function
-        const feedbackData = {
-          message: formData.get('message'),
-          theme: formData.get('theme'),
-          timestamp: new Date().toISOString()
-        };
-        
-        // For local development, just show success message
+        // For local development, prevent default and show success message
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          event.preventDefault(); // Prevent default form submission
           console.log('Local development mode - showing success message');
-          showNotification('Thanks for sharing! Your thoughts have been received. 💭 (Local mode)', 'success');
-          form.reset();
+          showNotification('Thanks for sharing! Your thoughts have been received. 💭 (Local mode - will work in production)', 'success');
+          event.target.reset();
           return false;
         }
         
-        // Submit to Netlify function (production only)
-        fetch('/.netlify/functions/feedback', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(feedbackData)
-        })
-        .then(response => {
-          if (response.ok) {
-            showNotification('Thanks for sharing! Your thoughts have been received. 💭', 'success');
-            form.reset();
-          } else {
-            showNotification('Oops! Something went wrong. Please try sharing again. 😅', 'error');
-          }
-        })
-        .catch(error => {
-          console.error('Feedback submission error:', error);
-          showNotification('Failed to submit feedback. Please try sharing again. 😅', 'error');
-        });
-        
-        return false;
+        // For production, let Netlify handle the form submission
+        // The form will submit normally to Netlify Forms and redirect to /thank-you
       }
 
 
@@ -261,26 +230,7 @@
           a.remove();
         });
 
-        const importFile = document.getElementById("importFile");
-        if (importFile) {
-          importFile.onchange = (e) => {
-            const f = e.target.files?.[0];
-            if (!f) return;
-            const r = new FileReader();
-            r.onload = () => {
-              try {
-                const d = JSON.parse(r.result);
-                Object.assign(appData, d);
-                saveAppData?.();
-                updateUI?.();
-                showNotification?.(t("imported_backup"), "success");
-              } catch {
-                showNotification?.(t("invalid_file"), "error");
-              }
-            };
-            r.readAsText(f);
-          };
-        }
+        // Import handler moved to functions.js with robust implementation
 
         // Nuclear Option moved to inline-script-01.js (FlickletApp)
         // bind("clearAllBtn", () => { ... });

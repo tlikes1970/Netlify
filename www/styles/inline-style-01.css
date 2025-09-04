@@ -1374,10 +1374,16 @@
         position: fixed;
         inset: 0;
         background: rgba(0, 0, 0, 0.55);
-        display: flex;
+        display: none; /* Default to hidden */
         align-items: center;
         justify-content: center;
         z-index: 10000;
+      }
+      
+      .modal-backdrop.active,
+      .modal-backdrop[style*="display: flex"],
+      .modal-backdrop[style*="display:block"] {
+        display: flex;
       }
 
       /* Share Modal Specific Styles */

@@ -14,21 +14,21 @@
 @media (min-width: 769px) {
   .tab-container {
     display: flex !important;
-    justify-content: center !important;
+    justify-content: space-evenly !important;
     align-items: center !important;
     flex-wrap: wrap !important;
-    gap: 8px !important;
+    gap: 12px !important;
     overflow: visible !important;
     white-space: normal !important;
-    padding: 8px !important;
+    padding: 12px !important;
   }
   .tab-container .tab {
     flex: 1 !important;
     display: flex !important;
     align-items: center;
     justify-content: center;
-    min-width: 120px !important;
-    max-width: 200px !important;
+    min-width: 140px !important;
+    max-width: 250px !important;
     margin: 0 !important;
   }
 }

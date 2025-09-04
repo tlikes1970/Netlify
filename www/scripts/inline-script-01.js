@@ -9,6 +9,229 @@
         return false;
       }
 
+      // Loading skeletons helper
+      window.Skeletons = {
+        list: function(containerId, count = 6) {
+          if (!window.FLAGS.skeletonsEnabled) return;
+          
+          const container = document.getElementById(containerId);
+          if (!container) return;
+          
+          const skeletonHTML = Array(count).fill(0).map(() => `
+            <div class="skel-card">
+              <div class="skel"></div>
+              <div class="skel"></div>
+              <div class="skel"></div>
+            </div>
+          `).join('');
+          
+          container.innerHTML = skeletonHTML;
+        },
+        
+        clear: function(containerId) {
+          const container = document.getElementById(containerId);
+          if (container) {
+            container.innerHTML = '';
+          }
+        }
+      };
+
+      // FlickWord integration
+      function initFlickWord() {
+        const fwPlayBtn = document.getElementById('fwPlayBtn');
+        const fwStreak = document.getElementById('fwStreak');
+        const fwBest = document.getElementById('fwBest');
+        const fwPlayed = document.getElementById('fwPlayed');
+        const fwModal = document.getElementById('fwModal');
+        const fwFrame = document.getElementById('fwFrame');
+        const fwClose = document.getElementById('fwClose');
+        
+        if (!fwPlayBtn) return;
+        
+        // Update FlickWord panel metrics
+        function updateFwPanel() {
+          const stats = JSON.parse(localStorage.getItem('flickword:stats') || '{}');
+          const lastPlay = localStorage.getItem('flickword:last');
+          const today = new Date().toISOString().split('T')[0];
+          
+          fwStreak.textContent = stats.streak || 0;
+          fwBest.textContent = stats.best || 0;
+          fwPlayed.textContent = stats.played || 0;
+        }
+        
+        // Play button handler
+        fwPlayBtn.addEventListener('click', () => {
+          const today = new Date().toISOString().split('T')[0];
+          const url = `features/flickword-v2.html?date=${today}`;
+          
+          if (window.FLAGS.flickwordModalEnabled) {
+            // Open in modal
+            fwFrame.src = url;
+            fwModal.style.display = 'block';
+          } else {
+            // Open in new tab
+            window.open(url, '_blank');
+          }
+        });
+        
+        // Modal control handlers
+        if (fwClose) {
+          fwClose.addEventListener('click', () => {
+            fwModal.style.display = 'none';
+            fwFrame.src = '';
+          });
+        }
+
+        const fwMinimize = document.getElementById('fwMinimize');
+        const fwMaximize = document.getElementById('fwMaximize');
+        const fwModalHeader = document.getElementById('fwModalHeader');
+        const fwModalContent = fwModal.querySelector('.fw-modal-content');
+
+        // Minimize handler
+        if (fwMinimize) {
+          fwMinimize.addEventListener('click', () => {
+            fwModal.style.display = 'none';
+            // Store state for restore
+            fwModal.dataset.minimized = 'true';
+          });
+        }
+
+        // Maximize handler
+        if (fwMaximize) {
+          fwMaximize.addEventListener('click', () => {
+            if (fwModalContent.style.position === 'fixed') {
+              // Restore
+              fwModalContent.style.position = 'relative';
+              fwModalContent.style.top = 'auto';
+              fwModalContent.style.left = 'auto';
+              fwModalContent.style.width = '95%';
+              fwModalContent.style.height = '90%';
+              fwMaximize.textContent = '□';
+            } else {
+              // Maximize
+              fwModalContent.style.position = 'fixed';
+              fwModalContent.style.top = '0';
+              fwModalContent.style.left = '0';
+              fwModalContent.style.width = '100%';
+              fwModalContent.style.height = '100%';
+              fwMaximize.textContent = '❐';
+            }
+          });
+        }
+
+        // Dragging functionality
+        if (fwModalHeader) {
+          let isDragging = false;
+          let currentX;
+          let currentY;
+          let initialX;
+          let initialY;
+          let xOffset = 0;
+          let yOffset = 0;
+
+          fwModalHeader.addEventListener('mousedown', dragStart);
+          document.addEventListener('mousemove', drag);
+          document.addEventListener('mouseup', dragEnd);
+
+          function dragStart(e) {
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+
+            if (e.target === fwModalHeader || fwModalHeader.contains(e.target)) {
+              isDragging = true;
+            }
+          }
+
+          function drag(e) {
+            if (isDragging) {
+              e.preventDefault();
+              currentX = e.clientX - initialX;
+              currentY = e.clientY - initialY;
+
+              xOffset = currentX;
+              yOffset = currentY;
+
+              fwModalContent.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            }
+          }
+
+          function dragEnd(e) {
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+          }
+        }
+        
+        // Listen for FlickWord results
+        window.addEventListener('message', (event) => {
+          if (event.data.type === 'flickword:result') {
+            const { date, won, guesses } = event.data;
+            const today = new Date().toISOString().split('T')[0];
+            
+            if (date === today) {
+              updateFlickWordStats(today, won, guesses);
+              
+              // Close modal if open
+              if (fwModal && fwModal.style.display === 'block') {
+                fwModal.style.display = 'none';
+                fwFrame.src = '';
+              }
+            }
+          }
+        });
+
+        // Function to update FlickWord stats
+        function updateFlickWordStats(date, won, guesses) {
+          console.log('🔍 Updating FlickWord stats:', { date, won, guesses });
+          
+          const stats = JSON.parse(localStorage.getItem('flickword:stats') || '{}');
+          stats.lastResult = won ? 'win' : 'miss';
+          stats.lastGuesses = guesses;
+          stats.played = (stats.played || 0) + 1;
+          
+          if (won) {
+            stats.streak = (stats.streak || 0) + 1;
+            stats.best = Math.max(stats.best || 0, stats.streak);
+          } else {
+            stats.streak = 0;
+          }
+          
+          console.log('🔍 New stats:', stats);
+          
+          localStorage.setItem('flickword:last', date);
+          localStorage.setItem('flickword:stats', JSON.stringify(stats));
+          
+          // Update panel
+          updateFwPanel();
+        }
+
+        // Check for results from localStorage (for new tab games)
+        function checkForNewResults() {
+          const today = new Date().toISOString().split('T')[0];
+          const results = JSON.parse(localStorage.getItem('flickword:results') || '{}');
+          const lastPlay = localStorage.getItem('flickword:last');
+          
+          console.log('🔍 Checking for new results:', { today, lastPlay, results });
+          
+          // Check all dates in results, not just today
+          for (const [date, result] of Object.entries(results)) {
+            if (lastPlay !== date) {
+              console.log('🔍 Found unprocessed result for date:', date, result);
+              updateFlickWordStats(date, result.won, result.guesses);
+            }
+          }
+        }
+        
+        // Initial update
+        updateFwPanel();
+        
+        // Check for any unprocessed results
+        checkForNewResults();
+      }
+
+      // Initialize FlickWord after DOM is ready
+      setTimeout(initFlickWord, 100);
+
       // Utility for safe deep-merge of settings to prevent displayName overwrites
       const safeMergeSettings = (existing = {}, incoming = {}) => {
         const merged = { ...existing, ...incoming };
@@ -231,14 +454,35 @@
 
                 const mergedSettings = safeMergeSettings(existingSettings, incomingSettings);
 
+                // Clean undefined values from data before saving
+                const cleanData = (obj) => {
+                  if (obj === null || obj === undefined) return null;
+                  if (typeof obj !== 'object') return obj;
+                  if (Array.isArray(obj)) {
+                    return obj.map(cleanData).filter(item => item !== undefined);
+                  }
+                  const cleaned = {};
+                  for (const [key, value] of Object.entries(obj)) {
+                    if (value !== undefined) {
+                      cleaned[key] = cleanData(value);
+                    }
+                  }
+                  return cleaned;
+                };
+
                 const payload = {
                   lastLoginAt: new Date(),
+                  // Save watchlists data
+                  watchlists: {
+                    tv: cleanData(this.appData.tv || { watching: [], wishlist: [], watched: [] }),
+                    movies: cleanData(this.appData.movies || { watching: [], wishlist: [], watched: [] })
+                  },
                   // only include settings if it has keys (avoid writing empty maps)
-                  ...(Object.keys(mergedSettings).length ? { settings: mergedSettings } : {}),
+                  ...(Object.keys(mergedSettings).length ? { settings: cleanData(mergedSettings) } : {}),
                   // Preserve root displayName if it exists (for Google login)
                   ...(existing.displayName && { displayName: existing.displayName }),
                   // Preserve the entire profile object to prevent it from being cleared (for Email login)
-                  ...(existing.profile && { profile: existing.profile })
+                  ...(existing.profile && { profile: cleanData(existing.profile) })
                 };
 
                 console.log('🔥 Saving to Firebase with safe merge:', payload);
@@ -274,10 +518,11 @@
             }, 100);
           }
           
-          if (typeof tryImportFromShareLink === 'function') {
-            console.log('🔄 Calling tryImportFromShareLink');
-            tryImportFromShareLink();
-          }
+          // DISABLED: tryImportFromShareLink is already called during DOMContentLoaded
+          // if (typeof tryImportFromShareLink === 'function') {
+          //   console.log('🔄 Calling tryImportFromShareLink');
+          //   tryImportFromShareLink();
+          // }
           
           if (typeof loadGenres === 'function') {
             console.log('🔄 Calling loadGenres');
@@ -827,28 +1072,41 @@
             case 'settings':
               // Settings doesn't have a tab button, show all tabs
               console.log('⚙️ Settings tab active - showing all tab buttons');
-              return;
+              // Don't return early - we still need to handle FlickWord container visibility
+              currentTabId = null; // No tab to hide
+              break;
             default:
               console.log('⚠️ Unknown currentTab:', this.currentTab);
               return;
           }
           
-          // Hide the current tab and add active class to remaining tabs
+          // Show the current tab and add active class to it
           if (currentTabId) {
             const currentTab = document.getElementById(currentTabId);
             if (currentTab) {
-              currentTab.classList.add('hidden');
-              console.log(`🙈 Hidden current tab: ${currentTabId}`);
+              currentTab.classList.remove('hidden');
+              currentTab.classList.add('active');
+              console.log(`✅ Activated current tab: ${currentTabId}`);
             }
             
-            // Add active class to all remaining visible tabs
+            // Remove active class from all other tabs
             allTabButtons.forEach(tabId => {
               if (tabId !== currentTabId) {
                 const tab = document.getElementById(tabId);
                 if (tab) {
-                  tab.classList.add('active');
-                  console.log(`✅ Activated remaining tab: ${tabId}`);
+                  tab.classList.remove('active');
+                  console.log(`🔘 Reset tab button: ${tabId}`);
                 }
+              }
+            });
+          } else if (this.currentTab === 'settings') {
+            // For settings tab, show all tab buttons but keep them in normal (non-active) state
+            // This makes them look like settings entries, not clickable tabs
+            allTabButtons.forEach(tabId => {
+              const tab = document.getElementById(tabId);
+              if (tab) {
+                tab.classList.remove('active'); // Remove active class to show normal appearance
+                console.log(`✅ Showed tab for settings view (normal state): ${tabId}`);
               }
             });
           }
@@ -1980,8 +2238,30 @@
         performSignOut() {
           console.log('🚪 Performing sign out cleanup...');
           
-          // Clear user authentication state only - preserve user data
+          // Clear user authentication state
           this.currentUser = null;
+          
+          // Clear user-specific data from centralized appData
+          if (this.appData?.tv) {
+            this.appData.tv = { watching: [], wishlist: [], watched: [] };
+          }
+          if (this.appData?.movies) {
+            this.appData.movies = { watching: [], wishlist: [], watched: [] };
+          }
+          if (this.appData?.settings) {
+            this.appData.settings.displayName = '';
+          }
+          
+          // Clear the global appData that the existing system uses
+          if (typeof appData !== 'undefined') {
+            console.log('🧹 Clearing global appData...');
+            appData.tv = { watching: [], wishlist: [], watched: [] };
+            appData.movies = { watching: [], wishlist: [], watched: [] };
+            appData.settings.displayName = '';
+          }
+          
+          // Save the cleared data
+          this.saveData();
           
           // Update the account button
           this.updateAccountButton();
@@ -1989,12 +2269,12 @@
           // Clear the username display
           this.updateLeftSideUsername();
           
-          // Don't clear user data - let it persist for when they sign back in
-          // Don't clear flicklet-login-prompted - let it persist so user isn't treated as new
+          // Clear localStorage data
+          localStorage.removeItem('flicklet-data');
+          localStorage.removeItem('tvMovieTrackerData');
+          localStorage.removeItem('flicklet-login-prompted');
           
-          // Username will persist in Firebase for next login
-          
-          // Refresh the UI to show current data (not empty)
+          // Refresh the UI to show empty lists
           this.updateUI();
           
           // Call existing updateUI function if available to refresh tab counts
@@ -2009,11 +2289,11 @@
             rebuildStats();
           }
           
-          // Switch to home tab
+          // Switch to home tab to show empty state
           this.switchTab('home');
           
-          this.showNotification('Signed out successfully - Data preserved', 'success');
-          console.log('✅ Sign out cleanup completed - data preserved');
+          this.showNotification('Signed out successfully - All data cleared', 'success');
+          console.log('✅ Sign out cleanup completed');
         },
 
         // Translation helper
@@ -2060,48 +2340,7 @@
   }, { capture: true });    // <-- capture to preempt other listeners
 })();
 
-// Harden openShareSelectionModal so it only opens from the actual Share button
-(() => {
-  const original = window.openShareSelectionModal;
-  if (typeof original !== 'function') return;
-
-  window.openShareSelectionModal = function (origin) {
-    // Is this an explicit click on the Share button?
-    const isUserClick =
-      (origin && origin.target && origin.target.closest?.('#shareListBtn')) ||
-      (typeof origin === 'string' && /^(user|btn)$/i.test(origin));
-
-    // Never auto-open while in Settings unless user clicked the Share button
-    const inSettings = !!(window.FlickletApp?.currentTab === 'settings');
-
-    if (!isUserClick && inSettings) {
-      console.debug('🛡️ Blocked auto share modal while in Settings.');
-      return;
-    }
-    
-    // Additional safety: force close any existing share modal before opening
-    // BUT only if it's NOT a legitimate user click
-    const shareModal = document.getElementById('shareSelectionModal');
-    if (shareModal && inSettings && !isUserClick) {
-      console.debug('🛡️ Force closing existing share modal in Settings (not user click).');
-      shareModal.style.setProperty('display', 'none', 'important');
-      shareModal.classList.remove('active');
-      return;
-    }
-    
-    // If this is a legitimate user click, set the interaction flag
-    if (isUserClick) {
-      // Set global interaction flags for the safety net
-      if (window.shareModalInteractionTracker) {
-        window.shareModalInteractionTracker.lastUserShareClick = Date.now();
-        window.shareModalInteractionTracker.userIsInteractingWithModal = true;
-        console.debug('🛡️ Setting interaction flags for legitimate user click');
-      }
-    }
-    
-    return original.apply(this, arguments);
-  };
-})();
+// Safety wrapper moved to inline-script-02.js after function definition
 
 // Bind ONLY to the primary Share button; ignore anything else with "share" in id
 (() => {
@@ -2210,8 +2449,6 @@
   const forceCloseShareModal = () => {
     const shareModal = document.getElementById('shareSelectionModal');
     const timeSinceUserClick = Date.now() - window.shareModalInteractionTracker.lastUserShareClick;
-    
-    // Safety check removed to reduce console spam
     
     // Only close if we're in settings AND user is not actively interacting with modal
     // AND it's been more than 5 seconds since user clicked share

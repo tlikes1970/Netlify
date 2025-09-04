@@ -1003,6 +1003,8 @@
           const localDisplayName = (appData.settings?.displayName || "").trim();
           const localLanguage = (appData.settings?.lang || "en");
           
+          // Track if we loaded any data from cloud
+          let dataLoadedFromCloud = false;
           
           if (cloud.watchlists) {
             // Only overwrite local data if Firebase has actual content
@@ -1011,7 +1013,10 @@
                  cloud.watchlists.tv.wishlist?.length > 0 || 
                  cloud.watchlists.tv.watched?.length > 0)) {
               console.log('🔄 Firebase has TV data, using it');
+              console.log('🔍 Firebase TV watching count:', cloud.watchlists.tv.watching?.length);
+              console.log('🔍 Local TV watching count:', appData.tv?.watching?.length);
               appData.tv = cloud.watchlists.tv;
+              dataLoadedFromCloud = true;
             } else {
               console.log('🚫 Firebase TV data is empty, keeping local data');
             }
@@ -1022,6 +1027,7 @@
                  cloud.watchlists.movies.watched?.length > 0)) {
               console.log('🔄 Firebase has movie data, using it');
               appData.movies = cloud.watchlists.movies;
+              dataLoadedFromCloud = true;
             } else {
               console.log('🚫 Firebase movie data is empty, keeping local data');
             }
@@ -1081,6 +1087,16 @@
             // Save to centralized storage
             localStorage.setItem('flicklet-data', JSON.stringify(window.FlickletApp.appData));
             console.log('✅ Data synced to FlickletApp and saved to centralized storage');
+          }
+          
+          // If we loaded data from cloud, also save it to localStorage for immediate access
+          if (dataLoadedFromCloud) {
+            try {
+              localStorage.setItem('flicklet-data', JSON.stringify(appData));
+              console.log('💾 Cloud data also saved to localStorage for immediate access');
+            } catch (error) {
+              console.error('❌ Failed to save cloud data to localStorage:', error);
+            }
           }
           
           // Prevent dropdown resets during language changes
@@ -1412,6 +1428,7 @@
         const wrap = document.createElement("div");
         wrap.className = "modal-backdrop";
         wrap.setAttribute("data-testid", "modal-backdrop");
+        wrap.style.display = "flex"; // Make modal visible
         wrap.innerHTML = `
           <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" data-testid="${testId}" tabindex="-1">
             <h3 id="modal-title">${title}</h3>
@@ -1552,12 +1569,33 @@
           out.style.display = "block";
           out.style.gridColumn = "1 / -1";
           out.style.margin = "0 auto";
-          out.onclick = () =>
-            auth.signOut().then(() => {
-              showNotification(t("signed_out"), "success");
+          out.onclick = () => {
+            if (typeof firebase !== 'undefined' && firebase.auth) {
+              firebase.auth().signOut().then(() => {
+                // Use the proper sign out function from FlickletApp if available
+                if (typeof FlickletApp !== 'undefined' && FlickletApp.performSignOut) {
+                  FlickletApp.performSignOut();
+                } else {
+                  // Fallback to basic sign out
+                  showNotification(t("signed_out"), "success");
+                  setAccountLabel?.(null);
+                }
+                document.querySelector(".modal-backdrop")?.remove();
+              }).catch((error) => {
+                console.error('Sign out error:', error);
+                showNotification('Failed to sign out', 'error');
+              });
+            } else {
+              // Fallback for when Firebase is not available
+              if (typeof FlickletApp !== 'undefined' && FlickletApp.performSignOut) {
+                FlickletApp.performSignOut();
+              } else {
+                showNotification(t("signed_out"), "success");
+                setAccountLabel?.(null);
+              }
               document.querySelector(".modal-backdrop")?.remove();
-              setAccountLabel?.(null);
-            });
+            }
+          };
         } else {
           google.onclick = () =>
             login()
@@ -2158,6 +2196,52 @@
           }
         };
       }
+      
+      // Make the function available on window object for safety wrapper
+      window.openShareSelectionModal = openShareSelectionModal;
+      
+      // Apply safety wrapper immediately after function definition
+      (() => {
+        const original = window.openShareSelectionModal;
+        if (typeof original !== 'function') return;
+
+        window.openShareSelectionModal = function (origin) {
+          // Is this an explicit click on the Share button?
+          const isUserClick =
+            (origin && origin.target && origin.target.closest?.('#shareListBtn')) ||
+            (typeof origin === 'string' && /^(user|btn)$/i.test(origin));
+
+          // Never auto-open while in Settings unless user clicked the Share button
+          const inSettings = !!(window.FlickletApp?.currentTab === 'settings');
+
+          if (!isUserClick && inSettings) {
+            console.debug('🛡️ Blocked auto share modal while in Settings.');
+            return;
+          }
+          
+          // Additional safety: force close any existing share modal before opening
+          // BUT only if it's NOT a legitimate user click
+          const shareModal = document.getElementById('shareSelectionModal');
+          if (shareModal && inSettings && !isUserClick) {
+            console.debug('🛡️ Force closing existing share modal in Settings (not user click).');
+            shareModal.style.setProperty('display', 'none', 'important');
+            shareModal.classList.remove('active');
+            return;
+          }
+          
+          // If this is a legitimate user click, set the interaction flag
+          if (isUserClick) {
+            // Set global interaction flags for the safety net
+            if (window.shareModalInteractionTracker) {
+              window.shareModalInteractionTracker.lastUserShareClick = Date.now();
+              window.shareModalInteractionTracker.userIsInteractingWithModal = true;
+              console.debug('🛡️ Setting interaction flags for legitimate user click');
+            }
+          }
+          
+          return original.apply(this, arguments);
+        };
+      })();
 
       function openNotInterestedModal() {
         console.log('🚫 Opening not interested modal');
@@ -3444,6 +3528,12 @@
           .forEach((s) => (s.style.display = "none"));
         document.getElementById(tab + "Section").style.display = "block";
 
+        if (tab === "home") {
+          // Load front spotlight when home tab is activated
+          if (window.FLAGS?.frontSpotlightEnabled) {
+            window.loadFrontSpotlight?.();
+          }
+        }
         if (tab === "discover") renderDiscover();
         if (tab === "settings") {
           // Populate the display name input with current value
@@ -3459,6 +3549,19 @@
               }
             });
           }
+          
+          // Load settings content (including new data tools handlers)
+          console.log('🔧 Checking for loadSettingsContent function:', typeof window.loadSettingsContent);
+          if (typeof window.loadSettingsContent === 'function') {
+            console.log('✅ Calling loadSettingsContent');
+            window.loadSettingsContent();
+          } else {
+            console.log('❌ loadSettingsContent function not found');
+          }
+          
+          // Render stats and Pro features
+          window.renderStatsCard?.();
+          window.renderProFeaturesList?.();
         }
         
         // Apply translations to the newly visible tab content
@@ -3535,8 +3638,14 @@
         else if (containerId === "wishlistList") listTab = "wishlist";
         else if (containerId === "watchedList") listTab = "watched";
         
-        c.innerHTML = "";
-        items.forEach((it) => c.appendChild(createShowCard(it, false, listTab)));
+        // Show skeletons while loading
+        window.Skeletons?.list(containerId, Math.min(items.length || 6, 8));
+        
+        // Small delay to show skeletons, then render actual content
+        setTimeout(() => {
+          c.innerHTML = "";
+          items.forEach((it) => c.appendChild(createShowCard(it, false, listTab)));
+        }, 500);
       }
 
       function updateUI() {
@@ -3639,7 +3748,8 @@
           }
 
           out.style.display = "";
-          out.innerHTML = t("searching");
+          // Show skeletons while searching
+          window.Skeletons?.list("searchResults", 6);
 
           if (typeof tmdbGet !== "function") {
             out.innerHTML = "Search service not ready.";
@@ -3929,15 +4039,21 @@
 
 
 
-          // Insert horoscope second (after quotes)
-          if (!document.getElementById("personalityForecast")) {
+          // Insert front spotlight (replaces horoscope)
+          if (!document.getElementById("frontSpotlight")) {
             const card = document.createElement("div");
-            card.className = "feedback-card";
-            card.id = "personalityForecast";
+            card.className = "front-spotlight card";
+            card.id = "frontSpotlight";
+            card.style.display = "none";
             card.innerHTML = `
-                    <h3>🧠 <span data-i18n="streaming_horoscope">Streaming Horoscope</span></h3>
-        <p id="fakeFortune" style="margin:0; font-style:italic;"></p>
-      `;
+              <div class="card-header">
+                <h3>Tonight On</h3>
+                <span class="tag">Next 7 days</span>
+              </div>
+              <div id="frontSpotlightList" class="front-spotlight-list">
+                <div class="no-episodes">No upcoming episodes this week.</div>
+              </div>
+            `;
             const insertAfter = document.getElementById("quoteBlock") || anchor;
             insertAfter.insertAdjacentElement("afterend", card);
           }
@@ -3967,14 +4083,17 @@
                 </div>
               </form>
             `;
-            const insertAfter = document.getElementById("personalityForecast") || document.getElementById("quoteBlock") || anchor;
+            const insertAfter = document.getElementById("frontSpotlight") || document.getElementById("personalityForecast") || document.getElementById("quoteBlock") || anchor;
             insertAfter.insertAdjacentElement("afterend", feedbackCard);
           }
 
-          const hEl = document.getElementById("fakeFortune");
           const qEl = document.getElementById("randomQuote");
-          if (hEl) hEl.textContent = pickDailyHoroscope();
           if (qEl) qEl.textContent = drawQuote();
+          
+          // Load front spotlight if enabled
+          if (window.FLAGS?.frontSpotlightEnabled) {
+            window.loadFrontSpotlight?.();
+          }
 
           return true;
         }

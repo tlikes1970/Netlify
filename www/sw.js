@@ -1,7 +1,7 @@
 // sw.js - Service Worker for StreamTracker PWA
-const CACHE_NAME = 'streamtracker-v1.0.0';
-const STATIC_CACHE_NAME = 'streamtracker-static-v1.0.0';
-const DYNAMIC_CACHE_NAME = 'streamtracker-dynamic-v1.0.0';
+const CACHE_NAME = 'streamtracker-v1.0.1';
+const STATIC_CACHE_NAME = 'streamtracker-static-v1.0.1';
+const DYNAMIC_CACHE_NAME = 'streamtracker-dynamic-v1.0.1';
 
 // Files to cache immediately (critical for offline functionality)
 const STATIC_FILES = [
