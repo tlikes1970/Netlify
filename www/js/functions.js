@@ -1,7 +1,12 @@
 /* ============== Core Application Functions (Cleaned) ============== */
 
 // ---- Mobile Layout Polish ----
-if (window.FLAGS?.mobilePolishEnabled) document.body.classList.add('mobile-v1');
+if (window.FLAGS?.mobilePolishEnabled) {
+  document.body.classList.add('mobile-v1');
+  console.log('📱 Mobile polish enabled - body.mobile-v1 class added');
+} else {
+  console.log('📱 Mobile polish disabled');
+}
 
 // ---- Tab / Render Pipeline ----
 // window.switchToTab is implemented in inline-script-02.js
