@@ -3295,6 +3295,9 @@
             <div class="providers-slot"></div>
             <div class="extras-slot"></div>
 
+            <div class="card-pills" role="group" aria-label="More information"></div>
+            <div class="card-drawer" hidden></div>
+
             <div class="show-actions">${actions}</div>
           </div>`;
 
@@ -3340,6 +3343,7 @@
           try { window.__FlickletAttachProviders?.(card, item); } catch {}
           try { window.__FlickletAttachExtras?.(card, item); } catch {}
           try { window.__FlickletAttachTrivia?.(card, item); } catch {}
+          try { window.__afterCardCreate?.(card, item); } catch {}
         }, 0);
         
         return card;
@@ -4681,5 +4685,185 @@
   };
 
   console.log('🎬 Extras v1 ready', { pro: PRO });
+})();
+
+// === SO-1: Series Organizer (progressive disclosure) ===
+(() => {
+  const FLAGS = (window.FLAGS = window.FLAGS || {});
+  if (FLAGS.seriesOrganizerEnabled === false) {
+    console.log('🗂️ Series Organizer disabled via flag');
+    return;
+  }
+  if (window.__soV1Bound) return;
+  window.__soV1Bound = true;
+
+  const PRO = !!FLAGS.proEnabled;
+
+  // Observe card insertions; decorate once
+  const DECORATED = new WeakSet();
+
+  function yearOf(item) {
+    const d = (item.first_air_date || item.release_date || '').slice(0,4);
+    return d || '';
+  }
+  function criticsPct(item) {
+    const v = Number(item.vote_average || 0);
+    if (!v) return '';
+    return `${Math.round(v * 10)}%`;
+  }
+  function statusOf(item) {
+    return (item.status || '').replace(/_/g,' ');
+  }
+  function networkOf(item) {
+    if (Array.isArray(item.networks) && item.networks[0]?.name) return item.networks[0].name;
+    return '';
+  }
+
+  function buildHeader(detailsEl, item, titleText) {
+    // Insert at the very top of details
+    let header = detailsEl.querySelector('.card-header');
+    if (!header) {
+      header = document.createElement('div');
+      header.className = 'card-header';
+      detailsEl.prepend(header);
+    } else {
+      header.textContent = ''; // idempotent
+    }
+
+    const hTitle = document.createElement('div');
+    hTitle.className = 'h-title';
+    hTitle.textContent = titleText;
+    header.appendChild(hTitle);
+
+    const meta = document.createElement('div');
+    meta.className = 'h-meta';
+    const bits = [];
+    const y = yearOf(item); if (y) bits.push(`(${y})`);
+    const st = statusOf(item); if (st) bits.push(st);
+    const nw = networkOf(item); if (nw) bits.push(nw);
+    const sc = criticsPct(item); if (sc) bits.push(sc);
+    meta.textContent = bits.join(' · ');
+    header.appendChild(meta);
+  }
+
+  function ensurePills(detailsEl) {
+    let pills = detailsEl.querySelector('.card-pills');
+    let drawer = detailsEl.querySelector('.card-drawer');
+    if (!pills || !drawer) return null;
+
+    // Create pills (Watch, Extras, Facts)
+    pills.textContent = '';
+    const mk = (id, label, ic) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pill';
+      b.dataset.pill = id;
+      b.setAttribute('aria-expanded', 'false');
+      b.setAttribute('aria-controls', 'drawer-'+id);
+      b.innerHTML = `<span class="ic" aria-hidden="true">${ic}</span>${label}`;
+      return b;
+    };
+    const pWatch = mk('watch', 'Watch', '▶');
+    const pExtras = mk('extras', 'Extras', '🎬');
+    const pFacts  = mk('facts',  'Facts',  '🧠');
+
+    pills.appendChild(pWatch);
+    pills.appendChild(pExtras);
+    pills.appendChild(pFacts);
+
+    // Hide pills that have no content
+    const hasProviders = !!detailsEl.querySelector('.providers-slot');
+    const hasExtras    = !!detailsEl.querySelector('.extras-slot');
+    const hasFacts     = !!detailsEl.querySelector('.trivia-slot');
+
+    if (!hasProviders) pWatch.hidden = true;
+    if (!hasExtras)    pExtras.hidden = true;
+    if (!hasFacts)     pFacts.hidden  = true;
+
+    // Move slots into drawer (once)
+    drawer.textContent = '';
+    ['providers-slot','extras-slot','trivia-slot'].forEach(cls => {
+      const src = detailsEl.querySelector('.' + cls);
+      if (src) drawer.appendChild(src);
+    });
+
+    // Toggle logic: one open at a time per card
+    pills.addEventListener('click', (e) => {
+      const btn = e.target.closest('button.pill');
+      if (!btn) return;
+      const id = btn.dataset.pill;
+      const open = btn.getAttribute('aria-expanded') === 'true';
+
+      // Close all, then maybe open the clicked one
+      pills.querySelectorAll('button.pill').forEach(b => b.setAttribute('aria-expanded','false'));
+      drawer.hidden = true;
+
+      if (!open) {
+        btn.setAttribute('aria-expanded','true');
+        drawer.hidden = false;
+
+        // Inside drawer, show only the requested block; hide the others
+        drawer.querySelectorAll('.providers-slot,.extras-slot,.trivia-slot')
+          .forEach(el => el.style.display = 'none');
+        const showCls = id === 'watch' ? '.providers-slot' : id === 'extras' ? '.extras-slot' : '.trivia-slot';
+        const tgt = drawer.querySelector(showCls);
+        if (tgt) tgt.style.display = '';
+      }
+    }, { passive: true });
+
+    return { pills, drawer, pWatch, pExtras, pFacts };
+  }
+
+  function decorateCard(cardEl) {
+    if (!cardEl || DECORATED.has(cardEl)) return;
+    const details = cardEl.querySelector('.show-details');
+    if (!details) return;
+
+    // Scope the card for CSS: .so-card
+    cardEl.classList.add('so-card');
+
+    // Header: extract title text from existing .show-title
+    const titleBtn = details.querySelector('.show-title .btn-link');
+    const titleText = titleBtn ? titleBtn.textContent.trim() : (details.querySelector('.show-title')?.textContent.trim() || 'Untitled');
+
+    // Pull item info from attributes (we already set data-id and data-media-type). We don't have the whole item here,
+    // but header bits (year/status/network/score) can be recomputed later when providers/extras/trivia IIFEs finish.
+    // For now we attempt to read a cached item attached by createShowCard (common pattern).
+    const item = cardEl.__item || {}; // if createShowCard attaches: card.__item = item;
+
+    buildHeader(details, item, titleText);
+    ensurePills(details);
+
+    DECORATED.add(cardEl);
+  }
+
+  // Hook into your card creation path:
+  // 1) decorate existing cards at boot
+  document.querySelectorAll('.show-card').forEach(decorateCard);
+
+  // 2) monkey-patch a small public hook you already use after creating cards (optional, safe if absent)
+  const origCreate = window.__afterCardCreate;
+  window.__afterCardCreate = function(cardEl, item) {
+    try { if (cardEl) cardEl.__item = item; } catch {}
+    try { decorateCard(cardEl); } catch {}
+    if (typeof origCreate === 'function') {
+      try { origCreate(cardEl, item); } catch {}
+    }
+  };
+
+  // 3) as a fallback, observe new cards
+  const obs = new MutationObserver((muts) => {
+    for (const m of muts) {
+      m.addedNodes.forEach(n => {
+        if (n && n.nodeType === 1) {
+          if (n.classList?.contains('show-card')) decorateCard(n);
+          n.querySelectorAll?.('.show-card')?.forEach(decorateCard);
+        }
+      });
+    }
+  });
+  obs.observe(document.body, { childList: true, subtree: true });
+
+  console.log('🗂️ Series Organizer SO-1 initialized', { pro: PRO });
 })();
     

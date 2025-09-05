@@ -20,6 +20,7 @@ window.FLAGS = Object.assign({
           playlistsProEnabled: true,                  // curated rows (PRO)
           triviaEnabled: true,                        // per-card trivia chips
           flickwordBoostEnabled: true,                // FlickFact panel on Home
+          seriesOrganizerEnabled: true,               // card declutter (progressive disclosure)
 }, window.FLAGS || {});
 
 window.guard = (cond, fn) => { 
