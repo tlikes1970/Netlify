@@ -68,6 +68,9 @@
             >
               👤 <span data-i18n="sign_in_account">Sign In</span>
             </button>
+            <button id="shareOpenBtn" class="btn secondary" data-share-title="Flicklet — My List" data-share-url="" title="Share this page" aria-label="Share this page">
+              🔗 <span>Share</span>
+            </button>
             <select id="langToggle" aria-label="Language" title="Language" onchange="changeLanguage(this.value).catch(console.error)">
               <option value="en">EN</option>
               <option value="es">ES</option>
@@ -163,6 +166,12 @@
         </div>
       </div>
     </section>
+
+    <!-- Series Organization -->
+    <section id="seriesOrg" class="series-block" aria-label="Series organization">
+      <!-- JS will render here. To force a specific series, add data-series-id="157239" (Alien: Earth example) -->
+    </section>
+
 
       <div class="tab-container">
         <button id="homeTab" class="tab active" title="Overview of your TV & movie tracking" aria-label="Home tab - view dashboard and recommendations">🏠 <span data-i18n="home">Home</span></button>
@@ -660,18 +669,42 @@
     <div id="toastRegion" aria-live="polite" aria-atomic="true" class="toast-region"></div>
     <div id="bannerRegion" aria-live="assertive" aria-atomic="true" class="banner-region"></div>
 
+    <!-- Share Modal (once at end of body) -->
+    <div id="shareModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="shareTitle" hidden>
+      <div class="modal-backdrop" data-close></div>
+      <div class="modal-card" role="document">
+        <header class="modal-head">
+          <h2 id="shareTitle">Share</h2>
+          <button id="shareCloseBtn" class="icon-btn" aria-label="Close" data-close>&times;</button>
+        </header>
+
+        <div class="modal-body">
+          <p id="shareHint" class="share-hint">Share this page or item.</p>
+
+          <label for="shareUrl" class="visually-hidden">Link</label>
+          <input id="shareUrl" class="share-url" type="url" inputmode="url" autocomplete="off" readonly>
+
+          <div class="share-actions">
+            <button id="shareNativeBtn" class="btn">Share…</button>
+            <button id="shareCopyBtn" class="btn">Copy link</button>
+          </div>
+
+          <div class="share-feedback" id="shareFeedback" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Add script AFTER your other inline/app scripts -->
     <script defer src="scripts/notifications.js"></script>
     
     <!-- After your other app scripts -->
-    <!-- Provide your TMDB API v3 key via meta or window var (do NOT hardcode in repo) -->
-    <meta name="tmdb-api-key" content="__REPLACE_WITH_YOUR_TMDB_KEY__">
-    <script>window.__TMDB_API_KEY__ = window.__TMDB_API_KEY__ || document.querySelector('meta[name="tmdb-api-key"]')?.content;</script>
     
     <script defer src="scripts/tmdb-seed.js"></script>
     <script defer src="scripts/curated-seed.js"></script>
     <script defer src="scripts/curated-rows.js"></script>
     <script defer src="scripts/trivia.js"></script>
     <script defer src="scripts/spotlight.js"></script>
+    <script defer src="scripts/series-org.js"></script>
+    <script defer src="scripts/share-modal.js"></script>
   </body>
 </html>

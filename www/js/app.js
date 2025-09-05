@@ -126,7 +126,12 @@
       // Tab clicks (id-based)
       const bind = (id, fn) => {
         const el = document.getElementById(id);
-        if (el) el.addEventListener('click', fn);
+        if (el) {
+          console.log(`🔧 Binding ${id}`);
+          el.addEventListener('click', fn);
+        } else {
+          console.warn(`🔧 Element ${id} not found`);
+        }
       };
 
       bind('homeTab',     () => this.switchToTab('home'));

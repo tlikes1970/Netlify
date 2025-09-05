@@ -3522,5 +3522,125 @@ body.has-banner {
   .spotlight-media{ scroll-behavior:auto; }
 }
 
+/* ===== Series Organization (seasons + episodes) ===== */
+.series-block{
+  margin-top:16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  padding: 12px;
+  display: grid; gap: 10px;
+}
+
+.series-head{
+  display:flex; align-items: baseline; gap:10px; justify-content: space-between;
+}
+.series-title{ font-size:1.1rem; font-weight:600; margin:0; }
+.series-meta{ opacity:.85; font-size:.9rem; }
+
+.seasons{ display:grid; gap:8px; }
+
+.season{
+  border:1px solid var(--color-border);
+  border-radius:10px;
+  overflow:hidden; /* local only */
+  background: var(--color-surface);
+}
+
+.season-toggle{
+  all: unset;
+  display:flex; align-items:center; gap:10px;
+  width:100%; cursor:pointer;
+  padding:10px 12px;
+}
+.season-toggle:focus-visible{ outline:2px solid var(--primary); border-radius:6px; }
+.season-toggle .name{ font-weight:600; }
+.season-toggle .count{ opacity:.75; font-size:.9rem; margin-left:auto; }
+.season-toggle .chev{ transition: transform .15s ease; }
+.season[aria-expanded="true"] .chev{ transform: rotate(90deg); }
+
+.episodes{
+  display:none;
+  padding: 10px 12px 12px 12px;
+  border-top:1px solid var(--color-border);
+  background: var(--color-surface-2, rgba(0,0,0,0.02));
+}
+.season[aria-expanded="true"] .episodes{ display:grid; gap:8px; }
+
+.episode{
+  display:grid; gap:4px;
+  grid-template-columns: auto 1fr;
+}
+.episode .ep-no{
+  min-width: 28px; text-align: right; opacity:.75; padding-right:8px;
+}
+.episode .ep-title{ font-weight:500; }
+.episode .ep-meta{ opacity:.75; font-size:.9rem; }
+
+.ep-actions{ margin-top:4px; display:flex; gap:8px; }
+.ep-actions .btn{ min-height:30px; padding:4px 8px; }
+
+.more-row{ display:flex; align-items:center; }
+.more-row .btn{ margin-left:auto; min-height:34px; padding:6px 10px; }
+
+/* Mobile tweak */
+@media (max-width:480px){
+  .series-block{ padding:10px; }
+}
+
+/* Reduced motion: no fancy transitions beyond the chevron */
+@media (prefers-reduced-motion: reduce){
+  .season .chev{ transition:none; }
+}
+
+/* ===== Share Modal ===== */
+.modal[hidden]{ display:none !important; }
+.modal{
+  position: fixed; inset: 0; z-index: 10000;
+  display:grid; place-items:center;
+}
+.modal-backdrop{
+  position:absolute; inset:0; background:rgba(0,0,0,.45);
+}
+.modal-card{
+  position:relative;
+  width:min(560px, 92vw);
+  background: var(--color-surface);
+  border:1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  padding: 12px;
+  display:grid; gap:10px;
+}
+.modal-head{
+  display:flex; align-items:center; gap:10px; justify-content:space-between;
+}
+.icon-btn{ background:none; border:0; cursor:pointer; font-size:22px; line-height:1; }
+
+.modal-body{ display:grid; gap:10px; }
+.share-hint{ opacity:.85; }
+.share-url{
+  width:100%;
+  padding:10px;
+  border:1px solid var(--color-border);
+  border-radius:10px;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+.share-actions{ display:flex; gap:8px; }
+.share-actions .btn{ min-height:36px; padding:6px 10px; }
+.share-feedback{ min-height:1.2em; font-size:.95rem; }
+
+.visually-hidden{
+  position:absolute !important; width:1px; height:1px; margin:-1px; border:0; padding:0;
+  clip:rect(0 0 0 0); overflow:hidden; white-space:nowrap;
+}
+
+/* Mobile */
+@media (max-width:480px){
+  .modal-card{ padding:10px; }
+}
+
 
 

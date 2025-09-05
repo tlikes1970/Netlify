@@ -5,7 +5,9 @@
    - Requires TMDB v3 API key set as window.__TMDB_API_KEY__ (from meta or server).
 */
 (function(){
-  const API_KEY = (typeof window !== 'undefined' && window.__TMDB_API_KEY__) || '';
+  const API_KEY = (typeof window !== 'undefined' && window.__TMDB_API_KEY__) || 
+                  (window.TMDB_CONFIG && window.TMDB_CONFIG.apiKey) || 
+                  (window.TMDB_API_KEY) || '';
   const TTL_MS = 24 * 60 * 60 * 1000; // 24h
   const STAMP_KEY = 'flicklet:seed:v1';  // stores {"ts": <ms>}
 
@@ -13,7 +15,12 @@
   if (!needsSeed()) return;
 
   // No key? Don't crash; just skip quietly.
-  if (!API_KEY) { touchStamp(); return; }
+  if (!API_KEY || API_KEY === 'YOUR_TMDB_API_KEY_HERE') { 
+    console.log('🔑 TMDB API key not found - skipping TMDB seeding');
+    console.log('   Check: window.__TMDB_API_KEY__, window.TMDB_CONFIG.apiKey, or window.TMDB_API_KEY');
+    touchStamp(); 
+    return; 
+  }
 
   // Kick off (non-blocking). We intentionally ignore the returned promise.
   seed().catch(() => { /* ignore */ });
