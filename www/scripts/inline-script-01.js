@@ -2468,4 +2468,1571 @@
   // Also run periodically as a safety net (less frequently)
   setInterval(forceCloseShareModal, 5000);
 })();
+
+// === MP-ShareModalSanity (guarded) ===
+(() => {
+  const FLAGS = (window.FLAGS = window.FLAGS || {});
+  if (FLAGS.shareModalSanityEnabled === false) {
+    console.log('🛡️ ShareModalSanity disabled via FLAGS.shareModalSanityEnabled=false');
+    return;
+  }
+  if (window.__shareModalSanityBound) return;
+  window.__shareModalSanityBound = true;
+
+  const qs  = (s, r=document) => r.querySelector(s);
+  const qsa = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+  function initShareModalSanity() {
+    const opener = qs('#shareListBtn');
+    const modal  = qs('#shareSelectionModal');          // expected .modal-backdrop
+    const dialog = modal ? qs('.modal', modal) : null;  // Fixed: use .modal instead of .modal-dialog
+
+    if (!opener || !modal || !dialog) {
+      console.warn('🛡️ ShareModalSanity: missing elements, retrying...', { hasOpener: !!opener, hasModal: !!modal, hasDialog: !!dialog });
+      // Retry after a short delay
+      setTimeout(initShareModalSanity, 100);
+      return;
+    }
+
+    console.log('🛡️ ShareModalSanity: elements found, initializing...');
+
+    // A11y attributes (idempotent)
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    if (!dialog.id) dialog.id = 'shareDialog';
+    modal.setAttribute('aria-labelledby', dialog.id);
+    modal.setAttribute('aria-hidden', 'true');
+    modal.dataset.open = 'false';
+
+    let lastActive = null;
+
+    function getFocusable(container) {
+      return qsa([
+        'a[href]:not([tabindex="-1"])',
+        'button:not([disabled]):not([tabindex="-1"])',
+        'input:not([disabled]):not([tabindex="-1"])',
+        'select:not([disabled]):not([tabindex="-1"])',
+        'textarea:not([disabled]):not([tabindex="-1"])',
+        '[tabindex]:not([tabindex="-1"])'
+      ].join(','), container).filter(el => el.offsetParent !== null || el === document.activeElement);
+    }
+
+    function openModalSafe() {
+      // Safety: don't open over settings tab (matches existing behavior)
+      if (window.currentActiveTab === 'settings') {
+        console.log('🛡️ ShareModalSanity: blocking open on settings tab');
+        return;
+      }
+      lastActive = document.activeElement || opener;
+      document.body.classList.add('modal-open');
+
+      // Use the existing display method but also set our attributes
+      modal.style.display = 'flex';
+      modal.dataset.open = 'true';
+      modal.setAttribute('aria-hidden', 'false');
+
+      // Focus trap to first focusable
+      const f = getFocusable(modal);
+      (f[0] || dialog).focus({ preventScroll: true });
+
+      // Key handler
+      window.addEventListener('keydown', onKeyDown, { passive: false });
+    }
+
+    function closeModalSafe() {
+      // Use the existing display method but also set our attributes
+      modal.style.display = 'none';
+      modal.dataset.open = 'false';
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('modal-open');
+      window.removeEventListener('keydown', onKeyDown, { passive: false });
+      // return focus
+      (lastActive || opener)?.focus({ preventScroll: true });
+    }
+
+    function onKeyDown(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeModalSafe();
+        return;
+      }
+      if (e.key === 'Tab') {
+        const f = getFocusable(modal);
+        if (!f.length) return;
+        const i = f.indexOf(document.activeElement);
+        if (e.shiftKey) {
+          if (i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+        } else {
+          if (i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+        }
+      }
+    }
+
+    // Backdrop click to close (but ignore clicks inside dialog)
+    modal.addEventListener('mousedown', (e) => {
+      if (e.target === modal) closeModalSafe();
+    });
+
+    // Respect existing open/close functions if they exist, otherwise wire opener directly
+    const hasExistingOpen  = typeof window.openShareSelectionModal === 'function';
+    const hasExistingClose = typeof window.closeShareSelectionModal === 'function';
+
+    if (hasExistingOpen && !window.__shareModalOpenWrapped) {
+      const prevOpen = window.openShareSelectionModal;
+      window.openShareSelectionModal = function(...args) {
+        try { prevOpen.apply(this, args); } catch(e) { console.error(e); }
+        openModalSafe(); // enforce a11y + trap + scroll lock
+      };
+      window.__shareModalOpenWrapped = true;
+    }
+
+    if (hasExistingClose && !window.__shareModalCloseWrapped) {
+      const prevClose = window.closeShareSelectionModal;
+      window.closeShareSelectionModal = function(...args) {
+        try { prevClose.apply(this, args); } catch(e) { console.error(e); }
+        closeModalSafe();
+      };
+      window.__shareModalCloseWrapped = true;
+    }
+
+    // Direct binding as a fallback (if no existing open function bound)
+    if (!hasExistingOpen) {
+      opener.addEventListener('click', openModalSafe, { passive: true });
+    }
+
+    // Safety: auto-close on tab switches
+    const closeOnTabSwitch = () => { if (modal.dataset.open === 'true') closeModalSafe(); };
+    window.addEventListener('tabchange', closeOnTabSwitch);
+    // Also observe mutations on the tab container if needed (optional)
+
+    console.log('🛡️ ShareModalSanity initialized');
+  }
+
+  // Start initialization
+  initShareModalSanity();
+})();
+
+// === MP-CondensedModeHardening (guarded) ===
+(() => {
+  const FLAGS = (window.FLAGS = window.FLAGS || {});
+  if (FLAGS.condensedModeFeatureEnabled === false) {
+    console.log('🧪 CondensedModeHardening disabled via flag');
+    return;
+  }
+  if (window.__condensedModeBound) return;
+  window.__condensedModeBound = true;
+
+  const STORAGE_KEY = 'flicklet:condensed';
+
+  const getPersisted = () => {
+    try { return localStorage.getItem(STORAGE_KEY) === '1'; } catch { return false; }
+  };
+  const persist = (v) => {
+    try { localStorage.setItem(STORAGE_KEY, v ? '1' : '0'); } catch {}
+    // Mirror to app settings if available (non-fatal)
+    try {
+      if (window.FlickletApp?.settings) {
+        window.FlickletApp.settings.condensed = !!v;
+        if (typeof window.FlickletApp.saveSettings === 'function') {
+          window.FlickletApp.saveSettings();
+        }
+      }
+    } catch {}
+  };
+
+  function applyCondensed(v) {
+    document.body.classList.toggle('condensed-v1', !!v);
+    console.log(`🧪 Condensed mode ${v ? 'ON' : 'OFF'}`);
+  }
+
+  // Initialize from persisted state
+  const initial = getPersisted();
+  applyCondensed(initial);
+
+  // Expose a safe toggle for other code/tests
+  window.setCondensedMode = function setCondensedMode(v) {
+    applyCondensed(!!v);
+    persist(!!v);
+  };
+
+  // Hotkey for dev convenience: Alt+D toggles condensed
+  window.addEventListener('keydown', (e) => {
+    if (e.altKey && (e.key === 'd' || e.key === 'D')) {
+      window.setCondensedMode(!document.body.classList.contains('condensed-v1'));
+    }
+  }, { passive: true });
+
+  // Inject a Settings row if a container exists (progressive enhancement)
+  function injectCondensedSettings() {
+    try {
+      // Look for the settings section or any existing card to inject into
+      const settingsSection = document.getElementById('settingsSection');
+      if (settingsSection) {
+        // Remove existing condensed row if it exists (in case it's in wrong position)
+        const existingRow = document.getElementById('condensedRow');
+        if (existingRow) {
+          existingRow.remove();
+        }
+        console.log('🧪 Injecting condensed mode settings...');
+        
+        // Create a new card for condensed mode settings
+        const card = document.createElement('div');
+        card.id = 'condensedRow';
+        card.className = 'card';
+        card.innerHTML = `
+          <h4>📐 Display Settings</h4>
+          <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
+            Adjust the display density of your TV show and movie cards for a more compact view.
+          </p>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="condensedToggle" ${initial ? 'checked' : ''} aria-label="Enable condensed mode">
+              <span>Enable condensed mode</span>
+            </label>
+          </div>
+        `;
+        
+        // Insert after the Pro Tier card (before Data Tools)
+        const allCards = settingsSection.querySelectorAll('.card');
+        let insertAfterCard = null;
+        
+        // Find the Pro Tier card
+        for (let i = 0; i < allCards.length; i++) {
+          const h4 = allCards[i].querySelector('h4');
+          if (h4 && h4.textContent.includes('Pro Tier')) {
+            insertAfterCard = allCards[i];
+            break;
+          }
+        }
+        
+        if (insertAfterCard) {
+          // Insert after the Pro Tier card
+          insertAfterCard.parentNode.insertBefore(card, insertAfterCard.nextSibling);
+        } else {
+          // Look for Data Tools card as fallback
+          for (let i = 0; i < allCards.length; i++) {
+            const h4 = allCards[i].querySelector('h4');
+            if (h4 && h4.textContent.includes('Data Tools')) {
+              allCards[i].parentNode.insertBefore(card, allCards[i]);
+              break;
+            }
+          }
+          
+          // Final fallback: append to the end of settings section
+          if (!card.parentNode) {
+            settingsSection.appendChild(card);
+          }
+        }
+        
+        card.querySelector('#condensedToggle').addEventListener('change', (e) => {
+          window.setCondensedMode(e.target.checked);
+        }, { passive: true });
+        
+        console.log('🧪 Condensed mode settings injected successfully');
+      } else if (!settingsSection) {
+        console.log('🧪 Settings section not found, will retry...');
+      } else {
+        console.log('🧪 Condensed mode settings already exist');
+      }
+    } catch (e) {
+      console.warn('Failed to inject condensed mode settings:', e);
+    }
+  }
+
+  // Try to inject immediately
+  console.log('🧪 Attempting initial injection...');
+  injectCondensedSettings();
+  
+  // Also try when DOM is ready and on window load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('🧪 DOMContentLoaded - attempting injection...');
+      injectCondensedSettings();
+    });
+  }
+  window.addEventListener('load', () => {
+    console.log('🧪 Window load - attempting injection...');
+    injectCondensedSettings();
+  });
+  
+  // Also try when settings tab is clicked or when switchToTab is called
+  const settingsTab = document.getElementById('settingsTab');
+  if (settingsTab) {
+    settingsTab.addEventListener('click', () => {
+      setTimeout(injectCondensedSettings, 100);
+    });
+  }
+  
+  // Hook into the global switchToTab function to detect when settings is shown
+  const originalSwitchToTab = window.switchToTab;
+  if (typeof originalSwitchToTab === 'function') {
+    window.switchToTab = function(tabName) {
+      const result = originalSwitchToTab.call(this, tabName);
+      if (tabName === 'settings') {
+        console.log('🧪 Settings tab switched - attempting injection...');
+        setTimeout(injectCondensedSettings, 200);
+      }
+      return result;
+    };
+  }
+  
+  // Also use MutationObserver to watch for settings section visibility changes
+  const settingsSection = document.getElementById('settingsSection');
+  if (settingsSection) {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+          const isVisible = settingsSection.style.display !== 'none';
+          if (isVisible) {
+            console.log('🧪 Settings section became visible - attempting injection...');
+            setTimeout(injectCondensedSettings, 100);
+          }
+        }
+      });
+    });
+    observer.observe(settingsSection, { attributes: true, attributeFilter: ['style'] });
+  }
+
+  // ARIA normalizer: ensure icon-only buttons speak
+  function labelButton(btn) {
+    if (btn.hasAttribute('aria-label')) return;
+    const fromData = btn.getAttribute('data-label');
+    const fromTitle = btn.getAttribute('title');
+    // Derive from text content if it seems meaningful
+    const fromText = (btn.textContent || '').trim();
+    const label = fromData || fromTitle || (fromText && fromText.length <= 28 ? fromText : null);
+    if (label) btn.setAttribute('aria-label', label);
+  }
+
+  function normalizeAria(root = document) {
+    // Heuristic: common card/action buttons
+    const candidates = root.querySelectorAll([
+      '.show-actions button',
+      '.show-actions .btn',
+      '.toolbar .btn',
+      'button.icon-btn',
+      'button[aria-label]:not([aria-label=""])' // keep existing
+    ].join(','));
+    candidates.forEach((btn) => labelButton(btn));
+    // Mark decorative icons
+    root.querySelectorAll('.show-card .show-title [class*="icon"], .show-card .show-title span[role="img"]')
+      .forEach(n => n.setAttribute('aria-hidden', 'true'));
+  }
+
+  // Initial pass & on dynamic updates (if your app dispatches a known event)
+  normalizeAria();
+  window.addEventListener('cards:rendered', () => normalizeAria(), { passive: true });
+
+  console.log('🧪 CondensedModeHardening initialized');
+  console.log('🧪 Feature flag enabled:', FLAGS.condensedModeFeatureEnabled);
+  console.log('🧪 Initial condensed state:', initial);
+  console.log('🧪 Settings section exists:', !!document.getElementById('settingsSection'));
+  console.log('🧪 Condensed row already exists:', !!document.getElementById('condensedRow'));
+})();
+
+// === MP-StickySafeAreas (guarded) ===
+(() => {
+  const FLAGS = (window.FLAGS = window.FLAGS || {});
+  if (FLAGS.safeAreasSanityEnabled === false) {
+    console.log('🧭 SafeAreasSanity disabled via flag');
+    return;
+  }
+  if (window.__safeAreasSanityBound) return;
+  window.__safeAreasSanityBound = true;
+
+  const supportsSafeArea = (() => {
+    try {
+      return CSS.supports('padding-bottom: env(safe-area-inset-bottom)');
+    } catch { return false; }
+  })();
+
+  if (supportsSafeArea) {
+    document.body.classList.add('supports-safe-area');
+  }
+
+  // Dev-only sticky ancestor probe: read-only, warns if something can break sticky.
+  // Does NOT modify styles; safe to leave in prod as a console warning.
+  try {
+    const sticky = document.querySelector('.top-search');
+    if (sticky) {
+      let n = sticky.parentElement;
+      while (n && n !== document.body) {
+        const cs = getComputedStyle(n);
+        const badOverflow = cs.overflow !== 'visible' && cs.overflow !== 'clip';
+        const badTransform = cs.transform && cs.transform !== 'none';
+        const hasContain = cs.contain && cs.contain !== 'none';
+        if (badOverflow || badTransform || hasContain) {
+          console.warn('⚠️ StickySearch risk: ancestor may break position:sticky', {
+            node: n,
+            overflow: cs.overflow,
+            transform: cs.transform,
+            contain: cs.contain
+          });
+          break; // one warning is enough
+        }
+        n = n.parentElement;
+      }
+    }
+  } catch (e) {
+    console.debug('SafeAreasSanity probe skipped:', e);
+  }
+
+  console.log('🧭 SafeAreasSanity initialized', { supportsSafeArea });
+})();
+
+// === MP-A11Y-Polish (guarded) ===
+(() => {
+  const FLAGS = (window.FLAGS = window.FLAGS || {});
+  if (FLAGS.a11yPolishEnabled === false) {
+    console.log('♿ A11Y polish disabled via flag');
+    return;
+  }
+  if (window.__a11yPolishBound) return;
+  window.__a11yPolishBound = true;
+
+  document.body.classList.add('a11y-v1');
+
+  const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+  function deriveLabel(btn) {
+    if (btn.hasAttribute('aria-label') && btn.getAttribute('aria-label').trim()) return null;
+    const fromData  = btn.getAttribute('data-label');
+    const fromTitle = btn.getAttribute('title');
+    const txt       = (btn.textContent || '').trim();
+    // Prefer explicit data/tooltip; fall back to short text
+    return fromData || fromTitle || (txt && txt.length <= 28 ? txt : null);
+  }
+
+  function normalizeButtons(root = document) {
+    // Likely interactive targets across the app
+    const candidates = qsa([
+      'button',
+      '.btn',
+      '.show-actions button',
+      '.toolbar .btn',
+      '[role="button"]'
+    ].join(','), root);
+
+    for (const el of candidates) {
+      const label = deriveLabel(el);
+      if (label) el.setAttribute('aria-label', label);
+
+      // Ensure focusability is not removed: if tabindex is set, keep it >=0
+      if (el.hasAttribute('tabindex') && Number(el.getAttribute('tabindex')) < 0) {
+        el.removeAttribute('tabindex');
+      }
+    }
+
+    // Mark decorative icons inside titles/chips as hidden
+    qsa('.show-card .show-title [class*="icon"], .show-card .show-title span[role="img"], .show-card .show-meta [class*="icon"]', root)
+      .forEach(n => n.setAttribute('aria-hidden', 'true'));
+  }
+
+  // Initial pass
+  normalizeButtons();
+
+  // Re-run after dynamic card renders, if app dispatches such an event
+  window.addEventListener('cards:rendered', () => normalizeButtons(), { passive: true });
+
+  console.log('♿ A11Y polish initialized');
+})();
+
+// === MP-NotifEngineCore (guarded, no-push) ===
+(() => {
+  const FLAGS = (window.FLAGS = window.FLAGS || {});
+  if (FLAGS.notifEngineEnabled === false) {
+    console.log('🔔 NotifEngineCore disabled via flag');
+    return;
+  }
+  if (window.__notifEngineBound) return;
+  window.__notifEngineBound = true;
+
+  const STORAGE_ON_KEY = 'flicklet:notif:on';
+  const STORAGE_SEEN_KEY = 'flicklet:notif:seen';
+
+  // Read/persist settings - integrate with existing app settings
+  const isOn = () => {
+    try { 
+      // First check existing app settings
+      const appData = window.appData || window.FlickletApp?.data;
+      if (appData?.settings?.notif?.episodes !== undefined) {
+        return !!appData.settings.notif.episodes;
+      }
+      // Fallback to localStorage
+      return localStorage.getItem(STORAGE_ON_KEY) !== '0'; 
+    } catch { return true; }
+  };
+  const setOn = (v) => {
+    try { 
+      localStorage.setItem(STORAGE_ON_KEY, v ? '1' : '0'); 
+      
+      // Mirror to existing app settings structure
+      const appData = window.appData || window.FlickletApp?.data;
+      if (appData?.settings) {
+        if (!appData.settings.notif) appData.settings.notif = {};
+        appData.settings.notif.episodes = !!v;
+        
+        // Save using existing save function
+        if (typeof window.saveAppData === 'function') {
+          window.saveAppData();
+        }
+      }
+    } catch {}
+  };
+
+  const getSeen = () => {
+    try { return JSON.parse(localStorage.getItem(STORAGE_SEEN_KEY) || '{}'); } catch { return {}; }
+  };
+  const setSeen = (obj) => {
+    try { localStorage.setItem(STORAGE_SEEN_KEY, JSON.stringify(obj)); } catch {}
+  };
+
+  // Utilities
+  const hoursUntil = (when) => (when.getTime() - Date.now()) / 36e5;
+  function parseAirDateLocal(show, ep) {
+    // TMDB often provides YYYY-MM-DD without time. Default to 20:00 local.
+    const raw = (ep && (ep.air_date || ep.first_air_date)) || show.first_air_date || null;
+    if (!raw) return null;
+    const [y, m, d] = raw.split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(y, m - 1, d, 20, 0, 0, 0); // 8pm local default
+  }
+  const safeTitle = (show, ep) => {
+    const t = show.name || show.title || 'Unknown';
+    const sn = ep?.season_number, en = ep?.episode_number;
+    return sn != null && en != null ? `${t} S${sn}E${en}` : t;
+  };
+  const epKey = (show, ep) => {
+    if (ep?.id != null) return `ep:${ep.id}`;
+    const mt = show.media_type || (show.first_air_date ? 'tv' : 'movie');
+    return `ep:${mt}:${show.id}:S${ep?.season_number || '?'}:E${ep?.episode_number || '?'}`;
+  };
+
+  function findCandidates() {
+    const data = (window.FlickletApp?.data) || window.appData || {};
+    const tvWatching = data?.tv?.watching || [];
+    const list = [];
+    for (const show of tvWatching) {
+      const ep = show.next_episode_to_air;
+      if (!ep) continue;
+      const when = parseAirDateLocal(show, ep);
+      if (!when) continue;
+      const h = hoursUntil(when);
+      if (h >= 0 && h <= 24) {
+        list.push({ show, ep, when, hours: h, key: epKey(show, ep) });
+      }
+    }
+    return list.sort((a,b) => a.when - b.when);
+  }
+
+  function notifyUpcoming(c) {
+    const msg = `New episode soon: ${safeTitle(c.show, c.ep)} (${Math.max(0, Math.floor(c.hours))}h)`;
+    const type = 'info';
+    try {
+      if (typeof window.showNotification === 'function') {
+        window.showNotification(msg, type);
+      } else {
+        // Fallback toast
+        console.log('🔔', msg);
+        alert(msg); // last resort; unlikely to run if toasts exist
+      }
+    } catch (e) { console.error('Notif toast failed', e); }
+  }
+
+  function runScan(reason = 'manual') {
+    if (!isOn()) return;
+    const seen = getSeen();
+    const cands = findCandidates();
+    // For debugging
+    console.log('🔔 NotifEngineCore scan', { reason, count: cands.length, cands });
+
+    let changed = false;
+    for (const c of cands) {
+      if (seen[c.key]) continue; // already notified
+      notifyUpcoming(c);
+      seen[c.key] = { at: Date.now() };
+      changed = true;
+    }
+    if (changed) setSeen(seen);
+  }
+
+  // Schedule: on load (deferred), every 30 min, and when tab becomes visible
+  const start = () => {
+    // Defer startup a bit to let data sync settle
+    setTimeout(() => runScan('startup-3s'), 3000);
+    setTimeout(() => runScan('startup-20s'), 20000);
+    // Periodic
+    window.__notifInterval = window.setInterval(() => runScan('interval-30m'), 30 * 60 * 1000);
+  };
+
+  // Connect to existing notification checkbox
+  function connectToExistingCheckbox() {
+    try {
+      const existingCheckbox = document.getElementById('notifEpisodes');
+      if (existingCheckbox) {
+        // Set initial state from our storage
+        existingCheckbox.checked = isOn();
+        
+        // Add event listener to sync with our storage
+        existingCheckbox.addEventListener('change', (e) => {
+          setOn(e.target.checked);
+          // run an immediate scan on enable to catch imminent episodes
+          if (e.target.checked) runScan('toggle-on');
+        }, { passive: true });
+        
+        console.log('🔔 Connected to existing notifEpisodes checkbox');
+        return true;
+      } else {
+        console.warn('🔔 Existing notifEpisodes checkbox not found, will retry...');
+        return false;
+      }
+    } catch (e) {
+      console.warn('Failed to connect to existing notification checkbox:', e);
+      return false;
+    }
+  }
+
+  // Try to connect immediately, and retry if needed
+  if (!connectToExistingCheckbox()) {
+    // Retry after a delay to ensure DOM is ready
+    setTimeout(() => {
+      if (!connectToExistingCheckbox()) {
+        // Final retry after longer delay
+        setTimeout(connectToExistingCheckbox, 2000);
+      }
+    }, 1000);
+  }
+
+  // Visibility re-scan
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') runScan('visible');
+  });
+
+  // Start the engine
+  start();
+
+  console.log('🔔 NotifEngineCore initialized');
+})();
+
+// === MP-NotifAdvancedPro (guarded, PRO) ===
+(() => {
+  console.log('🔔 NotifAdvancedPro: IIFE starting...');
+  const FLAGS = (window.FLAGS = window.FLAGS || {});
+  const IS_ENABLED = !!FLAGS.notifAdvancedEnabled;
+  const IS_PRO = !!FLAGS.proEnabled;
+
+  console.log('🔔 NotifAdvancedPro: Flags check', { IS_ENABLED, IS_PRO, FLAGS });
+
+  if (!IS_ENABLED) {
+    console.log('🔔 NotifAdvancedPro disabled via flag');
+    return;
+  }
+  if (window.__notifAdvBound) return;
+  window.__notifAdvBound = true;
+
+  // --- Storage keys (shared dedupe with Core) ---
+  const K_ADV_ON   = 'flicklet:notif:adv:on';
+  const K_LEAD_H   = 'flicklet:notif:adv:leadHours';
+  const K_LISTS    = 'flicklet:notif:adv:lists';
+  const K_SEEN     = 'flicklet:notif:seen'; // shared with Core
+
+  // --- Settings helpers ---
+  const getAdvOn = () => {
+    if (!IS_PRO) return false; // hard gate
+    try { return localStorage.getItem(K_ADV_ON) === '1'; } catch { return false; }
+  };
+  const setAdvOn = (v) => {
+    try { localStorage.setItem(K_ADV_ON, v ? '1' : '0'); } catch {}
+    try {
+      if (window.FlickletApp?.settings) {
+        window.FlickletApp.settings.notifAdvanced = !!v;
+        window.FlickletApp.saveSettings?.();
+      }
+    } catch {}
+  };
+  const getLeadHours = () => {
+    try {
+      const n = Number(localStorage.getItem(K_LEAD_H));
+      return Number.isFinite(n) && n > 0 ? n : 24;
+    } catch { return 24; }
+  };
+  const setLeadHours = (n) => {
+    try { localStorage.setItem(K_LEAD_H, String(Math.max(1, Math.floor(n)))) } catch {}
+  };
+  const DEF_LISTS = ['tv.watching'];
+  const getLists = () => {
+    try {
+      const v = JSON.parse(localStorage.getItem(K_LISTS) || 'null');
+      return Array.isArray(v) && v.length ? v : DEF_LISTS;
+    } catch { return DEF_LISTS; }
+  };
+  const setLists = (arr) => {
+    try { localStorage.setItem(K_LISTS, JSON.stringify(arr)); } catch {}
+  };
+  const getSeen = () => {
+    try { return JSON.parse(localStorage.getItem(K_SEEN) || '{}'); } catch { return {}; }
+  };
+  const setSeen = (obj) => {
+    try { localStorage.setItem(K_SEEN, JSON.stringify(obj)); } catch {}
+  };
+
+  // --- Utilities (aligned with Core) ---
+  const hoursUntil = (when) => (when.getTime() - Date.now()) / 36e5;
+  function parseAirDateLocal(show, ep) {
+    const raw = (ep && (ep.air_date || ep.first_air_date)) || show.first_air_date || null;
+    if (!raw) return null;
+    const [y, m, d] = String(raw).split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(y, m - 1, d, 20, 0, 0, 0); // 8pm local default
+  }
+  const safeTitle = (show, ep) => {
+    const t = show.name || show.title || 'Unknown';
+    const sn = ep?.season_number, en = ep?.episode_number;
+    return sn != null && en != null ? `${t} S${sn}E${en}` : t;
+  };
+  const epKey = (show, ep) => {
+    if (ep?.id != null) return `ep:${ep.id}`;
+    const mt = show.media_type || (show.first_air_date ? 'tv' : 'movie');
+    return `ep:${mt}:${show.id}:S${ep?.season_number || '?'}:E${ep?.episode_number || '?'}`;
+  };
+
+  // --- Candidate finder (advanced) ---
+  function* listSources(listKeys) {
+    const data = (window.FlickletApp?.data) || window.appData || {};
+    for (const key of listKeys) {
+      const path = key.split('.'); // e.g., ['tv','watching']
+      let cur = data;
+      for (const p of path) cur = cur?.[p];
+      if (Array.isArray(cur)) yield { key, items: cur };
+    }
+  }
+
+  function findCandidatesAdv(leadHours, listKeys) {
+    const out = [];
+    for (const src of listSources(listKeys)) {
+      if (!src.items?.length) continue;
+      for (const show of src.items) {
+        const ep = show?.next_episode_to_air;
+        if (!ep) continue;
+        const when = parseAirDateLocal(show, ep);
+        if (!when) continue;
+        const h = hoursUntil(when);
+        if (h >= 0 && h <= leadHours) {
+          out.push({ show, ep, when, hours: h, key: epKey(show, ep), src: src.key });
+        }
+      }
+    }
+    return out.sort((a,b) => a.when - b.when);
+  }
+
+  function notifyUpcoming(c) {
+    const msg = `Upcoming (${c.src}): ${safeTitle(c.show, c.ep)} in ${Math.max(0, Math.floor(c.hours))}h`;
+    try {
+      if (typeof window.showNotification === 'function') {
+        window.showNotification(msg, 'info');
+      } else {
+        console.log('🔔', msg);
+      }
+    } catch (e) { console.error('Notif toast failed', e); }
+  }
+
+  function runScanAdv(reason = 'manual') {
+    if (!IS_PRO || !getAdvOn()) return;
+    const lead = getLeadHours();
+    const lists = getLists();
+    const seen = getSeen();
+    const cands = findCandidatesAdv(lead, lists);
+
+    console.log('🔔 NotifAdvancedPro scan', { reason, lead, lists, count: cands.length, cands });
+
+    let changed = false;
+    for (const c of cands) {
+      if (seen[c.key]) continue; // already notified by Core or Advanced
+      notifyUpcoming(c);
+      seen[c.key] = { at: Date.now(), adv: true };
+      changed = true;
+    }
+    if (changed) setSeen(seen);
+  }
+
+  // Schedule (Advanced runs slightly earlier than Core on startup)
+  const start = () => {
+    setTimeout(() => runScanAdv('startup-2s'), 2000);
+    setTimeout(() => runScanAdv('startup-12s'), 12000);
+    window.__notifAdvInterval = window.setInterval(() => runScanAdv('interval-30m'), 30 * 60 * 1000);
+  };
+
+  // Settings UI (progressive) - with retry logic
+  const injectAdvancedSettings = () => {
+    try {
+      console.log('🔔 NotifAdvancedPro: Attempting settings injection...');
+      const settingsSection = document.getElementById('settingsSection');
+      console.log('🔔 NotifAdvancedPro: Settings section found:', !!settingsSection);
+      if (settingsSection && !document.getElementById('notifAdvRow')) {
+      const lists = getLists();
+      const lead = getLeadHours();
+      const on = getAdvOn();
+
+      const card = document.createElement('div');
+      card.id = 'notifAdvRow';
+      card.className = 'card';
+      const disabled = IS_PRO ? '' : 'disabled';
+      const disAttr = IS_PRO ? '' : 'disabled aria-disabled="true"';
+
+      card.innerHTML = `
+        <h4>🔔 Advanced Notifications (PRO)</h4>
+        <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
+          Configure advanced notification settings with custom lead times and list monitoring.
+        </p>
+        <div class="settings-block ${disabled}" style="display: flex; flex-direction: column; gap: 15px;">
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="advOn" ${on ? 'checked' : ''} ${disAttr}>
+              <span>Enable advanced notifications</span>
+            </label>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <label for="advLead" style="font-weight: 500;">Lead time (hours):</label>
+            <select id="advLead" ${disAttr} aria-label="Notification lead time" style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px;">
+              ${[6,12,24,48].map(h=>`<option value="${h}" ${lead===h?'selected':''}>${h}</option>`).join('')}
+              <option value="custom" ${![6,12,24,48].includes(lead)?'selected':''}>Custom…</option>
+            </select>
+            <input type="number" id="advLeadCustom" min="1" step="1" value="${lead}" style="width:88px;padding: 4px 8px;border: 1px solid #ccc;border-radius: 4px;" ${![6,12,24,48].includes(lead)?'':'hidden'} ${disAttr} aria-label="Custom lead hours">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="font-weight: 500;">Lists to monitor:</div>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+              <label style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="advL_tvWatching" ${lists.includes('tv.watching')?'checked':''} ${disAttr}>
+                <span>TV — Watching</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="advL_tvWishlist" ${lists.includes('tv.wishlist')?'checked':''} ${disAttr}>
+                <span>TV — Wishlist</span>
+              </label>
+            </div>
+          </div>
+          ${IS_PRO ? '' : '<div style="font-size: 0.8rem; color: #666; font-style: italic;" role="note">PRO subscription required to use advanced notifications.</div>'}
+        </div>
+      `;
+      
+      // Insert after Episode Reminders card (before Data Tools)
+      const allCards = settingsSection.querySelectorAll('.card');
+      let insertAfterCard = null;
+      
+      // Find the Episode Reminders card
+      for (let i = 0; i < allCards.length; i++) {
+        const h4 = allCards[i].querySelector('h4');
+        if (h4 && h4.textContent.includes('Episode Reminders')) {
+          insertAfterCard = allCards[i];
+          break;
+        }
+      }
+      
+      if (insertAfterCard) {
+        // Insert after the Episode Reminders card
+        insertAfterCard.parentNode.insertBefore(card, insertAfterCard.nextSibling);
+      } else {
+        // Look for Data Tools card as fallback
+        for (let i = 0; i < allCards.length; i++) {
+          const h4 = allCards[i].querySelector('h4');
+          if (h4 && h4.textContent.includes('Data Tools')) {
+            allCards[i].parentNode.insertBefore(card, allCards[i]);
+            break;
+          }
+        }
+        
+        // Final fallback: append to the end of settings section
+        if (!card.parentNode) {
+          settingsSection.appendChild(card);
+        }
+      }
+
+      const $ = (id) => card.querySelector(id);
+      const onChange = () => {
+        if (!IS_PRO) return;
+        const on = $('#advOn')?.checked ?? $('#advOn').checked;
+        const leadSel = $('#advLead').value;
+        const lead = leadSel === 'custom' ? Math.max(1, Number($('#advLeadCustom').value || 24)) : Number(leadSel);
+        const l = [];
+        if ($('#advL_tvWatching').checked) l.push('tv.watching');
+        if ($('#advL_tvWishlist').checked) l.push('tv.wishlist');
+        setAdvOn(on);
+        setLeadHours(lead);
+        setLists(l.length ? l : DEF_LISTS);
+        if (on) runScanAdv('settings-change');
+      };
+
+      $('#advOn')?.addEventListener('change', onChange, { passive: true });
+      $('#advLead')?.addEventListener('change', (e) => {
+        if (e.target.value === 'custom') {
+          $('#advLeadCustom').hidden = false;
+          $('#advLeadCustom').focus();
+        } else {
+          $('#advLeadCustom').hidden = true;
+        }
+        onChange();
+      }, { passive: true });
+      $('#advLeadCustom')?.addEventListener('change', onChange, { passive: true });
+      $('#advL_tvWatching')?.addEventListener('change', onChange, { passive: true });
+      $('#advL_tvWishlist')?.addEventListener('change', onChange, { passive: true });
+      
+      console.log('🔔 NotifAdvancedPro: Settings card injected successfully');
+      return true; // Success
+    } else {
+      console.log('🔔 NotifAdvancedPro: Settings section not found or card already exists');
+      return false; // Will retry
+    }
+    } catch (e) {
+      console.warn('Failed to inject advanced notification settings:', e);
+      return false; // Will retry
+    }
+  };
+
+  // Retry injection with multiple strategies
+  const tryInjectAdvancedSettings = () => {
+    if (injectAdvancedSettings()) return; // Success
     
+    // Retry strategies
+    setTimeout(() => {
+      if (injectAdvancedSettings()) return;
+      
+      // Try again after DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          setTimeout(() => injectAdvancedSettings(), 100);
+        });
+      }
+      
+      // Try again after window load
+      if (document.readyState !== 'complete') {
+        window.addEventListener('load', () => {
+          setTimeout(() => injectAdvancedSettings(), 500);
+        });
+      }
+      
+      // Try when settings tab is clicked
+      const settingsBtn = document.querySelector('[onclick*="settings"]');
+      if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => {
+          setTimeout(() => injectAdvancedSettings(), 200);
+        });
+      }
+      
+      // Try with window.switchToTab hook
+      if (window.switchToTab) {
+        const originalSwitchToTab = window.switchToTab;
+        window.switchToTab = function(tab) {
+          const result = originalSwitchToTab.call(this, tab);
+          if (tab === 'settings') {
+            setTimeout(() => injectAdvancedSettings(), 100);
+          }
+          return result;
+        };
+      }
+    }, 100);
+  };
+
+  // Initial injection attempt
+  tryInjectAdvancedSettings();
+
+  // Visibility re-scan
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') runScanAdv('visible');
+  });
+
+  // Start
+  start();
+  console.log('🔔 NotifAdvancedPro initialized', { pro: IS_PRO });
+})();
+
+// === MP-ThemePacks T0 (guarded) ===
+(() => {
+  const FLAGS = (window.FLAGS = window.FLAGS || {});
+  if (FLAGS.themePacksEnabled === false) {
+    console.log('🎨 ThemePacks disabled via flag');
+    return;
+  }
+  if (window.__themePacksBound) return;
+  window.__themePacksBound = true;
+
+  const STORAGE_KEY = 'flicklet:theme';
+  const THEMES = [
+    { id: 'classic',  label: 'Classic (Free)', pro: false },
+    { id: 'sunset',   label: 'Sunset (Pro)',   pro: true  },
+    { id: 'midnight', label: 'Midnight (Pro)', pro: true  },
+    { id: 'forest',   label: 'Forest (Pro)',   pro: true  }
+  ];
+
+  const isPro = !!FLAGS.proEnabled;
+
+  function getSavedTheme() {
+    try { return localStorage.getItem(STORAGE_KEY) || 'classic'; } catch { return 'classic'; }
+  }
+  function saveTheme(id) {
+    try { localStorage.setItem(STORAGE_KEY, id); } catch {}
+    try {
+      if (window.FlickletApp?.settings) {
+        window.FlickletApp.settings.themePack = id;
+        window.FlickletApp.saveSettings?.();
+      }
+    } catch {}
+  }
+
+  function applyTheme(id) {
+    // Gate: if not PRO and theme is pro-only, fall back to classic
+    const t = THEMES.find(t => t.id === id) || THEMES[0];
+    const allowed = isPro || !t.pro;
+    const finalId = allowed ? t.id : 'classic';
+    
+    // For classic theme, remove data-theme to use default dark mode
+    if (finalId === 'classic') {
+      delete document.body.dataset.theme;
+    } else {
+      document.body.dataset.theme = finalId;
+    }
+    
+    console.log('🎨 Theme applied:', finalId, '(requested:', id + (allowed ? '' : ', downgraded') + ')');
+  }
+
+  // Bootstrap current theme
+  applyTheme(getSavedTheme());
+
+  // Expose for quick manual test
+  window.setThemePack = function(id) {
+    applyTheme(id);
+    saveTheme(id);
+  };
+
+  // Settings UI (progressive enhancement) - with retry logic
+  const injectThemePacksSettings = () => {
+    try {
+      console.log('🎨 ThemePacks: Attempting settings injection...');
+      const settingsSection = document.getElementById('settingsSection');
+      console.log('🎨 ThemePacks: Settings section found:', !!settingsSection);
+      if (settingsSection && !document.getElementById('themePacksRow')) {
+      const card = document.createElement('div');
+      card.id = 'themePacksRow';
+      card.className = 'card';
+      const current = getSavedTheme();
+
+      const options = THEMES.map(t => {
+        const dis = (!isPro && t.pro) ? 'disabled aria-disabled="true"' : '';
+        const lock = (!isPro && t.pro) ? ' 🔒' : '';
+        const sel = (t.id === current) ? 'selected' : '';
+        return `<option value="${t.id}" ${sel} ${dis}>${t.label}${lock}</option>`;
+      }).join('');
+
+      card.innerHTML = `
+        <h4>🎨 Theme Packs</h4>
+        <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
+          Choose a visual theme for your Flicklet experience. Pro users get access to premium themes.
+        </p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+          <label for="themePackSelect" style="font-weight: 500;">Theme:</label>
+          <select id="themePackSelect" aria-label="Choose theme" style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px;">${options}</select>
+          ${!isPro ? '<div style="font-size: 0.8rem; color: #666; font-style: italic;" role="note">Pro unlocks more themes.</div>' : ''}
+        </div>
+      `;
+      
+      // Insert after Notifications card (before Data Tools)
+      const allCards = settingsSection.querySelectorAll('.card');
+      let insertAfterCard = null;
+      
+      // Find the Notifications card
+      for (let i = 0; i < allCards.length; i++) {
+        const h4 = allCards[i].querySelector('h4');
+        if (h4 && h4.textContent.includes('Notifications')) {
+          insertAfterCard = allCards[i];
+          break;
+        }
+      }
+      
+      if (insertAfterCard) {
+        // Insert after the Notifications card
+        insertAfterCard.parentNode.insertBefore(card, insertAfterCard.nextSibling);
+      } else {
+        // Fallback: append to the end of settings section
+        settingsSection.appendChild(card);
+      }
+
+      const sel = card.querySelector('#themePackSelect');
+      sel.addEventListener('change', (e) => {
+        const requested = e.target.value;
+        // If non-pro chooses a locked theme, snap back and nudge
+        const chosen = THEMES.find(t => t.id === requested);
+        if (chosen?.pro && !isPro) {
+          // snap back visually
+          e.target.value = getSavedTheme();
+          // gentle nudge via existing notification system if present
+          if (typeof window.showNotification === 'function') {
+            window.showNotification('That theme is a Pro feature. Upgrade to unlock.', 'info');
+          } else {
+            console.log('Pro theme selected without Pro.');
+          }
+          return;
+        }
+        applyTheme(requested);
+        saveTheme(requested);
+      }, { passive: true });
+      
+      console.log('🎨 ThemePacks: Settings card injected successfully');
+      return true; // Success
+    } else {
+      console.log('🎨 ThemePacks: Settings section not found or card already exists');
+      return false; // Will retry
+    }
+    } catch (e) {
+      console.warn('Failed to inject theme packs settings:', e);
+      return false; // Will retry
+    }
+  };
+
+  // Retry injection with multiple strategies
+  const tryInjectThemePacksSettings = () => {
+    if (injectThemePacksSettings()) return; // Success
+    
+    // Retry strategies
+    setTimeout(() => {
+      if (injectThemePacksSettings()) return;
+      
+      // Try again after DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          setTimeout(() => injectThemePacksSettings(), 100);
+        });
+      }
+      
+      // Try again after window load
+      if (document.readyState !== 'complete') {
+        window.addEventListener('load', () => {
+          setTimeout(() => injectThemePacksSettings(), 500);
+        });
+      }
+      
+      // Try when settings tab is clicked
+      const settingsBtn = document.querySelector('[onclick*="settings"]');
+      if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => {
+          setTimeout(() => injectThemePacksSettings(), 200);
+        });
+      }
+      
+      // Try with window.switchToTab hook
+      if (window.switchToTab) {
+        const originalSwitchToTab = window.switchToTab;
+        window.switchToTab = function(tab) {
+          const result = originalSwitchToTab.call(this, tab);
+          if (tab === 'settings') {
+            setTimeout(() => injectThemePacksSettings(), 100);
+          }
+          return result;
+        };
+      }
+    }, 100);
+  };
+
+  // Initial injection attempt
+  tryInjectThemePacksSettings();
+
+  console.log('🎨 ThemePacks initialized', { pro: isPro });
+})();
+
+// === MP-Playlists v1 (guarded) ===
+(() => {
+  const FLAGS = (window.FLAGS = window.FLAGS || {});
+  if (FLAGS.playlistsEnabled === false) {
+    console.log('📼 Playlists/Spotlight disabled via flag');
+    return;
+  }
+  if (window.__playlistV1Bound) return;
+  window.__playlistV1Bound = true;
+
+  // Seed curated picks (IDs only; safe for nocookie embeds)
+  const SEED = [
+    { id: 'dQw4w9WgXcQ', title: 'Top 10 Sci-Fi Shows (This Season)', genre: 'Sci-Fi' },
+    { id: '5qap5aO4i9A', title: 'Top 10 Dramas You Missed', genre: 'Drama' },
+    { id: 'Zi_XLOBDo_Y', title: 'Top 10 Comedies for Binge Night', genre: 'Comedy' }
+  ];
+
+  const LS_KEY = 'flicklet:spotlight:video'; // JSON: { id, title?, genre? }
+
+  // Helpers
+  const parseYouTube = (value) => {
+    if (!value) return null;
+    const v = String(value).trim();
+    // Accept raw ID or full URL
+    if (/^[\w-]{11}$/.test(v)) return v;
+    try {
+      const u = new URL(v);
+      if (u.hostname.includes('youtube.com')) return u.searchParams.get('v');
+      if (u.hostname.includes('youtu.be')) return u.pathname.replace('/', '') || null;
+    } catch {}
+    return null;
+  };
+
+  function chooseVideo() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        const obj = JSON.parse(raw);
+        if (obj && obj.id && /^[\w-]{11}$/.test(obj.id)) return obj;
+      }
+    } catch {}
+    // Rotate seed by day
+    const idx = Math.abs(new Date().toDateString().split('').reduce((a,c)=>a+c.charCodeAt(0),0)) % SEED.length;
+    return SEED[idx];
+  }
+
+  function findHomeMount() {
+    return document.querySelector('#homeSection');
+  }
+
+  function renderSpotlight(container, vid) {
+    console.log('📼 Playlists: renderSpotlight called', { container: !!container, vid: vid?.id, title: vid?.title });
+    if (!container || !vid?.id) return;
+    // Idempotent: clear existing instance
+    const prev = container.querySelector('.playlist-card[data-mp="v1"]');
+    if (prev) prev.remove();
+
+    const card = document.createElement('section');
+    card.className = 'playlist-card';
+    card.dataset.mp = 'v1';
+    card.innerHTML = `
+      <div class="video-embed" role="region" aria-label="Curated video">
+        <iframe
+          src="https://www.youtube-nocookie.com/embed/${vid.id}?rel=0&modestbranding=1"
+          title="${(vid.title || 'Curated video').replace(/"/g,'&quot;')}"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <div class="video-meta">
+        <div class="video-title">${(vid.title || 'Curated Spotlight').replace(/</g,'&lt;')}</div>
+        ${vid.genre ? `<span class="pill" aria-label="Genre">${vid.genre}</span>` : ''}
+        <span class="pill" aria-label="Curated by">Curated by Flicklet</span>
+        <div class="video-actions">
+          <button class="btn-ghost" data-action="openYT" aria-label="Open on YouTube">Open</button>
+          <button class="btn-ghost" data-action="dismissSpotlight" aria-label="Hide this card">Hide</button>
+        </div>
+      </div>
+    `;
+    container.prepend(card);
+    console.log('📼 Playlists: Card inserted into home section');
+
+    card.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+      if (action === 'openYT') {
+        window.open(`https://www.youtube.com/watch?v=${vid.id}`, '_blank', 'noopener');
+      } else if (action === 'dismissSpotlight') {
+        card.remove();
+        try { sessionStorage.setItem('flicklet:spotlight:dismiss', '1'); } catch {}
+      }
+    }, { passive: true });
+  }
+
+  function injectSettingsRow() {
+    try {
+      const container = document.getElementById('settingsList') || document.querySelector('#settingsTab .settings-list');
+      if (!container || document.getElementById('spotlightVideoRow')) return;
+
+      const row = document.createElement('div');
+      row.id = 'spotlightVideoRow';
+      row.className = 'settings-row';
+      const saved = (() => { try { return JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch { return null; } })();
+
+      row.innerHTML = `
+        <label class="settings-label" for="spotlightInput">Home video spotlight (test)</label>
+        <input id="spotlightInput" type="text" placeholder="Paste YouTube URL or ID"
+               value="${saved?.id ? `https://youtu.be/${saved.id}` : ''}" style="min-width:260px">
+        <button class="btn" id="spotlightSave">Save</button>
+        <button class="btn secondary" id="spotlightUseDefault">Use curated</button>
+      `;
+      container.appendChild(row);
+
+      const $ = (id) => row.querySelector(id);
+      $('#spotlightSave').addEventListener('click', () => {
+        const raw = String($('#spotlightInput').value || '').trim();
+        const id = parseYouTube(raw);
+        if (!id) {
+          if (typeof window.showNotification === 'function') {
+            window.showNotification('Invalid YouTube URL/ID.', 'warn');
+          } else { alert('Invalid YouTube URL/ID.'); }
+          return;
+        }
+        const payload = { id };
+        localStorage.setItem(LS_KEY, JSON.stringify(payload));
+        if (typeof window.showNotification === 'function') {
+          window.showNotification('Spotlight video saved.', 'success');
+        }
+        // Re-render on Home if visible
+        const mount = findHomeMount();
+        if (mount && document.visibilityState === 'visible') renderSpotlight(mount, payload);
+      }, { passive: true });
+
+      $('#spotlightUseDefault').addEventListener('click', () => {
+        localStorage.removeItem(LS_KEY);
+        if (typeof window.showNotification === 'function') {
+          window.showNotification('Reverted to curated spotlight.', 'info');
+        }
+        const mount = findHomeMount();
+        if (mount && document.visibilityState === 'visible') renderSpotlight(mount, chooseVideo());
+      }, { passive: true });
+    } catch {}
+  }
+
+  function boot() {
+    // Respect "Hide" for this session
+    try { if (sessionStorage.getItem('flicklet:spotlight:dismiss') === '1') return; } catch {}
+
+    const mount = findHomeMount();
+    console.log('📼 Playlists: Looking for home mount', { mount: !!mount, homeSection: !!document.getElementById('homeSection') });
+    if (!mount) return;
+    renderSpotlight(mount, chooseVideo());
+  }
+
+  // Re-render when home tab becomes active
+  function setupHomeTabListener() {
+    const homeTab = document.getElementById('homeTab');
+    if (homeTab) {
+      homeTab.addEventListener('click', () => {
+        setTimeout(() => {
+          const mount = findHomeMount();
+          if (mount && !mount.querySelector('.playlist-card[data-mp="v1"]')) {
+            console.log('📼 Playlists: Re-rendering on home tab click');
+            boot();
+          }
+        }, 100);
+      });
+    }
+  }
+
+  // Start with a delay to ensure DOM is ready
+  setTimeout(() => {
+    boot();
+  }, 500);
+  
+  setupHomeTabListener();
+  // Settings row (optional, handy for QA)
+  injectSettingsRow();
+
+  console.log('📼 Playlists/Spotlight v1 initialized');
+})();
+
+// === MP-Playlists v2 (curated rows, PRO) ===
+(() => {
+  const FLAGS = (window.FLAGS = window.FLAGS || {});
+  if (FLAGS.playlistsEnabled === false || FLAGS.playlistsProEnabled === false) {
+    console.log('📼 Playlists v2 disabled by flags');
+    return;
+  }
+  if (window.__playlistV2Bound) return;
+  window.__playlistV2Bound = true;
+
+  const IS_PRO = !!FLAGS.proEnabled;
+
+  // Minimal curated catalog (IDs only; safe for nocookie embeds)
+  const CATALOG = [
+    {
+      title: 'Top Sci-Fi Today', genre: 'Sci-Fi',
+      videos: [
+        { id:'dQw4w9WgXcQ', title:'Top 10 Sci-Fi Shows (This Season)' },
+        { id:'2vjPBrBU-TM', title:'Hidden Sci-Fi Gems' },
+        { id:'3JZ_D3ELwOQ', title:'New Space Epics Ranked' }
+      ]
+    },
+    {
+      title: 'Underrated Dramas', genre: 'Drama',
+      videos: [
+        { id:'Zi_XLOBDo_Y', title:'10 Dramas You Missed' },
+        { id:'FTQbiNvZqaY', title:'Modern Classics' },
+        { id:'fRh_vgS2dFE', title:'Slow Burns Worth It' }
+      ]
+    },
+    {
+      title: 'Bingeable Comedies', genre: 'Comedy',
+      videos: [
+        { id:'5qap5aO4i9A', title:'Laugh Track: Best Binges' },
+        { id:'OPf0YbXqDm0', title:'New Comfort Watches' },
+        { id:'9bZkp7q19f0', title:'Crowd Favorites' }
+      ]
+    }
+  ];
+
+  const LS_ROWS = 'flicklet:playlists:rowsCount'; // "1" | "2" | "3"
+  const LS_DENSE = 'flicklet:playlists:dense';    // "1" | "0"
+  const rowsCount = () => {
+    try { const n = Number(localStorage.getItem(LS_ROWS)); return [1,2,3].includes(n) ? n : 2; }
+    catch { return 2; }
+  };
+  const isDense = () => { try { return localStorage.getItem(LS_DENSE) === '1'; } catch { return false; } };
+
+  function findHomeMount() {
+    return document.querySelector('#homeSection');
+  }
+
+  function ytEmbed(id, title) {
+    return `<iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1"
+                    title="${(title||'Playlist video').replace(/"/g,'&quot;')}"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen></iframe>`;
+  }
+
+  function renderUpsell(container) {
+    const upsell = document.createElement('div');
+    upsell.className = 'playlist-upsell';
+    upsell.textContent = 'More curated rows are available with Pro.';
+    container.appendChild(upsell);
+  }
+
+  function renderRow(container, row) {
+    const wrap = document.createElement('section');
+    wrap.className = 'playlist-row';
+
+    const head = document.createElement('div');
+    head.className = 'row-head';
+    head.innerHTML = `
+      <div class="row-title">${row.title.replace(/</g,'&lt;')}</div>
+      ${row.genre ? `<span class="pill">${row.genre}</span>` : ''}
+    `;
+    wrap.appendChild(head);
+
+    const grid = document.createElement('div');
+    grid.className = 'playlist-grid';
+
+    // Primary tile
+    const primary = document.createElement('div');
+    primary.className = 'playlist-item';
+    primary.innerHTML = ytEmbed(row.videos[0].id, row.videos[0].title);
+    grid.appendChild(primary);
+
+    // Secondary area
+    if (isDense()) {
+      // multiple small embeds
+      const denseCol = document.createElement('div');
+      denseCol.className = 'playlist-grid';
+      denseCol.style.gridTemplateColumns = '1fr 1fr';
+      denseCol.style.gap = '8px';
+      row.videos.slice(1).forEach(v => {
+        const item = document.createElement('div');
+        item.className = 'playlist-item';
+        item.innerHTML = ytEmbed(v.id, v.title);
+        denseCol.appendChild(item);
+      });
+      grid.appendChild(denseCol);
+    } else {
+      // compact link list
+      const list = document.createElement('div');
+      list.className = 'playlist-list';
+      row.videos.slice(1).forEach(v => {
+        const a = document.createElement('a');
+        a.className = 'playlist-link';
+        a.href = `https://www.youtube.com/watch?v=${v.id}`;
+        a.target = '_blank'; a.rel='noopener';
+        a.textContent = v.title;
+        list.appendChild(a);
+      });
+      grid.appendChild(list);
+    }
+
+    wrap.appendChild(grid);
+    container.appendChild(wrap);
+  }
+
+  function boot() {
+    const mount = findHomeMount();
+    if (!mount) return;
+
+    // Idempotent re-render
+    let section = mount.querySelector('.playlist-section[data-mp="v2"]');
+    if (section) section.remove();
+
+    section = document.createElement('section');
+    section.className = 'playlist-section';
+    section.dataset.mp = 'v2';
+    mount.appendChild(section);
+
+    if (!IS_PRO) {
+      renderUpsell(section);
+      return;
+    }
+
+    const count = rowsCount();
+    CATALOG.slice(0, count).forEach(row => renderRow(section, row));
+  }
+
+  function injectSettings() {
+    try {
+      const container = document.getElementById('settingsSection');
+      if (!container || document.getElementById('playlistRowsSettings')) return;
+
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.id = 'playlistRowsSettings';
+      const rc = rowsCount();
+      const dense = isDense();
+      card.innerHTML = `
+        <div class="card-header">
+          <h3>Curated Rows (Home)</h3>
+        </div>
+        <div class="card-body">
+          <div class="settings-row">
+            <label class="settings-label" for="rowsCountSel">Rows count</label>
+            <select id="rowsCountSel" aria-label="Rows count">
+              <option value="1" ${rc===1?'selected':''}>1</option>
+              <option value="2" ${rc===2?'selected':''}>2</option>
+              <option value="3" ${rc===3?'selected':''}>3</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label><input id="rowsDenseChk" type="checkbox" ${dense?'checked':''}> Dense tiles</label>
+          </div>
+        </div>
+      `;
+      
+      // Insert after Theme Packs card
+      const themeCard = document.getElementById('themePacksCard');
+      if (themeCard) {
+        themeCard.insertAdjacentElement('afterend', card);
+      } else {
+        container.appendChild(card);
+      }
+
+      const sel = card.querySelector('#rowsCountSel');
+      const chk = card.querySelector('#rowsDenseChk');
+      sel.addEventListener('change', () => {
+        try { localStorage.setItem(LS_ROWS, sel.value); } catch {}
+        boot();
+      }, { passive: true });
+      chk.addEventListener('change', () => {
+        try { localStorage.setItem(LS_DENSE, chk.checked ? '1' : '0'); } catch {}
+        boot();
+      }, { passive: true });
+    } catch {}
+  }
+
+  // Start with delay to ensure DOM is ready
+  setTimeout(() => {
+    boot();
+  }, 1000);
+  
+  // Settings injection with retry
+  setTimeout(() => {
+    injectSettings();
+  }, 1500);
+
+  // Refresh when returning to tab
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') boot();
+  });
+
+  // Global refresh function for PRO state changes
+  window.__FlickletRefreshPlaylists = function() {
+    console.log('📼 Playlists v2: Refreshing due to PRO state change');
+    boot();
+  };
+
+  console.log('📼 Playlists v2 (curated rows) initialized', { pro: IS_PRO });
+})();

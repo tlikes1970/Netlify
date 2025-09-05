@@ -91,10 +91,6 @@
         border-color: var(--border);
       }
       
-      .dark-mode .show-card {
-        background: var(--card);
-        border-color: var(--border);
-      }
       
 
       .mardi .header {
@@ -938,27 +934,7 @@
         transition: transform 0.1s ease;
       }
       
-      /* Smooth card animations */
-      .show-card {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        animation: cardSlideIn 0.5s ease-out;
-      }
       
-      .show-card:hover {
-        transform: translateY(-4px) scale(1.02);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-      }
-      
-      @keyframes cardSlideIn {
-        from {
-          opacity: 0;
-          transform: translateY(20px) scale(0.95);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
-      }
       
       /* Enhanced search input */
       .search-input:focus {
@@ -1100,17 +1076,6 @@
         min-height: 80px;
       }
 
-      /* Cards */
-      .show-card {
-        display: grid;
-        grid-template-columns: 92px 1fr;
-        gap: 16px;
-        border: 2px solid var(--border);
-        border-radius: 12px;
-        padding: 14px;
-        margin: 12px 0;
-        background: var(--bg);
-      }
       .show-poster {
         width: 92px;
         height: 138px;
@@ -1576,28 +1541,27 @@
           min-height: 44px;
         }
 
-        .show-actions {
-          display: flex !important;
-          flex-direction: column !important;
-          gap: 8px !important;
+        @media (max-width: 640px) {
+          .show-actions {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+          }
         }
-        .show-actions .btn {
-          display: block !important;
-          width: 100% !important;
-          margin: 0 !important;
-          box-sizing: border-box !important;
-          text-align: center !important;
-          white-space: normal !important;
-          overflow: hidden !important;
-          text-overflow: ellipsis !important;
-          min-height: 44px !important;
+        @media (max-width: 640px) {
+          .show-actions .btn {
+            display: block !important;
+            width: 100% !important;
+            margin: 0 !important;
+            box-sizing: border-box !important;
+            text-align: center !important;
+            white-space: normal !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            min-height: 44px !important;
+          }
         }
         
-        .show-card {
-          grid-template-columns: 80px 1fr;
-          gap: 12px;
-          padding: 12px;
-        }
         .show-poster {
           width: 80px;
           height: 120px;
@@ -1641,11 +1605,6 @@
         .btn {
           padding: 8px 12px;
           font-size: 14px;
-        }
-        .show-card {
-          grid-template-columns: 70px 1fr;
-          gap: 10px;
-          padding: 10px;
         }
         .show-poster {
           width: 70px;
@@ -1867,11 +1826,11 @@
       body.dark-mode :focus-visible {
         outline-color: #fff;
       }
-      /* Card overflow & wrapping */
-      .show-card { overflow: hidden; }
-      .show-title, .show-meta, .rating-container, .show-actions { min-width: 0; overflow-wrap: anywhere; }
-      .show-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-      .show-actions .btn { white-space: normal; }
+      @media (min-width: 641px) {
+        .show-title, .show-meta, .rating-container, .show-actions { min-width: 0; overflow-wrap: anywhere; }
+        .show-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .show-actions .btn { white-space: normal; }
+      }
       /* Poster button reset */
       .poster-button {
         border: none;

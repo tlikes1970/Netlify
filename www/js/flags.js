@@ -1,14 +1,23 @@
 // Feature flags and safety guard for Flicklet
 window.FLAGS = Object.assign({
-  proEnabled: false,                          // flip when you want to demo Pro
+  proEnabled: true,                           // flip when you want to demo Pro
   notifEngineEnabled: true,                   // core notifications (free)
-  notifAdvancedEnabled: false,                // PRO
+  notifAdvancedEnabled: true,                 // PRO
   statsEnabled: true,
   skeletonsEnabled: true,
   flickwordModalEnabled: true,                // optional iframe modal
   frontSpotlightEnabled: true,                // replaces horoscope
   mobilePolishEnabled: true,                  // mobile layout polish v1
   notesChipEnabled: true,                     // notes/tags chip on cards
+  shareModalSanityEnabled: true,              // share modal a11y + scroll lock + focus trap
+  condensedModeFeatureEnabled: true,          // condensed mode hardening
+  safeAreasSanityEnabled: true,               // sticky & safe-areas sanity
+  a11yPolishEnabled: true,                    // tap targets & a11y polish
+  themePacksEnabled: true,                    // theme packs (T0)
+  providersEnabled: true,                     // where to watch providers
+  extrasEnabled: true,                        // extras/outtakes discovery
+            playlistsEnabled: true,                     // curated spotlight video
+          playlistsProEnabled: true,                  // curated rows (PRO)
 }, window.FLAGS || {});
 
 window.guard = (cond, fn) => { 

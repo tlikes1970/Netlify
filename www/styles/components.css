@@ -1,5 +1,47 @@
 /* Flicklet - Component CSS Styles */
 
+/* === MP-2.2 TOKENS (cards) === */
+:root {
+  /* Desktop defaults */
+  --poster-w-desktop: 92px;
+  --card-gap-desktop: 16px;
+  --card-pad-y-desktop: 14px;
+  --card-pad-x-desktop: 14px;
+  --meta-title-size-desktop: 18px;
+  --meta-line-desktop: 1.3;
+
+  /* Mobile defaults (overridable via .mobile-v1) */
+  --poster-w: 64px;
+  --actions-w: 44px;
+  --card-gap: 8px;
+  --card-pad-y: 8px;
+  --card-pad-x: 12px;
+  --meta-title-size: 16px;
+  --meta-line: 1.2;
+
+  /* Optional theme tokens used by cards */
+  --card-bg: transparent;
+  --card-border: 0;
+}
+
+/* === MP-2.2 DESKTOP CANONICAL CARD (≥641px) === */
+@media (min-width: 641px) {
+  .show-card {
+    display: grid;
+    grid-template-columns: var(--poster-w-desktop) 1fr;
+    gap: var(--card-gap-desktop);
+    padding: var(--card-pad-y-desktop) var(--card-pad-x-desktop);
+    background: var(--card-bg);
+    border: var(--card-border);
+    border-radius: 8px;
+  }
+  .show-card .show-title {
+    font-size: var(--meta-title-size-desktop);
+    line-height: var(--meta-line-desktop);
+    margin: 0 0 4px;
+  }
+}
+
 /* Tab Container */
 .tab-container {
   display: flex;
@@ -468,48 +510,31 @@ html[data-theme="light"] .welcome-message {
   50% { transform: translate(-50%, -50%) scale(1.02); }
 }
 
-/* Show Cards */
-.show-card {
-  display: grid;
-  grid-template-columns: 92px 1fr;
-  gap: 16px;
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  padding: 14px;
-  margin: 12px 0;
-  background: var(--bg);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: cardSlideIn 0.5s ease-out;
-  overflow: hidden;
-}
-
-.show-card:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
+/* === MP-2.2 DESKTOP ANIMATION === */
 @keyframes cardSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+
+@media (min-width: 641px) and (prefers-reduced-motion: no-preference) {
+  .show-card { animation: cardSlideIn .25s ease-out; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .show-card { animation: none !important; }
+}
+
 
 .show-poster {
-  width: 92px;
-  height: 138px;
+  width: var(--poster-w-desktop);
+  height: calc(var(--poster-w-desktop) * 1.5);
   border-radius: 8px;
   object-fit: cover;
   cursor: pointer;
 }
 
 .poster-placeholder {
-  width: 92px;
-  height: 138px;
+  width: var(--poster-w-desktop);
+  height: calc(var(--poster-w-desktop) * 1.5);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -519,25 +544,37 @@ html[data-theme="light"] .welcome-message {
   font-size: 12px;
 }
 
-.show-details {
-  display: grid;
-  grid-template-rows: auto auto auto 1fr;
-  gap: 6px;
-  min-width: 0;
+@media (min-width: 641px) {
+  .show-details {
+    display: grid;
+    grid-template-rows: auto auto auto 1fr auto;
+    gap: 6px;
+    min-width: 0;
+  }
+  
+  .show-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+    align-items: center;
+  }
 }
 
-.show-title {
-  margin: 0;
-  color: var(--primary);
-  font-size: 1.05rem;
-  font-weight: 900;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  cursor: pointer;
-  line-height: 1.2;
-  min-width: 0;
-  overflow-wrap: anywhere;
+@media (min-width: 641px) {
+  .show-title {
+    margin: 0;
+    color: var(--primary);
+    font-size: 1.05rem;
+    font-weight: 900;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    cursor: pointer;
+    line-height: 1.2;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
 }
 
 .show-meta {
@@ -2152,25 +2189,20 @@ button:focus-visible,
   transition: all 0.3s ease;
 }
 
-/* Card overflow & wrapping */
-.show-card { 
-  overflow: hidden; 
+/* Card overflow & wrapping - Desktop only */
+@media (min-width: 641px) {
+  .show-card { 
+    overflow: hidden; 
+  }
 }
 
-.show-title, .show-meta, .rating-container, .show-actions { 
-  min-width: 0; 
-  overflow-wrap: anywhere; 
+@media (min-width: 641px) {
+  .show-title, .show-meta, .rating-container, .show-actions { 
+    min-width: 0; 
+    overflow-wrap: anywhere; 
+  }
 }
 
-.show-actions { 
-  display: flex; 
-  flex-wrap: wrap; 
-  gap: 8px; 
-}
-
-.show-actions .btn { 
-  white-space: normal; 
-}
 
 /* Poster button reset */
 .poster-button {
@@ -2328,13 +2360,6 @@ html[data-theme="dark"] .notes-chip:hover {
   /* Prevent horizontal scroll without touching sticky ancestors */
   body.mobile-v1 .container { max-width:100vw; padding:0 16px }
 
-  /* Show cards - make them smaller on mobile */
-  body.mobile-v1 .show-card { 
-    grid-template-columns: 70px 1fr; 
-    gap: 10px; 
-    padding: 10px; 
-    margin: 8px 0;
-  }
   body.mobile-v1 .show-poster { 
     width: 70px; 
     height: 105px; 
@@ -2452,94 +2477,37 @@ html[data-theme="dark"] .notes-chip:hover {
     display:none !important;
   }
 
-  /* Mobile row-style cards: poster | meta | actions */
-  body.mobile-v1 .show-card{
-    display: grid !important;
-    grid-template-columns: 64px 1fr !important;
-    align-items: center !important;
-    gap: 12px !important;
-    padding: 10px 12px !important;
-    border-radius: 12px !important;
-    margin-bottom: 10px !important;
-    background: rgba(255, 0, 0, 0.1) !important; /* Debug: red tint to see if mobile layout is working */
-  }
-  body.mobile-v1 .show-card .poster-button{ 
-    grid-column:1; 
-  }
-  body.mobile-v1 .show-card .show-poster{
-    width:64px !important; 
-    height:96px !important; 
-    object-fit:cover; 
-    border-radius:8px;
-  }
-  body.mobile-v1 .show-card .show-details{
-    grid-column:2;
-    min-width:0; /* allow text clamp */
-  }
-  body.mobile-v1 .show-card .show-title{
-    font-size:15px !important; 
-    font-weight:700; 
-    margin:0 0 4px 0 !important;
-  }
-
-  /* clamp overview to 2 lines */
-  body.mobile-v1 .show-card .show-overview{
-    font-size:13px !important; 
-    line-height:1.3 !important;
-    display:-webkit-box; 
-    -webkit-line-clamp:2; 
-    -webkit-box-orient:vertical;
-    overflow:hidden;
-    margin:0 !important;
-  }
-
-  /* Make action buttons much more compact on mobile */
-  body.mobile-v1 .show-card .show-actions{
-    display:flex !important; 
-    gap:4px !important; 
-    flex-wrap:wrap !important;
-    margin-top:6px !important;
-  }
-  body.mobile-v1 .show-card .show-actions .btn{
-    font-size:11px !important;
-    padding:4px 8px !important;
-    min-height:28px !important;
-    line-height:1.2 !important;
-  }
-
-  /* Make rating container more compact */
-  body.mobile-v1 .show-card .rating-container{
-    margin:4px 0 !important;
-  }
-  body.mobile-v1 .show-card .rating-container span{
-    font-size:12px !important;
-  }
-  body.mobile-v1 .show-card .star-rating{
-    gap:2px !important;
-  }
-  body.mobile-v1 .show-card .star-btn{
-    width:20px !important;
-    height:20px !important;
-    font-size:14px !important;
-  }
-  body.mobile-v1 .show-card .like-dislike{
-    gap:4px !important;
-  }
-  body.mobile-v1 .show-card .like-btn,
-  body.mobile-v1 .show-card .dislike-btn{
-    width:24px !important;
-    height:24px !important;
-    font-size:14px !important;
+  /* Mobile card styling moved to mobile.css to avoid conflicts */
+  @media (max-width: 640px) {
+    body.mobile-v1 .show-card .star-rating{
+      gap:2px !important;
+    }
+    body.mobile-v1 .show-card .star-btn{
+      width:20px !important;
+      height:20px !important;
+      font-size:14px !important;
+    }
+    body.mobile-v1 .show-card .like-dislike{
+      gap:4px !important;
+    }
+    body.mobile-v1 .show-card .like-btn,
+    body.mobile-v1 .show-card .dislike-btn{
+      width:24px !important;
+      height:24px !important;
+      font-size:14px !important;
+    }
   }
 
   /* When condensed mode is on, the same actions row fits nicely */
-  body.condensed-list .show-card .right-actions .icon-btn{ 
-    height:32px; 
-    width:32px; 
-    font-size:16px 
-  }
-  body.condensed-list .show-card .show-overview{ 
-    display:none 
+  @media (min-width: 641px) {
+    body.condensed-list .show-card .right-actions .icon-btn{ 
+      height:32px; 
+      width:32px; 
+      font-size:16px 
+    }
+    body.condensed-list .show-card .show-overview{ 
+      display:none 
+    }
   }
 }
 
@@ -2565,6 +2533,412 @@ html[data-theme="dark"] .notes-chip:hover {
     width: max-content !important;     /* size to label/content */
     min-width: 120px !important;       /* floor so it doesn't collapse */
   }
+}
+
+/* === MP-ShareModalSanity (scoped) === */
+.modal-backdrop { 
+  visibility: hidden; opacity: 0; transition: opacity .15s ease;
+}
+.modal-backdrop[data-open="true"] {
+  visibility: visible; opacity: 1;
+}
+
+body.modal-open { overflow: hidden; }
+
+.modal-backdrop .modal-dialog:focus { outline: none; }
+.modal-backdrop .modal-dialog :focus-visible {
+  outline: 2px solid var(--focus-color, #2684ff);
+  outline-offset: 2px;
+}
+
+/* === MP-CondensedModeHardening (scoped, safe) === */
+/* Applies only when body has .condensed-v1 (opt-in). */
+body.condensed-v1 .show-card {
+  /* tighten vertical rhythm without changing grid structure */
+  padding: calc(var(--card-pad-y-desktop, 14px) * 0.6)
+           calc(var(--card-pad-x-desktop, 14px) * 0.7);
+  gap: calc(var(--card-gap-desktop, 16px) * 0.6);
+}
+
+@media (max-width: 640px) {
+  body.condensed-v1 .show-card {
+    padding: calc(var(--card-pad-y, 8px) * 0.6) calc(var(--card-pad-x, 12px) * 0.7);
+    gap: calc(var(--card-gap, 8px) * 0.6);
+  }
+}
+
+/* Titles/overview slightly smaller; keep legibility */
+body.condensed-v1 .show-card .show-title {
+  font-size: calc(var(--meta-title-size-desktop, 18px) * 0.9);
+  line-height: calc(var(--meta-line-desktop, 1.3) * 0.95);
+}
+@media (max-width: 640px) {
+  body.condensed-v1 .show-card .show-title {
+    font-size: calc(var(--meta-title-size, 16px) * 0.9);
+    line-height: calc(var(--meta-line, 1.2) * 0.95);
+  }
+}
+
+/* Overview clamp: same lines, reduced spacing */
+body.condensed-v1 .show-card .show-overview {
+  margin-top: 0;
+  opacity: 0.95;
+}
+
+/* Actions column: keep target sizes usable (≥36px) */
+body.condensed-v1 .show-card .show-actions .btn,
+body.condensed-v1 .show-card .show-actions button {
+  min-height: 36px;
+  padding: 4px 0;
+}
+
+/* Chips/meta: trim margins slightly */
+body.condensed-v1 .show-card .show-meta,
+body.condensed-v1 .show-card .rating-container { margin: 2px 0; }
+
+/* Ensure icons used as decoration don't speak */
+body.condensed-v1 .icon,
+body.condensed-v1 [aria-hidden="true"] { pointer-events: none; }
+
+/* === MP-StickySafeAreas (scoped, reversible) === */
+/* Default variables (no-op on non-notch devices) */
+:root {
+  --safe-top: 0px;
+  --safe-bottom: 0px;
+}
+
+/* Activate safe-area awareness only when body has .supports-safe-area */
+body.supports-safe-area {
+  /* Use env() with graceful fallback to 0 via existing --safe-* variables */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Content containers that can end up under a bottom-fixed element get breathing room.
+   Scope narrowly to known wrappers; do NOT touch .top-search ancestors. */
+.main-content,
+#homeTab .list-container,
+#watchingTab .list-container,
+#wishlistTab .list-container,
+#watchedTab .list-container,
+#discoverTab .list-container {
+  padding-bottom: calc(16px + var(--safe-bottom)); /* base 16px + notch */
+}
+
+/* Common bottom-fixed UI: keep clear of the notch without changing their behavior */
+.fab, .floating-action, .toast, .bottom-bar, .floating-toolbar {
+  bottom: max(16px, calc(8px + var(--safe-bottom))); /* keep elevation + notch */
+}
+
+/* Sticky header sanity: preserve existing sticky behavior; do not edit .top-search itself.
+   If there is a sticky header wrapper, allow for top inset. */
+.sticky-header, .app-header {
+  /* Do not force position here; respect existing app settings */
+  top: var(--safe-top);
+}
+
+/* Horizontal scroll guard for common layout wrappers (safe; does not touch body/html) */
+.app-container, .page, .tab-content {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* === MP-A11Y-Polish (scoped) === */
+body.a11y-v1 .show-card .show-actions .btn,
+body.a11y-v1 .show-card .show-actions button,
+body.a11y-v1 .toolbar .btn,
+body.a11y-v1 button,
+body.a11y-v1 .btn {
+  /* Hit target: aim for ≥40px without blowing up layout */
+  min-height: 40px;
+  /* Don't force width; column widths already handled elsewhere */
+}
+
+body.a11y-v1 .btn:focus-visible,
+body.a11y-v1 button:focus-visible,
+body.a11y-v1 [tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid var(--focus-color, #2684ff);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Keep icon-only buttons readable: ensure reasonable min width in action stacks */
+@media (max-width: 640px) {
+  body.a11y-v1 .show-card .show-actions .btn,
+  body.a11y-v1 .show-card .show-actions button {
+    min-width: 40px; /* column is 44px in mobile canon; this stays within it */
+  }
+}
+
+/* Decorative icons should never capture pointer nor be read by SR when hidden */
+body.a11y-v1 .icon[aria-hidden="true"] { pointer-events: none; }
+
+/* === MP-ThemePacks T0 (tokens only) === */
+/* Theme surfaces are applied when body carries data-theme="…" */
+
+/* Classic (free) — neutral blue (matches existing dark mode) */
+body[data-theme="classic"] {
+  --bg: #1a1a1a;
+  --text: #f5f5f5;
+  --card: #2a2a2a;
+  --border: #404040;
+  --text-secondary: #b0b0b0;
+  --primary: #2684ff;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6b 100%) !important;
+}
+
+/* Sunset (PRO) — warm coral */
+body[data-theme="sunset"] {
+  --bg: #1a0f0f;
+  --text: #ffeae5;
+  --card: #2a1a1a;
+  --border: #4a2a2a;
+  --text-secondary: #f5bdb2;
+  --primary: #ff6b6b;
+  background: linear-gradient(135deg, #4a1a1a 0%, #6b2a2a 100%) !important;
+}
+
+/* Midnight (PRO) — cyan on graphite */
+body[data-theme="midnight"] {
+  --bg: #0f0f1a;
+  --text: #e9f7ff;
+  --card: #1a1a2a;
+  --border: #2a2a4a;
+  --text-secondary: #a9c6d6;
+  --primary: #19b2ff;
+  background: linear-gradient(135deg, #1a2a4a 0%, #2a3a6b 100%) !important;
+}
+
+/* Forest (PRO) — emerald */
+body[data-theme="forest"] {
+  --bg: #0f1a0f;
+  --text: #e8ffee;
+  --card: #1a2a1a;
+  --border: #2a4a2a;
+  --text-secondary: #b4d2bf;
+  --primary: #2ecc71;
+  background: linear-gradient(135deg, #1a4a1a 0%, #2a6b2a 100%) !important;
+}
+
+/* === MP-Providers v1 (scoped) === */
+.providers-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  opacity: 0.98;
+}
+
+.providers-row .providers-label {
+  font-size: 12px;
+  color: var(--muted, #9aa6b2);
+  margin-right: 4px;
+}
+
+.provider-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  min-width: 22px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: var(--card, #2a2a2a);
+  color: var(--text, #f5f5f5);
+  text-decoration: none;
+  font-size: 12px;
+  line-height: 1;
+  border: 1px solid var(--border, #404040);
+  font-weight: 500;
+}
+
+.provider-badge img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.provider-badge:hover { filter: brightness(1.05); }
+
+/* Teaser state for Free users */
+.providers-row[data-locked="1"] .provider-badge {
+  opacity: .25;
+  pointer-events: none; /* no clicks when locked */
+  filter: blur(1px);
+  background: var(--bg, #1a1a1a) !important;
+  color: var(--muted, #9aa6b2) !important;
+  border-color: var(--border, #404040) !important;
+}
+
+.providers-row[data-locked="1"] .provider-badge img {
+  filter: blur(2px);
+  opacity: .3;
+}
+
+.providers-row .more-count {
+  font-size: 12px;
+  opacity: .8;
+  padding: 0 4px;
+}
+
+/* === MP-Extras v1 (scoped) === */
+.extras-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  opacity: 0.98;
+}
+
+.extras-row .extras-label {
+  font-size: 12px;
+  color: var(--muted, #9aa6b2);
+  margin-right: 4px;
+}
+
+.extra-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: var(--bg-elev, #1a1f27);
+  color: var(--text, #e6ecf2);
+  font-size: 12px;
+  line-height: 1;
+  border: 1px solid rgba(255,255,255,.06);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.extra-chip:hover { filter: brightness(1.05); }
+
+.extras-row[data-locked="1"] .extra-chip {
+  opacity: .65;
+  pointer-events: none; /* no clicks for Free teaser */
+}
+
+/* === MP-Playlists v1 (scoped) === */
+.playlist-card {
+  background: var(--bg-elev, #141a22);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  padding: 10px;
+  margin: 10px 0 14px;
+}
+
+.playlist-card .video-embed {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.playlist-card .video-embed iframe {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  border: 0;
+}
+
+.playlist-card .video-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.playlist-card .video-title {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.playlist-card .pill {
+  display: inline-flex; align-items: center;
+  height: 22px; padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: var(--bg, #0b0e13);
+  color: var(--muted, #a6b3c2);
+  font-size: 12px; line-height: 1;
+}
+
+.playlist-card .video-actions {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 6px;
+}
+
+.playlist-card .btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.08);
+  color: var(--text, #e6ecf2);
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* === MP-Playlists v2 (curated rows, PRO) === */
+.playlist-section[data-mp="v2"] {
+  margin: 14px 0 8px;
+}
+
+.playlist-row {
+  background: var(--bg-elev, #141a22);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
+.playlist-row .row-head {
+  display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap;
+}
+.playlist-row .row-title { font-weight:700; font-size:14px; line-height:1.25; }
+.playlist-row .pill { display:inline-flex; align-items:center; height:22px; padding:0 8px;
+  border-radius:999px; border:1px solid rgba(255,255,255,.08); background:var(--bg,#0b0e13);
+  color:var(--muted,#a6b3c2); font-size:12px; line-height:1; }
+
+.playlist-grid {
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:8px;
+}
+@media (min-width: 641px) {
+  .playlist-grid { grid-template-columns: 1.2fr 1fr; }
+}
+.playlist-item {
+  position:relative; background:#000; border-radius:8px; overflow:hidden; aspect-ratio:16/9;
+  border:1px solid rgba(255,255,255,.08);
+}
+.playlist-item iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+
+.playlist-list {
+  display:flex; flex-direction:column; gap:6px;
+}
+.playlist-link {
+  display:flex; align-items:center; gap:8px;
+  padding:6px 8px; border-radius:6px;
+  border:1px solid rgba(255,255,255,.06);
+  background: var(--bg, #0b0e13);
+  text-decoration:none; color:var(--text,#e6ecf2); font-size:13px;
+}
+.playlist-link:hover { filter:brightness(1.05); }
+
+.playlist-upsell {
+  background: var(--bg-elev, #141a22);
+  border: 1px dashed rgba(255,255,255,.15);
+  color: var(--muted, #a6b3c2);
+  border-radius: 10px;
+  padding: 10px; text-align:center; font-size:13px;
 }
 
 

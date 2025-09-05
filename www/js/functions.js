@@ -7,7 +7,7 @@ if (typeof window.FLAGS.mobilePolishGuard === 'undefined') {
   window.FLAGS.mobilePolishGuard = true; // default ON
 }
 
-(function mobilePolishGate() {
+window.mobilePolishGate = function mobilePolishGate() {
   if (!window.FLAGS.mobilePolishGuard) {
     console.log('📱 Mobile polish guard disabled via FLAGS.mobilePolishGuard=false');
     return;
@@ -17,16 +17,63 @@ if (typeof window.FLAGS.mobilePolishGuard === 'undefined') {
   const forced = localStorage.getItem('forceMobileV1') === '1';
 
   function applyMobileFlag() {
-    const isMobileViewport = window.matchMedia(`(max-width: ${MOBILE_BP}px)`).matches;
-    const enable = forced || isMobileViewport;
+    const viewportWidth = window.innerWidth;
+    const isMobileViewport = viewportWidth <= MOBILE_BP;
+    
+    // More comprehensive mobile device detection
+    const userAgent = navigator.userAgent;
+    const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile|BlackBerry|IEMobile|Opera Mini|webOS|Windows Phone/i.test(userAgent);
+    const isMobileSize = viewportWidth <= 640;
+    const isIPhone = /iPhone/i.test(userAgent);
+    
+    // Debug info
+    console.log(`📱 Mobile detection debug:`, {
+      viewportWidth,
+      userAgent: userAgent.substring(0, 50) + '...',
+      isMobileViewport,
+      isMobileDevice,
+      isMobileSize,
+      isIPhone,
+      forced
+    });
+    
+    // More aggressive mobile detection - force iPhone to mobile
+    const enable = forced || isMobileDevice || isMobileViewport || isMobileSize || isIPhone || viewportWidth <= 768;
+    
     document.body.classList.toggle('mobile-v1', enable);
-    console.log(`📱 Mobile polish ${enable ? 'ENABLED' : 'DISABLED'} — vw:${window.innerWidth}`);
+    console.log(`📱 Mobile polish ${enable ? 'ENABLED' : 'DISABLED'} — vw:${viewportWidth} (device: ${isMobileDevice}, viewport: ${isMobileViewport}, size: ${isMobileSize})`);
   }
 
+  // Apply immediately
   applyMobileFlag();
+  
+  // Also apply after a short delay to catch any timing issues
+  setTimeout(applyMobileFlag, 100);
+  
+  // Listen for viewport changes
   window.addEventListener('resize', applyMobileFlag, { passive: true });
-  window.addEventListener('orientationchange', applyMobileFlag);
-})();
+  window.addEventListener('orientationchange', () => {
+    // Delay after orientation change to let viewport settle
+    setTimeout(applyMobileFlag, 100);
+  });
+}
+
+// Run mobile polish guard multiple times to ensure it works
+mobilePolishGate(); // Run immediately
+
+// Run when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', mobilePolishGate);
+} else {
+  mobilePolishGate();
+}
+
+// Run after a delay to catch any timing issues
+setTimeout(mobilePolishGate, 200);
+setTimeout(mobilePolishGate, 500);
+
+// Also run on window load as final fallback
+window.addEventListener('load', mobilePolishGate);
 
 // ---- Tab / Render Pipeline ----
 // window.switchToTab is implemented in inline-script-02.js
@@ -216,6 +263,21 @@ window.loadSettingsContent = function loadSettingsContent() {
       // Update Pro state UI
       window.updateProState?.();
       
+      // Refresh providers, extras, and playlists when Pro state changes
+      console.log('🔄 Pro toggle (btnProTry): Refreshing providers, extras, and playlists...', { pro: window.FLAGS.proEnabled });
+      if (window.__FlickletRefreshProviders) {
+        window.__FlickletRefreshProviders();
+        console.log('✅ Providers refreshed');
+      }
+      if (window.__FlickletRefreshExtras) {
+        window.__FlickletRefreshExtras();
+        console.log('✅ Extras refreshed');
+      }
+      if (window.__FlickletRefreshPlaylists) {
+        window.__FlickletRefreshPlaylists();
+        console.log('✅ Playlists refreshed');
+      }
+      
       // Re-check advanced notifications visibility when Pro state changes
       const advancedCard = document.getElementById('notifAdvancedCard');
       if (advancedCard) {
@@ -386,6 +448,21 @@ window.loadSettingsContent = function loadSettingsContent() {
     
     // Update the Pro features list to show locked/unlocked states
     window.renderProFeaturesList?.();
+    
+      // Refresh providers, extras, and playlists when Pro state changes
+  console.log('🔄 Pro toggle: Refreshing providers, extras, and playlists...', { pro: window.FLAGS.proEnabled });
+  if (window.__FlickletRefreshProviders) {
+    window.__FlickletRefreshProviders();
+    console.log('✅ Providers refreshed');
+  }
+  if (window.__FlickletRefreshExtras) {
+    window.__FlickletRefreshExtras();
+    console.log('✅ Extras refreshed');
+  }
+  if (window.__FlickletRefreshPlaylists) {
+    window.__FlickletRefreshPlaylists();
+    console.log('✅ Playlists refreshed');
+  }
     
     // Re-check advanced notifications visibility when Pro state changes
     const advancedCard = document.getElementById('notifAdvancedCard');

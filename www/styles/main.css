@@ -102,9 +102,12 @@ body {
   border-color: var(--border);
 }
 
-.dark-mode .show-card {
-  background: var(--card);
-  border-color: var(--border);
+/* MP-2.1: fence legacy card rules to desktop to avoid mobile collisions */
+@media (min-width: 641px) {
+  .dark-mode .show-card {
+    background: var(--card);
+    border-color: var(--border);
+  }
 }
 
 .mardi .header {

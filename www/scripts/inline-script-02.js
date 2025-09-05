@@ -3026,6 +3026,9 @@
           modal.style.display = 'none';
         }
       }
+      
+      // Make the function available on window object
+      window.closeShareSelectionModal = closeShareSelectionModal;
 
       // Legacy function for backward compatibility
       function generateShareLinkForCurrentTab() {
@@ -3287,7 +3290,11 @@
             ${renderNotesChip(item)}
             <div class="show-meta"></div>
             <div class="show-overview">${escapeHtml(item.overview || t("no_description"))}</div>
-            ${actions}
+
+            <div class="providers-slot"></div>
+            <div class="extras-slot"></div>
+
+            <div class="show-actions">${actions}</div>
           </div>`;
 
         const meta = card.querySelector(".show-meta");
@@ -3326,6 +3333,13 @@
         });
 
         ensureTvDetails(item, card);
+        
+        // Lazy-load providers and extras
+        setTimeout(() => {
+          try { window.__FlickletAttachProviders?.(card, item); } catch {}
+          try { window.__FlickletAttachExtras?.(card, item); } catch {}
+        }, 0);
+        
         return card;
       }
 
@@ -4311,4 +4325,359 @@
 
         // start() function will be called by FlickletApp.init() or the fallback initialization
       })();
+
+// === MP-Providers v1 (guarded) ===
+(() => {
+  const FLAGS = (window.FLAGS = window.FLAGS || {});
+  if (FLAGS.providersEnabled === false) {
+    console.log('📺 Providers feature disabled via flag');
+    return;
+  }
+  if (window.__providersV1Bound) return;
+  window.__providersV1Bound = true;
+
+  // Config / helpers
+  const REGION = (window.i18n?.region || window.i18n?.defaultRegion || 'US');
+  const IMG_BASE = (window.TMDB_IMG_BASE || 'https://image.tmdb.org/t/p/w92');
+  const TMDB_BASE = (window.TMDB_API_BASE || 'https://api.themoviedb.org/3');
+  const API_KEY = (window.TMDB_API_KEY || window.TMDB?.key || 'b7247bb415b50f25b5e35e2566430b96');
+  const PRO = !!FLAGS.proEnabled;
+
+  const CACHE_NS = 'flicklet:prov:v1'; // flicklet:prov:v1:{type}:{id}:{region}
+  const cacheKey = (type, id, region) => `${CACHE_NS}:${type}:${id}:${region}`;
+
+  function getCache(k) {
+    try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; }
+  }
+  function setCache(k, v) {
+    try { localStorage.setItem(k, JSON.stringify(v)); } catch {}
+  }
+
+  async function fetchProviders(type, id, region) {
+    const key = cacheKey(type, id, region);
+    const cached = getCache(key);
+    if (cached) return cached;
+
+    if (!API_KEY) {
+      console.debug('Providers: missing TMDB API key');
+      return null;
+    }
+
+    const url = `${TMDB_BASE}/${type}/${id}/watch/providers?api_key=${API_KEY}`;
+    try {
+      const res = await fetch(url, { credentials: 'omit' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const byRegion = json?.results?.[region] || null;
+      setCache(key, byRegion || { __empty: true });
+      return byRegion;
+    } catch (e) {
+      console.debug('Providers fetch failed', { type, id, region, e });
+      return null;
+    }
+  }
+
+  function providerNodes(entry, locked) {
+    // Entry may contain flatrate (stream), rent, buy, free, ads
+    const groups = ['flatrate','free','ads','rent','buy'];
+    const nodes = [];
+    for (const g of groups) {
+      const arr = entry?.[g];
+      if (!Array.isArray(arr) || !arr.length) continue;
+      for (const p of arr.slice(0, 6)) { // cap badges
+        const label = p.provider_name || '—';
+        const icon = p.logo_path ? `${IMG_BASE}${p.logo_path}` : null;
+        const a = document.createElement(locked ? 'span' : 'a');
+        a.className = 'provider-badge';
+        if (!locked) {
+          // Deep links are inconsistently provided; TMDB offers a "link" in entry
+          const href = entry?.link || '#';
+          a.href = href;
+          a.target = '_blank';
+          a.rel = 'noopener';
+          a.title = `Open on ${label}`;
+          a.setAttribute('aria-label', `Open on ${label}`);
+        } else {
+          a.setAttribute('aria-hidden','true');
+        }
+        if (icon) {
+          const img = document.createElement('img');
+          img.src = icon;
+          img.alt = '';
+          img.setAttribute('aria-hidden','true');
+          a.appendChild(img);
+        } else {
+          a.textContent = label;
+        }
+        nodes.push(a);
+      }
+      break; // show only first non-empty group as primary signal
+    }
+    return nodes;
+  }
+
+  function renderProvidersInto(slot, entry, locked) {
+    if (!slot) return;
+    slot.textContent = '';
+    const row = document.createElement('div');
+    row.className = 'providers-row';
+    if (locked) row.dataset.locked = '1';
+
+    const label = document.createElement('span');
+    label.className = 'providers-label';
+    label.textContent = locked ? 'Available on' : 'Watch on';
+    row.appendChild(label);
+
+    const badges = providerNodes(entry, locked);
+    badges.forEach(b => row.appendChild(b));
+
+    const more = (entry?.flatrate?.length || 0) + (entry?.free?.length || 0) +
+                 (entry?.ads?.length || 0) + (entry?.rent?.length || 0) +
+                 (entry?.buy?.length || 0);
+    if (more > badges.length) {
+      const mc = document.createElement('span');
+      mc.className = 'more-count';
+      mc.textContent = `+${more - badges.length}`;
+      row.appendChild(mc);
+    }
+
+    // Free teaser nudge
+    if (locked) {
+      const tip = document.createElement('span');
+      tip.className = 'more-count';
+      tip.textContent = ' — upgrade to reveal';
+      row.appendChild(tip);
+    }
+
+    slot.appendChild(row);
+  }
+
+  // Public hook: lazy-load providers for a given card
+  async function attachProviders(cardEl, item) {
+    if (!cardEl || !item) return;
+    const slot = cardEl.querySelector('.providers-slot');
+    if (!slot) {
+      console.debug('📺 Providers: no slot found for', item.name || item.title);
+      return;
+    }
+
+    const type = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+    console.debug('📺 Providers: fetching for', { type, id: item.id, name: item.name || item.title });
+    const entry = await fetchProviders(type, item.id, REGION);
+    if (!entry || entry.__empty) {
+      console.debug('📺 Providers: no data for', item.name || item.title);
+      return;
+    }
+    
+    // Check Pro status at render time, not initialization time
+    const isPro = !!window.FLAGS?.proEnabled;
+    console.debug('📺 Providers: rendering for', item.name || item.title, entry, { pro: isPro });
+    renderProvidersInto(slot, entry, !isPro);
+  }
+
+  // Export to global (used by createShowCard below)
+  window.__FlickletAttachProviders = attachProviders;
+
+  // Function to refresh all provider displays (useful when Pro status changes)
+  window.__FlickletRefreshProviders = function() {
+    const cards = document.querySelectorAll('.show-card');
+    cards.forEach(card => {
+      const slot = card.querySelector('.providers-slot');
+      if (slot && slot.innerHTML.trim()) {
+        // Re-render existing providers with current Pro status
+        const isPro = !!window.FLAGS?.proEnabled;
+        const row = slot.querySelector('.providers-row');
+        if (row) {
+          row.dataset.locked = isPro ? '0' : '1';
+          const badges = row.querySelectorAll('.provider-badge');
+          badges.forEach(badge => {
+            if (isPro) {
+              badge.style.pointerEvents = 'auto';
+              badge.style.opacity = '1';
+              badge.style.filter = 'none';
+              badge.style.background = '';
+              badge.style.color = '';
+              badge.style.borderColor = '';
+            } else {
+              badge.style.pointerEvents = 'none';
+              badge.style.opacity = '0.25';
+              badge.style.filter = 'blur(1px)';
+              badge.style.background = 'var(--bg, #1a1a1a)';
+              badge.style.color = 'var(--muted, #9aa6b2)';
+              badge.style.borderColor = 'var(--border, #404040)';
+            }
+          });
+          // Also blur provider images
+          const images = row.querySelectorAll('.provider-badge img');
+          images.forEach(img => {
+            if (isPro) {
+              img.style.filter = 'none';
+              img.style.opacity = '1';
+            } else {
+              img.style.filter = 'blur(2px)';
+              img.style.opacity = '0.3';
+            }
+          });
+        }
+      }
+    });
+  };
+
+  console.log('📺 Providers v1 ready', { region: REGION, pro: PRO, apiKey: API_KEY ? 'found' : 'missing' });
+})();
+
+// === MP-Extras v1 (guarded, PRO reveal) ===
+(() => {
+  const FLAGS = (window.FLAGS = window.FLAGS || {});
+  if (FLAGS.extrasEnabled === false) {
+    console.log('🎬 Extras feature disabled via flag');
+    return;
+  }
+  if (window.__extrasV1Bound) return;
+  window.__extrasV1Bound = true;
+
+  const PRO = !!FLAGS.proEnabled;
+  const TMDB_BASE = (window.TMDB_API_BASE || 'https://api.themoviedb.org/3');
+  const API_KEY = (window.TMDB_API_KEY || window.TMDB?.key || 'b7247bb415b50f25b5e35e2566430b96');
+  const LANG = (window.i18n?.lang || 'en-US');
+
+  const CACHE_NS = 'flicklet:extras:v1';
+  const cacheKey = (type, id, lang) => `${CACHE_NS}:${type}:${id}:${lang}`;
+
+  function getCache(k){ try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } }
+  function setCache(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+
+  const GOOD_TYPES = new Set([
+    'Bloopers','Gag Reel','Deleted Scene','Behind the Scenes','Featurette','Clip'
+  ]);
+  const GOOD_SITES = new Set(['YouTube','Vimeo']);
+  const labelFor = v => (v.type === 'Behind the Scenes' ? 'BTS' :
+                         v.type === 'Deleted Scene' ? 'Deleted' :
+                         v.type === 'Gag Reel' ? 'Gag Reel' :
+                         v.type === 'Bloopers' ? 'Bloopers' :
+                         v.type === 'Featurette' ? 'Featurette' :
+                         v.type === 'Clip' ? 'Clip' : v.type);
+
+  function buildHref(v) {
+    if (v.site === 'YouTube' && v.key) return `https://www.youtube.com/watch?v=${encodeURIComponent(v.key)}`;
+    if (v.site === 'Vimeo' && v.key)   return `https://vimeo.com/${encodeURIComponent(v.key)}`;
+    return '#';
+  }
+
+  async function fetchExtras(type, id, lang) {
+    const ck = cacheKey(type, id, lang);
+    const cached = getCache(ck);
+    if (cached) return cached;
+    if (!API_KEY) { console.debug('Extras: missing TMDB API key'); return null; }
+    const url = `${TMDB_BASE}/${type}/${id}/videos?api_key=${API_KEY}&language=${encodeURIComponent(lang)}`;
+    try {
+      const res = await fetch(url, { credentials: 'omit' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const videos = (json?.results || []).filter(v =>
+        GOOD_TYPES.has(v.type) && GOOD_SITES.has(v.site)
+      );
+      // If none in requested lang, try no-lang fallback (omit language param)
+      if (!videos.length) {
+        const url2 = `${TMDB_BASE}/${type}/${id}/videos?api_key=${API_KEY}`;
+        const res2 = await fetch(url2, { credentials: 'omit' });
+        if (res2.ok) {
+          const j2 = await res2.json();
+          const vids2 = (j2?.results || []).filter(v => GOOD_TYPES.has(v.type) && GOOD_SITES.has(v.site));
+          setCache(ck, vids2.length ? vids2 : { __empty: true });
+          return vids2.length ? vids2 : null;
+        }
+      }
+      setCache(ck, videos.length ? videos : { __empty: true });
+      return videos.length ? videos : null;
+    } catch (e) {
+      console.debug('Extras fetch failed', { type, id, e });
+      return null;
+    }
+  }
+
+  function renderExtrasInto(slot, videos, locked) {
+    if (!slot) return;
+    slot.textContent = '';
+    if (!videos || !videos.length) return;
+
+    const row = document.createElement('div');
+    row.className = 'extras-row';
+    if (locked) row.dataset.locked = '1';
+
+    const label = document.createElement('span');
+    label.className = 'extras-label';
+    label.textContent = locked ? 'Extras' : 'Extras';
+    row.appendChild(label);
+
+    for (const v of videos.slice(0, 5)) { // cap to keep compact
+      const href = buildHref(v);
+      const el = document.createElement(locked ? 'span' : 'a');
+      el.className = 'extra-chip';
+      if (!locked) {
+        el.href = href;
+        el.target = '_blank';
+        el.rel = 'noopener';
+        el.title = `${v.type}: ${v.name || ''}`.trim();
+        el.setAttribute('aria-label', `${v.type}: ${v.name || ''}`.trim());
+      } else {
+        el.setAttribute('aria-hidden', 'true');
+      }
+      el.textContent = labelFor(v);
+      row.appendChild(el);
+    }
+
+    if (locked) {
+      const tip = document.createElement('span');
+      tip.className = 'more-count';
+      tip.textContent = ' — upgrade to watch';
+      row.appendChild(tip);
+    }
+
+    slot.appendChild(row);
+  }
+
+  async function attachExtras(cardEl, item) {
+    if (!cardEl || !item) return;
+    const slot = cardEl.querySelector('.extras-slot');
+    if (!slot) return;
+
+    const type = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+    const videos = await fetchExtras(type, item.id, LANG);
+    if (!videos || videos.__empty) return;
+
+    renderExtrasInto(slot, videos, !PRO);
+  }
+
+  // export global hook
+  window.__FlickletAttachExtras = attachExtras;
+
+  // Function to refresh all extras displays (useful when Pro status changes)
+  window.__FlickletRefreshExtras = function() {
+    const cards = document.querySelectorAll('.show-card');
+    cards.forEach(card => {
+      const slot = card.querySelector('.extras-slot');
+      if (slot && slot.innerHTML.trim()) {
+        // Re-render existing extras with current Pro status
+        const isPro = !!window.FLAGS?.proEnabled;
+        const row = slot.querySelector('.extras-row');
+        if (row) {
+          row.dataset.locked = isPro ? '0' : '1';
+          const chips = row.querySelectorAll('.extra-chip');
+          chips.forEach(chip => {
+            if (isPro) {
+              chip.style.pointerEvents = 'auto';
+              chip.style.opacity = '1';
+            } else {
+              chip.style.pointerEvents = 'none';
+              chip.style.opacity = '0.65';
+            }
+          });
+        }
+      }
+    });
+  };
+
+  console.log('🎬 Extras v1 ready', { pro: PRO });
+})();
     

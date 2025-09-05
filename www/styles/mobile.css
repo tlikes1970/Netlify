@@ -42,11 +42,76 @@
     z-index: 100;
     background: var(--bg);
   }
+  
+  /* Mobile search tips - prevent wrapping and overlap */
+  .top-search .search-help {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    font-size: 0.75rem !important;
+    line-height: 1.1 !important;
+    margin: 0 !important;
+    padding: 2px 4px !important;
+    background: rgba(0,0,0,0.1) !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+  }
+  
+  /* Mobile search tips - truncate long text */
+  .search-help span[data-i18n="search_tips"] {
+    font-size: 0.75rem !important;
+    line-height: 1.1 !important;
+    display: inline-block !important;
+    max-width: 200px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  
+  /* Also apply to mobile-v1 class */
+  .mobile-v1 .top-search .search-help {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    font-size: 0.75rem !important;
+    line-height: 1.1 !important;
+    margin: 0 !important;
+    padding: 2px 4px !important;
+    background: rgba(0,0,0,0.1) !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+  }
+  
+  .mobile-v1 .search-help span[data-i18n="search_tips"] {
+    font-size: 0.75rem !important;
+    line-height: 1.1 !important;
+    display: inline-block !important;
+    max-width: 200px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
 
   .search-row {
     display: flex !important;
     flex-direction: column !important;
-    gap: 6px !important;
+    gap: 4px !important;
+    margin-top: 0 !important;
+  }
+  
+  /* Remove any gaps between search elements */
+  .top-search > * {
+    margin-bottom: 0 !important;
+  }
+  
+  .top-search .search-help + * {
+    margin-top: 0 !important;
   }
 
   .search-input {
@@ -96,13 +161,6 @@
     margin-left: 4px;
   }
 
-  /* Show card adjustments */
-  .show-card {
-    grid-template-columns: 80px 1fr;
-    gap: 12px;
-    padding: 10px;
-    margin: 8px 0;
-  }
 
   .show-poster {
     width: 80px;
@@ -263,23 +321,7 @@
     font-size: 1.2rem;
   }
 
-  /* Mobile-specific animations */
-  @media (prefers-reduced-motion: no-preference) {
-    .show-card {
-      animation: mobileCardSlideIn 0.4s ease-out;
-    }
-
-    @keyframes mobileCardSlideIn {
-      from {
-        opacity: 0;
-        transform: translateY(15px) scale(0.98);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-  }
+  /* Mobile-specific animations - now handled by MP-2.2 ANIMATION SCOPE */
 }
 
 /* Extra small mobile devices */
@@ -319,11 +361,6 @@
     font-size: 11px;
   }
 
-  .show-card {
-    grid-template-columns: 70px 1fr;
-    gap: 10px;
-    padding: 8px;
-  }
 
   .show-poster {
     width: 70px;
@@ -367,88 +404,221 @@
   /* Floating buttons now handled by components.css */
 }
 
-/* === MP-2: Mobile card compaction (≤640px) === */
-@media (max-width: 640px) {
-  /* density tokens */
+/* === MP-2.2b MOBILE CANONICAL CARD (≤768px) — REPLACE PRIOR MP-2.* MOBILE BLOCKS === */
+@media (max-width: 768px) {
+  /* Mobile tokens (overridable via body.mobile-v1 inline style for quick testing) */
   .mobile-v1 {
-    --card-pad-y: 8px;
-    --card-pad-x: 12px;
-    --card-gap: 8px;
     --poster-w: 64px;
     --actions-w: 44px;
+    --card-gap: 8px;
+    --card-pad-y: 8px;
+    --card-pad-x: 12px;
     --meta-title-size: 16px;
     --meta-line: 1.2;
   }
 
-  /* Row layout: [64px poster] [meta grows] [44px actions] */
+  /* Row layout: [poster][details] - actions are now inside details */
   .mobile-v1 .show-card {
-    display: grid;
-    grid-template-columns: var(--poster-w) 1fr var(--actions-w);
-    align-items: center;
-    column-gap: var(--card-gap);
-    padding: var(--card-pad-y) var(--card-pad-x);
+    display: grid !important;
+    grid-template-columns: 64px 1fr !important;
+    gap: var(--card-gap) !important;
+    padding: var(--card-pad-y) var(--card-pad-x) !important;
+    background: var(--card-bg);
+    border: var(--card-border);
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 8px;
+    align-items: start;
+    margin: 0 0 4px; /* Reduced from 6px to 4px */
+  }
+  
+  /* Force mobile layout on small screens regardless of class */
+  .show-card {
+    display: grid !important;
+    grid-template-columns: 64px 1fr !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
+    background: white;
+    border: 1px solid #ddd;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 8px;
+    align-items: start;
+    margin: 0 0 8px !important; /* Add space between cards */
+    box-sizing: border-box !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important; /* Add subtle shadow */
+  }
+  
+  /* Mobile details layout for fallback */
+  .show-card .show-details {
+    display: grid !important;
+    grid-template-rows: auto auto auto 1fr auto !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+  }
+  
+  /* Mobile actions styling for fallback */
+  .show-card .show-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    align-items: center !important;
+    margin-top: 4px !important;
+  }
+  
+  .show-card .show-actions .btn {
+    flex: 1 !important;
+    min-width: 0 !important;
+    font-size: 10px !important;
+    padding: 2px 4px !important;
+    min-height: 24px !important;
+  }
+  
+  /* Tighten up title and meta spacing */
+  .show-card .show-title {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.2 !important;
+  }
+  
+  .show-card .show-meta {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.1 !important;
+  }
+  
+  .show-card .show-overview {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.2 !important;
+  }
+  
+  /* Mobile details layout with actions at bottom */
+  .mobile-v1 .show-card .show-details {
+    display: grid !important;
+    grid-template-rows: auto auto auto 1fr auto !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+  }
+  
+  /* Mobile actions styling */
+  .mobile-v1 .show-card .show-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    align-items: center !important;
+    margin-top: 4px !important;
   }
 
-  /* Poster/thumb sizing */
-  .mobile-v1 .show-card .poster,
-  .mobile-v1 .show-card img.poster,
-  .mobile-v1 .show-card .thumb,
-  .mobile-v1 .show-card img.thumb {
+  /* Poster + button */
+  .mobile-v1 .show-card .poster-button { grid-column: 1; align-self: start; }
+  .mobile-v1 .show-card .show-poster,
+  .mobile-v1 .show-card .poster-placeholder {
     width: var(--poster-w);
-    height: calc(var(--poster-w) * 1.5); /* ~96px for 64px wide */
+    height: calc(var(--poster-w) * 1.5);
     object-fit: cover;
     border-radius: 6px;
-    grid-column: 1;
-    align-self: start;
+    display: block;
   }
 
-  /* Meta column */
-  .mobile-v1 .show-card .meta {
-    grid-column: 2;
-    align-self: start;
-    min-width: 0; /* allow clamps to work */
+  /* Meta/details */
+  .mobile-v1 .show-card .show-details { 
+    grid-column: 2; 
+    min-width: 0 !important; 
+    overflow: hidden !important;
+    align-self: start; 
   }
-  .mobile-v1 .show-card .title {
+  .mobile-v1 .show-card .show-title {
     font-size: var(--meta-title-size);
-    line-height: var(--meta-line);
-    margin: 0 0 2px 0;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
-
-  /* Clamp long overviews to 2 lines */
-  .mobile-v1 .show-card .overview {
+  .mobile-v1 .show-card .show-overview {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-    overflow: hidden;
-    margin-top: 2px;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.2 !important;
+  }
+  .mobile-v1 .show-card .show-meta { 
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.1 !important;
   }
 
-  /* Tighten generic text spacing in meta block */
-  .mobile-v1 .show-card .meta > * + * {
-    margin-top: 2px;
+  .mobile-v1 .show-card .show-actions .btn,
+  .mobile-v1 .show-card .show-actions button {
+    flex: 1 !important;
+    min-width: 0 !important;
+    min-height: 24px !important;
+    padding: 2px 4px !important;
+    font-size: 10px !important;
+    margin: 0 !important;
   }
 
-  /* Actions column: fixed width, no wrapping tower */
-  .mobile-v1 .show-card .actions {
-    grid-column: 3;
-    width: var(--actions-w);
-    min-width: var(--actions-w);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    align-self: start;
+  /* Sub-elements (bring parity back here) */
+  .mobile-v1 .show-card .rating-container { 
+    display: flex; 
+    align-items: center; 
+    gap: 4px; 
+    margin: 0; /* Remove top margin */
+    font-size: 12px; /* Smaller font */
   }
-  .mobile-v1 .show-card .actions .btn,
-  .mobile-v1 .show-card .actions button,
-  .mobile-v1 .show-card .actions .icon-btn {
-    width: var(--actions-w);
-    min-width: var(--actions-w);
-    padding: 6px 0; /* preserve ≥40px overall with button line-height */
+  .mobile-v1 .show-card .star-rating { 
+    display: inline-flex; 
+    gap: 1px; /* Reduced gap */
+    font-size: 10px; /* Smaller stars */
+  }
+  .mobile-v1 .show-card .like-dislike { 
+    display: inline-flex; 
+    gap: 4px; /* Reduced gap */
+    font-size: 10px; /* Smaller buttons */
   }
 
-  /* Safety: prevent stray paddings from inflating card height */
-  .mobile-v1 .show-card > :is(.meta, .actions, .poster) {
-    margin: 0;
+  /* Mobile list container spacing */
+  .mobile-v1 .list-container {
+    padding: 4px !important;
+    gap: 0 !important;
+  }
+  
+  /* Ensure proper spacing between cards */
+  .mobile-v1 .show-card + .show-card {
+    margin-top: 8px !important;
+  }
+  
+  /* Fallback list container spacing */
+  .list-container {
+    padding: 4px !important;
+    gap: 0 !important;
+  }
+  
+  /* Fallback card spacing */
+  .show-card + .show-card {
+    margin-top: 8px !important;
+  }
+  
+  /* Mobile-only animation (scoped + a11y) */
+  @keyframes mobileCardSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .mobile-v1 .show-card { animation: mobileCardSlideIn .28s ease-out; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-v1 .show-card { animation: none !important; }
   }
 }
+
+/* === MP-2.2b CLEANUP NOTE ===
+   Remove any other `.show-card` rules in this file that sit OUTSIDE the block above
+   (especially unfenced 2-col grids or unfenced animation hooks). The single block
+   above is the only valid source of truth for mobile cards. */

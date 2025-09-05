@@ -14,19 +14,33 @@
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
     <link rel="manifest" href="manifest.json" />
 
-    <link rel="stylesheet" href="styles/inline-style-01.css">
+    <link rel="stylesheet" href="styles/inline-style-01.css?v=desktop-fix2">
     <link rel="stylesheet" href="styles/inline-style-02.css">
-    <link rel="stylesheet" href="styles/mobile.css?v=mobile-card-compaction-1">
-    <link rel="stylesheet" href="styles/components.css?v=flickword-visibility-fix-1">
+    <link rel="stylesheet" href="styles/components.css?v=desktop-fix3">
+    <link rel="stylesheet" href="styles/mobile.css?v=mp2.2d">
 
     <!-- Feature flags and safety guard -->
     <script src="js/flags.js"></script>
+    
+    <!-- Immediate mobile detection -->
+    <script>
+      (function() {
+        // Check if this is a mobile device
+        const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isMobileSize = window.innerWidth <= 768;
+        
+        if (isMobileDevice && isMobileSize) {
+          document.body.classList.add('mobile-v1');
+          console.log('📱 Mobile class applied immediately - iPhone detected');
+        }
+      })();
+    </script>
 
 </head>
 
   <body>
     <!-- Centralized Flicklet App Object -->
-    <script src="scripts/inline-script-01.js?v=tab-spacing-fix-1"></script>
+    <script src="scripts/inline-script-01.js?v=desktop-fix"></script>
 
     <!-- Main Container -->
     <div class="main-container" id="appRoot">
@@ -363,7 +377,7 @@
                 id="shareListBtn"
                 class="btn"
                 style="width: 25%; min-width: 150px; margin-bottom: 8px;"
-                onclick="openShareModal()"
+                onclick="openShareSelectionModal()"
               >
                 🔗 Select Items to Share
               </button>
@@ -510,9 +524,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <script src="js/functions.js"></script>
-    <script src="scripts/inline-script-02.js?v=data-persistence-fix-2"></script>
+    <script src="scripts/inline-script-02.js?v=desktop-fix"></script>
 
-    <script src="scripts/inline-script-03.js?v=displayname-priority-fix-1"></script>
+    <script src="scripts/inline-script-03.js?v=desktop-fix"></script>
 
     <script>
     // Welcome message functionality
@@ -542,6 +556,55 @@
       // Hide on key press
       document.addEventListener('keydown', handleKeyPress);
     });
+    </script>
+    
+    <!-- Force mobile class on iPhone -->
+    <script>
+      (function() {
+        // Force mobile class for iPhone users
+        const userAgent = navigator.userAgent;
+        const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+        const isIPhone = /iPhone/i.test(userAgent);
+        const viewportWidth = window.innerWidth;
+        const isMobileSize = viewportWidth <= 640;
+        
+        console.log('📱 Immediate mobile detection:', {
+          userAgent: userAgent.substring(0, 50) + '...',
+          isMobileDevice,
+          isIPhone,
+          viewportWidth,
+          isMobileSize
+        });
+        
+        // Force mobile class for ANY mobile device or small screen
+        if (isMobileDevice || isIPhone || isMobileSize || viewportWidth <= 768) {
+          document.body.classList.add('mobile-v1');
+          console.log('📱 Mobile class FORCED for mobile device');
+        }
+        
+        // Also run on window load as final fallback
+        window.addEventListener('load', function() {
+          if (isMobileDevice || isIPhone || isMobileSize || viewportWidth <= 768) {
+            document.body.classList.add('mobile-v1');
+            console.log('📱 Mobile class FORCED on window load');
+          }
+        });
+        
+        // Run multiple times to ensure it sticks
+        setTimeout(() => {
+          if (isMobileDevice || isIPhone || isMobileSize || viewportWidth <= 768) {
+            document.body.classList.add('mobile-v1');
+            console.log('📱 Mobile class FORCED on timeout');
+          }
+        }, 100);
+        
+        setTimeout(() => {
+          if (isMobileDevice || isIPhone || isMobileSize || viewportWidth <= 768) {
+            document.body.classList.add('mobile-v1');
+            console.log('📱 Mobile class FORCED on second timeout');
+          }
+        }, 500);
+      })();
     </script>
   </body>
 </html>
