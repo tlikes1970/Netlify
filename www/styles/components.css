@@ -1505,6 +1505,85 @@ button:focus-visible,
   }
 }
 
+/* ===== Search Tips Toggle ===== */
+.search-tips{ position:relative; display:flex; align-items:center; }
+.tips-trigger{
+  width:28px; height:28px; min-height:28px;
+  border-radius:50%;
+  border:1px solid var(--color-border);
+  background:var(--color-surface);
+  cursor:pointer; font-weight:700;
+  line-height:1; display:inline-flex; align-items:center; justify-content:center;
+  margin-left:6px;
+}
+.tips-trigger:focus-visible{ outline:2px solid var(--primary); }
+
+.tips-pop[hidden]{ display:none !important; }
+.tips-pop{
+  position:fixed; /* avoid interfering with sticky ancestors */
+  z-index: 9999;
+  width:min(320px, 92vw);
+  background:var(--color-surface);
+  border:1px solid var(--color-border);
+  border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+  padding:10px;
+}
+.tips-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; }
+.tips-title{ font-weight:600; }
+.tips-close{ background:none; border:0; font-size:20px; cursor:pointer; line-height:1; }
+
+.tips-list{ margin:0; padding-left:16px; display:grid; gap:6px; }
+.tips-list code{
+  background: rgba(127,127,127,.12);
+  padding: 0 4px; border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.tips-actions{ display:flex; align-items:center; justify-content:flex-end; margin-top:6px; }
+.tips-dontshow{ font-size:.9rem; opacity:.9; display:flex; align-items:center; gap:6px; }
+
+/* Mobile: keep the popover readable */
+@media (max-width:480px){
+  .tips-pop{ width:92vw; }
+}
+
+/* ===== Pro gating ===== */
+.pro-locked {
+  position: relative;
+}
+.pro-locked[aria-disabled="true"] {
+  opacity: .55;
+  cursor: not-allowed;
+}
+.pro-lock-tip {
+  position: absolute;
+  z-index: 200;
+  bottom: calc(100% + 6px);
+  left: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.25);
+  padding: 6px 8px;
+  font-size: .9rem;
+  white-space: nowrap;
+  display: none;
+}
+.pro-locked:hover .pro-lock-tip,
+.pro-locked:focus-within .pro-lock-tip {
+  display: block;
+}
+
+/* Small badge you can add inside buttons if you want */
+.badge-pro {
+  margin-left: 6px;
+  font-size: .75rem;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  opacity: .85;
+}
+
 /* FlickWord Container Styling */
 .quote-flickword-container {
   display: flex;
