@@ -263,8 +263,8 @@ window.loadSettingsContent = function loadSettingsContent() {
       // Update Pro state UI
       window.updateProState?.();
       
-      // Refresh providers, extras, and playlists when Pro state changes
-      console.log('🔄 Pro toggle (btnProTry): Refreshing providers, extras, and playlists...', { pro: window.FLAGS.proEnabled });
+      // Refresh providers, extras, playlists, and trivia when Pro state changes
+      console.log('🔄 Pro toggle (btnProTry): Refreshing providers, extras, playlists, and trivia...', { pro: window.FLAGS.proEnabled });
       if (window.__FlickletRefreshProviders) {
         window.__FlickletRefreshProviders();
         console.log('✅ Providers refreshed');
@@ -276,6 +276,10 @@ window.loadSettingsContent = function loadSettingsContent() {
       if (window.__FlickletRefreshPlaylists) {
         window.__FlickletRefreshPlaylists();
         console.log('✅ Playlists refreshed');
+      }
+      if (window.__FlickletRefreshTrivia) {
+        window.__FlickletRefreshTrivia();
+        console.log('✅ Trivia refreshed');
       }
       
       // Re-check advanced notifications visibility when Pro state changes
@@ -449,8 +453,8 @@ window.loadSettingsContent = function loadSettingsContent() {
     // Update the Pro features list to show locked/unlocked states
     window.renderProFeaturesList?.();
     
-      // Refresh providers, extras, and playlists when Pro state changes
-  console.log('🔄 Pro toggle: Refreshing providers, extras, and playlists...', { pro: window.FLAGS.proEnabled });
+      // Refresh providers, extras, playlists, and trivia when Pro state changes
+  console.log('🔄 Pro toggle: Refreshing providers, extras, playlists, and trivia...', { pro: window.FLAGS.proEnabled });
   if (window.__FlickletRefreshProviders) {
     window.__FlickletRefreshProviders();
     console.log('✅ Providers refreshed');
@@ -462,6 +466,10 @@ window.loadSettingsContent = function loadSettingsContent() {
   if (window.__FlickletRefreshPlaylists) {
     window.__FlickletRefreshPlaylists();
     console.log('✅ Playlists refreshed');
+  }
+  if (window.__FlickletRefreshTrivia) {
+    window.__FlickletRefreshTrivia();
+    console.log('✅ Trivia refreshed');
   }
     
     // Re-check advanced notifications visibility when Pro state changes

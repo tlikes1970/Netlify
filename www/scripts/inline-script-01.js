@@ -3648,11 +3648,11 @@
   if (window.__playlistV1Bound) return;
   window.__playlistV1Bound = true;
 
-  // Seed curated picks (IDs only; safe for nocookie embeds)
+  // Seed curated picks (placeholder content for TV tracker)
   const SEED = [
-    { id: 'dQw4w9WgXcQ', title: 'Top 10 Sci-Fi Shows (This Season)', genre: 'Sci-Fi' },
-    { id: '5qap5aO4i9A', title: 'Top 10 Dramas You Missed', genre: 'Drama' },
-    { id: 'Zi_XLOBDo_Y', title: 'Top 10 Comedies for Binge Night', genre: 'Comedy' }
+    { id: 'placeholder', title: 'Top 10 Sci-Fi Shows (This Season)', genre: 'Sci-Fi', type: 'placeholder' },
+    { id: 'placeholder', title: 'Top 10 Dramas You Missed', genre: 'Drama', type: 'placeholder' },
+    { id: 'placeholder', title: 'Top 10 Comedies for Binge Night', genre: 'Comedy', type: 'placeholder' }
   ];
 
   const LS_KEY = 'flicklet:spotlight:video'; // JSON: { id, title?, genre? }
@@ -3698,25 +3698,47 @@
     const card = document.createElement('section');
     card.className = 'playlist-card';
     card.dataset.mp = 'v1';
-    card.innerHTML = `
-      <div class="video-embed" role="region" aria-label="Curated video">
-        <iframe
-          src="https://www.youtube-nocookie.com/embed/${vid.id}?rel=0&modestbranding=1"
-          title="${(vid.title || 'Curated video').replace(/"/g,'&quot;')}"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen>
-        </iframe>
-      </div>
-      <div class="video-meta">
-        <div class="video-title">${(vid.title || 'Curated Spotlight').replace(/</g,'&lt;')}</div>
-        ${vid.genre ? `<span class="pill" aria-label="Genre">${vid.genre}</span>` : ''}
-        <span class="pill" aria-label="Curated by">Curated by Flicklet</span>
-        <div class="video-actions">
-          <button class="btn-ghost" data-action="openYT" aria-label="Open on YouTube">Open</button>
-          <button class="btn-ghost" data-action="dismissSpotlight" aria-label="Hide this card">Hide</button>
+    
+    if (vid.type === 'placeholder') {
+      card.innerHTML = `
+        <div class="video-embed" role="region" aria-label="Curated content" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: bold; text-align: center; padding: 40px;">
+          <div>
+            <div style="font-size: 48px; margin-bottom: 16px;">📺</div>
+            <div>${(vid.title || 'Curated Spotlight').replace(/</g,'&lt;')}</div>
+            <div style="font-size: 14px; opacity: 0.8; margin-top: 8px;">Coming Soon</div>
+          </div>
         </div>
-      </div>
-    `;
+        <div class="video-meta">
+          <div class="video-title">${(vid.title || 'Curated Spotlight').replace(/</g,'&lt;')}</div>
+          ${vid.genre ? `<span class="pill" aria-label="Genre">${vid.genre}</span>` : ''}
+          <span class="pill" aria-label="Curated by">Curated by Flicklet</span>
+          <div class="video-actions">
+            <button class="btn-ghost" data-action="dismissSpotlight" aria-label="Hide this card">Hide</button>
+          </div>
+        </div>
+      `;
+    } else {
+      card.innerHTML = `
+        <div class="video-embed" role="region" aria-label="Curated video">
+          <iframe
+            src="https://www.youtube-nocookie.com/embed/${vid.id}?rel=0&modestbranding=1"
+            title="${(vid.title || 'Curated video').replace(/"/g,'&quot;')}"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen>
+          </iframe>
+        </div>
+        <div class="video-meta">
+          <div class="video-title">${(vid.title || 'Curated Spotlight').replace(/</g,'&lt;')}</div>
+          ${vid.genre ? `<span class="pill" aria-label="Genre">${vid.genre}</span>` : ''}
+          <span class="pill" aria-label="Curated by">Curated by Flicklet</span>
+          <div class="video-actions">
+            <button class="btn-ghost" data-action="openYT" aria-label="Open on YouTube">Open</button>
+            <button class="btn-ghost" data-action="dismissSpotlight" aria-label="Hide this card">Hide</button>
+          </div>
+        </div>
+      `;
+    }
+    
     container.prepend(card);
     console.log('📼 Playlists: Card inserted into home section');
 
@@ -3785,11 +3807,20 @@
 
   function boot() {
     // Respect "Hide" for this session
-    try { if (sessionStorage.getItem('flicklet:spotlight:dismiss') === '1') return; } catch {}
+    try { 
+      if (sessionStorage.getItem('flicklet:spotlight:dismiss') === '1') {
+        console.log('📼 Playlists v1: Spotlight was dismissed this session, skipping');
+        return; 
+      } 
+    } catch {}
 
     const mount = findHomeMount();
-    console.log('📼 Playlists: Looking for home mount', { mount: !!mount, homeSection: !!document.getElementById('homeSection') });
-    if (!mount) return;
+    console.log('📼 Playlists v1: Looking for home mount', { mount: !!mount, homeSection: !!document.getElementById('homeSection') });
+    if (!mount) {
+      console.log('📼 Playlists v1: No home mount found, will retry');
+      return;
+    }
+    console.log('📼 Playlists v1: Rendering spotlight video');
     renderSpotlight(mount, chooseVideo());
   }
 
@@ -3846,7 +3877,7 @@
     {
       title: 'Underrated Dramas', genre: 'Drama',
       videos: [
-        { id:'Zi_XLOBDo_Y', title:'10 Dramas You Missed' },
+        { id:'5qap5aO4i9A', title:'10 Dramas You Missed' },
         { id:'FTQbiNvZqaY', title:'Modern Classics' },
         { id:'fRh_vgS2dFE', title:'Slow Burns Worth It' }
       ]
@@ -3854,7 +3885,7 @@
     {
       title: 'Bingeable Comedies', genre: 'Comedy',
       videos: [
-        { id:'5qap5aO4i9A', title:'Laugh Track: Best Binges' },
+        { id:'Zi_XLOBDo_Y', title:'Laugh Track: Best Binges' },
         { id:'OPf0YbXqDm0', title:'New Comfort Watches' },
         { id:'9bZkp7q19f0', title:'Crowd Favorites' }
       ]
@@ -4035,4 +4066,216 @@
   };
 
   console.log('📼 Playlists v2 (curated rows) initialized', { pro: IS_PRO });
+})();
+
+// === MP-Trivia v1 (per-card) + FlickWord Boost (Home) ===
+(() => {
+  const FLAGS = (window.FLAGS = window.FLAGS || {});
+  const TRIVIA_ON = FLAGS.triviaEnabled !== false;
+  const FFACT_ON  = FLAGS.flickwordBoostEnabled !== false;
+  if (!TRIVIA_ON && !FFACT_ON) { console.log('🧠 Trivia/FlickFact disabled'); return; }
+  if (window.__triviaBound) return; window.__triviaBound = true;
+
+  const PRO = !!FLAGS.proEnabled;
+
+  // Helpers
+  const safeDate = (s) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s)) ? new Date(s+'T00:00:00') : null;
+  const fmtYear  = (s) => (s ? String(s).slice(0,4) : '');
+  const plural   = (n, a, b) => (n===1 ? a : b);
+  const daysUntil = (date) => {
+    if (!date) return null;
+    const MS = 86400000;
+    const d0 = new Date(); d0.setHours(0,0,0,0);
+    const d1 = new Date(date); d1.setHours(0,0,0,0);
+    return Math.round((d1 - d0)/MS);
+  };
+  const num = (x) => (typeof x === 'number' ? x : (x ? Number(x) : NaN));
+
+  function makeFacts(item) {
+    const type = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+    const facts = [];
+
+    // 1) Year / runtime / seasons
+    const firstAir = safeDate(item.first_air_date);
+    const release  = safeDate(item.release_date);
+    const year = fmtYear(item.first_air_date || item.release_date);
+    const rt = num(item.runtime || (Array.isArray(item.episode_run_time) && item.episode_run_time[0]));
+    const seasons = num(item.number_of_seasons);
+    if (year) {
+      if (type === 'tv' && seasons) facts.push({ ic:'📆', text:`Since ${year} • ${seasons} ${plural(seasons,'season','seasons')}` });
+      else if (type === 'movie' && rt) facts.push({ ic:'⏱️', text:`${year} • ${rt} min` });
+      else facts.push({ ic:'📆', text:`${year}` });
+    }
+
+    // 2) Networks / origin
+    if (Array.isArray(item.networks) && item.networks[0]?.name) {
+      facts.push({ ic:'📺', text:`On ${item.networks[0].name}` });
+    } else if (Array.isArray(item.origin_country) && item.origin_country[0]) {
+      facts.push({ ic:'🌍', text:`From ${item.origin_country[0]}` });
+    }
+
+    // 3) Score
+    const score = num(item.vote_average);
+    if (!isNaN(score) && score > 0) {
+      const s = Math.round(score * 10);
+      facts.push({ ic: s>=85 ? '🍅' : '⭐', text:`Critics ${s}%` });
+    }
+
+    // 4) Next episode countdown (TV)
+    if (type === 'tv' && item.next_episode_to_air?.air_date) {
+      const d = safeDate(item.next_episode_to_air.air_date);
+      const n = daysUntil(d);
+      if (typeof n === 'number') {
+        if (n > 0) facts.push({ ic:'⏳', text:`Next in ${n} ${plural(n,'day','days')}` });
+        else if (n === 0) facts.push({ ic:'🟢', text:'New episode today' });
+        else facts.push({ ic:'📺', text:'Last aired' });
+      }
+    }
+
+    // 5) Language
+    if (item.original_language) {
+      facts.push({ ic:'🈶', text:`Lang: ${item.original_language.toUpperCase()}` });
+    }
+
+    // Deduplicate by text
+    const seen = new Set(); 
+    return facts.filter(f => !seen.has(f.text) && seen.add(f.text));
+  }
+
+  function renderTrivia(slot, facts, locked) {
+    if (!slot) return;
+    slot.textContent = '';
+    if (!facts.length) return;
+
+    const row = document.createElement('div');
+    row.className = 'trivia-row';
+    if (locked) row.dataset.locked = '1';
+
+    const label = document.createElement('span');
+    label.className = 'trivia-label';
+    label.textContent = 'Did you know';
+    row.appendChild(label);
+
+    const cap = locked ? 1 : Math.min(3, facts.length);
+    for (const f of facts.slice(0, cap)) {
+      const chip = document.createElement('span');
+      chip.className = 'trivia-chip';
+      chip.innerHTML = `<span class="ic" aria-hidden="true">${f.ic}</span> ${f.text}`;
+      row.appendChild(chip);
+    }
+
+    if (locked && facts.length > 0) {
+      const n = document.createElement('span');
+      n.className = 'nudge';
+      n.textContent = ' — upgrade for more';
+      row.appendChild(n);
+    }
+
+    slot.appendChild(row);
+  }
+
+  async function attachTrivia(cardEl, item) {
+    if (!TRIVIA_ON || !cardEl || !item) return;
+    const slot = cardEl.querySelector('.trivia-slot');
+    if (!slot) return;
+    try {
+      const facts = makeFacts(item);
+      if (!facts.length) return;
+      renderTrivia(slot, facts, !PRO);
+    } catch (e) {
+      console.debug('Trivia render failed', e);
+    }
+  }
+  window.__FlickletAttachTrivia = attachTrivia;
+
+  // ---- FlickWord Boost (Home) ----
+  function findHomeMount() {
+    return document.querySelector('#homeSection');
+  }
+  function chooseFlickFact() {
+    try {
+      const app = window.FlickletApp?.data || window.appData;
+      const pool = [
+        ...(app?.tv?.watching || []),
+        ...(app?.movies?.watching || []),
+        ...(app?.tv?.wishlist || []),
+        ...(app?.movies?.wishlist || [])
+      ];
+      if (!pool.length) return null;
+      const idx = Math.abs(new Date().toDateString().split('').reduce((a,c)=>a+c.charCodeAt(0),0)) % pool.length;
+      const item = pool[idx];
+      const facts = makeFacts(item);
+      if (!facts.length) return null;
+      return { title: (item.name || item.title || 'This title'), fact: facts[0].text };
+    } catch { return null; }
+  }
+  function renderFlickFact(container) {
+    if (!FFACT_ON) return;
+    const prev = container.querySelector('.flickfact-card[data-mp="v1"]');
+    if (prev) prev.remove();
+    const pick = chooseFlickFact();
+    if (!pick) return;
+
+    const card = document.createElement('section');
+    card.className = 'flickfact-card';
+    card.dataset.mp = 'v1';
+    card.innerHTML = `
+      <div class="ff-title">FlickFact</div>
+      <div class="ff-body"><strong>${pick.title.replace(/</g,'&lt;')}</strong> — ${pick.fact}</div>
+    `;
+    container.prepend(card);
+  }
+  function bootHome() {
+    const mount = findHomeMount();
+    if (!mount) return;
+    renderFlickFact(mount);
+  }
+
+  if (FFACT_ON) {
+    bootHome();
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') bootHome();
+    });
+  }
+
+  // Store item data for refresh purposes
+  const itemCache = new Map();
+  
+  // Enhanced attachTrivia that caches item data
+  const originalAttachTrivia = attachTrivia;
+  attachTrivia = function(cardEl, item) {
+    if (item && item.id) {
+      itemCache.set(item.id, item);
+    }
+    return originalAttachTrivia(cardEl, item);
+  };
+
+  // Global refresh function for PRO state changes
+  window.__FlickletRefreshTrivia = function() {
+    console.log('🧠 Trivia: Refreshing due to PRO state change');
+    // Refresh all existing cards
+    const cards = document.querySelectorAll('.show-card');
+    cards.forEach(card => {
+      const slot = card.querySelector('.trivia-slot');
+      if (slot) {
+        slot.textContent = ''; // Clear existing trivia
+        const itemId = card.getAttribute('data-id');
+        if (itemId) {
+          const item = itemCache.get(Number(itemId));
+          if (item) {
+            try {
+              const facts = makeFacts(item);
+              if (facts.length) {
+                renderTrivia(slot, facts, !window.FLAGS?.proEnabled);
+              }
+            } catch (e) {
+              console.debug('Trivia refresh failed for card', e);
+            }
+          }
+        }
+      }
+    });
+  };
+
+  console.log('🧠 Trivia + FlickWord boost initialized', { pro: PRO, trivia: TRIVIA_ON, flickfact: FFACT_ON });
 })();

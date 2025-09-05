@@ -18,6 +18,8 @@ window.FLAGS = Object.assign({
   extrasEnabled: true,                        // extras/outtakes discovery
             playlistsEnabled: true,                     // curated spotlight video
           playlistsProEnabled: true,                  // curated rows (PRO)
+          triviaEnabled: true,                        // per-card trivia chips
+          flickwordBoostEnabled: true,                // FlickFact panel on Home
 }, window.FLAGS || {});
 
 window.guard = (cond, fn) => { 

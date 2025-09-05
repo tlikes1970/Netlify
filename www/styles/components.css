@@ -2941,5 +2941,48 @@ body[data-theme="forest"] {
   padding: 10px; text-align:center; font-size:13px;
 }
 
+/* === MP-Trivia v1 (scoped) === */
+.trivia-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  opacity: 0.98;
+}
+.trivia-row .trivia-label {
+  font-size: 12px;
+  color: var(--muted, #9aa6b2);
+  margin-right: 2px;
+}
+.trivia-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--bg-elev, #1a1f27);
+  color: var(--text, #e6ecf2);
+  border: 1px solid rgba(255,255,255,.06);
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.trivia-chip .ic { opacity:.85; }
+.trivia-row[data-locked="1"] .trivia-chip { opacity:.65; }
+.trivia-row .nudge { font-size:12px; opacity:.8; }
+
+/* FlickWord Boost (Home) */
+.flickfact-card {
+  background: var(--bg-elev, #141a22);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  padding: 10px;
+  margin: 10px 0 12px;
+}
+.flickfact-card .ff-title { font-weight:700; font-size:14px; line-height:1.25; }
+.flickfact-card .ff-body  { font-size:13px; color: var(--muted,#a6b3c2); margin-top:6px; }
+
 
 

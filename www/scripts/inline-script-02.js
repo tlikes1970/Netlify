@@ -3291,6 +3291,7 @@
             <div class="show-meta"></div>
             <div class="show-overview">${escapeHtml(item.overview || t("no_description"))}</div>
 
+            <div class="trivia-slot"></div>
             <div class="providers-slot"></div>
             <div class="extras-slot"></div>
 
@@ -3334,10 +3335,11 @@
 
         ensureTvDetails(item, card);
         
-        // Lazy-load providers and extras
+        // Lazy-load providers, extras, and trivia
         setTimeout(() => {
           try { window.__FlickletAttachProviders?.(card, item); } catch {}
           try { window.__FlickletAttachExtras?.(card, item); } catch {}
+          try { window.__FlickletAttachTrivia?.(card, item); } catch {}
         }, 0);
         
         return card;
