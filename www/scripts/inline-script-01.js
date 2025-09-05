@@ -1617,6 +1617,10 @@
               firebase.auth().onAuthStateChanged(async (user) => {
                 console.log('👤 Firebase auth state changed:', user ? `User: ${user.email}` : 'No user');
                 this.currentUser = user;
+                // Also update the global currentUser for compatibility with existing code
+                if (typeof window !== 'undefined') {
+                  window.currentUser = user;
+                }
                 this.updateAccountButton();
                 if (user) {
                   console.log('✅ User signed in, updating UI');
@@ -1627,6 +1631,27 @@
                   
                   // Run cleanup for stray field
                   await this.cleanupStrayField();
+                  
+                  // Load user data from Firebase
+                  if (typeof loadUserDataFromCloud === 'function') {
+                    console.log('🔄 Loading user data from Firebase...');
+                    await loadUserDataFromCloud(user.uid);
+                    console.log('✅ User data loaded from Firebase');
+                    
+                    // Refresh the UI after data is loaded
+                    if (typeof updateUI === 'function') {
+                      console.log('🔄 Refreshing UI after data load');
+                      updateUI();
+                    }
+                    
+                    // Refresh the current tab content
+                    setTimeout(() => {
+                      if (typeof switchToTab === 'function') {
+                        console.log('🔄 Refreshing current tab after data load');
+                        switchToTab(this.currentTab);
+                      }
+                    }, 200);
+                  }
                   
                   // Handle username setup after login
                   this.handlePostLoginUsernameSetup(user);
@@ -1870,13 +1895,28 @@
           console.log('🔍 Looking for account button:', accountBtn);
           if (accountBtn) {
             console.log('🔧 Setting up account button event listener');
+            
+            // Remove any existing event listeners to prevent duplicates
+            const newBtn = accountBtn.cloneNode(true);
+            accountBtn.parentNode.replaceChild(newBtn, accountBtn);
+            
             const self = this; // Preserve 'this' context
-            accountBtn.addEventListener('click', function() {
+            newBtn.addEventListener('click', function(e) {
+              e.preventDefault();
+              e.stopPropagation();
               console.log('🔐 Account button clicked, currentUser:', self.currentUser);
+              console.log('🔍 FlickletApp instance:', self);
+              console.log('🔍 showSignOutModal function:', typeof self.showSignOutModal);
+              
               if (self.currentUser) {
                 // User is signed in, show sign out modal
                 console.log('👤 User signed in, showing sign out modal');
-                self.showSignOutModal();
+                try {
+                  self.showSignOutModal();
+                  console.log('✅ showSignOutModal called successfully');
+                } catch (error) {
+                  console.error('❌ Error calling showSignOutModal:', error);
+                }
               } else {
                 // User is not signed in, show sign in modal
                 console.log('🔑 User not signed in, showing sign in modal');
@@ -1957,25 +1997,33 @@
         },
 
         showSignOutModal() {
-          if (!this.currentUser) return;
+          console.log('🚪 showSignOutModal called, currentUser:', this.currentUser);
+          if (!this.currentUser) {
+            console.log('❌ No current user, cannot show sign out modal');
+            return;
+          }
           
           const email = this.currentUser.email || 'Account';
           const displayName = this.appData.settings.displayName || email;
+          console.log('👤 Sign out modal for:', { email, displayName });
           
           // Create a simple modal for sign out
           const modal = document.createElement('div');
           modal.className = 'modal-backdrop';
           modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(0, 0, 0, 0.5) !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            z-index: 99999 !important;
+            pointer-events: auto !important;
+            visibility: visible !important;
+            opacity: 1 !important;
           `;
           
           const modalContent = document.createElement('div');
@@ -1990,33 +2038,103 @@
           `;
           
           modalContent.innerHTML = `
-            <h3 style="margin: 0 0 16px 0; color: #333;">Account</h3>
-            <p style="margin: 0 0 20px 0; color: #666;">Signed in as <strong>${displayName}</strong></p>
-            <p style="margin: 0 0 20px 0; color: #666;">Email: ${email}</p>
-            <div style="display: flex; gap: 12px; justify-content: center;">
-              <button id="signOutBtn" class="btn" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">Sign Out</button>
-              <button id="closeModalBtn" class="btn secondary" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">Cancel</button>
+            <h3 style="margin: 0 0 16px 0; color: #333; font-size: 18px;">Account</h3>
+            <p style="margin: 0 0 20px 0; color: #666; font-size: 14px;">Signed in as <strong>${displayName}</strong></p>
+            <p style="margin: 0 0 20px 0; color: #666; font-size: 14px;">Email: ${email}</p>
+            <div style="display: flex; gap: 12px; justify-content: center; margin-top: 20px;">
+              <button id="signOutBtn" class="btn" style="background: #dc3545; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold;">Sign Out</button>
+              <button id="closeModalBtn" class="btn secondary" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px;">Cancel</button>
             </div>
           `;
           
           modal.appendChild(modalContent);
           document.body.appendChild(modal);
+          console.log('✅ Sign out modal created and added to DOM');
+          
+          // Force visibility immediately after creation
+          modal.style.visibility = 'visible';
+          modal.style.opacity = '1';
+          modal.style.display = 'flex';
+          
+          // Additional debugging to check modal visibility
+          setTimeout(() => {
+            const rect = modal.getBoundingClientRect();
+            const computedStyle = window.getComputedStyle(modal);
+            console.log('🔍 Modal visibility check:', {
+              rect: { width: rect.width, height: rect.height, top: rect.top, left: rect.left },
+              display: computedStyle.display,
+              visibility: computedStyle.visibility,
+              opacity: computedStyle.opacity,
+              zIndex: computedStyle.zIndex,
+              position: computedStyle.position
+            });
+            
+            // If modal is not visible, try a different approach
+            if (rect.width === 0 || rect.height === 0 || computedStyle.visibility === 'hidden' || computedStyle.opacity === '0') {
+              console.log('⚠️ Modal appears to be invisible, trying alternative approach');
+              modal.style.display = 'flex !important';
+              modal.style.visibility = 'visible !important';
+              modal.style.opacity = '1 !important';
+              modal.style.position = 'fixed !important';
+              modal.style.top = '0 !important';
+              modal.style.left = '0 !important';
+              modal.style.width = '100vw !important';
+              modal.style.height = '100vh !important';
+              modal.style.zIndex = '99999 !important';
+              modal.style.background = 'rgba(0,0,0,0.8) !important';
+              
+              // If still not visible, try using the existing modal system
+              setTimeout(() => {
+                const newRect = modal.getBoundingClientRect();
+                if (newRect.width === 0 || newRect.height === 0) {
+                  console.log('⚠️ Custom modal still not visible, trying existing modal system');
+                  modal.remove();
+                  
+                  // Use the existing showSignInModal system but modify it for sign out
+                  if (typeof showSignInModal === 'function') {
+                    // Create a simple confirmation dialog
+                    const confirmed = confirm(`Sign out as ${displayName}?\n\nEmail: ${email}`);
+                    if (confirmed) {
+                      console.log('🔥 User confirmed sign out via alert');
+                      if (typeof firebase !== 'undefined' && firebase.auth) {
+                        firebase.auth().signOut().then(() => {
+                          console.log('✅ Firebase sign out successful via alert');
+                          this.performSignOut();
+                        }).catch((error) => {
+                          console.error('❌ Firebase sign out error via alert:', error);
+                          this.showNotification('Failed to sign out', 'error');
+                        });
+                      } else {
+                        console.log('⚠️ Firebase not available, using fallback sign out via alert');
+                        this.performSignOut();
+                      }
+                    }
+                  }
+                }
+              }, 200);
+            }
+          }, 100);
           
           // Add event listeners
           const signOutBtn = modal.querySelector('#signOutBtn');
           const closeModalBtn = modal.querySelector('#closeModalBtn');
+          console.log('🔍 Modal buttons found:', { signOutBtn: !!signOutBtn, closeModalBtn: !!closeModalBtn });
           
           signOutBtn.addEventListener('click', () => {
+            console.log('🚪 Sign out button clicked');
             if (typeof firebase !== 'undefined' && firebase.auth) {
+              console.log('🔥 Firebase available, calling firebase.auth().signOut()');
               // Don't clear username from Firebase - let it persist for next login
               firebase.auth().signOut().then(() => {
+                console.log('✅ Firebase sign out successful');
                 this.performSignOut();
                 modal.remove();
               }).catch((error) => {
-                console.error('Sign out error:', error);
+                console.error('❌ Firebase sign out error:', error);
                 this.showNotification('Failed to sign out', 'error');
               });
             } else {
+              console.log('⚠️ Firebase not available, using fallback sign out');
               // Fallback sign out
               this.performSignOut();
               modal.remove();
@@ -2240,6 +2358,10 @@
           
           // Clear user authentication state
           this.currentUser = null;
+          // Also clear the global currentUser for compatibility
+          if (typeof window !== 'undefined') {
+            window.currentUser = null;
+          }
           
           // Clear user-specific data from centralized appData
           if (this.appData?.tv) {

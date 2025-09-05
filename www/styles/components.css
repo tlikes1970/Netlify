@@ -3068,5 +3068,98 @@ body[data-theme="forest"] {
   margin: 6px 0;
 }
 
+/* === SO-1.1: Visual separation & title suppression (scoped) === */
+
+/* 1) Don't show the legacy title when Series Organizer header is present */
+.so-card .show-title { 
+  display: none !important; 
+}
+
+/* 2) Make each card read as its own unit inside the list panel */
+.so-card {
+  /* local tokens, inherits your theme vars if present */
+  --so-gap: 8px;
+  --so-divider: rgba(0,0,0,0.08);            /* adjust in dark via theme if needed */
+  --so-card-pad-y: 10px;
+}
+
+/* soft divider between successive cards without changing the parent container */
+.so-card + .so-card {
+  border-top: 1px solid var(--so-divider);
+  margin-top: 10px;
+  padding-top: var(--so-card-pad-y);
+}
+
+/* if you want slightly stronger separation on wide viewports, keep it subtle */
+@media (min-width: 641px) {
+  .so-card + .so-card {
+    border-top-color: rgba(0,0,0,0.10);
+  }
+}
+
+/* 3) Trim excess space so the card body feels compact */
+.so-card .card-header { margin-bottom: var(--so-gap); }
+.so-card .card-pills   { margin-top: var(--so-gap); }
+.so-card .card-drawer  { margin-top: var(--so-gap); }
+
+/* Optional: tighten the "Your Rating" row spacing when present */
+.so-card .rating-container { 
+  margin: 6px 0 0 0; 
+}
+
+/* === SO-1.2: Card framing for Series Organizer cards (scoped to .so-card) === */
+/* Uses theme var if present; falls back to white */
+:root {
+  /* optional theme token if you don't already have one */
+  --card-bg: #fff;
+}
+
+/* Make each card read as its own box */
+.so-card {
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  margin-bottom: 12px;
+}
+
+/* Remove the old divider behavior now that cards are boxed */
+.so-card + .so-card {
+  border-top: none !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Keep the legacy-title suppression from SO-1.1 */
+.so-card .show-title {
+  display: none !important;
+}
+
+/* Optional: slightly tighter vertical rhythm within the card */
+.so-card .card-header { margin-bottom: 8px; }
+.so-card .card-pills  { margin-top: 8px; }
+.so-card .card-drawer { margin-top: 8px; }
+
+/* === SO-1.3 (optional): Alternating light tint for scanability === */
+/* Comment this block out if you don't want alternation */
+.so-card:nth-of-type(even) {
+  /* very subtle mix to avoid fighting theme */
+  background: color-mix(in srgb, var(--card-bg) 96%, #000 4%);
+}
+
+/* Dark mode support: provide a darker base bg if you have a dark theme var */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* If you already define a dark card bg, remove this and rely on your theme */
+    --card-bg: #1e1f25;
+  }
+  .so-card {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.45);
+  }
+  .so-card:nth-of-type(even) {
+    background: color-mix(in srgb, var(--card-bg) 96%, #fff 4%);
+  }
+}
+
 
 

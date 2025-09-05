@@ -281,6 +281,10 @@ window.loadSettingsContent = function loadSettingsContent() {
         window.__FlickletRefreshTrivia();
         console.log('✅ Trivia refreshed');
       }
+      if (window.__FlickletRefreshSeriesOrganizer) {
+        window.__FlickletRefreshSeriesOrganizer();
+        console.log('✅ Series Organizer refreshed');
+      }
       
       // Re-check advanced notifications visibility when Pro state changes
       const advancedCard = document.getElementById('notifAdvancedCard');
@@ -453,23 +457,28 @@ window.loadSettingsContent = function loadSettingsContent() {
     // Update the Pro features list to show locked/unlocked states
     window.renderProFeaturesList?.();
     
-      // Refresh providers, extras, playlists, and trivia when Pro state changes
-  console.log('🔄 Pro toggle: Refreshing providers, extras, playlists, and trivia...', { pro: window.FLAGS.proEnabled });
-  if (window.__FlickletRefreshProviders) {
-    window.__FlickletRefreshProviders();
-    console.log('✅ Providers refreshed');
-  }
-  if (window.__FlickletRefreshExtras) {
-    window.__FlickletRefreshExtras();
-    console.log('✅ Extras refreshed');
-  }
-  if (window.__FlickletRefreshPlaylists) {
-    window.__FlickletRefreshPlaylists();
-    console.log('✅ Playlists refreshed');
-  }
-  if (window.__FlickletRefreshTrivia) {
-    window.__FlickletRefreshTrivia();
-    console.log('✅ Trivia refreshed');
+    // Refresh providers, extras, playlists, and trivia when Pro state changes
+    console.log('🔄 Pro toggle (toggleProPreview): Refreshing providers, extras, playlists, and trivia...', { pro: window.FLAGS.proEnabled });
+    if (window.__FlickletRefreshProviders) {
+      window.__FlickletRefreshProviders();
+      console.log('✅ Providers refreshed');
+    }
+    if (window.__FlickletRefreshExtras) {
+      window.__FlickletRefreshExtras();
+      console.log('✅ Extras refreshed');
+    }
+    if (window.__FlickletRefreshPlaylists) {
+      window.__FlickletRefreshPlaylists();
+      console.log('✅ Playlists refreshed');
+    }
+    if (window.__FlickletRefreshTrivia) {
+      window.__FlickletRefreshTrivia();
+      console.log('✅ Trivia refreshed');
+    }
+    if (window.__FlickletRefreshSeriesOrganizer) {
+      window.__FlickletRefreshSeriesOrganizer();
+      console.log('✅ Series Organizer refreshed');
+    }
   }
     
     // Re-check advanced notifications visibility when Pro state changes
@@ -547,7 +556,6 @@ window.loadSettingsContent = function loadSettingsContent() {
       });
     }
   });
-};
 
 // ---- Data Import / Export ----
 // Old flaky handlers replaced by robust implementation above

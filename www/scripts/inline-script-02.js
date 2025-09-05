@@ -1339,117 +1339,133 @@
       }
 
       /* ============== Single global auth listener ============== */
-      auth.onAuthStateChanged(async (user) => {
-        currentUser = user;
-        // (Optional) kill the legacy painter if still present:
-        // setAccountLabel(user); // <-- REMOVE this call entirely
+      // DISABLED: This conflicts with FlickletApp auth system
+      // auth.onAuthStateChanged(async (user) => {
+      //   currentUser = user;
+      //   // (Optional) kill the legacy painter if still present:
+      //   // setAccountLabel(user); // <-- REMOVE this call entirely
 
-        if (user) {
-          const db = firebase.firestore();
-          const ref = db.collection("users").doc(user.uid);
+      //   if (user) {
+      //     const db = firebase.firestore();
+      //     const ref = db.collection("users").doc(user.uid);
 
-          // If user just signed in, close any open sign-in modals
-          const signInModals = document.querySelectorAll('.modal-backdrop[data-testid="modal-backdrop"]');
-          signInModals.forEach(modal => {
-            if (modal.querySelector('[data-testid="auth-modal"]')) {
-              modal.remove();
-            }
-          });
+      //     // If user just signed in, close any open sign-in modals
+      //     const signInModals = document.querySelectorAll('.modal-backdrop[data-testid="modal-backdrop"]');
+      //     signInModals.forEach(modal => {
+      //       if (modal.querySelector('[data-testid="auth-modal"]')) {
+      //         modal.remove();
+      //       }
+      //     });
 
-          try {
-            // 1) Base fields (never write empty displayName)
-            await ref.set(
-              {
-                profile: {
-                  email: user.email || "",
-                  photoURL: user.photoURL || "",
-                },
-                provider: user.providerData?.[0]?.providerId || "",
-                lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
-              },
-              { merge: true }
-            );
+      //     try {
+      //       // 1) Base fields (never write empty displayName)
+      //       await ref.set(
+      //         {
+      //           profile: {
+      //             email: user.email || "",
+      //             photoURL: user.photoURL || "",
+      //           },
+      //           provider: user.providerData?.[0]?.providerId || "",
+      //           lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+      //         },
+      //         { merge: true }
+      //       );
 
-            // 2) Only write displayName if non-empty
-            const authName = (user.displayName || "").trim();
-            if (authName) {
-              await ref.set({ "profile.displayName": authName }, { merge: true });
-            }
-            // If authName is empty (email/password), we DO NOT touch profile.displayName.
+      //       // 2) Only write displayName if non-empty
+      //       const authName = (user.displayName || "").trim();
+      //       if (authName) {
+      //         await ref.set({ "profile.displayName": authName }, { merge: true });
+      //       }
+      //       // If authName is empty (email/password), we DO NOT touch profile.displayName.
 
-            await loadUserDataFromCloud(user.uid);
+      //       await loadUserDataFromCloud(user.uid);
 
-            // Refresh the current tab content after cloud data is loaded
-            setTimeout(() => {
-              if (typeof applyTranslations === "function") {
-                applyTranslations();
-              }
-              // Also refresh the current tab content
-              const currentTab = document.querySelector(".tab-section[style*='display: block']") || 
-                                document.querySelector(".tab-section[style*='display: flex']");
-              if (currentTab && currentTab.id !== "homeSection") {
-                if (currentTab.id === "watchingSection") {
-                  const items = appData.tv.watching.concat(appData.movies.watching);
-                  if (typeof updateList === "function") updateList("watchingList", items);
-                } else if (currentTab.id === "wishlistSection") {
-                  const items = appData.tv.wishlist.concat(appData.movies.wishlist);
-                  if (typeof updateList === "function") updateList("wishlistList", items);
-                } else if (currentTab.id === "watchedSection") {
-                  const items = appData.tv.watched.concat(appData.movies.watched);
-                  if (typeof updateList === "function") updateList("watchedList", items);
-                } else if (currentTab.id === "discoverSection") {
-                  if (typeof renderDiscover === "function") renderDiscover();
-                }
-              }
-            }, 300);
+      //       // Refresh the current tab content after cloud data is loaded
+      //       setTimeout(() => {
+      //         if (typeof applyTranslations === "function") {
+      //           applyTranslations();
+      //         }
+      //         // Also refresh the current tab content
+      //         const currentTab = document.querySelector(".tab-section[style*='display: block']") || 
+      //                           document.querySelector(".tab-section[style*='display: flex']");
+      //         if (currentTab && currentTab.id !== "homeSection") {
+      //           if (currentTab.id === "watchingSection") {
+      //             const items = appData.tv.watching.concat(appData.movies.watching);
+      //             if (typeof updateList === "function") updateList("watchingList", items);
+      //           } else if (currentTab.id === "wishlistSection") {
+      //             const items = appData.tv.wishlist.concat(appData.movies.wishlist);
+      //             if (typeof updateList === "function") updateList("wishlistList", items);
+      //           } else if (currentTab.id === "watchedSection") {
+      //             const items = appData.tv.watched.concat(appData.movies.watched);
+      //             if (typeof updateList === "function") updateList("watchedList", items);
+      //           } else if (currentTab.id === "discoverSection") {
+      //             if (typeof renderDiscover === "function") renderDiscover();
+      //           }
+      //         }
+      //       }, 300);
 
-            // DISABLED - Old auto-set system conflicts with new FlickletApp username prompt system
-            console.log('🚫 Old auto-set displayName system disabled - using new FlickletApp system');
-            return;
-            
-            // Check if user needs to set a display name after successful authentication
-            const currentDisplayName = (appData?.settings?.displayName || "").trim();
-            if (!currentDisplayName) {
-              // Try to use Google/Apple profile name first
-              const guess =
-                (user.displayName && user.displayName.trim()) ||
-                (user.email && user.email.split("@")[0]) ||
-                "";
-              
-              if (guess) {
-                // Auto-set the name from profile
-                appData.settings.displayName = guess.trim();
-                if (typeof saveAppData === "function") saveAppData();
-                // if (typeof updateWelcomeText === "function") updateWelcomeText(); // DISABLED - conflicts with dynamic header system
-                if (typeof rebuildStats === "function") rebuildStats();
-                localStorage.setItem("__flicklet_onboarded__", "1");
-                // setAccountLabel(user); // DISABLED - conflicts with new FlickletApp.updateAccountButton()
-              } else {
-                // No profile name available - prompt user to set one
-                setTimeout(() => {
-                  if (!appData.settings.displayName || !appData.settings.displayName.trim()) {
-                    // Only show if no other modal is already open
-                    if (!document.querySelector('.modal-backdrop')) {
-                      showNameModal(true);
-                    }
-                  }
-                }, 500); // Small delay to ensure everything is loaded
-              }
-            }
-          } catch (e) {
-            console.warn("auth-state update failed", e);
-          }
-        } else {
-          // signed out flow...
-        }
-      });
+      //       // DISABLED - Old auto-set system conflicts with new FlickletApp username prompt system
+      //       console.log('🚫 Old auto-set displayName system disabled - using new FlickletApp system');
+      //       return;
+          
+      //       // Check if user needs to set a display name after successful authentication
+      //       const currentDisplayName = (appData?.settings?.displayName || "").trim();
+      //       if (!currentDisplayName) {
+      //         // Try to use Google/Apple profile name first
+      //         const guess =
+      //           (user.displayName && user.displayName.trim()) ||
+      //           (user.email && user.email.split("@")[0]) ||
+      //           "";
+          
+      //         if (guess) {
+      //           // Auto-set the name from profile
+      //           appData.settings.displayName = guess.trim();
+      //           if (typeof saveAppData === "function") saveAppData();
+      //           // if (typeof updateWelcomeText === "function") updateWelcomeText(); // DISABLED - conflicts with dynamic header system
+      //           if (typeof rebuildStats === "function") rebuildStats();
+      //           localStorage.setItem("__flicklet_onboarded__", "1");
+      //           // setAccountLabel(user); // DISABLED - conflicts with new FlickletApp.updateAccountButton()
+      //         } else {
+      //           // No profile name available - prompt user to set one
+      //           setTimeout(() => {
+      //             if (!appData.settings.displayName || !appData.settings.displayName.trim()) {
+      //               // Only show if no other modal is already open
+      //               if (!document.querySelector('.modal-backdrop')) {
+      //                 showNameModal(true);
+      //               }
+      //             }
+      //           }, 500); // Small delay to ensure everything is loaded
+      //         }
+      //       }
+      //     } catch (e) {
+      //       console.warn("auth-state update failed", e);
+      //     }
+      //   } else {
+      //     // signed out flow...
+      //   }
+      // });
 
       /* ======= Sign-in modal + Name onboarding ======= */
       function openModal(title, html, testId = "generic-modal") {
+        console.log('🔧 openModal called:', { title, testId });
         const wrap = document.createElement("div");
         wrap.className = "modal-backdrop";
         wrap.setAttribute("data-testid", "modal-backdrop");
-        wrap.style.display = "flex"; // Make modal visible
+        wrap.style.cssText = `
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          background: rgba(0, 0, 0, 0.5) !important;
+          display: flex !important;
+          justify-content: center !important;
+          align-items: center !important;
+          z-index: 99999 !important;
+          pointer-events: auto !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        `;
         wrap.innerHTML = `
           <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" data-testid="${testId}" tabindex="-1">
             <h3 id="modal-title">${title}</h3>
@@ -1459,6 +1475,47 @@
             </div>
           </div>`;
         document.body.appendChild(wrap);
+        
+        // Force visibility immediately after creation
+        wrap.style.visibility = 'visible';
+        wrap.style.opacity = '1';
+        wrap.style.display = 'flex';
+        
+        console.log('✅ Modal added to DOM, checking visibility:', {
+          display: wrap.style.display,
+          visibility: window.getComputedStyle(wrap).visibility,
+          opacity: window.getComputedStyle(wrap).opacity,
+          rect: wrap.getBoundingClientRect()
+        });
+
+        // Additional debugging to check modal visibility
+        setTimeout(() => {
+          const rect = wrap.getBoundingClientRect();
+          const computedStyle = window.getComputedStyle(wrap);
+          console.log('🔍 Modal visibility check after timeout:', {
+            rect: { width: rect.width, height: rect.height, top: rect.top, left: rect.left },
+            display: computedStyle.display,
+            visibility: computedStyle.visibility,
+            opacity: computedStyle.opacity,
+            zIndex: computedStyle.zIndex,
+            position: computedStyle.position
+          });
+          
+          // If modal is not visible, try a different approach
+          if (rect.width === 0 || rect.height === 0 || computedStyle.visibility === 'hidden' || computedStyle.opacity === '0') {
+            console.log('⚠️ Modal appears to be invisible, trying alternative approach');
+            wrap.style.display = 'flex !important';
+            wrap.style.visibility = 'visible !important';
+            wrap.style.opacity = '1 !important';
+            wrap.style.position = 'fixed !important';
+            wrap.style.top = '0 !important';
+            wrap.style.left = '0 !important';
+            wrap.style.width = '100vw !important';
+            wrap.style.height = '100vh !important';
+            wrap.style.zIndex = '99999 !important';
+            wrap.style.background = 'rgba(0,0,0,0.8) !important';
+          }
+        }, 100);
 
         const close = () => wrap.remove();
         wrap.addEventListener("click", (e) => {
@@ -1564,19 +1621,25 @@
       }
 
       window.showSignInModal = function showSignInModal() {
-        openModal(
-          "Sign in to sync",
-          `
-            <p style="margin-bottom: 20px;">Sign in to back up your lists and sync across devices.</p>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; justify-content:center; align-items:center; max-width:320px; margin:0 auto;">
-              <button id="googleBtn" class="btn" style="font-size:14px; padding:12px 18px; min-height:44px;">🔒 Google</button>
-              <button id="appleBtn" class="btn secondary" style="font-size:14px; padding:12px 18px; min-height:44px;">🍎 Apple</button>
-              <button id="emailBtn" class="btn secondary" style="font-size:14px; padding:12px 18px; min-height:44px; grid-column: 1 / -1;">✉️ Email</button>
-              <button id="signOutBtn" class="btn secondary" style="display:none; font-size:14px; padding:12px 18px; min-height:44px;">Sign Out</button>
-            </div>
+        console.log('🔑 showSignInModal called');
+        try {
+          openModal(
+            "Sign in to sync",
+            `
+              <p style="margin-bottom: 20px;">Sign in to back up your lists and sync across devices.</p>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; justify-content:center; align-items:center; max-width:320px; margin:0 auto;">
+                <button id="googleBtn" class="btn" style="font-size:14px; padding:12px 18px; min-height:44px;">🔒 Google</button>
+                <button id="appleBtn" class="btn secondary" style="font-size:14px; padding:12px 18px; min-height:44px;">🍎 Apple</button>
+                <button id="emailBtn" class="btn secondary" style="font-size:14px; padding:12px 18px; min-height:44px; grid-column: 1 / -1;">✉️ Email</button>
+                <button id="signOutBtn" class="btn secondary" style="display:none; font-size:14px; padding:12px 18px; min-height:44px;">Sign Out</button>
+              </div>
           `,
           "auth-modal"
         );
+        console.log('✅ Sign in modal created and added to DOM');
+        } catch (error) {
+          console.error('❌ Error creating sign in modal:', error);
+        }
 
         const google = document.getElementById("googleBtn");
         const apple = document.getElementById("appleBtn");
@@ -4834,6 +4897,15 @@
     buildHeader(details, item, titleText);
     ensurePills(details);
 
+    // Attach providers, extras, and trivia to the card (only if we have valid item data)
+    if (item && item.id) {
+      setTimeout(() => {
+        try { window.__FlickletAttachProviders?.(cardEl, item); } catch {}
+        try { window.__FlickletAttachExtras?.(cardEl, item); } catch {}
+        try { window.__FlickletAttachTrivia?.(cardEl, item); } catch {}
+      }, 0);
+    }
+
     DECORATED.add(cardEl);
   }
 
@@ -4863,6 +4935,22 @@
     }
   });
   obs.observe(document.body, { childList: true, subtree: true });
+
+  // Function to refresh all Series Organizer cards when Pro status changes
+  window.__FlickletRefreshSeriesOrganizer = function() {
+    const cards = document.querySelectorAll('.so-card');
+    cards.forEach(card => {
+      const item = card.__item;
+      if (item && item.id) {
+        // Re-attach providers, extras, and trivia with current Pro status
+        setTimeout(() => {
+          try { window.__FlickletAttachProviders?.(card, item); } catch {}
+          try { window.__FlickletAttachExtras?.(card, item); } catch {}
+          try { window.__FlickletAttachTrivia?.(card, item); } catch {}
+        }, 0);
+      }
+    });
+  };
 
   console.log('🗂️ Series Organizer SO-1 initialized', { pro: PRO });
 })();
