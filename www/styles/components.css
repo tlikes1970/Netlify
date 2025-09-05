@@ -1,5 +1,70 @@
 /* Flicklet - Component CSS Styles */
 
+:root{
+  /* Colors */
+  --color-primary-start:#ff4c8d;
+  --color-primary-end:#9b4dff;
+  --color-text:#1f2937;          /* slate-800 */
+  --color-muted:#6b7280;         /* gray-500 */
+  --color-surface:#ffffff;
+  --color-surface-2:#f3f4f6;     /* gray-100 */
+  --color-border:#e5e7eb;        /* gray-200 */
+  --color-danger:#ef4444;
+
+  /* Sizing / spacing */
+  --r:12px;
+  --gap-1:4px; --gap-2:8px; --gap-3:12px; --gap-4:16px; --gap-5:20px;
+
+  /* Type scale (mobile) */
+  --fs-body:14px;
+  --fs-label:16px;
+  --fs-button:16px;
+  --fs-h3:22px;
+
+  /* Buttons */
+  --btn-h:40px;
+  --btn-radius:10px;
+
+  /* Z-index */
+  --z-header:200;
+  --z-modal:1000;
+  --z-overlay:999;
+}
+
+/* TEMP: stop horizontal scroll while we find offenders */
+html, body { overflow-x:hidden; }
+
+/* Shared button styles */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  height:var(--btn-h); padding:0 var(--gap-4);
+  border-radius:var(--btn-radius); border:1px solid var(--color-border);
+  background:var(--color-surface); color:var(--color-text);
+  font-weight:600; text-decoration:none; cursor:pointer;
+}
+.btn.primary{
+  border:none; color:#fff;
+  background:linear-gradient(90deg,var(--color-primary-start),var(--color-primary-end));
+}
+.btn.secondary{ background:var(--color-surface-2); }
+.btn.ghost{ background:transparent; border:1px solid var(--color-border); }
+.btn.danger{ background:var(--color-danger); color:#fff; border:none; }
+
+/* Modal primitives (overlay + container shell) */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:var(--z-overlay);
+  display:none;
+}
+.modal{
+  position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+  z-index:var(--z-modal); pointer-events:none;
+}
+.modal > .modal-card{
+  pointer-events:auto; max-width:320px; width:calc(100% - 32px);
+  background:var(--color-surface); border-radius:12px; padding:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+
 /* === MP-2.2 TOKENS (cards) === */
 :root {
   /* Desktop defaults */
@@ -2886,6 +2951,31 @@ body[data-theme="forest"] {
   line-height: 1;
 }
 
+/* Settings segmented control */
+.settings-tabs{
+  display:flex; gap:var(--gap-2); padding:var(--gap-2) var(--gap-3);
+  overflow-x:auto; border-bottom:1px solid var(--color-border);
+  position:sticky; top:0; background:var(--color-surface); z-index:var(--z-header);
+}
+.settings-tabs button{
+  flex:0 0 auto; padding:10px 12px; border-radius:999px;
+  border:1px solid var(--color-border); background:var(--color-surface-2);
+  font-weight:600;
+}
+.settings-tabs button.active{
+  border-color:transparent; color:#fff;
+  background:linear-gradient(90deg,var(--color-primary-start),var(--color-primary-end));
+}
+.settings-section{ 
+  padding:var(--gap-4); 
+  min-height: 200px; /* Ensure there's content to scroll to */
+  margin-bottom: 20px; /* Add some spacing between sections */
+  display: none; /* Hide all sections by default */
+}
+.settings-section.active{ 
+  display: block; /* Show only the active section */
+}
+
 /* === MP-Playlists v2 (curated rows, PRO) === */
 .playlist-section[data-mp="v2"] {
   margin: 14px 0 8px;
@@ -3159,6 +3249,277 @@ body[data-theme="forest"] {
   .so-card:nth-of-type(even) {
     background: color-mix(in srgb, var(--card-bg) 96%, #fff 4%);
   }
+}
+
+/* ========== Notifications (shared) ========== */
+
+/* Toast region: mobile = bottom; desktop = top-right */
+.toast-region{
+  position:fixed;
+  inset:auto 16px max(16px, env(safe-area-inset-bottom)) 16px;
+  display:grid; gap:8px;
+  z-index:9999;
+  pointer-events:none; /* clicks pass through unless on toast */
+}
+@media (min-width:769px){
+  .toast-region{ inset:16px 16px auto auto; }
+}
+
+.toast{
+  pointer-events:auto;
+  max-width:92vw;
+  background:#222; color:#fff;
+  border-radius:12px;
+  padding:10px 12px;
+  box-shadow:0 6px 20px rgba(0,0,0,.25);
+  display:flex; align-items:center; gap:10px;
+  opacity:0; transform:translateY(10px);
+  transition:transform .18s ease, opacity .18s ease;
+  font-size:0.95rem;
+}
+.toast.show{ opacity:1; transform:translateY(0); }
+
+.toast[data-type="success"]{ background:#1b5e20; }
+.toast[data-type="info"]{ background:#2c3e50; }
+.toast[data-type="error"]{ background:#b00020; }
+
+.toast .msg{ flex:1; }
+.toast .close{
+  margin-left:auto;
+  background:transparent; border:0; color:inherit;
+  font-size:18px; cursor:pointer; line-height:1;
+}
+
+/* Banner region: fixed at very top of viewport */
+.banner-region{ 
+  position:fixed; 
+  top:0; 
+  left:0; 
+  right:0; 
+  z-index:9998; 
+  width:100%;
+}
+
+.banner{
+  background:#ffe9cc; color:#5b3b00;
+  padding:10px 12px;
+  display:flex; align-items:center; gap:8px;
+  border-bottom:1px solid rgba(0,0,0,.1);
+  font-size:0.95rem;
+}
+.banner[data-type="error"]{ background:#ffe5e8; color:#7a0010; }
+.banner .msg{ flex:1; }
+.banner .close{ margin-left:auto; background:none; border:0; cursor:pointer; font-size:18px; line-height:1; }
+
+/* Add top padding to body when banner is present */
+body.has-banner {
+  padding-top: 50px; /* Adjust based on banner height */
+}
+
+@media (prefers-reduced-motion: reduce){
+  .toast{ transition:none; }
+}
+
+/* ========== Header spacing + account controls (shared) ========== */
+
+/* Vertical rhythm inside header */
+.header .header-bar {
+  display: grid;
+  grid-auto-rows: min-content;
+  row-gap: 6px;
+}
+
+/* Titles compact but readable */
+.header .app-title {
+  line-height: 1.15;
+  margin: 2px 0 0 0;
+}
+.header .app-subtitle {
+  line-height: 1.2;
+  margin: 0 0 2px 0;
+  opacity: .9;
+}
+
+/* Account controls row */
+.account-controls{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;       /* consistent breathing room below titles */
+  margin-bottom: 2px;
+}
+
+/* Buttons/select hit-area */
+.account-controls #accountBtn{
+  min-height: 40px;
+  padding: 0 12px;
+}
+.account-controls #langSelect{
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+/* ========== Curated Rows ========== */
+.curated-sections {
+  display: grid;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.curated-section {
+  display: grid;
+  gap: 8px;
+}
+
+.curated-section .section-header {
+  display: flex; align-items: baseline; gap: 8px;
+}
+.curated-section .section-title {
+  font-weight: 600; font-size: 1.1rem;
+}
+.curated-section .section-subtitle {
+  font-size: .9rem; opacity: .75;
+}
+
+/* Horizontal row with scroll-snap; safe (not an ancestor of .top-search) */
+.curated-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 44vw;          /* mobile card width; tuned below for desktop */
+  gap: 10px;
+  overflow-x: auto;                  /* overflow is local to row */
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  padding: 4px 2px 8px 2px;
+  -webkit-overflow-scrolling: touch;
+}
+.curated-row::-webkit-scrollbar { height: 8px; }
+.curated-row::-webkit-scrollbar-thumb { background: rgba(0,0,0,.2); border-radius: 8px; }
+
+.curated-card {
+  scroll-snap-align: start;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  display: grid; grid-template-rows: auto auto;
+  min-height: 100%;
+}
+
+.curated-card .poster {
+  aspect-ratio: 2/3;
+  width: 100%;
+  object-fit: cover;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  background: var(--color-surface-2, #111);
+}
+.curated-card .meta {
+  padding: 8px; display: grid; gap: 4px;
+}
+.curated-card .title {
+  font-size: .95rem; line-height: 1.2;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.curated-card .actions {
+  display: flex; gap: 8px; margin-top: 6px;
+}
+.curated-card .btn {
+  padding: 6px 8px; min-height: 34px;
+}
+
+/* Desktop widths */
+@media (min-width: 769px){
+  .curated-row{ grid-auto-columns: 220px; }
+}
+
+/* ===== Trivia Tile ===== */
+.trivia-card{
+  margin-top: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+.trivia-head{
+  display:flex; align-items: baseline; gap: 10px;
+}
+.trivia-head h2{
+  font-size: 1.1rem; margin:0;
+}
+.trivia-stats{ opacity:.8; font-size:.9rem; }
+
+.trivia-body{ display:grid; gap:10px; }
+.trivia-question{ font-weight:600; line-height:1.3; }
+
+.trivia-choices{
+  list-style:none; padding:0; margin:0;
+  display:grid; gap:8px;
+}
+.trivia-choices li{
+  border:1px solid var(--color-border);
+  border-radius:10px;
+  padding:10px;
+  cursor:pointer;
+}
+.trivia-choices li[aria-selected="true"]{
+  outline:2px solid var(--primary);
+}
+.trivia-choices li.correct { background: #0f5e20; color:#fff; border-color:#0f5e20; }
+.trivia-choices li.wrong   { background: #7a0010; color:#fff; border-color:#7a0010; }
+
+.trivia-feedback{ min-height: 1.2em; font-size:.95rem; }
+.trivia-actions .btn{ min-height:36px; padding:6px 10px; }
+
+/* Keep it readable on mobile */
+@media (max-width:480px){
+  .trivia-card{ padding:10px; }
+}
+
+/* ===== Daily Video Spotlight ===== */
+.spotlight-card{
+  margin-top:16px;
+  background:var(--color-surface);
+  border:1px solid var(--color-border);
+  border-radius:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+  padding:12px; display:grid; gap:10px;
+}
+.spotlight-head{ display:flex; align-items:baseline; gap:10px; }
+.spotlight-head h2{ margin:0; font-size:1.1rem; }
+.spotlight-date{ opacity:.8; font-size:.9rem; }
+
+.spotlight-media{
+  position:relative;
+  aspect-ratio:16/9;
+  border-radius:10px; overflow:hidden; /* local overflow is OK here */
+  background:#000;
+}
+.spotlight-media iframe,
+.spotlight-media video{
+  width:100%; height:100%; display:block;
+}
+
+.spotlight-meta{ display:grid; gap:8px; }
+.spotlight-title{ font-weight:600; }
+.spotlight-desc{ opacity:.9; line-height:1.35; }
+.spotlight-actions{ display:flex; gap:8px; }
+.spotlight-actions .btn{ min-height:36px; padding:6px 10px; }
+
+/* Mobile tweak */
+@media (max-width:480px){
+  .spotlight-card{ padding:10px; }
+}
+
+/* Reduced motion: we won't animate; autoplay will be disabled in JS */
+@media (prefers-reduced-motion: reduce){
+  .spotlight-media{ scroll-behavior:auto; }
 }
 
 

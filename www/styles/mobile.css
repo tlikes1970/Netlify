@@ -622,3 +622,77 @@
    Remove any other `.show-card` rules in this file that sit OUTSIDE the block above
    (especially unfenced 2-col grids or unfenced animation hooks). The single block
    above is the only valid source of truth for mobile cards. */
+
+/* Mobile header fix: neutralize legacy grid and center title */
+body.mobile-v1 header.header{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  gap:8px !important;
+  grid-template-columns: unset !important; /* safety nuke */
+}
+
+body.mobile-v1 header.header .app-title{
+  flex:1 1 auto !important;
+  text-align:center !important;
+  line-height:1.2 !important;
+}
+
+body.mobile-v1 header.header .username-snark{
+  min-width:0 !important;
+  width:100% !important;
+  text-align:center !important;
+  order:2 !important; /* stack under title */
+}
+
+/* Notifications: minor mobile adjustments */
+@media (max-width:480px){
+  .toast{ max-width:96vw; }
+  /* No overflow/transform on header or .top-search ancestors touched */
+}
+
+/* ========== STEP 7 mobile spacing + language placement ========== */
+@media (max-width: 480px){
+
+  /* Tighten header -> search without touching sticky mechanics */
+  .header{ margin-bottom: 8px !important; }
+  .top-search{ margin-top: 6px; } /* do not change position:sticky ancestors */
+
+  /* Default: language inline with account button */
+  .header[data-lang-layout="inline"] .account-controls {
+    flex-wrap: nowrap;
+    justify-content: center;     /* titles centered above; controls centered below */
+    gap: 8px;
+  }
+  .header[data-lang-layout="inline"] #accountBtn,
+  .header[data-lang-layout="inline"] #langSelect {
+    font-size: 14px;
+  }
+
+  /* Variant: language on its own row (under account button) */
+  .header[data-lang-layout="row"] .account-controls {
+    display: grid;
+    grid-template-columns: 1fr;  /* stack */
+    row-gap: 6px;
+    justify-items: center;
+  }
+  .header[data-lang-layout="row"] #langSelect {
+    width: auto; min-width: 140px;
+  }
+}
+
+/* Tablet/Desktop: push controls to right edge, keep tidy spacing */
+@media (min-width: 481px){
+  .header .header-bar{
+    display: flex; align-items: flex-end; gap: 12px;
+  }
+  .header .account-controls{
+    margin-left: auto;           /* send to top-right */
+  }
+}
+
+/* Curated rows: mobile spacing */
+@media (max-width: 480px){
+  .curated-section .section-title { font-size: 1.05rem; }
+  .curated-row { grid-auto-columns: 58vw; } /* wider cards on narrow phones */
+}

@@ -29,7 +29,7 @@
         const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const isMobileSize = window.innerWidth <= 768;
         
-        if (isMobileDevice && isMobileSize) {
+        if (isMobileDevice && isMobileSize && document.body) {
           document.body.classList.add('mobile-v1');
           console.log('📱 Mobile class applied immediately - iPhone detected');
         }
@@ -44,7 +44,7 @@
 
     <!-- Main Container -->
     <div class="main-container" id="appRoot">
-      <header class="header" role="banner">
+      <header class="header" role="banner" data-lang-layout="inline">
         <!-- New left-side container for username and snarky phrase -->
         <div id="usernameSnarkContainer" style="text-align: left; min-width: 200px;">
           <div id="dynamicUsername" style="font-size: 18px; font-weight: bold; color: #9c27b0; margin-bottom: 4px;">Welcome!</div>
@@ -121,8 +121,48 @@
           id="tagFilterRow"
           class="tag-filters"
           aria-label="Tag filters"
-        ></div>
+        >        </div>
       </div>
+
+          <!-- Curated Sections -->
+    <section id="curatedSections" class="curated-sections" aria-label="Curated lists">
+      <!-- Populated by curated-rows.js -->
+    </section>
+
+    <!-- Trivia (daily) -->
+    <section id="triviaTile" class="trivia-card" aria-labelledby="triviaTitle">
+      <div class="trivia-head">
+        <h2 id="triviaTitle">Trivia</h2>
+        <div class="trivia-stats" aria-live="polite" aria-atomic="true"></div>
+      </div>
+      <div class="trivia-body">
+        <div class="trivia-question" id="triviaQuestion"></div>
+        <ul class="trivia-choices" id="triviaChoices" role="listbox"></ul>
+        <div class="trivia-feedback" id="triviaFeedback" aria-live="polite"></div>
+        <div class="trivia-actions">
+          <button class="btn" id="triviaNextBtn" hidden>Next</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Daily Video Spotlight -->
+    <section id="videoSpotlight" class="spotlight-card" aria-labelledby="spotlightTitle">
+      <div class="spotlight-head">
+        <h2 id="spotlightTitle">Daily Video Spotlight</h2>
+        <div class="spotlight-date" aria-live="polite" aria-atomic="true"></div>
+      </div>
+
+      <div class="spotlight-media" id="spotlightMedia" role="region" aria-label="Featured video"></div>
+
+      <div class="spotlight-meta">
+        <div class="spotlight-title" id="spotlightItemTitle"></div>
+        <div class="spotlight-desc" id="spotlightDesc"></div>
+        <div class="spotlight-actions">
+          <button class="btn" id="spotlightPlayBtn">Play</button>
+          <button class="btn" id="spotlightMuteBtn" aria-pressed="true">Unmute</button>
+        </div>
+      </div>
+    </section>
 
       <div class="tab-container">
         <button id="homeTab" class="tab active" title="Overview of your TV & movie tracking" aria-label="Home tab - view dashboard and recommendations">🏠 <span data-i18n="home">Home</span></button>
@@ -273,9 +313,19 @@
 
       <!-- Settings / Profile -->
               <div id="settingsSection" class="tab-section" style="display: none">
+            <div class="settings-tabs" role="tablist" aria-label="Settings Sections">
+              <button role="tab" aria-selected="true" class="active" data-target="#general">General</button>
+              <button role="tab" aria-selected="false" data-target="#notifications">Notifications</button>
+              <button role="tab" aria-selected="false" data-target="#layout">Layout</button>
+              <button role="tab" aria-selected="false" data-target="#data">Data</button>
+              <button role="tab" aria-selected="false" data-target="#pro">Pro</button>
+              <button role="tab" aria-selected="false" data-target="#about">About</button>
+            </div>
+
           <div class="section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-              <h3>⚙️ <span data-i18n="settings">Settings</span></h3>
+            <section id="general" class="settings-section">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>⚙️ <span data-i18n="settings">Settings</span></h3>
               <div style="display: flex; align-items: center; gap: 10px;">
                 <label for="displayNameInput" style="font-weight: 500; color: var(--text); white-space: nowrap;">
                   What would you like us to call you?
@@ -292,154 +342,153 @@
               </div>
             </div>
 
-          <!-- Stats Section (moved to first) -->
-          <div id="statsCard" class="card">
-            <h4>📊 My Statistics</h4>
-            <div id="statsContent">
-              <div class="loading">Loading stats...</div>
-            </div>
-          </div>
-
-          <!-- Manage Not Interested Section (moved to second) -->
-          <div class="card">
-            <h4>🚫 Not Interested Management</h4>
-            <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-              Manage shows and movies you've marked as not interested. These won't appear in your recommendations.
-            </p>
-            <button id="manageNotInterestedBtn" class="btn" onclick="openNotInterestedModal()" style="width: 25%; min-width: 150px; margin-bottom: 8px;">
-              🚫 Manage Not Interested List
-            </button>
-          </div>
-
-          <!-- Notifications Section (moved to third) -->
-          <div class="card">
-            <h4>🔔 <span data-i18n="notifications">Notifications</span></h4>
-            <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-              Choose which types of notifications you'd like to receive about your TV shows and movies
-            </p>
-            <p style="margin: 0 0 15px 0; font-size: 0.8rem; color: var(--text-tertiary); font-style: italic;">
-              These are basic notifications. Pro users get advanced notification features below.
-            </p>
-            <div
-              style="
-                display: flex;
-                gap: 10px;
-                flex-wrap: wrap;
-                align-items: center;
-                margin-bottom: 8px;
-              "
-            >
-              <label
-                ><input type="checkbox" id="notifEpisodes" /> <span data-i18n="episode_alerts">Upcoming episode alerts</span></label
-              >
-              <label
-                ><input type="checkbox" id="notifDiscover" /> <span data-i18n="weekly_discover">Weekly discover picks</span></label
-              >
-              <label
-                ><input type="checkbox" id="notifDigest" /> <span data-i18n="monthly_digest">Monthly stats digest</span></label
-              >
-            </div>
-          </div>
-
-          <!-- Pro Tier Offerings (moved to fourth) -->
-          <div class="card">
-            <h4>⭐ Pro Tier Offerings</h4>
-            <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-              Unlock advanced features and premium content with Flicklet Pro. Get personalized recommendations, 
-              advanced analytics, priority support, and exclusive content.
-            </p>
-            
-            <!-- Preview Pro Button -->
-            <div style="margin-bottom: 20px;">
-              <button id="previewProBtn" class="btn primary" style="width: 25%; min-width: 150px; margin-bottom: 8px;" onclick="toggleProPreview()">
-                ⭐ Preview Pro Features
-              </button>
-              <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-                Toggle Pro features on/off to see what's available
-              </p>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-              <h5 style="margin: 0 0 8px 0; color: var(--text); font-size: 0.9rem;">✨ Pro Features Include:</h5>
-              <div id="proFeaturesList">
-                <!-- Dynamic Pro features list will be rendered here -->
+              <!-- Stats Section (moved to first) -->
+              <div id="statsCard" class="card">
+                <h4>📊 My Statistics</h4>
+                <div id="statsContent">
+                  <div class="loading">Loading stats...</div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <!-- Data Tools Section (moved to sixth) -->
-          <div id="dataTools" class="card">
-            <h4>🔧 Data Tools</h4>
-            
-            <!-- Share Items (moved to top) -->
-            <div style="margin-bottom: 20px;">
-              <button
-                id="shareListBtn"
-                class="btn"
-                style="width: 25%; min-width: 150px; margin-bottom: 8px;"
-                onclick="openShareSelectionModal()"
-              >
-                🔗 Select Items to Share
-              </button>
-              <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-                Click here to select what TV shows and movies to share with your friends
-              </p>
-            </div>
-            
-            <!-- Export Data -->
-            <div style="margin-bottom: 20px;">
-              <button id="btnExport" class="btn" style="width: 25%; min-width: 150px; margin-bottom: 8px;">
-                📤 Export My Data (.json)
-              </button>
-              <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-                Download all your lists, notes, and preferences as a JSON file
-              </p>
-            </div>
-            
-            <!-- Import Data -->
-            <div style="margin-bottom: 20px;">
-              <button class="btn" style="width: 25%; min-width: 150px; margin-bottom: 8px;" onclick="document.getElementById('fileImport').click()">
-                📥 Import My Data (.json)
-              </button>
-              <input id="fileImport" type="file" accept="application/json" style="display:none">
-              <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-                Upload a JSON file to restore your data. Overwrites matching items.
-              </p>
-            </div>
-            
-            <!-- Nuclear Option -->
-            <div style="margin-bottom: 15px;">
-              <button id="clearAllBtn" class="btn" style="width: 25%; min-width: 150px; margin-bottom: 8px; background-color: #dc3545; color: white; border-color: #dc3545;">
-                🗑️ Nuclear Option
-              </button>
-              <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-                Clear all your data and start fresh (this action cannot be undone)
-              </p>
-            </div>
-          </div>
+              <!-- Manage Not Interested Section (moved to second) -->
+              <div class="card">
+                <h4>🚫 Not Interested Management</h4>
+                <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
+                  Manage shows and movies you've marked as not interested. These won't appear in your recommendations.
+                </p>
+                <button id="manageNotInterestedBtn" class="btn" onclick="openNotInterestedModal()" style="width: 25%; min-width: 150px; margin-bottom: 8px;">
+                  🚫 Manage Not Interested List
+                </button>
+              </div>
+            </section>
 
-          <!-- Share Your Thoughts Section (moved to last) -->
-          <div class="card">
-            <h4>💬 Share Your Thoughts</h4>
-            <p data-i18n="feedback_working">Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!</p>
-            <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="feedback-form" action="/thank-you">
-              <input type="hidden" name="form-name" value="feedback" />
-              <input type="hidden" name="theme" id="feedbackThemeInput" />
-              <div style="display: none;">
-                <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+            <section id="notifications" class="settings-section">
+              <!-- Notifications Section (moved to third) -->
+              <div class="card">
+                <h4>🔔 <span data-i18n="notifications">Notifications</span></h4>
+                <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
+                  Choose which types of notifications you'd like to receive about your TV shows and movies
+                </p>
+                <p style="margin: 0 0 15px 0; font-size: 0.8rem; color: var(--text-tertiary); font-style: italic;">
+                  These are basic notifications. Pro users get advanced notification features below.
+                </p>
+                <div
+                  style="
+                    display: flex;
+                    gap: 10px;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    margin-bottom: 8px;
+                  "
+                >
+                  <label
+                    ><input type="checkbox" id="notifEpisodes" /> <span data-i18n="episode_alerts">Upcoming episode alerts</span></label
+                  >
+                  <label
+                    ><input type="checkbox" id="notifDiscover" /> <span data-i18n="weekly_discover">Weekly discover picks</span></label
+                  >
+                  <label
+                    ><input type="checkbox" id="notifDigest" /> <span data-i18n="monthly_digest">Monthly stats digest</span></label
+                  >
+                </div>
               </div>
-              <div style="display: flex; gap: 8px; flex-wrap: wrap">
-                <textarea
-                  name="message"
-                  class="search-input"
-                  placeholder="Share your thoughts, feedback, quotes, or just vent! We're listening."
-                  rows="3"
-                  required
-                  style="resize: vertical; min-height: 60px;"
-                ></textarea>
-                <button type="submit" class="btn">📤 Share It!</button>
+            </section>
+
+            <section id="layout" class="settings-section">
+              <div class="card">
+                <h4>🎨 Layout Settings</h4>
+                <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
+                  Customize how your lists and cards are displayed
+                </p>
+                <div style="margin-bottom: 15px;">
+                  <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <input type="checkbox" id="condensedMode" />
+                    <span>Condensed list view (more items per screen)</span>
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <input type="checkbox" id="showPosters" checked />
+                    <span>Show movie/TV show posters</span>
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="darkMode" />
+                    <span>Dark mode (auto-detect system preference)</span>
+                  </label>
+                </div>
               </div>
-            </form>
+            </section>
+
+            <section id="data" class="settings-section">
+              <h3>Data</h3>
+
+              <div class="btn-row" style="display:flex; gap:12px; flex-wrap:wrap;">
+                <button id="exportBtn" class="btn secondary" aria-label="Export data to JSON">Export JSON</button>
+
+                <input type="file" id="importInput" accept=".json,application/json" hidden />
+                <button id="importBtn" class="btn secondary" aria-label="Import data from JSON">Import JSON</button>
+
+                <button id="resetBtn" class="btn danger" aria-label="Reset all data (requires confirmation)">
+                  Reset (Nuclear Option)
+                </button>
+              </div>
+
+              <p class="hint" style="color:var(--color-muted); font-size:12px; margin-top:8px;">
+                Export saves <code>flicklet-export.json</code> to your device's Downloads/Files. Import accepts a valid Flicklet export.
+              </p>
+            </section>
+
+            <section id="pro" class="settings-section">
+              <!-- Pro Tier Offerings (moved to fourth) -->
+              <div class="card">
+                <h4>⭐ Pro Tier Offerings</h4>
+                <p style="margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
+                  Unlock advanced features and premium content with Flicklet Pro. Get personalized recommendations, 
+                  advanced analytics, priority support, and exclusive content.
+                </p>
+                
+                <!-- Preview Pro Button -->
+                <div style="margin-bottom: 20px;">
+                  <button id="previewProBtn" class="btn primary" style="width: 25%; min-width: 150px; margin-bottom: 8px;" onclick="toggleProPreview()">
+                    ⭐ Preview Pro Features
+                  </button>
+                  <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
+                    Toggle Pro features on/off to see what's available
+                  </p>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                  <h5 style="margin: 0 0 8px 0; color: var(--text); font-size: 0.9rem;">✨ Pro Features Include:</h5>
+                  <div id="proFeaturesList">
+                    <!-- Dynamic Pro features list will be rendered here -->
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section id="about" class="settings-section">
+              <!-- Share Your Thoughts Section (moved to last) -->
+              <div class="card">
+                <h4>💬 Share Your Thoughts</h4>
+                <p data-i18n="feedback_working">Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!</p>
+                <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="feedback-form" action="/thank-you">
+                  <input type="hidden" name="form-name" value="feedback" />
+                  <input type="hidden" name="theme" id="feedbackThemeInput" />
+                  <div style="display: none;">
+                    <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+                  </div>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                    <textarea
+                      name="message"
+                      class="search-input"
+                      placeholder="Share your thoughts, feedback, quotes, or just vent! We're listening."
+                      rows="3"
+                      required
+                      style="resize: vertical; min-height: 60px;"
+                    ></textarea>
+                    <button type="submit" class="btn">📤 Share It!</button>
+                  </div>
+                </form>
+              </div>
+            </section>
           </div>
 
           <!-- Share Selection Modal -->
@@ -606,5 +655,23 @@
         }, 500);
       })();
     </script>
+    
+    <!-- Notifications (once, at end of body) -->
+    <div id="toastRegion" aria-live="polite" aria-atomic="true" class="toast-region"></div>
+    <div id="bannerRegion" aria-live="assertive" aria-atomic="true" class="banner-region"></div>
+
+    <!-- Add script AFTER your other inline/app scripts -->
+    <script defer src="scripts/notifications.js"></script>
+    
+    <!-- After your other app scripts -->
+    <!-- Provide your TMDB API v3 key via meta or window var (do NOT hardcode in repo) -->
+    <meta name="tmdb-api-key" content="__REPLACE_WITH_YOUR_TMDB_KEY__">
+    <script>window.__TMDB_API_KEY__ = window.__TMDB_API_KEY__ || document.querySelector('meta[name="tmdb-api-key"]')?.content;</script>
+    
+    <script defer src="scripts/tmdb-seed.js"></script>
+    <script defer src="scripts/curated-seed.js"></script>
+    <script defer src="scripts/curated-rows.js"></script>
+    <script defer src="scripts/trivia.js"></script>
+    <script defer src="scripts/spotlight.js"></script>
   </body>
 </html>

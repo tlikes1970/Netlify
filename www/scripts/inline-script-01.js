@@ -4401,3 +4401,272 @@
 
   console.log('🧠 Trivia + FlickWord boost initialized', { pro: PRO, trivia: TRIVIA_ON, flickfact: FFACT_ON });
 })();
+
+// Settings tabs functionality
+(function setupSettingsTabs(){
+  console.log('⚙️ setupSettingsTabs starting...');
+  
+  let tabsInitialized = false;
+  
+  function initTabs() {
+    if (tabsInitialized) return;
+    
+    const settingsSection = document.getElementById('settingsSection');
+    const tabs = document.querySelectorAll('.settings-tabs button');
+    console.log('⚙️ Settings section found:', !!settingsSection);
+    console.log('⚙️ Found tabs:', tabs.length);
+    
+    if(!tabs.length || !settingsSection) {
+      console.log('⚙️ Not ready yet, retrying in 200ms...');
+      setTimeout(initTabs, 200);
+      return;
+    }
+    
+    tabs.forEach((btn, index) => {
+      console.log(`⚙️ Setting up tab ${index}:`, btn.textContent, 'target:', btn.dataset.target);
+      
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('⚙️ Tab clicked:', btn.textContent);
+        
+        // Update active states
+        tabs.forEach(b => { 
+          b.classList.remove('active'); 
+          b.setAttribute('aria-selected','false'); 
+        });
+        btn.classList.add('active'); 
+        btn.setAttribute('aria-selected','true');
+        
+        // Show/hide sections
+        const allSections = document.querySelectorAll('.settings-section');
+        allSections.forEach(section => section.classList.remove('active'));
+        
+        const target = document.querySelector(btn.dataset.target);
+        console.log('⚙️ Target element:', target);
+        if(target) {
+          target.classList.add('active');
+          console.log('⚙️ Showing section:', btn.dataset.target);
+        } else {
+          console.log('⚙️ Target not found:', btn.dataset.target);
+        }
+      });
+    });
+    
+    // Show the first section by default
+    const firstSection = document.querySelector('#general');
+    if (firstSection) {
+      firstSection.classList.add('active');
+    }
+    
+    tabsInitialized = true;
+    console.log('⚙️ setupSettingsTabs ready');
+  }
+  
+  // Try multiple times to ensure it works
+  initTabs();
+  document.addEventListener('DOMContentLoaded', initTabs);
+  
+  // Also try when the settings tab is clicked
+  const settingsTab = document.getElementById('settingsTab');
+  if (settingsTab) {
+    settingsTab.addEventListener('click', () => {
+      setTimeout(initTabs, 100);
+    });
+  }
+})();
+
+// Data section functionality
+(function setupDataSection(){
+  console.log('⚙️ setupDataSection starting...');
+  
+  let dataSectionInitialized = false;
+  
+  function initDataSection() {
+    if (dataSectionInitialized) return;
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const importInput = document.getElementById('importInput');
+    const resetBtn = document.getElementById('resetBtn');
+    
+    console.log('⚙️ Data section elements found:', {
+      exportBtn: !!exportBtn,
+      importBtn: !!importBtn,
+      importInput: !!importInput,
+      resetBtn: !!resetBtn
+    });
+    
+    if (!exportBtn || !importBtn || !importInput || !resetBtn) {
+      console.log('⚙️ Data section elements not ready, retrying in 200ms...');
+      setTimeout(initDataSection, 200);
+      return;
+    }
+
+    // EXPORT - Use the existing working export functionality
+    if (exportBtn){
+      exportBtn.addEventListener('click', async ()=>{
+        try{
+          console.log('⬇️ Export button clicked');
+          
+          // Use the existing export function from functions.js
+          const btnExport = document.getElementById('btnExport');
+          if (btnExport) {
+            console.log('⬇️ Using existing btnExport functionality');
+            btnExport.click();
+          } else {
+            // Fallback: use the same logic as functions.js
+            const flickletData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
+            const legacyData = JSON.parse(localStorage.getItem('tvMovieTrackerData') || '{}');
+            
+            const data = {
+              meta: { app: 'Flicklet', version: window.FlickletApp?.version || 'n/a', exportedAt: new Date().toISOString() },
+              appData: flickletData.tv || flickletData.movies ? flickletData : legacyData,
+              legacyData: legacyData
+            };
+            
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `flicklet-export-${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            console.log('⬇️ Export complete (flicklet-export.json)');
+          }
+        }catch(err){
+          console.error('Export error:', err);
+          if (window.showNotification) {
+            window.showNotification('Export failed. Check console for details.', 'error');
+          } else if (window.showToast) {
+            window.showToast('Export failed. Check console for details.');
+          } else {
+            alert('Export failed. Check console for details.');
+          }
+        }
+      });
+    }
+
+    // IMPORT - Use the existing working import functionality
+    if (importBtn && importInput){
+      importBtn.addEventListener('click', ()=> importInput.click());
+
+      importInput.addEventListener('change', async (e)=>{
+        const file = e.target.files && e.target.files[0];
+        if(!file) return;
+
+        try{
+          const text = await file.text();
+          const json = JSON.parse(text);
+          
+          // Import the main app data
+          if (json.appData) {
+            localStorage.setItem('flicklet-data', JSON.stringify(json.appData));
+          }
+          
+          // Import legacy data for compatibility
+          if (json.legacyData) {
+            localStorage.setItem('tvMovieTrackerData', JSON.stringify(json.legacyData));
+          }
+          
+          // Legacy format support (for old exports)
+          if (json.lists)  localStorage.setItem('flicklet_lists', JSON.stringify(json.lists));
+          if (json.notes)  localStorage.setItem('flicklet_notes', JSON.stringify(json.notes));
+          if (json.prefs)  localStorage.setItem('flicklet_prefs', JSON.stringify(json.prefs));
+          
+                                // Show success message
+                      if (window.showNotification) {
+                        window.showNotification('Import complete. Reloading…', 'success');
+                      } else if (window.showToast) {
+                        window.showToast('Import complete. Reloading…');
+                      } else {
+                        alert('Import complete. Reloading…');
+                      }
+          
+          console.log('⬆️ Import complete', { keys: Object.keys(json).length });
+          
+          // Reload the page to apply changes
+          setTimeout(()=>location.reload(), 500);
+        }catch(err){
+          console.error('Import parse error:', err);
+                                if (window.showNotification) {
+                        window.showNotification('Import failed: invalid file.', 'error');
+                      } else if (window.showToast) {
+                        window.showToast('Import failed: invalid file.');
+                      } else {
+                        alert('Invalid JSON file.');
+                      }
+        }
+      });
+    }
+
+    // RESET (Danger Zone)
+    if (resetBtn){
+      resetBtn.addEventListener('click', ()=>{
+        const check = prompt('Type DELETE to confirm full reset. This cannot be undone.');
+        if(check === 'DELETE'){
+          try{
+            console.warn('⚠️ Data reset invoked by user');
+            
+            // First, try to call the app's reset function if available
+            if (window.FlickletApp && typeof window.FlickletApp.reset === 'function') {
+              console.log('🔄 Calling FlickletApp.reset()');
+              window.FlickletApp.reset();
+            } else if (window.Flicklet && typeof window.Flicklet.reset === 'function') {
+              console.log('🔄 Calling Flicklet.reset()');
+              window.Flicklet.reset();
+            } else {
+              console.warn('⚠️ No app reset function found, clearing localStorage only');
+            }
+            
+            // Clear all Flicklet-related data from localStorage
+            const keysToRemove = [
+              'flicklet-data',
+              'tvMovieTrackerData', 
+              'flicklet_lists',
+              'flicklet_notes',
+              'flicklet_prefs',
+              'flicklet_notif_master',
+              'flicklet_notif_lead',
+              'flicklet_notif_scope',
+              'flicklet_last_notif',
+              'flicklet-login-prompted'
+            ];
+            
+            keysToRemove.forEach(key => {
+              localStorage.removeItem(key);
+            });
+            
+            // Show success message
+            if (window.showNotification) {
+              window.showNotification('All data wiped. Reloading…', 'success');
+            } else if (window.showToast) {
+              window.showToast('All data wiped. Reloading…');
+            } else {
+              alert('All data wiped. Reloading…');
+            }
+            
+            // Reload the page to apply changes
+            setTimeout(()=>location.reload(), 500);
+          }catch(err){
+            console.error('Reset error:', err);
+            if (window.showNotification) {
+              window.showNotification('Reset failed. See console.', 'error');
+            } else if (window.showToast) {
+              window.showToast('Reset failed. See console.');
+            } else {
+              alert('Reset failed. See console.');
+            }
+          }
+        }
+      });
+    }
+
+    console.log('⚙️ setupDataSection ready');
+    dataSectionInitialized = true;
+  }
+  
+  // Try multiple times to ensure it works
+  initDataSection();
+  document.addEventListener('DOMContentLoaded', initDataSection);
+})();
