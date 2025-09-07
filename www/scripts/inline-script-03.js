@@ -14,8 +14,18 @@
         // 1. Load app data first
         loadAppData?.();
         
-        // 2. Try to import from share link
-        tryImportFromShareLink?.();
+        // 2. Try to import from share link (STEP 2.1 — Only import shared content when URL explicitly includes ?share=)
+        (function guardedShareImportOnce(){
+          try {
+            if (window.__shareImportRun) return; // run once per page load
+            const p = new URLSearchParams(location.search);
+            if (!p.has('share')) return; // explicit opt-in only
+            window.__shareImportRun = true;
+            tryImportFromShareLink?.();
+          } catch (e) {
+            console.warn('Share import guard error:', e);
+          }
+        })();
         
         // 3. Load genres
         loadGenres?.();

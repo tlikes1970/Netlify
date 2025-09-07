@@ -15,6 +15,22 @@
 
   init();
 
+  // Expose refresh function globally
+  window.__FlickletRefreshSeriesOrganizer = function() {
+    console.log('🗂️ Refreshing series organizer content');
+    // Clear any cached data to force fresh load
+    if (series) {
+      const seriesId = series.id;
+      if (seriesId) {
+        const cacheKey = `flicklet:series:${seriesId}`;
+        localStorage.removeItem(cacheKey);
+        console.log('🗂️ Cleared series cache:', cacheKey);
+      }
+    }
+    // Re-initialize the series organizer
+    init();
+  };
+
   async function init(){
     const ctx = pickSeriesContext(forcedId);
     if (!ctx) { mount.innerHTML = emptyState('No series selected.'); return; }

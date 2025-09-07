@@ -26,7 +26,7 @@ window.appData = {
 // ---- Persistence ----
 window.saveAppData = function saveAppData() {
   try {
-    localStorage.setItem('flicklet-data', JSON.stringify(appData));
+    localStorage.setItem('flicklet-data', JSON.stringify(window.appData));
     return true;
   } catch (e) {
     console.error('[saveAppData] failed:', e);
@@ -39,7 +39,7 @@ window.loadAppData = function loadAppData() {
     const saved = localStorage.getItem('flicklet-data') || localStorage.getItem('tvMovieTrackerData');
     if (saved) {
       const parsed = JSON.parse(saved);
-      Object.assign(appData, parsed);
+      Object.assign(window.appData, parsed);
       return true;
     }
     return false;
@@ -107,40 +107,7 @@ window.toggleDarkMode = function toggleDarkMode() {
   }
 };
 
-window.changeLanguage = function changeLanguage(lang) {
-  appData.settings.lang = lang || 'en';
-  try {
-    if (typeof applyTranslations === 'function') applyTranslations(appData.settings.lang);
-  } catch (e) {
-    console.warn('changeLanguage: translations not ready');
-  }
-  // Re-render search results with new language
-  if (Array.isArray(appData.searchCache) && appData.searchCache.length) {
-    if (typeof displaySearchResults === 'function') {
-      displaySearchResults(appData.searchCache);
-    }
-  }
-  
-  // Re-render current tab content to update language
-  if (typeof updateTabContent === 'function') {
-    const activeTab = window.FlickletApp?.currentTab || 'home';
-    updateTabContent(activeTab);
-  }
-  
-  // Update list content with new language
-  if (typeof loadListContent === 'function') {
-    ['watching', 'wishlist', 'watched'].forEach(listType => {
-      loadListContent(listType);
-    });
-  }
-  
-  // Update home content with new language
-  if (typeof loadHomeContent === 'function') {
-    loadHomeContent();
-  }
-  
-  showNotification(`Language changed to ${lang === 'en' ? 'English' : 'Spanish'}`, 'success');
-};
+// changeLanguage function moved to language-manager.js for centralized management
 
 // ---- TMDB Helpers ----
 window.openTMDBLink = function openTMDBLink(id, mediaType) {
@@ -152,9 +119,9 @@ window.openTMDBLink = function openTMDBLink(id, mediaType) {
 
 // ---- List & Item Utilities ----
 window.findItemMediaType = function findItemMediaType(id) {
-  const inTV = ['watching','wishlist','watched'].some(list => (appData.tv?.[list] || []).some(i => i.id === id));
+  const inTV = ['watching','wishlist','watched'].some(list => (window.appData.tv?.[list] || []).some(i => i.id === id));
   if (inTV) return 'tv';
-  const inMovies = ['watching','wishlist','watched'].some(list => (appData.movies?.[list] || []).some(i => i.id === id));
+  const inMovies = ['watching','wishlist','watched'].some(list => (window.appData.movies?.[list] || []).some(i => i.id === id));
   if (inMovies) return 'movies';
   return null;
 };
@@ -162,7 +129,7 @@ window.findItemMediaType = function findItemMediaType(id) {
 window.findItemList = function findItemList(id, mediaType) {
   const lists = ['watching','wishlist','watched'];
   for (const list of lists) {
-    const arr = appData[mediaType]?.[list] || [];
+    const arr = window.appData[mediaType]?.[list] || [];
     if (arr.some(i => i.id === id)) return list;
   }
   return null;

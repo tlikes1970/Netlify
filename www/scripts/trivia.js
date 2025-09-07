@@ -20,24 +20,114 @@
 
   const today = isoDay(new Date()); // YYYY-MM-DD
 
-  // Simple pool; add more later or swap to your dataset
-  const POOL = [
+  // External trivia API integration
+  const TRIVIA_API_BASE = 'https://opentdb.com/api.php';
+  
+  // Fallback pool for when API fails
+  const FALLBACK_POOL = [
     { id: 'q1', q: 'Which network originally aired "Archer"?', choices: ['HBO','FX','AMC','Paramount+'], correct: 1 },
     { id: 'q2', q: '"Alien: Earth" is a spin-off in which franchise?', choices: ['Predator','Alien','Star Trek','The Expanse'], correct: 1 },
     { id: 'q3', q: 'Sherlock (2010) starred Benedict Cumberbatch and…', choices: ['Tom Hiddleston','Martin Freeman','David Tennant','Matt Smith'], correct: 1 },
     { id: 'q4', q: '"House of the Dragon" streams primarily on…', choices: ['HBO Max','Netflix','Hulu','Apple TV+'], correct: 0 },
   ];
+  
+  // Cache for trivia questions
+  let triviaCache = null;
+  let lastFetchDate = null;
 
-  // Pick a deterministic daily question
-  const q = POOL[hashToIndex(today, POOL.length)];
+  // Fetch trivia questions from API
+  async function fetchTriviaQuestions(lang = 'en') {
+    const langCode = lang === 'es' ? 'es' : 'en';
+    const cacheKey = `trivia_${langCode}_${today}`;
+    
+    // Check cache first
+    if (triviaCache && lastFetchDate === today) {
+      console.log('🧠 Using cached trivia questions');
+      return triviaCache;
+    }
+    
+    try {
+      console.log('🧠 Fetching trivia questions from API for language:', langCode);
+      const response = await fetch(`${TRIVIA_API_BASE}?amount=10&category=10&difficulty=medium&type=multiple&encode=url3986&lang=${langCode}`);
+      
+      if (response.status === 429) {
+        console.warn('🧠 API rate limited, using fallback questions');
+        return FALLBACK_POOL;
+      }
+      
+      const data = await response.json();
+      
+      if (data.response_code === 0 && data.results && data.results.length > 0) {
+        // Convert API format to our format
+        const questions = data.results.map((item, index) => ({
+          id: `api_${index}`,
+          q: decodeURIComponent(item.question),
+          choices: [
+            decodeURIComponent(item.correct_answer),
+            ...item.incorrect_answers.map(ans => decodeURIComponent(ans))
+          ].sort(() => Math.random() - 0.5), // Shuffle choices
+          correct: 0 // Correct answer is always first after shuffling
+        }));
+        
+        triviaCache = questions;
+        lastFetchDate = today;
+        console.log('🧠 Trivia questions fetched successfully:', questions.length);
+        return questions;
+      } else {
+        throw new Error('Invalid API response');
+      }
+    } catch (error) {
+      console.warn('🧠 Failed to fetch trivia from API, using fallback:', error);
+      return FALLBACK_POOL;
+    }
+  }
 
-  // Lock logic: only allow a correct completion once per day
-  const lockDate = localStorage.getItem(KEYS.lock);
-  const locked = lockDate === today;
+  // Get current language
+  function getCurrentLanguage() {
+    return (window.appData?.settings?.lang) || 
+           (window.FlickletApp?.appData?.settings?.lang) || 
+           'en';
+  }
 
-  // Render
-  renderStats();
-  renderQuestion(q, locked);
+  // Initialize trivia
+  async function initTrivia() {
+    const lang = getCurrentLanguage();
+    const questions = await fetchTriviaQuestions(lang);
+    const q = questions[hashToIndex(today, questions.length)];
+
+    // Lock logic: only allow a correct completion once per day
+    const lockDate = localStorage.getItem(KEYS.lock);
+    const locked = lockDate === today;
+
+    // Render
+    renderStats();
+    renderQuestion(q, locked);
+  }
+
+  // Refresh trivia for language change
+  window.__FlickletRefreshTrivia = async function() {
+    console.log('🧠 Refreshing trivia for language change');
+    const lang = getCurrentLanguage();
+    console.log('🧠 Current language for trivia:', lang);
+    
+    // Clear cache to force fresh fetch
+    triviaCache = null;
+    lastFetchDate = null;
+    
+    const questions = await fetchTriviaQuestions(lang);
+    const q = questions[hashToIndex(today, questions.length)];
+
+    console.log('🧠 New trivia question:', {id: q.id, question: q.q.substring(0, 50) + '...', choices: q.choices.length, language: lang});
+
+    const lockDate = localStorage.getItem(KEYS.lock);
+    const locked = lockDate === today;
+
+    renderStats();
+    renderQuestion(q, locked);
+  };
+
+  // Start trivia
+  initTrivia();
 
   function renderStats(){
     const streak = Number(localStorage.getItem(KEYS.streak) || 0);
@@ -139,4 +229,7 @@
     return Math.abs(h) % mod;
   }
 })();
+
+
+
 

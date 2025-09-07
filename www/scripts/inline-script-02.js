@@ -1,600 +1,89 @@
 
-      /* ============== i18n (EN/ES) ============== */
-      const I18N = {
-        en: {
-          go_dark: "🌙 Go Dark",
-          go_light: "☀️ Go Light",
-          app_title: "Flicklet",
-          subtitle: "TV & Movie Tracker",
-          binge_total: "Total Binge Time",
-          currently_watching: "Currently Watching",
-          want_to_watch: "Want to Watch",
-          already_watched: "Already Watched",
-          streaming_on: "Streaming",
-          clear: "Clear",
-          series_complete: "Series Complete",
-          coming_soon: "Coming Soon",
-          currently_airing: "Currently Airing",
-          next: "Next",
-          last: "Last",
-          start: "Start",
-          because_you_liked: "Because you liked",
-          search_placeholder: "Search for shows or movies...",
-          search_tips: "Search tips: Use * for wildcards (e.g., \"marvel*\" for Marvel shows)",
-        welcome_message: "Welcome to Flicklet! Start by searching for a show or movie you love.",
-          all_genres: "All Genres",
-          search: "Search",
-          notes_tags: "Notes/Tags",
-          remove: "Remove",
-          your_rating: "Your Rating",
-          welcome_title: "Welcome! What should we call you?",
-          welcome_subtitle: "This will personalize your headers and stats.",
-          display_name: "Display name",
-          save: "Save",
-          sign_in_title: "Sign in to sync",
-          sign_in_subtitle: "Sign in to back up your lists and sync across devices.",
-          continue_google: "Continue with Google",
-          email_signin: "Email Sign-In",
-          sign_out: "Sign Out",
-          home: "Home",
-          discover: "Discover",
-          settings: "Settings",
-          no_items: "No items.",
-          no_description: "No description.",
-          already_in_list: "Already in {list}.",
-          moved_to: "Moved to {list}.",
-          added_to: "Added to {list}.",
-          // Additional English translations
-          feedback: "Share Your Thoughts",
-          feedback_placeholder: "Share your thoughts, feedback, quotes, confessions, or just vent here...",
-          send: "Share It!",
-          search_results: "Search Results",
-          no_results: "No results",
-          searching: "Searching...",
-          search_failed: "Search failed",
-          search_results_cleared: "Search results cleared due to language change.",
-          please_search_again: "Please search again to see results in the new language.",
-          episode_alerts: "Episode alerts",
-          weekly_discover: "Weekly discover picks",
-          monthly_digest: "Monthly stats digest",
-          backup_import: "Backup & Import",
-          nuclear_option: "Nuclear Option",
-          share_this_list: "Share This List",
-          share_selected: "Select Items to Share",
-          share_link: "Share link",
-          share_instructions: "Click to select which shows and movies to share",
-          choose_file: "Choose File",
-                  no_file_chosen: "No file chosen",
-        next: "Next",
-        last: "Last",
-        upcoming_episode: "Upcoming episode",
-          welcome: "Welcome",
-          theme: "Theme",
-          theme_description: "Switch between different visual themes for the app.",
-          mardi_gras_mode: "Mardi Gras mode",
-          sign_in_account: "Sign in / Account",
-          language: "Language",
-          all_genres: "All Genres",
-          search_for_shows: "Search for shows or movies...",
-          currently_watching_count: "Currently Watching",
-          want_to_watch_count: "Want to Watch",
-          already_watched_count: "Already Watched",
-          discover_description: "Recommendations based on your likes and ratings.",
-          settings_description: "Application settings",
-          display_name_placeholder: "Display name",
-          save_name: "Save",
-          pro_simulate: "Pro (simulate)",
-          notifications: "Notifications",
-          stats: "Stats",
-          total_items: "Total items",
-          watching_count: "Watching",
-          wishlist_count: "Wishlist",
-          watched_count: "Watched",
-          top_genres: "Top Genres",
-          average_rating: "Average Rating",
-          loading: "Loading...",
-          failed_to_load: "Failed to load",
-          not_enough_signals: "Not enough signals yet. Like or rate a few items first.",
-          recommendations_failed: "Failed to load recommendations.",
-          building_recommendations: "Building recommendations...",
-          remove_confirmation: "Remove \"{title}\" from this list?",
-          already_in_list_warning: "Already in {list}.",
-          moved_to_list: "Moved to {list}.",
-          added_to_list: "Added to {list}.",
-          cloud_sync_ok: "Cloud sync OK",
-          cloud_load_failed: "Cloud load failed. Using local.",
-          cloud_sync_failed: "Cloud sync failed. Saved locally.",
-          signed_in: "Signed in",
-          signed_out: "Signed out",
-          login_failed: "Login failed",
-          name_saved: "Name saved!",
-          enter_name_first: "Enter a name first.",
-          imported_backup: "Imported backup.",
-          invalid_file: "Invalid file.",
-          all_data_cleared: "All data cleared.",
-          share_link_generated: "Share link generated.",
-          generate_share_link: "Select what to share",
-          select_all_everything: "Select All Everything",
-          close: "Close",
-          no_items_selected: "No items selected",
-          no_items_in_list: "No items in this list",
-          switch_to_share: "Switch to Watching/Wishlist/Watched to share.",
-          imported_from_link: "Imported list from link",
-          could_not_read_item: "Couldn't read item details. Try again.",
-          upcoming_episode_alert: "Upcoming: {title} • {date}",
-          streaming_horoscope: "Streaming Horoscope",
-          feedback_working: "Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!",
-        feedback_subtitle: "💬 App feedback • 💭 Random thoughts • 💬 Quote submissions • 🤫 Anonymous confessions • 😤 Venting welcome",
-          quote_loading: "Loading quote of questionable value...",
-          // Quote translations
-          quote_1: "I am serious... and don't call me Shirley.",
-          quote_2: "Streaming is a lifestyle, not a choice.",
-          quote_3: "Binge now. Cry later.",
-          quote_4: "One does not simply watch one episode.",
-          quote_5: "You had me at 'skip recap.'",
-          quote_6: "Art is long, episodes are longer.",
-          quote_7: "We were on a break! From reality.",
-          quote_8: "I came, I saw, I queued it.",
-          quote_9: "To stream, perchance to nap.",
-          quote_10: "In this house we respect the 'Are you still watching?' prompt.",
-          quote_11: "The algorithm thinks I'm complicated. It's right.",
-          quote_12: "If found, return to the couch.",
-          quote_13: "My love language is 'skip ad.'",
-          quote_14: "I contain multitudes and several watchlists.",
-          quote_15: "Sundays are for pilots and denial.",
-          quote_16: "Ctrl+Z for life, play for comfort.",
-          quote_17: "I fear no man, but I fear finales.",
-          quote_18: "This app gets me. Terrifying.",
-          quote_19: "Plot holes are just cardio for the brain.",
-          quote_20: "We accept the dopamine we think we deserve.",
-          quote_21: "I have never finished anything. Except seasons.",
-          quote_22: "Today's vibe: closed captions and open snacks.",
-          quote_23: "Foreshadowing? I hardly know her.",
-          quote_24: "Character development is my cardio.",
-          quote_25: "If the title card hits, I'm staying.",
-          quote_26: "Minimalism, but for episodes.",
-          quote_27: "'Are you still watching?' yes, Netflix, I'm thriving.",
-          quote_28: "I ship productivity with naps.",
-          quote_29: "Comfort show supremacy.",
-          quote_30: "This queue is a personality test I'm failing.",
-          // Horoscope translations
-          you_love_a_slow_burn_and_fast_wifi: "You love a slow burn and fast Wi‑Fi.",
-          youre_allergic_to_laugh_tracks: "You're allergic to laugh tracks.",
-          you_pause_for_snacks_like_its_a_ritual: "You pause for snacks like it's a ritual.",
-          you_are_a_spoiler_ninja_and_an_ending_apologist: "You are a spoiler ninja and an ending apologist.",
-          you_think_limited_series_means_limits_dont_apply_to_you: "You think 'limited series' means limits don't apply to you.",
-          you_fastforward_opening_credits_but_respect_end_credits: "You fast‑forward opening credits but respect end credits.",
-          you_crave_vibes_plot_bold_choice: "You crave vibes > plot. Bold choice.",
-          you_treat_recommended_for_you_as_a_dare: "You treat 'recommended for you' as a dare.",
-          you_chase_vibes_like_a_sommelier_of_scenes: "You chase vibes like a sommelier of scenes.",
-          you_watch_with_subtitles_you_are_cultured_and_quiet: "You watch with subtitles; you are cultured (and quiet).",
-          you_fear_the_finale_but_press_play_anyway: "You fear the finale but press play anyway.",
-          you_bookmark_chaos_and_call_it_variety: "You bookmark chaos and call it variety.",
-          you_own_three_blankets_all_the_good_one: "You own three blankets. All 'the good one'.",
-          you_pretend_the_algorithm_is_your_friend: "You pretend the algorithm is your friend.",
-          you_rewatch_comfort_episodes_like_vitamins: "You rewatch comfort episodes like vitamins.",
-          you_hoard_tabs_and_storylines_with_equal_skill: "You hoard tabs and storylines with equal skill.",
-          you_skip_recaps_then_google_plot_summaries_iconic: "You skip recaps, then Google plot summaries. Iconic.",
-          // Additional missing horoscope translations
-          you_are_a_chaotic_good_you_like_drama_but_call_it_cinema: "You are a Chaotic Good. You like drama but call it 'cinema.'",
-          binge_minimalist_planning_watching: "Binge Minimalist: 90% planning, 10% watching.",
-          comfort_chaos_and_clever_twists: "Comfort, chaos, and clever twists. In that order.",
-          on_your_rewatch_arc_brave: "On your 14th rewatch arc. Brave.",
-          fueled_by_snacks_and_unresolved_plotlines: "63% fueled by snacks and unresolved plotlines.",
-          human_embodiment_of_skip_intro: "Human embodiment of 'skip intro.'",
-          your_spirit_animal_is_a_loading_spinner: "Your spirit animal is a loading spinner.",
-          you_collect_pilots_like_pokemon: "You collect pilots like Pokémon.",
-          you_claim_you_hate_cliffhangers_you_dont: "You claim you hate cliffhangers. You don't.",
-          you_alphabetize_your_watchlist_and_then_ignore_it: "You alphabetize your watchlist and then ignore it.",
-          you_believe_one_more_episode_is_a_contract_with_destiny: "You believe 'one more episode' is a contract with destiny.",
-          you_rate_with_your_heart_not_the_stars: "You rate with your heart, not the stars.",
-          youre_here_to_procrastinate_responsibly: "You're here to procrastinate responsibly.",
-          export: "Export",
-          unknown_title: "Unknown Title",
-          no_image: "No Image",
-          like: "Like",
-          dislike: "Dislike",
-          rate_out_of_5: "Rate {n} out of 5",
-          notifications_enabled: "Notifications enabled! You'll get episode reminders.",
-          pro_features: "Pro Features:",
-          pro_feature_analytics: "Advanced analytics & insights",
-          pro_feature_categories: "Custom watchlist categories",
-          pro_feature_export: "Export to multiple formats",
-          pro_feature_support: "Priority customer support",
-          pro_feature_early_access: "Early access to new features",
-          pro_feature_backup: "Cloud backup & cross-device sync",
-          pro_feature_recommendations: "Personalized AI recommendations",
-          pro_feature_stats: "Detailed watching statistics",
-          pro: "Pro",
-          // Quote and FlickWord translations
-          quote_of_the_day: "Quote of the Day",
-          random_quote: "Random Quote",
-          daily_word_challenge: "Daily Word Challenge",
-          flickword_daily_challenge: "FlickWord Daily Challenge",
-          hours_left_motivation: "Hours left to play today's game!",
-          streak: "STREAK",
-          best: "BEST",
-          played: "PLAYED",
-          play_todays_word: "Play Today's Word",
-          // Snarky sayings translations
-          keeping_track_questionable: "keeping track of your questionable life choices",
-          apparently_need_help: "because apparently you need help keeping track of your life",
-          watching_waste_time: "watching you waste time, one episode at a time",
-          judging_taste: "judging your taste in entertainment since forever",
-          memory_shorter_goldfish: "because your memory is shorter than a goldfish's",
-          helping_remember: "helping you remember what you're supposed to be watching",
-          binge_watching_personality: "because binge-watching is totally a personality trait",
-          keeping_organized: "keeping you organized, one show at a time",
-          someone_remember: "because someone has to remember what you're watching",
-          personal_tv_memory: "your personal TV memory bank (you're welcome)",
-          // Genre translations
-          action: "Action",
-          adventure: "Adventure",
-          animation: "Animation",
-          comedy: "Comedy",
-          crime: "Crime",
-          documentary: "Documentary",
-          drama: "Drama",
-          family: "Family",
-          fantasy: "Fantasy",
-          history: "History",
-          horror: "Horror",
-          music: "Music",
-          mystery: "Mystery",
-          romance: "Romance",
-          science_fiction: "Science Fiction",
-          tv_movie: "TV Movie",
-          thriller: "Thriller",
-          war: "War",
-          western: "Western",
-          // Additional genre combinations
-          action_adventure: "Action & Adventure",
-          kids: "Kids",
-          news: "News",
-          reality: "Reality",
-          sci_fi_fantasy: "Sci-Fi & Fantasy",
-          soap: "Soap",
-          talk: "Talk",
-          war_politics: "War & Politics",
-          // Additional missing genres
-          talk_show: "Talk Show",
-          // Additional TMDB genre variations
-          reality_tv: "Reality TV",
-        },
-        es: {
-          // Genre translations
-          action: "Acción",
-          adventure: "Aventura",
-          animation: "Animación",
-          comedy: "Comedia",
-          crime: "Crimen",
-          documentary: "Documental",
-          drama: "Drama",
-          family: "Familiar",
-          fantasy: "Fantasía",
-          history: "Historia",
-          horror: "Terror",
-          music: "Música",
-          mystery: "Misterio",
-          romance: "Romance",
-          science_fiction: "Ciencia ficción",
-          tv_movie: "Película de TV",
-          thriller: "Suspenso",
-          war: "Guerra",
-          western: "Western",
-          // Add Spanish genre names that TMDB returns
-          animación: "Animación",
-          comedia: "Comedia",
-          crimen: "Crimen",
-          documental: "Documental",
-          familiar: "Familiar",
-          misterio: "Misterio",
-          // Additional genre combinations
-          action_adventure: "Acción y Aventura",
-          kids: "Niños",
-          news: "Noticias",
-          reality: "Realidad",
-          sci_fi_fantasy: "Ciencia Ficción y Fantasía",
-          soap: "Telenovela",
-          talk: "Programa de Entrevistas",
-          war_politics: "Guerra y Política",
-          // Additional missing genres
-          talk_show: "Programa de Entrevistas",
-          // Additional TMDB genre variations
-          reality_tv: "Realidad TV",
-          // Fix for specific genres still in English
-          sci_fi_fantasy: "Ciencia Ficción y Fantasía",
-          action_adventure: "Acción y Aventura",
-          go_dark: "🌙 Modo oscuro",
-          go_light: "☀️ Modo claro",
-          app_title: "Flicklet",
-          subtitle: "Seguimiento de series y películas",
-          binge_total: "Tiempo total de maratón",
-          currently_watching: "Viendo actualmente",
-          want_to_watch: "Quiero ver",
-          already_watched: "Ya visto",
-          streaming_on: "En",
-          clear: "Limpiar",
-          series_complete: "Serie terminada",
-          coming_soon: "Próximamente",
-          currently_airing: "En emisión",
-          next: "Próx.",
-          last: "Últ.",
-          start: "Comenzar",
-          because_you_liked: "Porque te gustó",
-          search_placeholder: "Buscar series o películas...",
-          search_tips: "Consejos de búsqueda: Usa * para comodines (ej: \"marvel*\" para series de Marvel)",
-          all_genres: "Todos los géneros",
-          search: "Buscar",
-          notes_tags: "Notas/Etiquetas",
-          remove: "Eliminar",
-          your_rating: "Tu calificación",
-          welcome_title: "¡Bienvenido! ¿Cómo te llamamos?",
-          welcome_subtitle: "Esto personalizará tus encabezados y estadísticas.",
-          display_name: "Nombre para mostrar",
-          save: "Guardar",
-          sign_in_title: "Iniciar sesión para sincronizar",
-          sign_in_subtitle: "Inicia sesión para respaldar tus listas y sincronizar entre dispositivos.",
-          continue_google: "Continuar con Google",
-          email_signin: "Iniciar sesión con email",
-          sign_out: "Cerrar sesión",
-          home: "Inicio",
-          discover: "Descubrir",
-          settings: "Configuración",
-          no_items: "No hay elementos.",
-          no_description: "Sin descripción.",
-          already_in_list: "Ya está en {list}.",
-          moved_to: "Movido a {list}.",
-          added_to: "Agregado a {list}.",
-          // Additional Spanish translations
-          feedback: "Comentarios",
-          feedback_placeholder: "Tu comentario...",
-          send: "Enviar",
-          search_results: "Resultados de búsqueda",
-          no_results: "Sin resultados",
-          searching: "Buscando...",
-          search_failed: "Búsqueda falló",
-          search_results_cleared: "Resultados de búsqueda borrados debido al cambio de idioma.",
-          please_search_again: "Por favor busca de nuevo para ver resultados en el nuevo idioma.",
-          episode_alerts: "Alertas de episodios",
-          weekly_discover: "Descubrimientos semanales",
-          monthly_digest: "Resumen mensual",
-          backup_import: "Respaldo e importación",
-          nuclear_option: "Opción nuclear",
-          share_this_list: "Compartir esta lista",
-          share_selected: "Compartir Elementos Seleccionados",
-          share_link: "Enlace de compartir",
-          share_instructions: "Haz clic para seleccionar qué series y películas compartir",
-          choose_file: "Elegir Archivo",
-                  no_file_chosen: "Ningún archivo elegido",
-        next: "Próximo",
-        last: "Último",
-        upcoming_episode: "Episodio próximo",
-          welcome: "Bienvenido",
-          theme: "Tema",
-          theme_description: "Cambia entre diferentes temas visuales para la aplicación.",
-          mardi_gras_mode: "Modo Mardi Gras",
-          sign_in_account: "Iniciar sesión / Cuenta",
-          language: "Idioma",
-          all_genres: "Todos los géneros",
-          search_for_shows: "Buscar series o películas...",
-          currently_watching_count: "Viendo actualmente",
-          want_to_watch_count: "Quiero ver",
-          already_watched_count: "Ya visto",
-          discover_description: "Recomendaciones basadas en tus gustos y calificaciones.",
-          settings_description: "Configuración de la aplicación",
-          display_name_placeholder: "Nombre para mostrar",
-          save_name: "Guardar",
-          pro_simulate: "Pro (simular)",
-          notifications: "Notificaciones",
-          stats: "Estadísticas",
-          total_items: "Total de elementos",
-          watching_count: "Viendo",
-          wishlist_count: "Lista de deseos",
-          watched_count: "Visto",
-          top_genres: "Géneros principales",
-          average_rating: "Calificación promedio",
-          loading: "Cargando...",
-          failed_to_load: "Falló al cargar",
-          not_enough_signals: "No hay suficientes señales. Dale me gusta o califica algunos elementos primero.",
-          recommendations_failed: "Falló al cargar recomendaciones.",
-          building_recommendations: "Construyendo recomendaciones...",
-          remove_confirmation: "¿Eliminar \"{title}\" de esta lista?",
-          already_in_list_warning: "Ya está en {list}.",
-          moved_to_list: "Movido a {list}.",
-          added_to_list: "Agregado a {list}.",
-          cloud_sync_ok: "Sincronización en la nube OK",
-          cloud_load_failed: "Carga de la nube falló. Usando local.",
-          cloud_sync_failed: "Sincronización en la nube falló. Guardado localmente.",
-          signed_in: "Sesión iniciada",
-          signed_out: "Sesión cerrada",
-          login_failed: "Inicio de sesión falló",
-          name_saved: "¡Nombre guardado!",
-          enter_name_first: "Ingresa un nombre primero.",
-          imported_backup: "Respaldo importado.",
-          invalid_file: "Archivo inválido.",
-          all_data_cleared: "Todos los datos borrados.",
-          share_link_generated: "Enlace de compartir generado.",
-          generate_share_link: "Generar Enlace de Compartir",
-          select_all_everything: "Seleccionar Todo",
-          close: "Cerrar",
-          no_items_selected: "No hay elementos seleccionados",
-          no_items_in_list: "No hay elementos en esta lista",
-          switch_to_share: "Cambia a Ver/Lista de deseos/Visto para compartir.",
-          imported_from_link: "Lista importada desde enlace",
-          could_not_read_item: "No se pudieron leer los detalles del item. Intenta de nuevo.",
-          upcoming_episode_alert: "Próximo: {title} • {date}",
-          streaming_horoscope: "Horóscopo de streaming",
-          feedback_working: "Dinos qué está funcionando y qué no. Sé directo.",
-          quote_loading: "Cargando cita de valor cuestionable...",
-          // Quote translations
-          quote_1: "Soy serio... y no me llames Shirley.",
-          quote_2: "El streaming es un estilo de vida, no una elección.",
-          quote_3: "Maratón ahora. Llora después.",
-          quote_4: "Uno no simplemente ve un episodio.",
-          quote_5: "Me tuviste en 'saltar resumen.'",
-          quote_6: "El arte es largo, los episodios son más largos.",
-          quote_7: "¡Estábamos en una pausa! De la realidad.",
-          quote_8: "Vine, vi, lo puse en cola.",
-          quote_9: "Transmitir, tal vez dormir.",
-          quote_10: "En esta casa respetamos el aviso '¿Sigues viendo?'",
-          quote_11: "El algoritmo piensa que soy complicado. Tiene razón.",
-          quote_12: "Si se encuentra, devolver al sofá.",
-          quote_13: "Mi lenguaje del amor es 'saltar anuncio.'",
-          quote_14: "Contengo multitudes y varias listas de reproducción.",
-          quote_15: "Los domingos son para pilotos y negación.",
-          quote_16: "Ctrl+Z para la vida, reproducir para comodidad.",
-          quote_17: "No temo a ningún hombre, pero temo a los finales.",
-          quote_18: "Esta aplicación me entiende. Aterrador.",
-          quote_19: "Los agujeros de trama son solo cardio para el cerebro.",
-          quote_20: "Aceptamos la dopamina que creemos merecer.",
-          quote_21: "Nunca he terminado nada. Excepto temporadas.",
-          quote_22: "Vibra de hoy: subtítulos cerrados y aperitivos abiertos.",
-          quote_23: "¿Presagio? Apenas la conozco.",
-          quote_24: "El desarrollo de personajes es mi cardio.",
-          quote_25: "Si golpea la tarjeta de título, me quedo.",
-          quote_26: "Minimalismo, pero para episodios.",
-          quote_27: "'¿Sigues viendo?' sí, Netflix, estoy prosperando.",
-          quote_28: "Envío productividad con siestas.",
-          quote_29: "Supremacía del programa de comodidad.",
-          quote_30: "Esta cola es una prueba de personalidad que estoy fallando.",
-          // Horoscope translations in Spanish
-          you_love_a_slow_burn_and_fast_wifi: "Te encanta el desarrollo lento y el Wi‑Fi rápido.",
-          youre_allergic_to_laugh_tracks: "Eres alérgico a las risas enlatadas.",
-          you_pause_for_snacks_like_its_a_ritual: "Pausas para bocadillos como si fuera un ritual.",
-          you_are_a_spoiler_ninja_and_an_ending_apologist: "Eres un ninja de spoilers y un apologista de finales.",
-          you_think_limited_series_means_limits_dont_apply_to_you: "Crees que 'serie limitada' significa que los límites no se aplican a ti.",
-          you_fastforward_opening_credits_but_respect_end_credits: "Avanzas rápidamente los créditos iniciales pero respetas los finales.",
-          you_crave_vibes_plot_bold_choice: "Anhelas vibes > trama. Elección audaz.",
-          you_treat_recommended_for_you_as_a_dare: "Tratas 'recomendado para ti' como un desafío.",
-          you_chase_vibes_like_a_sommelier_of_scenes: "Persigues vibes como un sommelier de escenas.",
-          you_watch_with_subtitles_you_are_cultured_and_quiet: "Ves con subtítulos; eres culto (y silencioso).",
-          you_fear_the_finale_but_press_play_anyway: "Temes el final pero presionas play de todos modos.",
-          you_bookmark_chaos_and_call_it_variety: "Marcas el caos y lo llamas variedad.",
-          you_own_three_blankets_all_the_good_one: "Tienes tres mantas. Todas 'la buena'.",
-          you_pretend_the_algorithm_is_your_friend: "Finges que el algoritmo es tu amigo.",
-          you_rewatch_comfort_episodes_like_vitamins: "Revés episodios de consuelo como vitaminas.",
-          you_hoard_tabs_and_storylines_with_equal_skill: "Acumulas pestañas e historias con igual habilidad.",
-          you_skip_recaps_then_google_plot_summaries_iconic: "Saltas los resúmenes, luego buscas en Google. Icónico.",
-          // Additional missing horoscope translations
-          you_are_a_chaotic_good_you_like_drama_but_call_it_cinema: "Eres un Caótico Bueno. Te gusta el drama pero lo llamas 'cine.'",
-          binge_minimalist_planning_watching: "Minimalista de maratón: 90% planificación, 10% visualización.",
-          comfort_chaos_and_clever_twists: "Comodidad, caos y giros inteligentes. En ese orden.",
-          on_your_rewatch_arc_brave: "En tu arco de re-visualización número 14. Valiente.",
-          fueled_by_snacks_and_unresolved_plotlines: "63% alimentado por bocadillos y tramas sin resolver.",
-          human_embodiment_of_skip_intro: "Encarnación humana de 'saltar intro.'",
-          your_spirit_animal_is_a_loading_spinner: "Tu animal espiritual es un indicador de carga.",
-          you_collect_pilots_like_pokemon: "Coleccionas pilotos como Pokémon.",
-          you_claim_you_hate_cliffhangers_you_dont: "Dices que odias los cliffhangers. No es cierto.",
-          you_alphabetize_your_watchlist_and_then_ignore_it: "Alfabetizas tu lista de reproducción y luego la ignoras.",
-          you_believe_one_more_episode_is_a_contract_with_destiny: "Crees que 'un episodio más' es un contrato con el destino.",
-          you_rate_with_your_heart_not_the_stars: "Calificas con tu corazón, no con las estrellas.",
-          youre_here_to_procrastinate_responsibly: "Estás aquí para procrastinar responsablemente.",
-          export: "Exportar",
-          unknown_title: "Título Desconocido",
-          no_image: "Sin Imagen",
-          like: "Me Gusta",
-          dislike: "No Me Gusta",
-          rate_out_of_5: "Calificar {n} de 5",
-          notifications_enabled: "Notificaciones habilitadas! Recibirás recordatorios de episodios.",
-          pro_features: "Características Pro:",
-          pro_feature_analytics: "Análisis avanzado e insights",
-          pro_feature_categories: "Categorías personalizadas de lista de deseos",
-          pro_feature_export: "Exportar a múltiples formatos",
-          pro_feature_support: "Soporte prioritario al cliente",
-          pro_feature_early_access: "Acceso temprano a nuevas funciones",
-          pro_feature_backup: "Respaldo en la nube y sincronización entre dispositivos",
-          pro_feature_recommendations: "Recomendaciones personalizadas con IA",
-          pro_feature_stats: "Estadísticas detalladas de visualización",
-          pro: "Pro",
-          // Quote and FlickWord translations
-          quote_of_the_day: "Cita del Día",
-          daily_word_challenge: "Desafío de Palabra Diaria",
-          flickword_daily_challenge: "FlickWord Desafío Diario",
-          hours_left_motivation: "¡Horas restantes para jugar el juego de hoy!",
-          streak: "RACHA",
-          best: "MEJOR",
-          played: "JUGADOS",
-          play_todays_word: "Jugar Palabra de Hoy",
-          // Snarky sayings translations
-          keeping_track_questionable: "llevando la cuenta de tus dudosas decisiones de vida",
-          apparently_need_help: "porque aparentemente necesitas ayuda para llevar la cuenta de tu vida",
-          watching_waste_time: "viéndote perder el tiempo, un episodio a la vez",
-          judging_taste: "juzgando tu gusto en entretenimiento desde siempre",
-          memory_shorter_goldfish: "porque tu memoria es más corta que la de un pez dorado",
-          helping_remember: "ayudándote a recordar lo que se supone que estás viendo",
-          binge_watching_personality: "porque ver maratones es totalmente un rasgo de personalidad",
-          keeping_organized: "manteniéndote organizado, un show a la vez",
-          someone_remember: "porque alguien tiene que recordar lo que estás viendo",
-          personal_tv_memory: "tu banco de memoria personal de TV (de nada)",
-        },
-      };
-      function t(k) {
-        const lang = appData?.settings?.lang || "en";
-        const translation = (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k;
+      /* i18nn handled by js/i18n.js - duplicate removed
+	  
+      /* ============== Firebase (config) ============== */
+      let firebaseInitialized = false;
+      let auth = null;
+      let db = null;
+      let currentUser = null;
 
-        return translation;
-      }
-      function applyTranslations() {
-        const elements = document.querySelectorAll("[data-i18n]");
-        
-        elements.forEach((el) => {
-          const k = el.getAttribute("data-i18n");
-          if (k) {
-            const translation = t(k);
-    
-            el.textContent = translation;
-          }
-        });
-        
-        // Handle placeholder translations
-        const placeholderElements = document.querySelectorAll("[data-i18n-placeholder]");
-
-        
-        placeholderElements.forEach((el) => {
-          const k = el.getAttribute("data-i18n-placeholder");
-          if (k) {
-            const translation = t(k);
-    
-            el.placeholder = translation;
-          }
-        });
-      }
-      function formatDateShort(dateStr) {
-        if (!dateStr) return "";
-        const lang = appData?.settings?.lang === "es" ? "es-ES" : "en-US";
-        const d = new Date(dateStr);
-        if (Number.isNaN(d.getTime())) return dateStr;
-        return d.toLocaleDateString(lang, {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        });
-      }
-      
-      function updateFileLabel(input) {
-        const label = document.getElementById("fileLabel");
-        if (label) {
-          if (input.files && input.files[0]) {
-            label.textContent = input.files[0].name;
+      // Check if Firebase is available
+      if (typeof firebase === 'undefined') {
+        console.error('❌ Firebase scripts not loaded - authentication will be disabled');
+        firebaseInitialized = false;
+        auth = { signInWithPopup: () => Promise.reject(new Error('Firebase not available')) };
+        db = { collection: () => ({ doc: () => ({ get: () => Promise.reject(new Error('Firebase not available')) }) }) };
+        // Dispatch event even for failure case
+        window.firebaseInitialized = false;
+        window.dispatchEvent(new Event('firebase-ready'));
+      } else {
+        try {
+          // Check if Firebase is already initialized
+          if (firebase.apps && firebase.apps.length > 0) {
+            auth = firebase.auth();
+            db = firebase.firestore();
+            firebaseInitialized = true;
           } else {
-            label.textContent = t("no_file_chosen");
+            const app = firebase.initializeApp({
+              apiKey: "AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM",
+              authDomain: "flicklet-71dff.firebaseapp.com",
+              projectId: "flicklet-71dff",
+              storageBucket: "flicklet-71dff.firebasestorage.app",
+              messagingSenderId: "1034923556763",
+              appId: "1:1034923556763:web:bba5489cd1d9412c9c2b3e",
+            });
+            auth = firebase.auth();
+            db = firebase.firestore();
+            firebaseInitialized = true;
           }
+          
+          console.log('✅ Firebase initialized successfully');
+          // Set global flag and dispatch event
+          window.firebaseInitialized = true;
+          window.dispatchEvent(new Event('firebase-ready'));
+        } catch (error) {
+          console.error('❌ Firebase initialization failed:', error);
+          firebaseInitialized = false;
+          // Provide fallback functions
+          auth = { signInWithPopup: () => Promise.reject(new Error('Firebase not available')) };
+          db = { collection: () => ({ doc: () => ({ get: () => Promise.reject(new Error('Firebase not available')) }) }) };
+          // Dispatch failure event
+          window.firebaseInitialized = false;
+          window.dispatchEvent(new Event('firebase-ready'));
         }
       }
 
-      /* ============== Firebase (config) ============== */
-      firebase.initializeApp({
-        apiKey: "AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM",
-        authDomain: "flicklet-71dff.firebaseapp.com",
-        projectId: "flicklet-71dff",
-        storageBucket: "flicklet-71dff.firebasestorage.app",
-        messagingSenderId: "1034923556763",
-        appId: "1:1034923556763:web:bba5489cd1d9412c9c2b3e",
-      });
-      const auth = firebase.auth();
-      const db = firebase.firestore();
-      let currentUser = null;
+      // STEP 3.2e — inline-script-01 is the sole owner of Add actions.
+      // Neuter any Add attempts here to prevent double-calls and duplicate "Already in list" toasts.
+      document.addEventListener('click', (ev) => {
+        const el = ev.target.closest('[data-action]');
+        if (!el) return;
+
+        const action = el.getAttribute('data-action');
+        const id = el.getAttribute('data-id') || el.dataset.id;
+        const list = el.getAttribute('data-list') || el.dataset.list;
+        const mediaType = el.getAttribute('data-media-type') || el.dataset.mediaType;
+
+        // Neuter any Add attempts here to prevent double-calls and duplicate "Already in list" toasts.
+        if (action === 'add' || action === 'addToList' || action === 'addFromCache') {
+          // If inline-01 isn't present for some reason, fall back (dev-only)
+          if (!window.__inline01ActionsBound) {
+            console.debug('[inline-02] Fallback add (inline-01 not bound)');
+            try {
+              if (typeof window.addToListFromCache === 'function') return void window.addToListFromCache(id, list);
+              if (typeof window.addToList === 'function')         return void window.addToList(id, list);
+            } catch (e) { console.warn('[inline-02] Fallback add failed:', e); }
+          }
+          // Normal case: do nothing; inline-01 handled the click.
+          return;
+        }
+      }, { capture: true });
+
+      // Make Firebase available globally for other scripts
+      window.firebase = firebase;
+      window.firebaseInitialized = firebaseInitialized;
+      window.auth = auth;
+      window.db = db;
 
       /* ============== App constants / state ============== */
       const DEV = ["localhost","127.0.0.1","::1"].includes(location.hostname) || !!location.port;
@@ -602,7 +91,7 @@
       const API_BASE = DEV
         ? "https://api.themoviedb.org/3"
         : "/.netlify/functions/tmdb";
-      const TMDB_KEY = "b7247bb415b50f25b5e35e2566430b96";
+      const TMDB_KEY = window.TMDB_CONFIG?.apiKey || "b7247bb415b50f25b5e35e2566430b96";
 
       const appData = {
         tv: { watching: [], wishlist: [], watched: [] },
@@ -618,8 +107,8 @@
 
       /* ============== TMDB Localization System ============== */
       const TMDB = {
-        base: "https://api.themoviedb.org/3",
-        key: window.TMDB_API_KEY || "b7247bb415b50f25b5e35e2566430b96"
+        base: window.TMDB_CONFIG?.baseUrl || "https://api.themoviedb.org/3",
+        key: window.TMDB_CONFIG?.apiKey || window.TMDB_API_KEY || "b7247bb415b50f25b5e35e2566430b96"
       };
 
       const localizedCache = new Map(); // key: `${lang}:${type}:${id}` -> payload
@@ -807,21 +296,29 @@
       }
       function showNotification(msg, type = "info") {
         console.log(`🔔 Global showNotification called: "${msg}" (${type})`);
-        // Use the centralized notification system
-        if (window.FlickletApp && typeof window.FlickletApp.showNotification === 'function') {
-          console.log('✅ Using centralized notification system');
-          window.FlickletApp.showNotification(msg, type);
-        } else {
-          console.log('⚠️ Centralized system not available, using fallback');
-          // Fallback to old system if centralized system not available
-          const n = document.createElement("div");
-          n.className = `notification ${type}`;
-          n.textContent = msg;
-          const live = document.getElementById('liveRegion');
-          if (live) { live.textContent = msg; }
-          document.body.appendChild(n);
-          setTimeout(() => n.remove(), 2800);
-        }
+        // Avoid circular calls - create notification directly
+        const n = document.createElement("div");
+        n.className = `notification ${type}`;
+        n.textContent = msg;
+        n.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: ${type === 'error' ? '#ff4444' : type === 'success' ? '#44ff44' : '#4444ff'};
+          color: white;
+          padding: 12px 20px;
+          border-radius: 8px;
+          z-index: 100000;
+          font-family: system-ui, sans-serif;
+          font-size: 14px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          max-width: 300px;
+          word-wrap: break-word;
+        `;
+        const live = document.getElementById('liveRegion');
+        if (live) { live.textContent = msg; }
+        document.body.appendChild(n);
+        setTimeout(() => n.remove(), 3000);
       }
 
       function updateWelcomeText() {
@@ -854,7 +351,7 @@
             el.textContent = newText;
           } else {
             // Keep the original "Flicklet" title
-            el.textContent = t("app_title");
+            el.textContent = window.I18N.t("app_title");
           }
           */
 
@@ -1111,10 +608,10 @@
           // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
           if (typeof updateUI === "function") updateUI();
           
-          showNotification(t("cloud_sync_ok"), "success");
+          showNotification(window.I18N.t("cloud_sync_ok"), "success");
         } catch (e) {
           console.warn("load cloud failed", e);
-          showNotification(t("cloud_load_failed"), "warning");
+          showNotification(window.I18N.t("cloud_load_failed"), "warning");
         }
       }
 
@@ -1154,7 +651,7 @@
             return Promise.resolve();
           } catch (error) {
             console.error("cloud sync failed", error);
-            showNotification(t("cloud_sync_failed"), "warning");
+            showNotification(window.I18N.t("cloud_sync_failed"), "warning");
             return Promise.resolve();
           }
         } catch (e) {
@@ -1206,6 +703,7 @@
 
           // Add sign in button
           const signInBtn = document.createElement("button");
+          signInBtn.type = "button";
           signInBtn.className = "btn secondary";
           signInBtn.textContent = "Sign In / Create Account";
           signInBtn.style.marginBottom = "12px";
@@ -1228,9 +726,19 @@
               signInBtn.disabled = true;
               signInBtn.textContent = "Signing in...";
               
-              const result = await auth.signInWithEmailAndPassword(email, password);
+              // Use enhanced auth helper if available
+              if (window.authHelpers && window.authHelpers.loginWithEmail) {
+                await window.authHelpers.loginWithEmail(email, password);
+              } else {
+                // Fallback to original auth
+                const result = await auth.signInWithEmailAndPassword(email, password);
+                document.querySelector(".modal-backdrop")?.remove();
+                resolve(result);
+                return;
+              }
+              
               document.querySelector(".modal-backdrop")?.remove();
-              resolve(result);
+              resolve();
             } catch (signInError) {
               try {
                 // Try to create account if sign in fails
@@ -1448,9 +956,21 @@
       /* ======= Sign-in modal + Name onboarding ======= */
       function openModal(title, html, testId = "generic-modal") {
         console.log('🔧 openModal called:', { title, testId });
+        
+        // Guard against modal stacking
+        if (testId === 'auth-modal' && document.querySelector('.modal-backdrop[data-modal="login"]')) {
+          console.log('⚠️ Auth modal already exists, not creating another');
+          return null;
+        }
+        
         const wrap = document.createElement("div");
         wrap.className = "modal-backdrop";
         wrap.setAttribute("data-testid", "modal-backdrop");
+        if (testId === 'auth-modal') {
+          wrap.setAttribute("data-modal", "login");
+          wrap.id = `auth-modal-${Date.now()}`;
+          window.__currentAuthModal = wrap;
+        }
         wrap.style.cssText = `
           position: fixed !important;
           top: 0 !important;
@@ -1466,15 +986,70 @@
           visibility: visible !important;
           opacity: 1 !important;
         `;
+        
+        // Ensure all buttons inside the modal are clickable
+        const ensureButtonsClickable = () => {
+          const buttons = wrap.querySelectorAll('button');
+          buttons.forEach(btn => {
+            btn.style.pointerEvents = 'auto';
+            btn.style.zIndex = '100001';
+            btn.style.position = 'relative';
+          });
+        };
+        
+        // Make it available globally for other functions
+        window.ensureButtonsClickable = ensureButtonsClickable;
         wrap.innerHTML = `
-          <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" data-testid="${testId}" tabindex="-1">
+          <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" data-testid="${testId}" data-modal-body tabindex="-1" style="position:relative; z-index:100000; pointer-events: auto !important;">
             <h3 id="modal-title">${title}</h3>
-            <div class="modal-body">${html}</div>
-            <div class="modal-actions">
-              <button class="btn secondary" data-testid="modal-close" type="button" style="width: 120px !important; flex: 0 0 120px !important; font-size: 14px !important; padding: 12px 18px !important; height: 44px !important; min-height: 44px !important;">Close</button>
+            <div class="modal-body" style="pointer-events: auto !important;">${html}</div>
+            <div data-auth-msg aria-live="polite" style="min-height:1em; margin:8px 0; color:var(--color-error,#b00020); pointer-events: auto !important;"></div>
+            <div class="modal-actions" data-modal-actions style="pointer-events: auto !important;">
+              <button class="btn secondary" data-testid="modal-close" type="button" style="width: 120px !important; flex: 0 0 120px !important; font-size: 14px !important; padding: 12px 18px !important; height: 44px !important; min-height: 44px !important; pointer-events: auto !important;">Close</button>
             </div>
           </div>`;
+        
+        // Prevent form submission issues (but allow button clicks)
+        wrap.addEventListener('click', (e) => {
+          const t = e.target;
+          console.log('🔍 Modal click detected on:', t, 'is backdrop:', t === wrap);
+          
+          // Only handle clicks on the backdrop itself, not its children
+          if (t === wrap) {
+            console.log('🔍 Backdrop clicked - this should close modal for non-auth modals');
+            return; // Let the existing backdrop close logic handle this
+          }
+          
+          // For clicks on children, only prevent form submissions
+          if (t.matches('button[type="submit"], form button:not([type])')) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          
+          // For regular buttons, let them work normally
+          if (t.matches('button:not([type="submit"])')) {
+            console.log('🔍 Button click detected, allowing it to proceed:', t.id);
+            // Don't prevent default or stop propagation - let the button handle it
+            return; // Exit early to avoid any interference
+          }
+          
+          // For all other clicks on children, don't interfere
+          console.log('🔍 Child element clicked, allowing it to proceed:', t.tagName, t.className);
+        });
+        
+        // Prevent form submissions
+        wrap.querySelectorAll('form').forEach(f => {
+          f.addEventListener('submit', (e) => { 
+            e.preventDefault(); 
+            e.stopPropagation(); 
+          });
+          // Normalize buttons to non-submit
+          f.querySelectorAll('button:not([type])').forEach(b => b.setAttribute('type','button'));
+        });
         document.body.appendChild(wrap);
+        
+        // Ensure buttons are clickable immediately
+        ensureButtonsClickable();
         
         // Force visibility immediately after creation
         wrap.style.visibility = 'visible';
@@ -1517,12 +1092,31 @@
           }
         }, 100);
 
-        const close = () => wrap.remove();
+        const close = () => {
+          console.log('🚪 Modal close triggered');
+          wrap.remove();
+        };
         wrap.addEventListener("click", (e) => {
-          if (e.target === wrap) close();
+          console.log('🖱️ Modal backdrop clicked, target:', e.target, 'wrap:', wrap);
+          if (e.target === wrap) {
+            // Don't close auth modals on backdrop click
+            if (testId === 'auth-modal' || testId === 'email-login-modal') {
+              console.log('🔒 Auth modal - preventing backdrop close');
+              return;
+            }
+            console.log('🚪 Closing modal due to backdrop click');
+            close();
+          }
         });
         wrap.addEventListener("keydown", (e) => {
-          if (e.key === "Escape") close();
+          if (e.key === "Escape") {
+            // Don't close auth modals with Escape key
+            if (testId === 'auth-modal' || testId === 'email-login-modal') {
+              console.log('🔒 Auth modal - preventing Escape close');
+              return;
+            }
+            close();
+          }
         });
         const modalEl = wrap.querySelector('.modal');
         modalEl.focus();
@@ -1539,7 +1133,10 @@
           }
         }
         const closeBtn = wrap.querySelector('[data-testid="modal-close"]');
-        closeBtn.addEventListener("click", close);
+        closeBtn.addEventListener("click", (e) => {
+          console.log('🚪 Close button clicked!');
+          close();
+        });
         
         // Style the close button to match other buttons in the modal
         if (testId === "email-login-modal") {
@@ -1557,6 +1154,10 @@
           closeBtn.style.minHeight = "44px";
         }
       }
+
+      // Export modal API
+      window.openModal = openModal;
+      window.dispatchEvent(new Event('modal-api-ready'));
 
       function showNameModal(force = false) {
         const current = (appData.settings.displayName || "").trim();
@@ -1603,7 +1204,8 @@
           rebuildStats?.();
           localStorage.setItem("__flicklet_onboarded__", "1");
           document.querySelector(".modal-backdrop")?.remove();
-          if (currentUser) setAccountLabel?.(currentUser);
+          // setAccountLabel disabled - using FlickletApp.updateAccountButton() system
+          // if (currentUser) setAccountLabel?.(currentUser);
           // Don't automatically show sign-in modal - user should authenticate first
         };
         document.querySelector(".modal .modal-actions").prepend(saveBtn);
@@ -1620,153 +1222,47 @@
         }
       }
 
-      window.showSignInModal = function showSignInModal() {
-        console.log('🔑 showSignInModal called');
+      window.showEmailLoginModal = function showEmailLoginModal() {
+        console.log('✉️ showEmailLoginModal called');
+        console.log('🔍 emailLogin function available:', typeof emailLogin);
+        console.log('🔍 openModal function available:', typeof openModal);
         try {
-          openModal(
-            "Sign in to sync",
-            `
-              <p style="margin-bottom: 20px;">Sign in to back up your lists and sync across devices.</p>
-              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; justify-content:center; align-items:center; max-width:320px; margin:0 auto;">
-                <button id="googleBtn" class="btn" style="font-size:14px; padding:12px 18px; min-height:44px;">🔒 Google</button>
-                <button id="appleBtn" class="btn secondary" style="font-size:14px; padding:12px 18px; min-height:44px;">🍎 Apple</button>
-                <button id="emailBtn" class="btn secondary" style="font-size:14px; padding:12px 18px; min-height:44px; grid-column: 1 / -1;">✉️ Email</button>
-                <button id="signOutBtn" class="btn secondary" style="display:none; font-size:14px; padding:12px 18px; min-height:44px;">Sign Out</button>
-              </div>
-          `,
-          "auth-modal"
-        );
-        console.log('✅ Sign in modal created and added to DOM');
+          if (typeof emailLogin === 'function') {
+            emailLogin();
+            console.log('✅ emailLogin called successfully');
+          } else {
+            console.error('❌ emailLogin function not available');
+          }
         } catch (error) {
-          console.error('❌ Error creating sign in modal:', error);
+          console.error('❌ Error showing email login modal:', error);
         }
+      };
 
-        const google = document.getElementById("googleBtn");
-        const apple = document.getElementById("appleBtn");
-        const email = document.getElementById("emailBtn");
-        const out = document.getElementById("signOutBtn");
-
-        if (currentUser) {
-          google.style.display = "none";
-          apple.style.display = "none";
-          email.style.display = "none";
-          out.style.display = "block";
-          out.style.gridColumn = "1 / -1";
-          out.style.margin = "0 auto";
-          out.onclick = () => {
-            if (typeof firebase !== 'undefined' && firebase.auth) {
-              firebase.auth().signOut().then(() => {
-                // Use the proper sign out function from FlickletApp if available
-                if (typeof FlickletApp !== 'undefined' && FlickletApp.performSignOut) {
-                  FlickletApp.performSignOut();
-                } else {
-                  // Fallback to basic sign out
-                  showNotification(t("signed_out"), "success");
-                  setAccountLabel?.(null);
-                }
-                document.querySelector(".modal-backdrop")?.remove();
-              }).catch((error) => {
-                console.error('Sign out error:', error);
-                showNotification('Failed to sign out', 'error');
-              });
-            } else {
-              // Fallback for when Firebase is not available
-              if (typeof FlickletApp !== 'undefined' && FlickletApp.performSignOut) {
-                FlickletApp.performSignOut();
-              } else {
-                showNotification(t("signed_out"), "success");
-                setAccountLabel?.(null);
-              }
-              document.querySelector(".modal-backdrop")?.remove();
-            }
-          };
-        } else {
-          google.onclick = () => {
-            console.log('🔐 Google login clicked');
-            login()
-              .then(() => {
-                console.log('✅ Google login successful');
-                showNotification(t("signed_in"), "success");
-                // Close all modals to ensure the sign-in modal is removed
-                const modals = document.querySelectorAll(".modal-backdrop");
-                modals.forEach(modal => modal.remove());
-                // auth listener will call setAccountLabel and sync
-              })
-              .catch((e) => {
-                console.error('❌ Google login failed:', e);
-                let message = 'Sign in failed';
-                if (e.message) {
-                  if (e.message.includes('popup')) {
-                    message = 'Sign in failed: Popup was blocked. Please try again.';
-                  } else if (e.message.includes('network')) {
-                    message = 'Sign in failed: Network error. Please check your connection.';
-                  } else if (e.message.includes('invalid')) {
-                    message = 'Sign in failed: Invalid credentials. Please try again.';
-                  } else {
-                    message = `Sign in failed: ${e.message}. Please try again.`;
-                  }
-                }
-                showNotification(message, 'error');
-              });
-          };
-
-          apple.onclick = () => {
-            console.log('🍎 Apple login clicked');
-            appleLogin()
-              .then(() => {
-                console.log('✅ Apple login successful');
-                showNotification(t("signed_in"), "success");
-                // Close all modals to ensure the sign-in modal is removed
-                const modals = document.querySelectorAll(".modal-backdrop");
-                modals.forEach(modal => modal.remove());
-                // auth listener will call setAccountLabel and sync
-              })
-              .catch((e) => {
-                console.error('❌ Apple login failed:', e);
-                let message = 'Sign in failed';
-                if (e.message) {
-                  if (e.message.includes('popup')) {
-                    message = 'Sign in failed: Popup was blocked. Please try again.';
-                  } else if (e.message.includes('network')) {
-                    message = 'Sign in failed: Network error. Please check your connection.';
-                  } else if (e.message.includes('invalid')) {
-                    message = 'Sign in failed: Invalid credentials. Please try again.';
-                  } else {
-                    message = `Sign in failed: ${e.message}. Please try again.`;
-                  }
-                }
-                showNotification(message, 'error');
-              });
-          };
-
-          email.onclick = () => {
-            // Close the main sign-in modal first
-            document.querySelector(".modal-backdrop")?.remove();
-            
-            // Then open the email modal
-            emailLogin()
-              .then(() => {
-                showNotification(t("signed_in"), "success");
-                // auth listener will call setAccountLabel and sync
-              })
-              .catch((e) => {
-                let message = 'Sign in failed';
-                if (e.message) {
-                  if (e.message.includes('popup')) {
-                    message = 'Sign in failed: Popup was blocked. Please try again.';
-                  } else if (e.message.includes('network')) {
-                    message = 'Sign in failed: Network error. Please check your connection.';
-                  } else if (e.message.includes('invalid')) {
-                    message = 'Sign in failed: Invalid credentials. Please try again.';
-                  } else {
-                    message = `Sign in failed: ${e.message}. Please try again.`;
-                  }
-                }
-                showNotification(message, 'error');
-              });
-          };
-        }
-      }
+      // DISABLED: Sign-in modal handled by app.js
+      // window.showSignInModal = function showSignInModal() {
+      //   console.log('🔑 showSignInModal called');
+      //   console.log('🔍 openModal function available:', typeof openModal);
+      //   console.log('🔍 currentUser state:', currentUser);
+      //   try {
+      //     openModal(
+      //       "Sign in to sync",
+      //       `
+      //         <p style="margin-bottom: 20px;">Sign in to back up your lists and sync across devices.</p>
+      //         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; justify-content:center; align-items:center; max-width:320px; margin:0 auto;">
+      //           <button id="googleBtn" type="button" class="btn" style="font-size:14px; padding:12px 18px; min-height:44px;">🔒 Google</button>
+      //           <button id="appleBtn" type="button" class="btn secondary" style="font-size:14px; padding:12px 18px; min-height:44px;">🍎 Apple</button>
+      //           <button id="emailBtn" type="button" class="btn secondary" style="font-size:14px; padding:12px 18px; min-height:44px; grid-column: 1 / -1;">✉️ Email</button>
+      //           <button id="signOutBtn" type="button" class="btn secondary" style="display:none; font-size:14px; padding:12px 18px; min-height:44px;">Sign Out</button>
+      //         </div>
+      //     `,
+      //       "auth-modal"
+      //     );
+      //     console.log('✅ Sign in modal created and added to DOM');
+      //     } catch (error) {
+      //       console.error('❌ Error creating sign in modal:', error);
+      //     }
+      //     // ... rest of function body commented out
+      //   }
 
       function escapeHtml(str) {
         return (str || "").replace(
@@ -1784,9 +1280,16 @@
 
       /* ============== TMDB helpers (Localization + Fallback) ============== */
       function langQuery() {
-        return appData.settings.lang === "es"
+        // Use global appData or FlickletApp appData to get the most current language setting
+        const currentLang = (window.appData?.settings?.lang) || 
+                           (window.FlickletApp?.appData?.settings?.lang) || 
+                           (appData?.settings?.lang) || 
+                           'en';
+        const lang = currentLang === "es"
           ? "&language=es-ES"
           : "&language=en-US";
+        console.log('🌐 langQuery called, current language:', currentLang, '->', lang);
+        return lang;
       }
 
       async function tmdbGet(endpoint, params = "", tryFallback = true) {
@@ -1899,7 +1402,7 @@
           sel.innerHTML = "";
           const all = document.createElement("option");
           all.value = "";
-          all.textContent = t("all_genres");
+          all.textContent = window.I18N.t("all_genres");
           sel.appendChild(all);
           
           (data.genres || []).forEach((g) => {
@@ -1972,98 +1475,23 @@
       
 
       async function changeLanguage(newLang) {
-        // Use centralized language change if available
-        if (window.FlickletApp && typeof window.FlickletApp.changeLanguage === 'function') {
-          window.FlickletApp.changeLanguage(newLang);
-          return;
-        }
+        console.log('🌍 inline-script-02 changeLanguage delegating to LanguageManager:', newLang);
         
-        // Fallback to old system
-        // Set a flag to prevent dropdown resets during language change
-        window.isChangingLanguage = true;
-        
-        // Update app data
-        if (window.appData?.settings) {
-          window.appData.settings.lang = newLang;
-        }
-        if (appData?.settings) {
-          appData.settings.lang = newLang;
-        }
-        
-        // Ensure language dropdown options are preserved
-        const langToggle = document.getElementById("langToggle");
-        if (langToggle && langToggle.children.length < 2) {
-          // Restore options if they were lost
-          langToggle.innerHTML = `
-            <option value="en">EN</option>
-            <option value="es">ES</option>
-          `;
-        }
-        
-        // Apply translations FIRST (before rehydration)
-        applyTranslations?.();
-        
-        // Show loading state
-        const currentTab = document.querySelector(".tab.active")?.id?.replace("Tab", "");
-        if (currentTab && ["watching", "wishlist", "watched"].includes(currentTab)) {
-          const listContainer = document.getElementById(currentTab + "List");
-          if (listContainer) {
-            listContainer.innerHTML = `<div style="text-align: center; padding: 20px;">${t("loading")}...</div>`;
+        // Delegate to centralized LanguageManager
+        if (window.LanguageManager) {
+          return window.LanguageManager.changeLanguage(newLang);
+        } else if (window.FlickletApp && typeof window.FlickletApp.changeLanguage === 'function') {
+          return window.FlickletApp.changeLanguage(newLang);
+        } else {
+          console.warn('🌍 No centralized language manager available, using basic fallback');
+          // Basic fallback
+          if (window.appData?.settings) {
+            window.appData.settings.lang = newLang;
+          }
+          if (typeof applyTranslations === 'function') {
+            applyTranslations(newLang);
           }
         }
-        
-        try {
-          // Rehydrate lists with localized TMDB data
-          await rehydrateListsForLocale(newLang);
-          
-          // Save the data AFTER rehydration completes
-          saveAppData?.();
-          
-          // Update UI AFTER rehydration completes
-          updateUI?.();
-          
-        } catch (error) {
-          console.warn("Failed to rehydrate lists for locale:", error);
-          // Still save and update UI even if rehydration fails
-          saveAppData?.();
-          updateUI?.();
-        }
-        
-        // Force refresh of genre dropdown
-        setTimeout(() => {
-          if (typeof loadGenres === "function") {
-            loadGenres();
-          }
-        }, 200);
-        
-        // Show notification
-        const langName = newLang === "es" ? "Spanish" : "English";
-        showNotification(`Language changed to ${langName}`, "success");
-        
-        // Clear the flag after operations complete
-        setTimeout(() => {
-          window.isChangingLanguage = false;
-        }, 3000);
-        
-        // Final refresh of horoscope and quote
-        setTimeout(() => {
-          const hEl = document.getElementById("fakeFortune");
-          const qEl = document.getElementById("randomQuote");
-          if (hEl) {
-            hEl.textContent = pickDailyHoroscope();
-          }
-          if (qEl) {
-            qEl.textContent = drawQuote();
-          }
-          
-          const fileInput = document.getElementById("importFile");
-          if (fileInput) {
-            updateFileLabel(fileInput);
-          }
-          
-          // Refresh search results if they're visible
-          refreshSearchResults();
-        }, 600);
       }
 
       /* ============== Discover (Phase 1) ============== */
@@ -2379,6 +1807,12 @@
       function openShareSelectionModal() {
         console.log('🔗 Opening share selection modal');
         
+        // Guard: Don't open share modal when any modal is up
+        if (document.querySelector('.modal-backdrop')) {
+          console.log('⚠️ Another modal is open, deferring share modal');
+          return;
+        }
+        
         // Check if modal exists
         const modal = document.getElementById('shareSelectionModal');
         if (!modal) {
@@ -2449,47 +1883,187 @@
         };
       })();
 
-      function openNotInterestedModal() {
-        console.log('🚫 Opening not interested modal');
+      // --- Not Interested Modal (idempotent, global root) ---
+      function ensureRoot(){
+        let root = document.querySelector('[data-modal-root]');
+        if (!root) {
+          root = document.createElement('div');
+          root.id = 'modal-root';
+          root.setAttribute('data-modal-root','');
+          document.body.appendChild(root);
+        }
+        return root;
+      }
+
+      function closeNI(){
+        const node = document.querySelector('[data-modal="not-interested"]');
+        if (node) node.remove();
         
-        // Create modal HTML
-        const modalHTML = `
-          <div class="modal-backdrop" id="notInterestedModal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-            <div class="modal" style="background: var(--card); border-radius: 12px; padding: 24px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
-              <h3 style="margin: 0 0 16px 0; color: var(--text);">🚫 Not Interested List</h3>
-              <p style="margin: 0 0 20px 0; color: var(--text-secondary); font-size: 0.9rem;">
-                These shows and movies won't appear in your recommendations. You can remove items to see them again.
-              </p>
-              <div id="notInterestedList" style="margin-bottom: 20px;">
-                <!-- Items will be populated here -->
-              </div>
-              <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button class="btn secondary" onclick="closeNotInterestedModal()">Close</button>
-              </div>
+        // Restore search bar and navigation tabs
+        const searchBar = document.querySelector('.top-search');
+        const header = document.querySelector('.header');
+        const tabs = document.querySelector('.tab-container');
+        const settingsTabs = document.querySelector('.settings-tabs');
+        
+        if (searchBar) {
+          searchBar.style.display = '';
+          console.log('🔍 Restored search bar');
+        }
+        if (header) {
+          header.style.display = '';
+          console.log('🔍 Restored header');
+        }
+        if (tabs) {
+          tabs.style.display = '';
+          console.log('🔍 Restored tabs');
+        }
+        if (settingsTabs) {
+          settingsTabs.style.display = '';
+          console.log('🔍 Restored settings tabs');
+        }
+      }
+
+      async function populateList(container){
+        // Read list from your canonical store (mirror of what list-actions writes)
+        const dataSource = window.appData || appData;
+        const ni = dataSource?.notInterested || [];
+        const ul = container.querySelector('[data-ni-list]');
+        ul.innerHTML = ni.length
+          ? ni.map(x => `<li data-id="${x.id}" style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px;">
+              <span>${x.title || x.id}</span>
+              <button data-ni-remove="${x.id}" class="btn btn-ghost" type="button" style="padding: 4px 8px; font-size: 0.8rem;">Remove</button>
+            </li>`).join('')
+          : `<li class="muted" style="text-align: center; padding: 20px; color: var(--text-secondary); font-style: italic;">No items marked as not interested.</li>`;
+      }
+
+      function openNotInterestedModal(){
+        console.log('🚫 Opening not interested modal');
+        const root = ensureRoot();
+
+        // Build once; remove any existing instance
+        closeNI();
+        
+        // Hide search bar and navigation tabs to prevent z-index conflicts
+        const searchBar = document.querySelector('.top-search');
+        const header = document.querySelector('.header');
+        const tabs = document.querySelector('.tab-container');
+        const settingsTabs = document.querySelector('.settings-tabs');
+        
+        if (searchBar) {
+          searchBar.style.display = 'none';
+          console.log('🔍 Hidden search bar');
+        }
+        if (header) {
+          header.style.display = 'none';
+          console.log('🔍 Hidden header');
+        }
+        if (tabs) {
+          tabs.style.display = 'none';
+          console.log('🔍 Hidden tabs');
+        }
+        if (settingsTabs) {
+          settingsTabs.style.display = 'none';
+          console.log('🔍 Hidden settings tabs');
+        }
+
+        const wrap = document.createElement('div');
+        wrap.setAttribute('data-modal','not-interested');
+        wrap.setAttribute('data-testid','not-interested-modal');
+        wrap.style.cssText = [
+          'position:fixed !important','inset:0 !important','display:flex !important','align-items:center !important','justify-content:center !important',
+          'background:rgba(0,0,0,.5) !important','z-index:99999 !important','pointer-events:auto !important','visibility:visible !important','opacity:1 !important',
+          'top:0 !important','left:0 !important','width:100vw !important','height:100vh !important'
+        ].join(';');
+
+        wrap.innerHTML = `
+          <div role="dialog" aria-modal="true" class="modal" style="min-width:320px;max-width:640px;background:var(--color-surface,var(--card,#fff));border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:16px;position:relative;z-index:1000000 !important;pointer-events:auto !important;">
+            <header style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+              <h3 style="margin:0;font-size:18px;color:var(--text);">🚫 Manage "Not Interested"</h3>
+              <button type="button" class="btn" data-ni-close style="padding: 4px 8px;">✕</button>
+            </header>
+            <div data-ni-body style="max-height:60vh;overflow:auto;">
+              <ul data-ni-list style="display:grid;gap:8px;padding:0;margin:0;list-style:none;"></ul>
             </div>
+            <footer style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+              <button type="button" class="btn secondary" data-ni-clear style="padding: 8px 16px;">Clear all</button>
+              <button type="button" class="btn primary" data-ni-close style="padding: 8px 16px;">Done</button>
+            </footer>
           </div>
         `;
+
+        // Stop clicks inside from closing
+        wrap.addEventListener('click', (e) => {
+          console.log('🔍 Modal clicked on:', e.target);
+          if (e.target === wrap) e.stopPropagation();
+        });
+
+        root.appendChild(wrap);
         
-        // Insert modal into DOM
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        
-        // Populate the list
-        populateNotInterestedList();
-        
-        // Add click outside to close functionality
-        const modal = document.getElementById('notInterestedModal');
-        modal.onclick = function(e) {
-          if (e.target === modal) {
-            closeNotInterestedModal();
+        console.log('🔍 Modal created with z-index:', wrap.style.zIndex);
+        console.log('🔍 Modal element:', wrap);
+
+        // Wire actions
+        wrap.querySelectorAll('[data-ni-close]').forEach(b=>{
+          console.log('🔍 Adding close listener to button:', b);
+          b.addEventListener('click', (e) => {
+            console.log('🔍 Close button clicked!');
+            closeNI();
+          });
+        });
+
+        wrap.addEventListener('click', (e) => {
+          const rmBtn = e.target.closest('[data-ni-remove]');
+          if (rmBtn) {
+            const id = rmBtn.getAttribute('data-ni-remove');
+            try {
+              const dataSource = window.appData || appData;
+              if (dataSource && dataSource.notInterested) {
+                const next = dataSource.notInterested.filter(x => String(x.id) !== String(id));
+                dataSource.notInterested = next;
+                // Save to localStorage
+                if (window.saveAppData) window.saveAppData();
+              }
+              // Remove row
+              rmBtn.closest('li')?.remove();
+              // Optionally emit a rerender event
+              document.dispatchEvent(new CustomEvent('notinterested:changed', { detail:{ action:'remove', id }}));
+            } catch (e) {
+              console.error('NI remove failed', e);
+            }
           }
-        };
+        });
+
+        const clearBtn = wrap.querySelector('[data-ni-clear]');
+        if (clearBtn) {
+          console.log('🔍 Adding clear listener to button:', clearBtn);
+          clearBtn.addEventListener('click', (e) => {
+            console.log('🔍 Clear button clicked!');
+            const dataSource = window.appData || appData;
+            if (dataSource) {
+              dataSource.notInterested = [];
+              if (window.saveAppData) window.saveAppData();
+            }
+            wrap.querySelector('[data-ni-list]').innerHTML = `<li class="muted" style="text-align: center; padding: 20px; color: var(--text-secondary); font-style: italic;">No items marked as not interested.</li>`;
+            document.dispatchEvent(new CustomEvent('notinterested:changed', { detail:{ action:'clear' }}));
+          });
+        }
+
+        // Fill list
+        populateList(wrap);
       }
+
+      // Expose globally so Settings button can call it
+      window.openNotInterestedModal = openNotInterestedModal;
 
       function populateNotInterestedList() {
         const container = document.getElementById('notInterestedList');
         if (!container) return;
         
-        if (!appData.notInterested || appData.notInterested.length === 0) {
+        // Use window.appData if available, fallback to local appData
+        const dataSource = window.appData || appData;
+        console.log('🔍 Debug: populateNotInterestedList using dataSource:', !!dataSource, 'notInterested:', dataSource?.notInterested?.length || 0);
+        
+        if (!dataSource.notInterested || dataSource.notInterested.length === 0) {
           container.innerHTML = `
             <div style="text-align: center; padding: 40px; color: var(--text-secondary); font-style: italic;">
               <div style="font-size: 2rem; margin-bottom: 16px;">🎉</div>
@@ -2501,7 +2075,7 @@
         }
         
         container.innerHTML = '';
-        appData.notInterested.forEach((item, index) => {
+        dataSource.notInterested.forEach((item, index) => {
           const itemDiv = document.createElement('div');
           itemDiv.className = 'not-interested-item';
           itemDiv.style.cssText = `
@@ -2550,6 +2124,9 @@
           }
         }
       }
+      
+      // Make function globally accessible
+      window.populateNotInterestedList = populateNotInterestedList;
 
       function closeNotInterestedModal() {
         const modal = document.getElementById('notInterestedModal');
@@ -2961,56 +2538,40 @@
       }
       
       async function saveUsernameDirectly(newName) {
-        // Save the new username
-        if (!appData.settings) appData.settings = {};
-        appData.settings.displayName = newName;
+        const user = firebase.auth().currentUser;
+        if (!user) return;
+
+        const username = (newName || '').trim();
         
-        // Also update FlickletApp's appData to keep them in sync
-        if (window.FlickletApp && window.FlickletApp.appData) {
-          if (!window.FlickletApp.appData.settings) {
-            window.FlickletApp.appData.settings = {};
-          }
-          window.FlickletApp.appData.settings.displayName = newName;
-          console.log('✅ Synced username to FlickletApp appData:', newName);
-        }
-        
-        // Save to localStorage
-        localStorage.setItem('flicklet-data', JSON.stringify(appData));
-        
-        // Save to Firebase using update with dot notation to avoid overwriting other settings
-        if (currentUser && typeof firebase !== 'undefined' && firebase.firestore) {
+        // Write to Firestore settings.username only
+        if (typeof firebase !== 'undefined' && firebase.firestore) {
           try {
             const db = firebase.firestore();
-            await db.collection('users').doc(currentUser.uid).update({ 
-              'settings.displayName': newName 
-            });
-            console.log('✅ Username saved to Firebase using update with dot notation:', newName);
-            
-            // Clear the account button cache to force a fresh read
-            if (window.FlickletApp) {
-              window.FlickletApp._lastAccountBtnUid = null;
-              window.FlickletApp._lastAccountBtnDoc = null;
-              console.log('🧹 Cleared account button cache for fresh read');
-            }
+            await db.collection('users').doc(user.uid).set({
+              meta: {
+                settings: { 
+                  username: username,
+                  usernamePrompted: true 
+                }
+              }
+            }, { merge: true });
+            console.log('✅ Username saved to Firestore settings.username:', username);
           } catch (error) {
-            console.error('❌ Failed to save username to Firebase:', error);
+            console.error('❌ Failed to save username to Firestore:', error);
+            return;
           }
         }
+
+        // keep local data in sync if you rely on it
+        window.appData = window.appData || {};
+        window.appData.settings = { ...(window.appData.settings||{}), username };
+
+        // reflect in UI
+        if (window.FlickletApp && typeof window.FlickletApp.setLeftSnark === 'function') {
+          window.FlickletApp.setLeftSnark(username ? window.FlickletApp.makeSnark(username) : '');
+        }
         
-        showNotification(`Name saved as "${newName}"`, "success");
-        
-        // Update the left-side container to show the new username
-        // Use a small delay to ensure data is fully synced
-        setTimeout(() => {
-          if (window.FlickletApp && typeof window.FlickletApp.updateLeftSideUsername === 'function') {
-            console.log('🔄 Updating left-side container after username save (delayed)');
-            window.FlickletApp.updateLeftSideUsername();
-          }
-          // Update account button
-          if (window.FlickletApp && typeof window.FlickletApp.updateAccountButton === "function") {
-            window.FlickletApp.updateAccountButton();
-          }
-        }, 50);
+        showNotification(`Username saved as "${username}"`, "success");
       }
       
       function closeUsernamePromptModal() {
@@ -3148,6 +2709,22 @@
       }
 
       /* ============== UI helpers ============== */
+      // STEP 3.2a — Guarded date formatter used by getSeriesPill/createShowCard
+      if (typeof window.formatDateShort !== 'function') {
+        window.formatDateShort = function formatDateShort(dateStr) {
+          if (!dateStr) return '';
+          try {
+            const lang =
+              (window.appData?.settings?.lang === 'es') ? 'es-ES' : 'en-US';
+            const d = new Date(dateStr);
+            if (isNaN(d)) return '';
+            return d.toLocaleDateString(lang, { month: 'short', day: 'numeric', year: 'numeric' });
+          } catch (_) {
+            return '';
+          }
+        };
+      }
+
       function getSeriesPill(item) {
         if (!item || (item.media_type !== "tv" && !item.first_air_date))
           return "";
@@ -3310,36 +2887,38 @@
           <button class="btn" data-action='addFromCache' data-id='${Number(item.id)}' data-list='watching'>▶️ ${t("currently_watching")}</button>
           <button class="btn" data-action='addFromCache' data-id='${Number(item.id)}' data-list='wishlist'>📖 ${t("want_to_watch")}</button>
           <button class="btn" data-action='addFromCache' data-id='${Number(item.id)}' data-list='watched'>✅ ${t("already_watched")}</button>
-          <button class="btn danger" data-action='notInterested' data-id='${Number(item.id)}' data-media-type='${mediaType}'>🚫 Not Interested</button>
+          <button class="btn danger" data-action='notInterested' data-id='${Number(item.id)}' data-media-type='${mediaType}'>🚫 ${t('not_interested')}</button>
         </div>`;
         } else {
+          // Use search result card style for regular cards but preserve all functionality
           const likeStatus = item.likeStatus || "none";
           const userRating = item.userRating || 0;
-
+          
+          // Create rating display (non-interactive, just shows current rating)
           const stars = [1,2,3,4,5].map((n) =>
-            `<button type="button" class="star-btn ${n <= userRating ? "active" : ""}"
-                    aria-label="${t("rate_out_of_5").replace("{n}", n)}"
-                    aria-pressed="${n <= userRating}"
-                    data-action="rate" data-id="${item.id}" data-rating="${n}">${n <= userRating ? "★" : "☆"}</button>`
+            `<span class="star-display ${n <= userRating ? "active" : ""}" aria-label="${t("rate_out_of_5").replace("{n}", n)}">${n <= userRating ? "★" : "☆"}</span>`
           ).join("");
+          
           actions = `
-            <div class="rating-container">
-              <span>${t("your_rating")}:</span>
-              <div class="star-rating">${stars}</div>
-              <div class="like-dislike">
-                <button class="like-btn ${likeStatus === "like" ? "active" : ""}" data-action="like" data-id="${item.id}" aria-pressed="${likeStatus === "like"}" aria-label="${t("like")}">👍</button>
-                <button class="dislike-btn ${likeStatus === "dislike" ? "active" : ""}" data-action="dislike" data-id="${item.id}" aria-pressed="${likeStatus === "dislike"}" aria-label="${t("dislike")}">👎</button>
-              </div>
-              ${mediaType === "tv" ? getSeriesPill(item) : ""}
+        <div class="show-actions">
+          ${activeTab !== "watching" ? `<button class="btn" data-action="move" data-id="${item.id}" data-list="watching">▶️ ${t("currently_watching")}</button>` : ''}
+          ${activeTab !== "wishlist" ? `<button class="btn" data-action="move" data-id="${item.id}" data-list="wishlist">📖 ${t("want_to_watch")}</button>` : ''}
+          ${activeTab !== "watched" ? `<button class="btn" data-action="move" data-id="${item.id}" data-list="watched">✅ ${t("already_watched")}</button>` : ''}
+          <button class="btn" data-action="notes" data-id="${item.id}">✎ ${t("notes_tags")}</button>
+          <button class="btn danger" data-action="remove" data-id="${item.id}">🗑️ ${t("remove")}</button>
+        </div>
+        
+        <div class="rating-info" style="margin-top:8px; padding:8px; background:var(--color-bg-secondary); border-radius:4px; font-size:0.9rem;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <span>${t("your_rating")}:</span>
+            <div class="star-rating">${stars}</div>
+            <div class="like-dislike" style="margin-left:auto;">
+              <span class="like-display ${likeStatus === "like" ? "active" : ""}" aria-label="${t("like")}">👍</span>
+              <span class="dislike-display ${likeStatus === "dislike" ? "active" : ""}" aria-label="${t("dislike")}">👎</span>
             </div>
-
-            <div class="show-actions" style="margin-top:6px; display:flex; gap:8px; flex-wrap:wrap">
-                      ${activeTab !== "watching" ? `<button class="btn secondary" data-action="move" data-id="${item.id}" data-list="watching">→ ${t("currently_watching")}</button>` : ''}
-        ${activeTab !== "wishlist" ? `<button class="btn secondary" data-action="move" data-id="${item.id}" data-list="wishlist">→ ${t("want_to_watch")}</button>` : ''}
-        ${activeTab !== "watched" ? `<button class="btn secondary" data-action="move" data-id="${item.id}" data-list="watched">→ ${t("already_watched")}</button>` : ''}
-              <button class="btn" data-action="notes" data-id="${item.id}">✎ ${t("notes_tags")}</button>
-              <button class="btn danger" data-action="remove" data-id="${item.id}">🗑️ ${t("remove")}</button>
-            </div>`;
+          </div>
+          ${mediaType === "tv" ? getSeriesPill(item) : ""}
+        </div>`;
         }
 
         card.innerHTML = `
@@ -3374,30 +2953,32 @@
           ].join("");
         }
 
-        // Add direct click handlers to star rating buttons
-        const starButtons = card.querySelectorAll(".star-btn");
-        starButtons.forEach(starBtn => {
-          starBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const rating = Number(starBtn.getAttribute("data-rating"));
-            const id = Number(starBtn.getAttribute("data-id"));
-            setRating(id, rating);
-            
-            // Update the visual state of all stars in this card
-            const allStars = card.querySelectorAll(".star-btn");
-            allStars.forEach((star, index) => {
-              const starRating = index + 1;
-              if (starRating <= rating) {
-                star.classList.add("active");
-                star.setAttribute("aria-pressed", "true");
-              } else {
-                star.classList.remove("active");
-                star.setAttribute("aria-pressed", "false");
-              }
+        // Add direct click handlers to star rating buttons (only for search mode)
+        if (isSearch) {
+          const starButtons = card.querySelectorAll(".star-btn");
+          starButtons.forEach(starBtn => {
+            starBtn.addEventListener("click", (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const rating = Number(starBtn.getAttribute("data-rating"));
+              const id = Number(starBtn.getAttribute("data-id"));
+              setRating(id, rating);
+              
+              // Update the visual state of all stars in this card
+              const allStars = card.querySelectorAll(".star-btn");
+              allStars.forEach((star, index) => {
+                const starRating = index + 1;
+                if (starRating <= rating) {
+                  star.classList.add("active");
+                  star.setAttribute("aria-pressed", "true");
+                } else {
+                  star.classList.remove("active");
+                  star.setAttribute("aria-pressed", "false");
+                }
+              });
             });
           });
-        });
+        }
 
         ensureTvDetails(item, card);
         
@@ -3798,17 +3379,25 @@
           if (qEl) qEl.value = "";
         } catch {}
 
-        // DISABLED: Tab button management is now handled by FlickletApp.updateTabVisibility()
-        // document
-        //   .querySelectorAll(".tab")
-        //   .forEach((t) => t.classList.remove("active"));
-        // document.getElementById(tab + "Tab").classList.add("active");
+        // DISABLED: Tab switching is now handled by FlickletApp.switchToTab()
+        // This function now only handles tab-specific content loading
+        console.log('🔄 Old switchToTab called for:', tab, '- delegating to FlickletApp');
         
-        // Only manage section visibility
-        document
-          .querySelectorAll(".tab-section")
-          .forEach((s) => (s.style.display = "none"));
-        document.getElementById(tab + "Section").style.display = "block";
+        // Delegate to the new FlickletApp implementation
+        if (window.FlickletApp && typeof window.FlickletApp.switchToTab === 'function') {
+          window.FlickletApp.switchToTab(tab);
+          return;
+        }
+        
+        // Fallback: Use CSS classes instead of inline styles
+        const tabIds = ['home', 'watching', 'wishlist', 'watched', 'discover', 'settings'];
+        tabIds.forEach(name => {
+          const section = document.getElementById(`${name}Section`);
+          if (section) {
+            section.classList.toggle('active', name === tab);
+            section.style.display = ''; // Clear inline styles, let CSS handle it
+          }
+        });
 
         if (tab === "home") {
           // Load front spotlight when home tab is activated
@@ -4008,40 +3597,89 @@
       window.addToListFromCache = addToListFromCache; // used by inline handlers
 
       /* ---------- SEARCH HELPERS ---------- */
+      /**
+       * Process: Search Execution and Results Display
+       * Purpose: Executes user search query, calls TMDB API, and displays results while hiding main page content
+       * Data Source: User input from searchInput element, TMDB API response, cached search items
+       * Update Path: Modify API parameters in tmdbGet call, update home section IDs in homeSections array
+       * Dependencies: tmdbGet function, createShowCard function, home page elements, search results container
+       */
       async function performSearch() {
+        console.log('🔍 performSearch called');
         try {
           const qEl = document.getElementById("searchInput");
           const gEl = document.getElementById("genreFilter");
           const out = document.getElementById("searchResults");
-          if (!qEl || !out) return;
+          
+          console.log('🔍 Search elements found:', { qEl: !!qEl, gEl: !!gEl, out: !!out });
+          
+          if (!qEl || !out) {
+            console.error('❌ Missing search elements:', { qEl: !!qEl, out: !!out });
+            return;
+          }
 
           const q = (qEl.value || "").trim();
           const genre = gEl ? gEl.value || "" : "";
+          
+          console.log('🔍 Search query:', { q, genre });
+          
           if (!q) {
+            console.log('🔍 Empty query, clearing search');
             clearSearch();
             return;
           }
 
-          // Hide FlickWord container when searching
-          const quoteFlickwordContainer = document.querySelector('.quote-flickword-container');
-          if (quoteFlickwordContainer) {
-            quoteFlickwordContainer.style.display = 'none';
-            console.log('🙈 Hiding FlickWord container during search');
-          }
+          // Hide all main page elements when searching
+          const homeSections = [
+            'curatedSections',
+            'triviaTile', 
+            'videoSpotlight',
+            'seriesOrg',
+            'quote-flickword-container',
+            'quoteCard',
+            'randomQuoteCard',
+            'flickwordCard',
+            'bingeBanner'
+          ];
+          
+          homeSections.forEach(sectionId => {
+            const element = document.getElementById(sectionId);
+            if (element) {
+              element.style.display = 'none';
+              console.log(`🙈 Hiding ${sectionId} during search`);
+            }
+          });
 
           out.style.display = "";
           // Show skeletons while searching
           window.Skeletons?.list("searchResults", 6);
 
+          console.log('🔍 Checking tmdbGet function:', typeof tmdbGet);
           if (typeof tmdbGet !== "function") {
+            console.error('❌ tmdbGet function not available');
             out.innerHTML = "Search service not ready.";
             return;
           }
 
+          console.log('🔍 Calling tmdbGet with query:', q);
+          
+          // Debug language before API call
+          const currentLang = (window.appData?.settings?.lang) || 
+                             (window.FlickletApp?.appData?.settings?.lang) || 
+                             (appData?.settings?.lang) || 
+                             'en';
+          console.log('🌐 Language check before API call:', {
+            windowAppData: window.appData?.settings?.lang,
+            flickletAppData: window.FlickletApp?.appData?.settings?.lang,
+            localAppData: appData?.settings?.lang,
+            finalLang: currentLang
+          });
+          
           const data = await tmdbGet(
             "search/multi",
             `&query=${encodeURIComponent(q)}`
           );
+          console.log('🔍 TMDB response:', data);
           const results = (data?.results || []).filter(
             (r) => !genre || (r.genre_ids || []).includes(Number(genre))
           );
@@ -4054,6 +3692,10 @@
           // --- Cache every result before rendering ---
           out.innerHTML = "";
           results.forEach((it) => {
+            // STEP 3.2d — Ensure media_type is set for proper provider/extras handling
+            if (!it.media_type) {
+              it.media_type = it.first_air_date ? 'tv' : (it.release_date ? 'movie' : 'person');
+            }
             cacheSearchItem(it);
             out.appendChild(createShowCard(it, true)); // true => search-mode actions
           });
@@ -4064,6 +3706,13 @@
         }
       }
 
+      /**
+       * Process: Search Clearing and UI Restoration
+       * Purpose: Clears search input, hides results, and restores main page elements when on home tab
+       * Data Source: DOM elements (searchInput, searchResults), FlickletApp.currentTab for context
+       * Update Path: Modify home section IDs in homeSections array if page structure changes
+       * Dependencies: FlickletApp.currentTab, home page section elements, search input and results elements
+       */
       function clearSearch() {
         const qEl = document.getElementById("searchInput");
         const out = document.getElementById("searchResults");
@@ -4073,13 +3722,40 @@
           out.style.display = "none";
         }
         
-        // Show FlickWord container when search is cleared (only if on home tab)
-        const quoteFlickwordContainer = document.querySelector('.quote-flickword-container');
-        if (quoteFlickwordContainer && window.FlickletApp && window.FlickletApp.currentTab === 'home') {
-          quoteFlickwordContainer.style.display = 'flex';
-          console.log('📖 Showing FlickWord container after clearing search');
+        // Show all main page elements when search is cleared (only if on home tab)
+        if (window.FlickletApp && window.FlickletApp.currentTab === 'home') {
+          const homeSections = [
+            'curatedSections',
+            'triviaTile', 
+            'videoSpotlight',
+            'seriesOrg',
+            'quote-flickword-container',
+            'quoteCard',
+            'randomQuoteCard',
+            'flickwordCard',
+            'bingeBanner'
+          ];
+          
+          homeSections.forEach(sectionId => {
+            const element = document.getElementById(sectionId);
+            if (element) {
+              // Restore original display style (flex for containers, block for others)
+              if (sectionId === 'quote-flickword-container') {
+                element.style.display = 'flex';
+              } else {
+                element.style.display = '';
+              }
+              console.log(`📖 Showing ${sectionId} after clearing search`);
+            }
+          });
         }
       }
+
+      // Expose search functions to global scope
+      window.performSearch = performSearch;
+      window.clearSearch = clearSearch;
+      window.tmdbGet = tmdbGet;
+      window.createShowCard = createShowCard;
 
       function refreshSearchResults() {
         console.log('🔄 refreshSearchResults called');
@@ -4423,6 +4099,12 @@
   }
 
   async function fetchProviders(type, id, region) {
+    // STEP 3.2d — Providers exist ONLY for movie/tv, never for person
+    const mt = (type || '').toLowerCase();
+    if (mt !== 'movie' && mt !== 'tv') {
+      return { results: {} }; // safe empty
+    }
+    
     const key = cacheKey(type, id, region);
     const cached = getCache(key);
     if (cached) return cached;
@@ -4531,6 +4213,12 @@
     }
 
     const type = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+    const mt = (type || '').toLowerCase();
+    if (mt !== 'movie' && mt !== 'tv') {
+      console.debug('📺 Providers: skipping for person', { type, id: item.id, name: item.name || item.title });
+      return;
+    }
+    
     console.debug('📺 Providers: fetching for', { type, id: item.id, name: item.name || item.title });
     const entry = await fetchProviders(type, item.id, REGION);
     if (!entry || entry.__empty) {
@@ -4634,6 +4322,12 @@
   }
 
   async function fetchExtras(type, id, lang) {
+    // STEP 3.2d — Videos exist ONLY for movie/tv, never for person
+    const mt = (type || '').toLowerCase();
+    if (mt !== 'movie' && mt !== 'tv') {
+      return { results: [] }; // safe empty
+    }
+    
     const ck = cacheKey(type, id, lang);
     const cached = getCache(ck);
     if (cached) return cached;
@@ -4712,6 +4406,12 @@
     if (!slot) return;
 
     const type = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+    const mt = (type || '').toLowerCase();
+    if (mt !== 'movie' && mt !== 'tv') {
+      console.debug('🎬 Extras: skipping for person', { type, id: item.id, name: item.name || item.title });
+      return;
+    }
+    
     const videos = await fetchExtras(type, item.id, LANG);
     if (!videos || videos.__empty) return;
 

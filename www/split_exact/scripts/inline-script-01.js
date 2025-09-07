@@ -116,11 +116,14 @@
             // Wait a moment for the UI to settle, then show the login modal
             setTimeout(() => {
               console.log('⏰ Timeout completed, attempting to show login modal');
-              if (typeof showSignInModal === 'function') {
-                console.log('✅ showSignInModal function available, calling it');
-                showSignInModal();
+              if (window.FlickletAppInstance && typeof window.FlickletAppInstance.showSignInModal === 'function') {
+                console.log('✅ FlickletAppInstance.showSignInModal function available, calling it');
+                window.FlickletAppInstance.showSignInModal();
+              } else if (window.FlickletApp && typeof window.FlickletApp.showSignInModal === 'function') {
+                console.log('✅ FlickletApp.showSignInModal function available, calling it');
+                window.FlickletApp.showSignInModal();
               } else {
-                console.error('❌ showSignInModal function not available');
+                console.error('❌ FlickletApp.showSignInModal function not available');
               }
             }, 1000); // Increased timeout to ensure functions are loaded
           } else if (hasBeenPrompted && !hasData) {
@@ -1345,10 +1348,12 @@
               } else {
                 // User is not signed in, show sign in modal
                 console.log('🔑 User not signed in, showing sign in modal');
-                if (typeof showSignInModal === 'function') {
-                  showSignInModal();
+                if (window.FlickletAppInstance && typeof window.FlickletAppInstance.showSignInModal === 'function') {
+                  window.FlickletAppInstance.showSignInModal();
+                } else if (window.FlickletApp && typeof window.FlickletApp.showSignInModal === 'function') {
+                  window.FlickletApp.showSignInModal();
                 } else {
-                  console.error('❌ showSignInModal function not available');
+                  console.error('❌ FlickletApp.showSignInModal function not available');
                 }
               }
             });

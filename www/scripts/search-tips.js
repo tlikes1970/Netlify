@@ -40,6 +40,8 @@
   function onDocClick(e){
     if (pop.hidden) return;
     if (e.target === trigger) return;
+    // Don't close if clicking on modal elements
+    if (e.target.closest('.modal-backdrop') || e.target.closest('.modal')) return;
     if (!pop.contains(e.target)) closePop();
   }
 
@@ -82,3 +84,4 @@
     }, 500);
   }
 })();
+

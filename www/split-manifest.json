@@ -1,11 +1,6 @@
 {
   "scripts": [
-    {
-      "file": "scripts/inline-script-01.js",
-      "attrs": {
-        "_raw": ""
-      }
-    },
+ 
     {
       "file": "scripts/inline-script-02.js",
       "attrs": {

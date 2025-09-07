@@ -766,21 +766,29 @@
       }
       function showNotification(msg, type = "info") {
         console.log(`🔔 Global showNotification called: "${msg}" (${type})`);
-        // Use the centralized notification system
-        if (window.FlickletApp && typeof window.FlickletApp.showNotification === 'function') {
-          console.log('✅ Using centralized notification system');
-          window.FlickletApp.showNotification(msg, type);
-        } else {
-          console.log('⚠️ Centralized system not available, using fallback');
-          // Fallback to old system if centralized system not available
-          const n = document.createElement("div");
-          n.className = `notification ${type}`;
-          n.textContent = msg;
-          const live = document.getElementById('liveRegion');
-          if (live) { live.textContent = msg; }
-          document.body.appendChild(n);
-          setTimeout(() => n.remove(), 2800);
-        }
+        // Avoid circular calls - create notification directly
+        const n = document.createElement("div");
+        n.className = `notification ${type}`;
+        n.textContent = msg;
+        n.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: ${type === 'error' ? '#ff4444' : type === 'success' ? '#44ff44' : '#4444ff'};
+          color: white;
+          padding: 12px 20px;
+          border-radius: 8px;
+          z-index: 100000;
+          font-family: system-ui, sans-serif;
+          font-size: 14px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          max-width: 300px;
+          word-wrap: break-word;
+        `;
+        const live = document.getElementById('liveRegion');
+        if (live) { live.textContent = msg; }
+        document.body.appendChild(n);
+        setTimeout(() => n.remove(), 3000);
       }
 
       function updateWelcomeText() {

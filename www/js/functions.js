@@ -96,6 +96,18 @@ window.updateUI = function updateUI() {
   updateTabContent(tab);
 };
 
+// STEP 3.2 — Rerender the active tab's content if it matches a given list
+function rerenderIfVisible(list) {
+  const current = window.FlickletApp?.currentTab;
+  if (current && current === list) {
+    if (typeof window.updateTabContent === 'function') {
+      window.updateTabContent(list);
+    } else if (typeof window.FlickletApp?.updateTabContent === 'function') {
+      window.FlickletApp.updateTabContent(list);
+    }
+  }
+}
+
 window.updateTabCounts = function updateTabCounts() {
   const counts = {
     watching: (appData.tv?.watching?.length || 0) + (appData.movies?.watching?.length || 0),
@@ -125,6 +137,13 @@ window.loadHomeContent = function loadHomeContent() {
 };
 
 // ---- Lists ----
+/**
+ * Process: Tab Content Loading with Unified Card Rendering
+ * Purpose: Loads and displays list items (watching, wishlist, watched) using consistent card rendering
+ * Data Source: appData.tv[listType] and appData.movies[listType] arrays, createShowCard function
+ * Update Path: Modify listType parameter handling, update createShowCard call if card structure changes
+ * Dependencies: createShowCard function, appData structure, container elements, moveItem and removeItemFromCurrentList functions
+ */
 window.loadListContent = function loadListContent(listType) {
   const container = document.getElementById(`${listType}List`);
   if (!container) return;
@@ -140,18 +159,32 @@ window.loadListContent = function loadListContent(listType) {
     return;
   }
 
-  container.innerHTML = allItems.map(item => `
-    <div class="list-item" data-id="${item.id}">
-      <div class="item-info">
-        <h4>${item.name || item.title}</h4>
-        <p>${item.overview || 'No description available'}</p>
-      </div>
-      <div class="item-actions">
-        <button onclick="moveItem(${item.id}, '${getNextList(listType)}')" class="btn secondary">Move</button>
-        <button onclick="removeItemFromCurrentList(${item.id})" class="btn danger">Remove</button>
+  // Clear container first
+  container.innerHTML = '';
+  
+  // Use createShowCard for consistent card rendering
+  allItems.forEach(item => {
+    if (typeof window.createShowCard === 'function') {
+      const card = window.createShowCard(item, false, listType);
+      container.appendChild(card);
+    } else {
+      // Fallback to simple list item if createShowCard is not available
+      const listItem = document.createElement('div');
+      listItem.className = 'list-item';
+      listItem.setAttribute('data-id', item.id);
+      listItem.innerHTML = `
+        <div class="item-info">
+          <h4>${item.name || item.title}</h4>
+          <p>${item.overview || 'No description available'}</p>
         </div>
-      </div>
-  `).join('');
+        <div class="item-actions">
+          <button onclick="moveItem(${item.id}, '${getNextList(listType)}')" class="btn secondary">Move</button>
+          <button onclick="removeItemFromCurrentList(${item.id})" class="btn danger">Remove</button>
+        </div>
+      `;
+      container.appendChild(listItem);
+    }
+  });
 };
 
 function getNextList(currentList) {
@@ -572,7 +605,9 @@ window.addToListFromCache = function addToListFromCache(id, list) {
   target.push(item);
   appData[mediaType][list] = target;
   saveAppData();
+  // Keep badges fresh and render list immediately if it's visible
   if (window.FlickletApp) window.FlickletApp.updateUI();
+  rerenderIfVisible(list);
   showNotification(`Added to ${list}.`, 'success');
 };
 
@@ -591,6 +626,8 @@ window.moveItem = function moveItem(id, dest) {
   appData[mediaType][dest].push(item);
   saveAppData();
   if (window.FlickletApp) window.FlickletApp.updateUI();
+  rerenderIfVisible(sourceList);
+  rerenderIfVisible(dest);
   showNotification(`Moved to ${dest}.`, 'success');
 };
 
@@ -608,6 +645,7 @@ window.removeItemFromCurrentList = function removeItemFromCurrentList(id) {
   srcArr.splice(idx, 1);
   saveAppData();
   if (window.FlickletApp) window.FlickletApp.updateUI();
+  rerenderIfVisible(sourceList);
   showNotification('Item removed.', 'success');
 };
 
@@ -827,6 +865,8 @@ window.loadFrontSpotlight = function loadFrontSpotlight() {
   const frontSpotlightList = document.getElementById('frontSpotlightList');
   
   if (!frontSpotlight || !frontSpotlightList) return;
+  
+  console.log('🌙 Loading front spotlight content');
   
   try {
     const appData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');

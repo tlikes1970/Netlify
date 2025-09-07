@@ -235,3 +235,28 @@ body.mardi {
   display: none;
 }
 
+/* Rating display styles for new card layout */
+.star-display {
+  color: #ddd;
+  font-size: 1.1rem;
+  transition: color 0.2s ease;
+}
+
+.star-display.active {
+  color: #ffd43b;
+}
+
+.like-display, .dislike-display {
+  font-size: 1.1rem;
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+}
+
+.like-display.active, .dislike-display.active {
+  opacity: 1;
+}
+
+.rating-info {
+  border: 1px solid var(--border);
+}
+

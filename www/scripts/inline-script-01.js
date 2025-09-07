@@ -258,7 +258,10 @@
         return merged;
       };
 
-      window.FlickletApp = {
+      // Only define FlickletApp if it doesn't already exist (new system takes precedence)
+      if (!window.FlickletApp) {
+        console.log('🚀 Creating FlickletApp object (fallback system)');
+        window.FlickletApp = {
         // Centralized state
         currentUser: null,
         currentTab: 'home',
@@ -288,14 +291,27 @@
         init() {
           console.log('🚀 Initializing Flicklet App...');
           
+          // Check if the new system is available - if so, don't initialize the old system
+          if (window.FlickletApp && window.FlickletApp !== this) {
+            console.log('🔄 New FlickletApp detected, skipping old system initialization');
+            return;
+          }
+          
+          // Check if this is a class-based FlickletApp (new system)
+          if (window.FlickletApp && typeof window.FlickletApp === 'function') {
+            console.log('🔄 Class-based FlickletApp detected, skipping object-based initialization');
+            return;
+          }
+          
           // Wait for DOM to be fully ready
+          console.log('⏰ Setting up setTimeout for DOM ready...');
           setTimeout(() => {
             console.log('⏰ DOM ready timeout completed, setting up app...');
             this.loadData();
             this.applyTheme();
             this.applyLanguage();
             this.applyMardiGras(); // Apply Mardi Gras state
-            this.initFirebase();
+            // initFirebase() called in FlickletApp.init() - no need to call again
             console.log('🔧 About to call setupEventListeners...');
             this.setupEventListeners();
             this.updateUI();
@@ -328,7 +344,28 @@
             // Run global initialization after centralized system is ready
             setTimeout(() => {
               console.log('🌍 Running global initialization after centralized system...');
-              this.runGlobalInitialization();
+              console.log('🌍 this.runGlobalInitialization type:', typeof this.runGlobalInitialization);
+              if (typeof this.runGlobalInitialization === 'function') {
+                this.runGlobalInitialization();
+              } else {
+                console.error('❌ runGlobalInitialization method not available');
+                // Fallback: set up search controls directly
+                console.log('🔍 Setting up search controls (fallback)...');
+                const searchBtn = document.getElementById("searchBtn");
+                if (searchBtn) {
+                  console.log('✅ Search button found (fallback), binding performSearch');
+                  searchBtn.onclick = () => {
+                    console.log('🔍 Search button clicked (fallback), calling performSearch');
+                    if (typeof window.performSearch === 'function') {
+                      window.performSearch();
+                    } else {
+                      console.error('❌ performSearch function not available');
+                    }
+                  };
+                } else {
+                  console.log('❌ Search button not found (fallback)');
+                }
+              }
             }, 500);
             
             console.log('✅ App initialized successfully');
@@ -380,11 +417,14 @@
             // Wait a moment for the UI to settle, then show the login modal
             setTimeout(() => {
               console.log('⏰ Timeout completed, attempting to show login modal');
-              if (typeof showSignInModal === 'function') {
-                console.log('✅ showSignInModal function available, calling it');
-                showSignInModal();
+              if (window.FlickletAppInstance && typeof window.FlickletAppInstance.showSignInModal === 'function') {
+                console.log('✅ FlickletAppInstance.showSignInModal function available, calling it');
+                window.FlickletAppInstance.showSignInModal();
+              } else if (window.FlickletApp && typeof window.FlickletApp.showSignInModal === 'function') {
+                console.log('✅ FlickletApp.showSignInModal function available, calling it');
+                window.FlickletApp.showSignInModal();
               } else {
-                console.error('❌ showSignInModal function not available');
+                console.error('❌ FlickletApp.showSignInModal function not available');
               }
             }, 1000); // Increased timeout to ensure functions are loaded
           } else if (hasBeenPrompted && !hasData) {
@@ -534,7 +574,16 @@
           const searchBtn = document.getElementById("searchBtn");
           if (searchBtn) {
             console.log('✅ Search button found, binding performSearch');
-            searchBtn.onclick = performSearch;
+            searchBtn.onclick = () => {
+              console.log('🔍 Search button clicked, calling performSearch');
+              console.log('🔍 Search input value:', document.getElementById("searchInput")?.value);
+              if (typeof window.performSearch === 'function') {
+                window.performSearch();
+              } else {
+                console.error('❌ performSearch function not available');
+                console.log('🔍 Available window functions:', Object.keys(window).filter(k => k.includes('search') || k.includes('Search')));
+              }
+            };
           } else {
             console.log('❌ Search button not found');
           }
@@ -542,7 +591,14 @@
           const clearSearchBtn = document.getElementById("clearSearchBtn");
           if (clearSearchBtn) {
             console.log('✅ Clear search button found, binding clearSearch');
-            clearSearchBtn.onclick = clearSearch;
+            clearSearchBtn.onclick = () => {
+              console.log('🧹 Clear search button clicked');
+              if (typeof window.clearSearch === 'function') {
+                window.clearSearch();
+              } else {
+                console.error('❌ clearSearch function not available');
+              }
+            };
           } else {
             console.log('❌ Clear search button not found');
           }
@@ -553,15 +609,40 @@
             searchInput.addEventListener("keydown", (e) => {
               if (e.key === "Enter") {
                 console.log('⌨️ Enter key pressed, calling performSearch');
-                performSearch?.();
+                if (typeof window.performSearch === 'function') {
+                  window.performSearch();
+                } else {
+                  console.error('❌ performSearch function not available');
+                }
               }
             });
           } else {
             console.log('❌ Search input not found');
           }
           
-          // Set up event delegation for move buttons and other card actions
-          console.log('🎯 Setting up event delegation for card actions...');
+          // STEP 3.2c — Attach this delegate ONCE and add de-dup guards
+          if (!window.__inline01ActionsBound) {
+            window.__inline01ActionsBound = true;
+            console.log('🎯 Setting up event delegation for card actions (inline-01)…');
+          } else {
+            console.log('↩︎ Delegate already bound — skipping rebind');
+            return;
+          }
+
+          // short-window dedupe for addFromCache: ignore second call within 600ms
+          const __recentAdds = new Map(); // key `${id}|${list}` -> ts
+          function __isDupAdd(id, list) {
+            const key = `${id}|${list}`;
+            const now = Date.now();
+            const last = __recentAdds.get(key) || 0;
+            __recentAdds.set(key, now);
+            // garbage collect occasionally
+            if (__recentAdds.size > 200) {
+              for (const [k, ts] of __recentAdds) if (now - ts > 2000) __recentAdds.delete(k);
+            }
+            return (now - last) < 600;
+          }
+
           document.addEventListener("click", (e) => {
             const btn = e.target.closest("[data-action]");
             if (!btn) {
@@ -576,6 +657,19 @@
             console.log(`🎯 Action detected: action=${action}, id=${id}, list=${list}, mediaType=${mediaType}`);
             
             if (action === "addFromCache") {
+              // Per-button re-entrancy guard
+              if (btn.dataset.busy === '1') { 
+                console.debug('⏸️ addFromCache ignored (busy)'); 
+                return; 
+              }
+              btn.dataset.busy = '1';
+              setTimeout(() => { btn.dataset.busy = '0'; }, 650);
+
+              // Short-window duplicate guard (same id+list)
+              if (__isDupAdd(String(id), String(list))) {
+                console.debug('⏭️ addFromCache duplicate suppressed');
+                return;
+              }
               console.log('➕ Calling addToListFromCache');
               addToListFromCache(id, list);
             } else if (action === "notInterested") {
@@ -590,8 +684,45 @@
               console.log('📝 Calling openNotesTagsModal');
               openNotesTagsModal(id);
             } else if (action === "remove") {
-              console.log('🗑️ Calling removeItemFromCurrentList');
-              removeItemFromCurrentList(id);
+              console.log('🗑️ Remove clicked — optimistic UI');
+              // Find the visual card and its list container
+              const card = btn.closest('.show-card,.list-card,.curated-card,.card');
+              const listId =
+                (btn.getAttribute('data-list') || btn.dataset.list) ||
+                (card && card.closest('#watchingList,#wishlistList,#watchedList')?.id) ||
+                window.FlickletApp?.currentTab || null;
+
+              // Optimistically remove the card from the DOM
+              let parentForRestore = null;
+              let nextSiblingForRestore = null;
+              if (card) {
+                parentForRestore = card.parentNode;
+                nextSiblingForRestore = card.nextSibling;
+                card.remove();
+              }
+
+              try {
+                // Update data store
+                removeItemFromCurrentList(id);
+                // Recount the badge if our helper exists
+                if (typeof window.updateCount === 'function' && listId) {
+                  const sel = listId.startsWith('#') ? listId : ('#' + listId);
+                  try { window.updateCount(sel); } catch (_) {}
+                }
+                // If the current tab is visible and you've got a renderer, trigger it to stay fresh
+                if (typeof window.updateTabContent === 'function' && listId) {
+                  try { window.updateTabContent(listId.replace('List','')); } catch (_) {}
+                } else if (typeof window.FlickletApp?.updateTabContent === 'function' && listId) {
+                  try { window.FlickletApp.updateTabContent(window.FlickletApp.currentTab); } catch (_) {}
+                }
+              } catch (e) {
+                console.error('Remove failed, restoring card', e);
+                // Put the card back if something failed
+                if (parentForRestore && card) {
+                  if (nextSiblingForRestore) parentForRestore.insertBefore(card, nextSiblingForRestore);
+                  else parentForRestore.appendChild(card);
+                }
+              }
             } else if (action === "rate") {
               console.log('⭐ Calling setRating');
               const rating = Number(btn.getAttribute("data-rating"));
@@ -675,117 +806,25 @@
         },
 
         changeLanguage(newLang) {
-          console.log(`🌍 Centralized changeLanguage called with: ${newLang}`);
+          console.log(`🌍 FlickletApp.changeLanguage delegating to LanguageManager: ${newLang}`);
           
-          // Update the centralized app data
-          if (this.appData?.settings) {
-            this.appData.settings.lang = newLang;
-          }
-          
-          // Apply translations
-          this.applyLanguage();
-          
-          // Handle the complex language change logic directly here
-          // Set a flag to prevent dropdown resets during language change
-          window.isChangingLanguage = true;
-          
-          // Update global app data if available
-          if (window.appData?.settings) {
-            window.appData.settings.lang = newLang;
-          }
-          if (appData?.settings) {
-            appData.settings.lang = newLang;
-          }
-          
-          // Ensure language dropdown options are preserved
-          const langToggle = document.getElementById("langToggle");
-          if (langToggle && langToggle.children.length < 2) {
-            langToggle.innerHTML = `
-              <option value="en">EN</option>
-              <option value="es">ES</option>
-            `;
-          }
-          
-          // Apply translations FIRST (before rehydration)
-          if (typeof applyTranslations === 'function') {
-            applyTranslations();
-          }
-          
-          // Show loading state for lists
-          const currentTab = document.querySelector(".tab.active")?.id?.replace("Tab", "");
-          if (currentTab && ["watching", "wishlist", "watched"].includes(currentTab)) {
-            const listContainer = document.getElementById(currentTab + "List");
-            if (listContainer) {
-              listContainer.innerHTML = `<div style="text-align: center; padding: 20px;">${t("loading")}...</div>`;
-            }
-          }
-          
-          // Try to rehydrate lists with localized TMDB data
-          if (typeof rehydrateListsForLocale === 'function') {
-            rehydrateListsForLocale(newLang).then(() => {
-              // Save and update UI after rehydration
-              if (typeof saveAppData === 'function') saveAppData();
-              if (typeof updateUI === 'function') updateUI();
-            }).catch(error => {
-              console.warn("Failed to rehydrate lists for locale:", error);
-              // Still save and update UI even if rehydration fails
-              if (typeof saveAppData === 'function') saveAppData();
-              if (typeof updateUI === 'function') updateUI();
-            });
+          // Delegate to centralized LanguageManager
+          if (window.LanguageManager) {
+            return window.LanguageManager.changeLanguage(newLang);
           } else {
-            // Fallback: just save and update UI
-            if (typeof saveAppData === 'function') saveAppData();
-            if (typeof updateUI === 'function') updateUI();
+            console.warn('🌍 LanguageManager not available, using fallback');
+            // Fallback to basic language change
+            if (this.appData?.settings) {
+              this.appData.settings.lang = newLang;
+            }
+            if (window.appData?.settings) {
+              window.appData.settings.lang = newLang;
+            }
+            this.applyLanguage();
+            if (typeof applyTranslations === 'function') {
+              applyTranslations(newLang);
+            }
           }
-          
-          // Force refresh of genre dropdown
-          setTimeout(() => {
-            if (typeof loadGenres === "function") {
-              loadGenres();
-            }
-          }, 200);
-          
-          // Show notification
-          const langName = newLang === "es" ? "Spanish" : "English";
-          this.showNotification(`Language changed to ${langName}`, "success");
-          
-          // Clear the flag after operations complete
-          setTimeout(() => {
-            window.isChangingLanguage = false;
-          }, 3000);
-          
-          // Final refresh of horoscope and quote
-          setTimeout(() => {
-            const hEl = document.getElementById("fakeFortune");
-            const qEl = document.getElementById("randomQuote");
-            if (hEl && typeof pickDailyHoroscope === 'function') {
-              hEl.textContent = pickDailyHoroscope();
-            }
-            if (qEl && typeof drawQuote === 'function') {
-              qEl.textContent = drawQuote();
-            }
-            
-            const fileInput = document.getElementById("importFile");
-            if (fileInput && typeof updateFileLabel === 'function') {
-              updateFileLabel(fileInput);
-            }
-            
-            // Clear search cache to force fresh results in new language
-            if (typeof window.searchItemCache !== 'undefined' && window.searchItemCache.clear) {
-              console.log('🗑️ Clearing search cache for language change');
-              console.log('📊 Cache size before clearing:', window.searchItemCache.size);
-              window.searchItemCache.clear();
-              console.log('📊 Cache size after clearing:', window.searchItemCache.size);
-            } else {
-              console.log('⚠️ searchItemCache not available globally');
-            }
-            
-            // Refresh search results if they're visible
-            if (typeof refreshSearchResults === 'function') {
-              console.log('🔄 Refreshing search results for language change');
-              refreshSearchResults();
-            }
-          }, 600);
         },
 
         applyMardiGras() {
@@ -1462,216 +1501,112 @@
           }
         },
 
-        handlePostLoginUsernameSetup(user) {
-          console.log('👤 Handling post-login username setup for user:', user.email);
-          
-          // Check if user already has a username in Firebase
-          if (typeof firebase !== 'undefined' && firebase.firestore) {
-            const db = firebase.firestore();
-            
-            // Add a small delay to ensure Firebase is fully synced
-            setTimeout(() => {
-              console.log('🔍 DEBUG: About to read Firebase document for username setup');
-              db.collection("users").doc(user.uid).get().then((doc) => {
-                console.log('🔍 Firebase user document exists:', doc.exists);
-                if (doc.exists) {
-                  const userData = doc.data();
-                  console.log('🔍 DEBUG: Raw Firebase document for username setup:', userData);
-                  console.log('🔍 DEBUG: Profile object for username setup:', userData.profile);
-                  console.log('🔍 DEBUG: Profile.displayName for username setup:', userData.profile?.displayName);
-                  
-                  console.log('🔍 Firebase user data:', userData);
-                  console.log('🔍 Firebase user data keys:', Object.keys(userData));
-                  console.log('🔍 Firebase settings object:', userData?.settings);
-                  const existingUsername = userData?.settings?.displayName;
-                  const rootDisplayName = userData?.displayName;
-                  console.log('🔍 Existing username from Firebase settings:', existingUsername);
-                  console.log('🔍 Root displayName from Firebase:', rootDisplayName);
-                  
-                  // Check if user already has a CUSTOM username (only from settings.displayName, not Google's displayName)
-                  const localUsername = (this.appData?.settings?.displayName || "").trim();
-                  // Only use settings.displayName (user's custom choice), ignore Google's displayName
-                  const finalUsername = existingUsername && existingUsername.trim() ? existingUsername : localUsername;
-                  console.log('🔧 DEBUG: finalUsername decision:', { existingUsername, localUsername, finalUsername });
-                  
-                  if (finalUsername) {
-                    // User already has a username - use it
-                    const source = existingUsername ? 'Firebase settings' : 'local';
-                    console.log('✅ Found existing username:', finalUsername, '(source:', source, ')');
-                    
-                    // Update local appData with the username
-                    if (this.appData && this.appData.settings) {
-                      this.appData.settings.displayName = finalUsername;
-                    }
-                    
-                    // Populate the username input field
-                    const displayNameInput = document.getElementById('displayNameInput');
-                    if (displayNameInput) {
-                      displayNameInput.value = finalUsername;
-                      console.log('✅ Populated username input field with:', finalUsername);
-                    }
-                    
-                    // Update the left-side container with the username
-                    this.updateLeftSideUsername();
-                    
-                  } else {
-                    // No custom username exists - show username prompt modal
-                    console.log('❌ No username found, showing username prompt modal');
-                    
-                    // Show a modal to prompt for username
-                    this.showUsernamePromptModal(user.email);
-                  }
-                } else {
-                  // No user document exists - show username prompt modal
-                  console.log('❌ No user document found, showing username prompt modal');
-                  
-                  // Show a modal to prompt for username
-                  this.showUsernamePromptModal(user.email);
-                }
-              }).catch((error) => {
-                console.error('❌ Error checking Firebase for username:', error);
-                // Fallback - show username prompt modal
-                this.showUsernamePromptModal(user.email);
-              });
-            }, 500); // 500ms delay to ensure Firebase is synced
-          } else {
-            // Firebase not available - show username prompt modal
-            console.log('ℹ️ Firebase not available, showing username prompt modal');
-            this.showUsernamePromptModal(user.email);
+        
+        // UI Helper Functions
+        setAccountButtonLabel(displayName) {
+          const accountBtn = document.getElementById('accountBtn');
+          if (accountBtn) {
+            const email = this.currentUser?.email || 'Account';
+            const emailPrefix = email.split('@')[0];
+            // Use displayName if provided, otherwise fall back to email prefix
+            const finalName = displayName || emailPrefix || 'User';
+            accountBtn.innerHTML = `👤 ${finalName}`;
+            accountBtn.title = `Signed in as ${email}. Click to sign out.`;
+            console.log('🔍 Account button updated:', { displayName, finalName, email });
           }
         },
-
-        showUsernamePromptModal(userEmail) {
-          console.log('📝 Showing username prompt modal for:', userEmail);
-          
-          // Create and show a modal asking for username
-          const modalHTML = `
-            <div class="modal-backdrop" id="usernamePromptModal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
-              <div class="modal" style="background: var(--card); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
-                <h3 style="margin: 0 0 16px 0; color: var(--text);">Welcome! 👋</h3>
-                <p style="margin: 0 0 20px 0; color: var(--text); line-height: 1.5;">What would you like us to call you?</p>
-                <input 
-                  type="text" 
-                  id="newUsernameInput" 
-                  class="search-input" 
-                  placeholder="Enter your name"
-                  style="width: 100%; margin: 15px 0;"
-                />
-                <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                  <button class="btn secondary" onclick="closeUsernamePromptModal()" style="min-width: 80px;">Skip</button>
-                  <button class="btn primary" onclick="saveUsernameFromPrompt()" style="min-width: 80px;">Save</button>
+        
+        setLeftSnark(username) {
+          const leftSnark = document.getElementById('leftSnark');
+          if (leftSnark && username) {
+            leftSnark.textContent = this.makeSnark(username);
+          }
+        },
+        
+        makeSnark(username) {
+          const snarks = [
+            `${username}, try not to binge 12 seasons tonight`,
+            `${username}, your watchlist is judging you`,
+            `${username}, remember to eat between episodes`,
+            `${username}, sleep is also important`,
+            `${username}, your couch has a permanent dent`
+          ];
+          return snarks[Math.floor(Math.random() * snarks.length)];
+        },
+        
+        escapeHtml(text) {
+          const div = document.createElement('div');
+          div.textContent = text;
+          return div.innerHTML;
+        },
+        
+        async promptForUsernameOnce(suggest='') {
+          return new Promise((resolve) => {
+            const body = this.openModal('What should we call you?', `
+              <div style="min-width:280px">
+                <label for="usernameInput" style="font-weight:600">Your handle</label>
+                <input id="usernameInput" type="text" autocomplete="nickname" value="${suggest.replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]))}" style="display:block;width:100%;padding:10px;border:1px solid var(--color-border);border-radius:8px;margin-top:8px">
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+                  <button id="uCancel" class="btn secondary" type="button">Skip</button>
+                  <button id="uSave" class="btn primary" type="button">Save</button>
                 </div>
               </div>
-            </div>
-          `;
-          
-          // Insert the modal
-          document.body.insertAdjacentHTML('beforeend', modalHTML);
-          console.log('✅ Modal HTML inserted into DOM');
-          
-          // Check if modal was created
-          const modal = document.getElementById('usernamePromptModal');
-          if (modal) {
-            console.log('✅ Modal element found in DOM');
-            console.log('🔍 Modal display style:', modal.style.display);
-            console.log('🔍 Modal visibility:', modal.style.visibility);
-            console.log('🔍 Modal z-index:', modal.style.zIndex);
-          } else {
-            console.log('❌ Modal element NOT found in DOM');
-          }
-          
-          // Focus the input field
-          setTimeout(() => {
-            const input = document.getElementById('newUsernameInput');
-            if (input) {
-              input.focus();
-              input.select();
-              console.log('✅ Input field focused and selected');
-            } else {
-              console.log('❌ Input field not found');
-            }
-          }, 100);
-          
-          // Add click-outside-to-close functionality
-          setTimeout(() => {
-            const modal = document.getElementById('usernamePromptModal');
-            if (modal) {
-              modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                  console.log('🖱️ Clicked outside modal, closing');
-                  closeUsernamePromptModal();
-                }
-              });
-              console.log('✅ Click-outside-to-close functionality added');
-            }
-          }, 200);
+            `, 'username-modal');
+
+            // tag so it's distinct from login modal
+            const wrap = document.querySelector('.modal-backdrop[data-testid="username-modal"]');
+            if (wrap) wrap.setAttribute('data-modal','username');
+
+            const input  = document.getElementById('usernameInput');
+            const save   = document.getElementById('uSave');
+            const cancel = document.getElementById('uCancel');
+            const done = (v) => { document.querySelectorAll('.modal-backdrop[data-modal="username"]').forEach(n=>n.remove()); resolve(v); };
+
+            cancel?.addEventListener('click', () => done(null));
+            save?.addEventListener('click', () => done((input?.value || '').trim()));
+            input?.addEventListener('keydown', e => { if (e.key === 'Enter') save.click(); });
+            setTimeout(()=>input?.focus(), 0);
+          });
         },
 
-        initFirebase() {
-          console.log('🔥 Initializing Firebase...');
-          
-          // Wait for Firebase to be initialized by the old system
-          const waitForFirebase = () => {
-            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-              console.log('✅ Firebase available, setting up auth listener');
-              firebase.auth().onAuthStateChanged(async (user) => {
-                console.log('👤 Firebase auth state changed:', user ? `User: ${user.email}` : 'No user');
-                this.currentUser = user;
-                // Also update the global currentUser for compatibility with existing code
-                if (typeof window !== 'undefined') {
-                  window.currentUser = user;
-                }
-                this.updateAccountButton();
-                if (user) {
-                  console.log('✅ User signed in, updating UI');
-                  this.showNotification('Signed in successfully', 'success');
-                  
-                  // Run migration once per user
-                  await this.runMigration();
-                  
-                  // Run cleanup for stray field
-                  await this.cleanupStrayField();
-                  
-                  // Load user data from Firebase
-                  if (typeof loadUserDataFromCloud === 'function') {
-                    console.log('🔄 Loading user data from Firebase...');
-                    await loadUserDataFromCloud(user.uid);
-                    console.log('✅ User data loaded from Firebase');
-                    
-                    // Refresh the UI after data is loaded
-                    if (typeof updateUI === 'function') {
-                      console.log('🔄 Refreshing UI after data load');
-                      updateUI();
-                    }
-                    
-                    // Refresh the current tab content
-                    setTimeout(() => {
-                      if (typeof switchToTab === 'function') {
-                        console.log('🔄 Refreshing current tab after data load');
-                        switchToTab(this.currentTab);
-                      }
-                    }, 200);
-                  }
-                  
-                  // Handle username setup after login
-                  this.handlePostLoginUsernameSetup(user);
-                  
-                  // Update username display after login
-                  setTimeout(() => {
-                    this.updateLeftSideUsername();
-                  }, 100);
-                } else {
-                  console.log('❌ No user signed in');
-                }
-              });
-            } else {
-              console.log('⏳ Waiting for Firebase to be initialized...');
-              setTimeout(waitForFirebase, 100);
-            }
-          };
-          
-          waitForFirebase();
+        clearExistingUsernameModals() {
+          // Clear any existing username prompt modals
+          const existingModals = document.querySelectorAll('.modal-backdrop[data-modal="username-prompt-modal"]');
+          existingModals.forEach(modal => {
+            console.log('🧹 Clearing existing username prompt modal');
+            modal.remove();
+          });
         },
+
+        // Firestore settings helpers
+        settingsDoc(uid) {
+          return firebase.firestore().doc(`users/${uid}/meta/settings`);
+        },
+        
+        async readSettings(uid) {
+          const snap = await this.settingsDoc(uid).get();
+          return snap.exists ? snap.data() : {};
+        },
+        
+        async writeSettings(uid, data) {
+          await this.settingsDoc(uid).set(data, { merge: true });
+        },
+
+        // Migration to clean up legacy fields
+        async migrateLegacyNameFields(uid) {
+          const s = await this.readSettings(uid);
+          if (s && s.displayName && !s.username) {
+            await this.writeSettings(uid, { username: s.displayName });
+          }
+          // Optional: remove displayName field
+          try { 
+            await this.settingsDoc(uid).update({ displayName: firebase.firestore.FieldValue.delete() }); 
+          } catch (e) {
+            console.log('No displayName field to remove:', e.message);
+          }
+        },
+
+        // initFirebase() removed - handled by FlickletApp.initFirebase()
 
         // Migration function to clean existing Firebase documents
         async runMigration() {
@@ -1920,12 +1855,15 @@
               } else {
                 // User is not signed in, show sign in modal
                 console.log('🔑 User not signed in, showing sign in modal');
-                console.log('🔍 showSignInModal function type:', typeof showSignInModal);
-                if (typeof showSignInModal === 'function') {
-                  console.log('✅ Calling showSignInModal');
-                  showSignInModal();
+                console.log('🔍 FlickletApp instance available:', !!window.FlickletAppInstance);
+                if (window.FlickletAppInstance && typeof window.FlickletAppInstance.showSignInModal === 'function') {
+                  console.log('✅ Calling FlickletAppInstance.showSignInModal');
+                  window.FlickletAppInstance.showSignInModal();
+                } else if (window.FlickletApp && typeof window.FlickletApp.showSignInModal === 'function') {
+                  console.log('✅ Calling FlickletApp.showSignInModal');
+                  window.FlickletApp.showSignInModal();
                 } else {
-                  console.error('❌ showSignInModal function not available');
+                  console.error('❌ FlickletApp.showSignInModal function not available');
                 }
               }
             });
@@ -2091,7 +2029,7 @@
                   modal.remove();
                   
                   // Use the existing showSignInModal system but modify it for sign out
-                  if (typeof showSignInModal === 'function') {
+                  if (window.FlickletAppInstance && typeof window.FlickletAppInstance.showSignInModal === 'function') {
                     // Create a simple confirmation dialog
                     const confirmed = confirm(`Sign out as ${displayName}?\n\nEmail: ${email}`);
                     if (confirmed) {
@@ -2438,6 +2376,7 @@
           return translations[lang] && translations[lang][key] ? translations[lang][key] : (translations.en[key] || key);
         }
       };
+      } // End of if (!window.FlickletApp) check
 
       // FlickletApp will be initialized after all functions are defined
 
@@ -2605,18 +2544,33 @@
   const qsa = (s, r=document) => Array.from(r.querySelectorAll(s));
 
   function initShareModalSanity() {
-    const opener = qs('#shareListBtn');
+    const opener = qs('#shareOpenBtn');
     const modal  = qs('#shareSelectionModal');          // expected .modal-backdrop
     const dialog = modal ? qs('.modal', modal) : null;  // Fixed: use .modal instead of .modal-dialog
 
     if (!opener || !modal || !dialog) {
-      console.warn('🛡️ ShareModalSanity: missing elements, retrying...', { hasOpener: !!opener, hasModal: !!modal, hasDialog: !!dialog });
-      // Retry after a short delay
+      console.warn('🛡️ ShareModalSanity: missing elements, retrying...', { 
+        hasOpener: !!opener, 
+        hasModal: !!modal, 
+        hasDialog: !!dialog,
+        openerId: opener?.id,
+        modalId: modal?.id,
+        dialogClass: dialog?.className
+      });
+      // Add a maximum retry limit to prevent infinite loops
+      if (window.__shareModalRetryCount >= 10) {
+        console.error('🛡️ ShareModalSanity: Max retries reached, giving up');
+        return;
+      }
+      window.__shareModalRetryCount = (window.__shareModalRetryCount || 0) + 1;
       setTimeout(initShareModalSanity, 100);
       return;
     }
 
     console.log('🛡️ ShareModalSanity: elements found, initializing...');
+    
+    // Reset retry counter on success
+    window.__shareModalRetryCount = 0;
 
     // A11y attributes (idempotent)
     modal.setAttribute('role', 'dialog');
@@ -2730,8 +2684,8 @@
     console.log('🛡️ ShareModalSanity initialized');
   }
 
-  // Start initialization
-  initShareModalSanity();
+  // Start initialization - DISABLED to prevent console spam
+  // initShareModalSanity();
 })();
 
 // === MP-CondensedModeHardening (guarded) ===
@@ -3515,7 +3469,15 @@
   const tryInjectAdvancedSettings = () => {
     if (injectAdvancedSettings()) return; // Success
     
-    // Retry strategies
+    // Use onSettingsReady helper if available, otherwise fall back to retry strategies
+    if (window.App && typeof window.App.onSettingsReady === 'function') {
+      window.App.onSettingsReady(() => {
+        injectAdvancedSettings();
+      });
+      return;
+    }
+    
+    // Fallback retry strategies
     setTimeout(() => {
       if (injectAdvancedSettings()) return;
       
@@ -3714,7 +3676,15 @@
   const tryInjectThemePacksSettings = () => {
     if (injectThemePacksSettings()) return; // Success
     
-    // Retry strategies
+    // Use onSettingsReady helper if available, otherwise fall back to retry strategies
+    if (window.App && typeof window.App.onSettingsReady === 'function') {
+      window.App.onSettingsReady(() => {
+        injectThemePacksSettings();
+      });
+      return;
+    }
+    
+    // Fallback retry strategies
     setTimeout(() => {
       if (injectThemePacksSettings()) return;
       
@@ -4124,6 +4094,7 @@
       const card = document.createElement('div');
       card.className = 'card';
       card.id = 'playlistRowsSettings';
+      card.style.display = 'none'; // Hide old curated rows setting
       const rc = rowsCount();
       const dense = isDense();
       card.innerHTML = `
@@ -4417,6 +4388,11 @@
     console.log('⚙️ Found tabs:', tabs.length);
     
     if(!tabs.length || !settingsSection) {
+      // Use onSettingsReady helper if available, otherwise fall back to retry
+      if (window.App && typeof window.App.onSettingsReady === 'function') {
+        window.App.onSettingsReady(initTabs);
+        return;
+      }
       console.log('⚙️ Not ready yet, retrying in 200ms...');
       setTimeout(initTabs, 200);
       return;
@@ -4497,6 +4473,11 @@
     });
     
     if (!exportBtn || !importBtn || !importInput || !resetBtn) {
+      // Use onSettingsReady helper if available, otherwise fall back to retry
+      if (window.App && typeof window.App.onSettingsReady === 'function') {
+        window.App.onSettingsReady(initDataSection);
+        return;
+      }
       console.log('⚙️ Data section elements not ready, retrying in 200ms...');
       setTimeout(initDataSection, 200);
       return;

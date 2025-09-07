@@ -105,6 +105,11 @@ html, body { overflow-x:hidden; }
     line-height: var(--meta-line-desktop);
     margin: 0 0 4px;
   }
+  
+  /* Ensure proper spacing between cards on desktop */
+  .show-card + .show-card {
+    margin-top: 16px;
+  }
 }
 
 /* Tab Container */
@@ -3055,6 +3060,261 @@ body[data-theme="forest"] {
   display: block; /* Show only the active section */
 }
 
+/* ===== NEW SETTINGS LAYOUT SYSTEM ===== */
+
+/* Settings Container */
+.settings-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* Settings Sections */
+.settings-section {
+  display: none;
+  padding: 24px 0;
+  min-height: 400px;
+}
+
+.settings-section.active {
+  display: block;
+}
+
+/* Settings Subsections */
+.settings-subsection {
+  margin-bottom: 32px;
+  padding: 0;
+}
+
+.settings-subsection:last-child {
+  margin-bottom: 0;
+}
+
+/* Settings Titles */
+.settings-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+}
+
+.settings-subtitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+}
+
+/* Settings Descriptions */
+.settings-description {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #666);
+  margin: 0 0 16px 0;
+  line-height: 1.4;
+}
+
+/* Settings Control Groups */
+.settings-control-group {
+  margin-bottom: 20px;
+}
+
+.settings-control-group:last-child {
+  margin-bottom: 0;
+}
+
+/* Settings Labels */
+.settings-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+/* Settings Input Groups */
+.settings-input-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Settings Inputs */
+.settings-input {
+  padding: 8px 12px;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: var(--bg, #fff);
+  color: var(--text);
+  transition: all 0.2s ease;
+  min-width: 200px;
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: var(--primary, #e91e63);
+  box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
+}
+
+.settings-input-number {
+  width: 80px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.settings-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: var(--bg, #fff);
+  color: var(--text);
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  transition: all 0.2s ease;
+}
+
+.settings-textarea:focus {
+  outline: none;
+  border-color: var(--primary, #e91e63);
+  box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
+}
+
+/* Settings Checkboxes */
+.settings-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+.settings-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary, #e91e63);
+  cursor: pointer;
+}
+
+.settings-checkbox-text {
+  color: var(--text);
+  user-select: none;
+}
+
+/* Settings Button Groups */
+.settings-button-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+/* Settings Hints and Status */
+.settings-hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #888);
+  margin: 8px 0 0 0;
+  line-height: 1.3;
+}
+
+.settings-status {
+  font-size: 0.8rem;
+  color: var(--success, #51cf66);
+  font-weight: 500;
+}
+
+/* Settings Stats */
+.settings-stats {
+  background: var(--card, #f7f7f9);
+  border: 1px solid var(--border, #dedee3);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 8px;
+}
+
+/* Settings Pro Features */
+.settings-pro-features {
+  background: var(--card, #f7f7f9);
+  border: 1px solid var(--border, #dedee3);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 8px;
+}
+
+/* Settings Form */
+.settings-form {
+  margin-top: 16px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .settings-container {
+    padding: 0 16px;
+  }
+  
+  .settings-section {
+    padding: 16px 0;
+  }
+  
+  .settings-subsection {
+    margin-bottom: 24px;
+  }
+  
+  .settings-title {
+    font-size: 1.3rem;
+  }
+  
+  .settings-input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .settings-input {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .settings-button-group {
+    flex-direction: column;
+  }
+  
+  .settings-button-group .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-tabs {
+    padding: 8px 16px;
+    gap: 8px;
+  }
+  
+  .settings-tabs button {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+  
+  .settings-container {
+    padding: 0 12px;
+  }
+  
+  .settings-section {
+    padding: 12px 0;
+  }
+  
+  .settings-subsection {
+    margin-bottom: 20px;
+  }
+}
+
 /* === MP-Playlists v2 (curated rows, PRO) === */
 .playlist-section[data-mp="v2"] {
   margin: 14px 0 8px;
@@ -3478,36 +3738,65 @@ body.has-banner {
 .curated-row::-webkit-scrollbar { height: 8px; }
 .curated-row::-webkit-scrollbar-thumb { background: rgba(0,0,0,.2); border-radius: 8px; }
 
-.curated-card {
+.curated-card { 
+  background: var(--color-surface); 
+  border: 1px solid var(--color-border); 
+  border-radius: 12px; 
+  padding: 10px; 
+  width: 180px;
+  flex-shrink: 0;
   scroll-snap-align: start;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,.06);
-  display: grid; grid-template-rows: auto auto;
-  min-height: 100%;
 }
-
-.curated-card .poster {
-  aspect-ratio: 2/3;
-  width: 100%;
-  object-fit: cover;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-  background: var(--color-surface-2, #111);
+.curated-card + .curated-card { margin-left: 10px; }
+.curated-card .poster { 
+  width: 100%; 
+  aspect-ratio: 2/3; 
+  border-radius: 10px; 
+  overflow: hidden; 
+  background: #f2f2f2; 
 }
-.curated-card .meta {
-  padding: 8px; display: grid; gap: 4px;
+.curated-card .poster img { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: cover; 
+  display: block; 
+}
+.curated-card .poster.placeholder { 
+  background: linear-gradient(90deg,#eee,#f7f7f7,#eee); 
 }
 .curated-card .title {
-  font-size: .95rem; line-height: 1.2;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  font-size: .95rem; 
+  line-height: 1.2; 
+  margin: 8px 0 4px 0;
+  display: -webkit-box; 
+  -webkit-line-clamp: 2; 
+  -webkit-box-orient: vertical; 
+  overflow: hidden;
+}
+.card-meta { 
+  margin-top: 6px; 
+  font-size: .92rem; 
+  opacity: .9; 
+}
+.curated-card .stars {
+  color: #fbbf24;
+  margin-right: 4px;
+}
+.curated-card .votes {
+  color: var(--color-muted);
+  font-size: .85rem;
 }
 .curated-card .actions {
-  display: flex; gap: 8px; margin-top: 6px;
+  display: flex; 
+  gap: 6px; 
+  margin-top: 8px;
+  flex-wrap: wrap;
 }
 .curated-card .btn {
-  padding: 6px 8px; min-height: 34px;
+  padding: 4px 8px; 
+  min-height: 28px;
+  font-size: .85rem;
 }
 
 /* Desktop widths */

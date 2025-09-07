@@ -1,34 +1,11 @@
-// Firebase configuration
-const firebaseConfig = {
-  // Add your Firebase config here
-  // For now, using placeholder values
-  apiKey: "your-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "your-app-id"
-};
 
-// Initialize Firebase
-if (typeof firebase !== 'undefined') {
-  firebase.initializeApp(firebaseConfig);
-  
-  // Make Firebase available globally
-  window.db = firebase.firestore();
-  window.auth = firebase.auth();
-  
-  // Initialize Firebase function for app.js
-  window.initializeFirebase = function() {
-    console.log('🔥 Firebase initialized successfully');
-    return true;
-  };
-} else {
-  console.warn('⚠️ Firebase not loaded - authentication features will be disabled');
-  
-  // Provide fallback function
-  window.initializeFirebase = function() {
-    console.log('⚠️ Firebase not available - using fallback');
-    return false;
-  };
-}
+// Classic (compat) config — NO imports here
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM",
+  authDomain: "flicklet-71dff.firebaseapp.com",
+  projectId: "flicklet-71dff",
+  storageBucket: "flicklet-71dff.firebasestorage.app",
+  messagingSenderId: "1034923556763",
+  appId: "1:1034923556763:web:bba5489cd1d9412c9c2b3e",
+  measurementId: "G-YL4TJ4FHJC"
+};

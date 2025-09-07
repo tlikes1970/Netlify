@@ -39,6 +39,42 @@ const I18N = {
     home: "Home",
     discover: "Discover",
     settings: "Settings",
+    general: "General",
+    general_description: "Manage your account and basic preferences",
+    display_name: "Display Name",
+    my_statistics: "My Statistics",
+    not_interested_management: "Not Interested Management",
+    not_interested_description: "Manage shows and movies you've marked as not interested",
+    manage_not_interested_list: "Manage Not Interested List",
+    notifications: "Notifications",
+    notifications_description: "Choose which types of notifications you'd like to receive",
+    episode_alerts: "Upcoming episode alerts",
+    weekly_discover: "Weekly discover picks",
+    monthly_digest: "Monthly stats digest",
+    layout_settings: "Layout Settings",
+    layout_description: "Customize how your lists and cards are displayed",
+    condensed_list_view: "Condensed list view (more items per screen)",
+    show_posters: "Show movie/TV show posters",
+    dark_mode: "Dark mode (auto-detect system preference)",
+    home_page_lists: "Home Page TV/Movie Lists",
+    data_management: "Data Management",
+    data_description: "Export, import, or reset your data",
+    export_json: "Export JSON",
+    import_json: "Import JSON",
+    extra_trivia_pro: "Extra Trivia (Pro)",
+    export_csv_pro: "Export CSV (Pro)",
+    reset_all_data: "Reset All Data",
+    data_hint: "Export saves flicklet-export.json to your device's Downloads/Files. Import accepts a valid Flicklet export.",
+    pro_features: "Pro Features",
+    pro_description: "Unlock advanced features and premium content with Flicklet Pro",
+    preview_pro_features: "Preview Pro Features",
+    pro_hint: "Toggle Pro features on/off to see what's available",
+    pro_features_include: "Pro Features Include:",
+    share_your_thoughts: "Share Your Thoughts",
+    feedback_working: "Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!",
+    your_message: "Your Message",
+    feedback_placeholder: "Share your thoughts, feedback, quotes, or just vent! We're listening.",
+    share_it: "Share It!",
     no_items: "No items.",
     no_description: "No description.",
     already_in_list: "Already in {list}.",
@@ -92,7 +128,38 @@ const I18N = {
     loading: "Loading...",
     failed_to_load: "Failed to load",
     not_enough_signals: "Not enough signals yet. Like or rate a few items first.",
-    recommendations_failed: "Failed to load recommendations."
+    recommendations_failed: "Failed to load recommendations.",
+    // New strings from recent updates
+    auth_system_unavailable: "Authentication system is not available. Please refresh the page.",
+    signed_in_successfully: "Signed in successfully",
+    error_loading_user_data: "Error loading user data. Please try again.",
+    auth_system_error: "Authentication system error. Please refresh the page.",
+    firestore_not_available: "Firestore not available",
+    no_displayname_field: "No displayName field to remove",
+    what_should_we_call_you: "What should we call you?",
+    your_handle: "Your handle",
+    enter_key: "Enter",
+    account: "Account",
+    user: "User",
+    sign_in_account_title: "Sign in / Account",
+    signed_in_as: "Signed in as",
+    click_to_sign_out: "Sign out here",
+    unknown_data_action: "Unknown data-action",
+    auth_system_loading: "Authentication system is loading. Please try again in a moment.",
+    sign_in_to_sync: "Sign in to sync",
+    sign_in_subtitle_text: "Sign in to back up your lists and sync across devices.",
+    google_signin_unavailable: "Google sign-in is not available. Please refresh the page.",
+    apple_signin_unavailable: "Apple sign-in is not available. Please refresh the page.",
+    email_signin_unavailable: "Email sign-in is not available. Please refresh the page.",
+    unable_to_show_signin: "Unable to show sign-in modal. Please refresh the page.",
+    signin_system_not_ready: "Sign-in system is not ready. Please refresh the page.",
+    unknown: "Unknown",
+    sign_out_confirmation: "Sign out as",
+    email_label: "Email",
+    signed_out_successfully: "Signed out successfully",
+    sign_out_failed: "Sign out failed",
+    not_interested: "Not Interested",
+    language_changed_to: "Language changed to {lang}"
   },
   es: {
     go_dark: "🌙 Modo Oscuro",
@@ -132,6 +199,42 @@ const I18N = {
     home: "Inicio",
     discover: "Descubrir",
     settings: "Configuración",
+    general: "General",
+    general_description: "Gestiona tu cuenta y preferencias básicas",
+    display_name: "Nombre para Mostrar",
+    my_statistics: "Mis Estadísticas",
+    not_interested_management: "Gestión de No Interesado",
+    not_interested_description: "Gestiona programas y películas que has marcado como no interesado",
+    manage_not_interested_list: "Gestionar Lista de No Interesado",
+    notifications: "Notificaciones",
+    notifications_description: "Elige qué tipos de notificaciones quieres recibir",
+    episode_alerts: "Alertas de episodios próximos",
+    weekly_discover: "Descubrimientos semanales",
+    monthly_digest: "Resumen mensual de estadísticas",
+    layout_settings: "Configuración de Diseño",
+    layout_description: "Personaliza cómo se muestran tus listas y tarjetas",
+    condensed_list_view: "Vista de lista condensada (más elementos por pantalla)",
+    show_posters: "Mostrar carteles de películas/programas de TV",
+    dark_mode: "Modo oscuro (detectar automáticamente preferencia del sistema)",
+    home_page_lists: "Listas de TV/Películas de la Página Principal",
+    data_management: "Gestión de Datos",
+    data_description: "Exportar, importar o restablecer tus datos",
+    export_json: "Exportar JSON",
+    import_json: "Importar JSON",
+    extra_trivia_pro: "Trivia Extra (Pro)",
+    export_csv_pro: "Exportar CSV (Pro)",
+    reset_all_data: "Restablecer Todos los Datos",
+    data_hint: "La exportación guarda flicklet-export.json en la carpeta Descargas/Archivos de tu dispositivo. La importación acepta una exportación válida de Flicklet.",
+    pro_features: "Características Pro",
+    pro_description: "Desbloquea características avanzadas y contenido premium con Flicklet Pro",
+    preview_pro_features: "Vista Previa de Características Pro",
+    pro_hint: "Activa/desactiva las características Pro para ver qué está disponible",
+    pro_features_include: "Las Características Pro Incluyen:",
+    share_your_thoughts: "Comparte Tus Pensamientos",
+    feedback_working: "¡Comparte tus pensamientos! Danos retroalimentación de la app, cuéntanos qué funciona (o no), comparte una cita para nuestra rotación, haz una confesión, o simplemente desahógate. ¡Estamos escuchando!",
+    your_message: "Tu Mensaje",
+    feedback_placeholder: "¡Comparte tus pensamientos, retroalimentación, citas, o simplemente desahógate! Estamos escuchando.",
+    share_it: "¡Compártelo!",
     no_items: "No hay elementos.",
     no_description: "Sin descripción.",
     already_in_list: "Ya está en {list}.",
@@ -185,7 +288,38 @@ const I18N = {
     loading: "Cargando...",
     failed_to_load: "Error al cargar",
     not_enough_signals: "Aún no hay suficientes señales. Dale like o califica algunos elementos primero.",
-    recommendations_failed: "Error al cargar recomendaciones."
+    recommendations_failed: "Error al cargar recomendaciones.",
+    // New strings from recent updates
+    auth_system_unavailable: "El sistema de autenticación no está disponible. Por favor, actualiza la página.",
+    signed_in_successfully: "Inicio de sesión exitoso",
+    error_loading_user_data: "Error al cargar datos del usuario. Por favor, inténtalo de nuevo.",
+    auth_system_error: "Error del sistema de autenticación. Por favor, actualiza la página.",
+    firestore_not_available: "Firestore no disponible",
+    no_displayname_field: "No hay campo displayName que eliminar",
+    what_should_we_call_you: "¿Cómo deberíamos llamarte?",
+    your_handle: "Tu nombre de usuario",
+    enter_key: "Entrar",
+    account: "Cuenta",
+    user: "Usuario",
+    sign_in_account_title: "Iniciar sesión / Cuenta",
+    signed_in_as: "Conectado como",
+    click_to_sign_out: "Cerrar sesión aquí",
+    unknown_data_action: "Acción de datos desconocida",
+    auth_system_loading: "El sistema de autenticación se está cargando. Por favor, inténtalo en un momento.",
+    sign_in_to_sync: "Iniciar sesión para sincronizar",
+    sign_in_subtitle_text: "Inicia sesión para respaldar tus listas y sincronizar entre dispositivos.",
+    google_signin_unavailable: "El inicio de sesión con Google no está disponible. Por favor, actualiza la página.",
+    apple_signin_unavailable: "El inicio de sesión con Apple no está disponible. Por favor, actualiza la página.",
+    email_signin_unavailable: "El inicio de sesión por email no está disponible. Por favor, actualiza la página.",
+    unable_to_show_signin: "No se puede mostrar el modal de inicio de sesión. Por favor, actualiza la página.",
+    signin_system_not_ready: "El sistema de inicio de sesión no está listo. Por favor, actualiza la página.",
+    unknown: "Desconocido",
+    sign_out_confirmation: "Cerrar sesión como",
+    email_label: "Email",
+    signed_out_successfully: "Sesión cerrada exitosamente",
+    sign_out_failed: "Error al cerrar sesión",
+    not_interested: "No me interesa",
+    language_changed_to: "Idioma cambiado a {lang}"
   }
 };
 
@@ -195,16 +329,47 @@ function t(key, lang = 'en') {
   return translations[key] || key;
 }
 
-// Apply translations to the page
+// Comprehensive translation application
 function applyTranslations(lang = 'en') {
-  const elements = document.querySelectorAll('[data-i18n]');
-  elements.forEach(el => {
+  console.log('🌍 Applying translations for language:', lang);
+  
+  // Apply to data-i18n elements
+  document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     const translation = t(key, lang);
-    if (translation) {
+    if (translation && translation !== key) {
       el.textContent = translation;
     }
   });
+  
+  // Apply to placeholder elements
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    const translation = t(key, lang);
+    if (translation && translation !== key) {
+      el.placeholder = translation;
+    }
+  });
+  
+  // Apply to title attributes
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    const translation = t(key, lang);
+    if (translation && translation !== key) {
+      el.title = translation;
+    }
+  });
+  
+  // Apply to aria-label attributes
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+    const key = el.getAttribute('data-i18n-aria-label');
+    const translation = t(key, lang);
+    if (translation && translation !== key) {
+      el.setAttribute('aria-label', translation);
+    }
+  });
+  
+  console.log('✅ Translations applied successfully');
 }
 
 // Make functions globally accessible

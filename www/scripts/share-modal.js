@@ -48,6 +48,10 @@
   }
 
   function open(p){
+    // STEP 2.1 (optional) — Prevent accidental double-open even if someone calls twice
+    if (window.__shareModalOpened) { console.debug('Share modal already opened — skipping'); return; }
+    window.__shareModalOpened = true;
+    
     if (!canOpen()) return;
     setPayload(p);
     prevActive = document.activeElement;

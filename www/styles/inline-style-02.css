@@ -4,6 +4,14 @@
 /* Guard: never create a scroll container on sticky */
 .top-search, header.header { overflow: visible !important; }
 
+/* StickySearch ancestor guard: never apply transform/contain/overflow to #appRoot */
+#appRoot.main-container {
+  overflow: visible !important;
+  transform: none !important;
+  contain: none !important;
+}
+
+
 /* Reset tab flex growth from earlier styles */
 .tab-container .tab { 
   flex: 1 !important; 
