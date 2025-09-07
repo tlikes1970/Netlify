@@ -128,7 +128,11 @@
           
   
           if (action === "addFromCache") {
-            addToListFromCache(id, list);
+            // Neuter this legacy path unless explicitly enabled
+            if (window.FLICKLET_ADD_OWNER === 'legacy') {
+              addToListFromCache(id, list);
+            }
+            return;
           } else if (action === "move") {
             moveItem(id, list);
           } else if (action === "notes") {

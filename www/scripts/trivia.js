@@ -132,7 +132,9 @@
   function renderStats(){
     const streak = Number(localStorage.getItem(KEYS.streak) || 0);
     const last = localStorage.getItem(KEYS.last);
-    statsEl.textContent = `Streak: ${streak}${last === today ? ' • Completed today' : ''}`;
+    const streakText = t('flickword_streak') || 'Streak';
+    const completedText = t('trivia_completed_today') || ' • Completed today';
+    statsEl.textContent = `${streakText}: ${streak}${last === today ? completedText : ''}`;
   }
 
   function renderQuestion(q, isLocked){
@@ -162,7 +164,7 @@
     });
 
     if (isLocked){
-      fEl.textContent = 'Come back tomorrow for a new question.';
+      fEl.textContent = t('trivia_come_back_tomorrow') || 'Come back tomorrow for a new question.';
     }
   }
 
@@ -179,12 +181,16 @@
 
     const isCorrect = idx === correctIdx;
     chosen.classList.add(isCorrect ? 'correct' : 'wrong');
-    fEl.textContent = isCorrect ? 'Correct! ✔' : `Nope — correct answer is "${q.choices[correctIdx]}".`;
+    const correctText = t('trivia_correct') || 'Correct!';
+    const incorrectText = t('trivia_incorrect_answer') || 'Nope — correct answer is';
+    fEl.textContent = isCorrect ? `${correctText} ✔` : `${incorrectText} "${q.choices[correctIdx]}".`;
 
     // Notify (optional)
     if (window.Notify){
-      if (isCorrect) Notify.success('Trivia: +1 streak');
-      else Notify.info('Trivia: try again tomorrow');
+      const streakUpText = t('trivia_streak_up') || 'Trivia: +1 streak';
+      const tryAgainText = t('trivia_try_again_tomorrow') || 'Trivia: try again tomorrow';
+      if (isCorrect) Notify.success(streakUpText);
+      else Notify.info(tryAgainText);
     }
 
     // Update streak/lock
@@ -192,13 +198,13 @@
       bumpStreak();
       localStorage.setItem(KEYS.lock, today);
       nBtn.hidden = false;
-      nBtn.textContent = 'OK';
+      nBtn.textContent = t('trivia_ok') || 'OK';
       nBtn.onclick = () => { /* placeholder for future: next module */ };
     } else {
       // wrong answer still locks for today
       localStorage.setItem(KEYS.lock, today);
       nBtn.hidden = false;
-      nBtn.textContent = 'OK';
+      nBtn.textContent = t('trivia_ok') || 'OK';
       nBtn.onclick = () => {};
     }
     renderStats();

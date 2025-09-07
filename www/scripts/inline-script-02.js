@@ -66,15 +66,16 @@
 
         // Neuter any Add attempts here to prevent double-calls and duplicate "Already in list" toasts.
         if (action === 'add' || action === 'addToList' || action === 'addFromCache') {
-          // If inline-01 isn't present for some reason, fall back (dev-only)
-          if (!window.__inline01ActionsBound) {
-            console.debug('[inline-02] Fallback add (inline-01 not bound)');
-            try {
-              if (typeof window.addToListFromCache === 'function') return void window.addToListFromCache(id, list);
-              if (typeof window.addToList === 'function')         return void window.addToList(id, list);
-            } catch (e) { console.warn('[inline-02] Fallback add failed:', e); }
+          // Neuter this legacy path unless explicitly enabled
+          if (window.FLICKLET_ADD_OWNER !== 'legacy') {
+            // Let the centralized add function handle it - don't call it again
+            return;
           }
-          // Normal case: do nothing; inline-01 handled the click.
+          const listName = el.getAttribute('data-list') || el.dataset.list;
+          const id = el.getAttribute('data-id') || el.dataset.id;
+          if (typeof window.addToListFromCache === 'function') {
+            window.addToListFromCache(id, listName);
+          }
           return;
         }
       }, { capture: true });
@@ -351,7 +352,7 @@
             el.textContent = newText;
           } else {
             // Keep the original "Flicklet" title
-            el.textContent = window.I18N.t("app_title");
+            el.textContent = t("app_title");
           }
           */
 
@@ -608,10 +609,10 @@
           // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
           if (typeof updateUI === "function") updateUI();
           
-          showNotification(window.I18N.t("cloud_sync_ok"), "success");
+          showNotification(t("cloud_sync_ok"), "success");
         } catch (e) {
           console.warn("load cloud failed", e);
-          showNotification(window.I18N.t("cloud_load_failed"), "warning");
+          showNotification(t("cloud_load_failed"), "warning");
         }
       }
 
@@ -634,7 +635,7 @@
 
           applyTranslations?.();
           // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
-          updateUI?.();
+          // updateUI?.(); // DISABLED - causes full page refresh on every rating
 
           if (!currentUser) return Promise.resolve();
           try {
@@ -651,7 +652,7 @@
             return Promise.resolve();
           } catch (error) {
             console.error("cloud sync failed", error);
-            showNotification(window.I18N.t("cloud_sync_failed"), "warning");
+            showNotification(t("cloud_sync_failed"), "warning");
             return Promise.resolve();
           }
         } catch (e) {
@@ -705,7 +706,7 @@
           const signInBtn = document.createElement("button");
           signInBtn.type = "button";
           signInBtn.className = "btn secondary";
-          signInBtn.textContent = "Sign In / Create Account";
+          signInBtn.textContent = t("sign_in_create_account") || "Sign In / Create Account";
           signInBtn.style.marginBottom = "12px";
           signInBtn.style.fontSize = "14px";
           signInBtn.style.padding = "12px 18px";
@@ -724,7 +725,7 @@
 
             try {
               signInBtn.disabled = true;
-              signInBtn.textContent = "Signing in...";
+              signInBtn.textContent = t("signing_in") || "Signing in...";
               
               // Use enhanced auth helper if available
               if (window.authHelpers && window.authHelpers.loginWithEmail) {
@@ -747,7 +748,7 @@
                 resolve(result);
               } catch (createError) {
                 signInBtn.disabled = false;
-                signInBtn.textContent = "Sign In / Create Account";
+                signInBtn.textContent = t("sign_in_create_account") || "Sign In / Create Account";
                 showNotification(createError.message || "Failed to sign in or create account", "error");
                 reject(createError);
               }
@@ -1179,7 +1180,7 @@
 
         const saveBtn = document.createElement("button");
         saveBtn.className = "btn success";
-        saveBtn.textContent = "Save";
+        saveBtn.textContent = t("save") || "Save";
         saveBtn.onclick = () => {
           const v = (document.getElementById("onboardName").value || "").trim();
           if (!v) {
@@ -1191,10 +1192,10 @@
                 err = document.createElement('div');
                 err.id = 'onboardError';
                 err.className = 'form-error';
-                err.textContent = 'Please enter a display name.';
+                err.textContent = t('please_enter_display_name') || 'Please enter a display name.';
                 el.setAttribute('aria-describedby','onboardError');
                 el.insertAdjacentElement('afterend', err);
-              } else { err.textContent = 'Please enter a display name.'; }
+              } else { err.textContent = t('please_enter_display_name') || 'Please enter a display name.'; }
             }
             return;
           }
@@ -1394,18 +1395,33 @@
       }
 
               async function loadGenres() {
+        console.log('🎬 loadGenres() called');
         try {
+          console.log('🎬 Calling tmdbGet for genre/tv/list...');
           const data = await tmdbGet("genre/tv/list", "", true);
+          console.log('🎬 TMDB response:', data);
           
           const sel = document.getElementById("genreFilter");
-          if (!sel) return;
+          if (!sel) {
+            console.error('🎬 Genre filter element not found!');
+            return;
+          }
+          console.log('🎬 Genre filter element found, clearing...');
           sel.innerHTML = "";
           const all = document.createElement("option");
           all.value = "";
-          all.textContent = window.I18N.t("all_genres");
+          // Get current language for "All Genres" text
+          const currentLang = (window.LanguageManager?.getCurrentLanguage?.()) || 
+                             (window.appData?.settings?.lang) || 
+                             (appData?.settings?.lang) || 
+                             'en';
+          console.log('🎬 Current language:', currentLang);
+          all.textContent = t("all_genres", currentLang);
           sel.appendChild(all);
+          console.log('🎬 Added "All Genres" option:', all.textContent);
           
-          (data.genres || []).forEach((g) => {
+          console.log('🎬 Processing', (data.genres || []).length, 'genres...');
+          (data.genres || []).forEach((g, index) => {
             const opt = document.createElement("option");
             opt.value = String(g.id);
             // Try to translate the genre name, fallback to original if no translation
@@ -1418,11 +1434,20 @@
             if (genreKey === "war_&_politics") genreKey = "war_politics";
             if (genreKey === "talk_show") genreKey = "talk_show";
             
-            const translation = t(genreKey);
+            // Get current language from language manager or fallback to appData
+            const currentLang = (window.LanguageManager?.getCurrentLanguage?.()) || 
+                               (window.appData?.settings?.lang) || 
+                               (appData?.settings?.lang) || 
+                               'en';
+            const translation = t(genreKey, currentLang);
 
             opt.textContent = translation || g.name;
             sel.appendChild(opt);
+            if (index < 5) { // Log first 5 genres for debugging
+              console.log(`🎬 Added genre ${index + 1}: ${g.name} -> ${genreKey} -> "${opt.textContent}"`);
+            }
           });
+          console.log('🎬 Total genres added:', sel.children.length);
           
         } catch (e) {
           console.error("loadGenres error:", e);
@@ -2582,6 +2607,12 @@
       }
       
       function showRemoveConfirmationModal(itemTitle, onConfirm) {
+        // Guard against modal stacking
+        if (document.querySelector('[data-testid="remove-confirmation-modal"]')) {
+          console.log('⚠️ Remove confirmation modal already exists, not creating another');
+          return;
+        }
+        
         const modalHTML = `
           <div class="modal-content">
             <h3>🗑️ Remove Item</h3>
@@ -2600,9 +2631,13 @@
       }
       
       function closeRemoveConfirmationModal() {
-        const modal = document.querySelector('.modal-backdrop');
-        if (modal) {
-          modal.remove();
+        // Target specifically the remove confirmation modal by finding the backdrop that contains the modal with the specific testId
+        const modalContent = document.querySelector('[data-testid="remove-confirmation-modal"]');
+        if (modalContent) {
+          const modal = modalContent.closest('.modal-backdrop');
+          if (modal) {
+            modal.remove();
+          }
         }
         window._removeConfirmationCallback = null;
       }
@@ -2894,9 +2929,9 @@
           const likeStatus = item.likeStatus || "none";
           const userRating = item.userRating || 0;
           
-          // Create rating display (non-interactive, just shows current rating)
+          // Create interactive star rating buttons
           const stars = [1,2,3,4,5].map((n) =>
-            `<span class="star-display ${n <= userRating ? "active" : ""}" aria-label="${t("rate_out_of_5").replace("{n}", n)}">${n <= userRating ? "★" : "☆"}</span>`
+            `<button class="star-btn ${n <= userRating ? "active" : ""}" data-action="rate" data-rating="${n}" data-id="${item.id}" aria-label="${t("rate_out_of_5").replace("{n}", n)}" aria-pressed="${n <= userRating}">${n <= userRating ? "★" : "☆"}</button>`
           ).join("");
           
           actions = `
@@ -2913,8 +2948,8 @@
             <span>${t("your_rating")}:</span>
             <div class="star-rating">${stars}</div>
             <div class="like-dislike" style="margin-left:auto;">
-              <span class="like-display ${likeStatus === "like" ? "active" : ""}" aria-label="${t("like")}">👍</span>
-              <span class="dislike-display ${likeStatus === "dislike" ? "active" : ""}" aria-label="${t("dislike")}">👎</span>
+              <button class="like-btn ${likeStatus === "like" ? "active" : ""}" data-action="like" data-id="${item.id}" aria-label="${t("like")}">👍</button>
+              <button class="dislike-btn ${likeStatus === "dislike" ? "active" : ""}" data-action="dislike" data-id="${item.id}" aria-label="${t("dislike")}">👎</button>
             </div>
           </div>
           ${mediaType === "tv" ? getSeriesPill(item) : ""}
@@ -2953,32 +2988,7 @@
           ].join("");
         }
 
-        // Add direct click handlers to star rating buttons (only for search mode)
-        if (isSearch) {
-          const starButtons = card.querySelectorAll(".star-btn");
-          starButtons.forEach(starBtn => {
-            starBtn.addEventListener("click", (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const rating = Number(starBtn.getAttribute("data-rating"));
-              const id = Number(starBtn.getAttribute("data-id"));
-              setRating(id, rating);
-              
-              // Update the visual state of all stars in this card
-              const allStars = card.querySelectorAll(".star-btn");
-              allStars.forEach((star, index) => {
-                const starRating = index + 1;
-                if (starRating <= rating) {
-                  star.classList.add("active");
-                  star.setAttribute("aria-pressed", "true");
-                } else {
-                  star.classList.remove("active");
-                  star.setAttribute("aria-pressed", "false");
-                }
-              });
-            });
-          });
-        }
+        // Star rating and like/dislike buttons are handled by delegated event listeners in inline-script-03.js
 
         ensureTvDetails(item, card);
         
@@ -3121,20 +3131,138 @@
         }
       }
       function setRating(id, rating) {
-        const it = findItem(id);
+        console.log('⭐ setRating called:', { id, rating });
+        
+        // First try to find the item in user's lists
+        let it = findItem(id);
+        console.log('⭐ findItem result:', it);
+        
+        // If not found in lists, check if it's a cached search item
+        if (!it && window.searchItemCache) {
+          it = window.searchItemCache.get(Number(id));
+          console.log('⭐ searchItemCache result:', it);
+        }
+        
         if (!it) {
+          console.warn('Item not found for rating:', id);
           return;
         }
+        
         it.userRating = rating;
+        console.log('⭐ Updated userRating:', it.userRating);
+        
+        // If it's a cached search item, also store the rating in a global ratings object
+        if (window.searchItemCache && window.searchItemCache.has(Number(id))) {
+          if (!window.appData.ratings) {
+            window.appData.ratings = {};
+          }
+          window.appData.ratings[id] = rating;
+        }
+        
+        // Save data but don't refresh entire UI
         saveAppData?.();
-        updateUI?.();
+        
+        // Update only the specific card's visual state
+        updateCardRating(id, rating);
+        
+        // Show success notification
+        showNotification?.(`Rated ${it.name || it.title || 'item'} ${rating}/5 stars`, 'success');
+      }
+      
+      function updateCardRating(id, rating) {
+        // Find all cards with this ID and update their star display
+        const cards = document.querySelectorAll(`[data-id="${id}"]`);
+        cards.forEach(card => {
+          const starButtons = card.querySelectorAll('.star-btn[data-action="rate"]');
+          starButtons.forEach((star, index) => {
+            const starRating = index + 1;
+            if (starRating <= rating) {
+              star.classList.add('active');
+              star.setAttribute('aria-pressed', 'true');
+              star.textContent = '★';
+            } else {
+              star.classList.remove('active');
+              star.setAttribute('aria-pressed', 'false');
+              star.textContent = '☆';
+            }
+          });
+        });
       }
       function setLikeStatus(id, status) {
         const it = findItem(id);
         if (!it) return;
-        it.likeStatus = status;
-        saveAppData?.();
-        updateUI?.();
+        
+        console.log('👍 setLikeStatus DEBUG:', { id, status, currentLikeStatus: it.likeStatus });
+        
+        // Initialize likeStatus if it doesn't exist
+        if (it.likeStatus === undefined) {
+          it.likeStatus = null;
+          console.log('👍 Initialized likeStatus to null');
+        }
+        
+        // Toggle logic: if clicking the same status, remove it
+        if (it.likeStatus === status) {
+          it.likeStatus = null; // Remove the status
+          console.log('👍 Toggling OFF - setting to null');
+          saveAppData?.();
+          updateCardLikeStatus(id, null);
+          showNotification?.(`Removed ${status} from ${it.name || it.title || 'item'}`, 'success');
+        } else {
+          it.likeStatus = status;
+          console.log('👍 Toggling ON - setting to:', status);
+          saveAppData?.();
+          updateCardLikeStatus(id, status);
+          showNotification?.(`${status === 'like' ? 'Liked' : 'Disliked'} ${it.name || it.title || 'item'}`, 'success');
+        }
+        
+        console.log('👍 Final likeStatus:', it.likeStatus);
+      }
+      
+      function updateCardLikeStatus(id, status) {
+        console.log('👍 updateCardLikeStatus DEBUG:', { id, status });
+        
+        // Find all cards with this ID and update their like/dislike display
+        const cards = document.querySelectorAll(`[data-id="${id}"]`);
+        console.log('👍 Found cards:', cards.length);
+        
+        let updatedCount = 0;
+        cards.forEach((card, index) => {
+          const likeBtn = card.querySelector('.like-btn[data-action="like"]');
+          const dislikeBtn = card.querySelector('.dislike-btn[data-action="dislike"]');
+          
+          console.log(`👍 Card ${index}:`, { likeBtn: !!likeBtn, dislikeBtn: !!dislikeBtn });
+          
+          // Only update cards that actually have like/dislike buttons
+          if (likeBtn || dislikeBtn) {
+            updatedCount++;
+            
+            if (likeBtn) {
+              if (status === 'like') {
+                likeBtn.classList.add('active');
+                likeBtn.setAttribute('aria-pressed', 'true');
+                console.log('👍 Set like button to ACTIVE');
+              } else {
+                likeBtn.classList.remove('active');
+                likeBtn.setAttribute('aria-pressed', 'false');
+                console.log('👍 Set like button to INACTIVE');
+              }
+            }
+            
+            if (dislikeBtn) {
+              if (status === 'dislike') {
+                dislikeBtn.classList.add('active');
+                dislikeBtn.setAttribute('aria-pressed', 'true');
+                console.log('👍 Set dislike button to ACTIVE');
+              } else {
+                dislikeBtn.classList.remove('active');
+                dislikeBtn.setAttribute('aria-pressed', 'false');
+                console.log('👍 Set dislike button to INACTIVE');
+              }
+            }
+          }
+        });
+        
+        console.log(`👍 Updated ${updatedCount} cards with like/dislike buttons`);
       }
       
       function markAsNotInterested(id, mediaType) {
@@ -3430,6 +3558,12 @@
             console.log('❌ loadSettingsContent function not found');
           }
           
+          // Refresh curated rows setting to show correct value
+          if (typeof window.refreshCuratedRowsSetting === 'function') {
+            console.log('🔧 Refreshing curated rows setting');
+            window.refreshCuratedRowsSetting();
+          }
+          
           // Render stats and Pro features
           window.renderStatsCard?.();
           window.renderProFeaturesList?.();
@@ -3597,6 +3731,122 @@
       window.addToListFromCache = addToListFromCache; // used by inline handlers
 
       /* ---------- SEARCH HELPERS ---------- */
+      
+      /**
+       * Process: Advanced Search Query Parsing
+       * Purpose: Parses advanced search syntax like "genre:horror", "year:2023", "status:watching"
+       * Data Source: User search input string
+       * Update Path: Modify search parameters and filters based on parsed query
+       * Dependencies: Genre mapping, user data, search filters
+       */
+      function parseAdvancedSearch(query) {
+        console.log('🔍 Parsing advanced search query:', query);
+        
+        const result = {
+          baseQuery: query,
+          filters: {},
+          searchType: 'multi' // default to multi search
+        };
+        
+        // Genre mapping (from TMDB API)
+        const genreMap = {
+          'action': 28, 'adventure': 12, 'animation': 16, 'comedy': 35, 'crime': 80,
+          'documentary': 99, 'drama': 18, 'family': 10751, 'fantasy': 14, 'history': 36,
+          'horror': 27, 'music': 10402, 'mystery': 9648, 'romance': 10749, 'sci-fi': 878,
+          'science_fiction': 878, 'tv_movie': 10770, 'thriller': 53, 'war': 10752, 'western': 37
+        };
+        
+        // Parse different search operators
+        const patterns = [
+          // Genre filter: genre:horror, genre:sci-fi
+          { regex: /genre:(\w+(?:[-_]\w+)*)/gi, handler: (match, genre) => {
+            const genreKey = genre.toLowerCase().replace(/-/g, '_');
+            const genreId = genreMap[genreKey];
+            if (genreId) {
+              result.filters.genre = genreId;
+              console.log(`🎬 Genre filter: ${genre} -> ${genreId}`);
+            } else {
+              console.warn(`⚠️ Unknown genre: ${genre}`);
+            }
+          }},
+          
+          // Year filter: year:2023, year:2020-2023
+          { regex: /year:(\d{4}(?:-\d{4})?)/gi, handler: (match, year) => {
+            if (year.includes('-')) {
+              const [start, end] = year.split('-').map(Number);
+              result.filters.yearRange = { start, end };
+              console.log(`📅 Year range: ${start}-${end}`);
+            } else {
+              result.filters.year = parseInt(year);
+              console.log(`📅 Year: ${year}`);
+            }
+          }},
+          
+          // Media type: is:movie, is:show, is:tv
+          { regex: /is:(movie|show|tv)/gi, handler: (match, type) => {
+            result.searchType = type === 'show' || type === 'tv' ? 'tv' : 'movie';
+            console.log(`🎭 Media type: ${type}`);
+          }},
+          
+          // Status filter: status:watching, status:watched, status:wishlist
+          { regex: /status:(watching|watched|wishlist)/gi, handler: (match, status) => {
+            result.filters.status = status;
+            console.log(`📋 Status: ${status}`);
+          }},
+          
+          // Rating filter: rating:≥4, rating:>3, rating:5
+          { regex: /rating:([≥>]?)(\d)/gi, handler: (match, operator, rating) => {
+            result.filters.rating = {
+              value: parseInt(rating),
+              operator: operator || '='
+            };
+            console.log(`⭐ Rating: ${operator}${rating}`);
+          }},
+          
+          // Exact phrase: "exact phrase"
+          { regex: /"([^"]+)"/g, handler: (match, phrase) => {
+            result.filters.exactPhrase = phrase;
+            console.log(`💬 Exact phrase: "${phrase}"`);
+          }},
+          
+          // Exclude spoilers: !spoiler
+          { regex: /!spoiler/gi, handler: () => {
+            result.filters.excludeSpoilers = true;
+            console.log(`🚫 Exclude spoilers`);
+          }},
+          
+          // Trending: #trending
+          { regex: /#trending/gi, handler: () => {
+            result.filters.trending = true;
+            console.log(`🔥 Trending content`);
+          }}
+        ];
+        
+        // Apply all patterns
+        patterns.forEach(({ regex, handler }) => {
+          let match;
+          while ((match = regex.exec(query)) !== null) {
+            handler(match, ...match.slice(1));
+          }
+        });
+        
+        // Remove all operators from base query
+        result.baseQuery = query
+          .replace(/genre:\w+(?:[-_]\w+)*/gi, '')
+          .replace(/year:\d{4}(?:-\d{4})?/gi, '')
+          .replace(/is:(movie|show|tv)/gi, '')
+          .replace(/status:(watching|watched|wishlist)/gi, '')
+          .replace(/rating:[≥>]?\d/gi, '')
+          .replace(/"([^"]+)"/g, '')
+          .replace(/!spoiler/gi, '')
+          .replace(/#trending/gi, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        
+        console.log('🔍 Parsed search result:', result);
+        return result;
+      }
+      
       /**
        * Process: Search Execution and Results Display
        * Purpose: Executes user search query, calls TMDB API, and displays results while hiding main page content
@@ -3629,6 +3879,10 @@
             return;
           }
 
+          // Parse advanced search syntax
+          const parsedQuery = parseAdvancedSearch(q);
+          console.log('🔍 Parsed query:', parsedQuery);
+
           // Hide all main page elements when searching
           const homeSections = [
             'curatedSections',
@@ -3650,6 +3904,32 @@
             }
           });
 
+          // Hide tab content sections during search (keep tab bar visible)
+          const tabSections = ['homeSection', 'watchingSection', 'wishlistSection', 'watchedSection', 'discoverSection'];
+          tabSections.forEach(sectionId => {
+            const section = document.getElementById(sectionId);
+            if (section) {
+              section.style.display = 'none';
+              console.log(`🙈 Hiding tab section ${sectionId} during search`);
+            }
+          });
+
+          // Set search state flag
+          if (window.FlickletApp) {
+            window.FlickletApp.isSearching = true;
+          }
+
+          // Show all tabs when searching (hide current tab behavior disabled during search)
+          const tabIds = ['home','watching','wishlist','watched','discover','settings'];
+          tabIds.forEach(name => {
+            const btn = document.getElementById(`${name}Tab`);
+            if (btn) {
+              btn.classList.remove('hidden');
+              btn.classList.remove('active');
+              console.log(`🔍 Search mode: ${name}Tab visible`);
+            }
+          });
+
           out.style.display = "";
           // Show skeletons while searching
           window.Skeletons?.list("searchResults", 6);
@@ -3661,7 +3941,43 @@
             return;
           }
 
-          console.log('🔍 Calling tmdbGet with query:', q);
+          // Determine search endpoint and query
+          const searchEndpoint = parsedQuery.searchType === 'multi' ? 'search/multi' : 
+                                parsedQuery.searchType === 'movie' ? 'search/movie' : 'search/tv';
+          
+          // If baseQuery is empty after parsing, use a generic search term for genre-only searches
+          let searchQuery = parsedQuery.baseQuery;
+          console.log('🔍 Search query logic:', { 
+            baseQuery: parsedQuery.baseQuery, 
+            originalQ: q, 
+            searchQuery, 
+            hasGenreFilter: !!parsedQuery.filters.genre,
+            genreId: parsedQuery.filters.genre
+          });
+          
+          if (!searchQuery && parsedQuery.filters.genre) {
+            // For genre-only searches, use a broad search term
+            // Find the genre name from the ID
+            const genreMap = {
+              28: 'action', 12: 'adventure', 16: 'animation', 35: 'comedy', 80: 'crime',
+              99: 'documentary', 18: 'drama', 10751: 'family', 14: 'fantasy', 36: 'history',
+              27: 'horror', 10402: 'music', 9648: 'mystery', 10749: 'romance', 878: 'sci-fi',
+              10770: 'tv_movie', 53: 'thriller', 10752: 'war', 37: 'western'
+            };
+            const genreName = genreMap[parsedQuery.filters.genre] || 'movie';
+            searchQuery = genreName;
+            console.log('🔍 Using genre name as search term:', genreName);
+          } else if (!searchQuery) {
+            // Fallback to original query if no other search term
+            searchQuery = q;
+            console.log('🔍 Using original query as fallback:', q);
+          }
+          
+          console.log('🔍 Calling tmdbGet with:', { 
+            endpoint: searchEndpoint, 
+            query: searchQuery,
+            filters: parsedQuery.filters 
+          });
           
           // Debug language before API call
           const currentLang = (window.appData?.settings?.lang) || 
@@ -3676,12 +3992,75 @@
           });
           
           const data = await tmdbGet(
-            "search/multi",
-            `&query=${encodeURIComponent(q)}`
+            searchEndpoint,
+            `&query=${encodeURIComponent(searchQuery)}`
           );
           console.log('🔍 TMDB response:', data);
           const results = (data?.results || []).filter(
-            (r) => !genre || (r.genre_ids || []).includes(Number(genre))
+            (r) => {
+              // Filter out people (only show movies and TV shows)
+              if (r.media_type === 'person') {
+                return false;
+              }
+              
+              // Apply genre filter (from dropdown or advanced search)
+              const genreFilter = parsedQuery.filters.genre || genre;
+              if (genreFilter && !(r.genre_ids || []).includes(Number(genreFilter))) {
+                return false;
+              }
+              
+              // Apply year filter
+              if (parsedQuery.filters.year) {
+                const releaseYear = new Date(r.release_date || r.first_air_date || '').getFullYear();
+                if (releaseYear !== parsedQuery.filters.year) {
+                  return false;
+                }
+              }
+              
+              // Apply year range filter
+              if (parsedQuery.filters.yearRange) {
+                const releaseYear = new Date(r.release_date || r.first_air_date || '').getFullYear();
+                const { start, end } = parsedQuery.filters.yearRange;
+                if (releaseYear < start || releaseYear > end) {
+                  return false;
+                }
+              }
+              
+              // Apply media type filter
+              if (parsedQuery.searchType !== 'multi') {
+                const expectedType = parsedQuery.searchType === 'movie' ? 'movie' : 'tv';
+                if (r.media_type !== expectedType) {
+                  return false;
+                }
+              }
+              
+              // Apply status filter (requires user data)
+              if (parsedQuery.filters.status) {
+                const itemId = r.id;
+                const userData = window.appData?.userData || {};
+                const listKey = parsedQuery.filters.status === 'watching' ? 'watching' :
+                              parsedQuery.filters.status === 'watched' ? 'watched' : 'wishlist';
+                const userList = userData[listKey] || [];
+                if (!userList.some(item => item.id === itemId)) {
+                  return false;
+                }
+              }
+              
+              // Apply rating filter (requires user data)
+              if (parsedQuery.filters.rating) {
+                const itemId = r.id;
+                const userData = window.appData?.userData || {};
+                const userRating = userData.ratings?.[itemId];
+                if (!userRating) return false;
+                
+                const { value, operator } = parsedQuery.filters.rating;
+                if (operator === '≥' && userRating < value) return false;
+                if (operator === '>' && userRating <= value) return false;
+                if (operator === '=' && userRating !== value) return false;
+              }
+              
+              return true;
+            }
           );
 
           if (!results.length) {
@@ -3699,6 +4078,20 @@
             cacheSearchItem(it);
             out.appendChild(createShowCard(it, true)); // true => search-mode actions
           });
+
+          // Add "end of list" message after search results
+          const endMessage = document.createElement('div');
+          endMessage.className = 'search-end-message';
+          endMessage.style.cssText = `
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            color: #666;
+            font-style: italic;
+            border-top: 1px solid #eee;
+          `;
+          endMessage.textContent = t("end_of_search_results") || "End of search results";
+          out.appendChild(endMessage);
         } catch (err) {
           console.error("performSearch error", err);
           const out = document.getElementById("searchResults");
@@ -3722,6 +4115,29 @@
           out.style.display = "none";
         }
         
+        // Show tab content sections when search is cleared
+        const tabSections = ['homeSection', 'watchingSection', 'wishlistSection', 'watchedSection', 'discoverSection'];
+        tabSections.forEach(sectionId => {
+          const section = document.getElementById(sectionId);
+          if (section) {
+            section.style.display = '';
+            console.log(`📖 Showing tab section ${sectionId} after clearing search`);
+          }
+        });
+
+        // Clear search state flag
+        if (window.FlickletApp) {
+          window.FlickletApp.isSearching = false;
+        }
+
+        // Restore normal tab hiding behavior (hide current tab, show others)
+        if (window.FlickletApp && typeof window.FlickletApp.switchToTab === 'function') {
+          // Re-trigger tab switch to restore normal tab hiding behavior
+          const currentTab = window.FlickletApp.currentTab;
+          console.log('🔄 Restoring tab hiding behavior for current tab:', currentTab);
+          window.FlickletApp.switchToTab(currentTab);
+        }
+
         // Show all main page elements when search is cleared (only if on home tab)
         if (window.FlickletApp && window.FlickletApp.currentTab === 'home') {
           const homeSections = [
@@ -4176,7 +4592,7 @@
 
     const label = document.createElement('span');
     label.className = 'providers-label';
-    label.textContent = locked ? 'Available on' : 'Watch on';
+    label.textContent = locked ? (t('available_on') || 'Available on') : (t('watch_on') || 'Watch on');
     row.appendChild(label);
 
     const badges = providerNodes(entry, locked);
@@ -4196,7 +4612,7 @@
     if (locked) {
       const tip = document.createElement('span');
       tip.className = 'more-count';
-      tip.textContent = ' — upgrade to reveal';
+      tip.textContent = t('upgrade_to_reveal') || ' — upgrade to reveal';
       row.appendChild(tip);
     }
 
@@ -4370,7 +4786,7 @@
 
     const label = document.createElement('span');
     label.className = 'extras-label';
-    label.textContent = locked ? 'Extras' : 'Extras';
+    label.textContent = t('extras') || 'Extras';
     row.appendChild(label);
 
     for (const v of videos.slice(0, 5)) { // cap to keep compact
@@ -4393,7 +4809,7 @@
     if (locked) {
       const tip = document.createElement('span');
       tip.className = 'more-count';
-      tip.textContent = ' — upgrade to watch';
+      tip.textContent = t('upgrade_to_watch') || ' — upgrade to watch';
       row.appendChild(tip);
     }
 

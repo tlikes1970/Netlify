@@ -197,7 +197,13 @@ function getNextList(currentList) {
 window.loadDiscoverContent = function loadDiscoverContent() {
   const section = document.getElementById('discoverSection');
   if (!section) return;
-  section.innerHTML = `<div class="empty-state"><h3>Discover</h3><p>Recommendations coming soon.</p></div>`;
+  
+  // Call renderDiscover to actually load recommendations
+  if (typeof renderDiscover === 'function') {
+    renderDiscover();
+  } else {
+    section.innerHTML = `<div class="empty-state"><h3>Discover</h3><p>Recommendations coming soon.</p></div>`;
+  }
 };
 
 window.loadSettingsContent = function loadSettingsContent() {

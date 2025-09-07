@@ -13,6 +13,13 @@
 
   console.log('🌱 TMDB Seeder: Starting...', { API_KEY: API_KEY ? `${API_KEY.slice(0,4)}...` : 'none' });
   
+  // Force clear all curated data for fresh start
+  console.log('🌱 TMDB Seeder: Clearing all curated data for fresh start');
+  localStorage.removeItem('curated:trending');
+  localStorage.removeItem('curated:staff');
+  localStorage.removeItem('curated:new');
+  localStorage.removeItem('flicklet:seed:v1');
+
   // If curated keys exist and not stale, bail early
   if (!needsSeed()) {
     console.log('🌱 TMDB Seeder: Keys exist and fresh, skipping');
@@ -85,12 +92,11 @@
       
       console.log('🌱 Seeder: Total items collected:', pool.length);
 
-    // Normalize into {id, title, posterPath, backdrop_path, date}
+    // Store the complete TMDB data structure for curated rows
     const normalized = pool.map(n => ({
-      id: n.id,
+      ...n, // Keep all original TMDB data
       title: n.title || n.name || 'Untitled',
       posterPath: n.poster_path || n.backdrop_path || '',
-      backdrop_path: n.backdrop_path || '',
       date: parseDate(n.release_date || n.first_air_date)
     })).filter(x => x && x.id);
 

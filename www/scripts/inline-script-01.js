@@ -36,6 +36,128 @@
         }
       };
 
+      // --- Add flow dedupe + single owner ---
+      window.FLICKLET_ADD_OWNER = 'core'; // public signal for other files
+      const pendingAdds = new Set();      // e.g., "watching:12345"
+
+      function isInList(listName, tmdbId) {
+        try {
+          // Use the same appData reference as the existing code
+          const dataSource = window.appData || appData;
+          if (!dataSource) return false;
+          
+          // Check in both tv and movies categories
+          const tvList = (dataSource.tv?.[listName]) || [];
+          const moviesList = (dataSource.movies?.[listName]) || [];
+          const combinedList = [...tvList, ...moviesList];
+          return combinedList.some(it => Number(it?.id) === Number(tmdbId));
+        } catch { return false; }
+      }
+
+      async function addItemToList(tmdbId, listName, source = 'ui') {
+        console.log('➕ addItemToList called:', { tmdbId, listName, source });
+        const key = `${listName}:${Number(tmdbId)}`;
+        if (pendingAdds.has(key)) {
+          console.debug('⛔ add blocked (pending)', key, source);
+          return;
+        }
+
+        pendingAdds.add(key);
+        try {
+          // Get item from cache
+          let item;
+          if (window.searchItemCache && window.searchItemCache.get) {
+            item = window.searchItemCache.get(Number(tmdbId));
+          }
+          
+          if (!item) {
+            throw new Error('Item not found in cache');
+          }
+
+          // Call the original addToList function directly (bypass our wrapper)
+          console.log('🔄 Calling original addToList function');
+          // We need to call the addToList function that's defined in inline-script-02.js
+          // Since it's not exported to window, we'll call addToListFromCache which should work
+          if (typeof window.addToListFromCache === 'function') {
+            // Temporarily disable our wrapper to avoid infinite loop
+            const originalAddToListFromCache = window.addToListFromCache;
+            window.addToListFromCache = function(id, list) {
+              // Call the original function from inline-script-02.js
+              const item = window.searchItemCache?.get(Number(id));
+              if (item && window.addToList) {
+                window.addToList(item, list);
+              }
+            };
+            window.addToListFromCache(tmdbId, listName);
+            // Restore our wrapper
+            window.addToListFromCache = originalAddToListFromCache;
+          } else {
+            throw new Error('No add function available');
+          }
+          
+        } catch (e) {
+          console.error('addItemToList failed', e);
+          const errorMessage = t ? t('error_try_again') : 'Error, please try again';
+          if (typeof showNotification === 'function') {
+            showNotification(errorMessage, 'error');
+          } else if (window.showNotification) {
+            window.showNotification(errorMessage, 'error');
+          }
+        } finally {
+          pendingAdds.delete(key);
+        }
+      }
+
+      // Legacy entry points - add deduplication but use existing logic
+      function addToListFromCache(id, targetList) {
+        console.log('🔄 addToListFromCache called (legacy):', { id, targetList });
+        
+        // Check for pending adds to prevent double execution
+        const key = `${targetList}:${Number(id)}`;
+        if (pendingAdds.has(key)) {
+          console.debug('⛔ add blocked (pending)', key, 'legacy');
+          return;
+        }
+        
+        pendingAdds.add(key);
+        try {
+          // Call the original function from inline-script-02.js
+          const item = window.searchItemCache?.get(Number(id));
+          if (item && window.addToList) {
+            window.addToList(item, targetList);
+          } else {
+            console.error('❌ Item not found in cache or addToList not available');
+          }
+        } finally {
+          pendingAdds.delete(key);
+        }
+      }
+
+      // Export to window for inline onclick handlers
+      window.addToListFromCache = addToListFromCache;
+      window.addItemToList = addItemToList;
+
+      // Set up delegation for add actions to ensure centralized handling
+      document.addEventListener('click', (ev) => {
+        // Check for data-action buttons
+        const el = ev.target.closest('[data-action="addFromCache"]');
+        if (el) {
+          const id = el.getAttribute('data-id') || el.dataset.id;
+          const list = el.getAttribute('data-list') || el.dataset.list;
+          console.log('➕ Add button clicked (data-action):', { id, list, element: el });
+          if (id && list) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            console.log('➕ Centralized add handler called:', { id, list });
+            addItemToList(Number(id), list, 'delegation');
+          }
+        }
+      }, { capture: true }); // Use capture to ensure we run first
+      
+      // Mark that inline-01 actions are bound
+      window.__inline01ActionsBound = true;
+      console.log('✅ Centralized add delegation handler set up');
+
       // FlickWord integration
       function initFlickWord() {
         const fwPlayBtn = document.getElementById('fwPlayBtn');
@@ -265,6 +387,7 @@
         // Centralized state
         currentUser: null,
         currentTab: 'home',
+        isSearching: false,
         // Cache for account button to avoid redundant reads and race conditions
         _lastAccountBtnUid: null,
         _lastAccountBtnDoc: null,
@@ -1075,6 +1198,14 @@
         updateTabVisibility() {
           console.log('🎯 updateTabVisibility called, currentTab:', this.currentTab);
           
+          // Check if we're in search mode - if so, don't interfere with tab content visibility
+          if (this.isSearching) {
+            console.log('🔍 Search mode active - skipping tab visibility updates');
+            return;
+          }
+
+          // Curated sections indicator removed - only shows on setting change
+          
           // This function manages tab button visibility - hide current tab, show others
           // Section visibility is handled by the old switchToTab function
           
@@ -1700,8 +1831,8 @@
           if (!this.currentUser) {
             this._lastAccountBtnUid = null;
             this._lastAccountBtnDoc = null;
-            accountBtn.textContent = '👤 Sign In';
-            accountBtn.title = 'Click to sign in';
+            accountBtn.innerHTML = `👤 <span data-i18n="sign_in_account">Sign In</span>`;
+            accountBtn.title = t('click_to_sign_in') || 'Click to sign in';
             if (accountHint) accountHint.textContent = '';
             return;
           }
@@ -1737,8 +1868,8 @@
 
           // Paint button and hint
           accountBtn.textContent = `👤 ${displayText}`;
-          accountBtn.title = `Signed in as ${email}. Click to sign out.`;
-          if (accountHint) accountHint.textContent = 'click to log out';
+          accountBtn.title = `${t('signed_in_as') || 'Signed in as'} ${email}. ${t('click_to_sign_out') || 'Click to sign out.'}`;
+          if (accountHint) accountHint.textContent = t('click_to_log_out') || 'click to log out';
         },
 
         async getDisplayNameForUser(uid) {
@@ -1855,15 +1986,14 @@
               } else {
                 // User is not signed in, show sign in modal
                 console.log('🔑 User not signed in, showing sign in modal');
-                console.log('🔍 FlickletApp instance available:', !!window.FlickletAppInstance);
-                if (window.FlickletAppInstance && typeof window.FlickletAppInstance.showSignInModal === 'function') {
-                  console.log('✅ Calling FlickletAppInstance.showSignInModal');
-                  window.FlickletAppInstance.showSignInModal();
-                } else if (window.FlickletApp && typeof window.FlickletApp.showSignInModal === 'function') {
-                  console.log('✅ Calling FlickletApp.showSignInModal');
-                  window.FlickletApp.showSignInModal();
+                // Prefer app method, fallback to global
+                const fn = (window.FlickletApp && typeof FlickletApp.showSignInModal === 'function')
+                  ? FlickletApp.showSignInModal
+                  : (typeof window.showSignInModal === 'function' ? window.showSignInModal : null);
+                if (fn) {
+                  fn();
                 } else {
-                  console.error('❌ FlickletApp.showSignInModal function not available');
+                  console.error('❌ No showSignInModal available (check auth.js export and #signInModal)');
                 }
               }
             });
@@ -2731,6 +2861,25 @@
     persist(!!v);
   };
 
+  // Connect to the Layout tab checkbox
+  const connectCondensedCheckbox = () => {
+    const checkbox = document.getElementById('condensedMode');
+    if (checkbox) {
+      checkbox.checked = getPersisted();
+      checkbox.addEventListener('change', (e) => {
+        setCondensedMode(e.target.checked);
+      });
+      console.log('🧪 Condensed mode checkbox connected to Layout tab');
+    }
+  };
+
+  // Try to connect when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', connectCondensedCheckbox);
+  } else {
+    connectCondensedCheckbox();
+  }
+
   // Hotkey for dev convenience: Alt+D toggles condensed
   window.addEventListener('keydown', (e) => {
     if (e.altKey && (e.key === 'd' || e.key === 'D')) {
@@ -2741,6 +2890,8 @@
   // Inject a Settings row if a container exists (progressive enhancement)
   function injectCondensedSettings() {
     try {
+      console.log('🧪 Condensed mode settings now handled in Layout tab - skipping injection');
+      return false; // Skip injection since we moved it to the proper tab
       // Look for the settings section or any existing card to inject into
       const settingsSection = document.getElementById('settingsSection');
       if (settingsSection) {
@@ -2815,44 +2966,45 @@
     }
   }
 
-  // Try to inject immediately
-  console.log('🧪 Attempting initial injection...');
-  injectCondensedSettings();
+  // Try to inject immediately - DISABLED (moved to Layout tab)
+  console.log('🧪 Condensed mode settings moved to Layout tab - skipping injection');
+  // injectCondensedSettings();
   
-  // Also try when DOM is ready and on window load
+  // Also try when DOM is ready and on window load - DISABLED
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      console.log('🧪 DOMContentLoaded - attempting injection...');
-      injectCondensedSettings();
+      console.log('🧪 Condensed mode settings moved to Layout tab - skipping injection');
+      // injectCondensedSettings();
     });
   }
   window.addEventListener('load', () => {
-    console.log('🧪 Window load - attempting injection...');
-    injectCondensedSettings();
+    console.log('🧪 Condensed mode settings moved to Layout tab - skipping injection');
+    // injectCondensedSettings();
   });
   
-  // Also try when settings tab is clicked or when switchToTab is called
+  // Also try when settings tab is clicked or when switchToTab is called - DISABLED
   const settingsTab = document.getElementById('settingsTab');
   if (settingsTab) {
     settingsTab.addEventListener('click', () => {
-      setTimeout(injectCondensedSettings, 100);
+      console.log('🧪 Condensed mode settings moved to Layout tab - skipping injection');
+      // setTimeout(injectCondensedSettings, 100);
     });
   }
   
-  // Hook into the global switchToTab function to detect when settings is shown
+  // Hook into the global switchToTab function to detect when settings is shown - DISABLED
   const originalSwitchToTab = window.switchToTab;
   if (typeof originalSwitchToTab === 'function') {
     window.switchToTab = function(tabName) {
       const result = originalSwitchToTab.call(this, tabName);
       if (tabName === 'settings') {
-        console.log('🧪 Settings tab switched - attempting injection...');
-        setTimeout(injectCondensedSettings, 200);
+        console.log('🧪 Condensed mode settings moved to Layout tab - skipping injection');
+        // setTimeout(injectCondensedSettings, 200);
       }
       return result;
     };
   }
   
-  // Also use MutationObserver to watch for settings section visibility changes
+  // Also use MutationObserver to watch for settings section visibility changes - DISABLED
   const settingsSection = document.getElementById('settingsSection');
   if (settingsSection) {
     const observer = new MutationObserver((mutations) => {
@@ -2860,8 +3012,8 @@
         if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
           const isVisible = settingsSection.style.display !== 'none';
           if (isVisible) {
-            console.log('🧪 Settings section became visible - attempting injection...');
-            setTimeout(injectCondensedSettings, 100);
+            console.log('🧪 Condensed mode settings moved to Layout tab - skipping injection');
+            // setTimeout(injectCondensedSettings, 100);
           }
         }
       });
@@ -3341,7 +3493,8 @@
   // Settings UI (progressive) - with retry logic
   const injectAdvancedSettings = () => {
     try {
-      console.log('🔔 NotifAdvancedPro: Attempting settings injection...');
+      console.log('🔔 NotifAdvancedPro: Settings now handled in Notifications tab - skipping injection');
+      return false; // Skip injection since we moved it to the proper tab
       const settingsSection = document.getElementById('settingsSection');
       console.log('🔔 NotifAdvancedPro: Settings section found:', !!settingsSection);
       if (settingsSection && !document.getElementById('notifAdvRow')) {
@@ -3591,7 +3744,8 @@
   // Settings UI (progressive enhancement) - with retry logic
   const injectThemePacksSettings = () => {
     try {
-      console.log('🎨 ThemePacks: Attempting settings injection...');
+      console.log('🎨 ThemePacks: Settings now handled in Layout tab - skipping injection');
+      return false; // Skip injection since we moved it to the proper tab
       const settingsSection = document.getElementById('settingsSection');
       console.log('🎨 ThemePacks: Settings section found:', !!settingsSection);
       if (settingsSection && !document.getElementById('themePacksRow')) {

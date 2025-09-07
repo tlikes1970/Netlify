@@ -45,6 +45,9 @@
         // Initialize search functionality
         this.initializeSearch();
 
+        // Initialize genres
+        this.initializeGenres();
+
         console.log('✅ [FlickletApp] ready');
       } catch (e) {
         console.error('💥 [FlickletApp] init failed:', e);
@@ -145,12 +148,12 @@ waitForFirebaseReady() {
       // Update account button to show fallback message
       const accountBtn = document.getElementById('accountBtn');
       if (accountBtn) {
-        accountBtn.textContent = '🔒 Offline Mode';
-        accountBtn.title = 'Authentication unavailable - working in offline mode';
+        accountBtn.textContent = `🔒 ${t('offline_mode') || 'Offline Mode'}`;
+        accountBtn.title = t('auth_unavailable_offline') || 'Authentication unavailable - working in offline mode';
       }
       
       // Show a notification about offline mode
-      this.showNotification('Working in offline mode - data will be stored locally only', 'info');
+      this.showNotification(t('working_offline_mode') || 'Working in offline mode - data will be stored locally only', 'info');
     },
 
     setupAuthListener() {
@@ -256,6 +259,11 @@ waitForFirebaseReady() {
               console.log('🔄 Loading user data from Firebase...');
               await loadUserDataFromCloud(user.uid);
               console.log('✅ User data loaded from Firebase');
+              
+              // Dispatch custom event for other scripts to listen to
+              document.dispatchEvent(new CustomEvent('userDataLoaded', { 
+                detail: { uid: user.uid, data: window.appData } 
+              }));
               
               // Refresh the UI after data is loaded
               if (typeof updateUI === 'function') {
@@ -731,6 +739,12 @@ waitForFirebaseReady() {
       console.log(`🔄 Switching to tab: ${tab}`);
       this.currentTab = tab;
       
+      // Dispatch custom event for other scripts to listen to
+      document.dispatchEvent(new CustomEvent('tabSwitched', { 
+        detail: { tab: tab, previousTab: this.previousTab } 
+      }));
+      this.previousTab = tab;
+      
       // Clear search when switching tabs (only if search is active)
       const searchResults = document.getElementById('searchResults');
       if (searchResults && searchResults.style.display !== 'none' && typeof window.clearSearch === 'function') {
@@ -738,16 +752,22 @@ waitForFirebaseReady() {
         window.clearSearch();
       }
 
-      // Tab button classes - show all tabs, mark current as active
+      // Tab button classes - hide current tab, show others evenly spaced
       const ids = ['home','watching','wishlist','watched','discover','settings'];
       ids.forEach(name => {
         const btn = document.getElementById(`${name}Tab`);
         if (btn) {
-          // Show all tabs (remove hidden class)
-          btn.classList.remove('hidden');
-          // Mark current tab as active, remove active from others
-          btn.classList.toggle('active', name === tab);
-          console.log(`✅ ${name}Tab hidden: false, active: ${name === tab}`);
+          if (name === tab) {
+            // Hide the current tab
+            btn.classList.add('hidden');
+            btn.classList.remove('active');
+            console.log(`✅ ${name}Tab hidden: true (current tab)`);
+          } else {
+            // Show other tabs
+            btn.classList.remove('hidden');
+            btn.classList.remove('active');
+            console.log(`✅ ${name}Tab hidden: false, active: false`);
+          }
         }
       });
 
@@ -767,6 +787,7 @@ waitForFirebaseReady() {
       // Hide/show home-specific sections (curated, trivia, spotlight, series, flickword)
       const homeSections = [
         'curatedSections',
+        'currentlyWatchingPreview',
         'triviaTile', 
         'videoSpotlight',
         'seriesOrg',
@@ -786,6 +807,18 @@ waitForFirebaseReady() {
           console.warn(`⚠️ Home section not found: ${sectionId}`);
         }
       });
+
+      // Hide/show search bar based on tab
+      const searchContainer = document.querySelector('.top-search');
+      if (searchContainer) {
+        if (tab === 'settings') {
+          searchContainer.style.display = 'none';
+          console.log('🔍 Search bar hidden for settings tab');
+        } else {
+          searchContainer.style.display = '';
+          console.log('🔍 Search bar shown for', tab, 'tab');
+        }
+      }
 
       // Render content for this tab
       this.updateUI();
@@ -1176,9 +1209,43 @@ waitForFirebaseReady() {
         console.log('❌ Clear search button not found');
       }
       
+      // Set up Enter key functionality
+      this.setupSearchEnterKey();
+      
       console.log('✅ Search functionality initialized');
     },
-    
+
+    // ---------- Genres ----------
+    initializeGenres() {
+      console.log('🎬 Initializing genres...');
+      
+      // Call loadGenres if available
+      if (typeof window.loadGenres === 'function') {
+        console.log('✅ loadGenres function found, calling it');
+        window.loadGenres();
+      } else {
+        console.log('❌ loadGenres function not available');
+      }
+      
+      console.log('✅ Genres initialization complete');
+    },
+
+    // STEP 3.5 — Make Enter in search box trigger the search
+    setupSearchEnterKey() {
+      const searchInput = document.getElementById('searchInput');
+      const searchBtn = document.getElementById('searchBtn');
+      if (searchInput && searchBtn) {
+        searchInput.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter') {
+            ev.preventDefault();
+            ev.stopPropagation();
+            console.log('🔎 Enter pressed in search box — running search');
+            searchBtn.click(); // triggers the same onclick handler
+          }
+        });
+      }
+    },
+
     // Debug method to check account button state
     debugAccountButton() {
       const accountBtn = document.getElementById('accountBtn');

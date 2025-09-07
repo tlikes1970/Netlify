@@ -1017,7 +1017,7 @@
 
         applyTranslations?.();
         // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
-        updateUI?.();
+        // updateUI?.(); // DISABLED - causes full page refresh on every rating
 
         if (!currentUser) return;
         try {
@@ -1653,7 +1653,12 @@
           sel.innerHTML = "";
           const all = document.createElement("option");
           all.value = "";
-          all.textContent = t("all_genres");
+          // Get current language for "All Genres" text
+          const currentLang = (window.LanguageManager?.getCurrentLanguage?.()) || 
+                             (window.appData?.settings?.lang) || 
+                             (appData?.settings?.lang) || 
+                             'en';
+          all.textContent = t("all_genres", currentLang);
           sel.appendChild(all);
           
           (data.genres || []).forEach((g) => {
@@ -1669,7 +1674,12 @@
             if (genreKey === "war_&_politics") genreKey = "war_politics";
             if (genreKey === "talk_show") genreKey = "talk_show";
             
-            const translation = t(genreKey);
+            // Get current language from language manager or fallback to appData
+            const currentLang = (window.LanguageManager?.getCurrentLanguage?.()) || 
+                               (window.appData?.settings?.lang) || 
+                               (appData?.settings?.lang) || 
+                               'en';
+            const translation = t(genreKey, currentLang);
 
             opt.textContent = translation || g.name;
             sel.appendChild(opt);
@@ -2882,29 +2892,7 @@
         }
 
         // Add direct click handlers to star rating buttons
-        const starButtons = card.querySelectorAll(".star-btn");
-        starButtons.forEach(starBtn => {
-          starBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const rating = Number(starBtn.getAttribute("data-rating"));
-            const id = Number(starBtn.getAttribute("data-id"));
-            setRating(id, rating);
-            
-            // Update the visual state of all stars in this card
-            const allStars = card.querySelectorAll(".star-btn");
-            allStars.forEach((star, index) => {
-              const starRating = index + 1;
-              if (starRating <= rating) {
-                star.classList.add("active");
-                star.setAttribute("aria-pressed", "true");
-              } else {
-                star.classList.remove("active");
-                star.setAttribute("aria-pressed", "false");
-              }
-            });
-          });
-        });
+        // Star rating and like/dislike buttons are handled by delegated event listeners
 
         ensureTvDetails(item, card);
         return card;
@@ -3038,20 +3026,115 @@
         }
       }
       function setRating(id, rating) {
-        const it = findItem(id);
+        // First try to find the item in user's lists
+        let it = findItem(id);
+        
+        // If not found in lists, check if it's a cached search item
+        if (!it && window.searchItemCache) {
+          it = window.searchItemCache.get(Number(id));
+        }
+        
         if (!it) {
+          console.warn('Item not found for rating:', id);
           return;
         }
+        
         it.userRating = rating;
+        
+        // If it's a cached search item, also store the rating in a global ratings object
+        if (window.searchItemCache && window.searchItemCache.has(Number(id))) {
+          if (!window.appData.ratings) {
+            window.appData.ratings = {};
+          }
+          window.appData.ratings[id] = rating;
+        }
+        
+        // Save data but don't refresh entire UI
         saveAppData?.();
-        updateUI?.();
+        
+        // Update only the specific card's visual state
+        updateCardRating(id, rating);
+        
+        // Show success notification
+        showNotification?.(`Rated ${it.name || it.title || 'item'} ${rating}/5 stars`, 'success');
+      }
+      
+      function updateCardRating(id, rating) {
+        // Find all cards with this ID and update their star display
+        const cards = document.querySelectorAll(`[data-id="${id}"]`);
+        cards.forEach(card => {
+          const starButtons = card.querySelectorAll('.star-btn[data-action="rate"]');
+          starButtons.forEach((star, index) => {
+            const starRating = index + 1;
+            if (starRating <= rating) {
+              star.classList.add('active');
+              star.setAttribute('aria-pressed', 'true');
+              star.textContent = '★';
+            } else {
+              star.classList.remove('active');
+              star.setAttribute('aria-pressed', 'false');
+              star.textContent = '☆';
+            }
+          });
+        });
       }
       function setLikeStatus(id, status) {
         const it = findItem(id);
         if (!it) return;
-        it.likeStatus = status;
-        saveAppData?.();
-        updateUI?.();
+        
+        // Initialize likeStatus if it doesn't exist
+        if (it.likeStatus === undefined) {
+          it.likeStatus = null;
+        }
+        
+        // Toggle logic: if clicking the same status, remove it
+        if (it.likeStatus === status) {
+          it.likeStatus = null; // Remove the status
+          saveAppData?.();
+          updateCardLikeStatus(id, null);
+          showNotification?.(`Removed ${status} from ${it.name || it.title || 'item'}`, 'success');
+        } else {
+          it.likeStatus = status;
+          saveAppData?.();
+          updateCardLikeStatus(id, status);
+          showNotification?.(`${status === 'like' ? 'Liked' : 'Disliked'} ${it.name || it.title || 'item'}`, 'success');
+        }
+      }
+      
+      function updateCardLikeStatus(id, status) {
+        // Find all cards with this ID and update their like/dislike display
+        const cards = document.querySelectorAll(`[data-id="${id}"]`);
+        
+        let updatedCount = 0;
+        cards.forEach(card => {
+          const likeBtn = card.querySelector('.like-btn[data-action="like"]');
+          const dislikeBtn = card.querySelector('.dislike-btn[data-action="dislike"]');
+          
+          // Only update cards that actually have like/dislike buttons
+          if (likeBtn || dislikeBtn) {
+            updatedCount++;
+            
+            if (likeBtn) {
+              if (status === 'like') {
+                likeBtn.classList.add('active');
+                likeBtn.setAttribute('aria-pressed', 'true');
+              } else {
+                likeBtn.classList.remove('active');
+                likeBtn.setAttribute('aria-pressed', 'false');
+              }
+            }
+            
+            if (dislikeBtn) {
+              if (status === 'dislike') {
+                dislikeBtn.classList.add('active');
+                dislikeBtn.setAttribute('aria-pressed', 'true');
+              } else {
+                dislikeBtn.classList.remove('active');
+                dislikeBtn.setAttribute('aria-pressed', 'false');
+              }
+            }
+          }
+        });
       }
       
       function markAsNotInterested(id, mediaType) {
@@ -3475,6 +3558,122 @@
       window.addToListFromCache = addToListFromCache; // used by inline handlers
 
       /* ---------- SEARCH HELPERS ---------- */
+      
+      /**
+       * Process: Advanced Search Query Parsing
+       * Purpose: Parses advanced search syntax like "genre:horror", "year:2023", "status:watching"
+       * Data Source: User search input string
+       * Update Path: Modify search parameters and filters based on parsed query
+       * Dependencies: Genre mapping, user data, search filters
+       */
+      function parseAdvancedSearch(query) {
+        console.log('🔍 Parsing advanced search query:', query);
+        
+        const result = {
+          baseQuery: query,
+          filters: {},
+          searchType: 'multi' // default to multi search
+        };
+        
+        // Genre mapping (from TMDB API)
+        const genreMap = {
+          'action': 28, 'adventure': 12, 'animation': 16, 'comedy': 35, 'crime': 80,
+          'documentary': 99, 'drama': 18, 'family': 10751, 'fantasy': 14, 'history': 36,
+          'horror': 27, 'music': 10402, 'mystery': 9648, 'romance': 10749, 'sci-fi': 878,
+          'science_fiction': 878, 'tv_movie': 10770, 'thriller': 53, 'war': 10752, 'western': 37
+        };
+        
+        // Parse different search operators
+        const patterns = [
+          // Genre filter: genre:horror, genre:sci-fi
+          { regex: /genre:(\w+(?:[-_]\w+)*)/gi, handler: (match, genre) => {
+            const genreKey = genre.toLowerCase().replace(/-/g, '_');
+            const genreId = genreMap[genreKey];
+            if (genreId) {
+              result.filters.genre = genreId;
+              console.log(`🎬 Genre filter: ${genre} -> ${genreId}`);
+            } else {
+              console.warn(`⚠️ Unknown genre: ${genre}`);
+            }
+          }},
+          
+          // Year filter: year:2023, year:2020-2023
+          { regex: /year:(\d{4}(?:-\d{4})?)/gi, handler: (match, year) => {
+            if (year.includes('-')) {
+              const [start, end] = year.split('-').map(Number);
+              result.filters.yearRange = { start, end };
+              console.log(`📅 Year range: ${start}-${end}`);
+            } else {
+              result.filters.year = parseInt(year);
+              console.log(`📅 Year: ${year}`);
+            }
+          }},
+          
+          // Media type: is:movie, is:show, is:tv
+          { regex: /is:(movie|show|tv)/gi, handler: (match, type) => {
+            result.searchType = type === 'show' || type === 'tv' ? 'tv' : 'movie';
+            console.log(`🎭 Media type: ${type}`);
+          }},
+          
+          // Status filter: status:watching, status:watched, status:wishlist
+          { regex: /status:(watching|watched|wishlist)/gi, handler: (match, status) => {
+            result.filters.status = status;
+            console.log(`📋 Status: ${status}`);
+          }},
+          
+          // Rating filter: rating:≥4, rating:>3, rating:5
+          { regex: /rating:([≥>]?)(\d)/gi, handler: (match, operator, rating) => {
+            result.filters.rating = {
+              value: parseInt(rating),
+              operator: operator || '='
+            };
+            console.log(`⭐ Rating: ${operator}${rating}`);
+          }},
+          
+          // Exact phrase: "exact phrase"
+          { regex: /"([^"]+)"/g, handler: (match, phrase) => {
+            result.filters.exactPhrase = phrase;
+            console.log(`💬 Exact phrase: "${phrase}"`);
+          }},
+          
+          // Exclude spoilers: !spoiler
+          { regex: /!spoiler/gi, handler: () => {
+            result.filters.excludeSpoilers = true;
+            console.log(`🚫 Exclude spoilers`);
+          }},
+          
+          // Trending: #trending
+          { regex: /#trending/gi, handler: () => {
+            result.filters.trending = true;
+            console.log(`🔥 Trending content`);
+          }}
+        ];
+        
+        // Apply all patterns
+        patterns.forEach(({ regex, handler }) => {
+          let match;
+          while ((match = regex.exec(query)) !== null) {
+            handler(match, ...match.slice(1));
+          }
+        });
+        
+        // Remove all operators from base query
+        result.baseQuery = query
+          .replace(/genre:\w+(?:[-_]\w+)*/gi, '')
+          .replace(/year:\d{4}(?:-\d{4})?/gi, '')
+          .replace(/is:(movie|show|tv)/gi, '')
+          .replace(/status:(watching|watched|wishlist)/gi, '')
+          .replace(/rating:[≥>]?\d/gi, '')
+          .replace(/"([^"]+)"/g, '')
+          .replace(/!spoiler/gi, '')
+          .replace(/#trending/gi, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        
+        console.log('🔍 Parsed search result:', result);
+        return result;
+      }
+      
       async function performSearch() {
         try {
           const qEl = document.getElementById("searchInput");
@@ -3489,6 +3688,21 @@
             return;
           }
 
+          // Parse advanced search syntax
+          const parsedQuery = parseAdvancedSearch(q);
+          console.log('🔍 Parsed query:', parsedQuery);
+
+          // Show all tabs when searching (hide current tab behavior disabled during search)
+          const tabIds = ['home','watching','wishlist','watched','discover','settings'];
+          tabIds.forEach(name => {
+            const btn = document.getElementById(`${name}Tab`);
+            if (btn) {
+              btn.classList.remove('hidden');
+              btn.classList.remove('active');
+              console.log(`🔍 Search mode: ${name}Tab visible`);
+            }
+          });
+
           out.style.display = "";
           out.innerHTML = t("searching");
 
@@ -3497,12 +3711,73 @@
             return;
           }
 
+          // Determine search endpoint and query
+          const searchEndpoint = parsedQuery.searchType === 'multi' ? 'search/multi' : 
+                                parsedQuery.searchType === 'movie' ? 'search/movie' : 'search/tv';
+          
+          // If baseQuery is empty after parsing, use a generic search term for genre-only searches
+          let searchQuery = parsedQuery.baseQuery;
+          
+          if (!searchQuery && parsedQuery.filters.genre) {
+            // For genre-only searches, use a broad search term
+            // Find the genre name from the ID
+            const genreMap = {
+              28: 'action', 12: 'adventure', 16: 'animation', 35: 'comedy', 80: 'crime',
+              99: 'documentary', 18: 'drama', 10751: 'family', 14: 'fantasy', 36: 'history',
+              27: 'horror', 10402: 'music', 9648: 'mystery', 10749: 'romance', 878: 'sci-fi',
+              10770: 'tv_movie', 53: 'thriller', 10752: 'war', 37: 'western'
+            };
+            const genreName = genreMap[parsedQuery.filters.genre] || 'movie';
+            searchQuery = genreName;
+          } else if (!searchQuery) {
+            // Fallback to original query if no other search term
+            searchQuery = q;
+          }
+
           const data = await tmdbGet(
-            "search/multi",
-            `&query=${encodeURIComponent(q)}`
+            searchEndpoint,
+            `&query=${encodeURIComponent(searchQuery)}`
           );
           const results = (data?.results || []).filter(
-            (r) => !genre || (r.genre_ids || []).includes(Number(genre))
+            (r) => {
+              // Filter out people (only show movies and TV shows)
+              if (r.media_type === 'person') {
+                return false;
+              }
+              
+              // Apply genre filter (from dropdown or advanced search)
+              const genreFilter = parsedQuery.filters.genre || genre;
+              if (genreFilter && !(r.genre_ids || []).includes(Number(genreFilter))) {
+                return false;
+              }
+              
+              // Apply year filter
+              if (parsedQuery.filters.year) {
+                const releaseYear = new Date(r.release_date || r.first_air_date || '').getFullYear();
+                if (releaseYear !== parsedQuery.filters.year) {
+                  return false;
+                }
+              }
+              
+              // Apply year range filter
+              if (parsedQuery.filters.yearRange) {
+                const releaseYear = new Date(r.release_date || r.first_air_date || '').getFullYear();
+                const { start, end } = parsedQuery.filters.yearRange;
+                if (releaseYear < start || releaseYear > end) {
+                  return false;
+                }
+              }
+              
+              // Apply media type filter
+              if (parsedQuery.searchType !== 'multi') {
+                const expectedType = parsedQuery.searchType === 'movie' ? 'movie' : 'tv';
+                if (r.media_type !== expectedType) {
+                  return false;
+                }
+              }
+              
+              return true;
+            }
           );
 
           if (!results.length) {
@@ -3530,6 +3805,14 @@
         if (out) {
           out.innerHTML = "";
           out.style.display = "none";
+        }
+
+        // Restore normal tab hiding behavior (hide current tab, show others)
+        if (window.FlickletApp && typeof window.FlickletApp.switchToTab === 'function') {
+          // Re-trigger tab switch to restore normal tab hiding behavior
+          const currentTab = window.FlickletApp.currentTab;
+          console.log('🔄 Restoring tab hiding behavior for current tab:', currentTab);
+          window.FlickletApp.switchToTab(currentTab);
         }
       }
 

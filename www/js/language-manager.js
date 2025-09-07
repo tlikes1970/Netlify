@@ -18,7 +18,7 @@ class LanguageManager {
     this.setupLanguageDropdown();
     
     // Apply initial translations
-    this.applyTranslations(this.currentLang);
+    applyTranslations(this.currentLang);
     
     console.log('🌍 LanguageManager initialized with language:', this.currentLang);
   }
@@ -43,6 +43,8 @@ class LanguageManager {
 
   // Main language change function - single source of truth
   async changeLanguage(newLang) {
+    console.log('🌍 changeLanguage called with:', newLang);
+    
     if (this.isChangingLanguage) {
       console.log('🌍 Language change already in progress, ignoring');
       return;
@@ -60,14 +62,17 @@ class LanguageManager {
     try {
       // Update current language
       this.currentLang = newLang;
+      console.log('🌍 Updated currentLang to:', this.currentLang);
       
       // Update all app data sources
       this.updateAppData(newLang);
       
       // Apply translations
-      this.applyTranslations(newLang);
+      console.log('🌍 Calling applyTranslations with:', newLang);
+      applyTranslations(newLang);
       
       // Update UI elements
+      console.log('🌍 Calling updateLanguageDependentUI with:', newLang);
       this.updateLanguageDependentUI(newLang);
       
       // Save to storage
@@ -108,35 +113,6 @@ class LanguageManager {
     }
   }
 
-  // Comprehensive translation application
-  applyTranslations(lang) {
-    // Apply to data-i18n elements
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      const key = el.getAttribute('data-i18n');
-      const translation = this.t(key, lang);
-      if (translation && translation !== key) {
-        el.textContent = translation;
-      }
-    });
-    
-    // Apply to placeholder elements
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-      const key = el.getAttribute('data-i18n-placeholder');
-      const translation = this.t(key, lang);
-      if (translation && translation !== key) {
-        el.placeholder = translation;
-      }
-    });
-    
-    // Apply to title attributes
-    document.querySelectorAll('[data-i18n-title]').forEach(el => {
-      const key = el.getAttribute('data-i18n-title');
-      const translation = this.t(key, lang);
-      if (translation && translation !== key) {
-        el.title = translation;
-      }
-    });
-  }
 
   // Update language-dependent UI elements
   updateLanguageDependentUI(lang) {
@@ -151,7 +127,7 @@ class LanguageManager {
     if (currentTab && ["watching", "wishlist", "watched"].includes(currentTab)) {
       const listContainer = document.getElementById(currentTab + "List");
       if (listContainer) {
-        listContainer.innerHTML = `<div style="text-align: center; padding: 20px;">${this.t("loading", lang)}...</div>`;
+        listContainer.innerHTML = `<div style="text-align: center; padding: 20px;">${t("loading", lang)}...</div>`;
       }
     }
     
@@ -371,8 +347,8 @@ class LanguageManager {
       } else {
         // No search query, just show the language change message
         searchResults.innerHTML = `<div style="text-align: center; padding: 20px; color: #666;">
-          <p>${this.t("search_results_cleared", lang)}</p>
-          <p>${this.t("please_search_again", lang)}</p>
+          <p>${t("search_results_cleared", lang)}</p>
+          <p>${t("please_search_again", lang)}</p>
         </div>`;
       }
     }
@@ -439,7 +415,7 @@ class LanguageManager {
   // Show language change notification
   showLanguageChangeNotification(lang) {
     const langName = lang === 'es' ? 'Spanish' : 'English';
-    let message = this.t('language_changed_to', lang);
+    let message = t('language_changed_to', lang);
     
     // Replace placeholder if it exists
     if (message && message.includes('{lang}')) {

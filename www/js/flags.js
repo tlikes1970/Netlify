@@ -21,6 +21,7 @@ window.FLAGS = Object.assign({
           triviaEnabled: true,                        // per-card trivia chips
           flickwordBoostEnabled: true,                // FlickFact panel on Home
           seriesOrganizerEnabled: true,               // card declutter (progressive disclosure)
+          homeRowCurrentlyWatching: true,             // Currently Watching Preview row
 }, window.FLAGS || {});
 
 window.guard = (cond, fn) => { 
