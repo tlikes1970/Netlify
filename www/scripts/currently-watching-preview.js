@@ -154,13 +154,29 @@
     // Clear existing content
     scrollContainer.innerHTML = '';
 
-    // Render up to 5 items
-    const itemsToShow = watchingItems.slice(0, 5);
+    // Render items based on configurable limit
+    const maxItems = getCurrentlyWatchingLimit();
+    const itemsToShow = watchingItems.slice(0, maxItems);
     
     itemsToShow.forEach(item => {
       const card = createPreviewCard(item);
       scrollContainer.appendChild(card);
     });
+  }
+
+  /**
+   * Get the maximum number of currently watching items to display
+   * Can be configured via localStorage setting
+   */
+  function getCurrentlyWatchingLimit() {
+    // Check for user setting first
+    const userLimit = localStorage.getItem('flicklet:currentlyWatching:limit');
+    if (userLimit && !isNaN(userLimit) && userLimit > 0) {
+      return Math.min(parseInt(userLimit), 20); // Cap at 20 for performance
+    }
+    
+    // Default to 12 items (increased from original 5)
+    return 12;
   }
 
   /**
@@ -326,6 +342,9 @@
 
     return card;
   }
+
+  // Expose render function globally for settings
+  window.renderCurrentlyWatchingPreview = renderCurrentlyWatchingPreview;
 
   // Initialize when DOM is ready
   if (document.readyState === 'loading') {

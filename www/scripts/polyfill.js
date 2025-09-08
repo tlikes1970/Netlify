@@ -92,3 +92,5 @@
   
   console.log('🔧 Chrome extension messaging polyfill loaded');
 })();
+
+

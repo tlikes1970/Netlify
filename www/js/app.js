@@ -13,7 +13,7 @@
     firebaseInitialized: false,
 
     init() {
-      console.log('🚀 [FlickletApp] init');
+      FlickletDebug.info('🚀 [FlickletApp] init');
       try {
         // 1) Load persisted data
         if (typeof loadAppData === 'function') {
@@ -42,15 +42,17 @@
           // checkAndPromptLogin removed - handled in auth listener
         }, 150);
 
-        // Initialize search functionality
-        this.initializeSearch();
+        // Initialize search functionality after a delay to ensure search functions are loaded
+        setTimeout(() => {
+          this.initializeSearch();
+        }, 1000);
 
         // Initialize genres
         this.initializeGenres();
 
-        console.log('✅ [FlickletApp] ready');
+        FlickletDebug.info('✅ [FlickletApp] ready');
       } catch (e) {
-        console.error('💥 [FlickletApp] init failed:', e);
+        FlickletDebug.error('💥 [FlickletApp] init failed:', e);
       }
     },
 
@@ -745,25 +747,32 @@ waitForFirebaseReady() {
       }));
       this.previousTab = tab;
       
-      // Clear search when switching tabs (only if search is active)
-      const searchResults = document.getElementById('searchResults');
-      if (searchResults && searchResults.style.display !== 'none' && typeof window.clearSearch === 'function') {
-        console.log('🧹 Clearing search due to tab switch');
-        window.clearSearch();
+      // Clear search when switching tabs (except when staying on home)
+      if (this.isSearching && tab !== 'home') {
+        console.log('🧹 Clearing search due to tab switch to:', tab);
+        if (typeof window.clearSearch === 'function') {
+          window.clearSearch();
+        }
       }
 
       // Tab button classes - hide current tab, show others evenly spaced
+      // BUT: During search, show all tabs for navigation
       const ids = ['home','watching','wishlist','watched','discover','settings'];
       ids.forEach(name => {
         const btn = document.getElementById(`${name}Tab`);
         if (btn) {
-          if (name === tab) {
-            // Hide the current tab
+          if (this.isSearching) {
+            // During search, show all tabs for navigation
+            btn.classList.remove('hidden');
+            btn.classList.remove('active');
+            console.log(`🔍 Search mode - showing tab: ${name}Tab`);
+          } else if (name === tab) {
+            // Hide the current tab (normal mode)
             btn.classList.add('hidden');
             btn.classList.remove('active');
             console.log(`✅ ${name}Tab hidden: true (current tab)`);
           } else {
-            // Show other tabs
+            // Show other tabs (normal mode)
             btn.classList.remove('hidden');
             btn.classList.remove('active');
             console.log(`✅ ${name}Tab hidden: false, active: false`);
@@ -784,30 +793,35 @@ waitForFirebaseReady() {
         }
       });
 
-      // Hide/show home-specific sections (curated, trivia, spotlight, flickword)
-      const homeSections = [
-        'curatedSections',
-        'currentlyWatchingPreview',
-        'next-up-row',
-        'spotlight-row',
-        'playalong-row',
-        'curated-row',
-        'frontSpotlight',
-        'quote-flickword-container',
-        'quoteCard',
-        'randomQuoteCard',
-        'bingeBanner'
-      ];
-      
-      homeSections.forEach(sectionId => {
-        const section = document.getElementById(sectionId);
-        if (section) {
-          section.style.display = tab === 'home' ? 'block' : 'none';
-          console.log(`✅ ${sectionId} visibility: ${tab === 'home' ? 'visible' : 'hidden'}`);
-        } else {
-          console.warn(`⚠️ Home section not found: ${sectionId}`);
-        }
-      });
+      // Hide/show home-specific sections using unified visibility management
+      if (window.VisibilityManager) {
+        const results = window.VisibilityManager.manageHomeSections(
+          tab === 'home', 
+          `tab-switch-${tab}`
+        );
+        
+        results.forEach(result => {
+          if (result.success) {
+            FlickletDebug.info(`✅ ${result.sectionId} visibility: ${tab === 'home' ? 'visible' : 'hidden'}`);
+          } else {
+            FlickletDebug.warn(`⚠️ Failed to update visibility for: ${result.sectionId}`);
+          }
+        });
+      } else {
+        // Fallback to original method if VisibilityManager not available
+        const homeSections = window.HomeSectionsConfig.getSections('tab-switch');
+        const sectionElements = window.HomeSectionsConfig.getSectionElements('tab-switch');
+        
+        homeSections.forEach(sectionId => {
+          const section = sectionElements[sectionId];
+          if (section) {
+            section.style.display = tab === 'home' ? 'block' : 'none';
+            FlickletDebug.info(`✅ ${sectionId} visibility: ${tab === 'home' ? 'visible' : 'hidden'}`);
+          } else {
+            FlickletDebug.warn(`⚠️ Home section not found: ${sectionId}`);
+          }
+        });
+      }
 
       // Hide/show search bar based on tab
       const searchContainer = document.querySelector('.top-search');
@@ -846,7 +860,7 @@ waitForFirebaseReady() {
         ev.stopPropagation();
 
         // Only handle known tabs
-        const allowed = ['home','watching','wishlist','watched','discover','settings'];
+        const allowed = ['home','watching','wishlist','watched','discover','search','settings'];
         if (!allowed.includes(tab)) return;
 
         try {

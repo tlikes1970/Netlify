@@ -80,7 +80,7 @@
           </div>
         </div>
         
-        <div class="episode-modal-body" style="flex: 1; overflow-y: auto; padding: 20px;">
+        <div class="episode-modal-body">
           <div id="episode-seasons" class="episode-seasons">
             <div style="text-align: center; padding: 40px; color: var(--text-secondary, #666);">
               Loading series data...
@@ -198,7 +198,13 @@
   async function fetchTMDBData(endpoint) {
     try {
       // Use existing TMDB config if available
-      const apiKey = window.TMDB_API_KEY || 'your-api-key-here';
+      const apiKey = window.TMDB_CONFIG?.apiKey || window.__TMDB_API_KEY__ || window.TMDB_API_KEY || 'your-api-key-here';
+      console.log('📺 Episode tracking API key check:', {
+        TMDB_CONFIG: !!window.TMDB_CONFIG?.apiKey,
+        __TMDB_API_KEY__: !!window.__TMDB_API_KEY__,
+        TMDB_API_KEY: !!window.TMDB_API_KEY,
+        finalKey: apiKey ? `${apiKey.slice(0,4)}...` : 'none'
+      });
       const url = `${TMDB_API_BASE}${endpoint}?api_key=${apiKey}`;
       
       const response = await fetch(url);

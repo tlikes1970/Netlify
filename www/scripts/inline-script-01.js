@@ -692,56 +692,9 @@
             loadGenres();
           }
           
-          // Set up search controls
-          console.log('🔍 Setting up search controls...');
-          const searchBtn = document.getElementById("searchBtn");
-          if (searchBtn) {
-            console.log('✅ Search button found, binding performSearch');
-            searchBtn.onclick = () => {
-              console.log('🔍 Search button clicked, calling performSearch');
-              console.log('🔍 Search input value:', document.getElementById("searchInput")?.value);
-              if (typeof window.performSearch === 'function') {
-                window.performSearch();
-              } else {
-                console.error('❌ performSearch function not available');
-                console.log('🔍 Available window functions:', Object.keys(window).filter(k => k.includes('search') || k.includes('Search')));
-              }
-            };
-          } else {
-            console.log('❌ Search button not found');
-          }
-          
-          const clearSearchBtn = document.getElementById("clearSearchBtn");
-          if (clearSearchBtn) {
-            console.log('✅ Clear search button found, binding clearSearch');
-            clearSearchBtn.onclick = () => {
-              console.log('🧹 Clear search button clicked');
-              if (typeof window.clearSearch === 'function') {
-                window.clearSearch();
-              } else {
-                console.error('❌ clearSearch function not available');
-              }
-            };
-          } else {
-            console.log('❌ Clear search button not found');
-          }
-          
-          const searchInput = document.getElementById("searchInput");
-          if (searchInput) {
-            console.log('✅ Search input found, adding keydown listener');
-            searchInput.addEventListener("keydown", (e) => {
-              if (e.key === "Enter") {
-                console.log('⌨️ Enter key pressed, calling performSearch');
-                if (typeof window.performSearch === 'function') {
-                  window.performSearch();
-                } else {
-                  console.error('❌ performSearch function not available');
-                }
-              }
-            });
-          } else {
-            console.log('❌ Search input not found');
-          }
+          // Search controls are now handled by app.js initializeSearch()
+          // This prevents conflicts between multiple initialization systems
+          console.log('🔍 Search controls handled by app.js - skipping inline setup');
           
           // STEP 3.2c — Attach this delegate ONCE and add de-dup guards
           if (!window.__inline01ActionsBound) {
@@ -1196,11 +1149,21 @@
         },
 
         updateTabVisibility() {
-          console.log('🎯 updateTabVisibility called, currentTab:', this.currentTab);
+          console.log('🎯 updateTabVisibility called, currentTab:', this.currentTab, 'isSearching:', this.isSearching);
           
-          // Check if we're in search mode - if so, don't interfere with tab content visibility
+          // Check if we're in search mode - if so, show all tabs but don't hide any
           if (this.isSearching) {
-            console.log('🔍 Search mode active - skipping tab visibility updates');
+            console.log('🔍 Search mode active - showing all tabs for navigation');
+            
+            // Show all tab buttons during search
+            const allTabButtons = ['homeTab', 'watchingTab', 'wishlistTab', 'watchedTab', 'discoverTab'];
+            allTabButtons.forEach(tabId => {
+              const tab = document.getElementById(tabId);
+              if (tab) {
+                tab.classList.remove('active', 'hidden');
+                console.log(`🔍 Search mode - showing tab: ${tabId}`);
+              }
+            });
             return;
           }
 

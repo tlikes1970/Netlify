@@ -1,5 +1,64 @@
 
       /* ============== bootstrap ============== */
+      
+      // Set up click event listener immediately (not inside DOMContentLoaded)
+      console.log('🔧 Setting up click event listener in inline-script-03.js');
+      document.addEventListener("click", (e) => {
+        console.log('🔧 Click event detected on:', e.target, 'tagName:', e.target.tagName);
+        
+        const btn = e.target.closest("[data-action]");
+        if (!btn) {
+          console.log('🔧 No data-action element found');
+          return;
+        }
+        
+        console.log('🔧 Found data-action element:', btn.dataset.action);
+        
+        // Handle episode tracking action
+        if (btn.dataset.action === "track-episodes") {
+          e.preventDefault();
+          e.stopPropagation(); // Prevent other handlers from running
+          const seriesId = btn.dataset.id;
+          const seriesTitle = btn.dataset.title;
+          console.log('📺 Opening episode tracking for:', seriesId, seriesTitle);
+          console.log('📺 Episode tracking enabled:', localStorage.getItem('flicklet:episodeTracking:enabled'));
+          console.log('📺 openEpisodeModal available:', typeof window.openEpisodeModal);
+          
+          if (typeof window.openEpisodeModal === 'function') {
+            try {
+              window.openEpisodeModal(seriesId, seriesTitle);
+              console.log('📺 Modal function called successfully');
+            } catch (error) {
+              console.error('📺 Error calling episode modal:', error);
+            }
+          } else {
+            console.warn('📺 Episode tracking modal function not available');
+          }
+          return;
+        }
+        
+        const action = btn.getAttribute("data-action");
+        const id = Number(btn.getAttribute("data-id"));
+        const mediaType = btn.getAttribute("data-media-type");
+        const rating = btn.getAttribute("data-rating");
+        
+        if (action === "addFromCache") {
+          addToListFromCache(id, btn.getAttribute("data-list"));
+        } else if (action === "move") {
+          moveItem(id, btn.getAttribute("data-list"));
+        } else if (action === "remove") {
+          removeItemFromCurrentList(id);
+        } else if (action === "rate") {
+          setRating(id, rating);
+        } else if (action === "like") {
+          setLikeStatus(id, "like");
+        } else if (action === "dislike") {
+          setLikeStatus(id, "dislike");
+        } else if (action === "open") {
+          openTMDBLink(id, mediaType);
+        }
+      }, true); // Use capture phase
+      
       document.addEventListener("DOMContentLoaded", () => {
         // Use centralized initialization if available
         if (window.FlickletApp && typeof window.FlickletApp.init === 'function') {
@@ -110,68 +169,7 @@
 
         
         // --- delegated actions for cards & search results
-
-        
-        // Try both event delegation and direct binding
-        document.addEventListener("click", (e) => {
-          
-          
-          const btn = e.target.closest("[data-action]");
-          if (!btn) {
-            return;
-          }
-          
-          // Handle episode tracking action
-          if (btn.dataset.action === "track-episodes") {
-            e.preventDefault();
-            const seriesId = btn.dataset.id;
-            const seriesTitle = btn.dataset.title;
-            console.log('📺 Opening episode tracking for:', seriesId, seriesTitle);
-            console.log('📺 Episode tracking enabled:', localStorage.getItem('flicklet:episodeTracking:enabled'));
-            console.log('📺 openEpisodeModal available:', typeof window.openEpisodeModal);
-            
-            if (typeof window.openEpisodeModal === 'function') {
-              try {
-                window.openEpisodeModal(seriesId, seriesTitle);
-                console.log('📺 Modal function called successfully');
-              } catch (error) {
-                console.error('📺 Error calling episode modal:', error);
-              }
-            } else {
-              console.warn('📺 Episode tracking modal function not available');
-            }
-            return;
-          }
-          
-          const action = btn.getAttribute("data-action");
-          const id = Number(btn.getAttribute("data-id"));
-          const list = btn.getAttribute("data-list");
-          const mediaType = btn.getAttribute("data-media-type");
-          
-  
-          if (action === "addFromCache") {
-            // Neuter this legacy path unless explicitly enabled
-            if (window.FLICKLET_ADD_OWNER === 'legacy') {
-              addToListFromCache(id, list);
-            }
-            return;
-          } else if (action === "move") {
-            moveItem(id, list);
-          } else if (action === "notes") {
-            openNotesTagsModal(id);
-          } else if (action === "remove") {
-            removeItemFromCurrentList(id);
-          } else if (action === "rate") {
-            const rating = Number(btn.getAttribute("data-rating"));
-            setRating(id, rating);
-          } else if (action === "like") {
-            setLikeStatus(id, "like");
-          } else if (action === "dislike") {
-            setLikeStatus(id, "dislike");
-          } else if (action === "open") {
-            openTMDBLink(id, mediaType);
-          }
-        });
+        // (Event listener moved outside DOMContentLoaded to ensure it always runs)
 // --- dark mode
         const darkBtn = document.getElementById("darkModeToggle");
         const setDarkLabel = () => {

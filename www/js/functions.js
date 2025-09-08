@@ -340,8 +340,8 @@ window.loadSettingsContent = function loadSettingsContent() {
   });
 
   // Stats card functionality
-  window.guard(!!window.FLAGS.statsEnabled && !!document.getElementById('statsGrid'), () => {
-    const EL = document.getElementById('statsGrid');
+  window.guard(!!window.FLAGS.statsEnabled && !!document.getElementById('statsContent'), () => {
+    const EL = document.getElementById('statsContent');
 
     function getCounts() {
       // Get data from actual localStorage keys the app uses
@@ -363,12 +363,55 @@ window.loadSettingsContent = function loadSettingsContent() {
 
     function render() {
       const c = getCounts();
+      
+      // Get detailed breakdown for TV and Movies
+      const flickletData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
+      const legacyData = JSON.parse(localStorage.getItem('tvMovieTrackerData') || '{}');
+      const appData = flickletData.tv || flickletData.movies ? flickletData : legacyData;
+      
+      const tvWatching = appData.tv?.watching || [];
+      const tvWishlist = appData.tv?.wishlist || [];
+      const tvWatched = appData.tv?.watched || [];
+      const movieWatching = appData.movies?.watching || [];
+      const movieWishlist = appData.movies?.wishlist || [];
+      const movieWatched = appData.movies?.watched || [];
+      
+      const totalShows = tvWatching.length + tvWishlist.length + tvWatched.length;
+      const totalMovies = movieWatching.length + movieWishlist.length + movieWatched.length;
+      
       EL.innerHTML = `
-        <div class="stat"><b>${c.total}</b><span>Total items</span></div>
-        <div class="stat"><b>${c.watching}</b><span>Currently watching</span></div>
-        <div class="stat"><b>${c.wishlist}</b><span>Wishlist</span></div>
-        <div class="stat"><b>${c.watched}</b><span>Watched</span></div>
-        <div class="stat"><b>${c.notes}</b><span>Notes/Tags</span></div>
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-number">${c.watching}</div>
+            <div class="stat-label">Currently Watching</div>
+          </div>
+          <div class="stat">
+            <div class="stat-number">${c.wishlist}</div>
+            <div class="stat-label">Want to Watch</div>
+          </div>
+          <div class="stat">
+            <div class="stat-number">${c.watched}</div>
+            <div class="stat-label">Already Watched</div>
+          </div>
+          <div class="stat">
+            <div class="stat-number">${c.total}</div>
+            <div class="stat-label">Total Items</div>
+          </div>
+        </div>
+        <div style="margin-top: 15px; padding: 10px; background: var(--card-bg, #f8f9fa); border-radius: 8px; border: 1px solid var(--border, #dee2e6);">
+          <h5 style="margin: 0 0 10px 0; color: var(--text, #333); font-size: 0.9rem;">📺 TV Shows Breakdown</h5>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 0.85rem; max-width: 75%;">
+            <div><strong>${tvWatching.length}</strong> Watching</div>
+            <div><strong>${tvWishlist.length}</strong> Want to Watch</div>
+            <div><strong>${tvWatched.length}</strong> Watched</div>
+          </div>
+          <h5 style="margin: 10px 0; color: var(--text, #333); font-size: 0.9rem;">🎬 Movies Breakdown</h5>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 0.85rem; max-width: 75%;">
+            <div><strong>${movieWatching.length}</strong> Watching</div>
+            <div><strong>${movieWishlist.length}</strong> Want to Watch</div>
+            <div><strong>${movieWatched.length}</strong> Watched</div>
+          </div>
+        </div>
       `;
     }
 
@@ -865,7 +908,14 @@ window.renderProFeaturesList = function renderProFeaturesList() {
 
 // ---- Front Spotlight (replaces Horoscope) ----
 window.loadFrontSpotlight = function loadFrontSpotlight() {
-  if (!window.FLAGS?.frontSpotlightEnabled) return;
+  if (!window.FLAGS?.frontSpotlightEnabled) {
+    // Force hide the section if it exists
+    const frontSpotlight = document.getElementById('frontSpotlight');
+    if (frontSpotlight) {
+      frontSpotlight.style.display = 'none';
+    }
+    return;
+  }
   
   const frontSpotlight = document.getElementById('frontSpotlight');
   const frontSpotlightList = document.getElementById('frontSpotlightList');

@@ -6,7 +6,7 @@ window.FLAGS = Object.assign({
   statsEnabled: true,
   skeletonsEnabled: true,
   flickwordModalEnabled: true,                // optional iframe modal
-  frontSpotlightEnabled: false,               // replaced by Next Up This Week
+  frontSpotlightEnabled: false,               // Featured Spotlight section (disabled)
   mobilePolishEnabled: true,                  // mobile layout polish v1
   notesChipEnabled: true,                     // notes/tags chip on cards
   shareModalSanityEnabled: true,              // share modal a11y + scroll lock + focus trap
@@ -16,7 +16,7 @@ window.FLAGS = Object.assign({
   themePacksEnabled: true,                    // theme packs (T0)
   providersEnabled: true,                     // where to watch providers
   extrasEnabled: true,                        // extras/outtakes discovery
-            playlistsEnabled: true,                     // curated spotlight video
+            playlistsEnabled: false,                    // curated spotlight video (disabled)
           playlistsProEnabled: true,                  // curated rows (PRO)
           triviaEnabled: true,                        // per-card trivia chips
           flickwordBoostEnabled: true,                // FlickFact panel on Home
@@ -25,7 +25,6 @@ window.FLAGS = Object.assign({
           homeRowNextUp: true,                        // Next Up This Week row
           homeRowSpotlight: true,                     // Community Spotlight row
           homeRowPlayAlong: true,                     // Play Along row (Trivia & FlickWord)
-          homeRowCurated: true,                       // Curated Lists row (What to Watch)
           homeRowFeedback: true,                      // Feedback Tile row
 }, window.FLAGS || {});
 

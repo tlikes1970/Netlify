@@ -26,6 +26,24 @@
     <!-- Feature flags and safety guard -->
     <script src="js/flags.js"></script>
     
+    <!-- Debug utilities (must load early) -->
+    <script src="js/debug-utils.js"></script>
+    
+    <!-- Home sections configuration (must load early) -->
+    <script src="js/home-sections-config.js"></script>
+    
+    <!-- DOM element caching system -->
+    <script src="js/dom-cache.js"></script>
+    
+    <!-- Centralized error handling -->
+    <script src="js/error-handler.js"></script>
+    
+    <!-- Unified visibility management -->
+    <script src="js/visibility-manager.js"></script>
+    
+    <!-- Common utilities (reduced duplication) -->
+    <script src="js/common-utils.js"></script>
+    
     <!-- Chrome extension messaging polyfill -->
     <script src="scripts/polyfill.js"></script>
     
@@ -57,7 +75,7 @@
         </div>
         
         <div class="header-center">
-          <div id="versionIndicator" style="position: fixed; top: 10px; left: 10px; background: #007bff; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">v11.1</div>
+          <div id="versionIndicator" style="position: fixed; top: 10px; left: 10px; background: #007bff; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">v14.3</div>
           <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
           <div id="proBadge" class="pro-badge" style="display: none;">PRO</div>
           <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
@@ -175,135 +193,18 @@
         <button id="discoverTab" class="tab" title="Get personalized recommendations based on your taste" aria-label="Discover tab - find new shows and movies">✨ <span data-i18n="discover">Discover</span></button>
       </div>
 
-          <!-- Curated Sections -->
-    <section id="curatedSections" class="curated-sections" aria-label="Curated lists">
-      <!-- Populated by curated-rows.js -->
-    </section>
     
     <!-- Curated Sections Indicator - REMOVED (only shows on setting change) -->
 
-    <!-- Currently Watching Preview Row -->
-    <section id="currentlyWatchingPreview" class="home-preview-row cw-row" style="display: none;" aria-label="Currently Watching Preview">
-      <div class="preview-row-header">
-        <h3 class="preview-row-title">👁️ Currently Watching</h3>
-      </div>
-      <div class="preview-row-container">
-        <div class="preview-row-scroll" id="currentlyWatchingScroll">
-          <!-- Cards will be populated by JavaScript -->
-        </div>
-      </div>
-    </section>
 
-    <!-- Next Up This Week Row -->
-    <section id="next-up-row" class="home-section" data-feature="homeRowNextUp" style="display: none;">
-      <h2 class="section-title">Next Up This Week</h2>
-      <div class="next-up-scroll row-inner"><!-- tiles injected here --></div>
-    </section>
 
-    <!-- Community Spotlight Row -->
-    <section id="spotlight-row" class="home-section" data-feature="homeRowSpotlight">
-      <h2 class="section-title">Community Spotlight</h2>
-      <div class="section-description" style="font-size: 14px; color: var(--text-secondary, #666); margin-bottom: 16px; text-align: center;">
-        User-submitted videos and community content
-      </div>
 
-      <div class="spotlight-grid">
-        <!-- LEFT: video -->
-        <div class="spotlight-video">
-          <!-- inject <iframe> here on render -->
-        </div>
-
-        <!-- RIGHT: rotating info -->
-        <aside class="spotlight-info" aria-live="polite">
-          <div class="spotlight-meta">
-            <div class="spotlight-title"></div>
-            <div class="spotlight-credit"></div>
-            <div class="spotlight-desc"></div>
-          </div>
-          <div class="spotlight-cta">
-            <button class="btn btn-primary" id="spotlightSubmitBtn">Submit your video</button>
-          </div>
-          <div class="spotlight-badges">
-            <!-- e.g., <span class="badge">NEW</span> <span class="badge">Trailer</span> -->
-          </div>
-        </aside>
-      </div>
-    </section>
-
-    <!-- Play Along Row (Trivia & FlickWord) -->
-    <section id="playalong-row" class="home-section" data-feature="homeRowPlayAlong">
-      <h2 class="section-title">Play Along</h2>
-      <div class="playalong-scroll row-inner"><!-- tiles injected here --></div>
-    </section>
-
-    <!-- Curated Lists Row -->
-    <section id="curated-row" class="home-section" data-feature="homeRowCurated">
-      <h2 class="section-title">What to Watch</h2>
-      <div class="curated-stacks"><!-- lists injected here --></div>
-    </section>
 
 
 	
-	<!-- Front Spotlight (placeholder; module will populate if enabled) -->
-<section id="frontSpotlight" class="home-section" hidden>
-  <h2 class="section-title">Featured Spotlight</h2>
-  <div class="section-description" style="font-size: 14px; color: var(--text-secondary, #666); margin-bottom: 16px; text-align: center;">
-    Curated trending videos and featured content
-  </div>
-</section>
 
 
 
-    <!-- Daily Video Spotlight -->
-    <section id="videoSpotlight" class="spotlight-card" aria-labelledby="spotlightTitle">
-      <div class="spotlight-head">
-        <h2 id="spotlightTitle">Daily Video Spotlight</h2>
-        <div class="spotlight-subtitle" style="font-size: 14px; color: var(--text-secondary, #666); margin-bottom: 8px;">
-          Featured daily videos and trailers
-        </div>
-        <div class="spotlight-date" aria-live="polite" aria-atomic="true"></div>
-      </div>
-
-      <div class="spotlight-media" id="spotlightMedia" role="region" aria-label="Featured video"></div>
-
-      <div class="spotlight-meta">
-        <div class="spotlight-title" id="spotlightItemTitle"></div>
-        <div class="spotlight-desc" id="spotlightDesc"></div>
-        <div class="spotlight-actions">
-          <button class="btn" id="spotlightPlayBtn">Play</button>
-          <button class="btn" id="spotlightMuteBtn" aria-pressed="true">Unmute</button>
-        </div>
-      </div>
-    </section>
-
-
-      <!-- Quote of the Day Container -->
-      <div class="quote-flickword-container">
-        <div class="left-column">
-          <div id="quoteCard" class="quote-card">
-            <h3 class="quote-title">💭 <span data-i18n="quote_of_the_day">Quote of the Day</span></h3>
-            <div class="quote-content" id="dailyQuote">
-              <p class="quote-text">"The best way to predict the future is to create it."</p>
-              <p class="quote-author">- Peter Drucker</p>
-            </div>
-          </div>
-          <div id="randomQuoteCard" class="random-quote-card">
-            <h3 class="quote-title">🎲 <span data-i18n="random_quote">Random Quote</span></h3>
-            <div class="quote-content" id="randomQuote">
-              <p class="quote-text">"One does not simply watch one episode."</p>
-              <p class="quote-author">- Some dude</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Results -->
-      <div id="searchResults" class="section" style="display: none">
-                  <h3>
-            🎯 <span data-i18n="search_results">Search Results</span> <span class="count" id="resultsCount">0</span>
-          </h3>
-        <div id="searchResultsList" class="list-container"></div>
-      </div>
 
       <!-- Home -->
       <div id="homeSection" class="tab-section">
@@ -312,9 +213,143 @@
         </div>
         
         <!-- Stats Section -->
-        <div id="statsBasicBody" data-i18n="loading">Loading…</div>
+        <div id="statsBasicBody" data-i18n="loading" style="display: none;">Loading…</div>
         <div id="statsPro" style="display: none;">
           <div id="statsProBody"></div>
+        </div>
+
+        <!-- Currently Watching Preview Row -->
+        <section id="currentlyWatchingPreview" class="home-preview-row cw-row" style="display: none;" aria-label="Currently Watching Preview">
+          <div class="preview-row-header">
+            <h3 class="preview-row-title">👁️ Currently Watching</h3>
+          </div>
+          <div class="preview-row-container">
+            <div class="preview-row-scroll" id="currentlyWatchingScroll">
+              <!-- Cards will be populated by JavaScript -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Next Up This Week Row -->
+        <section id="next-up-row" class="home-section" data-feature="homeRowNextUp" style="display: none;">
+          <h2 class="section-title">Next Up This Week</h2>
+          <div class="next-up-scroll row-inner"><!-- tiles injected here --></div>
+        </section>
+
+        <!-- Community Spotlight Row -->
+        <section id="spotlight-row" class="home-section" data-feature="homeRowSpotlight">
+          <h2 class="section-title">Community Spotlight</h2>
+          <div class="spotlight-grid">
+            <div class="spotlight-video">
+              <!-- Video content will be injected here -->
+            </div>
+            <div class="spotlight-info">
+              <h3 class="spotlight-title">Community Spotlight</h3>
+              <div class="spotlight-credit"></div>
+              <p class="spotlight-desc"></p>
+              <div class="spotlight-badges"></div>
+              <button id="spotlightSubmitBtn" class="btn btn-primary">Submit Your Video</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Play Along Row (Trivia & FlickWord) -->
+        <section id="playalong-row" class="home-section" data-feature="homeRowPlayAlong">
+          <h2 class="section-title">Play Along</h2>
+          <div class="playalong-scroll row-inner"><!-- tiles injected here --></div>
+        </section>
+
+        <!-- Curated Sections (Trending, Staff Picks, New This Week) -->
+        <section id="curatedSections" class="curated-sections" aria-label="Curated lists">
+          <!-- Populated by curated-rows.js -->
+        </section>
+
+        <!-- What's in Theaters Section -->
+        <section id="theaters-section" class="home-section" style="display: none;">
+          <h2 class="section-title">What's in Theaters Near Me</h2>
+          <div class="section-description" style="font-size: 14px; color: var(--text-secondary, #666); margin-bottom: 16px; text-align: center;">
+            Current theatrical releases and showtimes
+          </div>
+          
+          <div class="theaters-container">
+            <div class="theaters-header">
+              <h3>🎬 Now Playing</h3>
+              <button class="btn secondary" id="refreshTheatersBtn">🔄 Refresh</button>
+            </div>
+            <div class="theaters-list" id="theatersList">
+              <div class="loading">Loading movies...</div>
+            </div>
+          </div>
+          
+          <div class="theaters-info">
+            <div class="theaters-meta">
+              <h3>Find Showtimes</h3>
+              <p>Click "Find Showtimes" to see showtimes at theaters near you</p>
+              <div class="location-info">
+                <span id="userLocation">📍 Getting your location...</span>
+              </div>
+            </div>
+            <div class="theaters-cta">
+              <button class="btn btn-primary" id="findShowtimesBtn">🎫 Find Showtimes</button>
+              <button class="btn secondary" id="refreshLocationBtn">📍 Update Location</button>
+            </div>
+            <div class="theaters-badges">
+              <span class="badge">Now Playing</span>
+              <span class="badge" id="movieCount">Loading...</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Quote of the Day Container -->
+        <div class="quote-flickword-container" style="display: none;">
+          <div class="left-column">
+            <div id="quoteCard" class="quote-card">
+              <h3 class="quote-title">💭 <span data-i18n="quote_of_the_day">Quote of the Day</span></h3>
+              <div class="quote-content" id="dailyQuote">
+                <p class="quote-text">"The best way to predict the future is to create it."</p>
+                <p class="quote-author">- Peter Drucker</p>
+              </div>
+            </div>
+            <div id="randomQuoteCard" class="random-quote-card">
+              <h3 class="quote-title">🎲 <span data-i18n="random_quote">Random Quote</span></h3>
+              <div class="quote-content" id="randomQuote">
+                <p class="quote-text">"One does not simply watch one episode."</p>
+                <p class="quote-author">- Some dude</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feedback Section -->
+        <div id="feedbackSection" class="feedback-card" style="display: none;">
+          <h3 data-i18n="feedback">Share Your Thoughts</h3>
+          <p data-i18n="feedback_working">Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!</p>
+          <p class="feedback-subtitle" data-i18n="feedback_subtitle">💬 App feedback • 💭 Random thoughts • 💬 Quote submissions • 🤫 Anonymous confessions • 😤 Venting welcome</p>
+          <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="feedback-form" action="/thank-you">
+            <input type="hidden" name="form-name" value="feedback" />
+            <input type="hidden" name="theme" id="feedbackThemeInput" />
+            <div style="display: none;">
+              <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <textarea
+                name="message"
+                class="search-input"
+                placeholder=""
+                data-i18n-placeholder="feedback_placeholder"
+                rows="3"
+                required
+                style="resize: vertical; min-height: 60px;"
+              ></textarea>
+              <button type="submit" class="btn" data-i18n="send">Share It!</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Search Results Container -->
+        <div id="searchResults" class="search-results" style="display: none;">
+          <h4>🎯 <span data-i18n="search_results">Search Results</span> <span class="count" id="resultsCount">0</span></h4>
+          <div id="searchResultsList" class="list-container"></div>
         </div>
       </div>
 
@@ -367,6 +402,7 @@
             <div id="discoverList" class="list-container"></div>
           </div>
         </div>
+
 
       <!-- Settings / Profile -->
               <div id="settingsSection" class="tab-section" style="display: none">
@@ -561,6 +597,25 @@
                         <span id="curatedRowsStatus" class="settings-status">Auto-saves</span>
                       </div>
                       <p class="settings-hint">Number of curated recommendation sections to show on the home page</p>
+                    </div>
+
+                    <!-- Currently Watching Preview Limit -->
+                    <div class="settings-control-group">
+                      <label for="settingCurrentlyWatchingLimit" class="settings-label">Currently Watching Preview Limit</label>
+                      <div class="settings-input-group">
+                        <input
+                          type="number"
+                          id="settingCurrentlyWatchingLimit"
+                          name="currentlyWatchingLimit"
+                          min="5"
+                          max="20"
+                          value="12"
+                          class="settings-input settings-input-number"
+                        />
+                        <span class="settings-hint">(5-20)</span>
+                        <span id="currentlyWatchingLimitStatus" class="settings-status">Auto-saves</span>
+                      </div>
+                      <p class="settings-hint">Number of currently watching shows to display on the home page preview</p>
                     </div>
 
                     <!-- Episode Tracking Toggle -->
@@ -884,12 +939,11 @@
     <!-- Feature modules (safe to assume utils/app are ready) -->
     <script src="scripts/currently-watching-preview.js"></script>
     <script src="scripts/next-up-this-week.js"></script>
+    <script src="scripts/community-spotlight.js"></script>
     <script src="scripts/curated-rows.js"></script>
     <script src="scripts/curated-seed.js"></script>
-    <script src="scripts/spotlight.js"></script>
-    <script src="scripts/community-spotlight.js"></script>
+    <script src="scripts/theaters-near-me.js"></script>
     <script src="scripts/play-along.js"></script>
-    <script src="scripts/curated-lists.js"></script>
     <script src="scripts/list-actions.js"></script>
     <script src="scripts/share-modal.js"></script>
     <script src="scripts/search-tips.js"></script>
@@ -906,6 +960,83 @@
     <script src="scripts/episode-tracking.js"></script>
 
     
+
+    <!-- Refactor validation testing -->
+    <script src="scripts/refactor-validation.js"></script>
+    
+    <!-- Search page functionality test -->
+    <script src="scripts/search-page-test.js"></script>
+    
+    <!-- Card size consistency test -->
+    <script src="scripts/card-size-test.js"></script>
+    
+    <!-- Duplicate fix test -->
+    <script src="scripts/duplicate-fix-test.js"></script>
+    
+    <!-- Currently watching fix test -->
+    <script src="scripts/currently-watching-fix-test.js"></script>
+    
+    <!-- Curated sections debug test -->
+    <script src="scripts/curated-debug-test.js"></script>
+    
+    <!-- Simple tab manager -->
+    <script src="scripts/simple-tab-manager.js"></script>
+    
+    <!-- Search functionality test -->
+    <script src="scripts/search-functionality-test.js"></script>
+    
+    <!-- Simple search test -->
+    <script src="scripts/simple-search-test.js"></script>
+    
+    <!-- Fallback search initialization -->
+    <script>
+    (function() {
+      'use strict';
+      
+      // Fallback search initialization to ensure search works
+      function initializeSearchFallback() {
+        console.log('🔍 Fallback search initialization starting...');
+        
+        const searchBtn = document.getElementById('searchBtn');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        const searchInput = document.getElementById('searchInput');
+        
+        if (searchBtn && typeof window.performSearch === 'function') {
+          console.log('✅ Setting up search button (fallback)');
+          searchBtn.onclick = function() {
+            console.log('🔍 Search button clicked (fallback)');
+            window.performSearch();
+          };
+        }
+        
+        if (clearSearchBtn && typeof window.clearSearch === 'function') {
+          console.log('✅ Setting up clear search button (fallback)');
+          clearSearchBtn.onclick = function() {
+            console.log('🧹 Clear search button clicked (fallback)');
+            window.clearSearch();
+          };
+        }
+        
+        if (searchInput && typeof window.performSearch === 'function') {
+          console.log('✅ Setting up search input Enter key (fallback)');
+          searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+              console.log('⌨️ Enter key pressed (fallback)');
+              e.preventDefault();
+              window.performSearch();
+            }
+          });
+        }
+        
+        console.log('✅ Fallback search initialization complete');
+      }
+      
+      // Run immediately and also after a delay
+      initializeSearchFallback();
+      setTimeout(initializeSearchFallback, 2000);
+      
+    })();
+    </script>
 
     <!-- Episode Tracking Toggle Handler -->
     <script>
@@ -960,14 +1091,21 @@
         localStorage.setItem('flicklet:episodeTracking:enabled', String(enabled));
         
         // Update UI visibility based on setting
-        updateEpisodeTrackingUI(enabled);
+        // Add a small delay to ensure cards are rendered first
+        setTimeout(() => {
+          updateEpisodeTrackingUI(enabled);
+        }, 100);
       }
       
       // Function to update UI based on episode tracking setting
       function updateEpisodeTrackingUI(enabled) {
+        console.log('🔧 updateEpisodeTrackingUI called with enabled:', enabled);
+        
         // Show/hide episode tracking buttons on TV series cards
         const episodeButtons = document.querySelectorAll('[data-action="track-episodes"]');
-        episodeButtons.forEach(btn => {
+        console.log('🔧 Found episode buttons:', episodeButtons.length);
+        episodeButtons.forEach((btn, index) => {
+          console.log(`🔧 Button ${index}:`, btn.textContent, 'setting display to:', enabled ? 'inline-block' : 'none');
           btn.style.display = enabled ? 'inline-block' : 'none';
         });
         
@@ -977,10 +1115,7 @@
           hint.style.display = enabled ? 'inline' : 'none';
         });
         
-        // Trigger UI update in episode tracking system
-        if (window.updateEpisodeTrackingUI) {
-          window.updateEpisodeTrackingUI(enabled);
-        }
+        // Note: UI update handled by episode tracking system initialization
       }
       
       // Try to setup immediately
@@ -1001,6 +1136,13 @@
       
       // Expose function to update UI
       window.updateEpisodeTrackingUI = updateEpisodeTrackingUI;
+      
+      // Update UI on page load to show existing buttons
+      setTimeout(() => {
+        const enabled = localStorage.getItem('flicklet:episodeTracking:enabled') === 'true';
+        console.log('🔧 Page load - updating episode tracking UI, enabled:', enabled);
+        updateEpisodeTrackingUI(enabled);
+      }, 1000);
       
     })();
     </script>
@@ -1239,6 +1381,164 @@
         // Stop checking after 10 seconds
         setTimeout(() => clearInterval(checkForTabs), 10000);
       });
+      
+    })();
+    </script>
+
+    <!-- Currently Watching Limit Setting Handler -->
+    <script>
+    (function(){
+      console.log('🔧 Currently watching limit setting handler starting...');
+      
+      let input = null;
+      let debounceTimer;
+      
+      // Function to find and setup the input
+      function setupInput() {
+        // If already set up, don't do it again
+        if (input && input.dataset.setupComplete) {
+          console.log('🔧 Currently watching limit input already set up, skipping');
+          return true;
+        }
+        
+        input = document.querySelector('#settingCurrentlyWatchingLimit, [name="currentlyWatchingLimit"]');
+        console.log('🔧 Currently watching limit input found:', !!input, input);
+        if (!input) {
+          console.warn('🔧 Currently watching limit input not found, will retry...');
+          return false;
+        }
+        
+        // Track if this is initial setup to avoid showing notification
+        let isInitialSetup = true;
+        let hasUserInteracted = false;
+        let isSettingValue = false; // Flag to prevent notifications when setting value programmatically
+        let lastNotifiedValue = null; // Track last value we showed notification for
+        
+        // Function to safely set value without triggering notifications
+        function setValueSafely(value) {
+          console.log('🔧 setValueSafely called with:', value, 'isSettingValue will be set to true');
+          isSettingValue = true;
+          input.value = value;
+          console.log('🔧 Set value safely to:', value, 'isSettingValue:', isSettingValue);
+          // Apply the setting but without notification
+          applySetting();
+          isSettingValue = false;
+          console.log('🔧 setValueSafely completed, isSettingValue reset to false');
+        }
+        
+        // Load saved value
+        const stored = localStorage.getItem('flicklet:currentlyWatching:limit');
+        console.log('🔧 Stored currently watching limit value:', stored);
+        if (stored) {
+          // Set value without triggering notifications
+          setValueSafely(stored);
+        } else {
+          // Set default value without triggering notifications
+          setValueSafely('12');
+        }
+        
+        // Function to apply the setting
+        function applySetting() {
+          console.log('🔧 applyCurrentlyWatchingSetting called with value:', input.value, 'isInitialSetup:', isInitialSetup, 'hasUserInteracted:', hasUserInteracted, 'isSettingValue:', isSettingValue);
+          const n = Math.max(5, Math.min(20, Number(input.value)||12));
+          console.log('🔧 Setting currently watching limit to:', n);
+          localStorage.setItem('flicklet:currentlyWatching:limit', String(n));
+          
+          // Trigger currently watching preview update
+          if (typeof window.renderCurrentlyWatchingPreview === 'function') {
+            window.renderCurrentlyWatchingPreview();
+          }
+          document.dispatchEvent(new CustomEvent('currentlyWatching:rerender'));
+          console.log('🔧 Dispatched currentlyWatching:rerender event');
+          
+          // Only show notification if user has actually interacted with the input, we're not setting the value programmatically, and the value has changed
+          if (hasUserInteracted && !isSettingValue && lastNotifiedValue !== n && window.showNotification) {
+            console.log('🔧 Showing notification for user interaction - value changed from', lastNotifiedValue, 'to', n);
+            window.showNotification(`✅ Showing ${n} currently watching shows`, 'success');
+            lastNotifiedValue = n; // Remember this value so we don't notify again
+          } else {
+            console.log('🔧 Notification blocked - hasUserInteracted:', hasUserInteracted, 'isSettingValue:', isSettingValue, 'value changed:', lastNotifiedValue !== n, 'showNotification available:', !!window.showNotification);
+          }
+          
+          // Visual feedback on the input
+          input.style.borderColor = '#10b981';
+          input.style.backgroundColor = '#f0fdf4';
+          
+          // Update status indicator
+          const status = document.getElementById('currentlyWatchingLimitStatus');
+          if (status) {
+            status.textContent = '✅ Saved';
+            status.style.color = '#10b981';
+            setTimeout(() => {
+              status.textContent = 'Auto-saves';
+              status.style.color = '';
+            }, 2000);
+          }
+          
+          setTimeout(() => {
+            input.style.borderColor = '';
+            input.style.backgroundColor = '';
+          }, 1000);
+        }
+        
+        // Debounced function for input events
+        function debouncedApply() {
+          console.log('🔧 debouncedApply called for currently watching limit');
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            console.log('🔧 Debounced apply executing for currently watching limit');
+            applySetting();
+          }, 500);
+        }
+        
+        // Event listeners
+        input.addEventListener('input', () => {
+          console.log('🔧 Currently watching limit input event fired');
+          hasUserInteracted = true;
+          isInitialSetup = false;
+          debouncedApply();
+        });
+        
+        input.addEventListener('change', () => {
+          console.log('🔧 Currently watching limit change event fired');
+          hasUserInteracted = true;
+          isInitialSetup = false;
+          applySetting();
+        });
+        
+        // Mark as set up
+        input.dataset.setupComplete = 'true';
+        console.log('🔧 Currently watching limit input setup complete');
+        return true;
+      }
+      
+      // Try to setup immediately
+      if (!setupInput()) {
+        // If not ready, retry every 100ms for up to 10 seconds
+        let attempts = 0;
+        const maxAttempts = 100;
+        const interval = setInterval(() => {
+          attempts++;
+          console.log('🔧 Currently watching limit setup attempt', attempts);
+          if (setupInput() || attempts >= maxAttempts) {
+            clearInterval(interval);
+            if (attempts >= maxAttempts) {
+              console.error('🔧 Failed to setup currently watching limit input after', maxAttempts, 'attempts');
+            }
+          }
+        }, 100);
+      }
+      
+      // Expose refresh function for external use
+      window.refreshCurrentlyWatchingLimitSetting = function() {
+        console.log('🔧 Refreshing currently watching limit setting...');
+        if (input) {
+          const stored = localStorage.getItem('flicklet:currentlyWatching:limit');
+          if (stored) {
+            input.value = stored;
+          }
+        }
+      };
       
     })();
     </script>

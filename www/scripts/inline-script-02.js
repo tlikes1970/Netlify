@@ -2943,7 +2943,11 @@
           ${activeTab !== "watching" ? `<button class="btn" data-action="move" data-id="${item.id}" data-list="watching">▶️ ${t("currently_watching")}</button>` : ''}
           ${activeTab !== "wishlist" ? `<button class="btn" data-action="move" data-id="${item.id}" data-list="wishlist">📖 ${t("want_to_watch")}</button>` : ''}
           ${activeTab !== "watched" ? `<button class="btn" data-action="move" data-id="${item.id}" data-list="watched">✅ ${t("already_watched")}</button>` : ''}
-          ${mediaType === "tv" ? `<button class="btn secondary" data-action="track-episodes" data-id="${item.id}" data-title="${escapeHtml(title)}" style="display: ${isEpisodeTrackingEnabled() ? 'inline-block' : 'none'};">📺 Track Episodes</button>` : ""}
+          ${mediaType === "tv" ? (() => {
+            const enabled = isEpisodeTrackingEnabled();
+            console.log('🔧 Creating Track Episodes button for', title, 'enabled:', enabled);
+            return `<button class="btn secondary" data-action="track-episodes" data-id="${item.id}" data-title="${escapeHtml(title)}" style="display: ${enabled ? 'inline-block' : 'none'};">📺 Track Episodes</button>`;
+          })() : ""}
           <button class="btn" data-action="notes" data-id="${item.id}">✎ ${t("notes_tags")}</button>
           <button class="btn danger" data-action="remove" data-id="${item.id}">🗑️ ${t("remove")}</button>
         </div>
@@ -3893,52 +3897,33 @@
           const parsedQuery = parseAdvancedSearch(q);
           console.log('🔍 Parsed query:', parsedQuery);
 
-          // Hide all main page elements when searching
-          const homeSections = [
-            'curatedSections',
-            'triviaTile', 
-            'frontSpotlight',
-            'seriesOrg',
-            'quote-flickword-container',
-            'quoteCard',
-            'randomQuoteCard',
-            'flickwordCard',
-            'bingeBanner'
-          ];
-          
-          homeSections.forEach(sectionId => {
-            const element = document.getElementById(sectionId);
-            if (element) {
-              element.style.display = 'none';
-              console.log(`🙈 Hiding ${sectionId} during search`);
-            }
-          });
+        // Hide home sections to show search results
+        if (window.HomeSectionsConfig && typeof window.HomeSectionsConfig.getSections === 'function') {
+          const homeSections = window.HomeSectionsConfig.getSections('search-hide');
+          if (homeSections) {
+            homeSections.forEach(sectionId => {
+              const section = document.getElementById(sectionId);
+              if (section && section.style) {
+                section.style.display = 'none';
+                console.log(`🔍 Hiding section ${sectionId} for search`);
+              }
+            });
+          }
+        }
 
-          // Hide tab content sections during search (keep tab bar visible)
-          const tabSections = ['homeSection', 'watchingSection', 'wishlistSection', 'watchedSection', 'discoverSection'];
-          tabSections.forEach(sectionId => {
-            const section = document.getElementById(sectionId);
-            if (section) {
-              section.style.display = 'none';
-              console.log(`🙈 Hiding tab section ${sectionId} during search`);
-            }
-          });
+        // Show search results container
+        const searchResults = document.getElementById('searchResults');
+        if (searchResults) {
+          searchResults.style.display = 'block';
+          console.log('🔍 Showing search results container');
+        }
 
           // Set search state flag
-          if (window.FlickletApp) {
+          if (window.SimpleTabManager) {
+            window.SimpleTabManager.setSearching(true);
+          } else if (window.FlickletApp) {
             window.FlickletApp.isSearching = true;
           }
-
-          // Show all tabs when searching (hide current tab behavior disabled during search)
-          const tabIds = ['home','watching','wishlist','watched','discover','settings'];
-          tabIds.forEach(name => {
-            const btn = document.getElementById(`${name}Tab`);
-            if (btn) {
-              btn.classList.remove('hidden');
-              btn.classList.remove('active');
-              console.log(`🔍 Search mode: ${name}Tab visible`);
-            }
-          });
 
           out.style.display = "";
           // Show skeletons while searching
@@ -4136,16 +4121,35 @@
         });
 
         // Clear search state flag
-        if (window.FlickletApp) {
+        if (window.SimpleTabManager) {
+          window.SimpleTabManager.setSearching(false);
+        } else if (window.FlickletApp) {
           window.FlickletApp.isSearching = false;
+          // Trigger tab visibility update to restore normal tab behavior
+          if (typeof window.FlickletApp.updateTabVisibility === 'function') {
+            window.FlickletApp.updateTabVisibility();
+          }
         }
 
-        // Restore normal tab hiding behavior (hide current tab, show others)
-        if (window.FlickletApp && typeof window.FlickletApp.switchToTab === 'function') {
-          // Re-trigger tab switch to restore normal tab hiding behavior
-          const currentTab = window.FlickletApp.currentTab;
-          console.log('🔄 Restoring tab hiding behavior for current tab:', currentTab);
-          window.FlickletApp.switchToTab(currentTab);
+        // Hide search results container
+        const searchResults = document.getElementById('searchResults');
+        if (searchResults) {
+          searchResults.style.display = 'none';
+          console.log('🔍 Hiding search results container');
+        }
+
+        // Show home sections when clearing search
+        if (window.HomeSectionsConfig && typeof window.HomeSectionsConfig.getSections === 'function') {
+          const homeSections = window.HomeSectionsConfig.getSections('search-show');
+          if (homeSections) {
+            homeSections.forEach(sectionId => {
+              const section = document.getElementById(sectionId);
+              if (section && section.style) {
+                section.style.display = '';
+                console.log(`📖 Showing section ${sectionId} after clearing search`);
+              }
+            });
+          }
         }
 
         // Show all main page elements when search is cleared (only if on home tab)
@@ -4182,6 +4186,12 @@
       window.clearSearch = clearSearch;
       window.tmdbGet = tmdbGet;
       window.createShowCard = createShowCard;
+      
+      // Initialize search functionality now that functions are available
+      if (window.FlickletApp && typeof window.FlickletApp.initializeSearch === 'function') {
+        console.log('🔍 Initializing search after functions are available');
+        window.FlickletApp.initializeSearch();
+      }
 
       function refreshSearchResults() {
         console.log('🔄 refreshSearchResults called');
@@ -4442,7 +4452,7 @@
             insertAfter.insertAdjacentElement("afterend", card);
           }
 
-          // Insert feedback section last (at the bottom)
+          // Insert feedback section at the very bottom of home page only
           if (!document.getElementById("feedbackSection")) {
             const feedbackCard = document.createElement("div");
             feedbackCard.className = "feedback-card";
@@ -4471,8 +4481,8 @@
                 </div>
               </form>
             `;
-            const insertAfter = document.getElementById("frontSpotlight") || document.getElementById("personalityForecast") || document.getElementById("quoteBlock") || anchor;
-            insertAfter.insertAdjacentElement("afterend", feedbackCard);
+            // Insert at the very end of the home section
+            home.appendChild(feedbackCard);
           }
 
           const qEl = document.getElementById("randomQuote");
