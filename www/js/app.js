@@ -788,6 +788,11 @@ waitForFirebaseReady() {
       const homeSections = [
         'curatedSections',
         'currentlyWatchingPreview',
+        'next-up-row',
+        'spotlight-row',
+        'playalong-row',
+        'curated-row',
+        'feedback-row',
         'triviaTile', 
         'videoSpotlight',
         'seriesOrg',

@@ -51,7 +51,7 @@
         </div>
         
         <div class="header-center">
-          <div id="versionIndicator" style="position: fixed; top: 10px; left: 10px; background: #007bff; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">v10.6</div>
+          <div id="versionIndicator" style="position: fixed; top: 10px; left: 10px; background: #007bff; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">v10.3</div>
           <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
           <div id="proBadge" class="pro-badge" style="display: none;">PRO</div>
           <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
@@ -185,6 +185,63 @@
         <div class="preview-row-scroll" id="currentlyWatchingScroll">
           <!-- Cards will be populated by JavaScript -->
         </div>
+      </div>
+    </section>
+
+    <!-- Next Up This Week Row -->
+    <section id="next-up-row" class="home-section" data-feature="homeRowNextUp" style="display: none;">
+      <h2 class="section-title">Next Up This Week</h2>
+      <div class="next-up-scroll row-inner"><!-- tiles injected here --></div>
+    </section>
+
+    <!-- Community Spotlight Row -->
+    <section id="spotlight-row" class="home-section" data-feature="homeRowSpotlight">
+      <h2 class="section-title">Community Spotlight</h2>
+
+      <div class="spotlight-grid">
+        <!-- LEFT: video -->
+        <div class="spotlight-video">
+          <!-- inject <iframe> here on render -->
+        </div>
+
+        <!-- RIGHT: rotating info -->
+        <aside class="spotlight-info" aria-live="polite">
+          <div class="spotlight-meta">
+            <div class="spotlight-title"></div>
+            <div class="spotlight-credit"></div>
+            <div class="spotlight-desc"></div>
+          </div>
+          <div class="spotlight-cta">
+            <button class="btn btn-primary" id="spotlightSubmitBtn">Submit your video</button>
+          </div>
+          <div class="spotlight-badges">
+            <!-- e.g., <span class="badge">NEW</span> <span class="badge">Trailer</span> -->
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Play Along Row (Trivia & FlickWord) -->
+    <section id="playalong-row" class="home-section" data-feature="homeRowPlayAlong">
+      <h2 class="section-title">Play Along</h2>
+      <div class="playalong-scroll row-inner"><!-- tiles injected here --></div>
+    </section>
+
+    <!-- Curated Lists Row -->
+    <section id="curated-row" class="home-section" data-feature="homeRowCurated">
+      <h2 class="section-title">What to Watch</h2>
+      <div class="curated-stacks"><!-- lists injected here --></div>
+    </section>
+
+    <!-- Feedback Tile Row -->
+    <section id="feedback-row" class="home-section" data-feature="homeRowFeedback">
+      <div class="feedback-card" role="button" tabindex="0" aria-label="Open feedback">
+        <div class="feedback-icon" aria-hidden="true">💬</div>
+        <div class="feedback-text">
+          <div class="feedback-title">Got feedback?</div>
+          <div class="feedback-sub">Tap to share a thought or request a feature.</div>
+        </div>
+        <button class="btn btn-primary feedback-cta" type="button">Open</button>
       </div>
     </section>
 
@@ -717,6 +774,9 @@
                       Here's the deal: you want to remember what you're watching without needing a PhD in App Navigation. We built this because we got tired of two bad options — messy notes on our phones or bloated apps that make you log your "episode 7 mid-season thoughts." (Hard pass.)
                     </p>
                     <p class="settings-description">
+                      <strong>Data Attribution:</strong> This product uses the TMDB API but is not endorsed or certified by TMDB.
+                    </p>
+                    <p class="settings-description">
                       So we made this instead:
                     </p>
                     <ul style="margin: 16px 0; padding-left: 20px; color: var(--color-text);">
@@ -867,9 +927,14 @@
 
     <!-- Feature modules (safe to assume utils/app are ready) -->
     <script src="scripts/currently-watching-preview.js"></script>
+    <script src="scripts/next-up-this-week.js"></script>
     <script src="scripts/curated-rows.js"></script>
     <script src="scripts/curated-seed.js"></script>
     <script src="scripts/spotlight.js"></script>
+    <script src="scripts/community-spotlight.js"></script>
+    <script src="scripts/play-along.js"></script>
+    <script src="scripts/curated-lists.js"></script>
+    <script src="scripts/feedback-tile.js"></script>
     <script src="scripts/list-actions.js"></script>
     <script src="scripts/share-modal.js"></script>
     <script src="scripts/search-tips.js"></script>

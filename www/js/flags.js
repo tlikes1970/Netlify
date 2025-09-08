@@ -6,7 +6,7 @@ window.FLAGS = Object.assign({
   statsEnabled: true,
   skeletonsEnabled: true,
   flickwordModalEnabled: true,                // optional iframe modal
-  frontSpotlightEnabled: true,                // replaces horoscope
+  frontSpotlightEnabled: false,               // replaced by Next Up This Week
   mobilePolishEnabled: true,                  // mobile layout polish v1
   notesChipEnabled: true,                     // notes/tags chip on cards
   shareModalSanityEnabled: true,              // share modal a11y + scroll lock + focus trap
@@ -22,6 +22,11 @@ window.FLAGS = Object.assign({
           flickwordBoostEnabled: true,                // FlickFact panel on Home
           seriesOrganizerEnabled: true,               // card declutter (progressive disclosure)
           homeRowCurrentlyWatching: true,             // Currently Watching Preview row
+          homeRowNextUp: true,                        // Next Up This Week row
+          homeRowSpotlight: true,                     // Community Spotlight row
+          homeRowPlayAlong: true,                     // Play Along row (Trivia & FlickWord)
+          homeRowCurated: true,                       // Curated Lists row (What to Watch)
+          homeRowFeedback: true,                      // Feedback Tile row
 }, window.FLAGS || {});
 
 window.guard = (cond, fn) => { 
