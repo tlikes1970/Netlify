@@ -1154,6 +1154,9 @@
           closeBtn.style.padding = "12px 18px";
           closeBtn.style.minHeight = "44px";
         }
+        
+        // Return the modal element for external use
+        return wrap;
       }
 
       // Export modal API
@@ -2922,6 +2925,7 @@
           <button class="btn" data-action='addFromCache' data-id='${Number(item.id)}' data-list='watching'>▶️ ${t("currently_watching")}</button>
           <button class="btn" data-action='addFromCache' data-id='${Number(item.id)}' data-list='wishlist'>📖 ${t("want_to_watch")}</button>
           <button class="btn" data-action='addFromCache' data-id='${Number(item.id)}' data-list='watched'>✅ ${t("already_watched")}</button>
+          ${mediaType === "tv" ? `<button class="btn secondary" data-action="track-episodes" data-id="${item.id}" data-title="${escapeHtml(title)}" style="display: ${isEpisodeTrackingEnabled() ? 'inline-block' : 'none'};">📺 Track Episodes</button>` : ""}
           <button class="btn danger" data-action='notInterested' data-id='${Number(item.id)}' data-media-type='${mediaType}'>🚫 ${t('not_interested')}</button>
         </div>`;
         } else {
@@ -2939,6 +2943,7 @@
           ${activeTab !== "watching" ? `<button class="btn" data-action="move" data-id="${item.id}" data-list="watching">▶️ ${t("currently_watching")}</button>` : ''}
           ${activeTab !== "wishlist" ? `<button class="btn" data-action="move" data-id="${item.id}" data-list="wishlist">📖 ${t("want_to_watch")}</button>` : ''}
           ${activeTab !== "watched" ? `<button class="btn" data-action="move" data-id="${item.id}" data-list="watched">✅ ${t("already_watched")}</button>` : ''}
+          ${mediaType === "tv" ? `<button class="btn secondary" data-action="track-episodes" data-id="${item.id}" data-title="${escapeHtml(title)}" style="display: ${isEpisodeTrackingEnabled() ? 'inline-block' : 'none'};">📺 Track Episodes</button>` : ""}
           <button class="btn" data-action="notes" data-id="${item.id}">✎ ${t("notes_tags")}</button>
           <button class="btn danger" data-action="remove" data-id="${item.id}">🗑️ ${t("remove")}</button>
         </div>
@@ -3005,6 +3010,11 @@
 
       function openTMDBLink(id, type) {
         window.open(`https://www.themoviedb.org/${type}/${id}`, "_blank");
+      }
+
+      // Helper function to check if episode tracking is enabled
+      function isEpisodeTrackingEnabled() {
+        return localStorage.getItem('flicklet:episodeTracking:enabled') === 'true';
       }
 
       /* Lists & ops */
@@ -3887,7 +3897,7 @@
           const homeSections = [
             'curatedSections',
             'triviaTile', 
-            'videoSpotlight',
+            'frontSpotlight',
             'seriesOrg',
             'quote-flickword-container',
             'quoteCard',
@@ -4143,7 +4153,7 @@
           const homeSections = [
             'curatedSections',
             'triviaTile', 
-            'videoSpotlight',
+            'frontSpotlight',
             'seriesOrg',
             'quote-flickword-container',
             'quoteCard',

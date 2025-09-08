@@ -47,6 +47,9 @@
     const src = toYouTubeEmbed(item.videoUrl) + (params.toString() ? `?${params}` : '');
     const iframe = document.createElement('iframe');
     iframe.setAttribute('title', item.title || 'Spotlight');
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
+    iframe.setAttribute('loading', 'lazy');
+    iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
     iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
     iframe.setAttribute('allowfullscreen', 'true');
     iframe.src = src;

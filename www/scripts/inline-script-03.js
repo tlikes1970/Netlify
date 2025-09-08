@@ -121,6 +121,28 @@
             return;
           }
           
+          // Handle episode tracking action
+          if (btn.dataset.action === "track-episodes") {
+            e.preventDefault();
+            const seriesId = btn.dataset.id;
+            const seriesTitle = btn.dataset.title;
+            console.log('📺 Opening episode tracking for:', seriesId, seriesTitle);
+            console.log('📺 Episode tracking enabled:', localStorage.getItem('flicklet:episodeTracking:enabled'));
+            console.log('📺 openEpisodeModal available:', typeof window.openEpisodeModal);
+            
+            if (typeof window.openEpisodeModal === 'function') {
+              try {
+                window.openEpisodeModal(seriesId, seriesTitle);
+                console.log('📺 Modal function called successfully');
+              } catch (error) {
+                console.error('📺 Error calling episode modal:', error);
+              }
+            } else {
+              console.warn('📺 Episode tracking modal function not available');
+            }
+            return;
+          }
+          
           const action = btn.getAttribute("data-action");
           const id = Number(btn.getAttribute("data-id"));
           const list = btn.getAttribute("data-list");

@@ -784,7 +784,7 @@ waitForFirebaseReady() {
         }
       });
 
-      // Hide/show home-specific sections (curated, trivia, spotlight, series, flickword)
+      // Hide/show home-specific sections (curated, trivia, spotlight, flickword)
       const homeSections = [
         'curatedSections',
         'currentlyWatchingPreview',
@@ -792,14 +792,10 @@ waitForFirebaseReady() {
         'spotlight-row',
         'playalong-row',
         'curated-row',
-        'feedback-row',
-        'triviaTile', 
-        'videoSpotlight',
-        'seriesOrg',
+        'frontSpotlight',
         'quote-flickword-container',
         'quoteCard',
         'randomQuoteCard',
-        'flickwordCard',
         'bingeBanner'
       ];
       
@@ -933,6 +929,9 @@ waitForFirebaseReady() {
             break;
           case 'not-interested':
             // Handled by list-actions.js - do nothing here
+            break;
+          case 'track-episodes':
+            // Handled by inline-script-03.js - do nothing here
             break;
           default:
             console.warn(t('unknown_data_action') + ':', action);

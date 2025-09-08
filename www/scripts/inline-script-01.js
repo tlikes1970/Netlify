@@ -3970,7 +3970,10 @@
             src="https://www.youtube-nocookie.com/embed/${vid.id}?rel=0&modestbranding=1"
             title="${(vid.title || 'Curated video').replace(/"/g,'&quot;')}"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen>
+            allowfullscreen
+            sandbox="allow-scripts allow-same-origin allow-presentation"
+            referrerpolicy="no-referrer-when-downgrade"
+            loading="lazy">
           </iframe>
         </div>
         <div class="video-meta">
@@ -4154,7 +4157,10 @@
     return `<iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1"
                     title="${(title||'Playlist video').replace(/"/g,'&quot;')}"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowfullscreen></iframe>`;
+                    allowfullscreen
+                    sandbox="allow-scripts allow-same-origin allow-presentation"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    loading="lazy"></iframe>`;
   }
 
   function renderUpsell(container) {

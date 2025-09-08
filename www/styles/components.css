@@ -3886,6 +3886,88 @@ body.has-banner {
   .trivia-card{ padding:10px; }
 }
 
+/* ===== Trivia Modal Styles ===== */
+.trivia-modal-content {
+  text-align: left;
+  max-width: 500px;
+}
+
+.trivia-modal-content .trivia-question {
+  font-weight: 600;
+  margin-bottom: 20px;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.trivia-modal-content .trivia-choices {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.trivia-choice-btn {
+  padding: 12px 16px;
+  border: 2px solid var(--border, #ddd);
+  border-radius: 8px;
+  background: var(--card, #fff);
+  color: var(--text, #333);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.trivia-choice-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light, rgba(102, 126, 234, 0.1));
+  transform: translateY(-1px);
+}
+
+.trivia-choice-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.trivia-choice-btn[data-correct="true"] {
+  border-color: var(--primary);
+}
+
+.trivia-modal-content .trivia-feedback {
+  min-height: 24px;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.trivia-modal-content .trivia-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.trivia-modal-content .trivia-stats {
+  font-size: 12px;
+  color: var(--text-secondary, #666);
+  text-align: center;
+  margin-top: 12px;
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .trivia-modal-content .trivia-question {
+    font-size: 15px;
+  }
+  
+  .trivia-choice-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
 /* ===== Daily Video Spotlight ===== */
 .spotlight-card{
   margin-top:16px;
@@ -4046,5 +4128,207 @@ body.has-banner {
   .modal-card{ padding:10px; }
 }
 
+/* ===== Episode Tracking Modal Styles ===== */
+.episode-modal-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
+.episode-modal-header {
+  flex-shrink: 0;
+  padding: 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.episode-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.episode-progress {
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.episode-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary-start), var(--color-primary-end));
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.season-container {
+  margin-bottom: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.season-header {
+  width: 100%;
+  padding: 16px;
+  background: var(--color-surface-2);
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.season-header:hover {
+  background: var(--color-border);
+}
+
+.season-episodes {
+  background: var(--color-surface);
+}
+
+.episode-row {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.episode-row:hover {
+  background: var(--color-surface-2);
+}
+
+.episode-row:focus {
+  outline: 2px solid var(--color-primary-start);
+  outline-offset: -2px;
+}
+
+.episode-info {
+  flex: 1;
+}
+
+.episode-toggle {
+  flex-shrink: 0;
+}
+
+/* Toggle Switch Styles */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-border);
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background: linear-gradient(90deg, var(--color-primary-start), var(--color-primary-end));
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.slider:hover {
+  background-color: var(--color-muted);
+}
+
+input:checked + .slider:hover {
+  opacity: 0.8;
+}
+
+.season-progress {
+  width: 100px;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.season-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary-start), var(--color-primary-end));
+  transition: width 0.3s ease;
+}
+
+.season-chevron {
+  font-size: 16px;
+  color: var(--color-muted);
+  transition: transform 0.2s ease;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .episode-modal-header {
+    background: #1a1a1a;
+    border-bottom-color: #333;
+  }
+  
+  .episode-modal-body {
+    background: #1a1a1a;
+  }
+  
+  .season-header {
+    background: #2d2d2d;
+    color: #fff;
+  }
+  
+  .season-header:hover {
+    background: #3d3d3d;
+  }
+  
+  .season-episodes {
+    background: #1a1a1a;
+  }
+  
+  .episode-row {
+    border-bottom-color: #333;
+    color: #fff;
+  }
+  
+  .episode-row:hover {
+    background: #2d2d2d;
+  }
+}
 

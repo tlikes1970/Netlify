@@ -110,12 +110,14 @@
     if (item.youtubeId) {
       // YouTube embed
       const iframe = document.createElement('iframe');
-      iframe.src = `https://www.youtube.com/embed/${item.youtubeId}?playsinline=1&rel=0`;
+      iframe.src = `https://www.youtube.com/embed/${item.youtubeId}?playsinline=1&rel=0&modestbranding=1`;
       iframe.title = escapeHtml(item.title);
       iframe.loading = 'lazy';
       iframe.frameBorder = '0';
       iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
+      iframe.sandbox = 'allow-scripts allow-same-origin allow-presentation';
+      iframe.referrerPolicy = 'no-referrer-when-downgrade';
       
       videoEl.innerHTML = '';
       videoEl.appendChild(iframe);

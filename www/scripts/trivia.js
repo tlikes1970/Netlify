@@ -128,6 +128,57 @@
 
   // Start trivia
   initTrivia();
+  
+  // Expose trivia functionality for other systems to use
+  window.FlickletTrivia = {
+    // Get current question data
+    getCurrentQuestion: function() {
+      const qEl = document.getElementById('triviaQuestion');
+      const cEl = document.getElementById('triviaChoices');
+      
+      if (!qEl || !cEl) return null;
+      
+      const question = qEl.textContent;
+      const choices = Array.from(cEl.children).map(li => li.textContent);
+      
+      // Find correct answer by looking at the data attributes
+      let correctIndex = 0;
+      for (let i = 0; i < cEl.children.length; i++) {
+        if (cEl.children[i].dataset.idx == '0') { // Correct answer is always at index 0 after shuffling
+          correctIndex = i;
+          break;
+        }
+      }
+      
+      return {
+        id: 'main_trivia',
+        question: question,
+        options: choices,
+        correct: correctIndex,
+        source: 'main_system'
+      };
+    },
+    
+    // Check if trivia is locked for today
+    isLockedToday: function() {
+      const lockDate = localStorage.getItem(KEYS.lock);
+      return lockDate === today;
+    },
+    
+    // Get current streak
+    getCurrentStreak: function() {
+      return Number(localStorage.getItem(KEYS.streak) || 0);
+    },
+    
+    // Get stats
+    getStats: function() {
+      return {
+        streak: Number(localStorage.getItem(KEYS.streak) || 0),
+        lastDate: localStorage.getItem(KEYS.last),
+        locked: localStorage.getItem(KEYS.lock) === today
+      };
+    }
+  };
 
   function renderStats(){
     const streak = Number(localStorage.getItem(KEYS.streak) || 0);

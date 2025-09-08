@@ -9,6 +9,9 @@
       content="Search, track, and rate shows & films fast."
     />
     
+    <!-- Permissions Policy to prevent compute-pressure violations -->
+    <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
+    
     <!-- Icons for different platforms -->
     <link rel="icon" href="icons/icon-512.png" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
@@ -22,6 +25,9 @@
 
     <!-- Feature flags and safety guard -->
     <script src="js/flags.js"></script>
+    
+    <!-- Chrome extension messaging polyfill -->
+    <script src="scripts/polyfill.js"></script>
     
     <!-- Immediate mobile detection -->
     <script>
@@ -51,7 +57,7 @@
         </div>
         
         <div class="header-center">
-          <div id="versionIndicator" style="position: fixed; top: 10px; left: 10px; background: #007bff; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">v10.3</div>
+          <div id="versionIndicator" style="position: fixed; top: 10px; left: 10px; background: #007bff; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">v11.1</div>
           <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
           <div id="proBadge" class="pro-badge" style="display: none;">PRO</div>
           <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
@@ -197,6 +203,9 @@
     <!-- Community Spotlight Row -->
     <section id="spotlight-row" class="home-section" data-feature="homeRowSpotlight">
       <h2 class="section-title">Community Spotlight</h2>
+      <div class="section-description" style="font-size: 14px; color: var(--text-secondary, #666); margin-bottom: 16px; text-align: center;">
+        User-submitted videos and community content
+      </div>
 
       <div class="spotlight-grid">
         <!-- LEFT: video -->
@@ -233,45 +242,25 @@
       <div class="curated-stacks"><!-- lists injected here --></div>
     </section>
 
-    <!-- Feedback Tile Row -->
-    <section id="feedback-row" class="home-section" data-feature="homeRowFeedback">
-      <div class="feedback-card" role="button" tabindex="0" aria-label="Open feedback">
-        <div class="feedback-icon" aria-hidden="true">💬</div>
-        <div class="feedback-text">
-          <div class="feedback-title">Got feedback?</div>
-          <div class="feedback-sub">Tap to share a thought or request a feature.</div>
-        </div>
-        <button class="btn btn-primary feedback-cta" type="button">Open</button>
-      </div>
-    </section>
 
-    <!-- Trivia (daily) -->
-    <section id="triviaTile" class="trivia-card" aria-labelledby="triviaTitle">
-      <div class="trivia-head">
-        <h2 id="triviaTitle" data-i18n="trivia_title">Trivia</h2>
-        <div class="trivia-stats" aria-live="polite" aria-atomic="true"></div>
-      </div>
-      <div class="trivia-body">
-        <div class="trivia-question" id="triviaQuestion"></div>
-        <ul class="trivia-choices" id="triviaChoices" role="listbox"></ul>
-        <div class="trivia-feedback" id="triviaFeedback" aria-live="polite"></div>
-        <div class="trivia-actions">
-          <button class="btn" id="triviaNextBtn" hidden data-i18n="trivia_next">Next</button>
-        </div>
-      </div>
-    </section>
 	
-	<!-- Spotlight video (placeholder; module will populate if enabled) -->
-<section id="videoSpotlight" class="home-section" hidden></section>
+	<!-- Front Spotlight (placeholder; module will populate if enabled) -->
+<section id="frontSpotlight" class="home-section" hidden>
+  <h2 class="section-title">Featured Spotlight</h2>
+  <div class="section-description" style="font-size: 14px; color: var(--text-secondary, #666); margin-bottom: 16px; text-align: center;">
+    Curated trending videos and featured content
+  </div>
+</section>
 
-<!-- FlickWord quote/cta (placeholder; module will populate if enabled) -->
-<section id="quote-flickword-container" class="home-section" hidden></section>
 
 
     <!-- Daily Video Spotlight -->
     <section id="videoSpotlight" class="spotlight-card" aria-labelledby="spotlightTitle">
       <div class="spotlight-head">
         <h2 id="spotlightTitle">Daily Video Spotlight</h2>
+        <div class="spotlight-subtitle" style="font-size: 14px; color: var(--text-secondary, #666); margin-bottom: 8px;">
+          Featured daily videos and trailers
+        </div>
         <div class="spotlight-date" aria-live="polite" aria-atomic="true"></div>
       </div>
 
@@ -287,12 +276,8 @@
       </div>
     </section>
 
-    <!-- Series Organization -->
-    <section id="seriesOrg" class="series-block" aria-label="Series organization">
-      <!-- JS will render here. To force a specific series, add data-series-id="157239" (Alien: Earth example) -->
-    </section>
 
-      <!-- Quote of the Day and FlickWord Container -->
+      <!-- Quote of the Day Container -->
       <div class="quote-flickword-container">
         <div class="left-column">
           <div id="quoteCard" class="quote-card">
@@ -309,45 +294,6 @@
               <p class="quote-author">- Some dude</p>
             </div>
           </div>
-        </div>
-        <div id="flickwordCard" class="flickword-card">
-          <h3 class="flickword-title">🎯 <span data-i18n="flickword_daily_challenge">FlickWord Daily Challenge</span></h3>
-          <div class="flickword-timer-section">
-            <div class="flickword-countdown" id="fwCountdown">00:00:00</div>
-            <div class="flickword-motivation" id="flickwordMotivation"><span data-i18n="hours_left_motivation">Hours left to play today's game!</span></div>
-          </div>
-          <div class="flickword-stats">
-            <div class="stat-item">
-              <span class="stat-label">🔥 <span data-i18n="streak">STREAK</span></span>
-              <span class="stat-value" id="fwStreak">0</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">🏆 <span data-i18n="best">BEST</span></span>
-              <span class="stat-value" id="fwBest">-</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">📊 <span data-i18n="played">PLAYED</span></span>
-              <span class="stat-value" id="fwPlayed">0</span>
-            </div>
-          </div>
-          <div class="flickword-actions">
-            <button id="fwPlayBtn" class="btn primary" data-i18n="play_todays_word">Play Today's Word</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- FlickWord Modal -->
-      <div id="fwModal" class="fw-modal" style="display: none;">
-        <div class="fw-modal-content">
-          <div class="fw-modal-header" id="fwModalHeader">
-            <div class="fw-modal-title">FlickWord</div>
-            <div class="fw-modal-controls">
-              <button id="fwMinimize" class="fw-control-btn minimize" title="Minimize">−</button>
-              <button id="fwMaximize" class="fw-control-btn maximize" title="Maximize">□</button>
-              <button id="fwClose" class="fw-control-btn close" title="Close">&times;</button>
-            </div>
-          </div>
-          <iframe id="fwFrame" src="" frameborder="0"></iframe>
         </div>
       </div>
 
@@ -616,6 +562,16 @@
                       </div>
                       <p class="settings-hint">Number of curated recommendation sections to show on the home page</p>
                     </div>
+
+                    <!-- Episode Tracking Toggle -->
+                    <div class="settings-control-group">
+                      <label class="settings-checkbox-label">
+                        <input type="checkbox" id="enableEpisodeTracking" class="settings-checkbox" />
+                        <span class="settings-checkbox-text">Enable Episode Tracking</span>
+                      </label>
+                      <p class="settings-hint">Allow tracking of individual episodes for TV series (opt-in per series)</p>
+                    </div>
+
                   </div>
 
                   <!-- Pro Layout Features -->
@@ -934,12 +890,10 @@
     <script src="scripts/community-spotlight.js"></script>
     <script src="scripts/play-along.js"></script>
     <script src="scripts/curated-lists.js"></script>
-    <script src="scripts/feedback-tile.js"></script>
     <script src="scripts/list-actions.js"></script>
     <script src="scripts/share-modal.js"></script>
     <script src="scripts/search-tips.js"></script>
     <script src="scripts/series-org.js"></script>
-    <script src="scripts/trivia.js"></script>
     <script src="scripts/tmdb-seed.js"></script>
     <script src="scripts/pro-gate.js"></script>
     <script src="js/language-manager.js"></script>
@@ -949,8 +903,108 @@
     <script src="scripts/inline-script-01.js"></script>
     <script src="scripts/inline-script-02.js"></script>
     <script src="scripts/inline-script-03.js"></script>
+    <script src="scripts/episode-tracking.js"></script>
 
     
+
+    <!-- Episode Tracking Toggle Handler -->
+    <script>
+    (function(){
+      console.log('🔧 Episode tracking toggle handler starting...');
+      
+      let toggle = null;
+      
+      // Function to find and setup the toggle
+      function setupToggle() {
+        if (toggle && toggle.dataset.setupComplete) {
+          console.log('🔧 Episode tracking toggle already set up, skipping');
+          return true;
+        }
+        
+        toggle = document.querySelector('#enableEpisodeTracking');
+        console.log('🔧 Episode tracking toggle found:', !!toggle, toggle);
+        if (!toggle) {
+          console.warn('🔧 Episode tracking toggle not found, will retry...');
+          return false;
+        }
+        
+        // Load saved value
+        const stored = localStorage.getItem('flicklet:episodeTracking:enabled');
+        console.log('🔧 Stored episode tracking value:', stored);
+        if (stored !== null) {
+          toggle.checked = stored === 'true';
+        } else {
+          // Default to false (disabled)
+          toggle.checked = false;
+        }
+        
+        // Apply the setting
+        applyEpisodeTrackingSetting();
+        
+        // Add event listener
+        toggle.addEventListener('change', () => {
+          console.log('🔧 Episode tracking toggle changed:', toggle.checked);
+          applyEpisodeTrackingSetting();
+        });
+        
+        // Mark as set up
+        toggle.dataset.setupComplete = 'true';
+        
+        return true;
+      }
+      
+      // Function to apply the setting
+      function applyEpisodeTrackingSetting() {
+        const enabled = toggle.checked;
+        console.log('🔧 Setting episode tracking to:', enabled);
+        localStorage.setItem('flicklet:episodeTracking:enabled', String(enabled));
+        
+        // Update UI visibility based on setting
+        updateEpisodeTrackingUI(enabled);
+      }
+      
+      // Function to update UI based on episode tracking setting
+      function updateEpisodeTrackingUI(enabled) {
+        // Show/hide episode tracking buttons on TV series cards
+        const episodeButtons = document.querySelectorAll('[data-action="track-episodes"]');
+        episodeButtons.forEach(btn => {
+          btn.style.display = enabled ? 'inline-block' : 'none';
+        });
+        
+        // Update any existing progress hints
+        const progressHints = document.querySelectorAll('.episode-progress-hint');
+        progressHints.forEach(hint => {
+          hint.style.display = enabled ? 'inline' : 'none';
+        });
+        
+        // Trigger UI update in episode tracking system
+        if (window.updateEpisodeTrackingUI) {
+          window.updateEpisodeTrackingUI(enabled);
+        }
+      }
+      
+      // Try to setup immediately
+      if (!setupToggle()) {
+        // If not found, retry every 500ms for up to 10 seconds
+        let retries = 0;
+        const retryInterval = setInterval(() => {
+          retries++;
+          console.log('🔧 Retrying to find episode tracking toggle, attempt:', retries);
+          if (setupToggle() || retries >= 20) {
+            clearInterval(retryInterval);
+            if (retries >= 20) {
+              console.warn('🔧 Failed to find episode tracking toggle after 20 attempts');
+            }
+          }
+        }, 500);
+      }
+      
+      // Expose function to update UI
+      window.updateEpisodeTrackingUI = updateEpisodeTrackingUI;
+      
+    })();
+    </script>
+
     <!-- Curated Rows Count Setting Handler -->
     <script>
     (function(){
