@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Container Alignment Test - Flicklet</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Inter, system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .test-header {
+            padding: 2rem;
+            text-align: center;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .test-content {
+            padding: 2rem;
+        }
+        
+        .container-demo {
+            margin: 2rem 0;
+            padding: 1rem;
+            background: #f0f0f0;
+            border-radius: 8px;
+            border-left: 4px solid #e91e63;
+        }
+        
+        .alignment-test {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .test-box {
+            padding: 1rem;
+            background: #e91e63;
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        .section {
+            margin: 2rem 0;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .alignment-test {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>📐 Container Alignment Test</h1>
+            <p>Testing the shared container pattern</p>
+        </div>
+        
+        <div class="test-content">
+            <div class="container-demo">
+                <h3>Container Pattern Test</h3>
+                <p>All sections below should align to the same width and be centered.</p>
+            </div>
+            
+            <div class="container">
+                <div class="section">
+                    <h3>Section 1 - Header Area</h3>
+                    <p>This represents the header container area.</p>
+                </div>
+            </div>
+            
+            <div class="container">
+                <div class="section">
+                    <h3>Section 2 - Tab Navigation</h3>
+                    <p>This represents the tab navigation area.</p>
+                </div>
+            </div>
+            
+            <div class="container">
+                <div class="section">
+                    <h3>Section 3 - Search Area</h3>
+                    <p>This represents the search area.</p>
+                </div>
+            </div>
+            
+            <div class="container">
+                <div class="section">
+                    <h3>Section 4 - Content Area</h3>
+                    <p>This represents the main content area.</p>
+                </div>
+            </div>
+            
+            <div class="alignment-test">
+                <div class="test-box">Desktop: 3 columns</div>
+                <div class="test-box">Tablet: 2 columns</div>
+                <div class="test-box">Mobile: 1 column</div>
+            </div>
+            
+            <div style="margin-top: 2rem;">
+                <h3>Test Instructions</h3>
+                <ol>
+                    <li>All sections above should have the same width and be centered</li>
+                    <li>Resize your browser to test responsive behavior</li>
+                    <li>Check that containers align perfectly</li>
+                    <li>Verify no extra spacing or misalignment</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate the container alignment fix
+        function testContainerAlignment() {
+            console.log('📐 Container Alignment Test: Running alignment check');
+            
+            const containers = document.querySelectorAll('.container');
+            console.log('📐 Found', containers.length, 'containers');
+            
+            containers.forEach((container, index) => {
+                const rect = container.getBoundingClientRect();
+                console.log(`📐 Container ${index + 1}:`, {
+                    width: rect.width,
+                    left: rect.left,
+                    right: rect.right
+                });
+            });
+        }
+        
+        testContainerAlignment();
+        window.addEventListener('resize', testContainerAlignment);
+    </script>
+</body>
+</html>

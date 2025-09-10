@@ -26,6 +26,9 @@
     <!-- Feature flags and safety guard -->
     <script src="js/flags.js"></script>
     
+    <!-- Early flags initialization (must be before any row scripts) -->
+    <script src="scripts/flags-init.js"></script>
+    
     <!-- Debug utilities (must load early) -->
     <script src="js/debug-utils.js"></script>
     
@@ -75,7 +78,7 @@
         </div>
         
         <div class="header-center">
-          <div id="versionIndicator" style="position: fixed; top: 10px; left: 10px; background: #007bff; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">v14.3</div>
+          <div id="versionIndicator" style="position: fixed; top: 10px; left: 10px; background: #007bff; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">v14.6</div>
           <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
           <div id="proBadge" class="pro-badge" style="display: none;">PRO</div>
           <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
@@ -936,6 +939,18 @@
     <script src="scripts/notifications.js"></script>
     <script src="js/functions.js"></script>
 
+    <!-- Component modules -->
+    <script src="scripts/components/Card.js"></script>
+    
+    <!-- Home layout -->
+    <script src="scripts/home.js"></script>
+    
+    <!-- Router -->
+    <script src="scripts/router.js"></script>
+    
+    <!-- Feedback system -->
+    <script src="scripts/feedback/banner.js"></script>
+    
     <!-- Feature modules (safe to assume utils/app are ready) -->
     <script src="scripts/currently-watching-preview.js"></script>
     <script src="scripts/next-up-this-week.js"></script>

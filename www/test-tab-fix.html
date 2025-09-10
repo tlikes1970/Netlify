@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .pass { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .fail { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Tab Switching Fix Test</h1>
+    <div id="test-results"></div>
+    
+    <h2>Manual Tests</h2>
+    <button onclick="testSwitchToHome()">Switch to Home</button>
+    <button onclick="testSwitchToWatching()">Switch to Watching</button>
+    <button onclick="checkCurrentState()">Check Current State</button>
+    <button onclick="runAllTests()">Run All Tests</button>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            document.getElementById('test-results').appendChild(div);
+        }
+
+        function testSwitchToHome() {
+            try {
+                if (window.FlickletApp && typeof window.FlickletApp.switchToTab === 'function') {
+                    window.FlickletApp.switchToTab('home');
+                    addResult('✅ Successfully switched to home tab', 'pass');
+                } else {
+                    addResult('❌ FlickletApp.switchToTab not available', 'fail');
+                }
+            } catch (error) {
+                addResult(`❌ Error switching to home: ${error.message}`, 'fail');
+            }
+        }
+
+        function testSwitchToWatching() {
+            try {
+                if (window.FlickletApp && typeof window.FlickletApp.switchToTab === 'function') {
+                    window.FlickletApp.switchToTab('watching');
+                    addResult('✅ Successfully switched to watching tab', 'pass');
+                } else {
+                    addResult('❌ FlickletApp.switchToTab not available', 'fail');
+                }
+            } catch (error) {
+                addResult(`❌ Error switching to watching: ${error.message}`, 'fail');
+            }
+        }
+
+        function checkCurrentState() {
+            const state = {
+                FlickletApp: !!window.FlickletApp,
+                currentTab: window.FlickletApp?.currentTab,
+                SimpleTabManager: !!window.SimpleTabManager,
+                oldSwitchToTab: typeof window.switchToTab,
+                homeSection: document.getElementById('homeSection')?.style.display,
+                watchingSection: document.getElementById('watchingSection')?.style.display
+            };
+            
+            addResult(`📊 Current State: ${JSON.stringify(state, null, 2)}`, 'info');
+        }
+
+        function runAllTests() {
+            document.getElementById('test-results').innerHTML = '';
+            addResult('🧪 Running all tests...', 'info');
+            
+            // Test 1: Check if FlickletApp is available
+            if (window.FlickletApp) {
+                addResult('✅ FlickletApp is available', 'pass');
+            } else {
+                addResult('❌ FlickletApp is not available', 'fail');
+                return;
+            }
+
+            // Test 2: Check if switchToTab function exists
+            if (typeof window.FlickletApp.switchToTab === 'function') {
+                addResult('✅ FlickletApp.switchToTab is available', 'pass');
+            } else {
+                addResult('❌ FlickletApp.switchToTab is not available', 'fail');
+                return;
+            }
+
+            // Test 3: Test switching to home
+            try {
+                window.FlickletApp.switchToTab('home');
+                if (window.FlickletApp.currentTab === 'home') {
+                    addResult('✅ Successfully switched to home tab', 'pass');
+                } else {
+                    addResult(`❌ Expected currentTab to be 'home', got '${window.FlickletApp.currentTab}'`, 'fail');
+                }
+            } catch (error) {
+                addResult(`❌ Error switching to home: ${error.message}`, 'fail');
+            }
+
+            // Test 4: Test switching to watching
+            try {
+                window.FlickletApp.switchToTab('watching');
+                if (window.FlickletApp.currentTab === 'watching') {
+                    addResult('✅ Successfully switched to watching tab', 'pass');
+                } else {
+                    addResult(`❌ Expected currentTab to be 'watching', got '${window.FlickletApp.currentTab}'`, 'fail');
+                }
+            } catch (error) {
+                addResult(`❌ Error switching to watching: ${error.message}`, 'fail');
+            }
+
+            // Test 5: Switch back to home
+            try {
+                window.FlickletApp.switchToTab('home');
+                if (window.FlickletApp.currentTab === 'home') {
+                    addResult('✅ Successfully switched back to home tab', 'pass');
+                } else {
+                    addResult(`❌ Expected currentTab to be 'home', got '${window.FlickletApp.currentTab}'`, 'fail');
+                }
+            } catch (error) {
+                addResult(`❌ Error switching back to home: ${error.message}`, 'fail');
+            }
+
+            addResult('🏁 All tests completed!', 'info');
+        }
+
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>
+

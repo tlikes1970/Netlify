@@ -2625,7 +2625,9 @@
 
 // === MP-ShareModalSanity (guarded) ===
 (() => {
-  const FLAGS = (window.FLAGS = window.FLAGS || {});
+  const FLAGS = (window.FLAGS = window.FLAGS || {
+    cards_v2: true  // Enable Card component v2
+  });
   if (FLAGS.shareModalSanityEnabled === false) {
     console.log('🛡️ ShareModalSanity disabled via FLAGS.shareModalSanityEnabled=false');
     return;

@@ -5,6 +5,9 @@
 (function(){
   const mount = document.getElementById('curatedSections');
   if (!mount) return;
+  
+  // Defensive guard for Card v2
+  const USE_CARD_V2 = !!(window.FLAGS && window.FLAGS.cards_v2 && window.Card);
 
   // ---- Dynamic section limiting ----
   function getRowsLimit(){
@@ -101,6 +104,44 @@
   // Replace your existing card HTML builder with this
   function renderCuratedCard(item){
     const m = mapCuratedItem(item);
+    
+    // Use new Card component if enabled
+    if (USE_CARD_V2) {
+      const cardElement = window.Card({
+        variant: 'compact',
+        id: m.id,
+        posterUrl: m.poster,
+        title: m.title,
+        subtitle: '', // No subtitle for curated cards
+        rating: m.rating || 0,
+        badges: [], // No badges for curated cards
+        primaryAction: {
+          label: window.i18n?.add || 'Add',
+          onClick: () => handleCuratedAction('add', item)
+        },
+        overflowActions: [
+          {
+            label: 'Add to Wishlist',
+            onClick: () => handleCuratedAction('wish', item),
+            icon: '📖'
+          },
+          {
+            label: 'Not interested',
+            onClick: () => handleCuratedAction('not-interested', item),
+            icon: '❌'
+          }
+        ],
+        onOpenDetails: () => {
+          // Handle opening details
+          console.log('Open details for:', m.title);
+        }
+      });
+      
+      // Return the outer HTML of the card element
+      return cardElement.outerHTML;
+    }
+    
+    // Fallback to legacy card
     const stars = m.rating ? `${'★'.repeat(Math.floor(m.rating))}${(m.rating%1>=0.5)?'☆':''}` : '';
     const votes = m.votes ? ` <span class="votes">(${m.votes})</span>` : '';
     return `
@@ -154,6 +195,15 @@
       return;
     }
 
+    handleCuratedAction(action, item);
+  }
+  
+  /**
+   * Handle curated card actions (used by both legacy and new Card component)
+   */
+  function handleCuratedAction(action, item) {
+    const title = item.title || item.name || 'Untitled';
+    
     // Wire into your existing add APIs
     if (action === 'add' && window.addToList) {
       window.addToList(item, 'watching');
@@ -165,7 +215,7 @@
       // Handled by list-actions.js - do nothing here to avoid duplicates
       return;
     } else {
-      console.warn('Curated action not wired:', action, id);
+      console.warn('Curated action not wired:', action, item.id);
     }
   }
 

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card v2 Verification</title>
+    <style>
+        body { 
+            padding: 20px; 
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .pass { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .fail { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .card-test {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Card v2 Verification Test</h1>
+    <div id="test-results"></div>
+    
+    <div class="card-test">
+        <h3>Live Card Component Test</h3>
+        <div id="card-container"></div>
+    </div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            document.getElementById('test-results').appendChild(div);
+        }
+
+        function runVerification() {
+            addResult('🔍 Running Card v2 verification tests...', 'info');
+            
+            // Test 1: Check if flags-init.js loaded
+            if (window.FLAGS && window.FLAGS.cards_v2 === true) {
+                addResult('✅ FLAGS.cards_v2 is set to true', 'pass');
+            } else {
+                addResult('❌ FLAGS.cards_v2 is not set or not true', 'fail');
+                addResult(`   Current value: ${window.FLAGS?.cards_v2}`, 'info');
+            }
+            
+            // Test 2: Check if Card component is available
+            if (window.Card && typeof window.Card === 'function') {
+                addResult('✅ window.Card is available and is a function', 'pass');
+            } else {
+                addResult('❌ window.Card is not available or not a function', 'fail');
+                addResult(`   Type: ${typeof window.Card}`, 'info');
+            }
+            
+            // Test 3: Try to create a Card component
+            if (window.Card) {
+                try {
+                    const testCard = window.Card({
+                        variant: 'compact',
+                        id: 'test-123',
+                        posterUrl: 'https://image.tmdb.org/t/p/w200/ggFHVNu6YYI5L9pCfOacjizRGt.jpg',
+                        title: 'Test Card',
+                        subtitle: '2023 • TV Series',
+                        rating: 4.5,
+                        badges: [{ label: 'Test', kind: 'status' }],
+                        primaryAction: {
+                            label: 'Test Action',
+                            onClick: () => console.log('Test action clicked')
+                        },
+                        overflowActions: [],
+                        onOpenDetails: () => console.log('Test details clicked')
+                    });
+                    
+                    if (testCard && testCard.classList.contains('card')) {
+                        addResult('✅ Card component creates valid DOM element', 'pass');
+                        document.getElementById('card-container').appendChild(testCard);
+                    } else {
+                        addResult('❌ Card component does not create valid DOM element', 'fail');
+                    }
+                } catch (error) {
+                    addResult(`❌ Error creating Card component: ${error.message}`, 'fail');
+                }
+            }
+            
+            // Test 4: Check CSS classes
+            const testElement = document.querySelector('.card.card--compact');
+            if (testElement) {
+                addResult('✅ Found .card.card--compact element in DOM', 'pass');
+            } else {
+                addResult('❌ No .card.card--compact elements found in DOM', 'fail');
+            }
+            
+            addResult('🏁 Verification complete!', 'info');
+        }
+
+        // Run verification when page loads
+        document.addEventListener('DOMContentLoaded', runVerification);
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Cleanup - Remove Invalid IDs</title>
+    <style>
+        body { 
+            padding: 20px; 
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .data-preview {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Data Cleanup - Remove Invalid IDs</h1>
+    <div id="results"></div>
+    
+    <button onclick="scanData()">🔍 Scan for Invalid IDs</button>
+    <button onclick="cleanData()">🧹 Clean Invalid IDs</button>
+    <button onclick="showData()">📊 Show Current Data</button>
+    
+    <div id="data-preview" class="data-preview" style="display: none;"></div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = message;
+            document.getElementById('results').appendChild(div);
+        }
+
+        function scanData() {
+            addResult('🔍 Scanning for invalid IDs...', 'info');
+            
+            try {
+                // Check appData
+                const appData = window.appData || {};
+                let invalidFound = false;
+                
+                // Check TV watching
+                if (appData.tv?.watching) {
+                    const invalidTv = appData.tv.watching.filter(item => 
+                        item.id === 744653 || item.id === '744653' || 
+                        !item.id || isNaN(Number(item.id)) || Number(item.id) <= 0
+                    );
+                    if (invalidTv.length > 0) {
+                        addResult(`❌ Found ${invalidTv.length} invalid TV items:`, 'error');
+                        invalidTv.forEach(item => {
+                            addResult(`   - ID: ${item.id}, Title: ${item.name || item.title}`, 'error');
+                        });
+                        invalidFound = true;
+                    }
+                }
+                
+                // Check Movies watching
+                if (appData.movies?.watching) {
+                    const invalidMovies = appData.movies.watching.filter(item => 
+                        item.id === 744653 || item.id === '744653' || 
+                        !item.id || isNaN(Number(item.id)) || Number(item.id) <= 0
+                    );
+                    if (invalidMovies.length > 0) {
+                        addResult(`❌ Found ${invalidMovies.length} invalid Movie items:`, 'error');
+                        invalidMovies.forEach(item => {
+                            addResult(`   - ID: ${item.id}, Title: ${item.name || item.title}`, 'error');
+                        });
+                        invalidFound = true;
+                    }
+                }
+                
+                if (!invalidFound) {
+                    addResult('✅ No invalid IDs found in appData', 'success');
+                }
+                
+                // Check localStorage
+                const flickletData = localStorage.getItem('flicklet-data');
+                if (flickletData) {
+                    try {
+                        const data = JSON.parse(flickletData);
+                        let localStorageInvalid = false;
+                        
+                        if (data.tv?.watching) {
+                            const invalidTv = data.tv.watching.filter(item => 
+                                item.id === 744653 || item.id === '744653' || 
+                                !item.id || isNaN(Number(item.id)) || Number(item.id) <= 0
+                            );
+                            if (invalidTv.length > 0) {
+                                addResult(`❌ Found ${invalidTv.length} invalid TV items in localStorage:`, 'error');
+                                invalidTv.forEach(item => {
+                                    addResult(`   - ID: ${item.id}, Title: ${item.name || item.title}`, 'error');
+                                });
+                                localStorageInvalid = true;
+                            }
+                        }
+                        
+                        if (data.movies?.watching) {
+                            const invalidMovies = data.movies.watching.filter(item => 
+                                item.id === 744653 || item.id === '744653' || 
+                                !item.id || isNaN(Number(item.id)) || Number(item.id) <= 0
+                            );
+                            if (invalidMovies.length > 0) {
+                                addResult(`❌ Found ${invalidMovies.length} invalid Movie items in localStorage:`, 'error');
+                                invalidMovies.forEach(item => {
+                                    addResult(`   - ID: ${item.id}, Title: ${item.name || item.title}`, 'error');
+                                });
+                                localStorageInvalid = true;
+                            }
+                        }
+                        
+                        if (!localStorageInvalid) {
+                            addResult('✅ No invalid IDs found in localStorage', 'success');
+                        }
+                    } catch (e) {
+                        addResult('❌ Error parsing localStorage data: ' + e.message, 'error');
+                    }
+                }
+                
+            } catch (error) {
+                addResult('❌ Error scanning data: ' + error.message, 'error');
+            }
+        }
+
+        function cleanData() {
+            addResult('🧹 Cleaning invalid IDs...', 'info');
+            
+            try {
+                // Clean appData
+                if (window.appData) {
+                    if (window.appData.tv?.watching) {
+                        const originalCount = window.appData.tv.watching.length;
+                        window.appData.tv.watching = window.appData.tv.watching.filter(item => 
+                            item.id && item.id !== 744653 && item.id !== '744653' && 
+                            !isNaN(Number(item.id)) && Number(item.id) > 0
+                        );
+                        const removedCount = originalCount - window.appData.tv.watching.length;
+                        if (removedCount > 0) {
+                            addResult(`✅ Removed ${removedCount} invalid TV items from appData`, 'success');
+                        }
+                    }
+                    
+                    if (window.appData.movies?.watching) {
+                        const originalCount = window.appData.movies.watching.length;
+                        window.appData.movies.watching = window.appData.movies.watching.filter(item => 
+                            item.id && item.id !== 744653 && item.id !== '744653' && 
+                            !isNaN(Number(item.id)) && Number(item.id) > 0
+                        );
+                        const removedCount = originalCount - window.appData.movies.watching.length;
+                        if (removedCount > 0) {
+                            addResult(`✅ Removed ${removedCount} invalid movie items from appData`, 'success');
+                        }
+                    }
+                }
+                
+                // Clean localStorage
+                const flickletData = localStorage.getItem('flicklet-data');
+                if (flickletData) {
+                    try {
+                        const data = JSON.parse(flickletData);
+                        let cleaned = false;
+                        
+                        if (data.tv?.watching) {
+                            const originalCount = data.tv.watching.length;
+                            data.tv.watching = data.tv.watching.filter(item => 
+                                item.id && item.id !== 744653 && item.id !== '744653' && 
+                                !isNaN(Number(item.id)) && Number(item.id) > 0
+                            );
+                            const removedCount = originalCount - data.tv.watching.length;
+                            if (removedCount > 0) {
+                                addResult(`✅ Removed ${removedCount} invalid TV items from localStorage`, 'success');
+                                cleaned = true;
+                            }
+                        }
+                        
+                        if (data.movies?.watching) {
+                            const originalCount = data.movies.watching.length;
+                            data.movies.watching = data.movies.watching.filter(item => 
+                                item.id && item.id !== 744653 && item.id !== '744653' && 
+                                !isNaN(Number(item.id)) && Number(item.id) > 0
+                            );
+                            const removedCount = originalCount - data.movies.watching.length;
+                            if (removedCount > 0) {
+                                addResult(`✅ Removed ${removedCount} invalid movie items from localStorage`, 'success');
+                                cleaned = true;
+                            }
+                        }
+                        
+                        if (cleaned) {
+                            localStorage.setItem('flicklet-data', JSON.stringify(data));
+                            addResult('✅ Updated localStorage with cleaned data', 'success');
+                        } else {
+                            addResult('✅ No invalid data found in localStorage', 'success');
+                        }
+                        
+                    } catch (e) {
+                        addResult('❌ Error cleaning localStorage: ' + e.message, 'error');
+                    }
+                }
+                
+                addResult('🎉 Data cleanup complete! Refresh the page to see changes.', 'success');
+                
+            } catch (error) {
+                addResult('❌ Error cleaning data: ' + error.message, 'error');
+            }
+        }
+
+        function showData() {
+            const preview = document.getElementById('data-preview');
+            preview.style.display = 'block';
+            
+            try {
+                const appData = window.appData || {};
+                const data = {
+                    tvWatching: appData.tv?.watching || [],
+                    movieWatching: appData.movies?.watching || [],
+                    totalTv: (appData.tv?.watching || []).length,
+                    totalMovies: (appData.movies?.watching || []).length
+                };
+                
+                preview.textContent = JSON.stringify(data, null, 2);
+                addResult('📊 Current data displayed below', 'info');
+                
+            } catch (error) {
+                preview.textContent = 'Error loading data: ' + error.message;
+                addResult('❌ Error loading data: ' + error.message, 'error');
+            }
+        }
+
+        // Auto-scan on load
+        document.addEventListener('DOMContentLoaded', () => {
+            addResult('🚀 Data cleanup tool loaded. Click "Scan for Invalid IDs" to start.', 'info');
+        });
+    </script>
+</body>
+</html>
+

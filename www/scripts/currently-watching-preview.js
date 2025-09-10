@@ -8,6 +8,9 @@
   'use strict';
 
   console.log('🎬 Currently Watching Preview script loaded');
+  
+  // Defensive guard for Card v2
+  const USE_CARD_V2 = !!(window.FLAGS && window.FLAGS.cards_v2 && window.Card);
 
   // Feature flag check
   if (!window.FLAGS?.homeRowCurrentlyWatching) {
@@ -91,10 +94,22 @@
 
   /**
    * Handle actions on preview cards (move, remove)
+   * Supports both old signature (card, actionBtn) and new signature (action, item)
    */
-  function handlePreviewAction(card, actionBtn) {
-    const itemId = card.dataset.itemId;
-    const action = actionBtn.dataset.action;
+  function handlePreviewAction(cardOrAction, actionBtnOrItem) {
+    let action, itemId;
+    
+    // Check if this is the new signature (action, item)
+    if (typeof cardOrAction === 'string' && actionBtnOrItem && actionBtnOrItem.id) {
+      action = cardOrAction;
+      itemId = actionBtnOrItem.id;
+    } else {
+      // Old signature (card, actionBtn)
+      const card = cardOrAction;
+      const actionBtn = actionBtnOrItem;
+      itemId = card.dataset.itemId;
+      action = actionBtn.dataset.action;
+    }
 
     if (!itemId || !action) {
       console.error('❌ Missing item ID or action');
@@ -300,6 +315,64 @@
    * Create a preview card element
    */
   function createPreviewCard(item) {
+    // Use new Card component if enabled
+    if (USE_CARD_V2) {
+      const title = item.title || item.name || 'Unknown Title';
+      
+      // Try to use full URL first, then construct from poster_path
+      let posterUrl = item.poster_src || item.poster;
+      if (!posterUrl && item.poster_path) {
+        posterUrl = `https://image.tmdb.org/t/p/w200${item.poster_path}`;
+      }
+      
+      // Extract year from various possible sources
+      const year = item.release_date ? new Date(item.release_date).getFullYear() : 
+                   item.first_air_date ? new Date(item.first_air_date).getFullYear() : 
+                   item.year || '';
+      
+      const subtitle = year ? `${year} • ${item.mediaType === 'tv' ? 'TV Series' : 'Movie'}` : 
+                       (item.mediaType === 'tv' ? 'TV Series' : 'Movie');
+      
+      return window.Card({
+        variant: 'compact',
+        id: item.id,
+        posterUrl: posterUrl,
+        title: title,
+        subtitle: subtitle,
+        rating: item.vote_average || 0,
+        badges: [{ label: 'Watching', kind: 'status' }],
+        primaryAction: {
+          label: window.i18n?.continue || 'Continue',
+          onClick: () => {
+            // Handle continue watching
+            console.log('Continue watching:', title);
+          }
+        },
+        overflowActions: [
+          {
+            label: 'Move to Watched',
+            onClick: () => handlePreviewAction('move-watched', item),
+            icon: '✅'
+          },
+          {
+            label: 'Move to Wishlist', 
+            onClick: () => handlePreviewAction('move-wishlist', item),
+            icon: '📖'
+          },
+          {
+            label: 'Remove',
+            onClick: () => handlePreviewAction('remove', item),
+            icon: '🗑️'
+          }
+        ],
+        onOpenDetails: () => {
+          // Handle opening details
+          console.log('Open details for:', title);
+        }
+      });
+    }
+    
+    // Fallback to legacy card
     const card = document.createElement('div');
     card.className = 'preview-card';
     card.dataset.itemId = item.id;

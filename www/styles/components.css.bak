@@ -384,6 +384,236 @@ html, body { overflow-x:hidden; }
   }
 }
 
+/* === LEGACY SECTION HIDING (Home Layout v2) === */
+[data-legacy-home] {
+  display: none !important;
+}
+
+/* Show legacy sections only when home_layout_v2 is disabled */
+body:not([data-home-layout-v2]) [data-legacy-home] {
+  display: block !important;
+}
+
+/* Hide original theaters section when Home Layout v2 is active */
+body[data-home-layout-v2] #theaters-section {
+  display: none !important;
+}
+
+/* Hide original feedback section when Home Layout v2 is active */
+body[data-home-layout-v2] #feedbackSection {
+  display: none !important;
+}
+
+/* === COMMUNITY LAYOUT === */
+/* Community grid: allow columns to shrink without overflow */
+.community-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--space-4, 16px);
+  align-items: start;
+}
+.community-grid > * {
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .community-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Ensure Spotlight iframe never overlays the games column */
+.community-grid .spotlight {
+  position: relative;
+  z-index: 0;
+}
+.community-games {
+  position: relative;
+  z-index: 1;
+}
+
+/* Tiles */
+.community-games__tiles {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3, 12px);
+}
+.game-tile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-4, 16px);
+  border: 1px solid var(--color-border, #e1e5e9);
+  border-radius: var(--radius-xl, 16px);
+  background: var(--color-surface, #ffffff);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+.game-tile:focus-visible {
+  outline: 2px solid var(--color-primary, #007bff);
+  outline-offset: 2px;
+}
+
+.game-tile__icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.game-tile__text {
+  flex: 1;
+}
+
+.game-tile__title {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 4px;
+  color: var(--color-text, #333);
+}
+
+.game-tile__sub {
+  opacity: 0.75;
+  font-size: 14px;
+  color: var(--color-text-secondary, #666);
+}
+
+/* Stats teaser wraps nicely */
+.community-games__teaser {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5, 20px);
+  flex-wrap: wrap;
+  margin-top: var(--space-3, 12px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  border-radius: var(--radius-xl, 16px);
+  background: var(--color-surface-2, #f8f9fa);
+  border: 1px solid var(--color-border, #e1e5e9);
+}
+.teaser__item {
+  min-width: 84px;
+  text-align: center;
+}
+
+.teaser__value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-primary, #007bff);
+  margin-bottom: 2px;
+}
+
+.teaser__label {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  color: var(--color-text-secondary, #666);
+}
+
+.teaser__cta {
+  margin-left: auto;
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
+.community-games-placeholder {
+  opacity: 0.7;
+  padding: var(--space-4, 16px);
+  text-align: center;
+  color: var(--color-text-secondary, #666);
+}
+
+/* === GAMES TEASER MODAL === */
+.modal.games-teaser {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4, 16px);
+}
+
+.modal__backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.modal__dialog {
+  position: relative;
+  background: var(--color-surface, #ffffff);
+  border-radius: var(--radius-xl, 16px);
+  box-shadow: var(--shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.2));
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4, 16px) var(--space-4, 16px) 0;
+  border-bottom: 1px solid var(--color-border, #e1e5e9);
+}
+
+.modal__header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text, #333);
+}
+
+.modal__close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: var(--space-2, 8px);
+  color: var(--color-text-secondary, #666);
+  border-radius: var(--radius-sm, 6px);
+}
+
+.modal__close:hover {
+  background: var(--color-surface-2, #f8f9fa);
+}
+
+.modal__body {
+  padding: var(--space-4, 16px);
+}
+
+.modal__body p {
+  margin: 0;
+  color: var(--color-text-secondary, #666);
+  line-height: 1.5;
+}
+
+.modal__actions {
+  display: flex;
+  gap: var(--space-3, 12px);
+  padding: 0 var(--space-4, 16px) var(--space-4, 16px);
+  flex-wrap: wrap;
+}
+
+.modal__actions .btn {
+  flex: 1;
+  min-width: 120px;
+}
+
 /* === CARD COMPONENT STYLES === */
 
 /* Base card styles */
@@ -948,6 +1178,60 @@ html, body { overflow-x:hidden; }
   }
 }
 
+/* Search Results Container */
+.search-results {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 12px 0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  min-height: 200px;
+  position: relative;
+  z-index: 40;
+  /* Position to replace main content */
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.search-results h4 {
+  margin: 0 0 16px 0;
+  color: var(--text);
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-results .count {
+  background: var(--primary);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.search-results .list-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* Search results when empty */
+.search-results:empty::before {
+  content: 'No search results yet. Try searching for a movie or TV show!';
+  display: block;
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 40px 20px;
+}
+
 .search-row {
   position: relative;
   display: flex;
@@ -1404,6 +1688,15 @@ html[data-theme="light"] .welcome-message {
 }
 
 .tab-section.active {
+  display: block;
+}
+
+/* Home sections visibility - only show when home tab is active */
+.home-section {
+  display: none;
+}
+
+.home-section.home-visible {
   display: block;
 }
 
@@ -5313,364 +5606,25 @@ input:checked + .slider:hover {
   }
 }
 
-/* ========== MOBILE LAYOUT FIXES (layout_mobile_fix flag) ========== */
-@media (max-width: 768px) {
-  /* Only apply when mobile fix flag is enabled */
-  .layout-mobile-fix {
-    /* 1) Header/Search mobile responsive fixes - COMPACT HORIZONTAL */
-    .header {
-      display: grid !important;
-      grid-template-columns: 1fr auto 1fr !important;
-      align-items: center !important;
-      gap: 8px !important;
-      padding: 8px 12px !important;
-      min-height: auto !important;
-    }
-    
-    .header-left {
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: flex-start !important;
-      gap: 2px !important;
-      order: 1;
-    }
-    
-    .header-center {
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
-      gap: 2px !important;
-      order: 2;
-      flex: 1;
-    }
-    
-    .header-right {
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: flex-end !important;
-      gap: 4px !important;
-      order: 3;
-    }
-    
-    /* Compact user section */
-    .user-section {
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: flex-start !important;
-      gap: 2px !important;
-    }
-    
-    .username-snark {
-      font-size: 12px !important;
-      line-height: 1.2 !important;
-      margin: 0 !important;
-    }
-    
-    .account-controls {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      gap: 6px !important;
-    }
-    
-    /* Compact title section */
-    .title {
-      font-size: 1.4rem !important;
-      line-height: 1.1 !important;
-      margin: 0 !important;
-    }
-    
-    .subtitle {
-      font-size: 0.75rem !important;
-      line-height: 1.1 !important;
-      margin: 0 !important;
-    }
-    
-    .pro-badge {
-      font-size: 0.6rem !important;
-      padding: 2px 6px !important;
-      margin: 0 !important;
-    }
-    
-    .top-search {
-      padding: 6px !important;
-      margin: 4px 0 !important;
-      border-radius: 6px !important;
-      position: sticky !important;
-      top: 0 !important;
-      z-index: 100 !important;
-      background: var(--bg) !important;
-    }
-    
-    .search-row {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 4px !important;
-    }
-    
-    .search-input {
-      width: 100% !important;
-      padding: 6px 10px !important;
-      font-size: 13px !important;
-      min-height: 36px !important;
-    }
-    
-    .search-controls {
-      display: flex !important;
-      flex-wrap: wrap !important;
-      gap: 4px !important;
-      justify-content: center !important;
-    }
-    
-    .genre-filter {
-      flex: 1 !important;
-      min-width: 100px !important;
-      padding: 6px 8px !important;
-      font-size: 13px !important;
-      min-height: 36px !important;
-    }
-    
-    .search-btn {
-      padding: 6px 12px !important;
-      font-size: 13px !important;
-      min-height: 36px !important;
-      min-width: 60px !important;
-    }
-    
-    /* 2) Tabs/Rail mobile layout */
-    .tab-rail {
-      display: flex !important;
-      flex-wrap: wrap !important;
-      gap: 4px !important;
-      padding: 8px 0 !important;
-      justify-content: center !important;
-    }
-    
-    .tab-btn {
-      flex: 1 !important;
-      min-width: 80px !important;
-      padding: 8px 12px !important;
-      font-size: 13px !important;
-      min-height: 44px !important;
-      text-align: center !important;
-    }
-    
-    /* 3) Rows & Cards mobile responsive behavior */
-    .row {
-      margin: 16px 0 !important;
-      padding: 0 8px !important;
-    }
-    
-    .row-header {
-      margin-bottom: 12px !important;
-      padding: 0 4px !important;
-    }
-    
-    .row-title {
-      font-size: 1.1rem !important;
-      margin-bottom: 4px !important;
-    }
-    
-    .row-subtitle {
-      font-size: 0.85rem !important;
-    }
-    
-    .row-inner {
-      display: flex !important;
-      overflow-x: auto !important;
-      overflow-y: hidden !important;
-      gap: 12px !important;
-      padding: 4px 0 !important;
-      scroll-behavior: smooth !important;
-      -webkit-overflow-scrolling: touch !important;
-    }
-    
-    .row-inner::-webkit-scrollbar {
-      height: 4px !important;
-    }
-    
-    .row-inner::-webkit-scrollbar-track {
-      background: transparent !important;
-    }
-    
-    .row-inner::-webkit-scrollbar-thumb {
-      background: var(--color-border) !important;
-      border-radius: 2px !important;
-    }
-    
-    /* Card mobile adjustments */
-    .card {
-      flex: 0 0 auto !important;
-      min-width: 150px !important;
-      max-width: 160px !important;
-    }
-    
-    .card--compact {
-      min-width: 150px !important;
-      max-width: 160px !important;
-    }
-    
-    .card__poster {
-      width: 100% !important;
-      height: 200px !important;
-      aspect-ratio: 2/3 !important;
-    }
-    
-    .card__content {
-      padding: 8px !important;
-    }
-    
-    .card__title {
-      font-size: 0.9rem !important;
-      line-height: 1.2 !important;
-      margin-bottom: 4px !important;
-    }
-    
-    .card__subtitle {
-      font-size: 0.8rem !important;
-      line-height: 1.2 !important;
-      margin-bottom: 6px !important;
-    }
-    
-    .card__actions {
-      gap: 4px !important;
-    }
-    
-    .card__primary-action {
-      padding: 6px 12px !important;
-      font-size: 0.8rem !important;
-      min-height: 32px !important;
-    }
-    
-    .card__more-btn {
-      padding: 6px !important;
-      min-width: 32px !important;
-      min-height: 32px !important;
-    }
-    
-    .card__more-menu {
-      right: 0 !important;
-      top: 100% !important;
-      min-width: 140px !important;
-      z-index: 1000 !important;
-    }
-    
-    /* 4) Section spacing normalization - COMPACT */
-    .section {
-      margin: 12px 0 !important;
-      padding: 0 8px !important;
-    }
-    
-    .section__header {
-      margin-bottom: 8px !important;
-      padding: 0 4px !important;
-    }
-    
-    .section__title {
-      font-size: 1.1rem !important;
-      margin-bottom: 2px !important;
-    }
-    
-    .section__subtitle {
-      font-size: 0.8rem !important;
-    }
-    
-    /* 5) Community Spotlight mobile stacking */
-    .spotlight-grid {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 16px !important;
-    }
-    
-    .spotlight-video {
-      width: 100% !important;
-      aspect-ratio: 16/9 !important;
-      order: 1 !important;
-    }
-    
-    .spotlight-content {
-      order: 2 !important;
-      width: 100% !important;
-      padding: 0 !important;
-    }
-    
-    .spotlight-title {
-      font-size: 1.1rem !important;
-      margin-bottom: 8px !important;
-    }
-    
-    .spotlight-description {
-      font-size: 0.9rem !important;
-      line-height: 1.4 !important;
-      margin-bottom: 12px !important;
-    }
-    
-    .spotlight-cta {
-      width: 100% !important;
-      padding: 10px 16px !important;
-      font-size: 0.9rem !important;
-      min-height: 44px !important;
-    }
-    
-    /* 6) Feedback & misc mobile fixes */
-    .feedback-card {
-      padding: 12px !important;
-      margin: 8px 0 !important;
-    }
-    
-    .feedback-title {
-      font-size: 1rem !important;
-      margin-bottom: 8px !important;
-    }
-    
-    .feedback-description {
-      font-size: 0.85rem !important;
-      line-height: 1.3 !important;
-      margin-bottom: 12px !important;
-    }
-    
-    .feedback-cta {
-      width: 100% !important;
-      padding: 10px 16px !important;
-      font-size: 0.9rem !important;
-      min-height: 44px !important;
-    }
-    
-    /* Form inputs mobile fixes */
-    input[type="text"],
-    input[type="email"],
-    textarea,
-    select {
-      width: 100% !important;
-      padding: 8px 12px !important;
-      font-size: 14px !important;
-      min-height: 44px !important;
-    }
-    
-    textarea {
-      min-height: 80px !important;
-      resize: vertical !important;
-    }
-    
-    /* Button mobile fixes */
-    .btn {
-      min-height: 44px !important;
-      padding: 8px 16px !important;
-      font-size: 14px !important;
-    }
-    
-    .btn--full-width {
-      width: 100% !important;
-    }
-    
-    /* Ensure no horizontal scroll */
-    body {
-      overflow-x: hidden !important;
-    }
-    
-    .main-container {
-      overflow-x: hidden !important;
-    }
-  }
+/* NEW: Tab section isolation */
+.tab-section:not(.active) {
+  display: none !important;
+}
+.tab-section.active {
+  display: block !important;
+}
+
+/* NEW: For search mode & hidden class */
+.tab-section .hidden {
+  display: none !important;
+}
+
+/* NEW: Ensure home subsections respect hides */
+.home-section.hidden,
+.home-preview-row.hidden,
+.curated-sections.hidden,
+.spotlight-grid.hidden,
+.preview-row-container.hidden {
+  display: none !important;
 }
 

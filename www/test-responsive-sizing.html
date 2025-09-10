@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KISS Responsive Sizing Test</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 2px solid #ddd; border-radius: 8px; }
+        .test-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
+        .test-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .test-card { 
+            background: #f0f0f0; 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+            padding: 10px; 
+            text-align: center;
+        }
+        .size-info { font-size: 0.9rem; color: #666; margin-top: 10px; }
+        .breakpoint-info { 
+            background: #e3f2fd; 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin: 10px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 KISS Responsive Sizing Test</h1>
+    
+    <div class="breakpoint-info" id="current-breakpoint">
+        Current breakpoint: <span id="breakpoint-text">Loading...</span>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">📱 Container Padding Test</div>
+        <div class="main-container">
+            <p>This container should have responsive padding:</p>
+            <ul>
+                <li>Mobile: 16px padding</li>
+                <li>Tablet: 24px padding</li>
+                <li>Desktop: 32px padding</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">🎴 Card Sizing Test</div>
+        <div class="test-grid">
+            <div class="test-card" style="width: var(--card-width-mobile); height: var(--card-height-mobile);">
+                <div>Mobile Card</div>
+                <div class="size-info">64px × 96px</div>
+            </div>
+            <div class="test-card" style="width: var(--card-width-tablet); height: var(--card-height-tablet);">
+                <div>Tablet Card</div>
+                <div class="size-info">120px × 180px</div>
+            </div>
+            <div class="test-card" style="width: var(--card-width-desktop); height: var(--card-height-desktop);">
+                <div>Desktop Card</div>
+                <div class="size-info">184px × 276px</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">🔧 CSS Variables Test</div>
+        <div id="css-vars">
+            <p>Loading CSS variables...</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">📏 Touch Target Test</div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button style="min-width: 44px; min-height: 44px; padding: 10px;">Touch Me</button>
+            <button style="min-width: 44px; min-height: 44px; padding: 10px;">Touch Me</button>
+            <button style="min-width: 44px; min-height: 44px; padding: 10px;">Touch Me</button>
+        </div>
+        <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">
+            All buttons should be at least 44px × 44px for touch accessibility
+        </p>
+    </div>
+
+    <script>
+        // Detect current breakpoint
+        function updateBreakpoint() {
+            const width = window.innerWidth;
+            let breakpoint = 'Mobile (0-767px)';
+            
+            if (width >= 1024) {
+                breakpoint = 'Desktop (1024px+)';
+            } else if (width >= 768) {
+                breakpoint = 'Tablet (768px-1023px)';
+            }
+            
+            document.getElementById('breakpoint-text').textContent = breakpoint;
+        }
+        
+        // Display CSS variables
+        function displayCSSVars() {
+            const root = getComputedStyle(document.documentElement);
+            const vars = [
+                '--container-pad-mobile',
+                '--container-pad-tablet', 
+                '--container-pad-desktop',
+                '--card-width-mobile',
+                '--card-height-mobile',
+                '--card-width-tablet',
+                '--card-height-tablet',
+                '--card-width-desktop',
+                '--card-height-desktop'
+            ];
+            
+            let html = '<ul>';
+            vars.forEach(varName => {
+                const value = root.getPropertyValue(varName).trim();
+                html += `<li><strong>${varName}:</strong> ${value}</li>`;
+            });
+            html += '</ul>';
+            
+            document.getElementById('css-vars').innerHTML = html;
+        }
+        
+        // Initialize
+        updateBreakpoint();
+        displayCSSVars();
+        
+        // Update on resize
+        window.addEventListener('resize', () => {
+            updateBreakpoint();
+            displayCSSVars();
+        });
+    </script>
+</body>
+</html>
+

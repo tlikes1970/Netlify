@@ -284,6 +284,40 @@ const I18N = {
     generate_share_link: "Select what to share",
     close: "Close",
     
+    // Card component
+    more_actions: "More actions",
+    continue: "Continue",
+    add: "Add",
+    
+    // Home sections
+    "home.my_library": "My Library",
+    "home.my_library_sub": "Your personal watchlists and progress",
+    "home.community": "Community",
+    "home.community_sub": "Spotlight videos and community games",
+    "home.curated": "Curated",
+    "home.curated_sub": "Trending shows and staff recommendations",
+    "home.personalized": "Personalized",
+    "home.personalized_sub": "Recommendations just for you",
+    "home.theaters": "In Theaters Near Me",
+    "home.theaters_sub": "What's playing at your local cinemas",
+    "home.feedback": "Feedback",
+    "home.feedback_sub": "Help us improve Flicklet",
+    
+    // Feedback
+    "feedback.banner_cta": "Share your thoughts",
+    "feedback.banner_title": "Help us improve Flicklet",
+    "feedback.modal_title": "Send Feedback",
+    "feedback.type_label": "Type of feedback",
+    "feedback.type_select": "Select a type",
+    "feedback.type_bug": "Bug Report",
+    "feedback.type_feature": "Feature Request",
+    "feedback.type_improvement": "Improvement",
+    "feedback.type_other": "Other",
+    "feedback.message_label": "Your message",
+    "feedback.email_label": "Email (optional)",
+    "feedback.send": "Send Feedback",
+    "feedback.success_message": "Thank you for your feedback!",
+    
     // Genre translations - User-friendly descriptions
     action: "Action",
     adventure: "Adventure", 
@@ -597,6 +631,40 @@ const I18N = {
     select_all_everything: "Seleccionar Todo",
     generate_share_link: "Selecciona qué compartir",
     close: "Cerrar",
+    
+    // Card component
+    more_actions: "Más acciones",
+    continue: "Continuar",
+    add: "Agregar",
+    
+    // Home sections
+    "home.my_library": "Mi Biblioteca",
+    "home.my_library_sub": "Tus listas de seguimiento y progreso personal",
+    "home.community": "Comunidad",
+    "home.community_sub": "Videos destacados y juegos de la comunidad",
+    "home.curated": "Curado",
+    "home.curated_sub": "Series populares y recomendaciones del equipo",
+    "home.personalized": "Personalizado",
+    "home.personalized_sub": "Recomendaciones solo para ti",
+    "home.theaters": "En Cines Cerca de Mí",
+    "home.theaters_sub": "Qué se está proyectando en tus cines locales",
+    "home.feedback": "Comentarios",
+    "home.feedback_sub": "Ayúdanos a mejorar Flicklet",
+    
+    // Feedback
+    "feedback.banner_cta": "Comparte tus pensamientos",
+    "feedback.banner_title": "Ayúdanos a mejorar Flicklet",
+    "feedback.modal_title": "Enviar Comentarios",
+    "feedback.type_label": "Tipo de comentario",
+    "feedback.type_select": "Selecciona un tipo",
+    "feedback.type_bug": "Reporte de Error",
+    "feedback.type_feature": "Solicitud de Función",
+    "feedback.type_improvement": "Mejora",
+    "feedback.type_other": "Otro",
+    "feedback.message_label": "Tu mensaje",
+    "feedback.email_label": "Email (opcional)",
+    "feedback.send": "Enviar Comentarios",
+    "feedback.success_message": "¡Gracias por tus comentarios!",
     
     // Genre translations - User-friendly descriptions
     action: "Acción",
