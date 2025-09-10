@@ -100,10 +100,9 @@
 
   .search-row {
     display: flex !important;
-    flex-direction: row !important; /* FIXED: Changed from column to row for better horizontal space usage */
+    flex-direction: column !important;
     gap: 4px !important;
     margin-top: 0 !important;
-    align-items: center !important; /* FIXED: Better alignment */
   }
   
   /* Remove any gaps between search elements */
@@ -116,28 +115,29 @@
   }
 
   .search-input {
-    flex: 1 !important; /* FIXED: Take available space instead of fixed width */
+    width: 100% !important;
     padding: 6px 8px !important;
     font-size: 14px !important;
     min-height: 36px !important;
     margin: 0 !important;
   }
 
-  /* FIXED: Better horizontal layout for search controls */
+  /* Create a flex container for the bottom row */
   .search-row .genre-filter,
   .search-row .search-btn,
   .search-row .clear-search-btn,
   .search-row .advanced-search-btn {
     display: inline-block !important;
-    flex: 0 0 auto !important; /* FIXED: Don't grow, don't shrink */
-    min-width: 60px !important; /* FIXED: Minimum width for touch targets */
-    padding: 6px 8px !important; /* FIXED: Increased padding */
+    flex: 1 !important;
+    min-width: 0 !important;
+    padding: 6px 4px !important;
     font-size: 12px !important;
     min-height: 36px !important;
     height: 36px !important;
     margin: 0 !important;
     text-align: center !important;
     vertical-align: top !important;
+    float: left !important;
   }
 
 
@@ -163,12 +163,12 @@
 
 
   .show-poster {
-    width: 80px; /* FIXED: Increased from 80px for better space usage */
+    width: 80px;
     height: 120px;
   }
 
   .poster-placeholder {
-    width: 80px; /* FIXED: Increased from 80px for better space usage */
+    width: 80px;
     height: 120px;
   }
 
@@ -183,7 +183,6 @@
   .show-overview {
     font-size: 0.9rem;
     -webkit-line-clamp: 2;
-    line-clamp: 2; /* FIXED: Added standard property for compatibility */
   }
 
   /* Button adjustments */
@@ -337,7 +336,6 @@
   }
 
   .search-row {
-    flex-direction: column !important; /* FIXED: Only stack on very small screens */
     gap: 4px !important;
   }
 
@@ -408,21 +406,21 @@
 
 /* === MP-2.2b MOBILE CANONICAL CARD (≤768px) — REPLACE PRIOR MP-2.* MOBILE BLOCKS === */
 @media (max-width: 768px) {
-  /* FIXED: Mobile tokens with better spacing and sizing */
+  /* Mobile tokens (overridable via body.mobile-v1 inline style for quick testing) */
   .mobile-v1 {
-    --poster-w: 80px; /* FIXED: Increased from 64px for better space usage */
+    --poster-w: 64px;
     --actions-w: 44px;
-    --card-gap: 12px; /* FIXED: Increased from 8px for better spacing */
-    --card-pad-y: 12px; /* FIXED: Increased from 8px for better touch targets */
-    --card-pad-x: 16px; /* FIXED: Increased from 12px for better spacing */
+    --card-gap: 8px;
+    --card-pad-y: 8px;
+    --card-pad-x: 12px;
     --meta-title-size: 16px;
     --meta-line: 1.2;
   }
 
-  /* FIXED: Row layout with better space usage and uniform margins */
+  /* Row layout: [poster][details] - actions are now inside details */
   .mobile-v1 .show-card {
     display: grid !important;
-    grid-template-columns: 80px 1fr !important; /* FIXED: Increased from 64px */
+    grid-template-columns: 64px 1fr !important;
     gap: var(--card-gap) !important;
     padding: var(--card-pad-y) var(--card-pad-x) !important;
     background: var(--card-bg);
@@ -431,53 +429,50 @@
     max-width: 100% !important;
     border-radius: 8px;
     align-items: start;
-    margin: 0 0 12px !important; /* FIXED: Uniform margin between cards */
-    box-sizing: border-box !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; /* FIXED: Better shadow */
+    margin: 0 0 4px; /* Reduced from 6px to 4px */
   }
   
-  /* FIXED: Force mobile layout with better sizing and uniform margins */
+  /* Force mobile layout on small screens regardless of class */
   .show-card {
     display: grid !important;
-    grid-template-columns: 80px 1fr !important; /* FIXED: Increased from 64px */
-    gap: 12px !important; /* FIXED: Increased from 8px */
-    padding: 12px 16px !important; /* FIXED: Increased padding */
+    grid-template-columns: 64px 1fr !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
     background: white;
     border: 1px solid #ddd;
     width: 100% !important;
     max-width: 100% !important;
     border-radius: 8px;
     align-items: start;
-    margin: 0 0 12px !important; /* FIXED: Uniform margin between cards */
+    margin: 0 0 8px !important; /* Add space between cards */
     box-sizing: border-box !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; /* FIXED: Better shadow */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important; /* Add subtle shadow */
   }
   
-  /* FIXED: Mobile details layout with better vertical spacing */
+  /* Mobile details layout for fallback */
   .show-card .show-details {
     display: grid !important;
     grid-template-rows: auto auto auto 1fr auto !important;
-    gap: 4px !important; /* FIXED: Increased from 2px */
+    gap: 2px !important;
     min-width: 0 !important;
   }
   
-  /* FIXED: Mobile actions styling - prevent wrapping */
+  /* Mobile actions styling for fallback */
   .show-card .show-actions {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important; /* FIXED: Prevent wrapping */
-    gap: 6px !important; /* FIXED: Increased gap */
+    flex-wrap: wrap !important;
+    gap: 4px !important;
     align-items: center !important;
-    margin-top: 8px !important; /* FIXED: Increased margin */
-    justify-content: space-between !important; /* FIXED: Better distribution */
+    margin-top: 4px !important;
   }
   
   .show-card .show-actions .btn {
     flex: 1 !important;
     min-width: 0 !important;
-    font-size: 11px !important; /* FIXED: Increased from 10px */
-    padding: 6px 8px !important; /* FIXED: Increased padding */
-    min-height: 32px !important; /* FIXED: Increased height */
+    font-size: 10px !important;
+    padding: 2px 4px !important;
+    min-height: 24px !important;
   }
   
   /* Tighten up title and meta spacing */
@@ -507,15 +502,14 @@
     min-width: 0 !important;
   }
   
-  /* FIXED: Mobile actions styling - prevent wrapping */
+  /* Mobile actions styling */
   .mobile-v1 .show-card .show-actions {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important; /* FIXED: Prevent wrapping */
-    gap: 6px !important; /* FIXED: Increased gap */
+    flex-wrap: wrap !important;
+    gap: 4px !important;
     align-items: center !important;
-    margin-top: 8px !important; /* FIXED: Increased margin */
-    justify-content: space-between !important; /* FIXED: Better distribution */
+    margin-top: 4px !important;
   }
 
   /* Poster + button */
@@ -548,7 +542,6 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-    line-clamp: 2; /* FIXED: Added standard property for compatibility */
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     margin: 0 !important;
@@ -565,9 +558,9 @@
   .mobile-v1 .show-card .show-actions button {
     flex: 1 !important;
     min-width: 0 !important;
-    min-height: 32px !important; /* FIXED: Increased from 24px */
-    padding: 6px 8px !important; /* FIXED: Increased padding */
-    font-size: 11px !important; /* FIXED: Increased from 10px */
+    min-height: 24px !important;
+    padding: 2px 4px !important;
+    font-size: 10px !important;
     margin: 0 !important;
   }
 
@@ -590,26 +583,26 @@
     font-size: 10px; /* Smaller buttons */
   }
 
-  /* FIXED: Mobile list container spacing */
+  /* Mobile list container spacing */
   .mobile-v1 .list-container {
-    padding: 8px !important; /* FIXED: Increased from 4px */
+    padding: 4px !important;
     gap: 0 !important;
   }
   
-  /* FIXED: Ensure proper spacing between cards */
+  /* Ensure proper spacing between cards */
   .mobile-v1 .show-card + .show-card {
-    margin-top: 12px !important; /* FIXED: Increased from 8px */
+    margin-top: 8px !important;
   }
   
-  /* FIXED: Fallback list container spacing */
+  /* Fallback list container spacing */
   .list-container {
-    padding: 8px !important; /* FIXED: Increased from 4px */
+    padding: 4px !important;
     gap: 0 !important;
   }
   
-  /* FIXED: Fallback card spacing */
+  /* Fallback card spacing */
   .show-card + .show-card {
-    margin-top: 12px !important; /* FIXED: Increased from 8px */
+    margin-top: 8px !important;
   }
   
   /* Mobile-only animation (scoped + a11y) */
