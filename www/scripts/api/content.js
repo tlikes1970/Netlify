@@ -23,7 +23,7 @@
     {
       key: 'anime',
       labelKey: 'rows.anime',
-      fetch: (page = 1) => fetchByGenre('Animation', page)
+      fetch: fetchAnime
     },
     {
       key: 'horror',
@@ -148,6 +148,49 @@
       };
     } catch (error) {
       console.error('❌ Failed to fetch staff picks:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch anime content (Japanese animated content)
+   * @param {number} page - Page number (default: 1)
+   * @returns {Promise<Object>} TMDB response with anime results
+   */
+  async function fetchAnime(page = 1) {
+    try {
+      console.log('🎌 Fetching anime content, page:', page);
+      
+      // Fetch animated content and filter for Japanese productions
+      const animatedContent = await fetchByGenre('Animation', page);
+      
+      if (!animatedContent || !animatedContent.results) {
+        return { results: [], page: page, total_pages: 1 };
+      }
+
+      // Filter for anime-specific content (Japanese origin required)
+      const animeResults = animatedContent.results.filter(item => {
+        // Must be from Japan (primary requirement)
+        const isJapanese = item.origin_country && item.origin_country.includes('JP');
+        
+        // Additional anime-specific keywords in title or overview
+        const title = (item.title || item.name || '').toLowerCase();
+        const overview = (item.overview || '').toLowerCase();
+        const hasAnimeKeywords = /anime|manga|otaku|shounen|shoujo|seinen|josei|mecha|isekai|slice of life|battle shounen|studio ghibli|ghibli/i.test(title + ' ' + overview);
+        
+        // Must be Japanese AND have anime characteristics
+        return isJapanese && (hasAnimeKeywords || item.genre_ids?.includes(16));
+      });
+
+      console.log(`🎌 Filtered ${animeResults.length} anime items from ${animatedContent.results.length} animated items`);
+
+      return {
+        results: animeResults,
+        page: page,
+        total_pages: animatedContent.total_pages || 1
+      };
+    } catch (error) {
+      console.error('❌ Failed to fetch anime content:', error);
       throw error;
     }
   }

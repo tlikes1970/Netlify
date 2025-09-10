@@ -60,9 +60,9 @@
       header.appendChild(container);
     }
 
-    // Apply container to tab container
+    // Apply container to tab container - but preserve tab positioning
     const tabContainer = document.querySelector('.tab-container');
-    if (tabContainer) {
+    if (tabContainer && !tabContainer.querySelector('.container')) {
       const container = document.createElement('div');
       container.className = 'container';
       
@@ -194,4 +194,6 @@
   }
 
 })();
+
+
 

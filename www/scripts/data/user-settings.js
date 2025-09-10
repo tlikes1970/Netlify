@@ -13,12 +13,20 @@
 
   /**
    * Get the user's personalized row selections
-   * @returns {Array} Array of 2 items: [slot0, slot1] or [null, null] if not set
+   * @returns {Array} Array of 2 items: [slot0, slot1] or defaults if not set
    */
   window.getMyRows = function getMyRows() {
     try {
       const raw = localStorage.getItem('my_rows');
-      if (!raw) return [null, null];
+      if (!raw) {
+            // Set default values: anime for row 1, horror for row 2
+            const defaults = [
+              { type: 'preset', key: 'anime' },
+              { type: 'preset', key: 'horror' }
+            ];
+        window.setMyRows(defaults);
+        return defaults;
+      }
       
       const parsed = JSON.parse(raw);
       // Normalize: always return exactly 2 slots
@@ -26,10 +34,14 @@
         parsed[0] || null,
         parsed[1] || null
       ];
-    } catch (e) {
-      console.error('[getMyRows] failed:', e);
-      return [null, null];
-    }
+          } catch (e) {
+            console.error('[getMyRows] failed:', e);
+            // Return defaults on error
+            return [
+              { type: 'preset', key: 'anime' },
+              { type: 'preset', key: 'horror' }
+            ];
+          }
   };
 
   /**
@@ -68,5 +80,22 @@
   window.clearMyRows = function clearMyRows() {
     return window.setMyRows([null, null]);
   };
+
+  /**
+   * Reset personalized rows to new defaults (anime + horror)
+   */
+  window.resetPersonalizedRows = function resetPersonalizedRows() {
+    const newDefaults = [
+      { type: 'preset', key: 'anime' },
+      { type: 'preset', key: 'horror' }
+    ];
+    window.setMyRows(newDefaults);
+    console.log('🔄 Personalized rows reset to new defaults:', newDefaults);
+    return newDefaults;
+  };
+
+  // Reset personalized rows to new defaults (anime + horror)
+  // This will update existing users to the new default configuration
+  window.resetPersonalizedRows();
 
 })();

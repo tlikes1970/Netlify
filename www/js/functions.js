@@ -125,14 +125,22 @@ window.loadHomeContent = function loadHomeContent() {
   const container = document.getElementById('homeSection');
   if (!container) return;
   
-  // Don't replace the entire content - just initialize the existing sections
-  console.log('🏠 Loading home content - initializing existing sections');
+  console.log('🏠 Loading home content - using improved loading');
   
-  // Initialize the existing sections
+  // Start performance monitoring
+  if (window.PerformanceMonitor) {
+    window.PerformanceMonitor.startHomeLoad();
+  }
+  
+  // Load content with better sequencing
   setTimeout(() => {
     try { startDailyCountdown?.(); } catch {}
     try { updateFlickWordStats?.(); } catch {}
-    try { loadFrontSpotlight?.(); } catch {}
+    
+    // End performance monitoring
+    if (window.PerformanceMonitor) {
+      window.PerformanceMonitor.endHomeLoad();
+    }
   }, 50);
 };
 
@@ -906,23 +914,23 @@ window.renderProFeaturesList = function renderProFeaturesList() {
   `;
 };
 
-// ---- Front Spotlight (replaces Horoscope) ----
-window.loadFrontSpotlight = function loadFrontSpotlight() {
-  if (!window.FLAGS?.frontSpotlightEnabled) {
+// ---- Upcoming Episodes (Tonight On) ----
+window.loadUpcomingEpisodes = function loadUpcomingEpisodes() {
+  if (!window.FLAGS?.upcomingEpisodesEnabled) {
     // Force hide the section if it exists
-    const frontSpotlight = document.getElementById('frontSpotlight');
-    if (frontSpotlight) {
-      frontSpotlight.style.display = 'none';
+    const upcomingEpisodes = document.getElementById('upcomingEpisodes');
+    if (upcomingEpisodes) {
+      upcomingEpisodes.style.display = 'none';
     }
     return;
   }
   
-  const frontSpotlight = document.getElementById('frontSpotlight');
-  const frontSpotlightList = document.getElementById('frontSpotlightList');
+  const upcomingEpisodes = document.getElementById('upcomingEpisodes');
+  const upcomingEpisodesList = document.getElementById('upcomingEpisodesList');
   
-  if (!frontSpotlight || !frontSpotlightList) return;
+  if (!upcomingEpisodes || !upcomingEpisodesList) return;
   
-  console.log('🌙 Loading front spotlight content');
+  console.log('🌙 Loading upcoming episodes content');
   
   try {
     const appData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
@@ -978,11 +986,11 @@ window.loadFrontSpotlight = function loadFrontSpotlight() {
     upcomingEpisodes.sort((a, b) => a.airDate - b.airDate);
     
     if (upcomingEpisodes.length === 0) {
-      frontSpotlightList.innerHTML = '<div class="no-episodes">No upcoming episodes this week.</div>';
+      upcomingEpisodesList.innerHTML = '<div class="no-episodes">No upcoming episodes this week.</div>';
     } else {
       const top8 = upcomingEpisodes.slice(0, 8);
-      frontSpotlightList.innerHTML = top8.map(episode => `
-        <div class="front-spotlight-item">
+      upcomingEpisodesList.innerHTML = top8.map(episode => `
+        <div class="upcoming-episode-item">
           <div class="show-info">
             <div class="show-name">${episode.showName}</div>
             <div class="episode-info">${episode.episodeInfo}</div>
@@ -998,9 +1006,9 @@ window.loadFrontSpotlight = function loadFrontSpotlight() {
       `).join('');
     }
     
-    frontSpotlight.style.display = 'block';
+    upcomingEpisodes.style.display = 'block';
   } catch (error) {
-    console.error('Error loading front spotlight:', error);
-    frontSpotlight.style.display = 'none';
+    console.error('Error loading upcoming episodes:', error);
+    upcomingEpisodes.style.display = 'none';
   }
 };

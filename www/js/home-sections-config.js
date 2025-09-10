@@ -14,8 +14,7 @@
       'currentlyWatchingPreview', 
       'next-up-row',
       'spotlight-row',
-      'playalong-row',
-      'frontSpotlight',
+      'upcomingEpisodes',
       'quote-flickword-container',
       'quoteCard',
       'randomQuoteCard',
@@ -32,7 +31,6 @@
       'triviaTile',
       'flickwordTile', 
       'spotlight-row',
-      'playalong-row',
       'quote-flickword-container',
       'feedbackSection'
     ],

@@ -3,8 +3,124 @@
       
       // Set up click event listener immediately (not inside DOMContentLoaded)
       console.log('🔧 Setting up click event listener in inline-script-03.js');
+      
+      // Debug: Check if settings tabs exist
+      setTimeout(() => {
+        const settingsTabs = document.querySelectorAll('.settings-tabs button');
+        console.log('🔧 Settings tabs found on page load:', settingsTabs.length);
+        settingsTabs.forEach((tab, index) => {
+          console.log(`🔧 Tab ${index}:`, tab.textContent, 'classes:', tab.className);
+        });
+      }, 1000);
       document.addEventListener("click", (e) => {
         console.log('🔧 Click event detected on:', e.target, 'tagName:', e.target.tagName);
+        console.log('🔧 Click target classes:', e.target.className);
+        console.log('🔧 Click target parent classes:', e.target.parentElement?.className);
+        console.log('🔧 Click target parent parent classes:', e.target.parentElement?.parentElement?.className);
+        console.log('🔧 Is settings tab button?', e.target.closest('.settings-tabs button'));
+        console.log('🔧 All settings tabs found:', document.querySelectorAll('.settings-tabs button').length);
+        
+        // Handle dark mode button specifically
+        if (e.target.id === 'themeIcon' || e.target.id === 'darkModeToggle') {
+          console.log('🌙 Dark mode button clicked via event delegation');
+          e.preventDefault();
+          e.stopPropagation();
+
+          // Toggle dark mode directly
+          document.body.classList.toggle("dark-mode");
+          
+          // Update app data
+          if (window.appData?.settings) {
+            appData.settings.theme = document.body.classList.contains("dark-mode") ? "dark" : "light";
+            if (typeof saveAppData === 'function') {
+              saveAppData();
+            }
+          }
+          
+          // Update button icon
+          const themeIcon = document.getElementById('themeIcon');
+          if (themeIcon) {
+            const isDark = document.body.classList.contains("dark-mode");
+            themeIcon.textContent = isDark ? '☀️' : '🌙';
+          }
+          
+          // Show notification
+          if (typeof showNotification === 'function') {
+            const isDark = document.body.classList.contains("dark-mode");
+            showNotification(`Switched to ${isDark ? 'dark' : 'light'} mode`, 'success');
+          }
+          
+          console.log('✅ Dark mode toggled successfully via event delegation');
+          return;
+        }
+
+        // Handle Mardi Gras button specifically
+        if (e.target.id === 'mardiToggle') {
+          console.log('🎭 Mardi Gras button clicked via event delegation');
+          e.preventDefault();
+          e.stopPropagation();
+
+          // Toggle Mardi Gras mode
+          const root = document.getElementById("appRoot");
+          if (root) {
+            root.classList.toggle("mardi");
+            const isMardiGras = root.classList.contains("mardi");
+            
+            // Update app data
+            if (window.appData?.settings) {
+              appData.settings.mardiGras = isMardiGras;
+              if (typeof saveAppData === 'function') {
+                saveAppData();
+              }
+            }
+            
+            // Show notification
+            if (typeof showNotification === 'function') {
+              showNotification(`Mardi Gras mode ${isMardiGras ? 'enabled' : 'disabled'}`, 'success');
+            }
+            
+            console.log('✅ Mardi Gras toggled successfully via event delegation');
+          } else {
+            console.error('❌ appRoot element not found for Mardi Gras toggle');
+          }
+          return;
+        }
+
+        // Handle settings tab buttons specifically
+        if (e.target.closest('.settings-tabs button')) {
+          const btn = e.target.closest('.settings-tabs button');
+          console.log('⚙️ Settings tab clicked via event delegation:', btn.textContent, 'target:', btn.dataset.target);
+          e.preventDefault();
+          e.stopPropagation();
+
+          // Update active states
+          const tabs = document.querySelectorAll('.settings-tabs button');
+          console.log('⚙️ Found tabs:', tabs.length);
+          tabs.forEach(b => { 
+            b.classList.remove('active'); 
+            b.setAttribute('aria-selected','false'); 
+          });
+          btn.classList.add('active'); 
+          btn.setAttribute('aria-selected','true');
+          
+          // Show/hide sections
+          const allSections = document.querySelectorAll('.settings-section');
+          console.log('⚙️ Found sections:', allSections.length);
+          allSections.forEach(section => {
+            section.classList.remove('active');
+            console.log('⚙️ Hiding section:', section.id);
+          });
+          
+          const target = document.querySelector(btn.dataset.target);
+          console.log('⚙️ Target element:', target, 'for selector:', btn.dataset.target);
+          if(target) {
+            target.classList.add('active');
+            console.log('⚙️ Showing section:', btn.dataset.target);
+          } else {
+            console.log('❌ Target not found:', btn.dataset.target);
+          }
+          return;
+        }
         
         const btn = e.target.closest("[data-action]");
         if (!btn) {
@@ -170,31 +286,8 @@
         
         // --- delegated actions for cards & search results
         // (Event listener moved outside DOMContentLoaded to ensure it always runs)
-// --- dark mode
-        const darkBtn = document.getElementById("darkModeToggle");
-        const setDarkLabel = () => {
-          if (!darkBtn) return;
-          const dark = document.body.classList.contains("dark-mode");
-          const label = darkBtn.querySelector('span');
-          if (label) {
-            label.textContent = t(dark ? "go_light" : "go_dark");
-          }
-        };
-        setDarkLabel();
-        if (darkBtn) {
-          darkBtn.onclick = () => {
-            document.body.classList.toggle("dark-mode");
-            if (window.appData?.settings) {
-              appData.settings.theme = document.body.classList.contains(
-                "dark-mode"
-              )
-                ? "dark"
-                : "light";
-              saveAppData?.();
-            }
-            setDarkLabel();
-          };
-        }
+        // --- dark mode (HANDLED VIA EVENT DELEGATION ABOVE)
+        // Dark mode is now handled in the main click event listener above
 
         // --- mardi toggle
         const root = document.getElementById("appRoot");
@@ -223,30 +316,76 @@
 
 
         // --- feedback handled by Netlify Forms
-      function handleFeedbackSubmit(event) {
-        // Store current theme before form submission
-        const currentTheme = document.body.classList.contains("dark-mode") ? "dark" : "light";
-        const themeInput = document.getElementById("feedbackThemeInput");
-        if (themeInput) {
-          themeInput.value = currentTheme;
+        function handleFeedbackSubmit(event) {
+          console.log('🔍 Feedback form submit handler called');
+          console.log('🔍 Hostname:', window.location.hostname);
+          
+          // Always prevent default first to avoid any server submission
+          event.preventDefault();
+          event.stopPropagation();
+          
+          // Store current theme before form submission
+          const currentTheme = document.body.classList.contains("dark-mode") ? "dark" : "light";
+          const themeInput = document.getElementById("feedbackThemeInput");
+          if (themeInput) {
+            themeInput.value = currentTheme;
+          }
+          
+          // Store theme in localStorage as backup
+          localStorage.setItem("flicklet-theme", currentTheme);
+          
+          // For local development, show success message
+          if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log('🏠 Local development mode - showing success message');
+            showNotification('Thanks for sharing! Your thoughts have been received. 💭 (Local mode - will work in production)', 'success');
+            event.target.reset();
+            return false;
+          }
+          
+          // For production, submit to Netlify function
+          console.log('🌐 Production mode - submitting to Netlify');
+          const form = event.target;
+          const formData = new FormData(form);
+          
+          const feedbackData = {
+            message: formData.get('message'),
+            theme: formData.get('theme'),
+            timestamp: new Date().toISOString()
+          };
+          
+          fetch('/.netlify/functions/feedback', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(feedbackData)
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log('✅ Feedback submitted successfully:', data);
+            showNotification('Thanks for sharing! Your thoughts have been received. 💭', 'success');
+            form.reset();
+          })
+          .catch(error => {
+            console.error('❌ Error submitting feedback:', error);
+            showNotification('Sorry, there was an error submitting your feedback. Please try again.', 'error');
+          });
         }
-        
-        // Store theme in localStorage as backup
-        localStorage.setItem("flicklet-theme", currentTheme);
-        
-        // For local development, prevent default and show success message
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-          event.preventDefault(); // Prevent default form submission
-          console.log('Local development mode - showing success message');
-          showNotification('Thanks for sharing! Your thoughts have been received. 💭 (Local mode - will work in production)', 'success');
-          event.target.reset();
-          return false;
+
+        // Bind feedback form submit handler with proper timing
+        function bindFeedbackForm() {
+          const feedbackForm = document.querySelector('form[name="feedback"]');
+          if (feedbackForm) {
+            console.log('🔗 Binding feedback form submit handler');
+            feedbackForm.addEventListener('submit', handleFeedbackSubmit);
+          } else {
+            console.log('⚠️ Feedback form not found, retrying in 100ms');
+            setTimeout(bindFeedbackForm, 100);
+          }
         }
-        
-        // For production, let Netlify handle the form submission
-        // Don't prevent default - let the form submit to Netlify
-        // The form will submit normally and Netlify will process it
-      }
+
+        // Bind immediately and also after DOM is ready
+        bindFeedbackForm();
 
 
 

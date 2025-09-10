@@ -90,12 +90,11 @@
     });
   }
   
-  // Test 7: Check legacy Play Along is hidden
-  const legacyPlayAlong = document.querySelector('#playalong-row:not([data-legacy-home])');
-  const hiddenPlayAlong = document.querySelector('#playalong-row[data-legacy-home]');
+  // Test 7: Check legacy Play Along is removed (moved to Community section)
+  const legacyPlayAlong = document.querySelector('#playalong-row');
   
-  console.log('✅ Legacy Play Along hidden:', !legacyPlayAlong ? 'PASS' : 'FAIL');
-  console.log('✅ Legacy Play Along marked as legacy:', !!hiddenPlayAlong ? 'PASS' : 'FAIL');
+  console.log('✅ Legacy Play Along removed:', !legacyPlayAlong ? 'PASS' : 'FAIL');
+  console.log('  - Note: Play Along games moved to Community section');
   
   // Test 8: Check i18n keys
   const i18nKeys = [

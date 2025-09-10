@@ -3453,56 +3453,6 @@
 
       /* Stats v2 */
       function rebuildStats() {
-        const totals = {
-          watching:
-            (appData.tv.watching?.length || 0) +
-            (appData.movies.watching?.length || 0),
-          wishlist:
-            (appData.tv.wishlist?.length || 0) +
-            (appData.movies.wishlist?.length || 0),
-          watched:
-            (appData.tv.watched?.length || 0) +
-            (appData.movies.watched?.length || 0),
-        };
-        const total = totals.watching + totals.wishlist + totals.watched;
-        document.getElementById("statsBasicBody").innerHTML = `
-          <ul>
-            <li>${t("total_items")}: <strong>${total}</strong></li>
-            <li>${t("watching_count")}: <strong>${
-              totals.watching
-            }</strong> • ${t("wishlist_count")}: <strong>${
-          totals.wishlist
-        }</strong> • ${t("watched_count")}: <strong>${totals.watched}</strong></li>
-            <li>${t("binge_total")}: <strong>${
-          calculateBingeTime().timeStr
-        }</strong></li>
-          </ul>`;
-
-        const proWrap = document.getElementById("statsPro");
-        proWrap.style.display = appData.settings.pro ? "block" : "none";
-        if (appData.settings.pro) {
-          const byGenre = {};
-          getAllItems().forEach((it) =>
-            (it.genres || []).forEach(
-              (g) => (byGenre[g.name] = (byGenre[g.name] || 0) + 1)
-            )
-          );
-          const topGenres = Object.entries(byGenre)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5);
-          const r = getAllItems()
-            .map((x) => Number(x.userRating) || 0)
-            .filter(Boolean);
-          const avgRating = r.length
-            ? (r.reduce((m, v) => m + v, 0) / r.length).toFixed(2)
-            : "N/A";
-          document.getElementById(
-            "statsProBody"
-          ).innerHTML = `<div><strong>${t("top_genres")}:</strong> ${
-            topGenres.map(([g, c]) => `${g} (${c})`).join(", ") || "N/A"
-          }</div>
-                           <div><strong>${t("average_rating")}:</strong> ${avgRating}</div>`;
-        }
       }
 
       /* Tabs + list rendering + search */
@@ -3542,9 +3492,9 @@
         });
 
         if (tab === "home") {
-          // Load front spotlight when home tab is activated
-          if (window.FLAGS?.frontSpotlightEnabled) {
-            window.loadFrontSpotlight?.();
+          // Load upcoming episodes when home tab is activated
+          if (window.FLAGS?.upcomingEpisodesEnabled) {
+            window.loadUpcomingEpisodes?.();
           }
         }
         if (tab === "discover") renderDiscover();
@@ -3910,11 +3860,21 @@
             });
           }
         }
+        
+        // Hide home section content (search results are now outside home section)
+        const homeSection = document.getElementById('homeSection');
+        if (homeSection) {
+          homeSection.style.display = 'none';
+          console.log(`🔍 Hiding home section for search`);
+        }
 
-        // Show search results container
+        // Show search results container and ensure it's visible
         const searchResults = document.getElementById('searchResults');
         if (searchResults) {
           searchResults.style.display = 'block';
+          searchResults.style.visibility = 'visible';
+          searchResults.style.position = 'relative';
+          searchResults.style.zIndex = '10';
           console.log('🔍 Showing search results container');
         }
 
@@ -4108,6 +4068,28 @@
         if (out) {
           out.innerHTML = "";
           out.style.display = "none";
+          out.style.visibility = "hidden";
+        }
+        
+        // Restore home sections when search is cleared
+        if (window.HomeSectionsConfig && typeof window.HomeSectionsConfig.getSections === 'function') {
+          const homeSections = window.HomeSectionsConfig.getSections('search-hide');
+          if (homeSections) {
+            homeSections.forEach(sectionId => {
+              const section = document.getElementById(sectionId);
+              if (section && section.style) {
+                section.style.display = 'block';
+                console.log(`📖 Showing section ${sectionId} after clearing search`);
+              }
+            });
+          }
+        }
+        
+        // Restore home section (search results are now outside home section)
+        const homeSection = document.getElementById('homeSection');
+        if (homeSection) {
+          homeSection.style.display = '';
+          console.log(`📖 Showing home section after clearing search`);
         }
         
         // Show tab content sections when search is cleared
@@ -4157,7 +4139,7 @@
           const homeSections = [
             'curatedSections',
             'triviaTile', 
-            'frontSpotlight',
+            'upcomingEpisodes',
             'seriesOrg',
             'quote-flickword-container',
             'quoteCard',
@@ -4433,18 +4415,18 @@
 
 
 
-          // Insert front spotlight (replaces horoscope)
-          if (!document.getElementById("frontSpotlight")) {
+          // Insert upcoming episodes section
+          if (!document.getElementById("upcomingEpisodes")) {
             const card = document.createElement("div");
-            card.className = "front-spotlight card";
-            card.id = "frontSpotlight";
+            card.className = "upcoming-episodes card";
+            card.id = "upcomingEpisodes";
             card.style.display = "none";
             card.innerHTML = `
               <div class="card-header">
                 <h3>Tonight On</h3>
                 <span class="tag">Next 7 days</span>
               </div>
-              <div id="frontSpotlightList" class="front-spotlight-list">
+              <div id="upcomingEpisodesList" class="upcoming-episodes-list">
                 <div class="no-episodes">No upcoming episodes this week.</div>
               </div>
             `;
@@ -4452,45 +4434,27 @@
             insertAfter.insertAdjacentElement("afterend", card);
           }
 
-          // Insert feedback section at the very bottom of home page only
-          if (!document.getElementById("feedbackSection")) {
-            const feedbackCard = document.createElement("div");
-            feedbackCard.className = "feedback-card";
-            feedbackCard.id = "feedbackSection";
-            feedbackCard.innerHTML = `
-                                                      <h3 data-i18n="feedback">Share Your Thoughts</h3>
-                                                          <p data-i18n="feedback_working">Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!</p>
-                              <p class="feedback-subtitle" data-i18n="feedback_subtitle">💬 App feedback • 💭 Random thoughts • 💬 Quote submissions • 🤫 Anonymous confessions • 😤 Venting welcome</p>
-                              <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="feedback-form" action="/thank-you">
-                <input type="hidden" name="form-name" value="feedback" />
-                <input type="hidden" name="theme" id="feedbackThemeInput" />
-                <div style="display: none;">
-                  <label>Don't fill this out if you're human: <input name="bot-field" /></label>
-                </div>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap">
-                  <textarea
-                    name="message"
-                    class="search-input"
-                    placeholder=""
-                    data-i18n-placeholder="feedback_placeholder"
-                    rows="3"
-                    required
-                    style="resize: vertical; min-height: 60px;"
-                  ></textarea>
-                  <button type="submit" class="btn" data-i18n="send">Share It!</button>
-                </div>
-              </form>
+          // Add simple feedback link at the bottom of home page
+          if (!document.getElementById("feedbackLinkSection")) {
+            const feedbackLink = document.createElement("div");
+            feedbackLink.className = "feedback-link-section";
+            feedbackLink.id = "feedbackLinkSection";
+            feedbackLink.innerHTML = `
+              <div class="feedback-link-card">
+                <p data-i18n="feedback_link_text">Have thoughts to share? We'd love to hear them!</p>
+                <button class="btn secondary" onclick="openSettingsToFeedback()" data-i18n="share_your_thoughts">Share Your Thoughts</button>
+              </div>
             `;
             // Insert at the very end of the home section
-            home.appendChild(feedbackCard);
+            home.appendChild(feedbackLink);
           }
 
           const qEl = document.getElementById("randomQuote");
           if (qEl) qEl.textContent = drawQuote();
           
-          // Load front spotlight if enabled
-          if (window.FLAGS?.frontSpotlightEnabled) {
-            window.loadFrontSpotlight?.();
+          // Load upcoming episodes if enabled
+          if (window.FLAGS?.upcomingEpisodesEnabled) {
+            window.loadUpcomingEpisodes?.();
           }
 
           return true;

@@ -3,8 +3,29 @@
    Expects items with { id, title, posterPath }. Map your data if needed.
 */
 (function(){
-  const mount = document.getElementById('curatedSections');
-  if (!mount) return;
+  let mount = document.getElementById('curatedSections');
+  if (!mount) {
+    // Wait for element to be created by V2 system
+    const checkForMount = () => {
+      mount = document.getElementById('curatedSections');
+      if (mount) {
+        console.log('🎯 Curated sections element found, initializing');
+        initializeCurated();
+      } else {
+        setTimeout(checkForMount, 100);
+      }
+    };
+    checkForMount();
+    return;
+  }
+  
+  initializeCurated();
+  
+  function initializeCurated() {
+    if (!mount) {
+      mount = document.getElementById('curatedSections');
+      if (!mount) return;
+    }
   
   // Defensive guard for Card v2
   const USE_CARD_V2 = !!(window.FLAGS && window.FLAGS.cards_v2 && window.Card);
@@ -275,10 +296,11 @@
     }
   });
 
-  // kick off
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', renderCuratedHomepage, { once: true });
-  } else {
-    renderCuratedHomepage();
+    // kick off
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', renderCuratedHomepage, { once: true });
+    } else {
+      renderCuratedHomepage();
+    }
   }
 })();

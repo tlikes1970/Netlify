@@ -171,15 +171,13 @@
     console.log('✅ Teaser has flex-wrap:', hasFlexWrap ? 'PASS' : 'FAIL');
   }
   
-  // Test 10: Check legacy Play Along is properly hidden
+  // Test 10: Check legacy Play Along is properly removed
   console.log('=== Legacy Cleanup Test ===');
-  const legacyPlayAlong = document.querySelector('#playalong-row:not([data-legacy-home])');
-  const hiddenPlayAlong = document.querySelector('#playalong-row[data-legacy-home]');
-  const playAlongVisible = hiddenPlayAlong ? window.getComputedStyle(hiddenPlayAlong).display !== 'none' : true;
+  const legacyPlayAlong = document.querySelector('#playalong-row');
+  const playAlongVisible = legacyPlayAlong ? window.getComputedStyle(legacyPlayAlong).display !== 'none' : false;
   
-  console.log('✅ Legacy Play Along hidden:', !legacyPlayAlong ? 'PASS' : 'FAIL');
-  console.log('✅ Legacy Play Along marked as legacy:', !!hiddenPlayAlong ? 'PASS' : 'FAIL');
-  console.log('✅ Legacy Play Along not visible:', !playAlongVisible ? 'PASS' : 'FAIL');
+  console.log('✅ Legacy Play Along removed:', !legacyPlayAlong ? 'PASS' : 'FAIL');
+  console.log('  - Note: Play Along games moved to Community section');
   
   // Overall result
   const allTests = [

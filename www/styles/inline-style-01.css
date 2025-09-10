@@ -48,48 +48,7 @@
         ) !important;
       }
       
-      .dark-mode .main-container {
-        background: var(--bg);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      }
-      
-      .dark-mode .top-search {
-        background: var(--bg);
-        border-color: var(--border);
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
-      }
-      
-      .dark-mode .tab-container {
-        background: var(--card);
-      }
-      
-      .dark-mode .search-input,
-      .dark-mode .genre-filter {
-        background: var(--card);
-        color: var(--text);
-        border-color: var(--border);
-      }
-      
-      .dark-mode .search-input:focus,
-      .dark-mode .genre-filter:focus {
-        box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.2);
-      }
-      
-      .dark-mode .search-help {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.2);
-        color: var(--text-secondary);
-      }
-      
-      .dark-mode .flickword-card {
-        background: var(--card);
-        border-color: var(--border);
-      }
-      
-      .dark-mode .list-container {
-        background: var(--card);
-        border-color: var(--border);
-      }
+      /* REMOVED: Duplicate dark mode component styles - now consolidated in main.css */
       
       
 
@@ -205,15 +164,7 @@
         font-weight: 700;
       }
 
-      .tab-container {
-        display: flex;
-        gap: 6px;
-        background: var(--card);
-        padding: 8px;
-        border-radius: 12px;
-        margin: 14px 0;
-        animation: tabContainerSlideIn 0.8s ease-out 0.4s both;
-      }
+      /* Tab container styles moved to components.css */
       
       @keyframes tabContainerSlideIn {
         from {
@@ -651,14 +602,7 @@
           flex: 1;
         }
       }
-      .tab-container {
-        display: flex;
-        gap: 6px;
-        background: var(--card);
-        padding: 8px;
-        border-radius: 12px;
-        margin: 14px 0;
-      }
+      /* Tab container styles moved to components.css */
       .tab {
         flex: 1;
         border: 0;
@@ -1320,27 +1264,7 @@
           overflow: hidden !important;
         }
         
-        /* Override flex: 1 for hidden tabs */
-        .tab-container .tab.hidden {
-          flex: 0 0 0 !important;
-          min-width: 0 !important;
-          max-width: 0 !important;
-          display: none !important;
-        }
-        
-        /* Override inline-flex for hidden tabs on desktop */
-        @media (min-width: 769px) {
-          .tab-container .tab.hidden {
-            display: none !important;
-          }
-        }
-        
-        /* Override grid display for hidden tabs on mobile */
-        @media (max-width: 768px) {
-          .tab-container .tab.hidden {
-            display: none !important;
-          }
-        }
+        /* REMOVED: Duplicate .tab-container .tab.hidden rules - now in components.css */
 
       /* Modal */
       .modal-backdrop {
@@ -1875,4 +1799,14 @@
         font-size: 1.1rem;
         color: #333;
       }
+      
+      /**
+       * Process: Tab-Search Spacing Fix
+       * Purpose: Reduces excessive spacing between search bar and tab navigation for compact, user-friendly layout
+       * Data Source: CSS margin and padding rules controlling tab container positioning
+       * Update Path: Modify margin-top values in .tab-container rules to adjust spacing
+       * Dependencies: .top-search element, .tab-container element, mobile responsive breakpoints
+       */
+      
+      /* Tab container layout moved to consolidated-layout.css */
       

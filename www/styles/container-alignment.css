@@ -106,7 +106,7 @@
   }
 
   .row-container::-webkit-scrollbar {
-    height: 6px;
+    height: 8px;
   }
 
   .row-container::-webkit-scrollbar-track {
@@ -114,8 +114,8 @@
   }
 
   .row-container::-webkit-scrollbar-thumb {
-    background: var(--primary, #e91e63);
-    border-radius: 3px;
+    background: rgba(0,0,0,.2);
+    border-radius: 8px;
   }
 
   .row-cards {
@@ -281,4 +281,5 @@
     }
   }
 }
+
 

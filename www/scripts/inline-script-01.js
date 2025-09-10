@@ -4526,32 +4526,33 @@
     tabs.forEach((btn, index) => {
       console.log(`⚙️ Setting up tab ${index}:`, btn.textContent, 'target:', btn.dataset.target);
       
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('⚙️ Tab clicked:', btn.textContent);
-        
-        // Update active states
-        tabs.forEach(b => { 
-          b.classList.remove('active'); 
-          b.setAttribute('aria-selected','false'); 
-        });
-        btn.classList.add('active'); 
-        btn.setAttribute('aria-selected','true');
-        
-        // Show/hide sections
-        const allSections = document.querySelectorAll('.settings-section');
-        allSections.forEach(section => section.classList.remove('active'));
-        
-        const target = document.querySelector(btn.dataset.target);
-        console.log('⚙️ Target element:', target);
-        if(target) {
-          target.classList.add('active');
-          console.log('⚙️ Showing section:', btn.dataset.target);
-        } else {
-          console.log('⚙️ Target not found:', btn.dataset.target);
-        }
-      });
+      // DISABLED: Settings tab handler moved to inline-script-03.js to prevent conflicts
+      // btn.addEventListener('click', (e) => {
+      //   e.preventDefault();
+      //   e.stopPropagation();
+      //   console.log('⚙️ Tab clicked:', btn.textContent);
+      //   
+      //   // Update active states
+      //   tabs.forEach(b => { 
+      //     b.classList.remove('active'); 
+      //     b.setAttribute('aria-selected','false'); 
+      //   });
+      //   btn.classList.add('active'); 
+      //   btn.setAttribute('aria-selected','true');
+      //   
+      //   // Show/hide sections
+      //   const allSections = document.querySelectorAll('.settings-section');
+      //   allSections.forEach(section => section.classList.remove('active'));
+      //   
+      //   const target = document.querySelector(btn.dataset.target);
+      //   console.log('⚙️ Target element:', target);
+      //   if(target) {
+      //     target.classList.add('active');
+      //     console.log('⚙️ Showing section:', btn.dataset.target);
+      //   } else {
+      //     console.log('⚙️ Target not found:', btn.dataset.target);
+      //   }
+      // });
     });
     
     // Show the first section by default

@@ -6,8 +6,8 @@ window.FLAGS = Object.assign({
   statsEnabled: true,
   skeletonsEnabled: true,
   flickwordModalEnabled: true,                // optional iframe modal
-  frontSpotlightEnabled: false,               // Featured Spotlight section (disabled)
-  mobilePolishEnabled: true,                  // mobile layout polish v1
+  upcomingEpisodesEnabled: false,             // Tonight On - upcoming episodes section (disabled)
+  mobilePolishEnabled: true,                  // mobile layout polish
   notesChipEnabled: true,                     // notes/tags chip on cards
   shareModalSanityEnabled: true,              // share modal a11y + scroll lock + focus trap
   condensedModeFeatureEnabled: true,          // condensed mode hardening
@@ -16,6 +16,7 @@ window.FLAGS = Object.assign({
   themePacksEnabled: true,                    // theme packs (T0)
   providersEnabled: true,                     // where to watch providers
   extrasEnabled: true,                        // extras/outtakes discovery
+  cards_v2: true,                             // Card v2 system for personalized rows
             playlistsEnabled: false,                    // curated spotlight video (disabled)
           playlistsProEnabled: true,                  // curated rows (PRO)
           triviaEnabled: true,                        // per-card trivia chips

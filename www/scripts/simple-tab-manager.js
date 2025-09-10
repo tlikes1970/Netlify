@@ -109,7 +109,6 @@
         'currentlyWatchingPreview',
         'next-up-row',
         'spotlight-row',
-        'playalong-row',
         'quote-flickword-container',
         'feedbackSection',
         'theaters-section'

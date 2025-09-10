@@ -31,15 +31,15 @@
   console.log('  - Games present:', hasGames);
   console.log('  - Total children:', communityChildren.length);
   
-  // Test 4: No duplicate Play Along sections
+  // Test 4: No duplicate Play Along sections (moved to Community section)
   const playAlongSections = document.querySelectorAll('#playalong-row, [data-feature="homeRowPlayAlong"]');
   const visiblePlayAlong = Array.from(playAlongSections).filter(section => 
     section.offsetParent !== null && !section.hidden
   );
   
-  console.log('✅ No duplicate Play Along sections:', visiblePlayAlong.length === 0 ? 'PASS' : 'FAIL');
+  console.log('✅ No duplicate Play Along sections:', playAlongSections.length === 0 ? 'PASS' : 'FAIL');
   console.log('  - Total Play Along sections found:', playAlongSections.length);
-  console.log('  - Visible Play Along sections:', visiblePlayAlong.length);
+  console.log('  - Note: Play Along games moved to Community section');
   
   // Test 5: Feedback banner only (no form)
   const feedbackSections = document.querySelectorAll('[id*="feedback"], .feedback-card, .feedback-form');

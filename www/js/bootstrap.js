@@ -8,15 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.classList.remove('modal-backdrop');
   });
   
-  // Add missing event listeners
-  const darkModeToggle = document.getElementById('darkModeToggle');
-  if (darkModeToggle) {
-    darkModeToggle.addEventListener('click', () => {
-      if (typeof toggleDarkMode === 'function') {
-        toggleDarkMode();
-      }
-    });
-  }
+  // DISABLED: Dark mode event listener - now handled in inline-script-03.js
+  // const darkModeToggle = document.getElementById('darkModeToggle');
+  // if (darkModeToggle) {
+  //   darkModeToggle.addEventListener('click', () => {
+  //     if (typeof toggleDarkMode === 'function') {
+  //       toggleDarkMode();
+  //     }
+  //   });
+  // }
   
   // Initialize the app
   if (window.FlickletApp && typeof window.FlickletApp.init === 'function') {

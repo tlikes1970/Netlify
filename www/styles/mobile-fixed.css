@@ -146,7 +146,7 @@
   .tab-container {
     padding: 6px;
     gap: 4px;
-    margin: 10px 0;
+    margin: 2px 0 !important;
   }
 
   .tab {
@@ -689,3 +689,4 @@ body.mobile-v1 header.header .username-snark{
   .curated-section .section-title { font-size: 1.05rem; }
   .curated-row { grid-auto-columns: 58vw; } /* wider cards on narrow phones */
 }
+

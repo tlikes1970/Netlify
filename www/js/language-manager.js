@@ -278,11 +278,10 @@ class LanguageManager {
       console.warn('🔄 __FlickletRefreshSeriesOrganizer function not available');
     }
     
-    // Refresh tonight on content (upcoming episodes)
-    const frontSpotlight = document.getElementById('frontSpotlight');
-    if (frontSpotlight && typeof window.loadFrontSpotlight === 'function') {
-      console.log('🔄 Refreshing tonight on content');
-      window.loadFrontSpotlight();
+    // Refresh upcoming episodes content (V2 system)
+    if (typeof window.loadUpcomingEpisodes === 'function') {
+      console.log('🔄 Refreshing upcoming episodes content');
+      window.loadUpcomingEpisodes();
     }
     
     // Refresh daily countdown and stats

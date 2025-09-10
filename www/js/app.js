@@ -221,6 +221,13 @@ waitForFirebaseReady() {
             const settings = await this.readSettings(user.uid);
             let username = (settings.username || '').trim();
 
+            // Load existing username into window.appData.settings for personalized rows
+            if (username) {
+              window.appData = window.appData || {};
+              window.appData.settings = { ...(window.appData.settings||{}), username };
+              console.log('✅ Loaded existing username into appData:', username);
+            }
+
             // single prompt gate stored in Firestore so it works across devices
             const alreadyPrompted = !!settings.usernamePrompted;
             console.log('🔍 Username check:', { username, alreadyPrompted, settings });
@@ -952,8 +959,8 @@ waitForFirebaseReady() {
         }
       });
 
-      // Theme toggle
-      document.getElementById('darkModeToggle')?.addEventListener('click', toggleDarkMode);
+      // DISABLED: Theme toggle - now handled in inline-script-03.js
+      // document.getElementById('darkModeToggle')?.addEventListener('click', toggleDarkMode);
 
       // Language select
       const langSel = document.getElementById('langToggle');

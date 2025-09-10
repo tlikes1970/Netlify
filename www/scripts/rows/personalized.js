@@ -14,12 +14,48 @@
   // Defensive guard for Card v2
   const USE_CARD_V2 = !!(window.FLAGS && window.FLAGS.cards_v2 && window.Card);
 
+  /**
+   * Generate personalized row title with username and row type
+   * @param {number} rowNumber - Row number (1-based)
+   * @param {string} rowType - Row type key (e.g., 'anime', 'horror')
+   * @returns {string} Formatted title like "Travis' anime suggestions"
+   */
+  function getPersonalizedRowTitle(rowNumber, rowType = null) {
+    // Get username from appData settings
+    const username = (window.appData && window.appData.settings && window.appData.settings.username) || 'Your';
+    
+    // Get row type display name
+    let typeDisplay = '';
+    if (rowType) {
+      // Map row types to display names
+      const typeMap = {
+        'anime': 'anime',
+        'horror': 'horror', 
+        'trending': 'trending',
+        'staff_picks': 'staff picks',
+        'comedy': 'comedy',
+        'action': 'action',
+        'drama': 'drama',
+        'sci-fi': 'sci-fi',
+        'romance': 'romance',
+        'thriller': 'thriller'
+      };
+      typeDisplay = typeMap[rowType] || rowType;
+    } else {
+      typeDisplay = 'suggestions';
+    }
+    
+    // Format: "Username's type suggestions" or "Username's suggestions" for ghost rows
+    return `${username}'s ${typeDisplay} suggestions`;
+  }
 
   /**
    * Mount the personalized section with ghost or populated rows
    * @param {HTMLElement} sectionEl - Section element to populate
    */
   window.mountPersonalizedSection = function mountPersonalizedSection(sectionEl) {
+    console.log('🎯 mountPersonalizedSection called with:', sectionEl);
+    
     if (!sectionEl) {
       console.error('❌ No section element provided for personalized rows');
       return;
@@ -28,8 +64,11 @@
     console.log('🎯 Mounting personalized section');
 
     const body = sectionEl.querySelector('.section__body');
+    console.log('🎯 Section body found:', !!body);
+    
     if (!body) {
-      console.error('❌ No section body found');
+      console.error('❌ No section body found in element:', sectionEl);
+      console.error('❌ Element HTML:', sectionEl.outerHTML);
       return;
     }
 
@@ -67,7 +106,7 @@
     const ghost = document.createElement('div');
     ghost.className = 'row row--ghost';
     ghost.innerHTML = `
-      <div class="row__header"><h4>${window.t ? window.t('rows.personalized_slot',{n: idx+1}) : `Your Row ${idx+1}`}</h4></div>
+      <div class="row__header"><h4>${getPersonalizedRowTitle(idx+1)}</h4></div>
       <div class="row__ghost-cards">${Array.from({length:8}).map(()=>`<div class="ghost-card"></div>`).join('')}</div>
       <button type="button" class="row__cta" data-action="open-settings-my-rows">
         ${window.t ? window.t('rows.configure_cta') : 'Go to Settings to configure'}
@@ -88,8 +127,7 @@
     row.innerHTML = `
       <div class="row__header">
         <h4>
-          ${window.t ? window.t('rows.personalized_slot', {n: index + 1}) : `Your Row ${index + 1}`}: 
-          ${window.t ? window.t(preset.labelKey) : preset.labelKey}
+          ${getPersonalizedRowTitle(index + 1, preset.key)}
         </h4>
       </div>
       <div class="row__scroller" data-slot="${index}">

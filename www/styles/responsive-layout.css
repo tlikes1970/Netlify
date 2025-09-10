@@ -68,17 +68,7 @@
   }
 
   /* Tabs/Filters - Single line, visually light */
-  .tab-container {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border, #dedee3);
-    background: var(--bg-secondary, #f8f9fa);
-    flex-wrap: wrap;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
+  /* Tab container styles moved to components.css for single source of truth */
 
   .tab {
     padding: 0.5rem 1rem;
@@ -315,7 +305,7 @@
   }
 
   .row-container::-webkit-scrollbar {
-    height: 6px;
+    height: 8px;
   }
 
   .row-container::-webkit-scrollbar-track {
@@ -323,8 +313,8 @@
   }
 
   .row-container::-webkit-scrollbar-thumb {
-    background: var(--primary, #e91e63);
-    border-radius: 3px;
+    background: rgba(0,0,0,.2);
+    border-radius: 8px;
   }
 
   .row-cards {
@@ -398,10 +388,7 @@
       text-align: center;
     }
 
-    .tab-container {
-      padding: 0.5rem 1rem;
-      gap: 0.25rem;
-    }
+    /* Tab container mobile styles moved to mobile.css */
 
     .tab {
       padding: 0.4rem 0.8rem;

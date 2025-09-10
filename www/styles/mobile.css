@@ -146,7 +146,12 @@
   .tab-container {
     padding: 6px;
     gap: 4px;
-    margin: 10px 0;
+    margin: 2px 0 !important;
+  }
+  
+  /* Ensure mobile search and tabs are close together */
+  .main-container .top-search + .tab-container {
+    margin-top: 2px !important;
   }
 
   .tab {

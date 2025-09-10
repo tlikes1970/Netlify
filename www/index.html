@@ -17,11 +17,12 @@
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
     <link rel="manifest" href="manifest.json" />
 
-    <link rel="stylesheet" href="styles/inline-style-01.css?v=desktop-fix2">
+    <link rel="stylesheet" href="styles/inline-style-01.css?v=v17.9">
     <link rel="stylesheet" href="styles/inline-style-02.css">
-    <link rel="stylesheet" href="styles/components.css?v=pro-gate-1">
-    <link rel="stylesheet" href="styles/mobile.css?v=mp2.2d">
-    <link rel="stylesheet" href="styles/main.css?v=horizontal-fix">
+    <link rel="stylesheet" href="styles/components.css?v=v17.9">
+    <link rel="stylesheet" href="styles/mobile.css?v=v17.9">
+    <link rel="stylesheet" href="styles/main.css?v=v17.9">
+    <link rel="stylesheet" href="styles/consolidated-layout.css?v=v17.9">
 
     <!-- Feature flags and safety guard -->
     <script src="js/flags.js"></script>
@@ -58,7 +59,7 @@
         const isMobileSize = window.innerWidth <= 768;
         
         if (isMobileDevice && isMobileSize && document.body) {
-          document.body.classList.add('mobile-v1');
+          document.body.classList.add('mobile');
           console.log('📱 Mobile class applied immediately - iPhone detected');
         }
       })();
@@ -78,7 +79,7 @@
         </div>
         
         <div class="header-center">
-          <div id="versionIndicator" style="position: fixed; top: 10px; left: 10px; background: #007bff; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">v14.7</div>
+          <div id="versionIndicator" style="position: fixed; top: 10px; left: 10px; background: #007bff; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">v21.9-GAMES</div>
           <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
           <div id="proBadge" class="pro-badge" style="display: none;">PRO</div>
           <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
@@ -179,6 +180,13 @@
         >        </div>
       </div>
 
+      <!-- Search Results Container - MOVED OUTSIDE HOME SECTION -->
+      <div id="searchResults" class="search-results" style="display: none;">
+        <h4>🎯 <span data-i18n="search_results">Search Results</span> <span class="count" id="resultsCount">0</span></h4>
+        <div id="searchResultsList" class="list-container"></div>
+      </div>
+
+      <!-- Tab container moved outside homeSection for proper positioning -->
       <div class="tab-container">
         <button id="homeTab" class="tab active" title="Overview of your TV & movie tracking" aria-label="Home tab - view dashboard and recommendations">🏠 <span data-i18n="home">Home</span></button>
         <button id="watchingTab" class="tab" title="Shows and movies you're currently watching" aria-label="Watching tab - view shows and movies you're currently watching">
@@ -196,163 +204,10 @@
         <button id="discoverTab" class="tab" title="Get personalized recommendations based on your taste" aria-label="Discover tab - find new shows and movies">✨ <span data-i18n="discover">Discover</span></button>
       </div>
 
-    
-    <!-- Curated Sections Indicator - REMOVED (only shows on setting change) -->
-
-
-
-
-
-
-	
-
-
-
-
       <!-- Home -->
       <div id="homeSection" class="tab-section">
         <div class="stats">
           <div class="stat" id="bingeMeter"></div>
-        </div>
-        
-        <!-- Stats Section -->
-        <div id="statsBasicBody" data-i18n="loading" style="display: none;">Loading…</div>
-        <div id="statsPro" style="display: none;">
-          <div id="statsProBody"></div>
-        </div>
-
-        <!-- Currently Watching Preview Row -->
-        <section id="currentlyWatchingPreview" class="home-preview-row cw-row" style="display: none;" aria-label="Currently Watching Preview">
-          <div class="preview-row-header">
-            <h3 class="preview-row-title">👁️ Currently Watching</h3>
-          </div>
-          <div class="preview-row-container">
-            <div class="preview-row-scroll" id="currentlyWatchingScroll">
-              <!-- Cards will be populated by JavaScript -->
-            </div>
-          </div>
-        </section>
-
-        <!-- Next Up This Week Row -->
-        <section id="next-up-row" class="home-section" data-feature="homeRowNextUp" style="display: none;">
-          <h2 class="section-title">Next Up This Week</h2>
-          <div class="next-up-scroll row-inner"><!-- tiles injected here --></div>
-        </section>
-
-        <!-- Community Spotlight Row -->
-        <section id="spotlight-row" class="home-section" data-feature="homeRowSpotlight">
-          <h2 class="section-title">Community Spotlight</h2>
-          <div class="spotlight-grid">
-            <div class="spotlight-video">
-              <!-- Video content will be injected here -->
-            </div>
-            <div class="spotlight-info">
-              <h3 class="spotlight-title">Community Spotlight</h3>
-              <div class="spotlight-credit"></div>
-              <p class="spotlight-desc"></p>
-              <div class="spotlight-badges"></div>
-              <button id="spotlightSubmitBtn" class="btn btn-primary">Submit Your Video</button>
-            </div>
-          </div>
-        </section>
-
-        <!-- Play Along Row (Trivia & FlickWord) -->
-        <section id="playalong-row" class="home-section" data-feature="homeRowPlayAlong">
-          <h2 class="section-title">Play Along</h2>
-          <div class="playalong-scroll row-inner"><!-- tiles injected here --></div>
-        </section>
-
-        <!-- Curated Sections (Trending, Staff Picks, New This Week) -->
-        <section id="curatedSections" class="curated-sections" aria-label="Curated lists">
-          <!-- Populated by curated-rows.js -->
-        </section>
-
-        <!-- What's in Theaters Section -->
-        <section id="theaters-section" class="home-section" style="display: none;">
-          <h2 class="section-title">What's in Theaters Near Me</h2>
-          <div class="section-description" style="font-size: 14px; color: var(--text-secondary, #666); margin-bottom: 16px; text-align: center;">
-            Current theatrical releases and showtimes
-          </div>
-          
-          <div class="theaters-container">
-            <div class="theaters-header">
-              <h3>🎬 Now Playing</h3>
-              <button class="btn secondary" id="refreshTheatersBtn">🔄 Refresh</button>
-            </div>
-            <div class="theaters-list" id="theatersList">
-              <div class="loading">Loading movies...</div>
-            </div>
-          </div>
-          
-          <div class="theaters-info">
-            <div class="theaters-meta">
-              <h3>Find Showtimes</h3>
-              <p>Click "Find Showtimes" to see showtimes at theaters near you</p>
-              <div class="location-info">
-                <span id="userLocation">📍 Getting your location...</span>
-              </div>
-            </div>
-            <div class="theaters-cta">
-              <button class="btn btn-primary" id="findShowtimesBtn">🎫 Find Showtimes</button>
-              <button class="btn secondary" id="refreshLocationBtn">📍 Update Location</button>
-            </div>
-            <div class="theaters-badges">
-              <span class="badge">Now Playing</span>
-              <span class="badge" id="movieCount">Loading...</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- Quote of the Day Container -->
-        <div class="quote-flickword-container" style="display: none;">
-          <div class="left-column">
-            <div id="quoteCard" class="quote-card">
-              <h3 class="quote-title">💭 <span data-i18n="quote_of_the_day">Quote of the Day</span></h3>
-              <div class="quote-content" id="dailyQuote">
-                <p class="quote-text">"The best way to predict the future is to create it."</p>
-                <p class="quote-author">- Peter Drucker</p>
-              </div>
-            </div>
-            <div id="randomQuoteCard" class="random-quote-card">
-              <h3 class="quote-title">🎲 <span data-i18n="random_quote">Random Quote</span></h3>
-              <div class="quote-content" id="randomQuote">
-                <p class="quote-text">"One does not simply watch one episode."</p>
-                <p class="quote-author">- Some dude</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Feedback Section -->
-        <div id="feedbackSection" class="feedback-card" style="display: none;">
-          <h3 data-i18n="feedback">Share Your Thoughts</h3>
-          <p data-i18n="feedback_working">Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!</p>
-          <p class="feedback-subtitle" data-i18n="feedback_subtitle">💬 App feedback • 💭 Random thoughts • 💬 Quote submissions • 🤫 Anonymous confessions • 😤 Venting welcome</p>
-          <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="feedback-form" action="/thank-you">
-            <input type="hidden" name="form-name" value="feedback" />
-            <input type="hidden" name="theme" id="feedbackThemeInput" />
-            <div style="display: none;">
-              <label>Don't fill this out if you're human: <input name="bot-field" /></label>
-            </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap">
-              <textarea
-                name="message"
-                class="search-input"
-                placeholder=""
-                data-i18n-placeholder="feedback_placeholder"
-                rows="3"
-                required
-                style="resize: vertical; min-height: 60px;"
-              ></textarea>
-              <button type="submit" class="btn" data-i18n="send">Share It!</button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Search Results Container -->
-        <div id="searchResults" class="search-results" style="display: none;">
-          <h4>🎯 <span data-i18n="search_results">Search Results</span> <span class="count" id="resultsCount">0</span></h4>
-          <div id="searchResultsList" class="list-container"></div>
         </div>
       </div>
 
@@ -811,7 +666,7 @@
                       share a quote for our rotation, make a confession, or just vent. We're listening!
                     </p>
                     
-                    <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="settings-form" action="/thank-you">
+                    <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="settings-form" action="/thank-you" onsubmit="console.log('🔍 Form onsubmit called'); return false;">
                       <input type="hidden" name="form-name" value="feedback" />
                       <input type="hidden" name="theme" id="feedbackThemeInput" />
                       <div style="display: none;">
@@ -904,17 +759,21 @@
   
           </div>
       </div>
+
+      <!-- FAB Rail - Sticky positioning within container -->
+      <div class="fab-rail">
+        <button id="settingsTab" class="fab-left" data-tab="settings" aria-label="Settings">⚙️ <span data-i18n="settings">Settings</span></button>
+        <div class="fab-stack">
+          <button id="darkModeToggle" class="fab" aria-label="Dark">
+            <span id="themeIcon">🌙</span>
+          </button>
+          <button id="mardiToggle" class="fab" aria-label="Mardi">🎭</button>
+        </div>
+      </div>
     </div>
 
     <!-- Firebase (compat for simplicity) -->
       </main>
-
-    <!-- Floating Action Buttons - Outside main container -->
-    <button id="mardiToggle" class="fab" aria-label="Mardi">🎭</button>
-    <button id="darkModeToggle" class="fab" aria-label="Dark">
-      <span id="themeIcon">🌙</span>
-    </button>
-    <button id="settingsTab" class="fab-left" data-tab="settings" aria-label="Settings">⚙️ <span data-i18n="settings">Settings</span></button>
 
     <!-- Firebase must load BEFORE app.js -->
         <!-- ==== SCRIPT ORDER: libraries → core → features → UI glue ==== -->
@@ -930,7 +789,6 @@
     <!-- Config & core helpers (must be available to everything below) -->
     <script src="tmdb-config.js"></script>
     <script src="js/utils.js"></script>
-    <script src="js/flags.js"></script>
     <script src="js/app.js"></script>
     <script src="js/bootstrap.js"></script>
 
@@ -942,14 +800,15 @@
     <!-- Component modules -->
     <script src="scripts/components/Card.js"></script>
     
+    <!-- Performance monitoring -->
+    <script src="scripts/performance-monitor.js"></script>
+    
     <!-- Home layout -->
     <script src="scripts/home.js"></script>
     
     <!-- Router -->
     <script src="scripts/router.js"></script>
     
-    <!-- Feedback system -->
-    <script src="scripts/feedback/banner.js"></script>
     
     <!-- Feature modules (safe to assume utils/app are ready) -->
     <script src="scripts/currently-watching-preview.js"></script>
@@ -957,9 +816,14 @@
     <script src="scripts/community-spotlight.js"></script>
     <script src="scripts/curated-rows.js"></script>
     <script src="scripts/curated-seed.js"></script>
-    <script src="scripts/theaters-near-me.js"></script>
-    <script src="scripts/play-along.js"></script>
     <script src="scripts/list-actions.js"></script>
+    
+    <!-- Personalized Rows System -->
+    <script src="scripts/data/user-settings.js"></script>
+    <script src="scripts/api/content.js"></script>
+    <script src="scripts/rows/personalized.js"></script>
+    <script src="scripts/settings/my-rows.js"></script>
+    
     <script src="scripts/share-modal.js"></script>
     <script src="scripts/search-tips.js"></script>
     <script src="scripts/series-org.js"></script>
@@ -976,32 +840,7 @@
 
     
 
-    <!-- Refactor validation testing -->
-    <script src="scripts/refactor-validation.js"></script>
-    
-    <!-- Search page functionality test -->
-    <script src="scripts/search-page-test.js"></script>
-    
-    <!-- Card size consistency test -->
-    <script src="scripts/card-size-test.js"></script>
-    
-    <!-- Duplicate fix test -->
-    <script src="scripts/duplicate-fix-test.js"></script>
-    
-    <!-- Currently watching fix test -->
-    <script src="scripts/currently-watching-fix-test.js"></script>
-    
-    <!-- Curated sections debug test -->
-    <script src="scripts/curated-debug-test.js"></script>
-    
-    <!-- Simple tab manager -->
-    <script src="scripts/simple-tab-manager.js"></script>
-    
-    <!-- Search functionality test -->
-    <script src="scripts/search-functionality-test.js"></script>
-    
-    <!-- Simple search test -->
-    <script src="scripts/simple-search-test.js"></script>
+    <!-- CLEANUP: All test and duplicate scripts removed for production -->
     
     <!-- Fallback search initialization -->
     <script>
@@ -1051,6 +890,38 @@
       setTimeout(initializeSearchFallback, 2000);
       
     })();
+    </script>
+
+    <!-- Feedback Link Handler -->
+    <script>
+    function openSettingsToFeedback() {
+      console.log('💬 Opening settings to feedback section');
+      
+      // Switch to settings tab
+      const settingsTab = document.getElementById('settingsTab');
+      if (settingsTab) {
+        settingsTab.click();
+        
+        // Wait for settings to load, then switch to About tab
+        setTimeout(() => {
+          const aboutTab = document.querySelector('.settings-tabs button[data-target="#about"]');
+          if (aboutTab) {
+            aboutTab.click();
+            
+            // Scroll to feedback section
+            setTimeout(() => {
+              const feedbackSection = document.querySelector('#about .settings-subsection:last-child');
+              if (feedbackSection) {
+                feedbackSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }, 100);
+          }
+        }, 200);
+      } else {
+        console.warn('💬 Settings tab not found');
+        alert('Please go to Settings → About to share your feedback');
+      }
+    }
     </script>
 
     <!-- Episode Tracking Toggle Handler -->

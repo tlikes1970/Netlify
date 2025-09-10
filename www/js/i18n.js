@@ -300,8 +300,9 @@ const I18N = {
     "home.personalized_sub": "Recommendations just for you",
     "home.theaters": "In Theaters Near Me",
     "home.theaters_sub": "What's playing at your local cinemas",
-    "home.feedback": "Feedback",
-    "home.feedback_sub": "Help us improve Flicklet",
+    "home.feedback_link": "Feedback",
+    "home.feedback_link_sub": "Help us improve Flicklet",
+    "feedback_link_text": "Have thoughts to share? We'd love to hear them!",
     
     // Feedback
     "feedback.banner_cta": "Share your thoughts",
@@ -648,8 +649,9 @@ const I18N = {
     "home.personalized_sub": "Recomendaciones solo para ti",
     "home.theaters": "En Cines Cerca de Mí",
     "home.theaters_sub": "Qué se está proyectando en tus cines locales",
-    "home.feedback": "Comentarios",
-    "home.feedback_sub": "Ayúdanos a mejorar Flicklet",
+    "home.feedback_link": "Comentarios",
+    "home.feedback_link_sub": "Ayúdanos a mejorar Flicklet",
+    "feedback_link_text": "¿Tienes pensamientos que compartir? ¡Nos encantaría escucharlos!",
     
     // Feedback
     "feedback.banner_cta": "Comparte tus pensamientos",

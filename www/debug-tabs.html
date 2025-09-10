@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tab Position Debug</title>
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial; }
+        .debug-section { 
+            border: 2px solid red; 
+            margin: 10px 0; 
+            padding: 10px; 
+            background: #f0f0f0; 
+        }
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            background: lightblue;
+            padding: 10px;
+            border: 2px solid blue;
+        }
+        .tab { 
+            background: white; 
+            padding: 10px; 
+            border: 1px solid black; 
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-section">
+        <h2>Header Section</h2>
+        <p>This simulates the main header</p>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Search Bar Section</h2>
+        <p>This simulates the search bar</p>
+    </div>
+    
+    <div class="tab-container">
+        <div class="tab">🏠 Home</div>
+        <div class="tab">▶️ Watching</div>
+        <div class="tab">📖 Wishlist</div>
+        <div class="tab">✅ Watched</div>
+        <div class="tab">✨ Discover</div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Home Content Section</h2>
+        <p>This simulates the home content that gets dynamically inserted</p>
+        <div style="height: 200px; background: lightgreen; margin: 10px 0;">Simulated content</div>
+        <div style="height: 200px; background: lightcoral; margin: 10px 0;">More simulated content</div>
+        <div style="height: 200px; background: lightyellow; margin: 10px 0;">Even more content</div>
+    </div>
+    
+    <script>
+        console.log('Tab container position:', document.querySelector('.tab-container').getBoundingClientRect());
+        console.log('Tab container parent:', document.querySelector('.tab-container').parentElement);
+    </script>
+</body>
+</html>
