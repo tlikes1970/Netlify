@@ -1,10 +1,46 @@
 /* ============== Centralized Language Manager ============== */
 
 class LanguageManager {
+  // Get stored language from localStorage
+  getStoredLanguage() {
+    try {
+      const stored = localStorage.getItem('flicklet-language');
+      return stored || null;
+    } catch (error) {
+      console.warn('Failed to get stored language:', error);
+      return null;
+    }
+  }
+
+  // Save language to localStorage and appData
+  saveLanguage(lang) {
+    try {
+      // Save to localStorage
+      localStorage.setItem('flicklet-language', lang);
+      
+      // Save to appData if available
+      if (window.saveAppData && typeof window.saveAppData === 'function') {
+        window.saveAppData();
+      } else if (window.appData) {
+        localStorage.setItem('flicklet-data', JSON.stringify(window.appData));
+      }
+      
+      console.log('🌍 Language saved to storage:', lang);
+    } catch (error) {
+      console.error('❌ Failed to save language:', error);
+    }
+  }
+
   constructor() {
     this.isChangingLanguage = false;
-    this.currentLang = 'en';
+    this.currentLang = this.getStoredLanguage() || 'en';
     this.observers = [];
+    
+    // Force English as default if no language is stored
+    if (!this.getStoredLanguage()) {
+      this.currentLang = 'en';
+      this.saveLanguage('en');
+    }
   }
 
   // Initialize language manager
@@ -88,8 +124,8 @@ class LanguageManager {
       
     } catch (error) {
       console.error('❌ Language change failed:', error);
-      // Revert on error
-      this.currentLang = this.currentLang; // Keep previous language
+      // Keep previous language (noop assignment kept for clarity)
+      this.currentLang = this.currentLang;
     } finally {
       this.isChangingLanguage = false;
     }
@@ -113,7 +149,6 @@ class LanguageManager {
     }
   }
 
-
   // Update language-dependent UI elements
   updateLanguageDependentUI(lang) {
     // Update language dropdown
@@ -127,7 +162,7 @@ class LanguageManager {
     if (currentTab && ["watching", "wishlist", "watched"].includes(currentTab)) {
       const listContainer = document.getElementById(currentTab + "List");
       if (listContainer) {
-        listContainer.innerHTML = `<div style="text-align: center; padding: 20px;">${t("loading", lang)}...</div>`;
+        listContainer.innerHTML = `<div style="text-align: center; padding: 20px;">${t("loading", lang)}</div>`;
       }
     }
     
@@ -353,21 +388,6 @@ class LanguageManager {
     }
   }
 
-  // Save language to storage
-  saveLanguage(lang) {
-    try {
-      // Save to localStorage
-      if (window.saveAppData && typeof window.saveAppData === 'function') {
-        window.saveAppData();
-      } else {
-        localStorage.setItem('flicklet-data', JSON.stringify(window.appData));
-      }
-      console.log('🌍 Language saved to storage:', lang);
-    } catch (error) {
-      console.error('❌ Failed to save language:', error);
-    }
-  }
-
   // Translation function
   t(key, lang = this.currentLang) {
     if (window.I18N && window.I18N[lang] && window.I18N[lang][key]) {
@@ -448,9 +468,8 @@ window.changeLanguage = (newLang) => {
   return window.LanguageManager.changeLanguage(newLang);
 };
 
-// Expose other functions for backward compatibility
-window.applyTranslations = (lang) => {
-  return window.LanguageManager.applyTranslations(lang);
-};
+// Do NOT redefine window.applyTranslations here — i18n.js already defines it.
+// If you need a convenience alias, create a differently named helper instead, e.g.:
+// window.applyAppTranslations = (lang) => applyTranslations(lang);
 
 console.log('🌍 Language Manager loaded');

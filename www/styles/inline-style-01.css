@@ -1044,6 +1044,14 @@
         gap: 6px;
         min-width: 0;
       }
+      .show-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-2);
+        margin-bottom: 4px;
+      }
+      
       .show-title {
         margin: 0;
         color: var(--primary);
@@ -1054,6 +1062,7 @@
         align-items: center;
         cursor: pointer;
         line-height: 1.2;
+        flex: 1;
       }
       .show-meta {
         color: #8a8a98;
@@ -1069,6 +1078,7 @@
         display: -webkit-box;
         -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
+        line-clamp: 3;
         overflow: hidden;
       }
       .rating-container {
@@ -1134,6 +1144,7 @@
         font-weight: 900;
         white-space: nowrap;
         border: 1px solid transparent;
+        flex-shrink: 0;
       }
       .series-pill.status-ongoing {
         background: rgba(81, 207, 102, 0.16);
@@ -1570,6 +1581,7 @@
       /* iOS-specific button styling */
       .btn {
         -webkit-appearance: none;
+        appearance: none;
         touch-action: manipulation;
         user-select: none;
       }

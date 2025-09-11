@@ -7,31 +7,40 @@
       let db = null;
       let currentUser = null;
 
-      // Check if Firebase is available
-      if (typeof firebase === 'undefined') {
-        console.error('❌ Firebase scripts not loaded - authentication will be disabled');
-        firebaseInitialized = false;
-        auth = { signInWithPopup: () => Promise.reject(new Error('Firebase not available')) };
-        db = { collection: () => ({ doc: () => ({ get: () => Promise.reject(new Error('Firebase not available')) }) }) };
-        // Dispatch event even for failure case
-        window.firebaseInitialized = false;
-        window.dispatchEvent(new Event('firebase-ready'));
-      } else {
+      // Firebase initialization function
+      function initializeFirebase() {
+        console.log('🔄 Initializing Firebase...');
+        console.log('🔍 Debug - firebase available:', typeof firebase);
+        console.log('🔍 Debug - FIREBASE_CONFIG available:', !!window.FIREBASE_CONFIG);
+        
+        // Check if Firebase is available
+        if (typeof firebase === 'undefined') {
+          console.error('❌ Firebase scripts not loaded - authentication will be disabled');
+          firebaseInitialized = false;
+          auth = { signInWithPopup: () => Promise.reject(new Error('Firebase not available')) };
+          db = { collection: () => ({ doc: () => ({ get: () => Promise.reject(new Error('Firebase not available')) }) }) };
+          window.firebaseInitialized = false;
+          window.dispatchEvent(new Event('firebase-ready'));
+          return;
+        }
+
+        // Check if FIREBASE_CONFIG is available
+        if (!window.FIREBASE_CONFIG) {
+          console.error('❌ FIREBASE_CONFIG not available! Retrying in 200ms...');
+          setTimeout(initializeFirebase, 200);
+          return;
+        }
+
         try {
           // Check if Firebase is already initialized
           if (firebase.apps && firebase.apps.length > 0) {
+            console.log('✅ Firebase already initialized');
             auth = firebase.auth();
             db = firebase.firestore();
             firebaseInitialized = true;
           } else {
-            const app = firebase.initializeApp({
-              apiKey: "AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM",
-              authDomain: "flicklet-71dff.firebaseapp.com",
-              projectId: "flicklet-71dff",
-              storageBucket: "flicklet-71dff.firebasestorage.app",
-              messagingSenderId: "1034923556763",
-              appId: "1:1034923556763:web:bba5489cd1d9412c9c2b3e",
-            });
+            console.log('🔄 Creating new Firebase app...');
+            const app = firebase.initializeApp(window.FIREBASE_CONFIG);
             auth = firebase.auth();
             db = firebase.firestore();
             firebaseInitialized = true;
@@ -51,6 +60,14 @@
           window.firebaseInitialized = false;
           window.dispatchEvent(new Event('firebase-ready'));
         }
+      }
+
+      // Initialize Firebase after DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeFirebase);
+      } else {
+        // DOM is already ready
+        initializeFirebase();
       }
 
       // STEP 3.2e — inline-script-01 is the sole owner of Add actions.
@@ -85,6 +102,25 @@
       window.firebaseInitialized = firebaseInitialized;
       window.auth = auth;
       window.db = db;
+      
+      // Global function to manually test Firebase
+      window.testFirebase = function() {
+        console.log('🧪 Manual Firebase Test:');
+        console.log('  firebase available:', typeof firebase);
+        console.log('  FIREBASE_CONFIG:', !!window.FIREBASE_CONFIG);
+        console.log('  firebaseInitialized:', firebaseInitialized);
+        console.log('  auth available:', !!auth);
+        console.log('  db available:', !!db);
+        console.log('  Firebase apps:', firebase?.apps?.length || 0);
+        return {
+          firebaseAvailable: typeof firebase !== 'undefined',
+          configAvailable: !!window.FIREBASE_CONFIG,
+          initialized: firebaseInitialized,
+          authAvailable: !!auth,
+          dbAvailable: !!db,
+          appsCount: firebase?.apps?.length || 0
+        };
+      };
 
       /* ============== App constants / state ============== */
       const DEV = ["localhost","127.0.0.1","::1"].includes(location.hostname) || !!location.port;
@@ -2856,12 +2892,15 @@
               ? Number(item.vote_average).toFixed(1)
               : "N/A";
             const mediaType = item.media_type || "tv";
-            meta.textContent = [
+            
+            const metaParts = [
               `⭐ ${rating}`,
-              date ? ` • ${date.split("-")[0]}` : "",
-              ` • ${mediaType.toUpperCase()}`,
-              networkNames ? ` • ${t("streaming_on")}: ${networkNames}` : ""
-            ].join("");
+              date ? `${date.split("-")[0]}` : "",
+              `${mediaType.toUpperCase()}`,
+              networkNames ? `${t("streaming_on")}: ${networkNames}` : ""
+            ].filter(part => part.trim() !== "");
+            
+            meta.textContent = metaParts.join(" • ");
           }
           if (pillWrap) {
             const old = pillWrap.querySelector(".series-pill");
@@ -2890,9 +2929,87 @@
       }
 
       function createShowCard(item, isSearch = false, listTab = null) {
+        // Use legacy card system with title row fix
+        return createLegacyCard(item, isSearch, listTab);
+      }
+
+      function createCardV2(item, isSearch = false, listTab = null) {
+        const title = item.name || item.title || t("unknown_title");
+        const year = item.first_air_date?.slice(0, 4) || item.release_date?.slice(0, 4) || '';
+        const posterUrl = item.poster_path ? `${TMDB_IMG_BASE}${item.poster_path}` : '';
+        const rating = item.vote_average || 0;
+        const mediaType = item.media_type || (item.first_air_date ? "tv" : "movie");
+        
+        // Create badges for status
+        const badges = [];
+        if (mediaType === "tv") {
+          const status = getSeriesStatus(item);
+          if (status) {
+            badges.push({
+              label: status,
+              kind: 'status'
+            });
+          }
+        }
+
+        return window.Card({
+          variant: 'compact',
+          id: item.id,
+          posterUrl: posterUrl,
+          title: title,
+          subtitle: year,
+          rating: rating,
+          badges: badges,
+          primaryAction: isSearch ? {
+            label: t("currently_watching"),
+            onClick: () => addToList(item, 'watching')
+          } : undefined,
+          overflowActions: isSearch ? [
+            {
+              label: t("want_to_watch"),
+              onClick: () => addToList(item, 'wishlist')
+            },
+            {
+              label: t("already_watched"),
+              onClick: () => addToList(item, 'watched')
+            }
+          ] : [],
+          onOpenDetails: () => openDetails(item)
+        });
+      }
+
+      // Helper function to get series status
+      function getSeriesStatus(item) {
+        if (!item.status) return null;
+        
+        const status = item.status.toLowerCase();
+        if (status === 'returning series' || status === 'ongoing') {
+          return 'Currently Airing';
+        } else if (status === 'ended') {
+          return 'Series Complete';
+        } else if (status === 'planned' || status === 'in production') {
+          return 'Coming Soon';
+        }
+        return null;
+      }
+
+      // Helper function to add item to list
+      function addToList(item, listType) {
+        if (typeof window.moveItem === 'function') {
+          window.moveItem(item.id, listType);
+        }
+      }
+
+      // Helper function to open details
+      function openDetails(item) {
+        if (typeof window.openDetails === 'function') {
+          window.openDetails(item);
+        }
+      }
+
+      function createLegacyCard(item, isSearch = false, listTab = null) {
         // Use the passed listTab if available, otherwise fall back to currentActiveTab
         const activeTab = listTab || currentActiveTab;
-
 
         const card = document.createElement("div");
         card.className = "show-card";
@@ -2968,11 +3085,14 @@
         card.innerHTML = `
           ${posterHtml}
           <div class="show-details">
-            <h4 class="show-title">
-              <button class="btn-link" data-action="open" data-id="${item.id}" data-media-type="${mediaType}" aria-label="Open ${escapeHtml(title)} on TMDB">
-                ${escapeHtml(title)} <span aria-hidden="true" style="opacity:.6">🔗</span>
-              </button>
-            </h4>
+            <div class="show-title-row">
+              <h4 class="show-title">
+                <button class="btn-link" data-action="open" data-id="${item.id}" data-media-type="${mediaType}" aria-label="Open ${escapeHtml(title)} on TMDB">
+                  ${escapeHtml(title)} <span aria-hidden="true" style="opacity:.6">🔗</span>
+                </button>
+              </h4>
+              ${mediaType === "tv" ? getSeriesPill(item) : ""}
+            </div>
             ${renderNotesChip(item)}
             <div class="show-meta"></div>
             <div class="show-overview">${escapeHtml(item.overview || t("no_description"))}</div>
@@ -3010,12 +3130,14 @@
 
         const meta = card.querySelector(".show-meta");
         if (meta) {
-          meta.textContent = [
+          const metaParts = [
             `⭐ ${rating}`,
-            date ? ` • ${date.split("-")[0]}` : "",
-            ` • ${mediaType.toUpperCase()}`,
-            networkNames ? ` • ${t("streaming_on")}: ${networkNames}` : ""
-          ].join("");
+            date ? `${date.split("-")[0]}` : "",
+            `${mediaType.toUpperCase()}`,
+            networkNames ? `${t("streaming_on")}: ${networkNames}` : ""
+          ].filter(part => part.trim() !== "");
+          
+          meta.textContent = metaParts.join(" • ");
         }
 
         // Star rating and like/dislike buttons are handled by delegated event listeners in inline-script-03.js
@@ -5076,5 +5198,10 @@
   };
 
   console.log('🗂️ Series Organizer SO-1 initialized', { pro: PRO });
+  
+  // Export critical functions to window for global access
+  window.loadUserDataFromCloud = loadUserDataFromCloud;
+  window.addToList = addToList;
+  window.saveAppData = saveAppData;
 })();
     

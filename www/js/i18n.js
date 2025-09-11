@@ -1,128 +1,109 @@
 /* ============== Internationalization (i18n) ============== */
+/* Unified keys, no duplicates, EN/ES aligned 1:1 */
 
 const I18N = {
   en: {
+    // Theme / UI toggles
     go_dark: "🌙 Go Dark",
     go_light: "☀️ Go Light",
+
+    // App identity
     app_title: "Flicklet",
     subtitle: "TV & Movie Tracker",
+
+    // High-level stats / sections
     binge_total: "Total Binge Time",
     currently_watching: "Currently Watching",
     want_to_watch: "Want to Watch",
     already_watched: "Already Watched",
-    streaming_on: "Streaming",
-    clear: "Clear",
+    currently_airing: "Currently Airing",
     series_complete: "Series Complete",
     coming_soon: "Coming Soon",
-    currently_airing: "Currently Airing",
     next: "Next",
     last: "Last",
     start: "Start",
     because_you_liked: "Because you liked",
-    search_placeholder: "Search for shows or movies...",
-    search_tips: "Search tips: Use * for wildcards (e.g., \"marvel*\" for Marvel shows)",
-    welcome_message: "Welcome to Flicklet! Start by searching for a show or movie you love.",
-    all_genres: "All Genres",
-    search: "Search",
-    notes_tags: "Notes/Tags",
-    remove: "Remove",
-    your_rating: "Your Rating",
-    welcome_title: "Welcome! What should we call you?",
-    welcome_subtitle: "This will personalize your headers and stats.",
-    display_name: "Display name",
-    save: "Save",
-    sign_in_title: "Sign in to sync",
-    sign_in_subtitle: "Sign in to back up your lists and sync across devices.",
-    continue_google: "Continue with Google",
-    email_signin: "Email Sign-In",
-    sign_out: "Sign Out",
+
+    // Global navigation
     home: "Home",
     discover: "Discover",
     settings: "Settings",
+
+    // Settings tabs + descriptions
+    general: "General",
+    notifications: "Notifications",
     layout: "Layout",
     data: "Data",
     pro: "Pro",
     about: "About",
-    general: "General",
     general_description: "Manage your account and basic preferences",
-    display_name: "Display Name",
-    my_statistics: "My Statistics",
-    not_interested_management: "Not Interested Management",
-    not_interested_description: "Manage shows and movies you've marked as not interested",
-    manage_not_interested_list: "Manage Not Interested List",
-    notifications: "Notifications",
     notifications_description: "Choose which types of notifications you'd like to receive",
-    episode_alerts: "Upcoming episode alerts",
-    weekly_discover: "Weekly discover picks",
-    monthly_digest: "Monthly stats digest",
     layout_settings: "Layout Settings",
     layout_description: "Customize how your lists and cards are displayed",
+    data_management: "Data Management",
+    data_description: "Export, import, or reset your data",
+    pro_features: "Pro Features",
+    pro_description: "Unlock advanced features and premium content with Flicklet Pro",
+    settings_description: "Application settings",
+
+    // Settings options
     condensed_list_view: "Condensed list view (more items per screen)",
     show_posters: "Show movie/TV show posters",
     dark_mode: "Dark mode (auto-detect system preference)",
     home_page_lists: "Home Page TV/Movie Lists",
-    data_management: "Data Management",
-    data_description: "Export, import, or reset your data",
+
+    // Data actions
     export_json: "Export JSON",
     import_json: "Import JSON",
     extra_trivia_pro: "Extra Trivia (Pro)",
     export_csv_pro: "Export CSV (Pro)",
     reset_all_data: "Reset All Data",
-    share_lists: "Share Lists",
     data_hint: "Export saves flicklet-export.json to your device's Downloads/Files. Import accepts a valid Flicklet export.",
-    pro_features: "Pro Features",
-    pro_description: "Unlock advanced features and premium content with Flicklet Pro",
+
+    // Pro preview
     preview_pro_features: "Preview Pro Features",
     pro_hint: "Toggle Pro features on/off to see what's available",
     pro_features_include: "Pro Features Include:",
+    pro_simulate: "Pro (simulate)",
+
+    // Feedback feature
     share_your_thoughts: "Share Your Thoughts",
+    feedback: "Share Your Thoughts",
     feedback_working: "Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!",
     your_message: "Your Message",
-    feedback_placeholder: "Share your thoughts, feedback, quotes, or just vent! We're listening.",
-    share_it: "Share It!",
-    no_items: "No items.",
-    no_description: "No description.",
-    already_in_list: "Already in {list}.",
-    moved_to: "Moved to {list}.",
-    added_to: "Added to {list}.",
-    feedback: "Share Your Thoughts",
     feedback_placeholder: "Share your thoughts, feedback, quotes, confessions, or just vent here...",
     send: "Share It!",
-    search_results: "Search Results",
-    no_results: "No results",
-    searching: "Searching...",
-    advanced: "Advanced",
-    search_failed: "Search failed",
-    search_results_cleared: "Search results cleared due to language change.",
-    please_search_again: "Please search again to see results in the new language.",
-    episode_alerts: "Episode alerts",
-    weekly_discover: "Weekly discover picks",
-    monthly_digest: "Monthly stats digest",
-    backup_import: "Backup & Import",
-    nuclear_option: "Nuclear Option",
+
+    // Share / lists
+    share_lists: "Share Lists",
     share_this_list: "Share This List",
     share_selected: "Select Items to Share",
     share_link: "Share link",
     share_instructions: "Click to select which shows and movies to share",
+
+    // File pickers
     choose_file: "Choose File",
     no_file_chosen: "No file chosen",
-    upcoming_episode: "Upcoming episode",
-    welcome: "Welcome",
-    theme: "Theme",
-    theme_description: "Switch between different visual themes for the app.",
-    mardi_gras_mode: "Mardi Gras mode",
-    sign_in_account: "Sign in / Account",
-    language: "Language",
+
+    // Search
+    search: "Search",
+    search_placeholder: "Search for shows or movies...",
     search_for_shows: "Search for shows or movies...",
+    search_tips: "Search tips: Use * for wildcards (e.g., \"marvel*\" for Marvel shows)",
+    search_results: "Search Results",
+    end_of_search_results: "End of search results",
+    search_failed: "Search failed",
+    no_results: "No results",
+    no_results_found: "No results found",
+    searching: "Searching...",
+    search_loading: "Searching...",
+    search_results_cleared: "Search results cleared due to language change.",
+    please_search_again: "Please search again to see results in the new language.",
+
+    // Counts / stats
     currently_watching_count: "Currently Watching",
     want_to_watch_count: "Want to Watch",
     already_watched_count: "Already Watched",
-    discover_description: "Recommendations based on your likes and ratings.",
-    settings_description: "Application settings",
-    display_name_placeholder: "Display name",
-    save_name: "Save",
-    pro_simulate: "Pro (simulate)",
-    notifications: "Notifications",
     stats: "Stats",
     total_items: "Total items",
     watching_count: "Watching",
@@ -130,75 +111,44 @@ const I18N = {
     watched_count: "Watched",
     top_genres: "Top Genres",
     average_rating: "Average Rating",
+
+    // Generic statuses
     loading: "Loading...",
     failed_to_load: "Failed to load",
-    not_enough_signals: "Not enough signals yet. Like or rate a few items first.",
-    recommendations_failed: "Failed to load recommendations.",
-    // New strings from recent updates
-    auth_system_unavailable: "Authentication system is not available. Please refresh the page.",
-    signed_in_successfully: "Signed in successfully",
-    error_loading_user_data: "Error loading user data. Please try again.",
-    auth_system_error: "Authentication system error. Please refresh the page.",
-    firestore_not_available: "Firestore not available",
-    no_displayname_field: "No displayName field to remove",
-    what_should_we_call_you: "What should we call you?",
-    your_handle: "Your handle",
-    enter_key: "Enter",
-    account: "Account",
-    user: "User",
-    sign_in_account_title: "Sign in / Account",
-    signed_in_as: "Signed in as",
-    click_to_sign_out: "Sign out here",
-    unknown_data_action: "Unknown data-action",
-    auth_system_loading: "Authentication system is loading. Please try again in a moment.",
-    sign_in_to_sync: "Sign in to sync",
-    sign_in_subtitle_text: "Sign in to back up your lists and sync across devices.",
-    google_signin_unavailable: "Google sign-in is not available. Please refresh the page.",
-    apple_signin_unavailable: "Apple sign-in is not available. Please refresh the page.",
-    email_signin_unavailable: "Email sign-in is not available. Please refresh the page.",
-    unable_to_show_signin: "Unable to show sign-in modal. Please refresh the page.",
-    signin_system_not_ready: "Sign-in system is not ready. Please refresh the page.",
+    no_items: "No items.",
+    no_description: "No description.",
     unknown: "Unknown",
-    sign_out_confirmation: "Sign out as",
-    email_label: "Email",
-    signed_out_successfully: "Signed out successfully",
-    sign_out_failed: "Sign out failed",
+
+    // Cards / actions
+    notes_tags: "Notes/Tags",
+    remove: "Remove",
+    your_rating: "Your Rating",
     not_interested: "Not Interested",
-    language_changed_to: "Language changed to {lang}",
-    
-    // Curated sections
+    add: "Add",
+    more_actions: "More actions",
+    continue: "Continue",
+    available_on: "Available on",
+    watch_on: "Watch on",
+    upgrade_to_reveal: " — upgrade to reveal",
+    upgrade_to_watch: " — upgrade to watch",
+    extras: "Extras",
+    already_in_list: "Already in {list}.",
+    moved_to: "Moved to {list}.",
+    added_to: "Added to {list}.",
+
+    // Curated homepage
     trending_title: "Trending",
     trending_subtitle: "What everyone is watching",
-    staff_picks_title: "Staff Picks", 
+    staff_picks_title: "Staff Picks",
     staff_picks_subtitle: "Curated by us",
     new_this_week_title: "New This Week",
     new_this_week_subtitle: "Fresh releases",
-    
-    // Trivia
-    trivia_title: "Trivia",
-    trivia_next: "Next",
-    trivia_loading: "Loading...",
-    trivia_error: "Error loading trivia",
-    trivia_correct: "Correct!",
-    trivia_incorrect: "Incorrect",
-    trivia_question: "Question",
-    trivia_answer: "Answer",
-    trivia_completed_today: " • Completed today",
-    trivia_come_back_tomorrow: "Come back tomorrow for a new question.",
-    trivia_incorrect_answer: "Nope — correct answer is",
-    trivia_streak_up: "Trivia: +1 streak",
-    trivia_try_again_tomorrow: "Trivia: try again tomorrow",
-    trivia_ok: "OK",
-    
-    // Search
-    end_of_search_results: "End of search results",
-    search_failed: "Search failed",
-    no_results_found: "No results found",
-    search_loading: "Searching...",
-    loading: "Loading",
-    search_results_cleared: "Search results cleared",
-    please_search_again: "Please search again",
-    
+
+    // Discovery / recommendations
+    discover_description: "Recommendations based on your likes and ratings.",
+    not_enough_signals: "Not enough signals yet. Like or rate a few items first.",
+    recommendations_failed: "Failed to load recommendations.",
+
     // FlickWord
     flickword_title: "FlickWord",
     flickword_play: "Play",
@@ -211,7 +161,7 @@ const I18N = {
     streak: "STREAK",
     best: "BEST",
     played: "PLAYED",
-    
+
     // Quotes
     quote_title: "Daily Quote",
     quote_of_the_day: "Quote of the Day",
@@ -246,82 +196,66 @@ const I18N = {
     quote_28: "\"I ship productivity with naps.\"",
     quote_29: "\"Comfort show supremacy.\"",
     quote_30: "\"This queue is a personality test I'm failing.\"",
-    
-    // Notifications
+
+    // Notifications / toasts
     notification_success: "Success",
-    notification_error: "Error", 
+    notification_error: "Error",
     notification_warning: "Warning",
     notification_info: "Info",
-    
-    // Cloud sync
+
+    // Cloud / offline
     cloud_sync_ok: "Data synced successfully",
     cloud_load_failed: "Failed to load cloud data",
     cloud_sync_failed: "Cloud sync failed",
-    
-    // Auth and onboarding
+    offline_mode: "Offline Mode",
+    auth_unavailable_offline: "Authentication unavailable - working in offline mode",
+    working_offline_mode: "Working in offline mode - data will be stored locally only",
+
+    // Auth & onboarding
+    sign_in_title: "Sign in to sync",
+    sign_in_subtitle: "Sign in to back up your lists and sync across devices.",
     sign_in_create_account: "Sign In / Create Account",
     signing_in: "Signing in...",
+    sign_in_subtitle_text: "Sign in to back up your lists and sync across devices.",
     please_enter_display_name: "Please enter a display name.",
+    welcome_title: "Welcome! What should we call you?",
+    welcome_subtitle: "This will personalize your headers and stats.",
+    welcome: "Welcome",
+    display_name: "Display Name",
+    display_name_placeholder: "Display name",
+    save_name: "Save",
+    sign_in_account: "Sign in / Account",
+    account: "Account",
+    user: "User",
+    email_signin: "Email Sign-In",
+    email_label: "Email",
+    continue_google: "Continue with Google",
     click_to_sign_in: "Click to sign in",
     signed_in_as: "Signed in as",
     click_to_sign_out: "Click to sign out.",
     click_to_log_out: "click to log out",
-    
-    // Offline mode
-    offline_mode: "Offline Mode",
-    auth_unavailable_offline: "Authentication unavailable - working in offline mode",
-    working_offline_mode: "Working in offline mode - data will be stored locally only",
-    
-    // Providers and extras
-    available_on: "Available on",
-    watch_on: "Watch on",
-    upgrade_to_reveal: " — upgrade to reveal",
-    extras: "Extras",
-    upgrade_to_watch: " — upgrade to watch",
-    
-    // Share modal
-    select_all_everything: "Select All Everything",
-    generate_share_link: "Select what to share",
-    close: "Close",
-    
-    // Card component
-    more_actions: "More actions",
-    continue: "Continue",
-    add: "Add",
-    
-    // Home sections
-    "home.my_library": "My Library",
-    "home.my_library_sub": "Your personal watchlists and progress",
-    "home.community": "Community",
-    "home.community_sub": "Spotlight videos and community games",
-    "home.curated": "Curated",
-    "home.curated_sub": "Trending shows and staff recommendations",
-    "home.personalized": "Personalized",
-    "home.personalized_sub": "Recommendations just for you",
-    "home.theaters": "In Theaters Near Me",
-    "home.theaters_sub": "What's playing at your local cinemas",
-    "home.feedback_link": "Feedback",
-    "home.feedback_link_sub": "Help us improve Flicklet",
-    "feedback_link_text": "Have thoughts to share? We'd love to hear them!",
-    
-    // Feedback
-    "feedback.banner_cta": "Share your thoughts",
-    "feedback.banner_title": "Help us improve Flicklet",
-    "feedback.modal_title": "Send Feedback",
-    "feedback.type_label": "Type of feedback",
-    "feedback.type_select": "Select a type",
-    "feedback.type_bug": "Bug Report",
-    "feedback.type_feature": "Feature Request",
-    "feedback.type_improvement": "Improvement",
-    "feedback.type_other": "Other",
-    "feedback.message_label": "Your message",
-    "feedback.email_label": "Email (optional)",
-    "feedback.send": "Send Feedback",
-    "feedback.success_message": "Thank you for your feedback!",
-    
-    // Genre translations - User-friendly descriptions
+    sign_out: "Sign Out",
+    sign_out_confirmation: "Sign out as",
+    signed_in_successfully: "Signed in successfully",
+    signed_out_successfully: "Signed out successfully",
+    sign_out_failed: "Sign out failed",
+
+    // Auth errors
+    auth_system_unavailable: "Authentication system is not available. Please refresh the page.",
+    error_loading_user_data: "Error loading user data. Please try again.",
+    auth_system_error: "Authentication system error. Please refresh the page.",
+    firestore_not_available: "Firestore not available",
+    no_displayname_field: "No displayName field to remove",
+    auth_system_loading: "Authentication system is loading. Please try again in a moment.",
+    google_signin_unavailable: "Google sign-in is not available. Please refresh the page.",
+    apple_signin_unavailable: "Apple sign-in is not available. Please refresh the page.",
+    email_signin_unavailable: "Email sign-in is not available. Please refresh the page.",
+    unable_to_show_signin: "Unable to show sign-in modal. Please refresh the page.",
+    signin_system_not_ready: "Sign-in system is not ready. Please refresh the page.",
+
+    // Genres
     action: "Action",
-    adventure: "Adventure", 
+    adventure: "Adventure",
     animation: "Animation",
     comedy: "Comedy",
     crime: "Crime",
@@ -339,7 +273,6 @@ const I18N = {
     thriller: "Thriller",
     war: "War",
     western: "Western",
-    // Additional genre combinations - More descriptive
     action_adventure: "Action & Adventure",
     kids: "Kids & Family",
     news: "News & Current Events",
@@ -349,129 +282,146 @@ const I18N = {
     talk: "Talk Shows",
     war_politics: "War & Politics",
     talk_show: "Talk Shows",
-    reality_tv: "Reality TV"
+    reality_tv: "Reality TV",
+
+    // Language change message
+    language: "Language",
+    language_changed_to: "Language changed to {lang}",
+
+    // Home sections (grouped)
+    "home.my_library": "My Library",
+    "home.my_library_sub": "Your personal watchlists and progress",
+    "home.community": "Community",
+    "home.community_sub": "Spotlight videos and community games",
+    "home.curated": "Curated",
+    "home.curated_sub": "Trending shows and staff recommendations",
+    "home.personalized": "Personalized",
+    "home.personalized_sub": "Recommendations just for you",
+    "home.theaters": "In Theaters Near Me",
+    "home.theaters_sub": "What's playing at your local cinemas",
+    "home.feedback_link": "Feedback",
+    "home.feedback_link_sub": "Help us improve Flicklet",
+    "feedback_link_text": "Have thoughts to share? We'd love to hear them!",
+
+    // Trivia
+    trivia_title: "Trivia",
+    trivia_next: "Next",
+    trivia_loading: "Loading...",
+    trivia_error: "Error loading trivia",
+    trivia_correct: "Correct!",
+    trivia_incorrect: "Incorrect",
+    trivia_question: "Question",
+    trivia_answer: "Answer",
+    trivia_completed_today: " • Completed today",
+    trivia_come_back_tomorrow: "Come back tomorrow for a new question.",
+    trivia_incorrect_answer: "Nope — correct answer is",
+    trivia_streak_up: "Trivia: +1 streak",
+    trivia_try_again_tomorrow: "Trivia: try again tomorrow",
+    trivia_ok: "OK"
   },
+
   es: {
+    // Theme / UI toggles
     go_dark: "🌙 Modo Oscuro",
     go_light: "☀️ Modo Claro",
+
+    // App identity
     app_title: "Flicklet",
     subtitle: "Rastreador de TV y Películas",
+
+    // High-level stats / sections
     binge_total: "Tiempo Total de Maratón",
     currently_watching: "Viendo Actualmente",
     want_to_watch: "Quiero Ver",
     already_watched: "Ya Visto",
-    streaming_on: "Transmitiendo",
-    clear: "Limpiar",
+    currently_airing: "Transmitiéndose Actualmente",
     series_complete: "Serie Completa",
     coming_soon: "Próximamente",
-    currently_airing: "Transmitiéndose Actualmente",
     next: "Siguiente",
     last: "Último",
     start: "Comenzar",
     because_you_liked: "Porque te gustó",
-    search_placeholder: "Buscar series o películas...",
-    search_tips: "Consejos de búsqueda: Usa * para comodines (ej., \"marvel*\" para series de Marvel)",
-    welcome_message: "¡Bienvenido a Flicklet! Comienza buscando una serie o película que te guste.",
-    all_genres: "Todos los Géneros",
-    search: "Buscar",
-    notes_tags: "Notas/Etiquetas",
-    remove: "Eliminar",
-    your_rating: "Tu Calificación",
-    welcome_title: "¡Bienvenido! ¿Cómo deberíamos llamarte?",
-    welcome_subtitle: "Esto personalizará tus encabezados y estadísticas.",
-    display_name: "Nombre de pantalla",
-    save: "Guardar",
-    sign_in_title: "Inicia sesión para sincronizar",
-    sign_in_subtitle: "Inicia sesión para respaldar tus listas y sincronizar entre dispositivos.",
-    continue_google: "Continuar con Google",
-    email_signin: "Inicio de Sesión por Email",
-    sign_out: "Cerrar Sesión",
+
+    // Global navigation
     home: "Inicio",
     discover: "Descubrir",
     settings: "Configuración",
+
+    // Settings tabs + descriptions
+    general: "General",
+    notifications: "Notificaciones",
     layout: "Diseño",
     data: "Datos",
     pro: "Pro",
     about: "Acerca de",
-    general: "General",
     general_description: "Gestiona tu cuenta y preferencias básicas",
-    display_name: "Nombre para Mostrar",
-    my_statistics: "Mis Estadísticas",
-    not_interested_management: "Gestión de No Interesado",
-    not_interested_description: "Gestiona programas y películas que has marcado como no interesado",
-    manage_not_interested_list: "Gestionar Lista de No Interesado",
-    notifications: "Notificaciones",
     notifications_description: "Elige qué tipos de notificaciones quieres recibir",
-    episode_alerts: "Alertas de episodios próximos",
-    weekly_discover: "Descubrimientos semanales",
-    monthly_digest: "Resumen mensual de estadísticas",
     layout_settings: "Configuración de Diseño",
     layout_description: "Personaliza cómo se muestran tus listas y tarjetas",
+    data_management: "Gestión de Datos",
+    data_description: "Exportar, importar o restablecer tus datos",
+    pro_features: "Características Pro",
+    pro_description: "Desbloquea características avanzadas y contenido premium con Flicklet Pro",
+    settings_description: "Configuración de la aplicación",
+
+    // Settings options
     condensed_list_view: "Vista de lista condensada (más elementos por pantalla)",
     show_posters: "Mostrar carteles de películas/programas de TV",
     dark_mode: "Modo oscuro (detectar automáticamente preferencia del sistema)",
     home_page_lists: "Listas de TV/Películas de la Página Principal",
-    data_management: "Gestión de Datos",
-    data_description: "Exportar, importar o restablecer tus datos",
+
+    // Data actions
     export_json: "Exportar JSON",
     import_json: "Importar JSON",
     extra_trivia_pro: "Trivia Extra (Pro)",
     export_csv_pro: "Exportar CSV (Pro)",
     reset_all_data: "Restablecer Todos los Datos",
     data_hint: "La exportación guarda flicklet-export.json en la carpeta Descargas/Archivos de tu dispositivo. La importación acepta una exportación válida de Flicklet.",
-    pro_features: "Características Pro",
-    pro_description: "Desbloquea características avanzadas y contenido premium con Flicklet Pro",
+
+    // Pro preview
     preview_pro_features: "Vista Previa de Características Pro",
     pro_hint: "Activa/desactiva las características Pro para ver qué está disponible",
     pro_features_include: "Las Características Pro Incluyen:",
+    pro_simulate: "Pro (simular)",
+
+    // Feedback feature
     share_your_thoughts: "Comparte Tus Pensamientos",
+    feedback: "Comparte Tus Pensamientos",
     feedback_working: "¡Comparte tus pensamientos! Danos retroalimentación de la app, cuéntanos qué funciona (o no), comparte una cita para nuestra rotación, haz una confesión, o simplemente desahógate. ¡Estamos escuchando!",
     your_message: "Tu Mensaje",
-    feedback_placeholder: "¡Comparte tus pensamientos, retroalimentación, citas, o simplemente desahógate! Estamos escuchando.",
-    share_it: "¡Compártelo!",
-    no_items: "No hay elementos.",
-    no_description: "Sin descripción.",
-    already_in_list: "Ya está en {list}.",
-    moved_to: "Movido a {list}.",
-    added_to: "Agregado a {list}.",
-    feedback: "Comparte Tus Pensamientos",
     feedback_placeholder: "Comparte tus pensamientos, comentarios, citas, confesiones o simplemente desahógate aquí...",
     send: "¡Compártelo!",
-    search_results: "Resultados de Búsqueda",
-    no_results: "Sin resultados",
-    searching: "Buscando...",
-    advanced: "Avanzado",
-    search_failed: "Búsqueda fallida",
-    search_results_cleared: "Resultados de búsqueda limpiados debido al cambio de idioma.",
-    please_search_again: "Por favor busca nuevamente para ver resultados en el nuevo idioma.",
-    episode_alerts: "Alertas de episodios",
-    weekly_discover: "Descubrimientos semanales",
-    monthly_digest: "Resumen mensual de estadísticas",
-    backup_import: "Respaldo e Importación",
-    nuclear_option: "Opción Nuclear",
+
+    // Share / lists
+    share_lists: "Compartir Listas",
     share_this_list: "Compartir Esta Lista",
     share_selected: "Seleccionar Elementos para Compartir",
     share_link: "Compartir enlace",
     share_instructions: "Haz clic para seleccionar qué series y películas compartir",
+
+    // File pickers
     choose_file: "Elegir Archivo",
     no_file_chosen: "Ningún archivo elegido",
-    upcoming_episode: "Episodio próximo",
-    welcome: "Bienvenido",
-    theme: "Tema",
-    theme_description: "Cambiar entre diferentes temas visuales para la aplicación.",
-    mardi_gras_mode: "Modo Mardi Gras",
-    sign_in_account: "Iniciar sesión / Cuenta",
-    language: "Idioma",
+
+    // Search
+    search: "Buscar",
+    search_placeholder: "Buscar series o películas...",
     search_for_shows: "Buscar series o películas...",
+    search_tips: "Consejos de búsqueda: Usa * para comodines (ej., \"marvel*\" para series de Marvel)",
+    search_results: "Resultados de Búsqueda",
+    end_of_search_results: "Fin de resultados de búsqueda",
+    search_failed: "Búsqueda falló",
+    no_results: "Sin resultados",
+    no_results_found: "No se encontraron resultados",
+    searching: "Buscando...",
+    search_loading: "Buscando...",
+    search_results_cleared: "Resultados de búsqueda limpiados debido al cambio de idioma.",
+    please_search_again: "Por favor busca nuevamente para ver resultados en el nuevo idioma.",
+
+    // Counts / stats
     currently_watching_count: "Viendo Actualmente",
     want_to_watch_count: "Quiero Ver",
     already_watched_count: "Ya Visto",
-    discover_description: "Recomendaciones basadas en tus gustos y calificaciones.",
-    settings_description: "Configuración de la aplicación",
-    display_name_placeholder: "Nombre de pantalla",
-    save_name: "Guardar",
-    pro_simulate: "Pro (simular)",
-    notifications: "Notificaciones",
     stats: "Estadísticas",
     total_items: "Total de elementos",
     watching_count: "Viendo",
@@ -479,75 +429,44 @@ const I18N = {
     watched_count: "Visto",
     top_genres: "Géneros Principales",
     average_rating: "Calificación Promedio",
+
+    // Generic statuses
     loading: "Cargando...",
     failed_to_load: "Error al cargar",
-    not_enough_signals: "Aún no hay suficientes señales. Dale like o califica algunos elementos primero.",
-    recommendations_failed: "Error al cargar recomendaciones.",
-    // New strings from recent updates
-    auth_system_unavailable: "El sistema de autenticación no está disponible. Por favor, actualiza la página.",
-    signed_in_successfully: "Inicio de sesión exitoso",
-    error_loading_user_data: "Error al cargar datos del usuario. Por favor, inténtalo de nuevo.",
-    auth_system_error: "Error del sistema de autenticación. Por favor, actualiza la página.",
-    firestore_not_available: "Firestore no disponible",
-    no_displayname_field: "No hay campo displayName que eliminar",
-    what_should_we_call_you: "¿Cómo deberíamos llamarte?",
-    your_handle: "Tu nombre de usuario",
-    enter_key: "Entrar",
-    account: "Cuenta",
-    user: "Usuario",
-    sign_in_account_title: "Iniciar sesión / Cuenta",
-    signed_in_as: "Conectado como",
-    click_to_sign_out: "Cerrar sesión aquí",
-    unknown_data_action: "Acción de datos desconocida",
-    auth_system_loading: "El sistema de autenticación se está cargando. Por favor, inténtalo en un momento.",
-    sign_in_to_sync: "Iniciar sesión para sincronizar",
-    sign_in_subtitle_text: "Inicia sesión para respaldar tus listas y sincronizar entre dispositivos.",
-    google_signin_unavailable: "El inicio de sesión con Google no está disponible. Por favor, actualiza la página.",
-    apple_signin_unavailable: "El inicio de sesión con Apple no está disponible. Por favor, actualiza la página.",
-    email_signin_unavailable: "El inicio de sesión por email no está disponible. Por favor, actualiza la página.",
-    unable_to_show_signin: "No se puede mostrar el modal de inicio de sesión. Por favor, actualiza la página.",
-    signin_system_not_ready: "El sistema de inicio de sesión no está listo. Por favor, actualiza la página.",
+    no_items: "No hay elementos.",
+    no_description: "Sin descripción.",
     unknown: "Desconocido",
-    sign_out_confirmation: "Cerrar sesión como",
-    email_label: "Email",
-    signed_out_successfully: "Sesión cerrada exitosamente",
-    sign_out_failed: "Error al cerrar sesión",
+
+    // Cards / actions
+    notes_tags: "Notas/Etiquetas",
+    remove: "Eliminar",
+    your_rating: "Tu Calificación",
     not_interested: "No me interesa",
-    language_changed_to: "Idioma cambiado a {lang}",
-    
-    // Curated sections
+    add: "Agregar",
+    more_actions: "Más acciones",
+    continue: "Continuar",
+    available_on: "Disponible en",
+    watch_on: "Ver en",
+    upgrade_to_reveal: " — actualiza para revelar",
+    upgrade_to_watch: " — actualiza para ver",
+    extras: "Extras",
+    already_in_list: "Ya está en {list}.",
+    moved_to: "Movido a {list}.",
+    added_to: "Agregado a {list}.",
+
+    // Curated homepage
     trending_title: "Tendencia",
     trending_subtitle: "Lo que todos están viendo",
-    staff_picks_title: "Selecciones del Equipo", 
+    staff_picks_title: "Selecciones del Equipo",
     staff_picks_subtitle: "Curado por nosotros",
     new_this_week_title: "Nuevo Esta Semana",
     new_this_week_subtitle: "Estrenos frescos",
-    
-    // Trivia
-    trivia_title: "Trivia",
-    trivia_next: "Siguiente",
-    trivia_loading: "Cargando...",
-    trivia_error: "Error al cargar trivia",
-    trivia_correct: "¡Correcto!",
-    trivia_incorrect: "Incorrecto",
-    trivia_question: "Pregunta",
-    trivia_answer: "Respuesta",
-    trivia_completed_today: " • Completado hoy",
-    trivia_come_back_tomorrow: "Vuelve mañana para una nueva pregunta.",
-    trivia_incorrect_answer: "No — la respuesta correcta es",
-    trivia_streak_up: "Trivia: +1 racha",
-    trivia_try_again_tomorrow: "Trivia: intenta de nuevo mañana",
-    trivia_ok: "OK",
-    
-    // Search
-    end_of_search_results: "Fin de resultados de búsqueda",
-    search_failed: "Búsqueda falló",
-    no_results_found: "No se encontraron resultados",
-    search_loading: "Buscando...",
-    loading: "Cargando",
-    search_results_cleared: "Resultados de búsqueda limpiados",
-    please_search_again: "Por favor busca de nuevo",
-    
+
+    // Discovery / recommendations
+    discover_description: "Recomendaciones basadas en tus gustos y calificaciones.",
+    not_enough_signals: "Aún no hay suficientes señales. Dale like o califica algunos elementos primero.",
+    recommendations_failed: "Error al cargar recomendaciones.",
+
     // FlickWord
     flickword_title: "FlickWord",
     flickword_play: "Jugar",
@@ -560,7 +479,7 @@ const I18N = {
     streak: "RACHA",
     best: "MEJOR",
     played: "JUGADO",
-    
+
     // Quotes
     quote_title: "Cita Diaria",
     quote_of_the_day: "Cita del Día",
@@ -578,15 +497,15 @@ const I18N = {
     quote_11: "\"El algoritmo piensa que soy complicado. Tiene razón.\"",
     quote_12: "\"Si se encuentra, devolver al sofá.\"",
     quote_13: "\"Mi lenguaje del amor es 'saltar anuncio'.\"",
-    quote_14: "\"Contengo multitudes y varias listas de reproducción.\"",
+    quote_14: "\"Contengo multitudes y varias watchlists.\"",
     quote_15: "\"Los domingos son para pilotos y negación.\"",
     quote_16: "\"Ctrl+Z para la vida, play para consuelo.\"",
     quote_17: "\"No temo a ningún hombre, pero temo a los finales.\"",
     quote_18: "\"Esta app me entiende. Aterrador.\"",
-    quote_19: "\"Los agujeros de guión son solo cardio para el cerebro.\"",
+    quote_19: "\"Los agujeros de guión son cardio para el cerebro.\"",
     quote_20: "\"Aceptamos la dopamina que creemos merecer.\"",
     quote_21: "\"Nunca he terminado nada. Excepto temporadas.\"",
-    quote_22: "\"Vibe de hoy: subtítulos cerrados y snacks abiertos.\"",
+    quote_22: "\"Vibe de hoy: subtítulos y snacks.\"",
     quote_23: "\"¿Presagio? Apenas la conozco.\"",
     quote_24: "\"El desarrollo de personajes es mi cardio.\"",
     quote_25: "\"Si la tarjeta de título pega, me quedo.\"",
@@ -595,80 +514,64 @@ const I18N = {
     quote_28: "\"Envío productividad con siestas.\"",
     quote_29: "\"Supremacía de serie de consuelo.\"",
     quote_30: "\"Esta cola es una prueba de personalidad que estoy fallando.\"",
-    
-    // Notifications
+
+    // Notifications / toasts
     notification_success: "Éxito",
-    notification_error: "Error", 
+    notification_error: "Error",
     notification_warning: "Advertencia",
     notification_info: "Información",
-    
-    // Cloud sync
+
+    // Cloud / offline
     cloud_sync_ok: "Datos sincronizados exitosamente",
     cloud_load_failed: "Error al cargar datos de la nube",
     cloud_sync_failed: "Error de sincronización en la nube",
-    
-    // Auth and onboarding
-    sign_in_create_account: "Iniciar Sesión / Crear Cuenta",
-    signing_in: "Iniciando sesión...",
-    please_enter_display_name: "Por favor ingresa un nombre de pantalla.",
-    click_to_sign_in: "Haz clic para iniciar sesión",
-    signed_in_as: "Conectado como",
-    click_to_sign_out: "Haz clic para cerrar sesión.",
-    click_to_log_out: "haz clic para cerrar sesión",
-    
-    // Offline mode
     offline_mode: "Modo Sin Conexión",
     auth_unavailable_offline: "Autenticación no disponible - trabajando en modo sin conexión",
     working_offline_mode: "Trabajando en modo sin conexión - los datos se almacenarán solo localmente",
-    
-    // Providers and extras
-    available_on: "Disponible en",
-    watch_on: "Ver en",
-    upgrade_to_reveal: " — actualiza para revelar",
-    extras: "Extras",
-    upgrade_to_watch: " — actualiza para ver",
-    
-    // Share modal
-    select_all_everything: "Seleccionar Todo",
-    generate_share_link: "Selecciona qué compartir",
-    close: "Cerrar",
-    
-    // Card component
-    more_actions: "Más acciones",
-    continue: "Continuar",
-    add: "Agregar",
-    
-    // Home sections
-    "home.my_library": "Mi Biblioteca",
-    "home.my_library_sub": "Tus listas de seguimiento y progreso personal",
-    "home.community": "Comunidad",
-    "home.community_sub": "Videos destacados y juegos de la comunidad",
-    "home.curated": "Curado",
-    "home.curated_sub": "Series populares y recomendaciones del equipo",
-    "home.personalized": "Personalizado",
-    "home.personalized_sub": "Recomendaciones solo para ti",
-    "home.theaters": "En Cines Cerca de Mí",
-    "home.theaters_sub": "Qué se está proyectando en tus cines locales",
-    "home.feedback_link": "Comentarios",
-    "home.feedback_link_sub": "Ayúdanos a mejorar Flicklet",
-    "feedback_link_text": "¿Tienes pensamientos que compartir? ¡Nos encantaría escucharlos!",
-    
-    // Feedback
-    "feedback.banner_cta": "Comparte tus pensamientos",
-    "feedback.banner_title": "Ayúdanos a mejorar Flicklet",
-    "feedback.modal_title": "Enviar Comentarios",
-    "feedback.type_label": "Tipo de comentario",
-    "feedback.type_select": "Selecciona un tipo",
-    "feedback.type_bug": "Reporte de Error",
-    "feedback.type_feature": "Solicitud de Función",
-    "feedback.type_improvement": "Mejora",
-    "feedback.type_other": "Otro",
-    "feedback.message_label": "Tu mensaje",
-    "feedback.email_label": "Email (opcional)",
-    "feedback.send": "Enviar Comentarios",
-    "feedback.success_message": "¡Gracias por tus comentarios!",
-    
-    // Genre translations - User-friendly descriptions
+
+    // Auth & onboarding
+    sign_in_title: "Inicia sesión para sincronizar",
+    sign_in_subtitle: "Inicia sesión para respaldar tus listas y sincronizar entre dispositivos.",
+    sign_in_create_account: "Iniciar Sesión / Crear Cuenta",
+    signing_in: "Iniciando sesión...",
+    sign_in_subtitle_text: "Inicia sesión para respaldar tus listas y sincronizar entre dispositivos.",
+    please_enter_display_name: "Por favor ingresa un nombre de pantalla.",
+    welcome_title: "¡Bienvenido! ¿Cómo deberíamos llamarte?",
+    welcome_subtitle: "Esto personalizará tus encabezados y estadísticas.",
+    welcome: "Bienvenido",
+    display_name: "Nombre de pantalla",
+    display_name_placeholder: "Nombre de pantalla",
+    save_name: "Guardar",
+    sign_in_account: "Iniciar sesión / Cuenta",
+    account: "Cuenta",
+    user: "Usuario",
+    email_signin: "Inicio de Sesión por Email",
+    email_label: "Email",
+    continue_google: "Continuar con Google",
+    click_to_sign_in: "Haz clic para iniciar sesión",
+    signed_in_as: "Conectado como",
+    click_to_sign_out: "Cerrar sesión aquí",
+    click_to_log_out: "haz clic para cerrar sesión",
+    sign_out: "Cerrar Sesión",
+    sign_out_confirmation: "Cerrar sesión como",
+    signed_in_successfully: "Inicio de sesión exitoso",
+    signed_out_successfully: "Sesión cerrada exitosamente",
+    sign_out_failed: "Error al cerrar sesión",
+
+    // Auth errors
+    auth_system_unavailable: "El sistema de autenticación no está disponible. Por favor, actualiza la página.",
+    error_loading_user_data: "Error al cargar datos del usuario. Por favor, inténtalo de nuevo.",
+    auth_system_error: "Error del sistema de autenticación. Por favor, actualiza la página.",
+    firestore_not_available: "Firestore no disponible",
+    no_displayname_field: "No hay campo displayName que eliminar",
+    auth_system_loading: "El sistema de autenticación se está cargando. Por favor, inténtalo en un momento.",
+    google_signin_unavailable: "El inicio de sesión con Google no está disponible. Por favor, actualiza la página.",
+    apple_signin_unavailable: "El inicio de sesión con Apple no está disponible. Por favor, actualiza la página.",
+    email_signin_unavailable: "El inicio de sesión por email no está disponible. Por favor, actualiza la página.",
+    unable_to_show_signin: "No se puede mostrar el modal de inicio de sesión. Por favor, actualiza la página.",
+    signin_system_not_ready: "El sistema de inicio de sesión no está listo. Por favor, actualiza la página.",
+
+    // Genres
     action: "Acción",
     adventure: "Aventura",
     animation: "Animación",
@@ -688,7 +591,6 @@ const I18N = {
     thriller: "Suspenso",
     war: "Guerra",
     western: "Western",
-    // Additional genre combinations - More descriptive
     action_adventure: "Acción y Aventura",
     kids: "Niños y Familia",
     news: "Noticias y Actualidad",
@@ -698,68 +600,80 @@ const I18N = {
     talk: "Programas de Entrevistas",
     war_politics: "Guerra y Política",
     talk_show: "Programas de Entrevistas",
-    reality_tv: "Realidad TV"
+    reality_tv: "Realidad TV",
+
+    // Language change message
+    language: "Idioma",
+    language_changed_to: "Idioma cambiado a {lang}",
+
+    // Home sections (grouped)
+    "home.my_library": "Mi Biblioteca",
+    "home.my_library_sub": "Tus listas de seguimiento y progreso personal",
+    "home.community": "Comunidad",
+    "home.community_sub": "Videos destacados y juegos de la comunidad",
+    "home.curated": "Curado",
+    "home.curated_sub": "Series populares y recomendaciones del equipo",
+    "home.personalized": "Personalizado",
+    "home.personalized_sub": "Recomendaciones solo para ti",
+    "home.theaters": "En Cines Cerca de Mí",
+    "home.theaters_sub": "Qué se está proyectando en tus cines locales",
+    "home.feedback_link": "Comentarios",
+    "home.feedback_link_sub": "Ayúdanos a mejorar Flicklet",
+    "feedback_link_text": "¿Tienes pensamientos que compartir? ¡Nos encantaría escucharlos!",
+
+    // Trivia
+    trivia_title: "Trivia",
+    trivia_next: "Siguiente",
+    trivia_loading: "Cargando...",
+    trivia_error: "Error al cargar trivia",
+    trivia_correct: "¡Correcto!",
+    trivia_incorrect: "Incorrecto",
+    trivia_question: "Pregunta",
+    trivia_answer: "Respuesta",
+    trivia_completed_today: " • Completado hoy",
+    trivia_come_back_tomorrow: "Vuelve mañana para una nueva pregunta.",
+    trivia_incorrect_answer: "No — la respuesta correcta es",
+    trivia_streak_up: "Trivia: +1 racha",
+    trivia_try_again_tomorrow: "Trivia: intenta de nuevo mañana",
+    trivia_ok: "OK"
   }
 };
 
-// Translation function
+// Translation function: strict fallback to EN if missing
 function t(key, lang = 'en') {
-  const translations = I18N[lang] || I18N.en;
-  return translations[key] || key;
+  const pack = I18N[lang] || I18N.en;
+  return (pack[key] ?? I18N.en[key] ?? key);
 }
 
-// Comprehensive translation application
+/* Apply translations for:
+   - text nodes: [data-i18n]
+   - placeholders: [data-i18n-placeholder]
+   - title attributes: [data-i18n-title]
+   - aria-labels: [data-i18n-aria-label]
+*/
 function applyTranslations(lang = 'en') {
-  console.log('🌍 Applying translations for language:', lang);
-  
-  // Apply to data-i18n elements
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    const translation = t(key, lang);
-    if (translation && translation !== key) {
-      el.textContent = translation;
-    }
-  });
-  
-  // Apply to placeholder elements
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-    const key = el.getAttribute('data-i18n-placeholder');
-    const translation = t(key, lang);
-    if (translation && translation !== key) {
-      el.placeholder = translation;
-    }
-  });
-  
-  // Apply to title attributes
-  document.querySelectorAll('[data-i18n-title]').forEach(el => {
-    const key = el.getAttribute('data-i18n-title');
-    const translation = t(key, lang);
-    if (translation && translation !== key) {
-      el.title = translation;
-    }
-  });
-  
-  // Apply to aria-label attributes
-  document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
-    const key = el.getAttribute('data-i18n-aria-label');
-    const translation = t(key, lang);
-    if (translation && translation !== key) {
-      el.setAttribute('aria-label', translation);
-    }
-  });
-  
-  console.log('✅ Translations applied successfully');
+  const apply = (sel, fn) => {
+    document.querySelectorAll(sel).forEach(el => {
+      const key = el.getAttribute(sel.replace(/^\[|\]$/g,''));
+      const val = t(key, lang);
+      if (val && val !== key) fn(el, val);
+    });
+  };
+
+  apply('[data-i18n]',        (el, val) => { el.textContent = val; });
+  apply('[data-i18n-placeholder]', (el, val) => { el.placeholder = val; });
+  apply('[data-i18n-title]',  (el, val) => { el.title = val; });
+  apply('[data-i18n-aria-label]', (el, val) => { el.setAttribute('aria-label', val); });
 }
 
-// Make functions globally accessible
+// Expose globally
 if (typeof window !== 'undefined') {
   window.I18N = I18N;
   window.t = t;
   window.applyTranslations = applyTranslations;
 }
 
-// Export for use in other modules
+// CJS export (optional tooling)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { I18N, t, applyTranslations };
 }
-

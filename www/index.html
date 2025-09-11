@@ -12,6 +12,9 @@
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
     
+    <!-- Cross-Origin-Opener-Policy for Google Auth popup compatibility -->
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups" />
+    
     <!-- Icons for different platforms -->
     <link rel="icon" href="icons/icon-512.png" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
@@ -79,7 +82,7 @@
         </div>
         
         <div class="header-center">
-          <div id="versionIndicator" style="position: fixed; top: 10px; left: 10px; background: #007bff; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">v22.5-POSTER-STANDARDIZED</div>
+          <div id="versionIndicator" style="position: fixed; top: 10px; left: 10px; background: #007bff; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">v22.18-FIREBASE-DEBUG-ENHANCED</div>
           <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
           <div id="proBadge" class="pro-badge" style="display: none;">PRO</div>
           <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>

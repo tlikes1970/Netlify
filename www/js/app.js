@@ -199,7 +199,50 @@ waitForFirebaseReady() {
             window.__currentAuthModal = null;
           }
 
-          // 2) BUTTON LABEL = Firebase displayName (fallback email prefix)
+          // 2) CREATE USER DATABASE ENTRY (CRITICAL FOR FIREBASE STORAGE)
+          console.log('🔄 Creating user database entry...');
+          try {
+            const db = firebase.firestore();
+            await db.collection("users").doc(user.uid).set({
+              profile: {
+                email: user.email || "",
+                displayName: user.displayName || "",
+                photoURL: user.photoURL || "",
+              },
+              lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+            }, { merge: true });
+            console.log('✅ User database entry created successfully');
+          } catch (error) {
+            console.error('❌ Failed to create user database entry:', error);
+          }
+
+          // 3) LOAD USER DATA FROM CLOUD (CRITICAL FOR DATA RESTORATION)
+          console.log('🔄 Loading user data from Firebase cloud storage...');
+          try {
+            if (typeof window.loadUserDataFromCloud === 'function') {
+              await window.loadUserDataFromCloud(user.uid);
+              console.log('✅ User data loaded from cloud successfully');
+              
+              // CRITICAL: Refresh UI after data is loaded to prevent "already in list" errors
+              if (typeof window.updateUI === 'function') {
+                console.log('🔄 Refreshing UI after cloud data load...');
+                window.updateUI();
+              }
+              
+              // Also refresh the current tab content
+              if (typeof window.FlickletApp?.updateTabContent === 'function') {
+                const currentTab = window.FlickletApp?.currentTab || 'home';
+                console.log('🔄 Refreshing current tab content:', currentTab);
+                window.FlickletApp.updateTabContent(currentTab);
+              }
+            } else {
+              console.error('❌ loadUserDataFromCloud function not available');
+            }
+          } catch (error) {
+            console.error('❌ Failed to load user data from cloud:', error);
+          }
+
+          // 3) BUTTON LABEL = Firebase displayName (fallback email prefix)
           console.log('🔍 User signed in, Firebase user data:', {
             displayName: user.displayName,
             email: user.email,

@@ -841,6 +841,29 @@ html, body { overflow-x:hidden; }
   margin-top: auto;
 }
 
+/* Title row layout for inline status badges */
+.card__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: 4px;
+}
+
+.card__title-row .card__title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-text);
+}
+
+.card__title-row .card__badge--status {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
 /* Badges */
 .card__badge {
   position: absolute;
@@ -858,6 +881,16 @@ html, body { overflow-x:hidden; }
 .card__badge--status {
   background: var(--color-primary-start);
   color: white;
+  /* Move status badges to title row - right aligned */
+  position: static;
+  display: inline-block;
+  margin-left: auto;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0.3px;
 }
 
 .card__badge--provider {
@@ -1022,6 +1055,37 @@ html, body { overflow-x:hidden; }
     grid-template-columns: var(--poster-w-mobile) 1fr !important;
     min-height: var(--poster-h-mobile) !important;
   }
+  
+  .show-card .show-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: 4px;
+  }
+  
+  .show-card .show-title {
+    flex: 1;
+    margin: 0;
+  }
+  
+  .show-card .series-pill {
+    margin-left: auto;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 900;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    flex-shrink: 0;
+  }
+  
+  /* Mobile list container styling */
+  #watchingList, #wishlistList, #watchedList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
 }
 
 /* Focus management */
@@ -1050,19 +1114,59 @@ html, body { overflow-x:hidden; }
     min-height: var(--poster-h-desktop);
   }
   
+  .show-card .show-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: 4px;
+  }
+  
   .show-card .show-title {
     font-size: var(--meta-title-size-desktop);
     line-height: var(--meta-line-desktop);
-    margin: 0 0 8px;
-    font-weight: 600;
+    margin: 0;
+    font-weight: 700;
     color: var(--color-text, #121212);
+    font-size: 20px;
+    flex: 1;
   }
   
   .show-card .show-meta {
-    font-size: 14px;
-    color: var(--color-text-secondary, #666);
+    font-size: 13px;
+    color: var(--color-text-secondary, #888);
     margin: 0 0 8px;
     line-height: 1.4;
+    font-weight: 400;
+  }
+  
+  .show-card .series-pill {
+    margin-left: auto;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    flex-shrink: 0;
+  }
+  
+  .show-card .series-pill.status-ongoing {
+    background: rgba(81, 207, 102, 0.16);
+    color: #2f9e44;
+    border-color: #2f9e44;
+  }
+  
+  .show-card .series-pill.status-ended {
+    background: rgba(255, 77, 79, 0.16);
+    color: #d63031;
+    border-color: #d63031;
+  }
+  
+  .show-card .series-pill.status-upcoming {
+    background: rgba(255, 212, 59, 0.16);
+    color: #b08900;
+    border-color: #b08900;
   }
   
   .show-card .show-overview {
@@ -1080,6 +1184,13 @@ html, body { overflow-x:hidden; }
   /* Ensure proper spacing between cards on desktop */
   .show-card + .show-card {
     margin-top: 20px;
+  }
+  
+  /* List container styling */
+  #watchingList, #wishlistList, #watchedList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 }
 

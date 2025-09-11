@@ -103,13 +103,15 @@
           </div>
           <div class="card__overlay">
             <div class="card__overlay-content">
-              <h3 class="card__title">${title}</h3>
+              <div class="card__title-row">
+                <h3 class="card__title">${title}</h3>
+                ${badgesHTML}
+              </div>
               ${subtitle ? `<p class="card__subtitle">${subtitle}</p>` : ''}
               ${stars ? `<div class="card__rating" aria-label="Rating ${normalizedRating}/5">${stars}</div>` : ''}
               ${primaryActionHTML}
             </div>
           </div>
-          ${badgesHTML}
         </div>
         ${overflowHTML}
       `;
