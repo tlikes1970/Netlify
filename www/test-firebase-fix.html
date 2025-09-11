@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-item { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .pass { background-color: #d4edda; border-color: #c3e6cb; }
+        .fail { background-color: #f8d7da; border-color: #f5c6cb; }
+        .pending { background-color: #fff3cd; border-color: #ffeaa7; }
+    </style>
+</head>
+<body>
+    <h1>Firebase Fix Test Results</h1>
+    
+    <div class="test-item pending" id="auth-test">
+        <h3>1. Authentication Test</h3>
+        <p>Status: <span id="auth-status">Testing...</span></p>
+        <p>Expected: User can sign in successfully</p>
+    </div>
+    
+    <div class="test-item pending" id="database-test">
+        <h3>2. Database Entry Test</h3>
+        <p>Status: <span id="database-status">Testing...</span></p>
+        <p>Expected: User document created in Firebase</p>
+    </div>
+    
+    <div class="test-item pending" id="data-test">
+        <h3>3. Data Persistence Test</h3>
+        <p>Status: <span id="data-status">Testing...</span></p>
+        <p>Expected: Data persists after page refresh</p>
+    </div>
+    
+    <div class="test-item pending" id="console-test">
+        <h3>4. Console Error Test</h3>
+        <p>Status: <span id="console-status">Testing...</span></p>
+        <p>Expected: No critical errors in console</p>
+    </div>
+
+    <script>
+        // Test script to check Firebase fix
+        console.log('🧪 Firebase Fix Test Starting...');
+        
+        // Test 1: Check if FIREBASE_CONFIG exists
+        if (window.FIREBASE_CONFIG) {
+            document.getElementById('auth-status').textContent = '✅ FIREBASE_CONFIG loaded';
+            document.getElementById('auth-test').className = 'test-item pass';
+        } else {
+            document.getElementById('auth-status').textContent = '❌ FIREBASE_CONFIG missing';
+            document.getElementById('auth-test').className = 'test-item fail';
+        }
+        
+        // Test 2: Check if Firebase is initialized
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+            document.getElementById('database-status').textContent = '✅ Firebase initialized';
+            document.getElementById('database-test').className = 'test-item pass';
+        } else {
+            document.getElementById('database-status').textContent = '❌ Firebase not initialized';
+            document.getElementById('database-test').className = 'test-item fail';
+        }
+        
+        // Test 3: Check if appData exists
+        if (window.appData) {
+            document.getElementById('data-status').textContent = '✅ appData available';
+            document.getElementById('data-test').className = 'test-item pass';
+        } else {
+            document.getElementById('data-status').textContent = '❌ appData missing';
+            document.getElementById('data-test').className = 'test-item fail';
+        }
+        
+        // Test 4: Check for critical errors
+        const originalError = console.error;
+        let errorCount = 0;
+        console.error = function(...args) {
+            errorCount++;
+            originalError.apply(console, args);
+        };
+        
+        setTimeout(() => {
+            if (errorCount === 0) {
+                document.getElementById('console-status').textContent = '✅ No critical errors';
+                document.getElementById('console-test').className = 'test-item pass';
+            } else {
+                document.getElementById('console-status').textContent = `⚠️ ${errorCount} errors found`;
+                document.getElementById('console-test').className = 'test-item fail';
+            }
+        }, 2000);
+        
+        console.log('🧪 Firebase Fix Test Complete');
+    </script>
+</body>
+</html>

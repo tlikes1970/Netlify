@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FlickWord</title>
+  <!-- Version: keyboard-fix-v2 -->
+  <style>
+    :root{
+      --correct:#16a34a;   /* deep green */
+      --present:#f59e0b;   /* amber */
+      --absent:#9ca3af;    /* gray */
+      --key:#ffffff;       /* key base */
+      --key-border:#111111;
+      --special:#2563eb;   /* blue for Enter */
+      --danger:#ef4444;    /* red for Exit */
+      --accent:#111111;    /* black text/borders */
+      --bg:#f7f7fb;
+    }
+
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,sans-serif;background:var(--bg);padding:20px;color:#111}
+
+    #gameWrapper{max-width:520px;margin:18px auto;background:#fff;border:2px solid var(--accent);border-radius:14px;padding:20px}
+
+    /* Grid */
+    #grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:16px 0}
+    .tile{width:64px;height:64px;border:2px solid var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;background:#fff}
+    .tile.correct{background:var(--correct);color:#fff}
+    .tile.present{background:var(--present);color:#111}
+    .tile.absent{background:#e5e7eb;color:#111}
+
+    /* Keyboard */
+    #keyboard{display:flex;flex-direction:column;align-items:center;gap:8px}
+    .kb-row{display:flex;gap:6px}
+    .key{appearance:none;user-select:none;border:2px solid var(--key-border);background:var(--key);color:#000;min-width:36px;height:48px;padding:0 10px;border-radius:10px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .key.correct{background:var(--correct);color:#fff;border-color:var(--correct)}
+    .key.present{background:var(--present);color:#111;border-color:var(--present)}
+    .key.absent{background:var(--absent);color:#fff;border-color:var(--absent)}
+    .key.special{color:#fff}
+    .key.enter{background:var(--special);border-color:var(--special)}
+    .key.back{background:#6b7280;border-color:#6b7280} /* slate for Backspace */
+
+    .btn-exit{appearance:none;border:2px solid var(--danger);background:#fff;color:#000;font-weight:800;border-radius:10px;padding:10px 14px;cursor:pointer}
+    .btn-exit:hover{background:#ffe4e6;border-color:var(--danger)}
+
+    /* Custom Notification */
+    .custom-notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      border: 2px solid #111;
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-weight: 600;
+      font-size: 14px;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      animation: slideDown 0.3s ease-out;
+    }
+    
+    .custom-notification.error {
+      border-color: #ef4444;
+      color: #ef4444;
+      background: #fef2f2;
+    }
+    
+    .custom-notification.success {
+      border-color: #16a34a;
+      color: #16a34a;
+      background: #f0fdf4;
+    }
+    
+    @keyframes slideDown {
+      from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+      to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    }
+
+    @media (max-width:480px){
+      /* Mobile-first approach: scale everything down proportionally */
+      .tile{width:48px;height:48px;font-size:18px}
+      
+      /* Responsive keyboard keys that scale with screen width - bigger and more usable */
+      .key{min-width:calc(9vw - 2px);height:44px;font-size:clamp(14px, 4vw, 18px);padding:0 4px}
+      
+      /* Better gaps to fit more keys without cutting off */
+      .kb-row{gap:3px;justify-content:center;flex-wrap:nowrap}
+      
+      /* Container adjustments */
+      #gameWrapper{padding:12px;margin:8px auto;max-width:100vw;box-sizing:border-box}
+      #keyboard{max-width:100vw;overflow:hidden;padding:0 6px;box-sizing:border-box}
+      
+      /* Ensure all rows center properly */
+      .kb-row:first-child{justify-content:center}
+      .kb-row:last-child{justify-content:center}
+      
+      /* Special handling for Enter and Backspace keys - bigger for easier tapping */
+      .key.enter,.key.back{min-width:calc(12vw - 2px)}
+    }
+    
+    /* Extra small mobile devices */
+    @media (max-width:360px){
+      .key{min-width:calc(8.5vw - 1px);height:40px;font-size:clamp(12px, 3.5vw, 16px)}
+      .tile{width:44px;height:44px;font-size:16px}
+      .kb-row{gap:2px}
+    }
+    
+    /* Extra extra small mobile devices */
+    @media (max-width:320px){
+      .key{min-width:calc(8vw);height:38px;font-size:clamp(11px, 3.2vw, 15px)}
+      .tile{width:42px;height:42px;font-size:15px}
+      .kb-row{gap:1px}
+      #gameWrapper{padding:8px;margin:4px auto}
+      #keyboard{padding:0 2px}
+    }
+  </style>
+</head>
+<body>
+  <div id="gameWrapper">
+    <h2 style="text-align:center;margin:0 0 12px;font-weight:900;">FlickWord</h2>
+    <div id="grid"></div>
+    <div id="keyboard"></div>
+    <div style="text-align:center;margin-top:20px;">
+      <button class="btn-exit" type="button" onclick="closeGame()">Exit</button>
+    </div>
+  </div>
+
+<script>
+// ===== Config =====
+const WORDS = ["bliss","crane","flick","gravy","masks","toast","crown","spine","tiger","pride"]; // placeholder list for target rotation
+const ROWS  = ["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"]; // QWERTY layout
+
+// ===== State =====
+let game = { target:null, guesses:[], current:"", max:6, done:false, status:{}, lastResults:[] };
+
+// ===== URL Parameter Support =====
+function getDateFromURL() {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('date');
+}
+
+async function getTodayWord(){
+  // Check if date parameter is provided
+  const dateParam = getDateFromURL();
+  let targetDate;
+  
+  if (dateParam) {
+    // Use provided date parameter (convert to local timezone)
+    targetDate = new Date(dateParam + 'T00:00:00');
+  } else {
+    // Use current date in local timezone
+    targetDate = new Date();
+  }
+  
+  // Create date string for caching
+  const dateStr = targetDate.toISOString().slice(0, 10);
+  
+  // Check if we already have a word for this date
+  const cachedWord = localStorage.getItem(`flickword:word:${dateStr}`);
+  if (cachedWord) {
+    console.log(`🎯 Using cached word for ${dateStr}: ${cachedWord}`);
+    return cachedWord.toUpperCase();
+  }
+  
+  // Try to get word from Datamuse API
+  try {
+    console.log(`🎯 Fetching new word from API for ${dateStr}`);
+    const response = await fetch('https://api.datamuse.com/words?sp=?????&max=1');
+    const data = await response.json();
+    
+    if (data && data.length > 0 && data[0].word) {
+      const word = data[0].word.toLowerCase();
+      
+      // Validate the word is exactly 5 letters
+      if (word.length === 5 && /^[a-z]+$/.test(word)) {
+        // Cache the word for this date
+        localStorage.setItem(`flickword:word:${dateStr}`, word);
+        console.log(`🎯 New word from API: ${word}`);
+        return word.toUpperCase();
+      }
+    }
+  } catch (error) {
+    console.warn('🎯 API failed, falling back to hardcoded list:', error);
+  }
+  
+  // Fallback to hardcoded list
+  const start = new Date("2023-01-01T00:00:00");
+  const days = Math.floor((targetDate - start)/(1000*60*60*24));
+  const fallbackWord = WORDS[days % WORDS.length];
+  
+  // Cache the fallback word too
+  localStorage.setItem(`flickword:word:${dateStr}`, fallbackWord);
+  console.log(`🎯 Using fallback word: ${fallbackWord}`);
+  return fallbackWord.toUpperCase();
+}
+
+// ===== PostMessage Bridge =====
+function reportResult(won, guesses) {
+  try {
+    // Use local timezone for date consistency
+    const now = new Date();
+    const today = now.getFullYear() + '-' + 
+                  String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                  String(now.getDate()).padStart(2, '0');
+    
+    const message = {
+      type: 'flickword:result',
+      date: today,
+      won: won,
+      guesses: guesses,
+      target: game.target
+    };
+    
+    // Send to parent if in iframe, ignore if in new tab
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage(message, '*');
+    }
+    
+    // Also save to localStorage for persistence
+    const results = JSON.parse(localStorage.getItem('flickword:results') || '{}');
+    results[today] = message;
+    localStorage.setItem('flickword:results', JSON.stringify(results));
+    
+  } catch(e) {
+    console.log('Could not report result:', e);
+  }
+}
+
+// ===== Game Functions =====
+async function showGame(){
+  game.target=await getTodayWord();
+  game.guesses=[]; game.current=""; game.done=false; game.status={}; game.lastResults=[];
+  renderGrid(); renderKeyboard();
+}
+
+function closeGame(){ 
+  // Close if in iframe, go back if in new tab
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'flickword:close' }, '*');
+  } else {
+    window.close();
+  }
+}
+
+// ===== Renderers =====
+function renderGrid(){
+  const grid = document.getElementById('grid'); grid.innerHTML='';
+  for(let i=0;i<game.max;i++){
+    const guess = game.guesses[i] || (i===game.guesses.length ? game.current : "");
+    for(let j=0;j<5;j++){
+      const tile = document.createElement('div');
+      tile.className='tile';
+      const letter = guess[j]||'';
+      tile.textContent = letter;
+      if(i < game.guesses.length){
+        const res = game.lastResults[i][j];
+        tile.classList.add(res);
+      }
+      grid.appendChild(tile);
+    }
+  }
+}
+
+function renderKeyboard(){
+  const kb = document.getElementById('keyboard'); kb.innerHTML='';
+
+  // Row 1 + Backspace on far right (top-right)
+  const r1=document.createElement('div'); r1.className='kb-row';
+  for(const L of ROWS[0]) r1.appendChild(makeKey(L));
+  r1.appendChild(makeKey('⌫','back special',backspace));
+  kb.appendChild(r1);
+
+  // Row 2
+  const r2=document.createElement('div'); r2.className='kb-row';
+  for(const L of ROWS[1]) r2.appendChild(makeKey(L));
+  kb.appendChild(r2);
+
+  // Row 3 + Enter at right
+  const r3=document.createElement('div'); r3.className='kb-row';
+  for(const L of ROWS[2]) r3.appendChild(makeKey(L));
+  r3.appendChild(makeKey('Enter','enter special',submit));
+  kb.appendChild(r3);
+}
+
+function makeKey(label, extraClasses='', handler){
+  const btn=document.createElement('button');
+  btn.type='button';
+  btn.textContent=label;
+  btn.className=('key '+extraClasses).trim();
+  
+  // Check for special keys first (before length check)
+  if(label === '⌫'){
+    btn.onclick=()=>backspace(); // Explicitly call backspace function
+  } else if(label === 'Enter'){
+    btn.onclick=()=>submit(); // Explicitly call submit function
+  } else if(label.length===1){
+    const st = game.status[label];
+    if(st==='correct') btn.classList.add('correct');
+    else if(st==='present') btn.classList.add('present');
+    else if(st==='absent') btn.classList.add('absent');
+    btn.onclick=()=>onKey(label);
+  } else if(handler){
+    btn.onclick=handler;
+  }
+  return btn;
+}
+
+// ===== Input =====
+function onKey(l){ 
+  console.log('onKey called with:', l, 'type:', typeof l, 'length:', l.length);
+  
+  // Prevent backspace character from being added
+  if (l === '⌫' || l === 'Backspace') {
+    console.log('Backspace character detected in onKey, ignoring');
+    return;
+  }
+  
+  if(game.done||game.current.length>=5) return; 
+  game.current+=l; 
+  renderGrid(); 
+}
+function backspace(){ 
+  console.log('backspace called, current before:', game.current);
+  if(game.done||!game.current) return; 
+  game.current=game.current.slice(0,-1); 
+  console.log('current after backspace:', game.current);
+  renderGrid(); 
+}
+
+// ===== Submit & Validation =====
+async function submit(){
+  if(game.done || game.current.length!==5) return;
+  const valid = await isValidWord(game.current);
+  if(!valid){ 
+    showCustomNotification("Not a valid word. Try again!", "error");
+    game.current = ''; // Clear the invalid input
+    renderGrid(); // Update the display
+    return; 
+  }
+
+  const res = scoreGuess(game.current, game.target);
+  game.lastResults.push(res);
+
+  // update keyboard status with best-known info
+  for(let i=0;i<5;i++){
+    const L = game.current[i];
+    if(res[i]==='correct') game.status[L]='correct';
+    else if(res[i]==='present' && game.status[L]!== 'correct') game.status[L]='present';
+    else if(res[i]==='absent' && !game.status[L]) game.status[L]='absent';
+  }
+
+  game.guesses.push(game.current);
+  if(game.current===game.target){ 
+    const victoryMessages = [
+      "🎉 ABSOLUTE LEGEND! You're a word wizard! 🧙‍♂️",
+      "🚀 UNSTOPPABLE! The dictionary bows to you! 📚",
+      "💪 BEAST MODE ACTIVATED! You're crushing words! 🔥",
+      "⭐ PERFECTION! You just made the English language proud! 🇺🇸",
+      "🎯 BULLSEYE! That's how you solve a word puzzle! 🎪",
+      "🏆 CHAMPION! You're the word master of the universe! 🌟",
+      "⚡ LIGHTNING STRIKE! That was absolutely brilliant! ⚡",
+      "🎊 VICTORY DANCE TIME! You're unstoppable! 💃",
+      "🔥 ON FIRE! The word gods are impressed! 👑",
+      "💎 DIAMOND HANDS! You just crushed this challenge! 💎"
+    ];
+         const randomMessage = victoryMessages[Math.floor(Math.random() * victoryMessages.length)];
+     showCustomNotification(randomMessage, "success"); 
+     game.done=true; 
+     reportResult(true, game.guesses.length);
+     
+     // Auto-close game after 3 seconds
+     setTimeout(() => {
+       closeGame();
+     }, 3000);
+  }
+     else if(game.guesses.length===game.max){ 
+           showCustomNotification(`Out of tries. The word was: ${game.target}`, "error"); 
+      game.done=true; 
+      reportResult(false, game.guesses.length);
+      
+      // Auto-close game after 3 seconds
+      setTimeout(() => {
+        closeGame();
+      }, 3000);
+   }
+  game.current='';
+  renderGrid(); renderKeyboard();
+}
+
+async function isValidWord(w){
+  try{
+    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${w.toLowerCase()}`);
+    return res.ok;
+  }catch(e){ return false; }
+}
+
+function scoreGuess(guess, target){
+  const res = Array(5).fill('absent');
+  const pool = target.split('');
+  // first pass exacts
+  for(let i=0;i<5;i++){ if(guess[i]===pool[i]){ res[i]='correct'; pool[i]=null; } }
+  // second pass presents respecting remaining pool
+  for(let i=0;i<5;i++){
+    if(res[i]==='correct') continue;
+    const idx = pool.indexOf(guess[i]);
+    if(idx!==-1){ res[i]='present'; pool[idx]=null; }
+  }
+  return res;
+}
+
+// ===== Custom Notification System =====
+function showCustomNotification(message, type = 'info') {
+  // Remove any existing notifications
+  const existing = document.querySelector('.custom-notification');
+  if (existing) existing.remove();
+  
+  // Create new notification
+  const notification = document.createElement('div');
+  notification.className = `custom-notification ${type}`;
+  notification.textContent = message;
+  
+  // Add to page
+  document.body.appendChild(notification);
+  
+  // Auto-remove after 3 seconds
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.remove();
+    }
+  }, 3000);
+}
+
+// ===== Keyboard Event Handling =====
+document.addEventListener('keydown', function(e) {
+  console.log('Keydown event:', e.key, 'type:', typeof e.key, 'length:', e.key.length);
+  
+  if (game.done) return;
+  
+  if (e.key === 'Backspace') {
+    console.log('Backspace key detected, preventing default and calling backspace()');
+    e.preventDefault();
+    e.stopPropagation();
+    backspace();
+    return false;
+  } else if (e.key === 'Enter') {
+    console.log('Enter key detected, preventing default and calling submit()');
+    e.preventDefault();
+    e.stopPropagation();
+    submit();
+    return false;
+  } else if (e.key.length === 1 && e.key.match(/[a-zA-Z0-9]/)) {
+    console.log('Letter/number key detected:', e.key, 'calling onKey()');
+    e.preventDefault();
+    e.stopPropagation();
+    onKey(e.key.toLowerCase());
+    return false;
+  } else if (e.key.length === 1) {
+    console.log('Single character key not matched:', e.key, 'charCode:', e.key.charCodeAt(0));
+  }
+}, true); // Use capture phase to ensure we get the event first
+
+// ===== Auto-start game when page loads =====
+document.addEventListener('DOMContentLoaded', async function() {
+  await showGame();
+});
+</script>
+</body>
+</html>
+
