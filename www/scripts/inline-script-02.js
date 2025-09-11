@@ -2985,6 +2985,27 @@
             <div class="card-drawer" hidden></div>
 
             <div class="show-actions">${actions}</div>
+            
+            <!-- 3-dots menu for Watch, Extras, Facts -->
+            <div class="card-more-menu">
+              <button class="card-more-btn" data-action="toggle-menu" aria-label="More actions" aria-expanded="false">
+                <span class="card-more-dots">•••</span>
+              </button>
+              <div class="card-more-dropdown" role="menu" aria-hidden="true">
+                <button class="card-more-item" data-action="watch" data-id="${item.id}">
+                  <span class="card-more-icon">▶</span>
+                  <span class="card-more-label">Watch</span>
+                </button>
+                <button class="card-more-item" data-action="extras" data-id="${item.id}">
+                  <span class="card-more-icon">🎬</span>
+                  <span class="card-more-label">Extras</span>
+                </button>
+                <button class="card-more-item" data-action="facts" data-id="${item.id}">
+                  <span class="card-more-icon">🧠</span>
+                  <span class="card-more-label">Facts</span>
+                </button>
+              </div>
+            </div>
           </div>`;
 
         const meta = card.querySelector(".show-meta");
@@ -3001,6 +3022,8 @@
 
         ensureTvDetails(item, card);
         
+        // 3-dots menu functionality is handled by event delegation in inline-script-03.js
+
         // Lazy-load providers, extras, and trivia
         setTimeout(() => {
           try { window.__FlickletAttachProviders?.(card, item); } catch {}

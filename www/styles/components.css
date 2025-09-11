@@ -23,24 +23,30 @@
   --color-border: var(--border) !important;
 }
 
+/* Additional design tokens */
+:root {
   /* Sizing / spacing */
-  --r:12px;
-  --gap-1:4px; --gap-2:8px; --gap-3:12px; --gap-4:16px; --gap-5:20px;
+  --r: 12px;
+  --gap-1: 4px; 
+  --gap-2: 8px; 
+  --gap-3: 12px; 
+  --gap-4: 16px; 
+  --gap-5: 20px;
 
   /* Type scale (mobile) */
-  --fs-body:14px;
-  --fs-label:16px;
-  --fs-button:16px;
-  --fs-h3:22px;
+  --fs-body: 14px;
+  --fs-label: 16px;
+  --fs-button: 16px;
+  --fs-h3: 22px;
 
   /* Buttons */
-  --btn-h:40px;
-  --btn-radius:10px;
+  --btn-h: 40px;
+  --btn-radius: 10px;
 
   /* Z-index */
-  --z-header:200;
-  --z-modal:1000;
-  --z-overlay:999;
+  --z-header: 200;
+  --z-modal: 1000;
+  --z-overlay: 999;
 }
 
 /* TEMP: stop horizontal scroll while we find offenders */
@@ -106,22 +112,28 @@ html, body { overflow-x:hidden; }
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
   
   
-  /* Legacy tokens for backward compatibility */
-  --poster-w-desktop: 92px;
+  /* === POSTER STANDARDIZATION SYSTEM - SINGLE SOURCE OF TRUTH === */
+  /* Aspect ratio locked at 2:3 for all posters across all contexts */
+  --poster-w-desktop: 120px; /* Fixed width for 2:3 aspect ratio */
+  --poster-h-desktop: 180px; /* 120px * 1.5 = 180px (2:3 ratio) */
+  --poster-w-mobile: 80px; /* Fixed width for mobile */
+  --poster-h-mobile: 120px; /* 80px * 1.5 = 120px (2:3 ratio) */
+  
+  /* Card layout variables */
   --card-gap-desktop: 16px;
-  --card-pad-y-desktop: 14px;
-  --card-pad-x-desktop: 14px;
+  --card-pad-y-desktop: 16px;
+  --card-pad-x-desktop: 16px;
   --meta-title-size-desktop: 18px;
   --meta-line-desktop: 1.3;
-  --poster-w: 64px;
-  --actions-w: 44px;
-  --card-gap: 8px;
-  --card-pad-y: 8px;
-  --card-pad-x: 12px;
-  --meta-title-size: 16px;
-  --meta-line: 1.2;
-  --card-bg: transparent;
-  --card-border: 0;
+  --card-gap-mobile: 12px;
+  --card-pad-y-mobile: 12px;
+  --card-pad-x-mobile: 16px;
+  --meta-title-size-mobile: 16px;
+  --meta-line-mobile: 1.2;
+  --card-bg: var(--color-surface, #ffffff);
+  --card-border: 1px solid var(--color-border, #e0e0e0);
+  --card-radius: 8px;
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* === SECTION BOXING (Home Layout v2) === */
@@ -768,8 +780,8 @@ html, body { overflow-x:hidden; }
 }
 
 .card--expanded .card__poster {
-  width: 80px;
-  height: 120px;
+  width: var(--poster-w-desktop); /* Using centralized desktop poster width */
+  height: var(--poster-h-desktop); /* Using centralized desktop poster height */
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--color-surface-2);
@@ -977,15 +989,15 @@ html, body { overflow-x:hidden; }
   }
   
   .card--expanded {
-    grid-template-columns: 60px 1fr;
+    grid-template-columns: var(--poster-w-mobile) 1fr;
     gap: var(--space-2);
     padding: var(--space-2);
-    min-height: 100px;
+    min-height: var(--poster-h-mobile);
   }
   
   .card--expanded .card__poster {
-    width: 60px;
-    height: 90px;
+    width: var(--poster-w-mobile);
+    height: var(--poster-h-mobile);
   }
   
   .card--expanded .card__title {
@@ -994,6 +1006,21 @@ html, body { overflow-x:hidden; }
   
   .card--expanded .card__subtitle {
     font-size: 0.8rem;
+  }
+  
+  /* === MOBILE POSTER STANDARDIZATION === */
+  /* Ensure all posters use standardized mobile dimensions */
+  .show-poster,
+  .poster-placeholder {
+    width: var(--poster-w-mobile) !important;
+    height: var(--poster-h-mobile) !important;
+    aspect-ratio: 2/3 !important;
+  }
+  
+  /* Mobile card layout uses mobile poster dimensions */
+  .show-card {
+    grid-template-columns: var(--poster-w-mobile) 1fr !important;
+    min-height: var(--poster-h-mobile) !important;
   }
 }
 
@@ -1008,7 +1035,7 @@ html, body { overflow-x:hidden; }
   outline-offset: 2px;
 }
 
-/* === LEGACY CARD STYLES (for backward compatibility) === */
+/* === UNIFIED CARD SYSTEM - DESKTOP (≥641px) === */
 @media (min-width: 641px) {
   .show-card {
     display: grid;
@@ -1017,17 +1044,42 @@ html, body { overflow-x:hidden; }
     padding: var(--card-pad-y-desktop) var(--card-pad-x-desktop);
     background: var(--card-bg);
     border: var(--card-border);
-    border-radius: 8px;
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    align-items: start;
+    min-height: var(--poster-h-desktop);
   }
+  
   .show-card .show-title {
     font-size: var(--meta-title-size-desktop);
     line-height: var(--meta-line-desktop);
-    margin: 0 0 4px;
+    margin: 0 0 8px;
+    font-weight: 600;
+    color: var(--color-text, #121212);
+  }
+  
+  .show-card .show-meta {
+    font-size: 14px;
+    color: var(--color-text-secondary, #666);
+    margin: 0 0 8px;
+    line-height: 1.4;
+  }
+  
+  .show-card .show-overview {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--color-text, #121212);
+    margin: 0 0 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   
   /* Ensure proper spacing between cards on desktop */
   .show-card + .show-card {
-    margin-top: 16px;
+    margin-top: 20px;
   }
 }
 
@@ -1523,24 +1575,151 @@ html[data-theme="light"] .welcome-message {
 }
 
 
+/* === UNIFIED POSTER SYSTEM === */
 .show-poster {
   width: var(--poster-w-desktop);
-  height: calc(var(--poster-w-desktop) * 1.5);
-  border-radius: 8px;
+  height: var(--poster-h-desktop);
+  border-radius: var(--card-radius);
   object-fit: cover;
   cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+/* === CARD 3-DOTS MENU STYLING === */
+.card-more-menu {
+  position: relative;
+  display: inline-block;
+  margin-top: 8px;
+}
+
+.card-more-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  color: var(--color-muted, #666);
+  transition: all 0.2s ease;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-more-btn:hover {
+  background: var(--color-surface-2, #f5f5f5);
+  color: var(--color-text, #121212);
+}
+
+.card-more-btn:focus-visible {
+  outline: 2px solid var(--color-primary-start, #ff4c8d);
+  outline-offset: 2px;
+}
+
+.card-more-dots {
+  font-size: 1.2rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.card-more-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+  min-width: 140px;
+  z-index: 10;
+  transform: translateY(4px);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+}
+
+.card-more-dropdown[aria-hidden="false"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.card-more-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  color: var(--color-text, #121212);
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.card-more-item:hover {
+  background: var(--color-surface-2, #f5f5f5);
+}
+
+.card-more-item:focus-visible {
+  outline: 2px solid var(--color-primary-start, #ff4c8d);
+  outline-offset: -2px;
+}
+
+.card-more-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+.card-more-label {
+  font-weight: 500;
+}
+
+/* Hide the old pill buttons */
+.card-pills {
+  display: none !important;
+}
+
+.show-poster:hover {
+  transform: scale(1.02);
 }
 
 .poster-placeholder {
   width: var(--poster-w-desktop);
-  height: calc(var(--poster-w-desktop) * 1.5);
-  border-radius: 8px;
+  height: var(--poster-h-desktop);
+  border-radius: var(--card-radius);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #e9e9ee;
-  color: #777;
-  font-size: 12px;
+  background: var(--color-surface-secondary, #f5f5f5);
+  color: var(--color-text-secondary, #777);
+  font-size: 14px;
+  border: 2px dashed var(--color-border, #ddd);
+}
+
+.poster-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.poster-button:hover {
+  transform: scale(1.02);
+}
+
+.poster-button:focus-visible {
+  outline: 2px solid var(--color-primary, #007bff);
+  outline-offset: 2px;
 }
 
 @media (min-width: 641px) {
@@ -3474,8 +3653,8 @@ html[data-theme="dark"] .notes-chip:hover {
   body.mobile .container { max-width:100vw; padding:0 16px }
 
   body.mobile .show-poster { 
-    width: 70px; 
-    height: 105px; 
+    width: var(--poster-w-mobile) !important; /* Using centralized mobile poster width */
+    height: var(--poster-h-mobile) !important; /* Using centralized mobile poster height */
   }
   body.mobile .show-title { 
     font-size: 14px; 

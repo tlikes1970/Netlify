@@ -733,8 +733,8 @@ body.mardi {
 }
 
 .preview-card-poster {
-  width: 92px !important;
-  height: 138px !important;
+  width: var(--poster-w-desktop) !important; /* Using centralized desktop poster width */
+  height: var(--poster-h-desktop) !important; /* Using centralized desktop poster height */
   background: var(--border);
   position: relative;
   overflow: hidden;
@@ -858,12 +858,12 @@ body.mardi {
    Use these dimensions for all home page card sections.
 */
 
-/* Standard home page card dimensions */
+/* Standard home page card dimensions - using centralized poster system */
 :root {
-  --home-card-width-desktop: 184px;
-  --home-card-height-desktop: 276px;
-  --home-card-width-mobile: 64px;
-  --home-card-height-mobile: 96px;
+  --home-card-width-desktop: 184px; /* Keep for home page specific cards */
+  --home-card-height-desktop: 276px; /* Keep for home page specific cards */
+  --home-card-width-mobile: 64px; /* Keep for home page specific cards */
+  --home-card-height-mobile: 96px; /* Keep for home page specific cards */
 }
 .cw-row {
   overflow-x: auto;
@@ -991,8 +991,8 @@ body.mardi {
   }
   
   .preview-card-poster {
-    width: 64px !important;
-    height: 96px !important;
+    width: var(--poster-w-mobile) !important; /* Using centralized mobile poster width */
+    height: var(--poster-h-mobile) !important; /* Using centralized mobile poster height */
   }
   
   .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner > * {

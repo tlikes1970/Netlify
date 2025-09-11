@@ -13,6 +13,17 @@
         });
       }, 1000);
       document.addEventListener("click", (e) => {
+        // Close 3-dots menus when clicking outside
+        if (!e.target.closest('.card-more-menu')) {
+          document.querySelectorAll('.card-more-btn').forEach(btn => {
+            btn.setAttribute('aria-expanded', 'false');
+            const dropdown = btn.nextElementSibling;
+            if (dropdown) {
+              dropdown.setAttribute('aria-hidden', 'true');
+            }
+          });
+        }
+        
         console.log('🔧 Click event detected on:', e.target, 'tagName:', e.target.tagName);
         console.log('🔧 Click target classes:', e.target.className);
         console.log('🔧 Click target parent classes:', e.target.parentElement?.className);
@@ -172,6 +183,76 @@
           setLikeStatus(id, "dislike");
         } else if (action === "open") {
           openTMDBLink(id, mediaType);
+        } else if (action === "toggle-menu") {
+          // Toggle 3-dots menu
+          const card = btn.closest('.show-card');
+          if (card) {
+            const moreBtn = card.querySelector('.card-more-btn');
+            const moreDropdown = card.querySelector('.card-more-dropdown');
+            if (moreBtn && moreDropdown) {
+              const isOpen = moreBtn.getAttribute('aria-expanded') === 'true';
+              
+              // Close all other menus first
+              document.querySelectorAll('.card-more-btn').forEach(menuBtn => {
+                if (menuBtn !== moreBtn) {
+                  menuBtn.setAttribute('aria-expanded', 'false');
+                  const menuDropdown = menuBtn.nextElementSibling;
+                  if (menuDropdown) {
+                    menuDropdown.setAttribute('aria-hidden', 'true');
+                  }
+                }
+              });
+              
+              // Toggle current menu
+              moreBtn.setAttribute('aria-expanded', !isOpen);
+              moreDropdown.setAttribute('aria-hidden', isOpen);
+            }
+          }
+        } else if (action === "watch") {
+          // Close menu and show providers section
+          const card = btn.closest('.show-card');
+          if (card) {
+            const moreBtn = card.querySelector('.card-more-btn');
+            const moreDropdown = card.querySelector('.card-more-dropdown');
+            if (moreBtn && moreDropdown) {
+              moreBtn.setAttribute('aria-expanded', 'false');
+              moreDropdown.setAttribute('aria-hidden', 'true');
+            }
+            const providersSlot = card.querySelector('.providers-slot');
+            if (providersSlot) {
+              providersSlot.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }
+        } else if (action === "extras") {
+          // Close menu and show extras section
+          const card = btn.closest('.show-card');
+          if (card) {
+            const moreBtn = card.querySelector('.card-more-btn');
+            const moreDropdown = card.querySelector('.card-more-dropdown');
+            if (moreBtn && moreDropdown) {
+              moreBtn.setAttribute('aria-expanded', 'false');
+              moreDropdown.setAttribute('aria-hidden', 'true');
+            }
+            const extrasSlot = card.querySelector('.extras-slot');
+            if (extrasSlot) {
+              extrasSlot.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }
+        } else if (action === "facts") {
+          // Close menu and show trivia/facts section
+          const card = btn.closest('.show-card');
+          if (card) {
+            const moreBtn = card.querySelector('.card-more-btn');
+            const moreDropdown = card.querySelector('.card-more-dropdown');
+            if (moreBtn && moreDropdown) {
+              moreBtn.setAttribute('aria-expanded', 'false');
+              moreDropdown.setAttribute('aria-hidden', 'true');
+            }
+            const triviaSlot = card.querySelector('.trivia-slot');
+            if (triviaSlot) {
+              triviaSlot.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }
         }
       }, true); // Use capture phase
       

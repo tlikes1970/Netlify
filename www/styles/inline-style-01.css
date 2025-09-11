@@ -1021,15 +1021,15 @@
       }
 
       .show-poster {
-        width: 92px;
-        height: 138px;
+        width: var(--poster-w-desktop); /* Using centralized desktop poster width */
+        height: var(--poster-h-desktop); /* Using centralized desktop poster height */
         border-radius: 8px;
         object-fit: cover;
         cursor: pointer;
       }
       .poster-placeholder {
-        width: 92px;
-        height: 138px;
+        width: var(--poster-w-desktop); /* Using centralized desktop poster width */
+        height: var(--poster-h-desktop); /* Using centralized desktop poster height */
         border-radius: 8px;
         display: flex;
         align-items: center;
@@ -1495,12 +1495,12 @@
         }
         
         .show-poster {
-          width: 80px;
-          height: 120px;
+          width: var(--poster-w-mobile); /* Using centralized mobile poster width */
+          height: var(--poster-h-mobile); /* Using centralized mobile poster height */
         }
         .poster-placeholder {
-          width: 80px;
-          height: 120px;
+          width: var(--poster-w-mobile); /* Using centralized mobile poster width */
+          height: var(--poster-h-mobile); /* Using centralized mobile poster height */
         }
         .show-title {
           font-size: 1rem;
@@ -1539,12 +1539,12 @@
           font-size: 14px;
         }
         .show-poster {
-          width: 70px;
-          height: 105px;
+          width: var(--poster-w-mobile); /* Using centralized mobile poster width */
+          height: var(--poster-h-mobile); /* Using centralized mobile poster height */
         }
         .poster-placeholder {
-          width: 70px;
-          height: 105px;
+          width: var(--poster-w-mobile); /* Using centralized mobile poster width */
+          height: var(--poster-h-mobile); /* Using centralized mobile poster height */
         }
         .show-title {
           font-size: 0.95rem;

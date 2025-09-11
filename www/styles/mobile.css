@@ -168,13 +168,13 @@
 
 
   .show-poster {
-    width: 80px; /* FIXED: Increased from 80px for better space usage */
-    height: 120px;
+    width: var(--poster-w-mobile); /* Using centralized mobile poster width */
+    height: var(--poster-h-mobile); /* Using centralized mobile poster height */
   }
 
   .poster-placeholder {
-    width: 80px; /* FIXED: Increased from 80px for better space usage */
-    height: 120px;
+    width: var(--poster-w-mobile); /* Using centralized mobile poster width */
+    height: var(--poster-h-mobile); /* Using centralized mobile poster height */
   }
 
   .show-title {
@@ -370,13 +370,13 @@
 
 
   .show-poster {
-    width: 70px;
-    height: 105px;
+    width: var(--poster-w-mobile); /* Using centralized mobile poster width */
+    height: var(--poster-h-mobile); /* Using centralized mobile poster height */
   }
 
   .poster-placeholder {
-    width: 70px;
-    height: 105px;
+    width: var(--poster-w-mobile); /* Using centralized mobile poster width */
+    height: var(--poster-h-mobile); /* Using centralized mobile poster height */
   }
 
   /* Floating buttons now handled by components.css */
@@ -411,126 +411,149 @@
   /* Floating buttons now handled by components.css */
 }
 
-/* === MP-2.2b MOBILE CANONICAL CARD (≤768px) — REPLACE PRIOR MP-2.* MOBILE BLOCKS === */
+/* === UNIFIED MOBILE CARD SYSTEM (≤768px) === */
 @media (max-width: 768px) {
-  /* FIXED: Mobile tokens with better spacing and sizing */
+  /* Mobile tokens using unified system */
   .mobile-v1 {
-    --poster-w: 80px; /* FIXED: Increased from 64px for better space usage */
-    --actions-w: 44px;
-    --card-gap: 12px; /* FIXED: Increased from 8px for better spacing */
-    --card-pad-y: 12px; /* FIXED: Increased from 8px for better touch targets */
-    --card-pad-x: 16px; /* FIXED: Increased from 12px for better spacing */
-    --meta-title-size: 16px;
-    --meta-line: 1.2;
+    --poster-w: var(--poster-w-mobile);
+    --poster-h: var(--poster-h-mobile);
+    --card-gap: var(--card-gap-mobile);
+    --card-pad-y: var(--card-pad-y-mobile);
+    --card-pad-x: var(--card-pad-x-mobile);
+    --meta-title-size: var(--meta-title-size-mobile);
+    --meta-line: var(--meta-line-mobile);
   }
 
-  /* FIXED: Row layout with better space usage and uniform margins */
+  /* UNIFIED: Mobile card layout using consistent variables */
   .mobile-v1 .show-card {
     display: grid !important;
-    grid-template-columns: 80px 1fr !important; /* FIXED: Increased from 64px */
-    gap: var(--card-gap) !important;
-    padding: var(--card-pad-y) var(--card-pad-x) !important;
+    grid-template-columns: var(--poster-w-mobile) 1fr !important;
+    gap: var(--card-gap-mobile) !important;
+    padding: var(--card-pad-y-mobile) var(--card-pad-x-mobile) !important;
     background: var(--card-bg);
     border: var(--card-border);
     width: 100% !important;
     max-width: 100% !important;
-    border-radius: 8px;
+    border-radius: var(--card-radius);
     align-items: start;
-    margin: 0 0 12px !important; /* FIXED: Uniform margin between cards */
+    margin: 0 0 16px !important;
     box-sizing: border-box !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; /* FIXED: Better shadow */
+    box-shadow: var(--card-shadow);
+    min-height: var(--poster-h-mobile);
   }
   
-  /* FIXED: Force mobile layout with better sizing and uniform margins */
+  /* UNIFIED: Fallback mobile layout for all cards */
   .show-card {
     display: grid !important;
-    grid-template-columns: 80px 1fr !important; /* FIXED: Increased from 64px */
-    gap: 12px !important; /* FIXED: Increased from 8px */
-    padding: 12px 16px !important; /* FIXED: Increased padding */
-    background: white;
-    border: 1px solid #ddd;
+    grid-template-columns: var(--poster-w-mobile) 1fr !important;
+    gap: var(--card-gap-mobile) !important;
+    padding: var(--card-pad-y-mobile) var(--card-pad-x-mobile) !important;
+    background: var(--card-bg);
+    border: var(--card-border);
     width: 100% !important;
     max-width: 100% !important;
-    border-radius: 8px;
+    border-radius: var(--card-radius);
     align-items: start;
-    margin: 0 0 12px !important; /* FIXED: Uniform margin between cards */
+    margin: 0 0 16px !important;
     box-sizing: border-box !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; /* FIXED: Better shadow */
+    box-shadow: var(--card-shadow);
+    min-height: var(--poster-h-mobile);
   }
   
-  /* FIXED: Mobile details layout with better vertical spacing */
+  /* UNIFIED: Mobile details layout */
   .show-card .show-details {
     display: grid !important;
     grid-template-rows: auto auto auto 1fr auto !important;
-    gap: 4px !important; /* FIXED: Increased from 2px */
+    gap: 6px !important;
     min-width: 0 !important;
   }
   
-  /* FIXED: Mobile actions styling - prevent wrapping */
+  /* UNIFIED: Mobile actions styling */
   .show-card .show-actions {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important; /* FIXED: Prevent wrapping */
-    gap: 6px !important; /* FIXED: Increased gap */
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
     align-items: center !important;
-    margin-top: 8px !important; /* FIXED: Increased margin */
-    justify-content: space-between !important; /* FIXED: Better distribution */
+    margin-top: 8px !important;
+    justify-content: space-between !important;
   }
   
   .show-card .show-actions .btn {
     flex: 1 !important;
     min-width: 0 !important;
-    font-size: 11px !important; /* FIXED: Increased from 10px */
-    padding: 6px 8px !important; /* FIXED: Increased padding */
-    min-height: 32px !important; /* FIXED: Increased height */
+    font-size: 11px !important;
+    padding: 6px 8px !important;
+    min-height: 32px !important;
   }
   
-  /* Tighten up title and meta spacing */
+  /* UNIFIED: Fallback mobile title and meta styling */
   .show-card .show-title {
-    margin: 0 !important;
+    font-size: var(--meta-title-size-mobile);
+    line-height: var(--meta-line-mobile) !important;
+    margin: 0 0 6px !important;
     padding: 0 !important;
-    line-height: 1.2 !important;
+    font-weight: 600;
+    color: var(--color-text, #121212);
   }
   
   .show-card .show-meta {
-    margin: 0 !important;
+    font-size: 13px;
+    color: var(--color-text-secondary, #666);
+    margin: 0 0 6px !important;
     padding: 0 !important;
-    line-height: 1.1 !important;
+    line-height: 1.3 !important;
   }
   
   .show-card .show-overview {
-    margin: 0 !important;
+    font-size: 14px;
+    line-height: 1.4 !important;
+    margin: 0 0 8px !important;
     padding: 0 !important;
-    line-height: 1.2 !important;
+    color: var(--color-text, #121212);
   }
   
-  /* Mobile details layout with actions at bottom */
+  /* UNIFIED: Mobile details layout with actions at bottom */
   .mobile-v1 .show-card .show-details {
     display: grid !important;
     grid-template-rows: auto auto auto 1fr auto !important;
-    gap: 2px !important;
+    gap: 6px !important;
     min-width: 0 !important;
   }
   
-  /* FIXED: Mobile actions styling - prevent wrapping */
+  /* UNIFIED: Mobile actions styling */
   .mobile-v1 .show-card .show-actions {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important; /* FIXED: Prevent wrapping */
-    gap: 6px !important; /* FIXED: Increased gap */
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
     align-items: center !important;
-    margin-top: 8px !important; /* FIXED: Increased margin */
-    justify-content: space-between !important; /* FIXED: Better distribution */
+    margin-top: 8px !important;
+    justify-content: space-between !important;
   }
 
-  /* Poster + button */
-  .mobile-v1 .show-card .poster-button { grid-column: 1; align-self: start; }
+  /* UNIFIED: Mobile poster styling */
+  .mobile-v1 .show-card .poster-button { 
+    grid-column: 1; 
+    align-self: start; 
+  }
+  
   .mobile-v1 .show-card .show-poster,
   .mobile-v1 .show-card .poster-placeholder {
-    width: var(--poster-w);
-    height: calc(var(--poster-w) * 1.5);
+    width: var(--poster-w-mobile);
+    height: var(--poster-h-mobile);
     object-fit: cover;
-    border-radius: 6px;
+    border-radius: var(--card-radius);
+    display: block;
+  }
+  
+  /* UNIFIED: Fallback mobile poster styling */
+  .show-card .show-poster,
+  .show-card .poster-placeholder {
+    width: var(--poster-w-mobile);
+    height: var(--poster-h-mobile);
+    object-fit: cover;
+    border-radius: var(--card-radius);
     display: block;
   }
 
@@ -542,12 +565,22 @@
     align-self: start; 
   }
   .mobile-v1 .show-card .show-title {
-    font-size: var(--meta-title-size);
-    line-height: 1.2 !important;
-    margin: 0 !important;
+    font-size: var(--meta-title-size-mobile);
+    line-height: var(--meta-line-mobile) !important;
+    margin: 0 0 6px !important;
     padding: 0 !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    font-weight: 600;
+    color: var(--color-text, #121212);
+  }
+  
+  .mobile-v1 .show-card .show-meta {
+    font-size: 13px;
+    color: var(--color-text-secondary, #666);
+    margin: 0 0 6px !important;
+    padding: 0 !important;
+    line-height: 1.3 !important;
   }
   .mobile-v1 .show-card .show-overview {
     display: -webkit-box;
@@ -559,11 +592,6 @@
     margin: 0 !important;
     padding: 0 !important;
     line-height: 1.2 !important;
-  }
-  .mobile-v1 .show-card .show-meta { 
-    margin: 0 !important;
-    padding: 0 !important;
-    line-height: 1.1 !important;
   }
 
   .mobile-v1 .show-card .show-actions .btn,
@@ -601,20 +629,19 @@
     gap: 0 !important;
   }
   
-  /* FIXED: Ensure proper spacing between cards */
+  /* UNIFIED: Card spacing using consistent margins */
   .mobile-v1 .show-card + .show-card {
-    margin-top: 12px !important; /* FIXED: Increased from 8px */
+    margin-top: 16px !important;
   }
   
-  /* FIXED: Fallback list container spacing */
-  .list-container {
-    padding: 8px !important; /* FIXED: Increased from 4px */
-    gap: 0 !important;
-  }
-  
-  /* FIXED: Fallback card spacing */
   .show-card + .show-card {
-    margin-top: 12px !important; /* FIXED: Increased from 8px */
+    margin-top: 16px !important;
+  }
+  
+  /* UNIFIED: List container spacing */
+  .list-container {
+    padding: 12px !important;
+    gap: 0 !important;
   }
   
   /* Mobile-only animation (scoped + a11y) */
