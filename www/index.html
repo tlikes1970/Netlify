@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker</title>
+    <title>Flicklet - TV & Movie Tracker v23.37-HEADER-REALIGNED</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
@@ -14,6 +14,9 @@
     
     <!-- Cross-Origin-Opener-Policy for Google Auth popup compatibility -->
     <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups" />
+    
+    <!-- TMDB API Configuration - Use environment variable or tmdb-config.js -->
+    <meta name="tmdb-api-key" content="YOUR_TMDB_API_KEY_HERE" />
     
     <!-- Icons for different platforms -->
     <link rel="icon" href="icons/icon-512.png" />
@@ -26,6 +29,7 @@
     <link rel="stylesheet" href="styles/mobile.css?v=v17.9">
     <link rel="stylesheet" href="styles/main.css?v=v17.9">
     <link rel="stylesheet" href="styles/consolidated-layout.css?v=v17.9">
+    <link rel="stylesheet" href="styles/action-bar.css?v=v22.21">
 
     <!-- Feature flags and safety guard -->
     <script src="js/flags.js"></script>
@@ -35,6 +39,12 @@
     
     <!-- Debug utilities (must load early) -->
     <script src="js/debug-utils.js"></script>
+    
+    <!-- Emergency function restoration (critical fallbacks) -->
+    <!-- <script src="js/emergency-functions.js"></script> --> <!-- DISABLED: Main functions are now working -->
+    
+    <!-- Syntax error bypass (ensures functionality) -->
+    <script src="js/syntax-fix.js"></script>
     
     <!-- Home sections configuration (must load early) -->
     <script src="js/home-sections-config.js"></script>
@@ -75,36 +85,28 @@
     <!-- Main Container -->
     <div class="main-container" id="appRoot">
       <header class="header" role="banner" data-lang-layout="inline">
-        <!-- New left-side container for username and snarky phrase -->
-        <div id="usernameSnarkContainer" style="text-align: left; min-width: 200px;">
-          <div id="dynamicUsername" style="font-size: 18px; font-weight: bold; color: #9c27b0; margin-bottom: 4px;">Welcome!</div>
-          <div id="dynamicSnark" style="font-size: 14px; color: #7f8c8d; font-style: italic;">Ready to track your shows</div>
-        </div>
-        
-        <div class="header-center">
-          <div id="versionIndicator" style="position: fixed; top: 10px; left: 10px; background: #007bff; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">v22.18-FIREBASE-DEBUG-ENHANCED</div>
-          <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
-          <div id="proBadge" class="pro-badge" style="display: none;">PRO</div>
-          <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
-          <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
-        </div>
-        <div class="user-section">
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-            <div id="accountHint" style="font-size: 11px; color: #7f8c8d; text-align: center; opacity: 0.8;"></div>
+        <div class="header-bar">
+          <div class="header-left">
+            <h1 class="brand">Flicklet</h1>
+            <span class="tagline">TV &amp; Movie Tracker</span>
+          </div>
+          <div class="header-right">
             <button
               id="accountBtn"
-              class="btn secondary"
+              class="user-btn btn btn--sm"
               title="Sign in / Account"
               aria-label="Account - sign in or manage your account"
             >
+              <span id="accountHint" style="font-size: 11px; color: #7f8c8d; opacity: 0.8;"></span>
               👤 <span data-i18n="sign_in_account">Sign In</span>
             </button>
-            <select id="langToggle" aria-label="Language" title="Language">
+            <select id="langToggle" class="lang-select select--sm" aria-label="Language" title="Language">
               <option value="en">EN</option>
               <option value="es">ES</option>
             </select>
           </div>
         </div>
+        <!-- leave .top-search exactly as-is, below this block -->
       </header>
 
 
@@ -211,6 +213,100 @@
       <div id="homeSection" class="tab-section">
         <div class="stats">
           <div class="stat" id="bingeMeter"></div>
+        </div>
+        
+        <!-- Currently Watching Preview Row -->
+        <section id="currentlyWatchingPreview" class="home-preview-row" style="display: none;" aria-label="Currently Watching Preview">
+          <div class="preview-row-header">
+            <h3 class="preview-row-title">👁️ Currently Watching</h3>
+          </div>
+          <div class="preview-row-container cw-row">
+            <div class="preview-row-scroll row-inner" id="currentlyWatchingScroll">
+              <!-- Cards will be populated by JavaScript -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Next Up This Week Row -->
+        <section id="next-up-row" class="home-section" data-feature="homeRowNextUp" style="display: none;">
+          <h2 class="section-title">Next Up This Week</h2>
+          <div class="next-up-scroll row-inner"><!-- tiles injected here --></div>
+        </section>
+
+        <!-- 2. Community Section (Spotlight video, Games) -->
+        <div id="community-section" class="home-section">
+          <!-- Community Spotlight -->
+          <div id="spotlight-row" class="home-row" style="display: none;">
+            <div class="home-row-header">
+              <h3>✨ <span data-i18n="community_spotlight">Community Spotlight</span></h3>
+            </div>
+            <div class="home-row-content">
+              <div class="spotlight-video">
+                <!-- Video content will be populated here -->
+              </div>
+              <div class="spotlight-info">
+                <!-- Info content will be populated here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Curated Section (Trending/Staff Picks/New This Week) -->
+        <div id="curated-section" class="home-section">
+          <!-- Curated Sections -->
+          <div id="curatedSections" class="home-section" style="display: none;">
+            <!-- Curated content will be populated here -->
+          </div>
+        </div>
+
+        <!-- 4. Personalized Section (Row #1, Row #2 Ghost) -->
+        <div id="personalized-section" class="home-section" style="display: none;">
+          <div class="section-header">
+            <h3>🎨 <span data-i18n="personalized_recommendations">Personalized Recommendations</span></h3>
+            <p class="section-subtitle" data-i18n="personalized_subtitle">Based on your watching history and preferences</p>
+          </div>
+          <div class="section-content" id="personalized-content">
+            <!-- Personalized content will be populated here -->
+          </div>
+        </div>
+
+        <!-- 5. In Theaters Near Me Section -->
+        <div id="theaters-section" class="home-section" style="display: none;">
+          <div class="section-header">
+            <h3>🎬 <span data-i18n="in_theaters_near_me">In Theaters Near Me</span></h3>
+            <p class="section-subtitle" data-i18n="theaters_subtitle">Current theatrical releases</p>
+          </div>
+          <div class="section-content" id="theaters-content">
+            <!-- Theater content will be populated here -->
+          </div>
+        </div>
+
+        <!-- 6. Additional Content Sections -->
+        <!-- Upcoming Episodes -->
+        <div id="upcomingEpisodes" class="home-section" style="display: none;">
+          <div class="section-header">
+            <h3>📅 <span data-i18n="upcoming_episodes">Upcoming Episodes</span></h3>
+          </div>
+          <div class="section-content">
+            <!-- Upcoming episodes will be populated here -->
+          </div>
+        </div>
+
+        <!-- Quote/Flickword Container -->
+        <div id="quote-flickword-container" class="home-section" style="display: none;">
+          <div class="quote-card" id="quoteCard">
+            <!-- Quote content will be populated here -->
+          </div>
+          <div class="random-quote-card" id="randomQuoteCard">
+            <!-- Random quote content will be populated here -->
+          </div>
+        </div>
+
+        <!-- 7. Feedback Section -->
+        <div id="feedbackSection" class="home-section" style="display: none;">
+          <div class="feedback-content">
+            <!-- Feedback content will be populated here -->
+          </div>
         </div>
       </div>
 
@@ -779,15 +875,75 @@
       </main>
 
     <!-- Firebase must load BEFORE app.js -->
-        <!-- ==== SCRIPT ORDER: libraries → core → features → UI glue ==== -->
+    <!-- ==== SCRIPT ORDER: libraries → config → init your app scripts === -->
 
-    <!-- Firebase libs -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-	
-	<!-- Your project config (REQUIRED) -->
+<!-- Firebase libs (compat for simplicity) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- Firebase Configuration - Load from external file -->
 <script src="firebase-config.js"></script>
+
+<!-- Initialize Firebase (single, robust initialization) -->
+<script>
+  (function() {
+    'use strict';
+    
+    // Prevent duplicate initialization
+    if (window.firebaseInitialized) {
+      console.warn("⚠️ Firebase already initialized, skipping duplicate");
+      return;
+    }
+    
+    try {
+      // Validate configuration
+      if (!window.FIREBASE_CONFIG?.apiKey) {
+        console.error("❌ Firebase config missing apiKey");
+        return;
+      }
+      
+      // Initialize Firebase only if not already initialized
+      if (firebase.apps.length === 0) {
+        firebase.initializeApp(window.FIREBASE_CONFIG);
+        console.info("✅ Firebase initialized:", window.FIREBASE_CONFIG.projectId);
+        
+        // Set persistence to LOCAL for better localhost experience
+        const auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+          .then(() => {
+            console.info("🔒 Auth persistence set to LOCAL");
+          })
+          .catch((err) => {
+            console.error("⚠️ Failed to set persistence", err);
+          });
+        
+        // Expose Firebase services globally for debugging and app use
+        window.FB = {
+          auth: auth,
+          db: firebase.firestore()
+        };
+        
+        // Mark as initialized to prevent duplicates
+        window.firebaseInitialized = true;
+        window.firebase = firebase;
+        window.auth = auth;
+        window.db = firebase.firestore();
+        
+      } else {
+        console.warn("⚠️ Firebase already initialized, reusing existing instance");
+        window.firebaseInitialized = true;
+      }
+      
+    } catch (e) {
+      console.error("🔥 Firebase initialization error:", e);
+      // Don't mark as initialized if there was an error
+    }
+  })();
+</script>
+<!-- Persistence is now handled in the main Firebase initialization above -->
+
+
 
     <!-- Config & core helpers (must be available to everything below) -->
     <script src="tmdb-config.js"></script>
@@ -802,6 +958,7 @@
 
     <!-- Component modules -->
     <script src="scripts/components/Card.js"></script>
+    <script src="scripts/components/ActionBar.js"></script>
     
     <!-- Performance monitoring -->
     <script src="scripts/performance-monitor.js"></script>
@@ -835,6 +992,11 @@
     <script src="js/language-manager.js"></script>
     <script src="js/i18n.js"></script>
 
+    <!-- TMDB Image Utilities (must load before components that use it) -->
+    <script src="scripts/tmdb-images.js"></script>
+    <!-- Centralized Add Handler (must load before other handlers) -->
+    <script src="scripts/centralized-add-handler.js"></script>
+    
     <!-- UI orchestration (must be last) -->
     <script src="scripts/inline-script-01.js"></script>
     <script src="scripts/inline-script-02.js"></script>

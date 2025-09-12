@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force Seeder Refresh</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        button { margin: 5px; padding: 10px 15px; }
+    </style>
+</head>
+<body>
+    <h1>Force Seeder Refresh</h1>
+    
+    <div class="info">
+        <h3>This will:</h3>
+        <ul>
+            <li>Clear all curated data from localStorage</li>
+            <li>Clear the seeder timestamp</li>
+            <li>Reload the page to trigger fresh seeding</li>
+        </ul>
+    </div>
+    
+    <button onclick="clearAndReload()">Clear Cache & Reload</button>
+    <button onclick="checkCurrentData()">Check Current Data</button>
+    
+    <div id="status"></div>
+
+    <script>
+        function addStatus(message) {
+            const status = document.getElementById('status');
+            status.innerHTML += `<div class="info">${message}</div>`;
+        }
+
+        function checkCurrentData() {
+            addStatus('Checking current localStorage data...');
+            
+            const keys = ['curated:trending', 'curated:staff', 'curated:new', 'flicklet:seed:v1'];
+            keys.forEach(key => {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    try {
+                        const parsed = JSON.parse(data);
+                        addStatus(`✅ ${key}: ${Array.isArray(parsed) ? parsed.length : 'object'} items`);
+                    } catch (e) {
+                        addStatus(`⚠️ ${key}: ${data.length} chars (not JSON)`);
+                    }
+                } else {
+                    addStatus(`❌ ${key}: not found`);
+                }
+            });
+        }
+
+        function clearAndReload() {
+            addStatus('Clearing localStorage...');
+            
+            const keys = ['curated:trending', 'curated:staff', 'curated:new', 'flicklet:seed:v1'];
+            keys.forEach(key => {
+                localStorage.removeItem(key);
+                addStatus(`🗑️ Removed ${key}`);
+            });
+            
+            addStatus('✅ Cache cleared! Reloading page in 2 seconds...');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+        }
+
+        // Auto-check on load
+        window.addEventListener('load', checkCurrentData);
+    </script>
+</body>
+</html>

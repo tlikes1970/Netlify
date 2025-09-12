@@ -2,10 +2,10 @@
 exports.handler = async (event, context) => {
   console.log('Function called with:', event.httpMethod, event.queryStringParameters);
   
-  // Domain restrictions - allow your actual domain and localhost
+  // Strict domain restrictions - only allow specific domains
   const allowedOrigins = [
-    'https://flicklet.netlify.app', // Your actual domain
-    'https://zippy-meerkat-329c02.netlify.app', // Old domain (temporary)
+    'https://flicklet.netlify.app',
+    'https://zippy-meerkat-329c02.netlify.app',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://localhost:8000',
@@ -17,14 +17,33 @@ exports.handler = async (event, context) => {
   const origin = event.headers.origin || event.headers.referer || '';
   const isAllowedOrigin = allowedOrigins.some(allowed => 
     origin.startsWith(allowed)
-  ) || !origin; // Allow if no origin (direct access)
+  );
+  
+  // Reject requests from unknown origins
+  if (!isAllowedOrigin && origin) {
+    console.log('CORS: Rejected request from origin:', origin);
+    return {
+      statusCode: 403,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        error: 'Forbidden', 
+        message: 'Origin not allowed' 
+      })
+    };
+  }
   
   const headers = {
-    'Access-Control-Allow-Origin': isAllowedOrigin ? (origin || '*') : '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin': isAllowedOrigin ? origin : 'https://flicklet.netlify.app',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Max-Age': '86400', // 24 hours
     'Content-Type': 'application/json',
-    'Cache-Control': 'public, max-age=300' // 5 minute cache
+    'Cache-Control': 'public, max-age=300', // 5 minute cache
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block'
   };
 
   // Handle preflight CORS requests

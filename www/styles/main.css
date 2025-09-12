@@ -1267,3 +1267,70 @@ body.mardi {
   #feedback-row .feedback-icon { font-size: 18px; }
 }
 
+/* === Header Realignment + Compact Controls === */
+
+/* Reset inherited centering */
+.header-bar { text-align: initial; }
+
+/* Desktop & tablet (≥641px) */
+@media (min-width: 641px) {
+  .header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: nowrap;
+    padding: 8px 12px;
+  }
+  .header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: flex-start;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    margin-left: auto;
+    margin-top: 0 !important;
+  }
+}
+
+/* Mobile (≤640px) */
+@media (max-width: 640px) {
+  .header-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+  .header-left,
+  .header-right {
+    width: 100%;
+    justify-content: center;
+  }
+  .header-right { margin-top: 6px; }
+}
+
+/* Compact controls */
+.btn--sm {
+  font-size: 0.9rem;
+  line-height: 1.1;
+  padding: 6px 10px;
+  height: 36px;
+  border-radius: 10px;
+}
+.select--sm {
+  font-size: 0.9rem;
+  line-height: 1.1;
+  padding: 4px 10px;
+  height: 36px;
+  border-radius: 10px;
+}
+.header-right > * { white-space: nowrap; }
+

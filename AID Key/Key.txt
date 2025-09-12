@@ -1,3 +1,0 @@
-Name:Flicklet Apple Sign In Key
-Key ID:GR9Y4W5443
-Services:Sign in with Apple

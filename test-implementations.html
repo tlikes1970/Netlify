@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flicklet Implementation Tests</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 3px; }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { margin: 5px; padding: 10px 15px; }
+    </style>
+</head>
+<body>
+    <h1>Flicklet Implementation Tests</h1>
+    
+    <div class="test-section">
+        <h2>STEP 2.1 - Share Guard Tests</h2>
+        <div id="share-guard-results"></div>
+        <button onclick="testShareGuard()">Test Share Guard</button>
+        <button onclick="testWithShareParam()">Test With ?share= Param</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>STEP 3.1 - Settings Tab Tests</h2>
+        <div id="settings-tab-results"></div>
+        <button onclick="testSettingsTab()">Test Settings Tab Button</button>
+        <button onclick="testDataTabAttribute()">Test data-tab Attribute</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Manual Tests</h2>
+        <div class="info">
+            <strong>Manual Test Instructions:</strong>
+            <ol>
+                <li>Open the main app: <a href="www/index.html" target="_blank">www/index.html</a></li>
+                <li>Click Settings button - should switch to Settings tab (no modal)</li>
+                <li>Open with share param: <a href="www/index.html?share=test123" target="_blank">www/index.html?share=test123</a></li>
+                <li>Should open share modal once on load</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function addResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            container.appendChild(div);
+        }
+
+        function testShareGuard() {
+            const results = document.getElementById('share-guard-results');
+            results.innerHTML = '';
+            
+            // Test 1: Check if share import guard exists
+            try {
+                const hasShareImportRun = window.__shareImportRun !== undefined;
+                addResult('share-guard-results', 
+                    `Share import guard flag exists: ${hasShareImportRun}`, 
+                    hasShareImportRun ? 'pass' : 'fail');
+            } catch (e) {
+                addResult('share-guard-results', `Error checking share guard: ${e.message}`, 'fail');
+            }
+            
+            // Test 2: Check URL parameter detection
+            try {
+                const url = new URL(window.location.href);
+                const hasShareParam = url.searchParams.has('share');
+                addResult('share-guard-results', 
+                    `Current URL has ?share= param: ${hasShareParam}`, 
+                    hasShareParam ? 'pass' : 'info');
+            } catch (e) {
+                addResult('share-guard-results', `Error checking URL params: ${e.message}`, 'fail');
+            }
+        }
+
+        function testWithShareParam() {
+            // Redirect to test URL with share parameter
+            window.location.href = 'www/index.html?share=test123';
+        }
+
+        function testSettingsTab() {
+            const results = document.getElementById('settings-tab-results');
+            results.innerHTML = '';
+            
+            // Test 1: Check if settings button exists
+            const settingsBtn = document.querySelector('[data-tab="settings"]');
+            addResult('settings-tab-results', 
+                `Settings button with data-tab="settings" found: ${!!settingsBtn}`, 
+                settingsBtn ? 'pass' : 'fail');
+            
+            // Test 2: Check if settings section exists
+            const settingsSection = document.getElementById('settingsSection');
+            addResult('settings-tab-results', 
+                `Settings section found: ${!!settingsSection}`, 
+                settingsSection ? 'pass' : 'fail');
+            
+            // Test 3: Check if FlickletApp exists
+            const hasFlickletApp = typeof window.FlickletApp !== 'undefined';
+            addResult('settings-tab-results', 
+                `FlickletApp exists: ${hasFlickletApp}`, 
+                hasFlickletApp ? 'pass' : 'fail');
+            
+            if (hasFlickletApp) {
+                const hasSwitchToTab = typeof window.FlickletApp.switchToTab === 'function';
+                addResult('settings-tab-results', 
+                    `FlickletApp.switchToTab method exists: ${hasSwitchToTab}`, 
+                    hasSwitchToTab ? 'pass' : 'fail');
+            }
+        }
+
+        function testDataTabAttribute() {
+            const results = document.getElementById('settings-tab-results');
+            
+            // Test all data-tab attributes
+            const tabElements = document.querySelectorAll('[data-tab]');
+            addResult('settings-tab-results', 
+                `Found ${tabElements.length} elements with data-tab attribute`, 
+                'info');
+            
+            tabElements.forEach((el, index) => {
+                const tab = el.getAttribute('data-tab');
+                const id = el.id || 'no-id';
+                addResult('settings-tab-results', 
+                    `Element ${index + 1}: ${id} -> data-tab="${tab}"`, 
+                    'info');
+            });
+        }
+
+        // Run initial tests
+        window.addEventListener('load', () => {
+            testShareGuard();
+            testSettingsTab();
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+

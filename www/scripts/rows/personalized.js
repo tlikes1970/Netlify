@@ -225,7 +225,8 @@
   function createCardV2(item) {
     const title = item.title || item.name || 'Unknown Title';
     const year = item.release_date?.slice(0, 4) || item.first_air_date?.slice(0, 4) || '';
-    const posterUrl = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
+    const posterUrl = window.getPosterUrl ? window.getPosterUrl(item, 'w200') : 
+      (item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '');
     const rating = item.vote_average || 0;
 
     return window.Card({
@@ -269,7 +270,7 @@
         <h3 class="card__title" onclick="openDetails(${item.id})">${title}</h3>
         <p class="card__subtitle">${year}</p>
         <div class="card__actions">
-          <button class="btn btn-sm btn-primary" onclick="addToList(${item.id})">
+          <button class="btn btn-sm btn-primary" data-action="add" data-id="${item.id}" data-list="watching">
             ${window.t ? window.t('common.add') : 'Add'}
           </button>
         </div>

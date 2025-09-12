@@ -1,5 +1,5 @@
 
-      /* i18nn handled by js/i18n.js - duplicate removed
+      /* i18n handled by js/i18n.js - duplicate removed */
 	  
       /* ============== Firebase (config) ============== */
       let firebaseInitialized = false;
@@ -7,51 +7,42 @@
       let db = null;
       let currentUser = null;
 
-      // Firebase initialization function
-      function initializeFirebase() {
-        console.log('🔄 Initializing Firebase...');
-        console.log('🔍 Debug - firebase available:', typeof firebase);
-        console.log('🔍 Debug - FIREBASE_CONFIG available:', !!window.FIREBASE_CONFIG);
-        
-        // Check if Firebase is available
-        if (typeof firebase === 'undefined') {
-          console.error('❌ Firebase scripts not loaded - authentication will be disabled');
-          firebaseInitialized = false;
-          auth = { signInWithPopup: () => Promise.reject(new Error('Firebase not available')) };
-          db = { collection: () => ({ doc: () => ({ get: () => Promise.reject(new Error('Firebase not available')) }) }) };
-          window.firebaseInitialized = false;
-          window.dispatchEvent(new Event('firebase-ready'));
-          return;
-        }
-
-        // Check if FIREBASE_CONFIG is available
-        if (!window.FIREBASE_CONFIG) {
-          console.error('❌ FIREBASE_CONFIG not available! Retrying in 200ms...');
-          setTimeout(initializeFirebase, 200);
-          return;
-        }
-
+      // Check if Firebase is available
+      if (typeof firebase === 'undefined') {
+        FlickletDebug.error('❌ Firebase scripts not loaded - authentication will be disabled');
+        firebaseInitialized = false;
+        auth = { signInWithPopup: () => Promise.reject(new Error('Firebase not available')) };
+        db = { collection: () => ({ doc: () => ({ get: () => Promise.reject(new Error('Firebase not available')) }) }) };
+        // Dispatch event even for failure case
+        window.firebaseInitialized = false;
+        window.dispatchEvent(new Event('firebase-ready'));
+      } else {
         try {
           // Check if Firebase is already initialized
           if (firebase.apps && firebase.apps.length > 0) {
-            console.log('✅ Firebase already initialized');
             auth = firebase.auth();
             db = firebase.firestore();
             firebaseInitialized = true;
           } else {
-            console.log('🔄 Creating new Firebase app...');
-            const app = firebase.initializeApp(window.FIREBASE_CONFIG);
+            const app = firebase.initializeApp({
+              apiKey: "AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM",
+              authDomain: "flicklet-71dff.firebaseapp.com",
+              projectId: "flicklet-71dff",
+              storageBucket: "flicklet-71dff.firebasestorage.app",
+              messagingSenderId: "1034923556763",
+              appId: "1:1034923556763:web:bba5489cd1d9412c9c2b3e",
+            });
             auth = firebase.auth();
             db = firebase.firestore();
             firebaseInitialized = true;
           }
           
-          console.log('✅ Firebase initialized successfully');
+          FlickletDebug.info('✅ Firebase initialized successfully');
           // Set global flag and dispatch event
           window.firebaseInitialized = true;
           window.dispatchEvent(new Event('firebase-ready'));
         } catch (error) {
-          console.error('❌ Firebase initialization failed:', error);
+          FlickletDebug.error('❌ Firebase initialization failed:', error);
           firebaseInitialized = false;
           // Provide fallback functions
           auth = { signInWithPopup: () => Promise.reject(new Error('Firebase not available')) };
@@ -60,14 +51,6 @@
           window.firebaseInitialized = false;
           window.dispatchEvent(new Event('firebase-ready'));
         }
-      }
-
-      // Initialize Firebase after DOM is ready
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeFirebase);
-      } else {
-        // DOM is already ready
-        initializeFirebase();
       }
 
       // STEP 3.2e — inline-script-01 is the sole owner of Add actions.
@@ -102,25 +85,6 @@
       window.firebaseInitialized = firebaseInitialized;
       window.auth = auth;
       window.db = db;
-      
-      // Global function to manually test Firebase
-      window.testFirebase = function() {
-        console.log('🧪 Manual Firebase Test:');
-        console.log('  firebase available:', typeof firebase);
-        console.log('  FIREBASE_CONFIG:', !!window.FIREBASE_CONFIG);
-        console.log('  firebaseInitialized:', firebaseInitialized);
-        console.log('  auth available:', !!auth);
-        console.log('  db available:', !!db);
-        console.log('  Firebase apps:', firebase?.apps?.length || 0);
-        return {
-          firebaseAvailable: typeof firebase !== 'undefined',
-          configAvailable: !!window.FIREBASE_CONFIG,
-          initialized: firebaseInitialized,
-          authAvailable: !!auth,
-          dbAvailable: !!db,
-          appsCount: firebase?.apps?.length || 0
-        };
-      };
 
       /* ============== App constants / state ============== */
       const DEV = ["localhost","127.0.0.1","::1"].includes(location.hostname) || !!location.port;
@@ -310,7 +274,7 @@
             successCount++;
             
           } catch (error) {
-            console.warn(`Failed to localize ${type}/${id}:`, error.message);
+            FlickletDebug.warn(`Failed to localize ${type}/${id}:`, error.message);
           }
           
           // Small delay to be nice to TMDB API
@@ -331,38 +295,13 @@
         const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
         return new TextDecoder().decode(bytes);
       }
-      function showNotification(msg, type = "info") {
-        console.log(`🔔 Global showNotification called: "${msg}" (${type})`);
-        // Avoid circular calls - create notification directly
-        const n = document.createElement("div");
-        n.className = `notification ${type}`;
-        n.textContent = msg;
-        n.style.cssText = `
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: ${type === 'error' ? '#ff4444' : type === 'success' ? '#44ff44' : '#4444ff'};
-          color: white;
-          padding: 12px 20px;
-          border-radius: 8px;
-          z-index: 100000;
-          font-family: system-ui, sans-serif;
-          font-size: 14px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-          max-width: 300px;
-          word-wrap: break-word;
-        `;
-        const live = document.getElementById('liveRegion');
-        if (live) { live.textContent = msg; }
-        document.body.appendChild(n);
-        setTimeout(() => n.remove(), 3000);
-      }
+      // showNotification function removed - using centralized version from utils.js
 
       function updateWelcomeText() {
         try {
           // DISABLED: This function conflicts with our dynamic header system
           // The header is now managed by FlickletApp.updateHeaderWithUsername()
-          console.log('🚫 updateWelcomeText disabled - header managed by FlickletApp');
+          FlickletDebug.info('🚫 updateWelcomeText disabled - header managed by FlickletApp');
           return;
           
           // OLD CODE (disabled):
@@ -371,7 +310,7 @@
           
           const el = document.getElementById("welcomeText");
           if (!el) {
-            console.log("welcomeText element not found");
+            FlickletDebug.info("welcomeText element not found");
             return;
           }
           
@@ -393,7 +332,7 @@
           */
 
         } catch (e) {
-          console.warn("updateWelcomeText failed:", e);
+          FlickletDebug.warn("updateWelcomeText failed:", e);
         }
       }
 
@@ -414,7 +353,7 @@
             window.FlickletApp.appData.settings.displayName.trim();
           
           if (hasTvContent || hasMovieContent || hasDisplayName) {
-            console.log('🚫 Skipping loadAppData - FlickletApp is managing data with actual content');
+            FlickletDebug.info('🚫 Skipping loadAppData - FlickletApp is managing data with actual content');
             
             // Sync the data to global appData for UI compatibility
             if (window.FlickletApp.appData.tv) {
@@ -426,7 +365,7 @@
             if (window.FlickletApp.appData.settings) {
               appData.settings = { ...appData.settings, ...window.FlickletApp.appData.settings };
             }
-            console.log('✅ Synced FlickletApp data to global appData');
+            FlickletDebug.info('✅ Synced FlickletApp data to global appData');
             return;
           }
         }
@@ -456,7 +395,7 @@
             });
           }
         } catch (e) {
-          console.warn("Local load failed", e);
+          FlickletDebug.warn("Local load failed", e);
         }
         if (appData.settings.theme === "dark")
           document.body.classList.add("dark-mode");
@@ -472,10 +411,10 @@
         
         // Sync data with FlickletApp if available
         if (window.FlickletApp && window.FlickletApp.appData) {
-          console.log('🔄 Syncing appData with FlickletApp after loadAppData');
+          FlickletDebug.info('🔄 Syncing appData with FlickletApp after loadAppData');
           // Update FlickletApp's appData with the loaded data
           window.FlickletApp.appData = { ...appData };
-          console.log('✅ FlickletApp appData synced:', window.FlickletApp.appData);
+          FlickletDebug.info('✅ FlickletApp appData synced:', window.FlickletApp.appData);
           
           // Update the header with the synced data
           if (typeof window.FlickletApp.updateHeaderWithUsername === 'function') {
@@ -527,111 +466,85 @@
       async function loadUserDataFromCloud(uid) {
         try {
           const snap = await db.collection("users").doc(uid).get();
-          if (!snap.exists) return;
+          if (!snap.exists) {
+            FlickletDebug.info('🔄 No Firebase document found, clearing local data');
+            // Clear local data when no Firebase document exists
+            appData.tv = { watching: [], wishlist: [], watched: [] };
+            appData.movies = { watching: [], wishlist: [], watched: [] };
+            return;
+          }
           const cloud = snap.data() || {};
           
-          // Always load from Firebase when user signs in, regardless of local state
-          console.log('🔄 Loading user data from Firebase cloud storage');
+          // CRITICAL: Always clear local data when user signs in, then load from Firebase
+          FlickletDebug.info('🔄 User signed in - clearing local data and loading from Firebase');
           
-          // Preserve local settings before any cloud operations
-          const localDisplayName = (appData.settings?.displayName || "").trim();
+          // Preserve only essential settings (not user data)
           const localLanguage = (appData.settings?.lang || "en");
+          const localTheme = (appData.settings?.theme || "light");
           
-          // Track if we loaded any data from cloud
-          let dataLoadedFromCloud = false;
+          // Clear all user data first
+          appData.tv = { watching: [], wishlist: [], watched: [] };
+          appData.movies = { watching: [], wishlist: [], watched: [] };
           
+          // Load from Firebase (even if empty)
           if (cloud.watchlists) {
-            // Only overwrite local data if Firebase has actual content
-            if (cloud.watchlists.tv && 
-                (cloud.watchlists.tv.watching?.length > 0 || 
-                 cloud.watchlists.tv.wishlist?.length > 0 || 
-                 cloud.watchlists.tv.watched?.length > 0)) {
-              console.log('🔄 Firebase has TV data, using it');
-              console.log('🔍 Firebase TV watching count:', cloud.watchlists.tv.watching?.length);
-              console.log('🔍 Local TV watching count:', appData.tv?.watching?.length);
+            if (cloud.watchlists.tv) {
+              FlickletDebug.info('🔄 Loading TV data from Firebase');
+              FlickletDebug.info('🔍 Firebase TV watching count:', cloud.watchlists.tv.watching?.length || 0);
               appData.tv = cloud.watchlists.tv;
-              dataLoadedFromCloud = true;
             } else {
-              console.log('🚫 Firebase TV data is empty, keeping local data');
+              FlickletDebug.info('🔄 No TV data in Firebase, using empty arrays');
             }
             
-            if (cloud.watchlists.movies && 
-                (cloud.watchlists.movies.watching?.length > 0 || 
-                 cloud.watchlists.movies.wishlist?.length > 0 || 
-                 cloud.watchlists.movies.watched?.length > 0)) {
-              console.log('🔄 Firebase has movie data, using it');
+            if (cloud.watchlists.movies) {
+              FlickletDebug.info('🔄 Loading movie data from Firebase');
+              FlickletDebug.info('🔍 Firebase movie watching count:', cloud.watchlists.movies.watching?.length || 0);
               appData.movies = cloud.watchlists.movies;
-              dataLoadedFromCloud = true;
             } else {
-              console.log('🚫 Firebase movie data is empty, keeping local data');
+              FlickletDebug.info('🔄 No movie data in Firebase, using empty arrays');
             }
           }
-                      if (cloud.settings) {
-              const incoming = { ...cloud.settings };
-
-              // Fallback for the mistaken top-level field during migration
-              if (!incoming.displayName && typeof cloud['settings.displayName'] === 'string') {
-                const stray = cloud['settings.displayName'].trim();
-                if (stray) incoming.displayName = stray;
-              }
-
-              // Only override with local if non-empty
-              if (localDisplayName) {
-                incoming.displayName = localDisplayName;
-              }
-
-              appData.settings = { ...(appData.settings || {}), ...incoming };
-            }
-
-          if (typeof cloud.pro === "boolean") appData.settings.pro = cloud.pro;
-
-          // Ensure display name is preserved after sanitization
-          const cleaned = sanitizeForFirestore({
-            tv: appData.tv,
-            movies: appData.movies,
-            settings: appData.settings,
-          });
-          appData.tv = cleaned.tv || {
-            watching: [],
-            wishlist: [],
-            watched: [],
-          };
-          appData.movies = cleaned.movies || {
-            watching: [],
-            wishlist: [],
-            watched: [],
-          };
-          appData.settings = cleaned.settings || appData.settings;
+          // Load settings from Firebase
+          if (cloud.settings) {
+            FlickletDebug.info('🔄 Loading settings from Firebase');
+            appData.settings = { ...(appData.settings || {}), ...cloud.settings };
+          }
           
-          // Restore local settings if they were lost during sanitization
-          if (localDisplayName && (!appData.settings.displayName || !appData.settings.displayName.trim())) {
-            appData.settings.displayName = localDisplayName;
+          // Final check after all assignments
+          FlickletDebug.info('✅ Firebase data loaded successfully');
+          
+          // Load pro status from Firebase
+          if (typeof cloud.pro === "boolean") {
+            appData.settings.pro = cloud.pro;
           }
-          // Don't restore language setting - let user's choice persist
 
-          localStorage.setItem("tvMovieTrackerData", JSON.stringify(appData));
+          // Ensure settings exist and are properly initialized
+          if (!appData.settings) appData.settings = { displayName: '', lang: 'en', theme: 'light', pro: false, notif: {} };
+          
+          // Preserve essential local settings
+          appData.settings.lang = localLanguage;
+          appData.settings.theme = localTheme;
+          
+          // Save to localStorage as backup (but Firebase is primary when logged in)
+          localStorage.setItem("flicklet-data", JSON.stringify(appData));
+          FlickletDebug.info('💾 Data saved to localStorage as backup');
           
           // Sync data to FlickletApp if it exists
           if (window.FlickletApp && window.FlickletApp.appData) {
-            console.log('🔄 Syncing Firebase data to FlickletApp...');
+            FlickletDebug.info('🔄 Syncing Firebase data to FlickletApp...');
             window.FlickletApp.appData.tv = appData.tv;
             window.FlickletApp.appData.movies = appData.movies;
             window.FlickletApp.appData.settings = appData.settings;
-            
-            // Save to centralized storage
-            localStorage.setItem('flicklet-data', JSON.stringify(window.FlickletApp.appData));
-            console.log('✅ Data synced to FlickletApp and saved to centralized storage');
+            FlickletDebug.info('✅ Data synced to FlickletApp');
           }
           
-          // If we loaded data from cloud, also save it to localStorage for immediate access
-          if (dataLoadedFromCloud) {
-            try {
-              localStorage.setItem('flicklet-data', JSON.stringify(appData));
-              console.log('💾 Cloud data also saved to localStorage for immediate access');
-            } catch (error) {
-              console.error('❌ Failed to save cloud data to localStorage:', error);
-            }
-          }
+          // CRITICAL: Sync data to global window.appData for components that check it
+          FlickletDebug.info('🔄 Syncing Firebase data to window.appData...');
+          window.appData = window.appData || {};
+          window.appData.tv = appData.tv;
+          window.appData.movies = appData.movies;
+          window.appData.settings = appData.settings;
+          FlickletDebug.info('✅ Data synced to window.appData');
           
           // Prevent dropdown resets during language changes
           if (!window.isChangingLanguage) {
@@ -654,8 +567,17 @@
 
       async function saveAppData() {
         try {
+          console.log('💾 DEBUG: saveAppData called', {
+            hasFlickletApp: !!window.FlickletApp,
+            hasSaveData: !!(window.FlickletApp && typeof window.FlickletApp.saveData === 'function'),
+            currentUser: !!currentUser,
+            appDataTV: appData.tv?.watching?.length || 0,
+            appDataMovies: appData.movies?.watching?.length || 0
+          });
+          
           if (window.FlickletApp && typeof window.FlickletApp.saveData === 'function') {
             // Ensure we always return a Promise
+            console.log('💾 DEBUG: Using FlickletApp.saveData()');
             return Promise.resolve(window.FlickletApp.saveData());
           }
           // Fallback to old system (sync), but still return a resolved Promise
@@ -673,7 +595,10 @@
           // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
           // updateUI?.(); // DISABLED - causes full page refresh on every rating
 
-          if (!currentUser) return Promise.resolve();
+          if (!currentUser) {
+            console.log('💾 DEBUG: No current user, skipping Firebase save');
+            return Promise.resolve();
+          }
           try {
             const payload = sanitizeForFirestore({
               watchlists: { tv: appData.tv, movies: appData.movies },
@@ -681,13 +606,23 @@
               pro: !!appData.settings.pro,
               lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
             });
+            
+            console.log('💾 DEBUG: Saving to Firebase', {
+              userId: currentUser.uid,
+              payload: payload,
+              tvWatching: payload.watchlists.tv.watching.length,
+              moviesWatching: payload.watchlists.movies.watching.length
+            });
+            
             await db
               .collection("users")
               .doc(currentUser.uid)
               .set(payload, { merge: true });
+              
+            console.log('💾 DEBUG: Firebase save successful');
             return Promise.resolve();
           } catch (error) {
-            console.error("cloud sync failed", error);
+            console.error("💾 DEBUG: cloud sync failed", error);
             showNotification(t("cloud_sync_failed"), "warning");
             return Promise.resolve();
           }
@@ -2892,15 +2827,12 @@
               ? Number(item.vote_average).toFixed(1)
               : "N/A";
             const mediaType = item.media_type || "tv";
-            
-            const metaParts = [
+            meta.textContent = [
               `⭐ ${rating}`,
-              date ? `${date.split("-")[0]}` : "",
-              `${mediaType.toUpperCase()}`,
-              networkNames ? `${t("streaming_on")}: ${networkNames}` : ""
-            ].filter(part => part.trim() !== "");
-            
-            meta.textContent = metaParts.join(" • ");
+              date ? ` • ${date.split("-")[0]}` : "",
+              ` • ${mediaType.toUpperCase()}`,
+              networkNames ? ` • ${t("streaming_on")}: ${networkNames}` : ""
+            ].join("");
           }
           if (pillWrap) {
             const old = pillWrap.querySelector(".series-pill");
@@ -2929,87 +2861,9 @@
       }
 
       function createShowCard(item, isSearch = false, listTab = null) {
-        // Use legacy card system with title row fix
-        return createLegacyCard(item, isSearch, listTab);
-      }
-
-      function createCardV2(item, isSearch = false, listTab = null) {
-        const title = item.name || item.title || t("unknown_title");
-        const year = item.first_air_date?.slice(0, 4) || item.release_date?.slice(0, 4) || '';
-        const posterUrl = item.poster_path ? `${TMDB_IMG_BASE}${item.poster_path}` : '';
-        const rating = item.vote_average || 0;
-        const mediaType = item.media_type || (item.first_air_date ? "tv" : "movie");
-        
-        // Create badges for status
-        const badges = [];
-        if (mediaType === "tv") {
-          const status = getSeriesStatus(item);
-          if (status) {
-            badges.push({
-              label: status,
-              kind: 'status'
-            });
-          }
-        }
-
-        return window.Card({
-          variant: 'compact',
-          id: item.id,
-          posterUrl: posterUrl,
-          title: title,
-          subtitle: year,
-          rating: rating,
-          badges: badges,
-          primaryAction: isSearch ? {
-            label: t("currently_watching"),
-            onClick: () => addToList(item, 'watching')
-          } : undefined,
-          overflowActions: isSearch ? [
-            {
-              label: t("want_to_watch"),
-              onClick: () => addToList(item, 'wishlist')
-            },
-            {
-              label: t("already_watched"),
-              onClick: () => addToList(item, 'watched')
-            }
-          ] : [],
-          onOpenDetails: () => openDetails(item)
-        });
-      }
-
-      // Helper function to get series status
-      function getSeriesStatus(item) {
-        if (!item.status) return null;
-        
-        const status = item.status.toLowerCase();
-        if (status === 'returning series' || status === 'ongoing') {
-          return 'Currently Airing';
-        } else if (status === 'ended') {
-          return 'Series Complete';
-        } else if (status === 'planned' || status === 'in production') {
-          return 'Coming Soon';
-        }
-        return null;
-      }
-
-      // Helper function to add item to list
-      function addToList(item, listType) {
-        if (typeof window.moveItem === 'function') {
-          window.moveItem(item.id, listType);
-        }
-      }
-
-      // Helper function to open details
-      function openDetails(item) {
-        if (typeof window.openDetails === 'function') {
-          window.openDetails(item);
-        }
-      }
-
-      function createLegacyCard(item, isSearch = false, listTab = null) {
         // Use the passed listTab if available, otherwise fall back to currentActiveTab
         const activeTab = listTab || currentActiveTab;
+
 
         const card = document.createElement("div");
         card.className = "show-card";
@@ -3022,8 +2876,12 @@
         card.setAttribute("data-id", String(item.id));
         card.setAttribute("data-media-type", mediaType);
 
-        const posterHtml = item.poster_path
-          ? `<button class="poster-button" data-action="open" data-id="${item.id}" data-media-type="${mediaType}" aria-label="Open on TMDB"><img class="show-poster" src="${TMDB_IMG_BASE}${item.poster_path}" alt="${escapeHtml(title)}"></button>`
+        // Use consistent poster URL handling
+        const posterUrl = window.getPosterUrl ? window.getPosterUrl(item, 'w200') : 
+          (item.poster_path ? `${TMDB_IMG_BASE}${item.poster_path}` : null);
+        
+        const posterHtml = posterUrl
+          ? `<button class="poster-button" data-action="open" data-id="${item.id}" data-media-type="${mediaType}" aria-label="Open on TMDB"><img class="show-poster" src="${posterUrl}" alt="${escapeHtml(title)}" loading="lazy"></button>`
           : `<button class="poster-button" data-action="open" data-id="${item.id}" data-media-type="${mediaType}" aria-label="Open on TMDB"><div class="poster-placeholder">${t("no_image")}</div></button>`;
 
         const runtimeMinutes =
@@ -3039,9 +2897,9 @@
         if (isSearch) {
           actions = `
         <div class="show-actions">
-          <button class="btn" data-action='addFromCache' data-id='${Number(item.id)}' data-list='watching'>▶️ ${t("currently_watching")}</button>
-          <button class="btn" data-action='addFromCache' data-id='${Number(item.id)}' data-list='wishlist'>📖 ${t("want_to_watch")}</button>
-          <button class="btn" data-action='addFromCache' data-id='${Number(item.id)}' data-list='watched'>✅ ${t("already_watched")}</button>
+          <button class="btn" data-action='add' data-id='${Number(item.id)}' data-list='watching'>▶️ ${t("currently_watching")}</button>
+          <button class="btn" data-action='add' data-id='${Number(item.id)}' data-list='wishlist'>📖 ${t("want_to_watch")}</button>
+          <button class="btn" data-action='add' data-id='${Number(item.id)}' data-list='watched'>✅ ${t("already_watched")}</button>
           ${mediaType === "tv" ? `<button class="btn secondary" data-action="track-episodes" data-id="${item.id}" data-title="${escapeHtml(title)}" style="display: ${isEpisodeTrackingEnabled() ? 'inline-block' : 'none'};">📺 Track Episodes</button>` : ""}
           <button class="btn danger" data-action='notInterested' data-id='${Number(item.id)}' data-media-type='${mediaType}'>🚫 ${t('not_interested')}</button>
         </div>`;
@@ -3085,14 +2943,11 @@
         card.innerHTML = `
           ${posterHtml}
           <div class="show-details">
-            <div class="show-title-row">
-              <h4 class="show-title">
-                <button class="btn-link" data-action="open" data-id="${item.id}" data-media-type="${mediaType}" aria-label="Open ${escapeHtml(title)} on TMDB">
-                  ${escapeHtml(title)} <span aria-hidden="true" style="opacity:.6">🔗</span>
-                </button>
-              </h4>
-              ${mediaType === "tv" ? getSeriesPill(item) : ""}
-            </div>
+            <h4 class="show-title">
+              <button class="btn-link" data-action="open" data-id="${item.id}" data-media-type="${mediaType}" aria-label="Open ${escapeHtml(title)} on TMDB">
+                ${escapeHtml(title)} <span aria-hidden="true" style="opacity:.6">🔗</span>
+              </button>
+            </h4>
             ${renderNotesChip(item)}
             <div class="show-meta"></div>
             <div class="show-overview">${escapeHtml(item.overview || t("no_description"))}</div>
@@ -3105,47 +2960,22 @@
             <div class="card-drawer" hidden></div>
 
             <div class="show-actions">${actions}</div>
-            
-            <!-- 3-dots menu for Watch, Extras, Facts -->
-            <div class="card-more-menu">
-              <button class="card-more-btn" data-action="toggle-menu" aria-label="More actions" aria-expanded="false">
-                <span class="card-more-dots">•••</span>
-              </button>
-              <div class="card-more-dropdown" role="menu" aria-hidden="true">
-                <button class="card-more-item" data-action="watch" data-id="${item.id}">
-                  <span class="card-more-icon">▶</span>
-                  <span class="card-more-label">Watch</span>
-                </button>
-                <button class="card-more-item" data-action="extras" data-id="${item.id}">
-                  <span class="card-more-icon">🎬</span>
-                  <span class="card-more-label">Extras</span>
-                </button>
-                <button class="card-more-item" data-action="facts" data-id="${item.id}">
-                  <span class="card-more-icon">🧠</span>
-                  <span class="card-more-label">Facts</span>
-                </button>
-              </div>
-            </div>
           </div>`;
 
         const meta = card.querySelector(".show-meta");
         if (meta) {
-          const metaParts = [
+          meta.textContent = [
             `⭐ ${rating}`,
-            date ? `${date.split("-")[0]}` : "",
-            `${mediaType.toUpperCase()}`,
-            networkNames ? `${t("streaming_on")}: ${networkNames}` : ""
-          ].filter(part => part.trim() !== "");
-          
-          meta.textContent = metaParts.join(" • ");
+            date ? ` • ${date.split("-")[0]}` : "",
+            ` • ${mediaType.toUpperCase()}`,
+            networkNames ? ` • ${t("streaming_on")}: ${networkNames}` : ""
+          ].join("");
         }
 
         // Star rating and like/dislike buttons are handled by delegated event listeners in inline-script-03.js
 
         ensureTvDetails(item, card);
         
-        // 3-dots menu functionality is handled by event delegation in inline-script-03.js
-
         // Lazy-load providers, extras, and trivia
         setTimeout(() => {
           try { window.__FlickletAttachProviders?.(card, item); } catch {}
@@ -3175,6 +3005,13 @@
         );
       }
       function addToList(item, list) {
+        console.log('🔍 DEBUG: addToList called', {
+          item: item,
+          list: list,
+          itemId: item?.id,
+          itemName: item?.name || item?.title
+        });
+        
         // --- normalize incoming search item ---
         const norm = { ...item };
         if (norm.id != null) norm.id = Number(norm.id);
@@ -3184,12 +3021,39 @@
 
         const cat =
           norm.media_type === "tv" || norm.first_air_date ? "tv" : "movies";
+          
+        console.log('🔍 DEBUG: Normalized item', {
+          norm: norm,
+          category: cat,
+          currentAppData: {
+            tv: appData.tv,
+            movies: appData.movies
+          }
+        });
+
+        // Ensure the category and list exist in appData
+        if (!appData[cat]) {
+          appData[cat] = { watching: [], wishlist: [], watched: [] };
+        }
+        if (!appData[cat][list]) {
+          appData[cat][list] = [];
+        }
 
         // Already in target?
-        const inTarget = (appData[cat][list] || []).some(
+        const inTarget = appData[cat][list].some(
           (s) => Number(s.id) === Number(norm.id)
         );
+        
+        console.log('🔍 DEBUG: Checking if already in list', {
+          itemId: norm.id,
+          category: cat,
+          list: list,
+          currentItems: appData[cat][list],
+          inTarget: inTarget
+        });
+        
         if (inTarget) {
+          console.log('🔍 DEBUG: Item already in list, showing warning');
           showNotification(
             t("already_in_list_warning").replace("{list}", list.replace("wishlist", t("want_to_watch"))),
             "warning"
@@ -3199,7 +3063,15 @@
         // Remove from everywhere else (both cats; all lists)
         let foundElsewhere = false;
         ["tv", "movies"].forEach((c) => {
+          // Ensure category exists
+          if (!appData[c]) {
+            appData[c] = { watching: [], wishlist: [], watched: [] };
+          }
           ["watching", "wishlist", "watched"].forEach((lst) => {
+            // Ensure list exists
+            if (!appData[c][lst]) {
+              appData[c][lst] = [];
+            }
             const before = appData[c][lst].length;
             appData[c][lst] = appData[c][lst].filter(
               (s) => Number(s.id) !== Number(norm.id)
@@ -3210,6 +3082,16 @@
 
         // Add to target
         appData[cat][list].unshift(norm);
+        
+        // Debug logging
+        console.log('🔍 DEBUG: Item added to appData:', {
+          category: cat,
+          list: list,
+          item: norm,
+          currentData: appData[cat][list],
+          user: currentUser?.uid
+        });
+        
         saveAppData();
         updateUI();
 
@@ -3598,6 +3480,62 @@
 
       /* Stats v2 */
       function rebuildStats() {
+        const totals = {
+          watching:
+            (appData.tv.watching?.length || 0) +
+            (appData.movies.watching?.length || 0),
+          wishlist:
+            (appData.tv.wishlist?.length || 0) +
+            (appData.movies.wishlist?.length || 0),
+          watched:
+            (appData.tv.watched?.length || 0) +
+            (appData.movies.watched?.length || 0),
+        };
+        const total = totals.watching + totals.wishlist + totals.watched;
+        const statsElement = document.getElementById("statsContent");
+        if (statsElement) {
+          statsElement.innerHTML = `
+          <ul>
+            <li>${t("total_items")}: <strong>${total}</strong></li>
+            <li>${t("watching_count")}: <strong>${
+              totals.watching
+            }</strong> • ${t("wishlist_count")}: <strong>${
+          totals.wishlist
+        }</strong> • ${t("watched_count")}: <strong>${totals.watched}</strong></li>
+            <li>${t("binge_total")}: <strong>${
+          calculateBingeTime().timeStr
+        }</strong></li>
+          </ul>`;
+        }
+
+        const proWrap = document.getElementById("statsPro");
+        if (proWrap) {
+          proWrap.style.display = appData.settings.pro ? "block" : "none";
+        }
+        if (appData.settings.pro) {
+          const byGenre = {};
+          getAllItems().forEach((it) =>
+            (it.genres || []).forEach(
+              (g) => (byGenre[g.name] = (byGenre[g.name] || 0) + 1)
+            )
+          );
+          const topGenres = Object.entries(byGenre)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+          const r = getAllItems()
+            .map((x) => Number(x.userRating) || 0)
+            .filter(Boolean);
+          const avgRating = r.length
+            ? (r.reduce((m, v) => m + v, 0) / r.length).toFixed(2)
+            : "N/A";
+          const statsProBody = document.getElementById("statsProBody");
+          if (statsProBody) {
+            statsProBody.innerHTML = `<div><strong>${t("top_genres")}:</strong> ${
+              topGenres.map(([g, c]) => `${g} (${c})`).join(", ") || "N/A"
+            }</div>
+                             <div><strong>${t("average_rating")}:</strong> ${avgRating}</div>`;
+          }
+        }
       }
 
       /* Tabs + list rendering + search */
@@ -3637,9 +3575,9 @@
         });
 
         if (tab === "home") {
-          // Load upcoming episodes when home tab is activated
-          if (window.FLAGS?.upcomingEpisodesEnabled) {
-            window.loadUpcomingEpisodes?.();
+          // Load front spotlight when home tab is activated
+          if (window.FLAGS?.frontSpotlightEnabled) {
+            window.loadFrontSpotlight?.();
           }
         }
         if (tab === "discover") renderDiscover();
@@ -3762,64 +3700,7 @@
         }, 500);
       }
 
-      function updateUI() {
-
-        const totals = {
-          watching:
-            (appData.tv.watching?.length || 0) +
-            (appData.movies.watching?.length || 0),
-          wishlist:
-            (appData.tv.wishlist?.length || 0) +
-            (appData.movies.wishlist?.length || 0),
-          watched:
-            (appData.tv.watched?.length || 0) +
-            (appData.movies.watched?.length || 0),
-        };
-        const totalAll = totals.watching + totals.wishlist + totals.watched;
-
-        const setText = (id, v) => {
-          const el = document.getElementById(id);
-          if (el) el.textContent = String(v);
-        };
-        setText("watchingBadge", totals.watching);
-        setText("watchingCount", totals.watching);
-        setText("wishlistBadge", totals.wishlist);
-        setText("wishlistCount", totals.wishlist);
-        setText("watchedBadge", totals.watched);
-        setText("watchedCount", totals.watched);
-        setText("totalCount", totalAll);
-
-        if (typeof updateTagFiltersUI === "function") updateTagFiltersUI();
-
-        const maybeFilter = (arr) =>
-          typeof filterByTags === "function" ? filterByTags(arr) : arr;
-        const watching = maybeFilter([
-          ...(appData.tv.watching || []),
-          ...(appData.movies.watching || []),
-        ]);
-        const wishlist = maybeFilter([
-          ...(appData.tv.wishlist || []),
-          ...(appData.movies.wishlist || []),
-        ]);
-        const watched = maybeFilter([
-          ...(appData.tv.watched || []),
-          ...(appData.movies.watched || []),
-        ]);
-
-        updateList("watchingList", watching);
-        updateList("wishlistList", wishlist);
-        updateList("watchedList", watched);
-
-        // updateBingeMeter?.(); // Disabled - removed from home page
-        // updateBingeBanner?.(); // Disabled - removed from front page
-        
-        // Ensure home page blocks are inserted (quotes, horoscope, feedback)
-        const blocksResult = ensureBlocks?.();
-        
-        applyTranslations?.();
-        
-        rebuildStats?.();
-      }
+      // updateUI function removed - using centralized version from functions.js
       // Cache search results so we don't inline JSON into onclick
       const searchItemCache = new Map();
       // Make it globally accessible for language switching
@@ -3830,14 +3711,37 @@
       }
 
       function addToListFromCache(id, list) {
+        console.log('🔍 addToListFromCache called:', { id, list });
         const it = searchItemCache.get(Number(id));
         if (!it) {
+          console.error('❌ addToListFromCache: item not found in cache', { id, list });
           showNotification(t("could_not_read_item"), "warning");
           return;
         }
+        console.log('🔍 addToListFromCache: calling addToList with item:', { item: it, list });
         addToList(it, list);
       }
       window.addToListFromCache = addToListFromCache; // used by inline handlers
+      window.addToList = addToList; // export for external calls
+      
+      // Debug function to check current appData state
+      window.debugAppData = function() {
+        console.log('🔍 Current appData state:', {
+          tv: appData.tv,
+          movies: appData.movies,
+          tvWatching: appData.tv?.watching?.length || 0,
+          moviesWatching: appData.movies?.watching?.length || 0
+        });
+      };
+      
+      // Function to clear stale data
+      window.clearStaleData = function() {
+        console.log('🧹 Clearing stale data...');
+        appData.tv = { watching: [], wishlist: [], watched: [] };
+        appData.movies = { watching: [], wishlist: [], watched: [] };
+        localStorage.removeItem('flicklet-data');
+        console.log('✅ Stale data cleared');
+      };
 
       /* ---------- SEARCH HELPERS ---------- */
       
@@ -4005,21 +3909,11 @@
             });
           }
         }
-        
-        // Hide home section content (search results are now outside home section)
-        const homeSection = document.getElementById('homeSection');
-        if (homeSection) {
-          homeSection.style.display = 'none';
-          console.log(`🔍 Hiding home section for search`);
-        }
 
-        // Show search results container and ensure it's visible
+        // Show search results container
         const searchResults = document.getElementById('searchResults');
         if (searchResults) {
           searchResults.style.display = 'block';
-          searchResults.style.visibility = 'visible';
-          searchResults.style.position = 'relative';
-          searchResults.style.zIndex = '10';
           console.log('🔍 Showing search results container');
         }
 
@@ -4213,28 +4107,6 @@
         if (out) {
           out.innerHTML = "";
           out.style.display = "none";
-          out.style.visibility = "hidden";
-        }
-        
-        // Restore home sections when search is cleared
-        if (window.HomeSectionsConfig && typeof window.HomeSectionsConfig.getSections === 'function') {
-          const homeSections = window.HomeSectionsConfig.getSections('search-hide');
-          if (homeSections) {
-            homeSections.forEach(sectionId => {
-              const section = document.getElementById(sectionId);
-              if (section && section.style) {
-                section.style.display = 'block';
-                console.log(`📖 Showing section ${sectionId} after clearing search`);
-              }
-            });
-          }
-        }
-        
-        // Restore home section (search results are now outside home section)
-        const homeSection = document.getElementById('homeSection');
-        if (homeSection) {
-          homeSection.style.display = '';
-          console.log(`📖 Showing home section after clearing search`);
         }
         
         // Show tab content sections when search is cleared
@@ -4284,7 +4156,7 @@
           const homeSections = [
             'curatedSections',
             'triviaTile', 
-            'upcomingEpisodes',
+            'frontSpotlight',
             'seriesOrg',
             'quote-flickword-container',
             'quoteCard',
@@ -4560,18 +4432,18 @@
 
 
 
-          // Insert upcoming episodes section
-          if (!document.getElementById("upcomingEpisodes")) {
+          // Insert front spotlight (replaces horoscope)
+          if (!document.getElementById("frontSpotlight")) {
             const card = document.createElement("div");
-            card.className = "upcoming-episodes card";
-            card.id = "upcomingEpisodes";
+            card.className = "front-spotlight card";
+            card.id = "frontSpotlight";
             card.style.display = "none";
             card.innerHTML = `
               <div class="card-header">
                 <h3>Tonight On</h3>
                 <span class="tag">Next 7 days</span>
               </div>
-              <div id="upcomingEpisodesList" class="upcoming-episodes-list">
+              <div id="frontSpotlightList" class="front-spotlight-list">
                 <div class="no-episodes">No upcoming episodes this week.</div>
               </div>
             `;
@@ -4579,27 +4451,45 @@
             insertAfter.insertAdjacentElement("afterend", card);
           }
 
-          // Add simple feedback link at the bottom of home page
-          if (!document.getElementById("feedbackLinkSection")) {
-            const feedbackLink = document.createElement("div");
-            feedbackLink.className = "feedback-link-section";
-            feedbackLink.id = "feedbackLinkSection";
-            feedbackLink.innerHTML = `
-              <div class="feedback-link-card">
-                <p data-i18n="feedback_link_text">Have thoughts to share? We'd love to hear them!</p>
-                <button class="btn secondary" onclick="openSettingsToFeedback()" data-i18n="share_your_thoughts">Share Your Thoughts</button>
-              </div>
+          // Insert feedback section at the very bottom of home page only
+          if (!document.getElementById("feedbackSection")) {
+            const feedbackCard = document.createElement("div");
+            feedbackCard.className = "feedback-card";
+            feedbackCard.id = "feedbackSection";
+            feedbackCard.innerHTML = `
+                                                      <h3 data-i18n="feedback">Share Your Thoughts</h3>
+                                                          <p data-i18n="feedback_working">Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!</p>
+                              <p class="feedback-subtitle" data-i18n="feedback_subtitle">💬 App feedback • 💭 Random thoughts • 💬 Quote submissions • 🤫 Anonymous confessions • 😤 Venting welcome</p>
+                              <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="feedback-form" action="/thank-you">
+                <input type="hidden" name="form-name" value="feedback" />
+                <input type="hidden" name="theme" id="feedbackThemeInput" />
+                <div style="display: none;">
+                  <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                  <textarea
+                    name="message"
+                    class="search-input"
+                    placeholder=""
+                    data-i18n-placeholder="feedback_placeholder"
+                    rows="3"
+                    required
+                    style="resize: vertical; min-height: 60px;"
+                  ></textarea>
+                  <button type="submit" class="btn" data-i18n="send">Share It!</button>
+                </div>
+              </form>
             `;
             // Insert at the very end of the home section
-            home.appendChild(feedbackLink);
+            home.appendChild(feedbackCard);
           }
 
           const qEl = document.getElementById("randomQuote");
           if (qEl) qEl.textContent = drawQuote();
           
-          // Load upcoming episodes if enabled
-          if (window.FLAGS?.upcomingEpisodesEnabled) {
-            window.loadUpcomingEpisodes?.();
+          // Load front spotlight if enabled
+          if (window.FLAGS?.frontSpotlightEnabled) {
+            window.loadFrontSpotlight?.();
           }
 
           return true;
@@ -5198,10 +5088,5 @@
   };
 
   console.log('🗂️ Series Organizer SO-1 initialized', { pro: PRO });
-  
-  // Export critical functions to window for global access
-  window.loadUserDataFromCloud = loadUserDataFromCloud;
-  window.addToList = addToList;
-  window.saveAppData = saveAppData;
 })();
     

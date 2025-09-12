@@ -73,7 +73,7 @@
           applyTranslations(lang);
         }
       } catch (e) {
-        console.warn('i18n not available yet, continuing.');
+        FlickletDebug.warn('i18n not available yet, continuing.');
       }
     },
 
@@ -85,11 +85,11 @@
     initFirebase() {
       // Prevent multiple initializations
       if (this.firebaseInitialized) {
-        console.log('⚠️ Firebase already initialized, skipping');
+        FlickletDebug.info('⚠️ Firebase already initialized, skipping');
         return;
       }
       
-      console.log('🔥 Initializing Firebase...');
+      FlickletDebug.info('🔥 Initializing Firebase...');
       this.firebaseInitialized = true;
       
       // Clear any existing username prompt modals
@@ -98,11 +98,11 @@
       // Wait for Firebase ready event with timeout
       this.waitForFirebaseReady()
         .then(() => {
-          console.log('✅ Firebase available, setting up auth listener');
+          FlickletDebug.info('✅ Firebase available, setting up auth listener');
           this.setupAuthListener();
         })
         .catch(() => {
-          console.error('❌ Firebase initialization timeout after 8 seconds');
+          FlickletDebug.error('❌ Firebase initialization timeout after 8 seconds');
           this.setupFallbackAuth();
         });
     },
@@ -143,7 +143,7 @@ waitForFirebaseReady() {
 
 
     setupFallbackAuth() {
-      console.log('🔄 Setting up fallback authentication system');
+      FlickletDebug.info('🔄 Setting up fallback authentication system');
       this.currentUser = null;
       this.firebaseInitialized = false;
       
@@ -160,8 +160,9 @@ waitForFirebaseReady() {
 
     setupAuthListener() {
       try {
+        console.log('🔥 Setting up Firebase auth listener...');
         firebase.auth().onAuthStateChanged(async (user) => {
-          console.log('👤 Firebase auth state changed:', user ? `User: ${user.email}` : 'No user');
+          FlickletDebug.info('👤 Firebase auth state changed:', user ? `User: ${user.email}` : 'No user');
           this.currentUser = user;
           // Also update the global currentUser for compatibility with existing code
           if (typeof window !== 'undefined') {
@@ -170,11 +171,11 @@ waitForFirebaseReady() {
           
           // Only process auth changes if this is a new sign-in, not page load
           if (!this.authInitialized) {
-            console.log('🔧 Auth listener initialized, checking current state');
+            FlickletDebug.info('🔧 Auth listener initialized, checking current state');
             this.authInitialized = true;
             
             if (user) {
-              console.log('🔍 User already signed in on page load, updating UI silently');
+              FlickletDebug.info('🔍 User already signed in on page load, updating UI silently');
               this.setAccountButtonLabel(user.displayName || user.email.split('@')[0] || 'User');
             } else {
               this.setAccountButtonLabel('Sign In');
@@ -191,7 +192,7 @@ waitForFirebaseReady() {
 
           // Handle both page load and new sign-ins
           if (this.authInitialized) {
-            console.log('✅ User signed in, updating UI');
+            FlickletDebug.info('✅ User signed in, updating UI');
             this.showNotification(t('signed_in_successfully'), 'success');
 
             // 1) Close ALL auth modals here (you already tag data-modal="login")
@@ -200,7 +201,7 @@ waitForFirebaseReady() {
           }
 
           // 2) CREATE USER DATABASE ENTRY (CRITICAL FOR FIREBASE STORAGE)
-          console.log('🔄 Creating user database entry...');
+          FlickletDebug.info('🔄 Creating user database entry...');
           try {
             const db = firebase.firestore();
             await db.collection("users").doc(user.uid).set({
@@ -211,35 +212,35 @@ waitForFirebaseReady() {
               },
               lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
             }, { merge: true });
-            console.log('✅ User database entry created successfully');
+            FlickletDebug.info('✅ User database entry created successfully');
           } catch (error) {
-            console.error('❌ Failed to create user database entry:', error);
+            FlickletDebug.error('❌ Failed to create user database entry:', error);
           }
 
           // 3) LOAD USER DATA FROM CLOUD (CRITICAL FOR DATA RESTORATION)
-          console.log('🔄 Loading user data from Firebase cloud storage...');
+          FlickletDebug.info('🔄 Loading user data from Firebase cloud storage...');
           try {
             if (typeof window.loadUserDataFromCloud === 'function') {
               await window.loadUserDataFromCloud(user.uid);
-              console.log('✅ User data loaded from cloud successfully');
+              FlickletDebug.info('✅ User data loaded from cloud successfully');
               
               // CRITICAL: Refresh UI after data is loaded to prevent "already in list" errors
               if (typeof window.updateUI === 'function') {
-                console.log('🔄 Refreshing UI after cloud data load...');
+                FlickletDebug.info('🔄 Refreshing UI after cloud data load...');
                 window.updateUI();
               }
               
               // Also refresh the current tab content
               if (typeof window.FlickletApp?.updateTabContent === 'function') {
                 const currentTab = window.FlickletApp?.currentTab || 'home';
-                console.log('🔄 Refreshing current tab content:', currentTab);
+                FlickletDebug.info('🔄 Refreshing current tab content:', currentTab);
                 window.FlickletApp.updateTabContent(currentTab);
               }
             } else {
-              console.error('❌ loadUserDataFromCloud function not available');
+              FlickletDebug.error('❌ loadUserDataFromCloud function not available');
             }
           } catch (error) {
-            console.error('❌ Failed to load user data from cloud:', error);
+            FlickletDebug.error('❌ Failed to load user data from cloud:', error);
           }
 
           // 3) BUTTON LABEL = Firebase displayName (fallback email prefix)
@@ -1365,6 +1366,96 @@ waitForFirebaseReady() {
         if (typeof window.changeLanguage === 'function') {
           return window.changeLanguage(newLang);
         }
+      }
+    },
+
+    // CRITICAL: Save app data to Firebase (missing function that was causing sync issues)
+    async saveData() {
+      try {
+        FlickletDebug.info('💾 FlickletApp.saveData: Starting data save to Firebase');
+        FlickletDebug.info('💾 FlickletApp.saveData: currentUser status:', { 
+          hasCurrentUser: !!this.currentUser, 
+          currentUserUid: this.currentUser?.uid,
+          firebaseAuth: !!firebase?.auth,
+          authState: firebase?.auth?.currentUser?.uid 
+        });
+        
+        // Ensure we have a current user - try to get from Firebase auth if not set
+        if (!this.currentUser && firebase?.auth?.currentUser) {
+          FlickletDebug.info('💾 No this.currentUser, but Firebase auth has user, updating...');
+          this.currentUser = firebase.auth.currentUser;
+          window.currentUser = this.currentUser;
+        }
+        
+        if (!this.currentUser) {
+          FlickletDebug.warn('💾 No current user, saving to localStorage only');
+          localStorage.setItem("flicklet-data", JSON.stringify(window.appData));
+          return;
+        }
+
+        // Get Firebase services
+        console.log('🔥 Getting Firebase Firestore instance...');
+        const db = firebase.firestore();
+        console.log('✅ Firebase Firestore instance obtained');
+        
+        // Prepare data payload with undefined value filtering
+        const cleanData = (obj) => {
+          if (obj === null || obj === undefined) return null;
+          if (Array.isArray(obj)) {
+            return obj.map(cleanData).filter(item => item !== null && item !== undefined);
+          }
+          if (typeof obj === 'object') {
+            const cleaned = {};
+            for (const [key, value] of Object.entries(obj)) {
+              if (value !== undefined) {
+                cleaned[key] = cleanData(value);
+              }
+            }
+            return cleaned;
+          }
+          return obj;
+        };
+
+        const payload = {
+          watchlists: { 
+            tv: cleanData(window.appData.tv) || { watching: [], wishlist: [], watched: [] },
+            movies: cleanData(window.appData.movies) || { watching: [], wishlist: [], watched: [] }
+          },
+          settings: cleanData(window.appData.settings) || {},
+          pro: !!window.appData.settings?.pro,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+
+        // Debug: Log the payload structure to identify any remaining undefined values
+        FlickletDebug.info('💾 Payload structure before Firebase save:', {
+          watchlists: {
+            tv: payload.watchlists.tv,
+            movies: payload.watchlists.movies
+          },
+          settings: payload.settings,
+          pro: payload.pro
+        });
+
+        // Save to Firebase
+        await db.collection("users").doc(this.currentUser.uid).set(payload, { merge: true });
+        
+        // Also save to localStorage as backup
+        localStorage.setItem("flicklet-data", JSON.stringify(window.appData));
+        
+        FlickletDebug.info('✅ FlickletApp.saveData: Data saved successfully to Firebase and localStorage');
+        
+      } catch (error) {
+        FlickletDebug.error('❌ FlickletApp.saveData failed:', error);
+        
+        // Fallback to localStorage only
+        try {
+          localStorage.setItem("flicklet-data", JSON.stringify(window.appData));
+          FlickletDebug.info('💾 Fallback: Data saved to localStorage only');
+        } catch (localError) {
+          FlickletDebug.error('❌ Even localStorage save failed:', localError);
+        }
+        
+        throw error;
       }
     },
   };

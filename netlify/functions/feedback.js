@@ -1,11 +1,45 @@
 exports.handler = async (event, context) => {
-  // Enhanced CORS headers
+  // Strict CORS headers - only allow specific domains
+  const allowedOrigins = [
+    'https://flicklet.netlify.app',
+    'https://zippy-meerkat-329c02.netlify.app',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'http://localhost:8888',
+    'http://127.0.0.1:8888'
+  ];
+  
+  const origin = event.headers.origin || event.headers.referer || '';
+  const isAllowedOrigin = allowedOrigins.some(allowed => 
+    origin.startsWith(allowed)
+  );
+  
+  // Reject requests from unknown origins
+  if (!isAllowedOrigin && origin) {
+    console.log('CORS: Rejected feedback request from origin:', origin);
+    return {
+      statusCode: 403,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        error: 'Forbidden', 
+        message: 'Origin not allowed' 
+      })
+    };
+  }
+  
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Accept',
+    'Access-Control-Allow-Origin': isAllowedOrigin ? origin : 'https://flicklet.netlify.app',
+    'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Max-Age': '86400',
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block'
   };
 
   // Debug logging
