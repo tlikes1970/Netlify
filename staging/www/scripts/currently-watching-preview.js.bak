@@ -1,0 +1,47 @@
+/* scripts/currently-watching-preview.js */
+(function(){
+  if (window.CWP) return;
+
+  let inited = false;
+
+  function render(){
+    if (AppState.activeTab !== 'home') return;
+    try {
+      // Your existing render logic goes here.
+      // IMPORTANT: remove any setTimeout retry loops.
+      // Only render once per event (tab change / data change).
+      // Example skeleton:
+      const data = (window.flickletAppData || window.globalAppData || {}).tv || [];
+      // ... build HTML into #currentlyWatchingPreview ...
+      
+      // NEW: After render, ensure visibility only if not searching
+      const cwpEl = document.getElementById('currentlyWatchingPreview');
+      if (cwpEl && !AppState.searchActive) {  // Assume AppState.searchActive
+        cwpEl.style.display = 'block';
+      }
+      // console.log('[CWP] render run');
+    } catch (e) {
+      console.error('[CWP] render error', e);
+    }
+  }
+
+  function init(){
+    if (inited) return;
+    inited = true;
+    // bind any static listeners needed for CWP (but no intervals/timeouts)
+    render();
+  }
+
+  window.CWP = { init, render };
+
+  document.addEventListener('DOMContentLoaded', init, { once: true });
+  AppEvents.on('tab:change', (e)=> { if (e.detail.tab === 'home') render(); });
+  AppEvents.on('data:changed', render);
+  
+  // NEW: Listen for search events
+  AppEvents.on('search:enter', () => {
+    const cwpEl = document.getElementById('currentlyWatchingPreview');
+    if (cwpEl) cwpEl.style.display = 'none';
+  });
+  AppEvents.on('search:exit', render);  // Re-render on exit
+})();
