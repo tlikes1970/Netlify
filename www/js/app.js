@@ -33,6 +33,14 @@
         // 5) Ensure a default active tab and initial render
         this.switchToTab('home');
         this.updateUI();
+        
+        // 6) Update tab badges after UI is ready
+        setTimeout(() => {
+          if (typeof window.updateTabCounts === 'function') {
+            console.log('🔢 Calling updateTabCounts during initialization');
+            window.updateTabCounts();
+          }
+        }, 500);
 
         // Auth listener handled in initFirebase()
 
@@ -230,6 +238,12 @@ waitForFirebaseReady() {
                 window.updateUI();
               }
               
+              // Update tab badges after data is loaded
+              if (typeof window.updateTabCounts === 'function') {
+                FlickletDebug.info('🔢 Updating tab counts after cloud data load...');
+                window.updateTabCounts();
+              }
+              
               // Also refresh the current tab content
               if (typeof window.FlickletApp?.updateTabContent === 'function') {
                 const currentTab = window.FlickletApp?.currentTab || 'home';
@@ -322,6 +336,12 @@ waitForFirebaseReady() {
               if (typeof updateUI === 'function') {
                 console.log('🔄 Refreshing UI after data load');
                 updateUI();
+              }
+              
+              // Update tab badges after data is loaded
+              if (typeof window.updateTabCounts === 'function') {
+                console.log('🔢 Updating tab counts after data load');
+                window.updateTabCounts();
               }
               
               // Refresh the current tab content
@@ -1457,6 +1477,121 @@ waitForFirebaseReady() {
         
         throw error;
       }
+    },
+
+    // ---------- SEARCH STATE MANAGEMENT ----------
+    /**
+     * Process: Search State Management
+     * Purpose: Track search state and ensure tabs remain visible during search
+     * Data Source: Search controller calls this method
+     * Update Path: Called by search-controller.js when entering/exiting search
+     * Dependencies: Tab visibility system, search controller
+     */
+    setSearching(searching) {
+      this.isSearching = searching;
+      console.log('🔍 FlickletApp search state changed:', searching);
+      
+      // Ensure tabs remain visible during search
+      if (searching) {
+        const tabContainer = document.querySelector('.tab-container');
+        if (tabContainer) {
+          tabContainer.style.display = 'flex';
+          console.log('🔍 Tab container made visible during search');
+        }
+      }
+    },
+
+    // ---------- FAB DOCKING SYSTEM ----------
+    /**
+     * Process: FAB Docking
+     * Purpose: Dock all FABs to the currently active tab container
+     * Data Source: DOM query for .tab-section.active and FAB elements
+     * Update Path: Automatically triggered on tab switches
+     * Dependencies: CSS .fab-dock class, tab switching system
+     */
+    dockFABsToActiveTab() {
+      const FAB_SELECTORS = '.fab, .fab-left'; // include all FAB variants
+      const ACTIVE_PANEL_SELECTOR = '.tab-section.active';
+
+      function getActivePanel() {
+        return document.querySelector(ACTIVE_PANEL_SELECTOR);
+      }
+
+      function ensureDock(panel) {
+        if (!panel) return null;
+        let dock = panel.querySelector(':scope > .fab-dock');
+        if (!dock) {
+          dock = document.createElement('div');
+          dock.className = 'fab-dock';
+          panel.appendChild(dock);
+        }
+        return dock;
+      }
+
+      function moveFABsToDock() {
+        console.log('🔧 FAB Docking: Starting moveFABsToDock');
+        const panel = getActivePanel();
+        console.log('🔧 FAB Docking: Active panel:', panel);
+        if (!panel) return;
+        const dock = ensureDock(panel);
+        console.log('🔧 FAB Docking: Dock created/found:', dock);
+        if (!dock) return;
+
+        // Move settings FAB (fab-left) to left side
+        const settingsFab = document.querySelector('.fab-left');
+        console.log('🔧 FAB Docking: Settings FAB found:', settingsFab);
+        if (settingsFab && !dock.contains(settingsFab)) {
+          settingsFab.style.display = ''; // Show the FAB
+          dock.appendChild(settingsFab);
+          console.log('🔧 FAB Docking: Settings FAB moved to dock');
+        }
+
+        // Move fab-stack (theme buttons) to right side
+        const fabStack = document.querySelector('.fab-stack');
+        console.log('🔧 FAB Docking: Fab stack found:', fabStack);
+        if (fabStack && !dock.contains(fabStack)) {
+          fabStack.style.display = 'flex'; // Show the stack
+          dock.appendChild(fabStack);
+          console.log('🔧 FAB Docking: Fab stack moved to dock');
+        }
+
+        // Move any individual FABs that aren't in a stack
+        const individualFabs = Array.from(document.querySelectorAll('.fab'))
+          .filter(btn => !btn.closest('.fab-stack') && !dock.contains(btn));
+        
+        if (individualFabs.length > 0) {
+          // Create a stack for individual FABs if it doesn't exist
+          let individualStack = dock.querySelector('.individual-fab-stack');
+          if (!individualStack) {
+            individualStack = document.createElement('div');
+            individualStack.className = 'fab-stack individual-fab-stack';
+            dock.appendChild(individualStack);
+          }
+          
+          individualFabs.forEach(btn => individualStack.appendChild(btn));
+        }
+        
+        console.log('🔧 FAB Docking: Dock contents after move:', dock.innerHTML);
+      }
+
+      // Initial run - try multiple times to ensure it works
+      moveFABsToDock();
+      setTimeout(moveFABsToDock, 100);
+      setTimeout(moveFABsToDock, 500);
+
+      // Re-run whenever tabs change (click on [data-tab] or programmatic)
+      document.addEventListener('click', (e) => {
+        // Adjust if your tab triggers differ
+        if (e.target.closest?.('[data-tab], .tab, .tab-link')) {
+          setTimeout(moveFABsToDock, 0); // let the 'active' class switch first
+        }
+      });
+
+      // Optional public hook if your code switches tabs programmatically
+      window.reDockFABs = moveFABsToDock;
+
+      // If your app fires a custom event on tab switch, hook it:
+      document.addEventListener('tab:changed', moveFABsToDock);
     },
   };
 

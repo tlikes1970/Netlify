@@ -257,10 +257,26 @@
       }, true); // Use capture phase
       
       document.addEventListener("DOMContentLoaded", () => {
+        console.log('🔧 DOMContentLoaded - FABs should be visible now');
         // Use centralized initialization if available
         if (window.FlickletApp && typeof window.FlickletApp.init === 'function') {
           console.log('🚀 Using centralized FlickletApp initialization');
           window.FlickletApp.init(); // <-- CALL IT HERE
+          
+          // Initialize FAB docking system
+          if (typeof window.FlickletApp.dockFABsToActiveTab === 'function') {
+            console.log('🔧 Initializing FAB docking system');
+            window.FlickletApp.dockFABsToActiveTab();
+            
+            // Also try to manually trigger it after a short delay
+            setTimeout(() => {
+              console.log('🔧 Manual FAB docking trigger');
+              if (window.reDockFABs) {
+                window.reDockFABs();
+              }
+            }, 1000);
+          }
+          
           return;
         }
 

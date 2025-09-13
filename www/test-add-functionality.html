@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Functionality Test - Flicklet</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .test-button { margin: 10px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .test-button:hover { background: #0056b3; }
+        .test-results { margin-top: 20px; padding: 10px; background: #f8f9fa; border-radius: 4px; }
+        .log-entry { margin: 5px 0; padding: 5px; background: white; border-left: 3px solid #007bff; }
+        .success { border-left-color: #28a745; }
+        .error { border-left-color: #dc3545; }
+        .warning { border-left-color: #ffc107; }
+    </style>
+</head>
+<body>
+    <h1>Add Functionality Test</h1>
+    <p>This page tests the centralized add handler to ensure it works correctly and prevents duplicate operations.</p>
+
+    <div class="test-section">
+        <h2>Test 1: Single Add Operation</h2>
+        <p>Click the button below to test a single add operation:</p>
+        <button class="test-button" data-action="add" data-id="123" data-list="watching">Add TV Show (ID: 123)</button>
+        <button class="test-button" data-action="add" data-id="456" data-list="wishlist">Add Movie (ID: 456)</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Rapid Fire Test</h2>
+        <p>Click the button below multiple times quickly to test deduplication:</p>
+        <button class="test-button" data-action="add" data-id="789" data-list="watching">Rapid Fire Test (ID: 789)</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Different Lists</h2>
+        <p>Test adding the same item to different lists:</p>
+        <button class="test-button" data-action="add" data-id="999" data-list="watching">Add to Watching</button>
+        <button class="test-button" data-action="add" data-id="999" data-list="wishlist">Add to Wishlist</button>
+        <button class="test-button" data-action="add" data-id="999" data-list="watched">Add to Watched</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: Missing Attributes</h2>
+        <p>Test buttons with missing required attributes:</p>
+        <button class="test-button" data-action="add" data-id="111">Missing data-list</button>
+        <button class="test-button" data-action="add" data-list="watching">Missing data-id</button>
+        <button class="test-button" data-action="add">Missing both attributes</button>
+    </div>
+
+    <div class="test-results">
+        <h3>Test Results</h3>
+        <div id="testLog"></div>
+    </div>
+
+    <script>
+        // Mock the required functions for testing
+        window.addToListFromCache = function(id, list) {
+            const log = document.getElementById('testLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry success';
+            entry.textContent = `✅ addToListFromCache called: id=${id}, list=${list}`;
+            log.appendChild(entry);
+            console.log('✅ addToListFromCache called:', { id, list });
+        };
+
+        window.showNotification = function(message, type) {
+            const log = document.getElementById('testLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type === 'error' ? 'error' : 'warning'}`;
+            entry.textContent = `📢 ${message}`;
+            log.appendChild(entry);
+            console.log('📢 Notification:', message, type);
+        };
+
+        // Load the centralized add handler
+        const script = document.createElement('script');
+        script.src = 'scripts/centralized-add-handler.js';
+        document.head.appendChild(script);
+
+        // Test counter
+        let testCounter = 0;
+        const originalAddToListFromCache = window.addToListFromCache;
+        window.addToListFromCache = function(id, list) {
+            testCounter++;
+            const log = document.getElementById('testLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry success';
+            entry.textContent = `✅ Test ${testCounter}: addToListFromCache called - id=${id}, list=${list}`;
+            log.appendChild(entry);
+            console.log(`✅ Test ${testCounter}: addToListFromCache called:`, { id, list });
+        };
+
+        // Test rapid fire deduplication
+        let rapidFireCount = 0;
+        const rapidFireButton = document.querySelector('[data-id="789"]');
+        if (rapidFireButton) {
+            rapidFireButton.addEventListener('click', () => {
+                rapidFireCount++;
+                const log = document.getElementById('testLog');
+                const entry = document.createElement('div');
+                entry.className = 'log-entry warning';
+                entry.textContent = `🔄 Rapid fire click ${rapidFireCount}`;
+                log.appendChild(entry);
+            });
+        }
+
+        // Clear log function
+        function clearLog() {
+            document.getElementById('testLog').innerHTML = '';
+            testCounter = 0;
+            rapidFireCount = 0;
+        }
+
+        // Add clear button
+        const clearButton = document.createElement('button');
+        clearButton.textContent = 'Clear Log';
+        clearButton.className = 'test-button';
+        clearButton.style.background = '#6c757d';
+        clearButton.onclick = clearLog;
+        document.querySelector('.test-results').appendChild(clearButton);
+    </script>
+</body>
+</html>

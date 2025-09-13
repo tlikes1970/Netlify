@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v23.37-HEADER-REALIGNED</title>
+    <title>Flicklet - TV & Movie Tracker v23.60-FAB-DOCKING</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
@@ -87,6 +87,7 @@
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
+            <span class="version-display" style="font-size: 10px; color: #7f8c8d; margin-right: 8px;">v23.60</span>
             <h1 class="brand">Flicklet</h1>
             <span class="tagline">TV &amp; Movie Tracker</span>
           </div>
@@ -209,104 +210,199 @@
         <button id="discoverTab" class="tab" title="Get personalized recommendations based on your taste" aria-label="Discover tab - find new shows and movies">✨ <span data-i18n="discover">Discover</span></button>
       </div>
 
-      <!-- Home -->
-      <div id="homeSection" class="tab-section">
-        <div class="stats">
-          <div class="stat" id="bingeMeter"></div>
+      <!-- Home - Immovable Layout Contract -->
+      <div id="homeSection" class="tab-section active">
+        <!-- Quote Bar - Hard-baked between Sticky Search and Group 1 -->
+        <div id="quote-bar" class="quote-bar" role="region" aria-label="Quote of the moment" style="display: none;">
+          <div class="quote-marquee">
+            <span class="quote-text" id="quoteText">Loading inspirational quote...</span>
+          </div>
         </div>
-        
-        <!-- Currently Watching Preview Row -->
-        <section id="currentlyWatchingPreview" class="home-preview-row" style="display: none;" aria-label="Currently Watching Preview">
-          <div class="preview-row-header">
-            <h3 class="preview-row-title">👁️ Currently Watching</h3>
-          </div>
-          <div class="preview-row-container cw-row">
-            <div class="preview-row-scroll row-inner" id="currentlyWatchingScroll">
-              <!-- Cards will be populated by JavaScript -->
-            </div>
-          </div>
-        </section>
 
-        <!-- Next Up This Week Row -->
-        <section id="next-up-row" class="home-section" data-feature="homeRowNextUp" style="display: none;">
-          <h2 class="section-title">Next Up This Week</h2>
-          <div class="next-up-scroll row-inner"><!-- tiles injected here --></div>
-        </section>
-
-        <!-- 2. Community Section (Spotlight video, Games) -->
-        <div id="community-section" class="home-section">
-          <!-- Community Spotlight -->
-          <div id="spotlight-row" class="home-row" style="display: none;">
-            <div class="home-row-header">
-              <h3>✨ <span data-i18n="community_spotlight">Community Spotlight</span></h3>
+        <!-- Group 1 - Your Shows -->
+        <div id="group-1-your-shows" class="home-group">
+          <div class="group-header">
+            <h2 class="group-title">Your Shows</h2>
+          </div>
+          
+          <!-- Currently Watching (row): always present -->
+          <section id="currentlyWatchingPreview" class="home-preview-row" aria-label="Currently Watching Preview">
+            <div class="preview-row-header">
+              <h3 class="preview-row-title">👁️ Currently Watching</h3>
             </div>
-            <div class="home-row-content">
-              <div class="spotlight-video">
-                <!-- Video content will be populated here -->
-              </div>
-              <div class="spotlight-info">
-                <!-- Info content will be populated here -->
+            <div class="preview-row-container cw-row">
+              <div class="preview-row-scroll row-inner" id="currentlyWatchingScroll">
+                <!-- Cards will be populated by JavaScript -->
+                <div class="placeholder-message" id="cw-placeholder" style="display: none;">
+                  Add something to your Currently Watching list and it'll show up here.
+                </div>
               </div>
             </div>
+          </section>
+
+          <!-- Group divider -->
+          <div class="group-divider"></div>
+
+          <!-- Next Up This Week (row): if data → carousel; if none → collapsed one-line placeholder -->
+          <section id="next-up-row" class="home-preview-row" data-feature="homeRowNextUp" style="display: none;">
+            <div class="preview-row-header">
+              <h3 class="preview-row-title">📅 Next Up This Week</h3>
+            </div>
+            <div class="preview-row-container">
+              <div class="next-up-scroll row-inner preview-row-scroll">
+                <!-- tiles injected here -->
+                <div class="placeholder-message" id="nextup-placeholder" style="display: none;">
+                  No upcoming episodes this week.
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Group 2 - Community -->
+        <div id="group-2-community" class="home-group">
+          <div class="group-header">
+            <h2 class="group-title">Community</h2>
+          </div>
+          
+          <!-- Community Content - Two Column Layout -->
+          <div class="community-content">
+            <!-- Left: Empty Player Box -->
+            <div class="community-left">
+              <div class="player-placeholder">
+                <div class="placeholder-content">
+                  <h3>Community Player</h3>
+                  <p>Video content will appear here</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Right: Game Cards Section -->
+            <div class="community-right">
+              <section id="home-games" class="home-games">
+                <article class="game-card" id="flickwordTile" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="modal-flickword">
+                  <div class="gc-bg"></div>
+                  <div class="gc-head">
+                    <div class="gc-icon" aria-hidden="true">🎯</div>
+                    <h3 class="gc-title">FlickWord</h3>
+                    <p class="gc-tagline">Wordle-style daily word play</p>
+                  </div>
+                  <div class="gc-stats">
+                    <div><span class="gc-stat-label">Streak</span><span class="gc-stat-val" data-fw-streak>0</span></div>
+                    <div><span class="gc-stat-label">Best</span><span class="gc-stat-val" data-fw-best>0</span></div>
+                    <div><span class="gc-stat-label">Win %</span><span class="gc-stat-val" data-fw-win>—</span></div>
+                  </div>
+                  <button class="gc-cta" type="button">Play Now</button>
+                </article>
+
+                <article class="game-card" id="triviaTile" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="modal-trivia">
+                  <div class="gc-bg"></div>
+                  <div class="gc-head">
+                    <div class="gc-icon" aria-hidden="true">🧠</div>
+                    <h3 class="gc-title">Daily Trivia</h3>
+                    <p class="gc-tagline">Fresh question, new bragging rights</p>
+                  </div>
+                  <div class="gc-stats">
+                    <div><span class="gc-stat-label">Streak</span><span class="gc-stat-val" data-tv-streak>1</span></div>
+                    <div><span class="gc-stat-label">Best</span><span class="gc-stat-val" data-tv-best>5</span></div>
+                    <div><span class="gc-stat-label">Accuracy</span><span class="gc-stat-val" data-tv-acc>—</span></div>
+                  </div>
+                  <button class="gc-cta" type="button">Play Now</button>
+                </article>
+              </section>
+            </div>
           </div>
         </div>
 
-        <!-- 3. Curated Section (Trending/Staff Picks/New This Week) -->
-        <div id="curated-section" class="home-section">
-          <!-- Curated Sections -->
-          <div id="curatedSections" class="home-section" style="display: none;">
-            <!-- Curated content will be populated here -->
+        <!-- Group 3 - For You -->
+        <div id="group-3-for-you" class="home-group">
+          <div class="group-header">
+            <h2 class="group-title">For You</h2>
           </div>
+          
+          <!-- Personalized genre rows from Settings -->
+          <section id="personalized-section" class="home-preview-row" style="display: none;">
+            <div class="preview-row-header">
+              <h3 class="preview-row-title">🎨 <span data-i18n="personalized_recommendations">Personalized Recommendations</span></h3>
+              <p class="section-subtitle" data-i18n="personalized_subtitle">Based on your watching history and preferences</p>
+            </div>
+            <div class="preview-row-container">
+              <div class="section-content" id="personalized-content">
+                <!-- Personalized content will be populated here -->
+              </div>
+            </div>
+          </section>
+
+          <!-- Group divider -->
+          <div class="group-divider"></div>
+
+          <!-- Curated rows count per user setting -->
+          <section id="curated-section" class="home-preview-row">
+            <div class="preview-row-header">
+              <h3 class="preview-row-title">🎯 Curated Sections</h3>
+            </div>
+            <div class="preview-row-container">
+              <div id="curatedSections" class="home-section" style="display: none;">
+                <!-- Curated content will be populated here -->
+              </div>
+            </div>
+          </section>
         </div>
 
-        <!-- 4. Personalized Section (Row #1, Row #2 Ghost) -->
-        <div id="personalized-section" class="home-section" style="display: none;">
-          <div class="section-header">
-            <h3>🎨 <span data-i18n="personalized_recommendations">Personalized Recommendations</span></h3>
-            <p class="section-subtitle" data-i18n="personalized_subtitle">Based on your watching history and preferences</p>
+        <!-- Group 4 - In Theaters Near You -->
+        <div id="group-4-theaters" class="home-group">
+          <div class="group-header">
+            <h2 class="group-title">In Theaters</h2>
           </div>
-          <div class="section-content" id="personalized-content">
-            <!-- Personalized content will be populated here -->
-          </div>
+          
+          <section id="theaters-section" class="home-preview-row" style="display: none;">
+            <div class="preview-row-header">
+              <h3 class="preview-row-title">🎬 <span data-i18n="in_theaters_near_me">In Theaters Near You</span></h3>
+              <p class="section-subtitle" data-i18n="theaters_subtitle">Current theatrical releases</p>
+            </div>
+            <div class="preview-row-container">
+              <div class="section-content" id="theaters-content">
+                <!-- Theater content will be populated here -->
+                <div class="theaters-fallback" id="theaters-fallback" style="display: none;">
+                  Turn on location to see movies playing near you.
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
 
-        <!-- 5. In Theaters Near Me Section -->
-        <div id="theaters-section" class="home-section" style="display: none;">
-          <div class="section-header">
-            <h3>🎬 <span data-i18n="in_theaters_near_me">In Theaters Near Me</span></h3>
-            <p class="section-subtitle" data-i18n="theaters_subtitle">Current theatrical releases</p>
+        <!-- Group 5 - Feedback -->
+        <div id="group-5-feedback" class="home-group">
+          <div class="group-header">
+            <h2 class="group-title">Feedback</h2>
           </div>
-          <div class="section-content" id="theaters-content">
-            <!-- Theater content will be populated here -->
-          </div>
-        </div>
-
-        <!-- 6. Additional Content Sections -->
-        <!-- Upcoming Episodes -->
-        <div id="upcomingEpisodes" class="home-section" style="display: none;">
-          <div class="section-header">
-            <h3>📅 <span data-i18n="upcoming_episodes">Upcoming Episodes</span></h3>
-          </div>
-          <div class="section-content">
-            <!-- Upcoming episodes will be populated here -->
-          </div>
-        </div>
-
-        <!-- Quote/Flickword Container -->
-        <div id="quote-flickword-container" class="home-section" style="display: none;">
-          <div class="quote-card" id="quoteCard">
-            <!-- Quote content will be populated here -->
-          </div>
-          <div class="random-quote-card" id="randomQuoteCard">
-            <!-- Random quote content will be populated here -->
-          </div>
-        </div>
-
-        <!-- 7. Feedback Section -->
-        <div id="feedbackSection" class="home-section" style="display: none;">
-          <div class="feedback-content">
-            <!-- Feedback content will be populated here -->
-          </div>
+          
+          <section id="feedbackSection" class="home-preview-row">
+            <div class="preview-row-header">
+              <h3 class="preview-row-title">💬 Share Your Thoughts</h3>
+              <p class="section-subtitle">Help us improve Flicklet with your feedback</p>
+            </div>
+            <div class="preview-row-container">
+              <div class="feedback-content">
+                <div class="feedback-card">
+                  <div class="feedback-actions">
+                    <button class="btn primary" onclick="openSettingsToFeedback()">
+                      🐛 Report a Bug
+                    </button>
+                    <button class="btn secondary" onclick="openSettingsToFeedback()">
+                      💡 Suggest a Feature
+                    </button>
+                    <button class="btn secondary" onclick="openSettingsToFeedback()">
+                      💬 General Feedback
+                    </button>
+                    <button class="btn secondary" onclick="openSettingsToFeedback()">
+                      📹 Submit Video
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
 
@@ -762,7 +858,7 @@
                     <h3 class="settings-title">💬 <span data-i18n="share_your_thoughts">Share Your Thoughts</span></h3>
                     <p class="settings-description" data-i18n="feedback_working">
                       Share your thoughts! Give us app feedback, tell us what's working (or not), 
-                      share a quote for our rotation, make a confession, or just vent. We're listening!
+                      share a quote for our rotation, make a confession, submit a video (describe your video idea and we'll get back to you), or just vent. We're listening!
                     </p>
                     
                     <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="settings-form" action="/thank-you" onsubmit="console.log('🔍 Form onsubmit called'); return false;">
@@ -859,15 +955,13 @@
           </div>
       </div>
 
-      <!-- FAB Rail - Sticky positioning within container -->
-      <div class="fab-rail">
-        <button id="settingsTab" class="fab-left" data-tab="settings" aria-label="Settings">⚙️ <span data-i18n="settings">Settings</span></button>
-        <div class="fab-stack">
-          <button id="darkModeToggle" class="fab" aria-label="Dark">
-            <span id="themeIcon">🌙</span>
-          </button>
-          <button id="mardiToggle" class="fab" aria-label="Mardi">🎭</button>
-        </div>
+      <!-- FABs - Will be moved to active tab dock by JavaScript -->
+      <button id="settingsTab" class="fab-left" data-tab="settings" aria-label="Settings">⚙️ <span data-i18n="settings">Settings</span></button>
+      <div class="fab-stack">
+        <button id="darkModeToggle" class="fab" aria-label="Dark">
+          <span id="themeIcon">🌙</span>
+        </button>
+        <button id="mardiToggle" class="fab" aria-label="Mardi">🎭</button>
       </div>
     </div>
 
@@ -966,6 +1060,317 @@
     <!-- Home layout -->
     <script src="scripts/home.js"></script>
     
+    <!-- Home Layout Guardrails - Immovable Contract Enforcement -->
+    <script>
+    (function() {
+      'use strict';
+      
+      console.log('🏠 Home Layout Guardrails loaded');
+      
+      // Immovable Home Layout Contract - Exact 6 Section Order
+      const REQUIRED_HOME_SECTIONS = [
+        'quote-bar',
+        'group-1-your-shows',
+        'group-2-community', 
+        'group-3-for-you',
+        'group-4-theaters',
+        'group-5-feedback'
+      ];
+      
+      // Runtime Order Assertion
+      function assertHomeOrder() {
+        const homeRoot = document.getElementById('homeSection');
+        if (!homeRoot) {
+          console.error('❌ HOME ORDER VIOLATION: homeSection not found');
+          return false;
+        }
+        
+        const children = Array.from(homeRoot.children);
+        const sectionIds = children.map(child => child.id).filter(id => id);
+        
+        console.log('🏠 Home sections found:', sectionIds);
+        
+        // Check if all required sections exist in correct order
+        let orderViolation = false;
+        REQUIRED_HOME_SECTIONS.forEach((requiredId, index) => {
+          const foundIndex = sectionIds.indexOf(requiredId);
+          if (foundIndex === -1) {
+            console.error(`❌ HOME ORDER VIOLATION: Missing required section "${requiredId}"`);
+            orderViolation = true;
+          } else if (foundIndex !== index) {
+            console.error(`❌ HOME ORDER VIOLATION: Section "${requiredId}" at position ${foundIndex}, expected ${index}`);
+            orderViolation = true;
+          }
+        });
+        
+        // Check for unexpected sections
+        sectionIds.forEach((id, index) => {
+          if (!REQUIRED_HOME_SECTIONS.includes(id)) {
+            console.error(`❌ HOME ORDER VIOLATION: Unexpected section "${id}" at position ${index}`);
+            orderViolation = true;
+          }
+        });
+        
+        if (orderViolation) {
+          console.error('❌ HOME ORDER VIOLATION: Removing unexpected nodes');
+          // Remove unexpected nodes
+          children.forEach((child, index) => {
+            if (!REQUIRED_HOME_SECTIONS.includes(child.id)) {
+              console.log(`🗑️ Removing unexpected section: ${child.id}`);
+              child.remove();
+            }
+          });
+        }
+        
+        return !orderViolation;
+      }
+      
+      // Purge Legacy Sections
+      function purgeLegacySections() {
+        const legacySelectors = [
+          '#bingeMeter',
+          '.stats',
+          '#upcomingEpisodes', 
+          '#quote-flickword-container',
+          '#quoteCard',
+          '#randomQuoteCard',
+          '#bingeBanner'
+        ];
+        
+        legacySelectors.forEach(selector => {
+          const element = document.querySelector(selector);
+          if (element) {
+            console.log(`🗑️ Purging legacy section: ${selector}`);
+            element.remove();
+          }
+        });
+      }
+      
+      // Initialize Quote Bar
+      function initQuoteBar() {
+        const quoteBar = document.getElementById('quote-bar');
+        if (!quoteBar) return;
+        
+        const quotes = [
+          "The best way to predict the future is to create it. - Peter Drucker",
+          "Life is what happens to you while you're busy making other plans. - John Lennon", 
+          "The only way to do great work is to love what you do. - Steve Jobs",
+          "Innovation distinguishes between a leader and a follower. - Steve Jobs",
+          "Your time is limited, don't waste it living someone else's life. - Steve Jobs",
+          "Stay hungry, stay foolish. - Steve Jobs",
+          "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
+          "It is during our darkest moments that we must focus to see the light. - Aristotle"
+        ];
+        
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        const quoteText = document.getElementById('quoteText');
+        if (quoteText) {
+          quoteText.textContent = randomQuote;
+          quoteBar.style.display = 'block';
+        }
+      }
+      
+      // Disable Auto-Inject Systems
+      function disableAutoInjectSystems() {
+        // Disable MP-Playlists v1
+        if (window.FLAGS) {
+          window.FLAGS.spotlight_enabled = false;
+          window.FLAGS.quotes_enabled = false;
+          window.FLAGS.curated_rows_auto_inject = false;
+          window.FLAGS.personalized_rows_auto_inject = false;
+        }
+        
+        // Disable Quote System
+        if (window.ensureBlocks) {
+          window.ensureBlocks = function() { return false; };
+        }
+        
+        // Disable MP-Playlists v1 boot
+        if (window.MP_PLAYLISTS_V1) {
+          window.MP_PLAYLISTS_V1.enabled = false;
+        }
+        
+        console.log('🚫 Auto-inject systems disabled');
+      }
+      
+            // Override FlickWord mount point to target our specific container
+            function overrideFlickWordMount() {
+              // Override the findHomeMount function to target our FlickWord container
+              window.findHomeMount = function() {
+                const flickwordMount = document.querySelector('.flickword-mount');
+                if (flickwordMount) {
+                  console.log('🎯 FlickWord mount found: .flickword-mount');
+                  return flickwordMount;
+                }
+                // Fallback to original home section
+                const homeSection = document.querySelector('#homeSection');
+                console.log('🎯 FlickWord mount fallback: #homeSection');
+                return homeSection;
+              };
+              
+              // FlickFact feature removed - no longer needed
+              
+              console.log('🎯 FlickWord system overridden for new layout');
+            }
+      
+      // Handle player container resizing
+      function handlePlayerResizing() {
+        const communityContent = document.querySelector('.community-content');
+        const communityLeft = document.querySelector('.community-left');
+        const communityRight = document.querySelector('.community-right');
+        
+        if (!communityContent || !communityLeft || !communityRight) return;
+        
+        // Force recalculation of container sizes
+        function resizeContainers() {
+          // Trigger reflow
+          communityContent.style.display = 'none';
+          communityContent.offsetHeight; // Force reflow
+          communityContent.style.display = 'flex';
+          
+          // Ensure proper sizing
+          communityLeft.style.width = '100%';
+          communityRight.style.width = '100%';
+          
+          console.log('🔄 Community containers resized');
+        }
+        
+        // Resize on window resize
+        window.addEventListener('resize', resizeContainers);
+        
+        // Resize when iframe loads
+        const iframe = communityLeft.querySelector('iframe');
+        if (iframe) {
+          iframe.addEventListener('load', resizeContainers);
+        }
+        
+        // Initial resize
+        setTimeout(resizeContainers, 100);
+      }
+      
+      // Initialize when DOM is ready
+      function initHomeGuardrails() {
+        console.log('🏠 Initializing Home Layout Guardrails...');
+        
+        // Disable auto-inject systems first
+        disableAutoInjectSystems();
+        
+        // Purge legacy sections
+        purgeLegacySections();
+        
+        // Initialize quote bar
+        initQuoteBar();
+        
+        // Override FlickWord mount point
+        overrideFlickWordMount();
+        
+        // Handle player container resizing
+        handlePlayerResizing();
+        
+        // Initialize Community Games
+        function initCommunityGames() {
+          console.log('🎮 Initializing Community Games...');
+          
+          // Check if game scripts loaded
+          console.log('🎮 Game script check:', {
+            triviaScript: typeof window.FlickletTrivia !== 'undefined',
+            flickwordScript: typeof window.flickword !== 'undefined',
+            triviaTile: !!document.getElementById('triviaTile'),
+            flickwordCard: !!document.getElementById('flickwordCard')
+          });
+          
+          // Try to manually trigger trivia if it exists
+          if (typeof window.FlickletTrivia !== 'undefined') {
+            console.log('🎮 FlickletTrivia found, checking for init function...');
+            console.log('🎮 Available methods:', Object.keys(window.FlickletTrivia));
+          }
+          
+          // Check if trivia is already loaded by the original script
+          const triviaTile = document.getElementById('triviaTile');
+          const questionEl = document.getElementById('triviaQuestion');
+          const choicesEl = document.getElementById('triviaChoices');
+          
+          if (triviaTile && questionEl && choicesEl) {
+            console.log('🎮 Trivia elements found:', {
+              hasQuestion: !!questionEl.textContent,
+              hasChoices: !!choicesEl.innerHTML,
+              questionText: questionEl.textContent
+            });
+            
+            // If trivia is already loaded, just ensure it fits in the container
+            if (questionEl.textContent && questionEl.textContent !== '') {
+              console.log('🎮 Trivia already loaded by original script');
+              // Apply compact styling to existing content
+              questionEl.style.fontSize = '13px';
+              questionEl.style.lineHeight = '1.3';
+              questionEl.style.marginBottom = '8px';
+              
+              // Style existing choice buttons
+              const existingButtons = choicesEl.querySelectorAll('button, li, div');
+              existingButtons.forEach(btn => {
+                btn.style.padding = '6px 8px';
+                btn.style.fontSize = '12px';
+                btn.style.marginBottom = '4px';
+                btn.style.borderRadius = '4px';
+              });
+            }
+          }
+          
+          // The games should load automatically via their respective systems
+          // FlickWord and Trivia are separate game systems that will populate their containers
+          console.log('🎮 Community games containers ready');
+        }
+        
+        // Trivia answer selection is handled by the trivia.js script
+        // No need for a separate selectAnswer function here
+        
+        // Initialize games after a delay
+        setTimeout(initCommunityGames, 2000);
+        setTimeout(initCommunityGames, 5000);
+        
+        // Also try when DOM is fully ready
+        document.addEventListener('DOMContentLoaded', () => {
+          setTimeout(initCommunityGames, 1000);
+        });
+        
+        // Assert order after a short delay to allow other scripts to run
+        setTimeout(() => {
+          const isValid = assertHomeOrder();
+          if (isValid) {
+            console.log('✅ Home layout order validated');
+          }
+        }, 100);
+      }
+      
+      // Run immediately and on DOM ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initHomeGuardrails);
+      } else {
+        initHomeGuardrails();
+      }
+      
+      // Re-assert order after any major DOM changes
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'childList' && mutation.target.id === 'homeSection') {
+            console.log('🏠 Home section DOM changed, re-asserting order...');
+            setTimeout(assertHomeOrder, 50);
+          }
+        });
+      });
+      
+      // Start observing when homeSection is available
+      const checkHomeSection = setInterval(() => {
+        const homeSection = document.getElementById('homeSection');
+        if (homeSection) {
+          observer.observe(homeSection, { childList: true, subtree: true });
+          clearInterval(checkHomeSection);
+        }
+      }, 100);
+      
+    })();
+    </script>
+    
     <!-- Router -->
     <script src="scripts/router.js"></script>
     
@@ -1002,6 +1407,427 @@
     <script src="scripts/inline-script-02.js"></script>
     <script src="scripts/inline-script-03.js"></script>
     <script src="scripts/episode-tracking.js"></script>
+    
+    <!-- Community Games -->
+    <script src="scripts/trivia.js?v=23.46&t=20250112"></script>
+    <script src="scripts/flickword-home-only.js.txt"></script>
+    
+    <!-- FlickWord Modal Functions -->
+    <script>
+      // FlickWord Modal Functions
+      function openFlickWordModal() {
+        console.log('🎯 Opening FlickWord modal');
+        const modal = document.getElementById('flickwordModal');
+        const frame = document.getElementById('flickwordFrame');
+        
+        if (modal && frame) {
+          // Set today's date for the game
+          const today = new Date().toISOString().split('T')[0];
+          frame.src = `features/flickword-v2.html?date=${today}`;
+          modal.style.display = 'block';
+          
+          // Focus management
+          const closeBtn = modal.querySelector('.modal-close');
+          if (closeBtn) closeBtn.focus();
+        }
+      }
+      
+      function closeFlickWordModal() {
+        console.log('🎯 Closing FlickWord modal');
+        const modal = document.getElementById('flickwordModal');
+        const frame = document.getElementById('flickwordFrame');
+        
+        if (modal) {
+          modal.style.display = 'none';
+          if (frame) frame.src = '';
+        }
+      }
+      
+      // Update FlickWord teaser stats
+      function updateFlickWordStats() {
+        const streakEl = document.querySelector('.flickword-teaser .streak');
+        const bestEl = document.querySelector('.flickword-teaser .best');
+        
+        if (streakEl && bestEl) {
+          const stats = JSON.parse(localStorage.getItem('flickword:stats') || '{}');
+          streakEl.textContent = `Streak: ${stats.streak || 0}`;
+          bestEl.textContent = `Best: ${stats.best || 0}`;
+        }
+      }
+      
+      // Initialize FlickWord teaser
+      function initFlickWordTeaser() {
+        console.log('🎯 Initializing FlickWord teaser');
+        updateFlickWordStats();
+        
+        // Listen for game results to update stats
+        window.addEventListener('message', function(event) {
+          if (event.data && event.data.type === 'flickword:result') {
+            console.log('🎯 FlickWord result received:', event.data);
+            updateFlickWordStats();
+          }
+        });
+      }
+      
+      // Initialize when ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initFlickWordTeaser);
+      } else {
+        initFlickWordTeaser();
+      }
+    </script>
+
+    <!-- Game Cards Modal System -->
+    <script>
+    console.log('🎮 Script starting...');
+    (function () {
+      console.log('🎮 Initializing Game Cards Modal System');
+      const qs  = (s, r=document) => r.querySelector(s);
+      const qsa = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+      // Open/close helpers
+      let lastOpener = null;
+      function openModal(id, opener) {
+        console.log('🎮 Opening modal:', id);
+        const m = qs('#' + id);
+        if (!m) {
+          console.error('🎮 Modal not found:', id);
+          return;
+        }
+        lastOpener = opener || document.activeElement;
+        m.setAttribute('aria-hidden', 'false');
+        console.log('🎮 Modal opened:', m.id, 'aria-hidden:', m.getAttribute('aria-hidden'));
+        
+        // Set up FlickWord iframe with today's date
+        if (id === 'modal-flickword') {
+          const frame = qs('#flickword-game-frame');
+          if (frame) {
+            const today = new Date().toISOString().split('T')[0];
+            frame.src = `features/flickword-v2.html?date=${today}`;
+          }
+        }
+
+        // Focus trap
+        const focusables = qsa('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])', m);
+        const first = focusables[0], last = focusables[focusables.length - 1];
+        (first || qs('[data-close]', m) || m).focus();
+
+        function trap(e){
+          if (e.key !== 'Tab') return;
+          if (!focusables.length) return;
+          if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+        }
+        m._trap = trap;
+        m.addEventListener('keydown', trap);
+      }
+      function closeModal(m) {
+        console.log('🔴 Closing modal:', m?.id);
+        if (!m) return;
+        m.setAttribute('aria-hidden', 'true');
+        m.removeEventListener('keydown', m._trap || (()=>{}));
+        if (lastOpener && typeof lastOpener.focus === 'function') lastOpener.focus();
+      }
+
+      // Wire card + CTA triggers
+      function wireCard(cardId, modalId){
+        console.log('🎮 Wiring card:', cardId, 'to modal:', modalId);
+        const card = qs('#' + cardId);
+        if (!card) {
+          console.error('🎮 Card not found:', cardId);
+          return;
+        }
+        const open = (e) => { 
+          console.log('🎮 Card clicked:', cardId);
+          e.preventDefault(); 
+          openModal(modalId, card); 
+        };
+        card.addEventListener('click', open);
+        card.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' || e.key === ' ') open(e); });
+        const btn = qs('#' + cardId + ' .gc-cta');
+        if (btn) {
+          console.log('🎮 CTA button found for:', cardId);
+          btn.addEventListener('click', open);
+        } else {
+          console.warn('🎮 CTA button not found for:', cardId);
+        }
+      }
+      // Check if modals exist
+      console.log('🎮 Available modals:', qsa('.game-modal').map(m => m.id));
+      console.log('🎮 FlickWord modal:', qs('#modal-flickword'));
+      console.log('🎮 Trivia modal:', qs('#modal-trivia'));
+      
+      wireCard('flickwordTile', 'modal-flickword');
+      wireCard('triviaTile', 'modal-trivia');
+
+      // Overlay & close buttons
+      qsa('.game-modal').forEach(m => {
+        qsa('[data-close]', m).forEach(el => {
+          el.addEventListener('click', (e) => {
+            console.log('🔴 Close button clicked for modal:', m.id);
+            e.preventDefault();
+            e.stopPropagation();
+            closeModal(m);
+          });
+        });
+        m.addEventListener('click', (e) => { 
+          if (e.target.classList.contains('gm-overlay')) {
+            closeModal(m);
+          }
+        });
+        m.addEventListener('keydown', (e) => { 
+          if (e.key === 'Escape') {
+            closeModal(m);
+          }
+        });
+      });
+      
+      // Global close function
+      window.closeGameModal = closeModal;
+      
+      // Listen for game close messages
+      window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'flickword:close') {
+          const modal = qs('#modal-flickword');
+          if (modal) closeModal(modal);
+        }
+        if (event.data && event.data.type === 'trivia:close') {
+          const modal = qs('#modal-trivia');
+          if (modal) closeModal(modal);
+        }
+      });
+      
+      // Dispatch modal events for other systems to listen to
+      const originalOpenModal = openModal;
+      openModal = function(id, opener) {
+        originalOpenModal(id, opener);
+        document.dispatchEvent(new CustomEvent('modal:open', { detail: { id, opener } }));
+      };
+      
+      const originalCloseModal = closeModal;
+      closeModal = function(m) {
+        const id = m?.id;
+        originalCloseModal(m);
+        if (id) {
+          document.dispatchEvent(new CustomEvent('modal:close', { detail: { id } }));
+        }
+      };
+
+      // ---- Reliable close: X, overlay, ESC ----
+      (function wireModalCloseDelegation(){
+        if (window.__modalCloseWired) return;
+        window.__modalCloseWired = true;
+
+        document.addEventListener('click', (e)=>{
+          const t = e.target;
+          if (t.classList?.contains('gm-overlay') || t.closest?.('[data-close]')){
+            e.preventDefault();
+            closeModal(t.closest('.game-modal'));
+          }
+        });
+        document.addEventListener('keydown', (e)=>{
+          if (e.key === 'Escape') {
+            const openModal = document.querySelector('.game-modal[aria-hidden="false"]');
+            if (openModal) closeModal(openModal);
+          }
+        });
+      })();
+
+      // ---- Exact iframe sizing on open + resize ----
+      (function sizeIframesOnModalOpen(){
+        function sizeIframe(modalId){
+          const modal = document.getElementById(modalId);
+          if (!modal) return;
+          const body = modal.querySelector('.gm-body');
+          const iframe = body?.querySelector('iframe');
+          if (!iframe || !body) return;
+          iframe.style.height = body.clientHeight + 'px';
+        }
+
+        const needsResize = new Set();
+
+        document.addEventListener('modal:open', (e)=>{
+          const id = e.detail?.id;
+          if (!id) return;
+          requestAnimationFrame(()=> sizeIframe(id));
+          needsResize.add(id);
+        });
+
+        document.addEventListener('modal:close', (e)=>{
+          const id = e.detail?.id;
+          if (!id) return;
+          needsResize.delete(id);
+        });
+
+        window.addEventListener('resize', ()=>{
+          for (const id of needsResize) sizeIframe(id);
+        });
+      })();
+
+      // Stats hooks (wire real data later)
+      window.GameStats = {
+        set(data){
+          if (data.flickword){
+            if ('streak' in data.flickword) qs('[data-fw-streak]')?.replaceChildren(String(data.flickword.streak));
+            if ('best'   in data.flickword) qs('[data-fw-best]')?.replaceChildren(String(data.flickword.best));
+            if ('win'    in data.flickword) qs('[data-fw-win]')?.replaceChildren(String(data.flickword.win));
+          }
+          if (data.trivia){
+            if ('streak' in data.trivia) qs('[data-tv-streak]')?.replaceChildren(String(data.trivia.streak));
+            if ('best'   in data.trivia) qs('[data-tv-best]')?.replaceChildren(String(data.trivia.best));
+            if ('acc'    in data.trivia) qs('[data-tv-acc]')?.replaceChildren(String(data.trivia.acc));
+          }
+        }
+      };
+    })();
+    </script>
+
+    <!-- Daily Trivia Bridge -->
+    <script>
+    // === Daily Trivia <-> Modal bridge (iframe mount/unmount) ===
+    window.DailyTriviaBridge = (() => {
+      let handle = null;
+      const TRIVIA_SRC = 'features/trivia.html'; // change here if your path differs
+
+      function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+      function mount(rootSel){
+        const root = typeof rootSel === 'string' ? document.querySelector(rootSel) : rootSel;
+        if (!root) throw new Error('DailyTrivia root not found');
+        if (handle) return handle;
+
+        const iframe = document.createElement('iframe');
+        iframe.id = 'triviaFrame_new';
+        iframe.title = 'Daily Trivia Game';
+        iframe.loading = 'eager';
+        iframe.referrerPolicy = 'no-referrer';
+        iframe.allow = '';
+        iframe.sandbox = 'allow-scripts allow-same-origin';
+        iframe.style.width = '100%';
+        iframe.style.height = '62vh';
+        iframe.style.minHeight = '420px';
+        iframe.style.border = 'none';
+        iframe.style.borderRadius = '10px';
+
+        // If your trivia uses a daily seed, pass date (safe even if ignored)
+        iframe.src = `${TRIVIA_SRC}?date=${todayISO()}`;
+
+        root.replaceChildren(iframe);
+
+        const onLoad = () => { try { iframe.focus(); } catch {} };
+        iframe.addEventListener('load', onLoad);
+
+        // Listen for results and update teaser stats
+        const onMsg = (event) => {
+          const data = event.data;
+          if (!data || data.type !== 'trivia:result') return;
+          // Expect payload like { streak, best, acc } — adjust if your keys differ
+          try {
+            const prev = JSON.parse(localStorage.getItem('trivia:stats') || '{}');
+            const next = { ...prev, ...data.payload };
+            localStorage.setItem('trivia:stats', JSON.stringify(next));
+          } catch {}
+
+          try {
+            const $ = (s)=>document.querySelector(s);
+            const stats = JSON.parse(localStorage.getItem('trivia:stats') || '{}');
+            $('[data-tv-streak]') && $('[data-tv-streak]').replaceChildren(String(stats.streak ?? 0));
+            $('[data-tv-best]')   && $('[data-tv-best]').replaceChildren(String(stats.best ?? 0));
+            $('[data-tv-acc]')    && $('[data-tv-acc]').replaceChildren(String(stats.acc ?? '—'));
+          } catch {}
+        };
+        window.addEventListener('message', onMsg);
+
+        handle = {
+          iframe,
+          destroy(){
+            try { iframe.removeEventListener('load', onLoad); } catch {}
+            try { window.removeEventListener('message', onMsg); } catch {}
+            try { iframe.src = 'about:blank'; } catch {}
+            if (iframe.parentNode) iframe.parentNode.replaceChildren();
+            handle = null;
+          }
+        };
+        return handle;
+      }
+
+      function unmount(){ if (handle) handle.destroy(); }
+
+      return { mount, unmount };
+    })();
+
+    // === Wire to modal lifecycle ===
+    (function wireTriviaToModal(){
+      document.addEventListener('modal:open', (e)=>{
+        if (e.detail?.id === 'modal-trivia') {
+          try { window.DailyTriviaBridge.mount('#dailytrivia-game'); }
+          catch(err){ console.error('Trivia mount failed', err); }
+        }
+      });
+      document.addEventListener('modal:close', (e)=>{
+        if (e.detail?.id === 'modal-trivia') {
+          try { window.DailyTriviaBridge.unmount(); }
+          catch(err){ console.error('Trivia unmount failed', err); }
+        }
+      });
+    })();
+
+    // === Initialize teaser with any saved stats (runs once at startup) ===
+    (function initTriviaTeaserNew(){
+      try {
+        const stats = JSON.parse(localStorage.getItem('trivia:stats') || '{}');
+        const set = (sel, val)=>{ const el=document.querySelector(sel); if (el) el.textContent = String(val); };
+        set('[data-tv-streak]', stats.streak ?? 0);
+        set('[data-tv-best]',   stats.best   ?? 0);
+        set('[data-tv-acc]',    stats.acc    ?? '—');
+      } catch {}
+    })();
+    </script>
+
+    <!-- Modal Iframe Sizing -->
+    <script>
+    // Helper to size an iframe to its modal body
+    function sizeModalIframe(modalId, iframeEl){
+      const modal = document.getElementById(modalId);
+      if (!modal || !iframeEl) return;
+      const body = modal.querySelector('.gm-body');
+      if (!body) return;
+
+      // Force a reflow-safe height
+      const h = body.clientHeight;
+      iframeEl.style.height = (h > 0 ? h : 420) + 'px';
+    }
+
+    // Patch FlickWordBridge to use dynamic sizing
+    (function patchFlickWordSizing(){
+      if (!window.FlickWordBridge) return;
+      const _mount = window.FlickWordBridge.mount;
+      window.FlickWordBridge.mount = async function(rootSel){
+        const handle = await _mount.call(window.FlickWordBridge, rootSel);
+
+        // Try to find the iframe we just created
+        const root = typeof rootSel === 'string' ? document.querySelector(rootSel) : rootSel;
+        const iframe = root && (root.querySelector('iframe') || root.firstElementChild);
+
+        // Initial size after next frame
+        requestAnimationFrame(()=> sizeModalIframe('modal-flickword', iframe));
+
+        // Resize with window
+        function onResize(){ sizeModalIframe('modal-flickword', iframe); }
+        window.addEventListener('resize', onResize);
+
+        // Keep cleanup on destroy
+        const _destroy = handle?.destroy;
+        if (_destroy){
+          handle.destroy = function(){
+            window.removeEventListener('resize', onResize);
+            _destroy.call(handle);
+          };
+        }
+        return handle;
+      };
+    })();
+    </script>
 
     
 
@@ -1062,10 +1888,9 @@
     function openSettingsToFeedback() {
       console.log('💬 Opening settings to feedback section');
       
-      // Switch to settings tab
-      const settingsTab = document.getElementById('settingsTab');
-      if (settingsTab) {
-        settingsTab.click();
+      // Use the global switchToTab function if available
+      if (typeof window.switchToTab === 'function') {
+        window.switchToTab('settings');
         
         // Wait for settings to load, then switch to About tab
         setTimeout(() => {
@@ -1083,8 +1908,30 @@
           }
         }, 200);
       } else {
-        console.warn('💬 Settings tab not found');
-        alert('Please go to Settings → About to share your feedback');
+        // Fallback to direct tab click
+        const settingsTab = document.getElementById('settingsTab');
+        if (settingsTab) {
+          settingsTab.click();
+          
+          // Wait for settings to load, then switch to About tab
+          setTimeout(() => {
+            const aboutTab = document.querySelector('.settings-tabs button[data-target="#about"]');
+            if (aboutTab) {
+              aboutTab.click();
+              
+              // Scroll to feedback section
+              setTimeout(() => {
+                const feedbackSection = document.querySelector('#about .settings-subsection:last-child');
+                if (feedbackSection) {
+                  feedbackSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }, 100);
+            }
+          }, 200);
+        } else {
+          console.warn('💬 Settings tab not found');
+          alert('Please go to Settings → About to share your feedback');
+        }
       }
     }
     </script>
@@ -1596,6 +2443,62 @@
     
     <!-- Global modal mount, never hidden by tab switching -->
     <div id="modal-root" data-modal-root style="position:relative; z-index:0;"></div>
+    
+    <!-- FlickWord Modal -->
+    <div id="flickwordModal" class="modal" style="display: none;">
+      <div class="modal-backdrop" onclick="closeFlickWordModal()"></div>
+      <div class="modal-dialog flickword-modal">
+        <div class="modal-header">
+          <h3>🎯 FlickWord</h3>
+          <button class="modal-close" onclick="closeFlickWordModal()">×</button>
+        </div>
+        <div class="modal-content">
+          <iframe 
+            id="flickwordFrame" 
+            src="features/flickword-v2.html" 
+            style="width: 100%; height: 500px; border: none; border-radius: 8px;"
+            title="FlickWord Game"
+            sandbox="allow-scripts allow-same-origin"
+          ></iframe>
+        </div>
+        <div class="modal-actions">
+          <button class="btn secondary" onclick="closeFlickWordModal()">Close Game</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Modals -->
+    <div class="game-modal" id="modal-flickword" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-flickword-title">
+      <div class="gm-overlay" data-close></div>
+      <div class="gm-dialog" role="document">
+        <header class="gm-header">
+          <h3 id="modal-flickword-title">FlickWord</h3>
+          <button class="gm-close" type="button" aria-label="Close" data-close>&times;</button>
+        </header>
+        <main class="gm-body">
+          <iframe 
+            id="flickword-game-frame" 
+            src="features/flickword-v2.html" 
+            style="width: 100%; height: 100%; border: none; border-radius: 8px;"
+            title="FlickWord Game"
+            sandbox="allow-scripts allow-same-origin"
+          ></iframe>
+        </main>
+      </div>
+    </div>
+
+    <div class="game-modal" id="modal-trivia" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-trivia-title">
+      <div class="gm-overlay" data-close></div>
+      <div class="gm-dialog" role="document">
+        <header class="gm-header">
+          <h3 id="modal-trivia-title">Daily Trivia</h3>
+          <button class="gm-close" type="button" aria-label="Close" data-close>&times;</button>
+        </header>
+        <main class="gm-body">
+          <div id="dailytrivia-game" class="gm-placeholder">[ Daily Trivia game mounts here ]</div>
+        </main>
+      </div>
+    </div>
 	
 	<!-- Notifications regions (required by notifications.js) -->
 <div id="toastRegion" role="status" aria-live="polite" aria-atomic="true" class="toast-region"></div>

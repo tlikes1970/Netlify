@@ -4368,54 +4368,7 @@
   window.__FlickletAttachTrivia = attachTrivia;
 
   // ---- FlickWord Boost (Home) ----
-  function findHomeMount() {
-    return document.querySelector('#homeSection');
-  }
-  function chooseFlickFact() {
-    try {
-      const app = window.FlickletApp?.data || window.appData;
-      const pool = [
-        ...(app?.tv?.watching || []),
-        ...(app?.movies?.watching || []),
-        ...(app?.tv?.wishlist || []),
-        ...(app?.movies?.wishlist || [])
-      ];
-      if (!pool.length) return null;
-      const idx = Math.abs(new Date().toDateString().split('').reduce((a,c)=>a+c.charCodeAt(0),0)) % pool.length;
-      const item = pool[idx];
-      const facts = makeFacts(item);
-      if (!facts.length) return null;
-      return { title: (item.name || item.title || 'This title'), fact: facts[0].text };
-    } catch { return null; }
-  }
-  function renderFlickFact(container) {
-    if (!FFACT_ON) return;
-    const prev = container.querySelector('.flickfact-card[data-mp="v1"]');
-    if (prev) prev.remove();
-    const pick = chooseFlickFact();
-    if (!pick) return;
-
-    const card = document.createElement('section');
-    card.className = 'flickfact-card';
-    card.dataset.mp = 'v1';
-    card.innerHTML = `
-      <div class="ff-title">FlickFact</div>
-      <div class="ff-body"><strong>${pick.title.replace(/</g,'&lt;')}</strong> — ${pick.fact}</div>
-    `;
-    container.prepend(card);
-  }
-  function bootHome() {
-    const mount = findHomeMount();
-    if (!mount) return;
-    renderFlickFact(mount);
-  }
-
-  if (FFACT_ON) {
-    bootHome();
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') bootHome();
-    });
-  }
+  // FlickFact feature removed - no longer needed
 
   // Store item data for refresh purposes
   const itemCache = new Map();

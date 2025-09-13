@@ -1248,21 +1248,55 @@ html, body { overflow-x:hidden; }
   }
 }
 
-/* Tab Container - Single Source of Truth */
+/* Tab Container - YouTube-style Design */
 .tab-container {
   display: flex;
   justify-content: space-evenly;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  background: var(--card);
-  padding: 12px;
-  border-radius: 12px;
-  margin: 2px 0;
-  border: 1px solid var(--border);
+  flex-wrap: nowrap;
+  gap: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  margin: 16px 0 0 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
   animation: tabContainerSlideIn 0.8s ease-out 0.4s both;
   position: relative;
   z-index: 10;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Ensure tabs are always visible during search */
+.tab-container {
+  display: flex !important;
+}
+
+/* Search results positioning - below tabs, above content */
+#searchResults {
+  position: relative;
+  z-index: 5;
+  margin-top: 0;
+  margin-bottom: 16px;
+  background: var(--card);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+/* Ensure search results appear between search bar and tabs */
+.top-search + #searchResults {
+  margin-top: 8px;
+}
+
+#searchResults + .tab-container {
+  margin-top: 8px;
+}
+
+.tab-container::-webkit-scrollbar {
+  display: none;
 }
 
 /* Search bar to tab container spacing - single source */
@@ -1289,22 +1323,26 @@ html, body { overflow-x:hidden; }
 }
 
 .tab {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   border: 0;
   background: transparent;
-  padding: 12px 20px;
-  border-radius: 10px;
-  font-weight: 800;
+  padding: 16px 20px;
+  border-radius: 0;
+  font-weight: 500;
+  font-size: 15px;
   cursor: pointer;
-  min-height: 44px;
-  min-width: 140px;
-  max-width: 250px;
+  min-height: 48px;
+  min-width: 0;
+  max-width: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+  color: var(--text-muted);
 }
 
 .tab::before {
@@ -1323,14 +1361,15 @@ html, body { overflow-x:hidden; }
 }
 
 .tab:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text);
 }
 
 .tab.active {
-  background: linear-gradient(45deg, var(--primary), var(--purple));
-  color: #fff;
-  animation: tabActivate 0.4s ease-out;
+  background: transparent;
+  color: var(--text);
+  border-bottom-color: var(--primary);
+  font-weight: 600;
 }
 
 @keyframes tabActivate {
@@ -1346,12 +1385,25 @@ html, body { overflow-x:hidden; }
 }
 
 .tab-badge {
-  background: #fff;
-  color: var(--primary);
-  border-radius: 12px;
-  padding: 2px 8px;
-  font-size: 12px;
-  margin-left: 6px;
+  background: var(--text-muted) !important;
+  color: var(--bg) !important;
+  border-radius: 10px !important;
+  padding: 2px 6px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  margin-left: 6px !important;
+  min-width: 16px !important;
+  text-align: center !important;
+  line-height: 1.2 !important;
+  transition: all 0.2s ease !important;
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.tab.active .tab-badge {
+  background: var(--primary) !important;
+  color: white !important;
 }
 
 /* Buttons */
@@ -2369,7 +2421,9 @@ select,
 }
 
 /* === FAB Rail - Container-Aware Positioning ========================== */
-
+#settingsTab span {
+  display: none;
+}
 :root{
   --fab-size: 50px;
   --fab-gap: 10px;
@@ -2401,15 +2455,10 @@ select,
 /* Individual FAB buttons */
 .fab, .fab-left {
   position: static !important; /* Force static positioning within rail */
-  width: var(--fab-size);
-  height: var(--fab-size);
-  border-radius: 50%;
   display: grid;
   place-items: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,.15);
   border: none;
   cursor: pointer;
-  background: #4a5568;
   color: white;
   font-size: 24px;
   transition: all 0.2s ease;
@@ -2451,6 +2500,42 @@ select,
   }
 }
 
+/* === Icon-only FAB base (applies to all floating buttons) === */
+.fab,
+.fab-left {
+  position: relative;        /* enables larger invisible hit area if needed */
+  background: none !important;
+  border: none !important;
+  width: auto !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none !important;
+  padding: 0;                /* no visual padding — just the icon */
+  color: inherit;
+  font-size: 24px;           /* adjust icon size here */
+  line-height: 1;
+  cursor: pointer;
+  transition: transform .08s ease, opacity .12s ease;
+}
+
+/* Hover/active/focus affordances without adding a box */
+.fab:hover,
+.fab-left:hover { opacity: .9; }
+.fab:active,
+.fab-left:active { transform: translateY(1px); }
+
+/* Keyboard focus ring (accessible, subtle) */
+.fab:focus-visible,
+.fab-left:focus-visible {
+  outline: 2px solid color-mix(in oklab, currentColor 50%, transparent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+
 /* Content protection - add space at bottom on narrow screens */
 @media (max-width: 1200px) {
   .main-container {
@@ -2461,6 +2546,89 @@ select,
 /* Tab visibility control */
 .tab[style*="display: none"] {
   display: none !important;
+}
+
+/* ===== FAB DOCKING SYSTEM ===== */
+/* Anchor for each tab's content so the dock can position inside it */
+.tab-section {
+  position: relative; /* containing block for the dock */
+}
+
+/* The dock that holds all FABs inside the active tab */
+.fab-dock {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  z-index: 30;
+  pointer-events: none;                /* only buttons receive events */
+  padding: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  margin-top: 20px; /* Add some space from content above */
+  width: 100%; /* Ensure dock spans full width of container */
+}
+
+/* Left side - Settings FAB */
+.fab-dock .fab-left {
+  pointer-events: auto;
+  margin-right: auto; /* Push to left side */
+  /* No left margin - align with container's left border */
+}
+
+/* Right side - Theme FABs stack */
+.fab-dock .fab-stack {
+  display: flex !important;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin-left: auto; /* Push to right side */
+  /* No right margin - align with container's right border */
+}
+
+.fab-dock .fab {
+  pointer-events: auto;
+}
+
+/* Mobile: adjust spacing and positioning */
+@media (max-width: 640px){
+  .fab-dock { 
+    padding: 0;
+    bottom: 0;
+    gap: 8px;
+  }
+  
+  .fab-dock .fab-left {
+    /* No margin - align with container's left border */
+  }
+  
+  .fab-dock .fab-stack {
+    gap: 10px;
+    /* No margin - align with container's right border */
+  }
+}
+
+/* Ensure FABs are not page-fixed anymore */
+.fab, .fab-left { 
+  position: relative !important; 
+}
+
+/* Hide FABs initially - they'll be shown when moved to dock */
+.fab-left {
+  display: none !important;
+}
+
+.fab-stack {
+  display: none !important;
+}
+
+/* Show FABs when they're in the dock */
+.fab-dock .fab-left {
+  display: block !important;
+}
+
+.fab-dock .fab-stack {
+  display: flex !important;
 }
 
 /* Force hide tabs that should be hidden */
@@ -2478,6 +2646,29 @@ select,
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;
+}
+
+/* Mobile responsive for YouTube-style tabs */
+@media (max-width: 768px) {
+  .tab-container {
+    padding: 0;
+    margin: 12px 0 0 0;
+    justify-content: space-evenly;
+  }
+  
+  .tab {
+    flex: 1 1 0;
+    padding: 14px 8px;
+    font-size: 13px;
+    min-width: 0;
+    min-height: 44px;
+  }
+  
+  .tab-badge {
+    font-size: 10px;
+    padding: 1px 4px;
+    margin-left: 4px;
+  }
 }
 
 /* Override flex: 1 for hidden tabs */
@@ -4758,16 +4949,7 @@ body[data-theme="forest"] {
 .trivia-row[data-locked="1"] .trivia-chip { opacity:.65; }
 .trivia-row .nudge { font-size:12px; opacity:.8; }
 
-/* FlickWord Boost (Home) */
-.flickfact-card {
-  background: var(--bg-elev, #141a22);
-  border: 1px solid rgba(255,255,255,.06);
-  border-radius: 10px;
-  padding: 10px;
-  margin: 10px 0 12px;
-}
-.flickfact-card .ff-title { font-weight:700; font-size:14px; line-height:1.25; }
-.flickfact-card .ff-body  { font-size:13px; color: var(--muted,#a6b3c2); margin-top:6px; }
+/* FlickWord Boost (Home) - FlickFact feature removed */
 
 /* === SO-1: Series Organizer (progressive disclosure) === */
 .so-card { /* applied via flagged JS; keeps scope narrow */

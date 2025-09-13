@@ -20,7 +20,7 @@ window.FLAGS = Object.assign({
             playlistsEnabled: false,                    // curated spotlight video (disabled)
           playlistsProEnabled: true,                  // curated rows (PRO)
           triviaEnabled: true,                        // per-card trivia chips
-          flickwordBoostEnabled: true,                // FlickFact panel on Home
+          flickwordBoostEnabled: false,               // FlickFact panel on Home (disabled)
           seriesOrganizerEnabled: true,               // card declutter (progressive disclosure)
           homeRowCurrentlyWatching: true,             // Currently Watching Preview row
           homeRowNextUp: true,                        // Next Up This Week row

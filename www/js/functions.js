@@ -107,16 +107,54 @@ function rerenderIfVisible(list) {
 }
 
 window.updateTabCounts = function updateTabCounts() {
+  console.log('🔢 Updating tab counts...');
   const counts = {
-    watching: (appData.tv?.watching?.length || 0) + (appData.movies?.watching?.length || 0),
-    wishlist: (appData.tv?.wishlist?.length || 0) + (appData.movies?.wishlist?.length || 0),
-    watched:  (appData.tv?.watched?.length  || 0) + (appData.movies?.watched?.length  || 0),
+    watching: (window.appData?.tv?.watching?.length || 0) + (window.appData?.movies?.watching?.length || 0),
+    wishlist: (window.appData?.tv?.wishlist?.length || 0) + (window.appData?.movies?.wishlist?.length || 0),
+    watched:  (window.appData?.tv?.watched?.length  || 0) + (window.appData?.movies?.watched?.length  || 0),
   };
+  
+  console.log('📊 Calculated counts:', counts);
+  
   ['watching','wishlist','watched'].forEach(list => {
     const badge = document.getElementById(`${list}Badge`);
-    if (badge) badge.textContent = counts[list];
+    if (badge) {
+      badge.textContent = counts[list];
+      console.log(`✅ ${list} badge updated to:`, badge.textContent);
+    } else {
+      console.log(`❌ ${list} badge not found!`);
+    }
   });
 };
+
+// Ensure the function is called when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔢 DOMContentLoaded - calling updateTabCounts');
+  setTimeout(() => {
+    if (typeof window.updateTabCounts === 'function') {
+      window.updateTabCounts();
+    }
+  }, 1000);
+});
+
+// Also call when user data is loaded
+document.addEventListener('userDataLoaded', function() {
+  console.log('🔢 userDataLoaded event - calling updateTabCounts');
+  setTimeout(() => {
+    if (typeof window.updateTabCounts === 'function') {
+      window.updateTabCounts();
+    }
+  }, 500);
+});
+
+// Call periodically to ensure counts stay updated
+setInterval(() => {
+  if (typeof window.updateTabCounts === 'function') {
+    window.updateTabCounts();
+  }
+}, 5000); // Update every 5 seconds
+
+
 
 // ---- Home ----
 window.loadHomeContent = function loadHomeContent() {

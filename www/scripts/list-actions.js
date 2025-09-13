@@ -83,6 +83,12 @@
     // Also try to find generic badges
     const badge = root.previousElementSibling?.querySelector?.('.count, .badge, .pill, .tab-badge');
     if (badge) badge.textContent = String(items.length);
+    
+    // Update all tab badges to ensure consistency
+    if (typeof window.updateTabCounts === 'function') {
+      console.log('🔢 Updating all tab counts after list change');
+      window.updateTabCounts();
+    }
   }
 
   document.addEventListener('click', async (e) => {

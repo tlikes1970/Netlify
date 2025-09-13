@@ -3925,8 +3925,10 @@
           }
 
           out.style.display = "";
+          // Clear previous results using replaceChildren
+          out.replaceChildren();
           // Show skeletons while searching
-          window.Skeletons?.list("searchResults", 6);
+          window.Skeletons?.list("searchResultsList", 6);
 
           console.log('🔍 Checking tmdbGet function:', typeof tmdbGet);
           if (typeof tmdbGet !== "function") {
@@ -4105,7 +4107,7 @@
         const out = document.getElementById("searchResults");
         if (qEl) qEl.value = "";
         if (out) {
-          out.innerHTML = "";
+          out.replaceChildren();
           out.style.display = "none";
         }
         
@@ -4451,38 +4453,11 @@
             insertAfter.insertAdjacentElement("afterend", card);
           }
 
-          // Insert feedback section at the very bottom of home page only
-          if (!document.getElementById("feedbackSection")) {
-            const feedbackCard = document.createElement("div");
-            feedbackCard.className = "feedback-card";
-            feedbackCard.id = "feedbackSection";
-            feedbackCard.innerHTML = `
-                                                      <h3 data-i18n="feedback">Share Your Thoughts</h3>
-                                                          <p data-i18n="feedback_working">Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!</p>
-                              <p class="feedback-subtitle" data-i18n="feedback_subtitle">💬 App feedback • 💭 Random thoughts • 💬 Quote submissions • 🤫 Anonymous confessions • 😤 Venting welcome</p>
-                              <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="feedback-form" action="/thank-you">
-                <input type="hidden" name="form-name" value="feedback" />
-                <input type="hidden" name="theme" id="feedbackThemeInput" />
-                <div style="display: none;">
-                  <label>Don't fill this out if you're human: <input name="bot-field" /></label>
-                </div>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap">
-                  <textarea
-                    name="message"
-                    class="search-input"
-                    placeholder=""
-                    data-i18n-placeholder="feedback_placeholder"
-                    rows="3"
-                    required
-                    style="resize: vertical; min-height: 60px;"
-                  ></textarea>
-                  <button type="submit" class="btn" data-i18n="send">Share It!</button>
-                </div>
-              </form>
-            `;
-            // Insert at the very end of the home section
-            home.appendChild(feedbackCard);
-          }
+          // DISABLED: Dynamic feedback section creation - using static HTML feedback section instead
+          // The static feedback section is already defined in the HTML and should be used
+          // if (!document.getElementById("feedbackSection")) {
+          //   // Dynamic feedback creation code removed to prevent conflicts
+          // }
 
           const qEl = document.getElementById("randomQuote");
           if (qEl) qEl.textContent = drawQuote();
