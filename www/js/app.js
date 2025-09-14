@@ -1076,6 +1076,9 @@ waitForFirebaseReady() {
           case 'sign-in':
             // Handled by auth.js - do nothing here
             break;
+          case 'share-lists':
+            // Handled by inline-script-01.js - do nothing here
+            break;
           default:
             console.warn(t('unknown_data_action') + ':', action);
         }

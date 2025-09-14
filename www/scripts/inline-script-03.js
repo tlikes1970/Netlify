@@ -149,6 +149,12 @@
         }
         
         console.log('🔧 Found data-action element:', btn.dataset.action);
+        console.log('🔧 Button element details:', {
+          id: btn.id,
+          className: btn.className,
+          textContent: btn.textContent?.trim(),
+          dataset: btn.dataset
+        });
         
         // Handle episode tracking action
         if (btn.dataset.action === "track-episodes") {
@@ -173,6 +179,30 @@
           return;
         }
         
+        // Handle share lists action
+        if (btn.dataset.action === "share-lists") {
+          e.preventDefault();
+          e.stopPropagation(); // Prevent other handlers from running
+          console.log('🔗 Opening share selection modal from inline-script-03.js');
+          console.log('🔗 Button element:', btn);
+          console.log('🔗 Button ID:', btn.id);
+          console.log('🔗 Button classes:', btn.className);
+          
+          if (typeof window.openShareSelectionModal === 'function') {
+            try {
+              console.log('🔗 Calling openShareSelectionModal with event:', e);
+              window.openShareSelectionModal(e);
+              console.log('🔗 Share modal function called successfully');
+            } catch (error) {
+              console.error('🔗 Error calling share modal:', error);
+            }
+          } else {
+            console.warn('🔗 Share modal function not available');
+            console.log('🔗 Available functions:', Object.keys(window).filter(k => k.includes('share')));
+          }
+          return;
+        }
+        
         const action = btn.getAttribute("data-action");
         const id = Number(btn.getAttribute("data-id"));
         const mediaType = btn.getAttribute("data-media-type");
@@ -191,6 +221,7 @@
         } else if (action === "dislike") {
           setLikeStatus(id, "dislike");
         } else if (action === "open") {
+          console.log('🔗 Poster button clicked:', { id, mediaType, button: btn });
           openTMDBLink(id, mediaType);
         } else if (action === "toggle-menu") {
           // Toggle 3-dots menu

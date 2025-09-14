@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v23.53-QUOTE-BAR-STANDARDIZATION</title>
+    <title>Flicklet - TV & Movie Tracker v23.71-POSTERS-HOME-PAGE-FIX</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
@@ -109,7 +109,7 @@
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
-            <span class="version-display">v23.53</span>
+            <span class="version-display">v23.74</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
@@ -812,7 +812,7 @@
 
                     <!-- Share Lists -->
                     <div class="settings-control-group">
-                      <button id="shareOpenBtn" class="btn btn--secondary" data-share-title="Flicklet — My List" data-share-url="" title="Share your lists" aria-label="Share your TV and movie lists">
+                      <button id="shareOpenBtn" class="btn btn--secondary" data-action="share-lists" data-share-title="Flicklet — My List" data-share-url="" title="Share your lists" aria-label="Share your TV and movie lists">
                         🔗 <span data-i18n="share_lists">Share Lists</span>
                       </button>
                       <p class="settings-hint" data-i18n="generate_a_shareable_text">Generate a shareable text list of your TV shows and movies to send to friends</p>
@@ -868,7 +868,7 @@
 
                     <!-- Export CSV (Pro) -->
                     <div class="settings-control-group">
-                      <button class="btn" data-pro="required" data-pro-mode="hide" data-pro-feature="export-csv">
+                      <button id="exportCsvBtn" class="btn" data-pro="required" data-pro-mode="disable" data-pro-feature="export-csv" onclick="exportToCSV()">
                         📊 <span data-i18n="export_csv_pro">Export CSV (Pro)</span>
                       </button>
                       <p class="settings-hint" data-i18n="export_your_data_csv">Export your data in CSV format for use in spreadsheets (Pro feature)</p>
@@ -968,62 +968,62 @@
               </div>
 
           <!-- Share Selection Modal -->
-          <div id="shareSelectionModal" class="modal-backdrop" style="display: none;">
-            <div class="modal share-modal" style="max-width: 800px; max-height: 80vh;">
+          <div id="shareSelectionModal" class="modal-backdrop" style="display: none; z-index: 10000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
+            <div class="modal share-modal" style="max-width: 800px; max-height: 80vh; z-index: 10001; position: relative; background: white; border-radius: 8px; padding: 20px; margin: 20px auto; pointer-events: auto;">
               <h3>🔗 <span data-i18n="share_selected">Share Selected Items</span></h3>
               
               <!-- Select All Controls -->
               <div class="select-all-controls card-surface" style="margin-bottom: 20px; padding: 15px;">
                 <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
-                  <label style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="selectAllWatching" />
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto;">
+                    <input type="checkbox" id="selectAllWatching" style="pointer-events: auto; cursor: pointer;" />
                     <strong>📺 <span data-i18n="currently_watching">Currently Watching</span></strong>
                   </label>
-                  <label style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="selectAllWishlist" />
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto;">
+                    <input type="checkbox" id="selectAllWishlist" style="pointer-events: auto; cursor: pointer;" />
                     <strong>📖 <span data-i18n="want_to_watch">Want to Watch</span></strong>
                   </label>
-                  <label style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="selectAllWatched" />
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto;">
+                    <input type="checkbox" id="selectAllWatched" style="pointer-events: auto; cursor: pointer;" />
                     <strong>✅ <span data-i18n="already_watched">Already Watched</span></strong>
                   </label>
-                  <label style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="selectAllEverything" />
-                    <strong>🌟 <span data-i18n="select_all_everything">Select All Everything</span></strong>
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto;">
+                    <input type="checkbox" id="selectAllEverything" style="pointer-events: auto; cursor: pointer;" />
+                    <strong>🌟 <span data-i18n="select_all_everything">Select Everything</span></strong>
                   </label>
                 </div>
               </div>
 
               <!-- Items Lists -->
-              <div class="share-items-container" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
+              <div class="share-items-container" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; pointer-events: auto;">
                 <!-- Currently Watching -->
-                <div class="share-list-section">
-                  <h4>📺 <span data-i18n="currently_watching">Currently Watching</span></h4>
-                  <div id="shareWatchingList" class="share-items-list"></div>
+                <div class="share-list-section" style="margin-bottom: 20px; padding: 10px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                  <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">📺 <span data-i18n="currently_watching">Currently Watching</span></h4>
+                  <div id="shareWatchingList" class="share-items-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
                 </div>
                 
                 <!-- Want to Watch -->
-                <div class="share-list-section">
-                  <h4>📖 <span data-i18n="want_to_watch">Want to Watch</span></h4>
-                  <div id="shareWishlistList" class="share-items-list"></div>
+                <div class="share-list-section" style="margin-bottom: 20px; padding: 10px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                  <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">📖 <span data-i18n="want_to_watch">Want to Watch</span></h4>
+                  <div id="shareWishlistList" class="share-items-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
                 </div>
                 
                 <!-- Already Watched -->
-                <div class="share-list-section">
-                  <h4>✅ <span data-i18n="already_watched">Already Watched</span></h4>
-                  <div id="shareWatchedList" class="share-items-list"></div>
+                <div class="share-list-section" style="margin-bottom: 20px; padding: 10px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                  <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">✅ <span data-i18n="already_watched">Already Watched</span></h4>
+                  <div id="shareWatchedList" class="share-items-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
                 </div>
               </div>
 
                             <!-- Action Buttons -->
-              <div class="modal-actions" style="display: flex; gap: 10px; justify-content: center;">
-                <button id="generateShareLinkBtn" class="btn btn--success" style="display: none;" onclick="generateShareLinkFromSelected()">
+              <div class="modal-actions" style="display: flex; gap: 10px; justify-content: center; pointer-events: auto;">
+                <button id="generateShareLinkBtn" class="btn btn--success" style="display: none; pointer-events: auto; cursor: pointer;" onclick="generateShareLinkFromSelected()">
                   📋 <span data-i18n="generate_share_link">Select what to share</span>
                 </button>
-                <button id="copyShareBtn" class="btn btn--primary" style="display: none;" onclick="copyShareList()">
+                <button id="copyShareBtn" class="btn btn--primary" style="display: none; pointer-events: auto; cursor: pointer;" onclick="copyShareList()">
                   📋 Copy
                 </button>
-                <button id="closeShareModalBtn" class="btn btn--secondary">
+                <button id="closeShareModalBtn" class="btn btn--secondary" style="pointer-events: auto; cursor: pointer;" onclick="closeShareSelectionModal()">
                   ✖️ <span data-i18n="close">Close</span>
                 </button>
               </div>
@@ -1233,7 +1233,7 @@
         });
       }
       
-      // Initialize Quote Bar
+      // Initialize Quote Bar with Enhanced Quotes System
       function initQuoteBar() {
         const quoteBar = document.getElementById('quote-bar');
         if (!quoteBar) return;
@@ -1242,33 +1242,54 @@
         quoteBar.setAttribute('data-state', 'loading');
         quoteBar.style.display = 'block';
         
-        const quotes = [
-          "The best way to predict the future is to create it. - Peter Drucker",
-          "Life is what happens to you while you're busy making other plans. - John Lennon", 
-          "The only way to do great work is to love what you do. - Steve Jobs",
-          "Innovation distinguishes between a leader and a follower. - Steve Jobs",
-          "Your time is limited, don't waste it living someone else's life. - Steve Jobs",
-          "Stay hungry, stay foolish. - Steve Jobs",
-          "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
-          "It is during our darkest moments that we must focus to see the light. - Aristotle"
-        ];
-        
-        // Simulate loading delay to prevent layout shift
-        setTimeout(() => {
-          const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-          const quoteText = document.getElementById('quoteText');
-          if (quoteText) {
-            quoteText.textContent = randomQuote;
-            quoteBar.setAttribute('data-state', 'loaded');
-            
-            // Add smooth transition
-            quoteBar.style.opacity = '0';
-            requestAnimationFrame(() => {
-              quoteBar.style.transition = 'opacity 0.3s ease';
-              quoteBar.style.opacity = '1';
-            });
+        // Wait for enhanced quotes system to load, then initialize
+        const waitForEnhancedQuotes = () => {
+          if (window.QuotesEnhanced && typeof window.QuotesEnhanced.drawQuote === 'function') {
+            // Enhanced quotes system is ready
+            const quote = window.QuotesEnhanced.drawQuote();
+            const quoteText = document.getElementById('quoteText');
+            if (quoteText) {
+              quoteText.textContent = quote;
+              quoteBar.setAttribute('data-state', 'loaded');
+              
+              // Add smooth transition
+              quoteBar.style.opacity = '0';
+              requestAnimationFrame(() => {
+                quoteBar.style.transition = 'opacity 0.3s ease';
+                quoteBar.style.opacity = '1';
+              });
+            }
+          } else {
+            // Fallback to basic quotes if enhanced system not ready
+            const basicQuotes = [
+              "The best way to predict the future is to create it. - Peter Drucker",
+              "Life is what happens to you while you're busy making other plans. - John Lennon", 
+              "The only way to do great work is to love what you do. - Steve Jobs",
+              "Innovation distinguishes between a leader and a follower. - Steve Jobs",
+              "Your time is limited, don't waste it living someone else's life. - Steve Jobs",
+              "Stay hungry, stay foolish. - Steve Jobs",
+              "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
+              "It is during our darkest moments that we must focus to see the light. - Aristotle"
+            ];
+            const quote = basicQuotes[Math.floor(Math.random() * basicQuotes.length)];
+            const quoteText = document.getElementById('quoteText');
+            if (quoteText) {
+              quoteText.textContent = quote;
+              quoteBar.setAttribute('data-state', 'loaded');
+              
+              // Add smooth transition
+              quoteBar.style.opacity = '0';
+              requestAnimationFrame(() => {
+                quoteBar.style.transition = 'opacity 0.3s ease';
+                quoteBar.style.opacity = '1';
+              });
+            }
           }
-        }, 100);
+        };
+        
+        // Try immediately, then retry after a short delay if needed
+        waitForEnhancedQuotes();
+        setTimeout(waitForEnhancedQuotes, 500);
       }
       
       // Disable Auto-Inject Systems
@@ -1523,6 +1544,30 @@
     <script src="scripts/inline-script-01.js"></script>
     <script src="scripts/inline-script-02.js"></script>
     <script src="scripts/inline-script-03.js"></script>
+    
+    <!-- Global Card Actions System -->
+    <script src="scripts/card-actions.js"></script>
+    
+    <!-- CSV Export System -->
+    <script src="scripts/export-csv.js"></script>
+    
+    <!-- Enhanced Share System -->
+    <script src="scripts/share-enhanced.js"></script>
+    
+    <!-- Pro Preview System -->
+    <script src="scripts/pro-preview.js"></script>
+    
+    <!-- Notifications Test System -->
+    <script src="scripts/notifications-test.js"></script>
+    
+    <!-- Enhanced Quotes System -->
+    <script src="scripts/quotes-enhanced.js"></script>
+    
+    <!-- Settings Tie-ins System -->
+    <script src="scripts/settings-tie-ins.js"></script>
+    
+    <!-- Community Player System -->
+    <script src="scripts/community-player.js"></script>
     <script src="scripts/episode-tracking.js"></script>
     
     <!-- Community Games -->

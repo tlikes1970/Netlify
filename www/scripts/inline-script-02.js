@@ -1823,9 +1823,28 @@
         modal.style.display = 'flex';
         console.log('✅ Modal displayed');
         
+        // Debug: Check if close button exists
+        const closeBtn = document.getElementById('closeShareModalBtn');
+        console.log('🔍 Close button found:', !!closeBtn);
+        if (closeBtn) {
+          console.log('🔍 Close button element:', closeBtn);
+          console.log('🔍 Close button onclick:', closeBtn.onclick);
+          console.log('🔍 Close button event listeners:', closeBtn.onclick ? 'has onclick' : 'no onclick');
+          
+          // Add direct event listener as backup
+          closeBtn.addEventListener('click', (e) => {
+            console.log('🔴 Close button clicked via direct listener in modal open');
+            e.preventDefault();
+            e.stopPropagation();
+            closeShareSelectionModal();
+          });
+          console.log('✅ Direct close button listener added');
+        }
+        
         // Add click outside to close functionality
         modal.onclick = function(e) {
           if (e.target === modal) {
+            console.log('🔴 Clicked outside modal, closing');
             closeShareSelectionModal();
           }
         };
@@ -1842,7 +1861,7 @@
         window.openShareSelectionModal = function (origin) {
           // Is this an explicit click on the Share button?
           const isUserClick =
-            (origin && origin.target && origin.target.closest?.('#shareListBtn')) ||
+            (origin && origin.target && origin.target.closest?.('#shareOpenBtn')) ||
             (typeof origin === 'string' && /^(user|btn)$/i.test(origin));
 
           // Never auto-open while in Settings unless user clicked the Share button
@@ -2070,6 +2089,9 @@
         
         container.innerHTML = '';
         dataSource.notInterested.forEach((item, index) => {
+          // Debug: Log the item data being displayed
+          console.log('🔧 Displaying not interested item:', item);
+          
           const itemDiv = document.createElement('div');
           itemDiv.className = 'not-interested-item';
           itemDiv.style.cssText = `
@@ -2085,11 +2107,24 @@
           
           const dateAdded = new Date(item.dateAdded).toLocaleDateString();
           
+          // Use the getPosterUrl utility if available, otherwise fall back to stored data
+          const posterUrl = window.getPosterUrl ? 
+            window.getPosterUrl(item, 'w200') : 
+            (item.poster_src || (item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : null));
+          
+          const posterHtml = posterUrl && !posterUrl.includes('placeholder') ? 
+            `<img src="${posterUrl}" alt="${item.title}" style="width: 40px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 12px;">` :
+            `<div style="width: 40px; height: 60px; background: var(--bg-secondary); border-radius: 4px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: var(--text-secondary);">${item.mediaType === 'tv' ? '📺' : '🎬'}</div>`;
+          
           itemDiv.innerHTML = `
-            <div>
-              <div style="font-weight: 500; margin-bottom: 4px;">${item.title}</div>
-              <div style="font-size: 0.85rem; color: var(--text-secondary);">
-                ${item.mediaType === 'tv' ? '📺 TV Series' : '🎬 Movie'} • Added ${dateAdded}
+            <div style="display: flex; align-items: center; flex: 1;">
+              ${posterHtml}
+              <div>
+                <div style="font-weight: 500; margin-bottom: 4px;">${item.title || item.id}</div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                  ${item.mediaType === 'tv' ? '📺 TV Series' : '🎬 Movie'}${item.year ? ` • ${item.year}` : ''} • Added ${dateAdded}
+                </div>
+                ${item.overview ? `<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.overview}</div>` : ''}
               </div>
             </div>
             <button class="btn danger" onclick="removeFromNotInterested(${index})" style="padding: 6px 12px; font-size: 0.85rem;">
@@ -2649,9 +2684,14 @@
 
 
       function closeShareSelectionModal() {
+        console.log('🔴 closeShareSelectionModal called');
         const modal = document.getElementById('shareSelectionModal');
         if (modal) {
+          console.log('🔴 Closing share modal');
           modal.style.display = 'none';
+          modal.classList.remove('active');
+        } else {
+          console.log('🔴 Share modal not found');
         }
       }
       
@@ -2880,7 +2920,7 @@
           window.tmdbSrcset(item.poster_path) : '';
         
         const posterHtml = posterUrl
-          ? `<button class="poster-button" data-action="open" data-id="${item.id}" data-media-type="${mediaType}" aria-label="Open on TMDB"><img class="show-poster" src="${posterUrl}" ${srcset ? `srcset="${srcset}"` : ''} sizes="(max-width: 480px) 148px, 200px" alt="${escapeHtml(title)}" loading="lazy"></button>`
+          ? `<button class="poster-button" data-action="open" data-id="${item.id}" data-media-type="${mediaType}" aria-label="Open on TMDB"><img class="show-poster" src="${posterUrl}" ${srcset ? `srcset="${srcset}"` : ''} sizes="(max-width: 480px) 148px, 200px" alt="${escapeHtml(title)}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\"poster-placeholder\\">${t("no_image")}</div>';"></button>`
           : `<button class="poster-button" data-action="open" data-id="${item.id}" data-media-type="${mediaType}" aria-label="Open on TMDB"><div class="poster-placeholder">${t("no_image")}</div></button>`;
 
         const runtimeMinutes =
@@ -2900,7 +2940,7 @@
           <button class="btn" data-action='add' data-id='${Number(item.id)}' data-list='wishlist'>📖 ${t("want_to_watch")}</button>
           <button class="btn" data-action='add' data-id='${Number(item.id)}' data-list='watched'>✅ ${t("already_watched")}</button>
           ${mediaType === "tv" ? `<button class="btn secondary" data-action="track-episodes" data-id="${item.id}" data-title="${escapeHtml(title)}" style="display: ${isEpisodeTrackingEnabled() ? 'inline-block' : 'none'};">📺 Track Episodes</button>` : ""}
-          <button class="btn danger" data-action='notInterested' data-id='${Number(item.id)}' data-media-type='${mediaType}'>🚫 ${t('not_interested')}</button>
+          <button class="btn danger" data-action='not-interested' data-id='${Number(item.id)}' data-media-type='${mediaType}' data-source-list='search'>🚫 ${t('not_interested')}</button>
         </div>`;
         } else {
           // Use search result card style for regular cards but preserve all functionality
@@ -2923,6 +2963,7 @@
             return `<button class="btn secondary" data-action="track-episodes" data-id="${item.id}" data-title="${escapeHtml(title)}" style="display: ${enabled ? 'inline-block' : 'none'};">📺 Track Episodes</button>`;
           })() : ""}
           <button class="btn" data-action="notes" data-id="${item.id}">✎ ${t("notes_tags")}</button>
+          <button class="btn danger" data-action="not-interested" data-id="${item.id}" data-media-type="${mediaType}" data-source-list="${activeTab}">🚫 ${t('not_interested')}</button>
           <button class="btn danger" data-action="remove" data-id="${item.id}">🗑️ ${t("remove")}</button>
         </div>
         
@@ -2987,7 +3028,42 @@
       }
 
       function openTMDBLink(id, type) {
-        window.open(`https://www.themoviedb.org/${type}/${id}`, "_blank");
+        console.log('🔗 Opening TMDB link:', { id, type, url: `https://www.themoviedb.org/${type}/${id}` });
+        
+        try {
+          // Validate inputs
+          if (!id || !type) {
+            console.error('❌ Invalid parameters for openTMDBLink:', { id, type });
+            showNotification('Error: Invalid item data', 'error');
+            return;
+          }
+          
+          // Validate media type
+          if (!['movie', 'tv'].includes(type)) {
+            console.error('❌ Invalid media type:', type);
+            showNotification('Error: Invalid media type', 'error');
+            return;
+          }
+          
+          // Open TMDB link
+          const url = `https://www.themoviedb.org/${type}/${id}`;
+          const newWindow = window.open(url, "_blank", "noopener,noreferrer");
+          
+          if (!newWindow) {
+            console.warn('⚠️ Popup blocked, trying alternative method');
+            showNotification('Popup blocked. Please allow popups for this site.', 'warning');
+            // Fallback: try to navigate in same tab
+            if (confirm('Popup was blocked. Open TMDB in this tab instead?')) {
+              window.location.href = url;
+            }
+          } else {
+            console.log('✅ TMDB link opened successfully');
+            showNotification(`Opening ${type === 'tv' ? 'TV show' : 'movie'} on TMDB`, 'success');
+          }
+        } catch (error) {
+          console.error('❌ Error opening TMDB link:', error);
+          showNotification('Error opening TMDB link', 'error');
+        }
       }
 
       // Helper function to check if episode tracking is enabled
@@ -4369,7 +4445,7 @@
         
         // Make functions globally accessible
         window.pickDailyHoroscope = pickDailyHoroscope;
-        window.drawQuote = drawQuote;
+        // Disabled: window.drawQuote = drawQuote; // Disabled to prevent conflicts with enhanced quotes system
 
         // ---------- Quotes (deck‑based, no repeats until exhausted) ----------
         function getQuoteDeck() {

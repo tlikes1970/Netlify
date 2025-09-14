@@ -479,8 +479,16 @@
           }
         ],
         onOpenDetails: () => {
-          // Handle opening details
-          console.log('Open details for:', title);
+          console.log('🔗 Currently watching Card v2 openDetails called:', item);
+          const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+          const id = item.id || item.tmdb_id || item.tmdbId;
+          
+          if (id && typeof window.openTMDBLink === 'function') {
+            console.log('🔗 Calling openTMDBLink from currently watching Card v2:', { id, mediaType });
+            window.openTMDBLink(id, mediaType);
+          } else {
+            console.warn('⚠️ openTMDBLink function not available or no ID found');
+          }
         }
       });
     }

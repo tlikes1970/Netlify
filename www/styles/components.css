@@ -5153,7 +5153,7 @@ body[data-theme="forest"] {
   position:fixed;
   inset:auto 16px max(16px, env(safe-area-inset-bottom)) 16px;
   display:grid; gap:8px;
-  z-index:9999;
+  z-index:99999;
   pointer-events:none; /* clicks pass through unless on toast */
 }
 @media (min-width:769px){

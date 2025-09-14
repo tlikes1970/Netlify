@@ -326,12 +326,24 @@
    */
   function openDetails(item) {
     try {
-      if (window.openDetails) {
-        window.openDetails(item);
-      } else if (window.showDetails) {
-        window.showDetails(item);
+      console.log('🔗 Card v2 openDetails called:', item);
+      
+      // Extract media type and ID for TMDB link
+      const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+      const id = item.id || item.tmdb_id || item.tmdbId;
+      
+      if (!id) {
+        console.error('❌ No ID found for item:', item);
+        return;
+      }
+      
+      // Use our enhanced openTMDBLink function
+      if (typeof window.openTMDBLink === 'function') {
+        console.log('🔗 Calling openTMDBLink from Card v2:', { id, mediaType });
+        window.openTMDBLink(id, mediaType);
       } else {
-        console.warn('No openDetails function available');
+        console.warn('⚠️ openTMDBLink function not available, falling back to window.open');
+        window.open(`https://www.themoviedb.org/${mediaType}/${id}`, "_blank");
       }
     } catch (error) {
       console.error('❌ Failed to open details:', error);

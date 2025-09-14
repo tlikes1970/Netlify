@@ -771,8 +771,17 @@
               console.log('👎 Calling setLikeStatus');
               setLikeStatus(id, "dislike");
             } else if (action === "open") {
-              console.log('🔗 Calling openTMDBLink');
+              console.log('🔗 Calling openTMDBLink from inline-script-01.js:', { id, mediaType, button: btn });
               openTMDBLink(id, mediaType);
+            } else if (action === "share-lists") {
+              console.log('🔗 Calling openShareSelectionModal from event delegation');
+              e.preventDefault();
+              e.stopPropagation();
+              if (typeof window.openShareSelectionModal === 'function') {
+                window.openShareSelectionModal(e);
+              } else {
+                console.error('❌ openShareSelectionModal function not found!');
+              }
             }
           });
           
@@ -788,12 +797,24 @@
         console.log('  - closeShareSelectionModal:', typeof closeShareSelectionModal);
         
         try {
-          // Only bind non-share buttons to avoid conflicts
+          // Bind all share-related buttons
+          bind("shareOpenBtn", openShareSelectionModal);
           bind("generateShareLinkBtn", generateShareLinkFromSelected);
-          bind("closeShareModalBtn", closeShareSelectionModal);
+          bind("closeShareModalBtn", () => {
+            console.log('🔴 Close button clicked');
+            closeShareSelectionModal();
+          });
           console.log('✅ Share button bindings set up');
           
           // Also add direct event listeners as backup
+          const closeBtn = document.getElementById('closeShareModalBtn');
+          if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+              console.log('🔴 Close button clicked via direct listener');
+              closeShareSelectionModal();
+            });
+          }
+          
           const generateBtn = document.getElementById('generateShareLinkBtn');
           if (generateBtn) {
             // Remove any existing listeners first
@@ -805,8 +826,30 @@
           console.error('❌ Error setting up share button bindings:', error);
         }
         
-        // Skip adding direct event listener to share button - let the safety-checked version handle it
-        console.log('🔗 Skipping direct share button binding - using safety-checked version');
+        // Add direct event listener as backup for share button
+        try {
+          const shareBtn = document.getElementById('shareOpenBtn');
+          if (shareBtn) {
+            console.log('🔗 Adding direct event listener to share button');
+            shareBtn.addEventListener('click', (e) => {
+              console.log('🔗 Share button clicked!', e);
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('🔗 openShareSelectionModal function exists:', typeof window.openShareSelectionModal);
+              if (typeof window.openShareSelectionModal === 'function') {
+                console.log('🔗 Calling openShareSelectionModal...');
+                window.openShareSelectionModal(e);
+              } else {
+                console.error('❌ openShareSelectionModal function not found!');
+              }
+            });
+            console.log('✅ Direct event listener added to share button');
+          } else {
+            console.error('❌ Share button not found for direct binding');
+          }
+        } catch (error) {
+          console.error('❌ Error setting up direct share button listener:', error);
+        }
         
         // Debug: Check all elements with 'share' in the ID
         const allElements = document.querySelectorAll('[id*="share"]');
@@ -890,7 +933,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 10000;
+            z-index: 99999;
             padding: 16px 24px;
             border-radius: 12px;
             color: white;
@@ -2159,7 +2202,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 10000;
+            z-index: 99999;
           `;
           
           const modalContent = document.createElement('div');
@@ -2580,8 +2623,8 @@
   // Run immediately and on any tab change
   forceCloseShareModal();
   
-  // Also run periodically as a safety net (less frequently)
-  setInterval(forceCloseShareModal, 5000);
+  // Disabled periodic safety net - too aggressive for user interactions
+  // setInterval(forceCloseShareModal, 5000);
 })();
 
 // === MP-ShareModalSanity (guarded) ===

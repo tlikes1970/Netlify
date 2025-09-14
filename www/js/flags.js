@@ -27,6 +27,7 @@ window.FLAGS = Object.assign({
           homeRowSpotlight: true,                     // Community Spotlight row
           homeRowPlayAlong: true,                     // Play Along row (Trivia & FlickWord)
           homeRowFeedback: true,                      // Feedback Tile row
+          communityPlayer: true,                      // Community player placeholder
 }, window.FLAGS || {});
 
 window.guard = (cond, fn) => { 
