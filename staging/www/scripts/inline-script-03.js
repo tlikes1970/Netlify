@@ -32,27 +32,36 @@
         FlickletDebug.info('🔧 All settings tabs found:', document.querySelectorAll('.settings-tabs button').length);
         
         // Handle dark mode button specifically
-        if (e.target.id === 'themeIcon' || e.target.id === 'darkModeToggle') {
-          FlickletDebug.info('🌙 Dark mode button clicked via event delegation');
+        if (e.target.id === 'themeIcon' || e.target.id === 'darkModeToggle' || e.target.id === 'themeToggleBtn' || e.target.id === 'themeToggleIcon' || e.target.id === 'themeToggleText') {
+          FlickletDebug.info('🌙 Theme toggle button clicked via event delegation');
           e.preventDefault();
           e.stopPropagation();
 
           // Toggle dark mode directly
-          document.body.classList.toggle("dark-mode");
+          const isDark = document.body.classList.toggle("dark-mode");
           
           // Update app data
           if (window.appData?.settings) {
-            appData.settings.theme = document.body.classList.contains("dark-mode") ? "dark" : "light";
+            appData.settings.theme = isDark ? "dark" : "light";
             if (typeof saveAppData === 'function') {
               saveAppData();
             }
           }
           
-          // Update button icon
+          // Update FAB theme icon
           const themeIcon = document.getElementById('themeIcon');
           if (themeIcon) {
-            const isDark = document.body.classList.contains("dark-mode");
             themeIcon.textContent = isDark ? '☀️' : '🌙';
+          }
+          
+          // Update settings theme toggle button
+          const themeToggleIcon = document.getElementById('themeToggleIcon');
+          const themeToggleText = document.getElementById('themeToggleText');
+          if (themeToggleIcon) {
+            themeToggleIcon.textContent = isDark ? '☀️' : '🌙';
+          }
+          if (themeToggleText) {
+            themeToggleText.textContent = isDark ? 'Light Mode' : 'Dark Mode';
           }
           
           // Show notification

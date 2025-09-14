@@ -1,9 +1,0 @@
-[build]
-publish = "www"
-functions = "netlify/functions"
-command = "echo 'Static site - no build required'"
-
-[[redirects]]
-from = "/api/*"
-to = "/.netlify/functions/:splat"
-status = 200

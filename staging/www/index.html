@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v23.65-IMG-SRCSET-FINAL</title>
+    <title>Flicklet - TV & Movie Tracker v23.53-QUOTE-BAR-STANDARDIZATION</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="styles/main.css?v=v17.9">
     <link rel="stylesheet" href="styles/consolidated-layout.css?v=v17.9">
     <link rel="stylesheet" href="styles/action-bar.css?v=v22.21">
+    <link rel="stylesheet" href="styles/card-system.css?v=v23.53">
 
     <!-- Feature flags and safety guard -->
     <script src="js/flags.js"></script>
@@ -108,7 +109,7 @@
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
-            <span class="version-display">v23.65</span>
+            <span class="version-display">v23.53</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
@@ -205,7 +206,7 @@
               <span class="icon" aria-hidden="true">🔍</span>
               <span class="label" data-i18n="search">Search</span>
             </button>
-            <button id="clearSearchBtn" class="btn secondary clear-search-btn search-area-clear" aria-label="Clear search results">
+            <button id="clearSearchBtn" class="btn btn--secondary clear-search-btn search-area-clear" aria-label="Clear search results">
               <span class="icon" aria-hidden="true">✖️</span>
               <span class="label" data-i18n="clear">Clear</span>
             </button>
@@ -245,7 +246,7 @@
       <!-- Home - Immovable Layout Contract -->
       <div id="homeSection" class="tab-section active">
         <!-- Quote Bar - Hard-baked between Sticky Search and Group 1 -->
-        <div id="quote-bar" class="quote-bar" role="region" aria-label="Quote of the moment" style="display: none;">
+        <div id="quote-bar" class="quote-bar" role="region" aria-label="Quote of the moment" data-state="loading" style="display: none;">
           <div class="quote-marquee">
             <span class="quote-text" id="quoteText" data-i18n="loading_inspirational_quote">Loading inspirational quote...</span>
           </div>
@@ -312,34 +313,66 @@
             <!-- Right: Game Cards Section -->
             <div class="community-right">
               <section id="home-games" class="home-games">
-                <article class="game-card" id="flickwordTile" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="modal-flickword">
-                  <div class="gc-bg"></div>
-                  <div class="gc-head">
-                    <div class="gc-icon" aria-hidden="true">🎯</div>
-                    <h3 class="gc-title" data-i18n="flickword">FlickWord</h3>
-                    <p class="gc-tagline" data-i18n="flickword_tagline">Wordle-style daily word play</p>
+                <article class="card card--game" id="flickwordTile" data-module="flickword" role="region" tabindex="0" aria-haspopup="dialog" aria-controls="modal-flickword" aria-labelledby="flickword-title">
+                  <div class="card__header">
+                    <h3 class="card__title" id="flickword-title" data-i18n="flickword">🎯 FlickWord</h3>
+                    <div class="card__tools">
+                      <div class="game-stats">
+                        <div class="stat-item">
+                          <span class="stat-label" data-i18n="streak">Streak</span>
+                          <span class="stat-value" data-fw-streak>0</span>
+                        </div>
+                        <div class="stat-item">
+                          <span class="stat-label" data-i18n="best">Best</span>
+                          <span class="stat-value" data-fw-best>0</span>
+                        </div>
+                        <div class="stat-item">
+                          <span class="stat-label" data-i18n="win_percent">Win %</span>
+                          <span class="stat-value" data-fw-win>—</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="gc-stats">
-                    <div><span class="gc-stat-label" data-i18n="streak">Streak</span><span class="gc-stat-val" data-fw-streak>0</span></div>
-                    <div><span class="gc-stat-label" data-i18n="best">Best</span><span class="gc-stat-val" data-fw-best>0</span></div>
-                    <div><span class="gc-stat-label" data-i18n="win_percent">Win %</span><span class="gc-stat-val" data-fw-win>—</span></div>
+                  
+                  <div class="card__body card__body--scroll">
+                    <p class="card__description" data-i18n="flickword_tagline">Wordle-style daily word play</p>
+                    <div aria-live="polite" class="sr-only" data-status-live></div>
                   </div>
-                  <button class="gc-cta" type="button" data-i18n="play_now">Play Now</button>
+                  
+                  <div class="card__actions">
+                    <button class="btn btn--primary" data-action="start-flickword" data-i18n="play_now">Play Now</button>
+                  </div>
                 </article>
 
-                <article class="game-card" id="triviaTile" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="modal-trivia">
-                  <div class="gc-bg"></div>
-                  <div class="gc-head">
-                    <div class="gc-icon" aria-hidden="true">🧠</div>
-                    <h3 class="gc-title" data-i18n="daily_trivia">Daily Trivia</h3>
-                    <p class="gc-tagline" data-i18n="daily_trivia_tagline">Fresh question, new bragging rights</p>
+                <article class="card card--game" id="triviaTile" data-module="trivia" role="region" tabindex="0" aria-haspopup="dialog" aria-controls="modal-trivia" aria-labelledby="trivia-title">
+                  <div class="card__header">
+                    <h3 class="card__title" id="trivia-title" data-i18n="daily_trivia">🧠 Daily Trivia</h3>
+                    <div class="card__tools">
+                      <div class="game-stats">
+                        <div class="stat-item">
+                          <span class="stat-label" data-i18n="streak">Streak</span>
+                          <span class="stat-value" data-tv-streak>1</span>
+                        </div>
+                        <div class="stat-item">
+                          <span class="stat-label" data-i18n="best">Best</span>
+                          <span class="stat-value" data-tv-best>5</span>
+                        </div>
+                        <div class="stat-item">
+                          <span class="stat-label" data-i18n="accuracy">Accuracy</span>
+                          <span class="stat-value" data-tv-acc>—</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="gc-stats">
-                    <div><span class="gc-stat-label" data-i18n="streak">Streak</span><span class="gc-stat-val" data-tv-streak>1</span></div>
-                    <div><span class="gc-stat-label" data-i18n="best">Best</span><span class="gc-stat-val" data-tv-best>5</span></div>
-                    <div><span class="gc-stat-label" data-i18n="accuracy">Accuracy</span><span class="gc-stat-val" data-tv-acc>—</span></div>
+                  
+                  <div class="card__body card__body--scroll">
+                    <p class="card__description" data-i18n="daily_trivia_tagline">Fresh question, new bragging rights</p>
+                    <div aria-live="polite" class="sr-only" data-status-live></div>
                   </div>
-                  <button class="gc-cta" type="button" data-i18n="play_now">Play Now</button>
+                  
+                  <div class="card__actions">
+                    <button class="btn btn--primary" data-action="start-trivia" data-i18n="play_now">Play Now</button>
+                  </div>
                 </article>
               </section>
             </div>
@@ -418,16 +451,16 @@
               <div class="feedback-content">
                 <div class="feedback-card">
                   <div class="feedback-actions">
-                    <button class="btn primary" onclick="openSettingsToFeedback()" data-i18n="report_bug">
+                    <button class="btn btn--primary" onclick="openSettingsToFeedback()" data-i18n="report_bug">
                       🐛 Report a Bug
                     </button>
-                    <button class="btn secondary" onclick="openSettingsToFeedback()" data-i18n="suggest_feature">
+                    <button class="btn btn--secondary" onclick="openSettingsToFeedback()" data-i18n="suggest_feature">
                       💡 Suggest a Feature
                     </button>
-                    <button class="btn secondary" onclick="openSettingsToFeedback()" data-i18n="general_feedback">
+                    <button class="btn btn--secondary" onclick="openSettingsToFeedback()" data-i18n="general_feedback">
                       💬 General Feedback
                     </button>
-                    <button class="btn secondary" onclick="openSettingsToFeedback()" data-i18n="submit_video">
+                    <button class="btn btn--secondary" onclick="openSettingsToFeedback()" data-i18n="submit_video">
                       📹 Submit Video
                     </button>
                   </div>
@@ -516,7 +549,7 @@
                           class="settings-input"
                           placeholder="Enter your name"
                         />
-                        <button id="saveNameBtn" class="btn primary" onclick="saveDisplayName()">
+                        <button id="saveNameBtn" class="btn btn--primary" onclick="saveDisplayName()">
                           💾 <span data-i18n="save">Save</span>
                         </button>
                       </div>
@@ -656,13 +689,18 @@
                       <p class="settings-hint" data-i18n="display_poster_images">Display poster images for each show and movie in your lists</p>
                     </div>
 
-                    <!-- Dark Mode -->
+                    <!-- Theme Toggle -->
                     <div class="settings-control-group">
-                      <label class="settings-checkbox-label">
-                        <input type="checkbox" id="darkMode" class="settings-checkbox" />
-                        <span class="settings-checkbox-text" data-i18n="dark_mode">Dark mode (auto-detect system preference)</span>
-                      </label>
-                      <p class="settings-hint" data-i18n="switch_to_dark_theme">Switch to dark theme. When enabled, follows your system's dark/light mode preference</p>
+                      <div class="settings-toggle-group">
+                        <label class="settings-label" data-i18n="theme_preference">Theme Preference</label>
+                        <div class="theme-toggle-container">
+                          <button id="themeToggleBtn" class="btn btn--secondary theme-toggle-btn" data-action="toggle-theme">
+                            <span id="themeToggleIcon">🌙</span>
+                            <span id="themeToggleText" data-i18n="dark_mode">Dark Mode</span>
+                          </button>
+                          <p class="settings-hint" data-i18n="theme_toggle_hint">Click to switch between light and dark themes</p>
+                        </div>
+                      </div>
                     </div>
 
                     <!-- Home Page Lists Count -->
@@ -704,12 +742,20 @@
                     </div>
 
                     <!-- Episode Tracking Toggle -->
-                    <div class="settings-control-group">
-                      <label class="settings-checkbox-label">
-                        <input type="checkbox" id="enableEpisodeTracking" class="settings-checkbox" />
-                        <span class="settings-checkbox-text" data-i18n="enable_episode_tracking">Enable Episode Tracking</span>
-                      </label>
-                      <p class="settings-hint" data-i18n="allow_tracking_of_individual">Allow tracking of individual episodes for TV series (opt-in per series)</p>
+                    <div class="settings-control-group settings-control-group--feature">
+                      <div class="settings-feature-card">
+                        <div class="settings-feature-header">
+                          <label class="settings-checkbox-label settings-checkbox-label--feature">
+                            <input type="checkbox" id="enableEpisodeTracking" class="settings-checkbox settings-checkbox--feature" />
+                            <span class="settings-checkbox-text settings-checkbox-text--feature" data-i18n="enable_episode_tracking">🎬 Enable Episode Tracking</span>
+                          </label>
+                          <div class="settings-feature-badge" data-i18n="recommended">Recommended</div>
+                        </div>
+                        <p class="settings-hint settings-hint--feature" data-i18n="allow_tracking_of_individual">Track individual episodes for TV series with detailed progress monitoring (opt-in per series)</p>
+                        <div class="settings-feature-details">
+                          <p class="settings-feature-benefit" data-i18n="episode_tracking_benefits">• Track your progress through each season<br>• Get notifications for new episodes<br>• See detailed watching statistics</p>
+                        </div>
+                      </div>
                     </div>
 
                   </div>
@@ -749,7 +795,7 @@
                     
                     <!-- Export JSON -->
                     <div class="settings-control-group">
-                      <button id="exportBtn" class="btn secondary" aria-label="Export data to JSON">
+                      <button id="exportBtn" class="btn btn--secondary" aria-label="Export data to JSON">
                         📤 <span data-i18n="export_json">Export JSON</span>
                       </button>
                       <p class="settings-hint" data-i18n="download_a_complete_backup">Download a complete backup of your lists and settings as a JSON file</p>
@@ -758,7 +804,7 @@
                     <!-- Import JSON -->
                     <div class="settings-control-group">
                       <input type="file" id="importInput" accept=".json,application/json" hidden />
-                      <button id="importBtn" class="btn secondary" aria-label="Import data from JSON">
+                      <button id="importBtn" class="btn btn--secondary" aria-label="Import data from JSON">
                         📥 <span data-i18n="import_json">Import JSON</span>
                       </button>
                       <p class="settings-hint" data-i18n="restore_your_data">Restore your data from a previously exported Flicklet backup file</p>
@@ -766,7 +812,7 @@
 
                     <!-- Share Lists -->
                     <div class="settings-control-group">
-                      <button id="shareOpenBtn" class="btn secondary" data-share-title="Flicklet — My List" data-share-url="" title="Share your lists" aria-label="Share your TV and movie lists">
+                      <button id="shareOpenBtn" class="btn btn--secondary" data-share-title="Flicklet — My List" data-share-url="" title="Share your lists" aria-label="Share your TV and movie lists">
                         🔗 <span data-i18n="share_lists">Share Lists</span>
                       </button>
                       <p class="settings-hint" data-i18n="generate_a_shareable_text">Generate a shareable text list of your TV shows and movies to send to friends</p>
@@ -774,7 +820,7 @@
 
                     <!-- Reset All Data -->
                     <div class="settings-control-group">
-                      <button id="resetBtn" class="btn danger" aria-label="Reset all data (requires confirmation)">
+                      <button id="resetBtn" class="btn btn--danger" aria-label="Reset all data (requires confirmation)">
                         🗑️ <span data-i18n="reset_all_data">Reset All Data</span>
                       </button>
                       <p class="settings-hint" data-i18n="permanently_delete_all">⚠️ Permanently delete all your lists, settings, and data. This cannot be undone.</p>
@@ -806,7 +852,7 @@
                     
                     <!-- Preview Pro Features -->
                     <div class="settings-control-group">
-                      <button id="previewProBtn" class="btn primary" onclick="toggleProPreview()">
+                      <button id="previewProBtn" class="btn btn--primary" onclick="toggleProPreview()">
                         ⭐ <span data-i18n="preview_pro_features">Preview Pro Features</span>
                       </button>
                       <p class="settings-hint" data-i18n="pro_hint">Toggle Pro features on/off to see what's available without purchasing</p>
@@ -912,7 +958,7 @@
                           required
                         ></textarea>
                         <p class="settings-hint">Your feedback helps us improve Flicklet. All messages are read and appreciated!</p>
-                        <button type="submit" class="btn primary">
+                        <button type="submit" class="btn btn--primary">
                           📤 <span data-i18n="share_it">Share It!</span>
                         </button>
                       </div>
@@ -971,13 +1017,13 @@
 
                             <!-- Action Buttons -->
               <div class="modal-actions" style="display: flex; gap: 10px; justify-content: center;">
-                <button id="generateShareLinkBtn" class="btn success" style="display: none;" onclick="generateShareLinkFromSelected()">
+                <button id="generateShareLinkBtn" class="btn btn--success" style="display: none;" onclick="generateShareLinkFromSelected()">
                   📋 <span data-i18n="generate_share_link">Select what to share</span>
                 </button>
-                <button id="copyShareBtn" class="btn primary" style="display: none;" onclick="copyShareList()">
+                <button id="copyShareBtn" class="btn btn--primary" style="display: none;" onclick="copyShareList()">
                   📋 Copy
                 </button>
-                <button id="closeShareModalBtn" class="btn secondary">
+                <button id="closeShareModalBtn" class="btn btn--secondary">
                   ✖️ <span data-i18n="close">Close</span>
                 </button>
               </div>
@@ -1192,6 +1238,10 @@
         const quoteBar = document.getElementById('quote-bar');
         if (!quoteBar) return;
         
+        // Set loading state
+        quoteBar.setAttribute('data-state', 'loading');
+        quoteBar.style.display = 'block';
+        
         const quotes = [
           "The best way to predict the future is to create it. - Peter Drucker",
           "Life is what happens to you while you're busy making other plans. - John Lennon", 
@@ -1203,12 +1253,22 @@
           "It is during our darkest moments that we must focus to see the light. - Aristotle"
         ];
         
-        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-        const quoteText = document.getElementById('quoteText');
-        if (quoteText) {
-          quoteText.textContent = randomQuote;
-          quoteBar.style.display = 'block';
-        }
+        // Simulate loading delay to prevent layout shift
+        setTimeout(() => {
+          const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+          const quoteText = document.getElementById('quoteText');
+          if (quoteText) {
+            quoteText.textContent = randomQuote;
+            quoteBar.setAttribute('data-state', 'loaded');
+            
+            // Add smooth transition
+            quoteBar.style.opacity = '0';
+            requestAnimationFrame(() => {
+              quoteBar.style.transition = 'opacity 0.3s ease';
+              quoteBar.style.opacity = '1';
+            });
+          }
+        }, 100);
       }
       
       // Disable Auto-Inject Systems
@@ -1653,6 +1713,20 @@
           if (modal) closeModal(modal);
         }
       });
+
+      // Handle new data-action buttons
+      document.addEventListener('click', function(event) {
+        const action = event.target.getAttribute('data-action');
+        if (action === 'start-flickword') {
+          event.preventDefault();
+          event.stopPropagation();
+          openModal('modal-flickword');
+        } else if (action === 'start-trivia') {
+          event.preventDefault();
+          event.stopPropagation();
+          openModal('modal-trivia');
+        }
+      });
       
       // Dispatch modal events for other systems to listen to
       const originalOpenModal = openModal;
@@ -1698,7 +1772,7 @@
           const body = modal.querySelector('.gm-body');
           const iframe = body?.querySelector('iframe');
           if (!iframe || !body) return;
-          iframe.style.height = body.clientHeight + 'px';
+          /* Height now managed by card system */
         }
 
         const needsResize = new Set();
@@ -1761,8 +1835,7 @@
         iframe.allow = '';
         iframe.sandbox = 'allow-scripts';
         iframe.style.width = '100%';
-        iframe.style.height = '62vh';
-        iframe.style.minHeight = '420px';
+        /* Height now managed by card system */
         iframe.style.border = 'none';
         iframe.style.borderRadius = '10px';
 
@@ -1850,9 +1923,7 @@
       const body = modal.querySelector('.gm-body');
       if (!body) return;
 
-      // Force a reflow-safe height
-      const h = body.clientHeight;
-      iframeEl.style.height = (h > 0 ? h : 420) + 'px';
+      /* Height now managed by card system - no forced heights */
     }
 
     // Patch FlickWordBridge to use dynamic sizing
@@ -2519,7 +2590,7 @@
           ></iframe>
         </div>
         <div class="modal-actions">
-          <button class="btn secondary" onclick="closeFlickWordModal()">Close Game</button>
+          <button class="btn btn--secondary" onclick="closeFlickWordModal()">Close Game</button>
         </div>
       </div>
     </div>
