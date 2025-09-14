@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase B Verification Test</title>
+    <link rel="stylesheet" href="www/styles/components.css">
+    <link rel="stylesheet" href="www/styles/main.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .test-content {
+            margin: 10px 0;
+        }
+        .tab-section {
+            display: block;
+        }
+        .list-container {
+            background: var(--card);
+            border: 3px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            min-height: 80px;
+            margin: 10px 0;
+        }
+        .show-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 16px;
+        }
+        .show-poster {
+            width: 120px;
+            height: 180px;
+            background: #e0e0e0;
+            border-radius: 4px;
+        }
+        .show-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .show-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+        .show-meta {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+        }
+        .preview-row-scroll {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .preview-card {
+            width: 120px;
+            height: 180px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Phase B Verification Test</h1>
+    
+    <!-- Test 1: Skip Links -->
+    <div class="test-section">
+        <div class="test-title">1. Skip Links Test</div>
+        <div class="test-content">
+            <p>Press Tab to see skip links appear:</p>
+            <a href="#main" class="skip-link">Skip to main content</a>
+            <a href="#search" class="skip-link">Skip to search</a>
+            <a href="#navigation" class="skip-link">Skip to navigation</a>
+        </div>
+    </div>
+    
+    <!-- Test 2: Skeleton Loaders -->
+    <div class="test-section">
+        <div class="test-title">2. Skeleton Loaders Test</div>
+        <div class="test-content">
+            <p>Test skeleton loader animations:</p>
+            <div class="skeleton skeleton-card" style="width: 200px; height: 100px;"></div>
+            <div class="skeleton skeleton-text" style="width: 150px; margin-top: 10px;"></div>
+            <div class="skeleton skeleton-button" style="margin-top: 10px;"></div>
+        </div>
+    </div>
+    
+    <!-- Test 3: Aspect Ratio -->
+    <div class="test-section">
+        <div class="test-title">3. Aspect Ratio Test</div>
+        <div class="test-content">
+            <p>Test aspect ratio enforcement (should maintain 2:3 ratio):</p>
+            <div class="show-poster" style="background: #e0e0e0;"></div>
+        </div>
+    </div>
+    
+    <!-- Test 4: Scroll Indicators -->
+    <div class="test-section">
+        <div class="test-title">4. Scroll Indicators Test</div>
+        <div class="test-content">
+            <p>Test scroll indicators (should show gradients when content overflows):</p>
+            <div class="preview-row-scroll" id="scrollableRow">
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Test 5: Tab Section Vertical Layout -->
+    <div class="test-section">
+        <div class="test-title">5. Tab Section Vertical Layout Test</div>
+        <div class="test-content">
+            <p>Test vertical card layout in tab sections:</p>
+            <div class="tab-section">
+                <div class="list-container">
+                    <div class="show-card">
+                        <div class="show-poster"></div>
+                        <div class="show-details">
+                            <div class="show-title">Test Show 1</div>
+                            <div class="show-meta">Drama • 2023</div>
+                        </div>
+                    </div>
+                    <div class="show-card">
+                        <div class="show-poster"></div>
+                        <div class="show-details">
+                            <div class="show-title">Test Show 2</div>
+                            <div class="show-meta">Comedy • 2024</div>
+                        </div>
+                    </div>
+                    <div class="show-card">
+                        <div class="show-poster"></div>
+                        <div class="show-details">
+                            <div class="show-title">Test Show 3</div>
+                            <div class="show-meta">Action • 2023</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Target elements for skip links -->
+    <div id="main" style="margin-top: 50px; padding: 20px; background: #f0f0f0; border-radius: 4px;">
+        <h2>Main Content Area</h2>
+        <p>This is the main content area that skip links should target.</p>
+    </div>
+    
+    <div id="search" style="margin-top: 20px; padding: 20px; background: #f0f0f0; border-radius: 4px;">
+        <h2>Search Area</h2>
+        <p>This is the search area that skip links should target.</p>
+    </div>
+    
+    <div id="navigation" style="margin-top: 20px; padding: 20px; background: #f0f0f0; border-radius: 4px;">
+        <h2>Navigation Area</h2>
+        <p>This is the navigation area that skip links should target.</p>
+    </div>
+    
+    <script src="www/js/layout-enhancements.js"></script>
+    <script>
+        // Test functions
+        function testScrollIndicators() {
+            const scrollableRow = document.getElementById('scrollableRow');
+            if (window.LayoutEnhancements && window.LayoutEnhancements.ScrollIndicatorManager) {
+                window.LayoutEnhancements.ScrollIndicatorManager.addScrollIndicators(scrollableRow);
+                console.log('Scroll indicators initialized');
+            } else {
+                console.log('Layout enhancements not loaded');
+            }
+        }
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            testScrollIndicators();
+            console.log('Phase B verification test loaded');
+        });
+    </script>
+</body>
+</html>

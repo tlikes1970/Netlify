@@ -1,228 +1,315 @@
-# Test Plan - Core Stabilization Verification
+# Test Plan - TV Tracker v23.83
+
+**Date:** 2025-01-12  
+**Version:** v23.83-CONTRAST-FIX  
+**Purpose:** Comprehensive testing strategy for Phase B implementation
+
+## Test Objectives
+
+### Primary Goals
+1. **Accessibility ≥95** on Desktop & Mobile
+2. **Mobile Performance ≥65** (interim target)
+3. **Desktop Performance ≥70** (maintain current)
+4. **Zero ARIA/Contrast failures**
+5. **Bundle size reduction** (~3.4MB → ~1.5MB)
+
+## Test Strategy
+
+### Phase 1: Pre-Implementation Testing
+1. **Baseline Measurement**
+   - Run Lighthouse Desktop + Mobile on production
+   - Export results to `/reports/lighthouse/PROD-YYYYMMDD/`
+   - Document current performance metrics
+   - Identify specific failure points
+
+2. **Accessibility Audit**
+   - Run axe-core scan on production
+   - Test with screen readers (NVDA, JAWS, VoiceOver)
+   - Verify keyboard navigation
+   - Check focus management
+
+3. **Performance Baseline**
+   - Measure bundle size
+   - Identify render-blocking resources
+   - Count long tasks
+   - Measure Core Web Vitals
+
+### Phase 2: Staging Testing
+
+#### Batch F1 - Guardrails Testing
+1. **ARIA Hygiene Tests**
+   - Verify no prohibited ARIA combinations
+   - Test screen reader compatibility
+   - Validate accessible names for regions
+   - Check focus management
+
+2. **Contrast Tests**
+   - Verify 4.5:1 contrast ratio for normal text
+   - Verify 3:1 contrast ratio for large text/icons
+   - Test with color blindness simulators
+   - Validate WCAG AA compliance
+
+3. **Mobile Font Size Tests**
+   - Verify base font size ≥16px on mobile
+   - Check clamped text ≥12px minimum
+   - Test touch targets ≥44px
+   - Validate mobile legibility
+
+#### Batch B2 - Render Hygiene Testing
+1. **Production Build Tests**
+   - Verify minified code
+   - Check tree-shaking effectiveness
+   - Validate no dev helpers in production
+   - Measure bundle size reduction
+
+2. **Render-blocking Tests**
+   - Verify deferred script loading
+   - Check critical CSS inlining
+   - Measure FCP improvement
+   - Validate LCP improvement
+
+3. **Long Tasks Tests**
+   - Count long tasks before/after
+   - Measure TBT improvement
+   - Verify main thread responsiveness
+   - Test on low-end devices
+
+### Phase 3: Post-Implementation Testing
+
+#### Comprehensive Verification
+1. **Lighthouse Testing**
+   - Desktop: Accessibility + Performance
+   - Mobile: Accessibility + Performance
+   - Export results to `/reports/lighthouse/STAGING-YYYYMMDD/`
+   - Compare with baseline
+
+2. **axe Testing**
+   - Zero Serious/Critical issues
+   - Focus on ARIA and Contrast
+   - Validate all interactive elements
+   - Check form accessibility
+
+3. **Manual Testing**
+   - Keyboard navigation
+   - Screen reader testing
+   - Touch target verification
+   - Cross-browser testing
+
+## Test Cases
+
+### Accessibility Test Cases
+
+#### ARIA Test Cases
+1. **TC-ARIA-001**: Verify no prohibited ARIA combinations
+   - **Input**: All elements with ARIA attributes
+   - **Expected**: No role/aria-* conflicts
+   - **Priority**: High
+   - **Status**: ✅ FIXED in staging
+
+2. **TC-ARIA-002**: Verify accessible names for regions
+   - **Input**: All [role="region"] elements
+   - **Expected**: Each has aria-label or aria-labelledby
+   - **Priority**: High
+   - **Status**: ✅ VERIFIED
+
+3. **TC-ARIA-003**: Verify focus management
+   - **Input**: All interactive elements
+   - **Expected**: Focus-visible styles work correctly
+   - **Priority**: Medium
+   - **Status**: ✅ IMPLEMENTED
+
+#### Contrast Test Cases
+1. **TC-CONTRAST-001**: Verify normal text contrast
+   - **Input**: All text elements
+   - **Expected**: 4.5:1 contrast ratio minimum
+   - **Priority**: High
+   - **Status**: ✅ FIXED in staging
+
+2. **TC-CONTRAST-002**: Verify large text contrast
+   - **Input**: Text ≥18px or ≥14px bold
+   - **Expected**: 3:1 contrast ratio minimum
+   - **Priority**: High
+   - **Status**: ✅ FIXED in staging
+
+3. **TC-CONTRAST-003**: Verify icon contrast
+   - **Input**: All icons and graphics
+   - **Expected**: 3:1 contrast ratio minimum
+   - **Priority**: Medium
+   - **Status**: ✅ IMPLEMENTED
+
+### Performance Test Cases
+
+#### Bundle Size Test Cases
+1. **TC-BUNDLE-001**: Verify minified code
+   - **Input**: All JavaScript files
+   - **Expected**: Minified and compressed
+   - **Priority**: High
+   - **Status**: 🔄 IN PROGRESS
+
+2. **TC-BUNDLE-002**: Verify unused code removal
+   - **Input**: JavaScript bundle
+   - **Expected**: No dead code
+   - **Priority**: High
+   - **Status**: 🔄 IN PROGRESS
+
+3. **TC-BUNDLE-003**: Verify CSS optimization
+   - **Input**: All CSS files
+   - **Expected**: Minified and optimized
+   - **Priority**: High
+   - **Status**: 🔄 IN PROGRESS
+
+#### Render-blocking Test Cases
+1. **TC-RENDER-001**: Verify critical CSS inlining
+   - **Input**: Above-the-fold styles
+   - **Expected**: Inlined in <head>
+   - **Priority**: High
+   - **Status**: ✅ IMPLEMENTED
+
+2. **TC-RENDER-002**: Verify async CSS loading
+   - **Input**: Non-critical stylesheets
+   - **Expected**: Load asynchronously
+   - **Priority**: High
+   - **Status**: ✅ IMPLEMENTED
+
+3. **TC-RENDER-003**: Verify script deferring
+   - **Input**: Non-critical scripts
+   - **Expected**: Load with defer attribute
+   - **Priority**: High
+   - **Status**: ✅ IMPLEMENTED
+
+### Mobile Test Cases
+
+#### Mobile Performance Test Cases
+1. **TC-MOBILE-001**: Verify mobile FCP
+   - **Input**: Mobile Lighthouse test
+   - **Expected**: FCP < 6.0s
+   - **Priority**: High
+   - **Status**: 🔄 TESTING
+
+2. **TC-MOBILE-002**: Verify mobile LCP
+   - **Input**: Mobile Lighthouse test
+   - **Expected**: LCP < 8.0s
+   - **Priority**: High
+   - **Status**: 🔄 TESTING
+
+3. **TC-MOBILE-003**: Verify mobile TBT
+   - **Input**: Mobile Lighthouse test
+   - **Expected**: TBT < 200ms
+   - **Priority**: High
+   - **Status**: 🔄 TESTING
+
+#### Mobile Accessibility Test Cases
+1. **TC-MOBILE-A11Y-001**: Verify mobile font sizes
+   - **Input**: All text on mobile devices
+   - **Expected**: Base font ≥16px, clamped ≥12px
+   - **Priority**: High
+   - **Status**: ✅ IMPLEMENTED
+
+2. **TC-MOBILE-A11Y-002**: Verify touch targets
+   - **Input**: All interactive elements
+   - **Expected**: Touch targets ≥44px
+   - **Priority**: High
+   - **Status**: ✅ IMPLEMENTED
+
+3. **TC-MOBILE-A11Y-003**: Verify mobile contrast
+   - **Input**: All text on mobile
+   - **Expected**: 4.5:1 contrast ratio
+   - **Priority**: High
+   - **Status**: ✅ IMPLEMENTED
 
 ## Test Environment Setup
-- **Desktop**: Chrome/Firefox on Windows 10, 1920x1080
-- **Mobile**: Chrome DevTools responsive mode, 375x667 and 414x896
-- **Test Data**: Sample user with authentication, sample TV shows/movies in lists
 
-## 1. Tabs Above Results Test
+### Required Tools
+1. **Lighthouse**: Chrome DevTools or CLI
+2. **axe-core**: Browser extension or CLI
+3. **Screen Readers**: NVDA, JAWS, VoiceOver
+4. **Color Contrast Checker**: WebAIM or similar
+5. **Mobile Testing**: Real devices or Chrome DevTools
 
-### Test Steps
-1. **Home Tab Test**
-   - Navigate to home tab
-   - Perform search with query "test"
-   - Verify tabs remain visible above search results
-   - Verify search results appear below tabs
-   - Clear search and verify tabs remain visible
+### Test Data
+1. **Sample Content**: Various TV shows and movies
+2. **User Accounts**: Test with different user states
+3. **Browser Configs**: Chrome, Firefox, Safari, Edge
+4. **Device Configs**: Desktop, tablet, mobile
 
-2. **Non-Home Tab Test**
-   - Navigate to "Watching" tab
-   - Perform search with query "test"
-   - Verify tabs remain visible above search results
-   - Verify search results appear below tabs
-   - Switch to "Wishlist" tab and verify search results hidden
+## Test Execution
 
-3. **Z-Index Verification**
-   - Open browser dev tools
-   - Inspect tab container element
-   - Verify `z-index: 100` is applied
-   - Inspect search results element
-   - Verify `z-index: 50` is applied
+### Phase 1: Baseline Testing
+1. **Production Lighthouse**: Run on flicklet.netlify.app
+2. **Accessibility Audit**: axe scan on production
+3. **Performance Baseline**: Bundle analysis
+4. **Document Results**: Save to reports/
 
-### Expected Results
-- ✅ Tabs always visible during search
-- ✅ Search results appear below tabs
-- ✅ Z-index hierarchy: tabs (100) > search results (50)
-- ✅ No visual overlap or layering issues
+### Phase 2: Staging Testing
+1. **Staging Lighthouse**: Run on localhost:8080
+2. **Accessibility Verification**: axe scan on staging
+3. **Performance Verification**: Bundle analysis
+4. **Compare Results**: Staging vs Production
 
-## 2. Theming Consistency Test
+### Phase 3: Post-Deployment Testing
+1. **Production Lighthouse**: Run on deployed version
+2. **Accessibility Verification**: axe scan on production
+3. **Performance Verification**: Bundle analysis
+4. **Final Comparison**: Before vs After
 
-### Test Steps
-1. **Dark Mode Test**
-   - Switch to dark mode
-   - Verify all text is readable (contrast ≥ 4.5:1)
-   - Check tab counts are visible
-   - Verify search results styling
-   - Test on all tabs (Home, Watching, Wishlist, Watched, Discover)
+## Success Criteria
 
-2. **Regular Mode Test**
-   - Switch to regular/light mode
-   - Verify consistent styling across all components
-   - Check tab counts are visible
-   - Verify search results styling
+### Accessibility Success
+- **Desktop A11y**: ≥95/100
+- **Mobile A11y**: ≥95/100
+- **ARIA Issues**: 0 failures
+- **Contrast Issues**: 0 failures
+- **Focus Management**: 100% functional
 
-3. **Mardi Gras Mode Test**
-   - Switch to Mardi Gras mode
-   - Verify festive styling applied consistently
-   - Check tab counts are visible
-   - Verify search results styling
+### Performance Success
+- **Desktop Performance**: ≥70/100
+- **Mobile Performance**: ≥65/100
+- **Bundle Size**: <1.5MB
+- **FCP Mobile**: <6.0s
+- **LCP Mobile**: <8.0s
 
-4. **Theme Persistence Test**
-   - Switch themes multiple times
-   - Refresh page and verify theme persists
-   - Verify no theme conflicts or race conditions
+### Code Quality Success
+- **Event Listeners**: <50 total
+- **Duplicate Functions**: <10 remaining
+- **CSS Duplicates**: 0 duplicate rules
+- **Bundle Redundancy**: <50KB
 
-### Expected Results
-- ✅ All text readable in all themes
-- ✅ Tab counts visible in all themes
-- ✅ Consistent styling across components
-- ✅ Theme persistence across page refreshes
-- ✅ No hardcoded colors visible
+## Risk Mitigation
 
-## 3. i18n Pipeline Test
+### High Risk Areas
+1. **Event Listener Changes**: May break functionality
+2. **Bundle Minification**: May break code
+3. **CSS Changes**: May break layout
+4. **ARIA Changes**: May affect screen readers
 
-### Test Steps
-1. **English to Spanish Test**
-   - Start with English interface
-   - Switch to Spanish
-   - Verify all visible text updates to Spanish
-   - Check search results language
-   - Verify no raw translation keys visible
+### Mitigation Strategies
+1. **Incremental Changes**: One system at a time
+2. **Comprehensive Testing**: Test each change
+3. **Rollback Plan**: Keep working versions
+4. **User Feedback**: Monitor for issues
 
-2. **Spanish to English Test**
-   - Start with Spanish interface
-   - Switch to English
-   - Verify all visible text updates to English
-   - Check search results language
-   - Verify no raw translation keys visible
+### Testing Safeguards
+1. **Automated Tests**: Run on every change
+2. **Manual Verification**: Human testing
+3. **Cross-browser Testing**: Multiple browsers
+4. **Real Device Testing**: Actual devices
 
-3. **Raw Key Detection Test**
-   - Search for "all_genres" in page source
-   - Verify it's translated to "All Genres" or "Todos los Géneros"
-   - Check for any other raw translation keys
+## Reporting
 
-4. **Live Translation Test**
-   - Perform search in English
-   - Switch to Spanish
-   - Verify search results update to Spanish
-   - Switch back to English
-   - Verify search results update to English
+### Test Reports
+1. **Lighthouse Reports**: Save to `/reports/lighthouse/`
+2. **axe Reports**: Save to `/reports/axe/`
+3. **Performance Reports**: Save to `/reports/performance/`
+4. **Accessibility Reports**: Save to `/reports/accessibility/`
 
-### Expected Results
-- ✅ All text translates live without page refresh
-- ✅ No raw translation keys visible
-- ✅ Search results language updates correctly
-- ✅ Translation persistence across page refreshes
+### Documentation
+1. **Test Results**: Document all findings
+2. **Issues Found**: Track and resolve
+3. **Improvements**: Document gains
+4. **Recommendations**: Future optimizations
 
-## 4. Auth Profile Display Test
+## Conclusion
 
-### Test Steps
-1. **Signed Out State Test**
-   - Sign out if currently signed in
-   - Verify account button shows "Sign In"
-   - Verify no username/snark displayed
-   - Check settings access (should prompt sign in)
+This test plan provides comprehensive coverage for Phase B implementation, focusing on accessibility and performance improvements. The staged approach ensures thorough testing while minimizing risk. Success will be measured by achieving the target metrics while maintaining functionality and user experience.
 
-2. **Sign In Test**
-   - Sign in with test account
-   - Verify account button shows username
-   - Verify snark text appears
-   - Check settings access (should work without prompts)
-
-3. **Profile Update Test**
-   - Update username in settings
-   - Verify account button updates
-   - Verify snark text updates
-   - Check profile persistence
-
-4. **Settings Access Test**
-   - While signed in, access settings
-   - Verify no "please sign in" prompts
-   - Verify all settings accessible
-   - Test profile editing functionality
-
-### Expected Results
-- ✅ Username displayed when signed in
-- ✅ Snark text appears when signed in
-- ✅ Settings accessible without prompts when signed in
-- ✅ Profile updates reflect immediately
-- ✅ No false "sign in" prompts
-
-## 5. Mobile Layout Stability Test
-
-### Test Steps
-1. **Mobile Card Grid Test**
-   - Set viewport to 375x667 (iPhone SE)
-   - Verify card grid is stable
-   - Check for horizontal scroll issues
-   - Verify poster dimensions are consistent
-   - Test on different screen sizes (414x896, 360x640)
-
-2. **Mobile Search Test**
-   - Perform search on mobile
-   - Verify search results display properly
-   - Check for overflow issues
-   - Verify tabs remain accessible
-
-3. **Mobile Responsive Test**
-   - Test breakpoints: 320px, 375px, 414px, 768px
-   - Verify layout adapts smoothly
-   - Check for content clipping
-   - Verify touch targets are appropriate size
-
-4. **Mobile Container Test**
-   - Test FlickWord container on mobile
-   - Test Daily Trivia container on mobile
-   - Verify containers are usable
-   - Check for content clipping
-
-### Expected Results
-- ✅ Stable card grid on all mobile sizes
-- ✅ No horizontal scroll issues
-- ✅ Consistent poster dimensions
-- ✅ Proper responsive breakpoints
-- ✅ Usable game containers
-
-## 6. FlickWord & Daily Trivia Containers Test
-
-### Test Steps
-1. **FlickWord Container Test**
-   - Open FlickWord modal
-   - Verify container sizes properly
-   - Check for content clipping
-   - Test scrolling if needed
-   - Verify responsive behavior
-
-2. **Daily Trivia Container Test**
-   - Open Daily Trivia modal
-   - Verify container sizes properly
-   - Check for content clipping
-   - Test scrolling if needed
-   - Verify responsive behavior
-
-3. **Container Height Test**
-   - Test on different screen sizes
-   - Verify containers adapt to viewport
-   - Check for overflow issues
-   - Verify content is fully visible
-
-4. **Modal Sizing Test**
-   - Test game modals on mobile
-   - Verify proper sizing
-   - Check for content accessibility
-   - Test close/open functionality
-
-### Expected Results
-- ✅ Containers size properly
-- ✅ No content clipping
-- ✅ Proper scroll management
-- ✅ Responsive modal sizing
-- ✅ Usable on all screen sizes
-
-## Success Criteria Summary
-
-### Must Pass (Critical)
-1. ✅ Tabs always above search results
-2. ✅ All themes readable and consistent
-3. ✅ Username + snark display when signed in
-4. ✅ Settings accessible without false prompts
-
-### Should Pass (Important)
-5. ✅ Live language switching works
-6. ✅ No raw translation keys visible
-7. ✅ Mobile layout stable and responsive
-
-### Nice to Pass (Enhancement)
-8. ✅ Game containers properly sized
-9. ✅ No content clipping anywhere
-10. ✅ Smooth responsive transitions
+The plan emphasizes both automated and manual testing, with particular attention to mobile performance and accessibility, which are the primary areas of concern. Regular reporting and documentation will ensure transparency and facilitate future improvements.

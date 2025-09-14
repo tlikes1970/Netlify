@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout Enhancements Test</title>
+    <link rel="stylesheet" href="www/styles/components.css">
+    <link rel="stylesheet" href="www/styles/main.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .test-content {
+            margin: 10px 0;
+        }
+        .preview-row-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .preview-card {
+            width: 120px;
+            height: 180px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .show-card {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 15px;
+            padding: 15px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .show-poster {
+            width: 120px;
+            height: 180px;
+            background: #e0e0e0;
+            border-radius: 4px;
+        }
+        .show-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .show-title {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .show-description {
+            font-size: 14px;
+            color: #666;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Layout Enhancements Test Suite</h1>
+    
+    <!-- Skip Links Test -->
+    <div class="test-section">
+        <div class="test-title">1. Skip Links Test</div>
+        <div class="test-content">
+            <p>Press Tab to see skip links appear. They should be hidden by default and visible on focus.</p>
+            <a href="#main" class="skip-link">Skip to main content</a>
+            <a href="#search" class="skip-link">Skip to search</a>
+            <a href="#navigation" class="skip-link">Skip to navigation</a>
+        </div>
+    </div>
+    
+    <!-- Skeleton Loaders Test -->
+    <div class="test-section">
+        <div class="test-title">2. Skeleton Loaders Test</div>
+        <div class="test-content">
+            <p>Test different skeleton loader types:</p>
+            
+            <h4>Show Card Skeleton:</h4>
+            <div class="show-card loading">
+                <div class="skeleton-poster"></div>
+                <div class="skeleton-content">
+                    <div class="skeleton-text skeleton-text-large"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text skeleton-text-small"></div>
+                    <div class="skeleton-actions">
+                        <div class="skeleton-button"></div>
+                        <div class="skeleton-button"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <h4>Preview Card Skeleton:</h4>
+            <div class="skeleton-preview-card"></div>
+            
+            <h4>Text Skeleton:</h4>
+            <div class="skeleton-text"></div>
+            <div class="skeleton-text skeleton-text-large"></div>
+            <div class="skeleton-text skeleton-text-small"></div>
+            
+            <h4>Button Skeleton:</h4>
+            <div class="skeleton-button"></div>
+        </div>
+    </div>
+    
+    <!-- Aspect Ratio Test -->
+    <div class="test-section">
+        <div class="test-title">3. Aspect Ratio Test</div>
+        <div class="test-content">
+            <p>Test aspect ratio enforcement (should maintain 2:3 ratio):</p>
+            
+            <h4>Poster with aspect ratio:</h4>
+            <div class="show-poster" style="background: #e0e0e0;"></div>
+            
+            <h4>Empty poster (should show background):</h4>
+            <div class="show-poster" style="background: var(--border);"></div>
+        </div>
+    </div>
+    
+    <!-- Scroll Indicators Test -->
+    <div class="test-section">
+        <div class="test-title">4. Scroll Indicators Test</div>
+        <div class="test-content">
+            <p>Test scroll indicators (should show gradients when content overflows):</p>
+            
+            <h4>Scrollable Row:</h4>
+            <div class="preview-row-scroll" id="scrollableRow">
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+            </div>
+            
+            <h4>Non-scrollable Row:</h4>
+            <div class="preview-row-scroll">
+                <div class="preview-card"></div>
+                <div class="preview-card"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Interactive Tests -->
+    <div class="test-section">
+        <div class="test-title">5. Interactive Tests</div>
+        <div class="test-content">
+            <p>Test JavaScript functionality:</p>
+            
+            <button class="test-button" onclick="testSkeletonToggle()">Toggle Skeleton Loading</button>
+            <button class="test-button" onclick="testScrollIndicators()">Test Scroll Indicators</button>
+            <button class="test-button" onclick="testAspectRatio()">Test Aspect Ratio</button>
+            
+            <div id="testCard" class="show-card" style="margin-top: 10px;">
+                <div class="show-poster" style="background: #e0e0e0;"></div>
+                <div class="show-content">
+                    <div class="show-title">Test Show</div>
+                    <div class="show-description">This is a test show description</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Target elements for skip links -->
+    <div id="main" style="margin-top: 50px; padding: 20px; background: #f0f0f0; border-radius: 4px;">
+        <h2>Main Content Area</h2>
+        <p>This is the main content area that skip links should target.</p>
+    </div>
+    
+    <div id="search" style="margin-top: 20px; padding: 20px; background: #f0f0f0; border-radius: 4px;">
+        <h2>Search Area</h2>
+        <p>This is the search area that skip links should target.</p>
+    </div>
+    
+    <div id="navigation" style="margin-top: 20px; padding: 20px; background: #f0f0f0; border-radius: 4px;">
+        <h2>Navigation Area</h2>
+        <p>This is the navigation area that skip links should target.</p>
+    </div>
+    
+    <script src="www/js/layout-enhancements.js"></script>
+    <script>
+        // Test functions
+        function testSkeletonToggle() {
+            const card = document.getElementById('testCard');
+            if (card.classList.contains('loading')) {
+                card.classList.remove('loading');
+                card.classList.add('loaded');
+            } else {
+                card.classList.add('loading');
+                card.classList.remove('loaded');
+            }
+        }
+        
+        function testScrollIndicators() {
+            const scrollableRow = document.getElementById('scrollableRow');
+            if (window.LayoutEnhancements && window.LayoutEnhancements.ScrollIndicatorManager) {
+                window.LayoutEnhancements.ScrollIndicatorManager.updateScrollIndicators(scrollableRow);
+                console.log('Scroll indicators updated');
+            } else {
+                console.log('Layout enhancements not loaded');
+            }
+        }
+        
+        function testAspectRatio() {
+            const posters = document.querySelectorAll('.show-poster');
+            posters.forEach(poster => {
+                console.log('Poster aspect ratio:', poster.style.aspectRatio || 'not set');
+                console.log('Poster object-fit:', poster.style.objectFit || 'not set');
+            });
+        }
+        
+        // Initialize scroll indicators
+        document.addEventListener('DOMContentLoaded', function() {
+            const scrollableRow = document.getElementById('scrollableRow');
+            if (window.LayoutEnhancements && window.LayoutEnhancements.ScrollIndicatorManager) {
+                window.LayoutEnhancements.ScrollIndicatorManager.addScrollIndicators(scrollableRow);
+            }
+        });
+    </script>
+</body>
+</html>

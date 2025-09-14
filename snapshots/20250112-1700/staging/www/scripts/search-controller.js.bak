@@ -1,0 +1,171 @@
+/* scripts/search-controller.js */
+(function(){
+  if (window.SearchController) return;
+  const $ = (s)=>document.querySelector(s);
+
+  // Grab a snapshot of any pre-existing search function (if defined before this file).
+  // We also allow late-binding via window.legacyPerformSearch (see Patch B).
+  let earlyLegacy = (typeof window.performSearch === 'function') ? window.performSearch.bind(window) : null;
+
+  function showResultsUI(){
+    // Get the current active tab section
+    const currentTab = AppState.activeTab || 'home';
+    const currentSection = document.getElementById(`${currentTab}Section`);
+    
+    if (currentSection) {
+      // FIXED: Use config for comprehensive hiding + broader selectors
+      const sectionsToHide = window.HomeSectionsConfig?.SEARCH_HIDDEN_SECTIONS || [];
+      sectionsToHide.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.style.display = 'none';
+          el.classList.add('hidden');
+        }
+      });
+      
+      // FIXED: Backup broader selector for stragglers (expanded to catch home-specific classes)
+      const tabContent = currentSection.querySelectorAll('.section, .stats, .binge-banner, .section-header, .list-container, .home-section, .home-preview-row, .cw-row, .curated-sections, .preview-row-container, .spotlight-grid, .next-up-scroll, .playalong-scroll');
+      tabContent.forEach(el => {
+        if (el && !el.id?.includes('searchResults')) {  // FIXED: Don't hide results themselves
+          el.style.display = 'none';
+          el.classList.add('hidden');
+        }
+      });
+      
+      // Show search results within the current tab section
+      const searchResults = document.getElementById('searchResults');  // FIXED: Use getElementById for consistency
+      if (searchResults) {
+        // Move search results into the current tab section if not already there
+        if (searchResults.parentNode !== currentSection) {
+          currentSection.appendChild(searchResults);
+        }
+        searchResults.style.display = 'block';
+        searchResults.classList.remove('hidden');
+      }
+    }
+  }
+
+  function hideResultsUI(){
+    // Hide search results
+    const searchResults = document.getElementById('searchResults');  // FIXED: Use getElementById for consistency
+    if (searchResults) {
+      searchResults.style.display = 'none';
+      searchResults.classList.add('hidden');
+      
+      // Move search results back to original position (outside tab sections)
+      const originalParent = document.querySelector('main') || document.body;
+      if (searchResults.parentNode !== originalParent) {
+        originalParent.appendChild(searchResults);
+      }
+    }
+    
+    // NEW: Re-show home sections using config (assume called from home or default tab)
+    if (window.HomeSectionsConfig?.SEARCH_HIDDEN_SECTIONS) {
+      window.HomeSectionsConfig.SEARCH_HIDDEN_SECTIONS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.style.display = '';  // Reset to default (block/flex as per CSS)
+          el.classList.remove('hidden');
+        }
+      });
+    }
+    
+    // Restore content in the current tab section
+    const currentTab = AppState.activeTab || 'home';
+    const currentSection = document.getElementById(`${currentTab}Section`);
+    
+    if (currentSection) {
+      // Show all content within the current tab section
+      const tabContent = currentSection.querySelectorAll('.section, .stats, .binge-banner, .section-header, .list-container, .home-section, .home-preview-row, .cw-row, .curated-sections, .preview-row-container, .spotlight-grid, .next-up-scroll, .playalong-scroll');
+      tabContent.forEach(el => {
+        if (el) {
+          el.style.display = 'block';
+          el.classList.remove('hidden');
+        }
+      });
+    }
+    
+    // NEW: Trigger home re-render if on home
+    if (AppState.activeTab === 'home' && window.CWP?.render) {
+      window.CWP.render();
+    }
+      
+    // optional: clear inputs
+    const q = document.querySelector('#q'); if (q) q.value = '';
+    const g = document.querySelector('#genre'); if (g) g.value = '';
+  }
+
+  function enterSearch(){
+    if (!AppState.searchActive){
+      AppState.searchActive = true;
+      
+      // Update tab system search state
+      if (window.FlickletApp && typeof window.FlickletApp.setSearching === 'function') {
+        window.FlickletApp.setSearching(true);
+      }
+      
+      AppEvents.emit('search:enter', {});
+    }
+  }
+
+  // Single, non-recursive entry-point
+  function doSearch(query){
+    // Prefer late-bound legacy, then early snapshot.
+    const legacy = (typeof window.legacyPerformSearch === 'function')
+      ? window.legacyPerformSearch
+      : earlyLegacy;
+
+    if (typeof legacy === 'function') {
+      try { 
+        // The legacy function reads from DOM, so we need to set the input value first
+        if (query && typeof query === 'string') {
+          const searchInput = document.querySelector('#searchInput');
+          if (searchInput) {
+            searchInput.value = query;
+          }
+        }
+        legacy(); // Call without parameters since it reads from DOM
+      }
+      catch (e) { console.error('performSearch error', e); }
+      return;
+    }
+
+    // Fallback: if no legacy exists, emit an event and let another module handle it.
+    AppEvents.emit('search:request', { query });
+  }
+
+  window.SearchController = {
+    perform(query){
+      enterSearch();
+      showResultsUI();
+      doSearch(query);
+    },
+    clear(){
+      hideResultsUI();
+      
+      // Reset search state
+      AppState.searchActive = false;
+      if (window.FlickletApp && typeof window.FlickletApp.setSearching === 'function') {
+        window.FlickletApp.setSearching(false);
+      }
+      
+      if (typeof window.clearSearchResults === 'function') {
+        window.clearSearchResults();
+      }
+    }
+  };
+
+  // Events
+  AppEvents.on('search:enter', showResultsUI);
+  AppEvents.on('search:exit',  ()=> SearchController.clear());
+  AppEvents.on('tab:change',   (e)=> { if (e.detail.tab !== 'search') hideResultsUI(); });
+
+  // Compatibility adapter for old click handlers without touching window.performSearch
+  if (!window.performSearchAdapter) {
+    window.performSearchAdapter = (params)=> {
+      // If params is an object with q and genre, extract the query
+      const query = (typeof params === 'object' && params.q) ? params.q : params;
+      window.SearchController.perform(query);
+    };
+  }
+})();

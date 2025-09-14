@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flicklet - TV & Movie Tracker v23.25-DUPLICATE-FIXED</title>
+    <meta
+      name="description"
+      content="Search, track, and rate shows & films fast."
+    />
+    
+    <!-- Permissions Policy to prevent compute-pressure violations -->
+    <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
+    
+    <!-- Cross-Origin-Opener-Policy for Google Auth popup compatibility -->
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups" />
+    
+    <!-- TMDB API Configuration - Use environment variable or tmdb-config.js -->
+    <meta name="tmdb-api-key" content="YOUR_TMDB_API_KEY_HERE" />
+    
+    <!-- Icons for different platforms -->
+    <link rel="icon" href="icons/icon-512.png" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="manifest" href="manifest.json" />
+
+    <link rel="stylesheet" href="styles/inline-style-01.css?v=v17.9">
+    <link rel="stylesheet" href="styles/inline-style-02.css">
+    <link rel="stylesheet" href="styles/components.css?v=v17.9">
+    <link rel="stylesheet" href="styles/mobile.css?v=v17.9">
+    <link rel="stylesheet" href="styles/main.css?v=v17.9">
+    <link rel="stylesheet" href="styles/consolidated-layout.css?v=v17.9">
+    <link rel="stylesheet" href="styles/action-bar.css?v=v22.21">
+
+    <!-- Feature flags and safety guard -->
+    <script src="js/flags.js"></script>
+    
+    <!-- Early flags initialization (must be before any row scripts) -->
+    <script src="scripts/flags-init.js"></script>
+    
+    <!-- Debug utilities (must load early) -->
+    <script src="js/debug-utils.js"></script>
+    
+    <!-- Emergency function restoration (critical fallbacks) -->
+    <!-- <script src="js/emergency-functions.js"></script> --> <!-- DISABLED: Main functions are now working -->
+    
+    <!-- Syntax error bypass (ensures functionality) -->
+    <script src="js/syntax-fix.js"></script>
+    
+    <!-- Home sections configuration (must load early) -->
+    <script src="js/home-sections-config.js"></script>
+    
+    <!-- DOM element caching system -->
+    <script src="js/dom-cache.js"></script>
+    
+    <!-- Centralized error handling -->
+    <script src="js/error-handler.js"></script>
+    
+    <!-- Unified visibility management -->
+    <script src="js/visibility-manager.js"></script>
+    
+    <!-- Common utilities (reduced duplication) -->
+    <script src="js/common-utils.js"></script>
+    
+    <!-- Chrome extension messaging polyfill -->
+    <script src="scripts/polyfill.js"></script>
+    
+    <!-- Immediate mobile detection -->
+    <script>
+      (function() {
+        // Check if this is a mobile device
+        const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isMobileSize = window.innerWidth <= 768;
+        
+        if (isMobileDevice && isMobileSize && document.body) {
+          document.body.classList.add('mobile');
+          console.log('📱 Mobile class applied immediately - iPhone detected');
+        }
+      })();
+    </script>
+
+</head>
+
+  <body>
+
+    <!-- Main Container -->
+    <div class="main-container" id="appRoot">
+      <header class="header" role="banner" data-lang-layout="inline">
+        <!-- New left-side container for username and snarky phrase -->
+        <div id="usernameSnarkContainer" style="text-align: left; min-width: 200px;">
+          <div id="dynamicUsername" style="font-size: 18px; font-weight: bold; color: #9c27b0; margin-bottom: 4px;">Welcome!</div>
+          <div id="dynamicSnark" style="font-size: 14px; color: #7f8c8d; font-style: italic;">Ready to track your shows</div>
+        </div>
+        
+        <div class="header-center">
+          <div id="versionIndicator" style="position: fixed; top: 10px; left: 10px; background: #007bff; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">v23.25-DUPLICATE-FIXED</div>
+          <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
+          <div id="proBadge" class="pro-badge" style="display: none;">PRO</div>
+          <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
+          <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
+        </div>
+        <div class="user-section">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+            <div id="accountHint" style="font-size: 11px; color: #7f8c8d; text-align: center; opacity: 0.8;"></div>
+            <button
+              id="accountBtn"
+              class="btn secondary"
+              title="Sign in / Account"
+              aria-label="Account - sign in or manage your account"
+            >
+              👤 <span data-i18n="sign_in_account">Sign In</span>
+            </button>
+            <select id="langToggle" aria-label="Language" title="Language">
+              <option value="en">EN</option>
+              <option value="es">ES</option>
+            </select>
+          </div>
+        </div>
+      </header>
+
+
+      <!-- Sticky Top Search -->
+      <div class="top-search">
+
+        <div class="search-help">
+          <!-- Search Tips Toggle - Clean, single source of truth -->
+          <div id="searchTips" class="search-tips-inline">
+            <button class="tips-trigger" id="tipsTrigger"
+                    type="button"
+                    aria-label="Search tips and help"
+                    aria-expanded="false"
+                    aria-controls="tipsPop">?</button>
+
+            <!-- Popover lives next to trigger, hidden by default -->
+            <div class="tips-pop" id="tipsPop" role="dialog" aria-modal="false" hidden>
+              <div class="tips-head">
+                <div class="tips-title">Search Tips</div>
+                <button class="tips-close" id="tipsClose" aria-label="Close">×</button>
+              </div>
+              <ul class="tips-list">
+                <li><code>"exact phrase"</code> finds an exact title.</li>
+                <li><code>alien year:2025</code> filters by year.</li>
+                <li><code>genre:sci-fi</code> narrows by genre.</li>
+                <li><code>status:watching</code> your current list.</li>
+                <li><code>rating:≥4</code> your rating or higher.</li>
+                <li><code>marvel*</code> wildcards for partial matches.</li>
+                <li><code>!spoiler</code> exclude spoiler content.</li>
+                <li><code>#trending</code> search trending content.</li>
+              </ul>
+              <div class="tips-footer">
+                <label class="tips-dont-show">
+                  <input type="checkbox" id="tipsDontShow">
+                  <span>Don't show again</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <span class="keyboard-hint">
+            <span class="tooltip">
+              <strong>Keyboard Shortcuts:</strong><br>
+              • <kbd>Ctrl/Cmd + K</kbd> - Focus search<br>
+              • <kbd>Ctrl/Cmd + T</kbd> - Toggle theme<br>
+              • <kbd>Ctrl/Cmd + M</kbd> - Toggle Mardi Gras<br>
+              • <kbd>1-5</kbd> - Switch tabs<br>
+              • <kbd>Esc</kbd> - Clear search
+            </span>
+          </span>
+        </div>
+        <div class="search-row">
+          <input
+            id="searchInput"
+            class="search-input search-area-input"
+            placeholder=""
+            data-i18n-placeholder="search_placeholder"
+          />
+          <div class="search-controls">
+            <select id="genreFilter" class="genre-filter search-area-genre">
+              <option value="" data-i18n="all_genres">All Genres</option>
+            </select>
+            <button id="searchBtn" class="btn search-btn search-area-search" aria-label="Search for TV shows and movies">
+              <span class="icon" aria-hidden="true">🔍</span>
+              <span class="label" data-i18n="search">Search</span>
+            </button>
+            <button id="clearSearchBtn" class="btn secondary clear-search-btn search-area-clear" aria-label="Clear search results">
+              <span class="icon" aria-hidden="true">✖️</span>
+              <span class="label" data-i18n="clear">Clear</span>
+            </button>
+          </div>
+        </div>
+        <div
+          id="tagFilterRow"
+          class="tag-filters"
+          aria-label="Tag filters"
+        >        </div>
+      </div>
+
+      <!-- Search Results Container - MOVED OUTSIDE HOME SECTION -->
+      <div id="searchResults" class="search-results" style="display: none;">
+        <h4>🎯 <span data-i18n="search_results">Search Results</span> <span class="count" id="resultsCount">0</span></h4>
+        <div id="searchResultsList" class="list-container"></div>
+      </div>
+
+      <!-- Tab container moved outside homeSection for proper positioning -->
+      <div class="tab-container">
+        <button id="homeTab" class="tab active" title="Overview of your TV & movie tracking" aria-label="Home tab - view dashboard and recommendations">🏠 <span data-i18n="home">Home</span></button>
+        <button id="watchingTab" class="tab" title="Shows and movies you're currently watching" aria-label="Watching tab - view shows and movies you're currently watching">
+          ▶️ <span data-i18n="currently_watching">Currently Watching</span>
+          <span class="tab-badge" id="watchingBadge">0</span>
+        </button>
+        <button id="wishlistTab" class="tab" title="Shows and movies you want to watch later" aria-label="Wishlist tab - view shows and movies you want to watch">
+          📖 <span data-i18n="want_to_watch">Want to Watch</span>
+          <span class="tab-badge" id="wishlistBadge">0</span>
+        </button>
+        <button id="watchedTab" class="tab" title="Shows and movies you've already finished" aria-label="Watched tab - view shows and movies you've completed">
+          ✅ <span data-i18n="already_watched">Already Watched</span>
+          <span class="tab-badge" id="watchedBadge">0</span>
+        </button>
+        <button id="discoverTab" class="tab" title="Get personalized recommendations based on your taste" aria-label="Discover tab - find new shows and movies">✨ <span data-i18n="discover">Discover</span></button>
+      </div>
+
+      <!-- Home -->
+      <div id="homeSection" class="tab-section">
+        <div class="stats">
+          <div class="stat" id="bingeMeter"></div>
+        </div>
+        
+        <!-- Currently Watching Preview Row -->
+        <section id="currentlyWatchingPreview" class="home-preview-row" style="display: none;" aria-label="Currently Watching Preview">
+          <div class="preview-row-header">
+            <h3 class="preview-row-title">👁️ Currently Watching</h3>
+          </div>
+          <div class="preview-row-container cw-row">
+            <div class="preview-row-scroll row-inner" id="currentlyWatchingScroll">
+              <!-- Cards will be populated by JavaScript -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Next Up This Week Row -->
+        <section id="next-up-row" class="home-section" data-feature="homeRowNextUp" style="display: none;">
+          <h2 class="section-title">Next Up This Week</h2>
+          <div class="next-up-scroll row-inner"><!-- tiles injected here --></div>
+        </section>
+
+        <!-- 2. Community Section (Spotlight video, Games) -->
+        <div id="community-section" class="home-section">
+          <!-- Community Spotlight -->
+          <div id="spotlight-row" class="home-row" style="display: none;">
+            <div class="home-row-header">
+              <h3>✨ <span data-i18n="community_spotlight">Community Spotlight</span></h3>
+            </div>
+            <div class="home-row-content">
+              <div class="spotlight-video">
+                <!-- Video content will be populated here -->
+              </div>
+              <div class="spotlight-info">
+                <!-- Info content will be populated here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Curated Section (Trending/Staff Picks/New This Week) -->
+        <div id="curated-section" class="home-section">
+          <!-- Curated Sections -->
+          <div id="curatedSections" class="home-section" style="display: none;">
+            <!-- Curated content will be populated here -->
+          </div>
+        </div>
+
+        <!-- 4. Personalized Section (Row #1, Row #2 Ghost) -->
+        <div id="personalized-section" class="home-section" style="display: none;">
+          <div class="section-header">
+            <h3>🎨 <span data-i18n="personalized_recommendations">Personalized Recommendations</span></h3>
+            <p class="section-subtitle" data-i18n="personalized_subtitle">Based on your watching history and preferences</p>
+          </div>
+          <div class="section-content" id="personalized-content">
+            <!-- Personalized content will be populated here -->
+          </div>
+        </div>
+
+        <!-- 5. In Theaters Near Me Section -->
+        <div id="theaters-section" class="home-section" style="display: none;">
+          <div class="section-header">
+            <h3>🎬 <span data-i18n="in_theaters_near_me">In Theaters Near Me</span></h3>
+            <p class="section-subtitle" data-i18n="theaters_subtitle">Current theatrical releases</p>
+          </div>
+          <div class="section-content" id="theaters-content">
+            <!-- Theater content will be populated here -->
+          </div>
+        </div>
+
+        <!-- 6. Additional Content Sections -->
+        <!-- Upcoming Episodes -->
+        <div id="upcomingEpisodes" class="home-section" style="display: none;">
+          <div class="section-header">
+            <h3>📅 <span data-i18n="upcoming_episodes">Upcoming Episodes</span></h3>
+          </div>
+          <div class="section-content">
+            <!-- Upcoming episodes will be populated here -->
+          </div>
+        </div>
+
+        <!-- Quote/Flickword Container -->
+        <div id="quote-flickword-container" class="home-section" style="display: none;">
+          <div class="quote-card" id="quoteCard">
+            <!-- Quote content will be populated here -->
+          </div>
+          <div class="random-quote-card" id="randomQuoteCard">
+            <!-- Random quote content will be populated here -->
+          </div>
+        </div>
+
+        <!-- 7. Feedback Section -->
+        <div id="feedbackSection" class="home-section" style="display: none;">
+          <div class="feedback-content">
+            <!-- Feedback content will be populated here -->
+          </div>
+        </div>
+      </div>
+
+      <main id="main" role="main">
+
+      <!-- Watching -->
+      <div id="watchingSection" class="tab-section" style="display: none">
+        <div class="section">
+          <div class="section-header">
+            <h3>
+              ▶️ <span data-i18n="currently_watching">Currently Watching</span>
+              <span class="count" id="watchingCount">0</span>
+            </h3>
+          </div>
+          <div id="watchingList" class="list-container"></div>
+        </div>
+      </div>
+
+      <!-- Wishlist -->
+      <div id="wishlistSection" class="tab-section" style="display: none">
+        <div class="section">
+          <div class="section-header">
+            <h3>
+              📖 <span data-i18n="want_to_watch">Want to Watch</span>
+              <span class="count" id="wishlistCount">0</span>
+            </h3>
+          </div>
+          <div id="wishlistList" class="list-container"></div>
+        </div>
+      </div>
+
+      <!-- Watched -->
+      <div id="watchedSection" class="tab-section" style="display: none">
+        <div class="section">
+          <div class="section-header">
+            <h3>
+              ✅ <span data-i18n="already_watched">Already Watched</span>
+              <span class="count" id="watchedCount">0</span>
+            </h3>
+          </div>
+          <div id="watchedList" class="list-container"></div>
+        </div>
+      </div>
+
+      <!-- Discover -->
+              <div id="discoverSection" class="tab-section" style="display: none">
+          <div class="section">
+            <h3>✨ <span data-i18n="discover">Discover</span></h3>
+            <p data-i18n="discover_description">Recommendations based on your likes and ratings.</p>
+            <div id="discoverList" class="list-container"></div>
+          </div>
+        </div>
+
+
+      <!-- Settings / Profile -->
+              <div id="settingsSection" class="tab-section" style="display: none">
+              <div class="settings-tabs" role="tablist" aria-label="Settings Sections">
+                <button role="tab" aria-selected="true" class="active" data-target="#general"><span data-i18n="general">General</span></button>
+                <button role="tab" aria-selected="false" data-target="#notifications"><span data-i18n="notifications">Notifications</span></button>
+                <button role="tab" aria-selected="false" data-target="#layout"><span data-i18n="layout">Layout</span></button>
+                <button role="tab" aria-selected="false" data-target="#data"><span data-i18n="data">Data</span></button>
+                <button role="tab" aria-selected="false" data-target="#pro"><span data-i18n="pro">Pro</span></button>
+                <button role="tab" aria-selected="false" data-target="#about"><span data-i18n="about">About</span></button>
+              </div>
+
+              <div class="settings-container">
+                <!-- General Section -->
+                <section id="general" class="settings-section active">
+                  <div class="settings-subsection">
+                    <h3 class="settings-title">⚙️ <span data-i18n="general">General</span></h3>
+                    <p class="settings-description" data-i18n="general_description">Manage your account and basic preferences</p>
+                    
+                    <!-- Display Name -->
+                    <div class="settings-control-group">
+                      <label for="displayNameInput" class="settings-label" data-i18n="display_name">Display Name</label>
+                      <div class="settings-input-group">
+                        <input
+                          id="displayNameInput"
+                          class="settings-input"
+                          placeholder="Enter your name"
+                        />
+                        <button id="saveNameBtn" class="btn primary" onclick="saveDisplayName()">
+                          💾 <span data-i18n="save">Save</span>
+                        </button>
+                      </div>
+                      <p class="settings-hint">Your name will appear in the header and personalize your experience</p>
+                    </div>
+                  </div>
+
+                  <div class="settings-subsection">
+                    <h4 class="settings-subtitle">📊 <span data-i18n="my_statistics">My Statistics</span></h4>
+                    <p class="settings-hint">View your watching statistics and achievements</p>
+                    <div id="statsContent" class="settings-stats">
+                      <div class="loading">Loading stats...</div>
+                    </div>
+                  </div>
+
+                  <div class="settings-subsection">
+                    <h4 class="settings-subtitle">🚫 <span data-i18n="not_interested_management">Not Interested Management</span></h4>
+                    <p class="settings-description" data-i18n="not_interested_description">Manage shows and movies you've marked as not interested</p>
+                    <div class="settings-control-group">
+                      <button id="manageNotInterestedBtn" class="btn" onclick="openNotInterestedModal()">
+                        🚫 <span data-i18n="manage_not_interested_list">Manage Not Interested List</span>
+                      </button>
+                      <p class="settings-hint">View and remove items from your "Not Interested" list to see them in recommendations again</p>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Notifications Section -->
+                <section id="notifications" class="settings-section">
+                  <div class="settings-subsection">
+                    <h3 class="settings-title">🔔 <span data-i18n="notifications">Notifications</span></h3>
+                    <p class="settings-description" data-i18n="notifications_description">Choose which types of notifications you'd like to receive</p>
+                    
+                    <!-- Episode Alerts -->
+                    <div class="settings-control-group">
+                      <label class="settings-checkbox-label">
+                        <input type="checkbox" id="notifEpisodes" class="settings-checkbox" />
+                        <span class="settings-checkbox-text" data-i18n="episode_alerts">Upcoming episode alerts</span>
+                      </label>
+                      <p class="settings-hint">Get notified when new episodes of shows you're watching are about to air</p>
+                    </div>
+
+                    <!-- Weekly Discover -->
+                    <div class="settings-control-group">
+                      <label class="settings-checkbox-label">
+                        <input type="checkbox" id="notifDiscover" class="settings-checkbox" />
+                        <span class="settings-checkbox-text" data-i18n="weekly_discover">Weekly discover picks</span>
+                      </label>
+                      <p class="settings-hint">Receive weekly recommendations for new shows and movies based on your preferences</p>
+                    </div>
+
+                    <!-- Monthly Digest -->
+                    <div class="settings-control-group">
+                      <label class="settings-checkbox-label">
+                        <input type="checkbox" id="notifDigest" class="settings-checkbox" />
+                        <span class="settings-checkbox-text" data-i18n="monthly_digest">Monthly stats digest</span>
+                      </label>
+                      <p class="settings-hint">Get a monthly summary of your watching statistics and achievements</p>
+                    </div>
+                  </div>
+
+                  <!-- Pro Notifications -->
+                  <div class="settings-subsection">
+                    <h4 class="settings-subtitle">⭐ Pro Notifications</h4>
+                    <p class="settings-description">Advanced notification features for Pro users</p>
+                    
+                    <!-- Advanced Notifications (PRO) -->
+                    <div class="settings-control-group">
+                      <h5 class="settings-label">🔔 Advanced Notifications (PRO)</h5>
+                      <p class="settings-hint">Configure advanced notification settings with custom lead times and list monitoring</p>
+                      <div class="settings-block" style="display: flex; flex-direction: column; gap: 15px; padding: 15px; background: var(--card); border-radius: 8px; border: 1px solid var(--border);">
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                          <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="advOn" disabled aria-disabled="true">
+                            <span>Enable advanced notifications</span>
+                          </label>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                          <label for="advLead" style="font-weight: 500;">Lead time (hours):</label>
+                          <select id="advLead" disabled aria-disabled="true" aria-label="Notification lead time" style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px;">
+                            <option value="6">6</option>
+                            <option value="12">12</option>
+                            <option value="24" selected>24</option>
+                            <option value="48">48</option>
+                            <option value="custom">Custom…</option>
+                          </select>
+                          <input type="number" id="advLeadCustom" min="1" step="1" value="24" disabled aria-disabled="true" style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; width: 80px;">
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                          <label for="advLists" style="font-weight: 500;">Monitor lists:</label>
+                          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 4px;">
+                              <input type="checkbox" id="advListWatching" checked disabled aria-disabled="true">
+                              <span>Currently Watching</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px;">
+                              <input type="checkbox" id="advListWishlist" disabled aria-disabled="true">
+                              <span>Want to Watch</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px;">
+                              <input type="checkbox" id="advListWatched" disabled aria-disabled="true">
+                              <span>Already Watched</span>
+                            </label>
+                          </div>
+                        </div>
+                        <div style="font-size: 0.8rem; color: #666; font-style: italic;" role="note">🔒 Pro feature - upgrade to unlock advanced notifications</div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Layout Section -->
+                <section id="layout" class="settings-section">
+                  <div class="settings-subsection">
+                    <h3 class="settings-title">🎨 <span data-i18n="layout_settings">Layout Settings</span></h3>
+                    <p class="settings-description" data-i18n="layout_description">Customize how your lists and cards are displayed</p>
+                    
+                    <!-- Core Layout Features -->
+                    <h4 class="settings-subtitle">📋 Core Features</h4>
+                    <p class="settings-description">Basic layout customization available to all users</p>
+                    
+                    <!-- Condensed Mode -->
+                    <div class="settings-control-group">
+                      <label class="settings-checkbox-label">
+                        <input type="checkbox" id="condensedMode" class="settings-checkbox" />
+                        <span class="settings-checkbox-text" data-i18n="condensed_list_view">Condensed list view (more items per screen)</span>
+                      </label>
+                      <p class="settings-hint">Show more items per screen by reducing card spacing and padding</p>
+                    </div>
+
+                    <!-- Show Posters -->
+                    <div class="settings-control-group">
+                      <label class="settings-checkbox-label">
+                        <input type="checkbox" id="showPosters" class="settings-checkbox" checked />
+                        <span class="settings-checkbox-text" data-i18n="show_posters">Show movie/TV show posters</span>
+                      </label>
+                      <p class="settings-hint">Display poster images for each show and movie in your lists</p>
+                    </div>
+
+                    <!-- Dark Mode -->
+                    <div class="settings-control-group">
+                      <label class="settings-checkbox-label">
+                        <input type="checkbox" id="darkMode" class="settings-checkbox" />
+                        <span class="settings-checkbox-text" data-i18n="dark_mode">Dark mode (auto-detect system preference)</span>
+                      </label>
+                      <p class="settings-hint">Switch to dark theme. When enabled, follows your system's dark/light mode preference</p>
+                    </div>
+
+                    <!-- Home Page Lists Count -->
+                    <div class="settings-control-group">
+                      <label for="settingCuratedRows" class="settings-label" data-i18n="home_page_lists">Home Page TV/Movie Lists</label>
+                      <div class="settings-input-group">
+                        <input
+                          type="number"
+                          id="settingCuratedRows"
+                          name="curatedRows"
+                          min="1"
+                          max="3"
+                          value="3"
+                          class="settings-input settings-input-number"
+                        />
+                        <span class="settings-hint">(1-3)</span>
+                        <span id="curatedRowsStatus" class="settings-status">Auto-saves</span>
+                      </div>
+                      <p class="settings-hint">Number of curated recommendation sections to show on the home page</p>
+                    </div>
+
+                    <!-- Currently Watching Preview Limit -->
+                    <div class="settings-control-group">
+                      <label for="settingCurrentlyWatchingLimit" class="settings-label">Currently Watching Preview Limit</label>
+                      <div class="settings-input-group">
+                        <input
+                          type="number"
+                          id="settingCurrentlyWatchingLimit"
+                          name="currentlyWatchingLimit"
+                          min="5"
+                          max="20"
+                          value="12"
+                          class="settings-input settings-input-number"
+                        />
+                        <span class="settings-hint">(5-20)</span>
+                        <span id="currentlyWatchingLimitStatus" class="settings-status">Auto-saves</span>
+                      </div>
+                      <p class="settings-hint">Number of currently watching shows to display on the home page preview</p>
+                    </div>
+
+                    <!-- Episode Tracking Toggle -->
+                    <div class="settings-control-group">
+                      <label class="settings-checkbox-label">
+                        <input type="checkbox" id="enableEpisodeTracking" class="settings-checkbox" />
+                        <span class="settings-checkbox-text">Enable Episode Tracking</span>
+                      </label>
+                      <p class="settings-hint">Allow tracking of individual episodes for TV series (opt-in per series)</p>
+                    </div>
+
+                  </div>
+
+                  <!-- Pro Layout Features -->
+                  <div class="settings-subsection">
+                    <h4 class="settings-subtitle">⭐ Pro Layout Features</h4>
+                    <p class="settings-description">Advanced layout and theming features for Pro users</p>
+                    
+                    <!-- Theme Packs -->
+                    <div class="settings-control-group">
+                      <h5 class="settings-label">🎨 Theme Packs</h5>
+                      <p class="settings-hint">Choose a visual theme for your Flicklet experience. Pro users get access to premium themes.</p>
+                      <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                        <label for="themePackSelect" style="font-weight: 500;">Theme:</label>
+                        <select id="themePackSelect" aria-label="Choose theme" style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px;">
+                          <option value="classic" selected>Classic</option>
+                          <option value="dark" disabled aria-disabled="true">Dark Pro 🔒</option>
+                          <option value="neon" disabled aria-disabled="true">Neon Pro 🔒</option>
+                          <option value="minimal" disabled aria-disabled="true">Minimal Pro 🔒</option>
+                        </select>
+                        <div style="font-size: 0.8rem; color: #666; font-style: italic;" role="note">🔒 Pro unlocks more themes</div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Data Section -->
+                <section id="data" class="settings-section">
+                  <div class="settings-subsection">
+                    <h3 class="settings-title">💾 <span data-i18n="data_management">Data Management</span></h3>
+                    <p class="settings-description" data-i18n="data_description">Export, import, or reset your data</p>
+                    
+                    <!-- Core Data Features -->
+                    <h4 class="settings-subtitle">📋 Core Features</h4>
+                    <p class="settings-description">Basic data management features available to all users</p>
+                    
+                    <!-- Export JSON -->
+                    <div class="settings-control-group">
+                      <button id="exportBtn" class="btn secondary" aria-label="Export data to JSON">
+                        📤 <span data-i18n="export_json">Export JSON</span>
+                      </button>
+                      <p class="settings-hint">Download a complete backup of your lists and settings as a JSON file</p>
+                    </div>
+
+                    <!-- Import JSON -->
+                    <div class="settings-control-group">
+                      <input type="file" id="importInput" accept=".json,application/json" hidden />
+                      <button id="importBtn" class="btn secondary" aria-label="Import data from JSON">
+                        📥 <span data-i18n="import_json">Import JSON</span>
+                      </button>
+                      <p class="settings-hint">Restore your data from a previously exported Flicklet backup file</p>
+                    </div>
+
+                    <!-- Share Lists -->
+                    <div class="settings-control-group">
+                      <button id="shareOpenBtn" class="btn secondary" data-share-title="Flicklet — My List" data-share-url="" title="Share your lists" aria-label="Share your TV and movie lists">
+                        🔗 <span data-i18n="share_lists">Share Lists</span>
+                      </button>
+                      <p class="settings-hint">Generate a shareable text list of your TV shows and movies to send to friends</p>
+                    </div>
+
+                    <!-- Reset All Data -->
+                    <div class="settings-control-group">
+                      <button id="resetBtn" class="btn danger" aria-label="Reset all data (requires confirmation)">
+                        🗑️ <span data-i18n="reset_all_data">Reset All Data</span>
+                      </button>
+                      <p class="settings-hint">⚠️ Permanently delete all your lists, settings, and data. This cannot be undone.</p>
+                    </div>
+                  </div>
+
+                  <!-- Pro Data Features -->
+                  <div class="settings-subsection">
+                    <h4 class="settings-subtitle">⭐ Pro Data Features</h4>
+                    <p class="settings-description">Advanced data management features for Pro users</p>
+                    
+                    <!-- Export CSV (Pro) -->
+                    <div class="settings-control-group">
+                      <button class="btn" data-pro="required" data-pro-mode="hide" data-pro-feature="export-csv">
+                        📊 <span data-i18n="export_csv_pro">Export CSV (Pro)</span>
+                      </button>
+                      <p class="settings-hint">Export your data in CSV format for use in spreadsheets (Pro feature)</p>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Pro Section -->
+                <section id="pro" class="settings-section">
+                  <div class="settings-subsection">
+                    <h3 class="settings-title">⭐ <span data-i18n="pro_features">Pro Features</span></h3>
+                    <p class="settings-description" data-i18n="pro_description">
+                      Unlock advanced features and premium content with Flicklet Pro
+                    </p>
+                    
+                    <!-- Preview Pro Features -->
+                    <div class="settings-control-group">
+                      <button id="previewProBtn" class="btn primary" onclick="toggleProPreview()">
+                        ⭐ <span data-i18n="preview_pro_features">Preview Pro Features</span>
+                      </button>
+                      <p class="settings-hint" data-i18n="pro_hint">Toggle Pro features on/off to see what's available without purchasing</p>
+                    </div>
+
+                    <!-- Extra Trivia (Pro) -->
+                    <div class="settings-control-group">
+                      <button class="btn" data-pro="required" data-pro-mode="disable" data-pro-feature="extra-trivia">
+                        🧠 <span data-i18n="extra_trivia_pro">Extra Trivia (Pro)</span>
+                      </button>
+                      <p class="settings-hint">Access additional trivia questions and behind-the-scenes content (Pro feature)</p>
+                    </div>
+
+                    <!-- Export CSV (Pro) -->
+                    <div class="settings-control-group">
+                      <button class="btn" data-pro="required" data-pro-mode="hide" data-pro-feature="export-csv">
+                        📊 <span data-i18n="export_csv_pro">Export CSV (Pro)</span>
+                      </button>
+                      <p class="settings-hint">Export your data in CSV format for use in spreadsheets (Pro feature)</p>
+                    </div>
+
+                    <!-- Pro Features List -->
+                    <div class="settings-control-group">
+                      <h4 class="settings-subtitle">✨ <span data-i18n="pro_features_include">Pro Features Include:</span></h4>
+                      <p class="settings-hint">Advanced features and premium content available with Flicklet Pro subscription</p>
+                      <div id="proFeaturesList" class="settings-pro-features">
+                        <!-- Dynamic Pro features list will be rendered here -->
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- About Section -->
+                <section id="about" class="settings-section">
+                  <!-- About Unique4U -->
+                  <div class="settings-subsection">
+                    <h3 class="settings-title">🏠 About Unique4U</h3>
+                    <p class="settings-description">
+                      We're not here to reinvent the wheel — we're here to make the wheel less squeaky. At Unique4U, our rule is simple: keep it simple. The world already has enough apps that feel like a second job to use. We'd rather give you tools that just… work.
+                    </p>
+                    <p class="settings-description">
+                      Everything we build has its own personality, but they all live under one roof: a people-first, all-inclusive, slightly offbeat house we call Unique4U. If it's fun, useful, and a little different from the pack — it belongs here.
+                    </p>
+                  </div>
+
+                  <!-- About the Creators -->
+                  <div class="settings-subsection">
+                    <h3 class="settings-title">👥 About the Creators</h3>
+                    <p class="settings-description">
+                      We're Pam and Travis. Think of us as casual builders with a shared allergy to overcomplication. We make things because we need them, and we figure you probably do too.
+                    </p>
+                    <p class="settings-description">
+                      Pam once trained dolphins (true story) and also happens to be really good with numbers. Travis studied English and Philosophy, which means he can overthink and explain it in writing, then somehow turn that into practical business know-how. Together, we're like a mash-up of "creative meets operations" — and that combo lets us build apps that are simple, useful, and not boring.
+                    </p>
+                  </div>
+
+                  <!-- About the App -->
+                  <div class="settings-subsection">
+                    <h3 class="settings-title">📱 About the App</h3>
+                    <p class="settings-description">
+                      Here's the deal: you want to remember what you're watching without needing a PhD in App Navigation. We built this because we got tired of two bad options — messy notes on our phones or bloated apps that make you log your "episode 7 mid-season thoughts." (Hard pass.)
+                    </p>
+                    <p class="settings-description">
+                      <strong>Data Attribution:</strong> This product uses the TMDB API but is not endorsed or certified by TMDB.
+                    </p>
+                    <p class="settings-description">
+                      So we made this instead:
+                    </p>
+                    <ul style="margin: 16px 0; padding-left: 20px; color: var(--color-text);">
+                      <li style="margin-bottom: 8px;"><strong>Stupidly easy.</strong> Open it, add your show, done.</li>
+                      <li style="margin-bottom: 8px;"><strong>Always free at the core.</strong> No paywalls for the basics.</li>
+                      <li style="margin-bottom: 8px;"><strong>Friend-proof sharing.</strong> Copy your list and drop it in a text when someone asks, "What should I watch?"</li>
+                    </ul>
+                    <p class="settings-description">
+                      If you watch TV or movies and don't want to make it a hobby just to track them, this app's for you. Simple lists, zero drama.
+                    </p>
+                  </div>
+
+                  <!-- Feedback Form -->
+                  <div class="settings-subsection">
+                    <h3 class="settings-title">💬 <span data-i18n="share_your_thoughts">Share Your Thoughts</span></h3>
+                    <p class="settings-description" data-i18n="feedback_working">
+                      Share your thoughts! Give us app feedback, tell us what's working (or not), 
+                      share a quote for our rotation, make a confession, or just vent. We're listening!
+                    </p>
+                    
+                    <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="settings-form" action="/thank-you" onsubmit="console.log('🔍 Form onsubmit called'); return false;">
+                      <input type="hidden" name="form-name" value="feedback" />
+                      <input type="hidden" name="theme" id="feedbackThemeInput" />
+                      <div style="display: none;">
+                        <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+                      </div>
+                      
+                      <!-- Feedback Form -->
+                      <div class="settings-control-group">
+                        <label for="feedbackMessage" class="settings-label" data-i18n="your_message">Your Message</label>
+                        <textarea
+                          id="feedbackMessage"
+                          name="message"
+                          class="settings-textarea"
+                          placeholder="Share your thoughts, feedback, quotes, or just vent! We're listening."
+                          rows="3"
+                          required
+                        ></textarea>
+                        <p class="settings-hint">Your feedback helps us improve Flicklet. All messages are read and appreciated!</p>
+                        <button type="submit" class="btn primary">
+                          📤 <span data-i18n="share_it">Share It!</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </section>
+              </div>
+
+          <!-- Share Selection Modal -->
+          <div id="shareSelectionModal" class="modal-backdrop" style="display: none;">
+            <div class="modal share-modal" style="max-width: 800px; max-height: 80vh;">
+              <h3>🔗 <span data-i18n="share_selected">Share Selected Items</span></h3>
+              
+              <!-- Select All Controls -->
+              <div class="select-all-controls" style="margin-bottom: 20px; padding: 15px; background: var(--card); border-radius: 8px;">
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                  <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="selectAllWatching" />
+                    <strong>📺 <span data-i18n="currently_watching">Currently Watching</span></strong>
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="selectAllWishlist" />
+                    <strong>📖 <span data-i18n="want_to_watch">Want to Watch</span></strong>
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="selectAllWatched" />
+                    <strong>✅ <span data-i18n="already_watched">Already Watched</span></strong>
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="selectAllEverything" />
+                    <strong>🌟 <span data-i18n="select_all_everything">Select All Everything</span></strong>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Items Lists -->
+              <div class="share-items-container" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
+                <!-- Currently Watching -->
+                <div class="share-list-section">
+                  <h4>📺 <span data-i18n="currently_watching">Currently Watching</span></h4>
+                  <div id="shareWatchingList" class="share-items-list"></div>
+                </div>
+                
+                <!-- Want to Watch -->
+                <div class="share-list-section">
+                  <h4>📖 <span data-i18n="want_to_watch">Want to Watch</span></h4>
+                  <div id="shareWishlistList" class="share-items-list"></div>
+                </div>
+                
+                <!-- Already Watched -->
+                <div class="share-list-section">
+                  <h4>✅ <span data-i18n="already_watched">Already Watched</span></h4>
+                  <div id="shareWatchedList" class="share-items-list"></div>
+                </div>
+              </div>
+
+                            <!-- Action Buttons -->
+              <div class="modal-actions" style="display: flex; gap: 10px; justify-content: center;">
+                <button id="generateShareLinkBtn" class="btn success" style="display: none;" onclick="generateShareLinkFromSelected()">
+                  📋 <span data-i18n="generate_share_link">Select what to share</span>
+                </button>
+                <button id="copyShareBtn" class="btn primary" style="display: none;" onclick="copyShareList()">
+                  📋 Copy
+                </button>
+                <button id="closeShareModalBtn" class="btn secondary">
+                  ✖️ <span data-i18n="close">Close</span>
+                </button>
+              </div>
+            </div>
+          </div>
+  
+          </div>
+      </div>
+
+      <!-- FAB Rail - Sticky positioning within container -->
+      <div class="fab-rail">
+        <button id="settingsTab" class="fab-left" data-tab="settings" aria-label="Settings">⚙️ <span data-i18n="settings">Settings</span></button>
+        <div class="fab-stack">
+          <button id="darkModeToggle" class="fab" aria-label="Dark">
+            <span id="themeIcon">🌙</span>
+          </button>
+          <button id="mardiToggle" class="fab" aria-label="Mardi">🎭</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Firebase (compat for simplicity) -->
+      </main>
+
+    <!-- Firebase must load BEFORE app.js -->
+    <!-- ==== SCRIPT ORDER: libraries → config → init your app scripts === -->
+
+<!-- Firebase libs (compat for simplicity) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- Firebase Configuration - Load from external file -->
+<script src="firebase-config.js"></script>
+
+<!-- Initialize Firebase (single, robust initialization) -->
+<script>
+  (function() {
+    'use strict';
+    
+    // Prevent duplicate initialization
+    if (window.firebaseInitialized) {
+      console.warn("⚠️ Firebase already initialized, skipping duplicate");
+      return;
+    }
+    
+    try {
+      // Validate configuration
+      if (!window.FIREBASE_CONFIG?.apiKey) {
+        console.error("❌ Firebase config missing apiKey");
+        return;
+      }
+      
+      // Initialize Firebase only if not already initialized
+      if (firebase.apps.length === 0) {
+        firebase.initializeApp(window.FIREBASE_CONFIG);
+        console.info("✅ Firebase initialized:", window.FIREBASE_CONFIG.projectId);
+        
+        // Set persistence to LOCAL for better localhost experience
+        const auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+          .then(() => {
+            console.info("🔒 Auth persistence set to LOCAL");
+          })
+          .catch((err) => {
+            console.error("⚠️ Failed to set persistence", err);
+          });
+        
+        // Expose Firebase services globally for debugging and app use
+        window.FB = {
+          auth: auth,
+          db: firebase.firestore()
+        };
+        
+        // Mark as initialized to prevent duplicates
+        window.firebaseInitialized = true;
+        window.firebase = firebase;
+        window.auth = auth;
+        window.db = firebase.firestore();
+        
+      } else {
+        console.warn("⚠️ Firebase already initialized, reusing existing instance");
+        window.firebaseInitialized = true;
+      }
+      
+    } catch (e) {
+      console.error("🔥 Firebase initialization error:", e);
+      // Don't mark as initialized if there was an error
+    }
+  })();
+</script>
+<!-- Persistence is now handled in the main Firebase initialization above -->
+
+
+
+    <!-- Config & core helpers (must be available to everything below) -->
+    <script src="tmdb-config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/bootstrap.js"></script>
+
+    <!-- Core functionality (assumes utils/app exist) -->
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/notifications.js"></script>
+    <script src="js/functions.js"></script>
+
+    <!-- Component modules -->
+    <script src="scripts/components/Card.js"></script>
+    <script src="scripts/components/ActionBar.js"></script>
+    
+    <!-- Performance monitoring -->
+    <script src="scripts/performance-monitor.js"></script>
+    
+    <!-- Home layout -->
+    <script src="scripts/home.js"></script>
+    
+    <!-- Router -->
+    <script src="scripts/router.js"></script>
+    
+    
+    <!-- Feature modules (safe to assume utils/app are ready) -->
+    <script src="scripts/currently-watching-preview.js"></script>
+    <script src="scripts/next-up-this-week.js"></script>
+    <script src="scripts/community-spotlight.js"></script>
+    <script src="scripts/curated-rows.js"></script>
+    <script src="scripts/curated-seed.js"></script>
+    <script src="scripts/list-actions.js"></script>
+    
+    <!-- Personalized Rows System -->
+    <script src="scripts/data/user-settings.js"></script>
+    <script src="scripts/api/content.js"></script>
+    <script src="scripts/rows/personalized.js"></script>
+    <script src="scripts/settings/my-rows.js"></script>
+    
+    <script src="scripts/share-modal.js"></script>
+    <script src="scripts/search-tips.js"></script>
+    <script src="scripts/series-org.js"></script>
+    <script src="scripts/tmdb-seed.js"></script>
+    <script src="scripts/pro-gate.js"></script>
+    <script src="js/language-manager.js"></script>
+    <script src="js/i18n.js"></script>
+
+    <!-- Centralized Add Handler (must load before other handlers) -->
+    <script src="scripts/centralized-add-handler.js"></script>
+    
+    <!-- UI orchestration (must be last) -->
+    <script src="scripts/inline-script-01.js"></script>
+    <script src="scripts/inline-script-02.js"></script>
+    <script src="scripts/inline-script-03.js"></script>
+    <script src="scripts/episode-tracking.js"></script>
+
+    
+
+    <!-- CLEANUP: All test and duplicate scripts removed for production -->
+    
+    <!-- Fallback search initialization -->
+    <script>
+    (function() {
+      'use strict';
+      
+      // Fallback search initialization to ensure search works
+      function initializeSearchFallback() {
+        console.log('🔍 Fallback search initialization starting...');
+        
+        const searchBtn = document.getElementById('searchBtn');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        const searchInput = document.getElementById('searchInput');
+        
+        if (searchBtn && typeof window.performSearch === 'function') {
+          console.log('✅ Setting up search button (fallback)');
+          searchBtn.onclick = function() {
+            console.log('🔍 Search button clicked (fallback)');
+            window.performSearch();
+          };
+        }
+        
+        if (clearSearchBtn && typeof window.clearSearch === 'function') {
+          console.log('✅ Setting up clear search button (fallback)');
+          clearSearchBtn.onclick = function() {
+            console.log('🧹 Clear search button clicked (fallback)');
+            window.clearSearch();
+          };
+        }
+        
+        if (searchInput && typeof window.performSearch === 'function') {
+          console.log('✅ Setting up search input Enter key (fallback)');
+          searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+              console.log('⌨️ Enter key pressed (fallback)');
+              e.preventDefault();
+              window.performSearch();
+            }
+          });
+        }
+        
+        console.log('✅ Fallback search initialization complete');
+      }
+      
+      // Run immediately and also after a delay
+      initializeSearchFallback();
+      setTimeout(initializeSearchFallback, 2000);
+      
+    })();
+    </script>
+
+    <!-- Feedback Link Handler -->
+    <script>
+    function openSettingsToFeedback() {
+      console.log('💬 Opening settings to feedback section');
+      
+      // Switch to settings tab
+      const settingsTab = document.getElementById('settingsTab');
+      if (settingsTab) {
+        settingsTab.click();
+        
+        // Wait for settings to load, then switch to About tab
+        setTimeout(() => {
+          const aboutTab = document.querySelector('.settings-tabs button[data-target="#about"]');
+          if (aboutTab) {
+            aboutTab.click();
+            
+            // Scroll to feedback section
+            setTimeout(() => {
+              const feedbackSection = document.querySelector('#about .settings-subsection:last-child');
+              if (feedbackSection) {
+                feedbackSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }, 100);
+          }
+        }, 200);
+      } else {
+        console.warn('💬 Settings tab not found');
+        alert('Please go to Settings → About to share your feedback');
+      }
+    }
+    </script>
+
+    <!-- Episode Tracking Toggle Handler -->
+    <script>
+    (function(){
+      console.log('🔧 Episode tracking toggle handler starting...');
+      
+      let toggle = null;
+      
+      // Function to find and setup the toggle
+      function setupToggle() {
+        if (toggle && toggle.dataset.setupComplete) {
+          console.log('🔧 Episode tracking toggle already set up, skipping');
+          return true;
+        }
+        
+        toggle = document.querySelector('#enableEpisodeTracking');
+        console.log('🔧 Episode tracking toggle found:', !!toggle, toggle);
+        if (!toggle) {
+          console.warn('🔧 Episode tracking toggle not found, will retry...');
+          return false;
+        }
+        
+        // Load saved value
+        const stored = localStorage.getItem('flicklet:episodeTracking:enabled');
+        console.log('🔧 Stored episode tracking value:', stored);
+        if (stored !== null) {
+          toggle.checked = stored === 'true';
+        } else {
+          // Default to false (disabled)
+          toggle.checked = false;
+        }
+        
+        // Apply the setting
+        applyEpisodeTrackingSetting();
+        
+        // Add event listener
+        toggle.addEventListener('change', () => {
+          console.log('🔧 Episode tracking toggle changed:', toggle.checked);
+          applyEpisodeTrackingSetting();
+        });
+        
+        // Mark as set up
+        toggle.dataset.setupComplete = 'true';
+        
+        return true;
+      }
+      
+      // Function to apply the setting
+      function applyEpisodeTrackingSetting() {
+        const enabled = toggle.checked;
+        console.log('🔧 Setting episode tracking to:', enabled);
+        localStorage.setItem('flicklet:episodeTracking:enabled', String(enabled));
+        
+        // Update UI visibility based on setting
+        // Add a small delay to ensure cards are rendered first
+        setTimeout(() => {
+          updateEpisodeTrackingUI(enabled);
+        }, 100);
+      }
+      
+      // Function to update UI based on episode tracking setting
+      function updateEpisodeTrackingUI(enabled) {
+        console.log('🔧 updateEpisodeTrackingUI called with enabled:', enabled);
+        
+        // Show/hide episode tracking buttons on TV series cards
+        const episodeButtons = document.querySelectorAll('[data-action="track-episodes"]');
+        console.log('🔧 Found episode buttons:', episodeButtons.length);
+        episodeButtons.forEach((btn, index) => {
+          console.log(`🔧 Button ${index}:`, btn.textContent, 'setting display to:', enabled ? 'inline-block' : 'none');
+          btn.style.display = enabled ? 'inline-block' : 'none';
+        });
+        
+        // Update any existing progress hints
+        const progressHints = document.querySelectorAll('.episode-progress-hint');
+        progressHints.forEach(hint => {
+          hint.style.display = enabled ? 'inline' : 'none';
+        });
+        
+        // Note: UI update handled by episode tracking system initialization
+      }
+      
+      // Try to setup immediately
+      if (!setupToggle()) {
+        // If not found, retry every 500ms for up to 10 seconds
+        let retries = 0;
+        const retryInterval = setInterval(() => {
+          retries++;
+          console.log('🔧 Retrying to find episode tracking toggle, attempt:', retries);
+          if (setupToggle() || retries >= 20) {
+            clearInterval(retryInterval);
+            if (retries >= 20) {
+              console.warn('🔧 Failed to find episode tracking toggle after 20 attempts');
+            }
+          }
+        }, 500);
+      }
+      
+      // Expose function to update UI
+      window.updateEpisodeTrackingUI = updateEpisodeTrackingUI;
+      
+      // Update UI on page load to show existing buttons
+      setTimeout(() => {
+        const enabled = localStorage.getItem('flicklet:episodeTracking:enabled') === 'true';
+        console.log('🔧 Page load - updating episode tracking UI, enabled:', enabled);
+        updateEpisodeTrackingUI(enabled);
+      }, 1000);
+      
+    })();
+    </script>
+
+    <!-- Curated Rows Count Setting Handler -->
+    <script>
+    (function(){
+      console.log('🔧 Curated rows setting handler starting...');
+      
+      let input = null;
+      let debounceTimer;
+      
+      // Function to find and setup the input
+      function setupInput() {
+        // If already set up, don't do it again
+        if (input && input.dataset.setupComplete) {
+          console.log('🔧 Input already set up, skipping');
+          return true;
+        }
+        
+        input = document.querySelector('#settingCuratedRows, [name="curatedRows"]');
+        console.log('🔧 Input found:', !!input, input);
+        if (!input) {
+          console.warn('🔧 Curated rows input not found, will retry...');
+          return false;
+        }
+        
+        // Track if this is initial setup to avoid showing notification
+        let isInitialSetup = true;
+        let hasUserInteracted = false;
+        let isSettingValue = false; // Flag to prevent notifications when setting value programmatically
+        let lastNotifiedValue = null; // Track last value we showed notification for
+        
+        // Function to safely set value without triggering notifications
+        function setValueSafely(value) {
+          console.log('🔧 setValueSafely called with:', value, 'isSettingValue will be set to true');
+          isSettingValue = true;
+          input.value = value;
+          console.log('🔧 Set value safely to:', value, 'isSettingValue:', isSettingValue);
+          // Apply the setting but without notification
+          applySetting();
+          isSettingValue = false;
+          console.log('🔧 setValueSafely completed, isSettingValue reset to false');
+        }
+        
+        // Load saved value
+        const stored = localStorage.getItem('flicklet:curated:rows');
+        console.log('🔧 Stored value:', stored);
+        if (stored) {
+          // Set value without triggering notifications
+          setValueSafely(stored);
+        } else {
+          // Set default value without triggering notifications
+          setValueSafely('3');
+        }
+        
+        // Function to apply the setting
+        function applySetting() {
+          console.log('🔧 applySetting called with value:', input.value, 'isInitialSetup:', isInitialSetup, 'hasUserInteracted:', hasUserInteracted, 'isSettingValue:', isSettingValue);
+          const n = Math.max(1, Math.min(10, Number(input.value)||3));
+          console.log('🔧 Setting curated rows to:', n);
+          localStorage.setItem('flicklet:curated:rows', String(n));
+          document.dispatchEvent(new CustomEvent('curated:rerender'));
+          console.log('🔧 Dispatched curated:rerender event');
+          
+          // Only show notification if user has actually interacted with the input, we're not setting the value programmatically, and the value has changed
+          if (hasUserInteracted && !isSettingValue && lastNotifiedValue !== n && window.showNotification) {
+            console.log('🔧 Showing notification for user interaction - value changed from', lastNotifiedValue, 'to', n);
+            window.showNotification(`✅ Showing ${n} TV/Movie list${n>1?'s':''}`, 'success');
+            lastNotifiedValue = n; // Remember this value so we don't notify again
+          } else {
+            console.log('🔧 Notification blocked - hasUserInteracted:', hasUserInteracted, 'isSettingValue:', isSettingValue, 'value changed:', lastNotifiedValue !== n, 'showNotification available:', !!window.showNotification);
+          }
+          
+          // Visual feedback on the input
+          input.style.borderColor = '#10b981';
+          input.style.backgroundColor = '#f0fdf4';
+          
+          // Update status indicator
+          const status = document.getElementById('curatedRowsStatus');
+          if (status) {
+            status.textContent = '✅ Saved';
+            status.style.color = '#10b981';
+            setTimeout(() => {
+              status.textContent = 'Auto-saves';
+              status.style.color = '';
+            }, 2000);
+          }
+          
+          setTimeout(() => {
+            input.style.borderColor = '';
+            input.style.backgroundColor = '';
+          }, 1000);
+        }
+        
+        // Debounced function for input events
+        function debouncedApply() {
+          console.log('🔧 debouncedApply called');
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(applySetting, 300);
+        }
+        
+        // Track user interaction to enable notifications
+        input.addEventListener('input', () => {
+          hasUserInteracted = true;
+          lastNotifiedValue = null; // Reset so we can notify for new changes
+          console.log('🔧 User interacted with input - notifications enabled, reset lastNotifiedValue');
+          debouncedApply();
+        });
+        input.addEventListener('change', () => {
+          hasUserInteracted = true;
+          console.log('🔧 User changed input - notifications enabled');
+          applySetting();
+        });
+        input.addEventListener('blur', () => {
+          hasUserInteracted = true;
+          console.log('🔧 User blurred input - notifications enabled');
+          applySetting();
+        });
+        
+        // Mark setup as complete after a short delay to avoid initial notification
+        setTimeout(() => {
+          isInitialSetup = false;
+          console.log('🔧 Initial setup complete - notifications enabled');
+        }, 1000);
+        
+        // Function to refresh value when settings tab is opened
+        function refreshValue() {
+          console.log('🔧 refreshValue called - resetting hasUserInteracted to false');
+          hasUserInteracted = false; // Reset user interaction flag for refresh operations
+          
+          const currentStored = localStorage.getItem('flicklet:curated:rows');
+          if (currentStored && currentStored !== input.value) {
+            console.log('🔧 Refreshing value from storage:', currentStored);
+            // Use setValueSafely to avoid notifications during refresh
+            setValueSafely(currentStored);
+          } else {
+            console.log('🔧 No refresh needed - value already correct:', input.value);
+          }
+        }
+        
+        // Expose refresh function globally so it can be called when settings tab opens
+        window.refreshCuratedRowsSetting = refreshValue;
+        
+        // Test if input is responsive
+        input.addEventListener('click', () => console.log('🔧 Input clicked'));
+        input.addEventListener('focus', () => console.log('🔧 Input focused'));
+        
+        console.log('🔧 Event listeners attached to input');
+        
+        // Mark as set up to prevent duplicate setup
+        input.dataset.setupComplete = 'true';
+        
+        // Test the input
+        setTimeout(() => {
+          if (input.offsetParent === null) {
+            console.log('🔧 Input is hidden - user needs to go to Settings > Layout tab to see it');
+          } else {
+            console.log('🔧 Input is visible and ready');
+          }
+        }, 1000);
+        
+        return true;
+      }
+      
+      // Try to setup immediately
+      if (!setupInput()) {
+        // If not found, retry every 500ms for up to 10 seconds
+        let retries = 0;
+        const retryInterval = setInterval(() => {
+          retries++;
+          console.log('🔧 Retrying to find input, attempt:', retries);
+          if (setupInput() || retries >= 20) {
+            clearInterval(retryInterval);
+            if (retries >= 20) {
+              console.warn('🔧 Failed to find input after 20 attempts');
+            }
+          }
+        }, 500);
+      }
+      
+      // Also listen for when the Layout tab becomes active
+      document.addEventListener('DOMContentLoaded', () => {
+        // Listen for tab changes to re-setup the input if needed
+        const layoutSection = document.querySelector('#layout');
+        if (layoutSection) {
+          // Use MutationObserver to detect when the section becomes active
+          const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+              if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const isActive = layoutSection.classList.contains('active');
+                if (isActive && !input) {
+                  console.log('🔧 Layout section became active, re-setting up input');
+                  setupInput();
+                }
+              }
+            });
+          });
+          
+          observer.observe(layoutSection, { attributes: true, attributeFilter: ['class'] });
+        }
+        
+        // Also listen for the settings tabs initialization
+        const checkForTabs = setInterval(() => {
+          if (document.querySelector('.settings-tabs button[data-target="#layout"]')) {
+            console.log('🔧 Settings tabs found, setting up layout tab listener');
+            clearInterval(checkForTabs);
+            
+            const layoutTab = document.querySelector('.settings-tabs button[data-target="#layout"]');
+            if (layoutTab) {
+              layoutTab.addEventListener('click', () => {
+                console.log('🔧 Layout tab clicked, ensuring input is set up');
+                setTimeout(() => {
+                  if (!input) {
+                    console.log('🔧 Input not found, setting up...');
+                    setupInput();
+                  } else {
+                    console.log('🔧 Input already exists, checking visibility...');
+                    console.log('🔧 Input visible?', input.offsetParent !== null);
+                    console.log('🔧 Input parent visible?', input.parentElement?.offsetParent !== null);
+                    console.log('🔧 Input parent classes:', input.parentElement?.className);
+                    console.log('🔧 Input parent parent classes:', input.parentElement?.parentElement?.className);
+                    
+                    // Refresh the value to ensure it shows the correct stored value
+                    if (typeof window.refreshCuratedRowsSetting === 'function') {
+                      console.log('🔧 Refreshing curated rows setting on Layout tab click');
+                      window.refreshCuratedRowsSetting();
+                    }
+                  }
+                }, 100);
+              });
+            }
+          }
+        }, 500);
+        
+        // Stop checking after 10 seconds
+        setTimeout(() => clearInterval(checkForTabs), 10000);
+      });
+      
+    })();
+    </script>
+
+    <!-- Currently Watching Limit Setting Handler -->
+    <script>
+    (function(){
+      console.log('🔧 Currently watching limit setting handler starting...');
+      
+      let input = null;
+      let debounceTimer;
+      
+      // Function to find and setup the input
+      function setupInput() {
+        // If already set up, don't do it again
+        if (input && input.dataset.setupComplete) {
+          console.log('🔧 Currently watching limit input already set up, skipping');
+          return true;
+        }
+        
+        input = document.querySelector('#settingCurrentlyWatchingLimit, [name="currentlyWatchingLimit"]');
+        console.log('🔧 Currently watching limit input found:', !!input, input);
+        if (!input) {
+          console.warn('🔧 Currently watching limit input not found, will retry...');
+          return false;
+        }
+        
+        // Track if this is initial setup to avoid showing notification
+        let isInitialSetup = true;
+        let hasUserInteracted = false;
+        let isSettingValue = false; // Flag to prevent notifications when setting value programmatically
+        let lastNotifiedValue = null; // Track last value we showed notification for
+        
+        // Function to safely set value without triggering notifications
+        function setValueSafely(value) {
+          console.log('🔧 setValueSafely called with:', value, 'isSettingValue will be set to true');
+          isSettingValue = true;
+          input.value = value;
+          console.log('🔧 Set value safely to:', value, 'isSettingValue:', isSettingValue);
+          // Apply the setting but without notification
+          applySetting();
+          isSettingValue = false;
+          console.log('🔧 setValueSafely completed, isSettingValue reset to false');
+        }
+        
+        // Load saved value
+        const stored = localStorage.getItem('flicklet:currentlyWatching:limit');
+        console.log('🔧 Stored currently watching limit value:', stored);
+        if (stored) {
+          // Set value without triggering notifications
+          setValueSafely(stored);
+        } else {
+          // Set default value without triggering notifications
+          setValueSafely('12');
+        }
+        
+        // Function to apply the setting
+        function applySetting() {
+          console.log('🔧 applyCurrentlyWatchingSetting called with value:', input.value, 'isInitialSetup:', isInitialSetup, 'hasUserInteracted:', hasUserInteracted, 'isSettingValue:', isSettingValue);
+          const n = Math.max(5, Math.min(20, Number(input.value)||12));
+          console.log('🔧 Setting currently watching limit to:', n);
+          localStorage.setItem('flicklet:currentlyWatching:limit', String(n));
+          
+          // Trigger currently watching preview update
+          if (typeof window.renderCurrentlyWatchingPreview === 'function') {
+            window.renderCurrentlyWatchingPreview();
+          }
+          document.dispatchEvent(new CustomEvent('currentlyWatching:rerender'));
+          console.log('🔧 Dispatched currentlyWatching:rerender event');
+          
+          // Only show notification if user has actually interacted with the input, we're not setting the value programmatically, and the value has changed
+          if (hasUserInteracted && !isSettingValue && lastNotifiedValue !== n && window.showNotification) {
+            console.log('🔧 Showing notification for user interaction - value changed from', lastNotifiedValue, 'to', n);
+            window.showNotification(`✅ Showing ${n} currently watching shows`, 'success');
+            lastNotifiedValue = n; // Remember this value so we don't notify again
+          } else {
+            console.log('🔧 Notification blocked - hasUserInteracted:', hasUserInteracted, 'isSettingValue:', isSettingValue, 'value changed:', lastNotifiedValue !== n, 'showNotification available:', !!window.showNotification);
+          }
+          
+          // Visual feedback on the input
+          input.style.borderColor = '#10b981';
+          input.style.backgroundColor = '#f0fdf4';
+          
+          // Update status indicator
+          const status = document.getElementById('currentlyWatchingLimitStatus');
+          if (status) {
+            status.textContent = '✅ Saved';
+            status.style.color = '#10b981';
+            setTimeout(() => {
+              status.textContent = 'Auto-saves';
+              status.style.color = '';
+            }, 2000);
+          }
+          
+          setTimeout(() => {
+            input.style.borderColor = '';
+            input.style.backgroundColor = '';
+          }, 1000);
+        }
+        
+        // Debounced function for input events
+        function debouncedApply() {
+          console.log('🔧 debouncedApply called for currently watching limit');
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            console.log('🔧 Debounced apply executing for currently watching limit');
+            applySetting();
+          }, 500);
+        }
+        
+        // Event listeners
+        input.addEventListener('input', () => {
+          console.log('🔧 Currently watching limit input event fired');
+          hasUserInteracted = true;
+          isInitialSetup = false;
+          debouncedApply();
+        });
+        
+        input.addEventListener('change', () => {
+          console.log('🔧 Currently watching limit change event fired');
+          hasUserInteracted = true;
+          isInitialSetup = false;
+          applySetting();
+        });
+        
+        // Mark as set up
+        input.dataset.setupComplete = 'true';
+        console.log('🔧 Currently watching limit input setup complete');
+        return true;
+      }
+      
+      // Try to setup immediately
+      if (!setupInput()) {
+        // If not ready, retry every 100ms for up to 10 seconds
+        let attempts = 0;
+        const maxAttempts = 100;
+        const interval = setInterval(() => {
+          attempts++;
+          console.log('🔧 Currently watching limit setup attempt', attempts);
+          if (setupInput() || attempts >= maxAttempts) {
+            clearInterval(interval);
+            if (attempts >= maxAttempts) {
+              console.error('🔧 Failed to setup currently watching limit input after', maxAttempts, 'attempts');
+            }
+          }
+        }, 100);
+      }
+      
+      // Expose refresh function for external use
+      window.refreshCurrentlyWatchingLimitSetting = function() {
+        console.log('🔧 Refreshing currently watching limit setting...');
+        if (input) {
+          const stored = localStorage.getItem('flicklet:currentlyWatching:limit');
+          if (stored) {
+            input.value = stored;
+          }
+        }
+      };
+      
+    })();
+    </script>
+    
+    <!-- Global modal mount, never hidden by tab switching -->
+    <div id="modal-root" data-modal-root style="position:relative; z-index:0;"></div>
+	
+	<!-- Notifications regions (required by notifications.js) -->
+<div id="toastRegion" role="status" aria-live="polite" aria-atomic="true" class="toast-region"></div>
+<div id="bannerRegion" role="alert" aria-live="assertive" aria-atomic="true" class="banner-region"></div>
+
+  </body>
+</html>

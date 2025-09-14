@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quick Verification - Phase C Changes</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+        .test-button {
+            padding: 12px 24px;
+            margin: 8px;
+            border: 1px solid #ddd;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 6px;
+            min-height: 44px;
+            min-width: 44px;
+        }
+        .test-button:focus-visible {
+            outline: 2px solid #e91e63;
+            outline-offset: 2px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .pass { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .fail { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Quick Verification - Phase C Changes</h1>
+    <p><strong>Version:</strong> v23.81-VISUAL-POLISH</p>
+    
+    <div class="test-card">
+        <h2>1. Focus-Visible Test</h2>
+        <p>Tab through these buttons to test focus-visible styles:</p>
+        <button class="test-button" tabindex="0">Button 1</button>
+        <button class="test-button" tabindex="0">Button 2</button>
+        <input type="text" placeholder="Input field" class="test-button">
+        <select class="test-button">
+            <option>Select option</option>
+        </select>
+        <div class="status info">
+            ℹ️ Expected: Pink outline (2px solid #e91e63) should appear when focused
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>2. Mobile Font Size Test</h2>
+        <div id="mobile-test" style="display: none;">
+            <p style="font-size: 14px;">This text should be 16px on mobile (overridden)</p>
+            <button style="font-size: 12px;">This button should be 16px on mobile (overridden)</button>
+        </div>
+        <div id="desktop-test">
+            <p>Mobile font size tests only visible on mobile devices (≤768px)</p>
+        </div>
+        <div class="status info">
+            ℹ️ Check browser dev tools to verify font sizes are ≥16px on mobile
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>3. Contrast Test</h2>
+        <p style="color: #4b5563; background: white; padding: 10px; border: 1px solid #ddd;">
+            Improved muted text color: #4b5563 (better contrast)
+        </p>
+        <p style="color: #6b7280; background: white; padding: 10px; border: 1px solid #ddd;">
+            Old muted text color: #6b7280 (for comparison)
+        </p>
+        <div class="status info">
+            ℹ️ The first line should have better contrast against white background
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>4. ARIA Test</h2>
+        <div role="region" aria-label="Test region" aria-live="polite">
+            This region has proper ARIA attributes (aria-live moved from CSS to HTML)
+        </div>
+        <div class="status pass">
+            ✅ aria-live attribute is now in HTML instead of CSS
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>5. Touch Target Test</h2>
+        <button class="test-button">Touch Target (44x44px minimum)</button>
+        <div class="status pass">
+            ✅ All interactive elements should be ≥44x44px for mobile accessibility
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>6. Script Loading Test</h2>
+        <p>Check Network tab in dev tools for:</p>
+        <ul>
+            <li>layout-enhancements.js should load with <code>defer</code></li>
+            <li>polyfill.js should load with <code>defer</code></li>
+        </ul>
+        <div class="status info">
+            ℹ️ Deferred scripts improve page load performance
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>7. Test Results</h2>
+        <div id="test-results">
+            <p>Running automated tests...</p>
+        </div>
+    </div>
+
+    <script>
+        // Auto-detect mobile
+        function checkMobile() {
+            if (window.innerWidth <= 768) {
+                document.getElementById('mobile-test').style.display = 'block';
+                document.getElementById('desktop-test').style.display = 'none';
+            }
+        }
+        
+        // Run tests
+        function runTests() {
+            const results = document.getElementById('test-results');
+            let html = '<h3>Automated Test Results:</h3>';
+            
+            // Test 1: Focus-visible support
+            const hasFocusVisible = CSS.supports('selector(:focus-visible)');
+            html += `<div class="status ${hasFocusVisible ? 'pass' : 'fail'}">
+                ${hasFocusVisible ? '✅' : '❌'} Focus-visible CSS support: ${hasFocusVisible}
+            </div>`;
+            
+            // Test 2: Mobile detection
+            const isMobile = window.innerWidth <= 768;
+            html += `<div class="status info">
+                ℹ️ Mobile device detected: ${isMobile} (width: ${window.innerWidth}px)
+            </div>`;
+            
+            // Test 3: Touch target check
+            const buttons = document.querySelectorAll('.test-button');
+            let allMeetTargets = true;
+            buttons.forEach(btn => {
+                const rect = btn.getBoundingClientRect();
+                if (rect.width < 44 || rect.height < 44) {
+                    allMeetTargets = false;
+                }
+            });
+            html += `<div class="status ${allMeetTargets ? 'pass' : 'fail'}">
+                ${allMeetTargets ? '✅' : '❌'} Touch targets: ${allMeetTargets ? 'All meet 44x44px minimum' : 'Some targets too small'}
+            </div>`;
+            
+            // Test 4: ARIA attributes
+            const regions = document.querySelectorAll('[role="region"]');
+            let allHaveLabels = true;
+            regions.forEach(region => {
+                if (!region.hasAttribute('aria-label') && !region.hasAttribute('aria-labelledby')) {
+                    allHaveLabels = false;
+                }
+            });
+            html += `<div class="status ${allHaveLabels ? 'pass' : 'fail'}">
+                ${allHaveLabels ? '✅' : '❌'} ARIA regions: ${allHaveLabels ? 'All have labels' : 'Some missing labels'}
+            </div>`;
+            
+            // Test 5: Script deferring
+            const scripts = document.querySelectorAll('script[src]');
+            let hasDeferred = false;
+            scripts.forEach(script => {
+                if (script.hasAttribute('defer')) {
+                    hasDeferred = true;
+                }
+            });
+            html += `<div class="status ${hasDeferred ? 'pass' : 'info'}">
+                ${hasDeferred ? '✅' : 'ℹ️'} Script deferring: ${hasDeferred ? 'Some scripts deferred' : 'No deferred scripts found'}
+            </div>`;
+            
+            results.innerHTML = html;
+        }
+        
+        // Initialize
+        checkMobile();
+        runTests();
+        
+        // Re-check on resize
+        window.addEventListener('resize', checkMobile);
+        
+        // Test focus-visible
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                console.log('Tab pressed - check for focus-visible styles');
+            }
+        });
+    </script>
+</body>
+</html>

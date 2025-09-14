@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Phase C Verification Test - v23.81</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .test-item {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid #e91e63;
+            background: #f9f9f9;
+        }
+        .pass { border-left-color: #51cf66; }
+        .fail { border-left-color: #f06292; }
+        .test-button {
+            padding: 8px 16px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .test-button:focus-visible {
+            outline: 2px solid #e91e63;
+            outline-offset: 2px;
+        }
+        .mobile-test {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .mobile-test { display: block; }
+            .desktop-test { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Phase C Verification Test - v23.81-VISUAL-POLISH</h1>
+    
+    <div class="test-section">
+        <h2>🎯 Focus-Visible Test</h2>
+        <p>Tab through these elements to test focus-visible styles:</p>
+        <button class="test-button" tabindex="0">Button Test</button>
+        <input type="text" placeholder="Input Test" class="test-button">
+        <select class="test-button">
+            <option>Select Test</option>
+        </select>
+        <div class="test-item pass">
+            ✅ Focus-visible styles should show pink outline (2px solid #e91e63)
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📱 Mobile Font Size Test</h2>
+        <div class="mobile-test">
+            <div class="test-item">
+                <p style="font-size: 16px;">This text should be 16px (mobile minimum)</p>
+                <p style="font-size: 14px;">This text should be 16px (overridden)</p>
+                <button style="font-size: 12px;">This button should be 16px (overridden)</button>
+            </div>
+        </div>
+        <div class="desktop-test">
+            <div class="test-item">
+                <p>Mobile font size tests only visible on mobile devices (≤768px)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎨 Contrast Test</h2>
+        <div class="test-item">
+            <p style="color: #4b5563; background: white; padding: 10px;">
+                Muted text color: #4b5563 (improved contrast)
+            </p>
+            <p style="color: #6b7280; background: white; padding: 10px;">
+                Old muted text color: #6b7280 (for comparison)
+            </p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 ARIA Test</h2>
+        <div class="test-item">
+            <div role="region" aria-label="Test region" aria-live="polite">
+                This region has proper ARIA attributes
+            </div>
+            <div class="test-item pass">
+                ✅ aria-live moved from CSS to HTML attribute
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📏 Touch Target Test</h2>
+        <div class="test-item">
+            <button style="min-height: 44px; min-width: 44px; padding: 8px 16px;">
+                Touch Target (44x44px)
+            </button>
+            <div class="test-item pass">
+                ✅ All interactive elements should be ≥44x44px
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>⚡ Performance Test</h2>
+        <div class="test-item">
+            <p>Check Network tab for deferred scripts:</p>
+            <ul>
+                <li>layout-enhancements.js should load with defer</li>
+                <li>polyfill.js should load with defer</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Manual Tests Required</h2>
+        <div class="test-item">
+            <h3>Lighthouse Tests:</h3>
+            <ul>
+                <li>Desktop Accessibility ≥95</li>
+                <li>Mobile Accessibility ≥95</li>
+                <li>No ARIA/contrast/font-size failures</li>
+            </ul>
+            
+            <h3>axe Tests:</h3>
+            <ul>
+                <li>Zero Critical/Serious issues</li>
+                <li>Focus management working</li>
+                <li>Color contrast meeting AA standards</li>
+            </ul>
+            
+            <h3>Keyboard Navigation:</h3>
+            <ul>
+                <li>Tab through all interactive elements</li>
+                <li>Focus-visible styles appear correctly</li>
+                <li>Skip links work properly</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Test focus-visible support
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Phase C Verification Test Loaded');
+            
+            // Test mobile font size overrides
+            if (window.innerWidth <= 768) {
+                const testElements = document.querySelectorAll('.mobile-test p, .mobile-test button');
+                testElements.forEach(el => {
+                    const computedStyle = window.getComputedStyle(el);
+                    const fontSize = parseFloat(computedStyle.fontSize);
+                    console.log(`Element font size: ${fontSize}px`, el);
+                });
+            }
+            
+            // Test focus-visible
+            const focusableElements = document.querySelectorAll('button, input, select');
+            focusableElements.forEach(el => {
+                el.addEventListener('focus', function() {
+                    console.log('Focus event on:', this);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -15,46 +15,16 @@
   --mardi3: #ffd43b;
   --focus: #1a73e8;
   /* Page container variables - moved to components.css */
+  
+  /* Required design tokens */
+  --surface: #f9f9f9;
+  --s-4: 1rem;
+  --r-2: 8px;
+  --fs-0: 1rem;
+  --shadow-1: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Quote Bar - Hard-baked between Sticky Search and Group 1 */
-.quote-bar {
-  background: transparent;
-  color: var(--text);
-  padding: 12px 16px;
-  margin: 8px 0;
-  border-radius: 8px;
-  overflow: hidden;
-  position: relative;
-}
-
-.quote-marquee {
-  white-space: nowrap;
-  overflow: hidden;
-  position: relative;
-}
-
-.quote-text {
-  display: inline-block;
-  font-size: 16px;
-  font-style: italic;
-  font-weight: 500;
-  animation: marquee 30s linear infinite;
-  padding-left: 100%;
-}
-
-.quote-text:hover {
-  animation-play-state: paused;
-}
-
-@keyframes marquee {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-}
+/* Quote Bar - Moved to card-system.css for standardization */
 
 /* Home Groups - Immovable Layout Contract */
 .home-group {
@@ -96,15 +66,6 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .quote-bar {
-    padding: 10px 12px;
-    margin: 6px 0;
-  }
-  
-  .quote-text {
-    font-size: 14px;
-  }
-  
   .home-group {
     margin-bottom: 24px;
   }
@@ -145,6 +106,11 @@ body {
   --bg: #1a1a1a;
   --text: #f5f5f5;
   --card: #2a2a2a;
+  --surface: #1e1e1e;
+  --s-4: 1rem;
+  --r-2: 8px;
+  --fs-0: 1rem;
+  --shadow-1: 0 2px 4px rgba(0,0,0,0.3);
   --border: #404040;
   --text-secondary: #b0b0b0;
   background: linear-gradient(
@@ -986,6 +952,93 @@ body.mardi {
   --home-card-height-desktop: 276px; /* Keep for home page specific cards */
   --home-card-width-mobile: 64px; /* Keep for home page specific cards */
   --home-card-height-mobile: 96px; /* Keep for home page specific cards */
+}
+
+/* Aspect ratio enforcement to prevent CLS */
+.show-poster,
+.poster-placeholder,
+.preview-card-poster,
+.preview-card-poster img {
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+
+/* Ensure aspect ratio is maintained during loading */
+.show-poster[src=""],
+.poster-placeholder:empty {
+  aspect-ratio: 2 / 3;
+  background: var(--border);
+}
+
+/* Scroll indicators for horizontal carousels */
+.preview-row-scroll {
+  position: relative;
+}
+
+.preview-row-scroll::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30px;
+  height: 100%;
+  background: linear-gradient(to left, var(--bg) 0%, transparent 100%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.preview-row-scroll.scrollable::after {
+  opacity: 1;
+}
+
+/* Left scroll indicator */
+.preview-row-scroll::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 30px;
+  height: 100%;
+  background: linear-gradient(to right, var(--bg) 0%, transparent 100%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.preview-row-scroll.scrollable-left::before {
+  opacity: 1;
+}
+
+/* Scroll indicator dots */
+.scroll-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.preview-row-container:hover .scroll-indicators {
+  opacity: 1;
+}
+
+.scroll-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.scroll-dot.active {
+  background: var(--primary);
+}
+
+.scroll-dot:hover {
+  background: var(--accent);
 }
 .cw-row {
   overflow-x: auto;
@@ -2495,4 +2548,147 @@ body.mardi {
   border-color: var(--border);
   color: var(--text-secondary);
 }
+
+/* --- Tabs > Search layering fix (policy-safe, no sticky edits) --- */
+html, body {
+  /* prevent global overflow from creating unwanted stacking contexts */
+  overflow: visible !important;
+  overscroll-behavior: none;
+}
+
+/* neutralize wrapper that was forcing hidden/auto overflow */
+.supports-safe-area.a11y-v1.layout-mobile-fix.mobile.mobile-v1 {
+  overflow: visible !important;
+  contain: none !important;
+}
+
+/* belt-and-suspenders: make intended stacking explicit */
+.tabs-rail, .tab-container {
+  position: relative;
+  z-index: 100;
+}
+#searchResults, .search-results {
+  position: relative;
+  z-index: 50;
+}
+/* --- end Tabs > Search layering fix --- */
+
+/* ---------- THEME TOKENS (Light / Dark / Mardi) ---------- */
+:root[data-theme="light"] {
+  --bg-page:        #ffffff;
+  --bg-elevated:    #f7f7f9;
+  --fg-default:     #1f2937;
+  --fg-muted:       #6b7280;
+  --fg-subtle:      #7f8c8d;  /* matches old version-display */
+  --fg-on-elevated: #111827;
+  --border:         #e5e7eb;
+  --accent:         #2563eb;
+}
+:root[data-theme="dark"] {
+  --bg-page:        #0b0f14;
+  --bg-elevated:    #111827;
+  --fg-default:     #e5e7eb;
+  --fg-muted:       #9ca3af;
+  --fg-subtle:      #9aa2a6;
+  --fg-on-elevated: #f9fafb;
+  --border:         #243140;
+  --accent:         #60a5fa;
+  --bg: #121212;
+  --surface: #1e1e1e;
+  --text: #f5f5f5;
+  --primary: #0066ff;
+  --s-4: 1rem;
+  --r-2: 8px;
+  --fs-0: 1rem;
+  --shadow-1: 0 2px 4px rgba(0,0,0,0.3);
+}
+:root[data-theme="mardi"] {
+  /* playful but readable; keep contrast */
+  --bg-page:        #0f1024;
+  --bg-elevated:    #17183a;
+  --fg-default:     #f2f2fb;
+  --fg-muted:       #c9caf2;
+  --fg-subtle:      #b3b7ff;
+  --fg-on-elevated: #ffffff;
+  --border:         #31337a;
+  --accent:         #ffbf00; /* gold pop against purple */
+}
+
+/* Base usage */
+body {
+  background: var(--bg-page);
+  color: var(--fg-default);
+}
+
+/* Utilities + small components (token-based) */
+.u-fg    { color: var(--fg-default); }
+.u-bg    { background: var(--bg-elevated); }
+.u-fg-on { color: var(--fg-on-elevated); }
+
+.version-display {            /* replaces inline #7f8c8d */
+  font-size: 10px;
+  margin-right: 8px;
+  color: var(--fg-subtle);
+}
+.meta-muted {                 /* replaces inline #666 italic */
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--fg-muted);
+}
+.card-surface {               /* replaces inline background/border token usage */
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+}
+.heading-subtle {             /* replaces inline var(--text, #333) on h5 etc. */
+  margin: 10px 0;
+  font-size: 0.9rem;
+  color: var(--fg-default);
+}
+/* Tabs/results already layered earlier — leave as-is */
+
+/* Auth visibility utility */
+[hidden] { display: none !important; }
+
+/* Base readable font stack & sizing guard */
+html, body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+/* Sign-in area (signed-out) */
+.signin-area { display: flex; flex-direction: column; align-items: center; gap: .25rem; }
+.signin-label { font-weight: 600; color: var(--fg-primary, #000); font-size: 0.875rem; }
+
+/* Account area (signed-in) */
+.account-area { display: flex; align-items: center; gap: .5rem; }
+.account-area .account-hint {
+  font-size: 0.75rem; line-height: 1; opacity: .75;
+  margin-right: .25rem; /* small nudge from the edge */
+}
+.account-area .account-name { font-weight: 600; }
+/* (removed separate .account-signout button; username now toggles sign-out) */
+.user-btn { display: inline-flex; align-items: center; gap: 8px; }
+.user-initial {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--bg-elevated); color: var(--fg-on-elevated);
+  font-weight: 600; font-size: 12px;
+}
+.user-name {
+  max-width: 18ch; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--fg-default);
+  font-weight: 600;
+}
+.account-menu {
+  position: absolute; margin-top: 6px; padding: 6px;
+  background: var(--bg-elevated); color: var(--fg-on-elevated);
+  border: 1px solid var(--border); border-radius: 8px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.25);
+  min-width: 140px; z-index: 2000;
+}
+.menu-item { display: block; width: 100%; text-align: left; padding: 8px 10px; }
+.menu-item:hover { background: var(--bg-page); }
 

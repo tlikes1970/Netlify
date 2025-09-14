@@ -1,135 +1,176 @@
-# Add Flow Map - Entry Points, Call Chains, Event Listeners, DOM Mutation Points
+# Add Flow Map - TV Tracker
 
-## A. Layout / Mount Order / Z-Index (Tabs vs Results)
+**Date:** 2025-01-12  
+**Version:** v23.83-CONTRAST-FIX  
+**Purpose:** Map the complete add functionality flow from user interaction to data persistence
 
-### Entry Points
-- **HTML Structure**: `www/index.html:190-195` - Search results container positioned outside home section
-- **CSS Positioning**: `www/styles/components.css:1252-1305` - Tab container and search results z-index rules
-- **JS Mount Logic**: `www/scripts/search-controller.js:10-63` - Search results show/hide logic
+## Entry Points
 
-### Call Chains
-1. **Search Initiation**: `performSearch()` → `showResultsUI()` → `#searchResults.style.display = 'block'`
-2. **Tab Switching**: `switchToTab()` → `hideResultsUI()` → `#searchResults.style.display = 'none'`
-3. **DOM Mount Order**: `.top-search` → `#searchResults` → `.tab-container` → content sections
+### 1. Card Add Buttons
+- **Location:** Dynamic card generation in `scripts/inline-script-02.js`
+- **Selector:** `[data-action="add"]` buttons
+- **Handler:** Centralized add handler via event delegation
 
-### Event Listeners
-- **Search Button**: `www/index.html:172` - `onclick="performSearch()"`
-- **Tab Clicks**: `www/scripts/simple-tab-manager.js:85-91` - Hide search results on tab change
-- **Search Input**: `www/index.html:1878-1881` - Enter key fallback
+### 2. Pro-Gated Add Buttons
+- **Location:** `scripts/pro-gate.js`
+- **Selector:** `[data-pro="required"]` elements
+- **Handler:** Pro gate system with upsell modal
 
-### DOM Mutation Points
-- **Search Results**: `www/scripts/inline-script-02.js:3914-3918` - Show/hide search results container
-- **Tab Container**: `www/scripts/tab-position-fix.js:15-17` - Tab positioning enforcement
-- **Z-Index Conflicts**: `www/scripts/inline-script-02.js:1945-1966` - Modal z-index management
+### 3. Emergency Add Functions
+- **Location:** `js/emergency-functions.js`
+- **Function:** `window.addToList()`
+- **Purpose:** Fallback when main functions fail
 
-### Current Z-Index Stack
-- `.tab-container`: `z-index: 10` (highest)
-- `#searchResults`: `z-index: 5` (middle)
-- Content sections: `z-index: 1` (lowest)
+## Call Chain
 
-## B. Theming (Dark / Regular / Mardi Gras)
+### Primary Flow
+```
+User Click → Centralized Add Handler → addToListFromCache → Data Persistence
+```
 
-### Entry Points
-- **Theme Switch**: `www/js/app.js:68-75` - `applyTheme()` function
-- **Theme Packs**: `www/scripts/inline-script-01.js:3612-3668` - MP-ThemePacks system
-- **CSS Variables**: `www/styles/components.css:3-24` - Root theme tokens
+### Detailed Steps
+1. **User Interaction**
+   - Click on `[data-action="add"]` button
+   - Button contains: `data-id`, `data-media-type`, `data-list`
 
-### Call Chains
-1. **Theme Application**: `localStorage.getItem('flicklet-theme')` → `document.body.classList.toggle('dark-mode')`
-2. **Theme Pack Switch**: `setThemePack(id)` → `document.body.dataset.theme = finalId`
-3. **CSS Variable Cascade**: `:root` → `.dark-mode` → component-specific overrides
+2. **Event Delegation**
+   - `centralized-add-handler.js` captures click
+   - Checks for duplicates (500ms window)
+   - Extracts item data from button attributes
 
-### Event Listeners
-- **Theme Toggle**: `www/scripts/inline-script-03.js:13-256` - Theme switching buttons
-- **Settings Change**: `www/js/app.js:68-75` - Settings-based theme application
+3. **Data Processing**
+   - Calls `addToListFromCache()` function
+   - Validates item data and list name
+   - Checks for existing items (deduplication)
 
-### DOM Mutation Points
-- **Body Classes**: `www/js/app.js:71` - `document.body.classList.toggle('dark-mode')`
-- **Data Attributes**: `www/scripts/inline-script-01.js:3652-3656` - `document.body.dataset.theme`
-- **CSS Variable Updates**: `www/styles/main.css:144-296` - Dark mode variable overrides
+4. **Storage Operations**
+   - Updates `window.appData` structure
+   - Saves to localStorage
+   - Attempts Firebase sync (if available)
 
-## C. i18n Pipeline
+5. **UI Updates**
+   - Triggers `updateUI()` function
+   - Dispatches custom events for re-rendering
+   - Shows success/error notifications
 
-### Entry Points
-- **Language Manager**: `www/js/language-manager.js:359-386` - Centralized language switching
-- **App Language**: `www/js/app.js:77-86` - `applyLanguage()` function
-- **Translation Function**: `www/scripts/inline-script-01.js:830-875` - `changeLanguage()` delegation
+## Listeners & Event Handlers
 
-### Call Chains
-1. **Language Change**: `changeLanguage(newLang)` → `LanguageManager.changeLanguage()` → `applyTranslations()`
-2. **Search Refresh**: `handleSearchResultsLanguageChange()` → `performSearch()` → fresh results
-3. **Trivia Refresh**: `__FlickletRefreshTrivia()` → `fetchTriviaQuestions(lang)` → new questions
+### Centralized Add Handler
+- **File:** `scripts/centralized-add-handler.js`
+- **Event:** `click` on document (delegated)
+- **Selector:** `[data-action="add"]`
+- **Deduplication:** 500ms window per item+list combination
 
-### Event Listeners
-- **Language Toggle**: `www/index.html:104` - Language select dropdown
-- **Settings Change**: `www/js/app.js:77-86` - Settings-based language application
+### Pro Gate System
+- **File:** `scripts/pro-gate.js`
+- **Event:** `click` on gated elements
+- **Behavior:** Shows upsell modal for non-Pro users
+- **Selector:** `[data-pro="required"]`
 
-### DOM Mutation Points
-- **Text Updates**: `www/js/language-manager.js:359-386` - Search results language refresh
-- **Trivia Content**: `www/scripts/trivia.js:124-146` - Trivia question language refresh
-- **UI Elements**: `www/scripts/inline-script-01.js:845-865` - Language change delegation
+### Card Actions
+- **File:** `scripts/card-actions.js`
+- **Event:** Various card interactions
+- **Features:** "Not interested", list management
+- **Storage:** `flicklet:notInterested` key
 
-## D. Auth → Profile ViewModel
+## Data Reloaders
 
-### Entry Points
-- **Auth Listener**: `www/js/app.js:169-359` - `setupAuthListener()` function
-- **User Data Loading**: `www/scripts/inline-script-02.js:466-566` - `loadUserDataFromCloud()`
-- **Account Button**: `www/scripts/inline-script-01.js:1756-1797` - `updateAccountButton()`
+### Custom Events
+- `curated:rerender` - Triggers curated content updates
+- `currentlyWatching:rerender` - Updates currently watching section
+- `add:success` - Notifies successful add operations
+- `add:error` - Notifies failed add operations
 
-### Call Chains
-1. **Sign In**: `firebase.auth().onAuthStateChanged()` → `loadUserDataFromCloud()` → `updateAccountButton()`
-2. **Profile Update**: `setAccountButtonLabel()` → `setLeftSnark()` → UI updates
-3. **Settings Check**: `isAuthenticated` check → Settings access control
+### UI Update Functions
+- `window.updateUI()` - General UI refresh
+- `window.renderCurrentlyWatchingPreview()` - Specific section update
+- `window.showNotification()` - User feedback system
 
-### Event Listeners
-- **Auth State**: `www/js/app.js:172` - `firebase.auth().onAuthStateChanged()`
-- **Account Button**: `www/scripts/inline-script-01.js:1883-1920` - Account button click handler
-- **Sign Out**: `www/scripts/inline-script-01.js:2037` - Sign out button handler
+## Storage Systems
 
-### DOM Mutation Points
-- **Account Button**: `www/scripts/inline-script-01.js:1758-1796` - Button text and title updates
-- **Snark Text**: `www/scripts/inline-script-01.js:1790` - Left snark text updates
-- **Settings Access**: `www/scripts/inline-script-02.js:2477` - "Please sign in" warning
+### Primary Storage
+- **localStorage Key:** `flicklet-data`
+- **Structure:** `window.appData` object
+- **Categories:** `tv`, `movies`, `settings`, `notInterested`
 
-## E. Mobile Base Layout / Cards
+### Backup Storage
+- **Firebase:** Real-time sync (if available)
+- **Emergency:** Basic localStorage fallback
+- **Cache:** Search results and API responses
 
-### Entry Points
-- **Mobile Detection**: `www/index.html:71-72` - User agent and viewport detection
-- **Card System**: `www/styles/components.css:86-137` - Card component tokens
-- **Responsive Breakpoints**: `www/styles/components.css:1064-1143` - Mobile adjustments
+## Error Handling
 
-### Call Chains
-1. **Mobile Init**: `isMobileDevice` check → `body.classList.add('mobile')` → mobile styles apply
-2. **Card Rendering**: `renderCard()` → mobile poster dimensions → responsive layout
-3. **Container Resize**: `resizeContainers()` → mobile layout adjustments
+### Graceful Degradation
+- Emergency functions provide basic functionality
+- Fallback to localStorage if Firebase fails
+- Silent error handling for non-critical operations
 
-### Event Listeners
-- **Resize Events**: `www/index.html:1248` - Container resizing
-- **Mobile Detection**: `www/index.html:71-72` - Initial mobile detection
+### User Feedback
+- Toast notifications for success/error states
+- Console logging for debugging
+- Visual feedback on button interactions
 
-### DOM Mutation Points
-- **Body Classes**: `www/index.html:71-72` - Mobile class addition
-- **Card Dimensions**: `www/styles/components.css:1107-1120` - Mobile poster standardization
-- **Container Layout**: `www/styles/components.css:1064-1143` - Mobile responsive adjustments
+## Dependencies
 
-## F. FlickWord & Daily Trivia Containers
+### Required Functions
+- `addToListFromCache()` - Core add functionality
+- `saveAppData()` - Data persistence
+- `showNotification()` - User feedback
 
-### Entry Points
-- **FlickWord Mount**: `www/index.html:1197-1265` - `overrideFlickWordMount()` function
-- **Trivia Mount**: `www/index.html:1754-1777` - `DailyTriviaBridge.mount()` function
-- **Container Styling**: `www/styles/main.css:1579-2459` - Game container CSS
+### Required Data
+- `window.appData` - Application state
+- `localStorage` - Persistent storage
+- Item metadata from TMDB API
 
-### Call Chains
-1. **FlickWord Init**: `initCommunityGames()` → `overrideFlickWordMount()` → `findHomeMount()`
-2. **Trivia Init**: `initCommunityGames()` → `DailyTriviaBridge.mount()` → iframe creation
-3. **Modal Open**: `modal:open` event → game mounting → iframe loading
+## Performance Considerations
 
-### Event Listeners
-- **Modal Events**: `www/index.html:1761-1771` - Modal open/close event listeners
-- **Game Stats**: `www/index.html:1669-1683` - Game statistics updates
-- **Container Resize**: `www/index.html:1248` - Container resizing for games
+### Deduplication
+- 500ms window prevents rapid duplicate adds
+- Map-based tracking with automatic cleanup
+- Memory-efficient duplicate detection
 
-### DOM Mutation Points
-- **FlickWord Container**: `www/index.html:1197-1265` - FlickWord mount point override
-- **Trivia Container**: `www/index.html:1754-1777` - Trivia iframe creation
-- **Game Modals**: `www/index.html:1602-1627` - Game modal open/close handling
+### Async Operations
+- Non-blocking data persistence
+- Background Firebase sync
+- Deferred UI updates
+
+## Security & Validation
+
+### Input Validation
+- Item ID validation (numeric)
+- Media type validation (tv/movie)
+- List name validation (watching/wishlist/watched)
+
+### Data Sanitization
+- HTML escaping for user-generated content
+- XSS prevention in notifications
+- Safe data structure handling
+
+## Testing Points
+
+### Manual Testing
+1. Click add button on any card
+2. Verify item appears in correct list
+3. Check for duplicate prevention
+4. Test Pro-gated functionality
+5. Verify error handling
+
+### Automated Testing
+- Event delegation coverage
+- Data persistence verification
+- Error state handling
+- Performance metrics
+
+## Known Issues
+
+### Current Limitations
+- Pro gating may block legitimate adds
+- Emergency functions are basic fallbacks
+- Firebase sync failures are silent
+- No offline queue for failed operations
+
+### Future Improvements
+- Enhanced error recovery
+- Offline operation support
+- Better Pro gate UX
+- Real-time collaboration features

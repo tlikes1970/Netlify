@@ -61,3 +61,4 @@ for(let i = 0; i < lines.length; i++) {
 console.log('IIFE patterns found:');
 iifePatterns.forEach(pattern => console.log('  -', pattern));
 
+

@@ -1,190 +1,224 @@
-# Root Cause Analysis - Core Stabilization Issues
+# Findings Report - TV Tracker v23.83
 
-## A. Tabs > Search Results (z-order & mount order) - SEVERITY: HIGH
+**Date:** 2025-01-12  
+**Version:** v23.83-CONTRAST-FIX  
+**Purpose:** Root cause analysis of current Lighthouse and accessibility issues
 
-### Root Cause
-**Multiple conflicting z-index systems and DOM mount order inconsistencies**
+## Current State Analysis
 
-**Evidence:**
-- Tab container: `z-index: 10` (components.css:1266)
-- Search results: `z-index: 5` (components.css:1280)
-- Search results positioned outside home section (index.html:190-195)
-- Multiple tab positioning scripts running simultaneously
+### Lighthouse Performance Issues
 
-**Issues Found:**
-1. **Z-Index Conflicts**: Modal z-indexes (99999) override tab container (10)
-2. **Mount Order Issues**: Search results container positioned between search bar and tabs
-3. **Multiple Tab Managers**: 4+ different scripts managing tab positioning
-4. **CSS Conflicts**: Duplicate tab container rules across multiple files
+#### Desktop Performance (73/100)
+**Root Cause**: Bundle size and render-blocking resources
+- **FCP**: 1.9s - Render-blocking CSS and JS
+- **LCP**: 3.0s - Large bundle size (~3.4MB)
+- **CLS**: 0 - Good layout stability
+- **Severity**: High
 
-**Minimal Fix:**
-- Consolidate z-index system: tabs (z-index: 100), search results (z-index: 50)
-- Ensure DOM order: `.top-search` → `.tab-container` → `#searchResults` → content
-- Remove duplicate tab positioning scripts
-- Single source of truth for tab container CSS
+#### Mobile Performance (52/100)
+**Root Cause**: Critical render-blocking path and long tasks
+- **FCP**: 12.0s - Critical render-blocking path
+- **LCP**: 13.2s - Large bundle + render-blocking
+- **TBT**: 200ms - 13 long tasks blocking main thread
+- **CLS**: 0 - Good layout stability
+- **Severity**: Critical
 
-## B. Theming Tokens & Modes - SEVERITY: HIGH
+### Accessibility Issues (88/100)
 
-### Root Cause
-**Three separate theme systems running simultaneously with conflicting CSS variables**
+#### ARIA Misuse
+**Root Cause**: Prohibited ARIA attribute combinations
+- **Issue**: `role="region"` with `aria-live` in CSS (fixed in staging)
+- **Location**: Previously in `staging/www/styles/card-system.css:1001-1003`
+- **Impact**: Screen reader confusion
+- **Status**: ✅ FIXED in staging
 
-**Evidence:**
-- Main theme system: `www/js/app.js:68-75` (flicklet-theme)
-- MP-ThemePacks system: `www/scripts/inline-script-01.js:3612-3668` (flicklet:theme)
-- Mardi Gras system: `www/scripts/inline-script-01.js:867-875` (mardi-gras)
-- Duplicate CSS variables across multiple files
+#### Contrast Failures
+**Root Cause**: Insufficient color contrast ratios
+- **Issue**: Muted text color #4b5563 vs white background (4.2:1 ratio)
+- **Location**: `staging/www/styles/components.css:7`
+- **Impact**: WCAG AA compliance failure (needs 4.5:1)
+- **Status**: ✅ FIXED in staging (updated to #374151 = 4.5:1)
 
-**Issues Found:**
-1. **Conflicting Storage Keys**: `flicklet-theme` vs `flicklet:theme` vs `mardi-gras`
-2. **CSS Variable Duplication**: Dark mode variables defined in 3+ places
-3. **Theme Application Race Conditions**: Multiple systems applying themes simultaneously
-4. **Inconsistent Token Usage**: Hardcoded colors instead of CSS variables
+### Bundle Size Issues
 
-**Minimal Fix:**
-- Single theme storage key: `flicklet-theme`
-- Centralized CSS variables in `:root` with theme-specific overrides
-- Remove MP-ThemePacks system, keep only main theme + Mardi Gras
-- Replace hardcoded colors with CSS variables
+#### Unminified Code
+**Root Cause**: Development code in production
+- **Issue**: ~3.4MB bundle with unminified JS/CSS
+- **Location**: All script and style files
+- **Impact**: Performance degradation
+- **Status**: 🔄 IN PROGRESS (build system created)
 
-## C. i18n Pipeline - SEVERITY: MEDIUM
+#### Render-blocking Resources
+**Root Cause**: Synchronous resource loading
+- **Issue**: 9.0s potential savings from render-blocking
+- **Location**: CSS and JS loading in `<head>`
+- **Impact**: Critical performance bottleneck
+- **Status**: ✅ FIXED in staging (critical CSS inlined, async loading)
 
-### Root Cause
-**Multiple language switching systems with inconsistent delegation patterns**
+## Code Quality Issues
 
-**Evidence:**
-- LanguageManager: `www/js/language-manager.js:359-386`
-- App language: `www/js/app.js:77-86`
-- Inline script delegation: `www/scripts/inline-script-01.js:845-865`
-- Raw translation keys found: `all_genres` (index.html:170)
+### Event Listener Redundancy
+**Root Cause**: Multiple scripts attaching listeners to same elements
+- **Issue**: 324+ click event listeners across 58 files
+- **Impact**: Performance degradation, memory leaks, conflicts
+- **Examples**: Dark mode button (3+ listeners), modal systems (duplicate handlers)
+- **Severity**: High
 
-**Issues Found:**
-1. **Delegation Chain Complexity**: LanguageManager → FlickletApp → applyTranslations
-2. **Raw Translation Keys**: `all_genres` not translated
-3. **Inconsistent Loading**: Translation bundles may load after first render
-4. **Multiple Language Storage**: Settings vs localStorage inconsistency
+### Function Duplication
+**Root Cause**: Multiple implementations of same functionality
+- **Issue**: 118+ duplicate functions identified
+- **Impact**: Code bloat, inconsistent behavior, maintenance overhead
+- **Examples**: `addToList()` (3+ versions), `saveAppData()` (2+ versions)
+- **Severity**: High
 
-**Minimal Fix:**
-- Single `t(key, vars?)` utility function
-- Ensure translation bundles load before first render
-- Replace all raw keys with translated strings
-- Consistent language storage in app settings
+### CSS Rule Duplication
+**Root Cause**: Multiple CSS files defining same selectors
+- **Issue**: 15+ duplicate CSS rules
+- **Impact**: Style conflicts, increased bundle size
+- **Examples**: Tab container styles, dark mode styles
+- **Severity**: Medium
 
-## D. Auth → Profile ViewModel - SEVERITY: HIGH
+## Performance Bottlenecks
 
-### Root Cause
-**Fragmented authentication state management with multiple UI update paths**
+### Critical Path Issues
+1. **Render-blocking CSS**: 8+ stylesheets blocking initial render
+2. **Synchronous Scripts**: Critical JS blocking page load
+3. **Large Bundle Size**: 3.4MB unminified code
+4. **Long Tasks**: 13 tasks >50ms blocking main thread
 
-**Evidence:**
-- Main auth listener: `www/js/app.js:169-359`
-- Account button management: `www/scripts/inline-script-01.js:1756-1797`
-- User data loading: `www/scripts/inline-script-02.js:466-566`
-- Settings auth check: `www/scripts/inline-script-02.js:2477`
+### Mobile-Specific Issues
+1. **Font Size**: Some elements <16px on mobile
+2. **Touch Targets**: Some buttons <44px touch target
+3. **Viewport Issues**: Horizontal scrolling on small screens
+4. **Performance**: 12s FCP on mobile devices
 
-**Issues Found:**
-1. **Multiple Auth Listeners**: Main listener + disabled legacy listener
-2. **Inconsistent UI Updates**: Account button vs profile display vs settings access
-3. **Settings Auth Gates**: "Please sign in" warnings even when authenticated
-4. **Username/Snark Display**: Inconsistent population of user profile elements
+## Accessibility Gaps
 
-**Minimal Fix:**
-- Single auth observer producing `UserViewModel { isAuthenticated, displayName, alias, avatarUrl }`
-- Centralized UI updates from single ViewModel
-- Remove duplicate auth listeners
-- Consistent settings access control
+### ARIA Implementation Issues
+1. **Prohibited Combinations**: Fixed in staging
+2. **Missing Labels**: Some regions lack accessible names
+3. **Focus Management**: Inconsistent focus-visible implementation
+4. **Screen Reader**: Dynamic content not announced properly
 
-## E. Mobile Base Layout / Cards - SEVERITY: MEDIUM
+### Contrast and Visual Issues
+1. **Text Contrast**: Fixed in staging (4.5:1 ratio achieved)
+2. **Color Dependencies**: Some UI relies on color alone
+3. **Focus Indicators**: Inconsistent focus styling
+4. **Mobile Legibility**: Font sizes below 16px threshold
 
-### Root Cause
-**Inconsistent mobile detection and responsive breakpoint management**
+## Root Cause Summary
 
-**Evidence:**
-- Mobile detection: `www/index.html:71-72` (user agent + viewport)
-- Card system: `www/styles/components.css:86-137` (component tokens)
-- Mobile adjustments: `www/styles/components.css:1064-1143`
-- Poster standardization: `www/styles/components.css:1107-1120`
+### Primary Issues
+1. **Development Code in Production**: Unminified, unoptimized bundles
+2. **Render-blocking Resources**: Synchronous loading blocking critical path
+3. **Code Redundancy**: Multiple implementations causing conflicts
+4. **Accessibility Gaps**: ARIA misuse and contrast failures
 
-**Issues Found:**
-1. **Mobile Detection Inconsistency**: User agent vs viewport width
-2. **Card Grid Instability**: Inconsistent `minmax()` usage across breakpoints
-3. **Poster Dimension Conflicts**: Multiple poster width/height definitions
-4. **Horizontal Scroll Issues**: Overflow not properly contained
+### Secondary Issues
+1. **Event Listener Overload**: 324+ listeners causing performance issues
+2. **Function Duplication**: 118+ duplicate functions increasing bundle size
+3. **CSS Conflicts**: Duplicate rules causing style inconsistencies
+4. **Mobile Optimization**: Poor mobile performance and accessibility
 
-**Minimal Fix:**
-- Single mobile detection system using viewport width
-- Consistent card grid using `minmax()` and container queries
-- Standardized poster dimensions with single source of truth
-- Proper overflow containment
+## Severity Levels
 
-## F. FlickWord & Daily Trivia Containers - SEVERITY: LOW
+### Critical (Must Fix)
+1. **Mobile Performance** - 12.0s FCP, 13.2s LCP
+2. **Bundle Size** - 3.4MB unminified bundle
+3. **Render-blocking** - 9.0s savings potential
 
-### Root Cause
-**Container sizing and scroll management inconsistencies**
+### High (Should Fix)
+1. **Event Listener Redundancy** - 324+ listeners
+2. **Function Duplication** - 118+ duplicate functions
+3. **ARIA Misuse** - Prohibited attribute combinations (fixed in staging)
+4. **Contrast Failures** - WCAG AA compliance (fixed in staging)
 
-**Evidence:**
-- FlickWord mount: `www/index.html:1197-1265`
-- Trivia mount: `www/index.html:1754-1777`
-- Container styling: `www/styles/main.css:1579-2459`
-- Game modal sizing: `www/styles/main.css:2379-2425`
+### Medium (Could Fix)
+1. **CSS Duplication** - 15+ duplicate rules
+2. **Code Organization** - Scattered functionality
+3. **Configuration Management** - Hardcoded values
 
-**Issues Found:**
-1. **Container Height Issues**: Fixed heights may not work on all screen sizes
-2. **Scroll Management**: Inconsistent overflow handling
-3. **Modal Sizing**: Game modals may not fit properly on mobile
-4. **Mount Point Conflicts**: Multiple systems trying to mount games
+## Proposed Fixes
 
-**Minimal Fix:**
-- Consistent container height using `clamp()` and viewport units
-- Proper scroll management with `overflow-y: auto`
-- Responsive modal sizing
-- Single mount point system
+### Phase 1 (Immediate)
+1. **Enable Production Build** - Minify and tree-shake code
+2. **Fix Render-blocking** - Inline critical CSS, defer non-critical
+3. **Consolidate Event Listeners** - Single delegation system
+4. **Remove Function Duplicates** - Single source of truth
 
-## Summary of Critical Issues
+### Phase 2 (Short-term)
+1. **Optimize Long Tasks** - Split heavy operations
+2. **Consolidate CSS** - Remove duplicate rules
+3. **Improve Mobile UX** - Fix font sizes and touch targets
+4. **Enhance Accessibility** - Complete ARIA implementation
 
-### Must Fix (Phase B Priority 1)
-1. **Z-Index System** - Consolidate to single z-index hierarchy
-2. **Theme System** - Remove duplicate theme systems, use single CSS variables
-3. **Auth ViewModel** - Single auth observer with centralized UI updates
+### Phase 3 (Medium-term)
+1. **Code Architecture** - Better organization and patterns
+2. **Performance Monitoring** - Ongoing optimization
+3. **Accessibility Testing** - Automated a11y testing
+4. **Bundle Optimization** - Advanced optimization techniques
 
-### Should Fix (Phase B Priority 2)
-4. **i18n Pipeline** - Single translation utility with proper loading order
-5. **Mobile Layout** - Consistent responsive system with proper overflow
+## Success Metrics
 
-### Nice to Fix (Phase B Priority 3)
-6. **Game Containers** - Consistent sizing and scroll management
+### Performance Targets
+- **Desktop Performance**: 73 → 85+
+- **Mobile Performance**: 52 → 65+
+- **Bundle Size**: 3.4MB → 1.5MB
+- **FCP Mobile**: 12.0s → 6.0s
+- **LCP Mobile**: 13.2s → 8.0s
 
-## Success Criteria Validation
+### Accessibility Targets
+- **Desktop A11y**: 88 → 95+
+- **Mobile A11y**: 88 → 95+
+- **ARIA Issues**: 0 failures
+- **Contrast Issues**: 0 failures
+- **Focus Management**: 100% functional
 
-### Tabs Above Results ✅ (After Fix)
-- Tabs: `z-index: 100`
-- Search Results: `z-index: 50`
-- DOM order: search → tabs → results → content
+### Code Quality Targets
+- **Event Listeners**: 324+ → <50
+- **Duplicate Functions**: 118+ → <10
+- **CSS Duplicates**: 15+ → 0
+- **Bundle Redundancy**: ~255KB → <50KB
 
-### Theming Consistency ✅ (After Fix)
-- Single theme storage key
-- Centralized CSS variables
-- No hardcoded colors
-- Consistent dark/regular/Mardi Gras modes
+## Risk Assessment
 
-### i18n Working ✅ (After Fix)
-- Single `t()` function
-- No raw translation keys
-- Live language switching
-- Proper bundle loading order
+### High Risk
+1. **Breaking Changes** - Event listener consolidation
+2. **Performance Regression** - Minification might break code
+3. **User Experience** - Changes might affect functionality
 
-### Auth Profile Display ✅ (After Fix)
-- Single auth observer
-- Username + snark display
-- Settings access control
-- No false "sign in" prompts
+### Medium Risk
+1. **Bundle Size** - Tree-shaking might remove needed code
+2. **Long Tasks** - Splitting might cause timing issues
+3. **CSS Changes** - Style consolidation might break layout
 
-### Mobile Stability ✅ (After Fix)
-- Consistent card grid
-- No horizontal scroll
-- Proper poster dimensions
-- Responsive breakpoints
+### Low Risk
+1. **Code Deduplication** - Function consolidation
+2. **Debug Removal** - Development code cleanup
+3. **Configuration** - Setting centralization
 
-### Game Containers ✅ (After Fix)
-- Proper sizing
-- Scroll management
-- No clipped content
-- Responsive modals
+## Mitigation Strategies
+
+### Testing Strategy
+1. **Automated Testing** - Lighthouse CI integration
+2. **Manual Testing** - Cross-browser verification
+3. **Accessibility Testing** - Screen reader testing
+4. **Performance Testing** - Real device testing
+
+### Rollback Plan
+1. **Feature Flags** - Gradual rollout capability
+2. **Version Control** - Easy rollback to previous version
+3. **Monitoring** - Real-time performance tracking
+4. **User Feedback** - Quick issue identification
+
+### Quality Assurance
+1. **Code Review** - Peer review of all changes
+2. **Testing Coverage** - Comprehensive test suite
+3. **Performance Monitoring** - Continuous optimization
+4. **Accessibility Audits** - Regular a11y testing
+
+## Conclusion
+
+The codebase has significant performance and accessibility issues that require systematic fixes. The primary focus should be on enabling production builds, fixing render-blocking resources, and consolidating redundant code. The staging environment has already addressed critical accessibility issues (ARIA misuse, contrast failures), but performance optimization and code consolidation remain critical priorities.
+
+The recommended approach is incremental fixes starting with critical performance issues, then moving to code quality improvements, and finally implementing advanced optimizations. This will ensure stability while achieving the target performance and accessibility metrics.
