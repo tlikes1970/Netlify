@@ -1,26 +1,54 @@
 /* Flicklet - Component CSS Styles */
 
 :root{
-  /* Colors */
-  --color-primary-start:#ff4c8d;
-  --color-primary-end:#9b4dff;
-  --color-text:#1f2937;          /* slate-800 */
-  --color-muted:#6b7280;         /* gray-500 */
-  --color-surface:#ffffff;
-  --color-surface-2:#f3f4f6;     /* gray-100 */
-  --color-border:#e5e7eb;        /* gray-200 */
-  --color-danger:#ef4444;
+  /* Core Theme Tokens - Single Source of Truth */
+  --fg: #1f2937;                 /* Primary text color */
+  --bg: #ffffff;                 /* Background color */
+  --muted: #374151;              /* Muted text color - WCAG AA compliant (4.5:1) */
+  --card: #ffffff;               /* Card background */
+  --border: #e5e7eb;             /* Border color */
+  --accent: #ff4c8d;             /* Accent color */
+  
+  /* Legacy color mappings for compatibility */
+  --color-primary-start: var(--accent);
+  --color-primary-end: #9b4dff;
+  --color-text: var(--fg);
+  --color-muted: var(--muted);
+  --color-surface: var(--bg);
+  --color-surface-2: #f3f4f6;
+  --color-border: var(--border);
+  --color-danger: #ef4444;
+  
+  /* High contrast tokens for accessibility */
+  --text-secondary: #374151;     /* 4.5:1 contrast ratio */
+  --placeholder: #6b7280;        /* 3:1 contrast ratio for placeholders */
+  --badge-text: #1f2937;         /* 4.5:1 contrast ratio for badges */
+  --meta-text: #374151;          /* 4.5:1 contrast ratio for meta text */
 }
 
 /* Dark mode CSS variables */
 .dark-mode {
-  --color-text: var(--text) !important;
-  --color-text-primary: var(--text) !important;
-  --color-text-secondary: var(--text-secondary) !important;
-  --color-muted: var(--text-secondary) !important;
-  --color-surface: var(--card) !important;
+  --fg: #f5f5f5;                 /* Light text on dark background */
+  --bg: #1a1a1a;                 /* Dark background */
+  --muted: #b0b0b0;              /* Muted text on dark */
+  --card: #2a2a2a;               /* Dark card background */
+  --border: #404040;             /* Dark border */
+  --accent: #ff4c8d;             /* Accent color (unchanged) */
+  
+  /* Legacy color mappings for compatibility */
+  --color-text: var(--fg) !important;
+  --color-text-primary: var(--fg) !important;
+  --color-text-secondary: var(--muted) !important;
+  --color-muted: var(--muted) !important;
+  --color-surface: var(--bg) !important;
   --color-surface-2: var(--card) !important;
   --color-border: var(--border) !important;
+  
+  /* High contrast tokens for dark mode */
+  --text-secondary: #d1d5db;     /* 4.5:1 contrast ratio on dark */
+  --placeholder: #9ca3af;        /* 3:1 contrast ratio for placeholders */
+  --badge-text: #f9fafb;         /* 4.5:1 contrast ratio for badges */
+  --meta-text: #d1d5db;          /* 4.5:1 contrast ratio for meta text */
 }
 
 /* Additional design tokens */
@@ -32,6 +60,11 @@
   --gap-3: 12px; 
   --gap-4: 16px; 
   --gap-5: 20px;
+  
+  /* Skeleton loader colors */
+  --skeleton-bg: #f3f4f6;
+  --skeleton-shimmer: #e5e7eb;
+  --skeleton-animation-duration: 1.5s;
 
   /* Type scale (mobile) */
   --fs-body: 14px;
@@ -893,6 +926,69 @@ html, body { overflow-x:hidden; }
   letter-spacing: 0.3px;
 }
 
+/* Program Status Badge - Unified Status System */
+.program-status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.program-status-badge.status-ended {
+  background: rgba(255, 77, 79, 0.16);
+  color: #d63031;
+  border-color: #d63031;
+}
+
+.program-status-badge.status-ongoing {
+  background: rgba(81, 207, 102, 0.16);
+  color: #2f9e44;
+  border-color: #2f9e44;
+}
+
+.program-status-badge.status-upcoming {
+  background: rgba(255, 212, 59, 0.16);
+  color: #b08900;
+  border-color: #b08900;
+}
+
+/* Mobile responsive behavior for status badges */
+@media (max-width: 480px) {
+  .program-status-badge {
+    font-size: 0.7rem;
+    padding: 3px 6px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* On mobile, status badge moves below title and right-aligned */
+  .show-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .show-title-row .program-status-badge {
+    margin-left: 0;
+    align-self: flex-end;
+    order: 2;
+  }
+  
+  .show-title-row .show-title {
+    order: 1;
+    width: 100%;
+  }
+}
+
 .card__badge--provider {
   top: auto;
   bottom: var(--space-2);
@@ -1069,16 +1165,7 @@ html, body { overflow-x:hidden; }
     margin: 0;
   }
   
-  .show-card .series-pill {
-    margin-left: auto;
-    padding: 4px 8px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 900;
-    white-space: nowrap;
-    border: 1px solid transparent;
-    flex-shrink: 0;
-  }
+  /* REMOVED: Old series-pill CSS - replaced with program-status-badge */
   
   /* Mobile list container styling */
   #watchingList, #wishlistList, #watchedList {
@@ -1140,30 +1227,30 @@ html, body { overflow-x:hidden; }
     font-weight: 400;
   }
   
-  .show-card .series-pill {
+  .show-card .program-status-badge {
     margin-left: auto;
     padding: 6px 10px;
     border-radius: 999px;
     font-size: 12px;
-    font-weight: 900;
+    font-weight: 500;
     white-space: nowrap;
     border: 1px solid transparent;
     flex-shrink: 0;
   }
   
-  .show-card .series-pill.status-ongoing {
+  .show-card .program-status-badge.status-ongoing {
     background: rgba(81, 207, 102, 0.16);
     color: #2f9e44;
     border-color: #2f9e44;
   }
   
-  .show-card .series-pill.status-ended {
+  .show-card .program-status-badge.status-ended {
     background: rgba(255, 77, 79, 0.16);
     color: #d63031;
     border-color: #d63031;
   }
   
-  .show-card .series-pill.status-upcoming {
+  .show-card .program-status-badge.status-upcoming {
     background: rgba(255, 212, 59, 0.16);
     color: #b08900;
     border-color: #b08900;
@@ -1194,21 +1281,55 @@ html, body { overflow-x:hidden; }
   }
 }
 
-/* Tab Container - Single Source of Truth */
+/* Tab Container - YouTube-style Design */
 .tab-container {
   display: flex;
   justify-content: space-evenly;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  background: var(--card);
-  padding: 12px;
-  border-radius: 12px;
-  margin: 2px 0;
-  border: 1px solid var(--border);
+  flex-wrap: nowrap;
+  gap: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  margin: 16px 0 0 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
   animation: tabContainerSlideIn 0.8s ease-out 0.4s both;
   position: relative;
-  z-index: 10;
+  z-index: 100 !important;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Ensure tabs are always visible during search */
+.tab-container {
+  display: flex !important;
+}
+
+/* Search results positioning - below tabs, above content */
+#searchResults {
+  position: relative;
+  z-index: 50;
+  margin-top: 0;
+  margin-bottom: 16px;
+  background: var(--card);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+/* Ensure search results appear between search bar and tabs */
+.top-search + #searchResults {
+  margin-top: 8px;
+}
+
+#searchResults + .tab-container {
+  margin-top: 8px;
+}
+
+.tab-container::-webkit-scrollbar {
+  display: none;
 }
 
 /* Search bar to tab container spacing - single source */
@@ -1235,22 +1356,26 @@ html, body { overflow-x:hidden; }
 }
 
 .tab {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   border: 0;
   background: transparent;
-  padding: 12px 20px;
-  border-radius: 10px;
-  font-weight: 800;
+  padding: 16px 20px;
+  border-radius: 0;
+  font-weight: 500;
+  font-size: 15px;
   cursor: pointer;
-  min-height: 44px;
-  min-width: 140px;
-  max-width: 250px;
+  min-height: 48px;
+  min-width: 0;
+  max-width: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+  color: var(--text-muted);
 }
 
 .tab::before {
@@ -1269,14 +1394,15 @@ html, body { overflow-x:hidden; }
 }
 
 .tab:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text);
 }
 
 .tab.active {
-  background: linear-gradient(45deg, var(--primary), var(--purple));
-  color: #fff;
-  animation: tabActivate 0.4s ease-out;
+  background: transparent;
+  color: var(--text);
+  border-bottom-color: var(--primary);
+  font-weight: 600;
 }
 
 @keyframes tabActivate {
@@ -1292,12 +1418,25 @@ html, body { overflow-x:hidden; }
 }
 
 .tab-badge {
-  background: #fff;
-  color: var(--primary);
-  border-radius: 12px;
-  padding: 2px 8px;
-  font-size: 12px;
-  margin-left: 6px;
+  background: var(--text-muted) !important;
+  color: var(--bg) !important;
+  border-radius: 10px !important;
+  padding: 2px 6px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  margin-left: 6px !important;
+  min-width: 16px !important;
+  text-align: center !important;
+  line-height: 1.2 !important;
+  transition: all 0.2s ease !important;
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.tab.active .tab-badge {
+  background: var(--primary) !important;
+  color: white !important;
 }
 
 /* Buttons */
@@ -1944,6 +2083,10 @@ html[data-theme="light"] .welcome-message {
   transition: all 0.3s ease;
 }
 
+/* Tab sections use default vertical layout - no special horizontal rules needed */
+
+/* Tab sections use default vertical layout - no scroll indicators needed */
+
 .list-container:empty::before {
   content: 'No items yet. Start by searching for something!';
   display: block;
@@ -2315,7 +2458,9 @@ select,
 }
 
 /* === FAB Rail - Container-Aware Positioning ========================== */
-
+#settingsTab span {
+  display: none;
+}
 :root{
   --fab-size: 50px;
   --fab-gap: 10px;
@@ -2347,15 +2492,10 @@ select,
 /* Individual FAB buttons */
 .fab, .fab-left {
   position: static !important; /* Force static positioning within rail */
-  width: var(--fab-size);
-  height: var(--fab-size);
-  border-radius: 50%;
   display: grid;
   place-items: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,.15);
   border: none;
   cursor: pointer;
-  background: #4a5568;
   color: white;
   font-size: 24px;
   transition: all 0.2s ease;
@@ -2397,6 +2537,42 @@ select,
   }
 }
 
+/* === Icon-only FAB base (applies to all floating buttons) === */
+.fab,
+.fab-left {
+  position: relative;        /* enables larger invisible hit area if needed */
+  background: none !important;
+  border: none !important;
+  width: auto !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none !important;
+  padding: 0;                /* no visual padding — just the icon */
+  color: inherit;
+  font-size: 24px;           /* adjust icon size here */
+  line-height: 1;
+  cursor: pointer;
+  transition: transform .08s ease, opacity .12s ease;
+}
+
+/* Hover/active/focus affordances without adding a box */
+.fab:hover,
+.fab-left:hover { opacity: .9; }
+.fab:active,
+.fab-left:active { transform: translateY(1px); }
+
+/* Keyboard focus ring (accessible, subtle) */
+.fab:focus-visible,
+.fab-left:focus-visible {
+  outline: 2px solid color-mix(in oklab, currentColor 50%, transparent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+
 /* Content protection - add space at bottom on narrow screens */
 @media (max-width: 1200px) {
   .main-container {
@@ -2407,6 +2583,89 @@ select,
 /* Tab visibility control */
 .tab[style*="display: none"] {
   display: none !important;
+}
+
+/* ===== FAB DOCKING SYSTEM ===== */
+/* Anchor for each tab's content so the dock can position inside it */
+.tab-section {
+  position: relative; /* containing block for the dock */
+}
+
+/* The dock that holds all FABs inside the active tab */
+.fab-dock {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  z-index: 30;
+  pointer-events: none;                /* only buttons receive events */
+  padding: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  margin-top: 20px; /* Add some space from content above */
+  width: 100%; /* Ensure dock spans full width of container */
+}
+
+/* Left side - Settings FAB */
+.fab-dock .fab-left {
+  pointer-events: auto;
+  margin-right: auto; /* Push to left side */
+  /* No left margin - align with container's left border */
+}
+
+/* Right side - Theme FABs stack */
+.fab-dock .fab-stack {
+  display: flex !important;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin-left: auto; /* Push to right side */
+  /* No right margin - align with container's right border */
+}
+
+.fab-dock .fab {
+  pointer-events: auto;
+}
+
+/* Mobile: adjust spacing and positioning */
+@media (max-width: 640px){
+  .fab-dock { 
+    padding: 0;
+    bottom: 0;
+    gap: 8px;
+  }
+  
+  .fab-dock .fab-left {
+    /* No margin - align with container's left border */
+  }
+  
+  .fab-dock .fab-stack {
+    gap: 10px;
+    /* No margin - align with container's right border */
+  }
+}
+
+/* Ensure FABs are not page-fixed anymore */
+.fab, .fab-left { 
+  position: relative !important; 
+}
+
+/* Hide FABs initially - they'll be shown when moved to dock */
+.fab-left {
+  display: none !important;
+}
+
+.fab-stack {
+  display: none !important;
+}
+
+/* Show FABs when they're in the dock */
+.fab-dock .fab-left {
+  display: block !important;
+}
+
+.fab-dock .fab-stack {
+  display: flex !important;
 }
 
 /* Force hide tabs that should be hidden */
@@ -2424,6 +2683,29 @@ select,
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;
+}
+
+/* Mobile responsive for YouTube-style tabs */
+@media (max-width: 768px) {
+  .tab-container {
+    padding: 0;
+    margin: 12px 0 0 0;
+    justify-content: space-evenly;
+  }
+  
+  .tab {
+    flex: 1 1 0;
+    padding: 14px 8px;
+    font-size: 13px;
+    min-width: 0;
+    min-height: 44px;
+  }
+  
+  .tab-badge {
+    font-size: 10px;
+    padding: 1px 4px;
+    margin-left: 4px;
+  }
 }
 
 /* Override flex: 1 for hidden tabs */
@@ -3147,34 +3429,7 @@ button:focus-visible,
   order: 0 !important;
 }
 
-/* Series Pills */
-.series-pill {
-  margin-left: auto;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 900;
-  white-space: nowrap;
-  border: 1px solid transparent;
-}
-
-.series-pill.status-ongoing {
-  background: rgba(81, 207, 102, 0.16);
-  color: #2f9e44;
-  border-color: #2f9e44;
-}
-
-.series-pill.status-ended {
-  background: rgba(255, 77, 79, 0.16);
-  color: #d63031;
-  border-color: #d63031;
-}
-
-.series-pill.status-upcoming {
-  background: rgba(255, 212, 59, 0.16);
-  color: #b08900;
-  border-color: #b08900;
-}
+/* REMOVED: Old series-pill classes - replaced with program-status-badge for unified status handling */
 
 /* Like/Dislike Buttons */
 .like-btn,
@@ -4731,16 +4986,7 @@ body[data-theme="forest"] {
 .trivia-row[data-locked="1"] .trivia-chip { opacity:.65; }
 .trivia-row .nudge { font-size:12px; opacity:.8; }
 
-/* FlickWord Boost (Home) */
-.flickfact-card {
-  background: var(--bg-elev, #141a22);
-  border: 1px solid rgba(255,255,255,.06);
-  border-radius: 10px;
-  padding: 10px;
-  margin: 10px 0 12px;
-}
-.flickfact-card .ff-title { font-weight:700; font-size:14px; line-height:1.25; }
-.flickfact-card .ff-body  { font-size:13px; color: var(--muted,#a6b3c2); margin-top:6px; }
+/* FlickWord Boost (Home) - FlickFact feature removed */
 
 /* === SO-1: Series Organizer (progressive disclosure) === */
 .so-card { /* applied via flagged JS; keeps scope narrow */
@@ -4928,7 +5174,7 @@ body[data-theme="forest"] {
   position:fixed;
   inset:auto 16px max(16px, env(safe-area-inset-bottom)) 16px;
   display:grid; gap:8px;
-  z-index:9999;
+  z-index:99999;
   pointer-events:none; /* clicks pass through unless on toast */
 }
 @media (min-width:769px){
@@ -6300,6 +6546,251 @@ input:checked + .slider:hover {
     .main-container {
       overflow-x: hidden !important;
     }
+  }
+}
+
+/* ========== SKIP LINKS FOR ACCESSIBILITY ========== */
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--accent);
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 14px;
+  z-index: 1000;
+  transition: top 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.skip-link:focus {
+  top: 6px;
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+.skip-link:hover {
+  background: var(--color-primary-dark, #c2185b);
+  color: white;
+}
+
+/* Dark mode skip links */
+.dark-mode .skip-link {
+  background: var(--accent);
+  color: white;
+}
+
+.dark-mode .skip-link:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ========== SKELETON LOADER SYSTEM ========== */
+
+/* Base skeleton loader */
+.skeleton {
+  background: var(--skeleton-bg);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  animation: skeleton-pulse var(--skeleton-animation-duration) ease-in-out infinite;
+}
+
+.skeleton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--skeleton-shimmer),
+    transparent
+  );
+  animation: skeleton-shimmer var(--skeleton-animation-duration) ease-in-out infinite;
+}
+
+/* Skeleton animations */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Card skeleton variants */
+.skeleton-card {
+  width: 100%;
+  height: 200px;
+  border-radius: var(--r);
+  margin-bottom: var(--gap-4);
+}
+
+.skeleton-poster {
+  width: var(--poster-w-desktop);
+  height: var(--poster-h-desktop);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.skeleton-poster-mobile {
+  width: var(--poster-w-mobile);
+  height: var(--poster-h-mobile);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.skeleton-text {
+  height: 16px;
+  margin-bottom: var(--gap-2);
+  border-radius: 4px;
+}
+
+.skeleton-text-large {
+  height: 20px;
+  margin-bottom: var(--gap-3);
+  border-radius: 4px;
+}
+
+.skeleton-text-small {
+  height: 12px;
+  margin-bottom: var(--gap-1);
+  border-radius: 4px;
+}
+
+.skeleton-button {
+  height: 36px;
+  width: 80px;
+  border-radius: 6px;
+}
+
+/* Skeleton for horizontal scroll cards */
+.skeleton-preview-card {
+  width: var(--home-card-width-desktop);
+  height: var(--home-card-height-desktop);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.skeleton-preview-card-mobile {
+  width: var(--home-card-width-mobile);
+  height: var(--home-card-height-mobile);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+/* Skeleton for quote bar */
+.skeleton-quote {
+  height: 60px;
+  border-radius: var(--r);
+  margin: var(--gap-3) 0;
+}
+
+/* Skeleton for game cards */
+.skeleton-game-card {
+  width: 100%;
+  height: 280px;
+  border-radius: var(--r);
+  margin-bottom: var(--gap-4);
+}
+
+/* Skeleton for list items */
+.skeleton-list-item {
+  width: 100%;
+  height: 80px;
+  border-radius: var(--r);
+  margin-bottom: var(--gap-3);
+}
+
+/* Dark mode skeleton adjustments */
+.dark-mode .skeleton {
+  --skeleton-bg: #374151;
+  --skeleton-shimmer: #4b5563;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+  
+  .skeleton::before {
+    animation: none;
+  }
+}
+
+/* Skeleton loading states */
+.loading .skeleton {
+  display: block;
+}
+
+.loaded .skeleton {
+  display: none;
+}
+
+/* Specific skeleton layouts */
+.skeleton-show-card {
+  display: grid;
+  grid-template-columns: var(--poster-w-desktop) 1fr;
+  gap: var(--gap-4);
+  padding: var(--gap-4);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  margin-bottom: var(--gap-4);
+}
+
+.skeleton-show-card-mobile {
+  display: grid;
+  grid-template-columns: var(--poster-w-mobile) 1fr;
+  gap: var(--gap-3);
+  padding: var(--gap-3);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  margin-bottom: var(--gap-3);
+}
+
+.skeleton-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-2);
+}
+
+.skeleton-actions {
+  display: flex;
+  gap: var(--gap-2);
+  margin-top: auto;
+}
+
+/* Mobile responsive skeleton */
+@media (max-width: 768px) {
+  .skeleton-show-card {
+    grid-template-columns: var(--poster-w-mobile) 1fr;
+    gap: var(--gap-3);
+    padding: var(--gap-3);
+  }
+  
+  .skeleton-preview-card {
+    width: var(--home-card-width-mobile);
+    height: var(--home-card-height-mobile);
   }
 }
 

@@ -221,17 +221,21 @@
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        // You could reverse geocode here to get city name
-        locationEl.textContent = `📍 ${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
-      },
-      (error) => {
-        console.warn('Location error:', error);
-        locationEl.textContent = '📍 Location unavailable';
-      }
-    );
+    // Defer geolocation call to idle time to avoid blocking LCP
+    const idle = (fn) => ('requestIdleCallback' in window) ? requestIdleCallback(fn, {timeout: 2000}) : setTimeout(fn, 100);
+    idle(() => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          // You could reverse geocode here to get city name
+          locationEl.textContent = `📍 ${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
+        },
+        (error) => {
+          console.warn('Location error:', error);
+          locationEl.textContent = '📍 Location unavailable';
+        }
+      );
+    });
   }
 
 

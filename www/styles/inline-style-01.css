@@ -100,10 +100,6 @@
       }
 
       .header {
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
-        align-items: flex-start;
-        gap: 12px;
         border-bottom: 2px solid var(--primary);
         padding-bottom: 16px;
         margin-bottom: 12px;
@@ -1214,7 +1210,7 @@
         top: 50% !important;
         left: 50% !important;
         transform: translate(-50%, -50%) !important;
-        z-index: 10000 !important;
+        z-index: 99999 !important;
         padding: 16px 24px !important;
         border-radius: 8px !important;
         color: #000 !important;
@@ -1821,4 +1817,71 @@
        */
       
       /* Tab container layout moved to consolidated-layout.css */
+
+      /* Header layout */
+      .header-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;           /* wrap only when truly necessary */
+        padding: 8px 12px;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex: 1 1 auto;
+        min-width: 260px;          /* reduces too-early wrapping */
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 0 0 auto;
+      }
+
+      .header-right > * {
+        white-space: nowrap;
+      }
+
+      .brand {
+        margin: 0;
+        font-size: 2.1rem;
+        color: var(--primary);
+        font-weight: 800;
+        letter-spacing: 0.2px;
+      }
+
+      .tagline {
+        margin: 0;
+        color: #8a8a98;
+        font-weight: 600;
+        font-size: 1rem;
+      }
+
+      /* Tweak text sizes on medium widths */
+      @media (max-width: 900px) {
+        .brand   { font-size: 1.4rem; }
+        .tagline { font-size: 0.95rem; opacity: 0.9; }
+      }
+
+      /* Collapse to two tidy rows on small phones */
+      @media (max-width: 640px) {
+        .header-bar { justify-content: center; }
+        .header-left, .header-right {
+          width: 100%;
+          justify-content: center;
+        }
+        .header-right { margin-top: 6px; }
+      }
+
+      /* Optional: long usernames */
+      .user-btn {
+        max-width: 220px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
       

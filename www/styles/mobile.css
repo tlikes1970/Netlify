@@ -2,6 +2,27 @@
 
 /* Mobile-specific adjustments */
 @media (max-width: 768px) {
+  /* Mobile font size enforcement - WCAG AA compliance */
+  body, html {
+    font-size: 16px !important;
+  }
+  
+  /* Base text elements - minimum 16px */
+  p, span, div, a, button, input, select, textarea, label {
+    font-size: 16px !important;
+  }
+  
+  /* Smaller elements - minimum 12px */
+  .badge, .count, .meta, .tag, .pill, .chip {
+    font-size: 12px !important;
+  }
+  
+  /* Headings maintain relative sizing but ensure minimums */
+  h1 { font-size: max(2rem, 24px) !important; }
+  h2 { font-size: max(1.5rem, 20px) !important; }
+  h3 { font-size: max(1.25rem, 18px) !important; }
+  h4 { font-size: max(1.1rem, 16px) !important; }
+  h5, h6 { font-size: 16px !important; }
   /* Main container adjustments */
   .main-container {
     padding: 16px;

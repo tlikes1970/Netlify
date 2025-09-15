@@ -9,30 +9,28 @@
   // Single source of truth for home sections
   window.HomeSectionsConfig = {
     // All home sections that should be shown/hidden based on tab
+    // ORDER (LOCKED): 1. Quote Bar 2. Group 1 3. Group 2 4. Group 3 5. Group 4 6. Group 5
     ALL_SECTIONS: [
-      'curatedSections',
-      'currentlyWatchingPreview', 
-      'next-up-row',
-      'spotlight-row',
-      'upcomingEpisodes',
-      'quote-flickword-container',
-      'quoteCard',
-      'randomQuoteCard',
-      'bingeBanner',
-      'feedbackSection'
+      'quote-bar',
+      'group-1-your-shows',
+      'group-2-community',
+      'flickwordTile',
+      'triviaTile',
+      'group-3-for-you',
+      'group-4-theaters',
+      'group-5-feedback'
     ],
     
     // Sections that are hidden during search
     SEARCH_HIDDEN_SECTIONS: [
-      'curatedSections',
-      'currentlyWatchingPreview',
-      'next-up-row',
-      'theaters-section',
+      'quote-bar',
+      'group-1-your-shows',
+      'group-2-community',
+      'flickwordTile',
       'triviaTile',
-      'flickwordTile', 
-      'spotlight-row',
-      'quote-flickword-container',
-      'feedbackSection'
+      'group-3-for-you',
+      'group-4-theaters',
+      'group-5-feedback'
     ],
     
     // Tab content sections

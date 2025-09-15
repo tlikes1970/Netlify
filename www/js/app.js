@@ -4,6 +4,69 @@
 */
 
 (function () {
+  // Centralized User ViewModel - Single Source of Truth for Auth State
+  const UserViewModel = {
+    isAuthenticated: false,
+    displayName: '',
+    alias: '',
+    avatarUrl: '',
+    email: '',
+    
+    update(user) {
+      this.isAuthenticated = !!user;
+      if (user) {
+        this.displayName = user.displayName || user.email?.split('@')[0] || 'User';
+        this.alias = user.displayName || user.email?.split('@')[0] || 'User';
+        this.avatarUrl = user.photoURL || '';
+        this.email = user.email || '';
+      } else {
+        this.displayName = '';
+        this.alias = '';
+        this.avatarUrl = '';
+        this.email = '';
+      }
+      
+      // Notify all UI components of auth state change
+      this.notifyUI();
+    },
+    
+    notifyUI() {
+      // Update account button
+      const accountBtn = document.getElementById('accountBtn');
+      if (accountBtn) {
+        accountBtn.textContent = this.isAuthenticated ? `👤 ${this.displayName}` : '👤 Sign In';
+        accountBtn.title = this.isAuthenticated ? 
+          `Signed in as ${this.email}. Click to sign out.` : 
+          'Click to sign in';
+      }
+      
+      // Update snark text
+      const snarkElement = document.querySelector('[data-snark]');
+      if (snarkElement && this.isAuthenticated) {
+        const snarks = [
+          `Welcome back, ${this.alias}!`,
+          `Ready to discover, ${this.alias}?`,
+          `Let's find your next favorite show, ${this.alias}!`
+        ];
+        snarkElement.textContent = snarks[Math.floor(Math.random() * snarks.length)];
+      } else if (snarkElement) {
+        snarkElement.textContent = '';
+      }
+      
+      // Update settings access
+      const settingsElements = document.querySelectorAll('[data-requires-auth]');
+      settingsElements.forEach(el => {
+        if (this.isAuthenticated) {
+          el.style.display = '';
+          el.removeAttribute('disabled');
+        } else {
+          el.style.display = 'none';
+          el.setAttribute('disabled', 'true');
+        }
+      });
+    }
+  };
+
   const App = {
     // Runtime state (references the global appData defined in utils.cleaned.js)
     currentUser: null,
@@ -33,6 +96,14 @@
         // 5) Ensure a default active tab and initial render
         this.switchToTab('home');
         this.updateUI();
+        
+        // 6) Update tab badges after UI is ready
+        setTimeout(() => {
+          if (typeof window.updateTabCounts === 'function') {
+            console.log('🔢 Calling updateTabCounts during initialization');
+            window.updateTabCounts();
+          }
+        }, 500);
 
         // Auth listener handled in initFirebase()
 
@@ -60,8 +131,14 @@
     applyTheme() {
       const local = localStorage.getItem('flicklet-theme');
       const chosen = local || (appData?.settings?.theme || 'light');
+      
+      // Apply data-theme attribute for new token system
+      document.documentElement.setAttribute('data-theme', chosen);
+      
+      // Keep legacy dark-mode class for backward compatibility
       document.body.classList.toggle('dark-mode', chosen === 'dark');
-      // keep both in sync
+      
+      // Keep both in sync
       appData.settings.theme = chosen;
       localStorage.setItem('flicklet-theme', chosen);
     },
@@ -73,7 +150,7 @@
           applyTranslations(lang);
         }
       } catch (e) {
-        console.warn('i18n not available yet, continuing.');
+        FlickletDebug.warn('i18n not available yet, continuing.');
       }
     },
 
@@ -85,11 +162,11 @@
     initFirebase() {
       // Prevent multiple initializations
       if (this.firebaseInitialized) {
-        console.log('⚠️ Firebase already initialized, skipping');
+        FlickletDebug.info('⚠️ Firebase already initialized, skipping');
         return;
       }
       
-      console.log('🔥 Initializing Firebase...');
+      FlickletDebug.info('🔥 Initializing Firebase...');
       this.firebaseInitialized = true;
       
       // Clear any existing username prompt modals
@@ -98,11 +175,11 @@
       // Wait for Firebase ready event with timeout
       this.waitForFirebaseReady()
         .then(() => {
-          console.log('✅ Firebase available, setting up auth listener');
+          FlickletDebug.info('✅ Firebase available, setting up auth listener');
           this.setupAuthListener();
         })
         .catch(() => {
-          console.error('❌ Firebase initialization timeout after 8 seconds');
+          FlickletDebug.error('❌ Firebase initialization timeout after 8 seconds');
           this.setupFallbackAuth();
         });
     },
@@ -143,7 +220,7 @@ waitForFirebaseReady() {
 
 
     setupFallbackAuth() {
-      console.log('🔄 Setting up fallback authentication system');
+      FlickletDebug.info('🔄 Setting up fallback authentication system');
       this.currentUser = null;
       this.firebaseInitialized = false;
       
@@ -160,186 +237,185 @@ waitForFirebaseReady() {
 
     setupAuthListener() {
       try {
-        firebase.auth().onAuthStateChanged(async (user) => {
-          console.log('👤 Firebase auth state changed:', user ? `User: ${user.email}` : 'No user');
-          this.currentUser = user;
-          // Also update the global currentUser for compatibility with existing code
-          if (typeof window !== 'undefined') {
-            window.currentUser = user;
-          }
-          
-          // Only process auth changes if this is a new sign-in, not page load
-          if (!this.authInitialized) {
-            console.log('🔧 Auth listener initialized, checking current state');
-            this.authInitialized = true;
-            
-            if (user) {
-              console.log('🔍 User already signed in on page load, updating UI silently');
-              this.setAccountButtonLabel(user.displayName || user.email.split('@')[0] || 'User');
-            } else {
-              this.setAccountButtonLabel('Sign In');
-              this.setLeftSnark('');
-            }
-            // Don't return early - continue to username check logic below
-          }
-          
-          if (!user) {
-            this.setAccountButtonLabel('Sign In');
-            this.setLeftSnark('');
-            return;
-          }
-
-          // Handle both page load and new sign-ins
-          if (this.authInitialized) {
-            console.log('✅ User signed in, updating UI');
-            this.showNotification(t('signed_in_successfully'), 'success');
-
-            // 1) Close ALL auth modals here (you already tag data-modal="login")
-            document.querySelectorAll('.modal-backdrop[data-modal="login"]').forEach(n => n.remove());
-            window.__currentAuthModal = null;
-          }
-
-          // 2) CREATE USER DATABASE ENTRY (CRITICAL FOR FIREBASE STORAGE)
-          console.log('🔄 Creating user database entry...');
-          try {
-            const db = firebase.firestore();
-            await db.collection("users").doc(user.uid).set({
-              profile: {
-                email: user.email || "",
-                displayName: user.displayName || "",
-                photoURL: user.photoURL || "",
-              },
-              lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
-            }, { merge: true });
-            console.log('✅ User database entry created successfully');
-          } catch (error) {
-            console.error('❌ Failed to create user database entry:', error);
-          }
-
-          // 3) LOAD USER DATA FROM CLOUD (CRITICAL FOR DATA RESTORATION)
-          console.log('🔄 Loading user data from Firebase cloud storage...');
-          try {
-            if (typeof window.loadUserDataFromCloud === 'function') {
-              await window.loadUserDataFromCloud(user.uid);
-              console.log('✅ User data loaded from cloud successfully');
-              
-              // CRITICAL: Refresh UI after data is loaded to prevent "already in list" errors
-              if (typeof window.updateUI === 'function') {
-                console.log('🔄 Refreshing UI after cloud data load...');
-                window.updateUI();
-              }
-              
-              // Also refresh the current tab content
-              if (typeof window.FlickletApp?.updateTabContent === 'function') {
-                const currentTab = window.FlickletApp?.currentTab || 'home';
-                console.log('🔄 Refreshing current tab content:', currentTab);
-                window.FlickletApp.updateTabContent(currentTab);
-              }
-            } else {
-              console.error('❌ loadUserDataFromCloud function not available');
-            }
-          } catch (error) {
-            console.error('❌ Failed to load user data from cloud:', error);
-          }
-
-          // 3) BUTTON LABEL = Firebase displayName (fallback email prefix)
-          console.log('🔍 User signed in, Firebase user data:', {
-            displayName: user.displayName,
-            email: user.email,
-            providerData: user.providerData
-          });
-          
-          // Set account button with Firebase displayName (this method will prioritize Firebase displayName)
-          console.log('🔍 Setting account button label with Firebase displayName:', user.displayName);
-          this.setAccountButtonLabel(user.displayName);
-          
-          // Also update the account button to ensure it's using the latest Firebase data
-          setTimeout(() => {
-            console.log('🔍 Refreshing account button after sign-in');
-            this.updateAccountButton();
-          }, 100);
-
-          // 3) WELCOME/SNARK = Firestore settings.username (prompt once if missing)
-          try {
-            const settings = await this.readSettings(user.uid);
-            let username = (settings.username || '').trim();
-
-            // Load existing username into window.appData.settings for personalized rows
-            if (username) {
-              window.appData = window.appData || {};
-              window.appData.settings = { ...(window.appData.settings||{}), username };
-              console.log('✅ Loaded existing username into appData:', username);
-            }
-
-            // single prompt gate stored in Firestore so it works across devices
-            const alreadyPrompted = !!settings.usernamePrompted;
-            console.log('🔍 Username check:', { username, alreadyPrompted, settings });
-            
-            if (!username && !alreadyPrompted) {
-              console.log('🔧 Prompting for username...', {username, alreadyPrompted, settings});
-              username = await this.promptForUsernameOnce(user.displayName);  // returns string or null
-              console.log('🔧 Username prompt result:', username);
-              
-              if (username && username.trim()) {
-                await this.writeSettings(user.uid, { username: username.trim(), usernamePrompted: true });
-                // keep local appData in sync (if you use it)
-                window.appData = window.appData || {};
-                window.appData.settings = { ...(window.appData.settings||{}), username: username.trim() };
-                console.log('✅ Username saved:', username.trim());
-              } else {
-                await this.writeSettings(user.uid, { usernamePrompted: true });
-                console.log('✅ Username prompt marked as completed (skipped)');
-              }
-            } else {
-              console.log('🔍 Username already exists or was prompted:', { username, alreadyPrompted });
-            }
-
-            // 3. Update left snark AFTER username is set
-            this.setLeftSnark(username ? this.makeSnark(username) : '');
-
-            // Run migration once per user
-            await this.runMigration();
-            
-            // Run cleanup for stray field
-            await this.cleanupStrayField();
-            
-            // Migrate legacy name fields
-            await this.migrateLegacyNameFields(user.uid);
-            
-            // Load user data from Firebase
-            if (typeof loadUserDataFromCloud === 'function') {
-              console.log('🔄 Loading user data from Firebase...');
-              await loadUserDataFromCloud(user.uid);
-              console.log('✅ User data loaded from Firebase');
-              
-              // Dispatch custom event for other scripts to listen to
-              document.dispatchEvent(new CustomEvent('userDataLoaded', { 
-                detail: { uid: user.uid, data: window.appData } 
-              }));
-              
-              // Refresh the UI after data is loaded
-              if (typeof updateUI === 'function') {
-                console.log('🔄 Refreshing UI after data load');
-                updateUI();
-              }
-              
-              // Refresh the current tab content
-              setTimeout(() => {
-                if (typeof switchToTab === 'function') {
-                  console.log('🔄 Refreshing current tab after data load');
-                  switchToTab(this.currentTab);
-                }
-              }, 200);
-            }
-          } catch (error) {
-            console.error('❌ Error in auth state change handler:', error);
-            this.showNotification(t('error_loading_user_data'), 'error');
-          }
-        });
+        console.log('🔥 Auth listener setup - using single observer from auth.js');
+        // Auth state changes are now handled by the single observer in auth.js
+        // This method is kept for compatibility but no longer registers its own observer
+        
+        // Get current user state for initialization
+        const user = firebase.auth().currentUser;
+        FlickletDebug.info('👤 Current user on init:', user ? `User: ${user.email}` : 'No user');
+        this.currentUser = user;
+        
+        // Also update the global currentUser for compatibility with existing code
+        if (typeof window !== 'undefined') {
+          window.currentUser = user;
+        }
+        
+        // Update centralized UserViewModel
+        UserViewModel.update(user);
+        
+        // Initialize auth state
+        this.authInitialized = true;
+        
+        // If user is already signed in, process their data
+        if (user) {
+          this.processUserSignIn(user);
+        }
+        
       } catch (error) {
-        console.error('❌ Error setting up auth listener:', error);
-        this.showNotification(t('auth_system_error'), 'error');
+        FlickletDebug.error('❌ Auth listener setup failed:', error);
       }
+    },
+
+    async processUserSignIn(user) {
+      try {
+        FlickletDebug.info('✅ User signed in, processing...');
+        
+        // 1) Close ALL auth modals
+        document.querySelectorAll('.modal-backdrop[data-modal="login"]').forEach(n => n.remove());
+        window.__currentAuthModal = null;
+
+        // 2) CREATE USER DATABASE ENTRY (CRITICAL FOR FIREBASE STORAGE)
+        FlickletDebug.info('🔄 Creating user database entry...');
+        try {
+          const db = firebase.firestore();
+          await db.collection("users").doc(user.uid).set({
+            profile: {
+              email: user.email || "",
+              displayName: user.displayName || "",
+              photoURL: user.photoURL || "",
+            },
+            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+          FlickletDebug.info('✅ User database entry created successfully');
+        } catch (error) {
+          FlickletDebug.error('❌ Failed to create user database entry:', error);
+        }
+
+        // 3) LOAD USER DATA FROM CLOUD (CRITICAL FOR DATA RESTORATION)
+        FlickletDebug.info('🔄 Loading user data from Firebase cloud storage...');
+        try {
+          if (typeof window.loadUserDataFromCloud === 'function') {
+            await window.loadUserDataFromCloud(user.uid);
+            FlickletDebug.info('✅ User data loaded from cloud successfully');
+            
+            // CRITICAL: Refresh UI after data is loaded to prevent "already in list" errors
+            if (typeof window.updateUI === 'function') {
+              FlickletDebug.info('🔄 Refreshing UI after cloud data load...');
+              window.updateUI();
+            }
+            
+            // Update tab badges after data is loaded
+            if (typeof window.updateTabCounts === 'function') {
+              FlickletDebug.info('🔢 Updating tab counts after cloud data load...');
+              window.updateTabCounts();
+            }
+            
+            // Also refresh the current tab content
+            if (typeof window.FlickletApp?.updateTabContent === 'function') {
+              const currentTab = window.FlickletApp?.currentTab || 'home';
+              FlickletDebug.info('🔄 Refreshing current tab content:', currentTab);
+              window.FlickletApp.updateTabContent(currentTab);
+            }
+          } else {
+            FlickletDebug.error('❌ loadUserDataFromCloud function not available');
+          }
+        } catch (error) {
+          FlickletDebug.error('❌ Failed to load user data from cloud:', error);
+        }
+
+        // 4) BUTTON LABEL = Firebase displayName (fallback email prefix)
+        console.log('🔍 User signed in, Firebase user data:', {
+          displayName: user.displayName,
+          email: user.email,
+          providerData: user.providerData
+        });
+        
+        // Set account button with Firebase displayName (this method will prioritize Firebase displayName)
+        console.log('🔍 Setting account button label with Firebase displayName:', user.displayName);
+        this.setAccountButtonLabel(user.displayName);
+        
+        // Also update the account button to ensure it's using the latest Firebase data
+        setTimeout(() => {
+          console.log('🔍 Refreshing account button after sign-in');
+          this.updateAccountButton();
+        }, 100);
+
+        // 5) WELCOME/SNARK = Firestore settings.username (prompt once if missing)
+        try {
+          const settings = await this.readSettings(user.uid);
+          let username = (settings.username || '').trim();
+
+          // Load existing username into window.appData.settings for personalized rows
+          if (username) {
+            window.appData = window.appData || {};
+            window.appData.settings = { ...(window.appData.settings||{}), username };
+            console.log('✅ Loaded existing username into appData:', username);
+          }
+
+          // single prompt gate stored in Firestore so it works across devices
+          const alreadyPrompted = !!settings.usernamePrompted;
+          console.log('🔍 Username check:', { username, alreadyPrompted, settings });
+          
+          if (!username && !alreadyPrompted) {
+            console.log('🔧 Prompting for username...', {username, alreadyPrompted, settings});
+            username = await this.promptForUsernameOnce(user.displayName);  // returns string or null
+            console.log('🔧 Username prompt result:', username);
+            
+            if (username && username.trim()) {
+              await this.writeSettings(user.uid, { username: username.trim(), usernamePrompted: true });
+              // keep local appData in sync (if you use it)
+              window.appData = window.appData || {};
+              window.appData.settings = { ...(window.appData.settings||{}), username: username.trim() };
+              console.log('✅ Username saved:', username.trim());
+            } else {
+              await this.writeSettings(user.uid, { usernamePrompted: true });
+              console.log('✅ Username prompt marked as completed (skipped)');
+            }
+          } else {
+            console.log('🔍 Username already exists or was prompted:', { username, alreadyPrompted });
+          }
+
+          // Update left snark AFTER username is set
+          this.setLeftSnark(username ? this.makeSnark(username) : '');
+
+          // Run migration once per user
+          await this.runMigration();
+          
+          // Run cleanup for stray field
+          await this.cleanupStrayField();
+          
+          // Migrate legacy name fields
+          await this.migrateLegacyNameFields(user.uid);
+          
+        } catch (error) {
+          console.error('❌ Error in user sign-in processing:', error);
+          this.showNotification(t('error_loading_user_data'), 'error');
+        }
+        
+      } catch (error) {
+        console.error('❌ Error in processUserSignIn:', error);
+        this.showNotification(t('error_processing_sign_in'), 'error');
+      }
+    },
+
+    clearUserData() {
+      // Clear user data when signing out
+      this.currentUser = null;
+      window.currentUser = null;
+      
+      // Clear any cached user data
+      if (window.appData) {
+        window.appData.settings = window.appData.settings || {};
+        window.appData.settings.username = '';
+      }
+      
+      // Update UI to reflect signed out state
+      if (window.UserViewModel) {
+        window.UserViewModel.update(null);
+      }
+      
+      console.log('🧹 User data cleared');
     },
 
     // Firestore settings helpers
@@ -997,6 +1073,12 @@ waitForFirebaseReady() {
           case 'track-episodes':
             // Handled by inline-script-03.js - do nothing here
             break;
+          case 'sign-in':
+            // Handled by auth.js - do nothing here
+            break;
+          case 'share-lists':
+            // Handled by inline-script-01.js - do nothing here
+            break;
           default:
             console.warn(t('unknown_data_action') + ':', action);
         }
@@ -1023,9 +1105,10 @@ waitForFirebaseReady() {
         newAccountBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          console.log('🔐 Account button clicked, currentUser:', this.currentUser);
+          const currentUser = this.currentUser || window.currentUser;
+          console.log('🔐 Account button clicked, currentUser:', currentUser);
           
-          if (this.currentUser) {
+          if (currentUser) {
             // User is signed in, show sign out modal
             console.log('👤 User signed in, showing sign out modal');
             if (typeof this.showSignOutModal === 'function') {
@@ -1367,6 +1450,211 @@ waitForFirebaseReady() {
         }
       }
     },
+
+    // CRITICAL: Save app data to Firebase (missing function that was causing sync issues)
+    async saveData() {
+      try {
+        FlickletDebug.info('💾 FlickletApp.saveData: Starting data save to Firebase');
+        FlickletDebug.info('💾 FlickletApp.saveData: currentUser status:', { 
+          hasCurrentUser: !!this.currentUser, 
+          currentUserUid: this.currentUser?.uid,
+          firebaseAuth: !!firebase?.auth,
+          authState: firebase?.auth?.currentUser?.uid 
+        });
+        
+        // Ensure we have a current user - try to get from Firebase auth if not set
+        if (!this.currentUser && firebase?.auth?.currentUser) {
+          FlickletDebug.info('💾 No this.currentUser, but Firebase auth has user, updating...');
+          this.currentUser = firebase.auth.currentUser;
+          window.currentUser = this.currentUser;
+        }
+        
+        if (!this.currentUser) {
+          FlickletDebug.warn('💾 No current user, saving to localStorage only');
+          localStorage.setItem("flicklet-data", JSON.stringify(window.appData));
+          return;
+        }
+
+        // Get Firebase services
+        console.log('🔥 Getting Firebase Firestore instance...');
+        const db = firebase.firestore();
+        console.log('✅ Firebase Firestore instance obtained');
+        
+        // Prepare data payload with undefined value filtering
+        const cleanData = (obj) => {
+          if (obj === null || obj === undefined) return null;
+          if (Array.isArray(obj)) {
+            return obj.map(cleanData).filter(item => item !== null && item !== undefined);
+          }
+          if (typeof obj === 'object') {
+            const cleaned = {};
+            for (const [key, value] of Object.entries(obj)) {
+              if (value !== undefined) {
+                cleaned[key] = cleanData(value);
+              }
+            }
+            return cleaned;
+          }
+          return obj;
+        };
+
+        const payload = {
+          watchlists: { 
+            tv: cleanData(window.appData.tv) || { watching: [], wishlist: [], watched: [] },
+            movies: cleanData(window.appData.movies) || { watching: [], wishlist: [], watched: [] }
+          },
+          settings: cleanData(window.appData.settings) || {},
+          pro: !!window.appData.settings?.pro,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+
+        // Debug: Log the payload structure to identify any remaining undefined values
+        FlickletDebug.info('💾 Payload structure before Firebase save:', {
+          watchlists: {
+            tv: payload.watchlists.tv,
+            movies: payload.watchlists.movies
+          },
+          settings: payload.settings,
+          pro: payload.pro
+        });
+
+        // Save to Firebase
+        await db.collection("users").doc(this.currentUser.uid).set(payload, { merge: true });
+        
+        // Also save to localStorage as backup
+        localStorage.setItem("flicklet-data", JSON.stringify(window.appData));
+        
+        FlickletDebug.info('✅ FlickletApp.saveData: Data saved successfully to Firebase and localStorage');
+        
+      } catch (error) {
+        FlickletDebug.error('❌ FlickletApp.saveData failed:', error);
+        
+        // Fallback to localStorage only
+        try {
+          localStorage.setItem("flicklet-data", JSON.stringify(window.appData));
+          FlickletDebug.info('💾 Fallback: Data saved to localStorage only');
+        } catch (localError) {
+          FlickletDebug.error('❌ Even localStorage save failed:', localError);
+        }
+        
+        throw error;
+      }
+    },
+
+    // ---------- SEARCH STATE MANAGEMENT ----------
+    /**
+     * Process: Search State Management
+     * Purpose: Track search state and ensure tabs remain visible during search
+     * Data Source: Search controller calls this method
+     * Update Path: Called by search-controller.js when entering/exiting search
+     * Dependencies: Tab visibility system, search controller
+     */
+    setSearching(searching) {
+      this.isSearching = searching;
+      console.log('🔍 FlickletApp search state changed:', searching);
+      
+      // Ensure tabs remain visible during search
+      if (searching) {
+        const tabContainer = document.querySelector('.tab-container');
+        if (tabContainer) {
+          tabContainer.style.display = 'flex';
+          console.log('🔍 Tab container made visible during search');
+        }
+      }
+    },
+
+    // ---------- FAB DOCKING SYSTEM ----------
+    /**
+     * Process: FAB Docking
+     * Purpose: Dock all FABs to the currently active tab container
+     * Data Source: DOM query for .tab-section.active and FAB elements
+     * Update Path: Automatically triggered on tab switches
+     * Dependencies: CSS .fab-dock class, tab switching system
+     */
+    dockFABsToActiveTab() {
+      const FAB_SELECTORS = '.fab, .fab-left'; // include all FAB variants
+      const ACTIVE_PANEL_SELECTOR = '.tab-section.active';
+
+      function getActivePanel() {
+        return document.querySelector(ACTIVE_PANEL_SELECTOR);
+      }
+
+      function ensureDock(panel) {
+        if (!panel) return null;
+        let dock = panel.querySelector(':scope > .fab-dock');
+        if (!dock) {
+          dock = document.createElement('div');
+          dock.className = 'fab-dock';
+          panel.appendChild(dock);
+        }
+        return dock;
+      }
+
+      function moveFABsToDock() {
+        console.log('🔧 FAB Docking: Starting moveFABsToDock');
+        const panel = getActivePanel();
+        console.log('🔧 FAB Docking: Active panel:', panel);
+        if (!panel) return;
+        const dock = ensureDock(panel);
+        console.log('🔧 FAB Docking: Dock created/found:', dock);
+        if (!dock) return;
+
+        // Move settings FAB (fab-left) to left side
+        const settingsFab = document.querySelector('.fab-left');
+        console.log('🔧 FAB Docking: Settings FAB found:', settingsFab);
+        if (settingsFab && !dock.contains(settingsFab)) {
+          settingsFab.style.display = ''; // Show the FAB
+          dock.appendChild(settingsFab);
+          console.log('🔧 FAB Docking: Settings FAB moved to dock');
+        }
+
+        // Move fab-stack (theme buttons) to right side
+        const fabStack = document.querySelector('.fab-stack');
+        console.log('🔧 FAB Docking: Fab stack found:', fabStack);
+        if (fabStack && !dock.contains(fabStack)) {
+          fabStack.style.display = 'flex'; // Show the stack
+          dock.appendChild(fabStack);
+          console.log('🔧 FAB Docking: Fab stack moved to dock');
+        }
+
+        // Move any individual FABs that aren't in a stack
+        const individualFabs = Array.from(document.querySelectorAll('.fab'))
+          .filter(btn => !btn.closest('.fab-stack') && !dock.contains(btn));
+        
+        if (individualFabs.length > 0) {
+          // Create a stack for individual FABs if it doesn't exist
+          let individualStack = dock.querySelector('.individual-fab-stack');
+          if (!individualStack) {
+            individualStack = document.createElement('div');
+            individualStack.className = 'fab-stack individual-fab-stack';
+            dock.appendChild(individualStack);
+          }
+          
+          individualFabs.forEach(btn => individualStack.appendChild(btn));
+        }
+        
+        console.log('🔧 FAB Docking: Dock contents after move:', dock.innerHTML);
+      }
+
+      // Initial run - try multiple times to ensure it works
+      moveFABsToDock();
+      setTimeout(moveFABsToDock, 100);
+      setTimeout(moveFABsToDock, 500);
+
+      // Re-run whenever tabs change (click on [data-tab] or programmatic)
+      document.addEventListener('click', (e) => {
+        // Adjust if your tab triggers differ
+        if (e.target.closest?.('[data-tab], .tab, .tab-link')) {
+          setTimeout(moveFABsToDock, 0); // let the 'active' class switch first
+        }
+      });
+
+      // Optional public hook if your code switches tabs programmatically
+      window.reDockFABs = moveFABsToDock;
+
+      // If your app fires a custom event on tab switch, hook it:
+      document.addEventListener('tab:changed', moveFABsToDock);
+    },
   };
 
   // Expose singleton
@@ -1374,4 +1662,7 @@ waitForFirebaseReady() {
   
   // Also expose as instance for compatibility
   window.FlickletAppInstance = App;
+  
+  // Expose UserViewModel globally for verification
+  window.UserViewModel = UserViewModel;
 })();

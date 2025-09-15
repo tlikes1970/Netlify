@@ -39,6 +39,7 @@
     variant = 'compact',
     id,
     posterUrl,
+    posterPath,
     title,
     subtitle,
     rating,
@@ -62,9 +63,18 @@
     const stars = generateStars(normalizedRating);
     
     // Generate badges HTML
-    const badgesHTML = badges.map(badge => 
-      `<span class="card__badge card__badge--${badge.kind || 'default'}" aria-label="${badge.label}">${badge.label}</span>`
-    ).join('');
+    const badgesHTML = badges.map(badge => {
+      if (badge.kind === 'status') {
+        // Use the new program status badge structure
+        return `<span class="program-status-badge ${badge.class || ''}" 
+                     title="${badge.ariaLabel || badge.label}" 
+                     aria-label="${badge.ariaLabel || badge.label}"
+                     role="status">${badge.label}</span>`;
+      } else {
+        // Use standard badge structure for other types
+        return `<span class="card__badge card__badge--${badge.kind || 'default'}" aria-label="${badge.label}">${badge.label}</span>`;
+      }
+    }).join('');
 
     // Generate overflow menu HTML
     const overflowHTML = overflowActions.length > 0 ? `
@@ -90,12 +100,17 @@
       </button>
     ` : '';
 
+    // Generate srcset for responsive images
+    const srcset = posterPath && typeof window.tmdbSrcset === 'function' ? 
+      window.tmdbSrcset(posterPath) : 
+      '';
+
     // Build card HTML based on variant
     if (variant === 'compact') {
       card.innerHTML = `
         <div class="card__poster" role="button" tabindex="0" aria-label="${title}">
           ${posterUrl ? 
-            `<img src="${posterUrl}" alt="${title} poster" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+            `<img src="${posterUrl}" ${srcset ? `srcset="${srcset}"` : ''} sizes="(max-width: 480px) 148px, 200px" alt="${title} poster" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
             ''
           }
           <div class="card__poster-placeholder" style="display: ${posterUrl ? 'none' : 'flex'};">
@@ -120,7 +135,7 @@
       card.innerHTML = `
         <div class="card__poster" role="button" tabindex="0" aria-label="${title}">
           ${posterUrl ? 
-            `<img src="${posterUrl}" alt="${title} poster" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+            `<img src="${posterUrl}" ${srcset ? `srcset="${srcset}"` : ''} sizes="(max-width: 480px) 148px, 200px" alt="${title} poster" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
             ''
           }
           <div class="card__poster-placeholder" style="display: ${posterUrl ? 'none' : 'flex'};">
@@ -269,11 +284,9 @@
     const type = item.media_type || item.mediaType || (item.first_air_date ? 'TV' : 'Movie');
     const subtitle = year ? `${year} • ${type}` : type;
 
-    // Handle poster URL
-    let posterUrl = item.poster_src || item.poster;
-    if (!posterUrl && item.poster_path) {
-      posterUrl = `https://image.tmdb.org/t/p/w342${item.poster_path}`;
-    }
+    // Handle poster URL using consistent utility
+    const posterUrl = window.getPosterUrl ? window.getPosterUrl(item, 'w342') : 
+      (item.poster_src || item.poster || (item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null));
 
     // Normalize rating
     const rating = item.userRating || item.rating || 
@@ -322,6 +335,7 @@
       variant,
       id,
       posterUrl,
+      posterPath: item.poster_path || '',
       title,
       subtitle,
       rating,

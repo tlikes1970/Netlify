@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+d<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker</title>
+    <title>Flicklet - TV & Movie Tracker v23.85-ROUTE-FIX-COMPLETE</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
@@ -15,56 +15,375 @@
     <!-- Cross-Origin-Opener-Policy for Google Auth popup compatibility -->
     <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups" />
     
+    <!-- TMDB API Configuration - Use environment variable or tmdb-config.js -->
+    <meta name="tmdb-api-key" content="YOUR_TMDB_API_KEY_HERE" />
+    
+    <!-- Base tag for root-relative URLs -->
+    <base href="/">
+    
     <!-- Icons for different platforms -->
-    <link rel="icon" href="icons/icon-512.png" />
-    <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="/icons/icon-512.png" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.json" />
 
-    <link rel="stylesheet" href="styles/inline-style-01.css?v=v17.9">
-    <link rel="stylesheet" href="styles/inline-style-02.css">
-    <link rel="stylesheet" href="styles/components.css?v=v17.9">
-    <link rel="stylesheet" href="styles/mobile.css?v=v17.9">
-    <link rel="stylesheet" href="styles/main.css?v=v17.9">
-    <link rel="stylesheet" href="styles/consolidated-layout.css?v=v17.9">
+    <!-- Critical CSS - Inlined for performance -->
+    <style>
+      /* Critical CSS - Above the fold styles */
+      :root {
+        --fg: #1f2937;
+        --bg: #ffffff;
+        --muted: #374151;
+        --card: #ffffff;
+        --border: #e5e7eb;
+        --accent: #ff4c8d;
+        --text-secondary: #374151;
+        --placeholder: #6b7280;
+        --badge-text: #1f2937;
+        --meta-text: #374151;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; padding: 0; }
+      body {
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: var(--text);
+        line-height: 1.5;
+        min-height: 100svh;
+        overflow-x: hidden;
+        overflow-y: visible;
+      }
+      .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: var(--bg);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        min-height: calc(100vh - 40px);
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      .title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--fg);
+        margin: 0;
+      }
+      .subtitle {
+        font-size: 1rem;
+        color: var(--muted);
+        margin: 4px 0 0 0;
+      }
+      .top-search {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--bg);
+        padding: 16px;
+        margin: 16px 0;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      .search-row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .search-input {
+        flex: 1;
+        min-width: 200px;
+        padding: 12px 16px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 16px;
+        background: var(--bg);
+        color: var(--fg);
+      }
+      .btn {
+        padding: 12px 24px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg);
+        color: var(--fg);
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        min-height: 44px;
+        min-width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .btn:hover {
+        background: var(--color-surface-2);
+        border-color: var(--accent);
+      }
+      .btn:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .tab-container {
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 0;
+        background: transparent;
+        padding: 0;
+        border-radius: 0;
+        margin: 16px 0 0 0;
+        border: none;
+        border-bottom: 1px solid var(--border);
+        position: relative;
+        z-index: 100;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .tab {
+        padding: 12px 24px;
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-bottom: 2px solid transparent;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .tab.active {
+        color: var(--fg);
+        border-bottom-color: var(--accent);
+      }
+      .tab:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      @media (max-width: 768px) {
+        .main-container { padding: 16px; margin: 10px; }
+        .header { flex-direction: column; gap: 8px; text-align: center; }
+        .title { font-size: 1.8rem; }
+        .search-row { flex-direction: column; gap: 8px; }
+        .search-input { width: 100%; min-width: auto; }
+        .tab-container { padding: 0 16px; }
+        .tab { padding: 8px 16px; font-size: 14px; }
+      }
+    </style>
+    
+    <!-- Critical CLS prevention CSS -->
+    <style id="critical-cls-guard">
+      /* Reserve space for help/top area */
+      .search-help{ min-height: clamp(72px, 8vw, 128px); }
+
+      /* Reserve space for the first curated row (prevents late layout jumps) */
+      .curated-row:first-of-type{ min-height: clamp(220px, 30vw, 340px); }
+
+      /* Give images in curated rows a stable box without touching layout elsewhere */
+      @supports (aspect-ratio: 2 / 3){
+        .curated-row img{
+          aspect-ratio: 2 / 3;
+          height: auto;
+          width: 100%;
+          object-fit: cover;
+          display:block;
+          background-color: rgba(0,0,0,0.04);
+        }
+      }
+
+      /* Optional subtle skeleton if containers are empty at paint (no DOM changes needed) */
+      .search-help:empty,
+      .curated-row:first-of-type:empty{
+        background: linear-gradient(90deg, #f2f2f2 25%, #f8f8f8 37%, #f2f2f2 63%);
+        background-size: 400% 100%;
+        animation: clsSkeleton 1.2s ease-in-out infinite;
+        border-radius: 8px;
+      }
+      @keyframes clsSkeleton{0%{background-position:100% 0}100%{background-position:0 0}}
+    </style>
+    
+    <!-- LCP Mobile Guard CSS -->
+    <style id="lcp-mobile-guard">
+      /* Make sure the hero renders on mobile and is large enough to become LCP */
+      .search-help{ 
+        display:block; 
+        min-height: clamp(400px, 50vw, 600px); 
+        padding: 0; 
+        background: #f8f9fa;
+        position: relative;
+        z-index: 10;
+        overflow: hidden;
+      }
+      .hero-content {
+        padding: 24px;
+        text-align: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .hero-title{ 
+        font-weight:900; 
+        font-size: clamp(48px, 12vw, 80px); 
+        line-height:0.9; 
+        margin:0 0 16px; 
+        color: white; 
+        text-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        letter-spacing: -0.03em;
+      }
+      .hero-sub{ 
+        font-size: clamp(20px, 5vw, 28px); 
+        opacity:0.95; 
+        margin:0; 
+        color: rgba(255,255,255,0.9); 
+        font-weight: 600;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      }
+      .hero-image {
+        width: 100%;
+        height: 300px;
+        display: block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+      }
+      .hero-image svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      /* Preserve our earlier CLS guard for first curated row, but this hero should now be the LCP */
+      .curated-row:first-of-type{ min-height: clamp(220px, 30vw, 340px); }
+    </style>
+    
+    <!-- LCP Mobile Hero -->
+    <style id="lcp-mobile-hero">
+      /* On small screens, make hero tall enough that the first curated row is offscreen,
+         so the hero text becomes LCP and rows render only on scroll. */
+      @media (max-width: 600px){
+        .search-help{
+          min-height: min(60vh, 520px); /* ensures row 1 starts below viewport */
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end;
+          padding: 16px 12px;
+        }
+        .hero-title{ font-size: clamp(28px, 7.6vw, 42px); font-weight: 800; line-height: 1.1; margin: 0 0 6px; }
+        .hero-sub{   font-size: clamp(14px, 3.8vw, 18px); opacity: .9; margin: 0; }
+      }
+
+      /* Keep our earlier guard so the row's space is reserved if it ever gets near viewport */
+      .curated-row:first-of-type{
+        content-visibility: auto;
+        contain-intrinsic-size: 320px;
+        min-height: 320px;
+      }
+    </style>
+    
+    <!-- Non-critical CSS - Load asynchronously -->
+    <link rel="preload" href="/styles/inline-style-01.css?v=v17.9" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/styles/inline-style-02.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/styles/components.css?v=v17.9" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/styles/mobile.css?v=v17.9" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/styles/main.css?v=v17.9" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/styles/consolidated-layout.css?v=v17.9" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/styles/action-bar.css?v=v22.21" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/styles/card-system.css?v=v23.53" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    
+    <!-- Fallback for browsers without preload support -->
+    <noscript>
+      <link rel="stylesheet" href="/styles/inline-style-01.css?v=v17.9">
+      <link rel="stylesheet" href="/styles/inline-style-02.css">
+      <link rel="stylesheet" href="/styles/components.css?v=v17.9">
+      <link rel="stylesheet" href="/styles/mobile.css?v=v17.9">
+      <link rel="stylesheet" href="/styles/main.css?v=v17.9">
+      <link rel="stylesheet" href="/styles/consolidated-layout.css?v=v17.9">
+      <link rel="stylesheet" href="/styles/action-bar.css?v=v22.21">
+      <link rel="stylesheet" href="/styles/card-system.css?v=v23.53">
+    </noscript>
 
     <!-- Feature flags and safety guard -->
-    <script src="js/flags.js"></script>
+    <script src="/js/flags.js"></script>
     
     <!-- Early flags initialization (must be before any row scripts) -->
-    <script src="scripts/flags-init.js"></script>
+    <script src="/scripts/flags-init.js"></script>
     
     <!-- Debug utilities (must load early) -->
-    <script src="js/debug-utils.js"></script>
+    <script src="/js/debug-utils.js"></script>
+    
+    <!-- Emergency function restoration (critical fallbacks) -->
+    <!-- <script src="/js/emergency-functions.js"></script> --> <!-- DISABLED: Main functions are now working -->
+    
+    <!-- Syntax error bypass (ensures functionality) -->
+    <script src="/js/syntax-fix.js"></script>
     
     <!-- Home sections configuration (must load early) -->
-    <script src="js/home-sections-config.js"></script>
+    <script src="/js/home-sections-config.js"></script>
     
     <!-- DOM element caching system -->
-    <script src="js/dom-cache.js"></script>
+    <script src="/js/dom-cache.js" defer></script>
     
     <!-- Centralized error handling -->
-    <script src="js/error-handler.js"></script>
+    <script src="/js/error-handler.js" defer></script>
     
     <!-- Unified visibility management -->
-    <script src="js/visibility-manager.js"></script>
+    <script src="/js/visibility-manager.js" defer></script>
     
     <!-- Common utilities (reduced duplication) -->
-    <script src="js/common-utils.js"></script>
+    <script src="/js/common-utils.js" defer></script>
+    
+    <!-- Layout enhancements (skeleton loaders, scroll indicators, accessibility) -->
+    <script src="/js/layout-enhancements.js" defer></script>
     
     <!-- Chrome extension messaging polyfill -->
-    <script src="scripts/polyfill.js"></script>
+    <script src="/scripts/polyfill.js" defer></script>
     
     <!-- Immediate mobile detection -->
     <script>
       (function() {
-        // Check if this is a mobile device
-        const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const isMobileSize = window.innerWidth <= 768;
-        
-        if (isMobileDevice && isMobileSize && document.body) {
-          document.body.classList.add('mobile');
-          console.log('📱 Mobile class applied immediately - iPhone detected');
+        // Single mobile detection system - viewport width only
+        function applyMobileClass() {
+          const isMobileSize = window.innerWidth <= 768;
+          
+          if (isMobileSize && document.body) {
+            document.body.classList.add('mobile');
+            console.log('📱 Mobile class applied - viewport width:', window.innerWidth);
+          }
         }
+        
+        // Apply immediately if body is ready
+        if (document.body) {
+          applyMobileClass();
+        } else {
+          // Wait for DOM ready
+          document.addEventListener('DOMContentLoaded', applyMobileClass);
+        }
+        
+        // Listen for resize events to update mobile class
+        window.addEventListener('resize', () => {
+          const isMobile = window.innerWidth <= 768;
+          if (isMobile && !document.body.classList.contains('mobile')) {
+            document.body.classList.add('mobile');
+            console.log('📱 Mobile class added on resize');
+          } else if (!isMobile && document.body.classList.contains('mobile')) {
+            document.body.classList.remove('mobile');
+            console.log('📱 Mobile class removed on resize');
+          }
+        });
       })();
     </script>
 
@@ -72,46 +391,75 @@
 
   <body>
 
+    <!-- Skip Links for Accessibility -->
+    <a href="#main" class="skip-link">Skip to main content</a>
+    <a href="#search" class="skip-link">Skip to search</a>
+    <a href="#navigation" class="skip-link">Skip to navigation</a>
+
     <!-- Main Container -->
     <div class="main-container" id="appRoot">
       <header class="header" role="banner" data-lang-layout="inline">
-        <!-- New left-side container for username and snarky phrase -->
-        <div id="usernameSnarkContainer" style="text-align: left; min-width: 200px;">
-          <div id="dynamicUsername" style="font-size: 18px; font-weight: bold; color: #9c27b0; margin-bottom: 4px;">Welcome!</div>
-          <div id="dynamicSnark" style="font-size: 14px; color: #7f8c8d; font-style: italic;">Ready to track your shows</div>
-        </div>
-        
-        <div class="header-center">
-          <div id="versionIndicator" style="position: fixed; top: 10px; left: 10px; background: #007bff; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">v22.18-FIREBASE-DEBUG-ENHANCED</div>
-          <h1 id="welcomeText" class="title" data-i18n="app_title">Flicklet</h1>
-          <div id="proBadge" class="pro-badge" style="display: none;">PRO</div>
-          <div id="snarkySubtitle" class="subtitle" data-i18n="subtitle">TV & Movie Tracker</div>
-          <div id="bingeBanner" class="binge-banner" aria-live="polite"></div>
-        </div>
-        <div class="user-section">
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-            <div id="accountHint" style="font-size: 11px; color: #7f8c8d; text-align: center; opacity: 0.8;"></div>
-            <button
-              id="accountBtn"
-              class="btn secondary"
-              title="Sign in / Account"
-              aria-label="Account - sign in or manage your account"
-            >
-              👤 <span data-i18n="sign_in_account">Sign In</span>
-            </button>
-            <select id="langToggle" aria-label="Language" title="Language">
+        <div class="header-bar">
+          <div class="header-left">
+            <span class="version-display">v23.85</span>
+            <h1 class="brand" data-i18n="app_title">Flicklet</h1>
+            <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
+          </div>
+          <div class="header-right">
+            <!-- Signed OUT -->
+            <div data-auth="signed-out-visible" class="signin-area">
+              <div class="signin-label">Sign in</div>
+              <button id="signIn" data-action="sign-in" class="btn btn--sm">👤 Sign In</button>
+              <!-- Welcome message for signed-out users only -->
+              <div class="snark" data-snark>Welcome back.</div>
+            </div>
+
+            <!-- Signed IN -->
+            <div data-auth="signed-in-visible" hidden class="account-area">
+              <!-- visible hint so it's obvious clicking your name signs out -->
+              <div class="account-hint">Sign out</div>
+              <button id="accountMenuBtn" class="user-btn btn btn--sm" aria-haspopup="menu" aria-expanded="false">
+                <span class="user-initial" aria-hidden="true">U</span>
+                <span id="usernameDisplay" class="user-name" data-username-display title="Sign out">Username</span>
+              </button>
+              <div id="accountMenu" class="account-menu" role="menu" hidden>
+                <button id="logoutBtn" role="menuitem" class="menu-item">Log out</button>
+              </div>
+            </div>
+            <select id="langToggle" class="lang-select select--sm" aria-label="Language" title="Language">
               <option value="en">EN</option>
               <option value="es">ES</option>
             </select>
           </div>
         </div>
+        <!-- leave .top-search exactly as-is, below this block -->
       </header>
 
 
       <!-- Sticky Top Search -->
-      <div class="top-search">
+      <div class="top-search" id="search">
 
-        <div class="search-help">
+        <div class="search-help" id="searchHelp">
+          <!-- Static hero content for LCP optimization -->
+          <div class="hero-content">
+            <h1 class="hero-title">Find your next great show</h1>
+            <p class="hero-sub">Search above. Curated picks load in a moment.</p>
+          </div>
+          <!-- Large hero image to ensure LCP -->
+          <div class="hero-image">
+            <svg width="100%" height="200" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                  <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                </linearGradient>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#heroGrad)"/>
+              <text x="50%" y="50%" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="48" font-weight="bold">🎬 TV Tracker</text>
+              <text x="50%" y="70%" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="18">Discover your next favorite show</text>
+            </svg>
+          </div>
+          
           <!-- Search Tips Toggle - Clean, single source of truth -->
           <div id="searchTips" class="search-tips-inline">
             <button class="tips-trigger" id="tipsTrigger"
@@ -123,7 +471,7 @@
             <!-- Popover lives next to trigger, hidden by default -->
             <div class="tips-pop" id="tipsPop" role="dialog" aria-modal="false" hidden>
               <div class="tips-head">
-                <div class="tips-title">Search Tips</div>
+                <div class="tips-title" data-i18n="search_tips">Search Tips</div>
                 <button class="tips-close" id="tipsClose" aria-label="Close">×</button>
               </div>
               <ul class="tips-list">
@@ -170,7 +518,7 @@
               <span class="icon" aria-hidden="true">🔍</span>
               <span class="label" data-i18n="search">Search</span>
             </button>
-            <button id="clearSearchBtn" class="btn secondary clear-search-btn search-area-clear" aria-label="Clear search results">
+            <button id="clearSearchBtn" class="btn btn--secondary clear-search-btn search-area-clear" aria-label="Clear search results">
               <span class="icon" aria-hidden="true">✖️</span>
               <span class="label" data-i18n="clear">Clear</span>
             </button>
@@ -183,14 +531,8 @@
         >        </div>
       </div>
 
-      <!-- Search Results Container - MOVED OUTSIDE HOME SECTION -->
-      <div id="searchResults" class="search-results" style="display: none;">
-        <h4>🎯 <span data-i18n="search_results">Search Results</span> <span class="count" id="resultsCount">0</span></h4>
-        <div id="searchResultsList" class="list-container"></div>
-      </div>
-
       <!-- Tab container moved outside homeSection for proper positioning -->
-      <div class="tab-container">
+      <div class="tab-container" id="navigation">
         <button id="homeTab" class="tab active" title="Overview of your TV & movie tracking" aria-label="Home tab - view dashboard and recommendations">🏠 <span data-i18n="home">Home</span></button>
         <button id="watchingTab" class="tab" title="Shows and movies you're currently watching" aria-label="Watching tab - view shows and movies you're currently watching">
           ▶️ <span data-i18n="currently_watching">Currently Watching</span>
@@ -207,10 +549,237 @@
         <button id="discoverTab" class="tab" title="Get personalized recommendations based on your taste" aria-label="Discover tab - find new shows and movies">✨ <span data-i18n="discover">Discover</span></button>
       </div>
 
-      <!-- Home -->
-      <div id="homeSection" class="tab-section">
-        <div class="stats">
-          <div class="stat" id="bingeMeter"></div>
+      <!-- Search Results Container - Now positioned after tabs -->
+      <div id="searchResults" class="search-results" style="display: none;">
+        <h4>🎯 <span data-i18n="search_results">Search Results</span> <span class="count" id="resultsCount">0</span></h4>
+        <div id="searchResultsList" class="list-container"></div>
+      </div>
+
+      <!-- Home - Immovable Layout Contract -->
+      <div id="homeSection" class="tab-section active">
+        <!-- Quote Bar - Hard-baked between Sticky Search and Group 1 -->
+        <div id="quote-bar" class="quote-bar" role="region" aria-label="Quote of the moment" data-state="loading" style="display: none;">
+          <div class="quote-marquee">
+            <span class="quote-text" id="quoteText" data-i18n="loading_inspirational_quote">Loading inspirational quote...</span>
+          </div>
+        </div>
+
+        <!-- Group 1 - Your Shows -->
+        <div id="group-1-your-shows" class="home-group">
+          <div class="group-header">
+            <h2 class="group-title" data-i18n="your_shows">Your Shows</h2>
+          </div>
+          
+          <!-- Currently Watching (row): always present -->
+          <section id="currentlyWatchingPreview" class="home-preview-row" aria-label="Currently Watching Preview">
+            <div class="preview-row-header">
+              <h3 class="preview-row-title" data-i18n="currently_watching_section">👁️ Currently Watching</h3>
+            </div>
+            <div class="preview-row-container cw-row">
+              <div class="preview-row-scroll row-inner" id="currentlyWatchingScroll">
+                <!-- Cards will be populated by JavaScript -->
+                <div class="placeholder-message" id="cw-placeholder" style="display: none;">
+                  Add something to your Currently Watching list and it'll show up here.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Group divider -->
+          <div class="group-divider"></div>
+
+          <!-- Next Up This Week (row): if data → carousel; if none → collapsed one-line placeholder -->
+          <section id="next-up-row" class="home-preview-row" data-feature="homeRowNextUp" style="display: none;">
+            <div class="preview-row-header">
+              <h3 class="preview-row-title" data-i18n="next_up_this_week">📅 Next Up This Week</h3>
+            </div>
+            <div class="preview-row-container">
+              <div class="next-up-scroll row-inner preview-row-scroll">
+                <!-- tiles injected here -->
+                <div class="placeholder-message" id="nextup-placeholder" style="display: none;" data-i18n="no_upcoming_episodes">
+                  No upcoming episodes this week.
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Group 2 - Community -->
+        <div id="group-2-community" class="home-group">
+          <div class="group-header">
+            <h2 class="group-title" data-i18n="community">Community</h2>
+          </div>
+          
+          <!-- Community Content - Two Column Layout -->
+          <div class="community-content">
+            <!-- Left: Empty Player Box -->
+            <div class="community-left">
+              <div class="player-placeholder">
+                <div class="placeholder-content">
+                  <h3 data-i18n="community_player">Community Player</h3>
+                  <p data-i18n="community_player_placeholder">Video content will appear here</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Right: Game Cards Section -->
+            <div class="community-right">
+              <section id="home-games" class="home-games">
+                <article class="card card--game" id="flickwordTile" data-module="flickword" role="region" tabindex="0" aria-haspopup="dialog" aria-controls="modal-flickword" aria-labelledby="flickword-title">
+                  <div class="card__header">
+                    <h3 class="card__title" id="flickword-title" data-i18n="flickword">🎯 FlickWord</h3>
+                    <div class="card__tools">
+                      <div class="game-stats">
+                        <div class="stat-item">
+                          <span class="stat-label" data-i18n="streak">Streak</span>
+                          <span class="stat-value" data-fw-streak>0</span>
+                        </div>
+                        <div class="stat-item">
+                          <span class="stat-label" data-i18n="best">Best</span>
+                          <span class="stat-value" data-fw-best>0</span>
+                        </div>
+                        <div class="stat-item">
+                          <span class="stat-label" data-i18n="win_percent">Win %</span>
+                          <span class="stat-value" data-fw-win>—</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="card__body card__body--scroll">
+                    <p class="card__description" data-i18n="flickword_tagline">Wordle-style daily word play</p>
+                    <div aria-live="polite" class="sr-only" data-status-live></div>
+                  </div>
+                  
+                  <div class="card__actions">
+                    <button class="btn btn--primary" data-action="start-flickword" data-i18n="play_now">Play Now</button>
+                  </div>
+                </article>
+
+                <article class="card card--game" id="triviaTile" data-module="trivia" role="region" tabindex="0" aria-haspopup="dialog" aria-controls="modal-trivia" aria-labelledby="trivia-title">
+                  <div class="card__header">
+                    <h3 class="card__title" id="trivia-title" data-i18n="daily_trivia">🧠 Daily Trivia</h3>
+                    <div class="card__tools">
+                      <div class="game-stats">
+                        <div class="stat-item">
+                          <span class="stat-label" data-i18n="streak">Streak</span>
+                          <span class="stat-value" data-tv-streak>1</span>
+                        </div>
+                        <div class="stat-item">
+                          <span class="stat-label" data-i18n="best">Best</span>
+                          <span class="stat-value" data-tv-best>5</span>
+                        </div>
+                        <div class="stat-item">
+                          <span class="stat-label" data-i18n="accuracy">Accuracy</span>
+                          <span class="stat-value" data-tv-acc>—</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="card__body card__body--scroll">
+                    <p class="card__description" data-i18n="daily_trivia_tagline">Fresh question, new bragging rights</p>
+                    <div aria-live="polite" class="sr-only" data-status-live></div>
+                  </div>
+                  
+                  <div class="card__actions">
+                    <button class="btn btn--primary" data-action="start-trivia" data-i18n="play_now">Play Now</button>
+                  </div>
+                </article>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group 3 - For You -->
+        <div id="group-3-for-you" class="home-group">
+          <div class="group-header">
+            <h2 class="group-title" data-i18n="for_you">For You</h2>
+          </div>
+          
+          <!-- Personalized genre rows from Settings -->
+          <section id="personalized-section" class="home-preview-row" style="display: none;">
+            <div class="preview-row-header">
+              <h3 class="preview-row-title">🎨 <span data-i18n="personalized_recommendations">Personalized Recommendations</span></h3>
+              <p class="section-subtitle" data-i18n="based_on_watching_history">Based on your watching history and preferences</p>
+            </div>
+            <div class="preview-row-container">
+              <div class="section-content" id="personalized-content">
+                <!-- Personalized content will be populated here -->
+              </div>
+            </div>
+          </section>
+
+          <!-- Group divider -->
+          <div class="group-divider"></div>
+
+          <!-- Curated rows count per user setting -->
+          <section id="curated-section" class="home-preview-row">
+            <div class="preview-row-header">
+              <h3 class="preview-row-title" data-i18n="curated_sections">🎯 Curated Sections</h3>
+            </div>
+            <div class="preview-row-container">
+              <div id="curatedSections" class="home-section" style="display: none;">
+                <!-- Curated content will be populated here -->
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Group 4 - In Theaters Near You -->
+        <div id="group-4-theaters" class="home-group">
+          <div class="group-header">
+            <h2 class="group-title" data-i18n="in_theaters">In Theaters</h2>
+          </div>
+          
+          <section id="theaters-section" class="home-preview-row" style="display: none;">
+            <div class="preview-row-header">
+              <h3 class="preview-row-title">🎬 <span data-i18n="in_theaters_near_you">In Theaters Near You</span></h3>
+              <p class="section-subtitle" data-i18n="current_theatrical_releases">Current theatrical releases</p>
+            </div>
+            <div class="preview-row-container">
+              <div class="section-content" id="theaters-content">
+                <!-- Theater content will be populated here -->
+                <div class="theaters-fallback" id="theaters-fallback" style="display: none;" data-i18n="location_prompt">
+                  Turn on location to see movies playing near you.
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Group 5 - Feedback -->
+        <div id="group-5-feedback" class="home-group">
+          <div class="group-header">
+            <h2 class="group-title" data-i18n="feedback">Feedback</h2>
+          </div>
+          
+          <section id="feedbackSection" class="home-preview-row">
+            <div class="preview-row-header">
+              <h3 class="preview-row-title" data-i18n="share_your_thoughts">💬 Share Your Thoughts</h3>
+              <p class="section-subtitle" data-i18n="help_improve_feedback">Help us improve Flicklet with your feedback</p>
+            </div>
+            <div class="preview-row-container">
+              <div class="feedback-content">
+                <div class="feedback-card">
+                  <div class="feedback-actions">
+                    <button class="btn btn--primary" onclick="openSettingsToFeedback()" data-i18n="report_bug">
+                      🐛 Report a Bug
+                    </button>
+                    <button class="btn btn--secondary" onclick="openSettingsToFeedback()" data-i18n="suggest_feature">
+                      💡 Suggest a Feature
+                    </button>
+                    <button class="btn btn--secondary" onclick="openSettingsToFeedback()" data-i18n="general_feedback">
+                      💬 General Feedback
+                    </button>
+                    <button class="btn btn--secondary" onclick="openSettingsToFeedback()" data-i18n="submit_video">
+                      📹 Submit Video
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
 
@@ -292,7 +861,7 @@
                           class="settings-input"
                           placeholder="Enter your name"
                         />
-                        <button id="saveNameBtn" class="btn primary" onclick="saveDisplayName()">
+                        <button id="saveNameBtn" class="btn btn--primary" onclick="saveDisplayName()">
                           💾 <span data-i18n="save">Save</span>
                         </button>
                       </div>
@@ -304,7 +873,7 @@
                     <h4 class="settings-subtitle">📊 <span data-i18n="my_statistics">My Statistics</span></h4>
                     <p class="settings-hint">View your watching statistics and achievements</p>
                     <div id="statsContent" class="settings-stats">
-                      <div class="loading">Loading stats...</div>
+                      <div class="loading" data-i18n="loading_stats">Loading stats...</div>
                     </div>
                   </div>
 
@@ -356,14 +925,14 @@
 
                   <!-- Pro Notifications -->
                   <div class="settings-subsection">
-                    <h4 class="settings-subtitle">⭐ Pro Notifications</h4>
-                    <p class="settings-description">Advanced notification features for Pro users</p>
+                    <h4 class="settings-subtitle" data-i18n="pro_notifications">⭐ Pro Notifications</h4>
+                    <p class="settings-description" data-i18n="advanced_notification_features">Advanced notification features for Pro users</p>
                     
                     <!-- Advanced Notifications (PRO) -->
                     <div class="settings-control-group">
                       <h5 class="settings-label">🔔 Advanced Notifications (PRO)</h5>
                       <p class="settings-hint">Configure advanced notification settings with custom lead times and list monitoring</p>
-                      <div class="settings-block" style="display: flex; flex-direction: column; gap: 15px; padding: 15px; background: var(--card); border-radius: 8px; border: 1px solid var(--border);">
+                      <div class="settings-block card-surface" style="display: flex; flex-direction: column; gap: 15px; padding: 15px;">
                         <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
                           <label style="display: flex; align-items: center; gap: 8px;">
                             <input type="checkbox" id="advOn" disabled aria-disabled="true">
@@ -398,7 +967,7 @@
                             </label>
                           </div>
                         </div>
-                        <div style="font-size: 0.8rem; color: #666; font-style: italic;" role="note">🔒 Pro feature - upgrade to unlock advanced notifications</div>
+                        <div class="meta-muted" role="note">🔒 Pro feature - upgrade to unlock advanced notifications</div>
                       </div>
                     </div>
                   </div>
@@ -411,8 +980,8 @@
                     <p class="settings-description" data-i18n="layout_description">Customize how your lists and cards are displayed</p>
                     
                     <!-- Core Layout Features -->
-                    <h4 class="settings-subtitle">📋 Core Features</h4>
-                    <p class="settings-description">Basic layout customization available to all users</p>
+                    <h4 class="settings-subtitle" data-i18n="core_features">📋 Core Features</h4>
+                    <p class="settings-description" data-i18n="basic_layout_customization">Basic layout customization available to all users</p>
                     
                     <!-- Condensed Mode -->
                     <div class="settings-control-group">
@@ -420,7 +989,7 @@
                         <input type="checkbox" id="condensedMode" class="settings-checkbox" />
                         <span class="settings-checkbox-text" data-i18n="condensed_list_view">Condensed list view (more items per screen)</span>
                       </label>
-                      <p class="settings-hint">Show more items per screen by reducing card spacing and padding</p>
+                      <p class="settings-hint" data-i18n="show_more_items_per_screen">Show more items per screen by reducing card spacing and padding</p>
                     </div>
 
                     <!-- Show Posters -->
@@ -429,16 +998,21 @@
                         <input type="checkbox" id="showPosters" class="settings-checkbox" checked />
                         <span class="settings-checkbox-text" data-i18n="show_posters">Show movie/TV show posters</span>
                       </label>
-                      <p class="settings-hint">Display poster images for each show and movie in your lists</p>
+                      <p class="settings-hint" data-i18n="display_poster_images">Display poster images for each show and movie in your lists</p>
                     </div>
 
-                    <!-- Dark Mode -->
+                    <!-- Theme Toggle -->
                     <div class="settings-control-group">
-                      <label class="settings-checkbox-label">
-                        <input type="checkbox" id="darkMode" class="settings-checkbox" />
-                        <span class="settings-checkbox-text" data-i18n="dark_mode">Dark mode (auto-detect system preference)</span>
-                      </label>
-                      <p class="settings-hint">Switch to dark theme. When enabled, follows your system's dark/light mode preference</p>
+                      <div class="settings-toggle-group">
+                        <label class="settings-label" data-i18n="theme_preference">Theme Preference</label>
+                        <div class="theme-toggle-container">
+                          <button id="themeToggleBtn" class="btn btn--secondary theme-toggle-btn" data-action="toggle-theme">
+                            <span id="themeToggleIcon">🌙</span>
+                            <span id="themeToggleText" data-i18n="dark_mode">Dark Mode</span>
+                          </button>
+                          <p class="settings-hint" data-i18n="theme_toggle_hint">Click to switch between light and dark themes</p>
+                        </div>
+                      </div>
                     </div>
 
                     <!-- Home Page Lists Count -->
@@ -457,12 +1031,12 @@
                         <span class="settings-hint">(1-3)</span>
                         <span id="curatedRowsStatus" class="settings-status">Auto-saves</span>
                       </div>
-                      <p class="settings-hint">Number of curated recommendation sections to show on the home page</p>
+                      <p class="settings-hint" data-i18n="number_of_curated_sections">Number of curated recommendation sections to show on the home page</p>
                     </div>
 
                     <!-- Currently Watching Preview Limit -->
                     <div class="settings-control-group">
-                      <label for="settingCurrentlyWatchingLimit" class="settings-label">Currently Watching Preview Limit</label>
+                      <label for="settingCurrentlyWatchingLimit" class="settings-label" data-i18n="currently_watching_preview_limit">Currently Watching Preview Limit</label>
                       <div class="settings-input-group">
                         <input
                           type="number"
@@ -476,38 +1050,46 @@
                         <span class="settings-hint">(5-20)</span>
                         <span id="currentlyWatchingLimitStatus" class="settings-status">Auto-saves</span>
                       </div>
-                      <p class="settings-hint">Number of currently watching shows to display on the home page preview</p>
+                      <p class="settings-hint" data-i18n="number_of_currently_watching">Number of currently watching shows to display on the home page preview</p>
                     </div>
 
                     <!-- Episode Tracking Toggle -->
-                    <div class="settings-control-group">
-                      <label class="settings-checkbox-label">
-                        <input type="checkbox" id="enableEpisodeTracking" class="settings-checkbox" />
-                        <span class="settings-checkbox-text">Enable Episode Tracking</span>
-                      </label>
-                      <p class="settings-hint">Allow tracking of individual episodes for TV series (opt-in per series)</p>
+                    <div class="settings-control-group settings-control-group--feature">
+                      <div class="settings-feature-card">
+                        <div class="settings-feature-header">
+                          <label class="settings-checkbox-label settings-checkbox-label--feature">
+                            <input type="checkbox" id="enableEpisodeTracking" class="settings-checkbox settings-checkbox--feature" />
+                            <span class="settings-checkbox-text settings-checkbox-text--feature" data-i18n="enable_episode_tracking">🎬 Enable Episode Tracking</span>
+                          </label>
+                          <div class="settings-feature-badge" data-i18n="recommended">Recommended</div>
+                        </div>
+                        <p class="settings-hint settings-hint--feature" data-i18n="allow_tracking_of_individual">Track individual episodes for TV series with detailed progress monitoring (opt-in per series)</p>
+                        <div class="settings-feature-details">
+                          <p class="settings-feature-benefit" data-i18n="episode_tracking_benefits">• Track your progress through each season<br>• Get notifications for new episodes<br>• See detailed watching statistics</p>
+                        </div>
+                      </div>
                     </div>
 
                   </div>
 
                   <!-- Pro Layout Features -->
                   <div class="settings-subsection">
-                    <h4 class="settings-subtitle">⭐ Pro Layout Features</h4>
-                    <p class="settings-description">Advanced layout and theming features for Pro users</p>
+                    <h4 class="settings-subtitle" data-i18n="pro_layout_features">⭐ Pro Layout Features</h4>
+                    <p class="settings-description" data-i18n="advanced_layout_and_theming">Advanced layout and theming features for Pro users</p>
                     
                     <!-- Theme Packs -->
                     <div class="settings-control-group">
-                      <h5 class="settings-label">🎨 Theme Packs</h5>
-                      <p class="settings-hint">Choose a visual theme for your Flicklet experience. Pro users get access to premium themes.</p>
+                      <h5 class="settings-label" data-i18n="theme_packs">🎨 Theme Packs</h5>
+                      <p class="settings-hint" data-i18n="choose_a_visual_theme">Choose a visual theme for your Flicklet experience. Pro users get access to premium themes.</p>
                       <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                        <label for="themePackSelect" style="font-weight: 500;">Theme:</label>
+                        <label for="themePackSelect" style="font-weight: 500;" data-i18n="theme">Theme:</label>
                         <select id="themePackSelect" aria-label="Choose theme" style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px;">
                           <option value="classic" selected>Classic</option>
                           <option value="dark" disabled aria-disabled="true">Dark Pro 🔒</option>
                           <option value="neon" disabled aria-disabled="true">Neon Pro 🔒</option>
                           <option value="minimal" disabled aria-disabled="true">Minimal Pro 🔒</option>
                         </select>
-                        <div style="font-size: 0.8rem; color: #666; font-style: italic;" role="note">🔒 Pro unlocks more themes</div>
+                        <div class="meta-muted" role="note" data-i18n="pro_unlocks_more_themes">🔒 Pro unlocks more themes</div>
                       </div>
                     </div>
                   </div>
@@ -520,54 +1102,54 @@
                     <p class="settings-description" data-i18n="data_description">Export, import, or reset your data</p>
                     
                     <!-- Core Data Features -->
-                    <h4 class="settings-subtitle">📋 Core Features</h4>
-                    <p class="settings-description">Basic data management features available to all users</p>
+                    <h4 class="settings-subtitle" data-i18n="core_features">📋 Core Features</h4>
+                    <p class="settings-description" data-i18n="basic_data_management">Basic data management features available to all users</p>
                     
                     <!-- Export JSON -->
                     <div class="settings-control-group">
-                      <button id="exportBtn" class="btn secondary" aria-label="Export data to JSON">
+                      <button id="exportBtn" class="btn btn--secondary" aria-label="Export data to JSON">
                         📤 <span data-i18n="export_json">Export JSON</span>
                       </button>
-                      <p class="settings-hint">Download a complete backup of your lists and settings as a JSON file</p>
+                      <p class="settings-hint" data-i18n="download_a_complete_backup">Download a complete backup of your lists and settings as a JSON file</p>
                     </div>
 
                     <!-- Import JSON -->
                     <div class="settings-control-group">
                       <input type="file" id="importInput" accept=".json,application/json" hidden />
-                      <button id="importBtn" class="btn secondary" aria-label="Import data from JSON">
+                      <button id="importBtn" class="btn btn--secondary" aria-label="Import data from JSON">
                         📥 <span data-i18n="import_json">Import JSON</span>
                       </button>
-                      <p class="settings-hint">Restore your data from a previously exported Flicklet backup file</p>
+                      <p class="settings-hint" data-i18n="restore_your_data">Restore your data from a previously exported Flicklet backup file</p>
                     </div>
 
                     <!-- Share Lists -->
                     <div class="settings-control-group">
-                      <button id="shareOpenBtn" class="btn secondary" data-share-title="Flicklet — My List" data-share-url="" title="Share your lists" aria-label="Share your TV and movie lists">
+                      <button id="shareOpenBtn" class="btn btn--secondary" data-action="share-lists" data-share-title="Flicklet — My List" data-share-url="" title="Share your lists" aria-label="Share your TV and movie lists">
                         🔗 <span data-i18n="share_lists">Share Lists</span>
                       </button>
-                      <p class="settings-hint">Generate a shareable text list of your TV shows and movies to send to friends</p>
+                      <p class="settings-hint" data-i18n="generate_a_shareable_text">Generate a shareable text list of your TV shows and movies to send to friends</p>
                     </div>
 
                     <!-- Reset All Data -->
                     <div class="settings-control-group">
-                      <button id="resetBtn" class="btn danger" aria-label="Reset all data (requires confirmation)">
+                      <button id="resetBtn" class="btn btn--danger" aria-label="Reset all data (requires confirmation)">
                         🗑️ <span data-i18n="reset_all_data">Reset All Data</span>
                       </button>
-                      <p class="settings-hint">⚠️ Permanently delete all your lists, settings, and data. This cannot be undone.</p>
+                      <p class="settings-hint" data-i18n="permanently_delete_all">⚠️ Permanently delete all your lists, settings, and data. This cannot be undone.</p>
                     </div>
                   </div>
 
                   <!-- Pro Data Features -->
                   <div class="settings-subsection">
-                    <h4 class="settings-subtitle">⭐ Pro Data Features</h4>
-                    <p class="settings-description">Advanced data management features for Pro users</p>
+                    <h4 class="settings-subtitle" data-i18n="pro_data_features">⭐ Pro Data Features</h4>
+                    <p class="settings-description" data-i18n="advanced_data_management">Advanced data management features for Pro users</p>
                     
                     <!-- Export CSV (Pro) -->
                     <div class="settings-control-group">
                       <button class="btn" data-pro="required" data-pro-mode="hide" data-pro-feature="export-csv">
                         📊 <span data-i18n="export_csv_pro">Export CSV (Pro)</span>
                       </button>
-                      <p class="settings-hint">Export your data in CSV format for use in spreadsheets (Pro feature)</p>
+                      <p class="settings-hint" data-i18n="export_your_data_csv">Export your data in CSV format for use in spreadsheets (Pro feature)</p>
                     </div>
                   </div>
                 </section>
@@ -582,7 +1164,7 @@
                     
                     <!-- Preview Pro Features -->
                     <div class="settings-control-group">
-                      <button id="previewProBtn" class="btn primary" onclick="toggleProPreview()">
+                      <button id="previewProBtn" class="btn btn--primary" onclick="toggleProPreview()">
                         ⭐ <span data-i18n="preview_pro_features">Preview Pro Features</span>
                       </button>
                       <p class="settings-hint" data-i18n="pro_hint">Toggle Pro features on/off to see what's available without purchasing</p>
@@ -593,15 +1175,15 @@
                       <button class="btn" data-pro="required" data-pro-mode="disable" data-pro-feature="extra-trivia">
                         🧠 <span data-i18n="extra_trivia_pro">Extra Trivia (Pro)</span>
                       </button>
-                      <p class="settings-hint">Access additional trivia questions and behind-the-scenes content (Pro feature)</p>
+                      <p class="settings-hint" data-i18n="access_additional_trivia">Access additional trivia questions and behind-the-scenes content (Pro feature)</p>
                     </div>
 
                     <!-- Export CSV (Pro) -->
                     <div class="settings-control-group">
-                      <button class="btn" data-pro="required" data-pro-mode="hide" data-pro-feature="export-csv">
+                      <button id="exportCsvBtn" class="btn" data-pro="required" data-pro-mode="disable" data-pro-feature="export-csv" onclick="exportToCSV()">
                         📊 <span data-i18n="export_csv_pro">Export CSV (Pro)</span>
                       </button>
-                      <p class="settings-hint">Export your data in CSV format for use in spreadsheets (Pro feature)</p>
+                      <p class="settings-hint" data-i18n="export_your_data_csv">Export your data in CSV format for use in spreadsheets (Pro feature)</p>
                     </div>
 
                     <!-- Pro Features List -->
@@ -619,44 +1201,44 @@
                 <section id="about" class="settings-section">
                   <!-- About Unique4U -->
                   <div class="settings-subsection">
-                    <h3 class="settings-title">🏠 About Unique4U</h3>
-                    <p class="settings-description">
+                    <h3 class="settings-title" data-i18n="about_unique4u">🏠 About Unique4U</h3>
+                    <p class="settings-description" data-i18n="were_not_here_to_reinvent">
                       We're not here to reinvent the wheel — we're here to make the wheel less squeaky. At Unique4U, our rule is simple: keep it simple. The world already has enough apps that feel like a second job to use. We'd rather give you tools that just… work.
                     </p>
-                    <p class="settings-description">
+                    <p class="settings-description" data-i18n="everything_we_build">
                       Everything we build has its own personality, but they all live under one roof: a people-first, all-inclusive, slightly offbeat house we call Unique4U. If it's fun, useful, and a little different from the pack — it belongs here.
                     </p>
                   </div>
 
                   <!-- About the Creators -->
                   <div class="settings-subsection">
-                    <h3 class="settings-title">👥 About the Creators</h3>
-                    <p class="settings-description">
+                    <h3 class="settings-title" data-i18n="about_the_creators">👥 About the Creators</h3>
+                    <p class="settings-description" data-i18n="were_pam_and_travis">
                       We're Pam and Travis. Think of us as casual builders with a shared allergy to overcomplication. We make things because we need them, and we figure you probably do too.
                     </p>
-                    <p class="settings-description">
+                    <p class="settings-description" data-i18n="pam_once_trained_dolphins">
                       Pam once trained dolphins (true story) and also happens to be really good with numbers. Travis studied English and Philosophy, which means he can overthink and explain it in writing, then somehow turn that into practical business know-how. Together, we're like a mash-up of "creative meets operations" — and that combo lets us build apps that are simple, useful, and not boring.
                     </p>
                   </div>
 
                   <!-- About the App -->
                   <div class="settings-subsection">
-                    <h3 class="settings-title">📱 About the App</h3>
-                    <p class="settings-description">
+                    <h3 class="settings-title" data-i18n="about_the_app">📱 About the App</h3>
+                    <p class="settings-description" data-i18n="heres_the_deal">
                       Here's the deal: you want to remember what you're watching without needing a PhD in App Navigation. We built this because we got tired of two bad options — messy notes on our phones or bloated apps that make you log your "episode 7 mid-season thoughts." (Hard pass.)
                     </p>
                     <p class="settings-description">
                       <strong>Data Attribution:</strong> This product uses the TMDB API but is not endorsed or certified by TMDB.
                     </p>
-                    <p class="settings-description">
+                    <p class="settings-description" data-i18n="so_we_made_this_instead">
                       So we made this instead:
                     </p>
-                    <ul style="margin: 16px 0; padding-left: 20px; color: var(--color-text);">
+                    <ul style="margin: 16px 0; padding-left: 20px;" class="u-fg">
                       <li style="margin-bottom: 8px;"><strong>Stupidly easy.</strong> Open it, add your show, done.</li>
                       <li style="margin-bottom: 8px;"><strong>Always free at the core.</strong> No paywalls for the basics.</li>
                       <li style="margin-bottom: 8px;"><strong>Friend-proof sharing.</strong> Copy your list and drop it in a text when someone asks, "What should I watch?"</li>
                     </ul>
-                    <p class="settings-description">
+                    <p class="settings-description" data-i18n="if_you_watch_tv">
                       If you watch TV or movies and don't want to make it a hobby just to track them, this app's for you. Simple lists, zero drama.
                     </p>
                   </div>
@@ -666,7 +1248,7 @@
                     <h3 class="settings-title">💬 <span data-i18n="share_your_thoughts">Share Your Thoughts</span></h3>
                     <p class="settings-description" data-i18n="feedback_working">
                       Share your thoughts! Give us app feedback, tell us what's working (or not), 
-                      share a quote for our rotation, make a confession, or just vent. We're listening!
+                      share a quote for our rotation, make a confession, submit a video (describe your video idea and we'll get back to you), or just vent. We're listening!
                     </p>
                     
                     <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="settings-form" action="/thank-you" onsubmit="console.log('🔍 Form onsubmit called'); return false;">
@@ -688,7 +1270,7 @@
                           required
                         ></textarea>
                         <p class="settings-hint">Your feedback helps us improve Flicklet. All messages are read and appreciated!</p>
-                        <button type="submit" class="btn primary">
+                        <button type="submit" class="btn btn--primary">
                           📤 <span data-i18n="share_it">Share It!</span>
                         </button>
                       </div>
@@ -698,62 +1280,62 @@
               </div>
 
           <!-- Share Selection Modal -->
-          <div id="shareSelectionModal" class="modal-backdrop" style="display: none;">
-            <div class="modal share-modal" style="max-width: 800px; max-height: 80vh;">
+          <div id="shareSelectionModal" class="modal-backdrop" style="display: none; z-index: 10000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
+            <div class="modal share-modal" style="max-width: 800px; max-height: 80vh; z-index: 10001; position: relative; background: white; border-radius: 8px; padding: 20px; margin: 20px auto; pointer-events: auto;">
               <h3>🔗 <span data-i18n="share_selected">Share Selected Items</span></h3>
               
               <!-- Select All Controls -->
-              <div class="select-all-controls" style="margin-bottom: 20px; padding: 15px; background: var(--card); border-radius: 8px;">
+              <div class="select-all-controls card-surface" style="margin-bottom: 20px; padding: 15px;">
                 <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
-                  <label style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="selectAllWatching" />
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto;">
+                    <input type="checkbox" id="selectAllWatching" style="pointer-events: auto; cursor: pointer;" />
                     <strong>📺 <span data-i18n="currently_watching">Currently Watching</span></strong>
                   </label>
-                  <label style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="selectAllWishlist" />
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto;">
+                    <input type="checkbox" id="selectAllWishlist" style="pointer-events: auto; cursor: pointer;" />
                     <strong>📖 <span data-i18n="want_to_watch">Want to Watch</span></strong>
                   </label>
-                  <label style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="selectAllWatched" />
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto;">
+                    <input type="checkbox" id="selectAllWatched" style="pointer-events: auto; cursor: pointer;" />
                     <strong>✅ <span data-i18n="already_watched">Already Watched</span></strong>
                   </label>
-                  <label style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="selectAllEverything" />
-                    <strong>🌟 <span data-i18n="select_all_everything">Select All Everything</span></strong>
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto;">
+                    <input type="checkbox" id="selectAllEverything" style="pointer-events: auto; cursor: pointer;" />
+                    <strong>🌟 <span data-i18n="select_all_everything">Select Everything</span></strong>
                   </label>
                 </div>
               </div>
 
               <!-- Items Lists -->
-              <div class="share-items-container" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
+              <div class="share-items-container" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; pointer-events: auto;">
                 <!-- Currently Watching -->
-                <div class="share-list-section">
-                  <h4>📺 <span data-i18n="currently_watching">Currently Watching</span></h4>
-                  <div id="shareWatchingList" class="share-items-list"></div>
+                <div class="share-list-section" style="margin-bottom: 20px; padding: 10px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                  <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">📺 <span data-i18n="currently_watching">Currently Watching</span></h4>
+                  <div id="shareWatchingList" class="share-items-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
                 </div>
                 
                 <!-- Want to Watch -->
-                <div class="share-list-section">
-                  <h4>📖 <span data-i18n="want_to_watch">Want to Watch</span></h4>
-                  <div id="shareWishlistList" class="share-items-list"></div>
+                <div class="share-list-section" style="margin-bottom: 20px; padding: 10px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                  <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">📖 <span data-i18n="want_to_watch">Want to Watch</span></h4>
+                  <div id="shareWishlistList" class="share-items-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
                 </div>
                 
                 <!-- Already Watched -->
-                <div class="share-list-section">
-                  <h4>✅ <span data-i18n="already_watched">Already Watched</span></h4>
-                  <div id="shareWatchedList" class="share-items-list"></div>
+                <div class="share-list-section" style="margin-bottom: 20px; padding: 10px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                  <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">✅ <span data-i18n="already_watched">Already Watched</span></h4>
+                  <div id="shareWatchedList" class="share-items-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
                 </div>
               </div>
 
                             <!-- Action Buttons -->
-              <div class="modal-actions" style="display: flex; gap: 10px; justify-content: center;">
-                <button id="generateShareLinkBtn" class="btn success" style="display: none;" onclick="generateShareLinkFromSelected()">
+              <div class="modal-actions" style="display: flex; gap: 10px; justify-content: center; pointer-events: auto;">
+                <button id="generateShareLinkBtn" class="btn btn--success" style="display: none; pointer-events: auto; cursor: pointer;" onclick="generateShareLinkFromSelected()">
                   📋 <span data-i18n="generate_share_link">Select what to share</span>
                 </button>
-                <button id="copyShareBtn" class="btn primary" style="display: none;" onclick="copyShareList()">
+                <button id="copyShareBtn" class="btn btn--primary" style="display: none; pointer-events: auto; cursor: pointer;" onclick="copyShareList()">
                   📋 Copy
                 </button>
-                <button id="closeShareModalBtn" class="btn secondary">
+                <button id="closeShareModalBtn" class="btn btn--secondary" style="pointer-events: auto; cursor: pointer;" onclick="closeShareSelectionModal()">
                   ✖️ <span data-i18n="close">Close</span>
                 </button>
               </div>
@@ -763,15 +1345,13 @@
           </div>
       </div>
 
-      <!-- FAB Rail - Sticky positioning within container -->
-      <div class="fab-rail">
-        <button id="settingsTab" class="fab-left" data-tab="settings" aria-label="Settings">⚙️ <span data-i18n="settings">Settings</span></button>
-        <div class="fab-stack">
-          <button id="darkModeToggle" class="fab" aria-label="Dark">
-            <span id="themeIcon">🌙</span>
-          </button>
-          <button id="mardiToggle" class="fab" aria-label="Mardi">🎭</button>
-        </div>
+      <!-- FABs - Will be moved to active tab dock by JavaScript -->
+      <button id="settingsTab" class="fab-left" data-tab="settings" aria-label="Settings" data-requires-auth>⚙️ <span data-i18n="settings">Settings</span></button>
+      <div class="fab-stack">
+        <button id="darkModeToggle" class="fab" aria-label="Dark">
+          <span id="themeIcon">🌙</span>
+        </button>
+        <button id="mardiToggle" class="fab" aria-label="Mardi">🎭</button>
       </div>
     </div>
 
@@ -779,67 +1359,960 @@
       </main>
 
     <!-- Firebase must load BEFORE app.js -->
-        <!-- ==== SCRIPT ORDER: libraries → core → features → UI glue ==== -->
+    <!-- ==== SCRIPT ORDER: libraries → config → init your app scripts === -->
 
-    <!-- Firebase libs -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-	
-	<!-- Your project config (REQUIRED) -->
-<script src="firebase-config.js"></script>
+<!-- Firebase libs (compat for simplicity) -->
+<!-- Firebase Configuration - Load from external file -->
+<script src="/firebase-config.js"></script>
+
+<!-- Firebase v9 CDN Bridge -->
+<script src="/js/firebase-init.js"></script>
+
+<!-- Auth Profile ViewModel - Single Observer -->
+<script src="/js/auth.js"></script>
+
+<!-- Auth Diagnostics (temporary) -->
+<script src="/auth-diagnostics.js"></script>
+
+<!-- Initialize Firebase (single, robust initialization) -->
+<script>
+  (function() {
+    'use strict';
+    
+    // Prevent duplicate initialization
+    if (window.firebaseInitialized) {
+      console.warn("⚠️ Firebase already initialized, skipping duplicate");
+      return;
+    }
+    
+    try {
+      // Validate configuration
+      if (!window.FIREBASE_CONFIG?.apiKey) {
+        console.error("❌ Firebase config missing apiKey");
+        return;
+      }
+      
+      // Initialize Firebase only if not already initialized
+      if (firebase.apps.length === 0) {
+        firebase.initializeApp(window.FIREBASE_CONFIG);
+        console.info("✅ Firebase initialized:", window.FIREBASE_CONFIG.projectId);
+        
+        // Set persistence to LOCAL for better localhost experience
+        const auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+          .then(() => {
+            console.info("🔒 Auth persistence set to LOCAL");
+          })
+          .catch((err) => {
+            console.error("⚠️ Failed to set persistence", err);
+          });
+        
+        // Expose Firebase services globally for debugging and app use
+        window.FB = {
+          auth: auth,
+          db: firebase.firestore()
+        };
+        
+        // Mark as initialized to prevent duplicates
+        window.firebaseInitialized = true;
+        window.firebase = firebase;
+        window.auth = auth;
+        window.db = firebase.firestore();
+        
+      } else {
+        console.warn("⚠️ Firebase already initialized, reusing existing instance");
+        window.firebaseInitialized = true;
+      }
+      
+    } catch (e) {
+      console.error("🔥 Firebase initialization error:", e);
+      // Don't mark as initialized if there was an error
+    }
+  })();
+</script>
+<!-- Persistence is now handled in the main Firebase initialization above -->
+
+
 
     <!-- Config & core helpers (must be available to everything below) -->
-    <script src="tmdb-config.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/bootstrap.js"></script>
+    <script src="/tmdb-config.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/bootstrap.js"></script>
 
     <!-- Core functionality (assumes utils/app exist) -->
-    <script src="scripts/auth.js"></script>
-    <script src="scripts/notifications.js"></script>
-    <script src="js/functions.js"></script>
+    <script src="/scripts/auth.js"></script>
+    <script src="/scripts/notifications.js"></script>
+    <script src="/js/functions.js"></script>
 
     <!-- Component modules -->
-    <script src="scripts/components/Card.js"></script>
+    <script src="/scripts/components/Card.js"></script>
+    <script src="/scripts/components/ActionBar.js"></script>
     
     <!-- Performance monitoring -->
-    <script src="scripts/performance-monitor.js"></script>
+    <script src="/scripts/performance-monitor.js"></script>
     
     <!-- Home layout -->
-    <script src="scripts/home.js"></script>
+    <script src="/scripts/home.js"></script>
+    
+    <!-- Home Layout Guardrails - Immovable Contract Enforcement -->
+    <script>
+    (function() {
+      'use strict';
+      
+      console.log('🏠 Home Layout Guardrails loaded');
+      
+      // Immovable Home Layout Contract - Exact 6 Section Order
+      const REQUIRED_HOME_SECTIONS = [
+        'quote-bar',
+        'group-1-your-shows',
+        'group-2-community', 
+        'group-3-for-you',
+        'group-4-theaters',
+        'group-5-feedback'
+      ];
+      
+      // Runtime Order Assertion
+      function assertHomeOrder() {
+        const homeRoot = document.getElementById('homeSection');
+        if (!homeRoot) {
+          console.error('❌ HOME ORDER VIOLATION: homeSection not found');
+          return false;
+        }
+        
+        const children = Array.from(homeRoot.children);
+        const sectionIds = children.map(child => child.id).filter(id => id);
+        
+        console.log('🏠 Home sections found:', sectionIds);
+        
+        // Check if all required sections exist in correct order
+        let orderViolation = false;
+        REQUIRED_HOME_SECTIONS.forEach((requiredId, index) => {
+          const foundIndex = sectionIds.indexOf(requiredId);
+          if (foundIndex === -1) {
+            console.error(`❌ HOME ORDER VIOLATION: Missing required section "${requiredId}"`);
+            orderViolation = true;
+          } else if (foundIndex !== index) {
+            console.error(`❌ HOME ORDER VIOLATION: Section "${requiredId}" at position ${foundIndex}, expected ${index}`);
+            orderViolation = true;
+          }
+        });
+        
+        // Check for unexpected sections
+        sectionIds.forEach((id, index) => {
+          if (!REQUIRED_HOME_SECTIONS.includes(id)) {
+            console.error(`❌ HOME ORDER VIOLATION: Unexpected section "${id}" at position ${index}`);
+            orderViolation = true;
+          }
+        });
+        
+        if (orderViolation) {
+          console.error('❌ HOME ORDER VIOLATION: Removing unexpected nodes');
+          // Remove unexpected nodes
+          children.forEach((child, index) => {
+            if (!REQUIRED_HOME_SECTIONS.includes(child.id)) {
+              console.log(`🗑️ Removing unexpected section: ${child.id}`);
+              child.remove();
+            }
+          });
+        }
+        
+        return !orderViolation;
+      }
+      
+      // Purge Legacy Sections
+      function purgeLegacySections() {
+        const legacySelectors = [
+          '#bingeMeter',
+          '.stats',
+          '#upcomingEpisodes', 
+          '#quote-flickword-container',
+          '#quoteCard',
+          '#randomQuoteCard',
+          '#bingeBanner'
+        ];
+        
+        legacySelectors.forEach(selector => {
+          const element = document.querySelector(selector);
+          if (element) {
+            console.log(`🗑️ Purging legacy section: ${selector}`);
+            element.remove();
+          }
+        });
+      }
+      
+      // Initialize Quote Bar with Enhanced Quotes System
+      function initQuoteBar() {
+        const quoteBar = document.getElementById('quote-bar');
+        if (!quoteBar) return;
+        
+        // Set loading state
+        quoteBar.setAttribute('data-state', 'loading');
+        quoteBar.style.display = 'block';
+        
+        // Wait for enhanced quotes system to load, then initialize
+        const waitForEnhancedQuotes = () => {
+          if (window.QuotesEnhanced && typeof window.QuotesEnhanced.drawQuote === 'function') {
+            // Enhanced quotes system is ready
+            const quote = window.QuotesEnhanced.drawQuote();
+            const quoteText = document.getElementById('quoteText');
+            if (quoteText) {
+              quoteText.textContent = quote;
+              quoteBar.setAttribute('data-state', 'loaded');
+              
+              // Add smooth transition
+              quoteBar.style.opacity = '0';
+              requestAnimationFrame(() => {
+                quoteBar.style.transition = 'opacity 0.3s ease';
+                quoteBar.style.opacity = '1';
+              });
+            }
+          } else {
+            // Fallback to basic quotes if enhanced system not ready
+            const basicQuotes = [
+              "The best way to predict the future is to create it. - Peter Drucker",
+              "Life is what happens to you while you're busy making other plans. - John Lennon", 
+              "The only way to do great work is to love what you do. - Steve Jobs",
+              "Innovation distinguishes between a leader and a follower. - Steve Jobs",
+              "Your time is limited, don't waste it living someone else's life. - Steve Jobs",
+              "Stay hungry, stay foolish. - Steve Jobs",
+              "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
+              "It is during our darkest moments that we must focus to see the light. - Aristotle"
+            ];
+            const quote = basicQuotes[Math.floor(Math.random() * basicQuotes.length)];
+            const quoteText = document.getElementById('quoteText');
+            if (quoteText) {
+              quoteText.textContent = quote;
+              quoteBar.setAttribute('data-state', 'loaded');
+              
+              // Add smooth transition
+              quoteBar.style.opacity = '0';
+              requestAnimationFrame(() => {
+                quoteBar.style.transition = 'opacity 0.3s ease';
+                quoteBar.style.opacity = '1';
+              });
+            }
+          }
+        };
+        
+        // Try immediately, then retry after a short delay if needed
+        waitForEnhancedQuotes();
+        setTimeout(waitForEnhancedQuotes, 500);
+      }
+      
+      // Disable Auto-Inject Systems
+      function disableAutoInjectSystems() {
+        // Disable MP-Playlists v1
+        if (window.FLAGS) {
+          window.FLAGS.spotlight_enabled = false;
+          window.FLAGS.quotes_enabled = false;
+          window.FLAGS.curated_rows_auto_inject = false;
+          window.FLAGS.personalized_rows_auto_inject = false;
+        }
+        
+        // Disable Quote System
+        if (window.ensureBlocks) {
+          window.ensureBlocks = function() { return false; };
+        }
+        
+        // Disable MP-Playlists v1 boot
+        if (window.MP_PLAYLISTS_V1) {
+          window.MP_PLAYLISTS_V1.enabled = false;
+        }
+        
+        console.log('🚫 Auto-inject systems disabled');
+      }
+      
+            // Override FlickWord mount point to target our specific container
+            function overrideFlickWordMount() {
+              // Override the findHomeMount function to target our FlickWord container
+              window.findHomeMount = function() {
+                const flickwordMount = document.querySelector('.flickword-mount');
+                if (flickwordMount) {
+                  console.log('🎯 FlickWord mount found: .flickword-mount');
+                  return flickwordMount;
+                }
+                // Fallback to original home section
+                const homeSection = document.querySelector('#homeSection');
+                console.log('🎯 FlickWord mount fallback: #homeSection');
+                return homeSection;
+              };
+              
+              // FlickFact feature removed - no longer needed
+              
+              console.log('🎯 FlickWord system overridden for new layout');
+            }
+      
+      // Handle player container resizing
+      function handlePlayerResizing() {
+        const communityContent = document.querySelector('.community-content');
+        const communityLeft = document.querySelector('.community-left');
+        const communityRight = document.querySelector('.community-right');
+        
+        if (!communityContent || !communityLeft || !communityRight) return;
+        
+        // Force recalculation of container sizes
+        function resizeContainers() {
+          // Trigger reflow
+          communityContent.style.display = 'none';
+          communityContent.offsetHeight; // Force reflow
+          communityContent.style.display = 'flex';
+          
+          // Ensure proper sizing
+          communityLeft.style.width = '100%';
+          communityRight.style.width = '100%';
+          
+          console.log('🔄 Community containers resized');
+        }
+        
+        // Resize on window resize
+        window.addEventListener('resize', resizeContainers);
+        
+        // Resize when iframe loads
+        const iframe = communityLeft.querySelector('iframe');
+        if (iframe) {
+          iframe.addEventListener('load', resizeContainers);
+        }
+        
+        // Initial resize
+        setTimeout(resizeContainers, 100);
+      }
+      
+      // Initialize when DOM is ready
+      function initHomeGuardrails() {
+        console.log('🏠 Initializing Home Layout Guardrails...');
+        
+        // Disable auto-inject systems first
+        disableAutoInjectSystems();
+        
+        // Purge legacy sections
+        purgeLegacySections();
+        
+        // Initialize quote bar
+        initQuoteBar();
+        
+        // Override FlickWord mount point
+        overrideFlickWordMount();
+        
+        // Handle player container resizing
+        handlePlayerResizing();
+        
+        // Initialize Community Games
+        function initCommunityGames() {
+          console.log('🎮 Initializing Community Games...');
+          
+          // Check if game scripts loaded
+          console.log('🎮 Game script check:', {
+            triviaScript: typeof window.FlickletTrivia !== 'undefined',
+            flickwordScript: typeof window.flickword !== 'undefined',
+            triviaTile: !!document.getElementById('triviaTile'),
+            flickwordCard: !!document.getElementById('flickwordCard')
+          });
+          
+          // Try to manually trigger trivia if it exists
+          if (typeof window.FlickletTrivia !== 'undefined') {
+            console.log('🎮 FlickletTrivia found, checking for init function...');
+            console.log('🎮 Available methods:', Object.keys(window.FlickletTrivia));
+          }
+          
+          // Check if trivia is already loaded by the original script
+          const triviaTile = document.getElementById('triviaTile');
+          const questionEl = document.getElementById('triviaQuestion');
+          const choicesEl = document.getElementById('triviaChoices');
+          
+          if (triviaTile && questionEl && choicesEl) {
+            console.log('🎮 Trivia elements found:', {
+              hasQuestion: !!questionEl.textContent,
+              hasChoices: !!choicesEl.innerHTML,
+              questionText: questionEl.textContent
+            });
+            
+            // If trivia is already loaded, just ensure it fits in the container
+            if (questionEl.textContent && questionEl.textContent !== '') {
+              console.log('🎮 Trivia already loaded by original script');
+              // Apply compact styling to existing content
+              questionEl.style.fontSize = '13px';
+              questionEl.style.lineHeight = '1.3';
+              questionEl.style.marginBottom = '8px';
+              
+              // Style existing choice buttons
+              const existingButtons = choicesEl.querySelectorAll('button, li, div');
+              existingButtons.forEach(btn => {
+                btn.style.padding = '6px 8px';
+                btn.style.fontSize = '12px';
+                btn.style.marginBottom = '4px';
+                btn.style.borderRadius = '4px';
+              });
+            }
+          }
+          
+          // The games should load automatically via their respective systems
+          // FlickWord and Trivia are separate game systems that will populate their containers
+          console.log('🎮 Community games containers ready');
+        }
+        
+        // Trivia answer selection is handled by the trivia.js script
+        // No need for a separate selectAnswer function here
+        
+        // Initialize games after a delay
+        setTimeout(initCommunityGames, 2000);
+        setTimeout(initCommunityGames, 5000);
+        
+        // Also try when DOM is fully ready
+        document.addEventListener('DOMContentLoaded', () => {
+          setTimeout(initCommunityGames, 1000);
+          
+          // Initialize theme system
+          (function ensureTheme() {
+            const k = 'flicklet-theme';
+            const t = localStorage.getItem(k) || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+            // Optional: wire buttons if present
+            document.querySelectorAll('[data-set-theme]').forEach(btn=>{
+              btn.addEventListener('click', e=>{
+                const v = btn.getAttribute('data-set-theme');
+                if (!v) return;
+                localStorage.setItem(k, v);
+                document.documentElement.setAttribute('data-theme', v);
+              }, { once: false });
+            });
+          })();
+        });
+        
+        // Assert order after a short delay to allow other scripts to run
+        setTimeout(() => {
+          const isValid = assertHomeOrder();
+          if (isValid) {
+            console.log('✅ Home layout order validated');
+          }
+        }, 100);
+      }
+      
+      // Run immediately and on DOM ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initHomeGuardrails);
+      } else {
+        initHomeGuardrails();
+      }
+      
+      // Re-assert order after any major DOM changes
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'childList' && mutation.target.id === 'homeSection') {
+            console.log('🏠 Home section DOM changed, re-asserting order...');
+            setTimeout(assertHomeOrder, 50);
+          }
+        });
+      });
+      
+      // Start observing when homeSection is available
+      const checkHomeSection = setInterval(() => {
+        const homeSection = document.getElementById('homeSection');
+        if (homeSection) {
+          observer.observe(homeSection, { childList: true, subtree: true });
+          clearInterval(checkHomeSection);
+        }
+      }, 100);
+      
+    })();
+    </script>
     
     <!-- Router -->
-    <script src="scripts/router.js"></script>
+    <script src="/scripts/router.js"></script>
     
     
     <!-- Feature modules (safe to assume utils/app are ready) -->
-    <script src="scripts/currently-watching-preview.js"></script>
-    <script src="scripts/next-up-this-week.js"></script>
-    <script src="scripts/community-spotlight.js"></script>
-    <script src="scripts/curated-rows.js"></script>
-    <script src="scripts/curated-seed.js"></script>
-    <script src="scripts/list-actions.js"></script>
+    <script src="/scripts/currently-watching-preview.js"></script>
+    <script src="/scripts/next-up-this-week.js"></script>
+    <script src="/scripts/community-spotlight.js"></script>
+    <!-- CURATED_ROWS: defer heavy work until idle (improves mobile TBT) -->
+    <script type="module">
+      const idle = (fn)=>('requestIdleCallback'in window)?requestIdleCallback(fn,{timeout:1500}):setTimeout(fn,400);
+      idle(()=> import('./scripts/curated-rows.js').then(m=>m.init?.()).catch(console.warn));
+    </script>
+    <script src="/scripts/curated-seed.js"></script>
+    <script src="/scripts/list-actions.js"></script>
     
     <!-- Personalized Rows System -->
-    <script src="scripts/data/user-settings.js"></script>
-    <script src="scripts/api/content.js"></script>
-    <script src="scripts/rows/personalized.js"></script>
-    <script src="scripts/settings/my-rows.js"></script>
+    <script src="/scripts/data/user-settings.js"></script>
+    <script src="/scripts/api/content.js"></script>
+    <script src="/scripts/rows/personalized.js"></script>
+    <script src="/scripts/settings/my-rows.js"></script>
     
-    <script src="scripts/share-modal.js"></script>
-    <script src="scripts/search-tips.js"></script>
-    <script src="scripts/series-org.js"></script>
-    <script src="scripts/tmdb-seed.js"></script>
-    <script src="scripts/pro-gate.js"></script>
-    <script src="js/language-manager.js"></script>
-    <script src="js/i18n.js"></script>
+    <script src="/scripts/share-modal.js"></script>
+    <script src="/scripts/search-tips.js"></script>
+    <script src="/scripts/series-org.js"></script>
+    <script src="/scripts/tmdb-seed.js"></script>
+    <script src="/scripts/pro-gate.js"></script>
+    <script src="/js/language-manager.js"></script>
+    <script src="/js/i18n.js"></script>
 
+    <!-- TMDB Image Utilities (must load before components that use it) -->
+    <script src="/scripts/tmdb-images.js"></script>
+    <!-- Centralized Add Handler (must load before other handlers) -->
+    <script src="/scripts/centralized-add-handler.js"></script>
+    
     <!-- UI orchestration (must be last) -->
-    <script src="scripts/inline-script-01.js"></script>
-    <script src="scripts/inline-script-02.js"></script>
-    <script src="scripts/inline-script-03.js"></script>
-    <script src="scripts/episode-tracking.js"></script>
+    <script src="/scripts/inline-script-01.js" defer></script>
+    <script src="/scripts/inline-script-02.js" defer></script>
+    <script src="/scripts/inline-script-03.js" defer></script>
+    
+    <!-- Global Card Actions System -->
+    <script src="/scripts/card-actions.js"></script>
+    
+    <!-- CSV Export System -->
+    <script src="/scripts/export-csv.js"></script>
+    
+    <!-- Enhanced Share System -->
+    <script src="/scripts/share-enhanced.js"></script>
+    
+    <!-- Pro Preview System -->
+    <script src="/scripts/pro-preview.js"></script>
+    
+    <!-- Notifications Test System -->
+    <script src="/scripts/notifications-test.js"></script>
+    
+    <!-- Enhanced Quotes System -->
+    <script src="/scripts/quotes-enhanced.js"></script>
+    
+    <!-- Settings Tie-ins System -->
+    <script src="/scripts/settings-tie-ins.js"></script>
+    
+    <!-- Community Player System -->
+    <script src="/scripts/community-player.js"></script>
+    <script src="/scripts/episode-tracking.js"></script>
+    
+    <!-- Community Games -->
+    <script src="/scripts/trivia.js?v=23.46&t=20250112"></script>
+    <script src="/scripts/flickword-home-only.js.txt"></script>
+    
+    <!-- FlickWord Modal Functions -->
+    <script>
+      // FlickWord Modal Functions
+      function openFlickWordModal() {
+        console.log('🎯 Opening FlickWord modal');
+        const modal = document.getElementById('flickwordModal');
+        const frame = document.getElementById('flickwordFrame');
+        
+        if (modal && frame) {
+          // Set today's date for the game
+          const today = new Date().toISOString().split('T')[0];
+          frame.src = `features/flickword-v2.html?date=${today}`;
+          modal.style.display = 'block';
+          
+          // Focus management
+          const closeBtn = modal.querySelector('.modal-close');
+          if (closeBtn) closeBtn.focus();
+        }
+      }
+      
+      function closeFlickWordModal() {
+        console.log('🎯 Closing FlickWord modal');
+        const modal = document.getElementById('flickwordModal');
+        const frame = document.getElementById('flickwordFrame');
+        
+        if (modal) {
+          modal.style.display = 'none';
+          if (frame) frame.src = '';
+        }
+      }
+      
+      // Update FlickWord teaser stats
+      function updateFlickWordStats() {
+        const streakEl = document.querySelector('.flickword-teaser .streak');
+        const bestEl = document.querySelector('.flickword-teaser .best');
+        
+        if (streakEl && bestEl) {
+          const stats = JSON.parse(localStorage.getItem('flickword:stats') || '{}');
+          streakEl.textContent = `Streak: ${stats.streak || 0}`;
+          bestEl.textContent = `Best: ${stats.best || 0}`;
+        }
+      }
+      
+      // Initialize FlickWord teaser
+      function initFlickWordTeaser() {
+        console.log('🎯 Initializing FlickWord teaser');
+        updateFlickWordStats();
+        
+        // Listen for game results to update stats
+        window.addEventListener('message', function(event) {
+          if (event.data && event.data.type === 'flickword:result') {
+            console.log('🎯 FlickWord result received:', event.data);
+            updateFlickWordStats();
+          }
+        });
+      }
+      
+      // Initialize when ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initFlickWordTeaser);
+      } else {
+        initFlickWordTeaser();
+      }
+    </script>
+
+    <!-- Game Cards Modal System -->
+    <script>
+    console.log('🎮 Script starting...');
+    (function () {
+      console.log('🎮 Initializing Game Cards Modal System');
+      const qs  = (s, r=document) => r.querySelector(s);
+      const qsa = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+      // Open/close helpers
+      let lastOpener = null;
+      function openModal(id, opener) {
+        console.log('🎮 Opening modal:', id);
+        const m = qs('#' + id);
+        if (!m) {
+          console.error('🎮 Modal not found:', id);
+          return;
+        }
+        lastOpener = opener || document.activeElement;
+        m.setAttribute('aria-hidden', 'false');
+        console.log('🎮 Modal opened:', m.id, 'aria-hidden:', m.getAttribute('aria-hidden'));
+        
+        // Set up FlickWord iframe with today's date
+        if (id === 'modal-flickword') {
+          const frame = qs('#flickword-game-frame');
+          if (frame) {
+            const today = new Date().toISOString().split('T')[0];
+            frame.src = `features/flickword-v2.html?date=${today}`;
+          }
+        }
+
+        // Focus trap
+        const focusables = qsa('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])', m);
+        const first = focusables[0], last = focusables[focusables.length - 1];
+        (first || qs('[data-close]', m) || m).focus();
+
+        function trap(e){
+          if (e.key !== 'Tab') return;
+          if (!focusables.length) return;
+          if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+        }
+        m._trap = trap;
+        m.addEventListener('keydown', trap);
+      }
+      function closeModal(m) {
+        console.log('🔴 Closing modal:', m?.id);
+        if (!m) return;
+        m.setAttribute('aria-hidden', 'true');
+        m.removeEventListener('keydown', m._trap || (()=>{}));
+        if (lastOpener && typeof lastOpener.focus === 'function') lastOpener.focus();
+      }
+
+      // Wire card + CTA triggers
+      function wireCard(cardId, modalId){
+        console.log('🎮 Wiring card:', cardId, 'to modal:', modalId);
+        const card = qs('#' + cardId);
+        if (!card) {
+          console.error('🎮 Card not found:', cardId);
+          return;
+        }
+        const open = (e) => { 
+          console.log('🎮 Card clicked:', cardId);
+          e.preventDefault(); 
+          openModal(modalId, card); 
+        };
+        card.addEventListener('click', open);
+        card.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' || e.key === ' ') open(e); });
+        const btn = qs('#' + cardId + ' .gc-cta');
+        if (btn) {
+          console.log('🎮 CTA button found for:', cardId);
+          btn.addEventListener('click', open);
+        } else {
+          console.warn('🎮 CTA button not found for:', cardId);
+        }
+      }
+      // Check if modals exist
+      console.log('🎮 Available modals:', qsa('.game-modal').map(m => m.id));
+      console.log('🎮 FlickWord modal:', qs('#modal-flickword'));
+      console.log('🎮 Trivia modal:', qs('#modal-trivia'));
+      
+      wireCard('flickwordTile', 'modal-flickword');
+      wireCard('triviaTile', 'modal-trivia');
+
+      // Overlay & close buttons
+      qsa('.game-modal').forEach(m => {
+        qsa('[data-close]', m).forEach(el => {
+          el.addEventListener('click', (e) => {
+            console.log('🔴 Close button clicked for modal:', m.id);
+            e.preventDefault();
+            e.stopPropagation();
+            closeModal(m);
+          });
+        });
+        m.addEventListener('click', (e) => { 
+          if (e.target.classList.contains('gm-overlay')) {
+            closeModal(m);
+          }
+        });
+        m.addEventListener('keydown', (e) => { 
+          if (e.key === 'Escape') {
+            closeModal(m);
+          }
+        });
+      });
+      
+      // Global close function
+      window.closeGameModal = closeModal;
+      
+      // Listen for game close messages
+      window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'flickword:close') {
+          const modal = qs('#modal-flickword');
+          if (modal) closeModal(modal);
+        }
+        if (event.data && event.data.type === 'trivia:close') {
+          const modal = qs('#modal-trivia');
+          if (modal) closeModal(modal);
+        }
+      });
+
+      // Handle new data-action buttons
+      document.addEventListener('click', function(event) {
+        const action = event.target.getAttribute('data-action');
+        if (action === 'start-flickword') {
+          event.preventDefault();
+          event.stopPropagation();
+          openModal('modal-flickword');
+        } else if (action === 'start-trivia') {
+          event.preventDefault();
+          event.stopPropagation();
+          openModal('modal-trivia');
+        }
+      });
+      
+      // Dispatch modal events for other systems to listen to
+      const originalOpenModal = openModal;
+      openModal = function(id, opener) {
+        originalOpenModal(id, opener);
+        document.dispatchEvent(new CustomEvent('modal:open', { detail: { id, opener } }));
+      };
+      
+      const originalCloseModal = closeModal;
+      closeModal = function(m) {
+        const id = m?.id;
+        originalCloseModal(m);
+        if (id) {
+          document.dispatchEvent(new CustomEvent('modal:close', { detail: { id } }));
+        }
+      };
+
+      // ---- Reliable close: X, overlay, ESC ----
+      (function wireModalCloseDelegation(){
+        if (window.__modalCloseWired) return;
+        window.__modalCloseWired = true;
+
+        document.addEventListener('click', (e)=>{
+          const t = e.target;
+          if (t.classList?.contains('gm-overlay') || t.closest?.('[data-close]')){
+            e.preventDefault();
+            closeModal(t.closest('.game-modal'));
+          }
+        });
+        document.addEventListener('keydown', (e)=>{
+          if (e.key === 'Escape') {
+            const openModal = document.querySelector('.game-modal[aria-hidden="false"]');
+            if (openModal) closeModal(openModal);
+          }
+        });
+      })();
+
+      // ---- Exact iframe sizing on open + resize ----
+      (function sizeIframesOnModalOpen(){
+        function sizeIframe(modalId){
+          const modal = document.getElementById(modalId);
+          if (!modal) return;
+          const body = modal.querySelector('.gm-body');
+          const iframe = body?.querySelector('iframe');
+          if (!iframe || !body) return;
+          /* Height now managed by card system */
+        }
+
+        const needsResize = new Set();
+
+        document.addEventListener('modal:open', (e)=>{
+          const id = e.detail?.id;
+          if (!id) return;
+          requestAnimationFrame(()=> sizeIframe(id));
+          needsResize.add(id);
+        });
+
+        document.addEventListener('modal:close', (e)=>{
+          const id = e.detail?.id;
+          if (!id) return;
+          needsResize.delete(id);
+        });
+
+        window.addEventListener('resize', ()=>{
+          for (const id of needsResize) sizeIframe(id);
+        });
+      })();
+
+      // Stats hooks (wire real data later)
+      window.GameStats = {
+        set(data){
+          if (data.flickword){
+            if ('streak' in data.flickword) qs('[data-fw-streak]')?.replaceChildren(String(data.flickword.streak));
+            if ('best'   in data.flickword) qs('[data-fw-best]')?.replaceChildren(String(data.flickword.best));
+            if ('win'    in data.flickword) qs('[data-fw-win]')?.replaceChildren(String(data.flickword.win));
+          }
+          if (data.trivia){
+            if ('streak' in data.trivia) qs('[data-tv-streak]')?.replaceChildren(String(data.trivia.streak));
+            if ('best'   in data.trivia) qs('[data-tv-best]')?.replaceChildren(String(data.trivia.best));
+            if ('acc'    in data.trivia) qs('[data-tv-acc]')?.replaceChildren(String(data.trivia.acc));
+          }
+        }
+      };
+    })();
+    </script>
+
+    <!-- Daily Trivia Bridge -->
+    <script>
+    // === Daily Trivia <-> Modal bridge (iframe mount/unmount) ===
+    window.DailyTriviaBridge = (() => {
+      let handle = null;
+      const TRIVIA_SRC = 'features/trivia.html'; // change here if your path differs
+
+      function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+      function mount(rootSel){
+        const root = typeof rootSel === 'string' ? document.querySelector(rootSel) : rootSel;
+        if (!root) throw new Error('DailyTrivia root not found');
+        if (handle) return handle;
+
+        const iframe = document.createElement('iframe');
+        iframe.id = 'triviaFrame_new';
+        iframe.title = 'Daily Trivia Game';
+        iframe.loading = 'eager';
+        iframe.referrerPolicy = 'no-referrer';
+        iframe.allow = '';
+        iframe.sandbox = 'allow-scripts';
+        iframe.style.width = '100%';
+        /* Height now managed by card system */
+        iframe.style.border = 'none';
+        iframe.style.borderRadius = '10px';
+
+        // If your trivia uses a daily seed, pass date (safe even if ignored)
+        iframe.src = `${TRIVIA_SRC}?date=${todayISO()}`;
+
+        root.replaceChildren(iframe);
+
+        const onLoad = () => { try { iframe.focus(); } catch {} };
+        iframe.addEventListener('load', onLoad);
+
+        // Listen for results and update teaser stats
+        const onMsg = (event) => {
+          const data = event.data;
+          if (!data || data.type !== 'trivia:result') return;
+          // Expect payload like { streak, best, acc } — adjust if your keys differ
+          try {
+            const prev = JSON.parse(localStorage.getItem('trivia:stats') || '{}');
+            const next = { ...prev, ...data.payload };
+            localStorage.setItem('trivia:stats', JSON.stringify(next));
+          } catch {}
+
+          try {
+            const $ = (s)=>document.querySelector(s);
+            const stats = JSON.parse(localStorage.getItem('trivia:stats') || '{}');
+            $('[data-tv-streak]') && $('[data-tv-streak]').replaceChildren(String(stats.streak ?? 0));
+            $('[data-tv-best]')   && $('[data-tv-best]').replaceChildren(String(stats.best ?? 0));
+            $('[data-tv-acc]')    && $('[data-tv-acc]').replaceChildren(String(stats.acc ?? '—'));
+          } catch {}
+        };
+        window.addEventListener('message', onMsg);
+
+        handle = {
+          iframe,
+          destroy(){
+            try { iframe.removeEventListener('load', onLoad); } catch {}
+            try { window.removeEventListener('message', onMsg); } catch {}
+            try { iframe.src = 'about:blank'; } catch {}
+            if (iframe.parentNode) iframe.parentNode.replaceChildren();
+            handle = null;
+          }
+        };
+        return handle;
+      }
+
+      function unmount(){ if (handle) handle.destroy(); }
+
+      return { mount, unmount };
+    })();
+
+    // === Wire to modal lifecycle ===
+    (function wireTriviaToModal(){
+      document.addEventListener('modal:open', (e)=>{
+        if (e.detail?.id === 'modal-trivia') {
+          try { window.DailyTriviaBridge.mount('#dailytrivia-game'); }
+          catch(err){ console.error('Trivia mount failed', err); }
+        }
+      });
+      document.addEventListener('modal:close', (e)=>{
+        if (e.detail?.id === 'modal-trivia') {
+          try { window.DailyTriviaBridge.unmount(); }
+          catch(err){ console.error('Trivia unmount failed', err); }
+        }
+      });
+    })();
+
+    // === Initialize teaser with any saved stats (runs once at startup) ===
+    (function initTriviaTeaserNew(){
+      try {
+        const stats = JSON.parse(localStorage.getItem('trivia:stats') || '{}');
+        const set = (sel, val)=>{ const el=document.querySelector(sel); if (el) el.textContent = String(val); };
+        set('[data-tv-streak]', stats.streak ?? 0);
+        set('[data-tv-best]',   stats.best   ?? 0);
+        set('[data-tv-acc]',    stats.acc    ?? '—');
+      } catch {}
+    })();
+    </script>
+
+    <!-- Modal Iframe Sizing -->
+    <script>
+    // Helper to size an iframe to its modal body
+    function sizeModalIframe(modalId, iframeEl){
+      const modal = document.getElementById(modalId);
+      if (!modal || !iframeEl) return;
+      const body = modal.querySelector('.gm-body');
+      if (!body) return;
+
+      /* Height now managed by card system - no forced heights */
+    }
+
+    // Patch FlickWordBridge to use dynamic sizing
+    (function patchFlickWordSizing(){
+      if (!window.FlickWordBridge) return;
+      const _mount = window.FlickWordBridge.mount;
+      window.FlickWordBridge.mount = async function(rootSel){
+        const handle = await _mount.call(window.FlickWordBridge, rootSel);
+
+        // Try to find the iframe we just created
+        const root = typeof rootSel === 'string' ? document.querySelector(rootSel) : rootSel;
+        const iframe = root && (root.querySelector('iframe') || root.firstElementChild);
+
+        // Initial size after next frame
+        requestAnimationFrame(()=> sizeModalIframe('modal-flickword', iframe));
+
+        // Resize with window
+        function onResize(){ sizeModalIframe('modal-flickword', iframe); }
+        window.addEventListener('resize', onResize);
+
+        // Keep cleanup on destroy
+        const _destroy = handle?.destroy;
+        if (_destroy){
+          handle.destroy = function(){
+            window.removeEventListener('resize', onResize);
+            _destroy.call(handle);
+          };
+        }
+        return handle;
+      };
+    })();
+    </script>
 
     
 
@@ -900,10 +2373,9 @@
     function openSettingsToFeedback() {
       console.log('💬 Opening settings to feedback section');
       
-      // Switch to settings tab
-      const settingsTab = document.getElementById('settingsTab');
-      if (settingsTab) {
-        settingsTab.click();
+      // Use the global switchToTab function if available
+      if (typeof window.switchToTab === 'function') {
+        window.switchToTab('settings');
         
         // Wait for settings to load, then switch to About tab
         setTimeout(() => {
@@ -921,8 +2393,30 @@
           }
         }, 200);
       } else {
-        console.warn('💬 Settings tab not found');
-        alert('Please go to Settings → About to share your feedback');
+        // Fallback to direct tab click
+        const settingsTab = document.getElementById('settingsTab');
+        if (settingsTab) {
+          settingsTab.click();
+          
+          // Wait for settings to load, then switch to About tab
+          setTimeout(() => {
+            const aboutTab = document.querySelector('.settings-tabs button[data-target="#about"]');
+            if (aboutTab) {
+              aboutTab.click();
+              
+              // Scroll to feedback section
+              setTimeout(() => {
+                const feedbackSection = document.querySelector('#about .settings-subsection:last-child');
+                if (feedbackSection) {
+                  feedbackSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }, 100);
+            }
+          }, 200);
+        } else {
+          console.warn('💬 Settings tab not found');
+          alert('Please go to Settings → About to share your feedback');
+        }
       }
     }
     </script>
@@ -1434,10 +2928,67 @@
     
     <!-- Global modal mount, never hidden by tab switching -->
     <div id="modal-root" data-modal-root style="position:relative; z-index:0;"></div>
+    
+    <!-- FlickWord Modal -->
+    <div id="flickwordModal" class="modal" style="display: none;">
+      <div class="modal-backdrop" onclick="closeFlickWordModal()"></div>
+      <div class="modal-dialog flickword-modal">
+        <div class="modal-header">
+          <h3 data-i18n="flickword">🎯 FlickWord</h3>
+          <button class="modal-close" onclick="closeFlickWordModal()" data-i18n="close_game">×</button>
+        </div>
+        <div class="modal-content">
+          <iframe 
+            id="flickwordFrame" 
+            src="/features/flickword-v2.html" 
+            style="width: 100%; height: 500px; border: none; border-radius: 8px;"
+            title="FlickWord Game"
+            sandbox="allow-scripts allow-same-origin"
+          ></iframe>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn--secondary" onclick="closeFlickWordModal()">Close Game</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Modals -->
+    <div class="game-modal" id="modal-flickword" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-flickword-title">
+      <div class="gm-overlay" data-close></div>
+      <div class="gm-dialog" role="document">
+        <header class="gm-header">
+          <h3 id="modal-flickword-title" data-i18n="flickword">FlickWord</h3>
+          <button class="gm-close" type="button" aria-label="Close" data-close>&times;</button>
+        </header>
+        <main class="gm-body">
+          <iframe 
+            id="flickword-game-frame" 
+            src="/features/flickword-v2.html" 
+            style="width: 100%; height: 100%; border: none; border-radius: 8px;"
+            title="FlickWord Game"
+            sandbox="allow-scripts allow-same-origin"
+          ></iframe>
+        </main>
+      </div>
+    </div>
+
+    <div class="game-modal" id="modal-trivia" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-trivia-title">
+      <div class="gm-overlay" data-close></div>
+      <div class="gm-dialog" role="document">
+        <header class="gm-header">
+          <h3 id="modal-trivia-title" data-i18n="daily_trivia">Daily Trivia</h3>
+          <button class="gm-close" type="button" aria-label="Close" data-close>&times;</button>
+        </header>
+        <main class="gm-body">
+          <div id="dailytrivia-game" class="gm-placeholder">[ Daily Trivia game mounts here ]</div>
+        </main>
+      </div>
+    </div>
 	
 	<!-- Notifications regions (required by notifications.js) -->
 <div id="toastRegion" role="status" aria-live="polite" aria-atomic="true" class="toast-region"></div>
 <div id="bannerRegion" role="alert" aria-live="assertive" aria-atomic="true" class="banner-region"></div>
 
-  </body>
+          <!-- Verification Script - Remove after testing -->
+          </body>
 </html>

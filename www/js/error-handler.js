@@ -206,6 +206,15 @@
   
   // Global error handler for uncaught errors
   window.addEventListener('error', (event) => {
+    // Filter out chrome extension errors that we can't control
+    if (event.error && event.error.message && 
+        (event.error.message.includes('chrome-extension://') || 
+         event.error.message.includes('pageViewId') ||
+         event.error.message.includes('message port closed'))) {
+      // Log but don't treat as critical
+      console.warn('Chrome extension error (ignored):', event.error.message);
+      return;
+    }
     handleError(event.error, 'Global Error Handler', ERROR_TYPES.CRITICAL);
   });
   

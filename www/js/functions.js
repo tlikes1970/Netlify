@@ -9,9 +9,16 @@ if (typeof window.FLAGS.mobilePolishGuard === 'undefined') {
 
 window.mobilePolishGate = function mobilePolishGate() {
   if (!window.FLAGS.mobilePolishGuard) {
-    console.log('📱 Mobile polish guard disabled via FLAGS.mobilePolishGuard=false');
+    FlickletDebug.info('📱 Mobile polish guard disabled via FLAGS.mobilePolishGuard=false');
     return;
   }
+
+  // Prevent multiple initializations
+  if (window._mobilePolishInitialized) {
+    FlickletDebug.info('📱 Mobile polish already initialized, skipping');
+    return;
+  }
+  window._mobilePolishInitialized = true;
 
   const MOBILE_BP = 640; // px
   const forced = localStorage.getItem('forceMobileV1') === '1';
@@ -26,54 +33,45 @@ window.mobilePolishGate = function mobilePolishGate() {
     const isMobileSize = viewportWidth <= 640;
     const isIPhone = /iPhone/i.test(userAgent);
     
-    // Debug info
-    console.log(`📱 Mobile detection debug:`, {
-      viewportWidth,
-      userAgent: userAgent.substring(0, 50) + '...',
-      isMobileViewport,
-      isMobileDevice,
-      isMobileSize,
-      isIPhone,
-      forced
-    });
+    // Debug info (only log once to prevent spam)
+    if (!window._mobileDebugLogged) {
+      FlickletDebug.info(`📱 Mobile detection debug:`, {
+        viewportWidth,
+        userAgent: userAgent.substring(0, 50) + '...',
+        isMobileViewport,
+        isMobileDevice,
+        isMobileSize,
+        isIPhone,
+        forced
+      });
+      window._mobileDebugLogged = true;
+    }
     
     // More aggressive mobile detection - force iPhone to mobile
     const enable = forced || isMobileDevice || isMobileViewport || isMobileSize || isIPhone || viewportWidth <= 768;
     
     document.body.classList.toggle('mobile-v1', enable);
-    console.log(`📱 Mobile polish ${enable ? 'ENABLED' : 'DISABLED'} — vw:${viewportWidth} (device: ${isMobileDevice}, viewport: ${isMobileViewport}, size: ${isMobileSize})`);
+    FlickletDebug.info(`📱 Mobile polish ${enable ? 'ENABLED' : 'DISABLED'} — vw:${viewportWidth} (device: ${isMobileDevice}, viewport: ${isMobileViewport}, size: ${isMobileSize})`);
   }
 
   // Apply immediately
   applyMobileFlag();
   
-  // Also apply after a short delay to catch any timing issues
-  setTimeout(applyMobileFlag, 100);
+  // Listen for viewport changes (throttled to prevent loops)
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(applyMobileFlag, 250); // Throttle to 250ms
+  }, { passive: true });
   
-  // Listen for viewport changes
-  window.addEventListener('resize', applyMobileFlag, { passive: true });
   window.addEventListener('orientationchange', () => {
     // Delay after orientation change to let viewport settle
     setTimeout(applyMobileFlag, 100);
   });
 }
 
-// Run mobile polish guard multiple times to ensure it works
+// Run mobile polish guard once
 mobilePolishGate(); // Run immediately
-
-// Run when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', mobilePolishGate);
-} else {
-  mobilePolishGate();
-}
-
-// Run after a delay to catch any timing issues
-setTimeout(mobilePolishGate, 200);
-setTimeout(mobilePolishGate, 500);
-
-// Also run on window load as final fallback
-window.addEventListener('load', mobilePolishGate);
 
 // ---- Tab / Render Pipeline ----
 // window.switchToTab is implemented in inline-script-02.js
@@ -109,23 +107,56 @@ function rerenderIfVisible(list) {
 }
 
 window.updateTabCounts = function updateTabCounts() {
+  console.log('🔢 Updating tab counts...');
   const counts = {
-    watching: (appData.tv?.watching?.length || 0) + (appData.movies?.watching?.length || 0),
-    wishlist: (appData.tv?.wishlist?.length || 0) + (appData.movies?.wishlist?.length || 0),
-    watched:  (appData.tv?.watched?.length  || 0) + (appData.movies?.watched?.length  || 0),
+    watching: (window.appData?.tv?.watching?.length || 0) + (window.appData?.movies?.watching?.length || 0),
+    wishlist: (window.appData?.tv?.wishlist?.length || 0) + (window.appData?.movies?.wishlist?.length || 0),
+    watched:  (window.appData?.tv?.watched?.length  || 0) + (window.appData?.movies?.watched?.length  || 0),
   };
+  
+  console.log('📊 Calculated counts:', counts);
+  
   ['watching','wishlist','watched'].forEach(list => {
     const badge = document.getElementById(`${list}Badge`);
-    if (badge) badge.textContent = counts[list];
+    if (badge) {
+      badge.textContent = counts[list];
+      console.log(`✅ ${list} badge updated to:`, badge.textContent);
+    } else {
+      console.log(`❌ ${list} badge not found!`);
+    }
   });
 };
+
+// Ensure the function is called when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔢 DOMContentLoaded - calling updateTabCounts');
+  setTimeout(() => {
+    if (typeof window.updateTabCounts === 'function') {
+      window.updateTabCounts();
+    }
+  }, 1000);
+});
+
+// Also call when user data is loaded
+document.addEventListener('userDataLoaded', function() {
+  console.log('🔢 userDataLoaded event - calling updateTabCounts');
+  setTimeout(() => {
+    if (typeof window.updateTabCounts === 'function') {
+      window.updateTabCounts();
+    }
+  }, 500);
+});
+
+// Note: Tab counts are now updated only when data changes, not periodically
+
+
 
 // ---- Home ----
 window.loadHomeContent = function loadHomeContent() {
   const container = document.getElementById('homeSection');
   if (!container) return;
   
-  console.log('🏠 Loading home content - using improved loading');
+  FlickletDebug.info('🏠 Loading home content - using improved loading');
   
   // Start performance monitoring
   if (window.PerformanceMonitor) {
@@ -156,7 +187,7 @@ window.loadListContent = function loadListContent(listType) {
   const container = document.getElementById(`${listType}List`);
   if (!container) return;
   
-  console.log(`📋 Loading ${listType} content`);
+  FlickletDebug.info(`📋 Loading ${listType} content`);
 
   const tvItems = appData.tv?.[listType] || [];
   const movieItems = appData.movies?.[listType] || [];
@@ -216,20 +247,20 @@ window.loadDiscoverContent = function loadDiscoverContent() {
 
 window.loadSettingsContent = function loadSettingsContent() {
   // Settings content is now in HTML, just add event handlers for new data tools
-  console.log('⚙️ Loading settings content - adding data tools handlers');
+  FlickletDebug.info('⚙️ Loading settings content - adding data tools handlers');
   
   // New robust export/import handlers
   const btnExport = document.getElementById('btnExport');
   const fileImport = document.getElementById('fileImport');
   
-  console.log('🔍 Debug: btnExport element found:', btnExport);
-  console.log('🔍 Debug: fileImport element found:', fileImport);
+  FlickletDebug.info('🔍 Debug: btnExport element found:', btnExport);
+  FlickletDebug.info('🔍 Debug: fileImport element found:', fileImport);
   
-  console.log('🔍 Debug: window.guard function exists:', typeof window.guard);
-  console.log('🔍 Debug: btnExport exists check:', !!btnExport);
+  FlickletDebug.info('🔍 Debug: window.guard function exists:', typeof window.guard);
+  FlickletDebug.info('🔍 Debug: btnExport exists check:', !!btnExport);
   
   window.guard(!!btnExport, () => {
-    console.log('✅ Setting up export/import handlers');
+    FlickletDebug.info('✅ Setting up export/import handlers');
 
     async function collectExport() {
       // Get data from the actual localStorage keys the app uses
@@ -256,15 +287,15 @@ window.loadSettingsContent = function loadSettingsContent() {
     }
 
     btnExport.addEventListener('click', async () => {
-      console.log('🚀 Export button clicked!');
+      FlickletDebug.info('🚀 Export button clicked!');
       try {
         const data = await collectExport();
-        console.log('📊 Export data collected:', data);
+        FlickletDebug.info('📊 Export data collected:', data);
         downloadJSON(data, `flicklet-export-${new Date().toISOString().slice(0,10)}.json`);
-        console.log('💾 File download initiated');
+        FlickletDebug.info('💾 File download initiated');
         window.showToast?.('Export created.');
       } catch (error) {
-        console.error('❌ Export failed:', error);
+        FlickletDebug.error('❌ Export failed:', error);
         window.showToast?.('Export failed: ' + error.message);
       }
     });
@@ -294,7 +325,7 @@ window.loadSettingsContent = function loadSettingsContent() {
         window.showToast?.('Import complete. Reloading…');
         setTimeout(()=>location.reload(), 500);
     } catch (err) {
-        console.error(err);
+        FlickletDebug.error(err);
         window.showToast?.('Import failed: invalid file.');
       }
     });
@@ -311,14 +342,14 @@ window.loadSettingsContent = function loadSettingsContent() {
       window.updateProState?.();
       
       // Refresh providers, extras, playlists, and trivia when Pro state changes
-      console.log('🔄 Pro toggle (btnProTry): Refreshing providers, extras, playlists, and trivia...', { pro: window.FLAGS.proEnabled });
+      FlickletDebug.info('🔄 Pro toggle (btnProTry): Refreshing providers, extras, playlists, and trivia...', { pro: window.FLAGS.proEnabled });
       if (window.__FlickletRefreshProviders) {
         window.__FlickletRefreshProviders();
-        console.log('✅ Providers refreshed');
+        FlickletDebug.info('✅ Providers refreshed');
       }
       if (window.__FlickletRefreshExtras) {
         window.__FlickletRefreshExtras();
-        console.log('✅ Extras refreshed');
+        FlickletDebug.info('✅ Extras refreshed');
       }
       if (window.__FlickletRefreshPlaylists) {
         window.__FlickletRefreshPlaylists();
@@ -406,14 +437,14 @@ window.loadSettingsContent = function loadSettingsContent() {
             <div class="stat-label">Total Items</div>
           </div>
         </div>
-        <div style="margin-top: 15px; padding: 10px; background: var(--card-bg, #f8f9fa); border-radius: 8px; border: 1px solid var(--border, #dee2e6);">
-          <h5 style="margin: 0 0 10px 0; color: var(--text, #333); font-size: 0.9rem;">📺 TV Shows Breakdown</h5>
+        <div class="card-surface" style="margin-top: 15px;">
+          <h5 class="heading-subtle">📺 TV Shows Breakdown</h5>
           <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 0.85rem; max-width: 75%;">
             <div><strong>${tvWatching.length}</strong> Watching</div>
             <div><strong>${tvWishlist.length}</strong> Want to Watch</div>
             <div><strong>${tvWatched.length}</strong> Watched</div>
           </div>
-          <h5 style="margin: 10px 0; color: var(--text, #333); font-size: 0.9rem;">🎬 Movies Breakdown</h5>
+          <h5 class="heading-subtle" style="margin: 10px 0;">🎬 Movies Breakdown</h5>
           <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 0.85rem; max-width: 75%;">
             <div><strong>${movieWatching.length}</strong> Watching</div>
             <div><strong>${movieWishlist.length}</strong> Want to Watch</div>
@@ -651,22 +682,7 @@ window.loadSettingsContent = function loadSettingsContent() {
 // Old flaky handlers replaced by robust implementation above
 
 // ---- Item Management ----
-window.addToListFromCache = function addToListFromCache(id, list) {
-  const item = (appData.searchCache || []).find(i => i.id === id);
-  if (!item) return showNotification('Item not found in cache.', 'warning');
-
-  const mediaType = item.name ? 'tv' : 'movies';
-  const target = appData[mediaType]?.[list] || [];
-  if (target.some(i => i.id === id)) return showNotification(`Already in ${list}.`, 'warning');
-
-  target.push(item);
-  appData[mediaType][list] = target;
-  saveAppData();
-  // Keep badges fresh and render list immediately if it's visible
-  if (window.FlickletApp) window.FlickletApp.updateUI();
-  rerenderIfVisible(list);
-  showNotification(`Added to ${list}.`, 'success');
-};
+// addToListFromCache function removed - using the real implementation from inline-script-02.js
 
 window.moveItem = function moveItem(id, dest) {
   const mediaType = findItemMediaType(id);
@@ -731,23 +747,7 @@ function findItemList(id, mediaType) {
 }
 
 // ---- Theme Management ----
-window.toggleDarkMode = function toggleDarkMode() {
-  const isDark = document.body.classList.contains('dark-mode');
-  document.body.classList.toggle('dark-mode');
-  
-  // Update app data
-  if (!appData.settings) appData.settings = {};
-  appData.settings.theme = isDark ? 'light' : 'dark';
-    saveAppData();
-  
-  // Update button text
-  const themeIcon = document.getElementById('themeIcon');
-  if (themeIcon) {
-    themeIcon.textContent = isDark ? '🌙' : '☀️';
-  }
-  
-  showNotification(`Switched to ${isDark ? 'light' : 'dark'} mode.`, 'success');
-};
+// toggleDarkMode is now centralized in utils.js
 
 // ---- Language Management ----
 window.changeLanguage = function changeLanguage(lang) {
@@ -836,14 +836,14 @@ window.renderStatsCard = function renderStatsCard() {
           <div class="stat-label">Total Items</div>
         </div>
       </div>
-      <div style="margin-top: 15px; padding: 10px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border);">
-        <h5 style="margin: 0 0 10px 0; color: var(--text); font-size: 0.9rem;">📺 TV Shows Breakdown</h5>
+      <div class="card-surface" style="margin-top: 15px;">
+        <h5 class="heading-subtle">📺 TV Shows Breakdown</h5>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 0.85rem; max-width: 75%;">
           <div><strong>${tvWatching.length}</strong> Watching</div>
           <div><strong>${tvWishlist.length}</strong> Want to Watch</div>
           <div><strong>${tvWatched.length}</strong> Watched</div>
         </div>
-        <h5 style="margin: 10px 0; color: var(--text); font-size: 0.9rem;">🎬 Movies Breakdown</h5>
+        <h5 class="heading-subtle" style="margin: 10px 0;">🎬 Movies Breakdown</h5>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 0.85rem; max-width: 75%;">
           <div><strong>${movieWatching.length}</strong> Watching</div>
           <div><strong>${movieWishlist.length}</strong> Want to Watch</div>

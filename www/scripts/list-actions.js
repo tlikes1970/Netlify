@@ -83,6 +83,12 @@
     // Also try to find generic badges
     const badge = root.previousElementSibling?.querySelector?.('.count, .badge, .pill, .tab-badge');
     if (badge) badge.textContent = String(items.length);
+    
+    // Update all tab badges to ensure consistency
+    if (typeof window.updateTabCounts === 'function') {
+      console.log('🔢 Updating all tab counts after list change');
+      window.updateTabCounts();
+    }
   }
 
   document.addEventListener('click', async (e) => {
@@ -94,68 +100,42 @@
     const card = btn.closest('.curated-card,.list-card,.list-row,.card');
     if (!card) return;
 
-    // Prevent multiple clicks
-    if (btn.disabled) {
-      console.log('🔍 Button already disabled, ignoring click');
-      return;
-    }
-    
-    btn.disabled = true; const prev = btn.textContent; btn.textContent = 'Removing…';
-    try {
+    // Delegate to global card actions system
+    if (window.CardActions && window.CardActions.notInterested) {
       const id = card.dataset.id || card.getAttribute('data-id');
-      const title = card.querySelector('h3, .title, .card-title')?.textContent || 'Unknown item';
-      const mediaType = card.dataset.mediaType || 'tv';
+      const mediaType = card.dataset.mediaType || card.getAttribute('data-media-type') || 'tv';
+      const sourceList = card.dataset.sourceList || card.getAttribute('data-source-list') || 'list';
       
-      // Add to not interested list in appData
-      console.log('🔍 Debug: window.appData exists:', !!window.appData);
-      if (window.appData) {
-        // Initialize notInterested array if it doesn't exist
-        if (!window.appData.notInterested) {
-          window.appData.notInterested = [];
-          console.log('🔍 Debug: Initialized notInterested array');
-        }
+      // Use global system
+      window.CardActions.notInterested(id, mediaType, sourceList);
+      
+      // Update counts
+      SECTIONS.forEach(updateCount);
+    } else {
+      console.warn('🔧 Global card actions system not available, falling back to legacy handler');
+      // Fallback to legacy behavior if global system not available
+      btn.disabled = true; 
+      const prev = btn.textContent; 
+      btn.textContent = 'Removing…';
+      
+      try {
+        const id = card.dataset.id || card.getAttribute('data-id');
+        const title = card.querySelector('h3, .title, .card-title')?.textContent || 'Unknown item';
+        const mediaType = card.dataset.mediaType || 'tv';
         
-        // Check if already in not interested list
-        const existingIndex = window.appData.notInterested.findIndex(item => item.id === Number(id));
-        console.log('🔍 Debug: existingIndex:', existingIndex, 'for id:', id);
-        if (existingIndex === -1) {
-          const itemInfo = {
-            id: Number(id),
-            title: title,
-            mediaType: mediaType,
-            addedAt: new Date().toISOString()
-          };
-          window.appData.notInterested.push(itemInfo);
-          console.log('✅ Added to not interested list:', itemInfo);
-          console.log('🔍 Debug: Total items in notInterested:', window.appData.notInterested.length);
-          
-          // Refresh the not interested modal if it's open
-          const modal = document.getElementById('notInterestedModal');
-          if (modal && modal.style.display !== 'none') {
-            console.log('🔍 Debug: Modal is open, refreshing...');
-            if (window.populateNotInterestedList) {
-              window.populateNotInterestedList();
-            }
-          }
-        } else {
-          console.log('🔍 Debug: Item already in not interested list');
+        if (window.flicklet?.removeFromList) await window.flicklet.removeFromList(id);
+        if (document.contains(card)) {
+          card.remove();
         }
-      } else {
-        console.warn('❌ window.appData not available!');
+        window.showNotification?.(`"${title}" marked as not interested`, 'info');
+        SECTIONS.forEach(updateCount);
+      } catch (err) {
+        console.error('[remove] failed', err);
+        btn.disabled = false; 
+        btn.textContent = prev;
+        window.showNotification?.('Could not remove item', 'error');
       }
-      
-      if (window.flicklet?.removeFromList) await window.flicklet.removeFromList(id);
-      if (document.contains(card)) {
-        card.remove();
-      }
-      window.showNotification?.(`"${title}" marked as not interested`, 'info');
-    } catch (err){
-      console.error('[remove] failed', err);
-      btn.disabled = false; btn.textContent = prev;
-      window.showNotification?.('Could not remove item', 'error');
-      return;
     }
-    SECTIONS.forEach(updateCount);
   });
   
   // Expose updateCount if it's scoped
