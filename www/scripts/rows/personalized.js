@@ -24,15 +24,15 @@
     // Get username from appData settings
     const username = (window.appData && window.appData.settings && window.appData.settings.username) || 'Your';
     
-    // Get row type display name
+    // Get row type display name using translation system
     let typeDisplay = '';
     if (rowType) {
-      // Map row types to display names
+      // Map row types to translation keys
       const typeMap = {
-        'anime': 'anime',
-        'horror': 'horror', 
+        'anime': 'your_anime_suggestions',
+        'horror': 'your_horror_suggestions', 
         'trending': 'trending',
-        'staff_picks': 'staff picks',
+        'staff_picks': 'staff_picks',
         'comedy': 'comedy',
         'action': 'action',
         'drama': 'drama',
@@ -40,13 +40,15 @@
         'romance': 'romance',
         'thriller': 'thriller'
       };
-      typeDisplay = typeMap[rowType] || rowType;
+      
+      const translationKey = typeMap[rowType] || 'your_suggestions';
+      typeDisplay = (typeof window.t === 'function') ? window.t(translationKey) : `${username}'s ${rowType} suggestions`;
     } else {
-      typeDisplay = 'suggestions';
+      typeDisplay = (typeof window.t === 'function') ? window.t('your_suggestions') : `${username}'s suggestions`;
     }
     
-    // Format: "Username's type suggestions" or "Username's suggestions" for ghost rows
-    return `${username}'s ${typeDisplay} suggestions`;
+    // Return the translated display name
+    return typeDisplay;
   }
 
   /**
@@ -225,7 +227,8 @@
   function createCardV2(item) {
     const title = item.title || item.name || 'Unknown Title';
     const year = item.release_date?.slice(0, 4) || item.first_air_date?.slice(0, 4) || '';
-    const posterUrl = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
+    const posterUrl = window.getPosterUrl ? window.getPosterUrl(item, 'w200') : 
+      (item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '');
     const rating = item.vote_average || 0;
 
     return window.Card({
@@ -261,15 +264,19 @@
     const year = item.release_date?.slice(0, 4) || item.first_air_date?.slice(0, 4) || '';
     const posterUrl = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
     
+    // Generate srcset for responsive images
+    const srcset = item.poster_path && typeof window.tmdbSrcset === 'function' ? 
+      window.tmdbSrcset(item.poster_path) : '';
+    
     card.innerHTML = `
       <div class="card__poster" onclick="openDetails(${item.id})">
-        ${posterUrl ? `<img src="${posterUrl}" alt="${title}" loading="lazy">` : '<div class="card__placeholder">📺</div>'}
+        ${posterUrl ? `<img src="${posterUrl}" ${srcset ? `srcset="${srcset}"` : ''} sizes="(max-width: 480px) 148px, 200px" alt="${title}" loading="lazy">` : '<div class="card__placeholder">📺</div>'}
       </div>
       <div class="card__content">
         <h3 class="card__title" onclick="openDetails(${item.id})">${title}</h3>
         <p class="card__subtitle">${year}</p>
         <div class="card__actions">
-          <button class="btn btn-sm btn-primary" onclick="addToList(${item.id})">
+          <button class="btn btn-sm btn-primary" data-action="add" data-id="${item.id}" data-list="watching">
             ${window.t ? window.t('common.add') : 'Add'}
           </button>
         </div>
@@ -319,12 +326,24 @@
    */
   function openDetails(item) {
     try {
-      if (window.openDetails) {
-        window.openDetails(item);
-      } else if (window.showDetails) {
-        window.showDetails(item);
+      console.log('🔗 Card v2 openDetails called:', item);
+      
+      // Extract media type and ID for TMDB link
+      const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+      const id = item.id || item.tmdb_id || item.tmdbId;
+      
+      if (!id) {
+        console.error('❌ No ID found for item:', item);
+        return;
+      }
+      
+      // Use our enhanced openTMDBLink function
+      if (typeof window.openTMDBLink === 'function') {
+        console.log('🔗 Calling openTMDBLink from Card v2:', { id, mediaType });
+        window.openTMDBLink(id, mediaType);
       } else {
-        console.warn('No openDetails function available');
+        console.warn('⚠️ openTMDBLink function not available, falling back to window.open');
+        window.open(`https://www.themoviedb.org/${mediaType}/${id}`, "_blank");
       }
     } catch (error) {
       console.error('❌ Failed to open details:', error);

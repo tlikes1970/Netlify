@@ -264,6 +264,12 @@ class LanguageManager {
             console.log('🔄 Dispatching curated:rerender event');
             document.dispatchEvent(new CustomEvent('curated:rerender'));
           }
+          
+          // Update personalized section
+          if (document.dispatchEvent) {
+            console.log('🔄 Dispatching personalized:updated event');
+            document.dispatchEvent(new CustomEvent('personalized:updated', { detail: { language: lang } }));
+          }
         }, 100);
       }).catch(error => {
         console.error('🔄 Re-seeding failed:', error);
@@ -277,6 +283,12 @@ class LanguageManager {
           if (document.dispatchEvent) {
             console.log('🔄 Dispatching curated:rerender event (fallback)');
             document.dispatchEvent(new CustomEvent('curated:rerender'));
+          }
+          
+          // Update personalized section (fallback)
+          if (document.dispatchEvent) {
+            console.log('🔄 Dispatching personalized:updated event (fallback)');
+            document.dispatchEvent(new CustomEvent('personalized:updated', { detail: { language: lang } }));
           }
         }, 100);
       });
@@ -380,7 +392,7 @@ class LanguageManager {
         }, 100);
       } else {
         // No search query, just show the language change message
-        searchResults.innerHTML = `<div style="text-align: center; padding: 20px; color: #666;">
+        searchResults.innerHTML = `<div style="text-align: center; padding: 20px;" class="u-fg">
           <p>${t("search_results_cleared", lang)}</p>
           <p>${t("please_search_again", lang)}</p>
         </div>`;

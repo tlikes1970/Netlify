@@ -20,13 +20,14 @@ window.FLAGS = Object.assign({
             playlistsEnabled: false,                    // curated spotlight video (disabled)
           playlistsProEnabled: true,                  // curated rows (PRO)
           triviaEnabled: true,                        // per-card trivia chips
-          flickwordBoostEnabled: true,                // FlickFact panel on Home
+          flickwordBoostEnabled: false,               // FlickFact panel on Home (disabled)
           seriesOrganizerEnabled: true,               // card declutter (progressive disclosure)
           homeRowCurrentlyWatching: true,             // Currently Watching Preview row
           homeRowNextUp: true,                        // Next Up This Week row
           homeRowSpotlight: true,                     // Community Spotlight row
           homeRowPlayAlong: true,                     // Play Along row (Trivia & FlickWord)
           homeRowFeedback: true,                      // Feedback Tile row
+          communityPlayer: true,                      // Community player placeholder
 }, window.FLAGS || {});
 
 window.guard = (cond, fn) => { 

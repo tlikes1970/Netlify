@@ -2,14 +2,14 @@
       /* ============== bootstrap ============== */
       
       // Set up click event listener immediately (not inside DOMContentLoaded)
-      console.log('🔧 Setting up click event listener in inline-script-03.js');
+      FlickletDebug.info('🔧 Setting up click event listener in inline-script-03.js');
       
       // Debug: Check if settings tabs exist
       setTimeout(() => {
         const settingsTabs = document.querySelectorAll('.settings-tabs button');
-        console.log('🔧 Settings tabs found on page load:', settingsTabs.length);
+        FlickletDebug.info('🔧 Settings tabs found on page load:', settingsTabs.length);
         settingsTabs.forEach((tab, index) => {
-          console.log(`🔧 Tab ${index}:`, tab.textContent, 'classes:', tab.className);
+          FlickletDebug.info(`🔧 Tab ${index}:`, tab.textContent, 'classes:', tab.className);
         });
       }, 1000);
       document.addEventListener("click", (e) => {
@@ -24,35 +24,44 @@
           });
         }
         
-        console.log('🔧 Click event detected on:', e.target, 'tagName:', e.target.tagName);
-        console.log('🔧 Click target classes:', e.target.className);
-        console.log('🔧 Click target parent classes:', e.target.parentElement?.className);
-        console.log('🔧 Click target parent parent classes:', e.target.parentElement?.parentElement?.className);
-        console.log('🔧 Is settings tab button?', e.target.closest('.settings-tabs button'));
-        console.log('🔧 All settings tabs found:', document.querySelectorAll('.settings-tabs button').length);
+        FlickletDebug.info('🔧 Click event detected on:', e.target, 'tagName:', e.target.tagName);
+        FlickletDebug.info('🔧 Click target classes:', e.target.className);
+        FlickletDebug.info('🔧 Click target parent classes:', e.target.parentElement?.className);
+        FlickletDebug.info('🔧 Click target parent parent classes:', e.target.parentElement?.parentElement?.className);
+        FlickletDebug.info('🔧 Is settings tab button?', e.target.closest('.settings-tabs button'));
+        FlickletDebug.info('🔧 All settings tabs found:', document.querySelectorAll('.settings-tabs button').length);
         
         // Handle dark mode button specifically
-        if (e.target.id === 'themeIcon' || e.target.id === 'darkModeToggle') {
-          console.log('🌙 Dark mode button clicked via event delegation');
+        if (e.target.id === 'themeIcon' || e.target.id === 'darkModeToggle' || e.target.id === 'themeToggleBtn' || e.target.id === 'themeToggleIcon' || e.target.id === 'themeToggleText') {
+          FlickletDebug.info('🌙 Theme toggle button clicked via event delegation');
           e.preventDefault();
           e.stopPropagation();
 
           // Toggle dark mode directly
-          document.body.classList.toggle("dark-mode");
+          const isDark = document.body.classList.toggle("dark-mode");
           
           // Update app data
           if (window.appData?.settings) {
-            appData.settings.theme = document.body.classList.contains("dark-mode") ? "dark" : "light";
+            appData.settings.theme = isDark ? "dark" : "light";
             if (typeof saveAppData === 'function') {
               saveAppData();
             }
           }
           
-          // Update button icon
+          // Update FAB theme icon
           const themeIcon = document.getElementById('themeIcon');
           if (themeIcon) {
-            const isDark = document.body.classList.contains("dark-mode");
             themeIcon.textContent = isDark ? '☀️' : '🌙';
+          }
+          
+          // Update settings theme toggle button
+          const themeToggleIcon = document.getElementById('themeToggleIcon');
+          const themeToggleText = document.getElementById('themeToggleText');
+          if (themeToggleIcon) {
+            themeToggleIcon.textContent = isDark ? '☀️' : '🌙';
+          }
+          if (themeToggleText) {
+            themeToggleText.textContent = isDark ? 'Light Mode' : 'Dark Mode';
           }
           
           // Show notification
@@ -61,13 +70,13 @@
             showNotification(`Switched to ${isDark ? 'dark' : 'light'} mode`, 'success');
           }
           
-          console.log('✅ Dark mode toggled successfully via event delegation');
+          FlickletDebug.info('✅ Dark mode toggled successfully via event delegation');
           return;
         }
 
         // Handle Mardi Gras button specifically
         if (e.target.id === 'mardiToggle') {
-          console.log('🎭 Mardi Gras button clicked via event delegation');
+          FlickletDebug.info('🎭 Mardi Gras button clicked via event delegation');
           e.preventDefault();
           e.stopPropagation();
 
@@ -90,9 +99,9 @@
               showNotification(`Mardi Gras mode ${isMardiGras ? 'enabled' : 'disabled'}`, 'success');
             }
             
-            console.log('✅ Mardi Gras toggled successfully via event delegation');
+            FlickletDebug.info('✅ Mardi Gras toggled successfully via event delegation');
           } else {
-            console.error('❌ appRoot element not found for Mardi Gras toggle');
+            FlickletDebug.error('❌ appRoot element not found for Mardi Gras toggle');
           }
           return;
         }
@@ -100,13 +109,13 @@
         // Handle settings tab buttons specifically
         if (e.target.closest('.settings-tabs button')) {
           const btn = e.target.closest('.settings-tabs button');
-          console.log('⚙️ Settings tab clicked via event delegation:', btn.textContent, 'target:', btn.dataset.target);
+          FlickletDebug.info('⚙️ Settings tab clicked via event delegation:', btn.textContent, 'target:', btn.dataset.target);
           e.preventDefault();
           e.stopPropagation();
 
           // Update active states
           const tabs = document.querySelectorAll('.settings-tabs button');
-          console.log('⚙️ Found tabs:', tabs.length);
+          FlickletDebug.info('⚙️ Found tabs:', tabs.length);
           tabs.forEach(b => { 
             b.classList.remove('active'); 
             b.setAttribute('aria-selected','false'); 
@@ -116,14 +125,14 @@
           
           // Show/hide sections
           const allSections = document.querySelectorAll('.settings-section');
-          console.log('⚙️ Found sections:', allSections.length);
+          FlickletDebug.info('⚙️ Found sections:', allSections.length);
           allSections.forEach(section => {
             section.classList.remove('active');
-            console.log('⚙️ Hiding section:', section.id);
+            FlickletDebug.info('⚙️ Hiding section:', section.id);
           });
           
           const target = document.querySelector(btn.dataset.target);
-          console.log('⚙️ Target element:', target, 'for selector:', btn.dataset.target);
+          FlickletDebug.info('⚙️ Target element:', target, 'for selector:', btn.dataset.target);
           if(target) {
             target.classList.add('active');
             console.log('⚙️ Showing section:', btn.dataset.target);
@@ -140,6 +149,12 @@
         }
         
         console.log('🔧 Found data-action element:', btn.dataset.action);
+        console.log('🔧 Button element details:', {
+          id: btn.id,
+          className: btn.className,
+          textContent: btn.textContent?.trim(),
+          dataset: btn.dataset
+        });
         
         // Handle episode tracking action
         if (btn.dataset.action === "track-episodes") {
@@ -164,6 +179,30 @@
           return;
         }
         
+        // Handle share lists action
+        if (btn.dataset.action === "share-lists") {
+          e.preventDefault();
+          e.stopPropagation(); // Prevent other handlers from running
+          console.log('🔗 Opening share selection modal from inline-script-03.js');
+          console.log('🔗 Button element:', btn);
+          console.log('🔗 Button ID:', btn.id);
+          console.log('🔗 Button classes:', btn.className);
+          
+          if (typeof window.openShareSelectionModal === 'function') {
+            try {
+              console.log('🔗 Calling openShareSelectionModal with event:', e);
+              window.openShareSelectionModal(e);
+              console.log('🔗 Share modal function called successfully');
+            } catch (error) {
+              console.error('🔗 Error calling share modal:', error);
+            }
+          } else {
+            console.warn('🔗 Share modal function not available');
+            console.log('🔗 Available functions:', Object.keys(window).filter(k => k.includes('share')));
+          }
+          return;
+        }
+        
         const action = btn.getAttribute("data-action");
         const id = Number(btn.getAttribute("data-id"));
         const mediaType = btn.getAttribute("data-media-type");
@@ -182,6 +221,7 @@
         } else if (action === "dislike") {
           setLikeStatus(id, "dislike");
         } else if (action === "open") {
+          console.log('🔗 Poster button clicked:', { id, mediaType, button: btn });
           openTMDBLink(id, mediaType);
         } else if (action === "toggle-menu") {
           // Toggle 3-dots menu
@@ -257,10 +297,26 @@
       }, true); // Use capture phase
       
       document.addEventListener("DOMContentLoaded", () => {
+        console.log('🔧 DOMContentLoaded - FABs should be visible now');
         // Use centralized initialization if available
         if (window.FlickletApp && typeof window.FlickletApp.init === 'function') {
           console.log('🚀 Using centralized FlickletApp initialization');
           window.FlickletApp.init(); // <-- CALL IT HERE
+          
+          // Initialize FAB docking system
+          if (typeof window.FlickletApp.dockFABsToActiveTab === 'function') {
+            console.log('🔧 Initializing FAB docking system');
+            window.FlickletApp.dockFABsToActiveTab();
+            
+            // Also try to manually trigger it after a short delay
+            setTimeout(() => {
+              console.log('🔧 Manual FAB docking trigger');
+              if (window.reDockFABs) {
+                window.reDockFABs();
+              }
+            }, 1000);
+          }
+          
           return;
         }
 

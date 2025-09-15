@@ -35,11 +35,8 @@
       searchSection.style.display = 'none';
     }
 
-    // Show home content
-    const homeSection = document.getElementById('homeSection');
-    if (homeSection) {
-      homeSection.style.display = 'block';
-    }
+    // Home content visibility is now handled by the tab switching system
+    // No need to force display here
 
     // Update URL without page reload
     if (history.pushState) {

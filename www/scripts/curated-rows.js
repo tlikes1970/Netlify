@@ -2,6 +2,29 @@
    Renders multiple curated rows from config.
    Expects items with { id, title, posterPath }. Map your data if needed.
 */
+
+// Export init function for idle import
+export function init() {
+  let mount = document.getElementById('curatedSections');
+  if (!mount) {
+    // Wait for element to be created by V2 system
+    const checkForMount = () => {
+      mount = document.getElementById('curatedSections');
+      if (mount) {
+        console.log('🎯 Curated sections element found, initializing');
+        initializeCurated();
+      } else {
+        setTimeout(checkForMount, 100);
+      }
+    };
+    checkForMount();
+    return;
+  }
+  
+  initializeCurated();
+}
+
+// Also support IIFE for backward compatibility
 (function(){
   let mount = document.getElementById('curatedSections');
   if (!mount) {
@@ -112,6 +135,17 @@
     return s.startsWith('http') ? s : `https://image.tmdb.org/t/p/${size}${s.startsWith('/')?'':'/'}${s}`;
   };
 
+  // Generate srcset for responsive images
+  const TMDB_SRCSET = (p) => {
+    if (!p) return '';
+    const s = String(p);
+    if (s.startsWith('http')) return '';
+    const path = s; // keep the leading '/'
+    const base = 'https://image.tmdb.org/t/p';
+    const joinTMDB = (size, p) => `${base}/w${size}${p}`;
+    return `${joinTMDB(200, path)} 200w, ${joinTMDB(300, path)} 300w, ${joinTMDB(342, path)} 342w, ${joinTMDB(500, path)} 500w`;
+  };
+
   function mapCuratedItem(raw){
     const id    = raw.id;
     const title = raw.title ?? raw.name ?? 'Untitled';
@@ -165,16 +199,21 @@
     // Fallback to legacy card
     const stars = m.rating ? `${'★'.repeat(Math.floor(m.rating))}${(m.rating%1>=0.5)?'☆':''}` : '';
     const votes = m.votes ? ` <span class="votes">(${m.votes})</span>` : '';
+    
+    // Generate srcset for responsive images
+    const rawPoster = item.posterPath ?? item.poster_path ?? item.backdrop_path ?? '';
+    const srcset = rawPoster ? TMDB_SRCSET(rawPoster) : '';
+    
     return `
       <article class="curated-card" data-id="${m.id}" data-title="${m.title}" ${m.rating?`data-rating="${m.rating}"`:''}>
         <div class="poster">
-          ${m.poster ? `<img src="${m.poster}" alt="${m.title} poster" loading="lazy">` : `<div class="poster placeholder" aria-hidden="true"></div>`}
+          ${m.poster ? `<img src="${m.poster}" ${srcset ? `srcset="${srcset}"` : ''} sizes="(max-width: 480px) 148px, 200px" alt="${m.title} poster" loading="lazy" decoding="async" fetchpriority="low">` : `<div class="poster placeholder" aria-hidden="true"></div>`}
         </div>
         <h4 class="title">${m.title}</h4>
         <div class="card-meta">${m.rating?`<span class="stars" aria-label="Rating ${m.rating}/5">${stars}</span>`:''}${votes}</div>
         <div class="actions">
-          <button class="btn" data-action="wish">Wish</button>
-          <button class="btn" data-action="add">Add</button>
+          <button class="btn" data-action="add" data-id="${m.id}" data-list="wishlist">Wish</button>
+          <button class="btn" data-action="add" data-id="${m.id}" data-list="watching">Add</button>
           <button class="btn btn-ghost" data-action="not-interested">Not interested</button>
         </div>
       </article>`;

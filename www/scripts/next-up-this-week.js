@@ -6,6 +6,10 @@
  * Dependencies: tmdbGet function, appData, home page elements
  */
 
+// Retry counter to prevent infinite loops
+let nextUpRetryCount = 0;
+const MAX_RETRIES = 5;
+
 // Helper function to get next air date from TMDB
 async function fetchNextAirDate(showId) {
   try {
@@ -101,20 +105,18 @@ function formatNextLabel(epNumber, airDate) {
 
 // Get poster source using existing helper
 function getPosterSrc(item) {
-  console.log('📺 Getting poster for', item.name || item.title, 'poster_path:', item.poster_path);
   
   if (item.poster_path && item.poster_path !== 'null' && item.poster_path !== '') {
     // Clean up the poster path
     const cleanPath = item.poster_path.startsWith('/') ? item.poster_path : `/${item.poster_path}`;
-    return `https://image.tmdb.org/t/p/w500${cleanPath}`;
+    return `https://image.tmdb.org/t/p/w300${cleanPath}`; // Use w300 to match srcset
   }
   if (item.backdrop_path && item.backdrop_path !== 'null' && item.backdrop_path !== '') {
     // Clean up the backdrop path
     const cleanPath = item.backdrop_path.startsWith('/') ? item.backdrop_path : `/${item.backdrop_path}`;
-    return `https://image.tmdb.org/t/p/w500${cleanPath}`;
+    return `https://image.tmdb.org/t/p/w300${cleanPath}`; // Use w300 to match srcset
   }
   
-  console.log('📺 No valid poster/backdrop path for', item.name || item.title, 'using fallback');
   return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9Ijc1MCIgdmlld0JveD0iMCAwIDUwMCA3NTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MDAiIGhlaWdodD0iNzUwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0yNTAgMzAwSDI3NVY0NTBIMjUwVjMwMFoiIGZpbGw9IiNDQ0NDQ0MiLz4KPHBhdGggZD0iTTIwMCAzNzVIMzAwVjQwMEgyMDBWMzc1WiIgZmlsbD0iI0NDQ0NDQyIvPgo8L3N2Zz4K';
 }
 
@@ -206,16 +208,22 @@ async function renderNextUpRow() {
     section.style.display = 'none';
     
     // If we found 0 watching items, retry after a delay (like Currently Watching does)
-    if (watchingItems.length === 0) {
-      console.log('📺 No watching items found, will retry in 2 seconds...');
+    if (watchingItems.length === 0 && nextUpRetryCount < MAX_RETRIES) {
+      nextUpRetryCount++;
+      console.log(`📺 No watching items found, will retry in 2 seconds... (attempt ${nextUpRetryCount}/${MAX_RETRIES})`);
       setTimeout(() => {
         console.log('🔄 Retrying Next Up This Week after delay...');
         renderNextUpRow();
       }, 2000);
+    } else if (nextUpRetryCount >= MAX_RETRIES) {
+      console.log('📺 Max retries reached, stopping Next Up This Week retries');
     }
     return;
   }
 
+  // Reset retry counter on success
+  nextUpRetryCount = 0;
+  
   // Show section and populate
   section.style.display = 'block';
   inner.innerHTML = '';
@@ -224,27 +232,28 @@ async function renderNextUpRow() {
     const imgSrc = getPosterSrc(item);
     const label = formatNextLabel(null, airDate);
 
+    // Generate srcset for responsive images
+    const srcset = (item.poster_path || item.backdrop_path) && typeof window.tmdbSrcset === 'function' ? 
+      window.tmdbSrcset(item.poster_path || item.backdrop_path) : '';
+
     const tile = document.createElement('div');
     tile.className = 'tile';
     tile.style.cursor = 'pointer';
 
     tile.innerHTML = `
       <div class="media">
-        <img alt="${item.name || item.title || 'Unknown Title'}" loading="lazy">
+        <img src="${imgSrc}" alt="${item.name || item.title || 'Unknown Title'}" loading="lazy" ${srcset ? `srcset="${srcset}"` : ''} sizes="(max-width: 480px) 148px, 200px">
       </div>
       <div class="meta">${label}</div>
     `;
 
     const img = tile.querySelector('img');
-    img.src = imgSrc;
-    img.onerror = () => {
-      console.log('📺 Image failed to load for', item.name || item.title, 'using fallback');
-      img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9Ijc1MCIgdmlld0JveD0iMCAwIDUwMCA3NTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MDAiIGhlaWdodD0iNzUwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0yNTAgMzAwSDI3NVY0NTBIMjUwVjMwMFoiIGZpbGw9IiNDQ0NDQ0MiLz4KPHBhdGggZD0iTTIwMCAzNzVIMzAwVjQwMEgyMDBWMzc1WiIgZmlsbD0iI0NDQ0NDQyIvPgo8L3N2Zz4K';
-    };
     
-    // Also add a loading state
-    img.onload = () => {
-      console.log('📺 Image loaded successfully for', item.name || item.title);
+    img.onerror = () => {
+      // Remove srcset and sizes on error, use data URI fallback to prevent infinite loop
+      img.removeAttribute('srcset');
+      img.removeAttribute('sizes');
+      img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgdmlld0JveD0iMCAwIDMwMCA0NTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0xNTAgMjI1SDE2NVYzMzc1SDE1MFYyMjVaIiBmaWxsPSIjQ0NDQ0NDIi8+CjxwYXRoIGQ9Ik0xMjAgMjgxSDE4MFYzMDBIMTIwVjI4MVoiIGZpbGw9IiNDQ0NDQ0MiLz4KPC9zdmc+Cg==';
     };
 
     tile.addEventListener('click', () => openShowDetail(item));

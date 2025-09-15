@@ -9,21 +9,45 @@
 
   console.log('🎬 Currently Watching Preview script loaded');
   
+  // Import TMDB image utilities
+  let getPosterUrl, isValidPosterUrl;
+  if (typeof window.getPosterUrl === 'function') {
+    getPosterUrl = window.getPosterUrl;
+    isValidPosterUrl = window.isValidPosterUrl;
+  } else {
+    // Fallback implementation if utility not loaded
+    getPosterUrl = function(itemOrPath, size = 'w200') {
+      const path = typeof itemOrPath === 'string' 
+        ? itemOrPath 
+        : (itemOrPath?.poster_src || itemOrPath?.poster_path || '');
+      if (!path) return '/assets/img/poster-placeholder.png';
+      if (/^https?:\/\//i.test(path)) return path;
+      return `https://image.tmdb.org/t/p/${size}/${path.replace(/^\/+/, '')}`;
+    };
+    isValidPosterUrl = function(url) {
+      return url && (url.startsWith('http') || url.startsWith('/assets'));
+    };
+  }
+  
   // Defensive guard for Card v2
   const USE_CARD_V2 = !!(window.FLAGS && window.FLAGS.cards_v2 && window.Card);
 
   // Feature flag check
+  console.log('🎬 Checking feature flag:', { FLAGS: window.FLAGS, homeRowCurrentlyWatching: window.FLAGS?.homeRowCurrentlyWatching });
   if (!window.FLAGS?.homeRowCurrentlyWatching) {
     console.log('🚫 Currently Watching Preview disabled by feature flag');
     return;
   }
 
   let isInitialized = false;
+  let retryCount = 0;
+  const MAX_RETRIES = 5;
 
   /**
    * Initialize the Currently Watching Preview row
    */
   function initCurrentlyWatchingPreview() {
+    console.log('🎬 initCurrentlyWatchingPreview called, isInitialized:', isInitialized);
     if (isInitialized) {
       console.log('⚠️ Currently Watching Preview already initialized');
       return;
@@ -143,11 +167,12 @@
    * Render the Currently Watching Preview row
    */
   function renderCurrentlyWatchingPreview() {
+    console.log('🎬 renderCurrentlyWatchingPreview called');
     const previewSection = document.getElementById('currentlyWatchingPreview');
     const scrollContainer = document.getElementById('currentlyWatchingScroll');
     
     if (!previewSection || !scrollContainer) {
-      console.error('❌ Preview elements not found');
+      console.error('❌ Preview elements not found', { previewSection: !!previewSection, scrollContainer: !!scrollContainer });
       return;
     }
 
@@ -156,10 +181,52 @@
 
     // Get currently watching items
     const watchingItems = getCurrentlyWatchingItems();
+    console.log('🎬 Retrieved watching items:', watchingItems);
     
     if (!watchingItems || watchingItems.length === 0) {
-      console.log('📭 No items currently watching, hiding preview row');
-      previewSection.style.display = 'none';
+      // Only show test data if no Firebase data is present and we haven't exceeded retry limit
+      const hasFirebaseData = window.appData && (window.appData.tv || window.appData.movies);
+      const shouldShowTestData = !hasFirebaseData && retryCount < MAX_RETRIES;
+      
+      if (shouldShowTestData) {
+        console.log('📭 No items currently watching, showing test data for layout verification');
+        
+        // Show test data to verify layout is working
+        const testItems = [
+          { id: 'test1', title: 'Test Show 1', mediaType: 'tv', poster_path: null },
+          { id: 'test2', title: 'Test Show 2', mediaType: 'tv', poster_path: null },
+          { id: 'test3', title: 'Test Show 3', mediaType: 'tv', poster_path: null }
+        ];
+        
+        console.log('🎬 Rendering test data for layout verification');
+        previewSection.style.display = 'block';
+        scrollContainer.innerHTML = '';
+        
+        testItems.forEach(item => {
+          const card = createPreviewCard(item);
+          scrollContainer.appendChild(card);
+        });
+        
+        // Set up a retry for real data (only once to prevent infinite loops)
+        if (!window._currentlyWatchingRetryScheduled && retryCount < MAX_RETRIES) {
+          window._currentlyWatchingRetryScheduled = true;
+          setTimeout(() => {
+            const retryItems = getCurrentlyWatchingItems();
+            if (retryItems && retryItems.length > 0) {
+              console.log('🎬 Found real items on retry, replacing test data...');
+              // Clear container before rendering real data
+              scrollContainer.innerHTML = '';
+              renderCurrentlyWatchingPreview();
+            }
+            window._currentlyWatchingRetryScheduled = false; // Reset for future use
+          }, 3000);
+        }
+      } else {
+        // Hide section if no data and no test mode
+        console.log('📭 No items currently watching, hiding section');
+        previewSection.style.display = 'none';
+        scrollContainer.innerHTML = '';
+      }
       return;
     }
 
@@ -177,6 +244,37 @@
       const card = createPreviewCard(item);
       scrollContainer.appendChild(card);
     });
+    
+    // Post-render validation: check that all poster URLs are properly formatted
+    validatePosterUrls();
+  }
+  
+  /**
+   * Validate that all poster URLs in the currently watching preview are properly formatted
+   */
+  function validatePosterUrls() {
+    const previewImages = document.querySelectorAll('#currentlyWatchingPreview img');
+    const invalidUrls = [];
+    
+    previewImages.forEach((img, index) => {
+      const src = img.src;
+      const itemId = img.closest('.preview-card')?.dataset?.itemId || `item-${index}`;
+      
+      if (!isValidPosterUrl(src)) {
+        invalidUrls.push({ itemId, src });
+        console.error(`❌ Invalid poster URL for item ${itemId}:`, src);
+      } else {
+        console.log(`✅ Valid poster URL for item ${itemId}:`, src);
+      }
+    });
+    
+    if (invalidUrls.length > 0) {
+      console.error('❌ Found invalid poster URLs:', invalidUrls);
+    } else {
+      console.log('✅ All poster URLs are properly formatted');
+    }
+    
+    return invalidUrls.length === 0;
   }
 
   /**
@@ -198,14 +296,17 @@
    * Get currently watching items from app data
    */
   function getCurrentlyWatchingItems() {
-    console.log('🔍 Debug: Checking appData...', {
-      appData: !!window.appData,
-      appDataKeys: window.appData ? Object.keys(window.appData) : 'N/A',
-      tv: window.appData?.tv,
-      movies: window.appData?.movies,
-      tvWatching: window.appData?.tv?.watching,
-      moviesWatching: window.appData?.movies?.watching
-    });
+    console.log('🔍 getCurrentlyWatchingItems called');
+    
+    // Check if data is being loaded but not yet available
+    if (window.appData?.tv?.watching && window.appData.tv.watching.length === 0) {
+      console.log('🔍 TV watching array exists but is empty. Checking if data is still loading...');
+      // Check if there's a loading indicator or if we should wait longer
+      const hasLoadingIndicator = document.querySelector('.skeleton, .loading, [data-loading]');
+      if (hasLoadingIndicator) {
+        console.log('🔍 Loading indicator found, data might still be loading');
+      }
+    }
 
     if (!window.appData) {
       console.warn('⚠️ appData not available');
@@ -217,10 +318,14 @@
     // Get TV shows
     if (window.appData.tv?.watching) {
       console.log('📺 Found TV watching items:', window.appData.tv.watching.length);
-      watchingItems.push(...window.appData.tv.watching.map(item => ({
-        ...item,
-        mediaType: 'tv'
-      })));
+      console.log('📺 TV watching items data:', window.appData.tv.watching);
+      watchingItems.push(...window.appData.tv.watching.map(item => {
+        console.log('📺 Processing TV item:', item);
+        return {
+          ...item,
+          mediaType: 'tv'
+        };
+      }));
     } else {
       console.log('📺 No TV watching items found');
     }
@@ -295,17 +400,26 @@
           
           if (domItems.length > 0) {
             console.log('✅ Found items via DOM extraction:', domItems.length);
+            
+            // Note: DOM extraction is only used as fallback for display purposes
+            // The actual data should come from appData which is loaded from Firebase
+            
             return domItems;
           }
         }
       }
       
-      // Try waiting a bit more and checking again
-      console.log('🔍 No items found, will retry in 2 seconds...');
-      setTimeout(() => {
-        console.log('🔄 Retrying Currently Watching Preview after delay...');
-        renderCurrentlyWatchingPreview();
-      }, 2000);
+      // Try waiting a bit more and checking again (with retry limit)
+      if (retryCount < MAX_RETRIES) {
+        retryCount++;
+        console.log(`🔍 No items found, will retry in 2 seconds... (attempt ${retryCount}/${MAX_RETRIES})`);
+        setTimeout(() => {
+          console.log('🔄 Retrying Currently Watching Preview after delay...');
+          renderCurrentlyWatchingPreview();
+        }, 2000);
+      } else {
+        console.log('❌ Max retries reached, stopping retry loop');
+      }
     }
     
     return watchingItems;
@@ -315,15 +429,14 @@
    * Create a preview card element
    */
   function createPreviewCard(item) {
+    console.log('🎬 createPreviewCard called with item:', item);
+    
     // Use new Card component if enabled
     if (USE_CARD_V2) {
       const title = item.title || item.name || 'Unknown Title';
       
-      // Try to use full URL first, then construct from poster_path
-      let posterUrl = item.poster_src || item.poster;
-      if (!posterUrl && item.poster_path) {
-        posterUrl = `https://image.tmdb.org/t/p/w200${item.poster_path}`;
-      }
+      // Use consistent poster URL handling
+      const posterUrl = getPosterUrl(item, 'w200');
       
       // Extract year from various possible sources
       const year = item.release_date ? new Date(item.release_date).getFullYear() : 
@@ -366,13 +479,22 @@
           }
         ],
         onOpenDetails: () => {
-          // Handle opening details
-          console.log('Open details for:', title);
+          console.log('🔗 Currently watching Card v2 openDetails called:', item);
+          const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+          const id = item.id || item.tmdb_id || item.tmdbId;
+          
+          if (id && typeof window.openTMDBLink === 'function') {
+            console.log('🔗 Calling openTMDBLink from currently watching Card v2:', { id, mediaType });
+            window.openTMDBLink(id, mediaType);
+          } else {
+            console.warn('⚠️ openTMDBLink function not available or no ID found');
+          }
         }
       });
     }
     
     // Fallback to legacy card
+    console.log('🎬 Creating legacy card for item:', item);
     const card = document.createElement('div');
     card.className = 'preview-card';
     card.dataset.itemId = item.id;
@@ -380,13 +502,14 @@
 
     const title = item.title || item.name || 'Unknown Title';
     
-    // Try to use full URL first, then construct from poster_path
-    let posterUrl = item.poster_src || item.poster;
-    if (!posterUrl && item.poster_path) {
-      posterUrl = `https://image.tmdb.org/t/p/w200${item.poster_path}`;
-    }
+    // Use consistent poster URL handling
+    const posterUrl = getPosterUrl(item, 'w200');
     
     console.log('🖼️ Poster URL for', title, ':', posterUrl);
+    
+    // Generate srcset for responsive images
+    const srcset = (item.poster_path || item.poster_src) && typeof window.tmdbSrcset === 'function' ? 
+      window.tmdbSrcset(item.poster_path || item.poster_src) : '';
     
     // Extract year from various possible sources
     const year = item.release_date ? new Date(item.release_date).getFullYear() : 
@@ -401,7 +524,7 @@
       </div>
       <div class="preview-card-poster">
         ${posterUrl ? 
-          `<img src="${posterUrl}" alt="${title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+          `<img src="${posterUrl}" ${srcset ? `srcset="${srcset}"` : ''} sizes="(max-width: 480px) 148px, 200px" alt="${title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
           ''
         }
         <div class="preview-card-poster-placeholder" style="display: ${posterUrl ? 'none' : 'flex'}; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 2rem;">🎬</div>
@@ -426,15 +549,26 @@
     initCurrentlyWatchingPreview();
   }
 
-  // Also initialize after delays to ensure other scripts are loaded
+  // Also initialize after a single delay to ensure other scripts are loaded
   setTimeout(initCurrentlyWatchingPreview, 1000);
-  setTimeout(initCurrentlyWatchingPreview, 3000); // Retry after 3 seconds
-  setTimeout(initCurrentlyWatchingPreview, 5000); // Final retry after 5 seconds
-  setTimeout(initCurrentlyWatchingPreview, 10000); // Final retry after 10 seconds
 
   // Listen for Firebase data loaded events
-  document.addEventListener('firebaseDataLoaded', initCurrentlyWatchingPreview);
-  document.addEventListener('userDataLoaded', initCurrentlyWatchingPreview);
+  document.addEventListener('firebaseDataLoaded', () => {
+    console.log('🎬 Firebase data loaded event received');
+    console.log('🎬 Checking appData after firebaseDataLoaded:', {
+      tvWatching: window.appData?.tv?.watching?.length || 0,
+      moviesWatching: window.appData?.movies?.watching?.length || 0
+    });
+    initCurrentlyWatchingPreview();
+  });
+  document.addEventListener('userDataLoaded', () => {
+    console.log('🎬 User data loaded event received');
+    console.log('🎬 Checking appData after userDataLoaded:', {
+      tvWatching: window.appData?.tv?.watching?.length || 0,
+      moviesWatching: window.appData?.movies?.watching?.length || 0
+    });
+    initCurrentlyWatchingPreview();
+  });
   
   // Listen for tab switches to watching tab (indicates data is loaded)
   document.addEventListener('tabSwitched', (event) => {
@@ -461,6 +595,39 @@
     console.log('2. appData.movies.watching:', window.appData?.movies?.watching);
     console.log('3. Watching tab DOM:', document.getElementById('watchingList')?.innerHTML);
     console.log('4. All appData keys:', Object.keys(window.appData || {}));
+  };
+  
+  // Expose function to manually trigger Currently Watching Preview
+  window.triggerCurrentlyWatchingPreview = function() {
+    console.log('🎬 Manually triggering Currently Watching Preview...');
+    retryCount = 0; // Reset retry count
+    renderCurrentlyWatchingPreview();
+  };
+  
+  // Expose function to check data loading status
+  window.checkDataLoadingStatus = function() {
+    console.log('🔍 Data Loading Status Check:');
+    console.log('1. appData exists:', !!window.appData);
+    console.log('2. appData.tv exists:', !!window.appData?.tv);
+    console.log('3. appData.tv.watching exists:', !!window.appData?.tv?.watching);
+    console.log('4. appData.tv.watching length:', window.appData?.tv?.watching?.length || 0);
+    console.log('5. appData.tv.watching content:', window.appData?.tv?.watching);
+    console.log('6. appData.movies.watching length:', window.appData?.movies?.watching?.length || 0);
+    console.log('7. appData.movies.watching content:', window.appData?.movies?.watching);
+    
+    // Check if there are any items in the main watching list DOM
+    const watchingList = document.getElementById('watchingList');
+    if (watchingList) {
+      const cards = watchingList.querySelectorAll('.show-card, .list-card');
+      console.log('8. DOM watchingList cards count:', cards.length);
+      if (cards.length > 0) {
+        console.log('9. First card data:', {
+          id: cards[0].dataset.id,
+          title: cards[0].querySelector('.show-title, .card-title')?.textContent,
+          poster: cards[0].querySelector('img')?.src
+        });
+      }
+    }
   };
 
 })();

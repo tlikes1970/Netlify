@@ -240,7 +240,11 @@ function closeGame(){
   if (window.parent && window.parent !== window) {
     window.parent.postMessage({ type: 'flickword:close' }, '*');
   } else {
-    window.close();
+    try {
+      window.close();
+    } catch (e) {
+      console.warn('Cannot close popup due to Cross-Origin-Opener-Policy:', e.message);
+    }
   }
 }
 

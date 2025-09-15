@@ -42,159 +42,76 @@
   // Mount My Library section
   function mountMyLibrary() {
     console.log('📚 Mounting My Library section');
-    const container = document.getElementById('homeSection');
-    if (!container) return;
-
-    // Create currently watching preview directly in homeSection
-    const cwPreview = document.createElement('section');
-    cwPreview.id = 'currentlyWatchingPreview';
-    cwPreview.className = 'home-preview-row cw-row';
-    cwPreview.setAttribute('aria-label', 'Currently Watching Preview');
-    cwPreview.innerHTML = `
-      <div class="preview-row-header">
-        <h3 class="preview-row-title">👁️ Currently Watching</h3>
-      </div>
-      <div class="preview-row-container">
-        <div class="preview-row-scroll" id="currentlyWatchingScroll">
-          <!-- Cards will be populated by JavaScript -->
-        </div>
-      </div>
-    `;
     
-    // Insert at the beginning of homeSection, before tab container
-    container.insertBefore(cwPreview, container.firstChild);
-
-    // Create next up row
-    const nextUpRow = document.createElement('section');
-    nextUpRow.id = 'next-up-row';
-    nextUpRow.className = 'home-section';
-    nextUpRow.setAttribute('data-feature', 'homeRowNextUp');
-    nextUpRow.innerHTML = `
-      <h2 class="section-title">Next Up This Week</h2>
-      <div class="next-up-scroll row-inner"><!-- tiles injected here --></div>
-    `;
+    // Initialize the currently watching preview if it exists
+    const cwPreview = document.getElementById('currentlyWatchingPreview');
+    if (cwPreview) {
+      console.log('📚 Found currently watching preview, making visible');
+      cwPreview.style.display = 'block';
+      
+      // Trigger the currently watching preview rendering
+      if (typeof window.renderCurrentlyWatchingPreview === 'function') {
+        console.log('📚 Triggering currently watching preview render');
+        window.renderCurrentlyWatchingPreview();
+      }
+    } else {
+      console.warn('📚 Currently watching preview not found');
+    }
     
-    // Insert after currently watching preview
-    cwPreview.insertAdjacentElement('afterend', nextUpRow);
+    // Initialize the next up row if it exists
+    const nextUpRow = document.getElementById('next-up-row');
+    if (nextUpRow) {
+      console.log('📚 Found next up row, making visible');
+      nextUpRow.style.display = 'block';
+      
+      // Trigger the next up row rendering
+      if (typeof window.renderNextUpRow === 'function') {
+        console.log('📚 Triggering next up this week render');
+        window.renderNextUpRow();
+      }
+    } else {
+      console.warn('📚 Next up row not found');
+    }
   }
 
   // Mount Community section
   function mountCommunity() {
     console.log('👥 Mounting Community section');
-    const container = document.getElementById('homeSection');
-    if (!container) return;
-
-    const sectionHTML = createSection(
-      'community',
-      'home.community',
-      'home.community_sub',
-      'section--community'
-    );
-    
-    // Insert at end of home section to maintain order
-    container.insertAdjacentHTML('beforeend', sectionHTML);
-
-    // Mount existing components into the section body
-    const sectionBody = document.getElementById('section-community-body');
-    if (sectionBody) {
-      // Create spotlight row
-      const spotlightRow = document.createElement('section');
-      spotlightRow.id = 'spotlight-row';
-      spotlightRow.className = 'home-section';
-      spotlightRow.setAttribute('data-feature', 'homeRowSpotlight');
-      spotlightRow.innerHTML = `
-        <h2 class="section-title">Community Spotlight</h2>
-        <div class="spotlight-grid">
-          <div class="spotlight-video">
-            <!-- Video content will be injected here -->
-          </div>
-          <div class="spotlight-info">
-            <h3 class="spotlight-title">Community Spotlight</h3>
-            <div class="spotlight-credit"></div>
-            <p class="spotlight-desc"></p>
-            <div class="spotlight-badges"></div>
-            <button id="spotlightSubmitBtn" class="btn btn-primary">Submit Your Video</button>
-          </div>
-        </div>
-      `;
-      sectionBody.appendChild(spotlightRow);
-
-      // Create community games container
-      const gamesContainer = document.createElement('div');
-      gamesContainer.className = 'community-games-container';
-      gamesContainer.innerHTML = `
-        <div class="community-games-grid">
-          <div class="game-box game-trivia">
-            <div class="game-header">
-              <h4 class="game-title">Daily Trivia</h4>
-            </div>
-            <div class="game-content">
-              <div class="game-stats" id="trivia-stats">
-                <div class="stat-item">
-                  <span class="stat-value" id="trivia-streak">0</span>
-                  <span class="stat-label">Streak</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-value" id="trivia-questions">10</span>
-                  <span class="stat-label">Questions</span>
-                </div>
-              </div>
-              <button class="game-play-btn" id="trivia-play-btn">Play Now</button>
-            </div>
-          </div>
-          
-          <div class="game-box game-flickword">
-            <div class="game-header">
-              <h4 class="game-title">FlickWord</h4>
-            </div>
-            <div class="game-content">
-              <div class="game-stats" id="flickword-stats">
-                <div class="stat-item">
-                  <span class="stat-value" id="flickword-streak">0</span>
-                  <span class="stat-label">Streak</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-value" id="flickword-best">-</span>
-                  <span class="stat-label">Best</span>
-                </div>
-              </div>
-              <button class="game-play-btn" id="flickword-play-btn">Play Now</button>
-            </div>
-          </div>
-        </div>
-      `;
-      sectionBody.appendChild(gamesContainer);
-      
-      // Initialize game functionality
-      initializeCommunityGames();
+    const container = document.getElementById('community-section');
+    if (!container) {
+      console.warn('👥 Community section container not found, skipping');
+      return;
     }
+
+    // The HTML structure is already in place, just ensure visibility
+    container.style.display = 'block';
+    
+    // Initialize the spotlight row if it exists
+    const spotlightRow = document.getElementById('spotlight-row');
+    if (spotlightRow) {
+      spotlightRow.style.display = 'block';
+    }
+    
+    // Initialize game functionality
+    initializeCommunityGames();
   }
 
   // Mount Curated section
   function mountCurated() {
     console.log('🎯 Mounting Curated section');
-    const container = document.getElementById('homeSection');
-    if (!container) return;
+    const container = document.getElementById('curated-section');
+    if (!container) {
+      console.warn('🎯 Curated section container not found, skipping');
+      return;
+    }
 
-    const sectionHTML = createSection(
-      'curated',
-      'home.curated',
-      'home.curated_sub'
-    );
+    // The HTML structure is already in place, just ensure visibility
+    container.style.display = 'block';
     
-    // Insert at end of home section to maintain order
-    container.insertAdjacentHTML('beforeend', sectionHTML);
-
-    // Mount existing components into the section body
-    const sectionBody = document.getElementById('section-curated-body');
-    if (sectionBody) {
-      // Create curated sections
-      const curatedSections = document.createElement('section');
-      curatedSections.id = 'curatedSections';
-      curatedSections.className = 'curated-sections';
-      curatedSections.setAttribute('aria-label', 'Curated lists');
-      curatedSections.innerHTML = `<!-- Populated by curated-rows.js -->`;
-      sectionBody.appendChild(curatedSections);
+    // Initialize the curated sections if they exist
+    const curatedSections = document.getElementById('curatedSections');
+    if (curatedSections) {
+      curatedSections.style.display = 'block';
       
       // Initialize curated content after element is created
       setTimeout(() => {
@@ -211,106 +128,107 @@
   // Mount Personalized section
   function mountPersonalized() {
     console.log('🎨 Mounting Personalized section');
-    const container = document.getElementById('homeSection');
+    const container = document.getElementById('personalized-section');
     if (!container) {
-      console.error('❌ Home section container not found');
+      console.warn('🎨 Personalized section container not found, skipping');
       return;
     }
-
-    const sectionHTML = createSection(
-      'personalized',
-      'home.personalized',
-      'home.personalized_sub'
-    );
     
-    // Insert at end of home section to maintain order
-    container.insertAdjacentHTML('beforeend', sectionHTML);
-    console.log('🎨 Personalized section inserted at beginning of home section');
-
-    // Mount existing components into the section body
-    const sectionBody = document.getElementById('section-personalized-body');
-    if (sectionBody) {
-      // Initialize personalized section with actual content
-      // Use setTimeout to ensure personalized scripts are loaded
-      setTimeout(() => {
-        if (window.mountPersonalizedSection) {
-          console.log('🎨 Initializing personalized section with content');
-          // Pass the section element, not the body element
-          const sectionElement = document.getElementById('section-personalized');
-          if (sectionElement) {
-            window.mountPersonalizedSection(sectionElement);
-          } else {
-            console.error('❌ Section element not found');
-          }
-        } else {
-          console.log('🎨 Personalized system not available, showing placeholder');
-          // Fallback placeholder if personalized system not available
-          const placeholder = document.createElement('div');
-          placeholder.className = 'personalized-placeholder';
-          placeholder.innerHTML = '<p>Personalized recommendations coming soon...</p>';
-          sectionBody.appendChild(placeholder);
-        }
-      }, 100);
+    // Convert the existing HTML structure to match what the script expects
+    if (container && !container.querySelector('.section__body')) {
+      console.log('🎨 Converting personalized section structure...');
+      const sectionContent = container.querySelector('.section-content');
+      if (sectionContent) {
+        sectionContent.className = 'section__body';
+        sectionContent.id = 'section-personalized-body';
+      }
+      
+      // Update the container to match expected structure
+      container.className = 'section';
+      container.id = 'section-personalized';
+      
+      const header = container.querySelector('.section-header');
+      if (header) {
+        header.className = 'section__header';
+      }
     }
+
+    // The HTML structure is already in place, just ensure visibility
+    container.style.display = 'block';
+    
+    // Initialize personalized section with actual content
+    // Use setTimeout to ensure personalized scripts are loaded
+    setTimeout(() => {
+      if (window.mountPersonalizedSection) {
+        console.log('🎨 Initializing personalized section with content');
+        window.mountPersonalizedSection(container);
+      } else {
+        console.log('🎨 Personalized system not available, showing placeholder');
+        // Fallback placeholder if personalized system not available
+        const content = document.getElementById('personalized-content');
+        if (content) {
+          content.innerHTML = '<p>Personalized recommendations coming soon...</p>';
+        }
+      }
+    }, 100);
   }
 
   // Mount Theaters section
   function mountTheaters() {
     console.log('🎬 Mounting Theaters section');
-    const container = document.getElementById('homeSection');
-    if (!container) return;
-
-    const sectionHTML = createSection(
-      'theaters',
-      'home.theaters',
-      'home.theaters_sub'
-    );
-    
-    // Insert at end of home section to maintain order
-    container.insertAdjacentHTML('beforeend', sectionHTML);
-
-    // Mount full theater functionality into the section body
-    const sectionBody = document.getElementById('section-theaters-body');
-    if (sectionBody) {
-      // Add the complete theater content from V1
-      sectionBody.innerHTML = `
-        <div class="theaters-container">
-          <div class="theaters-header">
-            <h3>🎬 Now Playing</h3>
-            <button class="btn secondary" id="refreshTheatersBtn">🔄 Refresh</button>
-          </div>
-          <div class="theaters-list" id="theatersList">
-            <div class="loading">Loading movies...</div>
-          </div>
-        </div>
-        
-        <div class="theaters-info">
-          <div class="theaters-meta">
-            <h3>Find Showtimes</h3>
-            <p>Click "Find Showtimes" to see showtimes at theaters near you</p>
-            <div class="location-info">
-              <span id="userLocation">📍 Getting your location...</span>
-            </div>
-          </div>
-          <div class="theaters-cta">
-            <button class="btn btn-primary" id="findShowtimesBtn">🎫 Find Showtimes</button>
-            <button class="btn secondary" id="refreshLocationBtn">📍 Update Location</button>
-          </div>
-          <div class="theaters-badges">
-            <span class="badge">Now Playing</span>
-            <span class="badge" id="movieCount">Loading...</span>
-          </div>
-        </div>
-      `;
-
-      // Initialize theater functionality
-      initializeTheaterFunctionality();
+    const container = document.getElementById('theaters-section');
+    if (!container) {
+      console.warn('🎬 Theaters section container not found, skipping');
+      return;
     }
+
+    // The HTML structure is already in place, just ensure visibility
+    container.style.display = 'block';
+    
+    // Initialize theater functionality
+    initializeTheaterFunctionality();
   }
 
   // Initialize theater functionality (copied from theaters-near-me.js)
   function initializeTheaterFunctionality() {
     console.log('🎬 Initializing theater functionality');
+    
+    const content = document.getElementById('theaters-content');
+    if (!content) {
+      console.warn('🎬 Theaters content container not found');
+      return;
+    }
+    
+    // Add the complete theater content
+    content.innerHTML = `
+      <div class="theaters-container">
+        <div class="theaters-header">
+          <h3>🎬 Now Playing</h3>
+          <button class="btn secondary" id="refreshTheatersBtn">🔄 Refresh</button>
+        </div>
+        <div class="theaters-list" id="theatersList">
+          <div class="loading">Loading movies...</div>
+        </div>
+      </div>
+      
+      <div class="theaters-info">
+        <div class="theaters-meta">
+          <h3>Find Showtimes</h3>
+          <p>Click "Find Showtimes" to see showtimes at theaters near you</p>
+          <div class="location-info">
+            <span id="userLocation">📍 Getting your location...</span>
+          </div>
+        </div>
+        <div class="theaters-cta">
+          <button class="btn btn-primary" id="findShowtimesBtn">🎫 Find Showtimes</button>
+          <button class="btn secondary" id="refreshLocationBtn">📍 Update Location</button>
+        </div>
+        <div class="theaters-badges">
+          <span class="badge">Now Playing</span>
+          <span class="badge" id="movieCount">Loading...</span>
+        </div>
+      </div>
+    `;
     
     // Set up event listeners
     setupTheaterEventListeners();
@@ -359,7 +277,12 @@
       console.log('🎬 Loading theater data...');
       
       const movies = await fetchCurrentTheatricalReleases();
-      renderTheaterMovies(movies);
+      if (movies && Array.isArray(movies)) {
+        renderTheaterMovies(movies);
+      } else {
+        console.warn('🎬 No valid movie data received, using fallback');
+        renderTheaterMovies(getFallbackTheaterContent());
+      }
     } catch (error) {
       console.error('❌ Failed to load theater data:', error);
       renderTheaterMovies(getFallbackTheaterContent());
@@ -371,62 +294,102 @@
       console.log('🎬 Fetching current theatrical releases...');
       
       // Use existing TMDB config if available
-      const apiKey = window.TMDB_CONFIG?.apiKey || window.__TMDB_API_KEY__ || window.TMDB_API_KEY || 'your-api-key-here';
+      const apiKey = window.TMDB_CONFIG?.apiKey || window.__TMDB_API_KEY__ || window.TMDB_API_KEY;
+      
+      if (!apiKey || apiKey === 'your-api-key-here' || apiKey === 'YOUR_TMDB_API_KEY_HERE') {
+        console.warn('🎬 No valid TMDB API key found, using fallback data');
+        return getFallbackTheaterContent();
+      }
+      
       const url = `https://api.themoviedb.org/3/movie/now_playing?api_key=${apiKey}&language=en-US&page=1&region=US`;
       
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error(`TMDB API error: ${response.status}`);
+        throw new Error(`TMDB API error: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
       console.log('🎬 Fetched theatrical releases:', data.results?.length || 0);
       
-      return data.results?.slice(0, 8) || []; // Get top 8 movies
+      if (!data.results || !Array.isArray(data.results)) {
+        console.warn('🎬 Invalid data structure received from TMDB API');
+        return getFallbackTheaterContent();
+      }
+      
+      return data.results.slice(0, 8); // Get top 8 movies
     } catch (error) {
       console.error('📺 TMDB API error:', error);
-      return [];
+      return getFallbackTheaterContent();
     }
   }
 
   function renderTheaterMovies(movies) {
-    const theatersList = document.getElementById('theatersList');
-    const movieCount = document.getElementById('movieCount');
-    
-    if (!theatersList) {
-      console.warn('🎬 Theaters list not found');
-      return;
-    }
+    try {
+      const theatersList = document.getElementById('theatersList');
+      const movieCount = document.getElementById('movieCount');
+      
+      if (!theatersList) {
+        console.warn('🎬 Theaters list not found');
+        return;
+      }
 
-    if (!movies || movies.length === 0) {
-      theatersList.innerHTML = '<div class="no-movies"><p>Unable to load current movies. Please try again later.</p></div>';
-      if (movieCount) movieCount.textContent = '0 Movies';
-      return;
-    }
+      if (!movies || movies.length === 0) {
+        theatersList.innerHTML = '<div class="no-movies"><p>Unable to load current movies. Please try again later.</p></div>';
+        if (movieCount) movieCount.textContent = '0 Movies';
+        return;
+      }
 
-    // Render movies
-    theatersList.innerHTML = movies.map(movie => `
-      <div class="theater-movie">
-        <div class="movie-poster">
-          <img src="${movie.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBM0FGIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+Tm8gUG9zdGVyPC90ZXh0Pgo8L3N2Zz4K'}" 
-               alt="${escapeHtml(movie.title)}" 
-               loading="lazy"
-               onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBM0FGIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+Tm8gUG9zdGVyPC90ZXh0Pgo8L3N2Zz4K'">
-        </div>
-        <div class="movie-info">
-          <h4 class="movie-title">${escapeHtml(movie.title)}</h4>
-          <p class="movie-overview">${escapeHtml(movie.overview?.substring(0, 120) + '...' || 'No description available')}</p>
-          <div class="movie-meta">
-            <span class="movie-rating">⭐ ${movie.vote_average?.toFixed(1) || 'N/A'}</span>
-            <span class="movie-release">${new Date(movie.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-          </div>
-        </div>
-      </div>
-    `).join('');
+      // Render movies with error handling for each movie
+      theatersList.innerHTML = movies.map(movie => {
+        try {
+          const title = movie.title || 'Unknown Title';
+          const posterPath = movie.poster_path;
+          const overview = movie.overview || 'No description available';
+          const voteAverage = movie.vote_average;
+          const releaseDate = movie.release_date;
+          
+          const posterUrl = posterPath ? 
+            `https://image.tmdb.org/t/p/w200${posterPath}` : 
+            'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBM0FGIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+Tm8gUG9zdGVyPC90ZXh0Pgo8L3N2Zz4K';
+          
+          const releaseDateFormatted = releaseDate ? 
+            new Date(releaseDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 
+            'TBA';
+          
+          return `
+            <div class="theater-movie">
+              <div class="movie-poster">
+                <img src="${posterUrl}" 
+                     alt="${escapeHtml(title)}" 
+                     loading="lazy"
+                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBM0FGIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+Tm8gUG9zdGVyPC90ZXh0Pgo8L3N2Zz4K'">
+              </div>
+              <div class="movie-info">
+                <h4 class="movie-title">${escapeHtml(title)}</h4>
+                <p class="movie-overview">${escapeHtml(overview.length > 120 ? overview.substring(0, 120) + '...' : overview)}</p>
+                <div class="movie-meta">
+                  <span class="movie-rating">⭐ ${voteAverage ? voteAverage.toFixed(1) : 'N/A'}</span>
+                  <span class="movie-release">${releaseDateFormatted}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        } catch (movieError) {
+          console.error('🎬 Error rendering movie:', movieError, movie);
+          return '<div class="theater-movie error">Error loading movie data</div>';
+        }
+      }).join('');
 
-    // Update movie count
-    if (movieCount) {
-      movieCount.textContent = `${movies.length} Movies`;
+      // Update movie count
+      if (movieCount) {
+        movieCount.textContent = `${movies.length} Movies`;
+      }
+    } catch (error) {
+      console.error('❌ Error rendering theater movies:', error);
+      const theatersList = document.getElementById('theatersList');
+      if (theatersList) {
+        theatersList.innerHTML = '<div class="no-movies"><p>Error loading movies. Please refresh the page.</p></div>';
+      }
     }
   }
 
@@ -441,17 +404,21 @@
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        // You could reverse geocode here to get city name
-        locationEl.textContent = `📍 ${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
-      },
-      (error) => {
-        console.warn('Location error:', error);
-        locationEl.textContent = '📍 Location unavailable';
-      }
-    );
+    // Defer geolocation call to idle time to avoid blocking LCP
+    const idle = (fn) => ('requestIdleCallback' in window) ? requestIdleCallback(fn, {timeout: 2000}) : setTimeout(fn, 100);
+    idle(() => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          // You could reverse geocode here to get city name
+          locationEl.textContent = `📍 ${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
+        },
+        (error) => {
+          console.warn('Location error:', error);
+          locationEl.textContent = '📍 Location unavailable';
+        }
+      );
+    });
   }
 
   function getFallbackTheaterContent() {
@@ -495,29 +462,60 @@
   
   // Improved section mounting with better sequencing
   function mountSectionsWithSequencing() {
-    // Phase 1: Critical sections (immediate) - in correct visual order
-    console.log('🏠 Mounting critical sections...');
-    mountMyLibrary();
-    
-    // Phase 2: High priority sections (short delay)
-    setTimeout(() => {
-      console.log('🏠 Mounting high priority sections...');
-      mountCommunity();
-    }, 100);
-    
-    // Phase 3: Medium priority sections
-    setTimeout(() => {
-      console.log('🏠 Mounting medium priority sections...');
-      mountCurated();
-      mountPersonalized();
-    }, 200);
-    
-    // Phase 4: Low priority sections
-    setTimeout(() => {
-      console.log('🏠 Mounting low priority sections...');
-      mountTheaters();
-      mountFeedbackLink();
-    }, 300);
+    try {
+      // Phase 1: Critical sections (immediate) - in correct visual order
+      console.log('🏠 Mounting critical sections...');
+      safeMountSection('My Library', mountMyLibrary);
+      
+      // Phase 2: High priority sections (short delay)
+      setTimeout(() => {
+        try {
+          console.log('🏠 Mounting high priority sections...');
+          safeMountSection('Community', mountCommunity);
+        } catch (error) {
+          console.error('❌ Error mounting high priority sections:', error);
+        }
+      }, 100);
+      
+      // Phase 3: Medium priority sections
+      setTimeout(() => {
+        try {
+          console.log('🏠 Mounting medium priority sections...');
+          safeMountSection('Curated', mountCurated);
+          safeMountSection('Personalized', mountPersonalized);
+        } catch (error) {
+          console.error('❌ Error mounting medium priority sections:', error);
+        }
+      }, 200);
+      
+      // Phase 4: Low priority sections
+      setTimeout(() => {
+        try {
+          console.log('🏠 Mounting low priority sections...');
+          safeMountSection('Theaters', mountTheaters);
+          safeMountSection('Feedback', mountFeedbackLink);
+        } catch (error) {
+          console.error('❌ Error mounting low priority sections:', error);
+        }
+      }, 300);
+    } catch (error) {
+      console.error('❌ Critical error in section mounting sequence:', error);
+    }
+  }
+  
+  // Safe section mounting with error handling
+  function safeMountSection(sectionName, mountFunction) {
+    try {
+      if (typeof mountFunction === 'function') {
+        mountFunction();
+        console.log(`✅ ${sectionName} section mounted successfully`);
+      } else {
+        console.warn(`⚠️ ${sectionName} mount function is not available`);
+      }
+    } catch (error) {
+      console.error(`❌ Error mounting ${sectionName} section:`, error);
+      // Continue with other sections even if one fails
+    }
   }
   
   // Fallback section mounting (original method)

@@ -22,13 +22,10 @@
         }
       });
       
-      // Show search results within the current tab section
+      // Show search results - they're already positioned correctly in HTML
       const searchResults = $('#searchResults');
       if (searchResults) {
-        // Move search results into the current tab section if not already there
-        if (searchResults.parentNode !== currentSection) {
-          currentSection.appendChild(searchResults);
-        }
+        // DON'T move search results - they're already in the right place
         searchResults.style.display = 'block';
         searchResults.classList.remove('hidden');
       }
@@ -42,11 +39,7 @@
       searchResults.style.display = 'none';
       searchResults.classList.add('hidden');
       
-      // Move search results back to original position (outside tab sections)
-      const originalParent = document.querySelector('main') || document.body;
-      if (searchResults.parentNode !== originalParent) {
-        originalParent.appendChild(searchResults);
-      }
+      // DON'T move search results - they're already in the right place
     }
     
     // Restore content in the current tab section

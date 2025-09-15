@@ -9,12 +9,17 @@
   const setPro = (v) => localStorage.setItem(KEY, v ? '1' : '0');
 
   // Public QA helpers (type in console):
-  window.enablePro = () => { setPro(true); applyGates(); Notify?.success?.('Pro ON'); };
-  window.disablePro = () => { setPro(false); applyGates(); Notify?.info?.('Pro OFF'); };
+  window.enablePro = () => { setPro(true); applyGates(); (window.Notify?.success || window.showNotification)?.('Pro ON'); };
+  window.disablePro = () => { setPro(false); applyGates(); (window.Notify?.info || window.showNotification)?.('Pro OFF'); };
 
   // Find all gated elements
   function applyGates(){
+    console.log('🔒 Applying Pro gates...');
     const gated = document.querySelectorAll('[data-pro="required"]');
+    console.log('🔒 Found', gated.length, 'gated elements');
+    const proStatus = isPro();
+    console.log('🔒 Pro status:', proStatus);
+    
     gated.forEach(el => {
       const mode = (el.getAttribute('data-pro-mode') || 'disable').toLowerCase();
       // Clean previous state
@@ -93,7 +98,7 @@
     // In real life, you'd kick off checkout here and set flag on success.
     setPro(true);
     applyGates();
-    Notify?.success?.('Pro activated');
+    (window.Notify?.success || window.showNotification)?.('Pro activated');
     closeUpsell();
   });
 
@@ -103,7 +108,19 @@
   } else {
     applyGates();
   }
+  
+  // Also apply gates after a short delay to ensure all elements are loaded
+  setTimeout(applyGates, 100);
+  
+  // Expose applyGates globally for manual triggering
+  window.applyProGates = applyGates;
 })();
+
+
+
+
+
+
 
 
 

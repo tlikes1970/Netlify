@@ -11,6 +11,21 @@
   const fEl = document.getElementById('triviaFeedback');
   const nBtn = document.getElementById('triviaNextBtn');
   const statsEl = el.querySelector('.trivia-stats');
+  
+  // Safety check - if required elements don't exist, skip initialization
+  if (!qEl || !cEl || !fEl || !nBtn) {
+    console.warn('Trivia: Required elements not found, skipping initialization');
+    return;
+  }
+  
+  // Safety check - if statsEl doesn't exist, create a placeholder or skip stats
+  if (!statsEl) {
+    console.warn('trivia-stats element not found, creating placeholder');
+    const placeholder = document.createElement('div');
+    placeholder.className = 'trivia-stats';
+    placeholder.style.display = 'none'; // Hide if no stats needed
+    el.appendChild(placeholder);
+  }
 
   const KEYS = {
     streak: 'flicklet:trivia:v1:streak',
@@ -29,11 +44,18 @@
     { id: 'q2', q: '"Alien: Earth" is a spin-off in which franchise?', choices: ['Predator','Alien','Star Trek','The Expanse'], correct: 1 },
     { id: 'q3', q: 'Sherlock (2010) starred Benedict Cumberbatch and…', choices: ['Tom Hiddleston','Martin Freeman','David Tennant','Matt Smith'], correct: 1 },
     { id: 'q4', q: '"House of the Dragon" streams primarily on…', choices: ['HBO Max','Netflix','Hulu','Apple TV+'], correct: 0 },
+    { id: 'q5', q: 'Which streaming service is known for "The Mandalorian"?', choices: ['Netflix','Disney+','HBO Max','Amazon Prime'], correct: 1 },
+    { id: 'q6', q: 'What year did "Breaking Bad" first air?', choices: ['2007','2008','2009','2010'], correct: 1 },
+    { id: 'q7', q: 'Who created "Stranger Things"?', choices: ['Ryan Murphy','The Duffer Brothers','Shonda Rhimes','David Fincher'], correct: 1 },
+    { id: 'q8', q: 'Which show features the character Walter White?', choices: ['Better Call Saul','Breaking Bad','The Walking Dead','Ozark'], correct: 1 },
   ];
   
   // Cache for trivia questions
   let triviaCache = null;
   let lastFetchDate = null;
+  
+  // Current question data (accessible to choose function)
+  let currentQuestion = null;
 
   // Fetch trivia questions from API
   async function fetchTriviaQuestions(lang = 'en') {
@@ -59,15 +81,22 @@
       
       if (data.response_code === 0 && data.results && data.results.length > 0) {
         // Convert API format to our format
-        const questions = data.results.map((item, index) => ({
-          id: `api_${index}`,
-          q: decodeURIComponent(item.question),
-          choices: [
-            decodeURIComponent(item.correct_answer),
-            ...item.incorrect_answers.map(ans => decodeURIComponent(ans))
-          ].sort(() => Math.random() - 0.5), // Shuffle choices
-          correct: 0 // Correct answer is always first after shuffling
-        }));
+        const questions = data.results.map((item, index) => {
+          const correctAnswer = decodeURIComponent(item.correct_answer);
+          const incorrectAnswers = item.incorrect_answers.map(ans => decodeURIComponent(ans));
+          const allChoices = [correctAnswer, ...incorrectAnswers];
+          
+          // Shuffle choices and track correct index
+          const shuffledChoices = [...allChoices].sort(() => Math.random() - 0.5);
+          const correctIndex = shuffledChoices.indexOf(correctAnswer);
+          
+          return {
+            id: `api_${index}`,
+            q: decodeURIComponent(item.question),
+            choices: shuffledChoices,
+            correct: correctIndex
+          };
+        });
         
         triviaCache = questions;
         lastFetchDate = today;
@@ -94,10 +123,12 @@
     const lang = getCurrentLanguage();
     const questions = await fetchTriviaQuestions(lang);
     const q = questions[hashToIndex(today, questions.length)];
+    
+    // Store current question for choose function access
+    currentQuestion = q;
 
-    // Lock logic: only allow a correct completion once per day
-    const lockDate = localStorage.getItem(KEYS.lock);
-    const locked = lockDate === today;
+    // Lock logic disabled - allow unlimited questions
+    const locked = false;
 
     // Render
     renderStats();
@@ -116,11 +147,14 @@
     
     const questions = await fetchTriviaQuestions(lang);
     const q = questions[hashToIndex(today, questions.length)];
+    
+    // Store current question for choose function access
+    currentQuestion = q;
 
     console.log('🧠 New trivia question:', {id: q.id, question: q.q.substring(0, 50) + '...', choices: q.choices.length, language: lang});
 
-    const lockDate = localStorage.getItem(KEYS.lock);
-    const locked = lockDate === today;
+    // Lock logic disabled - allow unlimited questions
+    const locked = false;
 
     renderStats();
     renderQuestion(q, locked);
@@ -181,6 +215,11 @@
   };
 
   function renderStats(){
+    if (!statsEl) {
+      console.warn('statsEl not available, skipping stats render');
+      return;
+    }
+    
     const streak = Number(localStorage.getItem(KEYS.streak) || 0);
     const last = localStorage.getItem(KEYS.last);
     const streakText = t('flickword_streak') || 'Streak';
@@ -189,10 +228,14 @@
   }
 
   function renderQuestion(q, isLocked){
+    if (!qEl) {
+      console.warn('Trivia: Question element not found, skipping render');
+      return;
+    }
     qEl.textContent = q.q;
-    cEl.innerHTML = '';
-    fEl.textContent = '';
-    nBtn.hidden = true;
+    if (cEl) cEl.innerHTML = '';
+    if (fEl) fEl.textContent = '';
+    if (nBtn) nBtn.hidden = true;
 
     q.choices.forEach((text, idx) => {
       const li = document.createElement('li');
@@ -220,7 +263,13 @@
   }
 
   function choose(idx){
-    const correctIdx = q.correct;
+    // Check if current question is available
+    if (!currentQuestion) {
+      console.error('🧠 No current question available for trivia');
+      return;
+    }
+    
+    const correctIdx = currentQuestion.correct;
     const items = Array.from(cEl.children);
 
     // Prevent double answers
@@ -234,7 +283,7 @@
     chosen.classList.add(isCorrect ? 'correct' : 'wrong');
     const correctText = t('trivia_correct') || 'Correct!';
     const incorrectText = t('trivia_incorrect_answer') || 'Nope — correct answer is';
-    fEl.textContent = isCorrect ? `${correctText} ✔` : `${incorrectText} "${q.choices[correctIdx]}".`;
+    fEl.textContent = isCorrect ? `${correctText} ✔` : `${incorrectText} "${currentQuestion.choices[correctIdx]}".`;
 
     // Notify (optional)
     if (window.Notify){
@@ -244,21 +293,96 @@
       else Notify.info(tryAgainText);
     }
 
-    // Update streak/lock
+    // Update streak (no locking - unlimited questions)
     if (isCorrect){
       bumpStreak();
-      localStorage.setItem(KEYS.lock, today);
-      nBtn.hidden = false;
-      nBtn.textContent = t('trivia_ok') || 'OK';
-      nBtn.onclick = () => { /* placeholder for future: next module */ };
-    } else {
-      // wrong answer still locks for today
-      localStorage.setItem(KEYS.lock, today);
-      nBtn.hidden = false;
-      nBtn.textContent = t('trivia_ok') || 'OK';
-      nBtn.onclick = () => {};
     }
+    
+    // Always show next button after answering
+    nBtn.hidden = false;
+    nBtn.style.display = 'block';
+    nBtn.style.visibility = 'visible';
+    nBtn.style.opacity = '1';
+    nBtn.style.position = 'static';
+    nBtn.style.zIndex = '10';
+    nBtn.textContent = isCorrect ? (t('trivia_next_question') || 'Next Question') : (t('trivia_try_again') || 'Try Again');
+    nBtn.onclick = () => {
+      try {
+        loadNextQuestion().catch(error => {
+          console.error('🧠 Unhandled promise rejection in loadNextQuestion:', error);
+          // Show error message to user
+          fEl.textContent = 'Error loading next question. Please refresh the page.';
+          nBtn.hidden = true;
+        });
+      } catch (error) {
+        console.error('🧠 Error in loadNextQuestion click handler:', error);
+        fEl.textContent = 'Error loading next question. Please refresh the page.';
+        nBtn.hidden = true;
+      }
+    };
+    
+    // Force a reflow to ensure the button is visible
+    nBtn.offsetHeight;
+    
+    console.log('🧠 Next button shown after answer', {
+      isCorrect: isCorrect,
+      hidden: nBtn.hidden,
+      display: nBtn.style.display,
+      visibility: nBtn.style.visibility,
+      opacity: nBtn.style.opacity,
+      textContent: nBtn.textContent,
+      computedStyle: window.getComputedStyle(nBtn).display
+    });
     renderStats();
+  }
+
+  // Load next question
+  async function loadNextQuestion() {
+    console.log('🧠 Loading next trivia question...');
+    
+    try {
+      const lang = getCurrentLanguage();
+      const questions = await fetchTriviaQuestions(lang);
+      
+      // Get a different question (not the same as current)
+      let nextQuestion;
+      let attempts = 0;
+      do {
+        nextQuestion = questions[hashToIndex(today + '_' + attempts, questions.length)];
+        attempts++;
+      } while (nextQuestion && currentQuestion && nextQuestion.id === currentQuestion.id && attempts < 10);
+      
+      // If we couldn't find a different question, just use the first one
+      if (!nextQuestion || (currentQuestion && nextQuestion.id === currentQuestion.id)) {
+        nextQuestion = questions[0];
+      }
+      
+      // Store the new question
+      currentQuestion = nextQuestion;
+      
+      // Reset the UI
+      fEl.textContent = '';
+      nBtn.hidden = true;
+      nBtn.style.display = 'none';
+      
+      // Clear any existing choice styling
+      const items = Array.from(cEl.children);
+      items.forEach(li => {
+        li.classList.remove('correct', 'wrong');
+        li.setAttribute('aria-selected', 'false');
+      });
+      
+      // Render the new question
+      renderQuestion(nextQuestion, false);
+      
+      console.log('🧠 Next question loaded:', nextQuestion.q.substring(0, 50) + '...');
+      
+    } catch (error) {
+      console.error('🧠 Error loading next question:', error);
+      // Fallback: just hide the button and show error
+      nBtn.hidden = true;
+      fEl.textContent = 'Error loading next question. Please refresh the page.';
+    }
   }
 
   function bumpStreak(){
