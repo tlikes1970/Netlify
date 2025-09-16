@@ -3,12 +3,12 @@ d<!DOCTYPE html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v23.90</title>
+    <title>Flicklet - TV & Movie Tracker v23.91</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
     />
-    <meta name="build" content="v23.90">
+    <meta name="build" content="v23.91">
     
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
@@ -421,7 +421,7 @@ d<!DOCTYPE html>
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
-            <span class="version-display">v23.90</span>
+            <span class="version-display">v23.91</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
@@ -1352,37 +1352,39 @@ d<!DOCTYPE html>
       }
       
       // Initialize Firebase only if not already initialized
-      if (firebase.apps.length === 0) {
-        if (window.firebase && typeof window.firebase.initializeApp === 'function') {
+      if (window.firebase && typeof window.firebase.initializeApp === 'function') {
+        if (firebase.apps.length === 0) {
           firebase.initializeApp(window.FIREBASE_CONFIG);
           console.info("✅ Firebase initialized:", window.FIREBASE_CONFIG.projectId);
+          
+          // Set persistence to LOCAL for better localhost experience
+          const auth = firebase.auth();
+          auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+            .then(() => {
+              console.info("🔒 Auth persistence set to LOCAL");
+            })
+            .catch((err) => {
+              console.error("⚠️ Failed to set persistence", err);
+            });
+          
+          // Expose Firebase services globally for debugging and app use
+          window.FB = {
+            auth: auth,
+            db: firebase.firestore()
+          };
+          
+          // Mark as initialized to prevent duplicates
+          window.firebaseInitialized = true;
+          window.firebase = firebase;
+          window.auth = auth;
+          window.db = firebase.firestore();
+          
+        } else {
+          console.warn("⚠️ Firebase already initialized, reusing existing instance");
+          window.firebaseInitialized = true;
         }
-        
-        // Set persistence to LOCAL for better localhost experience
-        const auth = firebase.auth();
-        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-          .then(() => {
-            console.info("🔒 Auth persistence set to LOCAL");
-          })
-          .catch((err) => {
-            console.error("⚠️ Failed to set persistence", err);
-          });
-        
-        // Expose Firebase services globally for debugging and app use
-        window.FB = {
-          auth: auth,
-          db: firebase.firestore()
-        };
-        
-        // Mark as initialized to prevent duplicates
-        window.firebaseInitialized = true;
-        window.firebase = firebase;
-        window.auth = auth;
-        window.db = firebase.firestore();
-        
       } else {
-        console.warn("⚠️ Firebase already initialized, reusing existing instance");
-        window.firebaseInitialized = true;
+        console.info('Firebase not available; skipping init');
       }
       
     } catch (e) {
