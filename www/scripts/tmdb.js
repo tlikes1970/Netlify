@@ -27,6 +27,8 @@
         console.warn('⚠️ TMDB API key not available');
         return { results: [], page: 1, total_pages: 0, total_results: 0 };
       }
+      
+      console.log('🔑 Using TMDB API key:', apiKey.substring(0, 8) + '...');
 
       const baseUrl = config.baseUrl || 'https://api.themoviedb.org/3';
       const searchParams = new URLSearchParams({ 
@@ -46,7 +48,21 @@
         return { results: [], page: 1, total_pages: 0, total_results: 0 };
       }
       
-      const data = await response.json();
+      // Check if response has content before trying to parse JSON
+      const text = await response.text();
+      if (!text || text.trim() === '') {
+        console.warn('⚠️ TMDB API returned empty response');
+        return { results: [], page: 1, total_pages: 0, total_results: 0 };
+      }
+      
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        console.warn('⚠️ TMDB API returned invalid JSON:', text.substring(0, 100));
+        return { results: [], page: 1, total_pages: 0, total_results: 0 };
+      }
+      
       console.log('✅ TMDB API response received:', path);
       return data;
       

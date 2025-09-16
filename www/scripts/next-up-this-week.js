@@ -19,7 +19,7 @@ async function fetchNextAirDate(showId) {
     }
     
     console.log('📺 Fetching TMDB data for show ID:', showId);
-    const data = await window.tmdbGet(`tv/${showId}`, "", true);
+    const data = await window.tmdbGet(`tv/${showId}`, {});
     console.log('📺 TMDB response for', showId, ':', data);
     
     const nextAirDate = data.next_episode_to_air?.air_date || null;

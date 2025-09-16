@@ -63,8 +63,8 @@
       
       // Fetch both movies and TV shows trending
       const [moviesData, tvData] = await Promise.all([
-        window.tmdbGet('trending/movie/day', `&page=${page}`),
-        window.tmdbGet('trending/tv/day', `&page=${page}`)
+        window.tmdbGet('trending/movie/day', { page: page }),
+        window.tmdbGet('trending/tv/day', { page: page })
       ]);
 
       // Combine and shuffle results
@@ -126,7 +126,11 @@
 
       // Fetch movies by genre
       try {
-        const movieData = await window.tmdbGet('discover/movie', `&with_genres=${genreId}&page=${page}&sort_by=popularity.desc`);
+        const movieData = await window.tmdbGet('discover/movie', {
+          with_genres: genreId,
+          page: page,
+          sort_by: 'popularity.desc'
+        });
         const movieItems = Array.isArray(movieData?.results) ? movieData.results : [];
         
         // Also fetch TV shows by genre if available
@@ -136,7 +140,11 @@
         
         let tvItems = [];
         if (tvGenreId) {
-          const tvData = await window.tmdbGet('discover/tv', `&with_genres=${tvGenreId}&page=${page}&sort_by=popularity.desc`);
+          const tvData = await window.tmdbGet('discover/tv', {
+          with_genres: tvGenreId,
+          page: page,
+          sort_by: 'popularity.desc'
+        });
           tvItems = Array.isArray(tvData?.results) ? tvData.results : [];
         }
 
@@ -169,10 +177,10 @@
       
       // Use a mix of highly rated and popular content
       const [topRatedMovies, topRatedTV, popularMovies, popularTV] = await Promise.all([
-        window.tmdbGet('movie/top_rated', `&page=${page}`),
-        window.tmdbGet('tv/top_rated', `&page=${page}`),
-        window.tmdbGet('movie/popular', `&page=${page}`),
-        window.tmdbGet('tv/popular', `&page=${page}`)
+        window.tmdbGet('movie/top_rated', { page: page }),
+        window.tmdbGet('tv/top_rated', { page: page }),
+        window.tmdbGet('movie/popular', { page: page }),
+        window.tmdbGet('tv/popular', { page: page })
       ]);
 
       // Combine and prioritize highly rated content
