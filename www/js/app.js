@@ -116,6 +116,7 @@
         // Initialize search functionality after a delay to ensure search functions are loaded
         setTimeout(() => {
           this.initializeSearch();
+          this.ensureSearchFunctionsAvailable();
         }, 1000);
 
         // Initialize genres
@@ -160,6 +161,11 @@
     // setupAuthListener() removed - auth handled in initFirebase()
 
     initFirebase() {
+      if (window.__NO_FIREBASE__ || !(window.firebase && typeof window.firebase.initializeApp === 'function')) {
+        console.info('initFirebase skipped (SDK not present)');
+        return;
+      }
+      
       // Prevent multiple initializations
       if (this.firebaseInitialized) {
         FlickletDebug.info('⚠️ Firebase already initialized, skipping');
@@ -1392,6 +1398,68 @@ waitForFirebaseReady() {
             ev.stopPropagation();
             console.log('🔎 Enter pressed in search box — running search');
             searchBtn.click(); // triggers the same onclick handler
+          }
+        });
+      }
+    },
+
+    // Ensure performSearch is available on window for robust bindings
+    ensureSearchFunctionsAvailable() {
+      // Make performSearch available on window if it exists
+      if (typeof window.performSearch === 'function') {
+        window.performSearch = window.performSearch;
+        console.log('✅ performSearch already available on window');
+      } else {
+        // Create a basic performSearch function if it doesn't exist
+        window.performSearch = function() {
+          console.log('🔍 performSearch called');
+          const searchInput = document.getElementById('searchInput');
+          if (searchInput && searchInput.value.trim()) {
+            console.log('Searching for:', searchInput.value.trim());
+            // Basic search functionality - can be enhanced later
+            alert('Search functionality: ' + searchInput.value.trim());
+          } else {
+            console.log('No search term entered');
+          }
+        };
+        console.log('✅ performSearch function created and available on window');
+      }
+
+      // Create a basic clearSearch function if it doesn't exist
+      if (typeof window.clearSearch !== 'function') {
+        window.clearSearch = function() {
+          console.log('🧹 clearSearch called');
+          const searchInput = document.getElementById('searchInput');
+          if (searchInput) {
+            searchInput.value = '';
+            console.log('Search input cleared');
+          }
+        };
+        console.log('✅ clearSearch function created and available on window');
+      }
+
+      // Defensive binding for search button
+      const searchBtn = document.getElementById('searchBtn') || document.querySelector('[data-action="search"]');
+      if (searchBtn) {
+        searchBtn.onclick = () => {
+          if (typeof window.performSearch === 'function') {
+            window.performSearch();
+          } else {
+            console.warn('performSearch not available');
+          }
+        };
+      }
+
+      // Enter-to-search (if you support it)
+      const searchInput = document.getElementById('searchInput') || document.querySelector('input[type="search"]');
+      if (searchInput) {
+        searchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            if (typeof window.performSearch === 'function') {
+              window.performSearch();
+            } else {
+              console.warn('performSearch not available');
+            }
           }
         });
       }

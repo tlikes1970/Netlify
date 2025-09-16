@@ -3,11 +3,12 @@ d<!DOCTYPE html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v23.89-STABILITY-FIXES</title>
+    <title>Flicklet - TV & Movie Tracker v23.90</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
     />
+    <meta name="build" content="v23.90">
     
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
@@ -303,8 +304,8 @@ d<!DOCTYPE html>
         12: 'Adventure', 14: 'Fantasy', 53: 'Thriller', 80: 'Crime', 99: 'Documentary'
       };
 
-      // Service Worker registration (only on production or localhost)
-      if ('serviceWorker' in navigator) {
+      // Service Worker registration (temporarily disabled)
+      if (false && 'serviceWorker' in navigator) {
         const host = location.hostname;
         const isLocal = host === 'localhost' || host.endsWith('.local') || host.endsWith('.lan');
         const isProd = host.endsWith('netlify.app') && !host.includes('--deploy-preview-');
@@ -420,7 +421,7 @@ d<!DOCTYPE html>
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
-            <span class="version-display">v23.89-STABILITY-FIXES</span>
+            <span class="version-display">v23.90</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
