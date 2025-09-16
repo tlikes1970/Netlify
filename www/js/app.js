@@ -1651,6 +1651,7 @@ waitForFirebaseReady() {
             
             // Show loading state
             if (searchResults) {
+              searchResults.style.display = 'block';
               searchResults.innerHTML = '<div style="text-align: center; padding: 20px;">🔍 Searching...</div>';
             }
             
@@ -1661,33 +1662,66 @@ waitForFirebaseReady() {
               
               if (searchResults) {
                 if (results.results && results.results.length > 0) {
-                  // Display search results
-                  const resultsHtml = results.results.map(item => {
-                    const title = item.title || item.name || 'Unknown';
-                    const year = item.release_date ? new Date(item.release_date).getFullYear() : 
-                                item.first_air_date ? new Date(item.first_air_date).getFullYear() : '';
-                    const mediaType = item.media_type || 'movie';
-                    const poster = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
-                    
-                    return `
-                      <div style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
-                        ${poster ? `<img src="${poster}" style="width: 50px; height: 75px; object-fit: cover; margin-right: 10px;">` : ''}
-                        <div>
-                          <h4 style="margin: 0;">${title} ${year ? `(${year})` : ''}</h4>
-                          <p style="margin: 5px 0 0 0; color: #666; text-transform: capitalize;">${mediaType}</p>
+                  // Update the count
+                  const countElement = document.getElementById('resultsCount');
+                  if (countElement) {
+                    countElement.textContent = results.results.length;
+                  }
+                  
+                  // Display search results in the proper container
+                  const resultsList = document.getElementById('searchResultsList');
+                  if (resultsList) {
+                    const resultsHtml = results.results.map(item => {
+                      const title = item.title || item.name || 'Unknown';
+                      const year = item.release_date ? new Date(item.release_date).getFullYear() : 
+                                  item.first_air_date ? new Date(item.first_air_date).getFullYear() : '';
+                      const mediaType = item.media_type || 'movie';
+                      const poster = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
+                      
+                      return `
+                        <div class="search-result-item" style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
+                          ${poster ? `<img src="${poster}" style="width: 50px; height: 75px; object-fit: cover; margin-right: 10px; border-radius: 4px;">` : ''}
+                          <div>
+                            <h4 style="margin: 0; color: #333;">${title} ${year ? `(${year})` : ''}</h4>
+                            <p style="margin: 5px 0 0 0; color: #666; text-transform: capitalize;">${mediaType}</p>
+                          </div>
                         </div>
+                      `;
+                    }).join('');
+                    
+                    resultsList.innerHTML = resultsHtml;
+                  } else {
+                    // Fallback to direct container update
+                    searchResults.innerHTML = `
+                      <h4>🎯 Search Results <span class="count">${results.results.length}</span></h4>
+                      <div class="list-container">
+                        ${results.results.map(item => {
+                          const title = item.title || item.name || 'Unknown';
+                          const year = item.release_date ? new Date(item.release_date).getFullYear() : 
+                                      item.first_air_date ? new Date(item.first_air_date).getFullYear() : '';
+                          const mediaType = item.media_type || 'movie';
+                          const poster = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
+                          
+                          return `
+                            <div class="search-result-item" style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
+                              ${poster ? `<img src="${poster}" style="width: 50px; height: 75px; object-fit: cover; margin-right: 10px; border-radius: 4px;">` : ''}
+                              <div>
+                                <h4 style="margin: 0; color: #333;">${title} ${year ? `(${year})` : ''}</h4>
+                                <p style="margin: 5px 0 0 0; color: #666; text-transform: capitalize;">${mediaType}</p>
+                              </div>
+                            </div>
+                          `;
+                        }).join('')}
                       </div>
                     `;
-                  }).join('');
-                  
+                  }
+                } else {
                   searchResults.innerHTML = `
-                    <div style="padding: 10px;">
-                      <h3>Search Results for "${query}"</h3>
-                      ${resultsHtml}
+                    <h4>🎯 Search Results <span class="count">0</span></h4>
+                    <div class="list-container">
+                      <div style="text-align: center; padding: 20px; color: #666;">No results found for "${query}"</div>
                     </div>
                   `;
-                } else {
-                  searchResults.innerHTML = `<div style="text-align: center; padding: 20px;">No results found for "${query}"</div>`;
                 }
               }
             } else {
@@ -1720,6 +1754,7 @@ waitForFirebaseReady() {
           }
           
           if (searchResults) {
+            searchResults.style.display = 'none';
             searchResults.innerHTML = '';
             console.log('Search results cleared');
           }
