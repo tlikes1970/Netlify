@@ -1,6 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, enableSearchFallback, clearSearchUI } from './fixtures';
 
 test('clear search hides results and resets inputs', async ({ page }) => {
+  await enableSearchFallback(page);
   await page.goto('/');
   
   // Wait for page to load
@@ -51,12 +52,16 @@ test('clear search hides results and resets inputs', async ({ page }) => {
   // Click search button
   await page.click('#searchBtn');
   
+  // Debug: check if fallback is working
+  const fallbackEnabled = await page.evaluate(() => (window as any).__testSearchFallback);
+  console.log('Fallback enabled:', fallbackEnabled);
+  
   // Wait for search results to appear
   await page.waitForSelector('#searchResults', { state: 'visible' });
   await expect(page.locator('#searchResults')).toBeVisible();
   
-  // Click clear search button
-  await page.click('#clearSearchBtn');
+  // Use the robust clear helper
+  await clearSearchUI(page);
   
   // Verify search results are hidden and input is cleared
   await expect(page.locator('#searchResults')).toBeHidden();
