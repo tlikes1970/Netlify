@@ -11,37 +11,7 @@
   
   FlickletDebug.info('🚨 Emergency functions loading - ensuring critical functionality');
   
-  // Emergency tmdbGet function
-  if (typeof window.tmdbGet !== 'function') {
-    FlickletDebug.warn('⚠️ tmdbGet not available, creating emergency fallback');
-    
-    window.tmdbGet = async function(endpoint, params = "", tryFallback = true) {
-      try {
-        const config = window.TMDB_CONFIG || {};
-        const apiKey = config.apiKey || 'b7247bb415b50f25b5e35e2566430b96';
-        const baseUrl = config.baseUrl || 'https://api.themoviedb.org/3';
-        
-        const lang = '&language=en-US';
-        const url = `${baseUrl}/${endpoint}?api_key=${apiKey}${params}${lang}`;
-        
-        FlickletDebug.info('🌐 Emergency tmdbGet request:', url);
-        
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
-          FlickletDebug.info('✅ Emergency tmdbGet success');
-          return data;
-        }
-        
-        throw new Error(`TMDB request failed: ${response.status}`);
-      } catch (error) {
-        FlickletDebug.error('❌ Emergency tmdbGet failed:', error);
-        return { results: [] }; // Return empty results to prevent crashes
-      }
-    };
-    
-    FlickletDebug.info('✅ Emergency tmdbGet function created');
-  }
+  // tmdbGet is now provided by tmdb.js script
   
   // Emergency loadUserDataFromCloud function
   if (typeof window.loadUserDataFromCloud !== 'function') {
@@ -175,6 +145,11 @@
   FlickletDebug.info('🚨 Emergency functions loaded successfully');
   
 })();
+
+
+
+
+
 
 
 
