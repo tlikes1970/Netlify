@@ -1337,6 +1337,31 @@ d<!DOCTYPE html>
     <!-- Performance monitoring -->
     <script src="/scripts/performance-monitor.js"></script>
     
+    <!-- tmdbGet shim to prevent runtime errors -->
+    <script>
+    (function () {
+      if (typeof window === 'undefined') return;
+      if (!window.tmdbGet) {
+        const EMPTY = { results: [], page: 1, total_pages: 0, total_results: 0 };
+        window.tmdbGet = async function tmdbGet(path, params = {}) {
+          try {
+            const base = 'https://api.themoviedb.org/3';
+            const key = (window.env && (window.env.TMDB_API_KEY || window.env.TMDB)) || window.TMDB_API_KEY || '';
+            if (!key) return EMPTY;
+            const usp = new URLSearchParams({ ...params, api_key: key });
+            const url = `${base}${path}?${usp.toString()}`;
+            const res = await fetch(url);
+            if (!res.ok) return EMPTY;
+            return await res.json();
+          } catch (_) {
+            return EMPTY;
+          }
+        };
+        console.info('✅ tmdbGet fallback installed');
+      }
+    })();
+    </script>
+    
     <!-- Home layout -->
     <script src="/scripts/home.js"></script>
     
