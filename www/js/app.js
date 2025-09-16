@@ -1620,7 +1620,7 @@ waitForFirebaseReady() {
         window.performSearch = async function() {
           try {
             console.log('🔍 performSearch called');
-            let searchInput = document.getElementById('search');
+            let searchInput = document.querySelector('input[type="search"]');
             const searchResults = document.getElementById('searchResults');
             
             // Debug logging
@@ -1630,9 +1630,9 @@ waitForFirebaseReady() {
             if (!searchInput) {
               console.error('❌ Search input element not found, trying alternative selectors');
               // Try alternative selectors
-              searchInput = document.querySelector('input[type="search"]') || 
-                           document.querySelector('.search-input') ||
-                           document.querySelector('#searchInput');
+              searchInput = document.querySelector('.search-input') ||
+                           document.querySelector('#searchInput') ||
+                           document.querySelector('input[placeholder*="search" i]');
               if (searchInput) {
                 console.log('✅ Found search input with alternative selector:', searchInput);
               } else {
@@ -1711,7 +1711,7 @@ waitForFirebaseReady() {
       if (typeof window.clearSearch !== 'function') {
         window.clearSearch = function() {
           console.log('🧹 clearSearch called');
-          const searchInput = document.getElementById('search');
+          const searchInput = document.querySelector('input[type="search"]');
           const searchResults = document.getElementById('searchResults');
           
           if (searchInput) {
@@ -1777,7 +1777,7 @@ waitForFirebaseReady() {
       }
 
       // Enter-to-search (if you support it)
-      const searchInput = document.getElementById('search') || document.querySelector('input[type="search"]');
+      const searchInput = document.querySelector('input[type="search"]');
       if (searchInput) {
         searchInput.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') {
