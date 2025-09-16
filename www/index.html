@@ -3,7 +3,7 @@ d<!DOCTYPE html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v23.88-SW-ENVIRONMENT-GUARD</title>
+    <title>Flicklet - TV & Movie Tracker v23.89-STABILITY-FIXES</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
@@ -266,21 +266,14 @@ d<!DOCTYPE html>
     <script>
     (function () {
       // Firebase guard
-      const hasFirebase = typeof window !== 'undefined' &&
-        window.firebase && typeof window.firebase.initializeApp === 'function';
-
-      if (hasFirebase) {
-        try {
-          // LEAVE existing firebase.initializeApp(...) here if present in index.html,
-          // or it may be in a separate script include. Do not duplicate in two places.
-          // If initialization currently happens later, it's OK; this guard just prevents crashes.
-        } catch (err) {
-          console.error('🔥 Firebase initialization error:', err);
-        }
-      } else {
-        console.info('ℹ️ Firebase not loaded — proceeding without cloud features');
+      const hasFirebase = !!(window.firebase && typeof window.firebase.initializeApp === 'function');
+      if (!hasFirebase) {
+        console.info('ℹ️ Firebase not loaded — cloud features disabled');
+        // Provide harmless fallbacks so later code doesn't break
         window.loadUserDataFromCloud = window.loadUserDataFromCloud || (async () => null);
         window.addToList = window.addToList || (() => false);
+        // Signal to app bootstrap that firebase is unavailable
+        window.__NO_FIREBASE__ = true;
       }
 
       // TMDB client shim (safe when no key)
@@ -318,11 +311,7 @@ d<!DOCTYPE html>
         if (isLocal || isProd) {
           navigator.serviceWorker.register('cnm-sw.js').catch(console.warn);
         } else {
-          // If a SW is already controlling this preview, unregister it
-          navigator.serviceWorker.getRegistrations?.().then(regs => {
-            regs.forEach(r => r.unregister());
-          });
-          console.info('SW disabled for this environment:', host);
+          console.info('[SW] Registration skipped in this environment:', host);
         }
       }
     })();
@@ -402,6 +391,24 @@ d<!DOCTYPE html>
 </head>
 
   <body>
+    <script>
+    (function () {
+      if (!('serviceWorker' in navigator)) return;
+      const host = location.hostname;
+      const isPreview = host.includes('--deploy-preview-');
+      if (isPreview) {
+        // Purge any already-installed SW and caches on previews
+        navigator.serviceWorker.getRegistrations?.().then(rs => rs.forEach(r => r.unregister()));
+        if (window.caches && caches.keys) {
+          caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+        }
+        // Block future registrations in this context
+        const noop = () => Promise.reject(new Error('SW disabled on preview'));
+        try { navigator.serviceWorker.register = noop; } catch {}
+        console.info('[SW] Disabled for deploy preview:', host);
+      }
+    })();
+    </script>
 
     <!-- Skip Links for Accessibility -->
     <a href="#main" class="skip-link">Skip to main content</a>
@@ -413,7 +420,7 @@ d<!DOCTYPE html>
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
-            <span class="version-display">v23.88-SW-ENVIRONMENT-GUARD</span>
+            <span class="version-display">v23.89-STABILITY-FIXES</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
@@ -1345,8 +1352,10 @@ d<!DOCTYPE html>
       
       // Initialize Firebase only if not already initialized
       if (firebase.apps.length === 0) {
-        firebase.initializeApp(window.FIREBASE_CONFIG);
-        console.info("✅ Firebase initialized:", window.FIREBASE_CONFIG.projectId);
+        if (window.firebase && typeof window.firebase.initializeApp === 'function') {
+          firebase.initializeApp(window.FIREBASE_CONFIG);
+          console.info("✅ Firebase initialized:", window.FIREBASE_CONFIG.projectId);
+        }
         
         // Set persistence to LOCAL for better localhost experience
         const auth = firebase.auth();
