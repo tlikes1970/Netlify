@@ -1616,29 +1616,93 @@ waitForFirebaseReady() {
         window.performSearch = window.performSearch;
         console.log('✅ performSearch already available on window');
       } else {
-        // Create a basic performSearch function if it doesn't exist
-        window.performSearch = function() {
+        // Create a proper performSearch function that uses tmdbGet
+        window.performSearch = async function() {
           console.log('🔍 performSearch called');
           const searchInput = document.getElementById('search');
-          if (searchInput && searchInput.value.trim()) {
-            console.log('Searching for:', searchInput.value.trim());
-            // Basic search functionality - can be enhanced later
-            alert('Search functionality: ' + searchInput.value.trim());
-          } else {
+          const searchResults = document.getElementById('searchResults');
+          
+          if (!searchInput || !searchInput.value.trim()) {
             console.log('No search term entered');
+            return;
+          }
+          
+          const query = searchInput.value.trim();
+          console.log('Searching for:', query);
+          
+          // Show loading state
+          if (searchResults) {
+            searchResults.innerHTML = '<div style="text-align: center; padding: 20px;">🔍 Searching...</div>';
+          }
+          
+          try {
+            // Use the searchTMDB helper function
+            if (typeof window.searchTMDB === 'function') {
+              const results = await window.searchTMDB(query);
+              console.log('Search results:', results);
+              
+              if (searchResults) {
+                if (results.results && results.results.length > 0) {
+                  // Display search results
+                  const resultsHtml = results.results.map(item => {
+                    const title = item.title || item.name || 'Unknown';
+                    const year = item.release_date ? new Date(item.release_date).getFullYear() : 
+                                item.first_air_date ? new Date(item.first_air_date).getFullYear() : '';
+                    const mediaType = item.media_type || 'movie';
+                    const poster = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
+                    
+                    return `
+                      <div style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
+                        ${poster ? `<img src="${poster}" style="width: 50px; height: 75px; object-fit: cover; margin-right: 10px;">` : ''}
+                        <div>
+                          <h4 style="margin: 0;">${title} ${year ? `(${year})` : ''}</h4>
+                          <p style="margin: 5px 0 0 0; color: #666; text-transform: capitalize;">${mediaType}</p>
+                        </div>
+                      </div>
+                    `;
+                  }).join('');
+                  
+                  searchResults.innerHTML = `
+                    <div style="padding: 10px;">
+                      <h3>Search Results for "${query}"</h3>
+                      ${resultsHtml}
+                    </div>
+                  `;
+                } else {
+                  searchResults.innerHTML = `<div style="text-align: center; padding: 20px;">No results found for "${query}"</div>`;
+                }
+              }
+            } else {
+              console.error('searchTMDB function not available');
+              if (searchResults) {
+                searchResults.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">Search functionality not available</div>';
+              }
+            }
+          } catch (error) {
+            console.error('Search failed:', error);
+            if (searchResults) {
+              searchResults.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">Search failed. Please try again.</div>';
+            }
           }
         };
         console.log('✅ performSearch function created and available on window');
       }
 
-      // Create a basic clearSearch function if it doesn't exist
+      // Create a proper clearSearch function if it doesn't exist
       if (typeof window.clearSearch !== 'function') {
         window.clearSearch = function() {
           console.log('🧹 clearSearch called');
           const searchInput = document.getElementById('search');
+          const searchResults = document.getElementById('searchResults');
+          
           if (searchInput) {
             searchInput.value = '';
             console.log('Search input cleared');
+          }
+          
+          if (searchResults) {
+            searchResults.innerHTML = '';
+            console.log('Search results cleared');
           }
         };
         console.log('✅ clearSearch function created and available on window');
