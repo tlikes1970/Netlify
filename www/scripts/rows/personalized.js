@@ -170,7 +170,8 @@
       const data = await preset.fetch(1);
       
       if (!data || !data.results || !Array.isArray(data.results)) {
-        throw new Error('Invalid data structure returned from preset');
+        console.warn('[personalized] Invalid data from preset; skipping row');
+        return;
       }
 
       // Clear skeleton and render cards
