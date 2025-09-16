@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, clearSearchUI } from './fixtures';
 
 test.describe('Desktop Search Row Grid Layout', () => {
   test.beforeEach(async ({ page }) => {
@@ -133,17 +133,16 @@ test.describe('Desktop Search Row Grid Layout', () => {
     await page.waitForTimeout(100);
 
     // First perform a search
-    await page.fill('.top-search .search-input', 'test search');
+    const input = page.locator('.top-search .search-input');
+    await input.fill('test search');
     await page.click('.top-search .search-btn');
     await page.waitForTimeout(500);
 
-    // Then clear it
-    await page.click('.top-search .clear-search-btn');
-    await page.waitForTimeout(100);
-
+    // Use the robust clear helper with selector override
+    await clearSearchUI(page, '.top-search .search-input');
+    
     // Verify input is cleared
-    const inputValue = await page.inputValue('.top-search .search-input');
-    expect(inputValue).toBe('');
+    await expect(input).toHaveValue('');
   });
 
   test('no layout wrapping at edge cases', async ({ page }) => {
