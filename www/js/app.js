@@ -356,18 +356,10 @@ waitForFirebaseReady() {
             
             const done = (val) => { wrap.remove(); resolve(val); };
             
-            // Fallback event handlers (in case global [data-action] delegate is not present)
-            document.getElementById('username-skip')?.addEventListener('click', (e) => { 
-              e.preventDefault(); 
-              e.stopPropagation(); 
-              done(null); 
-            });
-            document.getElementById('username-save')?.addEventListener('click', (e) => {
-              e.preventDefault(); 
-              e.stopPropagation();
-              const v = (document.getElementById('username-input')?.value || '').trim();
-              done(v || null);
-            });
+            // Expose the done callback for global [data-action] handler
+            wrap._usernameDone = done;
+            
+            // Note: Event handlers are now managed by the global [data-action] delegate
           });
         }
 
@@ -1265,6 +1257,36 @@ waitForFirebaseReady() {
             break;
           case 'share-lists':
             // Handled by inline-script-01.js - do nothing here
+            break;
+          case 'username-skip':
+            // Username modal skip
+            e.preventDefault();
+            e.stopPropagation();
+            // Find the username modal and trigger skip
+            const usernameModal = document.getElementById('username-modal');
+            if (usernameModal) {
+              // Find the parent wrapper and trigger the done callback
+              const wrapper = usernameModal.closest('div');
+              if (wrapper && wrapper._usernameDone) {
+                wrapper._usernameDone(null);
+              }
+            }
+            break;
+          case 'username-save':
+            // Username modal save
+            e.preventDefault();
+            e.stopPropagation();
+            // Find the username modal and trigger save
+            const usernameModal2 = document.getElementById('username-modal');
+            if (usernameModal2) {
+              const input = document.getElementById('username-input');
+              const value = input ? input.value.trim() : '';
+              // Find the parent wrapper and trigger the done callback
+              const wrapper = usernameModal2.closest('div');
+              if (wrapper && wrapper._usernameDone) {
+                wrapper._usernameDone(value || null);
+              }
+            }
             break;
           default:
             console.warn(t('unknown_data_action') + ':', action);
