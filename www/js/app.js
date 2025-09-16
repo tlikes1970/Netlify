@@ -1618,24 +1618,42 @@ waitForFirebaseReady() {
       } else {
         // Create a proper performSearch function that uses tmdbGet
         window.performSearch = async function() {
-          console.log('🔍 performSearch called');
-          const searchInput = document.getElementById('search');
-          const searchResults = document.getElementById('searchResults');
-          
-          if (!searchInput || !searchInput.value.trim()) {
-            console.log('No search term entered');
-            return;
-          }
-          
-          const query = searchInput.value.trim();
-          console.log('Searching for:', query);
-          
-          // Show loading state
-          if (searchResults) {
-            searchResults.innerHTML = '<div style="text-align: center; padding: 20px;">🔍 Searching...</div>';
-          }
-          
           try {
+            console.log('🔍 performSearch called');
+            let searchInput = document.getElementById('search');
+            const searchResults = document.getElementById('searchResults');
+            
+            // Debug logging
+            console.log('Search input element:', searchInput);
+            console.log('Search input value:', searchInput ? searchInput.value : 'undefined');
+            
+            if (!searchInput) {
+              console.error('❌ Search input element not found, trying alternative selectors');
+              // Try alternative selectors
+              searchInput = document.querySelector('input[type="search"]') || 
+                           document.querySelector('.search-input') ||
+                           document.querySelector('#searchInput');
+              if (searchInput) {
+                console.log('✅ Found search input with alternative selector:', searchInput);
+              } else {
+                console.error('❌ No search input found with any selector');
+                return;
+              }
+            }
+            
+            if (!searchInput.value || !searchInput.value.trim()) {
+              console.log('No search term entered');
+              return;
+            }
+            
+            const query = searchInput.value.trim();
+            console.log('Searching for:', query);
+            
+            // Show loading state
+            if (searchResults) {
+              searchResults.innerHTML = '<div style="text-align: center; padding: 20px;">🔍 Searching...</div>';
+            }
+            
             // Use the searchTMDB helper function
             if (typeof window.searchTMDB === 'function') {
               const results = await window.searchTMDB(query);
@@ -1680,6 +1698,7 @@ waitForFirebaseReady() {
             }
           } catch (error) {
             console.error('Search failed:', error);
+            const searchResults = document.getElementById('searchResults');
             if (searchResults) {
               searchResults.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">Search failed. Please try again.</div>';
             }
