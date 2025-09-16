@@ -342,15 +342,29 @@ waitForFirebaseReady() {
                   <h3 style="margin:0 0 8px 0;">what should we call you?</h3>
                   <input id="username-input" style="width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:8px" value="${defaultName || ''}" />
                   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-                    <button id="username-skip" class="btn btn--sm">Skip</button>
-                    <button id="username-save" class="btn btn--sm">Save</button>
+                    <button id="username-skip" type="button" class="btn btn--sm" data-action="username-skip">Skip</button>
+                    <button id="username-save" type="button" class="btn btn--sm" data-action="username-save">Save</button>
                   </div>
                 </div>
               </div>`;
             document.body.appendChild(wrap);
+            
+            // prevent overlay click from bubbling to app-level handlers
+            wrap.querySelector('#username-modal')?.addEventListener('click', (e) => {
+              if (e.target === e.currentTarget) { /* click on backdrop */ }
+            });
+            
             const done = (val) => { wrap.remove(); resolve(val); };
-            document.getElementById('username-skip')?.addEventListener('click', () => done(null));
-            document.getElementById('username-save')?.addEventListener('click', () => {
+            
+            // Fallback event handlers (in case global [data-action] delegate is not present)
+            document.getElementById('username-skip')?.addEventListener('click', (e) => { 
+              e.preventDefault(); 
+              e.stopPropagation(); 
+              done(null); 
+            });
+            document.getElementById('username-save')?.addEventListener('click', (e) => {
+              e.preventDefault(); 
+              e.stopPropagation();
               const v = (document.getElementById('username-input')?.value || '').trim();
               done(v || null);
             });
