@@ -3,7 +3,7 @@ d<!DOCTYPE html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v23.86-HERO-OVERLAY-REMOVED</title>
+    <title>Flicklet - TV & Movie Tracker v23.88-SW-ENVIRONMENT-GUARD</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
@@ -262,6 +262,72 @@ d<!DOCTYPE html>
       <link rel="stylesheet" href="/styles/card-system.css?v=v23.53">
     </noscript>
 
+    <!-- BOOTSTRAP GUARDS (must come before all app scripts) -->
+    <script>
+    (function () {
+      // Firebase guard
+      const hasFirebase = typeof window !== 'undefined' &&
+        window.firebase && typeof window.firebase.initializeApp === 'function';
+
+      if (hasFirebase) {
+        try {
+          // LEAVE existing firebase.initializeApp(...) here if present in index.html,
+          // or it may be in a separate script include. Do not duplicate in two places.
+          // If initialization currently happens later, it's OK; this guard just prevents crashes.
+        } catch (err) {
+          console.error('🔥 Firebase initialization error:', err);
+        }
+      } else {
+        console.info('ℹ️ Firebase not loaded — proceeding without cloud features');
+        window.loadUserDataFromCloud = window.loadUserDataFromCloud || (async () => null);
+        window.addToList = window.addToList || (() => false);
+      }
+
+      // TMDB client shim (safe when no key)
+      if (!window.tmdbGet) {
+        const EMPTY = { results: [], page: 1, total_pages: 0, total_results: 0 };
+        window.tmdbGet = async function tmdbGet(path, params = {}) {
+          try {
+            const base = 'https://api.themoviedb.org/3';
+            const key = (window.env && (window.env.TMDB_API_KEY || window.env.TMDB)) || window.TMDB_API_KEY || '';
+            if (!key) return EMPTY;
+            const usp = new URLSearchParams({ ...params, api_key: key });
+            const url = `${base}${path}?${usp.toString()}`;
+            const res = await fetch(url);
+            if (!res.ok) return EMPTY;
+            return await res.json();
+          } catch (_) {
+            return EMPTY;
+          }
+        };
+        console.info('✅ tmdbGet fallback installed');
+      }
+
+      // Minimal genre map fallback
+      window.__GENRES__ = window.__GENRES__ || {
+        // Core IDs used by TMDB (movies)
+        16: 'Animation', 27: 'Horror', 28: 'Action', 35: 'Comedy', 18: 'Drama',
+        12: 'Adventure', 14: 'Fantasy', 53: 'Thriller', 80: 'Crime', 99: 'Documentary'
+      };
+
+      // Service Worker registration (only on production or localhost)
+      if ('serviceWorker' in navigator) {
+        const host = location.hostname;
+        const isLocal = host === 'localhost' || host.endsWith('.local') || host.endsWith('.lan');
+        const isProd = host.endsWith('netlify.app') && !host.includes('--deploy-preview-');
+        if (isLocal || isProd) {
+          navigator.serviceWorker.register('cnm-sw.js').catch(console.warn);
+        } else {
+          // If a SW is already controlling this preview, unregister it
+          navigator.serviceWorker.getRegistrations?.().then(regs => {
+            regs.forEach(r => r.unregister());
+          });
+          console.info('SW disabled for this environment:', host);
+        }
+      }
+    })();
+    </script>
+
     <!-- Feature flags and safety guard -->
     <script src="/js/flags.js"></script>
     
@@ -347,7 +413,7 @@ d<!DOCTYPE html>
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
-            <span class="version-display">v23.86</span>
+            <span class="version-display">v23.88-SW-ENVIRONMENT-GUARD</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
