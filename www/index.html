@@ -3,12 +3,12 @@ d<!DOCTYPE html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v23.93</title>
+    <title>Flicklet - TV & Movie Tracker v23.95</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
     />
-    <meta name="build" content="v23.93">
+    <meta name="build" content="v23.95">
     
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
@@ -263,23 +263,33 @@ d<!DOCTYPE html>
       <link rel="stylesheet" href="/styles/card-system.css?v=v23.53">
     </noscript>
 
-    <!-- Firebase SDK CDN -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
-    <!-- Firebase Initialization -->
+    <!-- Project config (must define window.firebaseConfig) -->
+    <script src="firebase-config.js"></script>
+
+    <!-- Guarded init (runs AFTER the two SDK scripts and firebase-config.js) -->
     <script>
-    if (window.firebase && typeof firebase.initializeApp === 'function') {
-      // Replace with real config object if not already present
-      // const firebaseConfig = { apiKey: "...", authDomain: "...", ... };
+    (function () {
+      const hasSDK = !!(window.firebase && typeof window.firebase.initializeApp === 'function');
+      const cfg = window.firebaseConfig;
+      if (!hasSDK) {
+        console.info('Firebase SDK not loaded; skipping init');
+        return;
+      }
+      if (!cfg || typeof cfg !== 'object') {
+        console.info('Firebase config missing; skipping init');
+        return;
+      }
       try {
-        if (!firebase.apps?.length) firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps?.length) firebase.initializeApp(cfg);
+        console.info('Firebase initialized');
       } catch (e) {
         console.error('Firebase init error', e);
       }
-    } else {
-      console.info('Firebase SDK not loaded; skipping init');
-    }
+    })();
     </script>
 
     <!-- BOOTSTRAP GUARDS (must come before all app scripts) -->
@@ -440,7 +450,7 @@ d<!DOCTYPE html>
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
-            <span class="version-display">v23.93</span>
+            <span class="version-display">v23.95</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
