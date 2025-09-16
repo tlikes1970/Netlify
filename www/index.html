@@ -3,12 +3,12 @@ d<!DOCTYPE html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v23.92</title>
+    <title>Flicklet - TV & Movie Tracker v23.93</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
     />
-    <meta name="build" content="v23.92">
+    <meta name="build" content="v23.93">
     
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
@@ -263,6 +263,25 @@ d<!DOCTYPE html>
       <link rel="stylesheet" href="/styles/card-system.css?v=v23.53">
     </noscript>
 
+    <!-- Firebase SDK CDN -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
+    <!-- Firebase Initialization -->
+    <script>
+    if (window.firebase && typeof firebase.initializeApp === 'function') {
+      // Replace with real config object if not already present
+      // const firebaseConfig = { apiKey: "...", authDomain: "...", ... };
+      try {
+        if (!firebase.apps?.length) firebase.initializeApp(firebaseConfig);
+      } catch (e) {
+        console.error('Firebase init error', e);
+      }
+    } else {
+      console.info('Firebase SDK not loaded; skipping init');
+    }
+    </script>
+
     <!-- BOOTSTRAP GUARDS (must come before all app scripts) -->
     <script>
     (function () {
@@ -421,7 +440,7 @@ d<!DOCTYPE html>
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
-            <span class="version-display">v23.92</span>
+            <span class="version-display">v23.93</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
