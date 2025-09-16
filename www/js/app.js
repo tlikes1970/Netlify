@@ -354,10 +354,15 @@ waitForFirebaseReady() {
               if (e.target === e.currentTarget) { /* click on backdrop */ }
             });
             
-            const done = (val) => { wrap.remove(); resolve(val); };
+            const done = (val) => { 
+              console.log('[promptForUsername] done called with:', val);
+              wrap.remove(); 
+              resolve(val); 
+            };
             
             // Expose the done callback for global [data-action] handler
             wrap._usernameDone = done;
+            console.log('[promptForUsername] _usernameDone callback set on wrapper');
             
             // Note: Event handlers are now managed by the global [data-action] delegate
           });
@@ -1262,30 +1267,43 @@ waitForFirebaseReady() {
             // Username modal skip
             e.preventDefault();
             e.stopPropagation();
+            console.log('[data-action] username-skip clicked');
             // Find the username modal and trigger skip
             const usernameModal = document.getElementById('username-modal');
             if (usernameModal) {
-              // Find the parent wrapper and trigger the done callback
-              const wrapper = usernameModal.closest('div');
+              // Find the parent wrapper (the div that was created in promptForUsername)
+              const wrapper = usernameModal.parentElement;
               if (wrapper && wrapper._usernameDone) {
+                console.log('[data-action] calling _usernameDone(null)');
                 wrapper._usernameDone(null);
+              } else {
+                console.warn('[data-action] wrapper or _usernameDone not found');
               }
+            } else {
+              console.warn('[data-action] username modal not found');
             }
             break;
           case 'username-save':
             // Username modal save
             e.preventDefault();
             e.stopPropagation();
+            console.log('[data-action] username-save clicked');
             // Find the username modal and trigger save
             const usernameModal2 = document.getElementById('username-modal');
             if (usernameModal2) {
               const input = document.getElementById('username-input');
               const value = input ? input.value.trim() : '';
-              // Find the parent wrapper and trigger the done callback
-              const wrapper = usernameModal2.closest('div');
+              console.log('[data-action] input value:', value);
+              // Find the parent wrapper (the div that was created in promptForUsername)
+              const wrapper = usernameModal2.parentElement;
               if (wrapper && wrapper._usernameDone) {
+                console.log('[data-action] calling _usernameDone with value:', value);
                 wrapper._usernameDone(value || null);
+              } else {
+                console.warn('[data-action] wrapper or _usernameDone not found');
               }
+            } else {
+              console.warn('[data-action] username modal not found');
             }
             break;
           default:
