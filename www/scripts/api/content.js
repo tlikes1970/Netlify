@@ -11,6 +11,21 @@
 
   console.log('🎬 Content API presets loaded');
 
+  const GENRE_FALLBACK = (window.__GENRES__) || {
+    16: 'Animation', 27: 'Horror', 28: 'Action', 35: 'Comedy', 18: 'Drama',
+    12: 'Adventure', 14: 'Fantasy', 53: 'Thriller', 80: 'Crime', 99: 'Documentary'
+  };
+
+  function resolveGenreIdByName(name, map) {
+    const norm = String(name || '').trim().toLowerCase();
+    if (!norm) return null;
+    const pairs = Object.entries(map || {});
+    for (const [id, label] of pairs) {
+      if (String(label).toLowerCase() === norm) return Number(id);
+    }
+    return null;
+  }
+
   /**
    * Available row presets for personalized sections
    */
@@ -48,25 +63,45 @@
       
       // Fetch both movies and TV shows trending
       const [moviesData, tvData] = await Promise.all([
-        window.tmdbGet('trending/movie/day', `&page=${page}`),
-        window.tmdbGet('trending/tv/day', `&page=${page}`)
+        window.tmdbGet('trending/movie/day', { page: page }),
+        window.tmdbGet('trending/tv/day', { page: page })
       ]);
 
       // Combine and shuffle results
       const allResults = [
-        ...(moviesData.results || []),
-        ...(tvData.results || [])
+        ...(moviesData?.results || []),
+        ...(tvData?.results || [])
       ].sort(() => Math.random() - 0.5);
 
       return {
         results: allResults,
         page: page,
-        total_pages: Math.max(moviesData.total_pages || 1, tvData.total_pages || 1)
+        total_pages: Math.max(moviesData?.total_pages || 1, tvData?.total_pages || 1)
       };
     } catch (error) {
-      console.error('❌ Failed to fetch trending content:', error);
-      throw error;
+      console.warn('[content] tmdbGet failed for trending', error);
+      return [];
     }
+  }
+
+  /**
+   * Resolve genre ID by name using fallback map
+   * @param {string} name - Genre name to resolve
+   * @param {Object} genresMap - Genre map from TMDB API
+   * @returns {number|null} Genre ID or null if not found
+   */
+  function resolveGenreIdByName(name, genresMap) {
+    const norm = String(name || '').trim().toLowerCase();
+    if (!norm) return null;
+    // Try provided map first
+    for (const [id, label] of Object.entries(genresMap || {})) {
+      if (String(label).toLowerCase() === norm) return Number(id);
+    }
+    // Try fallback map
+    for (const [id, label] of Object.entries(window.__GENRES__ || {})) {
+      if (String(label).toLowerCase() === norm) return Number(id);
+    }
+    return null;
   }
 
   /**
@@ -79,40 +114,55 @@
     try {
       console.log(`🎬 Fetching ${genreName} content, page:`, page);
       
-      // First get the genre ID
+      // First get the genre ID using fallback
       const genreData = await window.tmdbGet('genre/movie/list');
-      const genre = genreData.genres?.find(g => g.name === genreName);
+      const genreId = resolveGenreIdByName(genreName, genreData.genres) ?? 
+                     resolveGenreIdByName(genreName, GENRE_FALLBACK);
       
-      if (!genre) {
-        throw new Error(`Genre "${genreName}" not found`);
+      if (genreId == null) {
+        console.warn('[content] Genre not found via API or fallback:', genreName);
+        return []; // do not throw
       }
 
       // Fetch movies by genre
-      const movieData = await window.tmdbGet('discover/movie', `&with_genres=${genre.id}&page=${page}&sort_by=popularity.desc`);
-      
-      // Also fetch TV shows by genre if available
-      const tvGenreData = await window.tmdbGet('genre/tv/list');
-      const tvGenre = tvGenreData.genres?.find(g => g.name === genreName);
-      
-      let tvData = { results: [] };
-      if (tvGenre) {
-        tvData = await window.tmdbGet('discover/tv', `&with_genres=${tvGenre.id}&page=${page}&sort_by=popularity.desc`);
+      try {
+        const movieData = await window.tmdbGet('discover/movie', {
+          with_genres: genreId,
+          page: page,
+          sort_by: 'popularity.desc'
+        });
+        const movieItems = Array.isArray(movieData?.results) ? movieData.results : [];
+        
+        // Also fetch TV shows by genre if available
+        const tvGenreData = await window.tmdbGet('genre/tv/list');
+        const tvGenreId = resolveGenreIdByName(genreName, tvGenreData.genres) ?? 
+                         resolveGenreIdByName(genreName, GENRE_FALLBACK);
+        
+        let tvItems = [];
+        if (tvGenreId) {
+          const tvData = await window.tmdbGet('discover/tv', {
+          with_genres: tvGenreId,
+          page: page,
+          sort_by: 'popularity.desc'
+        });
+          tvItems = Array.isArray(tvData?.results) ? tvData.results : [];
+        }
+
+        // Combine results
+        const allResults = [...movieItems, ...tvItems].sort(() => Math.random() - 0.5);
+
+        return {
+          results: allResults,
+          page: page,
+          total_pages: Math.max(movieData?.total_pages || 1, tvData?.total_pages || 1)
+        };
+      } catch (err) {
+        console.warn('[content] tmdbGet failed for genre', genreName, err);
+        return [];
       }
-
-      // Combine results
-      const allResults = [
-        ...(movieData.results || []),
-        ...(tvData.results || [])
-      ].sort(() => Math.random() - 0.5);
-
-      return {
-        results: allResults,
-        page: page,
-        total_pages: Math.max(movieData.total_pages || 1, tvData.total_pages || 1)
-      };
     } catch (error) {
-      console.error(`❌ Failed to fetch ${genreName} content:`, error);
-      throw error;
+      console.warn('[content] Genre not found:', genreName);
+      return [];
     }
   }
 
@@ -127,18 +177,18 @@
       
       // Use a mix of highly rated and popular content
       const [topRatedMovies, topRatedTV, popularMovies, popularTV] = await Promise.all([
-        window.tmdbGet('movie/top_rated', `&page=${page}`),
-        window.tmdbGet('tv/top_rated', `&page=${page}`),
-        window.tmdbGet('movie/popular', `&page=${page}`),
-        window.tmdbGet('tv/popular', `&page=${page}`)
+        window.tmdbGet('movie/top_rated', { page: page }),
+        window.tmdbGet('tv/top_rated', { page: page }),
+        window.tmdbGet('movie/popular', { page: page }),
+        window.tmdbGet('tv/popular', { page: page })
       ]);
 
       // Combine and prioritize highly rated content
       const allResults = [
-        ...(topRatedMovies.results || []).slice(0, 5),
-        ...(topRatedTV.results || []).slice(0, 5),
-        ...(popularMovies.results || []).slice(0, 3),
-        ...(popularTV.results || []).slice(0, 3)
+        ...(topRatedMovies?.results || []).slice(0, 5),
+        ...(topRatedTV?.results || []).slice(0, 5),
+        ...(popularMovies?.results || []).slice(0, 3),
+        ...(popularTV?.results || []).slice(0, 3)
       ].sort(() => Math.random() - 0.5);
 
       return {
@@ -147,8 +197,8 @@
         total_pages: 1 // Staff picks are curated, so we don't paginate much
       };
     } catch (error) {
-      console.error('❌ Failed to fetch staff picks:', error);
-      throw error;
+      console.warn('[content] tmdbGet failed for staff picks', error);
+      return [];
     }
   }
 
@@ -164,8 +214,8 @@
       // Fetch animated content and filter for Japanese productions
       const animatedContent = await fetchByGenre('Animation', page);
       
-      if (!animatedContent || !animatedContent.results) {
-        return { results: [], page: page, total_pages: 1 };
+      if (!animatedContent || !Array.isArray(animatedContent.results)) {
+        return [];
       }
 
       // Filter for anime-specific content (Japanese origin required)
@@ -190,8 +240,8 @@
         total_pages: animatedContent.total_pages || 1
       };
     } catch (error) {
-      console.error('❌ Failed to fetch anime content:', error);
-      throw error;
+      console.warn('[content] tmdbGet failed for anime', error);
+      return [];
     }
   }
 

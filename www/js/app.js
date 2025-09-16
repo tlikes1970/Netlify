@@ -90,6 +90,9 @@
         // 3) Initialize Firebase auth listener
         this.initFirebase();
 
+        // 3.5) Setup auth button sync
+        this.setupAuthButtonSync();
+
         // 4) Bind global UI listeners
         this.setupEventListeners();
 
@@ -116,6 +119,7 @@
         // Initialize search functionality after a delay to ensure search functions are loaded
         setTimeout(() => {
           this.initializeSearch();
+          this.ensureSearchFunctionsAvailable();
         }, 1000);
 
         // Initialize genres
@@ -160,6 +164,11 @@
     // setupAuthListener() removed - auth handled in initFirebase()
 
     initFirebase() {
+      if (window.__NO_FIREBASE__ || !(window.firebase && typeof window.firebase.initializeApp === 'function')) {
+        console.info('initFirebase skipped (SDK not present)');
+        return;
+      }
+      
       // Prevent multiple initializations
       if (this.firebaseInitialized) {
         FlickletDebug.info('⚠️ Firebase already initialized, skipping');
@@ -267,6 +276,179 @@ waitForFirebaseReady() {
       }
     },
 
+    // Complete login flow with Firestore integration
+    setupAuthButtonSync() {
+      (function () {
+        const btn = document.getElementById('signIn');
+        if (!btn) return;
+
+        // Small UI helpers
+        function setAuthButtonSignedIn(emailOrName) {
+          btn.textContent = emailOrName || '👤 Sign Out';
+          btn.dataset.state = 'signed-in';
+          btn.title = emailOrName ? `Signed in as ${emailOrName}` : 'Signed in';
+          showSignOutHint(true);
+        }
+        function setAuthButtonSignedOut() {
+          btn.textContent = '👤 Sign In';
+          btn.dataset.state = 'signed-out';
+          btn.title = 'Sign in';
+          showSignOutHint(false);
+        }
+        function showSignOutHint(show) {
+          let hint = document.getElementById('signOutHint');
+          if (!hint) {
+            hint = document.createElement('div');
+            hint.id = 'signOutHint';
+            hint.style.cssText = 'font-size:12px;opacity:.8;margin-top:2px;';
+            btn.parentElement?.insertBefore(hint, btn);
+          }
+          hint.textContent = show ? 'Sign out' : '';
+          hint.style.display = show ? '' : 'none';
+        }
+
+        // First-load prompt for unsigned users
+        function showFirstLoadSignInPrompt() {
+          if (sessionStorage.getItem('firstSignInPromptShown') === '1') return;
+          sessionStorage.setItem('firstSignInPromptShown', '1');
+
+          const wrap = document.createElement('div');
+          wrap.innerHTML = `
+            <div id="signin-info-modal" style="position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.35);z-index:9999">
+              <div style="background:#fff;padding:16px 20px;border-radius:10px;max-width:420px;width:92%;box-shadow:0 10px 30px rgba(0,0,0,.2)">
+                <h3 style="margin:0 0 8px 0;">Save your shows</h3>
+                <p style="margin:0 0 14px 0;">Sign in to keep your watchlists and pick up on any device.</p>
+                <div style="display:flex;gap:8px;justify-content:flex-end">
+                  <button id="signin-skip" class="btn btn--sm">Not now</button>
+                  <button id="signin-go" class="btn btn--sm">Sign in</button>
+                </div>
+              </div>
+            </div>`;
+          document.body.appendChild(wrap);
+          document.getElementById('signin-skip')?.addEventListener('click', () => wrap.remove());
+          document.getElementById('signin-go')?.addEventListener('click', () => {
+            wrap.remove();
+            triggerSignIn();
+          });
+        }
+
+        // Username prompt when missing
+        function promptForUsername(defaultName) {
+          return new Promise((resolve) => {
+            const wrap = document.createElement('div');
+            wrap.innerHTML = `
+              <div id="username-modal" style="position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.35);z-index:9999">
+                <div style="background:#fff;padding:16px 20px;border-radius:10px;max-width:480px;width:92%;box-shadow:0 10px 30px rgba(0,0,0,.2)">
+                  <h3 style="margin:0 0 8px 0;">what should we call you?</h3>
+                  <input id="username-input" style="width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:8px" value="${defaultName || ''}" />
+                  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+                    <button id="username-skip" type="button" class="btn btn--sm" data-action="username-skip">Skip</button>
+                    <button id="username-save" type="button" class="btn btn--sm" data-action="username-save">Save</button>
+                  </div>
+                </div>
+              </div>`;
+            document.body.appendChild(wrap);
+            
+            // prevent overlay click from bubbling to app-level handlers
+            wrap.querySelector('#username-modal')?.addEventListener('click', (e) => {
+              if (e.target === e.currentTarget) { /* click on backdrop */ }
+            });
+            
+            const done = (val) => { 
+              wrap.remove(); 
+              resolve(val); 
+            };
+            
+            // Expose the done callback for global [data-action] handler
+            wrap._usernameDone = done;
+            
+            // Note: Event handlers are now managed by the global [data-action] delegate
+          });
+        }
+
+        // Firestore helpers (guarded)
+        function userDocRef(uid) {
+          if (!window.db || !uid) return null;
+          return db.collection('users').doc(uid); // simple structure: users/{uid}
+        }
+        async function readUsername(uid) {
+          const ref = userDocRef(uid);
+          if (!ref) throw new Error('Firestore not available');
+          const snap = await ref.get();
+          return snap.exists ? (snap.data()?.username || null) : null;
+        }
+        async function writeUsername(uid, name) {
+          const ref = userDocRef(uid);
+          if (!ref) throw new Error('Firestore not available');
+          await ref.set({ username: name }, { merge: true });
+        }
+
+        function updateWelcome(name) {
+          const el = document.getElementById('welcomeNote') || (() => {
+            const n = document.createElement('div');
+            n.id = 'welcomeNote';
+            n.style.cssText = 'margin:8px 0;font-weight:600;';
+            const headerLeft = document.querySelector('#header-left, header .left, body'); // best-effort
+            (headerLeft || document.body).prepend(n);
+            return n;
+          })();
+          el.innerHTML = name
+            ? `${name}<div style="font-weight:400;opacity:.8">I have a PhD in binge-watching.</div>`
+            : '';
+        }
+
+        async function ensureUsernameFlow(user) {
+          try {
+            const display = user.displayName || user.email || 'Signed in';
+            setAuthButtonSignedIn(display);
+            let uname = null;
+            try { uname = await readUsername(user.uid); } catch {}
+            if (!uname) {
+              const picked = await promptForUsername(display);
+              if (picked) {
+                try { await writeUsername(user.uid, picked); } catch {}
+                uname = picked;
+              }
+            }
+            updateWelcome(uname || display);
+            // TODO: also reflect into your local Flicklet Settings if needed
+          } catch (e) {
+            console.error('[auth] username flow failed', e);
+          }
+        }
+
+        function triggerSignIn() {
+          if (!window.firebase || !firebase.auth) { console.warn('[auth] Firebase not available'); return; }
+          const auth = firebase.auth();
+          const provider = new firebase.auth.GoogleAuthProvider();
+          auth.signInWithPopup(provider).catch(err => console.error('[auth] Sign-in failed', err));
+        }
+
+        // Click handler
+        btn.addEventListener('click', async () => {
+          if (!window.firebase || !firebase.auth) return;
+          const auth = firebase.auth();
+          if (auth.currentUser) auth.signOut().catch(e => console.error('[auth] Sign-out failed', e));
+          else triggerSignIn();
+        });
+
+        // onAuthStateChanged: sync button + flows; show first-load prompt when unsigned
+        if (window.firebase && firebase.auth) {
+          const auth = firebase.auth();
+          // First paint
+          if (auth.currentUser) setAuthButtonSignedIn(auth.currentUser.displayName || auth.currentUser.email || '');
+          else { setAuthButtonSignedOut(); showFirstLoadSignInPrompt(); }
+
+          auth.onAuthStateChanged((user) => {
+            if (user) ensureUsernameFlow(user);
+            else { setAuthButtonSignedOut(); }
+          });
+        } else {
+          setAuthButtonSignedOut();
+        }
+      })();
+    },
+
     async processUserSignIn(user) {
       try {
         FlickletDebug.info('✅ User signed in, processing...');
@@ -318,7 +500,7 @@ waitForFirebaseReady() {
               window.FlickletApp.updateTabContent(currentTab);
             }
           } else {
-            FlickletDebug.error('❌ loadUserDataFromCloud function not available');
+            FlickletDebug.warn('⚠️ loadUserDataFromCloud function not available - user data not loaded from cloud');
           }
         } catch (error) {
           FlickletDebug.error('❌ Failed to load user data from cloud:', error);
@@ -1030,7 +1212,7 @@ waitForFirebaseReady() {
         if (e.ctrlKey || e.metaKey) {
           if (e.key === 'k') {
             e.preventDefault();
-            document.getElementById('searchInput')?.focus();
+            document.getElementById('search')?.focus();
           } else if (e.key === 't') {
             e.preventDefault();
             toggleDarkMode();
@@ -1078,6 +1260,36 @@ waitForFirebaseReady() {
             break;
           case 'share-lists':
             // Handled by inline-script-01.js - do nothing here
+            break;
+          case 'username-skip':
+            // Username modal skip
+            e.preventDefault();
+            e.stopPropagation();
+            // Find the username modal and trigger skip
+            const usernameModal = document.getElementById('username-modal');
+            if (usernameModal) {
+              // Find the parent wrapper (the div that was created in promptForUsername)
+              const wrapper = usernameModal.parentElement;
+              if (wrapper && wrapper._usernameDone) {
+                wrapper._usernameDone(null);
+              }
+            }
+            break;
+          case 'username-save':
+            // Username modal save
+            e.preventDefault();
+            e.stopPropagation();
+            // Find the username modal and trigger save
+            const usernameModal2 = document.getElementById('username-modal');
+            if (usernameModal2) {
+              const input = document.getElementById('username-input');
+              const value = input ? input.value.trim() : '';
+              // Find the parent wrapper (the div that was created in promptForUsername)
+              const wrapper = usernameModal2.parentElement;
+              if (wrapper && wrapper._usernameDone) {
+                wrapper._usernameDone(value || null);
+              }
+            }
             break;
           default:
             console.warn(t('unknown_data_action') + ':', action);
@@ -1383,7 +1595,7 @@ waitForFirebaseReady() {
 
     // STEP 3.5 — Make Enter in search box trigger the search
     setupSearchEnterKey() {
-      const searchInput = document.getElementById('searchInput');
+      const searchInput = document.getElementById('search');
       const searchBtn = document.getElementById('searchBtn');
       if (searchInput && searchBtn) {
         searchInput.addEventListener('keydown', (ev) => {
@@ -1392,6 +1604,223 @@ waitForFirebaseReady() {
             ev.stopPropagation();
             console.log('🔎 Enter pressed in search box — running search');
             searchBtn.click(); // triggers the same onclick handler
+          }
+        });
+      }
+    },
+
+    // Ensure performSearch is available on window for robust bindings
+    ensureSearchFunctionsAvailable() {
+      // Make performSearch available on window if it exists
+      if (typeof window.performSearch === 'function') {
+        window.performSearch = window.performSearch;
+        console.log('✅ performSearch already available on window');
+      } else {
+        // Create a proper performSearch function that uses tmdbGet
+        window.performSearch = async function() {
+          try {
+            console.log('🔍 performSearch called');
+            let searchInput = document.querySelector('input[type="search"]');
+            const searchResults = document.getElementById('searchResults');
+            
+            // Debug logging
+            console.log('Search input element:', searchInput);
+            console.log('Search input value:', searchInput ? searchInput.value : 'undefined');
+            
+            if (!searchInput) {
+              console.error('❌ Search input element not found, trying alternative selectors');
+              // Try alternative selectors
+              searchInput = document.querySelector('.search-input') ||
+                           document.querySelector('#searchInput') ||
+                           document.querySelector('input[placeholder*="search" i]');
+              if (searchInput) {
+                console.log('✅ Found search input with alternative selector:', searchInput);
+              } else {
+                console.error('❌ No search input found with any selector');
+                return;
+              }
+            }
+            
+            if (!searchInput.value || !searchInput.value.trim()) {
+              console.log('No search term entered');
+              return;
+            }
+            
+            const query = searchInput.value.trim();
+            console.log('Searching for:', query);
+            
+            // Show loading state
+            if (searchResults) {
+              searchResults.style.display = 'block';
+              searchResults.innerHTML = '<div style="text-align: center; padding: 20px;">🔍 Searching...</div>';
+            }
+            
+            // Use the searchTMDB helper function
+            if (typeof window.searchTMDB === 'function') {
+              const results = await window.searchTMDB(query);
+              console.log('Search results:', results);
+              
+              if (searchResults) {
+                if (results.results && results.results.length > 0) {
+                  // Update the count
+                  const countElement = document.getElementById('resultsCount');
+                  if (countElement) {
+                    countElement.textContent = results.results.length;
+                  }
+                  
+                  // Display search results in the proper container
+                  const resultsList = document.getElementById('searchResultsList');
+                  if (resultsList) {
+                    const resultsHtml = results.results.map(item => {
+                      const title = item.title || item.name || 'Unknown';
+                      const year = item.release_date ? new Date(item.release_date).getFullYear() : 
+                                  item.first_air_date ? new Date(item.first_air_date).getFullYear() : '';
+                      const mediaType = item.media_type || 'movie';
+                      const poster = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
+                      
+                      return `
+                        <div class="search-result-item" style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
+                          ${poster ? `<img src="${poster}" style="width: 50px; height: 75px; object-fit: cover; margin-right: 10px; border-radius: 4px;">` : ''}
+                          <div>
+                            <h4 style="margin: 0; color: #333;">${title} ${year ? `(${year})` : ''}</h4>
+                            <p style="margin: 5px 0 0 0; color: #666; text-transform: capitalize;">${mediaType}</p>
+                          </div>
+                        </div>
+                      `;
+                    }).join('');
+                    
+                    resultsList.innerHTML = resultsHtml;
+                  } else {
+                    // Fallback to direct container update
+                    searchResults.innerHTML = `
+                      <h4>🎯 Search Results <span class="count">${results.results.length}</span></h4>
+                      <div class="list-container">
+                        ${results.results.map(item => {
+                          const title = item.title || item.name || 'Unknown';
+                          const year = item.release_date ? new Date(item.release_date).getFullYear() : 
+                                      item.first_air_date ? new Date(item.first_air_date).getFullYear() : '';
+                          const mediaType = item.media_type || 'movie';
+                          const poster = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
+                          
+                          return `
+                            <div class="search-result-item" style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
+                              ${poster ? `<img src="${poster}" style="width: 50px; height: 75px; object-fit: cover; margin-right: 10px; border-radius: 4px;">` : ''}
+                              <div>
+                                <h4 style="margin: 0; color: #333;">${title} ${year ? `(${year})` : ''}</h4>
+                                <p style="margin: 5px 0 0 0; color: #666; text-transform: capitalize;">${mediaType}</p>
+                              </div>
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
+                    `;
+                  }
+                } else {
+                  searchResults.innerHTML = `
+                    <h4>🎯 Search Results <span class="count">0</span></h4>
+                    <div class="list-container">
+                      <div style="text-align: center; padding: 20px; color: #666;">No results found for "${query}"</div>
+                    </div>
+                  `;
+                }
+              }
+            } else {
+              console.error('searchTMDB function not available');
+              if (searchResults) {
+                searchResults.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">Search functionality not available</div>';
+              }
+            }
+          } catch (error) {
+            console.error('Search failed:', error);
+            const searchResults = document.getElementById('searchResults');
+            if (searchResults) {
+              searchResults.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">Search failed. Please try again.</div>';
+            }
+          }
+        };
+        console.log('✅ performSearch function created and available on window');
+      }
+
+      // Create a proper clearSearch function if it doesn't exist
+      if (typeof window.clearSearch !== 'function') {
+        window.clearSearch = function() {
+          console.log('🧹 clearSearch called');
+          const searchInput = document.querySelector('input[type="search"]');
+          const searchResults = document.getElementById('searchResults');
+          
+          if (searchInput) {
+            searchInput.value = '';
+            console.log('Search input cleared');
+          }
+          
+          if (searchResults) {
+            searchResults.style.display = 'none';
+            searchResults.innerHTML = '';
+            console.log('Search results cleared');
+          }
+        };
+        console.log('✅ clearSearch function created and available on window');
+      }
+
+      // Defensive handlers specifically for #desktop-search-row
+      (function () {
+        const row = document.getElementById('desktop-search-row');
+        if (!row) return;
+
+        const input = row.querySelector('#search');
+        const searchBtn = row.querySelector('#searchBtn');
+        const clearBtn = row.querySelector('#clearSearchBtn');
+        const genre = row.querySelector('#genreSelect');
+
+        if (searchBtn) {
+          searchBtn.onclick = () => {
+            if (typeof window.performSearch === 'function') window.performSearch();
+            else console.warn('[desktop-search-row] performSearch not available');
+          };
+        }
+
+        if (input) {
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && typeof window.performSearch === 'function') {
+              window.performSearch();
+            }
+          });
+        }
+
+        if (clearBtn && input) {
+          clearBtn.onclick = () => {
+            input.value = '';
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          };
+        }
+
+        // Optional: ensure genre select doesn't force wrapping
+        if (genre) genre.style.maxWidth = genre.style.maxWidth || 'unset';
+      })();
+
+      // Defensive binding for search button
+      const searchBtn = document.getElementById('searchBtn') || document.querySelector('[data-action="search"]');
+      if (searchBtn) {
+        searchBtn.onclick = () => {
+          if (typeof window.performSearch === 'function') {
+            window.performSearch();
+          } else {
+            console.warn('performSearch not available');
+          }
+        };
+      }
+
+      // Enter-to-search (if you support it)
+      const searchInput = document.querySelector('input[type="search"]');
+      if (searchInput) {
+        searchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            if (typeof window.performSearch === 'function') {
+              window.performSearch();
+            } else {
+              console.warn('performSearch not available');
+            }
           }
         });
       }
