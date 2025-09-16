@@ -3,12 +3,12 @@ d<!DOCTYPE html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v23.100</title>
+    <title>Flicklet - TV & Movie Tracker v24.0</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
     />
-    <meta name="build" content="v23.100">
+    <meta name="build" content="v24.0">
     
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
@@ -312,25 +312,7 @@ d<!DOCTYPE html>
         window.__NO_FIREBASE__ = true;
       }
 
-      // TMDB client shim (safe when no key)
-      if (!window.tmdbGet) {
-        const EMPTY = { results: [], page: 1, total_pages: 0, total_results: 0 };
-        window.tmdbGet = async function tmdbGet(path, params = {}) {
-          try {
-            const base = 'https://api.themoviedb.org/3';
-            const key = (window.env && (window.env.TMDB_API_KEY || window.env.TMDB)) || window.TMDB_API_KEY || '';
-            if (!key) return EMPTY;
-            const usp = new URLSearchParams({ ...params, api_key: key });
-            const url = `${base}${path}?${usp.toString()}`;
-            const res = await fetch(url);
-            if (!res.ok) return EMPTY;
-            return await res.json();
-          } catch (_) {
-            return EMPTY;
-          }
-        };
-        console.info('✅ tmdbGet fallback installed');
-      }
+      // TMDB client will be loaded via tmdb.js script
 
       // Minimal genre map fallback
       window.__GENRES__ = window.__GENRES__ || {
@@ -456,7 +438,7 @@ d<!DOCTYPE html>
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
-            <span class="version-display">v23.100</span>
+            <span class="version-display">v24.0</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
@@ -1433,6 +1415,7 @@ d<!DOCTYPE html>
 
     <!-- Config & core helpers (must be available to everything below) -->
     <script src="/tmdb-config.js"></script>
+    <script src="/scripts/tmdb.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/app.js"></script>
     <script src="/js/bootstrap.js"></script>
@@ -1452,25 +1435,7 @@ d<!DOCTYPE html>
     <!-- tmdbGet shim to prevent runtime errors -->
     <script>
     (function () {
-      if (typeof window === 'undefined') return;
-      if (!window.tmdbGet) {
-        const EMPTY = { results: [], page: 1, total_pages: 0, total_results: 0 };
-        window.tmdbGet = async function tmdbGet(path, params = {}) {
-          try {
-            const base = 'https://api.themoviedb.org/3';
-            const key = (window.env && (window.env.TMDB_API_KEY || window.env.TMDB)) || window.TMDB_API_KEY || '';
-            if (!key) return EMPTY;
-            const usp = new URLSearchParams({ ...params, api_key: key });
-            const url = `${base}${path}?${usp.toString()}`;
-            const res = await fetch(url);
-            if (!res.ok) return EMPTY;
-            return await res.json();
-          } catch (_) {
-            return EMPTY;
-          }
-        };
-        console.info('✅ tmdbGet fallback installed');
-      }
+      // TMDB client will be loaded via tmdb.js script
     })();
     </script>
     
