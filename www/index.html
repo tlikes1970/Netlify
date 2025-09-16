@@ -1380,7 +1380,7 @@ d<!DOCTYPE html>
     
     try {
       // Validate configuration
-      if (!window.FIREBASE_CONFIG?.apiKey) {
+      if (!window.firebaseConfig?.apiKey) {
         console.error("❌ Firebase config missing apiKey");
         return;
       }
@@ -1388,8 +1388,8 @@ d<!DOCTYPE html>
       // Initialize Firebase only if not already initialized
       if (window.firebase && typeof window.firebase.initializeApp === 'function') {
         if (firebase.apps.length === 0) {
-          firebase.initializeApp(window.FIREBASE_CONFIG);
-          console.info("✅ Firebase initialized:", window.FIREBASE_CONFIG.projectId);
+          firebase.initializeApp(window.firebaseConfig);
+          console.info("✅ Firebase initialized:", window.firebaseConfig.projectId);
           
           // Set persistence to LOCAL for better localhost experience
           const auth = firebase.auth();
