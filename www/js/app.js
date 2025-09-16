@@ -1036,7 +1036,7 @@ waitForFirebaseReady() {
         if (e.ctrlKey || e.metaKey) {
           if (e.key === 'k') {
             e.preventDefault();
-            document.getElementById('searchInput')?.focus();
+            document.getElementById('search')?.focus();
           } else if (e.key === 't') {
             e.preventDefault();
             toggleDarkMode();
@@ -1389,7 +1389,7 @@ waitForFirebaseReady() {
 
     // STEP 3.5 — Make Enter in search box trigger the search
     setupSearchEnterKey() {
-      const searchInput = document.getElementById('searchInput');
+      const searchInput = document.getElementById('search');
       const searchBtn = document.getElementById('searchBtn');
       if (searchInput && searchBtn) {
         searchInput.addEventListener('keydown', (ev) => {
@@ -1413,7 +1413,7 @@ waitForFirebaseReady() {
         // Create a basic performSearch function if it doesn't exist
         window.performSearch = function() {
           console.log('🔍 performSearch called');
-          const searchInput = document.getElementById('searchInput');
+          const searchInput = document.getElementById('search');
           if (searchInput && searchInput.value.trim()) {
             console.log('Searching for:', searchInput.value.trim());
             // Basic search functionality - can be enhanced later
@@ -1429,7 +1429,7 @@ waitForFirebaseReady() {
       if (typeof window.clearSearch !== 'function') {
         window.clearSearch = function() {
           console.log('🧹 clearSearch called');
-          const searchInput = document.getElementById('searchInput');
+          const searchInput = document.getElementById('search');
           if (searchInput) {
             searchInput.value = '';
             console.log('Search input cleared');
@@ -1437,6 +1437,43 @@ waitForFirebaseReady() {
         };
         console.log('✅ clearSearch function created and available on window');
       }
+
+      // Defensive handlers specifically for #desktop-search-row
+      (function () {
+        const row = document.getElementById('desktop-search-row');
+        if (!row) return;
+
+        const input = row.querySelector('#search');
+        const searchBtn = row.querySelector('#searchBtn');
+        const clearBtn = row.querySelector('#clearSearchBtn');
+        const genre = row.querySelector('#genreSelect');
+
+        if (searchBtn) {
+          searchBtn.onclick = () => {
+            if (typeof window.performSearch === 'function') window.performSearch();
+            else console.warn('[desktop-search-row] performSearch not available');
+          };
+        }
+
+        if (input) {
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && typeof window.performSearch === 'function') {
+              window.performSearch();
+            }
+          });
+        }
+
+        if (clearBtn && input) {
+          clearBtn.onclick = () => {
+            input.value = '';
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          };
+        }
+
+        // Optional: ensure genre select doesn't force wrapping
+        if (genre) genre.style.maxWidth = genre.style.maxWidth || 'unset';
+      })();
 
       // Defensive binding for search button
       const searchBtn = document.getElementById('searchBtn') || document.querySelector('[data-action="search"]');
@@ -1451,7 +1488,7 @@ waitForFirebaseReady() {
       }
 
       // Enter-to-search (if you support it)
-      const searchInput = document.getElementById('searchInput') || document.querySelector('input[type="search"]');
+      const searchInput = document.getElementById('search') || document.querySelector('input[type="search"]');
       if (searchInput) {
         searchInput.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') {
