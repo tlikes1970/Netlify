@@ -90,6 +90,9 @@
         // 3) Initialize Firebase auth listener
         this.initFirebase();
 
+        // 3.5) Setup auth button sync
+        this.setupAuthButtonSync();
+
         // 4) Bind global UI listeners
         this.setupEventListeners();
 
@@ -271,6 +274,67 @@ waitForFirebaseReady() {
       } catch (error) {
         FlickletDebug.error('❌ Auth listener setup failed:', error);
       }
+    },
+
+    // Keep Sign In/Out button in sync with Firebase auth state
+    setupAuthButtonSync() {
+      (function () {
+        const btn = document.getElementById('signIn');
+        if (!btn) return;
+
+        // Small helper to set UI state
+        function setAuthButton(signedIn, email) {
+          if (signedIn) {
+            btn.textContent = '👤 Sign Out';
+            btn.dataset.state = 'signed-in';
+            btn.title = email ? `Signed in as ${email}` : 'Signed in';
+          } else {
+            btn.textContent = '👤 Sign In';
+            btn.dataset.state = 'signed-out';
+            btn.title = 'Sign in';
+          }
+        }
+
+        // Keep label synced with Firebase auth state (if SDK present)
+        if (window.firebase && firebase.auth) {
+          const auth = firebase.auth();
+
+          // Initialize UI immediately (handles refreshes)
+          setAuthButton(!!auth.currentUser, auth.currentUser?.email || '');
+
+          // Subscribe to changes
+          auth.onAuthStateChanged((user) => {
+            setAuthButton(!!user, user?.email || '');
+            console.info('[auth] state:', user ? `signed in (${user.email || 'unknown'})` : 'signed out');
+          });
+        } else {
+          console.info('[auth] Firebase auth not available; leaving button in default state');
+        }
+
+        // Existing click handler (keep or replace your prior code with this consolidated version)
+        btn.addEventListener('click', async () => {
+          if (!window.firebase || !firebase.auth) {
+            console.warn('[auth] Firebase not available; cannot sign in/out');
+            return;
+          }
+          const auth = firebase.auth();
+          // Basic click debouncing
+          btn.disabled = true;
+          try {
+            if (auth.currentUser) {
+              await auth.signOut();
+            } else {
+              const provider = new firebase.auth.GoogleAuthProvider();
+              await auth.signInWithPopup(provider);
+            }
+            // onAuthStateChanged will update the UI
+          } catch (err) {
+            console.error('[auth] Auth action failed', err);
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      })();
     },
 
     async processUserSignIn(user) {
