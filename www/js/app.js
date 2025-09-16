@@ -276,64 +276,167 @@ waitForFirebaseReady() {
       }
     },
 
-    // Keep Sign In/Out button in sync with Firebase auth state
+    // Complete login flow with Firestore integration
     setupAuthButtonSync() {
       (function () {
         const btn = document.getElementById('signIn');
         if (!btn) return;
 
-        // Small helper to set UI state
-        function setAuthButton(signedIn, email) {
-          if (signedIn) {
-            btn.textContent = '👤 Sign Out';
-            btn.dataset.state = 'signed-in';
-            btn.title = email ? `Signed in as ${email}` : 'Signed in';
-          } else {
-            btn.textContent = '👤 Sign In';
-            btn.dataset.state = 'signed-out';
-            btn.title = 'Sign in';
+        // Small UI helpers
+        function setAuthButtonSignedIn(emailOrName) {
+          btn.textContent = emailOrName || '👤 Sign Out';
+          btn.dataset.state = 'signed-in';
+          btn.title = emailOrName ? `Signed in as ${emailOrName}` : 'Signed in';
+          showSignOutHint(true);
+        }
+        function setAuthButtonSignedOut() {
+          btn.textContent = '👤 Sign In';
+          btn.dataset.state = 'signed-out';
+          btn.title = 'Sign in';
+          showSignOutHint(false);
+        }
+        function showSignOutHint(show) {
+          let hint = document.getElementById('signOutHint');
+          if (!hint) {
+            hint = document.createElement('div');
+            hint.id = 'signOutHint';
+            hint.style.cssText = 'font-size:12px;opacity:.8;margin-top:2px;';
+            btn.parentElement?.insertBefore(hint, btn);
+          }
+          hint.textContent = show ? 'Sign out' : '';
+          hint.style.display = show ? '' : 'none';
+        }
+
+        // First-load prompt for unsigned users
+        function showFirstLoadSignInPrompt() {
+          if (sessionStorage.getItem('firstSignInPromptShown') === '1') return;
+          sessionStorage.setItem('firstSignInPromptShown', '1');
+
+          const wrap = document.createElement('div');
+          wrap.innerHTML = `
+            <div id="signin-info-modal" style="position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.35);z-index:9999">
+              <div style="background:#fff;padding:16px 20px;border-radius:10px;max-width:420px;width:92%;box-shadow:0 10px 30px rgba(0,0,0,.2)">
+                <h3 style="margin:0 0 8px 0;">Save your shows</h3>
+                <p style="margin:0 0 14px 0;">Sign in to keep your watchlists and pick up on any device.</p>
+                <div style="display:flex;gap:8px;justify-content:flex-end">
+                  <button id="signin-skip" class="btn btn--sm">Not now</button>
+                  <button id="signin-go" class="btn btn--sm">Sign in</button>
+                </div>
+              </div>
+            </div>`;
+          document.body.appendChild(wrap);
+          document.getElementById('signin-skip')?.addEventListener('click', () => wrap.remove());
+          document.getElementById('signin-go')?.addEventListener('click', () => {
+            wrap.remove();
+            triggerSignIn();
+          });
+        }
+
+        // Username prompt when missing
+        function promptForUsername(defaultName) {
+          return new Promise((resolve) => {
+            const wrap = document.createElement('div');
+            wrap.innerHTML = `
+              <div id="username-modal" style="position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.35);z-index:9999">
+                <div style="background:#fff;padding:16px 20px;border-radius:10px;max-width:480px;width:92%;box-shadow:0 10px 30px rgba(0,0,0,.2)">
+                  <h3 style="margin:0 0 8px 0;">what should we call you?</h3>
+                  <input id="username-input" style="width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:8px" value="${defaultName || ''}" />
+                  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+                    <button id="username-skip" class="btn btn--sm">Skip</button>
+                    <button id="username-save" class="btn btn--sm">Save</button>
+                  </div>
+                </div>
+              </div>`;
+            document.body.appendChild(wrap);
+            const done = (val) => { wrap.remove(); resolve(val); };
+            document.getElementById('username-skip')?.addEventListener('click', () => done(null));
+            document.getElementById('username-save')?.addEventListener('click', () => {
+              const v = (document.getElementById('username-input')?.value || '').trim();
+              done(v || null);
+            });
+          });
+        }
+
+        // Firestore helpers (guarded)
+        function userDocRef(uid) {
+          if (!window.db || !uid) return null;
+          return db.collection('users').doc(uid); // simple structure: users/{uid}
+        }
+        async function readUsername(uid) {
+          const ref = userDocRef(uid);
+          if (!ref) throw new Error('Firestore not available');
+          const snap = await ref.get();
+          return snap.exists ? (snap.data()?.username || null) : null;
+        }
+        async function writeUsername(uid, name) {
+          const ref = userDocRef(uid);
+          if (!ref) throw new Error('Firestore not available');
+          await ref.set({ username: name }, { merge: true });
+        }
+
+        function updateWelcome(name) {
+          const el = document.getElementById('welcomeNote') || (() => {
+            const n = document.createElement('div');
+            n.id = 'welcomeNote';
+            n.style.cssText = 'margin:8px 0;font-weight:600;';
+            const headerLeft = document.querySelector('#header-left, header .left, body'); // best-effort
+            (headerLeft || document.body).prepend(n);
+            return n;
+          })();
+          el.innerHTML = name
+            ? `${name}<div style="font-weight:400;opacity:.8">I have a PhD in binge-watching.</div>`
+            : '';
+        }
+
+        async function ensureUsernameFlow(user) {
+          try {
+            const display = user.displayName || user.email || 'Signed in';
+            setAuthButtonSignedIn(display);
+            let uname = null;
+            try { uname = await readUsername(user.uid); } catch {}
+            if (!uname) {
+              const picked = await promptForUsername(display);
+              if (picked) {
+                try { await writeUsername(user.uid, picked); } catch {}
+                uname = picked;
+              }
+            }
+            updateWelcome(uname || display);
+            // TODO: also reflect into your local Flicklet Settings if needed
+          } catch (e) {
+            console.error('[auth] username flow failed', e);
           }
         }
 
-        // Keep label synced with Firebase auth state (if SDK present)
+        function triggerSignIn() {
+          if (!window.firebase || !firebase.auth) { console.warn('[auth] Firebase not available'); return; }
+          const auth = firebase.auth();
+          const provider = new firebase.auth.GoogleAuthProvider();
+          auth.signInWithPopup(provider).catch(err => console.error('[auth] Sign-in failed', err));
+        }
+
+        // Click handler
+        btn.addEventListener('click', async () => {
+          if (!window.firebase || !firebase.auth) return;
+          const auth = firebase.auth();
+          if (auth.currentUser) auth.signOut().catch(e => console.error('[auth] Sign-out failed', e));
+          else triggerSignIn();
+        });
+
+        // onAuthStateChanged: sync button + flows; show first-load prompt when unsigned
         if (window.firebase && firebase.auth) {
           const auth = firebase.auth();
+          // First paint
+          if (auth.currentUser) setAuthButtonSignedIn(auth.currentUser.displayName || auth.currentUser.email || '');
+          else { setAuthButtonSignedOut(); showFirstLoadSignInPrompt(); }
 
-          // Initialize UI immediately (handles refreshes)
-          setAuthButton(!!auth.currentUser, auth.currentUser?.email || '');
-
-          // Subscribe to changes
           auth.onAuthStateChanged((user) => {
-            setAuthButton(!!user, user?.email || '');
-            console.info('[auth] state:', user ? `signed in (${user.email || 'unknown'})` : 'signed out');
+            if (user) ensureUsernameFlow(user);
+            else { setAuthButtonSignedOut(); }
           });
         } else {
-          console.info('[auth] Firebase auth not available; leaving button in default state');
+          setAuthButtonSignedOut();
         }
-
-        // Existing click handler (keep or replace your prior code with this consolidated version)
-        btn.addEventListener('click', async () => {
-          if (!window.firebase || !firebase.auth) {
-            console.warn('[auth] Firebase not available; cannot sign in/out');
-            return;
-          }
-          const auth = firebase.auth();
-          // Basic click debouncing
-          btn.disabled = true;
-          try {
-            if (auth.currentUser) {
-              await auth.signOut();
-            } else {
-              const provider = new firebase.auth.GoogleAuthProvider();
-              await auth.signInWithPopup(provider);
-            }
-            // onAuthStateChanged will update the UI
-          } catch (err) {
-            console.error('[auth] Auth action failed', err);
-          } finally {
-            btn.disabled = false;
-          }
-        });
       })();
     },
 
