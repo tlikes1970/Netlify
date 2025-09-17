@@ -226,6 +226,35 @@
    * @returns {HTMLElement} Card v2 element
    */
   function createCardV2(item) {
+    // Use new PosterCard system if available
+    if (window.PosterCard && window.CardDataNormalizer) {
+      const normalizedData = window.CardDataNormalizer.normalize(item, 'tmdb', 'discover');
+      
+      if (normalizedData) {
+        return window.PosterCard({
+          id: normalizedData.id,
+          mediaType: normalizedData.mediaType,
+          title: normalizedData.title,
+          posterUrl: normalizedData.posterUrl,
+          posterPath: normalizedData.posterPath,
+          year: normalizedData.year,
+          rating: normalizedData.rating,
+          runtime: normalizedData.runtime,
+          season: normalizedData.season,
+          episode: normalizedData.episode,
+          badges: normalizedData.badges,
+          isNew: normalizedData.isNew,
+          isAvailable: normalizedData.isAvailable,
+          progress: normalizedData.progress,
+          quickActions: normalizedData.quickActions,
+          overflowActions: normalizedData.overflowActions,
+          onOpenDetails: () => openDetails(item),
+          section: 'discover'
+        });
+      }
+    }
+    
+    // Fallback to old Card v2 system
     const title = item.title || item.name || 'Unknown Title';
     const year = item.release_date?.slice(0, 4) || item.first_air_date?.slice(0, 4) || '';
     const posterUrl = window.getPosterUrl ? window.getPosterUrl(item, 'w200') : 

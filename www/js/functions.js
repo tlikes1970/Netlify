@@ -212,82 +212,111 @@ window.loadListContent = function loadListContent(listType) {
   // Clear container first
   container.innerHTML = '';
   
-  // Set up horizontal row layout for list items
-  container.className = 'list-container';
-  container.style.cssText = `
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 16px 0;
-  `;
+  // Set up poster card grid layout
+  container.className = 'poster-cards-grid';
   
-  // Use Card v2 if available, otherwise create poster cards
-  allItems.forEach(item => {
-    if (window.FLAGS?.cards_v2 && window.Card) {
-      // Use Card v2 for consistent poster display
-      const card = window.Card({
-        variant: 'poster',
-        id: item.id,
-        posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '',
-        title: item.name || item.title || 'Unknown Title',
-        subtitle: item.release_date?.slice(0, 4) || item.first_air_date?.slice(0, 4) || '',
-        rating: item.vote_average || 0,
-        badges: [],
-        primaryAction: {
-          label: 'Move',
-          onClick: () => moveItem(item.id, getNextList(listType))
-        },
-        overflowActions: [{
-          label: 'Remove',
-          onClick: () => removeItemFromCurrentList(item.id)
-        }],
-        onOpenDetails: () => openTMDBLink?.(item.id, item.media_type || 'movie')
-      });
-      container.appendChild(card);
-    } else if (typeof window.createShowCard === 'function') {
-      const card = window.createShowCard(item, false, listType);
-      container.appendChild(card);
-    } else {
-      // Fallback to horizontal row layout
-      const card = document.createElement('div');
-      card.className = 'list-item';
-      card.setAttribute('data-id', item.id);
-      card.setAttribute('data-media-type', item.media_type || 'movie');
+  // Use new PosterCard system if available
+  if (window.PosterCard && window.CardDataNormalizer) {
+    allItems.forEach(item => {
+      // Normalize the item data
+      const normalizedData = window.CardDataNormalizer.normalize(item, 'user-list', listType);
       
-      const posterUrl = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
-      const title = item.name || item.title || 'Unknown Title';
-      const year = item.release_date?.slice(0, 4) || item.first_air_date?.slice(0, 4) || '';
-      const rating = item.vote_average || 0;
-      const overview = item.overview || 'No description available';
-      
-      card.innerHTML = `
-        <div class="list-item-poster">
-          ${posterUrl ? `<img src="${posterUrl}" alt="${title}" loading="lazy">` : 
-            '<div class="poster-placeholder">📺</div>'}
-        </div>
-        <div class="list-item-content">
-          <div class="list-item-header">
-            <h3 class="list-item-title">${title}</h3>
-            <div class="list-item-meta">
-              <span class="list-item-year">${year || 'Unknown Year'}</span>
-              <span class="list-item-type">${item.media_type || 'movie'}</span>
-              <span class="list-item-rating">⭐ ${rating.toFixed(1)}</span>
+      if (normalizedData) {
+        // Create PosterCard with section-specific configuration
+        const card = window.PosterCard({
+          id: normalizedData.id,
+          mediaType: normalizedData.mediaType,
+          title: normalizedData.title,
+          posterUrl: normalizedData.posterUrl,
+          posterPath: normalizedData.posterPath,
+          year: normalizedData.year,
+          rating: normalizedData.rating,
+          runtime: normalizedData.runtime,
+          season: normalizedData.season,
+          episode: normalizedData.episode,
+          badges: normalizedData.badges,
+          isNew: normalizedData.isNew,
+          isAvailable: normalizedData.isAvailable,
+          progress: normalizedData.progress,
+          quickActions: normalizedData.quickActions,
+          overflowActions: normalizedData.overflowActions,
+          onOpenDetails: () => {
+            if (window.openTMDBLink) {
+              window.openTMDBLink(item.id, item.media_type || 'movie');
+            }
+          },
+          section: listType
+        });
+        
+        container.appendChild(card);
+      }
+    });
+  } else {
+    // Fallback to existing system
+    allItems.forEach(item => {
+      if (window.FLAGS?.cards_v2 && window.Card) {
+        // Use Card v2 for consistent poster display
+        const card = window.Card({
+          variant: 'poster',
+          id: item.id,
+          posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '',
+          title: item.name || item.title || 'Unknown Title',
+          subtitle: item.release_date?.slice(0, 4) || item.first_air_date?.slice(0, 4) || '',
+          rating: item.vote_average || 0,
+          badges: [],
+          primaryAction: {
+            label: 'Move',
+            onClick: () => moveItem(item.id, getNextList(listType))
+          },
+          overflowActions: [{
+            label: 'Remove',
+            onClick: () => removeItemFromCurrentList(item.id)
+          }],
+          onOpenDetails: () => openTMDBLink?.(item.id, item.media_type || 'movie')
+        });
+        container.appendChild(card);
+      } else {
+        // Fallback to horizontal row layout
+        const card = document.createElement('div');
+        card.className = 'list-item';
+        card.setAttribute('data-id', item.id);
+        card.setAttribute('data-media-type', item.media_type || 'movie');
+        
+        const posterUrl = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
+        const title = item.name || item.title || 'Unknown Title';
+        const year = item.release_date?.slice(0, 4) || item.first_air_date?.slice(0, 4) || '';
+        const rating = item.vote_average || 0;
+        const overview = item.overview || 'No description available';
+        
+        card.innerHTML = `
+          <div class="list-item-poster">
+            ${posterUrl ? `<img src="${posterUrl}" alt="${title}" loading="lazy">` : 
+              '<div class="poster-placeholder">📺</div>'}
+          </div>
+          <div class="list-item-content">
+            <div class="list-item-header">
+              <h3 class="list-item-title">${title}</h3>
+              <div class="list-item-meta">
+                <span class="list-item-year">${year || 'Unknown Year'}</span>
+                <span class="list-item-type">${item.media_type || 'movie'}</span>
+                <span class="list-item-rating">⭐ ${rating.toFixed(1)}</span>
+              </div>
+            </div>
+            <p class="list-item-description">${overview}</p>
+            <div class="list-item-actions">
+              <button class="btn btn--sm" data-action="move" data-id="${item.id}" data-list="${getNextList(listType)}">
+                Move
+              </button>
+              <button class="btn btn--sm btn--secondary" data-action="remove" data-id="${item.id}">
+                Remove
+              </button>
             </div>
           </div>
-          <p class="list-item-description">${overview}</p>
-          <div class="list-item-actions">
-            <button class="btn btn--sm" data-action="move" data-id="${item.id}" data-list="${getNextList(listType)}">
-              Move
-            </button>
-            <button class="btn btn--sm btn--secondary" data-action="remove" data-id="${item.id}">
-              Remove
-            </button>
-          </div>
-        </div>
-      `;
-      container.appendChild(card);
-    }
-  });
+        `;
+        container.appendChild(card);
+      }
+    });
+  }
 };
 
 function getNextList(currentList) {

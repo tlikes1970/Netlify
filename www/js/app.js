@@ -1692,43 +1692,91 @@ waitForFirebaseReady() {
                     
                     resultsList.innerHTML = resultsHtml;
                   } else {
-                  // Fallback to direct container update
+                  // Use new PosterCard system for search results
                   searchResults.innerHTML = `
                     <h4>🎯 Search Results <span class="count">${results.results.length}</span></h4>
-                    <div class="search-results-grid">
-                      ${results.results
-                        .filter(item => item.media_type !== 'person') // Filter out person results
-                        .map(item => {
-                          const title = item.title || item.name || 'Unknown';
-                          const year = item.release_date ? new Date(item.release_date).getFullYear() : 
-                                      item.first_air_date ? new Date(item.first_air_date).getFullYear() : '';
-                          const mediaType = item.media_type || 'movie';
-                          const poster = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
-                          
-                          return `
-                            <div class="search-result-item" data-id="${item.id}" data-media-type="${mediaType}">
-                              <div class="search-result-poster">
-                                ${poster ? `<img src="${poster}" alt="${title}" loading="lazy">` : 
-                                  '<div class="poster-placeholder">📺</div>'}
-                              </div>
-                              <div class="search-result-content">
-                                <h4 class="search-result-title">${title}</h4>
-                                <p class="search-result-year">${year || 'Unknown Year'}</p>
-                                <p class="search-result-type">${mediaType}</p>
-                                <div class="search-result-actions">
-                                  <button class="btn btn--sm" data-action="add" data-id="${item.id}" data-list="wishlist">
-                                    Add to Wishlist
-                                  </button>
-                                  <button class="btn btn--sm btn--secondary" data-action="add" data-id="${item.id}" data-list="watching">
-                                    Add to Watching
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          `;
-                        }).join('')}
+                    <div class="poster-cards-grid" id="searchResultsGrid">
                     </div>
                   `;
+                  
+                  // Render search results using PosterCard
+                  const searchGrid = document.getElementById('searchResultsGrid');
+                  if (searchGrid && window.PosterCard && window.CardDataNormalizer) {
+                    const filteredResults = results.results.filter(item => item.media_type !== 'person');
+                    
+                    filteredResults.forEach(item => {
+                      // Normalize the item data
+                      const normalizedData = window.CardDataNormalizer.normalize(item, 'tmdb', 'search');
+                      
+                      if (normalizedData) {
+                        // Create PosterCard for search results
+                        const card = window.PosterCard({
+                          id: normalizedData.id,
+                          mediaType: normalizedData.mediaType,
+                          title: normalizedData.title,
+                          posterUrl: normalizedData.posterUrl,
+                          posterPath: normalizedData.posterPath,
+                          year: normalizedData.year,
+                          rating: normalizedData.rating,
+                          runtime: normalizedData.runtime,
+                          season: normalizedData.season,
+                          episode: normalizedData.episode,
+                          badges: normalizedData.badges,
+                          isNew: normalizedData.isNew,
+                          isAvailable: normalizedData.isAvailable,
+                          progress: normalizedData.progress,
+                          quickActions: normalizedData.quickActions,
+                          overflowActions: normalizedData.overflowActions,
+                          onOpenDetails: () => {
+                            if (window.openTMDBLink) {
+                              window.openTMDBLink(item.id, item.media_type || 'movie');
+                            }
+                          },
+                          section: 'search'
+                        });
+                        
+                        searchGrid.appendChild(card);
+                      }
+                    });
+                  } else {
+                    // Fallback to old system
+                    searchResults.innerHTML = `
+                      <h4>🎯 Search Results <span class="count">${results.results.length}</span></h4>
+                      <div class="search-results-grid">
+                        ${results.results
+                          .filter(item => item.media_type !== 'person') // Filter out person results
+                          .map(item => {
+                            const title = item.title || item.name || 'Unknown';
+                            const year = item.release_date ? new Date(item.release_date).getFullYear() : 
+                                        item.first_air_date ? new Date(item.first_air_date).getFullYear() : '';
+                            const mediaType = item.media_type || 'movie';
+                            const poster = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
+                            
+                            return `
+                              <div class="search-result-item" data-id="${item.id}" data-media-type="${mediaType}">
+                                <div class="search-result-poster">
+                                  ${poster ? `<img src="${poster}" alt="${title}" loading="lazy">` : 
+                                    '<div class="poster-placeholder">📺</div>'}
+                                </div>
+                                <div class="search-result-content">
+                                  <h4 class="search-result-title">${title}</h4>
+                                  <p class="search-result-year">${year || 'Unknown Year'}</p>
+                                  <p class="search-result-type">${mediaType}</p>
+                                  <div class="search-result-actions">
+                                    <button class="btn btn--sm" data-action="add" data-id="${item.id}" data-list="wishlist">
+                                      Add to Wishlist
+                                    </button>
+                                    <button class="btn btn--sm btn--secondary" data-action="add" data-id="${item.id}" data-list="watching">
+                                      Add to Watching
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            `;
+                          }).join('')}
+                      </div>
+                    `;
+                  }
                   }
                 } else {
                   searchResults.innerHTML = `
