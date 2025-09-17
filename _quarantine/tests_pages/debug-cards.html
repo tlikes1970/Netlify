@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Debug</title>
+    <link rel="stylesheet" href="styles/components.css?v=mp2.2">
+    <link rel="stylesheet" href="styles/mobile.css?v=mp2.2">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .debug-info { background: white; padding: 15px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; }
+        .card-info { background: #e8f4fd; padding: 10px; margin: 5px 0; border-radius: 5px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin: 5px; }
+        
+        /* Debug-specific overrides only */
+        .mobile-v1 .show-card {
+            background: rgba(0, 123, 255, 0.1) !important; /* Debug: soft blue tint */
+        }
+    </style>
+</head>
+<body>
+    <h1>Card Debug Information</h1>
+    
+    <div class="debug-info">
+        <h3>Page Info</h3>
+        <p><strong>Viewport Width:</strong> <span id="viewport-width">-</span>px</p>
+        <p><strong>Mobile-V1 Class:</strong> <span id="mobile-class">-</span></p>
+        <p><strong>MatchMedia (≤640px):</strong> <span id="match-media">-</span></p>
+    </div>
+
+    <div class="debug-info">
+        <h3>Card Information</h3>
+        <p><strong>Cards Found:</strong> <span id="card-count">-</span></p>
+        <div id="card-details"></div>
+    </div>
+
+    <button onclick="refreshInfo()">Refresh Info</button>
+    <button onclick="forceMobile()">Force Mobile-V1</button>
+    <button onclick="goToWishlist()">Go to Wishlist (to see cards)</button>
+    <button onclick="addTestCards()">Add Test Cards</button>
+
+    <div id="test-cards" style="margin-top: 20px;"></div>
+
+    <script>
+        function updateInfo() {
+            // Page info
+            document.getElementById('viewport-width').textContent = window.innerWidth;
+            document.getElementById('mobile-class').textContent = document.body.classList.contains('mobile-v1') ? 'YES' : 'NO';
+            document.getElementById('match-media').textContent = window.matchMedia('(max-width: 640px)').matches ? 'YES' : 'NO';
+            
+            // Debug mobile guard
+            console.log('Viewport width:', window.innerWidth);
+            console.log('MatchMedia (max-width: 640px):', window.matchMedia('(max-width: 640px)').matches);
+            console.log('Mobile-v1 class:', document.body.classList.contains('mobile-v1'));
+            console.log('FLAGS.mobilePolishGuard:', window.FLAGS ? window.FLAGS.mobilePolishGuard : 'undefined');
+            
+            // Card info - check all possible card classes
+            const showCards = document.querySelectorAll('.show-card');
+            const listItems = document.querySelectorAll('.list-item');
+            const itemCards = document.querySelectorAll('.item-card');
+            const searchResults = document.querySelectorAll('.search-result-card');
+            const allCards = [...showCards, ...listItems, ...itemCards, ...searchResults];
+            document.getElementById('card-count').textContent = `${allCards.length} (show-card: ${showCards.length}, list-item: ${listItems.length}, item-card: ${itemCards.length}, search-result: ${searchResults.length})`;
+            
+            // Also check for any divs that might be cards
+            const allDivs = document.querySelectorAll('div[class*="card"], div[class*="item"]');
+            console.log('All potential card elements:', allDivs.length);
+            
+            // Check what's actually on the page
+            const allDivsWithClasses = document.querySelectorAll('div[class]');
+            console.log('All divs with classes:', allDivsWithClasses.length);
+            console.log('First few div classes:', Array.from(allDivsWithClasses).slice(0, 10).map(d => d.className));
+            
+            // Check for any content sections
+            const contentSections = document.querySelectorAll('[id*="content"], [class*="content"], [id*="list"], [class*="list"]');
+            console.log('Content sections found:', contentSections.length);
+            contentSections.forEach((section, i) => {
+                console.log(`Section ${i}:`, section.id || section.className, 'children:', section.children.length);
+            });
+            
+            if (allCards.length > 0) {
+                const card = allCards[0];
+                const rect = card.getBoundingClientRect();
+                const styles = getComputedStyle(card);
+                
+                document.getElementById('card-details').innerHTML = `
+                    <div class="card-info">
+                        <strong>First Card Dimensions:</strong><br>
+                        Height: ${rect.height.toFixed(1)}px<br>
+                        Width: ${rect.width.toFixed(1)}px<br>
+                        Display: ${styles.display}<br>
+                        Grid Template Columns: ${styles.gridTemplateColumns}<br>
+                        Padding: ${styles.padding}<br>
+                        Gap: ${styles.gap}<br>
+                        Min Height: ${styles.minHeight}<br>
+                        Height: ${styles.height}
+                    </div>
+                    <div class="card-info">
+                        <strong>Children (${card.children.length}):</strong><br>
+                        ${Array.from(card.children).map((child, i) => 
+                            `${i}: ${child.className} - ${child.getBoundingClientRect().width.toFixed(1)}x${child.getBoundingClientRect().height.toFixed(1)}px`
+                        ).join('<br>')}
+                    </div>
+                `;
+            }
+        }
+
+        function refreshInfo() {
+            updateInfo();
+        }
+
+        function forceMobile() {
+            // Disable the mobile polish guard first
+            if (window.FLAGS) {
+                window.FLAGS.mobilePolishGuard = false;
+            }
+            // Also set localStorage override
+            localStorage.setItem('forceMobileV1', '1');
+            document.body.classList.add('mobile-v1');
+            updateInfo();
+        }
+
+        function goToWishlist() {
+            // Navigate to wishlist page where cards will appear
+            window.location.href = '/?tab=wishlist';
+        }
+
+        function addTestCards() {
+            const testCardsContainer = document.getElementById('test-cards');
+            testCardsContainer.innerHTML = `
+                <h3>Test Cards (should be compact with blue tint when mobile-v1 is active)</h3>
+                
+                <h4>Real .show-card structure (3-column grid):</h4>
+                <div class="show-card" data-id="test1">
+                    <button class="poster-button">
+                        <img class="show-poster" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA2NCA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjRjBGMEYwIi8+Cjx0ZXh0IHg9IjMyIiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5Qb3N0ZXI8L3RleHQ+Cjwvc3ZnPgo=" alt="Test Poster">
+                    </button>
+                    <div class="show-details">
+                        <h4 class="show-title">Test Show 1</h4>
+                        <div class="show-meta">⭐ 7.5 • 2023 • TV</div>
+                        <div class="show-overview">This is a test description that should be clamped to 2 lines on mobile when the mobile-v1 class is applied.</div>
+                    </div>
+                    <div class="show-actions">
+                        <button class="btn secondary">Move</button>
+                        <button class="btn danger">Remove</button>
+                    </div>
+                </div>
+                
+                <h4>List item structure (2-column grid):</h4>
+                <div class="list-item" data-id="test2">
+                    <div class="item-info">
+                        <h4>Test List Item</h4>
+                        <p>This is a test description for a list item without a poster.</p>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn secondary">Move</button>
+                        <button class="btn danger">Remove</button>
+                    </div>
+                </div>
+            `;
+            
+            // Force mobile-v1 class on the test cards container and individual cards
+            if (document.body.classList.contains('mobile-v1')) {
+                testCardsContainer.classList.add('mobile-v1');
+                // Also add mobile-v1 class to each test card
+                const testCards = testCardsContainer.querySelectorAll('.show-card, .list-item');
+                testCards.forEach(card => {
+                    card.classList.add('mobile-v1');
+                });
+            }
+            
+            updateInfo();
+        }
+
+        // Initial load
+        updateInfo();
+        
+        // Auto-refresh every 2 seconds
+        setInterval(updateInfo, 2000);
+    </script>
+</body>
+</html>

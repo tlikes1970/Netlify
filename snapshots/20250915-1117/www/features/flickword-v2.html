@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FlickWord</title>
+
+  <style>
+    :root {
+      --fw-bg: #f6f8ff;
+      --fw-card: #ffffff;
+      --fw-accent: #5a88ff;
+      --fw-accent-2: #3b6cff;
+      --fw-text: #1f2937;
+      --fw-muted: #6b7280;
+      --fw-border: #d7e3ff;
+      --fw-good: #20b265;
+      --fw-mid: #f7c23c;
+    }
+
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: var(--fw-text);
+      background:
+        radial-gradient(60% 50% at 70% 0%, rgba(90,136,255,0.10), rgba(90,136,255,0)) no-repeat,
+        var(--fw-bg);
+    }
+
+    /* Centered card with reasonable cap so it never overwhelms the modal */
+    #gameWrapper {
+      width: min(900px, 100%);
+      margin: 0 auto;
+      padding: 20px 16px 24px;
+      background: var(--fw-card);
+      border: 1px solid var(--fw-border);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.08);
+      box-sizing: border-box;
+    }
+
+    /* 5x6 grid */
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(56px, 1fr));
+      gap: 10px;
+      justify-items: center;
+      width: min(560px, 100%);   /* prevents “giant board”, centers well */
+      margin: 0 auto 20px;
+    }
+    .tile {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 10px;
+      border: 2px solid #a7b7e9;
+      background: linear-gradient(180deg, #fff, #f7f9ff);
+      box-shadow: inset 0 -1px 0 rgba(0,0,0,.05);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: clamp(16px, 3.4vw, 28px);
+    }
+
+    .tile.correct { background: linear-gradient(180deg,#3ddc84,#20b265); color:#052b18; border-color:#20b265; }
+    .tile.present { background: linear-gradient(180deg,#ffda6b,#f7c23c); color:#3c2a00; border-color:#f7c23c; }
+    .tile.absent  { background: linear-gradient(180deg,#e9edf7,#d7ddea); color:#6b7280; }
+
+    /* Keyboard: matches wrapper; ensures side keys never clip */
+    #keyboard {
+      width: min(900px, 100%);
+      margin: 16px auto 0;
+    }
+    .kb-row {
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      margin: 8px 0;
+      flex-wrap: wrap; /* extra safety in narrow cases */
+    }
+    .key {
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--fw-border);
+      background: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,.08);
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background .15s, transform .05s;
+      min-width: 48px;
+      height: 56px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+    .key:active { transform: translateY(1px); }
+    .key.enter, .key.back, .key.special {
+      background: linear-gradient(135deg, var(--fw-accent), var(--fw-accent-2));
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .btn-exit {
+      margin-top: 20px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--fw-border);
+      background: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-exit:hover { filter: brightness(1.03); }
+
+    /* Small screens inside the iframe */
+    @media (max-width: 560px){
+      #gameWrapper { padding: 12px; border-radius: 12px; }
+      #grid { gap: 6px; width: min(360px, 100%); grid-template-columns: repeat(5, minmax(44px, 1fr)); }
+      .tile { font-size: clamp(12px, 3vw, 18px); }
+      #keyboard { width: 100%; }
+      .kb-row { gap: 6px; }
+      .key { min-width: 36px; height: 48px; padding: 12px 14px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="gameWrapper">
+    <div id="grid" aria-label="FlickWord board" role="group"></div>
+    <div id="keyboard" aria-label="Keyboard" role="group"></div>
+    <div style="text-align:center;margin-top:20px;">
+      <button class="btn-exit" type="button" onclick="closeGame()">Exit</button>
+    </div>
+  </div>
+
+  <script>
+    /* ===== Config ===== */
+    const WORDS = ["bliss","crane","flick","gravy","masks","toast","crown","spine","tiger","pride"];
+    const ROWS  = ["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"];
+
+    /* ===== State ===== */
+    let game = { target:null, guesses:[], current:"", max:6, done:false, status:{}, lastResults:[] };
+
+    function getDateFromURL(){ return new URLSearchParams(location.search).get('date'); }
+
+    async function getTodayWord(){
+      const dateParam = getDateFromURL();
+      const targetDate = dateParam ? new Date(dateParam + 'T00:00:00') : new Date();
+      const dateStr = targetDate.toISOString().slice(0,10);
+
+      const cached = localStorage.getItem(`flickword:word:${dateStr}`);
+      if (cached) return cached.toUpperCase();
+
+      try{
+        const r = await fetch('https://api.datamuse.com/words?sp=?????&max=1');
+        const d = await r.json();
+        if (Array.isArray(d) && d[0]?.word && /^[a-z]{5}$/.test(d[0].word)) {
+          localStorage.setItem(`flickword:word:${dateStr}`, d[0].word);
+          return d[0].word.toUpperCase();
+        }
+      } catch {}
+
+      const start = new Date("2023-01-01T00:00:00");
+      const days = Math.floor((targetDate - start) / 86400000);
+      const fallback = WORDS[days % WORDS.length];
+      localStorage.setItem(`flickword:word:${dateStr}`, fallback);
+      return fallback.toUpperCase();
+    }
+
+    function reportResult(won, guesses){
+      try{
+        const now = new Date();
+        const today = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+        const message = { type:'flickword:result', date:today, won, guesses, target: game.target };
+        if (window.parent && window.parent !== window) window.parent.postMessage(message, '*');
+        const results = JSON.parse(localStorage.getItem('flickword:results') || '{}');
+        results[today] = message;
+        localStorage.setItem('flickword:results', JSON.stringify(results));
+      }catch{}
+    }
+
+    async function showGame(){
+      game.target = await getTodayWord();
+      game.guesses = [];
+      game.current = "";
+      game.done = false;
+      game.status = {};
+      game.lastResults = [];
+      renderGrid(); 
+      renderKeyboard();
+    }
+
+    function closeGame(){
+      if (window.parent && window.parent !== window) window.parent.postMessage({ type:'flickword:close' }, '*');
+      else {
+        try {
+          window.close();
+        } catch (e) {
+          console.warn('Cannot close popup due to Cross-Origin-Opener-Policy:', e.message);
+        }
+      }
+    }
+
+    function renderGrid(){
+      const grid = document.getElementById('grid'); grid.innerHTML='';
+      for (let i=0;i<game.max;i++){
+        const guess = game.guesses[i] || (i===game.guesses.length ? game.current : "");
+        for (let j=0;j<5;j++){
+          const tile = document.createElement('div');
+          tile.className = 'tile';
+          const letter = guess[j]||'';
+          tile.textContent = letter;
+          if (i < game.guesses.length){
+            const res = game.lastResults[i][j];
+            tile.classList.add(res);
+          }
+          grid.appendChild(tile);
+        }
+      }
+    }
+
+    function renderKeyboard(){
+      const kb = document.getElementById('keyboard'); kb.innerHTML = '';
+
+      const r1 = document.createElement('div'); r1.className='kb-row';
+      for (const L of ROWS[0]) r1.appendChild(makeKey(L));
+      r1.appendChild(makeKey('⌫','back special', backspace));
+      kb.appendChild(r1);
+
+      const r2 = document.createElement('div'); r2.className='kb-row';
+      for (const L of ROWS[1]) r2.appendChild(makeKey(L));
+      kb.appendChild(r2);
+
+      const r3 = document.createElement('div'); r3.className='kb-row';
+      for (const L of ROWS[2]) r3.appendChild(makeKey(L));
+      r3.appendChild(makeKey('Enter','enter special', submit));
+      kb.appendChild(r3);
+    }
+
+    function makeKey(label, extra='', handler){
+      const btn = document.createElement('button');
+      btn.type='button';
+      btn.textContent = label;
+      btn.className = ('key '+extra).trim();
+
+      if (label === '⌫')       btn.onclick = backspace;
+      else if (label === 'Enter') btn.onclick = submit;
+      else if (label.length===1){
+        const s = game.status[label];
+        if (s==='correct') btn.classList.add('correct');
+        if (s==='present') btn.classList.add('present');
+        if (s==='absent')  btn.classList.add('absent');
+        btn.onclick = () => onKey(label);
+      } else if (handler) btn.onclick = handler;
+
+      return btn;
+    }
+
+    function onKey(l){
+      if (l === '⌫' || l === 'Backspace') return;
+      if (game.done || game.current.length>=5) return;
+      game.current += l;
+      renderGrid();
+    }
+
+    function backspace(){
+      if (game.done || !game.current) return;
+      game.current = game.current.slice(0, -1);
+      renderGrid();
+    }
+
+    async function submit(){
+      if (game.done || game.current.length!==5) return;
+
+      const valid = await isValidWord(game.current);
+      if (!valid){
+        showCustomNotification("Not a valid word. Try again!", "error");
+        game.current = '';
+        renderGrid();
+        return;
+      }
+
+      const res = scoreGuess(game.current, game.target);
+      game.lastResults.push(res);
+
+      for (let i=0;i<5;i++){
+        const L = game.current[i];
+        if (res[i]==='correct') game.status[L]='correct';
+        else if (res[i]==='present' && game.status[L]!=='correct') game.status[L]='present';
+        else if (res[i]==='absent' && !game.status[L]) game.status[L]='absent';
+      }
+
+      game.guesses.push(game.current);
+
+      if (game.current === game.target){
+        showCustomNotification("🎉 Nice! You got it!", "success");
+        game.done = true;
+        reportResult(true, game.guesses.length);
+        setTimeout(closeGame, 2000);
+      } else if (game.guesses.length === game.max){
+        showCustomNotification(`Out of tries. The word was: ${game.target}`, "error");
+        game.done = true;
+        reportResult(false, game.guesses.length);
+        setTimeout(closeGame, 2500);
+      }
+
+      game.current = '';
+      renderGrid(); renderKeyboard();
+    }
+
+    async function isValidWord(w){
+      try{
+        const r = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${w.toLowerCase()}`);
+        return r.ok;
+      } catch { return false; }
+    }
+
+    function scoreGuess(guess, target){
+      const res = Array(5).fill('absent');
+      const pool = target.split('');
+      for (let i=0;i<5;i++){ if (guess[i]===pool[i]){ res[i]='correct'; pool[i]=null; } }
+      for (let i=0;i<5;i++){
+        if (res[i]==='correct') continue;
+        const idx = pool.indexOf(guess[i]);
+        if (idx!==-1){ res[i]='present'; pool[idx]=null; }
+      }
+      return res;
+    }
+
+    function showCustomNotification(message, type='info'){
+      const existing = document.querySelector('.custom-notification');
+      if (existing) existing.remove();
+      const n = document.createElement('div');
+      n.className = `custom-notification ${type}`;
+      n.textContent = message;
+      document.body.appendChild(n);
+      setTimeout(()=> n.remove(), 2500);
+    }
+
+    document.addEventListener('keydown', (e)=>{
+      if (game.done) return;
+      if (e.key === 'Backspace'){ e.preventDefault(); backspace(); return; }
+      if (e.key === 'Enter'){ e.preventDefault(); submit(); return; }
+      if (e.key.length===1 && /[a-z]/i.test(e.key)) onKey(e.key.toUpperCase());
+    });
+
+    showGame();
+  </script>
+</body>
+</html>

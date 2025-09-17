@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v24.24</title>
+    <title>Flicklet - TV & Movie Tracker v24.26</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
     />
-    <meta name="build" content="v24.24">
+    <meta name="build" content="v24.26">
     
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
@@ -250,8 +250,7 @@
     <link rel="preload" href="/styles/consolidated-layout.css?v=v17.9" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="/styles/action-bar.css?v=v22.21" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="/styles/card-system.css?v=v23.53" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="/styles/poster-card.css?v=v24.24" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="/styles/cards.css?v=v24.24" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/styles/cards.css?v=v24.26" as="style" onload="this.onload=null;this.rel='stylesheet'">
     
     <!-- Fallback for browsers without preload support -->
     <noscript>
@@ -263,8 +262,7 @@
       <link rel="stylesheet" href="/styles/consolidated-layout.css?v=v17.9">
       <link rel="stylesheet" href="/styles/action-bar.css?v=v22.21">
       <link rel="stylesheet" href="/styles/card-system.css?v=v23.53">
-      <link rel="stylesheet" href="/styles/poster-card.css?v=v24.24">
-      <link rel="stylesheet" href="/styles/cards.css?v=v24.24">
+      <link rel="stylesheet" href="/styles/cards.css?v=v24.26">
     </noscript>
 
     <!-- Firebase compat SDKs -->
@@ -273,7 +271,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <!-- Project config (must define window.firebaseConfig) -->
-    <script src="firebase-config.js"></script>
+    <script src="/firebase-config.js"></script>
 
     <!-- Guarded init: initialize app + Firestore once -->
     <script>
@@ -442,7 +440,7 @@
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
-            <span class="version-display">v24.24</span>
+            <span class="version-display">v24.26</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
@@ -1368,14 +1366,10 @@
     <!-- ==== SCRIPT ORDER: libraries → config → init your app scripts === -->
 
 <!-- Firebase libs (compat for simplicity) -->
-<!-- Firebase Configuration - Load from external file -->
-<script src="/firebase-config.js"></script>
 
 <!-- Firebase v9 CDN Bridge -->
 <script src="/js/firebase-init.js"></script>
 
-<!-- Auth Profile ViewModel - Single Observer -->
-<script src="/js/auth.js"></script>
 
 <!-- Auth Diagnostics (temporary) -->
 <script src="/auth-diagnostics.js"></script>
@@ -1457,7 +1451,6 @@
     <!-- Component modules (must load before functions that use them) -->
     <script src="/js/components/poster-card.js"></script>
     <script src="/scripts/components/Card.js"></script>
-    <script src="/scripts/components/PosterCard.js"></script>
     <script src="/scripts/components/ActionBar.js"></script>
 
     <!-- Core functionality (assumes utils/app exist) -->

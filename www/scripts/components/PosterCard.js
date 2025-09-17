@@ -400,3 +400,5 @@
   
   console.log('✅ Poster Card component ready');
 })();
+
+

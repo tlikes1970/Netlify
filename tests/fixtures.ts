@@ -98,6 +98,43 @@ async function shimAppGlobals(page: import('@playwright/test').Page) {
       // prevent offline banners or SW-dependent branches
       (window as any).__TEST__ = true;
     } catch {}
+
+    // 5) Disable sign-in modal for tests
+    try {
+      (window as any).showSignInModal = () => { console.log('Sign-in modal disabled for tests'); };
+      (window as any).hideSignInModal = () => { console.log('Hide sign-in modal disabled for tests'); };
+      
+      // Override the modal creation function
+      const originalCreateElement = document.createElement;
+      document.createElement = function(tagName) {
+        const element = originalCreateElement.call(this, tagName);
+        if (tagName.toLowerCase() === 'div' && element.id === 'signin-info-modal') {
+          console.log('Preventing sign-in modal creation');
+          element.style.display = 'none';
+          element.style.visibility = 'hidden';
+          element.style.pointerEvents = 'none';
+        }
+        return element;
+      };
+      
+      // Close any existing modals
+      const closeModals = () => {
+        const modals = document.querySelectorAll('#signin-info-modal, .modal-backdrop[data-modal="login"], #signInModal');
+        modals.forEach(modal => {
+          if (modal instanceof HTMLElement) {
+            modal.style.display = 'none';
+            modal.style.visibility = 'hidden';
+            modal.style.pointerEvents = 'none';
+            modal.remove();
+          }
+        });
+      };
+      
+      closeModals();
+      setTimeout(closeModals, 100);
+      setTimeout(closeModals, 500);
+      setTimeout(closeModals, 1000);
+    } catch {}
   });
 }
 
@@ -253,6 +290,15 @@ async function mockNetwork(page: Page) {
 async function neutralizeOverlays(page: Page) {
   await page.addStyleTag({ content: `
     #searchHelp, #searchHelp .hero-content, .offline-banner { pointer-events: none !important; }
+    #signin-info-modal, .modal-backdrop[data-modal="login"], #signInModal { 
+      display: none !important; 
+      visibility: hidden !important; 
+      pointer-events: none !important;
+      z-index: -1 !important;
+    }
+    [id*="signin"], [id*="modal"], [class*="modal"] {
+      pointer-events: none !important;
+    }
   `});
 }
 async function stubGeolocation(page: Page) {

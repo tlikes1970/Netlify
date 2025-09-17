@@ -1,0 +1,18 @@
+﻿
+cleanup-invalid-data.html:55:    <script>
+debug-posters.html:36:    <script>
+index.html:1219:    <script>
+index.html:1604:    <script>
+index.html:1669:    <script>
+index.html:1888:    <script>
+index.html:1989:    <script>
+index.html:2036:    <script>
+index.html:2086:    <script>
+index.html:2139:    <script>
+index.html:2248:    <script>
+index.html:2486:    <script>
+phase-b-verification.html:67:    <script>
+test-add-functionality.html:57:    <script>
+verify-card-v2.html:40:    <script>
+
+

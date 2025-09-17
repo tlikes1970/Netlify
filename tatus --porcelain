@@ -1,0 +1,39 @@
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'playwright.config.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/clear-search.spec.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/desktop-search-row.spec.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/fixtures.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/flickword-integration.spec.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/i18n-network.spec.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/not-interested-feature.spec.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/tab-navigation.spec.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'www/firebase-config.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'www/js/emergency-functions.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'www/js/language-manager.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'www/scripts/api/content.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'www/scripts/next-up-this-week.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'www/scripts/rows/personalized.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'www/scripts/tmdb.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'www/styles/consolidated.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'www/sw.js', LF will be replaced by CRLF the next time Git touches it
+tests/fixtures.ts
+www/COMPREHENSIVE_FIXES_v17.9.md
+www/COMPREHENSIVE_FIXES_v20.0.md
+www/COMPREHENSIVE_FIXES_v20.4.md
+www/COMPREHENSIVE_FIXES_v22.20.md
+www/COMPREHENSIVE_FIXES_v23.1.md
+www/EMERGENCY_FIX_v23.2.md
+www/MOBILE_LAYOUT_FIXES_v14.7.md
+www/POSTER_STANDARDIZATION_v22.5.md
+www/SYNTAX_FIX_v23.3.md
+www/analyze-syntax.js
+www/audit-results.html
+www/js/language-manager.js
+www/js/syntax-fix.js
+www/scripts/components/PosterCard.js
+www/scripts/polyfill.js
+www/scripts/pro-gate.js
+www/scripts/tab-position-fix.js
+www/scripts/utils/cardDataNormalizer.js
+www/styles/poster-card.css
+www/thank-you.html

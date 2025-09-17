@@ -4,8 +4,22 @@ class LanguageManager {
   // Get stored language from localStorage
   getStoredLanguage() {
     try {
-      const stored = localStorage.getItem('flicklet-language');
-      return stored || null;
+      // First check flicklet-language key
+      let stored = localStorage.getItem('flicklet-language');
+      if (stored) {
+        return stored;
+      }
+      
+      // Fallback to flicklet-data
+      const appData = localStorage.getItem('flicklet-data');
+      if (appData) {
+        const parsed = JSON.parse(appData);
+        if (parsed.settings?.lang) {
+          return parsed.settings.lang;
+        }
+      }
+      
+      return null;
     } catch (error) {
       console.warn('Failed to get stored language:', error);
       return null;
@@ -18,7 +32,12 @@ class LanguageManager {
       // Save to localStorage
       localStorage.setItem('flicklet-language', lang);
       
-      // Save to appData if available
+      // Update appData
+      if (window.appData?.settings) {
+        window.appData.settings.lang = lang;
+      }
+      
+      // Save to appData storage
       if (window.saveAppData && typeof window.saveAppData === 'function') {
         window.saveAppData();
       } else if (window.appData) {
@@ -36,18 +55,28 @@ class LanguageManager {
     this.currentLang = this.getStoredLanguage() || 'en';
     this.observers = [];
     
-    // Force English as default if no language is stored
-    if (!this.getStoredLanguage()) {
-      this.currentLang = 'en';
-      this.saveLanguage('en');
-    }
+    // Don't force English as default in constructor - wait for init()
+    // This prevents overwriting saved language during initialization
   }
 
   // Initialize language manager
   init() {
-    // Load saved language from appData
+    // Load saved language from appData (if available)
     if (window.appData?.settings?.lang) {
       this.currentLang = window.appData.settings.lang;
+      console.log('🌍 Language loaded from appData:', this.currentLang);
+    } else {
+      // Fallback to localStorage if appData not available yet
+      const storedLang = this.getStoredLanguage();
+      if (storedLang) {
+        this.currentLang = storedLang;
+        console.log('🌍 Language loaded from localStorage:', this.currentLang);
+      } else {
+        // Only set English as default if no language is stored anywhere
+        this.currentLang = 'en';
+        this.saveLanguage('en');
+        console.log('🌍 No language found, defaulting to English');
+      }
     }
     
     // Set up language dropdown
@@ -436,6 +465,29 @@ class LanguageManager {
   // Get current language
   getCurrentLanguage() {
     return this.currentLang;
+  }
+
+  // Re-initialize after appData is loaded
+  reinitialize() {
+    console.log('🌍 Re-initializing LanguageManager after appData load');
+    
+    // Load saved language from appData
+    if (window.appData?.settings?.lang) {
+      const newLang = window.appData.settings.lang;
+      if (newLang !== this.currentLang) {
+        console.log('🌍 Language changed from', this.currentLang, 'to', newLang);
+        this.currentLang = newLang;
+        
+        // Update dropdown
+        this.setupLanguageDropdown();
+        
+        // Apply translations
+        applyTranslations(this.currentLang);
+        
+        // Update UI
+        this.updateLanguageDependentUI(this.currentLang);
+      }
+    }
   }
 
   // Check if language change is in progress

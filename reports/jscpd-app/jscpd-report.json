@@ -1,0 +1,3365 @@
+{
+  "statistics": {
+    "detectionDate": "2025-09-15T06:28:34.076Z",
+    "formats": {
+      "css": {
+        "sources": {
+          "www/reports/jscpd/html/styles/prism.css": {
+            "lines": 7,
+            "tokens": 232,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/split_exact/styles/inline-style-02.css": {
+            "lines": 46,
+            "tokens": 320,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/styles/mobile.css": {
+            "lines": 757,
+            "tokens": 4494,
+            "sources": 1,
+            "clones": 4,
+            "duplicatedLines": 66,
+            "duplicatedTokens": 574,
+            "percentage": 8.72,
+            "percentageTokens": 12.77,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/styles/inline-style-02.css": {
+            "lines": 13,
+            "tokens": 57,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/styles/consolidated-layout.css": {
+            "lines": 35,
+            "tokens": 126,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/styles/action-bar.css": {
+            "lines": 376,
+            "tokens": 2562,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 24,
+            "duplicatedTokens": 208,
+            "percentage": 6.38,
+            "percentageTokens": 8.12,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/critical.css": {
+            "lines": 168,
+            "tokens": 1396,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 1402,
+          "tokens": 9187,
+          "sources": 7,
+          "clones": 3,
+          "duplicatedLines": 45,
+          "duplicatedTokens": 391,
+          "percentage": 3.21,
+          "percentageTokens": 4.26,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "javascript": {
+        "sources": {
+          "www/reports/jscpd/html/js/prism.js": {
+            "lines": 15,
+            "tokens": 4580,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/split_exact/scripts/inline-script-03.js": {
+            "lines": 352,
+            "tokens": 2910,
+            "sources": 1,
+            "clones": 5,
+            "duplicatedLines": 165,
+            "duplicatedTokens": 1299,
+            "percentage": 46.88,
+            "percentageTokens": 44.64,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/settings/my-rows.js": {
+            "lines": 219,
+            "tokens": 1701,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/settings/index.js": {
+            "lines": 26,
+            "tokens": 264,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/rows/personalized.js": {
+            "lines": 352,
+            "tokens": 2416,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/modals/games-teaser.js": {
+            "lines": 98,
+            "tokens": 713,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 17,
+            "duplicatedTokens": 168,
+            "percentage": 17.35,
+            "percentageTokens": 23.56,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/modals/core.js": {
+            "lines": 92,
+            "tokens": 614,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/data/user-settings.js": {
+            "lines": 100,
+            "tokens": 620,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/components/Card.js": {
+            "lines": 365,
+            "tokens": 2684,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 18,
+            "duplicatedTokens": 124,
+            "percentage": 4.93,
+            "percentageTokens": 4.62,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/components/ActionBar.js": {
+            "lines": 310,
+            "tokens": 2143,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 24,
+            "duplicatedTokens": 154,
+            "percentage": 7.74,
+            "percentageTokens": 7.19,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/community/games.js": {
+            "lines": 146,
+            "tokens": 1188,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 17,
+            "duplicatedTokens": 168,
+            "percentage": 11.64,
+            "percentageTokens": 14.14,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/api/content.js": {
+            "lines": 197,
+            "tokens": 1522,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/netlify/functions/tmdb.js": {
+            "lines": 356,
+            "tokens": 3108,
+            "sources": 1,
+            "clones": 7,
+            "duplicatedLines": 694,
+            "duplicatedTokens": 6058,
+            "percentage": 194.94,
+            "percentageTokens": 194.92,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/netlify/functions/feedback.js": {
+            "lines": 121,
+            "tokens": 1062,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 121,
+            "duplicatedTokens": 1062,
+            "percentage": 100,
+            "percentageTokens": 100,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/tools/simple-audit.mjs": {
+            "lines": 206,
+            "tokens": 1893,
+            "sources": 1,
+            "clones": 12,
+            "duplicatedLines": 165,
+            "duplicatedTokens": 1608,
+            "percentage": 80.1,
+            "percentageTokens": 84.94,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/tools/run-audit.js": {
+            "lines": 203,
+            "tokens": 1796,
+            "sources": 1,
+            "clones": 8,
+            "duplicatedLines": 116,
+            "duplicatedTokens": 1129,
+            "percentage": 57.14,
+            "percentageTokens": 62.86,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/tools/console-summary.js": {
+            "lines": 158,
+            "tokens": 1758,
+            "sources": 1,
+            "clones": 8,
+            "duplicatedLines": 121,
+            "duplicatedTokens": 1575,
+            "percentage": 76.58,
+            "percentageTokens": 89.59,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/tools/baseline-summary.mjs": {
+            "lines": 236,
+            "tokens": 2787,
+            "sources": 1,
+            "clones": 8,
+            "duplicatedLines": 121,
+            "duplicatedTokens": 1575,
+            "percentage": 51.27,
+            "percentageTokens": 56.51,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/tools/baseline-audit.mjs": {
+            "lines": 477,
+            "tokens": 4856,
+            "sources": 1,
+            "clones": 4,
+            "duplicatedLines": 49,
+            "duplicatedTokens": 479,
+            "percentage": 10.27,
+            "percentageTokens": 9.86,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/trivia.js": {
+            "lines": 411,
+            "tokens": 3917,
+            "sources": 1,
+            "clones": 3,
+            "duplicatedLines": 54,
+            "duplicatedTokens": 708,
+            "percentage": 13.14,
+            "percentageTokens": 18.08,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/tmdb-seed.js": {
+            "lines": 153,
+            "tokens": 1671,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/tmdb-images.js": {
+            "lines": 134,
+            "tokens": 956,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/theaters-near-me.js": {
+            "lines": 258,
+            "tokens": 1491,
+            "sources": 1,
+            "clones": 4,
+            "duplicatedLines": 84,
+            "duplicatedTokens": 611,
+            "percentage": 32.56,
+            "percentageTokens": 40.98,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/tab-position-fix.js": {
+            "lines": 54,
+            "tokens": 359,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/spotlight.js": {
+            "lines": 170,
+            "tokens": 1848,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/simple-tab-manager.js": {
+            "lines": 150,
+            "tokens": 1091,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/share-modal.js": {
+            "lines": 152,
+            "tokens": 1569,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/share-enhanced.js": {
+            "lines": 239,
+            "tokens": 2039,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/settings-tie-ins.js": {
+            "lines": 300,
+            "tokens": 2257,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/series-org.js": {
+            "lines": 262,
+            "tokens": 2765,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/search-tips.js": {
+            "lines": 85,
+            "tokens": 993,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/search-controller.js": {
+            "lines": 138,
+            "tokens": 1123,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/safe-console-replacement.js": {
+            "lines": 58,
+            "tokens": 317,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/router.js": {
+            "lines": 192,
+            "tokens": 1424,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/route-fix.js": {
+            "lines": 78,
+            "tokens": 580,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/responsive-layout.js": {
+            "lines": 140,
+            "tokens": 1125,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/refactor-validation.js": {
+            "lines": 288,
+            "tokens": 2785,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/quotes-enhanced.js": {
+            "lines": 363,
+            "tokens": 2857,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 32,
+            "duplicatedTokens": 248,
+            "percentage": 8.82,
+            "percentageTokens": 8.68,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/pro-preview.js": {
+            "lines": 373,
+            "tokens": 2088,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/pro-gate.js": {
+            "lines": 116,
+            "tokens": 1221,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/polyfill.js": {
+            "lines": 93,
+            "tokens": 788,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/performance-monitor.js": {
+            "lines": 93,
+            "tokens": 695,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/optimized-home-loader.js": {
+            "lines": 233,
+            "tokens": 1533,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/notifications.js": {
+            "lines": 113,
+            "tokens": 1083,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/notifications-test.js": {
+            "lines": 309,
+            "tokens": 2062,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/next-up-this-week.js": {
+            "lines": 295,
+            "tokens": 2653,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/list-actions.js": {
+            "lines": 145,
+            "tokens": 1493,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/inline-script-03.js": {
+            "lines": 604,
+            "tokens": 5164,
+            "sources": 1,
+            "clones": 9,
+            "duplicatedLines": 197,
+            "duplicatedTokens": 1683,
+            "percentage": 32.62,
+            "percentageTokens": 32.59,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/home.js": {
+            "lines": 669,
+            "tokens": 4579,
+            "sources": 1,
+            "clones": 4,
+            "duplicatedLines": 84,
+            "duplicatedTokens": 611,
+            "percentage": 12.56,
+            "percentageTokens": 13.34,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/flickword.js": {
+            "lines": 310,
+            "tokens": 3039,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/flags-init.js": {
+            "lines": 20,
+            "tokens": 167,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/export-csv.js": {
+            "lines": 297,
+            "tokens": 2893,
+            "sources": 1,
+            "clones": 4,
+            "duplicatedLines": 32,
+            "duplicatedTokens": 374,
+            "percentage": 10.77,
+            "percentageTokens": 12.93,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/episode-tracking.js": {
+            "lines": 639,
+            "tokens": 3850,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/currently-watching-preview.js": {
+            "lines": 632,
+            "tokens": 5317,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/curated-seed.js": {
+            "lines": 126,
+            "tokens": 1605,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/curated-rows.js": {
+            "lines": 321,
+            "tokens": 3526,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 6,
+            "duplicatedTokens": 90,
+            "percentage": 1.87,
+            "percentageTokens": 2.55,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/curated-lists.js": {
+            "lines": 254,
+            "tokens": 1683,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 6,
+            "duplicatedTokens": 90,
+            "percentage": 2.36,
+            "percentageTokens": 5.35,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/container-alignment.js": {
+            "lines": 195,
+            "tokens": 1418,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/compat-utils.js": {
+            "lines": 52,
+            "tokens": 720,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/community-spotlight.js": {
+            "lines": 324,
+            "tokens": 2484,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/community-player.js": {
+            "lines": 226,
+            "tokens": 1111,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/community-final-verification.js": {
+            "lines": 174,
+            "tokens": 1682,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/centralized-add-handler.js": {
+            "lines": 132,
+            "tokens": 1040,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/card.js": {
+            "lines": 26,
+            "tokens": 278,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/card-actions.js": {
+            "lines": 282,
+            "tokens": 2559,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 17,
+            "duplicatedTokens": 115,
+            "percentage": 6.03,
+            "percentageTokens": 4.49,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/auth.js": {
+            "lines": 392,
+            "tokens": 3272,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/app-state.js": {
+            "lines": 12,
+            "tokens": 152,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/anti-jump.js": {
+            "lines": 108,
+            "tokens": 805,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/scripts/analytics.js": {
+            "lines": 91,
+            "tokens": 570,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/visibility-manager.js": {
+            "lines": 274,
+            "tokens": 2456,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/utils.js": {
+            "lines": 135,
+            "tokens": 1283,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 17,
+            "duplicatedTokens": 115,
+            "percentage": 12.59,
+            "percentageTokens": 8.96,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/syntax-fix.js": {
+            "lines": 41,
+            "tokens": 291,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/layout-enhancements.js": {
+            "lines": 312,
+            "tokens": 2168,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/language-manager.js": {
+            "lines": 486,
+            "tokens": 3621,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/i18n.js": {
+            "lines": 970,
+            "tokens": 6258,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/home-sections-config.js": {
+            "lines": 91,
+            "tokens": 481,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/flags.js": {
+            "lines": 40,
+            "tokens": 352,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/firebase-init.js": {
+            "lines": 37,
+            "tokens": 373,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/error-handler.js": {
+            "lines": 226,
+            "tokens": 1672,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/emergency-functions.js": {
+            "lines": 176,
+            "tokens": 1588,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/dom-cache.js": {
+            "lines": 194,
+            "tokens": 1556,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/debug-utils.js": {
+            "lines": 80,
+            "tokens": 584,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/common-utils.js": {
+            "lines": 316,
+            "tokens": 2869,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/bootstrap.js": {
+            "lines": 26,
+            "tokens": 164,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/js/auth.js": {
+            "lines": 155,
+            "tokens": 1683,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/functions/tmdb.js": {
+            "lines": 356,
+            "tokens": 3108,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 356,
+            "duplicatedTokens": 3108,
+            "percentage": 100,
+            "percentageTokens": 100,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/functions/feedback.js": {
+            "lines": 121,
+            "tokens": 1062,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 121,
+            "duplicatedTokens": 1062,
+            "percentage": 100,
+            "percentageTokens": 100,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/features/trivia-safe.js": {
+            "lines": 243,
+            "tokens": 2574,
+            "sources": 1,
+            "clones": 3,
+            "duplicatedLines": 54,
+            "duplicatedTokens": 708,
+            "percentage": 22.22,
+            "percentageTokens": 27.51,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/verify-fixes.js": {
+            "lines": 128,
+            "tokens": 1180,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/tmdb-config.js": {
+            "lines": 43,
+            "tokens": 321,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/test-fixes.js": {
+            "lines": 42,
+            "tokens": 331,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/sw.js": {
+            "lines": 236,
+            "tokens": 1703,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/simple-translation-scanner.js": {
+            "lines": 101,
+            "tokens": 832,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 13,
+            "duplicatedTokens": 114,
+            "percentage": 12.87,
+            "percentageTokens": 13.7,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/firebase-config.js": {
+            "lines": 10,
+            "tokens": 63,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/find-missing-translations.js": {
+            "lines": 174,
+            "tokens": 1488,
+            "sources": 1,
+            "clones": 3,
+            "duplicatedLines": 32,
+            "duplicatedTokens": 337,
+            "percentage": 18.39,
+            "percentageTokens": 22.65,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/debug-verification.js": {
+            "lines": 189,
+            "tokens": 1645,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/critical-translations.js": {
+            "lines": 186,
+            "tokens": 1789,
+            "sources": 1,
+            "clones": 5,
+            "duplicatedLines": 59,
+            "duplicatedTokens": 587,
+            "percentage": 31.72,
+            "percentageTokens": 32.81,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/comprehensive-translation-fix.js": {
+            "lines": 228,
+            "tokens": 1815,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 14,
+            "duplicatedTokens": 136,
+            "percentage": 6.14,
+            "percentageTokens": 7.49,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/build.js": {
+            "lines": 176,
+            "tokens": 1557,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 30,
+            "duplicatedTokens": 284,
+            "percentage": 17.05,
+            "percentageTokens": 18.24,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/auth-diagnostics.js": {
+            "lines": 54,
+            "tokens": 601,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "www/analyze-syntax.js": {
+            "lines": 61,
+            "tokens": 675,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 21217,
+          "tokens": 179455,
+          "sources": 101,
+          "clones": 53,
+          "duplicatedLines": 1418,
+          "duplicatedTokens": 13190,
+          "percentage": 6.68,
+          "percentageTokens": 7.35,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      }
+    },
+    "total": {
+      "lines": 22619,
+      "tokens": 188642,
+      "sources": 108,
+      "clones": 56,
+      "duplicatedLines": 1463,
+      "duplicatedTokens": 13581,
+      "percentage": 6.47,
+      "percentageTokens": 7.2,
+      "newDuplicatedLines": 0,
+      "newClones": 0
+    }
+  },
+  "duplicates": [
+    {
+      "format": "javascript",
+      "lines": 10,
+      "fragment": "card.innerHTML = `\n        <div class=\"card__poster\" role=\"button\" tabindex=\"0\" aria-label=\"${title}\">\n          ${posterUrl ? \n            `<img src=\"${posterUrl}\" ${srcset ? `srcset=\"${srcset}\"` : ''} sizes=\"(max-width: 480px) 148px, 200px\" alt=\"${title} poster\" loading=\"lazy\" onerror=\"this.style.display='none'; this.nextElementSibling.style.display='flex';\">` :\n            ''\n          }\n          <div class=\"card__poster-placeholder\" style=\"display: ${posterUrl ? 'none' : 'flex'};\">\n            🎬\n          </div>\n          ",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\components\\Card.js",
+        "start": 135,
+        "end": 144,
+        "startLoc": {
+          "line": 135,
+          "column": 7,
+          "position": 727
+        },
+        "endLoc": {
+          "line": 144,
+          "column": 11,
+          "position": 789
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\components\\Card.js",
+        "start": 110,
+        "end": 122,
+        "startLoc": {
+          "line": 110,
+          "column": 7,
+          "position": 597
+        },
+        "endLoc": {
+          "line": 122,
+          "column": 41,
+          "position": 659
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 13,
+      "fragment": "${action.action}\" \r\n        data-id=\"${itemId}\" \r\n        data-list=\"${action.list || ''}\"\r\n        data-media-type=\"${mediaType}\"\r\n        aria-label=\"${action.label}\"\r\n        title=\"${action.label}\"\r\n      >\r\n        ${action.icon ? `<span class=\"action-icon\" aria-hidden=\"true\">${action.icon}</span>` : ''}\r\n        <span class=\"action-label\">${action.label}</span>\r\n      </button>\r\n    `).join('');\r\n\r\n    // Generate overflow menu HTML",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\components\\ActionBar.js",
+        "start": 147,
+        "end": 159,
+        "startLoc": {
+          "line": 147,
+          "column": 22,
+          "position": 951
+        },
+        "endLoc": {
+          "line": 159,
+          "column": 31,
+          "position": 1028
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\components\\ActionBar.js",
+        "start": 131,
+        "end": 143,
+        "startLoc": {
+          "line": 131,
+          "column": 22,
+          "position": 847
+        },
+        "endLoc": {
+          "line": 143,
+          "column": 35,
+          "position": 924
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 18,
+      "fragment": ");\r\n\r\n  // Helper function to get translation\r\n  function t(key) {\r\n    // Handle nested i18n keys\r\n    const keys = key.split('.');\r\n    let value = window.i18n;\r\n    for (let i = 0; i < keys.length; i++) {\r\n      if (value && typeof value === 'object' && keys[i] in value) {\r\n        value = value[keys[i]];\r\n      } else {\r\n        return key; // Return key if not found\r\n      }\r\n    }\r\n    return value;\r\n  }\r\n\r\n  // Helper function to navigate",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\community\\games.js",
+        "start": 9,
+        "end": 26,
+        "startLoc": {
+          "line": 9,
+          "column": 38,
+          "position": 26
+        },
+        "endLoc": {
+          "line": 26,
+          "column": 31,
+          "position": 194
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\modals\\games-teaser.js",
+        "start": 9,
+        "end": 26,
+        "startLoc": {
+          "line": 9,
+          "column": 31,
+          "position": 26
+        },
+        "endLoc": {
+          "line": 26,
+          "column": 38,
+          "position": 194
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 15,
+      "fragment": "'http://localhost:3000',\r\n    'http://127.0.0.1:3000',\r\n    'http://localhost:8000',\r\n    'http://127.0.0.1:8000',\r\n    'http://localhost:8888', // Netlify dev\r\n    'http://127.0.0.1:8888'\r\n  ];\r\n  \r\n  const origin = event.headers.origin || event.headers.referer || '';\r\n  const isAllowedOrigin = allowedOrigins.some(allowed => \r\n    origin.startsWith(allowed)\r\n  ) || !origin; // Allow if no origin (direct access)\r\n  \r\n  const headers = {\r\n    'Access-Control-Allow-Origin': isAllowedOrigin ? (origin || '*') : 'https://zippy-meerkat-329c02.netlify.app'",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\netlify\\functions\\tmdb.js",
+        "start": 186,
+        "end": 200,
+        "startLoc": {
+          "line": 186,
+          "column": 5,
+          "position": 1619
+        },
+        "endLoc": {
+          "line": 200,
+          "column": 43,
+          "position": 1750
+        }
+      },
+      "secondFile": {
+        "name": "www\\netlify\\functions\\tmdb.js",
+        "start": 9,
+        "end": 23,
+        "startLoc": {
+          "line": 9,
+          "column": 5,
+          "position": 74
+        },
+        "endLoc": {
+          "line": 23,
+          "column": 4,
+          "position": 205
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 100,
+      "fragment": ",\r\n    'Access-Control-Allow-Headers': 'Content-Type',\r\n    'Access-Control-Allow-Methods': 'GET, OPTIONS',\r\n    'Content-Type': 'application/json',\r\n    'Cache-Control': 'public, max-age=300' // 5 minute cache\r\n  };\r\n\r\n  // Handle preflight CORS requests\r\n  if (event.httpMethod === 'OPTIONS') {\r\n    console.log('Handling OPTIONS request');\r\n    return { \r\n      statusCode: 200, \r\n      headers, \r\n      body: '' \r\n    };\r\n  }\r\n\r\n  // Only allow GET requests\r\n  if (event.httpMethod !== 'GET') {\r\n    console.log('Method not allowed:', event.httpMethod);\r\n    return {\r\n      statusCode: 405,\r\n      headers,\r\n      body: JSON.stringify({ error: 'Method not allowed. Only GET requests are supported.' })\r\n    };\r\n  }\r\n\r\n  try {\r\n    // Get API key from environment variable\r\n    const API_KEY = process.env.TMDB_API_KEY;\r\n    \r\n    if (!API_KEY) {\r\n      console.error('TMDB_API_KEY environment variable is not set');\r\n      return {\r\n        statusCode: 500,\r\n        headers,\r\n        body: JSON.stringify({ \r\n          error: 'Server configuration error',\r\n          message: 'API key not configured'\r\n        })\r\n      };\r\n    }\r\n\r\n    console.log('API key found, length:', API_KEY.length);\r\n\r\n    // Extract query parameters\r\n    const { endpoint, query, page = '1', genre } = event.queryStringParameters || {};\r\n\r\n    if (!endpoint) {\r\n      console.log('Missing endpoint parameter');\r\n      return {\r\n        statusCode: 400,\r\n        headers,\r\n        body: JSON.stringify({ \r\n          error: 'Missing required parameter',\r\n          message: 'endpoint parameter is required'\r\n        })\r\n      };\r\n    }\r\n\r\n    console.log('Processing request for endpoint:', endpoint);\r\n\r\n    // Rate limiting - log IP for monitoring\r\n    const userIP = event.headers['client-ip'] || \r\n                   event.headers['x-forwarded-for'] || \r\n                   event.headers['x-real-ip'] || \r\n                   'unknown';\r\n    \r\n    console.log(`Request from IP: ${userIP} for endpoint: ${endpoint}`);\r\n\r\n    // Build the TMDB API URL\r\n    let tmdbUrl = `https://api.themoviedb.org/3/${endpoint}?api_key=${API_KEY}`;\r\n    \r\n    // Add optional parameters\r\n    if (query) {\r\n      tmdbUrl += `&query=${encodeURIComponent(query)}`;\r\n      console.log('Added query parameter:', query);\r\n    }\r\n    \r\n    if (page && page !== '1') {\r\n      tmdbUrl += `&page=${encodeURIComponent(page)}`;\r\n      console.log('Added page parameter:', page);\r\n    }\r\n    \r\n    if (genre) {\r\n      tmdbUrl += `&with_genres=${encodeURIComponent(genre)}`;\r\n      console.log('Added genre parameter:', genre);\r\n    }\r\n\r\n    // Log the URL (without API key for security)\r\n    const logUrl = tmdbUrl.replace(API_KEY, '[REDACTED]');\r\n    console.log('Making request to TMDB:', logUrl);\r\n\r\n    // Make the request to TMDB API\r\n    const response = await fetch(tmdbUrl, {\r\n      method: 'GET',\r\n      headers: {\r\n        'Accept': 'application/json',\r\n        'User-Agent': 'TV-Movie-Tracker/1.0'\r\n      },",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\netlify\\functions\\tmdb.js",
+        "start": 200,
+        "end": 299,
+        "startLoc": {
+          "line": 200,
+          "column": 43,
+          "position": 1751
+        },
+        "endLoc": {
+          "line": 299,
+          "column": 2,
+          "position": 2542
+        }
+      },
+      "secondFile": {
+        "name": "www\\netlify\\functions\\tmdb.js",
+        "start": 23,
+        "end": 123,
+        "startLoc": {
+          "line": 23,
+          "column": 4,
+          "position": 206
+        },
+        "endLoc": {
+          "line": 123,
+          "column": 2,
+          "position": 1000
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 57,
+      "fragment": "});\r\n\r\n    console.log('TMDB response status:', response.status, response.statusText);\r\n\r\n    if (!response.ok) {\r\n      const errorText = await response.text();\r\n      console.error('TMDB API error:', response.status, errorText);\r\n      \r\n      return {\r\n        statusCode: response.status >= 500 ? 502 : response.status,\r\n        headers,\r\n        body: JSON.stringify({ \r\n          error: 'External API error',\r\n          message: `TMDB API returned ${response.status}: ${response.statusText}`,\r\n          details: response.status === 401 ? 'Invalid API key' : 'Service temporarily unavailable'\r\n        })\r\n      };\r\n    }\r\n\r\n    // Parse the JSON response\r\n    const data = await response.json();\r\n    console.log('Successfully fetched data, results count:', data.results ? data.results.length : 'N/A');\r\n\r\n    // Return successful response\r\n    return {\r\n      statusCode: 200,\r\n      headers,\r\n      body: JSON.stringify(data)\r\n    };\r\n\r\n  } catch (error) {\r\n    console.error('Function error:', error.name, error.message);\r\n    console.error('Stack trace:', error.stack);\r\n    \r\n    // Handle different types of errors\r\n    let errorMessage = 'Internal server error';\r\n    let statusCode = 500;\r\n    \r\n    if (error.name === 'TypeError' && error.message.includes('fetch')) {\r\n      errorMessage = 'Network error connecting to TMDB API';\r\n      statusCode = 502;\r\n    } else if (error.name === 'AbortError' || error.message.includes('timeout')) {\r\n      errorMessage = 'Request timeout - TMDB API is slow';\r\n      statusCode = 504;\r\n    }\r\n    \r\n    return {\r\n      statusCode: statusCode,\r\n      headers,\r\n      body: JSON.stringify({ \r\n        error: errorMessage,\r\n        message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',\r\n        timestamp: new Date().toISOString()\r\n      })\r\n    };\r\n  }\r\n};",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\netlify\\functions\\tmdb.js",
+        "start": 301,
+        "end": 357,
+        "startLoc": {
+          "line": 301,
+          "column": 5,
+          "position": 2555
+        },
+        "endLoc": {
+          "line": 357,
+          "column": 2,
+          "position": 3108
+        }
+      },
+      "secondFile": {
+        "name": "www\\netlify\\functions\\tmdb.js",
+        "start": 123,
+        "end": 179,
+        "startLoc": {
+          "line": 123,
+          "column": 5,
+          "position": 1000
+        },
+        "endLoc": {
+          "line": 179,
+          "column": 2,
+          "position": 1553
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 10,
+      "fragment": "function ensureDirectories() {\r\n  const dirs = [\r\n    path.join(reportsDir, 'lighthouse'),\r\n    path.join(reportsDir, 'axe'),\r\n    path.join(reportsDir, 'jscpd'),\r\n    path.join(reportsDir, 'bundle')\r\n  ];\r\n  \r\n  for (const dir of dirs) {\r\n    if",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\run-audit.js",
+        "start": 16,
+        "end": 25,
+        "startLoc": {
+          "line": 16,
+          "column": 1,
+          "position": 74
+        },
+        "endLoc": {
+          "line": 25,
+          "column": 3,
+          "position": 168
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\simple-audit.mjs",
+        "start": 21,
+        "end": 30,
+        "startLoc": {
+          "line": 21,
+          "column": 2,
+          "position": 138
+        },
+        "endLoc": {
+          "line": 30,
+          "column": 6,
+          "position": 232
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 10,
+      "fragment": "(currentDir, { withFileTypes: true });\r\n      \r\n      for (const entry of entries) {\r\n        const fullPath = path.join(currentDir, entry.name);\r\n        \r\n        if (entry.isDirectory()) {\r\n          // Skip excluded directories\r\n          const skipDirs = ['node_modules', 'dist', 'build', 'out', '.next', '.cache', 'coverage'];\r\n          if (!skipDirs.some(skip => entry.name.includes(skip))) {\r\n            scanDir",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\run-audit.js",
+        "start": 37,
+        "end": 46,
+        "startLoc": {
+          "line": 37,
+          "column": 12,
+          "position": 273
+        },
+        "endLoc": {
+          "line": 46,
+          "column": 8,
+          "position": 407
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\simple-audit.mjs",
+        "start": 40,
+        "end": 49,
+        "startLoc": {
+          "line": 40,
+          "column": 8,
+          "position": 325
+        },
+        "endLoc": {
+          "line": 49,
+          "column": 6,
+          "position": 459
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 19,
+      "fragment": "(file);\r\n        cssTotalMB += stats.size / (1024 * 1024);\r\n      } catch (error) {\r\n        // Skip files that can't be read\r\n      }\r\n    }\r\n    \r\n    // Create bundle report\r\n    const bundleReport = {\r\n      jsFiles: jsFiles.length,\r\n      cssFiles: cssFiles.length,\r\n      jsTotalMB: Math.round(jsTotalMB * 100) / 100,\r\n      cssTotalMB: Math.round(cssTotalMB * 100) / 100,\r\n      totalMB: Math.round((jsTotalMB + cssTotalMB) * 100) / 100,\r\n      jsFilesList: jsFiles.map(f => path.relative(wwwDir, f)),\r\n      cssFilesList: cssFiles.map(f => path.relative(wwwDir, f))\r\n    };\r\n    \r\n    fs",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\run-audit.js",
+        "start": 85,
+        "end": 103,
+        "startLoc": {
+          "line": 85,
+          "column": 9,
+          "position": 718
+        },
+        "endLoc": {
+          "line": 103,
+          "column": 3,
+          "position": 931
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\simple-audit.mjs",
+        "start": 88,
+        "end": 106,
+        "startLoc": {
+          "line": 88,
+          "column": 5,
+          "position": 784
+        },
+        "endLoc": {
+          "line": 106,
+          "column": 6,
+          "position": 997
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 15,
+      "fragment": "(\r\n      path.join(reportsDir, 'bundle', 'bundle.json'),\r\n      JSON.stringify(bundleReport, null, 2)\r\n    );\r\n    \r\n    console.log('✅ Bundle analysis complete');\r\n    return { jsTotalMB, cssTotalMB };\r\n  } catch (error) {\r\n    console.error('❌ Bundle analysis failed:', error.message);\r\n    return { jsTotalMB: 0, cssTotalMB: 0 };\r\n  }\r\n}\r\n\r\n// Run basic security scan\r\nfunction",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\run-audit.js",
+        "start": 103,
+        "end": 117,
+        "startLoc": {
+          "line": 103,
+          "column": 14,
+          "position": 934
+        },
+        "endLoc": {
+          "line": 117,
+          "column": 9,
+          "position": 1058
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\simple-audit.mjs",
+        "start": 106,
+        "end": 120,
+        "startLoc": {
+          "line": 106,
+          "column": 10,
+          "position": 1002
+        },
+        "endLoc": {
+          "line": 120,
+          "column": 6,
+          "position": 1126
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 20,
+      "fragment": "function runSecurityScan() {\r\n  console.log('🔒 Running security scan...');\r\n  \r\n  try {\r\n    const securityPatterns = [\r\n      'innerHTML',\r\n      'insertAdjacentHTML',\r\n      'dangerouslySetInnerHTML',\r\n      'eval\\\\(',\r\n      'new Function\\\\(',\r\n      'javascript:',\r\n      'onerror=',\r\n      'onload='\r\n    ];\r\n    \r\n    let totalMatches = 0;\r\n    const results = [];\r\n    \r\n    // Find all JS and HTML files\r\n    const jsFiles = findFiles",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\run-audit.js",
+        "start": 117,
+        "end": 136,
+        "startLoc": {
+          "line": 117,
+          "column": 1,
+          "position": 1058
+        },
+        "endLoc": {
+          "line": 136,
+          "column": 10,
+          "position": 1177
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\simple-audit.mjs",
+        "start": 120,
+        "end": 139,
+        "startLoc": {
+          "line": 120,
+          "column": 2,
+          "position": 1128
+        },
+        "endLoc": {
+          "line": 139,
+          "column": 6,
+          "position": 1247
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 16,
+      "fragment": "(file, 'utf8');\r\n        \r\n        for (const pattern of securityPatterns) {\r\n          const regex = new RegExp(pattern, 'gi');\r\n          const matches = content.match(regex);\r\n          if (matches) {\r\n            totalMatches += matches.length;\r\n            results.push(`${file}:${pattern} (${matches.length} matches)`);\r\n          }\r\n        }\r\n      } catch (error) {\r\n        // Skip files that can't be read\r\n      }\r\n    }\r\n    \r\n    fs",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\run-audit.js",
+        "start": 142,
+        "end": 157,
+        "startLoc": {
+          "line": 142,
+          "column": 13,
+          "position": 1256
+        },
+        "endLoc": {
+          "line": 157,
+          "column": 3,
+          "position": 1398
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\simple-audit.mjs",
+        "start": 145,
+        "end": 160,
+        "startLoc": {
+          "line": 145,
+          "column": 9,
+          "position": 1332
+        },
+        "endLoc": {
+          "line": 160,
+          "column": 6,
+          "position": 1474
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 12,
+      "fragment": "(path.join(reportsDir, 'security-scan.txt'), results.join('\\n'));\r\n    console.log('✅ Security scan complete');\r\n    \r\n    return totalMatches;\r\n  } catch (error) {\r\n    console.error('❌ Security scan failed:', error.message);\r\n    return 0;\r\n  }\r\n}\r\n\r\n// Generate summary report\r\nfunction",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\run-audit.js",
+        "start": 157,
+        "end": 168,
+        "startLoc": {
+          "line": 157,
+          "column": 14,
+          "position": 1401
+        },
+        "endLoc": {
+          "line": 168,
+          "column": 9,
+          "position": 1488
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\simple-audit.mjs",
+        "start": 160,
+        "end": 171,
+        "startLoc": {
+          "line": 160,
+          "column": 10,
+          "position": 1479
+        },
+        "endLoc": {
+          "line": 171,
+          "column": 6,
+          "position": 1566
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 22,
+      "fragment": "function generateSummary(bundleData, securityMatches) {\r\n  console.log('\\n' + '='.repeat(80));\r\n  console.log('📊 BASELINE AUDIT SUMMARY');\r\n  console.log('='.repeat(80));\r\n  \r\n  // Bundle analysis\r\n  console.log(`\\n📦 BUNDLE ANALYSIS:`);\r\n  console.log(`   JavaScript: ${bundleData.jsTotalMB} MB`);\r\n  console.log(`   CSS: ${bundleData.cssTotalMB} MB`);\r\n  console.log(`   Total: ${(bundleData.jsTotalMB + bundleData.cssTotalMB).toFixed(2)} MB`);\r\n  \r\n  // Security scan\r\n  console.log(`\\n🔒 SECURITY SCAN:`);\r\n  console.log(`   Potential Issues: ${securityMatches} matches`);\r\n  \r\n  console.log('\\n' + '='.repeat(80));\r\n  console.log('✅ Baseline audit complete! Reports generated in /reports/');\r\n  console.log('='.repeat(80));\r\n}\r\n\r\n// Main execution\r\nfunction",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\run-audit.js",
+        "start": 168,
+        "end": 189,
+        "startLoc": {
+          "line": 168,
+          "column": 1,
+          "position": 1488
+        },
+        "endLoc": {
+          "line": 189,
+          "column": 9,
+          "position": 1704
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\simple-audit.mjs",
+        "start": 171,
+        "end": 192,
+        "startLoc": {
+          "line": 171,
+          "column": 2,
+          "position": 1568
+        },
+        "endLoc": {
+          "line": 192,
+          "column": 6,
+          "position": 1784
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 29,
+      "fragment": "readJSON(path.join(reportsDir, 'lighthouse', 'desktop.json'));\r\n    if (desktopLighthouse && desktopLighthouse.categories) {\r\n      console.log(`   Performance: ${Math.round(desktopLighthouse.categories.performance.score * 100)}`);\r\n      console.log(`   Accessibility: ${Math.round(desktopLighthouse.categories.accessibility.score * 100)}`);\r\n      console.log(`   Best Practices: ${Math.round(desktopLighthouse.categories['best-practices'].score * 100)}`);\r\n      console.log(`   SEO: ${Math.round(desktopLighthouse.categories.seo.score * 100)}`);\r\n      \r\n      // Key metrics\r\n      const audits = desktopLighthouse.audits;\r\n      if (audits['first-contentful-paint']) {\r\n        console.log(`   First Contentful Paint: ${Math.round(audits['first-contentful-paint'].numericValue)}ms`);\r\n      }\r\n      if (audits['largest-contentful-paint']) {\r\n        console.log(`   Largest Contentful Paint: ${Math.round(audits['largest-contentful-paint'].numericValue)}ms`);\r\n      }\r\n      if (audits['cumulative-layout-shift']) {\r\n        console.log(`   Cumulative Layout Shift: ${audits['cumulative-layout-shift'].numericValue}`);\r\n      }\r\n      if (audits['total-blocking-time']) {\r\n        console.log(`   Total Blocking Time: ${Math.round(audits['total-blocking-time'].numericValue)}ms`);\r\n      }\r\n    } else {\r\n      console.log('   ❌ Desktop Lighthouse results not available');\r\n    }\r\n  } catch (error) {\r\n    console.log('   ❌ Desktop Lighthouse results not available');\r\n  }\r\n  \r\n  // Lighthouse Mobile Results",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\baseline-summary.mjs",
+        "start": 43,
+        "end": 71,
+        "startLoc": {
+          "line": 43,
+          "column": 2,
+          "position": 324
+        },
+        "endLoc": {
+          "line": 71,
+          "column": 29,
+          "position": 700
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\console-summary.js",
+        "start": 37,
+        "end": 65,
+        "startLoc": {
+          "line": 37,
+          "column": 2,
+          "position": 239
+        },
+        "endLoc": {
+          "line": 65,
+          "column": 29,
+          "position": 612
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 11,
+      "fragment": ".audits;\r\n      if (audits['first-contentful-paint']) {\r\n        console.log(`   First Contentful Paint: ${Math.round(audits['first-contentful-paint'].numericValue)}ms`);\r\n      }\r\n      if (audits['largest-contentful-paint']) {\r\n        console.log(`   Largest Contentful Paint: ${Math.round(audits['largest-contentful-paint'].numericValue)}ms`);\r\n      }\r\n      if (audits['cumulative-layout-shift']) {\r\n        console.log(`   Cumulative Layout Shift: ${audits['cumulative-layout-shift'].numericValue}`);\r\n      }\r\n    }",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\baseline-summary.mjs",
+        "start": 82,
+        "end": 92,
+        "startLoc": {
+          "line": 82,
+          "column": 17,
+          "position": 933
+        },
+        "endLoc": {
+          "line": 92,
+          "column": 2,
+          "position": 1057
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\console-summary.js",
+        "start": 45,
+        "end": 55,
+        "startLoc": {
+          "line": 45,
+          "column": 18,
+          "position": 400
+        },
+        "endLoc": {
+          "line": 55,
+          "column": 3,
+          "position": 524
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 25,
+      "fragment": "readJSON(path.join(reportsDir, 'axe', 'axe.json'));\r\n    if (axeResults && Array.isArray(axeResults) && axeResults.length > 0) {\r\n      const result = axeResults[0];\r\n      const violations = result.violations || [];\r\n      const serious = violations.filter(v => v.impact === 'serious').length;\r\n      const critical = violations.filter(v => v.impact === 'critical').length;\r\n      const moderate = violations.filter(v => v.impact === 'moderate').length;\r\n      const minor = violations.filter(v => v.impact === 'minor').length;\r\n      \r\n      console.log(`   Total Violations: ${violations.length}`);\r\n      console.log(`   Critical: ${critical}`);\r\n      console.log(`   Serious: ${serious}`);\r\n      console.log(`   Moderate: ${moderate}`);\r\n      console.log(`   Minor: ${minor}`);\r\n    } else {\r\n      console.log('   ✅ No accessibility violations found');\r\n    }\r\n  } catch (error) {\r\n    console.log('   ❌ Axe results not available');\r\n  }\r\n  \r\n  // Bundle Analysis\r\n  console.log('\\n📦 BUNDLE ANALYSIS:');\r\n  try {\r\n    const bundleData = await",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\baseline-summary.mjs",
+        "start": 102,
+        "end": 126,
+        "startLoc": {
+          "line": 102,
+          "column": 2,
+          "position": 1135
+        },
+        "endLoc": {
+          "line": 126,
+          "column": 6,
+          "position": 1477
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\console-summary.js",
+        "start": 68,
+        "end": 92,
+        "startLoc": {
+          "line": 68,
+          "column": 2,
+          "position": 636
+        },
+        "endLoc": {
+          "line": 92,
+          "column": 9,
+          "position": 973
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 18,
+      "fragment": "readJSON(path.join(reportsDir, 'bundle', 'bundle.json'));\r\n    if (bundleData) {\r\n      console.log(`   JavaScript Files: ${bundleData.jsFiles}`);\r\n      console.log(`   CSS Files: ${bundleData.cssFiles}`);\r\n      console.log(`   JavaScript Size: ${bundleData.jsTotalMB} MB`);\r\n      console.log(`   CSS Size: ${bundleData.cssTotalMB} MB`);\r\n      console.log(`   Total Bundle Size: ${bundleData.totalMB} MB`);\r\n    } else {\r\n      console.log('   ❌ Bundle analysis not available');\r\n    }\r\n  } catch (error) {\r\n    console.log('   ❌ Bundle analysis not available');\r\n  }\r\n  \r\n  // Duplication Analysis\r\n  console.log('\\n🔄 DUPLICATION ANALYSIS:');\r\n  try {\r\n    const jscpdData = await",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\baseline-summary.mjs",
+        "start": 126,
+        "end": 143,
+        "startLoc": {
+          "line": 126,
+          "column": 2,
+          "position": 1479
+        },
+        "endLoc": {
+          "line": 143,
+          "column": 6,
+          "position": 1664
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\console-summary.js",
+        "start": 92,
+        "end": 109,
+        "startLoc": {
+          "line": 92,
+          "column": 2,
+          "position": 973
+        },
+        "endLoc": {
+          "line": 109,
+          "column": 9,
+          "position": 1153
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 19,
+      "fragment": "readJSON(path.join(reportsDir, 'jscpd', 'jscpd-report.json'));\r\n    if (jscpdData && jscpdData.statistics && jscpdData.statistics.total) {\r\n      const total = jscpdData.statistics.total;\r\n      const duplicationPercentage = Math.round((total.duplicatedLines / total.lines) * 100);\r\n      console.log(`   Total Lines: ${total.lines.toLocaleString()}`);\r\n      console.log(`   Duplicated Lines: ${total.duplicatedLines.toLocaleString()}`);\r\n      console.log(`   Duplication Percentage: ${duplicationPercentage}%`);\r\n      console.log(`   Clones Found: ${total.clones.toLocaleString()}`);\r\n    } else {\r\n      console.log('   ❌ Duplication analysis not available');\r\n    }\r\n  } catch (error) {\r\n    console.log('   ❌ Duplication analysis not available');\r\n  }\r\n  \r\n  // Dependency Analysis\r\n  console.log('\\n📋 DEPENDENCY ANALYSIS:');\r\n  try {\r\n    const depcheckData = await",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\baseline-summary.mjs",
+        "start": 143,
+        "end": 161,
+        "startLoc": {
+          "line": 143,
+          "column": 2,
+          "position": 1666
+        },
+        "endLoc": {
+          "line": 161,
+          "column": 6,
+          "position": 1904
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\console-summary.js",
+        "start": 109,
+        "end": 127,
+        "startLoc": {
+          "line": 109,
+          "column": 2,
+          "position": 1153
+        },
+        "endLoc": {
+          "line": 127,
+          "column": 9,
+          "position": 1386
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 11,
+      "fragment": "readJSON(path.join(reportsDir, 'depcheck.json'));\r\n    if (depcheckData) {\r\n      const unusedDeps = Object.keys(depcheckData.dependencies || {}).length;\r\n      const unusedDevDeps = Object.keys(depcheckData.devDependencies || {}).length;\r\n      const missing = Object.keys(depcheckData.missing || {}).length;\r\n      \r\n      console.log(`   Unused Dependencies: ${unusedDeps}`);\r\n      console.log(`   Unused Dev Dependencies: ${unusedDevDeps}`);\r\n      console.log(`   Missing Dependencies: ${missing}`);\r\n      \r\n      if",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\baseline-summary.mjs",
+        "start": 161,
+        "end": 171,
+        "startLoc": {
+          "line": 161,
+          "column": 2,
+          "position": 1906
+        },
+        "endLoc": {
+          "line": 171,
+          "column": 3,
+          "position": 2053
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\console-summary.js",
+        "start": 127,
+        "end": 136,
+        "startLoc": {
+          "line": 127,
+          "column": 2,
+          "position": 1386
+        },
+        "endLoc": {
+          "line": 136,
+          "column": 2,
+          "position": 1531
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 6,
+      "fragment": "readText(path.join(reportsDir, 'security-scan.txt'));\r\n    if (securityOutput) {\r\n      const lines = securityOutput.split('\\n').filter(line => line.trim());\r\n      console.log(`   Potential Security Issues: ${lines.length}`);\r\n      \r\n      if",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\baseline-summary.mjs",
+        "start": 210,
+        "end": 215,
+        "startLoc": {
+          "line": 210,
+          "column": 2,
+          "position": 2494
+        },
+        "endLoc": {
+          "line": 215,
+          "column": 3,
+          "position": 2567
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\console-summary.js",
+        "start": 146,
+        "end": 150,
+        "startLoc": {
+          "line": 146,
+          "column": 2,
+          "position": 1602
+        },
+        "endLoc": {
+          "line": 150,
+          "column": 2,
+          "position": 1673
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 10,
+      "fragment": "} else {\r\n      console.log('   ✅ No security issues found');\r\n    }\r\n  } catch (error) {\r\n    console.log('   ❌ Security scan not available');\r\n  }\r\n  \r\n  console.log('\\n' + '='.repeat(80));\r\n  console.log('✅ Baseline audit summary complete!');\r\n  console.log('='.repeat(80));",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\baseline-summary.mjs",
+        "start": 224,
+        "end": 233,
+        "startLoc": {
+          "line": 224,
+          "column": 5,
+          "position": 2676
+        },
+        "endLoc": {
+          "line": 233,
+          "column": 2,
+          "position": 2766
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\console-summary.js",
+        "start": 150,
+        "end": 159,
+        "startLoc": {
+          "line": 150,
+          "column": 3,
+          "position": 1673
+        },
+        "endLoc": {
+          "line": 159,
+          "column": 2,
+          "position": 1758
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 21,
+      "fragment": ";\nconst __dirname = path.dirname(fileURLToPath(import.meta.url));\nconst projectRoot = path.resolve(__dirname, '..');\nconst wwwDir = path.join(projectRoot, 'www');\nconst reportsDir = path.join(projectRoot, 'reports');\n\n// Ensure reports directories exist\nasync function ensureDirectories() {\n  const dirs = [\n    path.join(reportsDir, 'lighthouse'),\n    path.join(reportsDir, 'axe'),\n    path.join(reportsDir, 'jscpd'),\n    path.join(reportsDir, 'bundle')\n  ];\n  \n  for (const dir of dirs) {\n    await fs.mkdir(dir, { recursive: true });\n  }\n}\n\n// Run Lighthouse audit",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\baseline-audit.mjs",
+        "start": 18,
+        "end": 38,
+        "startLoc": {
+          "line": 18,
+          "column": 2,
+          "position": 95
+        },
+        "endLoc": {
+          "line": 38,
+          "column": 24,
+          "position": 286
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\simple-audit.mjs",
+        "start": 13,
+        "end": 34,
+        "startLoc": {
+          "line": 13,
+          "column": 6,
+          "position": 50
+        },
+        "endLoc": {
+          "line": 34,
+          "column": 26,
+          "position": 262
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 7,
+      "fragment": "const bundleReport = {\n        jsFiles: jsFiles.length,\n        cssFiles: cssFiles.length,\n        jsTotalMB: Math.round(jsTotalMB * 100) / 100,\n        cssTotalMB: Math.round(cssTotalMB * 100) / 100,\n        totalMB: Math.round((jsTotalMB + cssTotalMB) * 100) / 100\n      }",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\baseline-audit.mjs",
+        "start": 115,
+        "end": 121,
+        "startLoc": {
+          "line": 115,
+          "column": 7,
+          "position": 915
+        },
+        "endLoc": {
+          "line": 121,
+          "column": 2,
+          "position": 1007
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\simple-audit.mjs",
+        "start": 96,
+        "end": 101,
+        "startLoc": {
+          "line": 96,
+          "column": 5,
+          "position": 842
+        },
+        "endLoc": {
+          "line": 101,
+          "column": 2,
+          "position": 937
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 14,
+      "fragment": "}\n    }\n    \n    await fs.writeFile(path.join(reportsDir, 'security-scan.txt'), results.join('\\n'));\n    console.log('✅ Security scan complete');\n    \n    return totalMatches;\n  } catch (error) {\n    console.error('❌ Security scan failed:', error.message);\n    return 0;\n  }\n}\n\n/",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\baseline-audit.mjs",
+        "start": 300,
+        "end": 313,
+        "startLoc": {
+          "line": 300,
+          "column": 7,
+          "position": 2688
+        },
+        "endLoc": {
+          "line": 313,
+          "column": 2,
+          "position": 2776
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\simple-audit.mjs",
+        "start": 157,
+        "end": 170,
+        "startLoc": {
+          "line": 157,
+          "column": 7,
+          "position": 1464
+        },
+        "endLoc": {
+          "line": 170,
+          "column": 27,
+          "position": 1563
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 11,
+      "fragment": "const skipDirs = ['node_modules', 'dist', 'build', 'out', '.next', '.cache', 'coverage'];\n        if (!skipDirs.some(skip => entry.name.includes(skip))) {\n          await scanDir(fullPath);\n        }\n      } else if (entry.name.endsWith(extension)) {\n        files.push(fullPath);\n      }\n    }\n  }\n  \n  await",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\tools\\baseline-audit.mjs",
+        "start": 325,
+        "end": 335,
+        "startLoc": {
+          "line": 325,
+          "column": 9,
+          "position": 2918
+        },
+        "endLoc": {
+          "line": 335,
+          "column": 6,
+          "position": 3026
+        }
+      },
+      "secondFile": {
+        "name": "www\\tools\\simple-audit.mjs",
+        "start": 47,
+        "end": 55,
+        "startLoc": {
+          "line": 47,
+          "column": 11,
+          "position": 401
+        },
+        "endLoc": {
+          "line": 55,
+          "column": 6,
+          "position": 514
+        }
+      }
+    },
+    {
+      "format": "css",
+      "lines": 17,
+      "fragment": "{\n    position: relative !important;\n    top: auto !important;\n    left: auto !important;\n    font-size: 0.75rem !important;\n    line-height: 1.1 !important;\n    margin: 0 !important;\n    padding: 2px 4px !important;\n    background: rgba(0,0,0,0.1) !important;\n    border-radius: 4px !important;\n    white-space: nowrap !important;\n    overflow: hidden !important;\n    text-overflow: ellipsis !important;\n    max-width: 100% !important;\n  }\n  \n  .mobile-v1 .search-help span[data-i18n=\"search_tips\"]",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\styles\\mobile.css",
+        "start": 96,
+        "end": 112,
+        "startLoc": {
+          "line": 96,
+          "column": 2,
+          "position": 605
+        },
+        "endLoc": {
+          "line": 112,
+          "column": 54,
+          "position": 735
+        }
+      },
+      "secondFile": {
+        "name": "www\\styles\\mobile.css",
+        "start": 68,
+        "end": 84,
+        "startLoc": {
+          "line": 68,
+          "column": 2,
+          "position": 394
+        },
+        "endLoc": {
+          "line": 84,
+          "column": 46,
+          "position": 524
+        }
+      }
+    },
+    {
+      "format": "css",
+      "lines": 18,
+      "fragment": "{\n    display: grid !important;\n    grid-template-columns: var(--poster-w-mobile) 1fr !important;\n    gap: var(--card-gap-mobile) !important;\n    padding: var(--card-pad-y-mobile) var(--card-pad-x-mobile) !important;\n    background: var(--card-bg);\n    border: var(--card-border);\n    width: 100% !important;\n    max-width: 100% !important;\n    border-radius: var(--card-radius);\n    align-items: start;\n    margin: 0 0 16px !important;\n    box-sizing: border-box !important;\n    box-shadow: var(--card-shadow);\n    min-height: var(--poster-h-mobile);\n  }\n  \n  /* UNIFIED: Mobile details layout */",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\styles\\mobile.css",
+        "start": 467,
+        "end": 484,
+        "startLoc": {
+          "line": 467,
+          "column": 2,
+          "position": 2570
+        },
+        "endLoc": {
+          "line": 484,
+          "column": 37,
+          "position": 2727
+        }
+      },
+      "secondFile": {
+        "name": "www\\styles\\mobile.css",
+        "start": 449,
+        "end": 466,
+        "startLoc": {
+          "line": 449,
+          "column": 2,
+          "position": 2408
+        },
+        "endLoc": {
+          "line": 466,
+          "column": 52,
+          "position": 2565
+        }
+      }
+    },
+    {
+      "format": "css",
+      "lines": 13,
+      "fragment": "{\r\n  position: fixed;\r\n  top: auto;\r\n  bottom: 0;\r\n  left: 0;\r\n  right: 0;\r\n  margin: 0;\r\n  border-radius: 16px 16px 0 0;\r\n  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);\r\n  transform: translateY(100%);\r\n}\r\n\r\n.mobile-v1 .action-overflow-menu[aria-hidden=\"false\"]",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\styles\\action-bar.css",
+        "start": 276,
+        "end": 288,
+        "startLoc": {
+          "line": 276,
+          "column": 2,
+          "position": 1889
+        },
+        "endLoc": {
+          "line": 288,
+          "column": 54,
+          "position": 1993
+        }
+      },
+      "secondFile": {
+        "name": "www\\styles\\action-bar.css",
+        "start": 250,
+        "end": 262,
+        "startLoc": {
+          "line": 250,
+          "column": 2,
+          "position": 1717
+        },
+        "endLoc": {
+          "line": 262,
+          "column": 43,
+          "position": 1823
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 17,
+      "fragment": "next || ENHANCED_QUOTES[0];\r\n    \r\n    // Save remaining deck\r\n    try {\r\n      if (deck.length > 0) {\r\n        localStorage.setItem('flicklet:quote:deck', JSON.stringify(deck));\r\n      } else {\r\n        localStorage.removeItem('flicklet:quote:deck');\r\n      }\r\n    } catch (error) {\r\n      console.warn('💬 Failed to save quote deck:', error);\r\n    }\r\n    \r\n    return quote;\r\n  }\r\n  \r\n  // Quote rotation system",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\quotes-enhanced.js",
+        "start": 261,
+        "end": 277,
+        "startLoc": {
+          "line": 261,
+          "column": 2,
+          "position": 2021
+        },
+        "endLoc": {
+          "line": 277,
+          "column": 25,
+          "position": 2145
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\quotes-enhanced.js",
+        "start": 215,
+        "end": 231,
+        "startLoc": {
+          "line": 215,
+          "column": 2,
+          "position": 1632
+        },
+        "endLoc": {
+          "line": 231,
+          "column": 31,
+          "position": 1756
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 9,
+      "fragment": "const card = btn.closest('.show-card');\n          if (card) {\n            const moreBtn = card.querySelector('.card-more-btn');\n            const moreDropdown = card.querySelector('.card-more-dropdown');\n            if (moreBtn && moreDropdown) {\n              moreBtn.setAttribute('aria-expanded', 'false');\n              moreDropdown.setAttribute('aria-hidden', 'true');\n            }\n            const extrasSlot",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\inline-script-03.js",
+        "start": 268,
+        "end": 276,
+        "startLoc": {
+          "line": 268,
+          "column": 11,
+          "position": 2617
+        },
+        "endLoc": {
+          "line": 276,
+          "column": 11,
+          "position": 2713
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\inline-script-03.js",
+        "start": 253,
+        "end": 261,
+        "startLoc": {
+          "line": 253,
+          "column": 11,
+          "position": 2451
+        },
+        "endLoc": {
+          "line": 261,
+          "column": 14,
+          "position": 2547
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 9,
+      "fragment": "const card = btn.closest('.show-card');\n          if (card) {\n            const moreBtn = card.querySelector('.card-more-btn');\n            const moreDropdown = card.querySelector('.card-more-dropdown');\n            if (moreBtn && moreDropdown) {\n              moreBtn.setAttribute('aria-expanded', 'false');\n              moreDropdown.setAttribute('aria-hidden', 'true');\n            }\n            const triviaSlot",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\inline-script-03.js",
+        "start": 283,
+        "end": 291,
+        "startLoc": {
+          "line": 283,
+          "column": 11,
+          "position": 2783
+        },
+        "endLoc": {
+          "line": 291,
+          "column": 11,
+          "position": 2879
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\inline-script-03.js",
+        "start": 253,
+        "end": 261,
+        "startLoc": {
+          "line": 253,
+          "column": 11,
+          "position": 2451
+        },
+        "endLoc": {
+          "line": 261,
+          "column": 14,
+          "position": 2547
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 56,
+      "fragment": "();\n        \n        // 3. Load genres\n        loadGenres?.();\n        \n        // 4. Restore theme from localStorage\n        const savedTheme = localStorage.getItem(\"flicklet-theme\");\n        if (savedTheme === \"dark\") {\n          document.body.classList.add(\"dark-mode\");\n        }\n        \n        // 5. Ensure language dropdown is properly initialized\n        const ensureLanguageDropdown = () => {\n          const langToggle = document.getElementById(\"langToggle\");\n          if (langToggle && langToggle.children.length < 2) {\n            langToggle.innerHTML = `\n              <option value=\"en\">EN</option>\n              <option value=\"es\">ES</option>\n            `;\n            // Set the current language\n            if (appData?.settings?.lang) {\n              langToggle.value = appData.settings.lang;\n            }\n          }\n        };\n        \n        // Call it immediately and also after a delay to catch any late modifications\n        ensureLanguageDropdown();\n        setTimeout(ensureLanguageDropdown, 100);\n        \n        // 6. Show home tab by default\n        switchToTab(\"home\");\n        \n        // 7. Update UI (which will call ensureBlocks)\n        updateUI?.();\n        \n        // 8. Check upcoming episodes\n        checkUpcomingEpisodes?.();\n        \n        // 9. Apply translations to the initial tab content\n        setTimeout(() => {\n          if (typeof applyTranslations === \"function\") {\n            applyTranslations();\n          }\n        }, 200);\n        \n        // 10. Request notification permissions\n        requestNotificationPermission?.();\n        \n        // 11. Initialize file label\n        const importFileInput = document.getElementById(\"importFile\");\n        if (importFileInput) {\n          updateFileLabel(importFileInput);\n        }\n        \n        // 12. Account button is now handled by FlickletApp.updateAccountButton()",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\inline-script-03.js",
+        "start": 340,
+        "end": 395,
+        "startLoc": {
+          "line": 340,
+          "column": 2,
+          "position": 3266
+        },
+        "endLoc": {
+          "line": 395,
+          "column": 74,
+          "position": 3600
+        }
+      },
+      "secondFile": {
+        "name": "www\\split_exact\\scripts\\inline-script-03.js",
+        "start": 18,
+        "end": 73,
+        "startLoc": {
+          "line": 18,
+          "column": 2,
+          "position": 110
+        },
+        "endLoc": {
+          "line": 73,
+          "column": 78,
+          "position": 444
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 29,
+      "fragment": "// --- mardi toggle\n        const root = document.getElementById(\"appRoot\");\n        bind(\"mardiToggle\", () => root && root.classList.toggle(\"mardi\"));\n        bind(\"mardiOnBtn\", () => root && root.classList.toggle(\"mardi\"));\n\n        // --- language switch (will be set up after data loads)\n\n        // --- Name prompt moved to post-authentication flow for security best practices\n        // No more name prompt on app boot - this was causing the name persistence issue\n\n        // --- Account / Auth entry point (modal) - handled by FlickletApp.setupEventListeners()\n\n        // --- Save name button\n        bind(\"saveNameBtn\", () => {\n          const val = (document.getElementById(\"displayNameInput\")?.value || \"\").trim();\n          if (!val) return showNotification?.(t(\"enter_name_first\"), \"warning\");\n          if (appData?.settings) {\n            appData.settings.displayName = val;\n            saveAppData?.();\n            // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system\n            showNotification?.(t(\"name_saved\"), \"success\");\n          }\n        });\n        \n\n\n        // --- feedback handled by Netlify Forms\n        function handleFeedbackSubmit(event) {\n          console",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\inline-script-03.js",
+        "start": 429,
+        "end": 457,
+        "startLoc": {
+          "line": 429,
+          "column": 9,
+          "position": 3727
+        },
+        "endLoc": {
+          "line": 457,
+          "column": 8,
+          "position": 3956
+        }
+      },
+      "secondFile": {
+        "name": "www\\split_exact\\scripts\\inline-script-03.js",
+        "start": 165,
+        "end": 193,
+        "startLoc": {
+          "line": 165,
+          "column": 9,
+          "position": 1257
+        },
+        "endLoc": {
+          "line": 193,
+          "column": 6,
+          "position": 1486
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 11,
+      "fragment": "// Store current theme before form submission\n          const currentTheme = document.body.classList.contains(\"dark-mode\") ? \"dark\" : \"light\";\n          const themeInput = document.getElementById(\"feedbackThemeInput\");\n          if (themeInput) {\n            themeInput.value = currentTheme;\n          }\n          \n          // Store theme in localStorage as backup\n          localStorage.setItem(\"flicklet-theme\", currentTheme);\n          \n          // For local development, show success message",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\inline-script-03.js",
+        "start": 464,
+        "end": 474,
+        "startLoc": {
+          "line": 464,
+          "column": 11,
+          "position": 4004
+        },
+        "endLoc": {
+          "line": 474,
+          "column": 47,
+          "position": 4090
+        }
+      },
+      "secondFile": {
+        "name": "www\\split_exact\\scripts\\inline-script-03.js",
+        "start": 195,
+        "end": 205,
+        "startLoc": {
+          "line": 195,
+          "column": 9,
+          "position": 1498
+        },
+        "endLoc": {
+          "line": 205,
+          "column": 17,
+          "position": 1584
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 16,
+      "fragment": "// --- search controls (REMOVED - duplicate code that was breaking search functionality)\n\n        // --- backup / import / clear / share\n        bind(\"exportBtn\", () => {\n          const blob = new Blob([JSON.stringify(appData, null, 2)], {\n            type: \"application/json\",\n          });\n          const a = document.createElement(\"a\");\n          a.href = URL.createObjectURL(blob);\n          a.download = \"flicklet-backup.json\";\n          document.body.appendChild(a);\n          a.click();\n          a.remove();\n        });\n\n        // Import handler moved to functions.js with robust implementation",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\inline-script-03.js",
+        "start": 529,
+        "end": 544,
+        "startLoc": {
+          "line": 529,
+          "column": 9,
+          "position": 4505
+        },
+        "endLoc": {
+          "line": 544,
+          "column": 67,
+          "position": 4639
+        }
+      },
+      "secondFile": {
+        "name": "www\\split_exact\\scripts\\inline-script-03.js",
+        "start": 250,
+        "end": 265,
+        "startLoc": {
+          "line": 250,
+          "column": 9,
+          "position": 1906
+        },
+        "endLoc": {
+          "line": 265,
+          "column": 6,
+          "position": 2040
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 58,
+      "fragment": "// Share button bindings moved to runGlobalInitialization\n\n        // --- notification toggles\n        const ep = document.getElementById(\"notifEpisodes\");\n        const dp = document.getElementById(\"notifDiscover\");\n        const md = document.getElementById(\"notifDigest\");\n        if (ep)\n          ep.addEventListener(\"change\", (e) => {\n            if (appData?.settings?.notif) {\n              appData.settings.notif.episodes = !!e.target.checked;\n              saveAppData?.();\n            }\n          });\n        if (dp)\n          dp.addEventListener(\"change\", (e) => {\n            if (appData?.settings?.notif) {\n              appData.settings.notif.discover = !!e.target.checked;\n              saveAppData?.();\n            }\n          });\n        if (md)\n          md.addEventListener(\"change\", (e) => {\n            if (appData?.settings?.notif) {\n              appData.settings.notif.digest = !!e.target.checked;\n              saveAppData?.();\n            }\n          });\n\n        // --- pro toggle\n        const proToggle = document.getElementById(\"proToggle\");\n        if (proToggle) {\n          proToggle.checked = !!appData?.settings?.pro;\n          proToggle.addEventListener(\"change\", (e) => {\n            if (appData?.settings) {\n              appData.settings.pro = !!e.target.checked;\n              saveAppData?.();\n              rebuildStats?.();\n              \n              // Show/hide Pro features explanation\n              const proFeatures = document.getElementById(\"proFeatures\");\n              if (proFeatures) {\n                proFeatures.style.display = e.target.checked ? \"block\" : \"none\";\n              }\n            }\n          });\n          \n          // Show Pro features if already enabled\n          const proFeatures = document.getElementById(\"proFeatures\");\n          if (proFeatures && proToggle.checked) {\n            proFeatures.style.display = \"block\";\n          }\n        }\n\n        console.debug(\"[Flicklet] Boot OK\");\n\n        // FlickletApp.init() already called at the beginning if available\n\n      });",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\inline-script-03.js",
+        "start": 549,
+        "end": 606,
+        "startLoc": {
+          "line": 549,
+          "column": 9,
+          "position": 4650
+        },
+        "endLoc": {
+          "line": 606,
+          "column": 2,
+          "position": 5166
+        }
+      },
+      "secondFile": {
+        "name": "www\\split_exact\\scripts\\inline-script-03.js",
+        "start": 297,
+        "end": 354,
+        "startLoc": {
+          "line": 297,
+          "column": 9,
+          "position": 2396
+        },
+        "endLoc": {
+          "line": 354,
+          "column": 2,
+          "position": 2912
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 24,
+      "fragment": ");\n        } catch (error) {\n          console.error('Failed to refresh theaters:', error);\n        }\n      });\n    }\n\n    // Find showtimes button\n    const showtimesBtn = document.getElementById('findShowtimesBtn');\n    if (showtimesBtn) {\n      showtimesBtn.addEventListener('click', () => {\n        // Open Fandango in new tab\n        window.open('https://www.fandango.com/', '_blank');\n      });\n    }\n\n    // Update location button\n    const locationBtn = document.getElementById('refreshLocationBtn');\n    if (locationBtn) {\n      locationBtn.addEventListener('click', () => {\n        updateUserLocation();\n      });\n    }\n  }",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\home.js",
+        "start": 250,
+        "end": 273,
+        "startLoc": {
+          "line": 250,
+          "column": 2,
+          "position": 1377
+        },
+        "endLoc": {
+          "line": 273,
+          "column": 2,
+          "position": 1538
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\theaters-near-me.js",
+        "start": 185,
+        "end": 209,
+        "startLoc": {
+          "line": 185,
+          "column": 7,
+          "position": 972
+        },
+        "endLoc": {
+          "line": 209,
+          "column": 29,
+          "position": 1134
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 16,
+      "fragment": "{\n      const theatersList = document.getElementById('theatersList');\n      const movieCount = document.getElementById('movieCount');\n      \n      if (!theatersList) {\n        console.warn('🎬 Theaters list not found');\n        return;\n      }\n\n      if (!movies || movies.length === 0) {\n        theatersList.innerHTML = '<div class=\"no-movies\"><p>Unable to load current movies. Please try again later.</p></div>';\n        if (movieCount) movieCount.textContent = '0 Movies';\n        return;\n      }\n\n      // Render movies with error handling for each movie",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\home.js",
+        "start": 327,
+        "end": 342,
+        "startLoc": {
+          "line": 327,
+          "column": 2,
+          "position": 2006
+        },
+        "endLoc": {
+          "line": 342,
+          "column": 52,
+          "position": 2122
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\theaters-near-me.js",
+        "start": 133,
+        "end": 148,
+        "startLoc": {
+          "line": 133,
+          "column": 2,
+          "position": 589
+        },
+        "endLoc": {
+          "line": 148,
+          "column": 17,
+          "position": 705
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 27,
+      "fragment": "}\n\n  function updateUserLocation() {\n    const locationEl = document.getElementById('userLocation');\n    if (!locationEl) return;\n\n    locationEl.textContent = '📍 Getting your location...';\n\n    if (!navigator.geolocation) {\n      locationEl.textContent = '📍 Location not supported';\n      return;\n    }\n\n    navigator.geolocation.getCurrentPosition(\n      (position) => {\n        const { latitude, longitude } = position.coords;\n        // You could reverse geocode here to get city name\n        locationEl.textContent = `📍 ${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;\n      },\n      (error) => {\n        console.warn('Location error:', error);\n        locationEl.textContent = '📍 Location unavailable';\n      }\n    );\n  }\n\n  function getFallbackTheaterContent",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\home.js",
+        "start": 394,
+        "end": 420,
+        "startLoc": {
+          "line": 394,
+          "column": 3,
+          "position": 2508
+        },
+        "endLoc": {
+          "line": 420,
+          "column": 26,
+          "position": 2704
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\theaters-near-me.js",
+        "start": 211,
+        "end": 238,
+        "startLoc": {
+          "line": 211,
+          "column": 3,
+          "position": 1143
+        },
+        "endLoc": {
+          "line": 238,
+          "column": 19,
+          "position": 1340
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 21,
+      "fragment": "() {\n    return [\n      {\n        title: \"Sample Movie\",\n        overview: \"This is a sample movie description for when the API is unavailable.\",\n        vote_average: 7.5,\n        release_date: new Date().toISOString().split('T')[0],\n        poster_path: null\n      }\n    ];\n  }\n\n  // Utility function to escape HTML\n  function escapeHtml(text) {\n    if (!text) return '';\n    const div = document.createElement('div');\n    div.textContent = text;\n    return div.innerHTML;\n  }\n\n  // Feedback link is now handled by inline-script-02.js",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\home.js",
+        "start": 420,
+        "end": 440,
+        "startLoc": {
+          "line": 420,
+          "column": 26,
+          "position": 2705
+        },
+        "endLoc": {
+          "line": 440,
+          "column": 55,
+          "position": 2843
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\theaters-near-me.js",
+        "start": 238,
+        "end": 258,
+        "startLoc": {
+          "line": 238,
+          "column": 19,
+          "position": 1341
+        },
+        "endLoc": {
+          "line": 258,
+          "column": 8,
+          "position": 1479
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 11,
+      "fragment": ",\r\n          added_date: item.added_date || '',\r\n          user_rating: item.user_rating || '',\r\n          like_status: item.like_status || '',\r\n          notes: item.notes || '',\r\n          tags: (item.tags || []).join('; ')\r\n        });\r\n      });\r\n    });\r\n    \r\n    return",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\export-csv.js",
+        "start": 108,
+        "end": 118,
+        "startLoc": {
+          "line": 108,
+          "column": 3,
+          "position": 1076
+        },
+        "endLoc": {
+          "line": 118,
+          "column": 7,
+          "position": 1177
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\export-csv.js",
+        "start": 84,
+        "end": 94,
+        "startLoc": {
+          "line": 84,
+          "column": 2,
+          "position": 761
+        },
+        "endLoc": {
+          "line": 94,
+          "column": 17,
+          "position": 862
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 7,
+      "fragment": "|| '',\r\n      added_date: item.added_date || '',\r\n      user_rating: item.user_rating || '',\r\n      like_status: item.like_status || '',\r\n      notes: item.notes || '',\r\n      tags: (item.tags || []).join('; ')\r\n    }))",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\export-csv.js",
+        "start": 228,
+        "end": 234,
+        "startLoc": {
+          "line": 228,
+          "column": 2,
+          "position": 2258
+        },
+        "endLoc": {
+          "line": 234,
+          "column": 2,
+          "position": 2344
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\export-csv.js",
+        "start": 108,
+        "end": 90,
+        "startLoc": {
+          "line": 108,
+          "column": 2,
+          "position": 1073
+        },
+        "endLoc": {
+          "line": 90,
+          "column": 2,
+          "position": 844
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 7,
+      "fragment": "const TMDB_IMG = (p, size='w342') => {\n      if (!p) return '';\n      const s = String(p);\n      return s.startsWith('http') ? s : `https://image.tmdb.org/t/p/${size}${s.startsWith('/')?'':'/'}${s}`;\n    };\n    \n    const",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\scripts\\curated-lists.js",
+        "start": 99,
+        "end": 105,
+        "startLoc": {
+          "line": 99,
+          "column": 5,
+          "position": 615
+        },
+        "endLoc": {
+          "line": 105,
+          "column": 6,
+          "position": 705
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\curated-rows.js",
+        "start": 109,
+        "end": 115,
+        "startLoc": {
+          "line": 109,
+          "column": 3,
+          "position": 1219
+        },
+        "endLoc": {
+          "line": 115,
+          "column": 41,
+          "position": 1308
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 18,
+      "fragment": "lang: 'en',\n    theme: 'light',\n    pro: false,\n    notif: {}\n  },\n  tv: {\n    watching: [],\n    wishlist: [],\n    watched: []\n  },\n  movies: {\n    watching: [],\n    wishlist: [],\n    watched: []\n  },\n  searchCache: [],\n  activeTagFilters: new Set()\n}",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\js\\utils.js",
+        "start": 7,
+        "end": 24,
+        "startLoc": {
+          "line": 7,
+          "column": 5,
+          "position": 27
+        },
+        "endLoc": {
+          "line": 24,
+          "column": 2,
+          "position": 142
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\card-actions.js",
+        "start": 27,
+        "end": 31,
+        "startLoc": {
+          "line": 27,
+          "column": 2,
+          "position": 137
+        },
+        "endLoc": {
+          "line": 31,
+          "column": 2,
+          "position": 243
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 357,
+      "fragment": "// netlify/functions/tmdb.js\r\nexports.handler = async (event, context) => {\r\n  console.log('Function called with:', event.httpMethod, event.queryStringParameters);\r\n  \r\n  // Domain restrictions - allow your actual domain and localhost\r\n  const allowedOrigins = [\r\n    'https://flicklet.netlify.app', // Your actual domain\r\n    'https://zippy-meerkat-329c02.netlify.app', // Old domain (temporary)\r\n    'http://localhost:3000',\r\n    'http://127.0.0.1:3000',\r\n    'http://localhost:8000',\r\n    'http://127.0.0.1:8000',\r\n    'http://localhost:8888', // Netlify dev\r\n    'http://127.0.0.1:8888'\r\n  ];\r\n  \r\n  const origin = event.headers.origin || event.headers.referer || '';\r\n  const isAllowedOrigin = allowedOrigins.some(allowed => \r\n    origin.startsWith(allowed)\r\n  ) || !origin; // Allow if no origin (direct access)\r\n  \r\n  const headers = {\r\n    'Access-Control-Allow-Origin': isAllowedOrigin ? (origin || '*') : '*',\r\n    'Access-Control-Allow-Headers': 'Content-Type',\r\n    'Access-Control-Allow-Methods': 'GET, OPTIONS',\r\n    'Content-Type': 'application/json',\r\n    'Cache-Control': 'public, max-age=300' // 5 minute cache\r\n  };\r\n\r\n  // Handle preflight CORS requests\r\n  if (event.httpMethod === 'OPTIONS') {\r\n    console.log('Handling OPTIONS request');\r\n    return { \r\n      statusCode: 200, \r\n      headers, \r\n      body: '' \r\n    };\r\n  }\r\n\r\n  // Only allow GET requests\r\n  if (event.httpMethod !== 'GET') {\r\n    console.log('Method not allowed:', event.httpMethod);\r\n    return {\r\n      statusCode: 405,\r\n      headers,\r\n      body: JSON.stringify({ error: 'Method not allowed. Only GET requests are supported.' })\r\n    };\r\n  }\r\n\r\n  try {\r\n    // Get API key from environment variable\r\n    const API_KEY = process.env.TMDB_API_KEY;\r\n    \r\n    if (!API_KEY) {\r\n      console.error('TMDB_API_KEY environment variable is not set');\r\n      return {\r\n        statusCode: 500,\r\n        headers,\r\n        body: JSON.stringify({ \r\n          error: 'Server configuration error',\r\n          message: 'API key not configured'\r\n        })\r\n      };\r\n    }\r\n\r\n    console.log('API key found, length:', API_KEY.length);\r\n\r\n    // Extract query parameters\r\n    const { endpoint, query, page = '1', genre } = event.queryStringParameters || {};\r\n\r\n    if (!endpoint) {\r\n      console.log('Missing endpoint parameter');\r\n      return {\r\n        statusCode: 400,\r\n        headers,\r\n        body: JSON.stringify({ \r\n          error: 'Missing required parameter',\r\n          message: 'endpoint parameter is required'\r\n        })\r\n      };\r\n    }\r\n\r\n    console.log('Processing request for endpoint:', endpoint);\r\n\r\n    // Rate limiting - log IP for monitoring\r\n    const userIP = event.headers['client-ip'] || \r\n                   event.headers['x-forwarded-for'] || \r\n                   event.headers['x-real-ip'] || \r\n                   'unknown';\r\n    \r\n    console.log(`Request from IP: ${userIP} for endpoint: ${endpoint}`);\r\n\r\n    // Build the TMDB API URL\r\n    let tmdbUrl = `https://api.themoviedb.org/3/${endpoint}?api_key=${API_KEY}`;\r\n    \r\n    // Add optional parameters\r\n    if (query) {\r\n      tmdbUrl += `&query=${encodeURIComponent(query)}`;\r\n      console.log('Added query parameter:', query);\r\n    }\r\n    \r\n    if (page && page !== '1') {\r\n      tmdbUrl += `&page=${encodeURIComponent(page)}`;\r\n      console.log('Added page parameter:', page);\r\n    }\r\n    \r\n    if (genre) {\r\n      tmdbUrl += `&with_genres=${encodeURIComponent(genre)}`;\r\n      console.log('Added genre parameter:', genre);\r\n    }\r\n\r\n    // Log the URL (without API key for security)\r\n    const logUrl = tmdbUrl.replace(API_KEY, '[REDACTED]');\r\n    console.log('Making request to TMDB:', logUrl);\r\n\r\n    // Make the request to TMDB API\r\n    const response = await fetch(tmdbUrl, {\r\n      method: 'GET',\r\n      headers: {\r\n        'Accept': 'application/json',\r\n        'User-Agent': 'TV-Movie-Tracker/1.0'\r\n      }\r\n    });\r\n\r\n    console.log('TMDB response status:', response.status, response.statusText);\r\n\r\n    if (!response.ok) {\r\n      const errorText = await response.text();\r\n      console.error('TMDB API error:', response.status, errorText);\r\n      \r\n      return {\r\n        statusCode: response.status >= 500 ? 502 : response.status,\r\n        headers,\r\n        body: JSON.stringify({ \r\n          error: 'External API error',\r\n          message: `TMDB API returned ${response.status}: ${response.statusText}`,\r\n          details: response.status === 401 ? 'Invalid API key' : 'Service temporarily unavailable'\r\n        })\r\n      };\r\n    }\r\n\r\n    // Parse the JSON response\r\n    const data = await response.json();\r\n    console.log('Successfully fetched data, results count:', data.results ? data.results.length : 'N/A');\r\n\r\n    // Return successful response\r\n    return {\r\n      statusCode: 200,\r\n      headers,\r\n      body: JSON.stringify(data)\r\n    };\r\n\r\n  } catch (error) {\r\n    console.error('Function error:', error.name, error.message);\r\n    console.error('Stack trace:', error.stack);\r\n    \r\n    // Handle different types of errors\r\n    let errorMessage = 'Internal server error';\r\n    let statusCode = 500;\r\n    \r\n    if (error.name === 'TypeError' && error.message.includes('fetch')) {\r\n      errorMessage = 'Network error connecting to TMDB API';\r\n      statusCode = 502;\r\n    } else if (error.name === 'AbortError' || error.message.includes('timeout')) {\r\n      errorMessage = 'Request timeout - TMDB API is slow';\r\n      statusCode = 504;\r\n    }\r\n    \r\n    return {\r\n      statusCode: statusCode,\r\n      headers,\r\n      body: JSON.stringify({ \r\n        error: errorMessage,\r\n        message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',\r\n        timestamp: new Date().toISOString()\r\n      })\r\n    };\r\n  }\r\n};// netlify/functions/tmdb.js\r\nexports.handler = async (event, context) => {\r\n  console.log('Function called with:', event.httpMethod, event.queryStringParameters);\r\n  \r\n  // Domain restrictions - only allow requests from your domain and localhost\r\n  const allowedOrigins = [\r\n    'https://zippy-meerkat-329c02.netlify.app',\r\n    'http://localhost:3000',\r\n    'http://127.0.0.1:3000',\r\n    'http://localhost:8000',\r\n    'http://127.0.0.1:8000',\r\n    'http://localhost:8888', // Netlify dev\r\n    'http://127.0.0.1:8888'\r\n  ];\r\n  \r\n  const origin = event.headers.origin || event.headers.referer || '';\r\n  const isAllowedOrigin = allowedOrigins.some(allowed => \r\n    origin.startsWith(allowed)\r\n  ) || !origin; // Allow if no origin (direct access)\r\n  \r\n  const headers = {\r\n    'Access-Control-Allow-Origin': isAllowedOrigin ? (origin || '*') : 'https://zippy-meerkat-329c02.netlify.app',\r\n    'Access-Control-Allow-Headers': 'Content-Type',\r\n    'Access-Control-Allow-Methods': 'GET, OPTIONS',\r\n    'Content-Type': 'application/json',\r\n    'Cache-Control': 'public, max-age=300' // 5 minute cache\r\n  };\r\n\r\n  // Handle preflight CORS requests\r\n  if (event.httpMethod === 'OPTIONS') {\r\n    console.log('Handling OPTIONS request');\r\n    return { \r\n      statusCode: 200, \r\n      headers, \r\n      body: '' \r\n    };\r\n  }\r\n\r\n  // Only allow GET requests\r\n  if (event.httpMethod !== 'GET') {\r\n    console.log('Method not allowed:', event.httpMethod);\r\n    return {\r\n      statusCode: 405,\r\n      headers,\r\n      body: JSON.stringify({ error: 'Method not allowed. Only GET requests are supported.' })\r\n    };\r\n  }\r\n\r\n  try {\r\n    // Get API key from environment variable\r\n    const API_KEY = process.env.TMDB_API_KEY;\r\n    \r\n    if (!API_KEY) {\r\n      console.error('TMDB_API_KEY environment variable is not set');\r\n      return {\r\n        statusCode: 500,\r\n        headers,\r\n        body: JSON.stringify({ \r\n          error: 'Server configuration error',\r\n          message: 'API key not configured'\r\n        })\r\n      };\r\n    }\r\n\r\n    console.log('API key found, length:', API_KEY.length);\r\n\r\n    // Extract query parameters\r\n    const { endpoint, query, page = '1', genre } = event.queryStringParameters || {};\r\n\r\n    if (!endpoint) {\r\n      console.log('Missing endpoint parameter');\r\n      return {\r\n        statusCode: 400,\r\n        headers,\r\n        body: JSON.stringify({ \r\n          error: 'Missing required parameter',\r\n          message: 'endpoint parameter is required'\r\n        })\r\n      };\r\n    }\r\n\r\n    console.log('Processing request for endpoint:', endpoint);\r\n\r\n    // Rate limiting - log IP for monitoring\r\n    const userIP = event.headers['client-ip'] || \r\n                   event.headers['x-forwarded-for'] || \r\n                   event.headers['x-real-ip'] || \r\n                   'unknown';\r\n    \r\n    console.log(`Request from IP: ${userIP} for endpoint: ${endpoint}`);\r\n\r\n    // Build the TMDB API URL\r\n    let tmdbUrl = `https://api.themoviedb.org/3/${endpoint}?api_key=${API_KEY}`;\r\n    \r\n    // Add optional parameters\r\n    if (query) {\r\n      tmdbUrl += `&query=${encodeURIComponent(query)}`;\r\n      console.log('Added query parameter:', query);\r\n    }\r\n    \r\n    if (page && page !== '1') {\r\n      tmdbUrl += `&page=${encodeURIComponent(page)}`;\r\n      console.log('Added page parameter:', page);\r\n    }\r\n    \r\n    if (genre) {\r\n      tmdbUrl += `&with_genres=${encodeURIComponent(genre)}`;\r\n      console.log('Added genre parameter:', genre);\r\n    }\r\n\r\n    // Log the URL (without API key for security)\r\n    const logUrl = tmdbUrl.replace(API_KEY, '[REDACTED]');\r\n    console.log('Making request to TMDB:', logUrl);\r\n\r\n    // Make the request to TMDB API\r\n    const response = await fetch(tmdbUrl, {\r\n      method: 'GET',\r\n      headers: {\r\n        'Accept': 'application/json',\r\n        'User-Agent': 'TV-Movie-Tracker/1.0'\r\n      },\r\n      timeout: 10000 // 10 second timeout\r\n    });\r\n\r\n    console.log('TMDB response status:', response.status, response.statusText);\r\n\r\n    if (!response.ok) {\r\n      const errorText = await response.text();\r\n      console.error('TMDB API error:', response.status, errorText);\r\n      \r\n      return {\r\n        statusCode: response.status >= 500 ? 502 : response.status,\r\n        headers,\r\n        body: JSON.stringify({ \r\n          error: 'External API error',\r\n          message: `TMDB API returned ${response.status}: ${response.statusText}`,\r\n          details: response.status === 401 ? 'Invalid API key' : 'Service temporarily unavailable'\r\n        })\r\n      };\r\n    }\r\n\r\n    // Parse the JSON response\r\n    const data = await response.json();\r\n    console.log('Successfully fetched data, results count:', data.results ? data.results.length : 'N/A');\r\n\r\n    // Return successful response\r\n    return {\r\n      statusCode: 200,\r\n      headers,\r\n      body: JSON.stringify(data)\r\n    };\r\n\r\n  } catch (error) {\r\n    console.error('Function error:', error.name, error.message);\r\n    console.error('Stack trace:', error.stack);\r\n    \r\n    // Handle different types of errors\r\n    let errorMessage = 'Internal server error';\r\n    let statusCode = 500;\r\n    \r\n    if (error.name === 'TypeError' && error.message.includes('fetch')) {\r\n      errorMessage = 'Network error connecting to TMDB API';\r\n      statusCode = 502;\r\n    } else if (error.name === 'AbortError' || error.message.includes('timeout')) {\r\n      errorMessage = 'Request timeout - TMDB API is slow';\r\n      statusCode = 504;\r\n    }\r\n    \r\n    return {\r\n      statusCode: statusCode,\r\n      headers,\r\n      body: JSON.stringify({ \r\n        error: errorMessage,\r\n        message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',\r\n        timestamp: new Date().toISOString()\r\n      })\r\n    };\r\n  }\r\n};",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\functions\\tmdb.js",
+        "start": 1,
+        "end": 357,
+        "startLoc": {
+          "line": 1,
+          "column": 1,
+          "position": 0
+        },
+        "endLoc": {
+          "line": 357,
+          "column": 2,
+          "position": 3108
+        }
+      },
+      "secondFile": {
+        "name": "www\\netlify\\functions\\tmdb.js",
+        "start": 1,
+        "end": 179,
+        "startLoc": {
+          "line": 1,
+          "column": 1,
+          "position": 0
+        },
+        "endLoc": {
+          "line": 179,
+          "column": 2,
+          "position": 1553
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 122,
+      "fragment": "exports.handler = async (event, context) => {\r\n  // Enhanced CORS headers\r\n  const headers = {\r\n    'Access-Control-Allow-Origin': '*',\r\n    'Access-Control-Allow-Headers': 'Content-Type, Accept',\r\n    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',\r\n    'Access-Control-Max-Age': '86400',\r\n    'Content-Type': 'application/json'\r\n  };\r\n\r\n  // Debug logging\r\n  console.log('=== FUNCTION CALLED ===');\r\n  console.log('Method:', event.httpMethod);\r\n  console.log('Headers:', event.headers);\r\n  console.log('Body:', event.body);\r\n  console.log('=====================');\r\n\r\n  // Handle preflight OPTIONS request\r\n  if (event.httpMethod === 'OPTIONS') {\r\n    console.log('Handling OPTIONS preflight request');\r\n    return {\r\n      statusCode: 200,\r\n      headers,\r\n      body: JSON.stringify({ message: 'CORS preflight successful' })\r\n    };\r\n  }\r\n\r\n  // Handle GET request (for testing)\r\n  if (event.httpMethod === 'GET') {\r\n    console.log('Handling GET request');\r\n    return {\r\n      statusCode: 200,\r\n      headers,\r\n      body: JSON.stringify({ \r\n        message: 'Feedback function is working!',\r\n        endpoint: 'Use POST to submit feedback',\r\n        timestamp: new Date().toISOString()\r\n      })\r\n    };\r\n  }\r\n\r\n  // Handle POST request (actual feedback)\r\n  if (event.httpMethod === 'POST') {\r\n    try {\r\n      console.log('Processing POST request with feedback data');\r\n      \r\n      // Parse the feedback data\r\n      let feedback;\r\n      try {\r\n        feedback = JSON.parse(event.body);\r\n      } catch (parseError) {\r\n        console.error('JSON parse error:', parseError);\r\n        return {\r\n          statusCode: 400,\r\n          headers,\r\n          body: JSON.stringify({ \r\n            error: 'Invalid JSON in request body',\r\n            details: parseError.message \r\n          })\r\n        };\r\n      }\r\n      \r\n      // Add server-side metadata\r\n      const enhancedFeedback = {\r\n        ...feedback,\r\n        serverTimestamp: new Date().toISOString(),\r\n        ip: event.headers['x-forwarded-for'] || event.headers['client-ip'] || 'unknown',\r\n        userAgent: event.headers['user-agent'] || 'unknown',\r\n        netlifyId: context.awsRequestId || 'unknown'\r\n      };\r\n\r\n      // Log the feedback prominently\r\n      console.log('=== FEEDBACK RECEIVED ===');\r\n      console.log(JSON.stringify(enhancedFeedback, null, 2));\r\n      console.log('📺 SHOW:', feedback.show || 'Unknown');\r\n      console.log('⭐ RATING:', feedback.rating || 'N/A', '/5');\r\n      console.log('💭 COMMENT:', feedback.comment || 'No comment');\r\n      console.log('🌍 IP:', enhancedFeedback.ip);\r\n      console.log('📱 DEVICE:', enhancedFeedback.userAgent?.slice(0, 50) + '...');\r\n      console.log('========================');\r\n\r\n      return {\r\n        statusCode: 200,\r\n        headers,\r\n        body: JSON.stringify({ \r\n          success: true, \r\n          id: enhancedFeedback.id || 'unknown',\r\n          message: 'Feedback received and logged successfully!',\r\n          timestamp: enhancedFeedback.serverTimestamp\r\n        })\r\n      };\r\n      \r\n    } catch (error) {\r\n      console.error('=== FUNCTION ERROR ===');\r\n      console.error('Error processing feedback:', error);\r\n      console.error('Stack:', error.stack);\r\n      console.error('====================');\r\n      \r\n      return {\r\n        statusCode: 500,\r\n        headers,\r\n        body: JSON.stringify({ \r\n          error: 'Internal server error',\r\n          message: 'Failed to process feedback',\r\n          timestamp: new Date().toISOString()\r\n        })\r\n      };\r\n    }\r\n  }\r\n\r\n  // If we get here, it's an unsupported method\r\n  console.log('Unsupported method:', event.httpMethod);\r\n  return {\r\n    statusCode: 405,\r\n    headers,\r\n    body: JSON.stringify({ \r\n      error: 'Method not allowed',\r\n      allowedMethods: ['GET', 'POST', 'OPTIONS'],\r\n      receivedMethod: event.httpMethod\r\n    })\r\n  };\r\n};",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\functions\\feedback.js",
+        "start": 1,
+        "end": 122,
+        "startLoc": {
+          "line": 1,
+          "column": 1,
+          "position": 0
+        },
+        "endLoc": {
+          "line": 122,
+          "column": 2,
+          "position": 1062
+        }
+      },
+      "secondFile": {
+        "name": "www\\netlify\\functions\\feedback.js",
+        "start": 1,
+        "end": 122,
+        "startLoc": {
+          "line": 1,
+          "column": 1,
+          "position": 0
+        },
+        "endLoc": {
+          "line": 122,
+          "column": 2,
+          "position": 1062
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 7,
+      "fragment": "const qEl = document.getElementById('triviaQuestion');\r\n  const cEl = document.getElementById('triviaChoices');\r\n  const fEl = document.getElementById('triviaFeedback');\r\n  const nBtn = document.getElementById('triviaNextBtn');\r\n  const statsEl = el.querySelector('.trivia-stats');\r\n\r\n  // Safety check for all required elements",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\features\\trivia-safe.js",
+        "start": 13,
+        "end": 19,
+        "startLoc": {
+          "line": 13,
+          "column": 3,
+          "position": 59
+        },
+        "endLoc": {
+          "line": 19,
+          "column": 42,
+          "position": 141
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\trivia.js",
+        "start": 9,
+        "end": 15,
+        "startLoc": {
+          "line": 9,
+          "column": 3,
+          "position": 36
+        },
+        "endLoc": {
+          "line": 15,
+          "column": 72,
+          "position": 113
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 34,
+      "fragment": ";\r\n  }\r\n\r\n  const KEYS = {\r\n    streak: 'flicklet:trivia:v1:streak',\r\n    last  : 'flicklet:trivia:v1:lastDate',\r\n    lock  : 'flicklet:trivia:v1:lockDate'\r\n  };\r\n\r\n  const today = isoDay(new Date()); // YYYY-MM-DD\r\n\r\n  // External trivia API integration\r\n  const TRIVIA_API_BASE = 'https://opentdb.com/api.php';\r\n  \r\n  // Fallback pool for when API fails\r\n  const FALLBACK_POOL = [\r\n    { id: 'q1', q: 'Which network originally aired \"Archer\"?', choices: ['HBO','FX','AMC','Paramount+'], correct: 1 },\r\n    { id: 'q2', q: '\"Alien: Earth\" is a spin-off in which franchise?', choices: ['Predator','Alien','Star Trek','The Expanse'], correct: 1 },\r\n    { id: 'q3', q: 'Sherlock (2010) starred Benedict Cumberbatch and…', choices: ['Tom Hiddleston','Martin Freeman','David Tennant','Matt Smith'], correct: 1 },\r\n    { id: 'q4', q: '\"House of the Dragon\" streams primarily on…', choices: ['HBO Max','Netflix','Hulu','Apple TV+'], correct: 0 },\r\n    { id: 'q5', q: 'Which streaming service is known for \"The Mandalorian\"?', choices: ['Netflix','Disney+','HBO Max','Amazon Prime'], correct: 1 },\r\n    { id: 'q6', q: 'What year did \"Breaking Bad\" first air?', choices: ['2007','2008','2009','2010'], correct: 1 },\r\n    { id: 'q7', q: 'Who created \"Stranger Things\"?', choices: ['Ryan Murphy','The Duffer Brothers','Shonda Rhimes','David Fincher'], correct: 1 },\r\n    { id: 'q8', q: 'Which show features the character Walter White?', choices: ['Better Call Saul','Breaking Bad','The Walking Dead','Ozark'], correct: 1 },\r\n  ];\r\n  \r\n  // Cache for trivia questions\r\n  let triviaCache = null;\r\n  let lastFetchDate = null;\r\n  \r\n  // Current question data (accessible to choose function)\r\n  let currentQuestion = null;\r\n\r\n  // Safe helper functions",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\features\\trivia-safe.js",
+        "start": 28,
+        "end": 61,
+        "startLoc": {
+          "line": 28,
+          "column": 7,
+          "position": 243
+        },
+        "endLoc": {
+          "line": 61,
+          "column": 25,
+          "position": 704
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\trivia.js",
+        "start": 27,
+        "end": 60,
+        "startLoc": {
+          "line": 27,
+          "column": 2,
+          "position": 226
+        },
+        "endLoc": {
+          "line": 60,
+          "column": 35,
+          "position": 657
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 16,
+      "fragment": "() {\r\n    const last = localStorage.getItem(KEYS.last);\r\n    const streak = Number(localStorage.getItem(KEYS.streak) || 0);\r\n\r\n    if (last === prevDay(today)) {\r\n      localStorage.setItem(KEYS.streak, String(streak + 1));\r\n    } else if (last === today) {\r\n      // already counted today; no change\r\n    } else {\r\n      // missed a day or first time\r\n      localStorage.setItem(KEYS.streak, '1');\r\n    }\r\n    localStorage.setItem(KEYS.last, today);\r\n  }\r\n\r\n  function",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\features\\trivia-safe.js",
+        "start": 124,
+        "end": 139,
+        "startLoc": {
+          "line": 124,
+          "column": 13,
+          "position": 1383
+        },
+        "endLoc": {
+          "line": 139,
+          "column": 9,
+          "position": 1548
+        }
+      },
+      "secondFile": {
+        "name": "www\\scripts\\trivia.js",
+        "start": 388,
+        "end": 403,
+        "startLoc": {
+          "line": 388,
+          "column": 11,
+          "position": 3597
+        },
+        "endLoc": {
+          "line": 403,
+          "column": 11,
+          "position": 3746
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 14,
+      "fragment": ");\r\n    elements.forEach(el => {\r\n      // Skip if already has data-i18n\r\n      if (el.hasAttribute('data-i18n')) return;\r\n      \r\n      // Skip if no text or just whitespace\r\n      const text = el.textContent?.trim();\r\n      if (!text) return;\r\n      \r\n      // Skip if it's just numbers or symbols\r\n      if (/^[\\d\\s\\-\\.]+$/.test(text)) return;\r\n      if (text.length <= 2) return;\r\n      \r\n      // Skip common non-translatable elements",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\critical-translations.js",
+        "start": 29,
+        "end": 42,
+        "startLoc": {
+          "line": 29,
+          "column": 9,
+          "position": 174
+        },
+        "endLoc": {
+          "line": 42,
+          "column": 41,
+          "position": 288
+        }
+      },
+      "secondFile": {
+        "name": "www\\simple-translation-scanner.js",
+        "start": 12,
+        "end": 26,
+        "startLoc": {
+          "line": 12,
+          "column": 57,
+          "position": 55
+        },
+        "endLoc": {
+          "line": 26,
+          "column": 53,
+          "position": 171
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 15,
+      "fragment": "&& current; i++) {\r\n    if (current.id) {\r\n      context.unshift(`#${current.id}`);\r\n    } else if (current.className) {\r\n      context.unshift(`.${current.className.split(' ')[0]}`);\r\n    } else {\r\n      context.unshift(current.tagName ? current.tagName.toLowerCase() : 'unknown');\r\n    }\r\n    current = current.parentElement;\r\n  }\r\n  \r\n  return context.join(' > ');\r\n}\r\n\r\nfunction generateCriticalKeys",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\critical-translations.js",
+        "start": 74,
+        "end": 88,
+        "startLoc": {
+          "line": 74,
+          "column": 2,
+          "position": 572
+        },
+        "endLoc": {
+          "line": 88,
+          "column": 21,
+          "position": 726
+        }
+      },
+      "secondFile": {
+        "name": "www\\find-missing-translations.js",
+        "start": 78,
+        "end": 92,
+        "startLoc": {
+          "line": 78,
+          "column": 2,
+          "position": 595
+        },
+        "endLoc": {
+          "line": 92,
+          "column": 24,
+          "position": 749
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 11,
+      "fragment": ".substring(0, 30); // Limit length\r\n    \r\n    // Make sure it's unique\r\n    let originalKey = key;\r\n    let counter = 1;\r\n    while (keys.some(k => k.key === key)) {\r\n      key = `${originalKey}_${counter}`;\r\n      counter++;\r\n    }\r\n    \r\n    // Add priority based on element type",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\critical-translations.js",
+        "start": 98,
+        "end": 108,
+        "startLoc": {
+          "line": 98,
+          "column": 7,
+          "position": 828
+        },
+        "endLoc": {
+          "line": 108,
+          "column": 38,
+          "position": 924
+        }
+      },
+      "secondFile": {
+        "name": "www\\find-missing-translations.js",
+        "start": 101,
+        "end": 111,
+        "startLoc": {
+          "line": 101,
+          "column": 7,
+          "position": 833
+        },
+        "endLoc": {
+          "line": 111,
+          "column": 5,
+          "position": 929
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 9,
+      "fragment": ");\r\n  keys.forEach(item => {\r\n    console.log(`    ${item.key}: \"${item.text}\", // TODO: Translate to Spanish`);\r\n  });\r\n  \r\n  console.log('\\n=== HTML ELEMENTS TO UPDATE ===');\r\n  console.log('Add data-i18n attributes to these elements:');\r\n  keys.forEach(item => {\r\n    console.log(`<${item.tag",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\critical-translations.js",
+        "start": 158,
+        "end": 166,
+        "startLoc": {
+          "line": 158,
+          "column": 46,
+          "position": 1481
+        },
+        "endLoc": {
+          "line": 166,
+          "column": 4,
+          "position": 1568
+        }
+      },
+      "secondFile": {
+        "name": "www\\find-missing-translations.js",
+        "start": 144,
+        "end": 152,
+        "startLoc": {
+          "line": 144,
+          "column": 62,
+          "position": 1201
+        },
+        "endLoc": {
+          "line": 152,
+          "column": 8,
+          "position": 1288
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 15,
+      "fragment": ".forEach(selector => {\r\n    const elements = document.querySelectorAll(selector);\r\n    elements.forEach(el => {\r\n      // Skip if already has data-i18n\r\n      if (el.hasAttribute('data-i18n')) return;\r\n      \r\n      // Skip if no text or just whitespace\r\n      const text = el.textContent?.trim();\r\n      if (!text) return;\r\n      \r\n      // Skip if it's just numbers or symbols\r\n      if (/^[\\d\\s\\-\\.]+$/.test(text)) return;\r\n      if (text.length <= 2) return;\r\n      \r\n      // Skip if element has child elements (we want leaf text)",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\comprehensive-translation-fix.js",
+        "start": 116,
+        "end": 130,
+        "startLoc": {
+          "line": 116,
+          "column": 10,
+          "position": 792
+        },
+        "endLoc": {
+          "line": 130,
+          "column": 58,
+          "position": 928
+        }
+      },
+      "secondFile": {
+        "name": "www\\critical-translations.js",
+        "start": 28,
+        "end": 26,
+        "startLoc": {
+          "line": 28,
+          "column": 18,
+          "position": 152
+        },
+        "endLoc": {
+          "line": 26,
+          "column": 53,
+          "position": 171
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 16,
+      "fragment": "));\r\n      \r\n      // Ensure directory exists\r\n      const outputDir = path.dirname(outputPath);\r\n      if (!fs.existsSync(outputDir)) {\r\n        fs.mkdirSync(outputDir, { recursive: true });\r\n      }\r\n      \r\n      fs.writeFileSync(outputPath, minified);\r\n      console.log(`✅ ${file} → ${path.relative(__dirname, outputPath)}`);\r\n    } else {\r\n      console.log(`⚠️  ${file} not found, skipping...`);\r\n    }\r\n  });\r\n  \r\n  // Copy other assets",
+      "tokens": 0,
+      "firstFile": {
+        "name": "www\\build.js",
+        "start": 102,
+        "end": 117,
+        "startLoc": {
+          "line": 102,
+          "column": 11,
+          "position": 821
+        },
+        "endLoc": {
+          "line": 117,
+          "column": 21,
+          "position": 963
+        }
+      },
+      "secondFile": {
+        "name": "www\\build.js",
+        "start": 80,
+        "end": 95,
+        "startLoc": {
+          "line": 80,
+          "column": 10,
+          "position": 565
+        },
+        "endLoc": {
+          "line": 95,
+          "column": 20,
+          "position": 707
+        }
+      }
+    }
+  ]
+}

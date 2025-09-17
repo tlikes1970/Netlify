@@ -513,6 +513,32 @@ function clearNotInterested() {
   }
 }
 
+// ---- Modal Functions for Poster Cards ----
+window.openItemDetails = function openItemDetails(id) {
+  console.log('Open details for item:', id);
+  // TODO: Implement item details modal
+};
+
+window.openNotesModal = function openNotesModal(item) {
+  console.log('Open notes modal for:', item.title);
+  // TODO: Implement notes modal
+};
+
+window.openEpisodeGuideModal = function openEpisodeGuideModal(item) {
+  console.log('Open episode guide for:', item.title);
+  // TODO: Implement episode guide modal
+};
+
+window.confirmRemoveItem = function confirmRemoveItem(item, section) {
+  console.log('Confirm remove item:', item.title, 'from', section);
+  // TODO: Implement remove confirmation modal
+};
+
+window.openProTeaserModal = function openProTeaserModal() {
+  console.log('Open PRO teaser modal');
+  // TODO: Implement PRO teaser modal
+};
+
 // ---- Toast Notifications ----
 window.showToast = function showToast(type, title, message) {
   // Create toast container if it doesn't exist
