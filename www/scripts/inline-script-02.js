@@ -47,34 +47,37 @@
       }
       const cloud = snap.data() || {};
       
-      // CRITICAL: Always clear local data when user signs in, then load from Firebase
-      FlickletDebug.info('🔄 User signed in - clearing local data and loading from Firebase');
+      // CRITICAL: Load from Firebase, but preserve local data if Firebase is empty
+      FlickletDebug.info('🔄 User signed in - loading from Firebase');
       
-      // Preserve only essential settings (not user data)
+      // Preserve essential settings and current data
       const localLanguage = (appData.settings?.lang || "en");
       const localTheme = (appData.settings?.theme || "light");
+      const localTv = { ...appData.tv };
+      const localMovies = { ...appData.movies };
       
-      // Clear all user data first
-      appData.tv = { watching: [], wishlist: [], watched: [] };
-      appData.movies = { watching: [], wishlist: [], watched: [] };
-      
-      // Load from Firebase (even if empty)
+      // Load from Firebase if available
       if (cloud.watchlists) {
-        if (cloud.watchlists.tv) {
+        if (cloud.watchlists.tv && cloud.watchlists.tv.watching?.length > 0) {
           FlickletDebug.info('🔄 Loading TV data from Firebase');
           FlickletDebug.info('🔍 Firebase TV watching count:', cloud.watchlists.tv.watching?.length || 0);
           appData.tv = cloud.watchlists.tv;
         } else {
-          FlickletDebug.info('🔄 No TV data in Firebase, using empty arrays');
+          FlickletDebug.info('🔄 No TV data in Firebase, preserving local data');
+          // Keep local data if Firebase is empty
         }
         
-        if (cloud.watchlists.movies) {
+        if (cloud.watchlists.movies && cloud.watchlists.movies.watching?.length > 0) {
           FlickletDebug.info('🔄 Loading movie data from Firebase');
           FlickletDebug.info('🔍 Firebase movie watching count:', cloud.watchlists.movies.watching?.length || 0);
           appData.movies = cloud.watchlists.movies;
         } else {
-          FlickletDebug.info('🔄 No movie data in Firebase, using empty arrays');
+          FlickletDebug.info('🔄 No movie data in Firebase, preserving local data');
+          // Keep local data if Firebase is empty
         }
+      } else {
+        FlickletDebug.info('🔄 No Firebase data found, preserving local data');
+        // Keep local data if no Firebase data
       }
       
       // Load settings from Firebase

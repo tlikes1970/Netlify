@@ -189,9 +189,20 @@ window.loadListContent = function loadListContent(listType) {
   
   FlickletDebug.info(`📋 Loading ${listType} content`);
 
+  // Debug: Check appData structure
+  console.log('🔍 appData structure:', {
+    appData: window.appData,
+    tv: window.appData?.tv,
+    movies: window.appData?.movies,
+    tvItems: window.appData?.tv?.[listType],
+    movieItems: window.appData?.movies?.[listType]
+  });
+
   const tvItems = appData.tv?.[listType] || [];
   const movieItems = appData.movies?.[listType] || [];
   const allItems = [...tvItems, ...movieItems];
+  
+  console.log(`📋 Found ${allItems.length} items for ${listType}:`, allItems);
   
   if (allItems.length === 0) {
     container.innerHTML = `<div class="empty-state"><p>No items in ${listType} list.</p></div>`;

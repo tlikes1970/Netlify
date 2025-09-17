@@ -37,11 +37,24 @@ window.saveAppData = function saveAppData() {
 window.loadAppData = function loadAppData() {
   try {
     const saved = localStorage.getItem('flicklet-data') || localStorage.getItem('tvMovieTrackerData');
+    console.log('🔍 Loading appData from localStorage:', { saved: saved ? 'found' : 'not found' });
+    
     if (saved) {
       const parsed = JSON.parse(saved);
+      console.log('🔍 Parsed appData:', {
+        tv: parsed.tv,
+        movies: parsed.movies,
+        settings: parsed.settings
+      });
       Object.assign(window.appData, parsed);
+      console.log('🔍 Final appData after load:', {
+        tv: window.appData.tv,
+        movies: window.appData.movies,
+        settings: window.appData.settings
+      });
       return true;
     }
+    console.log('🔍 No saved data found, using defaults');
     return false;
   } catch (e) {
     console.error('[loadAppData] failed:', e);
