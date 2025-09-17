@@ -461,6 +461,10 @@ waitForFirebaseReady() {
       try {
         FlickletDebug.info('✅ User signed in, processing...');
         
+        // Auth guard: Ensure auth is ready before any Firestore operations
+        const authUser = await window.authReady;
+        const uid = authUser.uid;
+        
         // 1) Close ALL auth modals
         document.querySelectorAll('.modal-backdrop[data-modal="login"]').forEach(n => n.remove());
         window.__currentAuthModal = null;
@@ -469,7 +473,7 @@ waitForFirebaseReady() {
         FlickletDebug.info('🔄 Creating user database entry...');
         try {
           const db = firebase.firestore();
-          await db.collection("users").doc(user.uid).set({
+          await db.collection("users").doc(uid).set({
             profile: {
               email: user.email || "",
               displayName: user.displayName || "",
@@ -486,7 +490,7 @@ waitForFirebaseReady() {
         FlickletDebug.info('🔄 Loading user data from Firebase cloud storage...');
         try {
           if (typeof window.loadUserDataFromCloud === 'function') {
-            await window.loadUserDataFromCloud(user.uid);
+            await window.loadUserDataFromCloud(uid);
             FlickletDebug.info('✅ User data loaded from cloud successfully');
             
             // CRITICAL: Refresh UI after data is loaded to prevent "already in list" errors
@@ -533,7 +537,7 @@ waitForFirebaseReady() {
 
         // 5) WELCOME/SNARK = Firestore settings.username (prompt once if missing)
         try {
-          const settings = await this.readSettings(user.uid);
+          const settings = await this.readSettings(uid);
           let username = (settings.username || '').trim();
 
           // Load existing username into window.appData.settings for personalized rows
@@ -553,13 +557,13 @@ waitForFirebaseReady() {
             console.log('🔧 Username prompt result:', username);
             
             if (username && username.trim()) {
-              await this.writeSettings(user.uid, { username: username.trim(), usernamePrompted: true });
+              await this.writeSettings(uid, { username: username.trim(), usernamePrompted: true });
               // keep local appData in sync (if you use it)
               window.appData = window.appData || {};
               window.appData.settings = { ...(window.appData.settings||{}), username: username.trim() };
               console.log('✅ Username saved:', username.trim());
             } else {
-              await this.writeSettings(user.uid, { usernamePrompted: true });
+              await this.writeSettings(uid, { usernamePrompted: true });
               console.log('✅ Username prompt marked as completed (skipped)');
             }
           } else {
@@ -576,7 +580,7 @@ waitForFirebaseReady() {
           await this.cleanupStrayField();
           
           // Migrate legacy name fields
-          await this.migrateLegacyNameFields(user.uid);
+          await this.migrateLegacyNameFields(uid);
           
         } catch (error) {
           console.error('❌ Error in user sign-in processing:', error);
@@ -618,8 +622,12 @@ waitForFirebaseReady() {
     
     async readSettings(uid) {
       try {
-        console.log('🔥 Reading from Firestore:', { uid });
-        const snap = await this.settingsDoc(uid).get();
+        // Auth guard: Ensure auth is ready before any Firestore operations
+        const user = await window.authReady;
+        const authUid = user.uid;
+        
+        console.log('🔥 Reading from Firestore:', { uid, authUid });
+        const snap = await this.settingsDoc(authUid).get();
         const data = snap.exists ? snap.data() : {};
         console.log('✅ Firestore read successful:', data);
         return data;
@@ -631,8 +639,12 @@ waitForFirebaseReady() {
     
     async writeSettings(uid, data) {
       try {
-        console.log('🔥 Writing to Firestore:', { uid, data });
-        await this.settingsDoc(uid).set(data, { merge: true });
+        // Auth guard: Ensure auth is ready before any Firestore operations
+        const user = await window.authReady;
+        const authUid = user.uid;
+        
+        console.log('🔥 Writing to Firestore:', { uid, authUid, data });
+        await this.settingsDoc(authUid).set(data, { merge: true });
         console.log('✅ Firestore write successful');
       } catch (error) {
         console.error('❌ Firestore write failed:', error);
@@ -642,13 +654,17 @@ waitForFirebaseReady() {
 
     // Migration to clean up legacy fields
     async migrateLegacyNameFields(uid) {
-      const s = await this.readSettings(uid);
+      // Auth guard: Ensure auth is ready before any Firestore operations
+      const user = await window.authReady;
+      const authUid = user.uid;
+      
+      const s = await this.readSettings(authUid);
       if (s && s.displayName && !s.username) {
-        await this.writeSettings(uid, { username: s.displayName });
+        await this.writeSettings(authUid, { username: s.displayName });
       }
       // Optional: remove displayName field
       try { 
-        await this.settingsDoc(uid).update({ displayName: firebase.firestore.FieldValue.delete() }); 
+        await this.settingsDoc(authUid).update({ displayName: firebase.firestore.FieldValue.delete() }); 
       } catch (e) {
         console.log(t('no_displayname_field') + ':', e.message);
       }
@@ -889,14 +905,14 @@ waitForFirebaseReady() {
     },
 
     async runMigration() {
-      if (!this.currentUser) {
-        return;
-      }
-
       try {
+        // Auth guard: Ensure auth is ready before any Firestore operations
+        const user = await window.authReady;
+        const uid = user.uid;
+
         console.log('🔄 Running Firebase document migration...');
         const db = firebase.firestore();
-        const ref = db.collection('users').doc(this.currentUser.uid);
+        const ref = db.collection('users').doc(uid);
         
         const snap = await ref.get();
         if (!snap.exists) {
@@ -929,14 +945,14 @@ waitForFirebaseReady() {
     },
 
     async cleanupStrayField() {
-      if (!this.currentUser) {
-        return;
-      }
-
       try {
+        // Auth guard: Ensure auth is ready before any Firestore operations
+        const user = await window.authReady;
+        const uid = user.uid;
+
         console.log('🧹 Running cleanup for stray field...');
         const db = firebase.firestore();
-        const ref = db.collection('users').doc(this.currentUser.uid);
+        const ref = db.collection('users').doc(uid);
         
         const snap = await ref.get();
         if (!snap.exists) {
@@ -1961,26 +1977,17 @@ waitForFirebaseReady() {
     // CRITICAL: Save app data to Firebase (missing function that was causing sync issues)
     async saveData() {
       try {
+        // Auth guard: Ensure auth is ready before any Firestore operations
+        const user = await window.authReady;
+        const uid = user.uid;
+        
         FlickletDebug.info('💾 FlickletApp.saveData: Starting data save to Firebase');
-        FlickletDebug.info('💾 FlickletApp.saveData: currentUser status:', { 
-          hasCurrentUser: !!this.currentUser, 
-          currentUserUid: this.currentUser?.uid,
+        FlickletDebug.info('💾 FlickletApp.saveData: auth status:', { 
+          hasAuthUser: !!user, 
+          authUid: uid,
           firebaseAuth: !!firebase?.auth,
           authState: firebase?.auth?.currentUser?.uid 
         });
-        
-        // Ensure we have a current user - try to get from Firebase auth if not set
-        if (!this.currentUser && firebase?.auth?.currentUser) {
-          FlickletDebug.info('💾 No this.currentUser, but Firebase auth has user, updating...');
-          this.currentUser = firebase.auth.currentUser;
-          window.currentUser = this.currentUser;
-        }
-        
-        if (!this.currentUser) {
-          FlickletDebug.warn('💾 No current user, saving to localStorage only');
-          localStorage.setItem("flicklet-data", JSON.stringify(window.appData));
-          return;
-        }
 
         // Get Firebase services
         console.log('🔥 Getting Firebase Firestore instance...');
@@ -2026,7 +2033,7 @@ waitForFirebaseReady() {
         });
 
         // Save to Firebase
-        await db.collection("users").doc(this.currentUser.uid).set(payload, { merge: true });
+        await db.collection("users").doc(uid).set(payload, { merge: true });
         
         // Also save to localStorage as backup
         localStorage.setItem("flicklet-data", JSON.stringify(window.appData));
