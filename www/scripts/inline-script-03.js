@@ -144,7 +144,7 @@
         
         const btn = e.target.closest("[data-action]");
         if (!btn) {
-          console.log('🔧 No data-action element found');
+          // Don't log this as an error - it's normal for many clicks
           return;
         }
         
