@@ -4,6 +4,16 @@
 */
 
 (function () {
+  // Helper function to get translation
+  function t(key) {
+    // Use the global t function from i18n.js
+    if (typeof window.t === 'function') {
+      return window.t(key);
+    }
+    // Fallback to key if translation not available
+    return key;
+  }
+
   // Centralized User ViewModel - Single Source of Truth for Auth State
   const UserViewModel = {
     isAuthenticated: false,
