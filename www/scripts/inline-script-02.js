@@ -39,10 +39,20 @@
     try {
       const snap = await db.collection("users").doc(uid).get();
       if (!snap.exists) {
-        FlickletDebug.info('🔄 No Firebase document found, clearing local data');
-        // Clear local data when no Firebase document exists
+        FlickletDebug.info('🔄 No Firebase document found, preserving local settings');
+        // Clear watchlist data but preserve settings when no Firebase document exists
+        const localLanguage = (appData.settings?.lang || "en");
+        const localTheme = (appData.settings?.theme || "light");
+        
         appData.tv = { watching: [], wishlist: [], watched: [] };
         appData.movies = { watching: [], wishlist: [], watched: [] };
+        
+        // Preserve language and theme settings
+        if (localLanguage) appData.settings.lang = localLanguage;
+        if (localTheme) appData.settings.theme = localTheme;
+        
+        // Save the preserved settings
+        localStorage.setItem('flicklet-data', JSON.stringify(appData));
         return;
       }
       const cloud = snap.data() || {};
@@ -56,7 +66,7 @@
       const localTv = { ...appData.tv };
       const localMovies = { ...appData.movies };
       
-      // Load from Firebase if available
+      // Load from Firebase if available, otherwise preserve local data
       if (cloud.watchlists) {
         if (cloud.watchlists.tv && cloud.watchlists.tv.watching?.length > 0) {
           FlickletDebug.info('🔄 Loading TV data from Firebase');
@@ -65,6 +75,7 @@
         } else {
           FlickletDebug.info('🔄 No TV data in Firebase, preserving local data');
           // Keep local data if Firebase is empty
+          appData.tv = localTv;
         }
         
         if (cloud.watchlists.movies && cloud.watchlists.movies.watching?.length > 0) {
@@ -74,10 +85,13 @@
         } else {
           FlickletDebug.info('🔄 No movie data in Firebase, preserving local data');
           // Keep local data if Firebase is empty
+          appData.movies = localMovies;
         }
       } else {
         FlickletDebug.info('🔄 No Firebase data found, preserving local data');
         // Keep local data if no Firebase data
+        appData.tv = localTv;
+        appData.movies = localMovies;
       }
       
       // Load settings from Firebase
