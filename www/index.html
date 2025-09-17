@@ -1451,15 +1451,16 @@
     <script src="/js/app.js"></script>
     <script src="/js/bootstrap.js"></script>
 
+    <!-- Component modules (must load before functions that use them) -->
+    <script src="/js/components/poster-card.js"></script>
+    <script src="/scripts/components/Card.js"></script>
+    <script src="/scripts/components/PosterCard.js"></script>
+    <script src="/scripts/components/ActionBar.js"></script>
+
     <!-- Core functionality (assumes utils/app exist) -->
     <script src="/scripts/auth.js"></script>
     <script src="/scripts/notifications.js"></script>
     <script src="/js/functions.js"></script>
-
-    <!-- Component modules -->
-    <script src="/scripts/components/Card.js"></script>
-    <script src="/scripts/components/PosterCard.js"></script>
-    <script src="/scripts/components/ActionBar.js"></script>
     
     <!-- Utility modules -->
     <script src="/scripts/utils/cardDataNormalizer.js"></script>
@@ -1868,7 +1869,6 @@
     <script src="/scripts/pro-gate.js"></script>
     <script src="/js/language-manager.js"></script>
     <script src="/js/i18n.js"></script>
-    <script src="/js/components/poster-card.js"></script>
 
     <!-- TMDB Image Utilities (must load before components that use it) -->
     <script src="/scripts/tmdb-images.js"></script>
