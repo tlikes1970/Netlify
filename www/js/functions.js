@@ -203,6 +203,12 @@ window.loadListContent = function loadListContent(listType) {
   const allItems = [...tvItems, ...movieItems];
   
   console.log(`📋 Found ${allItems.length} items for ${listType}:`, allItems);
+  console.log('🔍 Full appData structure:', {
+    appData: window.appData,
+    tv: window.appData?.tv,
+    movies: window.appData?.movies,
+    settings: window.appData?.settings
+  });
   
   if (allItems.length === 0) {
     container.innerHTML = `<div class="empty-state"><p>No items in ${listType} list.</p></div>`;
@@ -216,7 +222,13 @@ window.loadListContent = function loadListContent(listType) {
   container.className = 'poster-cards-grid';
   
   // Use new createPosterCard system
+  console.log('🔍 Checking createPosterCard availability:', {
+    createPosterCard: typeof window.createPosterCard,
+    windowKeys: Object.keys(window).filter(k => k.includes('Poster') || k.includes('Card'))
+  });
+  
   if (window.createPosterCard) {
+    console.log('✅ Using createPosterCard for', allItems.length, 'items');
     allItems.forEach(item => {
       const card = window.createPosterCard(item, listType);
       if (card) {
@@ -224,6 +236,7 @@ window.loadListContent = function loadListContent(listType) {
       }
     });
   } else {
+    console.log('❌ createPosterCard not available, using fallback');
     // Fallback to existing system
     allItems.forEach(item => {
       if (window.FLAGS?.cards_v2 && window.Card) {
