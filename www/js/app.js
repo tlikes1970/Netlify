@@ -3,6 +3,10 @@
    This build removes duplicate init paths and normalizes tab/UI/render behavior.
 */
 
+// Firebase v9 modular imports
+import { ensureUser, db } from "./firebase-init.js";
+import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
 (function () {
   // Centralized User ViewModel - Single Source of Truth for Auth State
   const UserViewModel = {
@@ -376,19 +380,19 @@ waitForFirebaseReady() {
 
         // Firestore helpers (guarded)
         function userDocRef(uid) {
-          if (!window.db || !uid) return null;
-          return db.collection('users').doc(uid); // simple structure: users/{uid}
+          if (!uid) return null;
+          return doc(db, `users/${uid}`); // simple structure: users/{uid}
         }
         async function readUsername(uid) {
           const ref = userDocRef(uid);
           if (!ref) throw new Error('Firestore not available');
-          const snap = await ref.get();
-          return snap.exists ? (snap.data()?.username || null) : null;
+          const snap = await getDoc(ref);
+          return snap.exists() ? (snap.data()?.username || null) : null;
         }
         async function writeUsername(uid, name) {
           const ref = userDocRef(uid);
           if (!ref) throw new Error('Firestore not available');
-          await ref.set({ username: name }, { merge: true });
+          await setDoc(ref, { username: name }, { merge: true });
         }
 
         function updateWelcome(name) {
@@ -461,8 +465,8 @@ waitForFirebaseReady() {
       try {
         FlickletDebug.info('✅ User signed in, processing...');
         
-        // Auth guard: Ensure auth is ready before any Firestore operations
-        const authUser = await window.authReady;
+        // ✅ 2-line guard: wait for a real user, then get uid
+        const authUser = await ensureUser();
         const uid = authUser.uid;
         
         // 1) Close ALL auth modals
@@ -472,14 +476,14 @@ waitForFirebaseReady() {
         // 2) CREATE USER DATABASE ENTRY (CRITICAL FOR FIREBASE STORAGE)
         FlickletDebug.info('🔄 Creating user database entry...');
         try {
-          const db = firebase.firestore();
-          await db.collection("users").doc(uid).set({
+          const userRef = doc(db, `users/${uid}`);
+          await setDoc(userRef, {
             profile: {
               email: user.email || "",
               displayName: user.displayName || "",
               photoURL: user.photoURL || "",
             },
-            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+            lastLoginAt: serverTimestamp(),
           }, { merge: true });
           FlickletDebug.info('✅ User database entry created successfully');
         } catch (error) {
@@ -612,25 +616,29 @@ waitForFirebaseReady() {
       console.log('🧹 User data cleared');
     },
 
-    // Firestore settings helpers
-    settingsDoc(uid) {
-      if (!firebase.firestore) {
-        throw new Error(t('firestore_not_available'));
-      }
-      return firebase.firestore().doc(`users/${uid}/meta/settings`);
-    },
+    // Firestore settings helpers - now using direct path structure
     
     async readSettings(uid) {
       try {
         // Auth guard: Ensure auth is ready before any Firestore operations
-        const user = await window.authReady;
+        const user = await ensureUser();
         const authUid = user.uid;
         
         console.log('🔥 Reading from Firestore:', { uid, authUid });
-        const snap = await this.settingsDoc(authUid).get();
-        const data = snap.exists ? snap.data() : {};
-        console.log('✅ Firestore read successful:', data);
-        return data;
+        const ref = doc(db, `users/${authUid}/settings/app`);
+        const snap = await getDoc(ref);
+        
+        if (snap.exists()) {
+          const data = snap.data();
+          console.log('✅ Firestore read successful:', data);
+          return data;
+        } else {
+          // Seed defaults so the next read always has data
+          const defaults = { theme: "system", lang: "en", createdAt: Date.now() };
+          await setDoc(ref, defaults, { merge: true });
+          console.log('✅ Firestore defaults created:', defaults);
+          return defaults;
+        }
       } catch (error) {
         console.error('❌ Firestore read failed:', error);
         return {};
@@ -640,11 +648,12 @@ waitForFirebaseReady() {
     async writeSettings(uid, data) {
       try {
         // Auth guard: Ensure auth is ready before any Firestore operations
-        const user = await window.authReady;
+        const user = await ensureUser();
         const authUid = user.uid;
         
         console.log('🔥 Writing to Firestore:', { uid, authUid, data });
-        await this.settingsDoc(authUid).set(data, { merge: true });
+        const ref = doc(db, `users/${authUid}/settings/app`);
+        await setDoc(ref, { ...data, updatedAt: Date.now() }, { merge: true });
         console.log('✅ Firestore write successful');
       } catch (error) {
         console.error('❌ Firestore write failed:', error);
@@ -655,7 +664,7 @@ waitForFirebaseReady() {
     // Migration to clean up legacy fields
     async migrateLegacyNameFields(uid) {
       // Auth guard: Ensure auth is ready before any Firestore operations
-      const user = await window.authReady;
+      const user = await ensureUser();
       const authUid = user.uid;
       
       const s = await this.readSettings(authUid);
@@ -664,7 +673,8 @@ waitForFirebaseReady() {
       }
       // Optional: remove displayName field
       try { 
-        await this.settingsDoc(authUid).update({ displayName: firebase.firestore.FieldValue.delete() }); 
+        const ref = doc(db, `users/${authUid}/settings/app`);
+        await setDoc(ref, { displayName: null }, { merge: true });
       } catch (e) {
         console.log(t('no_displayname_field') + ':', e.message);
       }
@@ -907,15 +917,14 @@ waitForFirebaseReady() {
     async runMigration() {
       try {
         // Auth guard: Ensure auth is ready before any Firestore operations
-        const user = await window.authReady;
+        const user = await ensureUser();
         const uid = user.uid;
 
         console.log('🔄 Running Firebase document migration...');
-        const db = firebase.firestore();
-        const ref = db.collection('users').doc(uid);
+        const ref = doc(db, `users/${uid}`);
         
-        const snap = await ref.get();
-        if (!snap.exists) {
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
           console.log('📄 No document to migrate');
           this._migrationCompleted = true;
           return;
@@ -927,12 +936,12 @@ waitForFirebaseReady() {
 
         // Check for empty settings.displayName and remove it
         if (data.settings && data.settings.displayName === '') {
-          updates['settings.displayName'] = firebase.firestore.FieldValue.delete();
+          updates['settings.displayName'] = null;
           needsUpdate = true;
         }
 
         if (needsUpdate) {
-          await ref.update(updates);
+          await setDoc(ref, updates, { merge: true });
           console.log('✅ Migration completed');
         } else {
           console.log('✅ No migration needed');
@@ -947,15 +956,14 @@ waitForFirebaseReady() {
     async cleanupStrayField() {
       try {
         // Auth guard: Ensure auth is ready before any Firestore operations
-        const user = await window.authReady;
+        const user = await ensureUser();
         const uid = user.uid;
 
         console.log('🧹 Running cleanup for stray field...');
-        const db = firebase.firestore();
-        const ref = db.collection('users').doc(uid);
+        const ref = doc(db, `users/${uid}`);
         
-        const snap = await ref.get();
-        if (!snap.exists) {
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
           console.log('📄 No document to clean up');
           return;
         }
@@ -966,14 +974,14 @@ waitForFirebaseReady() {
 
         // Remove stray displayName field if it exists
         if (data.displayName) {
-          updates.displayName = firebase.firestore.FieldValue.delete();
+          updates.displayName = null;
           needsUpdate = true;
         }
 
         if (needsUpdate) {
-          await ref.update(updates);
+          await setDoc(ref, updates, { merge: true });
           console.log('✅ Cleanup completed');
-      } else {
+        } else {
           console.log('✅ No cleanup needed');
         }
       } catch (error) {
@@ -1978,7 +1986,7 @@ waitForFirebaseReady() {
     async saveData() {
       try {
         // Auth guard: Ensure auth is ready before any Firestore operations
-        const user = await window.authReady;
+        const user = await ensureUser();
         const uid = user.uid;
         
         FlickletDebug.info('💾 FlickletApp.saveData: Starting data save to Firebase');
@@ -1989,9 +1997,6 @@ waitForFirebaseReady() {
           authState: firebase?.auth?.currentUser?.uid 
         });
 
-        // Get Firebase services
-        console.log('🔥 Getting Firebase Firestore instance...');
-        const db = firebase.firestore();
         console.log('✅ Firebase Firestore instance obtained');
         
         // Prepare data payload with undefined value filtering
@@ -2019,7 +2024,7 @@ waitForFirebaseReady() {
           },
           settings: cleanData(window.appData.settings) || {},
           pro: !!window.appData.settings?.pro,
-          lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+          lastUpdated: serverTimestamp(),
         };
 
         // Debug: Log the payload structure to identify any remaining undefined values
@@ -2033,7 +2038,8 @@ waitForFirebaseReady() {
         });
 
         // Save to Firebase
-        await db.collection("users").doc(uid).set(payload, { merge: true });
+        const userRef = doc(db, `users/${uid}`);
+        await setDoc(userRef, payload, { merge: true });
         
         // Also save to localStorage as backup
         localStorage.setItem("flicklet-data", JSON.stringify(window.appData));
