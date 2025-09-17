@@ -233,7 +233,7 @@
     const rating = item.vote_average || 0;
 
     return window.Card({
-      variant: 'compact',
+      variant: 'poster',
       id: item.id,
       posterUrl: posterUrl,
       title: title,
@@ -250,6 +250,116 @@
       }],
       onOpenDetails: () => openDetails(item)
     });
+  }
+
+  /**
+   * Add item to list (Card v2 action handler)
+   * @param {Object} item - TMDB item data
+   * @param {string} list - List name (wishlist, watching, watched)
+   */
+  function addToList(item, list = 'wishlist') {
+    console.log('Adding to list:', item, list);
+    
+    // Create a synthetic event for the centralized handler
+    const syntheticEvent = {
+      target: {
+        closest: (selector) => {
+          if (selector === '[data-action="add"]') {
+            return {
+              getAttribute: (attr) => {
+                if (attr === 'data-action') return 'add';
+                if (attr === 'data-id') return item.id;
+                return null;
+              },
+              dataset: {
+                id: item.id,
+                list: list
+              }
+            };
+          }
+          return null;
+        }
+      },
+      preventDefault: () => {},
+      stopPropagation: () => {}
+    };
+    
+    // Trigger the centralized handler
+    if (typeof window.handleAddClick === 'function') {
+      window.handleAddClick(syntheticEvent);
+    } else if (typeof window.addToListFromCache === 'function') {
+      window.addToListFromCache(item.id, list);
+    } else {
+      console.warn('No add handler available');
+    }
+  }
+
+  /**
+   * Open more options menu (Card v2 action handler)
+   * @param {Object} item - TMDB item data
+   */
+  function openMore(item) {
+    console.log('Opening more options for:', item);
+    
+    // Create overflow menu
+    const menu = document.createElement('div');
+    menu.className = 'overflow-menu';
+    menu.innerHTML = `
+      <div class="overflow-menu-content">
+        <button data-action="add" data-id="${item.id}" data-list="wishlist">Add to Wishlist</button>
+        <button data-action="add" data-id="${item.id}" data-list="watching">Add to Watching</button>
+        <button data-action="not-interested" data-id="${item.id}">Not Interested</button>
+        <button data-action="open" data-id="${item.id}" data-media-type="${item.media_type || 'movie'}">View Details</button>
+      </div>
+    `;
+    
+    // Position and show menu
+    menu.style.cssText = `
+      position: absolute;
+      top: 100%;
+      right: 0;
+      z-index: 1000;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      padding: 8px 0;
+      min-width: 150px;
+    `;
+    
+    // Add to card element
+    const cardElement = document.querySelector(`[data-id="${item.id}"]`);
+    if (cardElement) {
+      cardElement.style.position = 'relative';
+      cardElement.appendChild(menu);
+      
+      // Close menu when clicking outside
+      setTimeout(() => {
+        document.addEventListener('click', function closeMenu(e) {
+          if (!menu.contains(e.target)) {
+            menu.remove();
+            document.removeEventListener('click', closeMenu);
+          }
+        });
+      }, 0);
+    }
+  }
+
+  /**
+   * Open item details (Card v2 action handler)
+   * @param {Object} item - TMDB item data
+   */
+  function openDetails(item) {
+    console.log('Opening details for:', item);
+    
+    // Open TMDB link if available
+    if (typeof window.openTMDBLink === 'function') {
+      window.openTMDBLink(item.id, item.media_type || 'movie');
+    } else {
+      // Fallback to TMDB website
+      const tmdbUrl = `https://www.themoviedb.org/${item.media_type || 'movie'}/${item.id}`;
+      window.open(tmdbUrl, '_blank');
+    }
   }
 
   /**

@@ -1,7 +1,7 @@
-// sw.js - Service Worker for StreamTracker PWA
-const CACHE_NAME = 'streamtracker-v1.0.1';
-const STATIC_CACHE_NAME = 'streamtracker-static-v1.0.1';
-const DYNAMIC_CACHE_NAME = 'streamtracker-dynamic-v1.0.1';
+// sw.js - Service Worker for Flicklet PWA
+const CACHE_NAME = 'flicklet-v24.6.1';
+const STATIC_CACHE_NAME = 'flicklet-static-v24.6.1';
+const DYNAMIC_CACHE_NAME = 'flicklet-dynamic-v24.6.1';
 
 // Files to cache immediately (critical for offline functionality)
 const STATIC_FILES = [
@@ -48,7 +48,7 @@ self.addEventListener('activate', (event) => {
           cacheNames.map((cacheName) => {
             if (cacheName !== STATIC_CACHE_NAME && 
                 cacheName !== DYNAMIC_CACHE_NAME &&
-                cacheName.startsWith('streamtracker-')) {
+                (cacheName.startsWith('streamtracker-') || cacheName.startsWith('flicklet-'))) {
               console.log('Service Worker: Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
