@@ -2149,7 +2149,7 @@ waitForFirebaseReady() {
   window.UserViewModel = UserViewModel;
 
   // Global functions for HTML onclick handlers
-  window.saveDisplayName = function() {
+  window.saveDisplayName = async function() {
     const input = document.getElementById('displayNameInput');
     if (!input) {
       console.error('Display name input not found');
@@ -2160,6 +2160,16 @@ waitForFirebaseReady() {
     if (!newName) {
       console.warn('Display name is empty');
       return;
+    }
+    
+    // Check if this is an overwrite of existing username
+    const currentUsername = window.appData?.settings?.username;
+    if (currentUsername && currentUsername !== newName) {
+      const confirmed = confirm(`Are you sure you want to change your username from "${currentUsername}" to "${newName}"? This will update your account settings.`);
+      if (!confirmed) {
+        console.log('Username change cancelled by user');
+        return;
+      }
     }
     
     try {
@@ -2179,6 +2189,20 @@ waitForFirebaseReady() {
         window.saveAppData();
       } else {
         localStorage.setItem('flicklet-data', JSON.stringify(window.appData));
+      }
+      
+      // Save to Firebase if user is signed in
+      if (window.FlickletApp && window.FlickletApp.currentUser) {
+        try {
+          await window.FlickletApp.writeSettings(window.FlickletApp.currentUser.uid, { 
+            username: newName,
+            displayName: newName 
+          });
+          console.log('✅ Username saved to Firebase:', newName);
+        } catch (firebaseError) {
+          console.error('❌ Failed to save username to Firebase:', firebaseError);
+          // Continue with local save even if Firebase fails
+        }
       }
       
       // Update UI

@@ -150,6 +150,15 @@
       } else if (Notify?.info) {
         Notify.info('Signed in successfully');
       }
+      
+      // Trigger username prompt after successful Google sign-in
+      setTimeout(() => {
+        if (window.FlickletApp && window.FlickletApp.promptForUsernameOnce) {
+          const suggestedName = result.user.displayName || result.user.email?.split('@')[0] || 'User';
+          console.log('🔐 Triggering username prompt with suggestion:', suggestedName);
+          window.FlickletApp.promptForUsernameOnce(suggestedName);
+        }
+      }, 1000); // Small delay to ensure UI is ready
     } catch (e){
       console.error('[auth] google login failed', e);
       let errorMessage = 'Google sign-in failed. ';

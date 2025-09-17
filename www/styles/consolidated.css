@@ -61,6 +61,31 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.signin-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.account-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* Search - Critical */
 .top-search {
   position: sticky;
