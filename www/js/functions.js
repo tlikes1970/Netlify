@@ -201,12 +201,12 @@ window.loadListContent = function loadListContent(listType) {
   // Clear container first
   container.innerHTML = '';
   
-  // Set up grid layout for poster cards
-  container.className = 'list-container search-results-grid';
+  // Set up horizontal row layout for list items
+  container.className = 'list-container';
   container.style.cssText = `
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     padding: 16px 0;
   `;
   
@@ -237,26 +237,34 @@ window.loadListContent = function loadListContent(listType) {
       const card = window.createShowCard(item, false, listType);
       container.appendChild(card);
     } else {
-      // Fallback to poster card HTML
+      // Fallback to horizontal row layout
       const card = document.createElement('div');
-      card.className = 'search-result-item';
+      card.className = 'list-item';
       card.setAttribute('data-id', item.id);
       card.setAttribute('data-media-type', item.media_type || 'movie');
       
       const posterUrl = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
       const title = item.name || item.title || 'Unknown Title';
       const year = item.release_date?.slice(0, 4) || item.first_air_date?.slice(0, 4) || '';
+      const rating = item.vote_average || 0;
+      const overview = item.overview || 'No description available';
       
       card.innerHTML = `
-        <div class="search-result-poster">
+        <div class="list-item-poster">
           ${posterUrl ? `<img src="${posterUrl}" alt="${title}" loading="lazy">` : 
             '<div class="poster-placeholder">📺</div>'}
         </div>
-        <div class="search-result-content">
-          <h4 class="search-result-title">${title}</h4>
-          <p class="search-result-year">${year || 'Unknown Year'}</p>
-          <p class="search-result-type">${item.media_type || 'movie'}</p>
-          <div class="search-result-actions">
+        <div class="list-item-content">
+          <div class="list-item-header">
+            <h3 class="list-item-title">${title}</h3>
+            <div class="list-item-meta">
+              <span class="list-item-year">${year || 'Unknown Year'}</span>
+              <span class="list-item-type">${item.media_type || 'movie'}</span>
+              <span class="list-item-rating">⭐ ${rating.toFixed(1)}</span>
+            </div>
+          </div>
+          <p class="list-item-description">${overview}</p>
+          <div class="list-item-actions">
             <button class="btn btn--sm" data-action="move" data-id="${item.id}" data-list="${getNextList(listType)}">
               Move
             </button>

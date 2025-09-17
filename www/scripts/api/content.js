@@ -139,8 +139,9 @@
                          resolveGenreIdByName(genreName, GENRE_FALLBACK);
         
         let tvItems = [];
+        let tvData = null;
         if (tvGenreId) {
-          const tvData = await window.tmdbGet('discover/tv', {
+          tvData = await window.tmdbGet('discover/tv', {
           with_genres: tvGenreId,
           page: page,
           sort_by: 'popularity.desc'
