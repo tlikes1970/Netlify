@@ -6,17 +6,20 @@
   const getApiKey = () => {
     // 1. Check for environment variable (for build processes)
     if (typeof process !== 'undefined' && process.env && process.env.TMDB_API_KEY) {
+      console.info('[TMDB] Using API key from environment variable');
       return process.env.TMDB_API_KEY;
     }
     
     // 2. Check for meta tag (for runtime configuration)
     const metaKey = document.querySelector('meta[name="tmdb-api-key"]')?.content;
     if (metaKey && metaKey !== 'YOUR_TMDB_API_KEY_HERE') {
+      console.info('[TMDB] Using API key from meta tag');
       return metaKey;
     }
     
     // 3. Check for window variable (for development)
     if (window.TMDB_API_KEY && window.TMDB_API_KEY !== 'YOUR_TMDB_API_KEY_HERE') {
+      console.info('[TMDB] Using API key from window variable');
       return window.TMDB_API_KEY;
     }
     

@@ -37,7 +37,9 @@
         language: 'en-US' // Default language
       });
       
-      const url = `${baseUrl}${path}?${searchParams.toString()}`;
+      // Ensure proper URL joining with exactly one slash
+      const cleanPath = path.startsWith('/') ? path : `/${path}`;
+      const url = `${baseUrl}${cleanPath}?${searchParams.toString()}`;
       
       console.log('🌐 TMDB API request:', url);
       
