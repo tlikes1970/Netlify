@@ -1,0 +1,451 @@
+/**
+ * Modal Styles - Unified Modal System
+ * 
+ * Process: Modal Styling
+ * Purpose: Unified modal system for all app modals
+ * Data Source: CSS variables and responsive design patterns
+ * Update Path: Update CSS variables and modal structure
+ * Dependencies: consolidated.css, CSS variables
+ */
+
+/* === MODAL BACKDROP === */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.modal-backdrop--visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* === MODAL BASE === */
+.modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.9) translateY(20px);
+  transition: all 0.3s ease;
+}
+
+.modal-backdrop--visible .modal {
+  transform: scale(1) translateY(0);
+}
+
+/* === MODAL HEADER === */
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border, #dedee3);
+  background: var(--surface, #f9f9f9);
+}
+
+.modal__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text, #121212);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  margin-right: 16px;
+}
+
+.modal__close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--muted, #999);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.modal__close:hover {
+  background: var(--surface, #f9f9f9);
+  color: var(--text, #121212);
+}
+
+/* === MODAL BODY === */
+.modal__body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* === MODAL FOOTER === */
+.modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--border, #dedee3);
+  background: var(--surface, #f9f9f9);
+}
+
+/* === EPISODE GUIDE MODAL === */
+.modal--episode-guide {
+  max-width: 600px;
+  width: 100%;
+}
+
+.episode-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.episode-guide__seasons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.episode-guide__seasons label {
+  font-weight: 600;
+  color: var(--text, #121212);
+  white-space: nowrap;
+}
+
+.episode-guide__select {
+  padding: 8px 12px;
+  border: 1px solid var(--border, #dedee3);
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  color: var(--text, #121212);
+  min-width: 150px;
+}
+
+.episode-guide__select:focus {
+  outline: none;
+  border-color: var(--primary, #e91e63);
+  box-shadow: 0 0 0 2px rgba(233, 30, 99, 0.2);
+}
+
+.episode-guide__episodes {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--border, #dedee3);
+  border-radius: 8px;
+  background: white;
+}
+
+.episode-guide__loading,
+.episode-guide__error,
+.episode-guide__empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted, #999);
+  font-style: italic;
+}
+
+.episode-guide__error {
+  color: var(--danger, #f06292);
+}
+
+.episode-guide__episode {
+  display: grid;
+  grid-template-columns: 80px 1fr 100px 60px 100px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border, #dedee3);
+  transition: background-color 0.2s ease;
+}
+
+.episode-guide__episode:last-child {
+  border-bottom: none;
+}
+
+.episode-guide__episode:hover {
+  background: var(--surface, #f9f9f9);
+}
+
+.episode-guide__episode--watched {
+  background: var(--success-light, #d4edda);
+  border-left: 4px solid var(--success, #51cf66);
+}
+
+.episode-guide__episode-number {
+  font-weight: 600;
+  color: var(--primary, #e91e63);
+  font-size: 12px;
+  text-align: center;
+}
+
+.episode-guide__episode-title {
+  font-weight: 500;
+  color: var(--text, #121212);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.episode-guide__episode-date {
+  font-size: 12px;
+  color: var(--muted, #999);
+  text-align: center;
+}
+
+.episode-guide__episode-rating {
+  font-size: 12px;
+  color: var(--accent, #ffd43b);
+  font-weight: 600;
+  text-align: center;
+}
+
+.episode-guide__episode-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text, #121212);
+}
+
+.episode-guide__episode-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary, #e91e63);
+}
+
+.episode-guide__episode-label {
+  font-weight: 500;
+}
+
+/* === NOTES MODAL === */
+.modal--notes {
+  max-width: 500px;
+  width: 100%;
+}
+
+.notes-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notes-modal__label {
+  font-weight: 600;
+  color: var(--text, #121212);
+  margin-bottom: 4px;
+}
+
+.notes-modal__textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border, #dedee3);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.5;
+  color: var(--text, #121212);
+  background: white;
+  resize: vertical;
+  min-height: 120px;
+  max-height: 300px;
+}
+
+.notes-modal__textarea:focus {
+  outline: none;
+  border-color: var(--primary, #e91e63);
+  box-shadow: 0 0 0 2px rgba(233, 30, 99, 0.2);
+}
+
+.notes-modal__char-count {
+  text-align: right;
+  font-size: 12px;
+  color: var(--muted, #999);
+}
+
+/* === MOBILE RESPONSIVE === */
+@media (max-width: 767px) {
+  .modal-backdrop {
+    padding: 10px;
+  }
+  
+  .modal {
+    max-width: 100%;
+    max-height: 95vh;
+  }
+  
+  .modal__header {
+    padding: 16px 20px;
+  }
+  
+  .modal__title {
+    font-size: 18px;
+  }
+  
+  .modal__body {
+    padding: 20px;
+  }
+  
+  .modal__footer {
+    padding: 16px 20px;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .modal__footer .btn {
+    width: 100%;
+  }
+  
+  /* Episode Guide Mobile */
+  .episode-guide__episode {
+    grid-template-columns: 60px 1fr 80px 50px 80px;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  
+  .episode-guide__episode-number {
+    font-size: 11px;
+  }
+  
+  .episode-guide__episode-title {
+    font-size: 13px;
+  }
+  
+  .episode-guide__episode-date,
+  .episode-guide__episode-rating {
+    font-size: 11px;
+  }
+  
+  .episode-guide__episode-checkbox {
+    font-size: 11px;
+  }
+  
+  .episode-guide__episode-checkbox input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+  }
+  
+  /* Notes Modal Mobile */
+  .notes-modal__textarea {
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+}
+
+/* === LOADING STATES === */
+.modal--loading .modal__body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.modal--loading .modal__body::after {
+  content: '';
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border, #dedee3);
+  border-top: 3px solid var(--primary, #e91e63);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* === ACCESSIBILITY === */
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop,
+  .modal {
+    transition: none;
+  }
+  
+  .modal-backdrop--visible .modal {
+    transform: none;
+  }
+}
+
+/* === HIGH CONTRAST MODE === */
+@media (prefers-contrast: high) {
+  .modal {
+    border: 2px solid var(--text, #121212);
+  }
+  
+  .modal__header {
+    border-bottom-width: 2px;
+  }
+  
+  .modal__footer {
+    border-top-width: 2px;
+  }
+  
+  .episode-guide__episode {
+    border-bottom-width: 2px;
+  }
+  
+  .episode-guide__episode--watched {
+    border-left-width: 6px;
+  }
+}
+
+/* === FOCUS MANAGEMENT === */
+.modal:focus {
+  outline: none;
+}
+
+.modal__close:focus {
+  outline: 2px solid var(--primary, #e91e63);
+  outline-offset: 2px;
+}
+
+/* === ANIMATION VARIANTS === */
+.modal--slide-up {
+  transform: translateY(100%);
+}
+
+.modal-backdrop--visible .modal--slide-up {
+  transform: translateY(0);
+}
+
+.modal--slide-down {
+  transform: translateY(-100%);
+}
+
+.modal-backdrop--visible .modal--slide-down {
+  transform: translateY(0);
+}
+
+.modal--fade-in {
+  transform: scale(1);
+  opacity: 0;
+}
+
+.modal-backdrop--visible .modal--fade-in {
+  opacity: 1;
+}
