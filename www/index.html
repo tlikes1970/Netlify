@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v25.1</title>
+    <title>Flicklet - TV & Movie Tracker v25.2</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
     />
-    <meta name="build" content="v25.1">
+    <meta name="build" content="v25.2">
     
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
@@ -253,6 +253,7 @@
     <link rel="preload" href="/styles/cards.css?v=v24.27" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="/styles/unified-poster-card.css?v=v25.0" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="/styles/modals.css?v=v25.0" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/styles/clean-poster-card.css?v=v25.2" as="style" onload="this.onload=null;this.rel='stylesheet'">
     
     <!-- Fallback for browsers without preload support -->
     <noscript>
@@ -442,7 +443,7 @@
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
-            <span class="version-display">v25.1</span>
+            <span class="version-display">v25.2</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
@@ -1460,17 +1461,11 @@
     <script src="/scripts/notifications.js"></script>
     <script src="/js/functions.js"></script>
     
-    <!-- Unified Poster Card System -->
-    <script src="/js/components/unified-poster-card.js?v=v25.0"></script>
-    <script src="/js/modals/episode-guide-modal.js?v=v25.0"></script>
-    <script src="/js/modals/notes-modal.js?v=v25.0"></script>
-    <script src="/js/migration/unified-card-migration.js?v=v25.0"></script>
-    <script src="/js/debug-auth.js?v=v25.1"></script>
-    <script src="/js/fix-auth-state.js?v=v25.1"></script>
-    <script src="/js/fix-auth-ui.js?v=v25.1"></script>
-    <script src="/js/debug-data-loading.js?v=v25.1"></script>
-    <script src="/js/force-data-load.js?v=v25.1"></script>
-    <script src="/js/force-card-migration.js?v=v25.1"></script>
+    <!-- Clean Unified Poster Card System v25.2 -->
+    <script src="/js/components/clean-poster-card.js?v=v25.2"></script>
+    <script src="/js/modals/clean-episode-guide.js?v=v25.2"></script>
+    <script src="/js/modals/clean-notes.js?v=v25.2"></script>
+    <script src="/js/clean-data-loader.js?v=v25.2"></script>
     
     <!-- Utility modules -->
     <script src="/scripts/utils/cardDataNormalizer.js"></script>
