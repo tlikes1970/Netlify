@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v24.7.1</title>
+    <title>Flicklet - TV & Movie Tracker v24.8</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
     />
-    <meta name="build" content="v24.7.1">
+    <meta name="build" content="v24.8">
     
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
@@ -251,6 +251,7 @@
     <link rel="preload" href="/styles/action-bar.css?v=v22.21" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="/styles/card-system.css?v=v23.53" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="/styles/poster-card.css?v=v24.6.7" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/styles/cards.css?v=v24.2" as="style" onload="this.onload=null;this.rel='stylesheet'">
     
     <!-- Fallback for browsers without preload support -->
     <noscript>
@@ -263,6 +264,7 @@
       <link rel="stylesheet" href="/styles/action-bar.css?v=v22.21">
       <link rel="stylesheet" href="/styles/card-system.css?v=v23.53">
       <link rel="stylesheet" href="/styles/poster-card.css?v=v24.6.7">
+      <link rel="stylesheet" href="/styles/cards.css?v=v24.2">
     </noscript>
 
     <!-- Firebase compat SDKs -->
@@ -1099,6 +1101,33 @@
                       <p class="settings-hint" data-i18n="restore_your_data">Restore your data from a previously exported Flicklet backup file</p>
                     </div>
 
+                    <!-- Not Interested Management -->
+                    <div class="settings-control-group">
+                      <h4 class="settings-subtitle">🚫 Not Interested List</h4>
+                      <p class="settings-description">Manage items you don't want to see in recommendations</p>
+                      
+                      <div class="not-interested-controls">
+                        <button id="viewNotInterestedBtn" class="btn btn--secondary">
+                          👁️ View Not Interested Items
+                        </button>
+                        <button id="clearNotInterestedBtn" class="btn btn--danger">
+                          🗑️ Clear All
+                        </button>
+                      </div>
+                      
+                      <div id="notInterestedList" class="not-interested-list" style="display: none;">
+                        <div class="not-interested-list__header">
+                          <h5>Items you're not interested in:</h5>
+                          <button id="closeNotInterestedBtn" class="btn btn--sm btn--secondary">×</button>
+                        </div>
+                        <div id="notInterestedItems" class="not-interested-items">
+                          <!-- Items will be populated here -->
+                        </div>
+                      </div>
+                      
+                      <p class="settings-hint">Items marked as "Not Interested" won't appear in your Discover recommendations</p>
+                    </div>
+
                     <!-- Share Lists -->
                     <div class="settings-control-group">
                       <button id="shareOpenBtn" class="btn btn--secondary" data-action="share-lists" data-share-title="Flicklet — My List" data-share-url="" title="Share your lists" aria-label="Share your TV and movie lists">
@@ -1839,6 +1868,7 @@
     <script src="/scripts/pro-gate.js"></script>
     <script src="/js/language-manager.js"></script>
     <script src="/js/i18n.js"></script>
+    <script src="/js/components/poster-card.js"></script>
 
     <!-- TMDB Image Utilities (must load before components that use it) -->
     <script src="/scripts/tmdb-images.js"></script>

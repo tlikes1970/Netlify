@@ -215,39 +215,11 @@ window.loadListContent = function loadListContent(listType) {
   // Set up poster card grid layout
   container.className = 'poster-cards-grid';
   
-  // Use new PosterCard system if available
-  if (window.PosterCard && window.CardDataNormalizer) {
+  // Use new createPosterCard system
+  if (window.createPosterCard) {
     allItems.forEach(item => {
-      // Normalize the item data
-      const normalizedData = window.CardDataNormalizer.normalize(item, 'user-list', listType);
-      
-      if (normalizedData) {
-        // Create PosterCard with section-specific configuration
-        const card = window.PosterCard({
-          id: normalizedData.id,
-          mediaType: normalizedData.mediaType,
-          title: normalizedData.title,
-          posterUrl: normalizedData.posterUrl,
-          posterPath: normalizedData.posterPath,
-          year: normalizedData.year,
-          rating: normalizedData.rating,
-          runtime: normalizedData.runtime,
-          season: normalizedData.season,
-          episode: normalizedData.episode,
-          badges: normalizedData.badges,
-          isNew: normalizedData.isNew,
-          isAvailable: normalizedData.isAvailable,
-          progress: normalizedData.progress,
-          quickActions: normalizedData.quickActions,
-          overflowActions: normalizedData.overflowActions,
-          onOpenDetails: () => {
-            if (window.openTMDBLink) {
-              window.openTMDBLink(item.id, item.media_type || 'movie');
-            }
-          },
-          section: listType
-        });
-        
+      const card = window.createPosterCard(item, listType);
+      if (card) {
         container.appendChild(card);
       }
     });
@@ -327,20 +299,930 @@ function getNextList(currentList) {
 
 // ---- Discover ----
 window.loadDiscoverContent = function loadDiscoverContent() {
-  const section = document.getElementById('discoverSection');
-  if (!section) return;
+  const container = document.getElementById('discoverList');
+  if (!container) return;
   
-  // Call renderDiscover to actually load recommendations
-  if (typeof renderDiscover === 'function') {
-    renderDiscover();
-  } else {
-    section.innerHTML = `<div class="empty-state"><h3>Discover</h3><p>Recommendations coming soon.</p></div>`;
-  }
+  // Set up poster card grid layout
+  container.className = 'poster-cards-grid';
+  
+  // Show loading state
+  container.innerHTML = `
+    <div class="poster-cards-loading">
+      <div class="poster-cards-loading__spinner">⏳</div>
+      <div class="poster-cards-loading__text">Loading recommendations...</div>
+    </div>
+  `;
+  
+  // Load recommendations
+  loadDiscoverRecommendations();
 };
+
+/**
+ * Load discover recommendations from TMDB
+ */
+async function loadDiscoverRecommendations() {
+  try {
+    const container = document.getElementById('discoverList');
+    if (!container) return;
+    
+    // Get not interested items to filter out
+    const notInterested = getNotInterestedItems();
+    
+    // Load popular movies and TV shows
+    const [moviesResponse, tvResponse] = await Promise.all([
+      fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${window.TMDB_API_KEY}&page=1`),
+      fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${window.TMDB_API_KEY}&page=1`)
+    ]);
+    
+    if (!moviesResponse.ok || !tvResponse.ok) {
+      throw new Error('Failed to fetch recommendations');
+    }
+    
+    const moviesData = await moviesResponse.json();
+    const tvData = await tvResponse.json();
+    
+    // Combine and filter results
+    const allItems = [
+      ...moviesData.results.map(item => ({ ...item, media_type: 'movie' })),
+      ...tvData.results.map(item => ({ ...item, media_type: 'tv' }))
+    ];
+    
+    // Filter out not interested items
+    const filteredItems = allItems.filter(item => 
+      !notInterested.some(notItem => 
+        notItem.id === item.id && notItem.media_type === item.media_type
+      )
+    );
+    
+    // Shuffle and take first 20
+    const shuffled = filteredItems.sort(() => Math.random() - 0.5);
+    const recommendations = shuffled.slice(0, 20);
+    
+    // Render recommendations
+    if (recommendations.length === 0) {
+      container.innerHTML = `
+        <div class="poster-cards-empty">
+          <div class="poster-cards-empty__icon">✨</div>
+          <div class="poster-cards-empty__title">No Recommendations</div>
+          <div class="poster-cards-empty__description">Try adjusting your preferences or check back later.</div>
+        </div>
+      `;
+      return;
+    }
+    
+    // Clear loading state
+    container.innerHTML = '';
+    
+    // Create poster cards
+    recommendations.forEach(item => {
+      const card = createDiscoverCard(item);
+      if (card) {
+        container.appendChild(card);
+      }
+    });
+    
+  } catch (error) {
+    console.error('Failed to load discover recommendations:', error);
+    const container = document.getElementById('discoverList');
+    if (container) {
+      container.innerHTML = `
+        <div class="poster-cards-error">
+          <div class="poster-cards-error__icon">❌</div>
+          <div class="poster-cards-error__title">Failed to Load</div>
+          <div class="poster-cards-error__description">Unable to load recommendations. Please try again later.</div>
+          <button class="btn btn--primary poster-cards-error__retry" onclick="loadDiscoverContent()">
+            Try Again
+          </button>
+        </div>
+      `;
+    }
+  }
+}
+
+/**
+ * Create discover card with not interested button
+ * @param {Object} item - Item data
+ * @returns {HTMLElement} Card element
+ */
+function createDiscoverCard(item) {
+  if (!window.createPosterCard) return null;
+  
+  const card = window.createPosterCard(item, 'discover');
+  if (!card) return null;
+  
+  // Add not interested button
+  const actions = card.querySelector('.poster-card__actions');
+  if (actions) {
+    const notInterestedBtn = document.createElement('button');
+    notInterestedBtn.className = 'btn btn--sm btn--danger poster-card__not-interested';
+    notInterestedBtn.innerHTML = 'Not Interested';
+    notInterestedBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      addToNotInterested(item);
+      card.remove();
+      showToast('info', 'Added to Not Interested', `${item.title || item.name} won't appear in recommendations`);
+    });
+    
+    actions.insertBefore(notInterestedBtn, actions.firstChild);
+  }
+  
+  return card;
+}
+
+// ---- Not Interested Database ----
+
+/**
+ * Get all not interested items
+ * @returns {Array} Array of not interested items
+ */
+function getNotInterestedItems() {
+  try {
+    const stored = localStorage.getItem('flicklet-not-interested');
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('Failed to get not interested items:', error);
+    return [];
+  }
+}
+
+/**
+ * Add item to not interested list
+ * @param {Object} item - Item to add
+ */
+function addToNotInterested(item) {
+  try {
+    const notInterested = getNotInterestedItems();
+    const exists = notInterested.some(notItem => 
+      notItem.id === item.id && notItem.media_type === item.media_type
+    );
+    
+    if (!exists) {
+      notInterested.push({
+        id: item.id,
+        title: item.title || item.name,
+        media_type: item.media_type,
+        added_date: new Date().toISOString()
+      });
+      
+      localStorage.setItem('flicklet-not-interested', JSON.stringify(notInterested));
+    }
+  } catch (error) {
+    console.error('Failed to add to not interested:', error);
+  }
+}
+
+/**
+ * Remove item from not interested list
+ * @param {string|number} itemId - Item ID
+ * @param {string} mediaType - Media type
+ */
+function removeFromNotInterested(itemId, mediaType) {
+  try {
+    const notInterested = getNotInterestedItems();
+    const filtered = notInterested.filter(notItem => 
+      !(notItem.id === itemId && notItem.media_type === mediaType)
+    );
+    
+    localStorage.setItem('flicklet-not-interested', JSON.stringify(filtered));
+  } catch (error) {
+    console.error('Failed to remove from not interested:', error);
+  }
+}
+
+/**
+ * Clear all not interested items
+ */
+function clearNotInterested() {
+  try {
+    localStorage.removeItem('flicklet-not-interested');
+  } catch (error) {
+    console.error('Failed to clear not interested:', error);
+  }
+}
+
+// ---- Toast Notifications ----
+window.showToast = function showToast(type, title, message) {
+  // Create toast container if it doesn't exist
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.className = `toast toast--${type}`;
+  
+  const icons = {
+    success: '✅',
+    error: '❌',
+    info: 'ℹ️'
+  };
+  
+  toast.innerHTML = `
+    <div class="toast__icon">${icons[type] || 'ℹ️'}</div>
+    <div class="toast__content">
+      <div class="toast__title">${title}</div>
+      <div class="toast__message">${message}</div>
+    </div>
+    <button class="toast__close" aria-label="Close notification">×</button>
+  `;
+  
+  // Add close functionality
+  const closeBtn = toast.querySelector('.toast__close');
+  closeBtn.addEventListener('click', () => {
+    toast.remove();
+  });
+  
+  // Add to container
+  container.appendChild(toast);
+  
+  // Animate in
+  setTimeout(() => {
+    toast.classList.add('visible');
+  }, 10);
+  
+  // Auto remove after 5 seconds
+  setTimeout(() => {
+    if (toast.parentNode) {
+      toast.classList.remove('visible');
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.remove();
+        }
+      }, 300);
+    }
+  }, 5000);
+};
+
+// ---- Modal Functions ----
+
+/**
+ * Open notes modal for an item
+ * @param {Object} item - Item data
+ */
+window.openNotesModal = function openNotesModal(item) {
+  // Create modal backdrop
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.dataset.modal = 'notes';
+  
+  // Create modal content
+  const modal = document.createElement('div');
+  modal.className = 'modal modal--notes';
+  
+  // Get existing notes
+  const existingNotes = getItemNotes(item.id) || '';
+  
+  modal.innerHTML = `
+    <div class="modal__header">
+      <h3 class="modal__title">Notes for ${item.title || item.name}</h3>
+      <button class="modal__close" aria-label="Close modal">×</button>
+    </div>
+    <div class="modal__body">
+      <textarea class="modal__textarea" placeholder="Add your notes about this show or movie..." rows="8">${existingNotes}</textarea>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--secondary modal__cancel">Cancel</button>
+      <button class="btn btn--primary modal__save">Save Notes</button>
+    </div>
+  `;
+  
+  backdrop.appendChild(modal);
+  document.body.appendChild(backdrop);
+  
+  // Add event listeners
+  const closeBtn = modal.querySelector('.modal__close');
+  const cancelBtn = modal.querySelector('.modal__cancel');
+  const saveBtn = modal.querySelector('.modal__save');
+  const textarea = modal.querySelector('.modal__textarea');
+  
+  const closeModal = () => {
+    backdrop.remove();
+  };
+  
+  closeBtn.addEventListener('click', closeModal);
+  cancelBtn.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) closeModal();
+  });
+  
+  saveBtn.addEventListener('click', () => {
+    const notes = textarea.value.trim();
+    saveItemNotes(item.id, notes);
+    showToast('success', 'Notes Saved', `Notes saved for ${item.title || item.name}`);
+    closeModal();
+  });
+  
+  // Focus textarea
+  setTimeout(() => textarea.focus(), 100);
+};
+
+/**
+ * Open episode guide modal for a TV show
+ * @param {Object} item - Item data
+ */
+window.openEpisodeGuideModal = function openEpisodeGuideModal(item) {
+  // Create modal backdrop
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.dataset.modal = 'episodes';
+  
+  // Create modal content
+  const modal = document.createElement('div');
+  modal.className = 'modal modal--episodes';
+  
+  modal.innerHTML = `
+    <div class="modal__header">
+      <h3 class="modal__title">Episode Guide - ${item.title || item.name}</h3>
+      <button class="modal__close" aria-label="Close modal">×</button>
+    </div>
+    <div class="modal__body">
+      <div class="episode-guide">
+        <div class="episode-guide__seasons">
+          <label for="seasonSelect">Season:</label>
+          <select id="seasonSelect" class="episode-guide__select">
+            <option value="1">Season 1</option>
+            <option value="2">Season 2</option>
+            <option value="3">Season 3</option>
+          </select>
+        </div>
+        <div class="episode-guide__episodes">
+          <div class="episode-guide__episode">
+            <div class="episode-guide__episode-number">S1E1</div>
+            <div class="episode-guide__episode-title">Pilot</div>
+            <div class="episode-guide__episode-date">Jan 15, 2023</div>
+            <button class="btn btn--sm episode-guide__watch-btn">Mark Watched</button>
+          </div>
+          <div class="episode-guide__episode">
+            <div class="episode-guide__episode-number">S1E2</div>
+            <div class="episode-guide__episode-title">The Second Episode</div>
+            <div class="episode-guide__episode-date">Jan 22, 2023</div>
+            <button class="btn btn--sm episode-guide__watch-btn">Mark Watched</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--secondary modal__close">Close</button>
+    </div>
+  `;
+  
+  backdrop.appendChild(modal);
+  document.body.appendChild(backdrop);
+  
+  // Add event listeners
+  const closeBtn = modal.querySelector('.modal__close');
+  const backdropClose = modal.querySelector('.modal__close');
+  
+  const closeModal = () => {
+    backdrop.remove();
+  };
+  
+  closeBtn.addEventListener('click', closeModal);
+  backdropClose.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) closeModal();
+  });
+};
+
+/**
+ * Confirm remove item
+ * @param {Object} item - Item data
+ * @param {string} section - Section type
+ */
+window.confirmRemoveItem = function confirmRemoveItem(item, section) {
+  // Create modal backdrop
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.dataset.modal = 'remove';
+  
+  // Create modal content
+  const modal = document.createElement('div');
+  modal.className = 'modal modal--remove';
+  
+  modal.innerHTML = `
+    <div class="modal__header">
+      <h3 class="modal__title">Remove Item</h3>
+      <button class="modal__close" aria-label="Close modal">×</button>
+    </div>
+    <div class="modal__body">
+      <p>Are you sure you want to remove <strong>${item.title || item.name}</strong> from your ${section} list?</p>
+      <p class="modal__warning">This action cannot be undone.</p>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--secondary modal__cancel">Cancel</button>
+      <button class="btn btn--danger modal__confirm">Remove</button>
+    </div>
+  `;
+  
+  backdrop.appendChild(modal);
+  document.body.appendChild(backdrop);
+  
+  // Add event listeners
+  const closeBtn = modal.querySelector('.modal__close');
+  const cancelBtn = modal.querySelector('.modal__cancel');
+  const confirmBtn = modal.querySelector('.modal__confirm');
+  
+  const closeModal = () => {
+    backdrop.remove();
+  };
+  
+  closeBtn.addEventListener('click', closeModal);
+  cancelBtn.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) closeModal();
+  });
+  
+  confirmBtn.addEventListener('click', () => {
+    // Remove item from store
+    removeItemFromStore(item, section);
+    
+    // Update UI
+    const container = document.getElementById(`${section}List`);
+    if (container) {
+      const card = container.querySelector(`[data-id="${item.id}"]`);
+      if (card) {
+        card.remove();
+      }
+    }
+    
+    // Update tab counts
+    if (window.updateTabCounts) {
+      window.updateTabCounts();
+    }
+    
+    showToast('success', 'Item Removed', `${item.title || item.name} removed from ${section}`);
+    closeModal();
+  });
+};
+
+/**
+ * Open PRO teaser modal
+ */
+window.openProTeaserModal = function openProTeaserModal() {
+  // Create modal backdrop
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.dataset.modal = 'pro';
+  
+  // Create modal content
+  const modal = document.createElement('div');
+  modal.className = 'modal modal--pro';
+  
+  modal.innerHTML = `
+    <div class="modal__header">
+      <h3 class="modal__title">⭐ Flicklet PRO</h3>
+      <button class="modal__close" aria-label="Close modal">×</button>
+    </div>
+    <div class="modal__body">
+      <div class="pro-teaser">
+        <div class="pro-teaser__icon">⭐</div>
+        <h4 class="pro-teaser__title">Unlock Premium Features</h4>
+        <ul class="pro-teaser__features">
+          <li>📝 Unlimited notes for all shows & movies</li>
+          <li>📺 Detailed episode guides with air dates</li>
+          <li>📊 Advanced statistics and insights</li>
+          <li>🎨 Custom themes and layouts</li>
+          <li>☁️ Cloud sync across all devices</li>
+        </ul>
+        <div class="pro-teaser__price">
+          <span class="pro-teaser__amount">$4.99</span>
+          <span class="pro-teaser__period">/month</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--secondary modal__close">Maybe Later</button>
+      <button class="btn btn--primary modal__upgrade">Upgrade to PRO</button>
+    </div>
+  `;
+  
+  backdrop.appendChild(modal);
+  document.body.appendChild(backdrop);
+  
+  // Add event listeners
+  const closeBtn = modal.querySelector('.modal__close');
+  const upgradeBtn = modal.querySelector('.modal__upgrade');
+  
+  const closeModal = () => {
+    backdrop.remove();
+  };
+  
+  closeBtn.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) closeModal();
+  });
+  
+  upgradeBtn.addEventListener('click', () => {
+    showToast('info', 'Coming Soon', 'PRO upgrade will be available soon!');
+    closeModal();
+  });
+};
+
+/**
+ * Get item notes from localStorage
+ * @param {string|number} itemId - Item ID
+ * @returns {string} Notes text
+ */
+function getItemNotes(itemId) {
+  try {
+    const notes = localStorage.getItem(`flicklet-notes-${itemId}`);
+    return notes || '';
+  } catch (error) {
+    console.error('Failed to get item notes:', error);
+    return '';
+  }
+}
+
+/**
+ * Save item notes to localStorage
+ * @param {string|number} itemId - Item ID
+ * @param {string} notes - Notes text
+ */
+function saveItemNotes(itemId, notes) {
+  try {
+    if (notes.trim()) {
+      localStorage.setItem(`flicklet-notes-${itemId}`, notes);
+    } else {
+      localStorage.removeItem(`flicklet-notes-${itemId}`);
+    }
+  } catch (error) {
+    console.error('Failed to save item notes:', error);
+  }
+}
+
+/**
+ * Remove item from store
+ * @param {Object} item - Item data
+ * @param {string} section - Section type
+ */
+function removeItemFromStore(item, section) {
+  if (!window.appData) return;
+  
+  const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+  const mediaKey = mediaType === 'tv' ? 'tv' : 'movies';
+  
+  if (window.appData[mediaKey] && window.appData[mediaKey][section]) {
+    const list = window.appData[mediaKey][section];
+    const index = list.findIndex(i => i.id === item.id);
+    if (index !== -1) {
+      list.splice(index, 1);
+      
+      // Save to localStorage
+      if (window.saveAppData) {
+        window.saveAppData();
+      } else {
+        localStorage.setItem('flicklet-data', JSON.stringify(window.appData));
+      }
+    }
+  }
+}
+
+/**
+ * Setup Not Interested management handlers
+ */
+function setupNotInterestedHandlers() {
+  const viewBtn = document.getElementById('viewNotInterestedBtn');
+  const clearBtn = document.getElementById('clearNotInterestedBtn');
+  const closeBtn = document.getElementById('closeNotInterestedBtn');
+  const listContainer = document.getElementById('notInterestedList');
+  const itemsContainer = document.getElementById('notInterestedItems');
+  
+  if (viewBtn) {
+    viewBtn.addEventListener('click', () => {
+      loadNotInterestedList();
+      listContainer.style.display = 'block';
+    });
+  }
+  
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to clear all "Not Interested" items? This action cannot be undone.')) {
+        clearNotInterested();
+        showToast('success', 'Cleared', 'All "Not Interested" items have been removed');
+        if (listContainer) {
+          listContainer.style.display = 'none';
+        }
+      }
+    });
+  }
+  
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      if (listContainer) {
+        listContainer.style.display = 'none';
+      }
+    });
+  }
+}
+
+/**
+ * Load and display Not Interested list
+ */
+function loadNotInterestedList() {
+  const itemsContainer = document.getElementById('notInterestedItems');
+  if (!itemsContainer) return;
+  
+  const notInterested = getNotInterestedItems();
+  
+  if (notInterested.length === 0) {
+    itemsContainer.innerHTML = `
+      <div class="not-interested-empty">
+        <p>No items marked as "Not Interested"</p>
+      </div>
+    `;
+    return;
+  }
+  
+  const itemsHTML = notInterested.map(item => `
+    <div class="not-interested-item">
+      <div class="not-interested-item__info">
+        <div class="not-interested-item__title">${item.title}</div>
+        <div class="not-interested-item__type">${item.media_type === 'tv' ? 'TV Show' : 'Movie'}</div>
+        <div class="not-interested-item__date">Added: ${new Date(item.added_date).toLocaleDateString()}</div>
+      </div>
+      <button class="btn btn--sm btn--secondary not-interested-item__remove" 
+              data-id="${item.id}" 
+              data-media-type="${item.media_type}">
+        Remove
+      </button>
+    </div>
+  `).join('');
+  
+  itemsContainer.innerHTML = itemsHTML;
+  
+  // Add remove handlers
+  const removeButtons = itemsContainer.querySelectorAll('.not-interested-item__remove');
+  removeButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const itemId = button.dataset.id;
+      const mediaType = button.dataset.mediaType;
+      
+      removeFromNotInterested(itemId, mediaType);
+      showToast('success', 'Removed', 'Item removed from "Not Interested" list');
+      
+      // Reload the list
+      loadNotInterestedList();
+    });
+  });
+}
+
+/**
+ * Setup drag-reorder functionality for lists
+ */
+function setupDragReorder() {
+  // Add drag-reorder to all list containers
+  const listContainers = ['watchingList', 'wishlistList', 'watchedList'];
+  
+  listContainers.forEach(containerId => {
+    const container = document.getElementById(containerId);
+    if (container) {
+      makeSortable(container);
+    }
+  });
+}
+
+/**
+ * Make a container sortable with drag-reorder
+ * @param {HTMLElement} container - Container element
+ */
+function makeSortable(container) {
+  let draggedElement = null;
+  let draggedIndex = -1;
+  
+  // Add drag handles to all cards
+  const addDragHandles = () => {
+    const cards = container.querySelectorAll('.poster-card');
+    cards.forEach(card => {
+      if (!card.querySelector('.poster-card__drag-handle')) {
+        const dragHandle = document.createElement('div');
+        dragHandle.className = 'poster-card__drag-handle';
+        dragHandle.innerHTML = '⋮⋮';
+        dragHandle.setAttribute('draggable', 'true');
+        dragHandle.setAttribute('aria-label', 'Drag to reorder');
+        
+        // Add to actions area
+        const actions = card.querySelector('.poster-card__actions');
+        if (actions) {
+          actions.insertBefore(dragHandle, actions.firstChild);
+        }
+      }
+    });
+  };
+  
+  // Add drag handle styles
+  const addDragStyles = () => {
+    if (!document.getElementById('drag-reorder-styles')) {
+      const style = document.createElement('style');
+      style.id = 'drag-reorder-styles';
+      style.textContent = `
+        .poster-card__drag-handle {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          background: var(--color-surface-2, #f5f5f5);
+          border: 1px solid var(--color-border, #e0e0e0);
+          border-radius: 4px;
+          cursor: grab;
+          font-size: 12px;
+          color: var(--color-text-muted, #999999);
+          transition: all 0.2s ease;
+          margin-right: 8px;
+        }
+        
+        .poster-card__drag-handle:hover {
+          background: var(--color-primary-light, #fce4ec);
+          border-color: var(--color-primary, #e91e63);
+          color: var(--color-primary, #e91e63);
+        }
+        
+        .poster-card__drag-handle:active {
+          cursor: grabbing;
+        }
+        
+        .poster-card--dragging {
+          opacity: 0.5;
+          transform: rotate(5deg);
+          z-index: 1000;
+        }
+        
+        .poster-card--drag-over {
+          border-color: var(--color-primary, #e91e63);
+          background: var(--color-primary-light, #fce4ec);
+        }
+        
+        .poster-cards-grid--reordering {
+          cursor: grabbing;
+        }
+        
+        .poster-cards-grid--reordering .poster-card {
+          transition: transform 0.2s ease;
+        }
+        
+        @media (max-width: 768px) {
+          .poster-card__drag-handle {
+            width: 20px;
+            height: 20px;
+            font-size: 10px;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  };
+  
+  // Initialize
+  addDragStyles();
+  addDragHandles();
+  
+  // Set up drag events
+  container.addEventListener('dragstart', (e) => {
+    if (e.target.classList.contains('poster-card__drag-handle')) {
+      draggedElement = e.target.closest('.poster-card');
+      draggedIndex = Array.from(container.children).indexOf(draggedElement);
+      
+      draggedElement.classList.add('poster-card--dragging');
+      container.classList.add('poster-cards-grid--reordering');
+      
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', draggedElement.outerHTML);
+    }
+  });
+  
+  container.addEventListener('dragend', (e) => {
+    if (e.target.classList.contains('poster-card__drag-handle')) {
+      draggedElement.classList.remove('poster-card--dragging');
+      container.classList.remove('poster-cards-grid--reordering');
+      
+      // Remove drag-over classes
+      const cards = container.querySelectorAll('.poster-card');
+      cards.forEach(card => card.classList.remove('poster-card--drag-over'));
+      
+      draggedElement = null;
+      draggedIndex = -1;
+    }
+  });
+  
+  container.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    
+    const afterElement = getDragAfterElement(container, e.clientY);
+    const card = e.target.closest('.poster-card');
+    
+    if (card && card !== draggedElement) {
+      card.classList.add('poster-card--drag-over');
+    }
+  });
+  
+  container.addEventListener('dragleave', (e) => {
+    const card = e.target.closest('.poster-card');
+    if (card) {
+      card.classList.remove('poster-card--drag-over');
+    }
+  });
+  
+  container.addEventListener('drop', (e) => {
+    e.preventDefault();
+    
+    const afterElement = getDragAfterElement(container, e.clientY);
+    const card = e.target.closest('.poster-card');
+    
+    if (card && card !== draggedElement) {
+      if (afterElement == null) {
+        container.appendChild(draggedElement);
+      } else {
+        container.insertBefore(draggedElement, afterElement);
+      }
+      
+      // Update the underlying data
+      updateListOrder(container, draggedElement);
+    }
+    
+    // Clean up
+    const cards = container.querySelectorAll('.poster-card');
+    cards.forEach(card => card.classList.remove('poster-card--drag-over'));
+  });
+  
+  // Re-add drag handles when new cards are added
+  const observer = new MutationObserver(() => {
+    addDragHandles();
+  });
+  
+  observer.observe(container, { childList: true, subtree: true });
+}
+
+/**
+ * Get the element after which to insert the dragged element
+ * @param {HTMLElement} container - Container element
+ * @param {number} y - Y coordinate
+ * @returns {HTMLElement|null} Element after which to insert
+ */
+function getDragAfterElement(container, y) {
+  const draggableElements = [...container.querySelectorAll('.poster-card:not(.poster-card--dragging)')];
+  
+  return draggableElements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    
+    if (offset < 0 && offset > closest.offset) {
+      return { offset: offset, element: child };
+    } else {
+      return closest;
+    }
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+/**
+ * Update the underlying data order after drag-reorder
+ * @param {HTMLElement} container - Container element
+ * @param {HTMLElement} draggedElement - Dragged element
+ */
+function updateListOrder(container, draggedElement) {
+  if (!window.appData) return;
+  
+  const containerId = container.id;
+  const section = containerId.replace('List', '');
+  const mediaType = section === 'watching' || section === 'wishlist' || section === 'watched' ? 
+    (containerId.includes('tv') ? 'tv' : 'movies') : 'tv';
+  
+  const mediaKey = mediaType === 'tv' ? 'tv' : 'movies';
+  
+  if (!window.appData[mediaKey] || !window.appData[mediaKey][section]) return;
+  
+  // Get new order from DOM
+  const cards = container.querySelectorAll('.poster-card');
+  const newOrder = Array.from(cards).map(card => {
+    const itemId = card.dataset.id || card.querySelector('[data-id]')?.dataset.id;
+    return window.appData[mediaKey][section].find(item => item.id == itemId);
+  }).filter(Boolean);
+  
+  // Update the data
+  window.appData[mediaKey][section] = newOrder;
+  
+  // Save to localStorage
+  if (window.saveAppData) {
+    window.saveAppData();
+  } else {
+    localStorage.setItem('flicklet-data', JSON.stringify(window.appData));
+  }
+  
+  showToast('success', 'Reordered', 'List order updated');
+}
 
 window.loadSettingsContent = function loadSettingsContent() {
   // Settings content is now in HTML, just add event handlers for new data tools
   FlickletDebug.info('⚙️ Loading settings content - adding data tools handlers');
+  
+  // Add Not Interested management handlers
+  setupNotInterestedHandlers();
+  
+  // Add drag-reorder functionality
+  setupDragReorder();
   
   // New robust export/import handlers
   const btnExport = document.getElementById('btnExport');
@@ -843,18 +1725,8 @@ function findItemList(id, mediaType) {
 // toggleDarkMode is now centralized in utils.js
 
 // ---- Language Management ----
-window.changeLanguage = function changeLanguage(lang) {
-  if (!appData.settings) appData.settings = {};
-  appData.settings.lang = lang;
-  saveAppData();
-  
-  // Apply translations
-  if (typeof applyTranslations === 'function') {
-    applyTranslations();
-  }
-  
-  showNotification(`Language changed to ${lang}.`, 'success');
-};
+// OLD changeLanguage function removed - now using LanguageManager
+// The new changeLanguage is defined in language-manager.js
 
 // ---- FlickWord Game ----
 window.startDailyCountdown = function startDailyCountdown() {

@@ -86,6 +86,11 @@
         // 2) Apply theme & language
         this.applyTheme();
         this.applyLanguage();
+        
+        // 2.5) Re-initialize language manager after appData is loaded
+        if (window.LanguageManager && typeof window.LanguageManager.reinitialize === 'function') {
+          window.LanguageManager.reinitialize();
+        }
 
         // 3) Initialize Firebase auth listener
         this.initFirebase();
@@ -1740,42 +1745,52 @@ waitForFirebaseReady() {
                     });
                   } else {
                     // Fallback to old system
-                    searchResults.innerHTML = `
-                      <h4>🎯 Search Results <span class="count">${results.results.length}</span></h4>
-                      <div class="search-results-grid">
-                        ${results.results
-                          .filter(item => item.media_type !== 'person') // Filter out person results
-                          .map(item => {
-                            const title = item.title || item.name || 'Unknown';
-                            const year = item.release_date ? new Date(item.release_date).getFullYear() : 
-                                        item.first_air_date ? new Date(item.first_air_date).getFullYear() : '';
-                            const mediaType = item.media_type || 'movie';
-                            const poster = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
-                            
-                            return `
-                              <div class="search-result-item" data-id="${item.id}" data-media-type="${mediaType}">
-                                <div class="search-result-poster">
-                                  ${poster ? `<img src="${poster}" alt="${title}" loading="lazy">` : 
-                                    '<div class="poster-placeholder">📺</div>'}
-                                </div>
-                                <div class="search-result-content">
-                                  <h4 class="search-result-title">${title}</h4>
-                                  <p class="search-result-year">${year || 'Unknown Year'}</p>
-                                  <p class="search-result-type">${mediaType}</p>
-                                  <div class="search-result-actions">
-                                    <button class="btn btn--sm" data-action="add" data-id="${item.id}" data-list="wishlist">
-                                      Add to Wishlist
-                                    </button>
-                                    <button class="btn btn--sm btn--secondary" data-action="add" data-id="${item.id}" data-list="watching">
-                                      Add to Watching
-                                    </button>
-                                  </div>
+                  // Set up poster card grid layout
+                  searchResults.className = 'poster-cards-grid';
+                  
+                  searchResults.innerHTML = `
+                    <h4>🎯 Search Results <span class="count">${results.results.length}</span></h4>
+                    <div class="poster-cards-grid">
+                      ${results.results
+                        .filter(item => item.media_type !== 'person') // Filter out person results
+                        .map(item => {
+                          // Use createPosterCard if available
+                          if (window.createPosterCard) {
+                            const card = window.createPosterCard(item, 'search');
+                            return card ? card.outerHTML : '';
+                          }
+                          
+                          // Fallback to simple HTML
+                          const title = item.title || item.name || 'Unknown';
+                          const year = item.release_date ? new Date(item.release_date).getFullYear() : 
+                                      item.first_air_date ? new Date(item.first_air_date).getFullYear() : '';
+                          const mediaType = item.media_type || 'movie';
+                          const poster = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
+                          
+                          return `
+                            <div class="search-result-item" data-id="${item.id}" data-media-type="${mediaType}">
+                              <div class="search-result-poster">
+                                ${poster ? `<img src="${poster}" alt="${title}" loading="lazy">` : 
+                                  '<div class="poster-placeholder">📺</div>'}
+                              </div>
+                              <div class="search-result-content">
+                                <h4 class="search-result-title">${title}</h4>
+                                <p class="search-result-year">${year || 'Unknown Year'}</p>
+                                <p class="search-result-type">${mediaType}</p>
+                                <div class="search-result-actions">
+                                  <button class="btn btn--sm" data-action="add" data-id="${item.id}" data-list="wishlist">
+                                    Add to Wishlist
+                                  </button>
+                                  <button class="btn btn--sm btn--secondary" data-action="add" data-id="${item.id}" data-list="watching">
+                                    Add to Watching
+                                  </button>
                                 </div>
                               </div>
-                            `;
-                          }).join('')}
-                      </div>
-                    `;
+                            </div>
+                          `;
+                        }).join('')}
+                    </div>
+                  `;
                   }
                   }
                 } else {
