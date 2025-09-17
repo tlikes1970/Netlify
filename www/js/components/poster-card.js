@@ -41,7 +41,7 @@
         (item.poster_src || item.poster || (item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null));
 
       // Generate srcset for responsive images
-      const srcset = posterPath && typeof window.tmdbSrcset === 'function' ? 
+      const srcset = item.poster_path && typeof window.tmdbSrcset === 'function' ? 
         window.tmdbSrcset(item.poster_path) : 
         '';
 
