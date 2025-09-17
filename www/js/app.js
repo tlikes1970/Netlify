@@ -96,7 +96,10 @@
         // 4) Bind global UI listeners
         this.setupEventListeners();
 
-        // 5) Ensure a default active tab and initial render
+        // 5) Setup settings tabs
+        this.setupSettingsTabs();
+
+        // 6) Ensure a default active tab and initial render
         this.switchToTab('home');
         this.updateUI();
         
@@ -1264,15 +1267,13 @@ waitForFirebaseReady() {
           case 'username-skip':
             // Username modal skip
             e.preventDefault();
-            e.stopPropagation();
-            // Find the username modal and trigger skip
-            const usernameModal = document.getElementById('username-modal');
-            if (usernameModal) {
-              // Find the parent wrapper (the div that was created in promptForUsername)
-              const wrapper = usernameModal.parentElement;
-              if (wrapper && wrapper._usernameDone) {
-                wrapper._usernameDone(null);
-              }
+            break;
+          case 'add':
+            // Handle add actions
+            const id = btn.dataset.id || btn.getAttribute('data-id');
+            const list = btn.dataset.list || btn.getAttribute('data-list') || 'wishlist';
+            if (id && typeof window.addToListFromCache === 'function') {
+              window.addToListFromCache(Number(id), list);
             }
             break;
           case 'username-save':
@@ -2098,6 +2099,44 @@ waitForFirebaseReady() {
       // If your app fires a custom event on tab switch, hook it:
       document.addEventListener('tab:changed', moveFABsToDock);
     },
+
+    // Settings tab functionality
+    setupSettingsTabs() {
+      const settingsTabs = document.querySelectorAll('.settings-tabs button[data-target]');
+      settingsTabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const targetId = tab.getAttribute('data-target');
+          console.log('Settings tab clicked:', targetId);
+          
+          // Remove active class from all tabs
+          settingsTabs.forEach(btn => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-selected', 'false');
+          });
+          
+          // Add active class to clicked tab
+          tab.classList.add('active');
+          tab.setAttribute('aria-selected', 'true');
+          
+          // Hide all sections
+          const sections = document.querySelectorAll('.settings-section');
+          sections.forEach(section => {
+            section.classList.remove('active');
+            section.style.display = 'none';
+          });
+          
+          // Show target section
+          const targetSection = document.querySelector(targetId);
+          if (targetSection) {
+            targetSection.classList.add('active');
+            targetSection.style.display = 'block';
+          }
+        });
+      });
+    },
   };
 
   // Expose singleton
@@ -2108,4 +2147,59 @@ waitForFirebaseReady() {
   
   // Expose UserViewModel globally for verification
   window.UserViewModel = UserViewModel;
+
+  // Global functions for HTML onclick handlers
+  window.saveDisplayName = function() {
+    const input = document.getElementById('displayNameInput');
+    if (!input) {
+      console.error('Display name input not found');
+      return;
+    }
+    
+    const newName = input.value.trim();
+    if (!newName) {
+      console.warn('Display name is empty');
+      return;
+    }
+    
+    try {
+      // Update appData
+      if (!window.appData) {
+        window.appData = { settings: {} };
+      }
+      if (!window.appData.settings) {
+        window.appData.settings = {};
+      }
+      
+      window.appData.settings.username = newName;
+      window.appData.settings.displayName = newName;
+      
+      // Save to localStorage
+      if (typeof window.saveAppData === 'function') {
+        window.saveAppData();
+      } else {
+        localStorage.setItem('flicklet-data', JSON.stringify(window.appData));
+      }
+      
+      // Update UI
+      UserViewModel.update({ displayName: newName });
+      
+      console.log('✅ Display name saved:', newName);
+      
+      // Show success feedback
+      const btn = document.getElementById('saveNameBtn');
+      if (btn) {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✅ Saved!';
+        btn.style.background = '#51cf66';
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.background = '';
+        }, 2000);
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to save display name:', error);
+    }
+  };
 })();

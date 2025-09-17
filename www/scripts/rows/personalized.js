@@ -362,6 +362,11 @@
     }
   }
 
+  // Expose functions globally
+  window.addToList = addToList;
+  window.openMore = openMore;
+  window.openDetails = openDetails;
+
   /**
    * Create a legacy card element (fallback)
    * @param {Object} item - TMDB item data
