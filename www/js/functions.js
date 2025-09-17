@@ -229,10 +229,15 @@ window.loadListContent = function loadListContent(listType) {
   
   if (window.createPosterCard) {
     console.log('✅ Using createPosterCard for', allItems.length, 'items');
-    allItems.forEach(item => {
+    console.log('🔍 Items data:', allItems);
+    allItems.forEach((item, index) => {
+      console.log(`🔍 Processing item ${index}:`, item);
       const card = window.createPosterCard(item, listType);
       if (card) {
+        console.log('✅ Card created successfully for item:', item.title || item.name);
         container.appendChild(card);
+      } else {
+        console.log('❌ Failed to create card for item:', item.title || item.name);
       }
     });
   } else {
@@ -1696,7 +1701,19 @@ window.loadSettingsContent = function loadSettingsContent() {
 // Old flaky handlers replaced by robust implementation above
 
 // ---- Item Management ----
-// addToListFromCache function removed - using the real implementation from inline-script-02.js
+// addToListFromCache function - simplified implementation
+window.addToListFromCache = function addToListFromCache(id, list) {
+  console.log('📝 addToListFromCache called with:', { id, list });
+  
+  // For now, just log that this was called
+  // The actual implementation would need to find the item in search cache
+  // and add it to the appropriate list
+  console.warn('⚠️ addToListFromCache not fully implemented - item not added');
+  
+  if (typeof window.showNotification === 'function') {
+    window.showNotification('Add function not fully implemented', 'warning');
+  }
+};
 
 window.moveItem = function moveItem(id, dest) {
   const mediaType = findItemMediaType(id);

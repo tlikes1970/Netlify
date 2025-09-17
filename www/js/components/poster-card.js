@@ -20,7 +20,12 @@
    * @returns {HTMLElement} Poster card element
    */
   function createPosterCard(item, section = 'discover') {
-    if (!item) return null;
+    if (!item) {
+      console.log('❌ createPosterCard: No item provided');
+      return null;
+    }
+
+    console.log('🎴 createPosterCard called with:', { item, section });
 
     try {
       const card = document.createElement('article');
