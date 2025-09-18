@@ -51,8 +51,6 @@
       "title": "Pro",
       "controls": [
         { "key": "previewPro",     "type": "button", "label": "Preview Pro Features", "selector": "#previewProBtn", "action": "toggleProPreview" },
-        { "key": "extraTrivia",    "type": "toggle", "label": "Extra Trivia",         "selector": "#extraTriviaToggle", "storageKey": "pref_extraTrivia" },
-        { "key": "exportCsv",      "type": "toggle", "label": "Export CSV",           "selector": "#exportCsvToggle", "storageKey": "pref_exportCsv" },
         { "key": "proFeaturesList","type": "label",  "label": "Pro Features List",    "selector": "#proFeaturesList" }
       ]
     },
