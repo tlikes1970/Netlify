@@ -76,7 +76,18 @@ mobilePolishGate(); // Run immediately
 // ---- Data Ready Event Listener ----
 // Re-render when data is ready/updated
 window.addEventListener('app:data:ready', () => {
+  console.log('🔄 Data ready event received, updating lists...');
   ['watching','wishlist','watched'].forEach(loadListContent);
+  
+  // Also update tab counts
+  if (typeof window.updateTabCounts === 'function') {
+    window.updateTabCounts();
+  }
+  
+  // Update home content if on home tab
+  if (typeof window.loadHomeContent === 'function') {
+    window.loadHomeContent();
+  }
 });
 
 // ---- Tab / Render Pipeline ----
@@ -190,6 +201,8 @@ window.loadHomeContent = function loadHomeContent() {
  * Dependencies: createShowCard function, appData structure, container elements, moveItem and removeItemFromCurrentList functions
  */
 window.loadListContent = function loadListContent(listType) {
+  console.log(`🔄 Loading ${listType} content...`);
+  
   const container =
     document.getElementById(`${listType}Grid`) ||
     document.querySelector(`[data-section="${listType}"] .section-content`) ||
@@ -206,6 +219,12 @@ window.loadListContent = function loadListContent(listType) {
   const items = []
     .concat(window.appData?.tv?.[listType] || [])
     .concat(window.appData?.movies?.[listType] || []);
+
+  console.log(`📊 ${listType} items found:`, items.length, {
+    tv: window.appData?.tv?.[listType]?.length || 0,
+    movies: window.appData?.movies?.[listType]?.length || 0,
+    appData: !!window.appData
+  });
 
   container.innerHTML = '';
   if (!items.length) {
