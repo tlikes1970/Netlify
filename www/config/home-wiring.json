@@ -18,7 +18,7 @@
     },
     {
       "key": "personalized",
-      "title": "🎨 Personalized Recommendations",
+      "title": "🎨 🎨 Personalized Recommendations",
       "headingSelector": "#personalized-section .preview-row-title",
       "containerSelector": "#personalized-content",
       "picker": "discover",
@@ -34,7 +34,7 @@
     },
     {
       "key": "inTheaters",
-      "title": "🎬 In Theaters Near You",
+      "title": "🎬 🎬 In Theaters Near You",
       "headingSelector": "#theaters-section .preview-row-title",
       "containerSelector": "#theaters-content",
       "picker": "inTheaters",

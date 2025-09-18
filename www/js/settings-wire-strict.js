@@ -126,6 +126,11 @@
   };
 
   function bindControl(control) {
+    if (!control.selector) {
+      console.warn(`[settings-wire] empty selector for control: ${control.key}`);
+      return;
+    }
+
     const element = document.querySelector(control.selector);
     if (!element) {
       console.warn(`[settings-wire] missing element: ${control.selector} for ${control.key}`);

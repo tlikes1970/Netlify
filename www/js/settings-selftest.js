@@ -53,7 +53,7 @@
           'button': 'button',
           'file': 'input',
           'multiselect': 'input',
-          'label': 'h3,h4,h5,div,span'
+          'label': 'h3,h4,h5,div,span,form'
         }[control.type];
 
         if (expectedTag && !element.matches(expectedTag)) {
