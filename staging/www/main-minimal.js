@@ -6,7 +6,7 @@
  * Dependencies: None
  */
 
-console.log("Flicklet TV Tracker v25.2 - Minimal main module loaded");
+console.log("Flicklet TV Tracker v26.0 - Minimal main module loaded");
 
 // Basic configuration
 window.Config = {
@@ -20,14 +20,14 @@ window.Config = {
     clientId: "",
   },
   app: {
-    version: "25.2",
+    version: "26.0",
     name: "Flicklet - TV & Movie Tracker",
   },
 };
 
 // Export for global access
 window.FlickletApp = {
-  version: "25.2",
+  version: "26.0",
   initialized: true,
   config: window.Config,
 };

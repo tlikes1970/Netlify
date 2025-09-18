@@ -16,11 +16,11 @@ import "./js/common-utils.js";
 // Import application modules
 import "./js/app.js";
 
-console.log("Flicklet TV Tracker v25.2 - Simple main module loaded");
+console.log("Flicklet TV Tracker v26.0 - Simple main module loaded");
 
 // Export for global access
 window.FlickletApp = {
-  version: "25.2",
+  version: "26.0",
   initialized: true,
   config: window.Config,
 };
