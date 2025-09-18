@@ -73,6 +73,12 @@ window.mobilePolishGate = function mobilePolishGate() {
 // Run mobile polish guard once
 mobilePolishGate(); // Run immediately
 
+// ---- Data Ready Event Listener ----
+// Re-render when data is ready/updated
+window.addEventListener('app:data:ready', () => {
+  ['watching','wishlist','watched'].forEach(loadListContent);
+});
+
 // ---- Tab / Render Pipeline ----
 // window.switchToTab is implemented in inline-script-02.js
 
@@ -184,129 +190,29 @@ window.loadHomeContent = function loadHomeContent() {
  * Dependencies: createShowCard function, appData structure, container elements, moveItem and removeItemFromCurrentList functions
  */
 window.loadListContent = function loadListContent(listType) {
-  const container = document.getElementById(`${listType}List`);
-  if (!container) return;
-  
-  FlickletDebug.info(`📋 Loading ${listType} content`);
+  const container =
+    document.getElementById(`${listType}Grid`) ||
+    document.querySelector(`[data-section="${listType}"] .section-content`) ||
+    document.querySelector(`#${listType}`) ||
+    (() => { const d = document.createElement('div'); d.id = `${listType}Grid`;
+             (document.querySelector('main,#app,#root,body')||document.body).appendChild(d); return d; })();
 
-  // Debug: Check appData structure
-  console.log('🔍 appData structure:', {
-    appData: window.appData,
-    tv: window.appData?.tv,
-    movies: window.appData?.movies,
-    tvItems: window.appData?.tv?.[listType],
-    movieItems: window.appData?.movies?.[listType]
-  });
+  container.className = 'poster-cards-grid';
 
-  const tvItems = appData.tv?.[listType] || [];
-  const movieItems = appData.movies?.[listType] || [];
-  const allItems = [...tvItems, ...movieItems];
-  
-  console.log(`📋 Found ${allItems.length} items for ${listType}:`, allItems);
-  console.log('🔍 Full appData structure:', {
-    appData: window.appData,
-    tv: window.appData?.tv,
-    movies: window.appData?.movies,
-    settings: window.appData?.settings
-  });
-  
-  if (allItems.length === 0) {
-    container.innerHTML = `<div class="empty-state"><p>No items in ${listType} list.</p></div>`;
+  if (typeof window.createPosterCard !== 'function') {
+    console.error('[cards] createPosterCard missing'); return;
+  }
+
+  const items = []
+    .concat(window.appData?.tv?.[listType] || [])
+    .concat(window.appData?.movies?.[listType] || []);
+
+  container.innerHTML = '';
+  if (!items.length) {
+    container.innerHTML = '<div class="poster-cards-empty">Nothing here yet.</div>';
     return;
   }
-
-  // Clear container first
-  container.innerHTML = '';
-  
-  // Set up poster card grid layout
-  container.className = 'poster-cards-grid';
-  
-  // Use new createPosterCard system
-  console.log('🔍 Checking createPosterCard availability:', {
-    createPosterCard: typeof window.createPosterCard,
-    windowKeys: Object.keys(window).filter(k => k.includes('Poster') || k.includes('Card'))
-  });
-  
-  if (window.createPosterCard) {
-    console.log('✅ Using createPosterCard for', allItems.length, 'items');
-    console.log('🔍 Items data:', allItems);
-    allItems.forEach((item, index) => {
-      console.log(`🔍 Processing item ${index}:`, item);
-      const card = window.createPosterCard(item, listType);
-      if (card) {
-        console.log('✅ Card created successfully for item:', item.title || item.name);
-        container.appendChild(card);
-      } else {
-        console.log('❌ Failed to create card for item:', item.title || item.name);
-      }
-    });
-  } else {
-    console.log('❌ createPosterCard not available, using fallback');
-    // Fallback to existing system
-    allItems.forEach(item => {
-      if (window.FLAGS?.cards_v2 && window.Card) {
-        // Use Card v2 for consistent poster display
-        const card = window.Card({
-          variant: 'poster',
-          id: item.id,
-          posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '',
-          title: item.name || item.title || 'Unknown Title',
-          subtitle: item.release_date?.slice(0, 4) || item.first_air_date?.slice(0, 4) || '',
-          rating: item.vote_average || 0,
-          badges: [],
-          primaryAction: {
-            label: 'Move',
-            onClick: () => moveItem(item.id, getNextList(listType))
-          },
-          overflowActions: [{
-            label: 'Remove',
-            onClick: () => removeItemFromCurrentList(item.id)
-          }],
-          onOpenDetails: () => openTMDBLink?.(item.id, item.media_type || 'movie')
-        });
-        container.appendChild(card);
-      } else {
-        // Fallback to horizontal row layout
-        const card = document.createElement('div');
-        card.className = 'list-item';
-        card.setAttribute('data-id', item.id);
-        card.setAttribute('data-media-type', item.media_type || 'movie');
-        
-        const posterUrl = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
-        const title = item.name || item.title || 'Unknown Title';
-        const year = item.release_date?.slice(0, 4) || item.first_air_date?.slice(0, 4) || '';
-        const rating = item.vote_average || 0;
-        const overview = item.overview || 'No description available';
-        
-        card.innerHTML = `
-          <div class="list-item-poster">
-            ${posterUrl ? `<img src="${posterUrl}" alt="${title}" loading="lazy">` : 
-              '<div class="poster-placeholder">📺</div>'}
-          </div>
-          <div class="list-item-content">
-            <div class="list-item-header">
-              <h3 class="list-item-title">${title}</h3>
-              <div class="list-item-meta">
-                <span class="list-item-year">${year || 'Unknown Year'}</span>
-                <span class="list-item-type">${item.media_type || 'movie'}</span>
-                <span class="list-item-rating">⭐ ${rating.toFixed(1)}</span>
-              </div>
-            </div>
-            <p class="list-item-description">${overview}</p>
-            <div class="list-item-actions">
-              <button class="btn btn--sm" data-action="move" data-id="${item.id}" data-list="${getNextList(listType)}">
-                Move
-              </button>
-              <button class="btn btn--sm btn--secondary" data-action="remove" data-id="${item.id}">
-                Remove
-              </button>
-            </div>
-          </div>
-        `;
-        container.appendChild(card);
-      }
-    });
-  }
+  for (const it of items) container.appendChild(window.createPosterCard(it, listType));
 };
 
 function getNextList(currentList) {
