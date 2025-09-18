@@ -59,7 +59,7 @@ export default defineConfig({
   ],
   // Define global constants
   define: {
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || "25.2"),
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || "26.0"),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
 });
