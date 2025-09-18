@@ -249,11 +249,8 @@
     <link rel="preload" href="/styles/main.css?v=v17.9" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="/styles/consolidated-layout.css?v=v17.9" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="/styles/action-bar.css?v=v22.21" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="/styles/card-system.css?v=v23.53" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="/styles/cards.css?v=v24.27" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="/styles/unified-poster-card.css?v=v25.0" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="/styles/modals.css?v=v25.0" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="/styles/clean-poster-card.css?v=v25.2" as="style" onload="this.onload=null;this.rel='stylesheet'">
     
     <!-- Fallback for browsers without preload support -->
     <noscript>
@@ -264,7 +261,6 @@
       <link rel="stylesheet" href="/styles/main.css?v=v17.9">
       <link rel="stylesheet" href="/styles/consolidated-layout.css?v=v17.9">
       <link rel="stylesheet" href="/styles/action-bar.css?v=v22.21">
-      <link rel="stylesheet" href="/styles/card-system.css?v=v23.53">
       <link rel="stylesheet" href="/styles/cards.css?v=v24.27">
     </noscript>
 
@@ -1453,7 +1449,6 @@
     
     <!-- Component modules (must load before functions that use them) -->
     <script src="/js/components/poster-card.js"></script>
-    <script src="/scripts/components/Card.js"></script>
     <script src="/scripts/components/ActionBar.js"></script>
 
     <!-- Core functionality (assumes utils/app exist) -->
@@ -1462,13 +1457,11 @@
     <script src="/js/functions.js"></script>
     
     <!-- Clean Unified Poster Card System v25.2 -->
-    <script src="/js/components/clean-poster-card.js?v=v25.2"></script>
     <script src="/js/modals/clean-episode-guide.js?v=v25.2"></script>
     <script src="/js/modals/clean-notes.js?v=v25.2"></script>
     <script src="/js/clean-data-loader.js?v=v25.2"></script>
     
     <!-- Utility modules -->
-    <script src="/scripts/utils/cardDataNormalizer.js"></script>
     
     <!-- Performance monitoring -->
     <script src="/scripts/performance-monitor.js"></script>
@@ -1884,7 +1877,6 @@
     <script src="/scripts/inline-script-03.js" defer></script>
     
     <!-- Global Card Actions System -->
-    <script src="/scripts/card-actions.js"></script>
     
     <!-- CSV Export System -->
     <script src="/scripts/export-csv.js"></script>

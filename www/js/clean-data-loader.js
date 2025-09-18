@@ -300,3 +300,4 @@
   console.log('✅ Clean Data Loader ready. Use window.loadUserDataAndReplaceCards() to manually load data.');
 
 })();
+

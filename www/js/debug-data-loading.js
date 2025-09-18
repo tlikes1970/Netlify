@@ -170,3 +170,4 @@
   console.log('✅ Data Loading Debug Script ready. Use window.debugDataLoading.check() to debug');
 
 })();
+

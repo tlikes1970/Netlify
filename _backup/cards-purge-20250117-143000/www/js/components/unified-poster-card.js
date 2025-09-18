@@ -1173,3 +1173,4 @@
   console.log('✅ Unified Poster Card component ready');
 
 })();
+

@@ -1173,3 +1173,4 @@
   console.log('✅ Clean Poster Card component ready');
 
 })();
+

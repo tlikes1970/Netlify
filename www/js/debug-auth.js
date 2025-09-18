@@ -180,3 +180,4 @@
   console.log('✅ Auth Debug Script ready. Use window.debugAuth.state() to debug');
 
 })();
+

@@ -367,3 +367,4 @@ The codebase suffers from **critical accessibility issues** primarily due to:
 
 
 
+

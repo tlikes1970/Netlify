@@ -1,22 +1,24 @@
 /**
- * Unified Card Migration Script
+ * Force Card Migration - Convert Old Cards to New Unified Cards
  * 
- * Process: Card System Migration
- * Purpose: Replace legacy card systems with unified poster card system
- * Data Source: Existing card implementations and DOM elements
- * Update Path: Update migration logic as new card systems are added
- * Dependencies: unified-poster-card.js, DOM manipulation
+ * Process: Force Card Migration
+ * Purpose: Convert all existing old cards to new unified poster cards
+ * Data Source: Existing DOM elements, appData
+ * Update Path: Remove after migration is complete
+ * Dependencies: unified-poster-card.js, appData
  */
 
 (function() {
   'use strict';
 
-  console.log('🔄 Unified Card Migration starting...');
+  console.log('🔄 Force Card Migration starting...');
 
   /**
-   * Migrate all existing cards to unified system
+   * Convert all old cards to new unified cards
    */
-  function migrateToUnifiedCards() {
+  function forceCardMigration() {
+    console.log('🔄 Starting force card migration...');
+    
     try {
       // Find all card containers
       const cardContainers = [
@@ -28,29 +30,45 @@
       ];
 
       let migratedCount = 0;
+      let totalOldCards = 0;
 
       cardContainers.forEach(containerId => {
         const container = document.getElementById(containerId);
-        if (!container) return;
+        if (!container) {
+          console.log(`⚠️ Container ${containerId} not found`);
+          return;
+        }
 
-        const section = containerId.replace('List', '');
-        const existingCards = container.querySelectorAll('.show-card, .poster-card, .list-item, .card');
+        // Find all old card types
+        const oldCards = container.querySelectorAll('.show-card, .poster-card, .list-item, .card:not(.unified-poster-card)');
+        totalOldCards += oldCards.length;
         
-        console.log(`🔄 Migrating ${existingCards.length} cards in ${section} section`);
+        console.log(`🔄 Found ${oldCards.length} old cards in ${containerId}`);
 
-        existingCards.forEach(card => {
+        oldCards.forEach(card => {
           try {
-            // Extract item data from existing card
-            const itemData = extractItemDataFromCard(card, section);
-            if (!itemData) return;
+            // Extract item data from old card
+            const itemData = extractItemDataFromCard(card, containerId);
+            if (!itemData) {
+              console.log('⚠️ Could not extract data from card:', card);
+              return;
+            }
 
+            // Determine section from container ID
+            const section = containerId.replace('List', '');
+            
             // Create new unified card
-            const newCard = window.createUnifiedPosterCard(itemData, section);
-            if (!newCard) return;
+            const newCard = createUnifiedPosterCard(itemData, section);
+            if (!newCard) {
+              console.log('⚠️ Could not create unified card for:', itemData.title);
+              return;
+            }
 
             // Replace old card with new one
             card.parentNode.replaceChild(newCard, card);
             migratedCount++;
+
+            console.log(`✅ Migrated card: ${itemData.title}`);
 
           } catch (error) {
             console.error('❌ Failed to migrate card:', error, card);
@@ -58,14 +76,11 @@
         });
       });
 
-      console.log(`✅ Migration complete: ${migratedCount} cards migrated`);
-      
-      // Update any remaining references
-      updateCardReferences();
+      console.log(`✅ Migration complete: ${migratedCount}/${totalOldCards} cards migrated`);
       
       // Show success message
       if (window.showToast) {
-        window.showToast('success', 'Migration Complete', `${migratedCount} cards updated to new design`);
+        window.showToast('success', 'Cards Updated', `${migratedCount} cards updated to new design`);
       }
 
     } catch (error) {
@@ -77,12 +92,9 @@
   }
 
   /**
-   * Extract item data from existing card element
-   * @param {HTMLElement} card - Existing card element
-   * @param {string} section - Section type
-   * @returns {Object|null} Item data
+   * Extract item data from old card element
    */
-  function extractItemDataFromCard(card, section) {
+  function extractItemDataFromCard(card, containerId) {
     try {
       // Get basic data from data attributes
       const id = card.dataset.id || card.dataset.tmdbId || card.dataset.tmdb_id;
@@ -133,6 +145,7 @@
       };
 
       // Add section-specific data
+      const section = containerId.replace('List', '');
       if (section === 'watching') {
         itemData.next_episode = card.dataset.nextEpisode ? JSON.parse(card.dataset.nextEpisode) : null;
         itemData.status = card.dataset.status;
@@ -148,57 +161,53 @@
   }
 
   /**
-   * Update any remaining references to old card systems
+   * Create unified poster card (fallback if not available globally)
    */
-  function updateCardReferences() {
-    try {
-      // Update any functions that create cards
-      if (window.createShowCard) {
-        window.createShowCard = window.createUnifiedPosterCard;
-      }
-      
-      if (window.createPosterCard && !window.createPosterCard.toString().includes('unified')) {
-        window.createPosterCard = window.createUnifiedPosterCard;
-      }
-
-      // Update any event listeners that target old card classes
-      const oldCardSelectors = ['.show-card', '.list-item', '.card:not(.unified-poster-card)'];
-      
-      oldCardSelectors.forEach(selector => {
-        const cards = document.querySelectorAll(selector);
-        cards.forEach(card => {
-          // Add unified card class if not already present
-          if (!card.classList.contains('unified-poster-card')) {
-            card.classList.add('unified-poster-card');
-          }
-        });
-      });
-
-      console.log('✅ Card references updated');
-
-    } catch (error) {
-      console.error('❌ Failed to update card references:', error);
+  function createUnifiedPosterCard(item, section) {
+    if (window.createUnifiedPosterCard) {
+      return window.createUnifiedPosterCard(item, section);
     }
+    
+    if (window.createPosterCard) {
+      return window.createPosterCard(item, section);
+    }
+    
+    console.error('❌ createUnifiedPosterCard function not available');
+    return null;
   }
 
   /**
-   * Initialize migration when DOM is ready
+   * Wait for unified card component to be available
    */
-  function initMigration() {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', migrateToUnifiedCards);
-    } else {
-      // DOM is already ready
-      setTimeout(migrateToUnifiedCards, 1000); // Wait for other scripts to load
-    }
+  function waitForUnifiedCard() {
+    return new Promise((resolve) => {
+      if (window.createUnifiedPosterCard || window.createPosterCard) {
+        resolve();
+      } else {
+        setTimeout(() => waitForUnifiedCard().then(resolve), 100);
+      }
+    });
+  }
+
+  /**
+   * Initialize migration
+   */
+  async function init() {
+    await waitForUnifiedCard();
+    
+    // Wait a bit for data to load
+    setTimeout(() => {
+      forceCardMigration();
+    }, 2000);
   }
 
   // Start migration
-  initMigration();
+  init();
 
-  // Expose migration function globally for manual use
-  window.migrateToUnifiedCards = migrateToUnifiedCards;
+  // Expose globally for manual use
+  window.forceCardMigration = forceCardMigration;
 
-  console.log('✅ Unified Card Migration script loaded');
+  console.log('✅ Force Card Migration script ready. Use window.forceCardMigration() to manually migrate.');
 
 })();
+

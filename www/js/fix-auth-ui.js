@@ -214,3 +214,4 @@
   console.log('✅ Auth UI Fix loaded. Use window.fixAuthUI() to manually fix.');
 
 })();
+
