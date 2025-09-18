@@ -2,7 +2,7 @@
   "rails": [
     {
       "key": "currentlyWatching",
-      "title": "Currently Watching",
+      "title": "👁️ Currently Watching",
       "headingSelector": "#currentlyWatchingPreview .preview-row-title",
       "containerSelector": "#currentlyWatchingScroll",
       "picker": "watching",
@@ -10,15 +10,15 @@
     },
     {
       "key": "nextUp",
-      "title": "Next Up This Week",
+      "title": "📅 Next Up This Week",
       "headingSelector": "#next-up-row .preview-row-title",
-      "containerSelector": ".next-up-scroll",
+      "containerSelector": ".next-up-scroll.row-inner",
       "picker": "nextUp",
       "limit": 30
     },
     {
       "key": "personalized",
-      "title": "Personalized Recommendations",
+      "title": "🎨 Personalized Recommendations",
       "headingSelector": "#personalized-section .preview-row-title",
       "containerSelector": "#personalized-content",
       "picker": "discover",
@@ -26,7 +26,7 @@
     },
     {
       "key": "curated",
-      "title": "Curated Sections",
+      "title": "🎯 Curated Sections",
       "headingSelector": "#curated-section .preview-row-title",
       "containerSelector": "#curatedSections",
       "picker": "curated",
@@ -34,7 +34,7 @@
     },
     {
       "key": "inTheaters",
-      "title": "In Theaters Near You",
+      "title": "🎬 In Theaters Near You",
       "headingSelector": "#theaters-section .preview-row-title",
       "containerSelector": "#theaters-content",
       "picker": "inTheaters",
