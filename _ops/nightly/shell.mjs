@@ -10,3 +10,4 @@ export default (cmd) => new Promise(res =>
     res({ ok: !e, stdout, stderr });
   })
 );
+

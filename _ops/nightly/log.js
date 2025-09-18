@@ -7,3 +7,4 @@ const fail = path.join(root, 'failures.log');
 
 export const log = (...a) => fs.appendFileSync(run, `[${new Date().toISOString()}] ${a.join(' ')}\n`);
 export const flog = (...a) => fs.appendFileSync(fail, `[${new Date().toISOString()}] ${a.join(' ')}\n`);
+

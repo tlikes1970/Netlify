@@ -8,3 +8,4 @@ const out = `_ops/nightly/backup/snap-${ts}.zip`;
 await shell(`git rev-parse --short HEAD`).then(r => log('HEAD', r.stdout?.trim() || ''));
 await shell(`git archive -o ${out} HEAD`);
 if (fs.existsSync(out)) log('SNAPSHOT', out); else flog('SNAPSHOT_FAIL', out);
+
