@@ -1299,7 +1299,12 @@ waitForFirebaseReady() {
             // Handled by inline-script-03.js - do nothing here
             break;
           case 'sign-in':
-            // Handled by auth.js - do nothing here
+            console.log('🔐 Sign-in button clicked');
+            if (window.showSignInModal) {
+              window.showSignInModal();
+            } else {
+              console.error('❌ showSignInModal not available');
+            }
             break;
           case 'share-lists':
             // Handled by inline-script-01.js - do nothing here
