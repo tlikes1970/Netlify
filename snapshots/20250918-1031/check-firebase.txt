@@ -1,0 +1,33 @@
+﻿
+staging\js\firebase-bundle.js:34:    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js');
+staging\js\firebase-bundle.js:35:    const { getAuth, setPersistence, browserLocalPersistence } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js');
+staging\js\firebase-bundle.js:36:    const { getFirestore } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js');
+staging\js\firebase-modular.js:33:    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js');
+staging\js\firebase-modular.js:34:    const { getAuth, setPersistence, browserLocalPersistence } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js');
+staging\js\firebase-modular.js:35:    const { getFirestore } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js');
+staging\reports\Lighthouse 09142025.pdf:4355:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:4366:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:4377:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:7881:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:7903:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:8656:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:9425:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:9436:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:9447:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:10037:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:10048:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:10059:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:11913:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:11924:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:12584:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:15716:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:15727:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js.map)>>
+staging\reports\Lighthouse 09142025.pdf:15738:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:15749:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js.map)>>
+staging\reports\Lighthouse 09142025.pdf:15760:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js)>>
+staging\reports\Lighthouse 09142025.pdf:15771:/URI (https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js.map)>>
+staging\split_exact\index.split.html:411:    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+staging\split_exact\index.split.html:412:    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+staging\split_exact\index.split.html:413:    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+

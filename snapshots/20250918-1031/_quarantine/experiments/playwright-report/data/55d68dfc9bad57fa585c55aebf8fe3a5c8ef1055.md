@@ -1,0 +1,137 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: Welcome!
+        - generic [ref=e6]: Ready to track your shows
+      - generic [ref=e7]:
+        - heading "Flicklet" [level=1] [ref=e8]
+        - generic [ref=e9]: TV & Movie Tracker
+      - generic [ref=e11]:
+        - button "Account - sign in or manage your account" [ref=e12] [cursor=pointer]: 👤 Sign In
+        - combobox "Language" [ref=e13]:
+          - option "EN" [selected]
+          - option "ES"
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - text: 💡
+          - generic [ref=e17]: "Search tips: Use * for wildcards (e.g., \"marvel*\" for Marvel shows)"
+        - generic [ref=e18]: "?"
+        - generic [ref=e19]: ⌨️
+      - generic [ref=e20]:
+        - textbox "Search for shows or movies..." [active] [ref=e21]: test search
+        - generic [ref=e22]:
+          - combobox [ref=e23]:
+            - option "All Genres" [selected]
+            - option "Action & Adventure"
+            - option "Animation"
+            - option "Comedy"
+            - option "Crime"
+            - option "Documentary"
+            - option "Drama"
+            - option "Family"
+            - option "Kids"
+            - option "Mystery"
+            - option "News"
+            - option "Reality"
+            - option "Sci-Fi & Fantasy"
+            - option "Soap"
+            - option "Talk"
+            - option "War & Politics"
+            - option "Western"
+          - button "Search for TV shows and movies" [ref=e24] [cursor=pointer]:
+            - generic [ref=e25] [cursor=pointer]: 🔍
+            - generic [ref=e26] [cursor=pointer]: Search
+          - button "Clear search results" [ref=e27] [cursor=pointer]:
+            - generic [ref=e28] [cursor=pointer]: ✖️
+            - generic [ref=e29] [cursor=pointer]: Clear
+    - generic [ref=e30]:
+      - button "Home tab - view dashboard and recommendations" [ref=e31] [cursor=pointer]:
+        - text: 🏠
+        - generic [ref=e32] [cursor=pointer]: Home
+      - button "Watching tab - view shows and movies you're currently watching" [ref=e33] [cursor=pointer]:
+        - text: ▶️
+        - generic [ref=e34] [cursor=pointer]: Currently Watching
+        - generic [ref=e35] [cursor=pointer]: "0"
+      - button "Wishlist tab - view shows and movies you want to watch" [ref=e36] [cursor=pointer]:
+        - text: 📖
+        - generic [ref=e37] [cursor=pointer]: Want to Watch
+        - generic [ref=e38] [cursor=pointer]: "0"
+      - button "Watched tab - view shows and movies you've completed" [ref=e39] [cursor=pointer]:
+        - text: ✅
+        - generic [ref=e40] [cursor=pointer]: Already Watched
+        - generic [ref=e41] [cursor=pointer]: "0"
+      - button "Discover tab - find new shows and movies" [ref=e42] [cursor=pointer]:
+        - text: ✨
+        - generic [ref=e43] [cursor=pointer]: Discover
+    - generic [ref=e44]:
+      - generic [ref=e45]:
+        - generic [ref=e46]:
+          - heading "💭 Quote of the Day" [level=3] [ref=e47]:
+            - text: 💭
+            - generic [ref=e48]: Quote of the Day
+          - generic [ref=e49]:
+            - paragraph [ref=e50]: "\"The best way to predict the future is to create it.\""
+            - paragraph [ref=e51]: "- Peter Drucker"
+        - generic [ref=e52]:
+          - heading "🎲 Random Quote" [level=3] [ref=e53]:
+            - text: 🎲
+            - generic [ref=e54]: Random Quote
+          - generic [ref=e55]: "'Are you still watching?' yes, Netflix, I'm thriving."
+      - generic [ref=e56]:
+        - heading "🎯 FlickWord Daily Challenge" [level=3] [ref=e57]:
+          - text: 🎯
+          - generic [ref=e58]: FlickWord Daily Challenge
+        - generic [ref=e59]:
+          - generic [ref=e60]: 00:00:00
+          - generic [ref=e62]: Hours left to play today's game!
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - generic [ref=e65]:
+              - text: 🔥
+              - generic [ref=e66]: STREAK
+            - generic [ref=e67]: "0"
+          - generic [ref=e68]:
+            - generic [ref=e69]:
+              - text: 🏆
+              - generic [ref=e70]: BEST
+            - generic [ref=e71]: "0"
+          - generic [ref=e72]:
+            - generic [ref=e73]:
+              - text: 📊
+              - generic [ref=e74]: PLAYED
+            - generic [ref=e75]: "0"
+        - button "Play Today's Word" [ref=e77] [cursor=pointer]
+    - generic [ref=e78]:
+      - generic [ref=e79]:
+        - generic [ref=e80]:
+          - heading "Tonight On" [level=3] [ref=e81]
+          - generic [ref=e82]: Next 7 days
+        - generic [ref=e84]: No upcoming episodes this week.
+      - generic [ref=e85]:
+        - heading "Share Your Thoughts" [level=3] [ref=e86]
+        - paragraph [ref=e87]: Share your thoughts! Give us app feedback, tell us what's working (or not), share a quote for our rotation, make a confession, or just vent. We're listening!
+        - paragraph [ref=e88]: 💬 App feedback • 💭 Random thoughts • 💬 Quote submissions • 🤫 Anonymous confessions • 😤 Venting welcome
+        - generic [ref=e90]:
+          - textbox "Share your thoughts, feedback, quotes, confessions, or just vent here..." [ref=e91]
+          - button "Share It!" [ref=e92] [cursor=pointer]
+      - generic [ref=e93]: Loading...
+    - main: No items yet. Start by searching for something!
+  - button "Mardi" [ref=e94] [cursor=pointer]: 🎭
+  - button "Dark" [ref=e95] [cursor=pointer]:
+    - generic [ref=e96] [cursor=pointer]: 🌙
+  - button "Settings" [ref=e97] [cursor=pointer]: ⚙️
+  - dialog "Sign in to sync" [ref=e99]:
+    - heading "Sign in to sync" [level=3] [ref=e100]
+    - generic [ref=e101]:
+      - paragraph [ref=e102]: Sign in to back up your lists and sync across devices.
+      - generic [ref=e103]:
+        - button "🔒 Google" [ref=e104] [cursor=pointer]
+        - button "🍎 Apple" [ref=e105] [cursor=pointer]
+        - button "✉️ Email" [ref=e106] [cursor=pointer]
+    - button "Close" [ref=e108] [cursor=pointer]
+```

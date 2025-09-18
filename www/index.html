@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v26.0</title>
+    <title>Flicklet - TV & Movie Tracker v26.1</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
     />
-    <meta name="build" content="v26.0">
+    <meta name="build" content="v26.1">
     
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
@@ -168,31 +168,16 @@
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
-            <span class="version-display">v26.0</span>
+            <span id="greetingName" class="greeting-name" style="display: none;"></span>
+            <div id="greetingSnark" class="greeting-snark" style="display: none;"></div>
+          </div>
+          <div class="header-center">
+            <span class="version-display">v26.1</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
           <div class="header-right">
-            <!-- Signed OUT -->
-            <div data-auth="signed-out-visible" class="signin-area">
-              <div class="signin-label">Sign in</div>
-              <button id="signIn" data-action="sign-in" class="btn btn--sm">👤 Sign In</button>
-              <!-- Welcome message for signed-out users only -->
-              <div class="snark" data-snark>Welcome back.</div>
-            </div>
-
-            <!-- Signed IN -->
-            <div data-auth="signed-in-visible" hidden class="account-area">
-              <!-- visible hint so it's obvious clicking your name signs out -->
-              <div class="account-hint">Sign out</div>
-              <button id="accountMenuBtn" class="user-btn btn btn--sm" aria-haspopup="menu" aria-expanded="false">
-                <span class="user-initial" aria-hidden="true">U</span>
-                <span id="usernameDisplay" class="user-name" data-username-display title="Sign out">Username</span>
-              </button>
-              <div id="accountMenu" class="account-menu" role="menu" hidden>
-                <button id="logoutBtn" role="menuitem" class="menu-item">Log out</button>
-              </div>
-            </div>
+            <button id="accountButton" type="button" aria-live="polite" class="account-btn">👤 Sign In</button>
             <select id="langToggle" class="lang-select select--sm" aria-label="Language" title="Language">
               <option value="en">EN</option>
               <option value="es">ES</option>

@@ -85,7 +85,7 @@
     authInitialized: false,
     firebaseInitialized: false,
 
-    init() {
+    async init() {
       FlickletDebug.info('🚀 [FlickletApp] init');
       try {
         // 1) Load persisted data
@@ -108,13 +108,16 @@
         // 3.5) Setup auth button sync
         this.setupAuthButtonSync();
 
-        // 4) Bind global UI listeners
+        // 4) Wait for data-init to complete
+        await this.waitForDataInit();
+
+        // 5) Bind global UI listeners
         this.setupEventListeners();
 
-        // 5) Setup settings tabs
+        // 6) Setup settings tabs
         this.setupSettingsTabs();
 
-        // 6) Ensure a default active tab and initial render
+        // 7) Ensure a default active tab and initial render
         this.switchToTab('home');
         this.updateUI();
         
@@ -147,6 +150,29 @@
       } catch (e) {
         FlickletDebug.error('💥 [FlickletApp] init failed:', e);
       }
+    },
+
+    // Wait for data-init to complete before proceeding
+    async waitForDataInit() {
+      return new Promise((resolve) => {
+        // If data-init already completed, resolve immediately
+        if (window.appData && typeof window.appData === 'object') {
+          resolve();
+          return;
+        }
+
+        // Wait for app:data:ready event with timeout
+        const timeout = setTimeout(() => {
+          console.warn('[FlickletApp] Data init timeout, proceeding anyway');
+          resolve();
+        }, 2000);
+
+        window.addEventListener('app:data:ready', () => {
+          clearTimeout(timeout);
+          console.log('[FlickletApp] Data init completed');
+          resolve();
+        }, { once: true });
+      });
     },
 
     // ---------- Visual / Theme ----------
@@ -1573,7 +1599,24 @@ waitForFirebaseReady() {
     },
 
     // Optional feature hooks (no-ops here, but left for compatibility)
-    initializeFlickWord() {},
+    initializeFlickWord() {
+      // Guard: Check if required containers exist before initializing
+      const flickwordTile = document.getElementById('flickwordTile');
+      const triviaTile = document.getElementById('triviaTile');
+      
+      if (!flickwordTile && !triviaTile) {
+        console.warn('[FlickletApp] Games containers not found, skipping games initialization');
+        return;
+      }
+      
+      // Log once if containers are missing
+      if (!flickwordTile) {
+        console.warn('[FlickletApp] flickwordTile not found');
+      }
+      if (!triviaTile) {
+        console.warn('[FlickletApp] triviaTile not found');
+      }
+    },
     // checkAndPromptLogin() removed - handled in auth listener
     
     /**

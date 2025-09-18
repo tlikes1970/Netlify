@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test A11Y Polish</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        
+        /* Test the A11Y CSS */
+        body.a11y-v1 .show-card .show-actions .btn,
+        body.a11y-v1 .show-card .show-actions button,
+        body.a11y-v1 .toolbar .btn,
+        body.a11y-v1 button,
+        body.a11y-v1 .btn {
+          min-height: 40px;
+        }
+
+        body.a11y-v1 .btn:focus-visible,
+        body.a11y-v1 button:focus-visible,
+        body.a11y-v1 [tabindex]:not([tabindex="-1"]):focus-visible {
+          outline: 2px solid var(--focus-color, #2684ff);
+          outline-offset: 2px;
+          border-radius: 6px;
+        }
+
+        @media (max-width: 640px) {
+          body.a11y-v1 .show-card .show-actions .btn,
+          body.a11y-v1 .show-card .show-actions button {
+            min-width: 40px;
+          }
+        }
+
+        body.a11y-v1 .icon[aria-hidden="true"] { pointer-events: none; }
+        
+        .test-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .show-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #ccc;
+            background: #f8f9fa;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background: #e9ecef;
+        }
+        
+        .icon {
+            font-size: 16px;
+        }
+        
+        .debug-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>A11Y Polish Test</h1>
+    
+    <div class="debug-info" id="debugInfo">
+        Testing A11Y polish...
+    </div>
+    
+    <div class="test-card">
+        <h2>Test Card 1</h2>
+        <p>This card tests tap targets and focus-visible behavior.</p>
+        <div class="show-actions">
+            <button class="btn" data-label="Add to list">➕ Add</button>
+            <button class="btn" title="Remove item">🗑️ Remove</button>
+            <button class="btn">Like</button>
+            <button class="btn" tabindex="-1">Disabled</button>
+        </div>
+    </div>
+    
+    <div class="test-card">
+        <h2>Test Card 2 - Icon Only</h2>
+        <p>Testing icon-only buttons with derived labels.</p>
+        <div class="show-actions">
+            <button class="btn" data-label="Move to watching">▶️</button>
+            <button class="btn" title="Mark as watched">✅</button>
+            <button class="btn">⭐</button>
+        </div>
+    </div>
+    
+    <div class="test-card">
+        <h2>Test Card 3 - Decorative Icons</h2>
+        <p>Testing decorative icons in titles and meta.</p>
+        <div class="show-title">
+            <span class="icon">🎬</span> Movie Title
+            <span class="icon" role="img">🎭</span>
+        </div>
+        <div class="show-meta">
+            <span class="icon">⭐</span> 8.5/10
+            <span class="icon">📅</span> 2023
+        </div>
+    </div>
+    
+    <div class="test-card">
+        <h2>Focus Test</h2>
+        <p>Use Tab key to navigate - you should see focus-visible outlines only when using keyboard.</p>
+        <button class="btn">Tab to me</button>
+        <button class="btn">Then to me</button>
+        <button class="btn">And finally me</button>
+    </div>
+
+    <script>
+        // Test A11Y normalization
+        const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+        function deriveLabel(btn) {
+            if (btn.hasAttribute('aria-label') && btn.getAttribute('aria-label').trim()) return null;
+            const fromData  = btn.getAttribute('data-label');
+            const fromTitle = btn.getAttribute('title');
+            const txt       = (btn.textContent || '').trim();
+            return fromData || fromTitle || (txt && txt.length <= 28 ? txt : null);
+        }
+
+        function normalizeButtons(root = document) {
+            const candidates = qsa([
+                'button',
+                '.btn',
+                '.show-actions button',
+                '.toolbar .btn',
+                '[role="button"]'
+            ].join(','), root);
+
+            for (const el of candidates) {
+                const label = deriveLabel(el);
+                if (label) el.setAttribute('aria-label', label);
+
+                if (el.hasAttribute('tabindex') && Number(el.getAttribute('tabindex')) < 0) {
+                    el.removeAttribute('tabindex');
+                }
+            }
+
+            qsa('.show-card .show-title [class*="icon"], .show-card .show-title span[role="img"], .show-card .show-meta [class*="icon"]', root)
+                .forEach(n => n.setAttribute('aria-hidden', 'true'));
+        }
+
+        // Apply A11Y class and normalize
+        document.body.classList.add('a11y-v1');
+        normalizeButtons();
+
+        // Test results
+        const buttonHeights = [...document.querySelectorAll('.show-actions .btn')].map(b => Math.round(b.getBoundingClientRect().height));
+        const ariaLabels = [...document.querySelectorAll('.show-actions button')].map(b => b.getAttribute('aria-label'));
+        const hiddenIcons = [...document.querySelectorAll('.show-title [class*="icon"], .show-title span[role="img"], .show-meta [class*="icon"]')]
+            .every(n => n.getAttribute('aria-hidden') === 'true');
+
+        document.getElementById('debugInfo').innerHTML = 
+            `✅ A11Y Polish Applied<br>` +
+            `Button heights: ${buttonHeights.join(', ')}px (should be ≥40px)<br>` +
+            `ARIA labels: ${ariaLabels.join(', ')}<br>` +
+            `Decorative icons hidden: ${hiddenIcons}<br>` +
+            `Body class: a11y-v1`;
+
+        console.log('♿ A11Y polish test initialized');
+        console.log('Button heights:', buttonHeights);
+        console.log('ARIA labels:', ariaLabels);
+        console.log('All decorative icons hidden:', hiddenIcons);
+    </script>
+</body>
+</html>
+
+
+
+
+
+

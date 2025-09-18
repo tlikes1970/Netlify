@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Card Debug</title>
+    <link rel="stylesheet" href="styles/components.css?v=desktop-fix3">
+    <link rel="stylesheet" href="styles/mobile.css?v=mp2.2d">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 10px;
+            background: #f5f5f5;
+        }
+        .debug-info {
+            background: #e0e0e0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #333;
+        }
+        .test-card {
+            background: white;
+            border: 2px solid #007acc;
+            margin: 10px 0; 
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .show-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 10px 0;
+            padding: 10px;
+        }
+        .show-poster {
+            width: 64px;
+            height: 96px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #666;
+        }
+        .show-details {
+            background: #f9f9f9;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .show-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .show-meta {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .show-overview {
+            font-size: 12px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .show-actions {
+            display: flex;
+            gap: 4px;
+        }
+        .btn {
+            padding: 4px 8px;
+            font-size: 10px;
+            border: 1px solid #ccc;
+            background: #f0f0f0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mobile Card Layout Debug</h1>
+    
+    <div id="debugInfo" class="debug-info">
+        <div>Loading debug info...</div>
+    </div>
+
+    <div class="test-card">
+        <h3>Test Card (should show mobile layout on iPhone)</h3>
+    <div class="show-card">
+            <div class="show-poster">64px</div>
+            <div class="show-details">
+                <div class="show-title">Test Show Title</div>
+                <div class="show-meta">2023 • Drama • 8.5★</div>
+                <div class="show-overview">This is a test overview that should be clamped to 2 lines on mobile and show the proper mobile layout with 64px poster and details in a 2-column grid.</div>
+                <div class="show-actions">
+            <button class="btn">+</button>
+            <button class="btn">❤</button>
+                    <button class="btn">👁</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-detect and apply mobile class - MORE AGGRESSIVE
+        const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isIPhone = /iPhone/i.test(navigator.userAgent);
+        const viewportWidth = window.innerWidth;
+        const isMobileSize = viewportWidth <= 640;
+        
+        console.log('📱 Test page mobile detection:', {
+            isMobileDevice,
+            isIPhone,
+            viewportWidth,
+            isMobileSize
+        });
+        
+        if (isMobileDevice || isIPhone || isMobileSize) {
+            document.body.classList.add('mobile-v1');
+            console.log('📱 Auto-applied mobile-v1 class');
+        }
+        
+        // Update debug info
+        function updateDebugInfo() {
+            const hasMobileClass = document.body.classList.contains('mobile-v1');
+            const computedStyle = window.getComputedStyle(document.querySelector('.show-card'));
+            const gridTemplateColumns = computedStyle.gridTemplateColumns;
+            
+            document.getElementById('debugInfo').innerHTML = `
+                <div><strong>Device Detection:</strong></div>
+                <div>• Is iPhone: ${isIPhone}</div>
+                <div>• Is Mobile Device: ${isMobileDevice}</div>
+                <div>• Viewport Width: ${viewportWidth}px</div>
+                <div>• Is Mobile Size: ${isMobileSize}</div>
+                <div><br><strong>Class State:</strong></div>
+                <div>• Has mobile-v1 class: ${hasMobileClass}</div>
+                <div>• Body classes: ${document.body.className}</div>
+                <div><br><strong>CSS Applied:</strong></div>
+                <div>• Grid Template Columns: ${gridTemplateColumns}</div>
+                <div>• Expected Layout: ${hasMobileClass ? '2-column mobile (64px | details+actions)' : '2-column desktop (92px | details+actions)'}</div>
+            `;
+        }
+        
+        // Force mobile class for testing
+        function forceMobileClass() {
+            document.body.classList.add('mobile-v1');
+            console.log('📱 Forced mobile-v1 class for testing');
+            updateDebugInfo();
+        }
+        
+        // Force desktop class for testing
+        function forceDesktopClass() {
+            document.body.classList.remove('mobile-v1');
+            console.log('📱 Forced desktop class for testing');
+            updateDebugInfo();
+        }
+        
+        // Immediate mobile detection - run as soon as possible
+        (function() {
+            const userAgent = navigator.userAgent;
+            const isIPhone = /iPhone/i.test(userAgent);
+            const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
+            const viewportWidth = window.innerWidth;
+            
+            console.log('📱 IMMEDIATE detection:', { isIPhone, isMobile, viewportWidth });
+            
+            if (isIPhone || isMobile || viewportWidth <= 768) {
+                document.body.classList.add('mobile-v1');
+                console.log('📱 IMMEDIATE mobile class applied');
+            }
+        })();
+        
+        // Update debug info on load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDebugInfo();
+            
+            // Add buttons for testing
+            const debugDiv = document.getElementById('debugInfo');
+            debugDiv.innerHTML += `
+                <br><br>
+                <button onclick="forceMobileClass()" style="margin-right: 10px; padding: 5px 10px;">Force Mobile</button>
+                <button onclick="forceDesktopClass()" style="margin-right: 10px; padding: 5px 10px;">Force Desktop</button>
+                <button onclick="updateDebugInfo()" style="padding: 5px 10px;">Refresh Debug</button>
+                <br><br>
+                <button onclick="checkMobileClass()" style="padding: 5px 10px; background: #007acc; color: white;">Check Mobile Class</button>
+            `;
+        });
+        
+        // Check mobile class function
+        function checkMobileClass() {
+            const hasClass = document.body.classList.contains('mobile-v1');
+            const classes = document.body.className;
+            const card = document.querySelector('.show-card');
+            const cardStyle = window.getComputedStyle(card);
+            
+            console.log('🔍 Mobile Debug Check:', {
+                hasMobileClass: hasClass,
+                bodyClasses: classes,
+                cardGridColumns: cardStyle.gridTemplateColumns,
+                cardDisplay: cardStyle.display,
+                viewportWidth: window.innerWidth,
+                userAgent: navigator.userAgent.substring(0, 50)
+            });
+            
+            alert(`Mobile-v1 class: ${hasClass}\nAll classes: ${classes}\nGrid: ${cardStyle.gridTemplateColumns}\nCheck console for full details`);
+        }
+        
+        // Also run on window load as final fallback
+        window.addEventListener('load', function() {
+            const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isIPhone = /iPhone/i.test(navigator.userAgent);
+            const viewportWidth = window.innerWidth;
+            
+            if (isMobileDevice || isIPhone || viewportWidth <= 768) {
+                document.body.classList.add('mobile-v1');
+                console.log('📱 Mobile class forced on window load');
+                updateDebugInfo();
+            }
+        });
+    </script>
+</body>
+</html>

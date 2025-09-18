@@ -1,0 +1,12 @@
+﻿
+staging\features\flickword-v2.html:136:  <script>
+staging\features\flickword.html:130:<script>
+staging\features\trivia.html:172:  <script>
+staging\split_exact\index.split.html:25:    <script src="scripts/inline-script-01.js"></script>
+staging\split_exact\index.split.html:411:    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+staging\split_exact\index.split.html:412:    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+staging\split_exact\index.split.html:413:    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+staging\split_exact\index.split.html:415:    <script src="scripts/inline-script-02.js"></script>
+staging\split_exact\index.split.html:417:    <script src="scripts/inline-script-03.js"></script>
+
+

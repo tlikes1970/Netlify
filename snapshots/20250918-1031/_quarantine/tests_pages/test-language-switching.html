@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Switching Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { margin: 5px; padding: 10px 15px; }
+        .translation-test { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Language Switching Test</h1>
+    
+    <div class="test-section">
+        <h2>Language Controls</h2>
+        <button onclick="testLanguageChange('en')">Switch to English</button>
+        <button onclick="testLanguageChange('es')">Switch to Spanish</button>
+        <p>Current Language: <span id="currentLang">Loading...</span></p>
+    </div>
+    
+    <div class="test-section">
+        <h2>Translation Test Elements</h2>
+        <div class="translation-test">
+            <p data-i18n="welcome_message">Welcome message</p>
+            <input data-i18n-placeholder="search_placeholder" placeholder="Search placeholder" style="width: 300px;">
+            <button data-i18n-title="search" title="Search button">Search</button>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="testResults"></div>
+    </div>
+
+    <!-- Load the same scripts as the main app -->
+    <script src="js/flags.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/language-manager.js"></script>
+    
+    <script>
+        // Test function
+        function testLanguageChange(lang) {
+            const results = document.getElementById('testResults');
+            results.innerHTML = '<p>Testing language change to ' + lang + '...</p>';
+            
+            try {
+                // Test the language manager
+                if (window.LanguageManager) {
+                    window.LanguageManager.changeLanguage(lang).then(() => {
+                        updateTestResults(lang, true);
+                    }).catch(error => {
+                        updateTestResults(lang, false, error.message);
+                    });
+                } else {
+                    updateTestResults(lang, false, 'LanguageManager not available');
+                }
+            } catch (error) {
+                updateTestResults(lang, false, error.message);
+            }
+        }
+        
+        function updateTestResults(lang, success, error = null) {
+            const results = document.getElementById('testResults');
+            const currentLang = document.getElementById('currentLang');
+            
+            currentLang.textContent = lang;
+            
+            if (success) {
+                results.innerHTML = `
+                    <div class="test-section success">
+                        <h3>✅ Language Change Successful</h3>
+                        <p>Language changed to: ${lang}</p>
+                        <p>Check the translation elements above to verify they updated correctly.</p>
+                    </div>
+                `;
+            } else {
+                results.innerHTML = `
+                    <div class="test-section error">
+                        <h3>❌ Language Change Failed</h3>
+                        <p>Error: ${error || 'Unknown error'}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentLang = document.getElementById('currentLang');
+            if (window.LanguageManager) {
+                currentLang.textContent = window.LanguageManager.getCurrentLanguage();
+            } else {
+                currentLang.textContent = 'LanguageManager not loaded';
+            }
+        });
+    </script>
+</body>
+</html>
+

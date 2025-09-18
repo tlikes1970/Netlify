@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Data Loading</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Debug Data Loading</h1>
+    
+    <div class="debug-section">
+        <h2>Current Data State</h2>
+        <div id="data-state"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>LocalStorage Contents</h2>
+        <div id="localstorage-contents"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Firebase Auth State</h2>
+        <div id="auth-state"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Account Button State</h2>
+        <div id="account-button-state"></div>
+    </div>
+
+    <script>
+        function updateDebugInfo() {
+            // Data state
+            const dataState = document.getElementById('data-state');
+            dataState.innerHTML = `
+                <p><strong>window.appData:</strong> ${window.appData ? 'Present' : 'Missing'}</p>
+                <p><strong>window.currentUser:</strong> ${window.currentUser ? window.currentUser.email : 'None'}</p>
+                <p><strong>FlickletApp.currentUser:</strong> ${window.FlickletApp?.currentUser ? window.FlickletApp.currentUser.email : 'None'}</p>
+                <pre>${JSON.stringify(window.appData, null, 2)}</pre>
+            `;
+            
+            // LocalStorage contents
+            const lsContents = document.getElementById('localstorage-contents');
+            const lsData = {
+                'flicklet-data': localStorage.getItem('flicklet-data'),
+                'flicklet_appData': localStorage.getItem('flicklet_appData'),
+                'tvMovieTrackerData': localStorage.getItem('tvMovieTrackerData')
+            };
+            lsContents.innerHTML = `
+                <p><strong>flicklet-data:</strong> ${lsData['flicklet-data'] ? 'Present' : 'Missing'}</p>
+                <p><strong>flicklet_appData:</strong> ${lsData['flicklet_appData'] ? 'Present' : 'Missing'}</p>
+                <p><strong>tvMovieTrackerData:</strong> ${lsData['tvMovieTrackerData'] ? 'Present' : 'Missing'}</p>
+                <pre>${JSON.stringify(lsData, null, 2)}</pre>
+            `;
+            
+            // Auth state
+            const authState = document.getElementById('auth-state');
+            authState.innerHTML = `
+                <p><strong>Firebase Auth:</strong> ${typeof firebase !== 'undefined' ? 'Available' : 'Missing'}</p>
+                <p><strong>Auth Ready:</strong> ${window.__authReady ? 'Yes' : 'No'}</p>
+                <p><strong>Current User:</strong> ${firebase?.auth()?.currentUser ? firebase.auth().currentUser.email : 'None'}</p>
+            `;
+            
+            // Account button state
+            const accountBtn = document.getElementById('accountBtn');
+            const accountButtonState = document.getElementById('account-button-state');
+            accountButtonState.innerHTML = `
+                <p><strong>Account Button Found:</strong> ${accountBtn ? 'Yes' : 'No'}</p>
+                <p><strong>Button HTML:</strong> ${accountBtn ? accountBtn.innerHTML : 'N/A'}</p>
+                <p><strong>Button Title:</strong> ${accountBtn ? accountBtn.title : 'N/A'}</p>
+            `;
+        }
+        
+        // Update every 2 seconds
+        setInterval(updateDebugInfo, 2000);
+        updateDebugInfo();
+    </script>
+</body>
+</html>

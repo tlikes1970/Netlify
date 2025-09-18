@@ -3,9 +3,30 @@
  * Ensures exactly one auth observer and provides clear DOM markers
  */
 
+// Import Firestore functions
+let doc, setDoc;
+if (typeof window !== 'undefined' && window.firebaseDb) {
+  import('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js').then(({ doc: docFn, setDoc: setDocFn }) => {
+    doc = docFn;
+    setDoc = setDocFn;
+  });
+}
+
 // ---- Auth Bridge + Singleton Observer ----
 (function initAuthBridge() {
   if (window.__authBridgeReady) return;
+  
+  // Export Firebase globals
+  if (window.firebaseApp) {
+    window.firebaseApp = window.firebaseApp;
+  }
+  if (window.firebaseAuth) {
+    window.firebaseAuth = window.firebaseAuth;
+  }
+  if (window.firebaseDb) {
+    window.firebaseDb = window.firebaseDb;
+  }
+  
   if (!window.auth || !window.onAuthStateChanged || !window.setPersistence) {
     console.warn('AuthBridge: Firebase APIs not on window yet.');
     return;
@@ -34,8 +55,8 @@
         window.UserViewModel.update(user);
       }
       
-      // Update UI markers
-      setAuthUI(!!user, user?.displayName || user?.email || null);
+      // Update auth UI
+      updateAuthUI(user);
       
       // Update account button
       if (window.FlickletApp && typeof window.FlickletApp.updateAccountButton === 'function') {
@@ -99,24 +120,95 @@ function setAuthUI(isIn, displayName) {
 // Expose globally for manual updates (e.g., username changes)
 window.setAuthUI = setAuthUI;
 
-// wire-01: resilient click delegation for a SINGLE toggle button
+// ---- New updateAuthUI function for hotfix ----
+function updateAuthUI(user) {
+  // Ensure DOM is ready before updating UI elements
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => updateAuthUI(user));
+    return;
+  }
+
+  const accountBtn = document.getElementById('accountButton');
+  const greetingName = document.getElementById('greetingName');
+  const greetingSnark = document.getElementById('greetingSnark');
+
+  if (!accountBtn) {
+    console.warn('updateAuthUI: accountButton not found, waiting for DOMContentLoaded');
+    document.addEventListener('DOMContentLoaded', () => updateAuthUI(user));
+    return;
+  }
+
+  if (user) {
+    // User is signed in
+    const displayName = user.displayName || user.email?.split('@')[0] || 'Travis Likes';
+    accountBtn.textContent = displayName;
+    accountBtn.setAttribute('aria-label', `Signed in as ${user.email}. Click to sign out.`);
+    
+    // Show greeting elements
+    if (greetingName) {
+      greetingName.textContent = displayName;
+      greetingName.style.display = 'block';
+    }
+    if (greetingSnark) {
+      const snarks = [
+        `Ready to discover, ${displayName}?`,
+        `Let's find your next favorite show, ${displayName}!`,
+        `Welcome back, ${displayName}!`
+      ];
+      greetingSnark.textContent = snarks[Math.floor(Math.random() * snarks.length)];
+      greetingSnark.style.display = 'block';
+    }
+    
+    // Write username to Firestore settings
+    if (window.firebaseDb && user.uid) {
+      try {
+        const settingsRef = doc(window.firebaseDb, 'users', user.uid, 'settings', 'app');
+        setDoc(settingsRef, { username: displayName }, { merge: true });
+      } catch (error) {
+        console.warn('Failed to update Firestore username:', error);
+      }
+    }
+  } else {
+    // User is signed out
+    accountBtn.textContent = '👤 Sign In';
+    accountBtn.setAttribute('aria-label', 'Click to sign in');
+    
+    // Hide greeting elements
+    if (greetingName) {
+      greetingName.style.display = 'none';
+    }
+    if (greetingSnark) {
+      greetingSnark.style.display = 'none';
+    }
+  }
+}
+
+// Expose updateAuthUI globally
+window.updateAuthUI = updateAuthUI;
+
+// wire-01: resilient click delegation for accountButton
 document.addEventListener('click', (e) => {
-  const el = e.target.closest('[data-action="sign-in"], [data-action="sign-out"], [data-username-display]');
+  const el = e.target.closest('#accountButton');
   if (!el) return;
   e.preventDefault();
   try {
-    // Signed OUT path → explicit sign-in button
-    if (el.matches('[data-action="sign-in"]')) {
+    const auth = window.auth || window.firebase?.auth?.();
+    const currentUser = auth?.currentUser;
+    
+    if (!currentUser) {
+      // Signed out → sign in
       if (typeof window.login === 'function') return window.login();
+      // Fallback to Google Auth popup
+      if (auth && window.GoogleAuthProvider) {
+        const provider = new window.GoogleAuthProvider();
+        return auth.signInWithPopup(provider);
+      }
       console.warn('[AUTH] login() not found');
-    }
-    // Signed IN path → clicking username acts as sign-out
-    if (el.matches('[data-action="sign-out"], [data-username-display]')) {
-      // lightweight confirmation; can be upgraded to a custom modal later
+    } else {
+      // Signed in → sign out
       const confirmOut = window.confirm('Sign out now?');
       if (!confirmOut) return;
       if (typeof window.logout === 'function') return window.logout();
-      const auth = window.auth || window.firebase?.auth?.();
       if (auth?.signOut) return auth.signOut();
       console.warn('[AUTH] signOut() not available');
     }

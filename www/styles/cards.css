@@ -84,6 +84,10 @@
   color: var(--color-text-muted, #999999);
   font-size: 48px;
   font-weight: 600;
+  background-image: url('/assets/img/poster-placeholder.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 /* ========== CARD CONTENT ========== */

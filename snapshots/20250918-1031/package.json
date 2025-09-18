@@ -1,0 +1,45 @@
+{
+  "name": "flicklet-tv-tracker",
+  "version": "26.0",
+  "description": "Flicklet - TV & Movie Tracker",
+  "main": "www/index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "vite preview --port 8000",
+    "audit:dup": "jscpd --threshold 0 --format markdown,json --output reports/jscpd .",
+    "audit:dead": "depcheck && knip",
+    "lint:strict": "eslint . --max-warnings=0",
+    "a11y:axe": "axe http://localhost:8000 --timeout 60000 -r json -o reports/axe/axe.json",
+    "lh:mobile": "lighthouse http://localhost:8000 --form-factor=mobile --output json --output-path=reports/lighthouse/mobile.json",
+    "bundle:explore": "source-map-explorer 'www/**/*.js' --html reports/bundle.html"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "axe-core": "^4.10.3",
+    "depcheck": "^1.4.7",
+    "eslint": "^8.57.1",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-sonarjs": "^0.23.0",
+    "eslint-plugin-unicorn": "^50.0.1",
+    "jscpd": "^3.5.10",
+    "knip": "^4.6.0",
+    "lighthouse": "^11.7.1",
+    "source-map-explorer": "^2.5.3",
+    "terser": "^5.44.0",
+    "vite": "^5.4.20"
+  },
+  "keywords": [
+    "tv",
+    "movie",
+    "tracker",
+    "pwa",
+    "entertainment"
+  ],
+  "author": "Flicklet Team",
+  "license": "MIT"
+}

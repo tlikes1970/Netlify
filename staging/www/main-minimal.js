@@ -6,7 +6,7 @@
  * Dependencies: None
  */
 
-console.log("Flicklet TV Tracker v26.0 - Minimal main module loaded");
+console.log("Flicklet TV Tracker v26.1 - Minimal main module loaded");
 
 // Basic configuration
 window.Config = {

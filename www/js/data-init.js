@@ -18,6 +18,25 @@
     window.dispatchEvent(new CustomEvent('app:data:ready', { detail: { source } }));
   };
 
+  // Debounced write function for Firestore updates
+  let writeTimeout;
+  const debouncedWrite = (data, type = 'lists') => {
+    clearTimeout(writeTimeout);
+    writeTimeout = setTimeout(async () => {
+      if (!window.firebaseDb || !window.currentUser) return;
+      try {
+        const ref = doc(window.firebaseDb, 'users', window.currentUser.uid, type, 'app');
+        await setDoc(ref, data, { merge: true });
+        console.log(`[data-init] ${type} synced to Firestore`);
+      } catch (error) {
+        console.warn(`[data-init] Failed to sync ${type} to Firestore:`, error);
+      }
+    }, 1000);
+  };
+
+  // Expose debounced write globally
+  window.debouncedWrite = debouncedWrite;
+
   // ---- 1) Local bootstrap (instant)
   const fromLS = safeParse(localStorage.getItem('flicklet_appData'));
   setAppData(fromLS || window.appData || EMPTY, fromLS ? 'localStorage' : 'empty');
@@ -43,10 +62,15 @@
       if (!user) return; // not signed in; LS state remains active
 
       // read /users/{uid}/lists
-      const ref = doc(db, `users/${user.uid}/lists/app`);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const server = snap.data();
+      const listsRef = doc(db, 'users', user.uid, 'lists', 'app');
+      const listsSnap = await getDoc(listsRef);
+      
+      // read /users/{uid}/settings
+      const settingsRef = doc(db, 'users', user.uid, 'settings', 'app');
+      const settingsSnap = await getDoc(settingsRef);
+      
+      if (listsSnap.exists()) {
+        const server = listsSnap.data();
         // Merge server over local (server wins if keys overlap)
         const merged = {
           tv:     { ...EMPTY.tv,     ...(window.appData?.tv||{}),     ...(server.tv||{}) },
@@ -56,8 +80,19 @@
       } else {
         // First-time user: seed server with our local (if any) so devices stay in sync
         const seed = window.appData || EMPTY;
-        await setDoc(ref, seed, { merge: true });
+        await setDoc(listsRef, seed, { merge: true });
         setAppData(seed, 'firestore-seeded');
+      }
+      
+      // Update settings if they exist
+      if (settingsSnap.exists()) {
+        const settings = settingsSnap.data();
+        // Store settings in localStorage for quick access
+        try {
+          localStorage.setItem('flicklet_settings', JSON.stringify(settings));
+        } catch (e) {
+          console.warn('Failed to store settings in localStorage:', e);
+        }
       }
     } catch (e) {
       console.warn('[data-init] Firestore sync skipped:', e?.message || e);

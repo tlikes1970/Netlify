@@ -17,7 +17,7 @@ import "./js/common-utils.js";
 import "./js/performance-monitor.js";
 import "./js/security-scanner.js";
 
-console.log("Flicklet TV Tracker v26.0 - Advanced main module loaded");
+console.log("Flicklet TV Tracker v26.1 - Advanced main module loaded");
 
 // Lazy load non-critical modules
 const lazyLoadModules = async () => {
@@ -120,7 +120,7 @@ const initializeApp = async () => {
 
   // Export for global access
   window.FlickletApp = {
-    version: "26.0",
+    version: "26.1",
     initialized: true,
     config: window.Config,
     modules: window.FlickletModules,

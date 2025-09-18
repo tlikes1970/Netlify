@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Language Switching</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { margin: 5px; padding: 10px 15px; }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Debug Language Switching</h1>
+    
+    <div class="debug-section">
+        <h2>Language Controls</h2>
+        <button onclick="testLanguageChange('en')">Switch to English</button>
+        <button onclick="testLanguageChange('es')">Switch to Spanish</button>
+        <p>Current Language: <span id="currentLang">Loading...</span></p>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Function Availability Check</h2>
+        <div id="functionCheck"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Test Results</h2>
+        <div id="testResults"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Console Log</h2>
+        <div id="consoleLog" class="log"></div>
+    </div>
+
+    <!-- Load the same scripts as the main app -->
+    <script src="js/flags.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/language-manager.js"></script>
+    
+    <script>
+        // Capture console logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        const logContainer = document.getElementById('consoleLog');
+        
+        function addToLog(type, message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logContainer.textContent += `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToLog('log', args.join(' '));
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToLog('error', args.join(' '));
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToLog('warn', args.join(' '));
+        };
+        
+        // Check function availability
+        function checkFunctionAvailability() {
+            const functions = [
+                'LanguageManager',
+                'seedCuratedData',
+                'renderCuratedHomepage',
+                '__FlickletRefreshTrivia',
+                '__FlickletRefreshSeriesOrganizer',
+                'loadFrontSpotlight',
+                'startDailyCountdown',
+                'updateFlickWordStats',
+                'rehydrateListsForLocale',
+                'applyTranslations',
+                't'
+            ];
+            
+            const results = functions.map(func => {
+                const exists = typeof window[func] === 'function';
+                return `<div class="${exists ? 'success' : 'error'}">${func}: ${exists ? '✅ Available' : '❌ Missing'}</div>`;
+            }).join('');
+            
+            document.getElementById('functionCheck').innerHTML = results;
+        }
+        
+        // Test function
+        async function testLanguageChange(lang) {
+            const results = document.getElementById('testResults');
+            results.innerHTML = '<p>Testing language change to ' + lang + '...</p>';
+            
+            try {
+                console.log('🧪 Starting language change test for:', lang);
+                
+                // Check if LanguageManager exists
+                if (!window.LanguageManager) {
+                    throw new Error('LanguageManager not available');
+                }
+                
+                // Test the language manager
+                await window.LanguageManager.changeLanguage(lang);
+                
+                // Wait a bit for async operations
+                setTimeout(() => {
+                    updateTestResults(lang, true);
+                }, 2000);
+                
+            } catch (error) {
+                console.error('❌ Language change test failed:', error);
+                updateTestResults(lang, false, error.message);
+            }
+        }
+        
+        function updateTestResults(lang, success, error = null) {
+            const results = document.getElementById('testResults');
+            const currentLang = document.getElementById('currentLang');
+            
+            currentLang.textContent = lang;
+            
+            if (success) {
+                results.innerHTML = `
+                    <div class="debug-section success">
+                        <h3>✅ Language Change Test Passed</h3>
+                        <p>Language changed to: ${lang}</p>
+                        <p>Check console log above for detailed execution steps.</p>
+                    </div>
+                `;
+            } else {
+                results.innerHTML = `
+                    <div class="debug-section error">
+                        <h3>❌ Language Change Test Failed</h3>
+                        <p>Error: ${error || 'Unknown error'}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🧪 Debug page loaded');
+            checkFunctionAvailability();
+            
+            const currentLang = document.getElementById('currentLang');
+            if (window.LanguageManager) {
+                currentLang.textContent = window.LanguageManager.getCurrentLanguage();
+            } else {
+                currentLang.textContent = 'LanguageManager not loaded';
+            }
+        });
+    </script>
+</body>
+</html>
+

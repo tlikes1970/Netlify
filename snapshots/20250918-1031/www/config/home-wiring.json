@@ -1,0 +1,44 @@
+{
+  "rails": [
+    {
+      "key": "currentlyWatching",
+      "title": "👁️ Currently Watching",
+      "headingSelector": "#currentlyWatchingPreview .preview-row-title",
+      "containerSelector": "#currentlyWatchingScroll",
+      "picker": "watching",
+      "limit": 30
+    },
+    {
+      "key": "nextUp",
+      "title": "📅 Next Up This Week",
+      "headingSelector": "#next-up-row .preview-row-title",
+      "containerSelector": ".next-up-scroll.row-inner",
+      "picker": "nextUp",
+      "limit": 30
+    },
+    {
+      "key": "personalized",
+      "title": "🎨 🎨 Personalized Recommendations",
+      "headingSelector": "#personalized-section .preview-row-title",
+      "containerSelector": "#personalized-content",
+      "picker": "discover",
+      "limit": 20
+    },
+    {
+      "key": "curated",
+      "title": "🎯 Curated Sections",
+      "headingSelector": "#curated-section .preview-row-title",
+      "containerSelector": "#curatedSections",
+      "picker": "curated",
+      "limit": 20
+    },
+    {
+      "key": "inTheaters",
+      "title": "🎬 🎬 In Theaters Near You",
+      "headingSelector": "#theaters-section .preview-row-title",
+      "containerSelector": "#theaters-content",
+      "picker": "inTheaters",
+      "limit": 20
+    }
+  ]
+}

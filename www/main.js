@@ -49,11 +49,11 @@ import "./js/inline-script-15.js";
 import "./js/inline-script-16.js";
 
 // Initialize application
-console.log("Flicklet TV Tracker v26.0 - Main module loaded");
+console.log("Flicklet TV Tracker v26.1 - Main module loaded");
 
 // Export for global access
 window.FlickletApp = {
-  version: "26.0",
+  version: "26.1",
   initialized: true,
   config: window.Config,
 };
