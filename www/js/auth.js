@@ -37,6 +37,11 @@
       // Update UI markers
       setAuthUI(!!user, user?.displayName || user?.email || null);
       
+      // Update account button
+      if (window.FlickletApp && typeof window.FlickletApp.updateAccountButton === 'function') {
+        window.FlickletApp.updateAccountButton();
+      }
+      
       // Process user sign-in if user exists and FlickletApp is available
       if (user && window.FlickletApp && typeof window.FlickletApp.processUserSignIn === 'function') {
         console.log('🔄 Processing user sign-in...');
