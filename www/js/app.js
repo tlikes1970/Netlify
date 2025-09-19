@@ -86,7 +86,9 @@
     firebaseInitialized: false,
 
     async init() {
-      FlickletDebug.info('🚀 [FlickletApp] init');
+      // Fallback for FlickletDebug if not loaded
+      const debug = window.FlickletDebug || { info: console.log, warn: console.warn, error: console.error };
+      debug.info('🚀 [FlickletApp] init');
       try {
         // 1) Load persisted data
         if (typeof loadAppData === 'function') {
@@ -1206,25 +1208,34 @@ waitForFirebaseReady() {
         
         results.forEach(result => {
           if (result.success) {
-            FlickletDebug.info(`✅ ${result.sectionId} visibility: ${tab === 'home' ? 'visible' : 'hidden'}`);
+            const debug = window.FlickletDebug || { info: console.log, warn: console.warn, error: console.error };
+            debug.info(`✅ ${result.sectionId} visibility: ${tab === 'home' ? 'visible' : 'hidden'}`);
           } else {
-            FlickletDebug.warn(`⚠️ Failed to update visibility for: ${result.sectionId}`);
+            const debug = window.FlickletDebug || { info: console.log, warn: console.warn, error: console.error };
+            debug.warn(`⚠️ Failed to update visibility for: ${result.sectionId}`);
           }
         });
       } else {
         // Fallback to original method if VisibilityManager not available
-        const homeSections = window.HomeSectionsConfig.getSections('tab-switch');
-        const sectionElements = window.HomeSectionsConfig.getSectionElements('tab-switch');
+        if (window.HomeSectionsConfig && typeof window.HomeSectionsConfig.getSections === 'function') {
+          const homeSections = window.HomeSectionsConfig.getSections('tab-switch');
+          const sectionElements = window.HomeSectionsConfig.getSectionElements('tab-switch');
         
-        homeSections.forEach(sectionId => {
-          const section = sectionElements[sectionId];
-          if (section) {
-            section.style.display = tab === 'home' ? 'block' : 'none';
-            FlickletDebug.info(`✅ ${sectionId} visibility: ${tab === 'home' ? 'visible' : 'hidden'}`);
-          } else {
-            FlickletDebug.warn(`⚠️ Home section not found: ${sectionId}`);
-          }
-        });
+          homeSections.forEach(sectionId => {
+            const section = sectionElements[sectionId];
+            if (section) {
+              section.style.display = tab === 'home' ? 'block' : 'none';
+              const debug = window.FlickletDebug || { info: console.log, warn: console.warn, error: console.error };
+              debug.info(`✅ ${sectionId} visibility: ${tab === 'home' ? 'visible' : 'hidden'}`);
+            } else {
+              const debug = window.FlickletDebug || { info: console.log, warn: console.warn, error: console.error };
+              debug.warn(`⚠️ Home section not found: ${sectionId}`);
+            }
+          });
+        } else {
+          // Ultimate fallback - just log that we can't manage home sections
+          console.log('⚠️ HomeSectionsConfig not available, skipping home section management');
+        }
       }
 
       // Hide/show search bar based on tab configuration
