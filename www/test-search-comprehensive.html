@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Functionality Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .pass { background-color: #d4edda; border-color: #c3e6cb; }
+        .fail { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { margin: 5px; padding: 10px 15px; }
+        input { padding: 8px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Search Functionality Test Suite</h1>
+    
+    <div class="test-section info">
+        <h3>Test Controls</h3>
+        <input type="text" id="testSearchInput" placeholder="Enter search term" value="test movie">
+        <button onclick="runSearchTest()">Test Search</button>
+        <button onclick="testClearSearch()">Test Clear</button>
+        <button onclick="runAllTests()">Run All Tests</button>
+    </div>
+    
+    <div id="testResults"></div>
+    
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('testResults');
+            const div = document.createElement('div');
+            div.className = `test-section ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            results.appendChild(div);
+            console.log(message);
+        }
+        
+        function runAllTests() {
+            document.getElementById('testResults').innerHTML = '';
+            log('🧪 Starting comprehensive search tests...', 'info');
+            
+            // Test 1: Module existence
+            if (window.SearchModule) {
+                log('✅ SearchModule exists', 'pass');
+            } else {
+                log('❌ SearchModule not found', 'fail');
+                return;
+            }
+            
+            // Test 2: Methods exist
+            const methods = ['init', 'performSearch', 'clearSearch', 'getSearchState', 'openItemDetails'];
+            let methodsPass = true;
+            methods.forEach(method => {
+                if (typeof window.SearchModule[method] === 'function') {
+                    log(`✅ SearchModule.${method} exists`, 'pass');
+                } else {
+                    log(`❌ SearchModule.${method} missing`, 'fail');
+                    methodsPass = false;
+                }
+            });
+            
+            // Test 3: DOM elements
+            const elements = {
+                'search input': document.getElementById('search'),
+                'search button': document.getElementById('searchBtn'),
+                'clear button': document.getElementById('clearSearchBtn'),
+                'search results': document.getElementById('searchResults')
+            };
+            
+            let elementsPass = true;
+            Object.entries(elements).forEach(([name, element]) => {
+                if (element) {
+                    log(`✅ ${name} found`, 'pass');
+                } else {
+                    log(`❌ ${name} not found`, 'fail');
+                    elementsPass = false;
+                }
+            });
+            
+            // Test 4: TMDB functions
+            if (typeof window.searchTMDB === 'function') {
+                log('✅ searchTMDB function exists', 'pass');
+            } else {
+                log('❌ searchTMDB function missing', 'fail');
+            }
+            
+            if (typeof window.tmdbGet === 'function') {
+                log('✅ tmdbGet function exists', 'pass');
+            } else {
+                log('❌ tmdbGet function missing', 'fail');
+            }
+            
+            // Test 5: Search state
+            try {
+                const state = window.SearchModule.getSearchState();
+                log(`✅ Search state retrieved: ${JSON.stringify(state)}`, 'pass');
+            } catch (error) {
+                log(`❌ Error getting search state: ${error.message}`, 'fail');
+            }
+            
+            // Test 6: Event listeners
+            const searchInput = document.getElementById('search');
+            const searchBtn = document.getElementById('searchBtn');
+            
+            if (searchInput && searchBtn) {
+                // Check if event listeners are attached
+                const hasKeydown = searchInput.onkeydown !== null || 
+                    searchInput.addEventListener.toString().includes('keydown');
+                const hasClick = searchBtn.onclick !== null || 
+                    searchBtn.addEventListener.toString().includes('click');
+                
+                if (hasKeydown) {
+                    log('✅ Search input has keydown listener', 'pass');
+                } else {
+                    log('❌ Search input missing keydown listener', 'fail');
+                }
+                
+                if (hasClick) {
+                    log('✅ Search button has click listener', 'pass');
+                } else {
+                    log('❌ Search button missing click listener', 'fail');
+                }
+            }
+            
+            log('🧪 All tests completed', 'info');
+        }
+        
+        function runSearchTest() {
+            const searchInput = document.getElementById('testSearchInput');
+            const query = searchInput.value.trim();
+            
+            if (!query) {
+                log('❌ No search query provided', 'fail');
+                return;
+            }
+            
+            log(`🔍 Testing search with query: "${query}"`, 'info');
+            
+            // Set the actual search input value
+            const actualSearchInput = document.getElementById('search');
+            if (actualSearchInput) {
+                actualSearchInput.value = query;
+                log('✅ Search input value set', 'pass');
+            } else {
+                log('❌ Cannot set search input value', 'fail');
+                return;
+            }
+            
+            // Test Enter key
+            if (actualSearchInput) {
+                const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+                actualSearchInput.dispatchEvent(enterEvent);
+                log('✅ Enter key event dispatched', 'pass');
+            }
+            
+            // Test search button click
+            const searchBtn = document.getElementById('searchBtn');
+            if (searchBtn) {
+                searchBtn.click();
+                log('✅ Search button click dispatched', 'pass');
+            } else {
+                log('❌ Search button not found', 'fail');
+            }
+        }
+        
+        function testClearSearch() {
+            log('🧹 Testing clear search', 'info');
+            
+            if (window.SearchModule) {
+                try {
+                    window.SearchModule.clearSearch();
+                    log('✅ Clear search called successfully', 'pass');
+                } catch (error) {
+                    log(`❌ Error clearing search: ${error.message}`, 'fail');
+                }
+            } else {
+                log('❌ SearchModule not available', 'fail');
+            }
+        }
+        
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>

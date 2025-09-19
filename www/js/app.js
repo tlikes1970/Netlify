@@ -137,11 +137,8 @@
           // checkAndPromptLogin removed - handled in auth listener
         }, 150);
 
-        // Initialize search functionality after a delay to ensure search functions are loaded
-        setTimeout(() => {
-          this.initializeSearch();
-          this.ensureSearchFunctionsAvailable();
-        }, 1000);
+        // Search functionality is now handled by search.js module
+        // No initialization needed here
 
         // Initialize genres
         this.initializeGenres();
@@ -1125,20 +1122,19 @@ waitForFirebaseReady() {
       this.previousTab = tab;
       
       // Clear search when switching tabs (except when staying on home)
-      if (this.isSearching && tab !== 'home') {
+      if (window.SearchModule && window.SearchModule.getSearchState().isSearching && tab !== 'home') {
         console.log('🧹 Clearing search due to tab switch to:', tab);
-        if (typeof window.clearSearch === 'function') {
-          window.clearSearch();
-        }
+        window.SearchModule.clearSearch();
       }
 
       // Tab button classes - hide current tab, show others evenly spaced
       // BUT: During search, show all tabs for navigation
       const ids = ['home','watching','wishlist','watched','discover','settings'];
+      const isSearching = window.SearchModule ? window.SearchModule.getSearchState().isSearching : false;
       ids.forEach(name => {
         const btn = document.getElementById(`${name}Tab`);
         if (btn) {
-          if (this.isSearching) {
+          if (isSearching) {
             // During search, show all tabs for navigation
             btn.classList.remove('hidden');
             btn.classList.remove('active');
@@ -1619,53 +1615,7 @@ waitForFirebaseReady() {
     },
     // checkAndPromptLogin() removed - handled in auth listener
     
-    /**
-     * Process: Search Functionality Initialization
-     * Purpose: Binds search and clear search buttons to their respective functions for user interaction
-     * Data Source: DOM elements (searchBtn, clearSearchBtn), global window.performSearch and window.clearSearch functions
-     * Update Path: Modify button IDs here if HTML changes, update function calls if search behavior changes
-     * Dependencies: performSearch function, clearSearch function, search button elements, search input elements
-     */
-    initializeSearch() {
-      console.log('🔍 Initializing search functionality...');
-      
-      // Set up search controls
-      const searchBtn = document.getElementById("searchBtn");
-      const clearSearchBtn = document.getElementById("clearSearchBtn");
-      
-      if (searchBtn) {
-        console.log('✅ Search button found, binding performSearch');
-        searchBtn.onclick = () => {
-          console.log('🔍 Search button clicked, calling performSearch');
-          if (typeof window.performSearch === 'function') {
-            window.performSearch();
-          } else {
-            console.error('❌ performSearch function not available');
-          }
-        };
-      } else {
-        console.log('❌ Search button not found');
-      }
-      
-      if (clearSearchBtn) {
-        console.log('✅ Clear search button found, binding clearSearch');
-        clearSearchBtn.onclick = () => {
-          console.log('🔍 Clear search button clicked, calling clearSearch');
-          if (typeof window.clearSearch === 'function') {
-            window.clearSearch();
-          } else {
-            console.error('❌ clearSearch function not available');
-          }
-        };
-      } else {
-        console.log('❌ Clear search button not found');
-      }
-      
-      // Set up Enter key functionality
-      this.setupSearchEnterKey();
-      
-      console.log('✅ Search functionality initialized');
-    },
+    // Search functionality moved to search.js module
 
     // ---------- Genres ----------
     initializeGenres() {
@@ -1682,319 +1632,9 @@ waitForFirebaseReady() {
       console.log('✅ Genres initialization complete');
     },
 
-    // STEP 3.5 — Make Enter in search box trigger the search
-    setupSearchEnterKey() {
-      const searchInput = document.getElementById('search');
-      const searchBtn = document.getElementById('searchBtn');
-      if (searchInput && searchBtn) {
-        console.log('🔍 Setting up Enter key handler for search input');
-        searchInput.addEventListener('keydown', (ev) => {
-          if (ev.key === 'Enter') {
-            ev.preventDefault();
-            ev.stopPropagation();
-            console.log('🔎 Enter pressed in search box — running search');
-            // Call performSearch directly instead of clicking button
-            if (typeof window.performSearch === 'function') {
-              window.performSearch();
-            } else {
-              console.error('❌ performSearch not available on Enter key');
-            }
-          }
-        });
-        console.log('✅ Enter key handler attached to search input');
-      } else {
-        console.warn('⚠️ Cannot setup Enter key - missing search input or button');
-      }
-    },
+    // Enter key functionality moved to search.js module
 
-    // Ensure performSearch is available on window for robust bindings
-    ensureSearchFunctionsAvailable() {
-      // Make performSearch available on window if it exists
-      if (typeof window.performSearch === 'function') {
-        window.performSearch = window.performSearch;
-        console.log('✅ performSearch already available on window');
-      } else {
-        // Create a proper performSearch function that uses tmdbGet
-        window.performSearch = async function() {
-          try {
-            console.log('🔍 performSearch called');
-            let searchInput = document.querySelector('input[type="search"]');
-            const searchResults = document.getElementById('searchResults');
-            
-            // Debug logging
-            console.log('Search input element:', searchInput);
-            console.log('Search input value:', searchInput ? searchInput.value : 'undefined');
-            
-            if (!searchInput) {
-              console.error('❌ Search input element not found, trying alternative selectors');
-              // Try alternative selectors
-              searchInput = document.querySelector('.search-input') ||
-                           document.querySelector('#searchInput') ||
-                           document.querySelector('input[placeholder*="search" i]');
-              if (searchInput) {
-                console.log('✅ Found search input with alternative selector:', searchInput);
-              } else {
-                console.error('❌ No search input found with any selector');
-                return;
-              }
-            }
-            
-            if (!searchInput.value || !searchInput.value.trim()) {
-              console.log('No search term entered');
-              return;
-            }
-            
-            const query = searchInput.value.trim();
-            console.log('Searching for:', query);
-            
-            // Show loading state
-            if (searchResults) {
-              searchResults.style.display = 'block';
-              searchResults.innerHTML = '<div style="text-align: center; padding: 20px;">🔍 Searching...</div>';
-            }
-            
-            // Use the searchTMDB helper function
-            if (typeof window.searchTMDB === 'function') {
-              const results = await window.searchTMDB(query);
-              console.log('Search results:', results);
-              
-              if (searchResults) {
-                if (results.results && results.results.length > 0) {
-                  // Update the count
-                  const countElement = document.getElementById('resultsCount');
-                  if (countElement) {
-                    countElement.textContent = results.results.length;
-                  }
-                  
-                  // Display search results in the proper container
-                  const resultsList = document.getElementById('searchResultsList');
-                  if (resultsList) {
-                    const resultsHtml = results.results.map(item => {
-                      const title = item.title || item.name || 'Unknown';
-                      const year = item.release_date ? new Date(item.release_date).getFullYear() : 
-                                  item.first_air_date ? new Date(item.first_air_date).getFullYear() : '';
-                      const mediaType = item.media_type || 'movie';
-                      const poster = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
-                      
-                      return `
-                        <div class="search-result-item" style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
-                          ${poster ? `<img src="${poster}" style="width: 50px; height: 75px; object-fit: cover; margin-right: 10px; border-radius: 4px;">` : ''}
-                          <div>
-                            <h4 style="margin: 0; color: #333;">${title} ${year ? `(${year})` : ''}</h4>
-                            <p style="margin: 5px 0 0 0; color: #666; text-transform: capitalize;">${mediaType}</p>
-                          </div>
-                        </div>
-                      `;
-                    }).join('');
-                    
-                    resultsList.innerHTML = resultsHtml;
-                  } else {
-                  // Use new PosterCard system for search results
-                  searchResults.innerHTML = `
-                    <h4>🎯 Search Results <span class="count">${results.results.length}</span></h4>
-                    <div class="poster-cards-grid" id="searchResultsGrid">
-                    </div>
-                  `;
-                  
-                  // Render search results using PosterCard
-                  const searchGrid = document.getElementById('searchResultsGrid');
-                  if (searchGrid && window.PosterCard && window.CardDataNormalizer) {
-                    const filteredResults = results.results.filter(item => item.media_type !== 'person');
-                    
-                    filteredResults.forEach(item => {
-                      // Normalize the item data
-                      const normalizedData = window.CardDataNormalizer.normalize(item, 'tmdb', 'search');
-                      
-                      if (normalizedData) {
-                        // Create PosterCard for search results
-                        const card = window.PosterCard({
-                          id: normalizedData.id,
-                          mediaType: normalizedData.mediaType,
-                          title: normalizedData.title,
-                          posterUrl: normalizedData.posterUrl,
-                          posterPath: normalizedData.posterPath,
-                          year: normalizedData.year,
-                          rating: normalizedData.rating,
-                          runtime: normalizedData.runtime,
-                          season: normalizedData.season,
-                          episode: normalizedData.episode,
-                          badges: normalizedData.badges,
-                          isNew: normalizedData.isNew,
-                          isAvailable: normalizedData.isAvailable,
-                          progress: normalizedData.progress,
-                          quickActions: normalizedData.quickActions,
-                          overflowActions: normalizedData.overflowActions,
-                          onOpenDetails: () => {
-                            if (window.openTMDBLink) {
-                              window.openTMDBLink(item.id, item.media_type || 'movie');
-                            }
-                          },
-                          section: 'search'
-                        });
-                        
-                        searchGrid.appendChild(card);
-                      }
-                    });
-                  } else {
-                    // Fallback to old system
-                  // Set up poster card grid layout
-                  searchResults.className = 'poster-cards-grid';
-                  
-                  searchResults.innerHTML = `
-                    <h4>🎯 Search Results <span class="count">${results.results.length}</span></h4>
-                    <div class="poster-cards-grid">
-                      ${results.results
-                        .filter(item => item.media_type !== 'person') // Filter out person results
-                        .map(item => {
-                          // Use createPosterCard if available
-                          if (window.createPosterCard) {
-                            const card = window.createPosterCard(item, 'search');
-                            return card ? card.outerHTML : '';
-                          }
-                          
-                          // Fallback to simple HTML
-                          const title = item.title || item.name || 'Unknown';
-                          const year = item.release_date ? new Date(item.release_date).getFullYear() : 
-                                      item.first_air_date ? new Date(item.first_air_date).getFullYear() : '';
-                          const mediaType = item.media_type || 'movie';
-                          const poster = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
-                          
-                          return `
-                            <div class="search-result-item" data-id="${item.id}" data-media-type="${mediaType}">
-                              <div class="search-result-poster">
-                                ${poster ? `<img src="${poster}" alt="${title}" loading="lazy">` : 
-                                  '<div class="poster-placeholder">📺</div>'}
-                              </div>
-                              <div class="search-result-content">
-                                <h4 class="search-result-title">${title}</h4>
-                                <p class="search-result-year">${year || 'Unknown Year'}</p>
-                                <p class="search-result-type">${mediaType}</p>
-                                <div class="search-result-actions">
-                                  <button class="btn btn--sm" data-action="add" data-id="${item.id}" data-list="wishlist">
-                                    Add to Wishlist
-                                  </button>
-                                  <button class="btn btn--sm btn--secondary" data-action="add" data-id="${item.id}" data-list="watching">
-                                    Add to Watching
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          `;
-                        }).join('')}
-                    </div>
-                  `;
-                  }
-                  }
-                } else {
-                  searchResults.innerHTML = `
-                    <h4>🎯 Search Results <span class="count">0</span></h4>
-                    <div class="list-container">
-                      <div style="text-align: center; padding: 20px; color: #666;">No results found for "${query}"</div>
-                    </div>
-                  `;
-                }
-              }
-            } else {
-              console.error('searchTMDB function not available');
-              if (searchResults) {
-                searchResults.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">Search functionality not available</div>';
-              }
-            }
-          } catch (error) {
-            console.error('Search failed:', error);
-            const searchResults = document.getElementById('searchResults');
-            if (searchResults) {
-              searchResults.innerHTML = '<div style="text-align: center; padding: 20px; color: red;">Search failed. Please try again.</div>';
-            }
-          }
-        };
-        console.log('✅ performSearch function created and available on window');
-      }
-
-      // Create a proper clearSearch function if it doesn't exist
-      if (typeof window.clearSearch !== 'function') {
-        window.clearSearch = function() {
-          console.log('🧹 clearSearch called');
-          const searchInput = document.querySelector('input[type="search"]');
-          const searchResults = document.getElementById('searchResults');
-          
-          if (searchInput) {
-            searchInput.value = '';
-            console.log('Search input cleared');
-          }
-          
-          if (searchResults) {
-            searchResults.style.display = 'none';
-            searchResults.innerHTML = '';
-            console.log('Search results cleared');
-          }
-        };
-        console.log('✅ clearSearch function created and available on window');
-      }
-
-      // Defensive handlers specifically for #desktop-search-row
-      (function () {
-        const row = document.getElementById('desktop-search-row');
-        if (!row) return;
-
-        const input = row.querySelector('#search');
-        const searchBtn = row.querySelector('#searchBtn');
-        const clearBtn = row.querySelector('#clearSearchBtn');
-        const genre = row.querySelector('#genreSelect');
-
-        if (searchBtn) {
-          searchBtn.onclick = () => {
-            if (typeof window.performSearch === 'function') window.performSearch();
-            else console.warn('[desktop-search-row] performSearch not available');
-          };
-        }
-
-        if (input) {
-          input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && typeof window.performSearch === 'function') {
-              window.performSearch();
-            }
-          });
-        }
-
-        if (clearBtn && input) {
-          clearBtn.onclick = () => {
-            input.value = '';
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-          };
-        }
-
-        // Optional: ensure genre select doesn't force wrapping
-        if (genre) genre.style.maxWidth = genre.style.maxWidth || 'unset';
-      })();
-
-      // Defensive binding for search button
-      const searchBtn = document.getElementById('searchBtn') || document.querySelector('[data-action="search"]');
-      if (searchBtn) {
-        searchBtn.onclick = () => {
-          if (typeof window.performSearch === 'function') {
-            window.performSearch();
-          } else {
-            console.warn('performSearch not available');
-          }
-        };
-      }
-
-      // Enter-to-search (if you support it)
-      const searchInput = document.querySelector('input[type="search"]');
-      if (searchInput) {
-        searchInput.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
-            if (typeof window.performSearch === 'function') {
-              window.performSearch();
-            } else {
-              console.warn('performSearch not available');
-            }
-          }
-        });
-      }
-    },
+    // Search functions moved to search.js module
 
     // Debug method to check account button state
     debugAccountButton() {

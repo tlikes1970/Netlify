@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v27.10</title>
+    <title>Flicklet - TV & Movie Tracker v27.11</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
     />
-    <meta name="build" content="v27.10">
+    <meta name="build" content="v27.11">
     
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
@@ -129,6 +129,9 @@
     <script src="/tmdb-config.js?v=v27.6"></script>
     <script src="/scripts/tmdb.js?v=v27.6"></script>
     
+    <!-- Search module -->
+    <script src="/js/search.js?v=v27.11"></script>
+    
     <!-- Auth and data initialization -->
     <script type="module" src="/js/data-init.js?v=v26.8"></script>
     <script type="module" src="/js/auth.js?v=v26.8"></script>
@@ -181,7 +184,7 @@
             <div id="headerGreeting" class="header-greeting" aria-live="polite"></div>
           </div>
           <div class="header-center">
-            <span class="version-display">v27.10</span>
+            <span class="version-display">v27.11</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
