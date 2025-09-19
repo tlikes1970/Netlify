@@ -23,9 +23,11 @@ window.mobilePolishGate = function mobilePolishGate() {
   const MOBILE_BP = 640; // px
   const forced = localStorage.getItem('forceMobileV1') === '1';
 
-  function applyMobileFlag() {
-    const viewportWidth = window.innerWidth;
-    const isMobileViewport = viewportWidth <= MOBILE_BP;
+        function applyMobileFlag() {
+          // Fallback for FlickletDebug if not loaded
+          const debug = window.FlickletDebug || { info: console.log, warn: console.warn, error: console.error };
+          const viewportWidth = window.innerWidth;
+          const isMobileViewport = viewportWidth <= MOBILE_BP;
     
     // More comprehensive mobile device detection
     const userAgent = navigator.userAgent;
@@ -33,25 +35,25 @@ window.mobilePolishGate = function mobilePolishGate() {
     const isMobileSize = viewportWidth <= 640;
     const isIPhone = /iPhone/i.test(userAgent);
     
-    // Debug info (only log once to prevent spam)
-    if (!window._mobileDebugLogged) {
-      FlickletDebug.info(`📱 Mobile detection debug:`, {
-        viewportWidth,
-        userAgent: userAgent.substring(0, 50) + '...',
-        isMobileViewport,
-        isMobileDevice,
-        isMobileSize,
-        isIPhone,
-        forced
-      });
-      window._mobileDebugLogged = true;
-    }
+          // Debug info (only log once to prevent spam)
+          if (!window._mobileDebugLogged) {
+            debug.info(`📱 Mobile detection debug:`, {
+              viewportWidth,
+              userAgent: userAgent.substring(0, 50) + '...',
+              isMobileViewport,
+              isMobileDevice,
+              isMobileSize,
+              isIPhone,
+              forced
+            });
+            window._mobileDebugLogged = true;
+          }
     
     // More aggressive mobile detection - force iPhone to mobile
     const enable = forced || isMobileDevice || isMobileViewport || isMobileSize || isIPhone || viewportWidth <= 768;
     
     document.body.classList.toggle('mobile-v1', enable);
-    FlickletDebug.info(`📱 Mobile polish ${enable ? 'ENABLED' : 'DISABLED'} — vw:${viewportWidth} (device: ${isMobileDevice}, viewport: ${isMobileViewport}, size: ${isMobileSize})`);
+    debug.info(`📱 Mobile polish ${enable ? 'ENABLED' : 'DISABLED'} — vw:${viewportWidth} (device: ${isMobileDevice}, viewport: ${isMobileViewport}, size: ${isMobileSize})`);
   }
 
   // Apply immediately
