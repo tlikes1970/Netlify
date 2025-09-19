@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v27.6</title>
+    <title>Flicklet - TV & Movie Tracker v27.7</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
     />
-    <meta name="build" content="v27.6">
+    <meta name="build" content="v27.7">
     
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
@@ -125,6 +125,10 @@
     <!-- Firebase modular init SECOND as an ES module -->
     <script type="module" src="/js/firebase-init.js?v=v26.8"></script>
     
+    <!-- TMDB API client -->
+    <script src="/tmdb-config.js?v=v27.6"></script>
+    <script src="/scripts/tmdb.js?v=v27.6"></script>
+    
     <!-- Auth and data initialization -->
     <script type="module" src="/js/data-init.js?v=v26.8"></script>
     <script type="module" src="/js/auth.js?v=v26.8"></script>
@@ -177,7 +181,7 @@
             <div id="headerGreeting" class="header-greeting" aria-live="polite"></div>
           </div>
           <div class="header-center">
-            <span class="version-display">v27.6</span>
+            <span class="version-display">v27.7</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
