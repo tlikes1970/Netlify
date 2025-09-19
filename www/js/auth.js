@@ -31,4 +31,15 @@
   }
 
   window.startSignIn = startSignIn;
+
+  window.startSignOut = async () => {
+    try {
+      if (!window.firebaseAuth) await window.__FIREBASE_READY__;
+      const { signOut } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
+      await signOut(window.firebaseAuth);
+      log("signed out");
+    } catch (e) {
+      err("signOut failed:", e);
+    }
+  };
 })();
