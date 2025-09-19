@@ -197,13 +197,15 @@ document.addEventListener('click', (e) => {
     
     if (!currentUser) {
       // Signed out → sign in
-      if (typeof window.login === 'function') return window.login();
+      if (window.FlickletApp && typeof window.FlickletApp.showSignInModal === 'function') {
+        return window.FlickletApp.showSignInModal();
+      }
       // Fallback to Google Auth popup
       if (auth && window.GoogleAuthProvider) {
         const provider = new window.GoogleAuthProvider();
         return auth.signInWithPopup(provider);
       }
-      console.warn('[AUTH] login() not found');
+      console.warn('[AUTH] FlickletApp.showSignInModal() not found');
     } else {
       // Signed in → sign out
       const confirmOut = window.confirm('Sign out now?');

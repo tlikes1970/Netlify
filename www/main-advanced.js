@@ -9,6 +9,9 @@
 // Import configuration first (critical)
 import "./js/config.js";
 
+// Import debug utilities first (needed by other modules)
+import "./js/debug-utils.js";
+
 // Import core utilities (critical)
 import "./js/utils.js";
 import "./js/common-utils.js";
