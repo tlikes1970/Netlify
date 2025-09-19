@@ -1,5 +1,6 @@
 // Simple console test for tab functionality
 // Run this in the browser console after the page loads
+// Updated for port 8080
 
 console.log("🧪 Running simple tab functionality test...");
 

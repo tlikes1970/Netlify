@@ -30,13 +30,13 @@
 
   // Helper: read appData safely
   function readLocalAppData() {
-    return storage.get("appData", { tv:{watching:[],wishlist:[],watched:[]}, movies:{watching:[],wishlist:[],watched:[]}, settings:{} });
+    return storage.get("flicklet-data", { tv:{watching:[],wishlist:[],watched:[]}, movies:{watching:[],wishlist:[],watched:[]}, settings:{} });
   }
 
   // Helper: write appData safely
   function writeLocalAppData(data) {
     if (!data || typeof data !== "object") return;
-    storage.set("appData", data);
+    storage.set("flicklet-data", data);
   }
 
   // Expose a manual loader used by logs you've seen
