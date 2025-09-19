@@ -87,6 +87,14 @@
         const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
         onAuthStateChanged(auth, async (user) => {
           log("auth state:", user ? "signed-in" : "signed-out");
+          
+          // Re-enable cloud sync when user signs in
+          if (user && !window.__CLOUD_ENABLED__) {
+            window.__CLOUD_ENABLED__ = true;
+            window.__AUTH_READY__ = true;
+            log("Cloud sync re-enabled for user:", user.uid);
+          }
+          
           try {
             await trySync("auth-change");
           } catch (e) {
@@ -95,6 +103,27 @@
         });
       } else {
         warn("cloud disabled (auth/db not ready) — local-only mode");
+        
+        // Set up a fallback auth listener for when cloud becomes available
+        if (window.firebaseAuth) {
+          const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
+          onAuthStateChanged(window.firebaseAuth, async (user) => {
+            log("fallback auth state:", user ? "signed-in" : "signed-out");
+            
+            // Re-enable cloud sync when user signs in
+            if (user) {
+              window.__CLOUD_ENABLED__ = true;
+              window.__AUTH_READY__ = true;
+              log("Cloud sync enabled for user:", user.uid);
+              
+              try {
+                await trySync("auth-change-fallback");
+              } catch (e) {
+                warn("fallback sync failed:", e?.message || e);
+              }
+            }
+          });
+        }
       }
     } catch (e) {
       err("init failure:", e?.message || e);
@@ -105,7 +134,8 @@
   async function getUserDocRef(kind) {
     if (!window.__CLOUD_ENABLED__) throw new Error("cloud-disabled");
     const { doc } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js");
-    const uid = auth?.currentUser?.uid;
+    const currentAuth = window.firebaseAuth || auth;
+    const uid = currentAuth?.currentUser?.uid;
     if (!uid) throw new Error("no-user");
     if (kind === "settings") return doc(db, `users/${uid}/settings/app`);
     if (kind === "lists")    return doc(db, `users/${uid}/lists/app`);
@@ -122,8 +152,9 @@
         import("https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js")
       ]);
 
-      // Guard: ensure user
-      const uid = auth?.currentUser?.uid || null;
+      // Guard: ensure user - use current auth state, not captured variable
+      const currentAuth = window.firebaseAuth || auth;
+      const uid = currentAuth?.currentUser?.uid || null;
       if (!uid) { warn("sync skipped:", reason, "- no user"); return; }
 
       // Pull remote
