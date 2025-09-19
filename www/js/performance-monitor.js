@@ -291,6 +291,10 @@ export class PerformanceMonitor {
         return;
       }
       
+      if (!this.metrics) {
+        this.metrics = {};
+      }
+      
       if (!this.metrics.interactions) {
         this.metrics.interactions = {
           byType: {},
