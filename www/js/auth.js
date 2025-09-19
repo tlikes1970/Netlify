@@ -6,6 +6,12 @@
 
   async function startSignIn() {
     try {
+      // Wait for Firebase to be ready
+      if (!window.firebaseApp || !window.firebaseAuth) {
+        log("waiting for Firebase ready...");
+        await window.__FIREBASE_READY__;
+      }
+      
       const { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect } =
         await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
       const app  = window.firebaseApp;

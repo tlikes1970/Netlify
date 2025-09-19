@@ -27,7 +27,7 @@ export class Config {
         clientId: "",
       },
       app: {
-        version: "27.4",
+        version: "27.5",
         name: "Flicklet - TV & Movie Tracker",
       },
     };
