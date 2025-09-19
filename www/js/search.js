@@ -163,6 +163,9 @@
       searchResults.innerHTML = '';
     }
     
+    // Show other tabs when search is cleared
+    showOtherTabs();
+    
     // Clear timeout
     if (searchTimeout) {
       clearTimeout(searchTimeout);
@@ -177,6 +180,9 @@
   function showLoadingState() {
     if (!searchResults) return;
     
+    // Hide other tabs when showing loading state
+    hideOtherTabs();
+    
     searchResults.style.display = 'block';
     searchResults.innerHTML = `
       <div style="text-align: center; padding: 40px;">
@@ -189,6 +195,9 @@
   // Show error state
   function showErrorState(message) {
     if (!searchResults) return;
+    
+    // Hide other tabs when showing error state
+    hideOtherTabs();
     
     searchResults.style.display = 'block';
     searchResults.innerHTML = `
@@ -223,6 +232,9 @@
     if (resultsCount) {
       resultsCount.textContent = filteredResults.length;
     }
+    
+    // Hide other tabs when showing search results
+    hideOtherTabs();
     
     // Show results
     searchResults.style.display = 'block';
@@ -343,6 +355,9 @@
   function showNoResults() {
     if (!searchResults) return;
     
+    // Hide other tabs when showing no results
+    hideOtherTabs();
+    
     searchResults.style.display = 'block';
     searchResults.innerHTML = `
       <div style="text-align: center; padding: 40px;">
@@ -351,6 +366,30 @@
         <div style="margin-top: 10px; color: #666; font-size: 14px;">Try different keywords or check your spelling</div>
       </div>
     `;
+  }
+  
+  // Hide other tabs when search results are shown
+  function hideOtherTabs() {
+    const tabIds = ['home', 'watching', 'wishlist', 'watched', 'discover', 'settings'];
+    tabIds.forEach(tabId => {
+      const section = document.getElementById(tabId);
+      if (section) {
+        section.style.display = 'none';
+        log(`Hidden tab: ${tabId}`);
+      }
+    });
+  }
+  
+  // Show other tabs when search is cleared
+  function showOtherTabs() {
+    const tabIds = ['home', 'watching', 'wishlist', 'watched', 'discover', 'settings'];
+    tabIds.forEach(tabId => {
+      const section = document.getElementById(tabId);
+      if (section) {
+        section.style.display = '';
+        log(`Shown tab: ${tabId}`);
+      }
+    });
   }
   
   // Open item details

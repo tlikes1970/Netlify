@@ -1126,6 +1126,15 @@ waitForFirebaseReady() {
         console.log('🧹 Clearing search due to tab switch to:', tab);
         window.SearchModule.clearSearch();
       }
+      
+      // If we're switching away from search, make sure the target tab is visible
+      if (window.SearchModule && !window.SearchModule.getSearchState().isSearching) {
+        const targetSection = document.getElementById(tab);
+        if (targetSection) {
+          targetSection.style.display = '';
+          console.log(`✅ Showing target tab: ${tab}`);
+        }
+      }
 
       // Tab button classes - hide current tab, show others evenly spaced
       // BUT: During search, show all tabs for navigation
