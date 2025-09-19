@@ -191,6 +191,11 @@ export class PerformanceMonitor {
       document.addEventListener(
         type,
         (event) => {
+          // Skip tab button clicks to avoid interference
+          if (type === 'click' && event.target.closest('.tab')) {
+            return;
+          }
+
           interactionCount++;
 
           // Measure interaction responsiveness
@@ -200,7 +205,10 @@ export class PerformanceMonitor {
             const responseTime = performance.now() - startTime;
             totalInteractionTime += responseTime;
 
-            self.recordInteraction(type, responseTime);
+            // Add safety check for self context
+            if (self && typeof self.recordInteraction === 'function') {
+              self.recordInteraction(type, responseTime);
+            }
           });
         },
         { passive: true }

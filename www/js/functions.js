@@ -91,7 +91,18 @@ window.addEventListener('app:data:ready', () => {
 });
 
 // ---- Tab / Render Pipeline ----
-// window.switchToTab is implemented in inline-script-02.js
+// Global switchToTab function as fallback
+window.switchToTab = function switchToTab(tab) {
+  if (!window.FlickletApp) {
+    console.error('[switchToTab] FlickletApp missing');
+    return;
+  }
+  if (typeof window.FlickletApp.switchToTab === 'function') {
+    window.FlickletApp.switchToTab(tab);
+  } else {
+    console.error('[switchToTab] FlickletApp.switchToTab not available');
+  }
+};
 
 window.updateTabContent = function updateTabContent(tab) {
   if (tab === 'home') {
