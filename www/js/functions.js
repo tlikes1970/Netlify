@@ -124,25 +124,49 @@ function rerenderIfVisible(list) {
 }
 
 window.updateTabCounts = function updateTabCounts() {
-  console.log('🔢 Updating tab counts...');
-  const counts = {
-    watching: (window.appData?.tv?.watching?.length || 0) + (window.appData?.movies?.watching?.length || 0),
-    wishlist: (window.appData?.tv?.wishlist?.length || 0) + (window.appData?.movies?.wishlist?.length || 0),
-    watched:  (window.appData?.tv?.watched?.length  || 0) + (window.appData?.movies?.watched?.length  || 0),
-  };
-  
-  console.log('📊 Calculated counts:', counts);
-  
-  ['watching','wishlist','watched'].forEach(list => {
-    const badge = document.getElementById(`${list}Badge`);
-    if (badge) {
-      badge.textContent = counts[list];
-      console.log(`✅ ${list} badge updated to:`, badge.textContent);
-    } else {
-      console.log(`❌ ${list} badge not found!`);
-    }
-  });
+  try {
+    const NS = "[functions]";
+    const log = (...a) => console.log(NS, ...a);
+    const warn = (...a) => console.warn(NS, ...a);
+
+    const A = window.appData || {};
+    const tv = A.tv || {}, mv = A.movies || {};
+    const sum = (arr) => Array.isArray(arr) ? arr.length : 0;
+    const counts = {
+      watching: sum(tv.watching) + sum(mv.watching),
+      wishlist: sum(tv.wishlist) + sum(mv.wishlist),
+      watched:  sum(tv.watched)  + sum(mv.watched)
+    };
+    
+    // Update badges with fallback selectors
+    ['watching','wishlist','watched'].forEach(list => {
+      const badge = document.getElementById(`${list}Badge`) || 
+                   document.getElementById(`${list}Count`) ||
+                   document.querySelector(`[data-count="${list}"]`);
+      if (badge) {
+        badge.textContent = counts[list];
+      }
+    });
+    
+    log("counts:", counts);
+    return counts;
+  } catch (e) {
+    console.warn("[functions] updateTabCounts failed:", e?.message || e);
+    return { watching:0, wishlist:0, watched:0 };
+  }
 };
+
+// Respond to data ready events (from data-init)
+document.addEventListener("app:data:ready", (ev) => {
+  try {
+    const src = ev?.detail?.source || "unknown";
+    console.log("[functions] data ready:", src);
+    // Recompute counts; current tab renderer calls can remain where they are.
+    window.updateTabCounts();
+  } catch (e) {
+    console.warn("[functions] app:data:ready handler failed:", e?.message || e);
+  }
+});
 
 // Ensure the function is called when the page loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -201,37 +225,48 @@ window.loadHomeContent = function loadHomeContent() {
  * Dependencies: createShowCard function, appData structure, container elements, moveItem and removeItemFromCurrentList functions
  */
 window.loadListContent = function loadListContent(listType) {
-  console.log(`🔄 Loading ${listType} content...`);
-  
-  const container =
-    document.getElementById(`${listType}Grid`) ||
-    document.querySelector(`[data-section="${listType}"] .section-content`) ||
-    document.querySelector(`#${listType}`) ||
-    (() => { const d = document.createElement('div'); d.id = `${listType}Grid`;
-             (document.querySelector('main,#app,#root,body')||document.body).appendChild(d); return d; })();
+  try {
+    const NS = "[functions]";
+    const log = (...a) => console.log(NS, ...a);
+    const warn = (...a) => console.warn(NS, ...a);
 
-  container.className = 'poster-cards-grid';
+    const A = window.appData || {};
+    const tv = A.tv || {}, mv = A.movies || {};
+    const items = [
+      ...(Array.isArray(tv[listType]) ? tv[listType] : []),
+      ...(Array.isArray(mv[listType]) ? mv[listType] : [])
+    ];
+    
+    const container = document.getElementById(`${listType}Grid`) || 
+                     document.getElementById(`${listType}List`) ||
+                     document.querySelector(`[data-section="${listType}"] .section-content`) ||
+                     (() => {
+                       const d = document.createElement('div');
+                       d.className = 'poster-cards-grid';
+                       (document.querySelector('main,#app,body')||document.body).appendChild(d);
+                       return d;
+                     })();
 
-  if (typeof window.createPosterCard !== 'function') {
-    console.error('[cards] createPosterCard missing'); return;
+    container.className = 'poster-cards-grid';
+    container.innerHTML = '';
+
+    const mk = window.createPosterCard;
+    if (!items.length || typeof mk !== 'function') {
+      container.innerHTML = '<div class="poster-cards-empty">Nothing here yet.</div>';
+      return;
+    }
+
+    items.forEach((it) => {
+      try {
+        const el = mk(it, listType);
+        if (el) container.appendChild(el);
+      } catch (e) {
+        warn("render item failed:", e?.message || e);
+      }
+    });
+  } catch (e) {
+    console.warn("[functions] loadListContent failed:", e?.message || e);
   }
-
-  const items = []
-    .concat(window.appData?.tv?.[listType] || [])
-    .concat(window.appData?.movies?.[listType] || []);
-
-  console.log(`📊 ${listType} items found:`, items.length, {
-    tv: window.appData?.tv?.[listType]?.length || 0,
-    movies: window.appData?.movies?.[listType]?.length || 0,
-    appData: !!window.appData
-  });
-
-  container.innerHTML = '';
-  if (!items.length) {
-    container.innerHTML = '<div class="poster-cards-empty">Nothing here yet.</div>';
-    return;
-  }
-  for (const it of items) container.appendChild(window.createPosterCard(it, listType));
 };
 
 function getNextList(currentList) {

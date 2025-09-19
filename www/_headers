@@ -1,0 +1,9 @@
+/*
+  Content-Security-Policy: default-src 'self';
+  Content-Security-Policy: script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://www.gstatic.com;
+  Content-Security-Policy: style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  Content-Security-Policy: font-src 'self' https://fonts.gstatic.com;
+  Content-Security-Policy: img-src 'self' data: https:;
+  Content-Security-Policy: connect-src 'self' https://api.themoviedb.org https://firebase.googleapis.com https://www.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://accounts.google.com https://www.gstatic.com;
+  Content-Security-Policy: frame-src 'self' https://accounts.google.com;
+*/
