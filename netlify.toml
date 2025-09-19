@@ -3,6 +3,11 @@ publish = "www"
 functions = "netlify/functions"
 command = "echo 'Static site - no build required'"
 
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://image.tmdb.org data: https:; connect-src 'self' https://api.themoviedb.org https://firebase.googleapis.com https://www.googleapis.com https://securetoken.googleapis.com https://www.gstatic.com https://apis.google.com https://accounts.google.com; frame-src 'self' https://accounts.google.com https://myaccount.google.com https://apis.google.com; form-action 'self' https://accounts.google.com; base-uri 'self'; frame-ancestors 'none'"
+
 [[redirects]]
 from = "/api/*"
 to = "/.netlify/functions/:splat"

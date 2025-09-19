@@ -1,93 +1,115 @@
 // www/js/auth.js
-import {
-  getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import {
-  getFirestore, doc, getDoc, setDoc
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+// Hardened auth flow: popup first; on error → redirect fallback.
+// Minimal diagnostics; no noisy logs.
 
-(function initAuthBridge() {
+(async () => {
+  const { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, setPersistence, browserLocalPersistence } =
+    await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
+
   const app = window.firebaseApp;
+  if (!app) {
+    console.warn("[auth] firebaseApp missing");
+    return;
+  }
+
   const auth = window.firebaseAuth || getAuth(app);
-  const db   = window.firebaseDb   || getFirestore(app);
+  try { await setPersistence(auth, browserLocalPersistence); } catch {}
 
-  const $btn   = document.getElementById("accountButton");
-  const $label = document.getElementById("accountLabel");
-  const $hello = document.getElementById("headerGreeting");
+  const accountBtn = document.getElementById("accountButton");
+  const urlForcesRedirect = /[?&]auth=redirect\b/i.test(location.search);
 
-  const setGreeting = (username, displayName) => {
-    if (!$hello) return;
-    if (username) {
-      $hello.innerHTML = `<div><strong>${username}</strong><div class="snark">welcome back, legend ✨</div></div>`;
-    } else if (displayName) {
-      $hello.innerHTML = `<div><strong>${displayName}</strong><div class="snark">nice to see you 👋</div></div>`;
-    } else {
-      $hello.textContent = "";
+  const provider = new GoogleAuthProvider();
+
+  function setSignedOutUI() {
+    if (accountBtn) {
+      accountBtn.textContent = "👤 Sign In";
+      accountBtn.title = "Sign in with Google";
+      accountBtn.dataset.state = "signed-out";
     }
-  };
+  }
 
-  const setSignedOutUI = () => {
-    if ($label) $label.textContent = "Sign In";
-    if ($btn)   { $btn.title = "Sign in"; $btn.dataset.state = "signed-out"; }
-    setGreeting(null, null);
-    document.querySelectorAll("[data-requires-auth]").forEach(el => { el.setAttribute("disabled",""); el.setAttribute("aria-disabled","true"); });
-  };
+  function setSignedInUI(user) {
+    const label = user?.displayName || user?.email || "Sign Out";
+    if (accountBtn) {
+      accountBtn.textContent = "👤 Sign Out";
+      accountBtn.title = label;
+      accountBtn.dataset.state = "signed-in";
+    }
+  }
 
-  const setSignedInUI = async (user) => {
-    const displayName = user.displayName || user.email || "Signed in";
-    if ($label) $label.textContent = displayName;
-    if ($btn)   { $btn.title = "Sign Out"; $btn.dataset.state = "signed-in"; }
-
-    // pull settings.username, or prompt once, then persist
+  async function beginRedirect() {
     try {
-      const settingsRef = doc(db, `users/${user.uid}/settings/app`);
-      const snap = await getDoc(settingsRef);
-      let username = snap.exists() ? (snap.data().username || "") : "";
-
-      if (!username) {
-        username = window.prompt("What should we call you?")?.trim() || "";
-        if (username) {
-          await setDoc(settingsRef, { username }, { merge: true });
-        }
-      }
-      setGreeting(username, displayName);
-    } catch (e) {
-      console.warn("[auth] settings/username read/write failed:", e?.message || e);
-      setGreeting(null, displayName);
+      await signInWithRedirect(auth, provider);
+    } catch (err) {
+      console.warn("[auth] redirect failed", compactError(err));
     }
+  }
 
-    document.querySelectorAll("[data-requires-auth]").forEach(el => { el.removeAttribute("disabled"); el.removeAttribute("aria-disabled"); });
-  };
+  function compactError(err) {
+    return {
+      code: err?.code || null,
+      msg: err?.message || String(err || ""),
+      origin: location.origin,
+      cookieEnabled: navigator.cookieEnabled
+    };
+  }
 
-  // click handler toggles sign-in/out
-  if ($btn) {
-    $btn.addEventListener("click", async () => {
-      if ($btn.dataset.state === "signed-in") {
-        try { await signOut(auth); } catch (e) { console.warn("[auth] signOut failed:", e?.message || e); }
+  async function handleSignIn() {
+    if (urlForcesRedirect) return beginRedirect();
+
+    // Try popup first
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      const code = err?.code || "";
+      console.warn("[auth] popup failed", compactError(err));
+      // Common popup/cookie/CSP failures → redirect fallback
+      if (
+        code.includes("popup-") ||
+        code === "auth/network-request-failed" ||
+        code === "auth/unauthorized-domain"
+      ) {
+        return beginRedirect();
+      }
+      // Unknown error: still try redirect as last resort
+      return beginRedirect();
+    }
+  }
+
+  async function handleSignOut() {
+    try { await signOut(auth); } catch (err) {
+      console.warn("[auth] signOut failed", compactError(err));
+    }
+  }
+
+  // Button behavior
+  if (accountBtn) {
+    accountBtn.addEventListener("click", async () => {
+      if (auth.currentUser) {
+        await handleSignOut();
       } else {
-        try {
-          await signInWithPopup(auth, new GoogleAuthProvider());
-        } catch (e) {
-          console.warn("[auth] signIn failed:", e?.message || e);
-        }
+        accountBtn.textContent = "Signing in…";
+        await handleSignIn();
       }
     });
   }
 
-  // auth observer: update UI + kick data hydrate
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      setSignedOutUI();
-      window.dispatchEvent(new CustomEvent("user:signedOut"));
-      return;
+  // One-time redirect result (post-redirect landing)
+  try {
+    const res = await getRedirectResult(auth);
+    if (res && res.user) {
+      console.info("[auth] redirect success");
     }
-    await setSignedInUI(user);
-    window.dispatchEvent(new CustomEvent("user:signedIn", { detail: { uid: user.uid } }));
+  } catch (err) {
+    console.warn("[auth] redirect result error", compactError(err));
+  }
+
+  // Keep UI synced
+  onAuthStateChanged(auth, (user) => {
+    if (user) setSignedInUI(user); else setSignedOutUI();
+    window.firebaseAuth = auth; // ensure global stays current
   });
 
-  // initial
-  if (auth.currentUser) setSignedInUI(auth.currentUser);
-  else setSignedOutUI();
-
-  console.log("[auth] ready");
+  // Initialize UI state
+  if (auth.currentUser) setSignedInUI(auth.currentUser); else setSignedOutUI();
 })();

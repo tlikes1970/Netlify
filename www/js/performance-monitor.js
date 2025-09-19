@@ -284,28 +284,32 @@ export class PerformanceMonitor {
 
   // Record user interactions
   recordInteraction(type, responseTime) {
-    if (!this.metrics.interactions) {
-      this.metrics.interactions = {
-        byType: {},
-        total: 0,
-        averageResponseTime: 0,
-      };
+    try {
+      if (!this.metrics.interactions) {
+        this.metrics.interactions = {
+          byType: {},
+          total: 0,
+          averageResponseTime: 0,
+        };
+      }
+
+      if (!this.metrics.interactions.byType[type]) {
+        this.metrics.interactions.byType[type] = {
+          count: 0,
+          totalTime: 0,
+          averageTime: 0,
+        };
+      }
+
+      const typeMetrics = this.metrics.interactions.byType[type];
+      typeMetrics.count++;
+      typeMetrics.totalTime += responseTime;
+      typeMetrics.averageTime = typeMetrics.totalTime / typeMetrics.count;
+
+      this.metrics.interactions.total++;
+    } catch (e) {
+      console.warn("[perf] recordInteraction guard", e && e.message);
     }
-
-    if (!this.metrics.interactions.byType[type]) {
-      this.metrics.interactions.byType[type] = {
-        count: 0,
-        totalTime: 0,
-        averageTime: 0,
-      };
-    }
-
-    const typeMetrics = this.metrics.interactions.byType[type];
-    typeMetrics.count++;
-    typeMetrics.totalTime += responseTime;
-    typeMetrics.averageTime = typeMetrics.totalTime / typeMetrics.count;
-
-    this.metrics.interactions.total++;
   }
 
   // Get performance rating
