@@ -1963,11 +1963,19 @@ waitForFirebaseReady() {
     },
   };
 
-  // Expose singleton
-  window.FlickletApp = App;
-  
-  // Also expose as instance for compatibility
-  window.FlickletAppInstance = App;
+         // Expose singleton
+         window.FlickletApp = App;
+
+         // Also expose as instance for compatibility
+         window.FlickletAppInstance = App;
+
+         // Initialize the app when DOM is ready
+         document.addEventListener('DOMContentLoaded', () => {
+           console.log('🚀 DOMContentLoaded - initializing FlickletApp');
+           App.init().catch(error => {
+             console.error('❌ FlickletApp initialization failed:', error);
+           });
+         });
   
   // Expose UserViewModel globally for verification
   window.UserViewModel = UserViewModel;
