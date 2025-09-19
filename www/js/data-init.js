@@ -242,6 +242,13 @@
       }
 
       writeLocalAppData(local);
+      
+      // Update window.appData from localStorage after sync
+      if (typeof window.loadAppData === 'function') {
+        window.loadAppData();
+        log("window.appData updated from localStorage after sync");
+      }
+      
       document.dispatchEvent(new CustomEvent("app:data:ready", { detail: { source: "cloud" }}));
       log("sync complete:", reason, { tvCounts: Object.fromEntries(Object.entries(local.tv).map(([k,v])=>[k, v.length])), movieCounts: Object.fromEntries(Object.entries(local.movies).map(([k,v])=>[k, v.length])) });
     } catch (e) {
