@@ -285,6 +285,11 @@ export class PerformanceMonitor {
   // Record user interactions
   recordInteraction(type, responseTime) {
     try {
+      if (!type || typeof type !== 'string') {
+        console.warn("[perf] recordInteraction: invalid type", type);
+        return;
+      }
+      
       if (!this.metrics.interactions) {
         this.metrics.interactions = {
           byType: {},
