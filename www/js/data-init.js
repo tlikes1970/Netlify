@@ -174,6 +174,11 @@
     const currentAuth = window.firebaseAuth || auth;
     const uid = currentAuth?.currentUser?.uid;
     if (!uid) throw new Error("no-user");
+    
+    // Use window.firebaseDb directly instead of captured db variable
+    const db = window.firebaseDb;
+    if (!db) throw new Error("no-db");
+    
     if (kind === "settings") return doc(db, `users/${uid}/settings/app`);
     if (kind === "lists")    return doc(db, `users/${uid}/lists/app`);
     throw new Error("bad-kind");
