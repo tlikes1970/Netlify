@@ -104,6 +104,43 @@
       } else {
         warn("cloud disabled (auth/db not ready) — local-only mode");
         
+        // Listen for Firebase ready event
+        window.addEventListener('firebase:ready', async () => {
+          log("Firebase ready event received, re-evaluating cloud status");
+          
+          // Re-check Firebase availability
+          const app = window.firebaseApp;
+          const auth = window.firebaseAuth;
+          const db = window.firebaseDb;
+          
+          if (app && auth && db) {
+            window.__CLOUD_ENABLED__ = true;
+            window.__AUTH_READY__ = true;
+            log("Cloud sync enabled after Firebase ready event");
+            
+            // Set up auth listener
+            const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
+            onAuthStateChanged(auth, async (user) => {
+              log("auth state:", user ? "signed-in" : "signed-out");
+              
+              try {
+                await trySync("auth-change");
+              } catch (e) {
+                warn("sync on auth-change failed:", e?.message || e);
+              }
+            });
+            
+            // Try immediate sync if user is already signed in
+            if (auth.currentUser) {
+              try {
+                await trySync("firebase-ready");
+              } catch (e) {
+                warn("immediate sync failed:", e?.message || e);
+              }
+            }
+          }
+        });
+        
         // Set up a fallback auth listener for when cloud becomes available
         if (window.firebaseAuth) {
           const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
