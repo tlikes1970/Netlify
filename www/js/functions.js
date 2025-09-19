@@ -162,7 +162,27 @@ window.updateTabCounts = function updateTabCounts() {
                    document.querySelector(`[data-count="${list}"]`);
       if (badge) {
         badge.textContent = counts[list];
-        log(`Updated ${list}Badge: ${counts[list]}`);
+        
+        // Force badge to be visible with inline styles to override any CSS
+        badge.style.display = 'inline-block';
+        badge.style.visibility = 'visible';
+        badge.style.opacity = '1';
+        badge.style.fontSize = '10px';
+        badge.style.backgroundColor = '#e91e63';
+        badge.style.color = 'white';
+        badge.style.padding = '2px 6px';
+        badge.style.borderRadius = '10px';
+        badge.style.marginLeft = '4px';
+        badge.style.fontWeight = 'bold';
+        
+        log(`Updated ${list}Badge: ${counts[list]}`, {
+          element: badge,
+          classes: badge.className,
+          style: badge.style.cssText,
+          display: getComputedStyle(badge).display,
+          visibility: getComputedStyle(badge).visibility,
+          opacity: getComputedStyle(badge).opacity
+        });
       } else {
         warn(`Badge not found for ${list}: ${list}Badge, ${list}Count, or [data-count="${list}"]`);
       }
