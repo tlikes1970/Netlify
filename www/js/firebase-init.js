@@ -1,11 +1,17 @@
 // --- Firebase v9 CDN Compat Bridge ---
 // This file exposes Firebase v9 CDN compat APIs on window for non-module scripts
 
-(function initFirebaseV9Bridge() {
+(function initFirebaseV9Bridge(retryCount = 0) {
+  const maxRetries = 50; // 5 seconds max
+  
   // Wait for Firebase to be loaded
   if (typeof firebase === 'undefined') {
-    console.warn('Firebase not loaded yet, retrying...');
-    setTimeout(initFirebaseV9Bridge, 100);
+    if (retryCount >= maxRetries) {
+      console.error('Firebase failed to load after 5 seconds - CSP may be blocking scripts');
+      return;
+    }
+    console.warn('Firebase not loaded yet, retrying...', retryCount + 1);
+    setTimeout(() => initFirebaseV9Bridge(retryCount + 1), 100);
     return;
   }
 
