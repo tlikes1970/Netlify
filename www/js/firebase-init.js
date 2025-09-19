@@ -1,47 +1,56 @@
 // www/js/firebase-init.js
-// Modular-only bridge. No compat. Safe to re-run.
+// Modular-only Firebase bridge. No compat. Safe to re-run.
+// If this file already exists, replace its contents with the IIFE below.
 
-import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+(async () => {
+  try {
+    const { initializeApp, getApp, getApps } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js");
+    const { getAuth, onAuthStateChanged }   = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
+    const { getFirestore }                  = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js");
 
-// Expect window.firebaseConfig to be defined earlier
-const cfg = window.firebaseConfig;
-if (!cfg) {
-  console.error("[firebase-init] Missing window.firebaseConfig");
-  // Set fallback flags to prevent crashes
-  window.__FIREBASE_MODULAR__ = false;
-  window.__NO_FIREBASE__ = true;
-  return;
-}
+    const cfg = window.firebaseConfig;
+    if (!cfg) {
+      console.error("[firebase-init] Missing window.firebaseConfig");
+      // Don't 'return' at top level; just mark not ready and exit IIFE
+      window.__FIREBASE_MODULAR__ = false;
+      return;
+    }
 
-try {
-  // Reuse if exists
-  const app = getApps().length ? getApp() : initializeApp(cfg);
+    const app = getApps().length ? getApp() : initializeApp(cfg);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
 
-  // Expose modular handles globally for legacy code paths
-  window.firebaseApp  = app;
-  window.firebaseAuth = getAuth(app);
-  window.firebaseDb   = getFirestore(app);
+    // Expose handles for legacy code (no compat!)
+    window.firebaseApp  = app;
+    window.firebaseAuth = auth;
+    window.firebaseDb   = db;
+    window.__FIREBASE_MODULAR__ = true;
 
-  // Useful diag flags
-  window.__FIREBASE_MODULAR__ = true;
-  window.__NO_FIREBASE__ = false;
+    // Provide a simple ready event for any code that needs to wait
+    window.dispatchEvent(new CustomEvent("firebase:ready", {
+      detail: { projectId: app?.options?.projectId }
+    }));
 
-  // Optional helper for consumers that need a ready callback
-  window.onAuthStateChanged = async (callback) => {
-    const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
-    return onAuthStateChanged(window.firebaseAuth, callback);
-  };
+    // Optional convenience
+    window.onAuthStateChanged = (cb) => onAuthStateChanged(auth, cb);
 
-  console.log("[firebase-init] Modular bridge ready", {
-    projectId: app?.options?.projectId,
-    hasAuth: !!window.firebaseAuth,
-    hasDb: !!window.firebaseDb
-  });
-} catch (error) {
-  console.error("[firebase-init] Failed to initialize modular bridge:", error);
-  // Set fallback flags to prevent crashes
-  window.__FIREBASE_MODULAR__ = false;
-  window.__NO_FIREBASE__ = true;
-}
+    // Helper for legacy code that needs to wait for Firebase
+    window.whenFirebaseReady = (fn) => {
+      if (window.__FIREBASE_MODULAR__ && window.firebaseApp && window.firebaseAuth && window.firebaseDb) {
+        fn();
+      } else {
+        const onReady = () => { window.removeEventListener("firebase:ready", onReady); fn(); };
+        window.addEventListener("firebase:ready", onReady);
+      }
+    };
+
+    console.log("[firebase-init] Modular bridge ready", {
+      projectId: app?.options?.projectId,
+      hasAuth: !!auth,
+      hasDb:   !!db
+    });
+  } catch (e) {
+    console.error("[firebase-init] Failed to initialize:", e);
+    window.__FIREBASE_MODULAR__ = false;
+  }
+})();
