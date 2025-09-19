@@ -195,11 +195,12 @@ export class PerformanceMonitor {
 
           // Measure interaction responsiveness
           const startTime = performance.now();
+          const self = this; // Capture this context
           requestAnimationFrame(() => {
             const responseTime = performance.now() - startTime;
             totalInteractionTime += responseTime;
 
-            this.recordInteraction(type, responseTime);
+            self.recordInteraction(type, responseTime);
           });
         },
         { passive: true }
