@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v27.0</title>
+    <title>Flicklet - TV & Movie Tracker v27.1</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
     />
-    <meta name="build" content="v27.0">
+    <meta name="build" content="v27.1">
     
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
@@ -177,13 +177,13 @@
             <div id="headerGreeting" class="header-greeting" aria-live="polite"></div>
           </div>
           <div class="header-center">
-            <span class="version-display">v27.0</span>
+            <span class="version-display">v27.1</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
           <div class="header-right">
-            <button id="accountButton" class="account-btn" aria-live="polite" title="Sign in">
-              👤 <span id="accountLabel">Sign In</span>
+            <button id="accountButton" class="account-btn" aria-live="polite" title="Sign in" onclick="(firebaseAuth?.currentUser ? startSignOut() : startSignIn())">
+              👤 <span id="accountButtonLabel">Sign In</span>
             </button>
             <select id="langToggle" class="lang-select select--sm" aria-label="Language" title="Language">
               <option value="en">EN</option>

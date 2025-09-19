@@ -38,12 +38,18 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.2/firebase
     window.firebaseDb   = db;
     window.__FIREBASE_MODULAR__ = true;
 
-    // Notify listeners
-    try {
-      window.dispatchEvent(new CustomEvent("firebase:ready", {
-        detail: { projectId: app.options.projectId }
-      }));
-    } catch {}
+    // Expose a one-shot promise
+    if (!window.__FIREBASE_READY__) {
+      let _resolve;
+      window.__FIREBASE_READY__ = new Promise(r => (_resolve = r));
+      // if someone already attached a resolver, call it safely
+      window.__FIREBASE_READY_RESOLVE__ = () => { try { _resolve?.(); } catch {} };
+    }
+    // resolve now and broadcast an event
+    window.__FIREBASE_READY_RESOLVE__?.();
+    window.dispatchEvent(new CustomEvent("firebase:ready", {
+      detail: { app: window.firebaseApp, auth: window.firebaseAuth, db: window.firebaseDb }
+    }));
 
     // Optional: debug
     onAuthStateChanged(auth, (u) => {
