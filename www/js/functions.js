@@ -162,6 +162,9 @@ window.updateTabCounts = function updateTabCounts() {
                    document.querySelector(`[data-count="${list}"]`);
       if (badge) {
         badge.textContent = counts[list];
+        log(`Updated ${list}Badge: ${counts[list]}`);
+      } else {
+        warn(`Badge not found for ${list}: ${list}Badge, ${list}Count, or [data-count="${list}"]`);
       }
     });
     
@@ -281,6 +284,11 @@ window.loadListContent = function loadListContent(listType) {
         warn("render item failed:", e?.message || e);
       }
     });
+    
+    // Update tab counts after rendering content
+    if (typeof window.updateTabCounts === 'function') {
+      window.updateTabCounts();
+    }
   } catch (e) {
     console.warn("[functions] loadListContent failed:", e?.message || e);
   }
