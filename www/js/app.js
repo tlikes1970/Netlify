@@ -1257,10 +1257,15 @@ waitForFirebaseReady() {
     bindTabClicks() {
       // Delegate on document to catch future buttons too
       document.addEventListener('click', (ev) => {
-        const el = ev.target.closest('[data-tab]');
-        if (!el) return;
+        // Check if clicked element is a tab button or inside one
+        const tabButton = ev.target.closest('.tab');
+        if (!tabButton) return;
 
-        const tab = el.getAttribute('data-tab');
+        // Extract tab name from button ID (e.g., 'homeTab' -> 'home')
+        const buttonId = tabButton.id;
+        if (!buttonId) return;
+
+        const tab = buttonId.replace('Tab', '');
         if (!tab) return;
 
         // Stop links from navigating and buttons from bubbling into overlays
@@ -1268,8 +1273,10 @@ waitForFirebaseReady() {
         ev.stopPropagation();
 
         // Only handle known tabs
-        const allowed = ['home','watching','wishlist','watched','discover','search','settings'];
+        const allowed = ['home','watching','wishlist','watched','discover','settings'];
         if (!allowed.includes(tab)) return;
+
+        console.log(`🔄 Tab clicked: ${tab} (from ${buttonId})`);
 
         try {
           if (typeof this.switchToTab === 'function') {
