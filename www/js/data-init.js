@@ -1,103 +1,72 @@
-// Goal: Immediate cards via localStorage, then transparent Firestore sync when available.
+// www/js/data-init.js
+import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-// 1) Add: www/js/data-init.js
-// - Boot from localStorage immediately
-// - Then, if Firebase Auth + Firestore are present and user is signed-in, load /users/{uid}/lists
-// - On success: update window.appData, persist to localStorage, dispatch "app:data:ready" (firestore)
-// - On failure: keep LS state, log a compact warning (no UI break)
+(function initData() {
+  const app = window.firebaseApp;
+  const auth = window.firebaseAuth || getAuth(app);
+  const db   = window.firebaseDb   || getFirestore(app);
 
-(function () {
-  // ---- helpers
-  const safeParse = (s) => { try { return JSON.parse(s); } catch { return null; } };
-  const EMPTY = { tv:{ watching:[], wishlist:[], watched:[] },
-                  movies:{ watching:[], wishlist:[], watched:[] } };
-
-  const setAppData = (obj, source) => {
-    window.appData = obj && typeof obj === 'object' ? obj : EMPTY;
-    try { localStorage.setItem('flicklet_appData', JSON.stringify(window.appData)); } catch {}
-    window.dispatchEvent(new CustomEvent('app:data:ready', { detail: { source } }));
+  // in-memory + localStorage helpers
+  const saveLocal = (data) => {
+    try { localStorage.setItem("appData", JSON.stringify(data)); } catch {}
+  };
+  const loadLocal = () => {
+    try { return JSON.parse(localStorage.getItem("appData") || "{}"); } catch { return {}; }
   };
 
-  // Debounced write function for Firestore updates
-  let writeTimeout;
-  const debouncedWrite = (data, type = 'lists') => {
-    clearTimeout(writeTimeout);
-    writeTimeout = setTimeout(async () => {
-      if (!window.firebaseDb || !window.currentUser) return;
-      try {
-        const ref = doc(window.firebaseDb, 'users', window.currentUser.uid, type, 'app');
-        await setDoc(ref, data, { merge: true });
-        console.log(`[data-init] ${type} synced to Firestore`);
-      } catch (error) {
-        console.warn(`[data-init] Failed to sync ${type} to Firestore:`, error);
-      }
-    }, 1000);
-  };
+  const ensureAppDataShape = (d) => ({
+    tv:     { watching: d?.tv?.watching || [], wishlist: d?.tv?.wishlist || [], watched: d?.tv?.watched || [] },
+    movies: { watching: d?.movies?.watching || [], wishlist: d?.movies?.wishlist || [], watched: d?.movies?.watched || [] },
+    settings: d?.settings || {}
+  });
 
-  // Expose debounced write globally
-  window.debouncedWrite = debouncedWrite;
+  async function readUserLists(uid) {
+    // primary location
+    const listsRef = doc(db, `users/${uid}/lists/app`);
+    const setRef   = doc(db, `users/${uid}/settings/app`);
+    const [listsSnap, settingsSnap] = await Promise.all([getDoc(listsRef), getDoc(setRef)]);
+    const lists = listsSnap.exists() ? listsSnap.data() : {};
+    const settings = settingsSnap.exists() ? settingsSnap.data() : {};
+    return ensureAppDataShape({ ...lists, settings });
+  }
 
-  // ---- 1) Local bootstrap (instant)
-  const fromLS = safeParse(localStorage.getItem('flicklet_appData'));
-  setAppData(fromLS || window.appData || EMPTY, fromLS ? 'localStorage' : 'empty');
-
-  // ---- 2) Firestore sync (non-blocking)
-  const hasFirebase = !!(window.firebaseApp || window.firebaseAuth || window.firebaseDb);
-  if (!hasFirebase) return; // not fatal
-
-  const trySync = async () => {
+  async function bootstrapForUser(uid) {
+    let data;
     try {
-      // v9 modular via globals your app already created
-      const { getAuth, onAuthStateChanged }    = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
-      const { getFirestore, doc, getDoc, setDoc } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js");
-      const app   = window.firebaseApp;
-      const auth  = window.firebaseAuth || getAuth(app);
-      const db    = window.firebaseDb   || getFirestore(app);
-
-      // wait for a signed in user (without blocking UI)
-      const user = auth.currentUser || await new Promise((resolve) => {
-        const unsub = onAuthStateChanged(auth, (u) => { if (u) { unsub(); resolve(u); } else { resolve(null); } });
-        setTimeout(() => { try { unsub(); } catch {} resolve(null); }, 2000); // soft timeout
-      });
-      if (!user) return; // not signed in; LS state remains active
-
-      // read /users/{uid}/lists
-      const listsRef = doc(db, 'users', user.uid, 'lists', 'app');
-      const listsSnap = await getDoc(listsRef);
-      
-      // read /users/{uid}/settings
-      const settingsRef = doc(db, 'users', user.uid, 'settings', 'app');
-      const settingsSnap = await getDoc(settingsRef);
-      
-      if (listsSnap.exists()) {
-        const server = listsSnap.data();
-        // Merge server over local (server wins if keys overlap)
-        const merged = {
-          tv:     { ...EMPTY.tv,     ...(window.appData?.tv||{}),     ...(server.tv||{}) },
-          movies: { ...EMPTY.movies, ...(window.appData?.movies||{}), ...(server.movies||{}) },
-        };
-        setAppData(merged, 'firestore');
-      } else {
-        // First-time user: seed server with our local (if any) so devices stay in sync
-        const seed = window.appData || EMPTY;
-        await setDoc(listsRef, seed, { merge: true });
-        setAppData(seed, 'firestore-seeded');
-      }
-      
-      // Update settings if they exist
-      if (settingsSnap.exists()) {
-        const settings = settingsSnap.data();
-        // Store settings in localStorage for quick access
-        try {
-          localStorage.setItem('flicklet_settings', JSON.stringify(settings));
-        } catch (e) {
-          console.warn('Failed to store settings in localStorage:', e);
-        }
-      }
+      data = await readUserLists(uid);
     } catch (e) {
-      console.warn('[data-init] Firestore sync skipped:', e?.message || e);
-      // keep local state; no dispatch (we already dispatched from LS)
+      console.warn("[data-init] Firestore read failed, falling back to local:", e?.message || e);
+      data = ensureAppDataShape(loadLocal());
     }
-  };
-  trySync();
+    window.appData = data;
+    saveLocal(data);
+
+    // trigger renders (reuse existing renderer)
+    try {
+      if (typeof window.loadListContent === "function") {
+        ["watching", "wishlist", "watched"].forEach((k) => window.loadListContent(k));
+      }
+      if (typeof window.updateTabCounts === "function") window.updateTabCounts();
+    } catch (e) {
+      console.warn("[data-init] render kick failed:", e?.message || e);
+    }
+    console.log("[data-init] hydrated", {
+      tv: Object.fromEntries(Object.entries(data.tv).map(([k,v])=>[k, v.length])),
+      mv: Object.fromEntries(Object.entries(data.movies).map(([k,v])=>[k, v.length]))
+    });
+  }
+
+  // events
+  window.addEventListener("firebase:ready", () => {
+    if (auth.currentUser) bootstrapForUser(auth.currentUser.uid);
+  });
+  window.addEventListener("user:signedIn", (e) => bootstrapForUser(e.detail.uid));
+  window.addEventListener("user:signedOut", () => {
+    // keep local, just clear in-memory to reflect signed-out state
+    window.appData = ensureAppDataShape(loadLocal());
+    if (typeof window.updateTabCounts === "function") window.updateTabCounts();
+  });
+
+  console.log("[data-init] ready");
 })();
