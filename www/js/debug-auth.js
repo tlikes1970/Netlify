@@ -21,11 +21,11 @@
     
     // Check Firebase availability
     console.log('Firebase available:', !!window.firebase);
-    console.log('Firebase auth available:', !!(window.firebase && window.firebase.auth));
+    console.log('Firebase auth available:', !!(window.firebaseAuth));
     
     // Check auth state
-    if (window.firebase && window.firebase.auth) {
-      const auth = window.firebase.auth();
+    if (window.firebaseAuth) {
+      const auth = window.firebaseAuth;
       const currentUser = auth.currentUser;
       console.log('Current user:', currentUser);
       console.log('User email:', currentUser?.email);
@@ -85,8 +85,8 @@
   function forceAuthRefresh() {
     console.log('🔄 Forcing auth state refresh...');
     
-    if (window.firebase && window.firebase.auth) {
-      const auth = window.firebase.auth();
+    if (window.firebaseAuth) {
+      const auth = window.firebaseAuth;
       const currentUser = auth.currentUser;
       
       if (currentUser) {
@@ -116,8 +116,8 @@
     }
     
     // Force sign out
-    if (window.firebase && window.firebase.auth) {
-      window.firebase.auth().signOut().then(() => {
+    if (window.firebaseAuth) {
+      window.firebaseAuth.signOut().then(() => {
         console.log('🧹 Signed out successfully');
         forceAuthRefresh();
       }).catch(err => {
@@ -133,8 +133,8 @@
     console.log('🧪 Testing authentication flow...');
     
     // Check if we can detect auth state
-    if (window.firebase && window.firebase.auth) {
-      const auth = window.firebase.auth();
+    if (window.firebaseAuth) {
+      const auth = window.firebaseAuth;
       const currentUser = auth.currentUser;
       
       if (currentUser) {
@@ -149,7 +149,7 @@
         });
       } else {
         console.log('🧪 User is signed out, testing sign in...');
-        const provider = new window.firebase.auth.GoogleAuthProvider();
+        const provider = new window.firebaseAuth.GoogleAuthProvider();
         auth.signInWithPopup(provider).then(() => {
           console.log('🧪 Sign in successful');
           setTimeout(() => {

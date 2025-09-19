@@ -1,9 +1,9 @@
 
     (function () {
-      // Firebase guard
-      const hasFirebase = !!(window.firebase && typeof window.firebase.initializeApp === 'function');
+      // Firebase modular bridge guard
+      const hasFirebase = !!(window.firebaseApp && window.firebaseAuth && window.firebaseDb);
       if (!hasFirebase) {
-        console.info('ℹ️ Firebase not loaded — cloud features disabled');
+        console.info('ℹ️ Firebase modular bridge not ready — cloud features disabled');
         // Provide harmless fallbacks so later code doesn't break
         window.loadUserDataFromCloud = window.loadUserDataFromCloud || (async () => null);
         window.addToList = window.addToList || (() => false);

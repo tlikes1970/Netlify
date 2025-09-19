@@ -16,7 +16,7 @@
   // Wait for Firebase to be ready
   function waitForFirebase() {
     return new Promise((resolve) => {
-      if (window.firebase && window.firebase.auth) {
+      if (window.firebaseAuth) {
         resolve();
       } else {
         setTimeout(() => waitForFirebase().then(resolve), 100);
@@ -41,7 +41,7 @@
       await waitForFirebase();
       await waitForSetAuthUI();
       
-      const auth = window.firebase.auth();
+      const auth = window.firebaseAuth;
       const currentUser = auth.currentUser;
       
       console.log('🔧 Current user from Firebase:', currentUser);

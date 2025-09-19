@@ -1,44 +1,47 @@
-// --- Firebase v9 CDN Compat Bridge ---
-// This file exposes Firebase v9 CDN compat APIs on window for non-module scripts
+// www/js/firebase-init.js
+// Modular-only bridge. No compat. Safe to re-run.
 
-(function initFirebaseV9Bridge(retryCount = 0) {
-  const maxRetries = 50; // 5 seconds max
-  
-  // Wait for Firebase to be loaded
-  if (typeof firebase === 'undefined') {
-    if (retryCount >= maxRetries) {
-      console.error('Firebase failed to load after 5 seconds - CSP may be blocking scripts');
-      return;
-    }
-    console.warn('Firebase not loaded yet, retrying...', retryCount + 1);
-    setTimeout(() => initFirebaseV9Bridge(retryCount + 1), 100);
-    return;
-  }
+import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-  // Initialize Firebase if not already done
-  if (!firebase.apps || firebase.apps.length === 0) {
-    // Use the existing firebase-config.js configuration
-    if (window.firebaseConfig) {
-      firebase.initializeApp(window.firebaseConfig);
-    } else {
-      console.error('firebaseConfig not found');
-      return;
-    }
-  }
+// Expect window.firebaseConfig to be defined earlier
+const cfg = window.firebaseConfig;
+if (!cfg) {
+  console.error("[firebase-init] Missing window.firebaseConfig");
+  // Set fallback flags to prevent crashes
+  window.__FIREBASE_MODULAR__ = false;
+  window.__NO_FIREBASE__ = true;
+  return;
+}
 
-  // Get auth instance
-  const auth = firebase.auth();
-  
-  // --- Expose minimal surface on window for non-module scripts/diagnostics ---
-  window.firebaseApp = firebase.app();
-  window.auth = auth;
-  window.getAuth = () => auth;
-  window.onAuthStateChanged = (authInstance, callback) => authInstance.onAuthStateChanged(callback);
-  window.setPersistence = (authInstance, persistence) => authInstance.setPersistence(persistence);
-  window.browserLocalPersistence = firebase.auth.Auth.Persistence.LOCAL;
-  window.GoogleAuthProvider = firebase.auth.GoogleAuthProvider;
-  window.signInWithPopup = (authInstance, provider) => authInstance.signInWithPopup(provider);
-  window.signOut = (authInstance) => authInstance.signOut();
+try {
+  // Reuse if exists
+  const app = getApps().length ? getApp() : initializeApp(cfg);
 
-  console.log('✅ Firebase v9 CDN bridge initialized');
-})();
+  // Expose modular handles globally for legacy code paths
+  window.firebaseApp  = app;
+  window.firebaseAuth = getAuth(app);
+  window.firebaseDb   = getFirestore(app);
+
+  // Useful diag flags
+  window.__FIREBASE_MODULAR__ = true;
+  window.__NO_FIREBASE__ = false;
+
+  // Optional helper for consumers that need a ready callback
+  window.onAuthStateChanged = async (callback) => {
+    const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
+    return onAuthStateChanged(window.firebaseAuth, callback);
+  };
+
+  console.log("[firebase-init] Modular bridge ready", {
+    projectId: app?.options?.projectId,
+    hasAuth: !!window.firebaseAuth,
+    hasDb: !!window.firebaseDb
+  });
+} catch (error) {
+  console.error("[firebase-init] Failed to initialize modular bridge:", error);
+  // Set fallback flags to prevent crashes
+  window.__FIREBASE_MODULAR__ = false;
+  window.__NO_FIREBASE__ = true;
+}

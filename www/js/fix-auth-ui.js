@@ -120,8 +120,8 @@
         return;
       }
       
-      const auth = window.firebase.auth();
-      const provider = new window.firebase.auth.GoogleAuthProvider();
+      const auth = window.firebaseAuth;
+      const provider = new window.firebaseAuth.GoogleAuthProvider();
       
       console.log('🔧 Starting Google sign in...');
       const result = await auth.signInWithPopup(provider);
@@ -151,7 +151,7 @@
         return;
       }
       
-      const auth = window.firebase.auth();
+      const auth = window.firebaseAuth;
       
       console.log('🔧 Starting sign out...');
       await auth.signOut();
@@ -178,7 +178,7 @@
   // Wait for Firebase to be ready
   function waitForFirebase() {
     return new Promise((resolve) => {
-      if (window.firebase && window.firebase.auth) {
+      if (window.firebaseAuth) {
         resolve();
       } else {
         setTimeout(() => waitForFirebase().then(resolve), 100);
@@ -194,7 +194,7 @@
     fixAuthUI();
     
     // Also listen for auth state changes
-    const auth = window.firebase.auth();
+    const auth = window.firebaseAuth;
     auth.onAuthStateChanged((user) => {
       console.log('🔧 Auth state changed:', user?.email || 'None');
       setTimeout(() => {

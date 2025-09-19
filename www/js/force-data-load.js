@@ -132,7 +132,7 @@
    */
   function waitForFirebase() {
     return new Promise((resolve) => {
-      if (window.firebase && window.firebase.auth && window.firebase.firestore) {
+      if (window.firebaseAuth && window.firebaseDb) {
         resolve();
       } else {
         setTimeout(() => waitForFirebase().then(resolve), 100);
@@ -147,7 +147,7 @@
     await waitForFirebase();
     
     // Listen for auth state changes
-    const auth = window.firebase.auth();
+    const auth = window.firebaseAuth;
     auth.onAuthStateChanged((user) => {
       if (user) {
         console.log('🔄 Auth state changed - user signed in:', user.email);

@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v26.5</title>
+    <title>Flicklet - TV & Movie Tracker v26.6</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
     />
-    <meta name="build" content="v26.5">
+    <meta name="build" content="v26.6">
     
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
@@ -119,16 +119,12 @@
       <link rel="stylesheet" href="/styles/cards.css?v=v24.27">
     </noscript>
 
-    <!-- Firebase compat SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase v9 modular (CDN) -->
+    <script type="module" src="/js/firebase-init.js?v=v26.5"></script>
 
     <!-- Project config (must define window.firebaseConfig) -->
     <script src="/firebase-config.js"></script>
     
-    <!-- Firebase v9 CDN Bridge -->
-    <script src="/js/firebase-init.js"></script>
 
     <!-- Guarded init: initialize app + Firestore once -->
 
@@ -179,7 +175,7 @@
             <div id="greetingSnark" class="greeting-snark" style="display: none;"></div>
           </div>
           <div class="header-center">
-            <span class="version-display">v26.5</span>
+            <span class="version-display">v26.6</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>

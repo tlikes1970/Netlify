@@ -208,7 +208,7 @@
     // setupAuthListener() removed - auth handled in initFirebase()
 
     initFirebase() {
-      if (window.__NO_FIREBASE__ || !(window.firebase && typeof window.firebase.initializeApp === 'function')) {
+      if (window.__NO_FIREBASE__ || !window.firebaseApp) {
         console.info('initFirebase skipped (SDK not present)');
         return;
       }
