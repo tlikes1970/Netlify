@@ -3,6 +3,14 @@
    This build removes duplicate init paths and normalizes tab/UI/render behavior.
 */
 
+// Fallback for FlickletDebug if not loaded
+window.FlickletDebug = window.FlickletDebug || {
+  info: console.log,
+  warn: console.warn,
+  error: console.error,
+  log: console.log
+};
+
 (function () {
   // Helper function to get translation
   function t(key) {

@@ -56,8 +56,12 @@ window.mobilePolishGate = function mobilePolishGate() {
     debug.info(`📱 Mobile polish ${enable ? 'ENABLED' : 'DISABLED'} — vw:${viewportWidth} (device: ${isMobileDevice}, viewport: ${isMobileViewport}, size: ${isMobileSize})`);
   }
 
-  // Apply immediately
-  applyMobileFlag();
+  // Apply when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyMobileFlag);
+  } else {
+    applyMobileFlag();
+  }
   
   // Listen for viewport changes (throttled to prevent loops)
   let resizeTimeout;
