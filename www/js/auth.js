@@ -36,6 +36,56 @@
     }
   }
 
+  // Update UI based on auth state
+  function updateAuthUI(user) {
+    const button = document.getElementById('accountButton');
+    const label = document.getElementById('accountButtonLabel');
+    const greeting = document.getElementById('headerGreeting');
+    
+    if (user) {
+      // Signed in
+      if (label) label.textContent = user.displayName || user.email || 'Signed In';
+      if (button) {
+        button.title = 'Sign Out';
+        button.dataset.state = 'signed-in';
+      }
+      if (greeting) {
+        greeting.innerHTML = `<div><strong>${user.displayName || 'User'}</strong><div class="snark">welcome back, legend ✨</div></div>`;
+      }
+    } else {
+      // Signed out
+      if (label) label.textContent = 'Sign In';
+      if (button) {
+        button.title = 'Sign In';
+        button.dataset.state = 'signed-out';
+      }
+      if (greeting) {
+        greeting.textContent = '';
+      }
+    }
+  }
+
+  // Listen for auth state changes
+  async function setupAuthListener() {
+    try {
+      if (!window.firebaseAuth) await window.__FIREBASE_READY__;
+      const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
+      onAuthStateChanged(window.firebaseAuth, (user) => {
+        log("auth state changed:", user ? "signed-in" : "signed-out");
+        updateAuthUI(user);
+      });
+    } catch (e) {
+      warn("auth listener setup failed:", e?.message || e);
+    }
+  }
+
+  // Initialize auth listener when Firebase is ready
+  if (window.__FIREBASE_READY__) {
+    window.__FIREBASE_READY__.then(setupAuthListener);
+  } else {
+    window.addEventListener('firebase:ready', setupAuthListener);
+  }
+
   window.startSignIn = startSignIn;
 
   window.startSignOut = async () => {
