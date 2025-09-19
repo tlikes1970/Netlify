@@ -180,7 +180,7 @@
     if (!db) throw new Error("no-db");
     
     if (kind === "settings") return doc(db, `users/${uid}/settings/app`);
-    if (kind === "lists")    return doc(db, `users/${uid}/lists/app`);
+    if (kind === "lists")    return doc(db, `users/${uid}`); // Read from user root document
     throw new Error("bad-kind");
   }
 
@@ -216,9 +216,29 @@
       }
       if (listsSnap.exists()) {
         const remote = listsSnap.data() || {};
-        // normalize shape (don't mutate unexpectedly)
-        local.tv     = { watching: remote?.tv?.watching || [], wishlist: remote?.tv?.wishlist || [], watched: remote?.tv?.watched || [] };
-        local.movies = { watching: remote?.movies?.watching || [], wishlist: remote?.movies?.wishlist || [], watched: remote?.movies?.watched || [] };
+        const watchlists = remote.watchlists || {};
+        
+        // Transform Firestore structure to app structure
+        local.tv = {
+          watching: watchlists.tv?.watching || [],
+          wishlist: watchlists.tv?.wishlist || [],
+          watched: watchlists.tv?.watched || []
+        };
+        
+        local.movies = {
+          watching: watchlists.movies?.watching || [],
+          wishlist: watchlists.movies?.wishlist || [],
+          watched: watchlists.movies?.watched || []
+        };
+        
+        log("Data transformation complete:", {
+          tvWatching: local.tv.watching.length,
+          tvWishlist: local.tv.wishlist.length,
+          tvWatched: local.tv.watched.length,
+          moviesWatching: local.movies.watching.length,
+          moviesWishlist: local.movies.wishlist.length,
+          moviesWatched: local.movies.watched.length
+        });
       }
 
       writeLocalAppData(local);
