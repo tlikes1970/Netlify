@@ -12,10 +12,10 @@
   // Initialize Firebase if not already done
   if (!firebase.apps || firebase.apps.length === 0) {
     // Use the existing firebase-config.js configuration
-    if (window.FIREBASE_CONFIG) {
-      firebase.initializeApp(window.FIREBASE_CONFIG);
+    if (window.firebaseConfig) {
+      firebase.initializeApp(window.firebaseConfig);
     } else {
-      console.error('FIREBASE_CONFIG not found');
+      console.error('firebaseConfig not found');
       return;
     }
   }
