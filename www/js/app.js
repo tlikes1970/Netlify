@@ -1687,14 +1687,23 @@ waitForFirebaseReady() {
       const searchInput = document.getElementById('search');
       const searchBtn = document.getElementById('searchBtn');
       if (searchInput && searchBtn) {
+        console.log('🔍 Setting up Enter key handler for search input');
         searchInput.addEventListener('keydown', (ev) => {
           if (ev.key === 'Enter') {
             ev.preventDefault();
             ev.stopPropagation();
             console.log('🔎 Enter pressed in search box — running search');
-            searchBtn.click(); // triggers the same onclick handler
+            // Call performSearch directly instead of clicking button
+            if (typeof window.performSearch === 'function') {
+              window.performSearch();
+            } else {
+              console.error('❌ performSearch not available on Enter key');
+            }
           }
         });
+        console.log('✅ Enter key handler attached to search input');
+      } else {
+        console.warn('⚠️ Cannot setup Enter key - missing search input or button');
       }
     },
 
