@@ -18,6 +18,7 @@
   let isSearching = false;
   let currentQuery = '';
   let searchTimeout = null;
+  let previousTab = null; // Remember which tab was active before search
   
   // DOM elements cache
   let searchInput = null;
@@ -165,6 +166,13 @@
     
     // Show other tabs when search is cleared
     showOtherTabs();
+    
+    // Return to previous tab if available
+    if (previousTab && window.FlickletApp && typeof window.FlickletApp.switchToTab === 'function') {
+      log(`Returning to previous tab: ${previousTab}`);
+      window.FlickletApp.switchToTab(previousTab);
+      previousTab = null;
+    }
     
     // Clear timeout
     if (searchTimeout) {
@@ -370,24 +378,36 @@
   
   // Hide other tabs when search results are shown
   function hideOtherTabs() {
-    const tabIds = ['home', 'watching', 'wishlist', 'watched', 'discover', 'settings'];
-    tabIds.forEach(tabId => {
-      const section = document.getElementById(tabId);
+    // Remember current tab before hiding
+    if (window.FlickletApp && window.FlickletApp.currentTab) {
+      previousTab = window.FlickletApp.currentTab;
+      log(`Remembered previous tab: ${previousTab}`);
+    }
+    
+    // Use same tab IDs as app.js for consistency
+    const TAB_IDS = ['home', 'watching', 'wishlist', 'watched', 'discover', 'settings'];
+    TAB_IDS.forEach(tabId => {
+      const section = document.getElementById(`${tabId}Section`);
       if (section) {
         section.style.display = 'none';
-        log(`Hidden tab: ${tabId}`);
+        log(`Hidden tab: ${tabId}Section`);
+      } else {
+        log(`Tab section not found: ${tabId}Section`);
       }
     });
   }
   
   // Show other tabs when search is cleared
   function showOtherTabs() {
-    const tabIds = ['home', 'watching', 'wishlist', 'watched', 'discover', 'settings'];
-    tabIds.forEach(tabId => {
-      const section = document.getElementById(tabId);
+    // Use same tab IDs as app.js for consistency
+    const TAB_IDS = ['home', 'watching', 'wishlist', 'watched', 'discover', 'settings'];
+    TAB_IDS.forEach(tabId => {
+      const section = document.getElementById(`${tabId}Section`);
       if (section) {
         section.style.display = '';
-        log(`Shown tab: ${tabId}`);
+        log(`Shown tab: ${tabId}Section`);
+      } else {
+        log(`Tab section not found: ${tabId}Section`);
       }
     });
   }

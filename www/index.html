@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v27.12</title>
+    <title>Flicklet - TV & Movie Tracker v27.13</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
     />
-    <meta name="build" content="v27.12">
+    <meta name="build" content="v27.13">
     
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
@@ -130,7 +130,7 @@
     <script src="/scripts/tmdb.js?v=v27.6"></script>
     
     <!-- Search module -->
-    <script src="/js/search.js?v=v27.12"></script>
+    <script src="/js/search.js?v=v27.13"></script>
     
     <!-- Auth and data initialization -->
     <script type="module" src="/js/data-init.js?v=v26.8"></script>
@@ -184,7 +184,7 @@
             <div id="headerGreeting" class="header-greeting" aria-live="polite"></div>
           </div>
           <div class="header-center">
-            <span class="version-display">v27.12</span>
+            <span class="version-display">v27.13</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
@@ -528,13 +528,13 @@
       </div>
 
       <!-- Discover -->
-              <div id="discoverSection" class="tab-section" style="display: none">
-          <div class="section">
-            <h3>✨ <span data-i18n="discover">Discover</span></h3>
-            <p data-i18n="discover_description">Recommendations based on your likes and ratings.</p>
-            <div id="discoverList" class="list-container"></div>
-          </div>
+      <div id="discoverSection" class="tab-section" style="display: none">
+        <div class="section">
+          <h3>✨ <span data-i18n="discover">Discover</span></h3>
+          <p data-i18n="discover_description">Recommendations based on your likes and ratings.</p>
+          <div id="discoverList" class="list-container"></div>
         </div>
+      </div>
 
       <!-- Settings / Profile -->
               <div id="settingsSection" class="tab-section" style="display: none">

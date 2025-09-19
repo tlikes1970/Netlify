@@ -1122,24 +1122,47 @@ waitForFirebaseReady() {
       this.previousTab = tab;
       
       // Clear search when switching tabs (except when staying on home)
-      if (window.SearchModule && window.SearchModule.getSearchState().isSearching && tab !== 'home') {
-        console.log('🧹 Clearing search due to tab switch to:', tab);
-        window.SearchModule.clearSearch();
+      if (window.SearchModule && typeof window.SearchModule.getSearchState === 'function') {
+        try {
+          const searchState = window.SearchModule.getSearchState();
+          if (searchState.isSearching && tab !== 'home') {
+            console.log('🧹 Clearing search due to tab switch to:', tab);
+            window.SearchModule.clearSearch();
+          }
+        } catch (error) {
+          console.warn('⚠️ Error checking search state:', error);
+        }
       }
       
       // If we're switching away from search, make sure the target tab is visible
-      if (window.SearchModule && !window.SearchModule.getSearchState().isSearching) {
-        const targetSection = document.getElementById(tab);
-        if (targetSection) {
-          targetSection.style.display = '';
-          console.log(`✅ Showing target tab: ${tab}`);
+      if (window.SearchModule && typeof window.SearchModule.getSearchState === 'function') {
+        try {
+          const searchState = window.SearchModule.getSearchState();
+          if (!searchState.isSearching) {
+            const targetSection = document.getElementById(`${tab}Section`);
+            if (targetSection) {
+              targetSection.style.display = '';
+              console.log(`✅ Showing target tab: ${tab}Section`);
+            }
+          }
+        } catch (error) {
+          console.warn('⚠️ Error checking search state for tab visibility:', error);
         }
       }
 
       // Tab button classes - hide current tab, show others evenly spaced
       // BUT: During search, show all tabs for navigation
-      const ids = ['home','watching','wishlist','watched','discover','settings'];
-      const isSearching = window.SearchModule ? window.SearchModule.getSearchState().isSearching : false;
+      const TAB_IDS = ['home','watching','wishlist','watched','discover','settings'];
+      const ids = TAB_IDS;
+      let isSearching = false;
+      if (window.SearchModule && typeof window.SearchModule.getSearchState === 'function') {
+        try {
+          const searchState = window.SearchModule.getSearchState();
+          isSearching = searchState.isSearching;
+        } catch (error) {
+          console.warn('⚠️ Error getting search state for tab visibility:', error);
+        }
+      }
       ids.forEach(name => {
         const btn = document.getElementById(`${name}Tab`);
         if (btn) {
@@ -1167,8 +1190,7 @@ waitForFirebaseReady() {
         const section = document.getElementById(`${name}Section`);
         if (section) {
           section.classList.toggle('active', name === tab);
-          // keep inline display off; class controls visibility
-          section.style.display = '';
+          // Let CSS classes control visibility, don't override with inline styles
           console.log(`✅ ${name}Section active: ${name === tab}`);
         } else {
           console.error(`❌ Section not found: ${name}Section`);
@@ -1205,12 +1227,16 @@ waitForFirebaseReady() {
         });
       }
 
-      // Hide/show search bar based on tab
+      // Hide/show search bar based on tab configuration
       const searchContainer = document.querySelector('.top-search');
       if (searchContainer) {
-        if (tab === 'settings') {
+        // Define which tabs should hide the search bar
+        const TABS_WITHOUT_SEARCH = ['settings'];
+        const shouldHideSearch = TABS_WITHOUT_SEARCH.includes(tab);
+        
+        if (shouldHideSearch) {
           searchContainer.style.display = 'none';
-          console.log('🔍 Search bar hidden for settings tab');
+          console.log('🔍 Search bar hidden for', tab, 'tab');
         } else {
           searchContainer.style.display = '';
           console.log('🔍 Search bar shown for', tab, 'tab');
@@ -1263,23 +1289,8 @@ waitForFirebaseReady() {
       // STEP 3.1 — Delegated tab click handler (one place, works for all tab buttons/links)
       this.bindTabClicks();
 
-      // Tab clicks (id-based) - keeping for backward compatibility
-      const bind = (id, fn) => {
-        const el = document.getElementById(id);
-        if (el) {
-          console.log(`🔧 Binding ${id}`);
-          el.addEventListener('click', fn);
-        } else {
-          console.warn(`🔧 Element ${id} not found`);
-        }
-      };
-
-      bind('homeTab',     () => this.switchToTab('home'));
-      bind('watchingTab', () => this.switchToTab('watching'));
-      bind('wishlistTab', () => this.switchToTab('wishlist'));
-      bind('watchedTab',  () => this.switchToTab('watched'));
-      bind('discoverTab', () => this.switchToTab('discover'));
-      bind('settingsTab', () => this.switchToTab('settings'));
+      // Tab clicks are handled by the delegated handler above
+      // Individual handlers removed to prevent duplicate event handling
 
       // Keyboard shortcuts
       document.addEventListener('keydown', (e) => {
