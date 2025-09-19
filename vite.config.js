@@ -30,8 +30,8 @@ export default defineConfig({
     },
     // Asset optimization
     assetsInlineLimit: 4096,
-    // Source maps for debugging
-    sourcemap: true,
+    // Source maps for debugging - disabled in production to prevent CSP errors
+    sourcemap: process.env.NODE_ENV === "production" ? false : true,
   },
   server: {
     port: 8000,
@@ -44,7 +44,7 @@ export default defineConfig({
   },
   // CSS optimization
   css: {
-    devSourcemap: true,
+    devSourcemap: process.env.NODE_ENV !== "production",
   },
   // Plugin configuration
   plugins: [
