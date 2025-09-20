@@ -226,59 +226,27 @@
    * @returns {HTMLElement} Card v2 element
    */
   function createCardV2(item) {
-    // Use new PosterCard system if available
-    if (window.PosterCard && window.CardDataNormalizer) {
-      const normalizedData = window.CardDataNormalizer.normalize(item, 'tmdb', 'discover');
-      
-      if (normalizedData) {
-        return window.PosterCard({
-          id: normalizedData.id,
-          mediaType: normalizedData.mediaType,
-          title: normalizedData.title,
-          posterUrl: normalizedData.posterUrl,
-          posterPath: normalizedData.posterPath,
-          year: normalizedData.year,
-          rating: normalizedData.rating,
-          runtime: normalizedData.runtime,
-          season: normalizedData.season,
-          episode: normalizedData.episode,
-          badges: normalizedData.badges,
-          isNew: normalizedData.isNew,
-          isAvailable: normalizedData.isAvailable,
-          progress: normalizedData.progress,
-          quickActions: normalizedData.quickActions,
-          overflowActions: normalizedData.overflowActions,
-          onOpenDetails: () => openDetails(item),
-          section: 'discover'
-        });
-      }
+    // Use Card system
+    if (window.Card) {
+      return window.Card({
+        variant: 'poster',
+        id: item.id || item.tmdb_id || item.tmdbId,
+        title: item.title || item.name,
+        subtitle: item.release_date ? `${new Date(item.release_date).getFullYear()} • ${item.media_type === 'tv' ? 'TV Series' : 'Movie'}` : 
+                 (item.media_type === 'tv' ? 'TV Series' : 'Movie'),
+        posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : null,
+        rating: item.vote_average || 0,
+        badges: [{ label: 'Personalized', kind: 'status' }],
+        onOpenDetails: () => {
+          if (window.openTMDBLink) {
+            window.openTMDBLink(item.id, item.media_type || 'movie');
+          }
+        }
+      });
     }
     
-    // Fallback to old Card v2 system
-    const title = item.title || item.name || 'Unknown Title';
-    const year = item.release_date?.slice(0, 4) || item.first_air_date?.slice(0, 4) || '';
-    const posterUrl = window.getPosterUrl ? window.getPosterUrl(item, 'w200') : 
-      (item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '');
-    const rating = item.vote_average || 0;
-
-    return window.Card({
-      variant: 'poster',
-      id: item.id,
-      posterUrl: posterUrl,
-      title: title,
-      subtitle: year,
-      rating: rating,
-      badges: [],
-      primaryAction: {
-        label: window.t ? window.t('common.add') : 'Add',
-        onClick: () => addToList(item)
-      },
-      overflowActions: [{
-        label: window.t ? window.t('common.more') : 'More',
-        onClick: () => openMore(item)
-      }],
-      onOpenDetails: () => openDetails(item)
-    });
+    // Fallback to legacy system
+    return null;
   }
 
   /**

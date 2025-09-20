@@ -36,10 +36,24 @@
       container.appendChild(empty);
       return;
     }
-    const factory = (window.createPosterCard || window.createMediaCard);
+    const factory = window.Card;
     list.forEach(it => {
       try {
-        const el = factory(it, sectionHint);
+        const el = factory({
+          variant: 'poster',
+          id: it.id || it.tmdb_id || it.tmdbId,
+          title: it.title || it.name,
+          subtitle: it.year ? `${it.year} • ${it.mediaType === 'tv' ? 'TV Series' : 'Movie'}` : 
+                   (it.mediaType === 'tv' ? 'TV Series' : 'Movie'),
+          posterUrl: it.posterUrl || it.poster_src,
+          rating: it.vote_average || it.rating || 0,
+          badges: [{ label: sectionHint.charAt(0).toUpperCase() + sectionHint.slice(1), kind: 'status' }],
+          onOpenDetails: () => {
+            if (window.openTMDBLink) {
+              window.openTMDBLink(it.id || it.tmdb_id, it.mediaType || 'movie');
+            }
+          }
+        });
         if (el) container.appendChild(el);
       } catch (e) {
         console.warn('[home-wire] render error', e);

@@ -320,29 +320,7 @@
     });
   }
   
-  // Render with createPosterCard function
-  function renderWithCreatePosterCard(results) {
-    log('Rendering with createPosterCard function');
-    
-    searchResults.innerHTML = `
-      <h4>🎯 Search Results <span class="count">${results.length}</span></h4>
-      <div class="poster-cards-grid"></div>
-    `;
-    
-    const grid = searchResults.querySelector('.poster-cards-grid');
-    if (!grid) return;
-    
-    results.forEach(item => {
-      try {
-        const card = window.createPosterCard(item, 'search');
-        if (card) {
-          grid.appendChild(card);
-        }
-      } catch (error) {
-        warn('Error creating poster card:', error);
-      }
-    });
-  }
+  // Legacy function removed - using Card component instead
   
   // Fallback rendering
   function renderWithFallback(results) {

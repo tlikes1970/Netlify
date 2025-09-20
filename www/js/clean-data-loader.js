@@ -167,7 +167,21 @@
           
           // Create clean cards
           sectionData.forEach(item => {
-            const cleanCard = window.createCleanPosterCard(item, section);
+            const cleanCard = window.Card({
+              variant: 'poster',
+              id: item.id || item.tmdb_id || item.tmdbId,
+              title: item.title || item.name,
+              subtitle: item.year ? `${item.year} • ${item.mediaType === 'tv' ? 'TV Series' : 'Movie'}` : 
+                       (item.mediaType === 'tv' ? 'TV Series' : 'Movie'),
+              posterUrl: item.posterUrl || item.poster_src,
+              rating: item.vote_average || item.rating || 0,
+              badges: [{ label: section.charAt(0).toUpperCase() + section.slice(1), kind: 'status' }],
+              onOpenDetails: () => {
+                if (window.openTMDBLink) {
+                  window.openTMDBLink(item.id || item.tmdb_id, item.mediaType || 'movie');
+                }
+              }
+            });
             if (cleanCard) {
               container.appendChild(cleanCard);
               replacedCount++;
@@ -251,12 +265,12 @@
   /**
    * Wait for clean poster card component to be ready
    */
-  function waitForCleanPosterCard() {
+  function waitForCard() {
     return new Promise((resolve) => {
-      if (window.createCleanPosterCard) {
+      if (window.Card) {
         resolve();
       } else {
-        setTimeout(() => waitForCleanPosterCard().then(resolve), 100);
+        setTimeout(() => waitForCard().then(resolve), 100);
       }
     });
   }
@@ -266,7 +280,7 @@
    */
   async function init() {
     await waitForFirebase();
-    await waitForCleanPosterCard();
+    await waitForCard();
     
     // Listen for auth state changes
     const auth = window.firebaseAuth;

@@ -482,26 +482,42 @@ async function loadDiscoverRecommendations() {
  * @returns {HTMLElement} Card element
  */
 function createDiscoverCard(item) {
-  if (!window.createPosterCard) return null;
+  if (!window.Card) return null;
   
-  const card = window.createPosterCard(item, 'discover');
-  if (!card) return null;
-  
-  // Add not interested button
-  const actions = card.querySelector('.poster-card__actions');
-  if (actions) {
-    const notInterestedBtn = document.createElement('button');
-    notInterestedBtn.className = 'btn btn--sm btn--danger poster-card__not-interested';
-    notInterestedBtn.innerHTML = 'Not Interested';
-    notInterestedBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      addToNotInterested(item);
-      card.remove();
-      showToast('info', 'Added to Not Interested', `${item.title || item.name} won't appear in recommendations`);
-    });
-    
-    actions.insertBefore(notInterestedBtn, actions.firstChild);
-  }
+  const card = window.Card({
+    variant: 'poster',
+    id: item.id || item.tmdb_id || item.tmdbId,
+    title: item.title || item.name,
+    subtitle: item.year ? `${item.year} • ${item.mediaType === 'tv' ? 'TV Series' : 'Movie'}` : 
+             (item.mediaType === 'tv' ? 'TV Series' : 'Movie'),
+    posterUrl: item.posterUrl || item.poster_src,
+    rating: item.vote_average || item.rating || 0,
+    badges: [{ label: 'Discover', kind: 'status' }],
+    primaryAction: {
+      label: 'View Details',
+      onClick: () => {
+        if (window.openTMDBLink) {
+          window.openTMDBLink(item.id || item.tmdb_id, item.mediaType || 'movie');
+        }
+      }
+    },
+    overflowActions: [
+      {
+        label: 'Not Interested',
+        onClick: () => {
+          addToNotInterested(item);
+          card.remove();
+          showToast('info', 'Added to Not Interested', `${item.title || item.name} won't appear in recommendations`);
+        },
+        icon: '❌'
+      }
+    ],
+    onOpenDetails: () => {
+      if (window.openTMDBLink) {
+        window.openTMDBLink(item.id || item.tmdb_id, item.mediaType || 'movie');
+      }
+    }
+  });
   
   return card;
 }
