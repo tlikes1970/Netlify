@@ -71,6 +71,16 @@ describe('Currently Watching Preview Cards', () => {
     );
   });
 
+  test('should NOT use compact variant (bug test)', () => {
+    const card = createPreviewCard(mockItem);
+    
+    expect(window.Card).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        variant: 'compact'
+      })
+    );
+  });
+
   test('should render cards with correct dimensions', () => {
     const card = createPreviewCard(mockItem);
     

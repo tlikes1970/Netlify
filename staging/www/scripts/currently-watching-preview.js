@@ -447,7 +447,7 @@
                        (item.mediaType === 'tv' ? 'TV Series' : 'Movie');
       
       return window.Card({
-        variant: 'compact',
+        variant: 'poster',
         id: item.id,
         posterUrl: posterUrl,
         title: title,
