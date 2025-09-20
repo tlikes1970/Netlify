@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card v2 Test</title>
+    <link rel="stylesheet" href="/styles/components.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Card v2 Component Test</h1>
+    
+    <div class="test-container">
+        <div class="test-section">
+            <h2>Poster Variant</h2>
+            <div id="poster-cards"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Compact Variant</h2>
+            <div id="compact-cards"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Expanded Variant</h2>
+            <div id="expanded-cards"></div>
+        </div>
+    </div>
+
+    <!-- Load Card component -->
+    <script>
+        // Mock feature flags
+        window.FLAGS = {
+            cards_v2: true
+        };
+    </script>
+    <script src="/scripts/components/Card.js"></script>
+    
+    <script>
+        // Test data
+        const testItem = {
+            id: 'test123',
+            title: 'Test Show',
+            subtitle: '2023 • TV Series',
+            posterUrl: 'https://image.tmdb.org/t/p/w200/test-poster.jpg',
+            rating: 8.5,
+            badges: [{ label: 'Watching', kind: 'status' }],
+            primaryAction: {
+                label: 'Continue',
+                onClick: () => console.log('Continue clicked')
+            },
+            overflowActions: [
+                {
+                    label: 'Move to Watched',
+                    onClick: () => console.log('Move to Watched'),
+                    icon: '✅'
+                },
+                {
+                    label: 'Remove',
+                    onClick: () => console.log('Remove'),
+                    icon: '🗑️'
+                }
+            ],
+            onOpenDetails: (id) => console.log('Open details for:', id)
+        };
+
+        // Test poster variant
+        const posterCard = window.Card({
+            ...testItem,
+            variant: 'poster'
+        });
+        document.getElementById('poster-cards').appendChild(posterCard);
+
+        // Test compact variant
+        const compactCard = window.Card({
+            ...testItem,
+            variant: 'compact'
+        });
+        document.getElementById('compact-cards').appendChild(compactCard);
+
+        // Test expanded variant
+        const expandedCard = window.Card({
+            ...testItem,
+            variant: 'expanded'
+        });
+        document.getElementById('expanded-cards').appendChild(expandedCard);
+
+        console.log('Card v2 component test completed');
+    </script>
+</body>
+</html>
