@@ -29,8 +29,8 @@
     };
   }
   
-  // Defensive guard for Card v2
-  const USE_CARD_V2 = !!(window.FLAGS && window.FLAGS.cards_v2 && window.Card);
+  // Card component availability check
+  const USE_CARD = !!(window.Card);
 
   // Feature flag check
   console.log('🎬 Checking feature flag:', { FLAGS: window.FLAGS, homeRowCurrentlyWatching: window.FLAGS?.homeRowCurrentlyWatching });
@@ -438,8 +438,8 @@
   function createPreviewCard(item) {
     console.log('🎬 createPreviewCard called with item:', item);
     
-    // Use new Card component if enabled
-    if (USE_CARD_V2) {
+    // Use Card component
+    if (USE_CARD) {
       const title = item.title || item.name || 'Unknown Title';
       
       // Use consistent poster URL handling
@@ -486,12 +486,12 @@
           }
         ],
         onOpenDetails: () => {
-          console.log('🔗 Currently watching Card v2 openDetails called:', item);
+          console.log('🔗 Currently watching Card openDetails called:', item);
           const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
           const id = item.id || item.tmdb_id || item.tmdbId;
           
           if (id && typeof window.openTMDBLink === 'function') {
-            console.log('🔗 Calling openTMDBLink from currently watching Card v2:', { id, mediaType });
+            console.log('🔗 Calling openTMDBLink from currently watching Card:', { id, mediaType });
             window.openTMDBLink(id, mediaType);
           } else {
             console.warn('⚠️ openTMDBLink function not available or no ID found');
@@ -500,50 +500,9 @@
       });
     }
     
-    // Fallback to legacy card
-    console.log('🎬 Creating legacy card for item:', item);
-    const card = document.createElement('div');
-    card.className = 'preview-card';
-    card.dataset.itemId = item.id;
-    card.dataset.mediaType = item.mediaType;
-
-    const title = item.title || item.name || 'Unknown Title';
-    
-    // Use consistent poster URL handling
-    const posterUrl = getPosterUrl(item, 'w200');
-    
-    console.log('🖼️ Poster URL for', title, ':', posterUrl);
-    
-    // Generate srcset for responsive images
-    const srcset = (item.poster_path || item.poster_src) && typeof window.tmdbSrcset === 'function' ? 
-      window.tmdbSrcset(item.poster_path || item.poster_src) : '';
-    
-    // Extract year from various possible sources
-    const year = item.release_date ? new Date(item.release_date).getFullYear() : 
-                 item.first_air_date ? new Date(item.first_air_date).getFullYear() : 
-                 item.year || '';
-
-    card.innerHTML = `
-      <div class="preview-card-actions">
-        <button class="preview-action-btn" data-action="move-watched" title="Move to Watched">✅</button>
-        <button class="preview-action-btn" data-action="move-wishlist" title="Move to Wishlist">📖</button>
-        <button class="preview-action-btn" data-action="remove" title="Remove">🗑️</button>
-      </div>
-      <div class="preview-card-poster">
-        ${posterUrl ? 
-          `<img src="${posterUrl}" ${srcset ? `srcset="${srcset}"` : ''} sizes="(max-width: 480px) 148px, 200px" alt="${title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
-          ''
-        }
-        <div class="preview-card-poster-placeholder" style="display: ${posterUrl ? 'none' : 'flex'}; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 2rem;">🎬</div>
-        <div class="preview-card-status">Watching</div>
-      </div>
-      <div class="preview-card-content">
-        <h4 class="preview-card-title">${title}</h4>
-        ${year ? `<p class="preview-card-year">${year}</p>` : ''}
-      </div>
-    `;
-
-    return card;
+    // If Card component is not available, throw an error
+    console.error('❌ Card component not available');
+    throw new Error('Card component is required but not loaded');
   }
 
   // Expose render function globally for settings

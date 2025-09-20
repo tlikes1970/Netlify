@@ -6757,7 +6757,7 @@ input:checked + .slider:hover {
   margin-bottom: var(--gap-4);
 }
 
-/* Card v2 Component Styles */
+/* Card Component Styles */
 .card {
   display: flex;
   flex-direction: column;

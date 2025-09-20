@@ -303,15 +303,56 @@ window.loadListContent = function loadListContent(listType) {
     container.className = 'poster-cards-grid';
     container.innerHTML = '';
 
-    const mk = window.createPosterCard;
-    if (!items.length || typeof mk !== 'function') {
+    if (!items.length || typeof window.Card !== 'function') {
       container.innerHTML = '<div class="poster-cards-empty">Nothing here yet.</div>';
       return;
     }
 
     items.forEach((it) => {
       try {
-        const el = mk(it, listType);
+        // Convert item to Card format
+        const cardData = {
+          variant: 'poster',
+          id: it.id || it.tmdb_id || it.tmdbId,
+          title: it.title || it.name,
+          subtitle: it.year ? `${it.year} • ${it.mediaType === 'tv' ? 'TV Series' : 'Movie'}` : 
+                   (it.mediaType === 'tv' ? 'TV Series' : 'Movie'),
+          posterUrl: it.posterUrl || it.poster_src,
+          rating: it.vote_average || it.rating || 0,
+          badges: [{ label: listType.charAt(0).toUpperCase() + listType.slice(1), kind: 'status' }],
+          primaryAction: {
+            label: 'View Details',
+            onClick: () => {
+              if (window.openTMDBLink) {
+                window.openTMDBLink(it.id || it.tmdb_id, it.mediaType || 'movie');
+              }
+            }
+          },
+          overflowActions: [
+            {
+              label: 'Move to Watched',
+              onClick: () => window.moveItem && window.moveItem(Number(it.id), 'watched'),
+              icon: '✅'
+            },
+            {
+              label: 'Move to Wishlist',
+              onClick: () => window.moveItem && window.moveItem(Number(it.id), 'wishlist'),
+              icon: '📖'
+            },
+            {
+              label: 'Remove',
+              onClick: () => window.removeItemFromCurrentList && window.removeItemFromCurrentList(Number(it.id)),
+              icon: '🗑️'
+            }
+          ],
+          onOpenDetails: (id) => {
+            if (window.openTMDBLink) {
+              window.openTMDBLink(id, it.mediaType || 'movie');
+            }
+          }
+        };
+        
+        const el = window.Card(cardData);
         if (el) container.appendChild(el);
       } catch (e) {
         warn("render item failed:", e?.message || e);

@@ -1,5 +1,5 @@
 /**
- * Card Component - Phase 1 Standardization
+ * Card Component - Unified Card System
  * 
  * Process: Card Component
  * Purpose: Unified card component with compact/expanded/poster variants for all Home rows and search results
@@ -12,12 +12,6 @@
   'use strict';
 
   console.log('🎴 Card component loaded');
-
-  // Feature flag check
-  if (!window.FLAGS?.cards_v2) {
-    console.log('🚫 Card v2 disabled by feature flag');
-    return;
-  }
 
   /**
    * Create a standardized card element

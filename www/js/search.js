@@ -247,19 +247,17 @@
     // Show results
     searchResults.style.display = 'block';
     
-    // Try to use PosterCard system first
-    if (window.PosterCard && window.CardDataNormalizer) {
-      renderWithPosterCard(filteredResults);
-    } else if (window.createPosterCard) {
-      renderWithCreatePosterCard(filteredResults);
+    // Use Card system
+    if (window.Card) {
+      renderWithCard(filteredResults);
     } else {
       renderWithFallback(filteredResults);
     }
   }
   
-  // Render with PosterCard system
-  function renderWithPosterCard(results) {
-    log('Rendering with PosterCard system');
+  // Render with Card system
+  function renderWithCard(results) {
+    log('Rendering with Card system');
     
     searchResults.innerHTML = `
       <h4>🎯 Search Results <span class="count">${results.length}</span></h4>
@@ -271,37 +269,53 @@
     
     results.forEach(item => {
       try {
-        const normalizedData = window.CardDataNormalizer.normalize(item, 'tmdb', 'search');
-        if (normalizedData) {
-          const card = window.PosterCard({
-            id: normalizedData.id,
-            mediaType: normalizedData.mediaType,
-            title: normalizedData.title,
-            posterUrl: normalizedData.posterUrl,
-            posterPath: normalizedData.posterPath,
-            year: normalizedData.year,
-            rating: normalizedData.rating,
-            runtime: normalizedData.runtime,
-            season: normalizedData.season,
-            episode: normalizedData.episode,
-            badges: normalizedData.badges,
-            isNew: normalizedData.isNew,
-            isAvailable: normalizedData.isAvailable,
-            progress: normalizedData.progress,
-            quickActions: normalizedData.quickActions,
-            overflowActions: normalizedData.overflowActions,
-            onOpenDetails: () => {
+        const card = window.Card({
+          variant: 'poster',
+          id: item.id,
+          title: item.title || item.name,
+          subtitle: item.release_date ? `${new Date(item.release_date).getFullYear()} • ${item.media_type === 'tv' ? 'TV Series' : 'Movie'}` : 
+                   (item.media_type === 'tv' ? 'TV Series' : 'Movie'),
+          posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : null,
+          rating: item.vote_average || 0,
+          badges: [{ label: 'Search Result', kind: 'status' }],
+          primaryAction: {
+            label: 'View Details',
+            onClick: () => {
               if (window.openTMDBLink) {
                 window.openTMDBLink(item.id, item.media_type || 'movie');
               }
+            }
+          },
+          overflowActions: [
+            {
+              label: 'Add to Watching',
+              onClick: () => {
+                if (window.addToWatching) {
+                  window.addToWatching(item);
+                }
+              },
+              icon: '➕'
             },
-            section: 'search'
-          });
-          
-          searchGrid.appendChild(card);
-        }
+            {
+              label: 'Add to Wishlist',
+              onClick: () => {
+                if (window.addToWishlist) {
+                  window.addToWishlist(item);
+                }
+              },
+              icon: '📖'
+            }
+          ],
+          onOpenDetails: () => {
+            if (window.openTMDBLink) {
+              window.openTMDBLink(item.id, item.media_type || 'movie');
+            }
+          }
+        });
+        
+        searchGrid.appendChild(card);
       } catch (error) {
-        warn('Error creating PosterCard:', error);
+        warn('Error creating Card:', error);
       }
     });
   }

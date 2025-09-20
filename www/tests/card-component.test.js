@@ -1,9 +1,9 @@
 /**
- * Card v2 Missing Component Test
- * Tests that Card v2 component exists and supports 'poster' variant
+ * Card Component Test
+ * Tests that Card component exists and supports 'poster' variant
  */
 
-describe('Card v2 Component Missing Test', () => {
+describe('Card Component Test', () => {
   beforeEach(() => {
     // Reset window.Card to undefined to simulate missing component
     delete window.Card;
@@ -14,11 +14,11 @@ describe('Card v2 Component Missing Test', () => {
     delete window.Card;
   });
 
-  test('should fail when Card v2 component is missing', () => {
-    // This test should fail because Card v2 is missing
+  test('should fail when Card component is missing', () => {
+    // This test should fail because Card is missing
     expect(window.Card).toBeUndefined();
     
-    // Try to use Card v2 with 'poster' variant (should throw error)
+    // Try to use Card with 'poster' variant (should throw error)
     expect(() => {
       window.Card({
         variant: 'poster',
@@ -28,8 +28,8 @@ describe('Card v2 Component Missing Test', () => {
     }).toThrow();
   });
 
-  test('should support poster variant when Card v2 is available', () => {
-    // Mock Card v2 component
+  test('should support poster variant when Card is available', () => {
+    // Mock Card component
     window.Card = jest.fn((options) => {
       const card = document.createElement('div');
       card.className = 'card';
@@ -38,7 +38,7 @@ describe('Card v2 Component Missing Test', () => {
       return card;
     });
 
-    // Test that Card v2 supports 'poster' variant
+    // Test that Card supports 'poster' variant
     const card = window.Card({
       variant: 'poster',
       id: 'test123',
@@ -53,8 +53,8 @@ describe('Card v2 Component Missing Test', () => {
     expect(card.dataset.id).toBe('test123');
   });
 
-  test('should handle currently-watching-preview Card v2 usage', () => {
-    // Mock Card v2 component
+  test('should handle currently-watching-preview Card usage', () => {
+    // Mock Card component
     window.Card = jest.fn((options) => {
       const card = document.createElement('div');
       card.className = 'card';
