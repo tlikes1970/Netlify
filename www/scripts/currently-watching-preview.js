@@ -38,6 +38,13 @@
     console.log('🚫 Currently Watching Preview disabled by feature flag');
     return;
   }
+  
+  // Ensure the section is visible by default
+  const previewSection = document.getElementById('currentlyWatchingPreview');
+  if (previewSection) {
+    previewSection.style.display = 'block';
+    console.log('🎬 Currently Watching Preview section made visible');
+  }
 
   let isInitialized = false;
   let retryCount = 0;

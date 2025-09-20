@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker v27.31</title>
+    <title>Flicklet - TV & Movie Tracker v27.33</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
     />
-    <meta name="build" content="v27.31">
+    <meta name="build" content="v27.33">
     
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta http-equiv="Permissions-Policy" content="compute-pressure=(), camera=(), microphone=(), geolocation=()" />
@@ -144,6 +144,116 @@
     <script src="/js/components/poster-card.js?v=v27.22&t=1734567890125"></script>
     <script src="/js/functions.js?v=v27.22&t=1734567890125"></script>
     <script src="/js/app.js?v=v27.22&t=1734567890125"></script>
+    
+    <!-- Home page features -->
+    <script src="/scripts/currently-watching-preview.js?v=v27.33"></script>
+    
+    <!-- Initialize curated sections -->
+    <script>
+      // Initialize curated sections with sample data
+      window.CURATED_SECTIONS = [
+        {
+          title: "Trending Now",
+          items: [
+            { id: 1, title: "The Last of Us", posterPath: "/uKvVjHN3B5mRyGQxOrI8y4ny6Nt.jpg", rating: 8.5, year: 2023 },
+            { id: 2, title: "House of the Dragon", posterPath: "/z2yahl2uefxDCl0nogcRBstwruJ.jpg", rating: 8.2, year: 2022 },
+            { id: 3, title: "Stranger Things", posterPath: "/49WJfeN0moxb9IPfGn9AIqCtW6W.jpg", rating: 8.7, year: 2016 }
+          ]
+        },
+        {
+          title: "Staff Picks",
+          items: [
+            { id: 4, title: "Breaking Bad", posterPath: "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg", rating: 9.5, year: 2008 },
+            { id: 5, title: "The Office", posterPath: "/7DJKHzAiZOlkpJQvAjjF4gxqX5k.jpg", rating: 8.9, year: 2005 },
+            { id: 6, title: "Friends", posterPath: "/f496cm9enuEsZkSPzCwnTESEK5s.jpg", rating: 8.9, year: 1994 }
+          ]
+        }
+      ];
+    </script>
+    
+    <!-- Fix tab badge visibility and header centering -->
+    <style>
+      .tab-badge {
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background: #e91e63 !important;
+        color: white !important;
+        border-radius: 10px !important;
+        padding: 2px 6px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        margin-left: 6px !important;
+        min-width: 16px !important;
+        text-align: center !important;
+        line-height: 1.2 !important;
+        position: relative !important;
+        z-index: 1 !important;
+      }
+      
+      /* Ensure tab badges are always visible regardless of other CSS */
+      .tab .tab-badge {
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      
+      /* Override any conflicting styles */
+      .tab-badge[style*="display: none"] {
+        display: inline-block !important;
+      }
+      
+      .tab-badge[style*="visibility: hidden"] {
+        visibility: visible !important;
+      }
+      
+      .tab-badge[style*="opacity: 0"] {
+        opacity: 1 !important;
+      }
+      
+      /* Ensure currently watching preview is prominently displayed */
+      #currentlyWatchingPreview {
+        display: block !important;
+        order: -1; /* Move to top of flex container */
+      }
+      
+      /* Ensure the first group shows currently watching prominently */
+      #group-1-your-shows {
+        display: flex;
+        flex-direction: column;
+      }
+      
+      #currentlyWatchingPreview {
+        order: -1; /* Ensure it's first */
+      }
+      
+      /* Fix header centering */
+      .header-center {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+      }
+      
+      .header-center .brand {
+        margin: 0 !important;
+        font-size: 2rem !important;
+        font-weight: 700 !important;
+      }
+      
+      .header-center .tagline {
+        margin: 0 !important;
+        font-size: 0.9rem !important;
+        opacity: 0.8 !important;
+      }
+      
+      .header-center .version-display {
+        font-size: 0.8rem !important;
+        opacity: 0.7 !important;
+        margin-bottom: 4px !important;
+      }
+    </style>
 
     <!-- Guarded init: initialize app + Firestore once -->
 
@@ -193,7 +303,7 @@
             <div id="headerGreeting" class="header-greeting" aria-live="polite"></div>
           </div>
           <div class="header-center">
-            <span class="version-display">v27.31</span>
+            <span class="version-display">v27.33</span>
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
           </div>
@@ -444,14 +554,42 @@
             <h2 class="group-title" data-i18n="in_theaters">In Theaters</h2>
           </div>
           
-          <section id="theaters-section" class="home-preview-row" style="display: none;">
+          <section id="theaters-section" class="home-preview-row">
             <div class="preview-row-header">
               <h3 class="preview-row-title">🎬 <span data-i18n="in_theaters_near_you">In Theaters Near You</span></h3>
               <p class="section-subtitle" data-i18n="current_theatrical_releases">Current theatrical releases</p>
             </div>
             <div class="preview-row-container">
               <div class="section-content" id="theaters-content">
-                <!-- Theater content will be populated here -->
+                <div class="poster-cards-grid">
+                  <div class="poster-card">
+                    <div class="poster-card-poster">
+                      <img src="https://image.tmdb.org/t/p/w200/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg" alt="Dune: Part Two" loading="lazy">
+                    </div>
+                    <div class="poster-card-content">
+                      <h4 class="poster-card-title">Dune: Part Two</h4>
+                      <p class="poster-card-year">2024</p>
+                    </div>
+                  </div>
+                  <div class="poster-card">
+                    <div class="poster-card-poster">
+                      <img src="https://image.tmdb.org/t/p/w200/4MC6Nv8oR8I4eECfYw6oWj4QjY5.jpg" alt="Oppenheimer" loading="lazy">
+                    </div>
+                    <div class="poster-card-content">
+                      <h4 class="poster-card-title">Oppenheimer</h4>
+                      <p class="poster-card-year">2023</p>
+                    </div>
+                  </div>
+                  <div class="poster-card">
+                    <div class="poster-card-poster">
+                      <img src="https://image.tmdb.org/t/p/w200/4m1Au3YkjqsxF8iwQy0fPYSxE0h.jpg" alt="Barbie" loading="lazy">
+                    </div>
+                    <div class="poster-card-content">
+                      <h4 class="poster-card-title">Barbie</h4>
+                      <p class="poster-card-year">2023</p>
+                    </div>
+                  </div>
+                </div>
                 <div class="theaters-fallback" id="theaters-fallback" style="display: none;" data-i18n="location_prompt">
                   Turn on location to see movies playing near you.
                 </div>

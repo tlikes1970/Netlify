@@ -164,16 +164,24 @@ window.updateTabCounts = function updateTabCounts() {
         badge.textContent = counts[list];
         
         // Force badge to be visible with inline styles to override any CSS
-        badge.style.display = 'inline-block';
-        badge.style.visibility = 'visible';
-        badge.style.opacity = '1';
-        badge.style.fontSize = '10px';
-        badge.style.backgroundColor = '#e91e63';
-        badge.style.color = 'white';
-        badge.style.padding = '2px 6px';
-        badge.style.borderRadius = '10px';
-        badge.style.marginLeft = '4px';
-        badge.style.fontWeight = 'bold';
+        badge.style.setProperty('display', 'inline-block', 'important');
+        badge.style.setProperty('visibility', 'visible', 'important');
+        badge.style.setProperty('opacity', '1', 'important');
+        badge.style.setProperty('fontSize', '11px', 'important');
+        badge.style.setProperty('backgroundColor', '#e91e63', 'important');
+        badge.style.setProperty('color', 'white', 'important');
+        badge.style.setProperty('padding', '2px 6px', 'important');
+        badge.style.setProperty('borderRadius', '10px', 'important');
+        badge.style.setProperty('marginLeft', '6px', 'important');
+        badge.style.setProperty('fontWeight', '600', 'important');
+        badge.style.setProperty('minWidth', '16px', 'important');
+        badge.style.setProperty('textAlign', 'center', 'important');
+        badge.style.setProperty('lineHeight', '1.2', 'important');
+        badge.style.setProperty('position', 'relative', 'important');
+        badge.style.setProperty('zIndex', '1', 'important');
+        
+        // Add class for additional CSS targeting
+        badge.classList.add('tab-badge');
         
         log(`Updated ${list}Badge: ${counts[list]}`, {
           element: badge,
@@ -248,6 +256,11 @@ window.loadHomeContent = function loadHomeContent() {
   setTimeout(() => {
     try { startDailyCountdown?.(); } catch {}
     try { updateFlickWordStats?.(); } catch {}
+    
+    // Load currently watching preview
+    if (typeof window.renderCurrentlyWatchingPreview === 'function') {
+      window.renderCurrentlyWatchingPreview();
+    }
     
     // End performance monitoring
     if (window.PerformanceMonitor) {
