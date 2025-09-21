@@ -15,7 +15,9 @@ function initializeCurated() {
   const USE_CARD = !!(window.Card);
 
   // ---- Dynamic section limiting ----
-  const MAX_SECTIONS = 3; // Limit to prevent overwhelming the UI
+  // Read the curated rows count from localStorage setting
+  const storedRows = localStorage.getItem('flicklet:curated:rows');
+  const MAX_SECTIONS = storedRows ? Math.max(1, Math.min(3, parseInt(storedRows, 10))) : 3;
   const sections = window.CURATED_SECTIONS || [];
   const limitedSections = sections.slice(0, MAX_SECTIONS);
 
@@ -29,7 +31,7 @@ function initializeCurated() {
     sectionEl.className = 'curated-section';
     sectionEl.innerHTML = `
       <h3 class="curated-section-title">${section.title}</h3>
-      <div class="curated-items" data-section="${index}"></div>
+      <div class="curated-row" data-section="${index}"></div>
     `;
 
     mount.appendChild(sectionEl);
@@ -38,7 +40,7 @@ function initializeCurated() {
     mount.style.display = 'block';
 
     // Render items for this section
-    const itemsContainer = sectionEl.querySelector('.curated-items');
+    const itemsContainer = sectionEl.querySelector('.curated-row');
     if (section.items && section.items.length > 0) {
       section.items.forEach(item => {
         if (USE_CARD && window.Card) {
@@ -90,6 +92,12 @@ export function init() {
   initializeCurated();
 }
 
+// Listen for curated:rerender event to update when settings change
+document.addEventListener('curated:rerender', () => {
+  console.log('🎯 Curated rerender event received, updating sections');
+  initializeCurated();
+});
+
 // Also support IIFE for backward compatibility
 (function(){
   let mount = document.getElementById('curatedSections');
@@ -109,4 +117,10 @@ export function init() {
   }
   
   initializeCurated();
+  
+  // Listen for curated:rerender event to update when settings change
+  document.addEventListener('curated:rerender', () => {
+    console.log('🎯 Curated rerender event received (IIFE), updating sections');
+    initializeCurated();
+  });
 })();

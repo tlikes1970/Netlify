@@ -5280,13 +5280,15 @@ body.has-banner {
 
 /* ========== Curated Rows ========== */
 .curated-sections {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
   margin-top: 12px;
 }
 
 .curated-section {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
@@ -5380,6 +5382,31 @@ body.has-banner {
 /* Desktop widths */
 @media (min-width: 769px){
   .curated-row{ grid-auto-columns: 220px; }
+}
+
+/* Card component styling within curated rows */
+.curated-row .card {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  width: 180px;
+  margin-right: 10px;
+}
+
+.curated-row .card:last-child {
+  margin-right: 0;
+}
+
+/* Mobile card widths for curated rows */
+@media (max-width: 768px) {
+  .curated-row .card {
+    width: 44vw;
+  }
+}
+
+@media (max-width: 480px) {
+  .curated-row .card {
+    width: 58vw;
+  }
 }
 
 /* ===== Trivia Tile ===== */
