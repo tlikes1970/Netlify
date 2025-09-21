@@ -295,74 +295,93 @@ window.loadListContent = function loadListContent(listType) {
                      document.querySelector(`[data-section="${listType}"] .section-content`) ||
                      (() => {
                        const d = document.createElement('div');
-                       d.className = 'poster-cards-grid';
+                       d.className = 'list-container';
                        (document.querySelector('main,#app,body')||document.body).appendChild(d);
                        return d;
                      })();
 
-    container.className = 'poster-cards-grid';
+    // Use list-container class for tab sections to enable horizontal layout
+    container.className = 'list-container';
     container.innerHTML = '';
 
-    if (!items.length || typeof window.Card !== 'function') {
+    if (!items.length) {
       container.innerHTML = '<div class="poster-cards-empty">Nothing here yet.</div>';
       return;
     }
 
-    items.forEach((it) => {
-      try {
-        // Convert item to Card format
-        const cardData = {
-          variant: 'poster',
-          id: it.id || it.tmdb_id || it.tmdbId,
-          title: it.title || it.name,
-          subtitle: it.year ? `${it.year} • ${it.mediaType === 'tv' ? 'TV Series' : 'Movie'}` : 
-                   (it.mediaType === 'tv' ? 'TV Series' : 'Movie'),
-          posterUrl: it.posterUrl || it.poster_src,
-          rating: it.vote_average || it.rating || 0,
-          badges: [{ label: listType.charAt(0).toUpperCase() + listType.slice(1), kind: 'status' }],
-          primaryAction: {
-            label: 'View Details',
-            onClick: () => {
+    // Use createPosterCard for tab sections to get horizontal layout
+    if (typeof window.createPosterCard === 'function') {
+      items.forEach((it) => {
+        try {
+          const card = window.createPosterCard(it, listType);
+          if (card) container.appendChild(card);
+        } catch (e) {
+          warn("render item failed:", e?.message || e);
+        }
+      });
+    } else if (typeof window.Card === 'function') {
+      // Fallback to Card component
+      items.forEach((it) => {
+        try {
+          const cardData = {
+            variant: 'poster',
+            id: it.id || it.tmdb_id || it.tmdbId,
+            title: it.title || it.name,
+            subtitle: it.year ? `${it.year} • ${it.mediaType === 'tv' ? 'TV Series' : 'Movie'}` : 
+                     (it.mediaType === 'tv' ? 'TV Series' : 'Movie'),
+            posterUrl: it.posterUrl || it.poster_src,
+            rating: it.vote_average || it.rating || 0,
+            badges: [{ label: listType.charAt(0).toUpperCase() + listType.slice(1), kind: 'status' }],
+            primaryAction: {
+              label: 'View Details',
+              onClick: () => {
+                if (window.openTMDBLink) {
+                  window.openTMDBLink(it.id || it.tmdb_id, it.mediaType || 'movie');
+                }
+              }
+            },
+            overflowActions: [
+              {
+                label: 'Move to Watched',
+                onClick: () => window.moveItem && window.moveItem(Number(it.id), 'watched'),
+                icon: '✅'
+              },
+              {
+                label: 'Move to Wishlist',
+                onClick: () => window.moveItem && window.moveItem(Number(it.id), 'wishlist'),
+                icon: '📖'
+              },
+              {
+                label: 'Remove',
+                onClick: () => window.removeItemFromCurrentList && window.removeItemFromCurrentList(Number(it.id)),
+                icon: '🗑️'
+              }
+            ],
+            onOpenDetails: (id) => {
               if (window.openTMDBLink) {
-                window.openTMDBLink(it.id || it.tmdb_id, it.mediaType || 'movie');
+                window.openTMDBLink(id, it.mediaType || 'movie');
               }
             }
-          },
-          overflowActions: [
-            {
-              label: 'Move to Watched',
-              onClick: () => window.moveItem && window.moveItem(Number(it.id), 'watched'),
-              icon: '✅'
-            },
-            {
-              label: 'Move to Wishlist',
-              onClick: () => window.moveItem && window.moveItem(Number(it.id), 'wishlist'),
-              icon: '📖'
-            },
-            {
-              label: 'Remove',
-              onClick: () => window.removeItemFromCurrentList && window.removeItemFromCurrentList(Number(it.id)),
-              icon: '🗑️'
-            }
-          ],
-          onOpenDetails: (id) => {
-            if (window.openTMDBLink) {
-              window.openTMDBLink(id, it.mediaType || 'movie');
-            }
-          }
-        };
-        
-        const el = window.Card(cardData);
-        if (el) container.appendChild(el);
-      } catch (e) {
-        warn("render item failed:", e?.message || e);
-      }
-    });
+          };
+          
+          const el = window.Card(cardData);
+          if (el) container.appendChild(el);
+        } catch (e) {
+          warn("render item failed:", e?.message || e);
+        }
+      });
+    } else {
+      // Fallback to simple HTML
+      container.innerHTML = '<div class="poster-cards-empty">Card components not available.</div>';
+    }
     
     // Update tab counts after rendering content
     if (typeof window.updateTabCounts === 'function') {
       window.updateTabCounts();
     }
+    
+    // Add scroll indicators for horizontal layout
+    addScrollIndicators(container);
   } catch (e) {
     console.warn("[functions] loadListContent failed:", e?.message || e);
   }
@@ -1892,6 +1911,38 @@ window.updateFlickWordStats = function updateFlickWordStats() {
 window.startFlickWordGame = function startFlickWordGame() {
   showNotification('FlickWord game starting soon! 🎮', 'success');
 };
+
+// ---- Scroll Indicators for Horizontal Layout ----
+function addScrollIndicators(container) {
+  if (!container || !container.classList.contains('list-container')) return;
+  
+  // Add scroll event listener to show/hide scroll indicators
+  const updateScrollIndicators = () => {
+    const scrollLeft = container.scrollLeft;
+    const scrollWidth = container.scrollWidth;
+    const clientWidth = container.clientWidth;
+    
+    if (scrollWidth > clientWidth) {
+      container.classList.add('scrollable');
+      if (scrollLeft > 0) {
+        container.classList.add('scrollable-left');
+      } else {
+        container.classList.remove('scrollable-left');
+      }
+    } else {
+      container.classList.remove('scrollable', 'scrollable-left');
+    }
+  };
+  
+  // Initial check
+  updateScrollIndicators();
+  
+  // Add scroll listener
+  container.addEventListener('scroll', updateScrollIndicators);
+  
+  // Add resize listener to recalculate on window resize
+  window.addEventListener('resize', updateScrollIndicators);
+}
 
 // ---- Stats Card Renderer ----
 window.renderStatsCard = function renderStatsCard() {

@@ -11,8 +11,8 @@ function initializeCurated() {
     if (!mount) return;
   }
 
-  // Defensive guard for Card v2
-  const USE_CARD_V2 = !!(window.FLAGS && window.FLAGS.cards_v2 && window.Card);
+  // Defensive guard for Card component
+  const USE_CARD = !!(window.Card);
 
   // ---- Dynamic section limiting ----
   const MAX_SECTIONS = 3; // Limit to prevent overwhelming the UI
@@ -33,18 +33,22 @@ function initializeCurated() {
     `;
 
     mount.appendChild(sectionEl);
+    
+    // Make the container visible
+    mount.style.display = 'block';
 
     // Render items for this section
     const itemsContainer = sectionEl.querySelector('.curated-items');
     if (section.items && section.items.length > 0) {
       section.items.forEach(item => {
-        if (USE_CARD_V2 && window.Card) {
+        if (USE_CARD && window.Card) {
           const card = window.Card({
+            variant: 'poster',
             id: item.id,
             title: item.title,
-            posterPath: item.posterPath,
-            rating: item.rating,
-            year: item.year
+            posterUrl: item.posterPath ? `https://image.tmdb.org/t/p/w200${item.posterPath}` : null,
+            subtitle: item.year ? `${item.year} • Movie` : 'Movie',
+            rating: item.rating
           });
           itemsContainer.appendChild(card);
         } else {
