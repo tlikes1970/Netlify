@@ -56,13 +56,20 @@
     const normalizedRating = rating ? Math.min(5, Math.max(0, rating / 2)) : 0;
     const stars = '★'.repeat(Math.floor(normalizedRating)) + '☆'.repeat(5 - Math.floor(normalizedRating));
 
+    // Get proper poster URL using TMDB utilities
+    const finalPosterUrl = posterUrl || (posterPath && window.getPosterUrl ? window.getPosterUrl(posterPath) : null);
+    
     // Build card HTML based on variant
     let cardHTML = '';
     
     if (variant === 'poster') {
       cardHTML = `
         <div class="card-poster">
-          ${posterUrl ? `<img src="${posterUrl}" alt="${title}" loading="lazy">` : '<div class="card-poster-placeholder">🎬</div>'}
+          ${finalPosterUrl ? 
+            `<img src="${finalPosterUrl}" alt="${title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
+            '<div class="card-poster-placeholder">🎬</div>'
+          }
+          <div class="card-poster-placeholder" style="display: ${finalPosterUrl ? 'none' : 'flex'};">🎬</div>
           ${badges.length > 0 ? `<div class="card-badges">${badges.map(badge => `<span class="card-badge card-badge--${badge.kind}">${badge.label}</span>`).join('')}</div>` : ''}
         </div>
         <div class="card-content">
@@ -77,7 +84,11 @@
       // Compact and expanded variants
       cardHTML = `
         <div class="card-poster">
-          ${posterUrl ? `<img src="${posterUrl}" alt="${title}" loading="lazy">` : '<div class="card-poster-placeholder">🎬</div>'}
+          ${finalPosterUrl ? 
+            `<img src="${finalPosterUrl}" alt="${title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
+            '<div class="card-poster-placeholder">🎬</div>'
+          }
+          <div class="card-poster-placeholder" style="display: ${finalPosterUrl ? 'none' : 'flex'};">🎬</div>
         </div>
         <div class="card-content">
           <h3 class="card-title">${title}</h3>

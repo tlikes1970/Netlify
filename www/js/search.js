@@ -275,7 +275,7 @@
           title: item.title || item.name,
           subtitle: item.release_date ? `${new Date(item.release_date).getFullYear()} • ${item.media_type === 'tv' ? 'TV Series' : 'Movie'}` : 
                    (item.media_type === 'tv' ? 'TV Series' : 'Movie'),
-          posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : null,
+          posterUrl: item.poster_path ? (window.getPosterUrl ? window.getPosterUrl(item.poster_path, 'w200') : `https://image.tmdb.org/t/p/w200${item.poster_path}`) : null,
           rating: item.vote_average || 0,
           badges: [{ label: 'Search Result', kind: 'status' }],
           primaryAction: {
@@ -331,7 +331,7 @@
       const year = item.release_date ? new Date(item.release_date).getFullYear() : 
                   item.first_air_date ? new Date(item.first_air_date).getFullYear() : '';
       const mediaType = item.media_type || 'movie';
-      const poster = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
+      const poster = item.poster_path ? (window.getPosterUrl ? window.getPosterUrl(item.poster_path, 'w200') : `https://image.tmdb.org/t/p/w200${item.poster_path}`) : '';
       
       return `
         <div class="search-result-item" data-id="${item.id}" data-media-type="${mediaType}" style="display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #eee; cursor: pointer;" onclick="window.SearchModule.openItemDetails(${item.id}, '${mediaType}')">

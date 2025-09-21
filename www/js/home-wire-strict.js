@@ -66,9 +66,10 @@
                  item.year || '';
     const mediaType = item.media_type || item.mediaType || (item.first_air_date ? 'TV' : 'Movie');
     
-    // Handle poster URL
+    // Handle poster URL using TMDB utilities if available
     const posterUrl = item.posterUrl || item.poster_src || 
-                     (item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null);
+                     (item.poster_path && window.getPosterUrl ? window.getPosterUrl(item.poster_path, 'w342') : 
+                      item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null);
     
     // Build preview card HTML
     card.innerHTML = `
