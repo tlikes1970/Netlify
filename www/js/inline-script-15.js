@@ -38,8 +38,8 @@
           console.log('🔧 setValueSafely completed, isSettingValue reset to false');
         }
         
-        // Load saved value
-        const stored = localStorage.getItem('flicklet:curated:rows');
+        // Load saved value (use correct storage key from settings wiring)
+        const stored = localStorage.getItem('pref_homeListsCount') || localStorage.getItem('flicklet:curated:rows');
         console.log('🔧 Stored value:', stored);
         if (stored) {
           // Set value without triggering notifications
@@ -52,9 +52,9 @@
         // Function to apply the setting
         function applySetting() {
           console.log('🔧 applySetting called with value:', input.value, 'isInitialSetup:', isInitialSetup, 'hasUserInteracted:', hasUserInteracted, 'isSettingValue:', isSettingValue);
-          const n = Math.max(1, Math.min(10, Number(input.value)||3));
+          const n = Math.max(1, Math.min(3, Number(input.value)||3));
           console.log('🔧 Setting curated rows to:', n);
-          localStorage.setItem('flicklet:curated:rows', String(n));
+          localStorage.setItem('pref_homeListsCount', String(n));
           document.dispatchEvent(new CustomEvent('curated:rerender'));
           console.log('🔧 Dispatched curated:rerender event');
           
@@ -124,7 +124,7 @@
           console.log('🔧 refreshValue called - resetting hasUserInteracted to false');
           hasUserInteracted = false; // Reset user interaction flag for refresh operations
           
-          const currentStored = localStorage.getItem('flicklet:curated:rows');
+          const currentStored = localStorage.getItem('pref_homeListsCount') || localStorage.getItem('flicklet:curated:rows');
           if (currentStored && currentStored !== input.value) {
             console.log('🔧 Refreshing value from storage:', currentStored);
             // Use setValueSafely to avoid notifications during refresh
