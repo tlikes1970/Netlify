@@ -64,12 +64,12 @@ function initializeCurated() {
             id: item.id,
             title: item.title,
             posterUrl: item.posterPath ? `https://image.tmdb.org/t/p/w200${item.posterPath}` : null,
-            subtitle: item.year ? `${item.year} • Movie` : 'Movie',
+            subtitle: item.year ? `${item.year} • ${item.mediaType === 'tv' ? 'TV Show' : 'Movie'}` : (item.mediaType === 'tv' ? 'TV Show' : 'Movie'),
             rating: item.rating,
             onOpenDetails: () => {
-              // Use canonical detail link pattern
+              // Use canonical detail link pattern with correct media type
               if (window.openTMDBLink) {
-                window.openTMDBLink(item.id, 'movie');
+                window.openTMDBLink(item.id, item.mediaType || 'movie');
               }
             }
           });
@@ -93,7 +93,7 @@ function initializeCurated() {
           // Add click handler for detail navigation
           itemEl.addEventListener('click', () => {
             if (window.openTMDBLink) {
-              window.openTMDBLink(item.id, 'movie');
+              window.openTMDBLink(item.id, item.mediaType || 'movie');
             }
           });
           
@@ -102,7 +102,7 @@ function initializeCurated() {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
               if (window.openTMDBLink) {
-                window.openTMDBLink(item.id, 'movie');
+                window.openTMDBLink(item.id, item.mediaType || 'movie');
               }
             }
           });

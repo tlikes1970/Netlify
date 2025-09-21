@@ -237,12 +237,65 @@ users/{uid}/
 
 ## Testing & Quality Assurance
 
+### Pre-Development Validation Requirements
+Before making any code changes, the assistant must:
+
+1. **API Key Validation**
+   - Verify TMDB API key in meta tag is valid and functional
+   - Test one API call to ensure openTMDBLink works without errors
+   - If API key invalid, STOP and request valid key from user
+
+2. **Data Source Validation**
+   - Confirm all data sources use real, valid IDs (not fake/sample data)
+   - Verify data structure matches what functions expect
+   - If using sample data, STOP and request real data or different approach
+
+3. **End-to-End Testing Requirements**
+   - Test all interactive elements (clicks, navigation) work without errors
+   - Verify visual changes are actually visible and functional
+   - Confirm settings changes affect display as expected
+   - If any test fails, STOP and fix before proceeding
+
+4. **Visual Verification (Mandatory)**
+   - Before coding: Take screenshot of current state
+   - After coding: Take screenshot of new state
+   - Verify changes are visible and functional
+   - If no visual change, STOP and debug rendering
+
 ### Code Quality Tools
 - **ESLint**: JavaScript linting
 - **JSCPD**: Duplicate code detection
 - **Axe**: Accessibility testing
 - **Lighthouse**: Performance auditing
 - **Depcheck**: Dependency analysis
+
+### Accessibility Standards
+- **WCAG 2.1 AA Compliance**: All components must meet accessibility standards
+- **ARIA Labels**: Proper labeling for screen readers
+- **Keyboard Navigation**: Full keyboard accessibility
+- **Color Contrast**: WCAG AA compliant color ratios
+- **Focus Management**: Clear focus indicators and logical tab order
+
+#### WCAG 2.1 AA Compliance Checkpoints
+- **Perceivable**:
+  - Text alternatives for images and media
+  - Captions and transcripts for video content
+  - Sufficient color contrast (4.5:1 for normal text, 3:1 for large text)
+  - Resizable text up to 200% without loss of functionality
+- **Operable**:
+  - Keyboard accessible for all functionality
+  - No seizure-inducing content (flashing < 3 times per second)
+  - Clear navigation and consistent UI patterns
+  - Sufficient time limits with ability to extend or disable
+- **Understandable**:
+  - Clear language and readable text
+  - Consistent navigation and functionality
+  - Error identification and suggestions for correction
+  - Help and documentation available
+- **Robust**:
+  - Valid, semantic HTML markup
+  - Compatible with assistive technologies
+  - Future-proof code that works with evolving technologies
 
 ### Testing Strategy
 - **Unit Tests**: Individual function testing
@@ -361,6 +414,14 @@ document.addEventListener('click', (e) => {
 - **Advanced Search**: Filters, sorting, and saved searches
 - **Social Features**: Sharing and collaboration
 - **Analytics**: User behavior tracking and insights
+
+## Document Maintenance Rules
+
+### Update Protocol
+- **Gap Identification**: When gaps or missing information are discovered in this document during development, the assistant must ask the user for approval before updating
+- **User Approval Required**: Always confirm with the user before adding new sections or modifying existing content
+- **Version Tracking**: Document updates should be noted in version comments when significant changes are made
+- **Completeness Check**: Regularly review the document for completeness against actual codebase implementation
 
 ---
 
