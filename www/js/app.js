@@ -1422,7 +1422,7 @@ waitForFirebaseReady() {
       }
 
       // Account button - ensure only one event listener
-      const accountBtn = document.getElementById('accountBtn');
+      const accountBtn = document.getElementById('accountButton');
       if (accountBtn) {
         // Remove any existing event listeners to prevent conflicts
         const newAccountBtn = accountBtn.cloneNode(true);

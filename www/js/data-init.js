@@ -71,7 +71,8 @@
           if (!auth) auth = window.firebaseAuth || getAuth(app);
           if (!db)   db   = window.firebaseDb   || getFirestore(app);
         } catch (e) {
-          warn("modular import skipped/failed (likely CSP cache):", e?.message || e);
+          // This is expected when CSP blocks dynamic imports - not an error
+          log("modular import skipped (CSP policy):", e?.message || e);
         }
       }
 
@@ -102,7 +103,7 @@
           }
         });
       } else {
-        warn("cloud disabled (auth/db not ready) — local-only mode");
+        log("cloud disabled (auth/db not ready) — local-only mode");
         
         // Listen for Firebase ready event
         window.addEventListener('firebase:ready', async () => {
