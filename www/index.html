@@ -155,17 +155,17 @@
     
     <!-- Initialize curated sections -->
     <script>
-      // Initialize curated sections with 3 distinct genre-based sections
+      // Initialize curated sections with 3 distinct genre-based sections with proper TMDB data
       window.CURATED_SECTIONS = [
         {
           title: "Drama & Crime",
           items: [
             { id: 1399, title: "Breaking Bad", posterPath: "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg", rating: 9.5, year: 2008, mediaType: "tv" },
-            { id: 1396, title: "Breaking Bad", posterPath: "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg", rating: 9.5, year: 2008, mediaType: "tv" },
-            { id: 1398, title: "Sons of Anarchy", posterPath: "/7DJKHzAiZOlkpJQvAjjF4gxqX5k.jpg", rating: 8.6, year: 2008, mediaType: "tv" },
-            { id: 1399, title: "Breaking Bad", posterPath: "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg", rating: 9.5, year: 2008, mediaType: "tv" },
-            { id: 1396, title: "Breaking Bad", posterPath: "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg", rating: 9.5, year: 2008, mediaType: "tv" },
-            { id: 1398, title: "Sons of Anarchy", posterPath: "/7DJKHzAiZOlkpJQvAjjF4gxqX5k.jpg", rating: 8.6, year: 2008, mediaType: "tv" }
+            { id: 1398, title: "Sons of Anarchy", posterPath: "/yPLkr4JWZr6hsB9M3W5oTBTbgYD.jpg", rating: 8.6, year: 2008, mediaType: "tv" },
+            { id: 1408, title: "House", posterPath: "/3Cz7oSOQJmqiuTdrc6CY0r65yDI.jpg", rating: 8.8, year: 2004, mediaType: "tv" },
+            { id: 4057, title: "Criminal Minds", posterPath: "/7TCwWWx6RYNfitLNpPOJJIBqZEG.jpg", rating: 8.2, year: 2005, mediaType: "tv" },
+            { id: 1402, title: "The Walking Dead", posterPath: "/w21lgYIi9GeUH5dO8l3B9ARZbCB.jpg", rating: 8.2, year: 2010, mediaType: "tv" },
+            { id: 1434, title: "Family Guy", posterPath: "/eWWCRjBfLyePh2tfZdvNcIvKVQQ.jpg", rating: 8.1, year: 1999, mediaType: "tv" }
           ]
         },
         {
@@ -173,21 +173,21 @@
           items: [
             { id: 2316, title: "The Office", posterPath: "/7DJKHzAiZOlkpJQvAjjF4gxqX5k.jpg", rating: 8.9, year: 2005, mediaType: "tv" },
             { id: 1668, title: "Friends", posterPath: "/f496cm9enuEsZkSPzCwnTESEK5s.jpg", rating: 8.9, year: 1994, mediaType: "tv" },
-            { id: 2316, title: "The Office", posterPath: "/7DJKHzAiZOlkpJQvAjjF4gxqX5k.jpg", rating: 8.9, year: 2005, mediaType: "tv" },
-            { id: 1668, title: "Friends", posterPath: "/f496cm9enuEsZkSPzCwnTESEK5s.jpg", rating: 8.9, year: 1994, mediaType: "tv" },
-            { id: 2316, title: "The Office", posterPath: "/7DJKHzAiZOlkpJQvAjjF4gxqX5k.jpg", rating: 8.9, year: 2005, mediaType: "tv" },
-            { id: 1668, title: "Friends", posterPath: "/f496cm9enuEsZkSPzCwnTESEK5s.jpg", rating: 8.9, year: 1994, mediaType: "tv" }
+            { id: 1418, title: "The Big Bang Theory", posterPath: "/ooBGRQBdbGzBxAVfExiO8r7kloA.jpg", rating: 8.1, year: 2007, mediaType: "tv" },
+            { id: 456, title: "The Simpsons", posterPath: "/KoFnlbXWpSBhSnCkSAE5Y8oZxYF.jpg", rating: 8.7, year: 1989, mediaType: "tv" },
+            { id: 1438, title: "How I Met Your Mother", posterPath: "/b34jPzmB0wZy7EjUZoleXOl2RRI.jpg", rating: 8.3, year: 2005, mediaType: "tv" },
+            { id: 1433, title: "American Dad!", posterPath: "/xnFFz3etm1vftF0ns8RMHA8XdqT.jpg", rating: 7.4, year: 2005, mediaType: "tv" }
           ]
         },
         {
           title: "Sci-Fi & Fantasy",
           items: [
             { id: 1399, title: "Breaking Bad", posterPath: "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg", rating: 9.5, year: 2008, mediaType: "tv" },
-            { id: 1396, title: "Breaking Bad", posterPath: "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg", rating: 9.5, year: 2008, mediaType: "tv" },
-            { id: 1398, title: "Sons of Anarchy", posterPath: "/7DJKHzAiZOlkpJQvAjjF4gxqX5k.jpg", rating: 8.6, year: 2008, mediaType: "tv" },
-            { id: 1399, title: "Breaking Bad", posterPath: "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg", rating: 9.5, year: 2008, mediaType: "tv" },
-            { id: 1396, title: "Breaking Bad", posterPath: "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg", rating: 9.5, year: 2008, mediaType: "tv" },
-            { id: 1398, title: "Sons of Anarchy", posterPath: "/7DJKHzAiZOlkpJQvAjjF4gxqX5k.jpg", rating: 8.6, year: 2008, mediaType: "tv" }
+            { id: 1420, title: "Stranger Things", posterPath: "/x2LSRK2Cm7MZhjluni1msVJ3wDF.jpg", rating: 8.7, year: 2016, mediaType: "tv" },
+            { id: 1429, title: "Supernatural", posterPath: "/KoYWXbnYuS3b0GyQPkbuexlVK9.jpg", rating: 8.4, year: 2005, mediaType: "tv" },
+            { id: 1390, title: "American Horror Story", posterPath: "/5LLG9bjq0i7V5N4UfRhnab8zHK4.jpg", rating: 8.0, year: 2011, mediaType: "tv" },
+            { id: 1437, title: "Lost", posterPath: "/og6S0aTZU6YUJAbqxeKjCa3kY1E.jpg", rating: 8.3, year: 2004, mediaType: "tv" },
+            { id: 1426, title: "Arrow", posterPath: "/gKG5QGz5Ngf8fgWpBsWtlg5L2SF.jpg", rating: 7.5, year: 2012, mediaType: "tv" }
           ]
         }
       ];
@@ -327,7 +327,7 @@
           <div class="header-center">
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
-            <span class="version-display">v27.52</span>
+            <span class="version-display">v27.53</span>
           </div>
           <div class="header-right">
             <button id="accountButton" class="account-btn" aria-live="polite" title="Sign in" onclick="(firebaseAuth?.currentUser ? startSignOut() : startSignIn())">
@@ -377,7 +377,7 @@
 
       <!-- Tab container moved outside homeSection for proper positioning -->
       <div class="tab-container" id="navigation">
-        <button id="homeTab" class="tab active" title="Overview of your TV & movie tracking" aria-label="Home tab - view dashboard and recommendations">🏠 <span data-i18n="home">Home</span> <span class="tab-version">v27.52</span></button>
+        <button id="homeTab" class="tab active" title="Overview of your TV & movie tracking" aria-label="Home tab - view dashboard and recommendations">🏠 <span data-i18n="home">Home</span> <span class="tab-version">v27.53</span></button>
         <button id="watchingTab" class="tab" title="Shows and movies you're currently watching" aria-label="Watching tab - view shows and movies you're currently watching">
           ▶️ <span data-i18n="currently_watching">Currently Watching</span>
           <span class="tab-badge" id="watchingBadge">0</span>
