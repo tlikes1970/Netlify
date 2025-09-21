@@ -55,8 +55,11 @@ function initializeCurated() {
           // Fallback to simple item display
           const itemEl = document.createElement('div');
           itemEl.className = 'curated-item';
+          const posterUrl = item.posterPath ? 
+            `https://image.tmdb.org/t/p/w200${item.posterPath}` : 
+            '/icons/icon-192.png';
           itemEl.innerHTML = `
-            <img src="${item.posterPath || '/icons/icon-192.png'}" alt="${item.title}" />
+            <img src="${posterUrl}" alt="${item.title}" onerror="this.src='/icons/icon-192.png'" />
             <span>${item.title}</span>
           `;
           itemsContainer.appendChild(itemEl);
