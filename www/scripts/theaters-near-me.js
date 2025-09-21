@@ -146,24 +146,34 @@
     }
 
     // Render movies
-    theatersList.innerHTML = movies.map(movie => `
-      <div class="theater-movie">
-        <div class="movie-poster">
-          <img src="${movie.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBM0FGIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+Tm8gUG9zdGVyPC90ZXh0Pgo8L3N2Zz4K'}" 
-               alt="${escapeHtml(movie.title)}" 
-               loading="lazy"
-               onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBM0FGIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+Tm8gUG9zdGVyPC90ZXh0Pgo8L3N2Zz4K'">
-        </div>
-        <div class="movie-info">
-          <h4 class="movie-title">${escapeHtml(movie.title)}</h4>
-          <p class="movie-overview">${escapeHtml(movie.overview?.substring(0, 120) + '...' || 'No description available')}</p>
-          <div class="movie-meta">
-            <span class="movie-rating">⭐ ${movie.vote_average?.toFixed(1) || 'N/A'}</span>
-            <span class="movie-release">${new Date(movie.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+    theatersList.innerHTML = movies.map(movie => {
+      // Use TMDB utilities if available, otherwise fallback to direct URL
+      const posterUrl = movie.poster_path ? 
+        (window.getPosterUrl ? window.getPosterUrl(movie.poster_path, 'w200') : `https://image.tmdb.org/t/p/w200${movie.poster_path}`) : 
+        null;
+      
+      const placeholderSvg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBM0FGIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+Tm8gUG9zdGVyPC90ZXh0Pgo8L3N2Zz4K';
+      
+      return `
+        <div class="theater-movie">
+          <div class="movie-poster">
+            ${posterUrl ? 
+              `<img src="${posterUrl}" alt="${escapeHtml(movie.title)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+               <div class="movie-poster-placeholder" style="display: none;">🎬</div>` :
+              `<div class="movie-poster-placeholder">🎬</div>`
+            }
+          </div>
+          <div class="movie-info">
+            <h4 class="movie-title">${escapeHtml(movie.title)}</h4>
+            <p class="movie-overview">${escapeHtml(movie.overview?.substring(0, 120) + '...' || 'No description available')}</p>
+            <div class="movie-meta">
+              <span class="movie-rating">⭐ ${movie.vote_average?.toFixed(1) || 'N/A'}</span>
+              <span class="movie-release">${movie.release_date ? new Date(movie.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBA'}</span>
+            </div>
           </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     // Update movie count
     if (movieCount) {

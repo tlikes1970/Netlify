@@ -5839,12 +5839,27 @@ body.has-banner {
   height: 200px;
   overflow: hidden;
   background: var(--color-surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 .movie-poster img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.movie-poster-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-border);
+  color: var(--color-muted);
+  font-size: 48px;
 }
 
 .movie-info {
@@ -5971,8 +5986,11 @@ body.has-banner {
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .theaters-list {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
     gap: 12px;
+    padding: 8px;
   }
   
   .movie-poster {
