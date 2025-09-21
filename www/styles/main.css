@@ -801,7 +801,7 @@ body.mardi {
 }
 
 .preview-card {
-  flex: 0 0 92px !important;
+  flex: 0 0 var(--home-card-width-desktop) !important;
   background: var(--bg);
   border-radius: 6px;
   border: 1px solid var(--border);
@@ -812,7 +812,7 @@ body.mardi {
   display: flex !important;
   flex-direction: column !important;
   height: auto !important;
-  width: 92px !important;
+  width: var(--home-card-width-desktop) !important;
 }
 
 .preview-card:hover {
@@ -1381,8 +1381,8 @@ body.mardi {
 
 @media (max-width: 768px) {
   .preview-card {
-    width: 64px !important;
-    flex: 0 0 64px !important;
+    width: var(--home-card-width-mobile) !important;
+    flex: 0 0 var(--home-card-width-mobile) !important;
   }
   
   .preview-card-poster {
