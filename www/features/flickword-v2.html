@@ -235,6 +235,14 @@
       renderGrid(); 
       renderKeyboard();
       console.log('🎯 Game initialized successfully');
+      
+      // Debug: Check if elements exist
+      const grid = document.getElementById('grid');
+      const keyboard = document.getElementById('keyboard');
+      console.log('🎯 Grid element:', grid);
+      console.log('🎯 Keyboard element:', keyboard);
+      console.log('🎯 Grid children:', grid?.children.length);
+      console.log('🎯 Keyboard children:', keyboard?.children.length);
     }
 
     function closeGame(){
@@ -249,7 +257,13 @@
     }
 
     function renderGrid(){
-      const grid = document.getElementById('grid'); grid.innerHTML='';
+      console.log('🎯 Rendering grid...');
+      const grid = document.getElementById('grid'); 
+      if (!grid) {
+        console.error('🎯 Grid element not found!');
+        return;
+      }
+      grid.innerHTML='';
       for (let i=0;i<game.max;i++){
         const guess = game.guesses[i] || (i===game.guesses.length ? game.current : "");
         for (let j=0;j<5;j++){
@@ -264,11 +278,17 @@
           grid.appendChild(tile);
         }
       }
+      console.log('🎯 Grid rendered with', grid.children.length, 'tiles');
     }
 
     function renderKeyboard(){
       console.log('🎯 Rendering keyboard...');
-      const kb = document.getElementById('keyboard'); kb.innerHTML = '';
+      const kb = document.getElementById('keyboard'); 
+      if (!kb) {
+        console.error('🎯 Keyboard element not found!');
+        return;
+      }
+      kb.innerHTML = '';
 
       const r1 = document.createElement('div'); r1.className='kb-row';
       for (const L of ROWS[0]) r1.appendChild(makeKey(L));
@@ -285,6 +305,7 @@
       kb.appendChild(r3);
       
       console.log('🎯 Keyboard rendered with', kb.querySelectorAll('.key').length, 'buttons');
+      console.log('🎯 Keyboard HTML:', kb.innerHTML.substring(0, 200) + '...');
     }
 
     function makeKey(label, extra='', handler){
