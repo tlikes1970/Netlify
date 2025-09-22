@@ -1,5 +1,5 @@
-#community-player { display:grid; gap:16px; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); padding: 12px; }
-#community-player .c-card { border:1px solid #e5e7eb; border-radius:16px; overflow:hidden; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.06); outline:none; }
+#community-player { display:flex; justify-content:center; padding: 12px; }
+#community-player .c-card { border:1px solid #e5e7eb; border-radius:16px; overflow:hidden; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.06); outline:none; max-width:400px; width:100%; }
 #community-player .c-card:focus { box-shadow:0 0 0 3px rgba(59,130,246,.5); }
 #community-player .c-card header { padding:12px; }
 #community-player .c-card .title { font-size:1rem; font-weight:700; margin:0 0 4px; }
