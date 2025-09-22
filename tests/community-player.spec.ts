@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Community Player Seed", () => {
   test("legacy blocks removed", async ({ page }) => {
-    await page.goto("http://localhost:8000/");
+    await page.goto("http://localhost:8002/");
     await expect(page.locator("#community-content")).toHaveCount(0);
     await expect(page.locator(".community-left")).toHaveCount(0);
     await expect(page.locator(".player-placeholder")).toHaveCount(0);
@@ -11,12 +11,12 @@ test.describe("Community Player Seed", () => {
   });
 
   test("renders 1 daily card", async ({ page }) => {
-    await page.goto("http://localhost:8000/");
+    await page.goto("http://localhost:8002/");
     await expect(page.locator("#community-player .c-card")).toHaveCount(1);
   });
 
   test("a11y basics: images have alt, cards are focusable", async ({ page }) => {
-    await page.goto("http://localhost:8000/");
+    await page.goto("http://localhost:8002/");
     const imgs = page.locator("#community-player .c-card img");
     const n = await imgs.count();
     for (let i = 0; i < n; i++) {
@@ -30,7 +30,7 @@ test.describe("Community Player Seed", () => {
   });
 
   test("poll tile shows 4 bars when poll card is displayed", async ({ page }) => {
-    await page.goto("http://localhost:8000/");
+    await page.goto("http://localhost:8002/");
     
     // Check if today's card is a poll card
     const pollCard = page.locator(".type-poll_results");
@@ -47,7 +47,7 @@ test.describe("Community Player Seed", () => {
 
   test("daily rotation shows different cards on different days", async ({ page }) => {
     // Test that the rotation algorithm works
-    await page.goto("http://localhost:8000/");
+    await page.goto("http://localhost:8002/");
     
     // Get the current card type
     const currentCard = page.locator("#community-player .c-card");

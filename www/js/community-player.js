@@ -116,14 +116,19 @@
     root.appendChild(card);
   }
 
-  (async () => {
+  function init() {
     const root = ensureRoot();
     removeLegacy();
-    try {
-      const payload = await fetchSeed();
+    fetchSeed().then(payload => {
       render(root, payload);
-    } catch (e) {
+    }).catch(e => {
       root.innerHTML = `<div class="c-empty" role="status">Community features are coming soon.</div>`;
-    }
-  })();
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
