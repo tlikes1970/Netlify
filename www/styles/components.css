@@ -683,6 +683,538 @@ html, body { overflow-x:hidden; }
   }
 }
 
+/* === BASE POSTER CARD COMPONENT STYLES === */
+
+/* Base Poster Card - Unified 2:3 aspect ratio cards */
+.base-poster-card {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  aspect-ratio: 2/3;
+  padding: 0;
+  text-align: left;
+  font-family: inherit;
+}
+
+.base-poster-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.base-poster-card:focus-visible {
+  outline: 2px solid var(--color-primary-start);
+  outline-offset: 2px;
+}
+
+.base-poster-card--disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.base-poster-card--skeleton {
+  pointer-events: none;
+}
+
+.base-poster-card--empty {
+  pointer-events: none;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Poster section */
+.base-poster-card__poster {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--color-surface-2);
+  overflow: hidden;
+}
+
+.base-poster-card__poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.base-poster-card__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--color-muted);
+  background: var(--color-surface-2);
+}
+
+/* Content section */
+.base-poster-card__content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.8));
+  padding: var(--space-3);
+  color: white;
+}
+
+.base-poster-card__title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0 0 var(--space-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.base-poster-card__subline {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  margin: 0 0 var(--space-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.base-poster-card__rating {
+  font-size: 0.8rem;
+  color: #fbbf24;
+  margin: 0;
+}
+
+/* Overflow menu */
+.base-poster-card__overflow {
+  position: absolute;
+  bottom: var(--space-2);
+  right: var(--space-2);
+}
+
+.base-poster-card__overflow-btn {
+  background: rgba(0,0,0,0.7);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-1);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.base-poster-card__overflow-btn:hover {
+  background: rgba(0,0,0,0.9);
+}
+
+.base-poster-card__overflow-dots {
+  font-size: 0.8rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.base-poster-card__overflow-menu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  min-width: 120px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.base-poster-card__overflow-menu[aria-hidden="false"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.base-poster-card__overflow-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: background-color 0.2s ease;
+}
+
+.base-poster-card__overflow-item:hover {
+  background: var(--color-surface-2);
+}
+
+.base-poster-card__overflow-icon {
+  font-size: 1rem;
+  width: 16px;
+  text-align: center;
+}
+
+.base-poster-card__overflow-label {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+/* Skeleton loading */
+.base-poster-card__skeleton-shimmer {
+  background: linear-gradient(90deg, var(--color-surface-2) 25%, var(--color-surface) 50%, var(--color-surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Empty state */
+.base-poster-card__empty-content {
+  text-align: center;
+  color: var(--color-muted);
+}
+
+.base-poster-card__empty-icon {
+  font-size: 2rem;
+  margin-bottom: var(--space-2);
+}
+
+.base-poster-card__empty-message {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Responsive grid system */
+.base-poster-grid {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+/* Mobile: 2 columns */
+@media (max-width: 375px) {
+  .base-poster-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 16px;
+  }
+}
+
+/* Small mobile: 3 columns */
+@media (min-width: 376px) and (max-width: 599px) {
+  .base-poster-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 16px;
+  }
+}
+
+/* Tablet: 4 columns */
+@media (min-width: 600px) and (max-width: 899px) {
+  .base-poster-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 24px;
+  }
+}
+
+/* Large tablet: 5 columns */
+@media (min-width: 900px) and (max-width: 1279px) {
+  .base-poster-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    padding: 24px;
+  }
+}
+
+/* Desktop: 6-8 columns (auto-fill) */
+@media (min-width: 1280px) {
+  .base-poster-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 24px;
+  }
+}
+
+/* === STATSCARD COMPONENT STYLES === */
+
+/* StatsCard - FlickWord statistics display */
+.stats-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.stats-card__header {
+  margin-bottom: var(--space-3);
+}
+
+.stats-card__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.stats-card__content {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
+.stats-card__stat {
+  text-align: center;
+}
+
+.stats-card__stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary-start);
+  line-height: 1;
+  margin-bottom: var(--space-1);
+}
+
+.stats-card__stat-label {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stats-card__footer {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.stats-card__last-played {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .stats-card {
+    padding: var(--space-3);
+  }
+  
+  .stats-card__content {
+    gap: var(--space-2);
+  }
+  
+  .stats-card__stat-value {
+    font-size: 1.25rem;
+  }
+  
+  .stats-card__stat-label {
+    font-size: 0.7rem;
+  }
+}
+
+/* === FLICKWORD TAB STYLES === */
+
+.flickword-tab {
+  width: 100%;
+}
+
+.flickword-tab__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+  padding: 0 var(--space-4);
+}
+
+.flickword-tab__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.flickword-tab__hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+  padding: 0 var(--space-4);
+  align-items: center;
+}
+
+.flickword-tab__hero-image {
+  display: flex;
+  justify-content: center;
+}
+
+.flickword-tab__hero-image img {
+  width: 100%;
+  max-width: 480px;
+  min-width: 280px;
+  height: auto;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.flickword-tab__hero-stats {
+  flex-shrink: 0;
+}
+
+.flickword-tab__grid {
+  margin-top: var(--space-4);
+}
+
+/* Mobile adjustments for FlickWord tab */
+@media (max-width: 768px) {
+  .flickword-tab__header {
+    padding: 0 var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  
+  .flickword-tab__title {
+    font-size: 1.25rem;
+  }
+  
+  .flickword-tab__hero {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    padding: 0 var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  
+  .flickword-tab__hero-image {
+    order: 2;
+  }
+  
+  .flickword-tab__hero-stats {
+    order: 1;
+  }
+}
+
+/* === TRIVIA TAB STYLES === */
+
+.trivia-tab {
+  width: 100%;
+}
+
+.trivia-tab__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+  padding: 0 var(--space-4);
+}
+
+.trivia-tab__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.trivia-tab__grid {
+  margin-top: var(--space-4);
+}
+
+/* Mobile adjustments for Trivia tab */
+@media (max-width: 768px) {
+  .trivia-tab__header {
+    padding: 0 var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  
+  .trivia-tab__title {
+    font-size: 1.25rem;
+  }
+}
+
+/* === GAME TAB NAVIGATION STYLES === */
+
+.game-tab-nav {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.game-tab-btn {
+  background: none;
+  border: none;
+  padding: var(--space-3) var(--space-4);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.game-tab-btn:hover {
+  color: var(--color-text);
+  background: var(--color-surface-2);
+}
+
+.game-tab-btn.active {
+  color: var(--color-primary-start);
+  border-bottom-color: var(--color-primary-start);
+}
+
+.game-tab {
+  display: none;
+}
+
+.game-tab.active {
+  display: block;
+}
+
+/* Mobile adjustments for tab navigation */
+@media (max-width: 768px) {
+  .game-tab-nav {
+    padding: 0 var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+  
+  .game-tab-btn {
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.9rem;
+  }
+}
+
+/* === VERSION DISPLAY STYLES === */
+
+.version-display {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  background: var(--color-surface-2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-right: var(--space-2);
+  display: inline-block;
+}
+
 /* === CARD COMPONENT STYLES === */
 
 /* Base card styles */

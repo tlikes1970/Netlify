@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet - TV & Movie Tracker</title>
+    <title>Flicklet v25.1 - TV & Movie Tracker</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
@@ -155,6 +155,13 @@
     
     <!-- Game modules -->
     <script type="module" src="/scripts/modules/flickword-modal.js"></script>
+    
+    <!-- New unified card components -->
+    <script src="/scripts/components/BasePosterCard.js"></script>
+    <script src="/scripts/components/StatsCard.js"></script>
+    <script src="/scripts/components/FlickWordTab.js"></script>
+    <script src="/scripts/components/TriviaTab.js"></script>
+    <script src="/scripts/game-tabs-init.js"></script>
     
     <!-- Initialize curated sections -->
     <script>
@@ -379,6 +386,7 @@
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
+            <div class="version-display">v25.1</div>
             <div id="headerGreeting" class="header-greeting" aria-live="polite"></div>
           </div>
           <div class="header-center">
@@ -526,67 +534,25 @@
             <!-- Right: Game Cards Section -->
             <div class="community-right">
               <section id="home-games" class="home-games">
-                <article class="card card--game" id="flickwordTile" data-module="flickword" role="region" tabindex="0" aria-haspopup="dialog" aria-controls="modal-flickword" aria-labelledby="flickword-title">
-                  <div class="card__header">
-                    <h3 class="card__title" id="flickword-title" data-i18n="flickword">🎯 FlickWord</h3>
-                    <div class="card__tools">
-                      <div class="game-stats">
-                        <div class="stat-item">
-                          <span class="stat-label" data-i18n="streak">Streak</span>
-                          <span class="stat-value" data-fw-streak>0</span>
-                        </div>
-                        <div class="stat-item">
-                          <span class="stat-label" data-i18n="best">Best</span>
-                          <span class="stat-value" data-fw-best>0</span>
-                        </div>
-                        <div class="stat-item">
-                          <span class="stat-label" data-i18n="win_percent">Win %</span>
-                          <span class="stat-value" data-fw-win>—</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="card__body card__body--scroll">
-                    <p class="card__description" data-i18n="flickword_tagline">Wordle-style daily word play</p>
-                    <div aria-live="polite" class="sr-only" data-status-live></div>
-                  </div>
-                  
-                  <div class="card__actions">
-                    <button class="btn btn--primary" data-action="open-flickword" data-i18n="play_now">Play Now</button>
-                  </div>
-                </article>
-
-                <article class="card card--game" id="triviaTile" data-module="trivia" role="region" tabindex="0" aria-haspopup="dialog" aria-controls="modal-trivia" aria-labelledby="trivia-title">
-                  <div class="card__header">
-                    <h3 class="card__title" id="trivia-title" data-i18n="daily_trivia">🧠 Daily Trivia</h3>
-                    <div class="card__tools">
-                      <div class="game-stats">
-                        <div class="stat-item">
-                          <span class="stat-label" data-i18n="streak">Streak</span>
-                          <span class="stat-value" data-tv-streak>1</span>
-                        </div>
-                        <div class="stat-item">
-                          <span class="stat-label" data-i18n="best">Best</span>
-                          <span class="stat-value" data-tv-best>5</span>
-                        </div>
-                        <div class="stat-item">
-                          <span class="stat-label" data-i18n="accuracy">Accuracy</span>
-                          <span class="stat-value" data-tv-acc>—</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="card__body card__body--scroll">
-                    <p class="card__description" data-i18n="daily_trivia_tagline">Fresh question, new bragging rights</p>
-                    <div aria-live="polite" class="sr-only" data-status-live></div>
-                  </div>
-                  
-                  <div class="card__actions">
-                    <button class="btn btn--primary" data-action="start-trivia" data-i18n="play_now">Play Now</button>
-                  </div>
-                </article>
+                <!-- Tab Navigation -->
+                <div class="game-tab-nav">
+                  <button class="game-tab-btn active" data-tab="flickword" data-testid="flickword-tab-btn">
+                    🎯 FlickWord
+                  </button>
+                  <button class="game-tab-btn" data-tab="trivia" data-testid="trivia-tab-btn">
+                    🧠 Trivia
+                  </button>
+                </div>
+                
+                <!-- FlickWord Tab -->
+                <div id="flickword-tab" class="game-tab active">
+                  <!-- FlickWord tab content will be rendered here -->
+                </div>
+                
+                <!-- Trivia Tab -->
+                <div id="trivia-tab" class="game-tab">
+                  <!-- Trivia tab content will be rendered here -->
+                </div>
               </section>
             </div>
           </div>
