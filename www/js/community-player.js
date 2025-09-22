@@ -14,7 +14,14 @@
       el = document.createElement("section");
       el.id = rootId;
       el.setAttribute("aria-label", "Community Player");
-      document.body.appendChild(el);
+      // Try to find the community-left container first
+      const communityLeft = document.querySelector('.community-left');
+      if (communityLeft) {
+        communityLeft.appendChild(el);
+      } else {
+        // Fallback to body if community-left not found
+        document.body.appendChild(el);
+      }
     }
     return el;
   }
@@ -32,28 +39,23 @@
   }
 
   function getDailyCardIndex(cards) {
-    // Get today's date as YYYY-MM-DD
     const today = new Date().toISOString().split('T')[0];
-    // Use date as seed for consistent daily rotation
     const dateSeed = new Date(today).getTime();
-    // Return index based on day of year (0-6 for 7 cards)
     return Math.floor(dateSeed / (1000 * 60 * 60 * 24)) % cards.length;
   }
 
   function render(root, payload) {
     const cards = payload?.rotation || [];
     if (cards.length === 0) {
-      root.innerHTML = `<div class="c-empty" role="status">Community features are coming soon.</div>`;
+      root.innerHTML = '<div class="c-empty" role="status">Community features are coming soon.</div>';
       return;
     }
     
-    // Get today's card index
     const dailyIndex = getDailyCardIndex(cards);
     const dailyCard = cards[dailyIndex];
     
     root.innerHTML = "";
     
-    // Render only the daily card
     const c = dailyCard;
     const card = document.createElement("article");
     card.className = `c-card type-${(c.type || "").toLowerCase()}`;
@@ -122,7 +124,7 @@
     fetchSeed().then(payload => {
       render(root, payload);
     }).catch(e => {
-      root.innerHTML = `<div class="c-empty" role="status">Community features are coming soon.</div>`;
+      root.innerHTML = '<div class="c-empty" role="status">Community features are coming soon.</div>';
     });
   }
 
