@@ -40,7 +40,7 @@
       </div>
 
       <!-- Card Grid -->
-      <div class="trivia-tab__grid base-poster-grid" data-testid="trivia-grid">
+      <div class="trivia-tab__grid" data-testid="trivia-grid">
         ${categories.length > 0 ? 
           categories.map(category => `
             <div class="trivia-category-card" data-category-id="${category.id}">

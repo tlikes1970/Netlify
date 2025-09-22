@@ -56,7 +56,7 @@
       </div>
 
       <!-- Card Grid -->
-      <div class="flickword-tab__grid base-poster-grid" data-testid="flickword-grid">
+      <div class="flickword-tab__grid" data-testid="flickword-grid">
         ${wordArchives.length > 0 ? 
           wordArchives.map(word => `
             <div class="flickword-word-card" data-word-id="${word.id}">

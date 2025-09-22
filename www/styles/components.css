@@ -901,8 +901,9 @@ html, body { overflow-x:hidden; }
   margin: 0;
 }
 
-/* Responsive grid system */
-.base-poster-grid {
+/* Responsive grid system - only for FlickWord/Trivia content */
+.flickword-tab__grid,
+.trivia-tab__grid {
   display: grid;
   gap: 12px;
   padding: 16px;
@@ -912,7 +913,8 @@ html, body { overflow-x:hidden; }
 
 /* Mobile: 2 columns */
 @media (max-width: 375px) {
-  .base-poster-grid {
+  .flickword-tab__grid,
+  .trivia-tab__grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     padding: 16px;
@@ -921,7 +923,8 @@ html, body { overflow-x:hidden; }
 
 /* Small mobile: 3 columns */
 @media (min-width: 376px) and (max-width: 599px) {
-  .base-poster-grid {
+  .flickword-tab__grid,
+  .trivia-tab__grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
     padding: 16px;
@@ -930,7 +933,8 @@ html, body { overflow-x:hidden; }
 
 /* Tablet: 4 columns */
 @media (min-width: 600px) and (max-width: 899px) {
-  .base-poster-grid {
+  .flickword-tab__grid,
+  .trivia-tab__grid {
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
     padding: 24px;
@@ -939,7 +943,8 @@ html, body { overflow-x:hidden; }
 
 /* Large tablet: 5 columns */
 @media (min-width: 900px) and (max-width: 1279px) {
-  .base-poster-grid {
+  .flickword-tab__grid,
+  .trivia-tab__grid {
     grid-template-columns: repeat(5, 1fr);
     gap: 16px;
     padding: 24px;
@@ -948,7 +953,8 @@ html, body { overflow-x:hidden; }
 
 /* Desktop: 6-8 columns (auto-fill) */
 @media (min-width: 1280px) {
-  .base-poster-grid {
+  .flickword-tab__grid,
+  .trivia-tab__grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 20px;
     padding: 24px;
