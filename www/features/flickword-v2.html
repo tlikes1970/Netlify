@@ -126,6 +126,37 @@
     }
     .btn-exit:hover { filter: brightness(1.03); }
 
+    /* Custom notification styles */
+    .custom-notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      animation: slideDown 0.3s ease-out;
+    }
+    .custom-notification.success {
+      background: linear-gradient(135deg, #20b265, #16a34a);
+      color: white;
+    }
+    .custom-notification.error {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+    }
+    .custom-notification.info {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
     /* Small screens inside the iframe */
     @media (max-width: 560px){
       #gameWrapper { padding: 12px; border-radius: 12px; }
@@ -193,7 +224,9 @@
     }
 
     async function showGame(){
+      console.log('🎯 Initializing FlickWord game...');
       game.target = await getTodayWord();
+      console.log('🎯 Target word:', game.target);
       game.guesses = [];
       game.current = "";
       game.done = false;
@@ -201,6 +234,7 @@
       game.lastResults = [];
       renderGrid(); 
       renderKeyboard();
+      console.log('🎯 Game initialized successfully');
     }
 
     function closeGame(){
@@ -266,10 +300,16 @@
         btn.onclick = () => onKey(label);
       } else if (handler) btn.onclick = handler;
 
+      // Add debugging
+      btn.addEventListener('click', (e) => {
+        console.log('🎯 Button clicked:', label, 'Event:', e);
+      });
+
       return btn;
     }
 
     function onKey(l){
+      console.log('🎯 Key pressed:', l);
       if (l === '⌫' || l === 'Backspace') return;
       if (game.done || game.current.length>=5) return;
       game.current += l;
@@ -277,12 +317,14 @@
     }
 
     function backspace(){
+      console.log('🎯 Backspace pressed');
       if (game.done || !game.current) return;
       game.current = game.current.slice(0, -1);
       renderGrid();
     }
 
     async function submit(){
+      console.log('🎯 Submit pressed, current word:', game.current);
       if (game.done || game.current.length!==5) return;
 
       const valid = await isValidWord(game.current);
