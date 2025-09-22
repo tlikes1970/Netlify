@@ -267,6 +267,7 @@
     }
 
     function renderKeyboard(){
+      console.log('🎯 Rendering keyboard...');
       const kb = document.getElementById('keyboard'); kb.innerHTML = '';
 
       const r1 = document.createElement('div'); r1.className='kb-row';
@@ -282,6 +283,8 @@
       for (const L of ROWS[2]) r3.appendChild(makeKey(L));
       r3.appendChild(makeKey('Enter','enter special', submit));
       kb.appendChild(r3);
+      
+      console.log('🎯 Keyboard rendered with', kb.querySelectorAll('.key').length, 'buttons');
     }
 
     function makeKey(label, extra='', handler){
@@ -290,20 +293,30 @@
       btn.textContent = label;
       btn.className = ('key '+extra).trim();
 
-      if (label === '⌫')       btn.onclick = backspace;
-      else if (label === 'Enter') btn.onclick = submit;
-      else if (label.length===1){
+      // Add debugging and event handling
+      btn.addEventListener('click', (e) => {
+        console.log('🎯 Button clicked:', label, 'Event:', e);
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (label === '⌫') {
+          backspace();
+        } else if (label === 'Enter') {
+          submit();
+        } else if (label.length === 1) {
+          onKey(label);
+        } else if (handler) {
+          handler();
+        }
+      });
+
+      // Set up status classes for letter keys
+      if (label.length === 1) {
         const s = game.status[label];
         if (s==='correct') btn.classList.add('correct');
         if (s==='present') btn.classList.add('present');
         if (s==='absent')  btn.classList.add('absent');
-        btn.onclick = () => onKey(label);
-      } else if (handler) btn.onclick = handler;
-
-      // Add debugging
-      btn.addEventListener('click', (e) => {
-        console.log('🎯 Button clicked:', label, 'Event:', e);
-      });
+      }
 
       return btn;
     }
