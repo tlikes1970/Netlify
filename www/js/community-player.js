@@ -128,9 +128,11 @@
     });
   }
 
+  // Wait for DOM to be ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
-    init();
+    // If DOM is already ready, wait a bit more to ensure all elements are rendered
+    setTimeout(init, 100);
   }
 })();
