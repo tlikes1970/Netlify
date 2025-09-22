@@ -153,6 +153,9 @@
     <script src="/scripts/currently-watching-preview.js"></script>
     <script src="/scripts/theaters-near-me.js"></script>
     
+    <!-- Game modules -->
+    <script type="module" src="/scripts/modules/flickword-modal.js"></script>
+    
     <!-- Initialize curated sections -->
     <script>
       // Initialize curated sections with 3 distinct genre-based sections with proper TMDB data
@@ -381,7 +384,7 @@
           <div class="header-center">
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
-            <span class="version-display">v27.54</span>
+            <span class="version-display">v27.55</span>
           </div>
           <div class="header-right">
             <button id="accountButton" class="account-btn" aria-live="polite" title="Sign in" onclick="(firebaseAuth?.currentUser ? startSignOut() : startSignIn())">
@@ -431,7 +434,7 @@
 
       <!-- Tab container moved outside homeSection for proper positioning -->
       <div class="tab-container" id="navigation">
-        <button id="homeTab" class="tab active" title="Overview of your TV & movie tracking" aria-label="Home tab - view dashboard and recommendations">🏠 <span data-i18n="home">Home</span> <span class="tab-version">v27.54</span></button>
+        <button id="homeTab" class="tab active" title="Overview of your TV & movie tracking" aria-label="Home tab - view dashboard and recommendations">🏠 <span data-i18n="home">Home</span> <span class="tab-version">v27.55</span></button>
         <button id="watchingTab" class="tab" title="Shows and movies you're currently watching" aria-label="Watching tab - view shows and movies you're currently watching">
           ▶️ <span data-i18n="currently_watching">Currently Watching</span>
           <span class="tab-badge" id="watchingBadge">0</span>
@@ -550,7 +553,7 @@
                   </div>
                   
                   <div class="card__actions">
-                    <button class="btn btn--primary" data-action="start-flickword" data-i18n="play_now">Play Now</button>
+                    <button class="btn btn--primary" data-action="open-flickword" data-i18n="play_now">Play Now</button>
                   </div>
                 </article>
 

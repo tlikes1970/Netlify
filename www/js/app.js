@@ -144,6 +144,7 @@ window.FlickletDebug = window.FlickletDebug || {
         // 6) Optional: feature blocks that rely on DOM (after first paint)
         setTimeout(() => {
           this.initializeFlickWord?.();
+          this.initializeFlickWordModal?.();
           // checkAndPromptLogin removed - handled in auth listener
         }, 150);
 
@@ -1389,6 +1390,15 @@ waitForFirebaseReady() {
               window.addToListFromCache(Number(id), list);
             }
             break;
+          case 'open-flickword':
+            // Handle FlickWord game opening
+            console.log('🎯 FlickWord button clicked');
+            if (typeof window.openFlickWordModal === 'function') {
+              window.openFlickWordModal();
+            } else {
+              console.error('❌ openFlickWordModal function not available');
+            }
+            break;
           case 'username-save':
             // Username modal save
             e.preventDefault();
@@ -1657,6 +1667,25 @@ waitForFirebaseReady() {
       }
       if (!triviaTile) {
         console.warn('[FlickletApp] triviaTile not found');
+      }
+    },
+
+    initializeFlickWordModal() {
+      console.log('🎯 Initializing FlickWord modal...');
+      try {
+        // Import and initialize the flickword modal module
+        import('/scripts/modules/flickword-modal.js').then(module => {
+          if (module.initializeFlickWordModal) {
+            module.initializeFlickWordModal();
+            console.log('✅ FlickWord modal initialized successfully');
+          } else {
+            console.warn('⚠️ initializeFlickWordModal function not found in module');
+          }
+        }).catch(error => {
+          console.error('❌ Failed to load FlickWord modal module:', error);
+        });
+      } catch (error) {
+        console.error('❌ Error initializing FlickWord modal:', error);
       }
     },
     // checkAndPromptLogin() removed - handled in auth listener

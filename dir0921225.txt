@@ -1,0 +1,108 @@
+ Volume in drive C is Windows-SSD
+ Volume Serial Number is 9656-D29F
+
+ Directory of C:\Users\Likes\Side Projects\TV Tracker\Netlify
+
+09/21/2025  03:00 PM    <DIR>          .
+09/19/2025  10:14 AM    <DIR>          ..
+09/18/2025  08:36 AM                34 .env
+09/19/2025  10:07 AM             1,051 .eslintrc.cjs
+09/18/2025  10:30 AM             1,713 .eslintrc.js
+09/18/2025  08:36 AM    <DIR>          .github
+09/18/2025  08:36 AM               194 .gitignore
+09/19/2025  10:12 AM    <DIR>          .husky
+09/18/2025  08:36 AM            16,789 1 text eol=crlf
+09/18/2025  08:36 AM    <DIR>          AID Key
+09/18/2025  08:36 AM    <DIR>          android
+09/20/2025  01:24 PM            29,053 app by function.docx
+09/20/2025  01:24 PM            36,612 app elements.docx
+09/18/2025  08:36 AM    <DIR>          backup index's 09012025
+09/18/2025  08:36 AM    <DIR>          backup_20250902_130607
+09/18/2025  08:36 AM    <DIR>          backup_20250903_181036
+09/18/2025  08:36 AM             6,531 BUG_FIXES_SUMMARY.md
+09/18/2025  08:36 AM                90 capacitor.config.json
+09/18/2025  08:36 AM    <DIR>          Check these
+09/18/2025  08:36 AM               856 check-blocking-scripts.txt
+09/18/2025  08:36 AM                 0 check-firebase-code.txt
+09/18/2025  08:36 AM             3,939 check-firebase.txt
+09/18/2025  08:36 AM               151 check-inline-scripts.txt
+09/18/2025  08:36 AM               304 copy-to-www.bat
+09/21/2025  02:35 PM    <DIR>          Cursor Rules
+09/18/2025  08:36 AM             3,790 debug-data.html
+09/21/2025  02:23 PM    <DIR>          Design
+09/21/2025  01:48 PM    <DIR>          diagnostics
+09/21/2025  03:00 PM                 0 dir0921225.txt
+09/18/2025  08:36 AM         2,215,276 directory09012025.txt
+09/20/2025  12:22 PM    <DIR>          dist
+09/18/2025  08:36 AM             6,668 FBaseCDN.txt
+09/18/2025  08:36 AM    <DIR>          features
+09/20/2025  10:25 AM             4,960 FINAL_VALIDATION_REPORT.md
+09/18/2025  08:36 AM    <DIR>          Fixes
+09/18/2025  08:36 AM         2,164,800 Flicklet_Dir.txt
+09/18/2025  08:36 AM    <DIR>          FlickWord
+09/18/2025  08:36 AM    <DIR>          icons
+09/18/2025  08:36 AM    <DIR>          ios
+09/18/2025  08:36 AM             6,000 LANGUAGE_VALIDATION_REPORT.md
+09/18/2025  08:36 AM    <DIR>          Layout
+09/18/2025  08:36 AM               914 Manifest.json
+09/18/2025  08:36 AM    <DIR>          netlify
+09/19/2025  01:57 AM               983 netlify.toml
+09/20/2025  11:55 AM    <DIR>          node_modules
+09/20/2025  10:20 AM           402,229 package-lock.json
+09/20/2025  10:25 AM             1,521 package.json
+09/20/2025  10:24 AM    <DIR>          playwright-report
+09/18/2025  08:36 AM             2,114 playwright.config.ts
+09/20/2025  11:55 AM           207,299 pnpm-lock.yaml
+09/18/2025  08:36 AM             5,417 purge-manifest.json
+09/18/2025  10:30 AM    <DIR>          reports
+09/18/2025  08:36 AM               242 run-tests.bat
+09/18/2025  08:36 AM            16,789 s text eol=lf
+09/18/2025  08:36 AM    <DIR>          scripts
+09/18/2025  10:31 AM    <DIR>          snapshots
+09/18/2025  08:36 AM    <DIR>          split_exact
+09/18/2025  10:38 AM    <DIR>          staging
+09/18/2025  08:36 AM    <DIR>          staging_backup_20250115_153000
+09/18/2025  08:36 AM             2,767 tatus --porcelain
+09/19/2025  10:38 AM             1,757 test-auth.js
+09/18/2025  08:36 AM             6,550 test-desktop-search.html
+09/19/2025  04:42 PM             2,863 test-firebase-sync.js
+09/18/2025  08:36 AM            10,175 test-mobile-cards.html
+09/18/2025  08:36 AM             5,576 test-mobile-guard.html
+09/18/2025  08:36 AM               156 test-poster-card.js
+09/20/2025  10:24 AM    <DIR>          test-results
+09/19/2025  11:06 AM             2,116 test-search-enter.js
+09/19/2025  11:35 AM             2,840 test-search-rewrite.js
+09/19/2025  10:45 AM             2,247 test-search.js
+09/19/2025  12:30 PM             2,770 test-tab-clicking.js
+09/19/2025  12:42 PM             5,263 test-tab-fixes-comprehensive.js
+09/19/2025  12:08 PM             6,719 test-tab-fixes.js
+09/19/2025  11:44 AM             3,048 test-tab-hiding.js
+09/20/2025  08:46 AM            18,215 test-tab-totals-and-home-preview.html
+09/20/2025  08:46 AM             5,965 test-tab-totals-and-home-preview.js
+09/20/2025  10:20 AM    <DIR>          tests
+09/18/2025  08:36 AM    <DIR>          tests-examples
+09/18/2025  08:36 AM             8,299 text eol=lf
+09/18/2025  10:30 AM    <DIR>          tools
+09/18/2025  08:36 AM         2,223,479 tvtrackerdir.txt
+09/18/2025  08:36 AM             6,012 UNIFIED_CARD_SYSTEM_v25.0.md
+09/18/2025  08:36 AM             4,438 UX_IMPROVEMENTS_LIST.md
+09/18/2025  08:36 AM             7,972 verify-desktop-search.html
+09/18/2025  08:36 AM             1,667 verify-mobile-guard.js
+09/18/2025  11:31 PM             1,594 vite.config.js
+09/21/2025  02:14 PM    <DIR>          www
+09/18/2025  08:36 AM    <DIR>          www_backup_20250115_153000
+09/18/2025  08:36 AM         1,987,968 www_mobile_after_hero.json
+09/18/2025  08:36 AM         1,981,773 www_mobile_after_images.json
+09/18/2025  08:36 AM         2,002,088 www_mobile_after_lcp.json
+09/18/2025  08:36 AM         2,023,195 www_mobile_after_lcp2.json
+09/18/2025  08:36 AM         1,983,767 www_mobile_after_lcp3.json
+09/18/2025  08:36 AM         2,009,177 www_mobile_after_lcp_v2.json
+09/18/2025  08:36 AM         1,978,060 www_mobile_after_lcp_v3.json
+09/18/2025  08:36 AM         2,002,135 www_mobile_after_lcp_v4.json
+09/18/2025  08:36 AM         1,989,138 www_mobile_final_lcp.json
+09/18/2025  08:36 AM           456,417 www_mobile_geolocation_fix.json
+09/18/2025  08:36 AM    <DIR>          _backup
+09/18/2025  10:30 AM    <DIR>          _ops
+09/18/2025  08:36 AM    <DIR>          _quarantine
+              63 File(s)     25,882,525 bytes
+              38 Dir(s)  257,847,681,024 bytes free
