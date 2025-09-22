@@ -2680,26 +2680,23 @@ body.mardi {
 /* === Game Cards & Modals === */
 
 /* --- GAME TEASER COLUMN LAYOUT --- */
-.home-games {
-  display: grid;
-  grid-template-rows: 1fr 1fr;  /* two equal rows for the two cards */
-  gap: 16px;
-  height: 100%;
-  min-height: 100%;
+.home-games { 
+  display: contents; 
 }
 
 /* Each card fills available width and splits height evenly */
-.home-games .game-card,
 #flickwordTile,
-#triviaTile {
-  width: 100%;
+#triviaTile,
+.home-games .game-card {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 16px 18px;
   border-radius: 16px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   box-sizing: border-box;
-  min-height: 0;            /* allow equal split without overflow pushing */
   position: relative;
   background: var(--card-bg, #fff);
   box-shadow: 0 1px 2px rgba(0,0,0,.06);
