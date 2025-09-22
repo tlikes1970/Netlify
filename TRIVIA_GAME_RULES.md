@@ -100,3 +100,4 @@ This document outlines the specific implementation rules for the Trivia game to 
 - `nextQuestion()` - Loads next question or shows limit message
 
 This implementation ensures a clean, focused trivia experience that matches the user's requirements for simplicity and proper progression tracking.
+
