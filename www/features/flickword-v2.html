@@ -30,24 +30,27 @@
 
     /* Centered card with reasonable cap so it never overwhelms the modal */
     #gameWrapper {
-      width: min(900px, 100%);
+      width: 100%;
+      max-width: 100%;
       margin: 0 auto;
-      padding: 20px 16px 24px;
+      padding: 16px;
       background: var(--fw-card);
       border: 1px solid var(--fw-border);
       border-radius: 12px;
       box-shadow: 0 4px 16px rgba(0,0,0,.08);
       box-sizing: border-box;
+      min-height: 100vh;
     }
 
     /* 5x6 grid */
     #grid {
       display: grid;
-      grid-template-columns: repeat(5, minmax(56px, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(5, minmax(60px, 1fr));
+      gap: 12px;
       justify-items: center;
-      width: min(560px, 100%);   /* prevents “giant board”, centers well */
-      margin: 0 auto 20px;
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto 24px;
     }
     .tile {
       width: 100%;
@@ -68,7 +71,8 @@
 
     /* Keyboard: matches wrapper; ensures side keys never clip */
     #keyboard {
-      width: min(900px, 100%);
+      width: 100%;
+      max-width: 500px;
       margin: 16px auto 0;
     }
     .kb-row {
@@ -79,23 +83,32 @@
       flex-wrap: wrap; /* extra safety in narrow cases */
     }
     .key {
-      padding: 14px 16px;
-      border-radius: 12px;
-      border: 1px solid var(--fw-border);
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 2px solid var(--fw-border);
       background: #fff;
-      box-shadow: 0 2px 4px rgba(0,0,0,.08);
+      box-shadow: 0 2px 4px rgba(0,0,0,.1);
       font-weight: 700;
       font-size: 16px;
       cursor: pointer;
-      transition: background .15s, transform .05s;
-      min-width: 48px;
-      height: 56px;
+      transition: all .15s ease;
+      min-width: 44px;
+      height: 52px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       user-select: none;
+      touch-action: manipulation;
     }
-    .key:active { transform: translateY(1px); }
+    .key:hover { 
+      background: #f8f9fa; 
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,.15);
+    }
+    .key:active { 
+      transform: translateY(1px); 
+      box-shadow: 0 1px 2px rgba(0,0,0,.1);
+    }
     .key.enter, .key.back, .key.special {
       background: linear-gradient(135deg, var(--fw-accent), var(--fw-accent-2));
       border-color: transparent;

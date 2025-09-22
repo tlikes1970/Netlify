@@ -384,7 +384,7 @@
           <div class="header-center">
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
-            <span class="version-display">v27.55</span>
+            <span class="version-display">v27.56</span>
           </div>
           <div class="header-right">
             <button id="accountButton" class="account-btn" aria-live="polite" title="Sign in" onclick="(firebaseAuth?.currentUser ? startSignOut() : startSignIn())">
@@ -434,7 +434,7 @@
 
       <!-- Tab container moved outside homeSection for proper positioning -->
       <div class="tab-container" id="navigation">
-        <button id="homeTab" class="tab active" title="Overview of your TV & movie tracking" aria-label="Home tab - view dashboard and recommendations">🏠 <span data-i18n="home">Home</span> <span class="tab-version">v27.55</span></button>
+        <button id="homeTab" class="tab active" title="Overview of your TV & movie tracking" aria-label="Home tab - view dashboard and recommendations">🏠 <span data-i18n="home">Home</span> <span class="tab-version">v27.56</span></button>
         <button id="watchingTab" class="tab" title="Shows and movies you're currently watching" aria-label="Watching tab - view shows and movies you're currently watching">
           ▶️ <span data-i18n="currently_watching">Currently Watching</span>
           <span class="tab-badge" id="watchingBadge">0</span>
@@ -1407,16 +1407,16 @@
     <!-- FlickWord Modal -->
     <div id="flickwordModal" class="modal" style="display: none;">
       <div class="modal-backdrop" onclick="closeFlickWordModal()"></div>
-      <div class="modal-dialog flickword-modal">
+      <div class="modal-dialog flickword-modal" style="max-width: 90vw; max-height: 90vh; width: 600px;">
         <div class="modal-header">
           <h3 data-i18n="flickword">🎯 FlickWord</h3>
           <button class="modal-close" onclick="closeFlickWordModal()" data-i18n="close_game">×</button>
         </div>
-        <div class="modal-content">
+        <div class="modal-content" style="padding: 0;">
           <iframe 
             id="flickwordFrame" 
             src="/features/flickword-v2.html" 
-            style="width: 100%; height: 500px; border: none; border-radius: 8px;"
+            style="width: 100%; height: 70vh; min-height: 500px; border: none; border-radius: 8px;"
             title="FlickWord Game"
             sandbox="allow-scripts allow-same-origin"
           ></iframe>
