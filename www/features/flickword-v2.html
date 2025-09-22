@@ -16,6 +16,11 @@
       --fw-border: #d7e3ff;
       --fw-good: #20b265;
       --fw-mid: #f7c23c;
+      
+      /* Responsive sizing tokens */
+      --tile: clamp(36px, 6vw, 56px);
+      --gap: clamp(4px, 0.8vw, 8px);
+      --key: clamp(28px, 6vw, 44px);
     }
 
     html, body { height: 100%; }
@@ -45,15 +50,16 @@
     /* 5x6 grid */
     #grid {
       display: grid;
-      grid-template-columns: repeat(5, minmax(60px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(5, var(--tile));
+      gap: var(--gap);
       justify-items: center;
       width: 100%;
-      max-width: 400px;
+      max-width: calc(5 * var(--tile) + 4 * var(--gap));
       margin: 0 auto 24px;
     }
     .tile {
-      width: 100%;
+      width: var(--tile);
+      height: var(--tile);
       aspect-ratio: 1 / 1;
       border-radius: 10px;
       border: 2px solid #a7b7e9;
@@ -62,7 +68,7 @@
       display: grid;
       place-items: center;
       font-weight: 800;
-      font-size: clamp(16px, 3.4vw, 28px);
+      font-size: clamp(12px, 2.5vw, 24px);
     }
 
     .tile.correct { background: linear-gradient(180deg,#3ddc84,#20b265); color:#052b18; border-color:#20b265; }
@@ -72,28 +78,28 @@
     /* Keyboard: matches wrapper; ensures side keys never clip */
     #keyboard {
       width: 100%;
-      max-width: 500px;
+      max-width: calc(10 * var(--key) + 9 * var(--gap));
       margin: 16px auto 0;
     }
     .kb-row {
       display:flex;
-      gap:10px;
+      gap: var(--gap);
       justify-content:center;
       margin: 8px 0;
       flex-wrap: wrap; /* extra safety in narrow cases */
     }
     .key {
-      padding: 12px 14px;
+      padding: 8px 12px;
       border-radius: 8px;
       border: 2px solid var(--fw-border);
       background: #fff;
       box-shadow: 0 2px 4px rgba(0,0,0,.1);
       font-weight: 700;
-      font-size: 16px;
+      font-size: clamp(12px, 2.5vw, 16px);
       cursor: pointer;
       transition: all .15s ease;
-      min-width: 44px;
-      height: 52px;
+      min-width: var(--key);
+      height: calc(var(--key) + 8px);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -113,6 +119,20 @@
       background: linear-gradient(135deg, var(--fw-accent), var(--fw-accent-2));
       border-color: transparent;
       color: #fff;
+    }
+    
+    /* Keyboard key colors */
+    .key.correct {
+      background-color: var(--fw-good, #20b265) !important;
+      color: white !important;
+    }
+    .key.present {
+      background-color: var(--fw-mid, #f7c23c) !important;
+      color: white !important;
+    }
+    .key.absent {
+      background-color: var(--fw-muted, #6b7280) !important;
+      color: white !important;
     }
 
     .btn-exit {
@@ -159,12 +179,17 @@
 
     /* Small screens inside the iframe */
     @media (max-width: 560px){
+      :root {
+        --tile: clamp(32px, 8vw, 44px);
+        --gap: clamp(3px, 1vw, 6px);
+        --key: clamp(24px, 8vw, 36px);
+      }
       #gameWrapper { padding: 12px; border-radius: 12px; }
-      #grid { gap: 6px; width: min(360px, 100%); grid-template-columns: repeat(5, minmax(44px, 1fr)); }
-      .tile { font-size: clamp(12px, 3vw, 18px); }
+      #grid { gap: var(--gap); width: min(360px, 100%); }
+      .tile { font-size: clamp(10px, 2.5vw, 16px); }
       #keyboard { width: 100%; }
-      .kb-row { gap: 6px; }
-      .key { min-width: 36px; height: 48px; padding: 12px 14px; font-size: 14px; }
+      .kb-row { gap: var(--gap); }
+      .key { min-width: var(--key); height: calc(var(--key) + 6px); padding: 6px 10px; font-size: clamp(10px, 2.5vw, 14px); }
     }
   </style>
 </head>
@@ -212,15 +237,19 @@
     }
 
     function reportResult(won, guesses){
+      console.log('🎯 reportResult called:', { won, guesses, target: game.target });
       try{
         const now = new Date();
         const today = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
         const message = { type:'flickword:result', date:today, won, guesses, target: game.target };
+        console.log('🎯 Sending result message to parent:', message);
         if (window.parent && window.parent !== window) window.parent.postMessage(message, '*');
         const results = JSON.parse(localStorage.getItem('flickword:results') || '{}');
         results[today] = message;
         localStorage.setItem('flickword:results', JSON.stringify(results));
-      }catch{}
+      }catch(e){
+        console.error('🎯 Error in reportResult:', e);
+      }
     }
 
     async function showGame(){
@@ -246,8 +275,12 @@
     }
 
     function closeGame(){
-      if (window.parent && window.parent !== window) window.parent.postMessage({ type:'flickword:close' }, '*');
-      else {
+      console.log('🎯 closeGame() called');
+      if (window.parent && window.parent !== window) {
+        console.log('🎯 Sending close message to parent');
+        window.parent.postMessage({ type:'flickword:close' }, '*');
+      } else {
+        console.log('🎯 No parent window, trying to close');
         try {
           window.close();
         } catch (e) {
@@ -292,7 +325,6 @@
 
       const r1 = document.createElement('div'); r1.className='kb-row';
       for (const L of ROWS[0]) r1.appendChild(makeKey(L));
-      r1.appendChild(makeKey('⌫','back special', backspace));
       kb.appendChild(r1);
 
       const r2 = document.createElement('div'); r2.className='kb-row';
@@ -300,6 +332,7 @@
       kb.appendChild(r2);
 
       const r3 = document.createElement('div'); r3.className='kb-row';
+      r3.appendChild(makeKey('⌫','backspace special', backspace));
       for (const L of ROWS[2]) r3.appendChild(makeKey(L));
       r3.appendChild(makeKey('Enter','enter special', submit));
       kb.appendChild(r3);
@@ -331,15 +364,36 @@
         }
       });
 
-      // Set up status classes for letter keys
+      // Set up data attribute for letter keys
       if (label.length === 1) {
-        const s = game.status[label];
-        if (s==='correct') btn.classList.add('correct');
-        if (s==='present') btn.classList.add('present');
-        if (s==='absent')  btn.classList.add('absent');
+        btn.setAttribute('data-letter', label);
       }
 
       return btn;
+    }
+
+    function updateKeyboardColors(){
+      console.log('🎯 Updating keyboard colors...');
+      const keys = document.querySelectorAll('.key[data-letter]');
+      keys.forEach(key => {
+        const letter = key.getAttribute('data-letter');
+        const status = game.status[letter];
+        
+        // Remove all status classes from keyboard keys only
+        key.classList.remove('correct', 'present', 'absent');
+        
+        // Add the appropriate status class to keyboard keys
+        if (status === 'correct') {
+          key.classList.add('correct');
+          console.log(`🎯 Keyboard key ${letter} set to correct (green)`);
+        } else if (status === 'present') {
+          key.classList.add('present');
+          console.log(`🎯 Keyboard key ${letter} set to present (yellow)`);
+        } else if (status === 'absent') {
+          key.classList.add('absent');
+          console.log(`🎯 Keyboard key ${letter} set to absent (grey)`);
+        }
+      });
     }
 
     function onKey(l){
@@ -380,6 +434,9 @@
       }
 
       game.guesses.push(game.current);
+      
+      // Update keyboard colors after each guess
+      updateKeyboardColors();
 
       if (game.current === game.target){
         showCustomNotification("🎉 Nice! You got it!", "success");
@@ -394,7 +451,7 @@
       }
 
       game.current = '';
-      renderGrid(); renderKeyboard();
+      renderGrid();
     }
 
     async function isValidWord(w){

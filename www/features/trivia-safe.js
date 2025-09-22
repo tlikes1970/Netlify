@@ -77,7 +77,7 @@
     }
   }
 
-  // Fetch trivia questions from API
+  // Fetch trivia questions from API with deterministic daily seed
   async function fetchTriviaQuestions(lang = 'en') {
     const langCode = lang === 'es' ? 'es' : 'en';
     const cacheKey = `trivia_${langCode}_${today}`;
@@ -88,16 +88,31 @@
     }
     
     try {
-      const response = await fetch(`${TRIVIA_API_BASE}?amount=5&category=14&difficulty=medium&type=multiple&encode=url3986`);
+      // Use UTC date as seed for deterministic daily questions
+      const utcDate = new Date().toISOString().split('T')[0];
+      const seed = utcDate.replace(/-/g, ''); // Convert YYYY-MM-DD to YYYYMMDD
+      
+      const response = await fetch(`${TRIVIA_API_BASE}?amount=5&category=14&difficulty=medium&type=multiple&encode=url3986&seed=${seed}`);
       const data = await response.json();
       
       if (data.results && data.results.length > 0) {
-        triviaCache = data.results.map((q, idx) => ({
-          id: `api_${idx}`,
-          q: decodeURIComponent(q.question),
-          choices: [...q.incorrect_answers.map(a => decodeURIComponent(a)), decodeURIComponent(q.correct_answer)].sort(() => Math.random() - 0.5),
-          correct: [...q.incorrect_answers.map(a => decodeURIComponent(a)), decodeURIComponent(q.correct_answer)].indexOf(decodeURIComponent(q.correct_answer))
-        }));
+        // Use deterministic sorting based on seed
+        const seededRandom = (seed) => {
+          let x = Math.sin(seed) * 10000;
+          return x - Math.floor(x);
+        };
+        
+        triviaCache = data.results.map((q, idx) => {
+          const choices = [...q.incorrect_answers.map(a => decodeURIComponent(a)), decodeURIComponent(q.correct_answer)];
+          // Use seeded random for consistent ordering
+          const shuffledChoices = choices.sort((a, b) => seededRandom(seed + idx + a.length) - seededRandom(seed + idx + b.length));
+          return {
+            id: `api_${idx}`,
+            q: decodeURIComponent(q.question),
+            choices: shuffledChoices,
+            correct: shuffledChoices.indexOf(decodeURIComponent(q.correct_answer))
+          };
+        });
         lastFetchDate = today;
         return triviaCache;
       }
@@ -105,8 +120,27 @@
       console.warn('Trivia API failed, using fallback:', error);
     }
     
-    // Fallback to hardcoded questions
-    triviaCache = FALLBACK_POOL;
+    // Fallback to hardcoded questions with deterministic selection
+    const utcDate = new Date().toISOString().split('T')[0];
+    const seed = utcDate.replace(/-/g, '');
+    const seededRandom = (seed) => {
+      let x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
+    
+    // Select 5 questions deterministically from fallback pool
+    const selectedQuestions = [];
+    const usedIndices = new Set();
+    for (let i = 0; i < Math.min(5, FALLBACK_POOL.length); i++) {
+      let index;
+      do {
+        index = Math.floor(seededRandom(seed + i) * FALLBACK_POOL.length);
+      } while (usedIndices.has(index));
+      usedIndices.add(index);
+      selectedQuestions.push(FALLBACK_POOL[index]);
+    }
+    
+    triviaCache = selectedQuestions;
     lastFetchDate = today;
     return triviaCache;
   }
@@ -141,7 +175,21 @@
     const last = localStorage.getItem(KEYS.last);
     const streakText = t('flickword_streak') || 'Streak';
     const completedText = t('trivia_completed_today') || ' • Completed today';
-    safeSetTextContent(statsEl, `${streakText}: ${streak}${last === today ? completedText : ''}`);
+    
+    // Get daily count and limits
+    const isPro = window.appData?.settings?.pro || false;
+    const dailyLimit = isPro ? 50 : 5;
+    const today = new Date().toISOString().split('T')[0];
+    const dailyKey = `flicklet:trivia:daily:${today}`;
+    const dailyCount = parseInt(localStorage.getItem(dailyKey) || '0');
+    const remaining = Math.max(0, dailyLimit - dailyCount);
+    
+    // Show plan-specific stats
+    const planText = isPro ? 'Pro' : 'Basic';
+    const limitText = `(${planText}: ${dailyCount}/${dailyLimit})`;
+    const remainingText = remaining > 0 ? ` • ${remaining} left today` : ' • Daily limit reached';
+    
+    safeSetTextContent(statsEl, `${streakText}: ${streak}${last === today ? completedText : ''} ${limitText}${remainingText}`);
   }
 
   function renderQuestion(q, isLocked){
@@ -169,6 +217,21 @@
     if (isLocked) {
       cEl.style.opacity = '0.5';
       cEl.style.pointerEvents = 'none';
+      
+      // Show limit reached message
+      const isPro = window.appData?.settings?.pro || false;
+      const dailyLimit = isPro ? 50 : 5;
+      const today = new Date().toISOString().split('T')[0];
+      const dailyKey = `flicklet:trivia:daily:${today}`;
+      const dailyCount = parseInt(localStorage.getItem(dailyKey) || '0');
+      
+      const limitMessage = document.createElement('div');
+      limitMessage.style.cssText = 'text-align: center; padding: 20px; color: var(--text-secondary); font-style: italic;';
+      limitMessage.innerHTML = `
+        <p>Daily limit reached (${dailyCount}/${dailyLimit})</p>
+        <p>${isPro ? 'Pro users get 50 questions per day' : 'Upgrade to Pro for 50 questions per day'}</p>
+      `;
+      cEl.appendChild(limitMessage);
     } else {
       cEl.style.opacity = '1';
       cEl.style.pointerEvents = 'auto';
@@ -204,6 +267,12 @@
       updateStreak();
       renderStats();
     }
+    
+    // Increment daily count
+    const today = new Date().toISOString().split('T')[0];
+    const dailyKey = `flicklet:trivia:daily:${today}`;
+    const currentCount = parseInt(localStorage.getItem(dailyKey) || '0');
+    localStorage.setItem(dailyKey, String(currentCount + 1));
   }
 
   async function nextQuestion() {
@@ -212,8 +281,13 @@
       const q = questions[Math.floor(Math.random() * questions.length)];
       currentQuestion = q;
       
-      // Lock logic disabled - allow unlimited questions
-      const locked = false;
+  // Check daily limits based on user plan
+  const isPro = window.appData?.settings?.pro || false;
+  const dailyLimit = isPro ? 50 : 5; // Pro users get 50, Basic users get 5
+  const today = new Date().toISOString().split('T')[0];
+  const dailyKey = `flicklet:trivia:daily:${today}`;
+  const dailyCount = parseInt(localStorage.getItem(dailyKey) || '0');
+  const locked = dailyCount >= dailyLimit;
 
       // Render
       renderStats();

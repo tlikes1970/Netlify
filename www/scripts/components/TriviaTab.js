@@ -14,6 +14,37 @@
   console.log('🧠 Trivia Tab component loaded');
 
   /**
+   * Create stats panel with Basic and Pro rows
+   * @returns {string} HTML for stats panel
+   */
+  function createStatsPanel() {
+    const isPro = window.appData?.settings?.pro || false;
+    const today = new Date().toISOString().split('T')[0];
+    const dailyKey = `flicklet:trivia:daily:${today}`;
+    const dailyCount = parseInt(localStorage.getItem(dailyKey) || '0');
+    const streak = parseInt(localStorage.getItem('flicklet:trivia:v1:streak') || '0');
+    
+    return `
+      <div class="stats-panel">
+        <div class="stats-row ${isPro ? 'pro-active' : 'basic-active'}">
+          <div class="stats-label">Basic Plan</div>
+          <div class="stats-value">${dailyCount}/5 questions today</div>
+          <div class="stats-status">${isPro ? 'Upgraded' : 'Active'}</div>
+        </div>
+        <div class="stats-row ${isPro ? 'pro-active' : 'pro-locked'}">
+          <div class="stats-label">Pro Plan</div>
+          <div class="stats-value">${isPro ? `${dailyCount}/50 questions today` : '50 questions/day'}</div>
+          <div class="stats-status">${isPro ? 'Active' : 'Locked'}</div>
+        </div>
+        <div class="stats-summary">
+          <div class="streak-info">Current Streak: ${streak} days</div>
+          ${!isPro ? '<div class="upgrade-hint">Upgrade to Pro for 10x more questions!</div>' : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  /**
    * Create Trivia tab content
    * @param {Object} options - Tab configuration
    * @param {Array} options.categories - Trivia category data
@@ -37,6 +68,11 @@
         <button class="btn btn--primary" data-testid="play-trivia" onclick="(${onPlay ? onPlay.toString() : '() => {}'})()">
           Play
         </button>
+      </div>
+
+      <!-- Stats Panel -->
+      <div class="trivia-stats-panel" data-testid="trivia-stats">
+        ${createStatsPanel()}
       </div>
 
       <!-- Card Grid -->

@@ -539,6 +539,18 @@
                     <div class="card__tools">
                       <div class="game-stats">
                         <div class="stat-item">
+                          <span class="stat-label" data-i18n="games">Games</span>
+                          <span class="stat-value" data-fw-games>0</span>
+                        </div>
+                        <div class="stat-item">
+                          <span class="stat-label" data-i18n="won">Won</span>
+                          <span class="stat-value" data-fw-won>0</span>
+                        </div>
+                        <div class="stat-item">
+                          <span class="stat-label" data-i18n="lost">Lost</span>
+                          <span class="stat-value" data-fw-lost>0</span>
+                        </div>
+                        <div class="stat-item">
                           <span class="stat-label" data-i18n="streak">Streak</span>
                           <span class="stat-value" data-fw-streak>0</span>
                         </div>
@@ -555,6 +567,13 @@
                   </div>
                   
                   <div class="card__body card__body--scroll">
+                    <div class="flickword-hero">
+                      <img src="/images/word-game-hero.jpg" 
+                           alt="Word game illustration with letters and puzzle pieces" 
+                           class="flickword-hero-image"
+                           loading="lazy"
+                           onerror="this.style.display='none'">
+                    </div>
                     <p class="card__description" data-i18n="flickword_tagline">Wordle-style daily word play</p>
                     <div aria-live="polite" class="sr-only" data-status-live></div>
                   </div>
@@ -1411,28 +1430,6 @@
     <!-- Global modal mount, never hidden by tab switching -->
     <div id="modal-root" data-modal-root style="position:relative; z-index:0;"></div>
     
-    <!-- FlickWord Modal -->
-    <div id="flickwordModal" class="modal" style="display: none;">
-      <div class="modal-backdrop" onclick="closeFlickWordModal()"></div>
-      <div class="modal-dialog flickword-modal" style="max-width: 90vw; max-height: 90vh; width: 600px;">
-        <div class="modal-header">
-          <h3 data-i18n="flickword">🎯 FlickWord</h3>
-          <button class="modal-close" onclick="closeFlickWordModal()" data-i18n="close_game">×</button>
-        </div>
-        <div class="modal-content" style="padding: 0;">
-          <iframe 
-            id="flickwordFrame" 
-            src="/features/flickword-v2.html" 
-            style="width: 100%; height: 70vh; min-height: 500px; border: none; border-radius: 8px;"
-            title="FlickWord Game"
-            sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
-          ></iframe>
-        </div>
-        <div class="modal-actions">
-          <button class="btn btn--secondary" onclick="closeFlickWordModal()">Close Game</button>
-        </div>
-      </div>
-    </div>
 
     <!-- Game Modals -->
     <div class="game-modal" id="modal-flickword" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-flickword-title">
@@ -1470,6 +1467,107 @@
 	<!-- Notifications regions (required by notifications.js) -->
 <div id="toastRegion" role="status" aria-live="polite" aria-atomic="true" class="toast-region"></div>
 <div id="bannerRegion" role="alert" aria-live="assertive" aria-atomic="true" class="banner-region"></div>
+
+          <!-- Stats Loading Script -->
+          <script>
+            // Load and display FlickWord stats on page load
+            document.addEventListener('DOMContentLoaded', function() {
+              // Load FlickWord stats from localStorage
+              function loadFlickWordStats() {
+                try {
+                  // Try different possible localStorage keys
+                  const rawStats = JSON.parse(localStorage.getItem('flickword:stats') || 
+                                             localStorage.getItem('flickword-stats') || 
+                                             localStorage.getItem('flicklet-data') || '{}');
+                  
+                  console.log('📊 Raw stats data:', rawStats);
+                  
+                  // Create a deep copy to avoid circular references
+                  const stats = JSON.parse(JSON.stringify(rawStats));
+                  
+                  // Extract FlickWord stats from the data
+                  const flickwordStats = stats.flickword || stats || {};
+                  
+                  console.log('📊 Extracted FlickWord stats:', flickwordStats);
+                  
+                  // Calculate win percentage if we have wins and games
+                  let winPercentage = '—';
+                  if (flickwordStats.wins && flickwordStats.games) {
+                    winPercentage = Math.round((flickwordStats.wins / flickwordStats.games) * 100) + '%';
+                  } else if (flickwordStats.win) {
+                    winPercentage = flickwordStats.win;
+                  }
+                  
+                  console.log('📊 Calculated win percentage:', winPercentage);
+                  
+                  // Update the stats display using the same logic as the modal
+                  console.log('📊 Updating stats display using stat-label mapping...');
+                  
+                  // Look for stat-label elements specifically in the FlickWord card
+                  const flickwordCard = document.getElementById('flickwordTile');
+                  const statLabels = flickwordCard ? flickwordCard.querySelectorAll('.stat-label') : [];
+                  console.log('📊 Found FlickWord stat-label elements:', statLabels.length);
+                  
+                  statLabels.forEach((label, index) => {
+                    console.log(`📊 Stat label ${index + 1}:`, {
+                      text: label.textContent,
+                      parent: label.parentElement?.tagName + '.' + label.parentElement?.className
+                    });
+                    
+                    // Look for the value element (usually next sibling or child)
+                    const valueElement = label.nextElementSibling || label.parentElement?.querySelector('.stat-value, .stat-number, [class*="value"], [class*="number"]');
+                    if (valueElement) {
+                      console.log(`📊 Found value element for "${label.textContent}":`, {
+                        text: valueElement.textContent,
+                        className: valueElement.className
+                      });
+                      
+                      // Update based on label text
+                      if (label.textContent.includes('Streak') && !label.textContent.includes('Best')) {
+                        valueElement.textContent = flickwordStats.streak || 0;
+                        console.log(`📊 Updated streak to: ${flickwordStats.streak || 0}`);
+                      } else if (label.textContent.includes('Best')) {
+                        valueElement.textContent = flickwordStats.maxStreak || 0;
+                        console.log(`📊 Updated best to: ${flickwordStats.maxStreak || 0}`);
+                      } else if (label.textContent.includes('Win')) {
+                        valueElement.textContent = winPercentage;
+                        console.log(`📊 Updated win rate to: ${winPercentage}`);
+                      } else if (label.textContent.includes('Games') || label.textContent.includes('Total')) {
+                        valueElement.textContent = flickwordStats.games || 0;
+                        console.log(`📊 Updated games to: ${flickwordStats.games || 0}`);
+                      } else if (label.textContent.includes('Won')) {
+                        valueElement.textContent = flickwordStats.wins || 0;
+                        console.log(`📊 Updated wins to: ${flickwordStats.wins || 0}`);
+                      } else if (label.textContent.includes('Lost')) {
+                        valueElement.textContent = flickwordStats.losses || 0;
+                        console.log(`📊 Updated losses to: ${flickwordStats.losses || 0}`);
+                      }
+                    }
+                  });
+                  
+                  // Also try to update any other stats elements that might exist
+                  const allStatsElements = document.querySelectorAll('[data-testid*="stats-"]');
+                  console.log('📊 Found all stats elements:', allStatsElements.length);
+                  
+                  console.log('📊 Stats display update complete');
+                  
+                  console.log('📊 FlickWord stats loaded:', flickwordStats);
+                } catch (error) {
+                  console.warn('⚠️ Failed to load FlickWord stats:', error);
+                }
+              }
+              
+              // Load stats immediately
+              loadFlickWordStats();
+              
+              // Also load stats when the FlickWord tab is shown
+              document.addEventListener('click', function(e) {
+                if (e.target && e.target.closest('[data-tab="flickword"]')) {
+                  setTimeout(loadFlickWordStats, 100); // Small delay to ensure tab is visible
+                }
+              });
+            });
+          </script>
 
           <!-- Verification Script - Remove after testing -->
           </body>

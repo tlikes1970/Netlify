@@ -33,7 +33,7 @@ module.exports = {
 
     // SonarJS rules
     "sonarjs/cognitive-complexity": ["error", 15],
-    "sonarjs/no-duplicate-string": ["error", 3],
+    "sonarjs/no-duplicate-string": ["error", { "threshold": 3 }],
     "sonarjs/no-identical-functions": "error",
     "sonarjs/no-redundant-boolean": "error",
     "sonarjs/no-unused-collection": "error",

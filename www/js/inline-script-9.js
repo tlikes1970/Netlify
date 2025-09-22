@@ -105,6 +105,12 @@
       // Global close function
       window.closeGameModal = closeModal;
       
+      // Global open function for Trivia modal
+      window.openTriviaModal = function(triviaData) {
+        console.log('🎮 Opening Trivia modal with data:', triviaData);
+        openModal('modal-trivia');
+      };
+      
       // Listen for game close messages
       window.addEventListener('message', function(event) {
         if (event.data && event.data.type === 'flickword:close') {

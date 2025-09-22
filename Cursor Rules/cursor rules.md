@@ -402,6 +402,185 @@ document.addEventListener('click', (e) => {
 - **Performance Monitor**: Built-in performance tracking
 - **Error Boundaries**: Graceful error handling with fallbacks
 
+## FlickWord Game System
+
+### Overview
+FlickWord is a Wordle-style daily word guessing game integrated into the Flicklet app. It features a modal-based interface with responsive design, dynamic stats tracking, and keyboard color feedback.
+
+### Architecture
+
+#### Core Files
+- **`www/features/flickword-v2.html`** - Main game implementation (iframe content)
+- **`www/scripts/modules/flickword-modal.js`** - Modal control and stats management
+- **`www/index.html`** - Game launcher and stats display (lines 536-575)
+- **`www/styles/main.css`** - Modal and stats styling (lines 2670-2715)
+
+#### Game Flow
+1. **Launch**: User clicks FlickWord button → opens modal with iframe
+2. **Play**: User enters 5-letter words → gets color feedback
+3. **Complete**: Game ends → stats update → modal closes
+4. **Stats**: Main page displays updated statistics
+
+### Key Components
+
+#### 1. Modal System
+```html
+<!-- Game Modal Structure -->
+<div class="game-modal" id="modal-flickword" aria-hidden="true" role="dialog">
+  <div class="gm-overlay" data-close></div>
+  <div class="gm-dialog" role="document">
+    <header class="gm-header">
+      <h3 id="modal-flickword-title">🎯 FlickWord</h3>
+      <button class="gm-close" type="button" aria-label="Close" data-close>&times;</button>
+    </header>
+    <main class="gm-body">
+      <iframe id="flickword-game-frame" src="/features/flickword-v2.html" 
+              sandbox="allow-scripts allow-same-origin"></iframe>
+    </main>
+  </div>
+</div>
+```
+
+#### 2. Stats Display
+```html
+<!-- Stats Card Layout -->
+<div class="game-stats">
+  <!-- Top Row: Overall Performance -->
+  <div class="stat-item">
+    <span class="stat-label">Games</span>
+    <span class="stat-value" data-fw-games>0</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-label">Won</span>
+    <span class="stat-value" data-fw-won>0</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-label">Lost</span>
+    <span class="stat-value" data-fw-lost>0</span>
+  </div>
+  <!-- Bottom Row: Current Performance -->
+  <div class="stat-item">
+    <span class="stat-label">Streak</span>
+    <span class="stat-value" data-fw-streak>0</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-label">Best</span>
+    <span class="stat-value" data-fw-best>0</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-label">Win %</span>
+    <span class="stat-value" data-fw-win>—</span>
+  </div>
+</div>
+```
+
+#### 3. Game Logic (flickword-v2.html)
+- **Word Generation**: Daily word from API with fallback to word list
+- **Validation**: Dictionary API check for valid words
+- **Scoring**: Letter-by-letter comparison with color coding
+- **Keyboard**: Dynamic color updates based on letter status
+- **Communication**: PostMessage API for modal control
+
+### CSS Architecture
+
+#### Responsive Sizing
+```css
+:root {
+  --tile: clamp(36px, 6vw, 56px);
+  --gap: clamp(4px, 0.8vw, 8px);
+  --key: clamp(28px, 6vw, 44px);
+}
+```
+
+#### Keyboard Colors
+```css
+.key.correct { background-color: #20b265; color: white; }
+.key.present { background-color: #f7c23c; color: white; }
+.key.absent { background-color: #6b7280; color: white; }
+```
+
+#### Stats Grid Layout
+```css
+#flickwordTile .game-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  #flickwordTile .game-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+```
+
+### Data Management
+
+#### LocalStorage Keys
+- **`flickword:stats`** - Main stats storage
+- **`flickword:results`** - Daily game results
+- **`flickword:word`** - Daily word cache
+- **`flicklet-data`** - App-wide data (includes FlickWord stats)
+
+#### Stats Structure
+```javascript
+{
+  games: 15,        // Total games played
+  wins: 14,         // Games won
+  losses: 1,        // Games lost
+  streak: 0,        // Current win streak
+  maxStreak: 14     // Longest streak achieved
+}
+```
+
+### Event System
+
+#### Modal Events
+- **`openFlickWordModal()`** - Opens game modal
+- **`closeFlickWordModal()`** - Closes modal and updates stats
+- **Escape key** - Closes modal
+- **Overlay click** - Closes modal
+
+#### Game Events (PostMessage)
+- **`flickword:close`** - Game requests modal close
+- **`flickword:result`** - Game completion with stats
+
+### Accessibility Features
+- **ARIA attributes**: `role="dialog"`, `aria-modal="true"`, `aria-labelledby`
+- **Keyboard navigation**: Tab order, Escape key support
+- **Focus management**: Focus trap within modal
+- **Screen reader support**: Semantic HTML and ARIA labels
+
+### Mobile Responsiveness
+- **Viewport scaling**: CSS custom properties with `clamp()`
+- **Touch targets**: Minimum 44px touch targets
+- **Grid adaptation**: 3-column desktop, 2-column mobile
+- **Modal sizing**: Full-screen on mobile, constrained on desktop
+
+### Integration Points
+- **Main App**: Launched from home page game section
+- **Stats System**: Updates main app stats display
+- **Modal System**: Uses shared modal infrastructure
+- **Storage**: Integrates with app-wide localStorage system
+
+### Troubleshooting Guide
+
+#### Common Issues
+1. **Modal won't open**: Check event listener attachment timing
+2. **Stats not updating**: Verify PostMessage communication
+3. **Keyboard colors missing**: Ensure CSS classes are defined
+4. **Responsive issues**: Check CSS custom property values
+
+#### Debug Logging
+- **`🎯` prefix**: FlickWord-specific logs
+- **`📊` prefix**: Stats-related logs
+- **Console output**: Extensive debugging for all game states
+
+### Maintenance Notes
+- **Version tracking**: Increment version on any changes
+- **Testing**: Manual testing required for game flow
+- **Dependencies**: No external libraries, pure vanilla JS
+- **Browser support**: Modern browsers with ES6+ support
+
 ## Future Considerations
 
 ### Scalability
