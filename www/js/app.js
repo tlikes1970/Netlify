@@ -145,6 +145,7 @@ window.FlickletDebug = window.FlickletDebug || {
         setTimeout(() => {
           this.initializeFlickWord?.();
           this.initializeFlickWordModal?.();
+          this.initializeTriviaModal?.();
           // checkAndPromptLogin removed - handled in auth listener
         }, 150);
 
@@ -1399,6 +1400,15 @@ waitForFirebaseReady() {
               console.error('❌ openFlickWordModal function not available');
             }
             break;
+          case 'start-trivia':
+            // Handle Trivia game opening
+            console.log('🧠 Trivia button clicked');
+            if (typeof window.openTriviaModal === 'function') {
+              window.openTriviaModal();
+            } else {
+              console.error('❌ openTriviaModal function not available');
+            }
+            break;
           case 'username-save':
             // Username modal save
             e.preventDefault();
@@ -1686,6 +1696,25 @@ waitForFirebaseReady() {
         });
       } catch (error) {
         console.error('❌ Error initializing FlickWord modal:', error);
+      }
+    },
+
+    initializeTriviaModal() {
+      console.log('🧠 Initializing Trivia modal...');
+      try {
+        // Import and initialize the trivia modal module
+        import('/scripts/modules/trivia-modal.js').then(module => {
+          if (module.initializeTriviaModal) {
+            module.initializeTriviaModal();
+            console.log('✅ Trivia modal initialized successfully');
+          } else {
+            console.warn('⚠️ initializeTriviaModal function not found in module');
+          }
+        }).catch(error => {
+          console.error('❌ Failed to load Trivia modal module:', error);
+        });
+      } catch (error) {
+        console.error('❌ Error initializing Trivia modal:', error);
       }
     },
     // checkAndPromptLogin() removed - handled in auth listener

@@ -170,26 +170,85 @@
     localStorage.setItem(KEYS.last, today);
   }
 
-  function renderStats(){
-    const streak = Number(localStorage.getItem(KEYS.streak) || 0);
-    const last = localStorage.getItem(KEYS.last);
-    const streakText = t('flickword_streak') || 'Streak';
-    const completedText = t('trivia_completed_today') || ' • Completed today';
+  // Update Trivia stats similar to FlickWord
+  function updateTriviaStats(isCorrect) {
+    // Load current stats
+    const rawStats = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
+    const triviaStats = rawStats.trivia || {
+      games: 0,
+      wins: 0,
+      losses: 0,
+      streak: 0,
+      maxStreak: 0
+    };
+
+    // Update stats
+    triviaStats.games += 1;
     
+    if (isCorrect) {
+      triviaStats.wins += 1;
+      triviaStats.streak += 1;
+      // Update best streak if current streak is higher
+      if (triviaStats.streak > triviaStats.maxStreak) {
+        triviaStats.maxStreak = triviaStats.streak;
+      }
+    } else {
+      // Reset streak on wrong answer
+      triviaStats.streak = 0;
+    }
+    
+    // Calculate losses
+    triviaStats.losses = triviaStats.games - triviaStats.wins;
+
+    // Save updated stats
+    const newStats = {
+      ...rawStats,
+      trivia: triviaStats
+    };
+    localStorage.setItem('flicklet-data', JSON.stringify(newStats));
+    
+    // Also save to individual trivia stats for compatibility
+    localStorage.setItem('flicklet:trivia:v1:streak', String(triviaStats.streak));
+    localStorage.setItem('flicklet:trivia:v1:best', String(triviaStats.maxStreak));
+    
+    // Increment daily count for ALL answers (both correct and incorrect)
+    const today = new Date().toISOString().split('T')[0];
+    const dailyKey = `flicklet:trivia:daily:${today}`;
+    const currentCount = parseInt(localStorage.getItem(dailyKey) || '0');
+    localStorage.setItem(dailyKey, String(currentCount + 1));
+    
+    // Update display
+    renderStats();
+    
+    // Send stats update to parent window
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'trivia:result',
+        payload: { 
+          streak: triviaStats.streak, 
+          best: triviaStats.maxStreak, 
+          acc: Math.round((triviaStats.wins / triviaStats.games) * 100) || 0
+        }
+      }, '*');
+    }
+  }
+
+  function renderStats(){
     // Get daily count and limits
     const isPro = window.appData?.settings?.pro || false;
     const dailyLimit = isPro ? 50 : 5;
     const today = new Date().toISOString().split('T')[0];
     const dailyKey = `flicklet:trivia:daily:${today}`;
     const dailyCount = parseInt(localStorage.getItem(dailyKey) || '0');
-    const remaining = Math.max(0, dailyLimit - dailyCount);
     
-    // Show plan-specific stats
-    const planText = isPro ? 'Pro' : 'Basic';
-    const limitText = `(${planText}: ${dailyCount}/${dailyLimit})`;
-    const remainingText = remaining > 0 ? ` • ${remaining} left today` : ' • Daily limit reached';
+    // Simple counter in top left
+    const statsHTML = `
+      <div class="daily-counter">
+        ${dailyCount}/${dailyLimit}
+      </div>
+    `;
     
-    safeSetTextContent(statsEl, `${streakText}: ${streak}${last === today ? completedText : ''} ${limitText}${remainingText}`);
+    safeSetInnerHTML(statsEl, statsHTML);
   }
 
   function renderQuestion(q, isLocked){
@@ -214,28 +273,8 @@
       cEl.appendChild(li);
     });
 
-    if (isLocked) {
-      cEl.style.opacity = '0.5';
-      cEl.style.pointerEvents = 'none';
-      
-      // Show limit reached message
-      const isPro = window.appData?.settings?.pro || false;
-      const dailyLimit = isPro ? 50 : 5;
-      const today = new Date().toISOString().split('T')[0];
-      const dailyKey = `flicklet:trivia:daily:${today}`;
-      const dailyCount = parseInt(localStorage.getItem(dailyKey) || '0');
-      
-      const limitMessage = document.createElement('div');
-      limitMessage.style.cssText = 'text-align: center; padding: 20px; color: var(--text-secondary); font-style: italic;';
-      limitMessage.innerHTML = `
-        <p>Daily limit reached (${dailyCount}/${dailyLimit})</p>
-        <p>${isPro ? 'Pro users get 50 questions per day' : 'Upgrade to Pro for 50 questions per day'}</p>
-      `;
-      cEl.appendChild(limitMessage);
-    } else {
-      cEl.style.opacity = '1';
-      cEl.style.pointerEvents = 'auto';
-    }
+    cEl.style.opacity = '1';
+    cEl.style.pointerEvents = 'auto';
   }
 
   function choose(choiceIdx) {
@@ -259,39 +298,47 @@
     fEl.style.display = 'block';
     safeSetTextContent(fEl, isCorrect ? 'Correct! 🎉' : `Wrong! The answer was: ${currentQuestion.choices[currentQuestion.correct]}`);
     
-    // Show next button
-    safeSetHidden(nBtn, false);
-    nBtn.onclick = nextQuestion;
-
-    if (isCorrect) {
-      updateStreak();
-      renderStats();
-    }
+    // Update stats (includes daily count increment)
+    updateTriviaStats(isCorrect);
     
-    // Increment daily count
-    const today = new Date().toISOString().split('T')[0];
-    const dailyKey = `flicklet:trivia:daily:${today}`;
-    const currentCount = parseInt(localStorage.getItem(dailyKey) || '0');
-    localStorage.setItem(dailyKey, String(currentCount + 1));
+    // Auto-advance to next question after 2 seconds
+    setTimeout(() => {
+      nextQuestion();
+    }, 2000);
   }
 
   async function nextQuestion() {
     try {
+      // Check daily limits based on user plan
+      const isPro = window.appData?.settings?.pro || false;
+      const dailyLimit = isPro ? 50 : 5; // Pro users get 50, Basic users get 5
+      const today = new Date().toISOString().split('T')[0];
+      const dailyKey = `flicklet:trivia:daily:${today}`;
+      const dailyCount = parseInt(localStorage.getItem(dailyKey) || '0');
+      const locked = dailyCount >= dailyLimit;
+
+      if (locked) {
+        // Show limit reached message
+        safeSetTextContent(qEl, 'Daily limit reached!');
+        safeSetInnerHTML(cEl, `
+          <div style="text-align: center; padding: 20px; color: var(--text-secondary); font-style: italic;">
+            <p>You've reached your daily limit (${dailyCount}/${dailyLimit})</p>
+            <p>${isPro ? 'Pro users get 50 questions per day' : 'Upgrade to Pro for 50 questions per day'}</p>
+          </div>
+        `);
+        safeSetTextContent(fEl, '');
+        safeSetHidden(nBtn, true);
+        renderStats();
+        return;
+      }
+
       const questions = await fetchTriviaQuestions();
       const q = questions[Math.floor(Math.random() * questions.length)];
       currentQuestion = q;
-      
-  // Check daily limits based on user plan
-  const isPro = window.appData?.settings?.pro || false;
-  const dailyLimit = isPro ? 50 : 5; // Pro users get 50, Basic users get 5
-  const today = new Date().toISOString().split('T')[0];
-  const dailyKey = `flicklet:trivia:daily:${today}`;
-  const dailyCount = parseInt(localStorage.getItem(dailyKey) || '0');
-  const locked = dailyCount >= dailyLimit;
 
       // Render
       renderStats();
-      renderQuestion(q, locked);
+      renderQuestion(q);
     } catch (error) {
       console.error('Error loading trivia question:', error);
       safeSetTextContent(qEl, 'Error loading question. Please try again.');

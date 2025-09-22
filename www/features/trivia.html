@@ -24,31 +24,21 @@
     }
     
     .trivia-stats {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      padding: 12px;
-      background: #f8f9fa;
-      border-radius: 8px;
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 10;
+    }
+    
+    .daily-counter {
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 20px;
       font-size: 14px;
       font-weight: 600;
-    }
-    
-    .stat {
       text-align: center;
-    }
-    
-    .stat-label {
-      display: block;
-      color: #666;
-      font-size: 12px;
-      margin-bottom: 4px;
-    }
-    
-    .stat-value {
-      font-size: 18px;
-      font-weight: 700;
-      color: #2563eb;
+      min-width: 60px;
     }
     
     #triviaQuestion {

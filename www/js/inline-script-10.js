@@ -17,7 +17,7 @@
         iframe.loading = 'eager';
         iframe.referrerPolicy = 'no-referrer';
         iframe.allow = '';
-        iframe.sandbox = 'allow-scripts';
+        iframe.sandbox = 'allow-scripts allow-same-origin';
         iframe.style.width = '100%';
         /* Height now managed by card system */
         iframe.style.border = 'none';
