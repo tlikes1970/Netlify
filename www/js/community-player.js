@@ -2,7 +2,6 @@
   const rootId = "community-player";
   const LEGACY_SELECTORS = [
     "#community-content",
-    ".community-left",
     ".player-placeholder",
     ".community-player-placeholder",
     ".loading-spinner"

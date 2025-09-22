@@ -4,7 +4,7 @@ test.describe("Community Player Seed", () => {
   test("legacy blocks removed", async ({ page }) => {
     await page.goto("http://localhost:8002/");
     await expect(page.locator("#community-content")).toHaveCount(0);
-    await expect(page.locator(".community-left")).toHaveCount(0);
+    await expect(page.locator(".community-left")).toHaveCount(1); // Should exist now
     await expect(page.locator(".player-placeholder")).toHaveCount(0);
     await expect(page.locator(".community-player-placeholder")).toHaveCount(0);
     await expect(page.locator(".loading-spinner")).toHaveCount(0);
