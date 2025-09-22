@@ -106,6 +106,7 @@
     <link rel="preload" href="/styles/consolidated-layout.css?v=v17.9" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="/styles/action-bar.css?v=v22.21" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="/styles/modals.css?v=v25.0" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="stylesheet" href="/css/community-player.css">
     
     <!-- Fallback for browsers without preload support -->
     <noscript>
@@ -116,6 +117,7 @@
       <link rel="stylesheet" href="/styles/main.css?v=v17.9">
       <link rel="stylesheet" href="/styles/consolidated-layout.css?v=v17.9">
       <link rel="stylesheet" href="/styles/action-bar.css?v=v22.21">
+      <link rel="stylesheet" href="/css/community-player.css">
     </noscript>
 
     <!-- Firebase config FIRST (plain script is fine) -->
@@ -257,6 +259,9 @@
         }
       ];
     </script>
+    
+    <!-- Community Player -->
+    <script defer src="/js/community-player.js"></script>
     
     <!-- Fix tab badge visibility and header centering -->
     <style>
@@ -520,20 +525,11 @@
             <h2 class="group-title" data-i18n="community">Community</h2>
           </div>
           
-          <!-- Community Content - Two Column Layout -->
-          <div class="community-content">
-            <!-- Left: Empty Player Box -->
-            <div class="community-left">
-              <div class="player-placeholder">
-                <div class="placeholder-content">
-                  <h3 data-i18n="community_player">Community Player</h3>
-                  <p data-i18n="community_player_placeholder">Video content will appear here</p>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Right: Game Cards Section -->
-            <div class="community-right">
+          <!-- Community Player -->
+          <section id="community-player" aria-label="Community Player"></section>
+          
+          <!-- Right: Game Cards Section -->
+          <div class="community-right">
               <section id="home-games" class="home-games">
                 <article class="card card--game" id="flickwordTile" data-module="flickword" role="region" tabindex="0" aria-haspopup="dialog" aria-controls="modal-flickword" aria-labelledby="flickword-title">
                   <div class="card__header">
