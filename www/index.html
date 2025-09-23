@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet v27.36 - TV & Movie Tracker</title>
+    <title>Flicklet v27.82 - TV & Movie Tracker</title>
     <meta
       name="description"
       content="Search, track, and rate shows & films fast."
@@ -18,7 +18,7 @@
     <meta http-equiv="Cross-Origin-Opener-Policy" content="unsafe-none" />
     
     <!-- Content Security Policy -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.themoviedb.org https://firebase.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://accounts.google.com https://www.gstatic.com; frame-src 'self' https://accounts.google.com https://flicklet-71dff.firebaseapp.com;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.themoviedb.org https://firebase.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://accounts.google.com https://www.gstatic.com; frame-src 'self' https://accounts.google.com https://appleid.apple.com https://flicklet-71dff.firebaseapp.com;" />
     
     <!-- Additional Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
@@ -120,11 +120,16 @@
       <link rel="stylesheet" href="/css/community-player.css">
     </noscript>
 
+    <!-- Firebase SDK CDN -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
     <!-- Firebase config FIRST (plain script is fine) -->
-    <script src="/firebase-config.js?v=v26.8"></script>
+    <script src="/firebase-config.js?v=v27.77"></script>
 
     <!-- Firebase modular init SECOND as an ES module -->
-    <script type="module" src="/js/firebase-init.js?v=v26.8"></script>
+    <script type="module" src="/js/firebase-init.js?v=v27.77"></script>
     
     <!-- TMDB API client -->
     <script src="/tmdb-config.js"></script>
@@ -135,13 +140,16 @@
     
     <!-- Auth and data initialization -->
     <script type="module" src="/js/data-init.js"></script>
-    <script type="module" src="/js/auth.js"></script>
+    <script src="/js/auth-manager.js"></script>
+    <script src="/scripts/inline-script-02.js"></script>
     
     <!-- Feature flags and guards -->
     <script src="/js/flags.js"></script>
     
     <!-- Main app functionality -->
     <script src="/js/utils.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/language-manager.js"></script>
     <script src="/js/functions.js"></script>
     <script src="/js/app.js"></script>
     <script src="/js/inline-script-10.js"></script>
@@ -150,7 +158,7 @@
     <script src="/scripts/tmdb-images.js"></script>
     
     <!-- Card component -->
-    <script src="/scripts/components/Card.js?v=v27.46"></script>
+    <script src="/scripts/components/Card.js?v=v27.70"></script>
     
     <!-- Home page features -->
     <script src="/scripts/currently-watching-preview.js"></script>
@@ -392,17 +400,18 @@
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
-            <div class="version-display">v27.36</div>
+            <div id="leftSnark" class="left-snark" aria-live="polite"></div>
             <div id="headerGreeting" class="header-greeting" aria-live="polite"></div>
           </div>
           <div class="header-center">
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
-            <span class="version-display">v27.36</span>
+            <span class="version-display">v27.82</span>
           </div>
           <div class="header-right">
-            <button id="accountButton" class="account-btn" aria-live="polite" title="Sign in" onclick="(firebaseAuth?.currentUser ? startSignOut() : startSignIn())">
-              👤 <span id="accountButtonLabel">Sign In</span>
+            <div id="accountContext" class="account-context" aria-live="polite"></div>
+            <button id="accountButton" class="account-btn" aria-live="polite" title="Sign in">
+              <span id="accountButtonLabel">Sign In</span>
             </button>
             <select id="langToggle" class="lang-select select--sm" aria-label="Language" title="Language">
               <option value="en">EN</option>
@@ -431,11 +440,11 @@
             <option value="" data-i18n="all_genres">All Genres</option>
           </select>
           <button id="searchBtn" type="button" class="btn search-btn search-area-search" aria-label="Search for TV shows and movies">
-            <span class="icon" aria-hidden="true">🔍</span>
+            <span class="icon" aria-hidden="true">Search</span>
             <span class="label" data-i18n="search">Search</span>
           </button>
           <button id="clearSearchBtn" type="button" class="btn btn--secondary clear-search-btn search-area-clear" aria-label="Clear search results">
-            <span class="icon" aria-hidden="true">✖️</span>
+            <span class="icon" aria-hidden="true">X</span>
             <span class="label" data-i18n="clear">Clear</span>
           </button>
         </div>
@@ -448,25 +457,25 @@
 
       <!-- Tab container moved outside homeSection for proper positioning -->
       <div class="tab-container" id="navigation">
-        <button id="homeTab" class="tab active" title="Overview of your TV & movie tracking" aria-label="Home tab - view dashboard and recommendations">🏠 <span data-i18n="home">Home</span> <span class="tab-version">v27.36</span></button>
+        <button id="homeTab" class="tab active" title="Overview of your TV & movie tracking" aria-label="Home tab - view dashboard and recommendations">Home <span data-i18n="home">Home</span></button>
         <button id="watchingTab" class="tab" title="Shows and movies you're currently watching" aria-label="Watching tab - view shows and movies you're currently watching">
-          ▶️ <span data-i18n="currently_watching">Currently Watching</span>
+          > <span data-i18n="currently_watching">Currently Watching</span>
           <span class="tab-badge" id="watchingBadge">0</span>
         </button>
         <button id="wishlistTab" class="tab" title="Shows and movies you want to watch later" aria-label="Wishlist tab - view shows and movies you want to watch">
-          📖 <span data-i18n="want_to_watch">Want to Watch</span>
+          + <span data-i18n="want_to_watch">Want to Watch</span>
           <span class="tab-badge" id="wishlistBadge">0</span>
         </button>
         <button id="watchedTab" class="tab" title="Shows and movies you've already finished" aria-label="Watched tab - view shows and movies you've completed">
-          ✅ <span data-i18n="already_watched">Already Watched</span>
+          ✓ <span data-i18n="already_watched">Already Watched</span>
           <span class="tab-badge" id="watchedBadge">0</span>
         </button>
-        <button id="discoverTab" class="tab" title="Get personalized recommendations based on your taste" aria-label="Discover tab - find new shows and movies">✨ <span data-i18n="discover">Discover</span></button>
+        <button id="discoverTab" class="tab" title="Get personalized recommendations based on your taste" aria-label="Discover tab - find new shows and movies">* <span data-i18n="discover">Discover</span></button>
       </div>
 
       <!-- Search Results Container - Now positioned after tabs -->
       <div id="searchResults" class="search-results" style="display: none;">
-        <h4>🎯 <span data-i18n="search_results">Search Results</span> <span class="count" id="resultsCount">0</span></h4>
+        <h4>Target <span data-i18n="search_results">Search Results</span> <span class="count" id="resultsCount">0</span></h4>
         <div id="searchResultsList" class="list-container"></div>
       </div>
 
@@ -488,7 +497,7 @@
           <!-- Currently Watching (row): always present -->
           <section id="currentlyWatchingPreview" class="home-preview-row" aria-label="Currently Watching Preview">
             <div class="preview-row-header">
-              <h3 class="preview-row-title" data-i18n="currently_watching_section">👁️ Currently Watching</h3>
+              <h3 class="preview-row-title" data-i18n="currently_watching_section">Eye Currently Watching</h3>
             </div>
             <div class="preview-row-container cw-row">
               <div class="preview-row-scroll row-inner" id="currentlyWatchingScroll">
@@ -506,7 +515,7 @@
           <!-- Next Up This Week (row): if data → carousel; if none → collapsed one-line placeholder -->
           <section id="next-up-row" class="home-preview-row" data-feature="homeRowNextUp" style="display: none;">
             <div class="preview-row-header">
-              <h3 class="preview-row-title" data-i18n="next_up_this_week">📅 Next Up This Week</h3>
+              <h3 class="preview-row-title" data-i18n="next_up_this_week">Calendar Next Up This Week</h3>
             </div>
             <div class="preview-row-container">
               <div class="next-up-scroll row-inner preview-row-scroll">
@@ -537,7 +546,7 @@
               <section id="home-games" class="home-games">
                 <article class="card card--game" id="flickwordTile" data-module="flickword" role="region" tabindex="0" aria-haspopup="dialog" aria-controls="modal-flickword" aria-labelledby="flickword-title">
                   <div class="card__header">
-                    <h3 class="card__title" id="flickword-title" data-i18n="flickword">🎯 FlickWord</h3>
+                    <h3 class="card__title" id="flickword-title" data-i18n="flickword">Target FlickWord</h3>
                     <div class="card__tools">
                       <div class="game-stats">
                         <div class="stat-item">
@@ -562,7 +571,7 @@
                         </div>
                         <div class="stat-item">
                           <span class="stat-label" data-i18n="win_percent">Win %</span>
-                          <span class="stat-value" data-fw-win>—</span>
+                          <span class="stat-value" data-fw-win>-</span>
                         </div>
                       </div>
                     </div>
@@ -570,11 +579,10 @@
                   
                   <div class="card__body card__body--scroll">
                     <div class="flickword-hero">
-                      <img src="/images/word-game-hero.jpg" 
-                           alt="Word game illustration with letters and puzzle pieces" 
-                           class="flickword-hero-image"
-                           loading="lazy"
-                           onerror="this.style.display='none'">
+                      <div class="flickword-hero-placeholder">
+                        <div class="flickword-hero-icon">Game</div>
+                        <div class="flickword-hero-text">Word Game</div>
+                      </div>
                     </div>
                     <p class="card__description" data-i18n="flickword_tagline">Wordle-style daily word play</p>
                     <div aria-live="polite" class="sr-only" data-status-live></div>
@@ -587,7 +595,7 @@
 
                 <article class="card card--game" id="triviaTile" data-module="trivia" role="region" tabindex="0" aria-haspopup="dialog" aria-controls="modal-trivia" aria-labelledby="trivia-title">
                   <div class="card__header">
-                    <h3 class="card__title" id="trivia-title" data-i18n="daily_trivia">🧠 Daily Trivia</h3>
+                    <h3 class="card__title" id="trivia-title" data-i18n="daily_trivia">Brain Daily Trivia</h3>
                     <div class="card__tools">
                       <div class="game-stats">
                         <div class="stat-item">
@@ -600,7 +608,7 @@
                         </div>
                         <div class="stat-item">
                           <span class="stat-label" data-i18n="accuracy">Accuracy</span>
-                          <span class="stat-value" data-tv-acc>—</span>
+                          <span class="stat-value" data-tv-acc>-</span>
                         </div>
                       </div>
                     </div>
@@ -629,7 +637,7 @@
           <!-- Personalized genre rows from Settings -->
           <section id="personalized-section" class="home-preview-row" style="display: none;">
             <div class="preview-row-header">
-              <h3 class="preview-row-title">🎨 <span data-i18n="personalized_recommendations">Personalized Recommendations</span></h3>
+              <h3 class="preview-row-title">Art <span data-i18n="personalized_recommendations">Personalized Recommendations</span></h3>
               <p class="section-subtitle" data-i18n="based_on_watching_history">Based on your watching history and preferences</p>
             </div>
             <div class="preview-row-container">
@@ -645,7 +653,7 @@
           <!-- Curated rows count per user setting -->
           <section id="curated-section" class="home-preview-row">
             <div class="preview-row-header">
-              <h3 class="preview-row-title" data-i18n="curated_sections">🎯 Curated Sections</h3>
+              <h3 class="preview-row-title" data-i18n="curated_sections">Target Curated Sections</h3>
             </div>
             <div class="preview-row-container">
               <div id="curatedSections" class="home-section">
@@ -663,14 +671,14 @@
           
           <section id="theaters-section" class="home-preview-row">
             <div class="preview-row-header">
-              <h3 class="preview-row-title">🎬 <span data-i18n="in_theaters_near_you">In Theaters Near You</span></h3>
+              <h3 class="preview-row-title">Movie <span data-i18n="in_theaters_near_you">In Theaters Near You</span></h3>
               <p class="section-subtitle" data-i18n="current_theatrical_releases">Current theatrical releases</p>
             </div>
             <div class="preview-row-container">
               <div class="section-content" id="theaters-content">
                 <div class="theaters-container">
                   <div class="theaters-header">
-                    <h3>🎬 Now Playing</h3>
+                    <h3>Movie Now Playing</h3>
                     <button class="btn secondary" id="refreshTheatersBtn">🔄 Refresh</button>
                   </div>
                   <div class="theaters-list" id="theatersList">
@@ -755,7 +763,7 @@
         <div class="section">
           <div class="section-header">
             <h3>
-              📖 <span data-i18n="want_to_watch">Want to Watch</span>
+              + <span data-i18n="want_to_watch">Want to Watch</span>
               <span class="count" id="wishlistCount">0</span>
             </h3>
           </div>
@@ -768,7 +776,7 @@
         <div class="section">
           <div class="section-header">
             <h3>
-              ✅ <span data-i18n="already_watched">Already Watched</span>
+              ✓ <span data-i18n="already_watched">Already Watched</span>
               <span class="count" id="watchedCount">0</span>
             </h3>
           </div>
@@ -779,7 +787,7 @@
       <!-- Discover -->
       <div id="discoverSection" class="tab-section" style="display: none">
         <div class="section">
-          <h3>✨ <span data-i18n="discover">Discover</span></h3>
+          <h3>* <span data-i18n="discover">Discover</span></h3>
           <p data-i18n="discover_description">Recommendations based on your likes and ratings.</p>
           <div id="discoverList" class="list-container"></div>
         </div>
@@ -927,7 +935,7 @@
                 <!-- Layout Section -->
                 <section id="layout" class="settings-section">
                   <div class="settings-subsection">
-                    <h3 class="settings-title">🎨 <span data-i18n="layout_settings">Layout Settings</span></h3>
+                    <h3 class="settings-title">Art <span data-i18n="layout_settings">Layout Settings</span></h3>
                     <p class="settings-description" data-i18n="layout_description">Customize how your lists and cards are displayed</p>
                     
                     <!-- Core Layout Features -->
@@ -1010,7 +1018,7 @@
                         <div class="settings-feature-header">
                           <label class="settings-checkbox-label settings-checkbox-label--feature">
                             <input type="checkbox" id="enableEpisodeTracking" class="settings-checkbox settings-checkbox--feature" />
-                            <span class="settings-checkbox-text settings-checkbox-text--feature" data-i18n="enable_episode_tracking">🎬 Enable Episode Tracking</span>
+                            <span class="settings-checkbox-text settings-checkbox-text--feature" data-i18n="enable_episode_tracking">Movie Enable Episode Tracking</span>
                           </label>
                           <div class="settings-feature-badge" data-i18n="recommended">Recommended</div>
                         </div>
@@ -1030,7 +1038,7 @@
                     
                     <!-- Theme Packs -->
                     <div class="settings-control-group">
-                      <h5 class="settings-label" data-i18n="theme_packs">🎨 Theme Packs</h5>
+                      <h5 class="settings-label" data-i18n="theme_packs">Art Theme Packs</h5>
                       <p class="settings-hint" data-i18n="choose_a_visual_theme">Choose a visual theme for your Flicklet experience. Pro users get access to premium themes.</p>
                       <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
                         <label for="themePackSelect" style="font-weight: 500;" data-i18n="theme">Theme:</label>
@@ -1080,7 +1088,7 @@
                       
                       <div class="not-interested-controls">
                         <button id="viewNotInterestedBtn" class="btn btn--secondary">
-                          👁️ View Not Interested Items
+                          Eye View Not Interested Items
                         </button>
                         <button id="clearNotInterestedBtn" class="btn btn--danger">
                           🗑️ Clear All
@@ -1102,7 +1110,7 @@
 
                     <!-- Share Lists -->
                     <div class="settings-control-group">
-                      <button id="shareOpenBtn" class="btn btn--secondary" data-action="share-lists" data-share-title="Flicklet — My List" data-share-url="" title="Share your lists" aria-label="Share your TV and movie lists">
+                      <button id="shareOpenBtn" class="btn btn--secondary" data-action="share-lists" data-share-title="Flicklet - My List" data-share-url="" title="Share your lists" aria-label="Share your TV and movie lists">
                         🔗 <span data-i18n="share_lists">Share Lists</span>
                       </button>
                       <p class="settings-hint" data-i18n="generate_a_shareable_text">Generate a shareable text list of your TV shows and movies to send to friends</p>
@@ -1151,7 +1159,7 @@
                     <!-- Extra Trivia (Pro) -->
                     <div class="settings-control-group">
                       <button class="btn" data-pro="required" data-pro-mode="disable" data-pro-feature="extra-trivia">
-                        🧠 <span data-i18n="extra_trivia_pro">Extra Trivia (Pro)</span>
+                        Brain <span data-i18n="extra_trivia_pro">Extra Trivia (Pro)</span>
                       </button>
                       <p class="settings-hint" data-i18n="access_additional_trivia">Access additional trivia questions and behind-the-scenes content (Pro feature)</p>
                     </div>
@@ -1166,7 +1174,7 @@
 
                     <!-- Pro Features List -->
                     <div class="settings-control-group">
-                      <h4 class="settings-subtitle">✨ <span data-i18n="pro_features_include">Pro Features Include:</span></h4>
+                      <h4 class="settings-subtitle">* <span data-i18n="pro_features_include">Pro Features Include:</span></h4>
                       <p class="settings-hint">Advanced features and premium content available with Flicklet Pro subscription</p>
                       <div id="proFeaturesList" class="settings-pro-features">
                         <!-- Dynamic Pro features list will be rendered here -->
@@ -1181,10 +1189,10 @@
                   <div class="settings-subsection">
                     <h3 class="settings-title" data-i18n="about_unique4u">🏠 About Unique4U</h3>
                     <p class="settings-description" data-i18n="were_not_here_to_reinvent">
-                      We're not here to reinvent the wheel — we're here to make the wheel less squeaky. At Unique4U, our rule is simple: keep it simple. The world already has enough apps that feel like a second job to use. We'd rather give you tools that just… work.
+                      We're not here to reinvent the wheel - we're here to make the wheel less squeaky. At Unique4U, our rule is simple: keep it simple. The world already has enough apps that feel like a second job to use. We'd rather give you tools that just… work.
                     </p>
                     <p class="settings-description" data-i18n="everything_we_build">
-                      Everything we build has its own personality, but they all live under one roof: a people-first, all-inclusive, slightly offbeat house we call Unique4U. If it's fun, useful, and a little different from the pack — it belongs here.
+                      Everything we build has its own personality, but they all live under one roof: a people-first, all-inclusive, slightly offbeat house we call Unique4U. If it's fun, useful, and a little different from the pack - it belongs here.
                     </p>
                   </div>
 
@@ -1195,7 +1203,7 @@
                       We're Pam and Travis. Think of us as casual builders with a shared allergy to overcomplication. We make things because we need them, and we figure you probably do too.
                     </p>
                     <p class="settings-description" data-i18n="pam_once_trained_dolphins">
-                      Pam once trained dolphins (true story) and also happens to be really good with numbers. Travis studied English and Philosophy, which means he can overthink and explain it in writing, then somehow turn that into practical business know-how. Together, we're like a mash-up of "creative meets operations" — and that combo lets us build apps that are simple, useful, and not boring.
+                      Pam once trained dolphins (true story) and also happens to be really good with numbers. Travis studied English and Philosophy, which means he can overthink and explain it in writing, then somehow turn that into practical business know-how. Together, we're like a mash-up of "creative meets operations" - and that combo lets us build apps that are simple, useful, and not boring.
                     </p>
                   </div>
 
@@ -1203,7 +1211,7 @@
                   <div class="settings-subsection">
                     <h3 class="settings-title" data-i18n="about_the_app">📱 About the App</h3>
                     <p class="settings-description" data-i18n="heres_the_deal">
-                      Here's the deal: you want to remember what you're watching without needing a PhD in App Navigation. We built this because we got tired of two bad options — messy notes on our phones or bloated apps that make you log your "episode 7 mid-season thoughts." (Hard pass.)
+                      Here's the deal: you want to remember what you're watching without needing a PhD in App Navigation. We built this because we got tired of two bad options - messy notes on our phones or bloated apps that make you log your "episode 7 mid-season thoughts." (Hard pass.)
                     </p>
                     <p class="settings-description">
                       <strong>Data Attribution:</strong> This product uses the TMDB API but is not endorsed or certified by TMDB.
@@ -1271,11 +1279,11 @@
                   </label>
                   <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto;">
                     <input type="checkbox" id="selectAllWishlist" style="pointer-events: auto; cursor: pointer;" />
-                    <strong>📖 <span data-i18n="want_to_watch">Want to Watch</span></strong>
+                    <strong>+ <span data-i18n="want_to_watch">Want to Watch</span></strong>
                   </label>
                   <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto;">
                     <input type="checkbox" id="selectAllWatched" style="pointer-events: auto; cursor: pointer;" />
-                    <strong>✅ <span data-i18n="already_watched">Already Watched</span></strong>
+                    <strong>✓ <span data-i18n="already_watched">Already Watched</span></strong>
                   </label>
                   <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto;">
                     <input type="checkbox" id="selectAllEverything" style="pointer-events: auto; cursor: pointer;" />
@@ -1294,13 +1302,13 @@
                 
                 <!-- Want to Watch -->
                 <div class="share-list-section" style="margin-bottom: 20px; padding: 10px; border: 1px solid #e0e0e0; border-radius: 4px;">
-                  <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">📖 <span data-i18n="want_to_watch">Want to Watch</span></h4>
+                  <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">+ <span data-i18n="want_to_watch">Want to Watch</span></h4>
                   <div id="shareWishlistList" class="share-items-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
                 </div>
                 
                 <!-- Already Watched -->
                 <div class="share-list-section" style="margin-bottom: 20px; padding: 10px; border: 1px solid #e0e0e0; border-radius: 4px;">
-                  <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">✅ <span data-i18n="already_watched">Already Watched</span></h4>
+                  <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">✓ <span data-i18n="already_watched">Already Watched</span></h4>
                   <div id="shareWatchedList" class="share-items-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
                 </div>
               </div>
@@ -1447,7 +1455,7 @@
             src="/features/flickword-v2.html" 
             style="width: 100%; height: 100%; border: none; border-radius: 8px;"
             title="FlickWord Game"
-            sandbox="allow-scripts allow-same-origin"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
           ></iframe>
         </main>
       </div>
@@ -1493,7 +1501,7 @@
                   console.log('📊 Extracted FlickWord stats:', flickwordStats);
                   
                   // Calculate win percentage if we have wins and games
-                  let winPercentage = '—';
+                  let winPercentage = '-';
                   if (flickwordStats.wins && flickwordStats.games) {
                     winPercentage = Math.round((flickwordStats.wins / flickwordStats.games) * 100) + '%';
                   } else if (flickwordStats.win) {

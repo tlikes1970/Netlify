@@ -124,6 +124,11 @@
       currentQuery = query;
       isSearching = true;
       
+      // Notify FlickletApp of search state change
+      if (window.FlickletApp && typeof window.FlickletApp.setSearching === 'function') {
+        window.FlickletApp.setSearching(true);
+      }
+      
       log('Performing search for:', query);
       
       // Show loading state
@@ -157,6 +162,11 @@
     searchInput.value = '';
     currentQuery = '';
     isSearching = false;
+    
+    // Notify FlickletApp of search state change
+    if (window.FlickletApp && typeof window.FlickletApp.setSearching === 'function') {
+      window.FlickletApp.setSearching(false);
+    }
     
     // Hide results
     if (searchResults) {
@@ -368,7 +378,7 @@
     `;
   }
   
-  // Hide other tabs when search results are shown
+  // Hide other tabs when search results are shown (but keep home tab visible)
   function hideOtherTabs() {
     // Remember current tab before hiding
     if (window.FlickletApp && window.FlickletApp.currentTab) {
@@ -376,8 +386,8 @@
       log(`Remembered previous tab: ${previousTab}`);
     }
     
-    // Use same tab IDs as app.js for consistency
-    const TAB_IDS = ['home', 'watching', 'wishlist', 'watched', 'discover', 'settings'];
+    // Use same tab IDs as app.js for consistency, but exclude home tab
+    const TAB_IDS = ['watching', 'wishlist', 'watched', 'discover', 'settings'];
     TAB_IDS.forEach(tabId => {
       const section = document.getElementById(`${tabId}Section`);
       if (section) {
@@ -387,6 +397,13 @@
         log(`Tab section not found: ${tabId}Section`);
       }
     });
+    
+    // Hide home section during search (but keep tab button available)
+    const homeSection = document.getElementById('homeSection');
+    if (homeSection) {
+      homeSection.style.display = 'none';
+      log(`Home section hidden during search`);
+    }
   }
   
   // Show other tabs when search is cleared

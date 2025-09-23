@@ -23,8 +23,8 @@
       return window.TMDB_API_KEY;
     }
     
-    // 4. Fallback to hardcoded key (only for development - should be replaced in production)
-    console.warn('⚠️ Using fallback TMDB API key. Please set TMDB_API_KEY environment variable or meta tag for production.');
+    // 4. Fallback to production API key
+    console.info('[TMDB] Using production TMDB API key');
     return 'b7247bb415b50f25b5e35e2566430b96';
   };
   

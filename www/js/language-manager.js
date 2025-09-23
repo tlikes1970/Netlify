@@ -220,10 +220,32 @@ class LanguageManager {
       loadHomeContent();
     }
     
+    // Refresh TMDB metadata for Currently Watching items in new language
+    this.refreshCurrentlyWatchingMetadata(lang);
+    
     // Update stats
     if (typeof rebuildStats === 'function') {
       rebuildStats();
     }
+    
+    // Listen for card rendering events and apply translations
+    const handleCardsRendered = () => {
+      console.log('🌍 Cards rendered, applying translations');
+      applyTranslations(lang);
+    };
+    
+    // Listen for card rendering events (remove after 5 seconds to avoid memory leaks)
+    window.addEventListener('cards:rendered', handleCardsRendered, { once: false });
+    setTimeout(() => {
+      window.removeEventListener('cards:rendered', handleCardsRendered);
+    }, 5000);
+    
+    // Also apply translations with a delay as fallback
+    console.log('🌍 Applying translations after content re-render');
+    setTimeout(() => {
+      console.log('🌍 Delayed translation application');
+      applyTranslations(lang);
+    }, 200);
     
     // Handle complex rehydration logic
     this.handleComplexRehydration(lang);
@@ -234,22 +256,14 @@ class LanguageManager {
     try {
       console.log('🔄 Starting complex rehydration for language:', lang);
       
-      // Try to rehydrate lists with localized TMDB data
-      if (typeof rehydrateListsForLocale === 'function') {
-        console.log('🔄 Rehydrating lists for locale');
-        await rehydrateListsForLocale(lang);
-        console.log('✅ Lists rehydrated successfully');
-      } else {
-        console.warn('🔄 rehydrateListsForLocale function not available');
-      }
+      // Refresh Currently Watching metadata first (this is the most important)
+      await this.refreshCurrentlyWatchingMetadata(lang);
       
       // Force refresh of genre dropdown
       setTimeout(() => {
         if (typeof loadGenres === "function") {
           console.log('🔄 Refreshing genres');
           loadGenres();
-        } else {
-          console.warn('🔄 loadGenres function not available');
         }
       }, 200);
       
@@ -259,10 +273,113 @@ class LanguageManager {
       // Refresh other dynamic content
       this.refreshDynamicContent(lang);
       
+      // Force re-render of all home content to ensure cards are updated
+      setTimeout(() => {
+        console.log('🔄 Force re-rendering all home content');
+        if (typeof window.renderHomeRails === 'function') {
+          window.renderHomeRails();
+        }
+        if (typeof window.renderCurrentlyWatchingPreview === 'function') {
+          window.renderCurrentlyWatchingPreview();
+        }
+      }, 500);
+      
       console.log('✅ Complex rehydration completed');
       
     } catch (error) {
       console.error("❌ Failed to rehydrate lists for locale:", error);
+    }
+  }
+
+  // Refresh TMDB metadata for Currently Watching items in new language
+  async refreshCurrentlyWatchingMetadata(lang) {
+    console.log('🔄 Refreshing Currently Watching metadata for language:', lang);
+    
+    try {
+      const appData = window.appData;
+      if (!appData) {
+        console.warn('🔄 No appData available for metadata refresh');
+        return;
+      }
+      
+      const tmdbLang = lang === 'es' ? 'es-ES' : 'en-US';
+      const apiKey = window.__TMDB_API_KEY__ || window.TMDB_CONFIG?.apiKey;
+      
+      if (!apiKey) {
+        console.warn('🔄 TMDB API key not available for metadata refresh');
+        return;
+      }
+      
+      let updated = false;
+      
+      // Refresh TV watching items
+      if (appData.tv?.watching) {
+        for (let i = 0; i < appData.tv.watching.length; i++) {
+          const item = appData.tv.watching[i];
+          if (item.id) {
+            try {
+              const response = await fetch(`https://api.themoviedb.org/3/tv/${item.id}?api_key=${apiKey}&language=${tmdbLang}`);
+              if (response.ok) {
+                const tmdbData = await response.json();
+                // Update only the translatable fields, preserve user data
+                appData.tv.watching[i] = {
+                  ...item, // Preserve user data (added_date, notes, etc.)
+                  title: tmdbData.name || item.title,
+                  overview: tmdbData.overview || item.overview,
+                  original_name: tmdbData.original_name || item.original_name
+                };
+                updated = true;
+                console.log('🔄 Updated TV item metadata:', item.title || item.name);
+              }
+            } catch (error) {
+              console.warn('🔄 Failed to update TV item metadata:', error);
+            }
+          }
+        }
+      }
+      
+      // Refresh movie watching items
+      if (appData.movies?.watching) {
+        for (let i = 0; i < appData.movies.watching.length; i++) {
+          const item = appData.movies.watching[i];
+          if (item.id) {
+            try {
+              const response = await fetch(`https://api.themoviedb.org/3/movie/${item.id}?api_key=${apiKey}&language=${tmdbLang}`);
+              if (response.ok) {
+                const tmdbData = await response.json();
+                // Update only the translatable fields, preserve user data
+                appData.movies.watching[i] = {
+                  ...item, // Preserve user data (added_date, notes, etc.)
+                  title: tmdbData.title || item.title,
+                  overview: tmdbData.overview || item.overview,
+                  original_title: tmdbData.original_title || item.original_title
+                };
+                updated = true;
+                console.log('🔄 Updated movie item metadata:', item.title || item.name);
+              }
+            } catch (error) {
+              console.warn('🔄 Failed to update movie item metadata:', error);
+            }
+          }
+        }
+      }
+      
+      if (updated) {
+        // Save updated data
+        if (typeof window.saveAppData === 'function') {
+          window.saveAppData();
+        }
+        
+        // Re-render home content with updated metadata
+        if (typeof window.renderCurrentlyWatchingPreview === 'function') {
+          window.renderCurrentlyWatchingPreview();
+        }
+        
+        console.log('✅ Currently Watching metadata refreshed successfully');
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to refresh Currently Watching metadata:', error);
     }
   }
 
@@ -277,53 +394,19 @@ class LanguageManager {
       console.log(`🗑️ Cleared ${key} cache`);
     });
     
-    // Re-fetch curated data from TMDB in new language
-    if (typeof window.seedCuratedData === 'function') {
-      console.log('🔄 Re-seeding curated data from TMDB');
-      window.seedCuratedData(lang).then(() => {
-        console.log('🔄 Re-seeding completed, re-rendering curated rows');
-        setTimeout(() => {
-          if (typeof window.renderCuratedHomepage === 'function') {
-            console.log('🔄 Calling renderCuratedHomepage');
-            window.renderCuratedHomepage();
-          } else {
-            console.warn('🔄 renderCuratedHomepage function not available');
-          }
-          if (document.dispatchEvent) {
-            console.log('🔄 Dispatching curated:rerender event');
-            document.dispatchEvent(new CustomEvent('curated:rerender'));
-          }
-          
-          // Update personalized section
-          if (document.dispatchEvent) {
-            console.log('🔄 Dispatching personalized:updated event');
-            document.dispatchEvent(new CustomEvent('personalized:updated', { detail: { language: lang } }));
-          }
-        }, 100);
-      }).catch(error => {
-        console.error('🔄 Re-seeding failed:', error);
-        setTimeout(() => {
-          if (typeof window.renderCuratedHomepage === 'function') {
-            console.log('🔄 Calling renderCuratedHomepage (fallback)');
-            window.renderCuratedHomepage();
-          } else {
-            console.warn('🔄 renderCuratedHomepage function not available (fallback)');
-          }
-          if (document.dispatchEvent) {
-            console.log('🔄 Dispatching curated:rerender event (fallback)');
-            document.dispatchEvent(new CustomEvent('curated:rerender'));
-          }
-          
-          // Update personalized section (fallback)
-          if (document.dispatchEvent) {
-            console.log('🔄 Dispatching personalized:updated event (fallback)');
-            document.dispatchEvent(new CustomEvent('personalized:updated', { detail: { language: lang } }));
-          }
-        }, 100);
-      });
-    } else {
-      console.warn('🔄 seedCuratedData function not available');
-    }
+    // Trigger re-render of home content to get fresh curated data
+    setTimeout(() => {
+      if (typeof window.renderHomeRails === 'function') {
+        console.log('🔄 Re-rendering home rails with new language');
+        window.renderHomeRails();
+      }
+      
+      // Also trigger curated rows re-render if available
+      if (typeof window.renderCuratedRows === 'function') {
+        console.log('🔄 Re-rendering curated rows with new language');
+        window.renderCuratedRows();
+      }
+    }, 100);
   }
 
   // Refresh other dynamic content
@@ -337,8 +420,6 @@ class LanguageManager {
       } catch (error) {
         console.error('❌ Trivia refresh failed:', error);
       }
-    } else {
-      console.warn('🔄 __FlickletRefreshTrivia function not available');
     }
     
     // Refresh series organizer content
@@ -350,8 +431,6 @@ class LanguageManager {
       } catch (error) {
         console.error('❌ Series organizer refresh failed:', error);
       }
-    } else {
-      console.warn('🔄 __FlickletRefreshSeriesOrganizer function not available');
     }
     
     // Refresh upcoming episodes content (V2 system)

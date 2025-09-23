@@ -253,6 +253,8 @@ const I18N = {
 
     // Cards / actions
     notes_tags: "Notes/Tags",
+    mark_watched: "Mark Watched",
+    want_to_watch: "Want to Watch",
     remove: "Remove",
     your_rating: "Your Rating",
     not_interested: "Not Interested",
@@ -717,6 +719,8 @@ const I18N = {
 
     // Cards / actions
     notes_tags: "Notas/Etiquetas",
+    mark_watched: "Marcar como Visto",
+    want_to_watch: "Quiero Ver",
     remove: "Eliminar",
     your_rating: "Tu Calificación",
     not_interested: "No me interesa",

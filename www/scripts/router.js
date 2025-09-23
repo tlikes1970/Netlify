@@ -50,7 +50,7 @@
     currentRoute = 'search';
     currentParams = params;
 
-    // Hide home content
+    // Hide home content during search (but keep tab button available)
     const homeSection = document.getElementById('homeSection');
     if (homeSection) {
       homeSection.style.display = 'none';

@@ -254,6 +254,14 @@
     
     // Post-render validation: check that all poster URLs are properly formatted
     validatePosterUrls();
+    
+    // Dispatch event to notify that cards have been rendered
+    window.dispatchEvent(new CustomEvent('cards:rendered', { 
+      detail: { 
+        count: itemsToShow.length,
+        section: 'currently-watching' 
+      } 
+    }));
   }
   
   /**

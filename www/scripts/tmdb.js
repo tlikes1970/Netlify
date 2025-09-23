@@ -31,10 +31,15 @@
       console.log('🔑 Using TMDB API key:', apiKey.substring(0, 8) + '...');
 
       const baseUrl = config.baseUrl || 'https://api.themoviedb.org/3';
+      
+      // Get current language from app settings or default to en-US
+      const currentLang = window.appData?.settings?.lang || 'en';
+      const tmdbLang = currentLang === 'es' ? 'es-ES' : 'en-US';
+      
       const searchParams = new URLSearchParams({ 
         ...params, 
         api_key: apiKey,
-        language: 'en-US' // Default language
+        language: tmdbLang
       });
       
       // Ensure proper URL joining with exactly one slash

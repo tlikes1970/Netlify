@@ -13,6 +13,30 @@
 
   console.log("[firebase-config] ready for projectId:", window.firebaseConfig.projectId);
 
+  // Initialize Firebase with compat SDK
+  if (typeof firebase !== 'undefined') {
+    try {
+      window.firebaseApp = firebase.initializeApp(window.firebaseConfig);
+      window.firebaseAuth = firebase.auth();
+      window.firebaseDb = firebase.firestore();
+      
+      console.log("[firebase-config] Firebase initialized successfully");
+      
+      // Dispatch ready event
+      window.dispatchEvent(new CustomEvent("firebase:ready", {
+        detail: { 
+          app: window.firebaseApp, 
+          auth: window.firebaseAuth, 
+          db: window.firebaseDb 
+        }
+      }));
+    } catch (error) {
+      console.error("[firebase-config] Firebase initialization failed:", error);
+    }
+  } else {
+    console.warn("[firebase-config] Firebase SDK not loaded yet");
+  }
+
   try {
     window.dispatchEvent(new CustomEvent("firebase:config", {
       detail: { projectId: window.firebaseConfig.projectId }

@@ -309,22 +309,26 @@ window.loadListContent = function loadListContent(listType) {
       return;
     }
 
-    // Use createPosterCard for tab sections to get horizontal layout
-    if (typeof window.createPosterCard === 'function') {
+    // Use unified Card component for tab sections
+    if (typeof window.Card === 'function' && typeof window.createCardData === 'function') {
       items.forEach((it) => {
         try {
-          const card = window.createPosterCard(it, listType);
+          const cardData = window.createCardData(it, 'tmdb', listType);
+          const card = window.Card({
+            variant: 'unified',
+            ...cardData
+          });
           if (card) container.appendChild(card);
         } catch (e) {
           warn("render item failed:", e?.message || e);
         }
       });
     } else if (typeof window.Card === 'function') {
-      // Fallback to Card component
+      // Fallback to Card component without createCardData
       items.forEach((it) => {
         try {
           const cardData = {
-            variant: 'poster',
+            variant: 'unified',
             id: it.id || it.tmdb_id || it.tmdbId,
             title: it.title || it.name,
             subtitle: it.year ? `${it.year} • ${it.mediaType === 'tv' ? 'TV Series' : 'Movie'}` : 
@@ -382,6 +386,14 @@ window.loadListContent = function loadListContent(listType) {
     
     // Add scroll indicators for horizontal layout
     addScrollIndicators(container);
+    
+    // Dispatch event to notify that list cards have been rendered
+    window.dispatchEvent(new CustomEvent('cards:rendered', { 
+      detail: { 
+        count: items.length,
+        section: listType 
+      } 
+    }));
   } catch (e) {
     console.warn("[functions] loadListContent failed:", e?.message || e);
   }
@@ -424,10 +436,19 @@ async function loadDiscoverRecommendations() {
     // Get not interested items to filter out
     const notInterested = getNotInterestedItems();
     
+    // Get current language for TMDB API calls
+    const currentLang = window.appData?.settings?.lang || 'en';
+    const tmdbLang = currentLang === 'es' ? 'es-ES' : 'en-US';
+    const apiKey = window.__TMDB_API_KEY__ || window.TMDB_CONFIG?.apiKey;
+    
+    if (!apiKey) {
+      throw new Error('TMDB API key not available');
+    }
+    
     // Load popular movies and TV shows
     const [moviesResponse, tvResponse] = await Promise.all([
-      fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${window.TMDB_API_KEY}&page=1`),
-      fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${window.TMDB_API_KEY}&page=1`)
+      fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&page=1&language=${tmdbLang}`),
+      fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${apiKey}&page=1&language=${tmdbLang}`)
     ]);
     
     if (!moviesResponse.ok || !tvResponse.ok) {
@@ -1826,6 +1847,8 @@ window.moveItem = function moveItem(id, dest) {
   if (window.FlickletApp) window.FlickletApp.updateUI();
   rerenderIfVisible(sourceList);
   rerenderIfVisible(dest);
+  // Trigger home page re-render if available
+  if (window.renderHomeRails) window.renderHomeRails();
   showNotification(`Moved to ${dest}.`, 'success');
 };
 
@@ -1844,6 +1867,8 @@ window.removeItemFromCurrentList = function removeItemFromCurrentList(id) {
   saveAppData();
   if (window.FlickletApp) window.FlickletApp.updateUI();
   rerenderIfVisible(sourceList);
+  // Trigger home page re-render if available
+  if (window.renderHomeRails) window.renderHomeRails();
   showNotification('Item removed.', 'success');
 };
 

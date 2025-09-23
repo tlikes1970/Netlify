@@ -534,8 +534,9 @@ waitForFirebaseReady() {
         // 3) LOAD USER DATA FROM CLOUD (CRITICAL FOR DATA RESTORATION)
         FlickletDebug.info('🔄 Loading user data from Firebase cloud storage...');
         try {
-          if (typeof window.loadUserDataFromCloud === 'function') {
-            await window.loadUserDataFromCloud(uid);
+          // Use the trySync function from data-init.js to load user data
+          if (typeof window.DataInit?.trySync === 'function') {
+            await window.DataInit.trySync("user-sign-in");
             FlickletDebug.info('✅ User data loaded from cloud successfully');
             
             // CRITICAL: Refresh UI after data is loaded to prevent "already in list" errors
@@ -557,7 +558,7 @@ waitForFirebaseReady() {
               window.FlickletApp.updateTabContent(currentTab);
             }
           } else {
-            FlickletDebug.warn('⚠️ loadUserDataFromCloud function not available - user data not loaded from cloud');
+            FlickletDebug.warn('⚠️ DataInit.trySync function not available - user data not loaded from cloud');
           }
         } catch (error) {
           FlickletDebug.error('❌ Failed to load user data from cloud:', error);
@@ -662,6 +663,9 @@ waitForFirebaseReady() {
     async readSettings(uid) {
       try {
         // Auth guard: Ensure auth is ready before any Firestore operations
+        if (typeof window.ensureUser !== 'function') {
+          throw new Error('ensureUser function not available');
+        }
         const user = await window.ensureUser();
         const authUid = user.uid;
         
@@ -690,6 +694,9 @@ waitForFirebaseReady() {
     async writeSettings(uid, data) {
       try {
         // Auth guard: Ensure auth is ready before any Firestore operations
+        if (typeof window.ensureUser !== 'function') {
+          throw new Error('ensureUser function not available');
+        }
         const user = await window.ensureUser();
         const authUid = user.uid;
         
@@ -724,6 +731,201 @@ waitForFirebaseReady() {
       }
     },
 
+    /**
+     * Handle post-auth success pipeline
+     * Called by AuthManager after successful authentication
+     */
+    async handlePostAuthSuccess(user) {
+      console.log('🔄 [FlickletApp] handlePostAuthSuccess:', user.email);
+      
+      try {
+        const uid = user.uid;
+        
+        // 1) Create/update Firestore user doc
+        await this.createOrUpdateUserDoc(user);
+        
+        // 2) Load cloud data and merge with local
+        await this.loadAndMergeCloudData(uid);
+        
+        // 3) Handle identity (username vs displayName)
+        await this.handleUserIdentity(user);
+        
+        // 4) Update UI
+        this.updateUI();
+        
+      } catch (error) {
+        console.error('❌ [FlickletApp] handlePostAuthSuccess failed:', error);
+      }
+    },
+
+    /**
+     * Create or update Firestore user document
+     */
+    async createOrUpdateUserDoc(user) {
+      try {
+        const uid = user.uid;
+        const userDoc = {
+          uid: uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          lastLoginAt: new Date().toISOString(),
+          createdAt: new Date().toISOString()
+        };
+        
+        // Update Firestore user doc
+        if (window.firebaseDb) {
+          await window.firebaseDb.collection('users').doc(uid).set(userDoc, { merge: true });
+          console.log('✅ User doc updated in Firestore');
+        }
+      } catch (error) {
+        console.error('❌ Failed to update user doc:', error);
+      }
+    },
+
+    /**
+     * Load and merge cloud data
+     */
+    async loadAndMergeCloudData(uid) {
+      try {
+        if (window.firebaseDb) {
+          const userDoc = await window.firebaseDb.collection('users').doc(uid).get();
+          if (userDoc.exists) {
+            const cloudData = userDoc.data();
+            
+            // Merge cloud data with local
+            if (cloudData.watchlists) {
+              console.log('🔄 Merging cloud watchlists data:', cloudData.watchlists);
+              
+              // Merge TV data
+              if (cloudData.watchlists.tv) {
+                if (cloudData.watchlists.tv.watching) {
+                  window.appData.tv.watching = [...new Set([...window.appData.tv.watching, ...cloudData.watchlists.tv.watching])];
+                }
+                if (cloudData.watchlists.tv.wishlist) {
+                  window.appData.tv.wishlist = [...new Set([...window.appData.tv.wishlist, ...cloudData.watchlists.tv.wishlist])];
+                }
+                if (cloudData.watchlists.tv.watched) {
+                  window.appData.tv.watched = [...new Set([...window.appData.tv.watched, ...cloudData.watchlists.tv.watched])];
+                }
+              }
+              
+              // Merge Movies data
+              if (cloudData.watchlists.movies) {
+                if (cloudData.watchlists.movies.watching) {
+                  window.appData.movies.watching = [...new Set([...window.appData.movies.watching, ...cloudData.watchlists.movies.watching])];
+                }
+                if (cloudData.watchlists.movies.wishlist) {
+                  window.appData.movies.wishlist = [...new Set([...window.appData.movies.wishlist, ...cloudData.watchlists.movies.wishlist])];
+                }
+                if (cloudData.watchlists.movies.watched) {
+                  window.appData.movies.watched = [...new Set([...window.appData.movies.watched, ...cloudData.watchlists.movies.watched])];
+                }
+              }
+              
+              // Persist merged data
+              if (typeof window.saveAppData === 'function') {
+                window.saveAppData();
+              }
+              
+              console.log('✅ Cloud data merged with local');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ Failed to load/merge cloud data:', error);
+      }
+    },
+
+    /**
+     * Handle user identity (username vs displayName)
+     */
+    async handleUserIdentity(user) {
+      try {
+        const uid = user.uid;
+        
+        // Get username from settings
+        const username = await this.getUsername(uid);
+        
+        if (username) {
+          this.renderSnark(username);
+        } else {
+          console.info('[identity] username:missing → prompt');
+          const suggestedName = user.displayName || user.email?.split('@')[0] || 'User';
+          const pickedUsername = await this.promptForUsernameOnce(suggestedName);
+          
+          if (pickedUsername) {
+            await this.setUsername(uid, pickedUsername);
+            this.renderSnark(pickedUsername);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Failed to handle user identity:', error);
+      }
+    },
+
+    /**
+     * Get username from settings
+     */
+    async getUsername(uid) {
+      try {
+        const settings = await this.readSettings(uid);
+        const username = (settings.username || '').trim();
+        if (username) {
+          console.info(`[identity] username:found=${username}`);
+        }
+        return username;
+      } catch (error) {
+        console.error('❌ Failed to get username:', error);
+        return null;
+      }
+    },
+
+    /**
+     * Set username in settings
+     */
+    async setUsername(uid, username) {
+      try {
+        const trimmedUsername = username.trim();
+        await this.writeSettings(uid, { 
+          username: trimmedUsername, 
+          usernamePrompted: true 
+        });
+        
+        // Update local appData
+        if (window.appData) {
+          window.appData.settings.username = trimmedUsername;
+          if (typeof window.saveAppData === 'function') {
+            window.saveAppData();
+          }
+        }
+        
+        console.info(`[identity] username:saved=${trimmedUsername}`);
+        return true;
+      } catch (error) {
+        console.error('❌ Failed to set username:', error);
+        return false;
+      }
+    },
+
+    /**
+     * Render snarky header message
+     */
+    renderSnark(username) {
+      const leftSnark = document.getElementById('leftSnark');
+      if (leftSnark && username) {
+        const snarkText = this.makeSnark(username);
+        // Make username bold in the snark text
+        const boldSnarkText = snarkText.replace(username, `<strong>${username}</strong>`);
+        leftSnark.innerHTML = boldSnarkText;
+        leftSnark.style.textAlign = 'left';
+        leftSnark.style.zIndex = 'auto';
+        leftSnark.style.pointerEvents = 'none';
+        
+        console.info(`[identity] snark:render=${snarkText}`);
+      }
+    },
+
     clearExistingUsernameModals() {
       // Clear any existing username prompt modals
       const existingModals = document.querySelectorAll('.modal-backdrop[data-modal="username-prompt-modal"]');
@@ -748,20 +950,30 @@ waitForFirebaseReady() {
       
       this._usernameModalPromise = new Promise((resolve) => {
         console.log('🔧 Creating username modal...');
-        const body = this.openModal(t('what_should_we_call_you'), `
-          <div style="min-width:280px">
-            <label for="usernameInput" style="font-weight:600">${t('your_handle')}</label>
-            <input id="usernameInput" type="text" autocomplete="nickname" value="${suggest.replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]))}" style="display:block;width:100%;padding:10px;border:1px solid var(--color-border);border-radius:8px;margin-top:8px">
-            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-              <button id="uCancel" class="btn secondary" type="button" style="pointer-events: auto !important;">Skip</button>
-              <button id="uSave" class="btn primary" type="button" style="pointer-events: auto !important;">Save</button>
+        const body = this.openModal('What do I call you?', `
+          <div style="min-width:320px; max-width:480px;">
+            <p style="margin:0 0 16px; color:#666; font-size:14px;">Choose a name to personalize your experience</p>
+            <input id="usernameInput" type="text" autocomplete="nickname" placeholder="Enter your name" value="${suggest.replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]))}" style="display:block;width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;margin-bottom:16px;font-size:16px;">
+            <div style="display:flex;gap:12px;justify-content:flex-end;">
+              <button id="uCancel" class="btn secondary" type="button" style="padding:8px 16px; border:1px solid #ddd; background:#f5f5f5; color:#333; border-radius:6px; cursor:pointer;">Skip</button>
+              <button id="uSave" class="btn primary" type="button" style="padding:8px 16px; background:#1976d2; color:white; border:none; border-radius:6px; cursor:pointer;">Save</button>
             </div>
           </div>
         `, 'username-modal');
 
         // tag so it's distinct from login modal
         const wrap = document.querySelector('.modal-backdrop[data-testid="username-modal"]');
-        if (wrap) wrap.setAttribute('data-modal','username');
+        if (wrap) {
+          wrap.setAttribute('data-modal','username');
+          
+          // Add click outside to close
+          wrap.addEventListener('click', (e) => {
+            if (e.target === wrap) {
+              console.log('🔧 Modal backdrop clicked, closing');
+              done(null);
+            }
+          });
+        }
 
         let isDone = false;
         const done = (v) => { 
@@ -771,7 +983,13 @@ waitForFirebaseReady() {
           }
           isDone = true;
           console.log('🔧 Username modal closing with value:', v);
+          
+          // Close the modal properly
+          this.closeModal();
+          
+          // Also remove any remaining username modals
           document.querySelectorAll('.modal-backdrop[data-modal="username"]').forEach(n=>n.remove()); 
+          
           this._usernameModalPromise = null; // Clear the promise
           resolve(v); 
         };
@@ -789,7 +1007,9 @@ waitForFirebaseReady() {
               e.preventDefault();
               e.stopPropagation();
               console.log('🔧 Cancel button clicked');
-              done(null);
+              if (!isDone) {
+                done(null);
+              }
             });
           }
           
@@ -799,16 +1019,32 @@ waitForFirebaseReady() {
             save._clickHandler = (e) => {
               e.preventDefault();
               e.stopPropagation();
-              const value = input?.value || '';
+              const value = input?.value?.trim() || '';
               console.log('🔧 Save button clicked with value:', value);
-              console.log('🔧 Save button event details:', { 
-                target: e.target, 
-                currentTarget: e.currentTarget,
-                button: save,
-                input: input,
-                inputValue: input?.value
-              });
-              done(value.trim());
+              
+              // Validate input
+              if (value.length < 1) {
+                console.log('🔧 Username too short, showing error');
+                const errorEl = document.querySelector('[data-auth-msg]');
+                if (errorEl) {
+                  errorEl.textContent = 'Please enter a name or click Skip';
+                }
+                return;
+              }
+              
+              if (value.length > 50) {
+                console.log('🔧 Username too long, showing error');
+                const errorEl = document.querySelector('[data-auth-msg]');
+                if (errorEl) {
+                  errorEl.textContent = 'Name must be 50 characters or less';
+                }
+                return;
+              }
+              
+              console.log('🔧 Username validated, closing modal');
+              if (!isDone) {
+                done(value);
+              }
             };
             save.addEventListener('click', save._clickHandler);
             console.log('🔧 Save button event listener attached');
@@ -823,7 +1059,9 @@ waitForFirebaseReady() {
                 e.stopPropagation();
                 const value = input.value || '';
                 console.log('🔧 Enter key pressed with value:', value);
-                done(value.trim());
+                if (!isDone) {
+                  done(value.trim());
+                }
               }
             });
           }
@@ -956,6 +1194,26 @@ waitForFirebaseReady() {
       }
 
       return wrap.querySelector('[data-modal-body]');
+    },
+
+    closeModal() {
+      console.log('🔧 closeModal called');
+      
+      // Close any modal backdrop
+      const modals = document.querySelectorAll('.modal-backdrop');
+      modals.forEach(modal => {
+        if (modal && modal.parentNode) {
+          console.log('🔧 Removing modal:', modal.id || modal.className);
+          modal.remove();
+        }
+      });
+      
+      // Clear any global modal references
+      if (window.__currentAuthModal) {
+        window.__currentAuthModal = null;
+      }
+      
+      console.log('🔧 Modal closed');
     },
 
     async runMigration() {
@@ -1133,11 +1391,11 @@ waitForFirebaseReady() {
       }));
       this.previousTab = tab;
       
-      // Clear search when switching tabs (except when staying on home)
+      // Clear search when switching tabs (including when switching to home)
       if (window.SearchModule && typeof window.SearchModule.getSearchState === 'function') {
         try {
           const searchState = window.SearchModule.getSearchState();
-          if (searchState.isSearching && tab !== 'home') {
+          if (searchState.isSearching) {
             console.log('🧹 Clearing search due to tab switch to:', tab);
             window.SearchModule.clearSearch();
           }
@@ -1167,7 +1425,9 @@ waitForFirebaseReady() {
       const TAB_IDS = ['home','watching','wishlist','watched','discover','settings'];
       const ids = TAB_IDS;
       let isSearching = false;
-      if (window.SearchModule && typeof window.SearchModule.getSearchState === 'function') {
+      if (this.isSearching !== undefined) {
+        isSearching = this.isSearching;
+      } else if (window.SearchModule && typeof window.SearchModule.getSearchState === 'function') {
         try {
           const searchState = window.SearchModule.getSearchState();
           isSearching = searchState.isSearching;
@@ -1441,57 +1701,8 @@ waitForFirebaseReady() {
         });
       }
 
-      // Account button - ensure only one event listener
-      const accountBtn = document.getElementById('accountButton');
-      if (accountBtn) {
-        // Remove any existing event listeners to prevent conflicts
-        const newAccountBtn = accountBtn.cloneNode(true);
-        accountBtn.parentNode.replaceChild(newAccountBtn, accountBtn);
-        
-        newAccountBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const currentUser = this.currentUser || window.currentUser;
-          console.log('🔐 Account button clicked, currentUser:', currentUser);
-          
-          if (currentUser) {
-            // User is signed in, show sign out modal
-            console.log('👤 User signed in, showing sign out modal');
-            if (typeof this.showSignOutModal === 'function') {
-              this.showSignOutModal();
-            } else {
-              console.error('❌ showSignOutModal function not available');
-            }
-          } else if (this.firebaseInitialized) {
-            // User is not signed in, show sign in modal
-            console.log('🔑 User not signed in, showing sign in modal');
-            // Use FlickletAuth system for sign-in
-            if (window.FlickletAuth && typeof window.FlickletAuth.loginWithGoogle === 'function') {
-              this.showSignInModal();
-            } else {
-              console.error('❌ FlickletAuth not available, retrying in 500ms...');
-              // Retry after a short delay in case auth.js is still loading
-              setTimeout(() => {
-                if (window.FlickletAuth && typeof window.FlickletAuth.loginWithGoogle === 'function') {
-                  console.log('✅ FlickletAuth now available, showing sign in modal');
-                  this.showSignInModal();
-                } else {
-                  console.error('❌ FlickletAuth still not available after retry');
-                  // Fallback: show a simple error message
-                  this.showNotification(t('auth_system_loading'), 'error');
-                }
-              }, 500);
-            }
-          } else {
-            // Firebase not available, show offline mode message
-            console.log('🔒 Firebase not available, showing offline mode message');
-            this.showNotification('Authentication is currently unavailable. Your data is stored locally and will sync when Firebase is available.', 'info');
-          }
-        });
-        console.log('✅ Account button event listener set up (conflict-free)');
-      } else {
-        console.warn('⚠️ Account button not found');
-      }
+      // Account button is now handled by AuthManager via onclick attribute
+      // No need to set up event listeners here
     },
 
     // Account management
@@ -1567,6 +1778,7 @@ waitForFirebaseReady() {
     },
 
     createSignInModal() {
+      console.log('🔐 Creating sign-in modal...');
       try {
         window.openModal(
           t('sign_in_to_sync'),
@@ -1611,10 +1823,10 @@ waitForFirebaseReady() {
           
           if (emailBtn) {
             emailBtn.addEventListener('click', () => {
-              if (typeof window.emailLogin === 'function') {
-                window.emailLogin();
+              if (window.FlickletAuth && window.FlickletAuth.loginWithEmail) {
+                window.FlickletAuth.loginWithEmail();
               } else {
-                console.error('❌ emailLogin function not available');
+                console.error('❌ FlickletAuth.loginWithEmail not available');
                 this.showNotification(t('email_signin_unavailable'), 'error');
               }
             });
@@ -2045,6 +2257,31 @@ waitForFirebaseReady() {
   
   // Expose UserViewModel globally for verification
   window.UserViewModel = UserViewModel;
+
+  // Ensure user function for auth guards
+  window.ensureUser = async function() {
+    // Wait for Firebase to be ready
+    if (!window.firebase || !window.firebaseAuth) {
+      console.log('[ensureUser] Waiting for Firebase...');
+      await new Promise(resolve => {
+        const checkFirebase = () => {
+          if (window.firebase && window.firebaseAuth) {
+            resolve();
+          } else {
+            setTimeout(checkFirebase, 100);
+          }
+        };
+        checkFirebase();
+      });
+    }
+    
+    const user = window.firebaseAuth.currentUser;
+    if (!user) {
+      throw new Error('No authenticated user');
+    }
+    
+    return user;
+  };
 
   // Global functions for HTML onclick handlers
   window.saveDisplayName = async function() {

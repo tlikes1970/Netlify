@@ -39,6 +39,42 @@
     storage.set("flicklet-data", data);
   }
 
+  // Helper: clear user data on sign out
+  function clearUserData() {
+    try {
+      // Clear localStorage data
+      localStorage.removeItem("flicklet-data");
+      localStorage.removeItem("tvMovieTrackerData");
+      localStorage.removeItem("flicklet_lists");
+      localStorage.removeItem("flicklet_notes");
+      localStorage.removeItem("flicklet_prefs");
+      
+      // Reset appData to empty state
+      const emptyData = {
+        tv: { watching: [], wishlist: [], watched: [] },
+        movies: { watching: [], wishlist: [], watched: [] },
+        settings: {}
+      };
+      
+      // Update window.appData if it exists
+      if (window.appData) {
+        window.appData.tv = emptyData.tv;
+        window.appData.movies = emptyData.movies;
+        window.appData.settings = emptyData.settings;
+      }
+      
+      // Write empty data to localStorage
+      writeLocalAppData(emptyData);
+      
+      // Update UI
+      document.dispatchEvent(new CustomEvent("app:data:ready", { detail: { source: "cleared" }}));
+      
+      log("User data cleared successfully");
+    } catch (e) {
+      err("Failed to clear user data:", e?.message || e);
+    }
+  }
+
   // Expose a manual loader used by logs you've seen
   window.loadUserDataAndReplaceCards = async function loadUserDataAndReplaceCards() {
     try {
@@ -89,17 +125,62 @@
         onAuthStateChanged(auth, async (user) => {
           log("auth state:", user ? "signed-in" : "signed-out");
           
-          // Re-enable cloud sync when user signs in
-          if (user && !window.__CLOUD_ENABLED__) {
-            window.__CLOUD_ENABLED__ = true;
-            window.__AUTH_READY__ = true;
-            log("Cloud sync re-enabled for user:", user.uid);
-          }
-          
-          try {
-            await trySync("auth-change");
-          } catch (e) {
-            warn("sync on auth-change failed:", e?.message || e);
+          if (user) {
+            // Re-enable cloud sync when user signs in
+            if (!window.__CLOUD_ENABLED__) {
+              window.__CLOUD_ENABLED__ = true;
+              window.__AUTH_READY__ = true;
+              log("Cloud sync re-enabled for user:", user.uid);
+            }
+            
+            try {
+              await trySync("auth-change");
+              
+              // Trigger UI refresh after data sync
+              setTimeout(() => {
+                if (typeof window.updateUI === 'function') {
+                  log("Triggering UI refresh after auth change");
+                  window.updateUI();
+                }
+                if (typeof window.updateTabCounts === 'function') {
+                  log("Triggering tab counts update after auth change");
+                  window.updateTabCounts();
+                }
+              }, 500);
+            } catch (e) {
+              warn("sync on auth-change failed:", e?.message || e);
+            }
+          } else {
+            // Check if this is a redirect sign-in in progress
+            const isRedirectInProgress = window.location.search.includes('auth') || 
+                                       window.location.hash.includes('auth') ||
+                                       document.referrer.includes('accounts.google.com') ||
+                                       document.referrer.includes('google.com');
+            
+            // Check if sign-in was actually attempted
+            const signInAttempted = window.__SIGN_IN_ATTEMPTED__;
+            
+            log("🔍 Checking redirect status:", {
+              search: window.location.search,
+              hash: window.location.hash,
+              referrer: document.referrer,
+              isRedirectInProgress,
+              signInAttempted
+            });
+            
+            if (isRedirectInProgress) {
+              log("⏳ Auth state change during redirect - waiting for redirect result");
+              // Don't clear data during redirect, wait for redirect result
+              return;
+            }
+            
+            // Only clear data if sign-in was actually attempted
+            if (signInAttempted) {
+              log("🧹 User signed out after sign-in attempt - clearing local data");
+              clearUserData();
+            } else {
+              log("ℹ️ No sign-in attempt detected - keeping existing data");
+            }
           }
         });
       } else {
@@ -124,10 +205,54 @@
             onAuthStateChanged(auth, async (user) => {
               log("auth state:", user ? "signed-in" : "signed-out");
               
-              try {
-                await trySync("auth-change");
-              } catch (e) {
-                warn("sync on auth-change failed:", e?.message || e);
+              if (user) {
+                try {
+                  await trySync("auth-change");
+                  
+                  // Trigger UI refresh after data sync
+                  setTimeout(() => {
+                    if (typeof window.updateUI === 'function') {
+                      log("Triggering UI refresh after auth change (ready event)");
+                      window.updateUI();
+                    }
+                    if (typeof window.updateTabCounts === 'function') {
+                      log("Triggering tab counts update after auth change (ready event)");
+                      window.updateTabCounts();
+                    }
+                  }, 500);
+                } catch (e) {
+                  warn("sync on auth-change failed:", e?.message || e);
+                }
+              } else {
+                // Check if this is a redirect sign-in in progress
+                const isRedirectInProgress = window.location.search.includes('auth') || 
+                                           window.location.hash.includes('auth') ||
+                                           document.referrer.includes('accounts.google.com') ||
+                                           document.referrer.includes('google.com');
+                
+                // Check if sign-in was actually attempted
+                const signInAttempted = window.__SIGN_IN_ATTEMPTED__;
+                
+                log("🔍 Checking redirect status (ready event):", {
+                  search: window.location.search,
+                  hash: window.location.hash,
+                  referrer: document.referrer,
+                  isRedirectInProgress,
+                  signInAttempted
+                });
+                
+                if (isRedirectInProgress) {
+                  log("⏳ Auth state change during redirect (ready event) - waiting for redirect result");
+                  return;
+                }
+                
+                // Only clear data if sign-in was actually attempted
+                if (signInAttempted) {
+                  log("🧹 User signed out after sign-in attempt (ready event) - clearing local data");
+                  clearUserData();
+                } else {
+                  log("ℹ️ No sign-in attempt detected (ready event) - keeping existing data");
+                }
               }
             });
             
@@ -148,16 +273,58 @@
           onAuthStateChanged(window.firebaseAuth, async (user) => {
             log("fallback auth state:", user ? "signed-in" : "signed-out");
             
-            // Re-enable cloud sync when user signs in
             if (user) {
+              // Re-enable cloud sync when user signs in
               window.__CLOUD_ENABLED__ = true;
               window.__AUTH_READY__ = true;
               log("Cloud sync enabled for user:", user.uid);
               
               try {
                 await trySync("auth-change-fallback");
+                
+                // Trigger UI refresh after data sync
+                setTimeout(() => {
+                  if (typeof window.updateUI === 'function') {
+                    log("Triggering UI refresh after auth change (fallback)");
+                    window.updateUI();
+                  }
+                  if (typeof window.updateTabCounts === 'function') {
+                    log("Triggering tab counts update after auth change (fallback)");
+                    window.updateTabCounts();
+                  }
+                }, 500);
               } catch (e) {
                 warn("fallback sync failed:", e?.message || e);
+              }
+            } else {
+              // Check if this is a redirect sign-in in progress
+              const isRedirectInProgress = window.location.search.includes('auth') || 
+                                         window.location.hash.includes('auth') ||
+                                         document.referrer.includes('accounts.google.com') ||
+                                         document.referrer.includes('google.com');
+              
+              // Check if sign-in was actually attempted
+              const signInAttempted = window.__SIGN_IN_ATTEMPTED__;
+              
+              log("🔍 Checking redirect status (fallback):", {
+                search: window.location.search,
+                hash: window.location.hash,
+                referrer: document.referrer,
+                isRedirectInProgress,
+                signInAttempted
+              });
+              
+              if (isRedirectInProgress) {
+                log("⏳ Auth state change during redirect (fallback) - waiting for redirect result");
+                return;
+              }
+              
+              // Only clear data if sign-in was actually attempted
+              if (signInAttempted) {
+                log("🧹 User signed out after sign-in attempt (fallback) - clearing local data");
+                clearUserData();
+              } else {
+                log("ℹ️ No sign-in attempt detected (fallback) - keeping existing data");
               }
             }
           });

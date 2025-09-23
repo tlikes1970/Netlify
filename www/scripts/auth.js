@@ -128,10 +128,13 @@
       });
       
       // Update account button immediately with the user data we have
-      const accountBtn = document.getElementById('accountBtn');
+      const accountBtn = document.getElementById('accountButton');
       if (accountBtn && result.user) {
         const displayName = result.user.displayName || result.user.email?.split('@')[0] || 'User';
-        accountBtn.innerHTML = `👤 ${displayName}`;
+        const accountButtonLabel = accountBtn.querySelector('#accountButtonLabel');
+        if (accountButtonLabel) {
+          accountButtonLabel.textContent = displayName;
+        }
         accountBtn.title = `Signed in as ${result.user.email}. Click to sign out.`;
         console.log('🔍 Updated account button directly with user data:', displayName);
       }
@@ -151,14 +154,8 @@
         Notify.info('Signed in successfully');
       }
       
-      // Trigger username prompt after successful Google sign-in
-      setTimeout(() => {
-        if (window.FlickletApp && window.FlickletApp.promptForUsernameOnce) {
-          const suggestedName = result.user.displayName || result.user.email?.split('@')[0] || 'User';
-          console.log('🔐 Triggering username prompt with suggestion:', suggestedName);
-          window.FlickletApp.promptForUsernameOnce(suggestedName);
-        }
-      }, 1000); // Small delay to ensure UI is ready
+      // DEPRECATED: Username prompt now handled by app layer post-auth pipeline
+      console.warn('[auth] DEPRECATED: Username prompt trigger - handled by app layer');
     } catch (e){
       console.error('[auth] google login failed', e);
       let errorMessage = 'Google sign-in failed. ';
@@ -203,6 +200,17 @@
       closeAuthModal();
       
       // Update account button immediately
+      const accountBtn = document.getElementById('accountButton');
+      if (accountBtn && result.user) {
+        const displayName = result.user.displayName || result.user.email?.split('@')[0] || 'User';
+        const accountButtonLabel = accountBtn.querySelector('#accountButtonLabel');
+        if (accountButtonLabel) {
+          accountButtonLabel.textContent = displayName;
+        }
+        accountBtn.title = `Signed in as ${result.user.email}. Click to sign out.`;
+        console.log('🔍 Updated account button directly with user data:', displayName);
+      }
+      
       if (window.FlickletApp && window.FlickletApp.updateAccountButton) {
         console.log('🔍 Updating account button after Apple sign-in');
         window.FlickletApp.updateAccountButton();
@@ -258,6 +266,17 @@
       closeAuthModal();
       
       // Update account button immediately
+      const accountBtn = document.getElementById('accountButton');
+      if (accountBtn && result.user) {
+        const displayName = result.user.displayName || result.user.email?.split('@')[0] || 'User';
+        const accountButtonLabel = accountBtn.querySelector('#accountButtonLabel');
+        if (accountButtonLabel) {
+          accountButtonLabel.textContent = displayName;
+        }
+        accountBtn.title = `Signed in as ${result.user.email}. Click to sign out.`;
+        console.log('🔍 Updated account button directly with user data:', displayName);
+      }
+      
       if (window.FlickletApp && window.FlickletApp.updateAccountButton) {
         console.log('🔍 Updating account button after Email sign-in');
         window.FlickletApp.updateAccountButton();
@@ -392,10 +411,40 @@
     }, { once: true });
   }
 
-  // Export a single API for the rest of the app
+  // Export a single API for the rest of the app - delegate to AuthManager
   window.FlickletAuth = {
-    loginWithGoogle, loginWithApple, loginWithEmail,
-    showInlineError
+    loginWithGoogle: () => {
+      console.log('[auth] FlickletAuth.loginWithGoogle() → delegating to AuthManager');
+      if (window.AuthManager) {
+        window.AuthManager.startLogin(window.AuthManager.PROVIDERS.GOOGLE);
+      } else {
+        console.error('[auth] AuthManager not available');
+      }
+    },
+    loginWithApple: () => {
+      console.log('[auth] FlickletAuth.loginWithApple() → delegating to AuthManager');
+      if (window.AuthManager) {
+        window.AuthManager.startLogin(window.AuthManager.PROVIDERS.APPLE);
+      } else {
+        console.error('[auth] AuthManager not available');
+      }
+    },
+    loginWithEmail: () => {
+      console.log('[auth] FlickletAuth.loginWithEmail() → delegating to AuthManager');
+      if (window.AuthManager) {
+        window.AuthManager.startLogin(window.AuthManager.PROVIDERS.EMAIL);
+      } else {
+        console.error('[auth] AuthManager not available');
+      }
+    },
+    showInlineError: (text) => {
+      console.log('[auth] FlickletAuth.showInlineError() → delegating to AuthManager');
+      if (window.AuthManager) {
+        window.AuthManager.showError(text);
+      } else {
+        console.error('[auth] AuthManager not available');
+      }
+    }
   };
 
   console.log('🔐 Auth.js loaded - enhanced modal protection and login functions available');

@@ -46,6 +46,26 @@
   border: 2px dashed var(--border);
 }
 
+/* Left Snark Styling */
+.left-snark {
+  font-size: 12px;
+  color: var(--text-secondary, #666);
+  font-style: italic;
+  text-align: left;
+  margin: 4px 0;
+  pointer-events: none;
+  z-index: auto;
+}
+
+/* Provider Modal Styling */
+.modal-backdrop {
+  z-index: 10000 !important;
+}
+
+.modal-backdrop .modal-content {
+  z-index: 10001 !important;
+}
+
 /* Feedback Card */
 .feedback-card {
   background: var(--card);
@@ -939,6 +959,265 @@ body.mardi {
   background: var(--border);
 }
 
+/* === UNIFIED CARD SYSTEM ===
+   Unified card component for Home and Curated sections
+   Desktop: 184px width, 276px height (2:3 aspect ratio)
+   Mobile: 64px width, 96px height (2:3 aspect ratio)
+   Features: 3 large labeled buttons, skeleton loader, branded placeholder
+*/
+
+/* Unified Card Base Styles */
+.unified-card {
+  flex: 0 0 var(--home-card-width-desktop) !important;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  display: flex !important;
+  flex-direction: column !important;
+  height: auto !important;
+  width: var(--home-card-width-desktop) !important;
+}
+
+.unified-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Poster Area */
+.unified-card-poster {
+  width: var(--home-card-width-desktop) !important;
+  height: var(--home-card-height-desktop) !important;
+  background: var(--border);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.unified-card-poster-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.unified-card-poster-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Skeleton Loader */
+.unified-card-poster-skeleton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Branded Placeholder */
+.unified-card-poster-brand {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  color: var(--text-secondary);
+  z-index: 2;
+}
+
+.unified-card-poster-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Action Buttons */
+.unified-card-actions {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  padding: 12px;
+}
+
+.unified-card:hover .unified-card-actions {
+  opacity: 1;
+}
+
+.unified-card-action-btn {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 120px;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.unified-card-action-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.unified-card-action-btn:active {
+  transform: translateY(0);
+}
+
+.unified-card-action-icon {
+  font-size: 0.9rem;
+}
+
+.unified-card-action-label {
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+/* Content Area */
+.unified-card-content {
+  padding: 8px 6px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+}
+
+.unified-card-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 2px 0;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-align: center;
+}
+
+.unified-card-subtitle {
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+  margin: 0 0 4px 0;
+  line-height: 1.0;
+  text-align: center;
+}
+
+.unified-card-rating {
+  font-size: 0.6rem;
+  color: var(--accent);
+  text-align: center;
+  margin: 0;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  .unified-card {
+    width: var(--home-card-width-mobile) !important;
+    max-width: var(--home-card-width-mobile) !important;
+    min-width: var(--home-card-width-mobile) !important;
+  }
+  
+  .unified-card-poster {
+    width: var(--home-card-width-mobile) !important;
+    height: var(--home-card-height-mobile) !important;
+  }
+  
+  .unified-card-actions {
+    padding: 8px;
+    gap: 6px;
+  }
+  
+  .unified-card-action-btn {
+    padding: 6px 8px;
+    font-size: 0.65rem;
+    min-width: 80px;
+  }
+  
+  .unified-card-action-label {
+    font-size: 0.6rem;
+  }
+  
+  .unified-card-title {
+    font-size: 0.65rem;
+  }
+  
+  .unified-card-subtitle {
+    font-size: 0.55rem;
+  }
+  
+  .unified-card-rating {
+    font-size: 0.55rem;
+  }
+}
+
+/* Dark Mode Adjustments */
+.dark-mode .unified-card {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+.dark-mode .unified-card-poster {
+  background: var(--border);
+}
+
+.dark-mode .unified-card-poster-placeholder {
+  background: var(--border);
+}
+
+.dark-mode .unified-card-actions {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.dark-mode .unified-card-action-btn {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+}
+
+.dark-mode .unified-card-action-btn:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
 /* === Currently Watching (STANDARD HOME PAGE CARD SIZE) ===
    This is the standard card size for all home page sections.
    Desktop: 184px width, 276px height (2:3 aspect ratio)
@@ -1728,6 +2007,16 @@ body.mardi {
   border-radius: 10px;
 }
 .header-right > * { white-space: nowrap; }
+
+/* Account Context Styling */
+.account-context {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #666);
+  text-align: center;
+  margin-bottom: 2px;
+  min-height: 1em;
+  opacity: 0.8;
+}
 
 /* Home section visibility is now handled by tab switching system */
 
@@ -2778,9 +3067,44 @@ body.mardi {
   object-fit: cover;
 }
 
+.flickword-hero-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 200px;
+  height: 120px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.flickword-hero-icon {
+  font-size: 2.5rem;
+  margin-bottom: 8px;
+}
+
+.flickword-hero-text {
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
 @media (max-width: 768px) {
-  .flickword-hero-image {
+  .flickword-hero-image,
+  .flickword-hero-placeholder {
     max-width: 150px;
+    height: 90px;
+  }
+  
+  .flickword-hero-icon {
+    font-size: 2rem;
+  }
+  
+  .flickword-hero-text {
+    font-size: 0.9rem;
   }
 }
 

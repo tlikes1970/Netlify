@@ -169,6 +169,119 @@
     }
   };
 
+  // Modal functionality
+  function openModal(title, html, testId = "generic-modal") {
+    // Remove any existing modals
+    document.querySelectorAll('.modal-backdrop').forEach(modal => modal.remove());
+    
+    // Create modal backdrop
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.setAttribute('data-modal', testId);
+    backdrop.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    `;
+    
+    // Create modal content
+    const modal = document.createElement('div');
+    modal.className = 'modal-content';
+    modal.style.cssText = `
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    `;
+    
+    // Add title
+    if (title) {
+      const titleEl = document.createElement('h2');
+      titleEl.textContent = title;
+      titleEl.style.cssText = `
+        margin: 0 0 15px 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+      `;
+      modal.appendChild(titleEl);
+    }
+    
+    // Add content
+    if (html) {
+      if (typeof html === 'string') {
+        modal.innerHTML += html;
+      } else {
+        modal.appendChild(html);
+      }
+    }
+    
+    // Add close button
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText = `
+      margin-top: 15px;
+      padding: 8px 16px;
+      background: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    `;
+    closeBtn.addEventListener('click', () => {
+      backdrop.remove();
+    });
+    modal.appendChild(closeBtn);
+    
+    // Add to DOM
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+    
+    // Animate in
+    requestAnimationFrame(() => {
+      backdrop.style.opacity = '1';
+      modal.style.transform = 'scale(1)';
+    });
+    
+    // Close on backdrop click
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) {
+        backdrop.remove();
+      }
+    });
+    
+    // Close on Escape key
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        backdrop.remove();
+        document.removeEventListener('keydown', handleEscape);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    
+    return backdrop;
+  }
+
+  // Export modal API
+  window.openModal = openModal;
+  window.dispatchEvent(new Event('modal-api-ready'));
+
 })();
 
 // Initialize app functionality

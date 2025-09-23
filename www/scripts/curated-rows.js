@@ -58,53 +58,111 @@ function initializeCurated() {
     // Render items for this section
     if (section.items && section.items.length > 0) {
       section.items.forEach(item => {
-        if (USE_CARD && window.Card) {
+        if (USE_CARD && window.Card && window.createCardData) {
+          // Use unified card component
+          const cardData = window.createCardData(item, 'tmdb', 'curated');
           const card = window.Card({
-            variant: 'poster',
-            id: item.id,
-            title: item.title,
-            posterUrl: item.posterPath ? `https://image.tmdb.org/t/p/w200${item.posterPath}` : null,
-            subtitle: item.year ? `${item.year} • ${item.mediaType === 'tv' ? 'TV Show' : 'Movie'}` : (item.mediaType === 'tv' ? 'TV Show' : 'Movie'),
-            rating: item.rating,
-            onOpenDetails: () => {
-              // Use canonical detail link pattern with correct media type
-              if (window.openTMDBLink) {
-                window.openTMDBLink(item.id, item.mediaType || 'movie');
-              }
-            }
+            variant: 'unified',
+            ...cardData
           });
           itemsContainer.appendChild(card);
         } else {
           // Fallback to simple item display with click handler
           const itemEl = document.createElement('div');
-          itemEl.className = 'curated-item';
+          itemEl.className = 'unified-card';
           itemEl.setAttribute('tabindex', '0');
           itemEl.setAttribute('role', 'button');
           itemEl.setAttribute('aria-label', `View details for ${item.title}`);
           
           const posterUrl = item.posterPath ? 
             `https://image.tmdb.org/t/p/w200${item.posterPath}` : 
-            '/icons/icon-192.png';
+            null;
+          
+          const year = item.year || '';
+          const mediaType = item.mediaType || 'movie';
+          
           itemEl.innerHTML = `
-            <img src="${posterUrl}" alt="${item.title}" onerror="this.src='/icons/icon-192.png'" />
-            <span>${item.title}</span>
+            <div class="unified-card-poster" role="button" tabindex="0" aria-label="${item.title}">
+              <div class="unified-card-poster-container">
+                ${posterUrl ? 
+                  `<img src="${posterUrl}" alt="${item.title} poster" loading="lazy" class="unified-card-poster-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
+                  ''
+                }
+                <div class="unified-card-poster-placeholder" style="display: ${posterUrl ? 'none' : 'flex'};">
+                  <div class="unified-card-poster-skeleton"></div>
+                  <div class="unified-card-poster-brand">🎬</div>
+                </div>
+              </div>
+              <div class="unified-card-actions">
+                <button class="unified-card-action-btn" 
+                        data-action="mark-watched" 
+                        data-id="${item.id}" 
+                        aria-label="Mark as Watched"
+                        title="Mark as Watched">
+                  <span class="unified-card-action-icon">✅</span>
+                  <span class="unified-card-action-label">Mark Watched</span>
+                </button>
+                <button class="unified-card-action-btn" 
+                        data-action="want-to-watch" 
+                        data-id="${item.id}" 
+                        aria-label="Add to Want to Watch"
+                        title="Add to Want to Watch">
+                  <span class="unified-card-action-icon">📖</span>
+                  <span class="unified-card-action-label">Want to Watch</span>
+                </button>
+                <button class="unified-card-action-btn" 
+                        data-action="remove" 
+                        data-id="${item.id}" 
+                        aria-label="Remove from List"
+                        title="Remove from List">
+                  <span class="unified-card-action-icon">🗑️</span>
+                  <span class="unified-card-action-label">Remove</span>
+                </button>
+              </div>
+            </div>
+            <div class="unified-card-content">
+              <h3 class="unified-card-title">${item.title}</h3>
+              <div class="unified-card-subtitle">${year ? `(${year}) • ${mediaType === 'tv' ? 'TV Show' : 'Movie'}` : (mediaType === 'tv' ? 'TV Show' : 'Movie')}</div>
+            </div>
           `;
           
-          // Add click handler for detail navigation
-          itemEl.addEventListener('click', () => {
-            if (window.openTMDBLink) {
-              window.openTMDBLink(item.id, item.mediaType || 'movie');
-            }
-          });
-          
-          // Add keyboard support
-          itemEl.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              if (window.openTMDBLink) {
-                window.openTMDBLink(item.id, item.mediaType || 'movie');
+          // Add click handler for poster
+          const poster = itemEl.querySelector('.unified-card-poster');
+          if (poster && window.openTMDBLink) {
+            poster.addEventListener('click', (e) => {
+              // Don't trigger if clicking on action buttons
+              if (!e.target.closest('.unified-card-action-btn')) {
+                window.openTMDBLink(item.id, mediaType);
               }
-            }
+            });
+          }
+          
+          // Add action button handlers
+          const actionButtons = itemEl.querySelectorAll('.unified-card-action-btn');
+          actionButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const action = button.dataset.action;
+              const itemId = button.dataset.id;
+              
+              switch (action) {
+                case 'mark-watched':
+                  if (window.moveItem) {
+                    window.moveItem(Number(itemId), 'watched');
+                  }
+                  break;
+                case 'want-to-watch':
+                  if (window.moveItem) {
+                    window.moveItem(Number(itemId), 'wishlist');
+                  }
+                  break;
+                case 'remove':
+                  if (window.removeItemFromCurrentList) {
+                    window.removeItemFromCurrentList(Number(itemId));
+                  }
+                  break;
+              }
+            });
           });
           
           itemsContainer.appendChild(itemEl);
@@ -112,6 +170,14 @@ function initializeCurated() {
       });
     }
   });
+  
+  // Dispatch event to notify that curated cards have been rendered
+  window.dispatchEvent(new CustomEvent('cards:rendered', { 
+    detail: { 
+      count: limitedSections.reduce((total, section) => total + (section.items?.length || 0), 0),
+      section: 'curated' 
+    } 
+  }));
 }
 
 // Export init function for idle import

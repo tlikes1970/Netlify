@@ -49,14 +49,24 @@
   }
 
   /**
-   * Create a compact preview card for home screen carousels
+   * Create a unified card for home screen carousels
    * @param {Object} item - Item data
    * @param {string} sectionHint - Section type (watching, wishlist, etc.)
-   * @returns {HTMLElement} Preview card element
+   * @returns {HTMLElement} Unified card element
    */
   function createPreviewCard(item, sectionHint = 'watching') {
+    // Use the unified Card component if available
+    if (window.Card && window.createCardData) {
+      const cardData = window.createCardData(item, 'tmdb', 'home');
+      return window.Card({
+        variant: 'unified',
+        ...cardData
+      });
+    }
+    
+    // Fallback to simple card if Card component not available
     const card = document.createElement('div');
-    card.className = 'preview-card';
+    card.className = 'unified-card';
     card.dataset.id = item.id || item.tmdb_id || item.tmdbId;
     
     // Extract data
@@ -64,43 +74,97 @@
     const year = item.release_date ? new Date(item.release_date).getFullYear() : 
                  item.first_air_date ? new Date(item.first_air_date).getFullYear() : 
                  item.year || '';
-    const mediaType = item.media_type || item.mediaType || (item.first_air_date ? 'TV' : 'Movie');
+    const mediaType = item.media_type || item.mediaType || (item.first_air_date ? 'tv' : 'movie');
     
     // Handle poster URL using TMDB utilities if available
     const posterUrl = item.posterUrl || item.poster_src || 
                      (item.poster_path && window.getPosterUrl ? window.getPosterUrl(item.poster_path, 'w342') : 
                       item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null);
     
-    // Build preview card HTML
+    // Build unified card HTML
     card.innerHTML = `
-      <div class="preview-card-poster" role="button" tabindex="0" aria-label="${title}">
-        ${posterUrl ? 
-          `<img src="${posterUrl}" alt="${title} poster" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
-          ''
-        }
-        <div class="preview-card-poster-placeholder" style="display: ${posterUrl ? 'none' : 'flex'};">
-          🎬
+      <div class="unified-card-poster" role="button" tabindex="0" aria-label="${title}">
+        <div class="unified-card-poster-container">
+          ${posterUrl ? 
+            `<img src="${posterUrl}" alt="${title} poster" loading="lazy" class="unified-card-poster-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
+            ''
+          }
+          <div class="unified-card-poster-placeholder" style="display: ${posterUrl ? 'none' : 'flex'};">
+            <div class="unified-card-poster-skeleton"></div>
+            <div class="unified-card-poster-brand">🎬</div>
+          </div>
         </div>
-        <div class="preview-card-status">${sectionHint.charAt(0).toUpperCase() + sectionHint.slice(1)}</div>
-        <div class="preview-card-actions">
-          <button class="preview-action-btn" title="Move to Watched" onclick="window.moveItem && window.moveItem(${item.id || item.tmdb_id}, 'watched')">✅</button>
-          <button class="preview-action-btn" title="Move to Wishlist" onclick="window.moveItem && window.moveItem(${item.id || item.tmdb_id}, 'wishlist')">📖</button>
-          <button class="preview-action-btn" title="Remove" onclick="window.removeItemFromCurrentList && window.removeItemFromCurrentList(${item.id || item.tmdb_id})">🗑️</button>
+        <div class="unified-card-actions">
+          <button class="unified-card-action-btn" 
+                  data-action="mark-watched" 
+                  data-id="${item.id || item.tmdb_id}" 
+                  aria-label="Mark as Watched"
+                  title="Mark as Watched">
+            <span class="unified-card-action-icon">✅</span>
+            <span class="unified-card-action-label">Mark Watched</span>
+          </button>
+          <button class="unified-card-action-btn" 
+                  data-action="want-to-watch" 
+                  data-id="${item.id || item.tmdb_id}" 
+                  aria-label="Add to Want to Watch"
+                  title="Add to Want to Watch">
+            <span class="unified-card-action-icon">📖</span>
+            <span class="unified-card-action-label">Want to Watch</span>
+          </button>
+          <button class="unified-card-action-btn" 
+                  data-action="remove" 
+                  data-id="${item.id || item.tmdb_id}" 
+                  aria-label="Remove from List"
+                  title="Remove from List">
+            <span class="unified-card-action-icon">🗑️</span>
+            <span class="unified-card-action-label">Remove</span>
+          </button>
         </div>
       </div>
-      <div class="preview-card-content">
-        <h3 class="preview-card-title">${title.toUpperCase()}</h3>
-        <div class="preview-card-year">${year ? `(${year})` : ''} ${mediaType}</div>
+      <div class="unified-card-content">
+        <h3 class="unified-card-title">${title}</h3>
+        <div class="unified-card-subtitle">${year ? `(${year}) • ${mediaType === 'tv' ? 'TV Show' : 'Movie'}` : (mediaType === 'tv' ? 'TV Show' : 'Movie')}</div>
       </div>
     `;
     
     // Add click handler for poster
-    const poster = card.querySelector('.preview-card-poster');
+    const poster = card.querySelector('.unified-card-poster');
     if (poster && window.openTMDBLink) {
-      poster.addEventListener('click', () => {
-        window.openTMDBLink(item.id || item.tmdb_id, item.mediaType || 'movie');
+      poster.addEventListener('click', (e) => {
+        // Don't trigger if clicking on action buttons
+        if (!e.target.closest('.unified-card-action-btn')) {
+          window.openTMDBLink(item.id || item.tmdb_id, mediaType);
+        }
       });
     }
+    
+    // Add action button handlers
+    const actionButtons = card.querySelectorAll('.unified-card-action-btn');
+    actionButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const action = button.dataset.action;
+        const itemId = button.dataset.id;
+        
+        switch (action) {
+          case 'mark-watched':
+            if (window.moveItem) {
+              window.moveItem(Number(itemId), 'watched');
+            }
+            break;
+          case 'want-to-watch':
+            if (window.moveItem) {
+              window.moveItem(Number(itemId), 'wishlist');
+            }
+            break;
+          case 'remove':
+            if (window.removeItemFromCurrentList) {
+              window.removeItemFromCurrentList(Number(itemId));
+            }
+            break;
+        }
+      });
+    });
     
     return card;
   }
