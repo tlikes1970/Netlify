@@ -38,10 +38,10 @@ export class Config {
   loadFromEnvironment() {
     const config = {};
 
-    // Browser environment - try to get from meta tags or window
+    // Browser environment - try to get from window object
     if (typeof document !== "undefined") {
-      const metaKey = document.querySelector('meta[name="tmdb-api-key"]');
-      config.tmdbApiKey = metaKey ? metaKey.getAttribute("content") : "";
+      // No direct API key access - using proxy system
+      config.tmdbApiKey = "";
 
       // Try to get from window object if available
       if (window.ENV) {

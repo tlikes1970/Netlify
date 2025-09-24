@@ -1,9 +1,9 @@
 /**
  * Process: TMDB API Client
- * Purpose: Central TMDB API integration with proper error handling
- * Data Source: TMDB API via tmdb-config.js
+ * Purpose: Central TMDB API integration via secure proxy
+ * Data Source: TMDB API via netlify/functions/tmdb-proxy.js
  * Update Path: Modify API endpoints or add new functions here
- * Dependencies: tmdb-config.js, TMDB_CONFIG
+ * Dependencies: tmdb-proxy.js (Netlify Function)
  */
 
 (function() {
@@ -11,17 +11,43 @@
 
   console.log('🎬 TMDB API client loading...');
 
-  // Ensure TMDB_CONFIG is available
-  if (!window.TMDB_CONFIG) {
-    console.error('❌ TMDB_CONFIG not found. Make sure tmdb-config.js is loaded first.');
-    return;
+  // Proxy configuration
+  const TMDB_PROXY_URL = '/.netlify/functions/tmdb-proxy';
+  
+  // Rate limiting (client-side backup)
+  let requestCount = 0;
+  const MAX_REQUESTS_PER_MINUTE = 30; // Reduced since we have server-side limiting
+  const requestTimes = [];
+
+  function checkRateLimit() {
+    const now = Date.now();
+    const oneMinuteAgo = now - 60000;
+    
+    // Remove old requests
+    while (requestTimes.length > 0 && requestTimes[0] < oneMinuteAgo) {
+      requestTimes.shift();
+    }
+    
+    if (requestTimes.length >= MAX_REQUESTS_PER_MINUTE) {
+      throw new Error('Rate limit exceeded. Please try again later.');
+    }
+    
+    requestTimes.push(now);
   }
 
   // Language helper methods
   function getCurrentLanguage() {
-    // Try LanguageManager first
+    // Try LanguageManager first (if available)
     if (window.LanguageManager && typeof window.LanguageManager.getCurrentLanguage === 'function') {
       return window.LanguageManager.getCurrentLanguage();
+    }
+    
+    // Try direct localStorage access
+    try {
+      const stored = localStorage.getItem('flicklet-language');
+      if (stored) return stored;
+    } catch (error) {
+      console.warn('Failed to get language from localStorage:', error);
     }
     
     // Fallback to appData
@@ -56,66 +82,46 @@
     return langMap[lang] || 'en-US';
   }
 
-  // Central TMDB API client
-  window.tmdbGet = async function tmdbGet(path, params = {}) {
+  // Central TMDB API client via proxy
+  window.tmdbGet = async function tmdbGet(endpoint, params = {}) {
     try {
-      const config = window.TMDB_CONFIG;
-      const apiKey = config.apiKey;
-      
-      if (!apiKey) {
-        console.warn('⚠️ TMDB API key not available');
-        return { results: [], page: 1, total_pages: 0, total_results: 0 };
-      }
-      
-      console.log('🔑 Using TMDB API key:', apiKey.substring(0, 8) + '...');
-
-      const baseUrl = config.baseUrl || 'https://api.themoviedb.org/3';
+      checkRateLimit();
       
       // Get current language from LanguageManager or fallback to appData
-      const currentLang = this.getCurrentLanguage();
-      const tmdbLang = this.mapToTMDBLocale(currentLang);
+      const currentLang = getCurrentLanguage();
+      const tmdbLang = mapToTMDBLocale(currentLang);
       
-      const searchParams = new URLSearchParams({ 
-        ...params, 
-        api_key: apiKey,
-        language: tmdbLang,
-        include_image_language: `${tmdbLang},null`
+      // Build proxy URL
+      const url = new URL(TMDB_PROXY_URL, window.location.origin);
+      url.searchParams.set('path', endpoint);
+      
+      // Add parameters
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          url.searchParams.set(key, String(value));
+        }
       });
       
-      // Ensure proper URL joining with exactly one slash
-      const cleanPath = path.startsWith('/') ? path : `/${path}`;
-      const url = `${baseUrl}${cleanPath}?${searchParams.toString()}`;
+      // Add language parameter
+      url.searchParams.set('language', tmdbLang);
       
-      console.log('🌐 TMDB API request:', url);
-      console.log('🌐 Language parameters:', { currentLang, tmdbLang, include_image_language: `${tmdbLang},null` });
+      console.log(`🔍 TMDB Proxy Request: ${endpoint}`, { ...params, language: tmdbLang });
       
-      const response = await fetch(url);
+      const response = await fetch(url.toString());
       
       if (!response.ok) {
-        console.warn(`⚠️ TMDB API error: ${response.status} ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error(`❌ TMDB Proxy error: ${response.status} - ${errorData.error || 'Unknown error'}`);
         return { results: [], page: 1, total_pages: 0, total_results: 0 };
       }
       
-      // Check if response has content before trying to parse JSON
-      const text = await response.text();
-      if (!text || text.trim() === '') {
-        console.warn('⚠️ TMDB API returned empty response');
-        return { results: [], page: 1, total_pages: 0, total_results: 0 };
-      }
+      const data = await response.json();
+      console.log(`✅ TMDB Proxy Response: ${endpoint} - ${data.results?.length || 0} results`);
       
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (parseError) {
-        console.warn('⚠️ TMDB API returned invalid JSON:', text.substring(0, 100));
-        return { results: [], page: 1, total_pages: 0, total_results: 0 };
-      }
-      
-      console.log('✅ TMDB API response received:', path);
       return data;
       
     } catch (error) {
-      console.error('❌ TMDB API request failed:', error);
+      console.error(`❌ TMDB Proxy request failed: ${endpoint}`, error);
       return { results: [], page: 1, total_pages: 0, total_results: 0 };
     }
   };
@@ -128,28 +134,28 @@
 
   // Search helper
   window.searchTMDB = async function(query, mediaType = 'multi', page = 1) {
-    return await window.tmdbGet('/search/multi', {
+    return await window.tmdbGet('search/multi', {
       query: query,
       page: page,
-      include_adult: false
+      media_type: mediaType
     });
   };
 
   // Trending content helper
-  window.getTrending = async function(mediaType = 'all', timeWindow = 'week', page = 1) {
-    return await window.tmdbGet(`/trending/${mediaType}/${timeWindow}`, {
+  window.getTrending = async function(mediaType = 'all', timeWindow = 'day', page = 1) {
+    return await window.tmdbGet(`trending/${mediaType}/${timeWindow}`, {
       page: page
     });
   };
 
   // Genre list helper
   window.getGenres = async function(mediaType = 'movie') {
-    return await window.tmdbGet(`/genre/${mediaType}/list`);
+    return await window.tmdbGet(`genre/${mediaType}/list`);
   };
 
   // Discover content by genre
   window.discoverByGenre = async function(genreId, mediaType = 'movie', page = 1) {
-    return await window.tmdbGet('/discover/movie', {
+    return await window.tmdbGet(`discover/${mediaType}`, {
       with_genres: genreId,
       page: page,
       sort_by: 'popularity.desc'

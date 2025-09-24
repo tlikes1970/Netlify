@@ -1,48 +1,19 @@
-// tmdb-config.js — secure configuration with environment variable support
+// tmdb-config.js — Legacy compatibility for proxy migration
 (function(){
   'use strict';
   
-  // Get API key from environment variable or meta tag (more secure than hardcoding)
-  const getApiKey = () => {
-    // 1. Check for environment variable (for build processes)
-    if (typeof process !== 'undefined' && process.env && process.env.TMDB_API_KEY) {
-      console.info('[TMDB] Using API key from environment variable');
-      return process.env.TMDB_API_KEY;
-    }
-    
-    // 2. Check for meta tag (for runtime configuration)
-    const metaKey = document.querySelector('meta[name="tmdb-api-key"]')?.content;
-    if (metaKey && metaKey !== 'YOUR_TMDB_API_KEY_HERE') {
-      console.info('[TMDB] Using API key from meta tag');
-      return metaKey;
-    }
-    
-    // 3. Check for window variable (for development)
-    if (window.TMDB_API_KEY && window.TMDB_API_KEY !== 'YOUR_TMDB_API_KEY_HERE') {
-      console.info('[TMDB] Using API key from window variable');
-      return window.TMDB_API_KEY;
-    }
-    
-    // 4. Fallback to production API key
-    console.info('[TMDB] Using production TMDB API key');
-    return 'b7247bb415b50f25b5e35e2566430b96';
-  };
+  console.log('🎬 TMDB Config: Using proxy-based API (no direct API key)');
   
+  // Legacy compatibility - no direct API key exposure
   window.TMDB_CONFIG = window.TMDB_CONFIG || {
-    apiKey: getApiKey(),
-    baseUrl: 'https://api.themoviedb.org/3',
+    apiKey: null, // No direct API key - using proxy
+    baseUrl: 'PROXY_ONLY', // All requests go through proxy
     imgBase: 'https://image.tmdb.org/t/p/'
   };
   
-  // Expose API key for compatibility
-  if (window.TMDB_CONFIG.apiKey) {
-    window.__TMDB_API_KEY__ = window.TMDB_CONFIG.apiKey;
-  }
+  // No API key exposure for security
+  window.__TMDB_API_KEY__ = null;
   
-  console.info('[TMDB] Configuration loaded:', {
-    hasApiKey: !!window.__TMDB_API_KEY__,
-    baseUrl: window.TMDB_CONFIG.baseUrl,
-    isFallbackKey: window.TMDB_CONFIG.apiKey === 'b7247bb415b50f25b5e35e2566430b96'
-  });
+  console.info('[TMDB] Proxy-based configuration loaded - API key secured server-side');
 })();
 

@@ -104,16 +104,12 @@
     try {
       console.log('🎬 Fetching current theatrical releases...');
       
-      // Use existing TMDB config if available
-      const apiKey = window.TMDB_CONFIG?.apiKey || window.__TMDB_API_KEY__ || window.TMDB_API_KEY || 'your-api-key-here';
-      const url = `https://api.themoviedb.org/3/movie/now_playing?api_key=${apiKey}&language=en-US&page=1&region=US`;
-      
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`TMDB API error: ${response.status}`);
-      }
-      
-      const data = await response.json();
+      // Use proxy for API calls
+      const data = await window.tmdbGet('movie/now_playing', {
+        language: 'en-US',
+        page: 1,
+        region: 'US'
+      });
       console.log('🎬 Fetched theatrical releases:', data.results?.length || 0);
       
       return data.results?.slice(0, 8) || []; // Get top 8 movies

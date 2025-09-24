@@ -1134,8 +1134,8 @@ async function loadDiscoverRecommendations() {
     
     // Load popular movies and TV shows
     const [moviesResponse, tvResponse] = await Promise.all([
-      fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&page=1&language=${tmdbLang}`),
-      fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${apiKey}&page=1&language=${tmdbLang}`)
+      window.tmdbGet('movie/popular', { page: 1, language: tmdbLang }),
+      window.tmdbGet('tv/popular', { page: 1, language: tmdbLang })
     ]);
     
     if (!moviesResponse.ok || !tvResponse.ok) {

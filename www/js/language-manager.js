@@ -361,7 +361,7 @@ class LanguageManager {
           const item = appData.tv.watching[i];
           if (item.id) {
             try {
-              const response = await fetch(`https://api.themoviedb.org/3/tv/${item.id}?api_key=${apiKey}&language=${tmdbLang}`);
+              const response = await window.tmdbGet(`tv/${item.id}`, { language: tmdbLang });
               if (response.ok) {
                 const tmdbData = await response.json();
                 // Update only the translatable fields, preserve user data
@@ -387,7 +387,7 @@ class LanguageManager {
           const item = appData.movies.watching[i];
           if (item.id) {
             try {
-              const response = await fetch(`https://api.themoviedb.org/3/movie/${item.id}?api_key=${apiKey}&language=${tmdbLang}`);
+              const response = await window.tmdbGet(`movie/${item.id}`, { language: tmdbLang });
               if (response.ok) {
                 const tmdbData = await response.json();
                 // Update only the translatable fields, preserve user data

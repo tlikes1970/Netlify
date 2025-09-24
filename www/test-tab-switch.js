@@ -56,3 +56,4 @@ if (window.FlickletApp && window.FlickletApp.switchToTab) {
 } else {
   console.error('❌ FlickletApp.switchToTab not available');
 }
+

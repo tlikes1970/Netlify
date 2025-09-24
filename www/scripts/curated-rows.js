@@ -23,29 +23,25 @@ async function loadDynamicContent(section, sectionIndex) {
       return [];
     }
     
-    // Get API key
-    const apiKey = window.__TMDB_API_KEY__ || window.TMDB_CONFIG?.apiKey;
-    if (!apiKey) {
-      console.error('🎯 TMDB API key not available');
-      return [];
-    }
-    
     // Get current language
     const currentLang = window.appData?.settings?.lang || 'en';
     const tmdbLang = currentLang === 'es' ? 'es-ES' : 'en-US';
     
-    // Load both movies and TV shows for this genre
-    const [moviesResponse, tvResponse] = await Promise.all([
-      fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genre.movie}&sort_by=popularity.desc&page=1&language=${tmdbLang}`),
-      fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&with_genres=${genre.tv}&sort_by=popularity.desc&page=1&language=${tmdbLang}`)
+    // Use proxy for API calls
+    const [moviesData, tvData] = await Promise.all([
+      window.tmdbGet('discover/movie', {
+        with_genres: genre.movie,
+        sort_by: 'popularity.desc',
+        page: 1,
+        language: tmdbLang
+      }),
+      window.tmdbGet('discover/tv', {
+        with_genres: genre.tv,
+        sort_by: 'popularity.desc',
+        page: 1,
+        language: tmdbLang
+      })
     ]);
-    
-    if (!moviesResponse.ok || !tvResponse.ok) {
-      throw new Error('Failed to fetch dynamic content');
-    }
-    
-    const moviesData = await moviesResponse.json();
-    const tvData = await tvResponse.json();
     
     // Combine and format results
     const allItems = [
