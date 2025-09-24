@@ -114,6 +114,11 @@ window.FlickletDebug = window.FlickletDebug || {
 
         // 2.6) Initialize FAB icons
         this.initializeFABIcons();
+        
+        // 2.7) Initialize Counter Bootstrap System
+        if (window.CounterBootstrap) {
+          window.CounterBootstrap.init();
+        }
 
         // 3) Initialize Firebase auth listener
         this.initFirebase();
@@ -143,6 +148,12 @@ window.FlickletDebug = window.FlickletDebug || {
             console.log('🔢 Calling updateTabCounts during initialization');
             window.updateTabCounts();
           }
+          
+          // Emit app:lists-rendered event for counter system
+          document.dispatchEvent(new CustomEvent('app:lists-rendered', {
+            detail: { source: 'initialization' }
+          }));
+          
           // Ensure FABs are docked after everything is ready
           this.dockFABsToActiveTab();
         }, 500);
@@ -733,6 +744,12 @@ waitForFirebaseReady() {
         if (snap.exists) {
           const data = snap.data();
           console.log('✅ Firestore read successful:', data);
+          
+          // Emit userDataLoaded event for other components
+          document.dispatchEvent(new CustomEvent('userDataLoaded', {
+            detail: { uid: authUid, data: data }
+          }));
+          
           return data;
         } else {
           // Seed defaults so the next read always has data
@@ -885,6 +902,11 @@ waitForFirebaseReady() {
               }
               
               console.log('✅ Cloud data merged with local');
+              
+              // Emit firebaseDataLoaded event for other components
+              document.dispatchEvent(new CustomEvent('firebaseDataLoaded', {
+                detail: { uid: uid, watchlists: cloudData.watchlists }
+              }));
             }
           }
         }
@@ -1445,6 +1467,12 @@ waitForFirebaseReady() {
       document.dispatchEvent(new CustomEvent('tabSwitched', { 
         detail: { tab: tab, previousTab: this.previousTab } 
       }));
+      
+      // Dispatch tab:switched event for counter system
+      document.dispatchEvent(new CustomEvent('tab:switched', {
+        detail: { tab: tab, previousTab: this.previousTab }
+      }));
+      
       this.previousTab = tab;
       
       // Clear search when switching tabs (including when switching to home)
@@ -1586,6 +1614,13 @@ waitForFirebaseReady() {
       // Load content for this tab
       if (typeof updateTabContent === 'function') {
         updateTabContent(tab);
+      }
+      
+      // Trigger counter system update after tab content is loaded
+      if (window.CounterBootstrap && typeof window.CounterBootstrap.directRecount === 'function') {
+        setTimeout(() => {
+          window.CounterBootstrap.directRecount();
+        }, 200);
       }
       
       // Dock FABs to the new active tab
@@ -2189,6 +2224,12 @@ waitForFirebaseReady() {
     // Language change function - delegates to centralized LanguageManager
     changeLanguage(newLang) {
       console.log('🌐 FlickletApp.changeLanguage delegating to LanguageManager:', newLang);
+      
+      // Emit language:changed event for counter system
+      document.dispatchEvent(new CustomEvent('language:changed', {
+        detail: { newLang: newLang }
+      }));
+      
       if (window.LanguageManager) {
         return window.LanguageManager.changeLanguage(newLang);
       } else {
@@ -2569,6 +2610,13 @@ waitForFirebaseReady() {
     try {
       const NS = "[app]";
       const log = (...a) => console.log(NS, ...a);
+      
+      // Wait for DOM to be ready
+      if (!document.body) {
+        log("DOM not ready, deferring back-to-top initialization");
+        setTimeout(() => FlickletApp.initBackToTop(), 100);
+        return;
+      }
       
       // Create back-to-top button
       const backToTopBtn = document.createElement('button');

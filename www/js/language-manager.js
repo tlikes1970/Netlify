@@ -45,8 +45,48 @@ class LanguageManager {
       }
       
       console.log('🌍 Language saved to storage:', lang);
+      
+      // Trigger language change event for other components
+      this.triggerLanguageChange(lang);
     } catch (error) {
       console.error('❌ Failed to save language:', error);
+    }
+  }
+  
+  // Trigger language change event and refresh data
+  triggerLanguageChange(lang) {
+    console.log('🌍 Triggering language change event:', lang);
+    
+    // Dispatch custom event
+    document.dispatchEvent(new CustomEvent('languagechange', { 
+      detail: { language: lang } 
+    }));
+    
+    // Refresh TMDB data in background
+    this.refreshTMDBData(lang);
+  }
+  
+  // Refresh TMDB data for current language
+  async refreshTMDBData(lang) {
+    console.log('🔄 Refreshing TMDB data for language:', lang);
+    
+    try {
+      // Refresh currently watching items
+      await this.refreshCurrentlyWatchingMetadata(lang);
+      
+      // Trigger UI refresh
+      if (window.FlickletApp && typeof window.FlickletApp.updateUI === 'function') {
+        window.FlickletApp.updateUI();
+      }
+      
+      // Dispatch cards:refreshed event for counter updates
+      document.dispatchEvent(new CustomEvent('cards:refreshed', { 
+        detail: { language: lang } 
+      }));
+      
+      console.log('✅ TMDB data refreshed for language:', lang);
+    } catch (error) {
+      console.error('❌ Failed to refresh TMDB data:', error);
     }
   }
 

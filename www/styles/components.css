@@ -7792,3 +7792,87 @@ button#btnSettings.fab-left.fab:hover {
   opacity: 0.8;
 }
 
+/* Remove Button Styling */
+.unified-card-action-btn--remove {
+  background-color: #dc3545 !important;
+  color: white !important;
+  border: 1px solid #dc3545 !important;
+}
+
+.unified-card-action-btn--remove:hover {
+  background-color: #c82333 !important;
+  border-color: #bd2130 !important;
+  transform: scale(1.05);
+}
+
+.unified-card-action-btn--remove .unified-card-action-icon {
+  color: white !important;
+}
+
+.unified-card-action-btn--remove .unified-card-action-label {
+  color: white !important;
+}
+
+/* Two-Column Action Layout */
+.unified-card-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.unified-card-actions-left,
+.unified-card-actions-right {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Compact Button Styling */
+.unified-card-action-btn--compact {
+  padding: 6px 8px !important;
+  font-size: 12px !important;
+  min-height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+}
+
+.unified-card-action-btn--compact .unified-card-action-icon {
+  font-size: 14px !important;
+}
+
+.unified-card-action-btn--compact .unified-card-action-label {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 80px !important;
+}
+
+/* Ensure buttons fit in container */
+.unified-card-actions {
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+/* Mobile responsiveness for compact buttons */
+@media (max-width: 768px) {
+  .unified-card-action-btn--compact {
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+    min-height: 28px !important;
+  }
+  
+  .unified-card-action-btn--compact .unified-card-action-label {
+    font-size: 10px !important;
+    max-width: 60px !important;
+  }
+  
+  .unified-card-actions-grid {
+    gap: 6px;
+  }
+}
+

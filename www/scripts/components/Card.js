@@ -24,12 +24,14 @@
    * @returns {string} HTML for action buttons
    */
   function generateDetailActions(id, currentList, isPro, episodeTrackingEnabled, userRating, userNote) {
-    const actions = [];
+    // Create two-column layout for action buttons
+    const leftColumn = [];
+    const rightColumn = [];
     
-    // Core actions based on current list
+    // Left column: Want to Watch and Watched buttons
     if (currentList !== 'wishlist') {
-      actions.push(`
-        <button class="unified-card-action-btn" 
+      leftColumn.push(`
+        <button class="unified-card-action-btn unified-card-action-btn--compact" 
                 data-action="want-to-watch" 
                 data-id="${id}" 
                 aria-label="Add to Want to Watch"
@@ -40,22 +42,9 @@
       `);
     }
     
-    if (currentList !== 'watching') {
-      actions.push(`
-        <button class="unified-card-action-btn" 
-                data-action="start-watching" 
-                data-id="${id}" 
-                aria-label="Start Watching"
-                title="Start Watching">
-          <span class="unified-card-action-icon">▶️</span>
-          <span class="unified-card-action-label">Watching</span>
-        </button>
-      `);
-    }
-    
     if (currentList !== 'watched') {
-      actions.push(`
-        <button class="unified-card-action-btn" 
+      leftColumn.push(`
+        <button class="unified-card-action-btn unified-card-action-btn--compact" 
                 data-action="mark-watched" 
                 data-id="${id}" 
                 aria-label="Mark as Watched"
@@ -66,10 +55,38 @@
       `);
     }
     
+    // Right column: Remove button
+    if (currentList !== 'discover') {
+      rightColumn.push(`
+        <button class="unified-card-action-btn unified-card-action-btn--remove unified-card-action-btn--compact" 
+                data-action="remove" 
+                data-id="${id}" 
+                aria-label="Remove from List"
+                title="Remove from List">
+          <span class="unified-card-action-icon">🗑️</span>
+          <span class="unified-card-action-label">Remove</span>
+        </button>
+      `);
+    }
+    
+    // Additional actions (if needed)
+    if (currentList !== 'watching') {
+      leftColumn.push(`
+        <button class="unified-card-action-btn unified-card-action-btn--compact" 
+                data-action="start-watching" 
+                data-id="${id}" 
+                aria-label="Start Watching"
+                title="Start Watching">
+          <span class="unified-card-action-icon">▶️</span>
+          <span class="unified-card-action-label">Watching</span>
+        </button>
+      `);
+    }
+    
     // Not Interested (only for Discover)
     if (currentList === 'discover') {
-      actions.push(`
-        <button class="unified-card-action-btn" 
+      leftColumn.push(`
+        <button class="unified-card-action-btn unified-card-action-btn--compact" 
                 data-action="not-interested" 
                 data-id="${id}" 
                 aria-label="Not Interested"
@@ -81,8 +98,8 @@
     }
     
     // Details button
-    actions.push(`
-      <button class="unified-card-action-btn" 
+    rightColumn.push(`
+      <button class="unified-card-action-btn unified-card-action-btn--compact" 
               data-action="details" 
               data-id="${id}" 
               aria-label="View Details"
@@ -94,8 +111,8 @@
     
     // Episode Tracking (if enabled)
     if (episodeTrackingEnabled && currentList === 'watching') {
-      actions.push(`
-        <button class="unified-card-action-btn" 
+      rightColumn.push(`
+        <button class="unified-card-action-btn unified-card-action-btn--compact" 
                 data-action="episode-tracking" 
                 data-id="${id}" 
                 aria-label="Episode Tracking"
@@ -108,8 +125,8 @@
     
     // Pro features
     if (isPro) {
-      actions.push(`
-        <button class="unified-card-action-btn unified-card-action-btn--pro" 
+      rightColumn.push(`
+        <button class="unified-card-action-btn unified-card-action-btn--pro unified-card-action-btn--compact" 
                 data-action="show-trivia" 
                 data-id="${id}" 
                 aria-label="Show Trivia"
@@ -119,8 +136,8 @@
         </button>
       `);
       
-      actions.push(`
-        <button class="unified-card-action-btn unified-card-action-btn--pro" 
+      rightColumn.push(`
+        <button class="unified-card-action-btn unified-card-action-btn--pro unified-card-action-btn--compact" 
                 data-action="behind-scenes" 
                 data-id="${id}" 
                 aria-label="Behind the Scenes"
@@ -130,8 +147,8 @@
         </button>
       `);
       
-      actions.push(`
-        <button class="unified-card-action-btn unified-card-action-btn--pro" 
+      rightColumn.push(`
+        <button class="unified-card-action-btn unified-card-action-btn--pro unified-card-action-btn--compact" 
                 data-action="bloopers" 
                 data-id="${id}" 
                 aria-label="Bloopers"
@@ -143,7 +160,7 @@
     }
     
     // Rating system
-    actions.push(`
+    const ratingHTML = `
       <div class="unified-card-rating-input">
         <label for="rating-${id}">Rate:</label>
         <select id="rating-${id}" data-action="rate" data-id="${id}" class="unified-card-rating-select">
@@ -155,10 +172,10 @@
           <option value="5" ${userRating === 5 ? 'selected' : ''}>⭐⭐⭐⭐⭐</option>
         </select>
       </div>
-    `);
+    `;
     
     // Notes system
-    actions.push(`
+    const notesHTML = `
       <div class="unified-card-notes">
         <label for="note-${id}">Note:</label>
         <textarea id="note-${id}" 
@@ -168,21 +185,21 @@
                   placeholder="Add a note..."
                   rows="2">${userNote}</textarea>
       </div>
-    `);
+    `;
     
-    // Remove button
-    actions.push(`
-      <button class="unified-card-action-btn unified-card-action-btn--danger" 
-              data-action="remove" 
-              data-id="${id}" 
-              aria-label="Remove from List"
-              title="Remove from List">
-        <span class="unified-card-action-icon">🗑️</span>
-        <span class="unified-card-action-label">Remove</span>
-      </button>
-    `);
-    
-    return actions.join('');
+    // Return structured two-column layout
+    return `
+      <div class="unified-card-actions-grid">
+        <div class="unified-card-actions-left">
+          ${leftColumn.join('')}
+        </div>
+        <div class="unified-card-actions-right">
+          ${rightColumn.join('')}
+        </div>
+      </div>
+      ${ratingHTML}
+      ${notesHTML}
+    `;
   }
 
   /**
@@ -228,6 +245,7 @@
     card.dataset.id = id;
     card.dataset.variant = variant;
     card.dataset.mediaType = mediaType;
+    card.dataset.card = 'poster'; // Required for unified counter selector
     
     // Add drag functionality for user-owned lists
     if (variant === 'detail' && ['watching', 'wishlist', 'watched'].includes(currentList)) {
@@ -501,6 +519,22 @@
    * @param {string} section - UI section ('home', 'search', 'watching', 'wishlist', 'watched', 'discover')
    * @returns {Object} Normalized card data
    */
+  /**
+   * Get localized title with fallback
+   * @param {Object} item - Item data from TMDB
+   * @param {string} mediaType - 'tv' or 'movie'
+   * @returns {string} Localized title with fallback
+   */
+  function getLocalizedTitle(item, mediaType) {
+    if (mediaType === 'tv') {
+      // For TV shows: prefer localized name, fallback to original_name
+      return item.name || item.original_name || item.title || 'Unknown Show';
+    } else {
+      // For movies: prefer localized title, fallback to original_title
+      return item.title || item.original_title || item.name || 'Unknown Movie';
+    }
+  }
+
   function createCardData(item, source = 'tmdb', section = 'home') {
     const year = item.release_date ? new Date(item.release_date).getFullYear() : 
                  item.first_air_date ? new Date(item.first_air_date).getFullYear() : 
@@ -525,7 +559,7 @@
     return {
       variant: variant,
       id: item.id || item.tmdb_id || item.tmdbId,
-      title: item.title || item.name,
+      title: getLocalizedTitle(item, mediaType),
       subtitle: year ? `(${year}) • ${mediaType === 'tv' ? 'TV Show' : 'Movie'}` : (mediaType === 'tv' ? 'TV Show' : 'Movie'),
       posterUrl: posterUrl,
       posterPath: item.posterPath || item.poster_path,

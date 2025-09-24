@@ -594,6 +594,11 @@
       // Notify iframes
       this.notifyIframes('auth-signout');
       
+      // Emit userSignedOut event for other components
+      document.dispatchEvent(new CustomEvent('userSignedOut', {
+        detail: { timestamp: Date.now() }
+      }));
+      
       console.log('✅ Sign out process completed');
     },
 

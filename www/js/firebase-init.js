@@ -20,11 +20,14 @@
     }
   }
 
-  // Get auth instance
+  // Get auth and firestore instances
   const auth = firebase.auth();
+  const db = firebase.firestore();
   
   // --- Expose minimal surface on window for non-module scripts/diagnostics ---
   window.firebaseApp = firebase.app();
+  window.firebaseAuth = auth;
+  window.firebaseDb = db;
   window.auth = auth;
   window.getAuth = () => auth;
   window.onAuthStateChanged = (authInstance, callback) => authInstance.onAuthStateChanged(callback);
@@ -34,5 +37,5 @@
   window.signInWithPopup = (authInstance, provider) => authInstance.signInWithPopup(provider);
   window.signOut = (authInstance) => authInstance.signOut();
 
-  console.log('✅ Firebase v9 CDN bridge initialized');
+  console.log('✅ Firebase v9 CDN bridge initialized with Auth and Firestore');
 })();

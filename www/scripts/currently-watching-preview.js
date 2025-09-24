@@ -193,8 +193,12 @@
     
     if (!watchingItems || watchingItems.length === 0) {
       // Only show test data if no Firebase data is present and we haven't exceeded retry limit
-      const hasFirebaseData = window.appData && (window.appData.tv || window.appData.movies);
-      const shouldShowTestData = !hasFirebaseData && retryCount < MAX_RETRIES;
+      const hasFirebaseData = window.appData && (
+        (window.appData.tv?.watching && window.appData.tv.watching.length > 0) ||
+        (window.appData.movies?.watching && window.appData.movies.watching.length > 0)
+      );
+      const isSignedIn = window.FlickletApp?.currentUser || window.currentUser;
+      const shouldShowTestData = !hasFirebaseData && !isSignedIn && retryCount < MAX_RETRIES;
       
       if (shouldShowTestData) {
         console.log('📭 No items currently watching, showing test data for layout verification');
@@ -574,6 +578,20 @@
     initCurrentlyWatchingPreview();
   });
   
+  // Listen for sign-out events to clear preview immediately
+  document.addEventListener('userSignedOut', () => {
+    console.log('🎬 User signed out, clearing Currently Watching Preview');
+    const previewSection = document.getElementById('currentlyWatchingPreview');
+    const scrollContainer = document.getElementById('currentlyWatchingScroll');
+    if (previewSection) {
+      previewSection.style.display = 'none';
+    }
+    if (scrollContainer) {
+      scrollContainer.innerHTML = '';
+    }
+    retryCount = 0; // Reset retry count
+  });
+  
   // Listen for tab switches to watching tab (indicates data is loaded)
   document.addEventListener('tabSwitched', (event) => {
     if (event.detail && event.detail.tab === 'watching') {
@@ -632,6 +650,9 @@
         });
       }
     }
+    
+    // Check the actual data that getCurrentlyWatchingItems() would return
+    console.log('10. getCurrentlyWatchingItems() result:', getCurrentlyWatchingItems());
   };
 
 })();

@@ -17,6 +17,45 @@
     return;
   }
 
+  // Language helper methods
+  function getCurrentLanguage() {
+    // Try LanguageManager first
+    if (window.LanguageManager && typeof window.LanguageManager.getCurrentLanguage === 'function') {
+      return window.LanguageManager.getCurrentLanguage();
+    }
+    
+    // Fallback to appData
+    if (window.appData?.settings?.lang) {
+      return window.appData.settings.lang;
+    }
+    
+    // Fallback to HTML lang attribute
+    const htmlLang = document.documentElement.lang;
+    if (htmlLang) {
+      return htmlLang.split('-')[0]; // Extract language code from 'en-US' -> 'en'
+    }
+    
+    // Default fallback
+    return 'en';
+  }
+  
+  function mapToTMDBLocale(lang) {
+    const langMap = {
+      'en': 'en-US',
+      'es': 'es-ES',
+      'fr': 'fr-FR',
+      'de': 'de-DE',
+      'it': 'it-IT',
+      'pt': 'pt-PT',
+      'ru': 'ru-RU',
+      'ja': 'ja-JP',
+      'ko': 'ko-KR',
+      'zh': 'zh-CN'
+    };
+    
+    return langMap[lang] || 'en-US';
+  }
+
   // Central TMDB API client
   window.tmdbGet = async function tmdbGet(path, params = {}) {
     try {
@@ -32,14 +71,15 @@
 
       const baseUrl = config.baseUrl || 'https://api.themoviedb.org/3';
       
-      // Get current language from app settings or default to en-US
-      const currentLang = window.appData?.settings?.lang || 'en';
-      const tmdbLang = currentLang === 'es' ? 'es-ES' : 'en-US';
+      // Get current language from LanguageManager or fallback to appData
+      const currentLang = this.getCurrentLanguage();
+      const tmdbLang = this.mapToTMDBLocale(currentLang);
       
       const searchParams = new URLSearchParams({ 
         ...params, 
         api_key: apiKey,
-        language: tmdbLang
+        language: tmdbLang,
+        include_image_language: `${tmdbLang},null`
       });
       
       // Ensure proper URL joining with exactly one slash
@@ -47,6 +87,7 @@
       const url = `${baseUrl}${cleanPath}?${searchParams.toString()}`;
       
       console.log('🌐 TMDB API request:', url);
+      console.log('🌐 Language parameters:', { currentLang, tmdbLang, include_image_language: `${tmdbLang},null` });
       
       const response = await fetch(url);
       
