@@ -534,6 +534,24 @@
      * Handle sign out (called by both manual sign out and auth state change)
      */
     handleSignOut() {
+      console.log('🧹 Starting sign out process...');
+      
+      // Clear user data first
+      if (typeof window.clearUserData === 'function') {
+        console.log('🧹 Calling clearUserData function...');
+        window.clearUserData();
+      } else if (typeof window.loadUserDataAndReplaceCards === 'function') {
+        // Fallback to data-init clearUserData
+        console.log('🧹 Using data-init clearUserData...');
+        window.loadUserDataAndReplaceCards();
+      }
+      
+      // Clear FlickletApp user data
+      if (window.FlickletApp && typeof window.FlickletApp.clearUserData === 'function') {
+        console.log('🧹 Calling FlickletApp.clearUserData...');
+        window.FlickletApp.clearUserData();
+      }
+      
       // Reset account button
       const accountBtn = document.getElementById('accountButton');
       const accountLabel = document.getElementById('accountButtonLabel');
@@ -554,8 +572,29 @@
       this.closeProviderModal();
       this.closeEmailModal();
       
+      // Clear any cached data
+      if (window.appData) {
+        window.appData.settings = window.appData.settings || {};
+        window.appData.settings.username = '';
+        window.appData.settings.displayName = '';
+      }
+      
+      // Clear render flags to allow fresh rendering
+      Object.keys(window).forEach(key => {
+        if (key.startsWith('render_')) {
+          window[key] = false;
+        }
+      });
+      
+      // Trigger UI refresh
+      if (typeof window.updateUI === 'function') {
+        window.updateUI();
+      }
+      
       // Notify iframes
       this.notifyIframes('auth-signout');
+      
+      console.log('✅ Sign out process completed');
     },
 
     /**

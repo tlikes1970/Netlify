@@ -45,6 +45,7 @@ www/
 
 ### 2. Component-Based UI System
 - **Unified Card Component**: Single `Card.js` component with variants (compact, expanded, poster)
+- **Floating Action Buttons (FABs)**: Always-visible action buttons docked to active tab
 - **CSS Custom Properties**: Centralized theming with `:root` variables
 - **Mobile-First**: Responsive design with mobile breakpoints
 - **Accessibility**: ARIA attributes, semantic HTML, keyboard navigation
@@ -118,6 +119,20 @@ const cardData = {
   </section>
 </main>
 
+<!-- Floating Action Buttons -->
+<button id="btnSettings" class="fab-left" aria-label="Go to settings" title="Go to Settings">
+  <span aria-hidden="true">⚙️</span>
+</button>
+
+<div class="fab-stack">
+  <button id="themeToggleFab" class="fab" aria-label="Toggle theme" title="Toggle Light/Dark Mode">
+    <span aria-hidden="true">🌙</span>
+  </button>
+  <button id="mardiGrasFab" class="fab" aria-label="Toggle Mardi Gras mode" title="Toggle Mardi Gras Mode">
+    <span aria-hidden="true">🎭</span>
+  </button>
+</div>
+
 <!-- Data attributes for JavaScript targeting -->
 <button data-action="add" data-id="123" data-list="wishlist">
   Add to Wishlist
@@ -131,6 +146,10 @@ const cardData = {
 - **`FlickletApp.switchToTab(tab)`**: Tab navigation with search clearing
 - **`FlickletApp.updateUI()`**: UI refresh after data changes
 - **`FlickletApp.saveData()`**: Firebase data persistence
+- **`FlickletApp.toggleTheme()`**: Theme switching (light/dark/system)
+- **`FlickletApp.toggleMardiGras()`**: Mardi Gras mode toggle
+- **`FlickletApp.dockFABsToActiveTab()`**: Floating Action Button positioning
+- **`FlickletApp.initializeFABIcons()`**: FAB icon state initialization
 
 ### Business Logic (`functions.js`)
 - **`loadListContent(listType)`**: Render list items with unified card system
@@ -146,6 +165,12 @@ const cardData = {
 ### Card Component (`Card.js`)
 - **`Card(options)`**: Create standardized card elements
 - **`createCardData(item, source, section)`**: Normalize item data for cards
+
+### Floating Action Button System
+- **`dockFABsToActiveTab()`**: Positions FABs relative to active tab
+- **`initializeFABIcons()`**: Sets initial FAB icons based on current state
+- **FAB Event Handlers**: Click handlers for settings, theme, and Mardi Gras toggles
+- **CSS Classes**: `.fab`, `.fab-left`, `.fab-stack`, `.fab-dock` for positioning
 
 ## Data Flow & State Management
 
@@ -188,6 +213,8 @@ document.addEventListener('app:data:ready', () => {
 
 ### Authentication
 - **Google Sign-In**: Primary authentication method
+- **Apple Sign-In**: Secondary authentication method
+- **Email/Password**: Tertiary authentication method
 - **Firebase Auth**: User state management
 - **Persistence**: Local storage with cloud sync
 
@@ -200,13 +227,62 @@ users/{uid}/
 │   ├── tv: { watching: [], wishlist: [], watched: [] }
 │   └── movies: { watching: [], wishlist: [], watched: [] }
 │   }
-└── settings: { theme, lang, username }
+└── settings: { theme, lang, username, mardi }
 ```
 
 ### Sync Strategy
 1. **Local First**: All operations work offline
 2. **Cloud Sync**: Background sync when authenticated
 3. **Conflict Resolution**: Last-write-wins with timestamps
+
+## Theme & UI System
+
+### Theme Management
+- **ThemeManager**: Centralized theme control (`theme-manager.js`)
+- **Theme Options**: `light`, `dark`, `system` (follows OS preference)
+- **Mardi Gras Mode**: Special festive theme toggle (`on`/`off`)
+- **CSS Variables**: Dynamic theming with `:root` custom properties
+- **Body Classes**: `mardi` class for Mardi Gras styling
+
+### Floating Action Buttons (FABs)
+- **Settings FAB**: Left-side button for settings navigation
+- **Theme Toggle FAB**: Right-side button for light/dark mode
+- **Mardi Gras FAB**: Right-side button for festive mode toggle
+- **Dynamic Positioning**: FABs dock to active tab's bottom area
+- **Icon Updates**: Icons change based on current state
+- **Accessibility**: Proper ARIA labels and keyboard support
+
+### CSS Architecture for FABs
+```css
+/* FAB positioning and styling */
+.fab, .fab-left {
+  position: static !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: var(--text, #1f2937);
+  font-size: 24px;
+  transition: all 0.2s ease;
+}
+
+.fab-dock {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 16px;
+  pointer-events: none;
+}
+
+.fab-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+}
+```
 
 ## Performance Optimizations
 
@@ -221,6 +297,9 @@ users/{uid}/
 - **Debounced Search**: 500ms delay on search input
 - **Memoization**: Cached search results and API calls
 - **Request Idle Callback**: Heavy operations deferred to idle time
+- **Render Guards**: Prevent duplicate rendering with `window.render_*` flags
+- **Deduplication**: Set-based ID filtering to prevent duplicate items
+- **Performance Logging**: Console output for debugging render cycles
 
 ## Mobile & Responsive Design
 
@@ -336,9 +415,11 @@ npm run lh:mobile    # Lighthouse mobile audit
 ```
 
 ### Version Management
-- **Semantic Versioning**: Major.Minor.Patch
-- **Auto-increment**: Version bumped on code changes
+- **Semantic Versioning**: Major.Minor.Patch (currently v28.06)
+- **Auto-increment**: Version bumped on code changes [[memory:8428544]]
 - **Rollback Support**: Easy rollback with version display
+- **Version Location**: Updated in `www/index.html` title tag
+- **Change Tracking**: Version comments document what was fixed
 
 ## Common Patterns & Best Practices
 
@@ -396,6 +477,10 @@ document.addEventListener('click', (e) => {
 2. **Search Not Working**: Verify TMDB API key and `searchTMDB` function
 3. **Cards Not Rendering**: Check `Card.js` component and CSS classes
 4. **Mobile Layout Issues**: Verify viewport meta tag and CSS breakpoints
+5. **FABs Not Visible**: Check `dockFABsToActiveTab()` calls in app initialization
+6. **Settings FAB Opens Modal**: Verify `aria-haspopup="dialog"` is removed from HTML
+7. **Mardi Gras Not Working**: Check `ThemeManager.mardi` property and CSS `.mardi` class
+8. **FAB Styling Issues**: Verify CSS overrides with `!important` declarations
 
 ### Debug Tools
 - **Console Logging**: Extensive logging with `[module]` prefixes

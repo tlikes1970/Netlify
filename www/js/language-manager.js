@@ -208,10 +208,13 @@ class LanguageManager {
       updateTabContent(activeTab);
     }
     
-    // Update list content
+    // Update list content only if not already rendered
     if (typeof loadListContent === 'function') {
       ['watching', 'wishlist', 'watched'].forEach(listType => {
-        loadListContent(listType);
+        // Only render if not already rendered
+        if (!window[`render_${listType}`]) {
+          loadListContent(listType);
+        }
       });
     }
     

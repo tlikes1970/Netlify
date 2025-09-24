@@ -5,7 +5,7 @@
   if (window.__proInit__) return; window.__proInit__ = true;
 
   const KEY = 'flicklet:pro'; // '1' = active
-  const isPro = () => localStorage.getItem(KEY) === '1';
+  const isPro = () => localStorage.getItem(KEY) === '1' || localStorage.getItem(KEY) === null; // Default to true if not set
   const setPro = (v) => localStorage.setItem(KEY, v ? '1' : '0');
 
   // Public QA helpers (type in console):

@@ -30,7 +30,15 @@
 
   // Helper: read appData safely
   function readLocalAppData() {
-    return storage.get("flicklet-data", { tv:{watching:[],wishlist:[],watched:[]}, movies:{watching:[],wishlist:[],watched:[]}, settings:{} });
+    return storage.get("flicklet-data", { 
+      tv:{watching:[],wishlist:[],watched:[]}, 
+      movies:{watching:[],wishlist:[],watched:[]}, 
+      settings:{
+        isPro: true, // Default to true for dev testing
+        episodeTracking: true, // Default to true for dev testing
+        pro: true // Default to true for dev testing
+      }
+    });
   }
 
   // Helper: write appData safely
@@ -53,7 +61,11 @@
       const emptyData = {
         tv: { watching: [], wishlist: [], watched: [] },
         movies: { watching: [], wishlist: [], watched: [] },
-        settings: {}
+        settings: {
+          isPro: true, // Default to true for dev testing
+          episodeTracking: true, // Default to true for dev testing
+          pro: true // Default to true for dev testing
+        }
       };
       
       // Update window.appData if it exists

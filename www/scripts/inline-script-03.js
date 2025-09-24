@@ -31,80 +31,6 @@
         FlickletDebug.info('🔧 Is settings tab button?', e.target.closest('.settings-tabs button'));
         FlickletDebug.info('🔧 All settings tabs found:', document.querySelectorAll('.settings-tabs button').length);
         
-        // Handle dark mode button specifically
-        if (e.target.id === 'themeIcon' || e.target.id === 'darkModeToggle' || e.target.id === 'themeToggleBtn' || e.target.id === 'themeToggleIcon' || e.target.id === 'themeToggleText') {
-          FlickletDebug.info('🌙 Theme toggle button clicked via event delegation');
-          e.preventDefault();
-          e.stopPropagation();
-
-          // Toggle dark mode directly
-          const isDark = document.body.classList.toggle("dark-mode");
-          
-          // Update app data
-          if (window.appData?.settings) {
-            appData.settings.theme = isDark ? "dark" : "light";
-            if (typeof saveAppData === 'function') {
-              saveAppData();
-            }
-          }
-          
-          // Update FAB theme icon
-          const themeIcon = document.getElementById('themeIcon');
-          if (themeIcon) {
-            themeIcon.textContent = isDark ? '☀️' : '🌙';
-          }
-          
-          // Update settings theme toggle button
-          const themeToggleIcon = document.getElementById('themeToggleIcon');
-          const themeToggleText = document.getElementById('themeToggleText');
-          if (themeToggleIcon) {
-            themeToggleIcon.textContent = isDark ? '☀️' : '🌙';
-          }
-          if (themeToggleText) {
-            themeToggleText.textContent = isDark ? 'Light Mode' : 'Dark Mode';
-          }
-          
-          // Show notification
-          if (typeof showNotification === 'function') {
-            const isDark = document.body.classList.contains("dark-mode");
-            showNotification(`Switched to ${isDark ? 'dark' : 'light'} mode`, 'success');
-          }
-          
-          FlickletDebug.info('✅ Dark mode toggled successfully via event delegation');
-          return;
-        }
-
-        // Handle Mardi Gras button specifically
-        if (e.target.id === 'mardiToggle') {
-          FlickletDebug.info('🎭 Mardi Gras button clicked via event delegation');
-          e.preventDefault();
-          e.stopPropagation();
-
-          // Toggle Mardi Gras mode
-          const root = document.getElementById("appRoot");
-          if (root) {
-            root.classList.toggle("mardi");
-            const isMardiGras = root.classList.contains("mardi");
-            
-            // Update app data
-            if (window.appData?.settings) {
-              appData.settings.mardiGras = isMardiGras;
-              if (typeof saveAppData === 'function') {
-                saveAppData();
-              }
-            }
-            
-            // Show notification
-            if (typeof showNotification === 'function') {
-              showNotification(`Mardi Gras mode ${isMardiGras ? 'enabled' : 'disabled'}`, 'success');
-            }
-            
-            FlickletDebug.info('✅ Mardi Gras toggled successfully via event delegation');
-          } else {
-            FlickletDebug.error('❌ appRoot element not found for Mardi Gras toggle');
-          }
-          return;
-        }
 
         // Handle settings tab buttons specifically
         if (e.target.closest('.settings-tabs button')) {
@@ -426,10 +352,6 @@
         // --- dark mode (HANDLED VIA EVENT DELEGATION ABOVE)
         // Dark mode is now handled in the main click event listener above
 
-        // --- mardi toggle
-        const root = document.getElementById("appRoot");
-        bind("mardiToggle", () => root && root.classList.toggle("mardi"));
-        bind("mardiOnBtn", () => root && root.classList.toggle("mardi"));
 
         // --- language switch (will be set up after data loads)
 

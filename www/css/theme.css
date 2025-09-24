@@ -1,0 +1,234 @@
+/**
+ * Process: Theme System
+ * Purpose: CSS variables for System/Light/Dark themes with Mardi Gras overlay
+ * Data Source: data-theme and data-mardi attributes on body element
+ * Update Path: ThemeManager applies attributes, CSS variables cascade
+ * Dependencies: theme-manager.js, settings-modal.js
+ */
+
+/* Base variables (light defaults) */
+:root {
+  --bg: #ffffff;
+  --text: #121212;
+  --surface: #f6f7fb;
+  --card: #ffffff;
+  --border: #e6e8f0;
+  --accent: #6c5ce7;  /* primary */
+  --accent-2: #00b894; /* secondary */
+  --link: #2962ff;
+  --btn-text: #ffffff;
+  --shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+/* Apply to body and descendants */
+body {
+  background: var(--bg);
+  color: var(--text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark theme overrides */
+body[data-theme="dark"] {
+  --bg: #0e0f13;
+  --text: #eef2ff;
+  --surface: #141720;
+  --card: #1a1f2b;
+  --border: #2a3142;
+  --accent: #7c83ff;
+  --accent-2: #00d1a0;
+  --link: #7aa2ff;
+  --btn-text: #0e0f13;
+  --shadow: 0 6px 24px rgba(0,0,0,0.35);
+}
+
+/* System theme - uses media query for actual values */
+body[data-theme="system"] {
+  /* Will be overridden by .system-dark class when media query matches */
+}
+
+/* System dark mode - applied when system theme and OS is dark */
+body[data-theme="system"].system-dark {
+  --bg: #0e0f13;
+  --text: #eef2ff;
+  --surface: #141720;
+  --card: #1a1f2b;
+  --border: #2a3142;
+  --accent: #7c83ff;
+  --accent-2: #00d1a0;
+  --link: #7aa2ff;
+  --btn-text: #0e0f13;
+  --shadow: 0 6px 24px rgba(0,0,0,0.35);
+}
+
+/* Mardi Gras overlay: accent-only swap + subtle confetti hook class (optional) */
+body[data-mardi="on"] {
+  --accent: #6a00ff;  /* purple */
+  --accent-2: #16a34a; /* green */
+  --link: #b45309;    /* golden-amber for links */
+}
+
+/* Generic UI hooks that will inherit variables */
+.card { 
+  background: var(--card); 
+  box-shadow: var(--shadow); 
+  border: 1px solid var(--border); 
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.button { 
+  background: var(--accent); 
+  color: var(--btn-text); 
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.button.secondary { 
+  background: var(--accent-2); 
+}
+
+a { 
+  color: var(--link); 
+  transition: color 0.3s ease;
+}
+
+/* Settings Modal Styles */
+.modal[hidden] { 
+  display: none; 
+}
+
+.modal { 
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0,0,0,0.45); 
+  display: grid; 
+  place-items: center; 
+  z-index: 99999; 
+  pointer-events: auto;
+}
+
+.modal-content { 
+  background: var(--card); 
+  color: var(--text); 
+  border: 1px solid var(--border); 
+  border-radius: 12px; 
+  width: min(560px, 90vw); 
+  max-height: 85vh; 
+  overflow: auto; 
+  box-shadow: var(--shadow); 
+  padding: 16px 20px; 
+  pointer-events: auto;
+  position: relative;
+  z-index: 100000;
+  display: block;
+  visibility: visible;
+}
+
+.modal-header { 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  gap: 12px; 
+  margin-bottom: 16px;
+}
+
+.modal-section { 
+  margin-bottom: 24px; 
+}
+
+.modal-section h3 { 
+  margin: 0 0 16px 0; 
+  font-size: 1.2rem; 
+  font-weight: 600; 
+}
+
+.field-group { 
+  display: grid; 
+  gap: 8px; 
+  margin: 10px 0 16px; 
+}
+
+.field-group label { 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  cursor: pointer; 
+  padding: 8px; 
+  border-radius: 6px; 
+  transition: background-color 0.2s ease;
+}
+
+.field-group label:hover { 
+  background: var(--surface); 
+}
+
+.field-group input[type="radio"] { 
+  margin: 0; 
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.switch { 
+  display: flex !important; 
+  align-items: center; 
+  gap: 10px; 
+  padding: 8px; 
+  border-radius: 6px; 
+  transition: background-color 0.2s ease;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.switch:hover { 
+  background: var(--surface); 
+}
+
+.switch input[type="checkbox"] { 
+  margin: 0; 
+  pointer-events: auto;
+  cursor: pointer;
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.icon-btn { 
+  background: transparent; 
+  border: none; 
+  color: inherit; 
+  cursor: pointer; 
+  font-size: 18px; 
+  padding: 8px; 
+  border-radius: 4px; 
+  transition: background-color 0.2s ease;
+  pointer-events: auto;
+}
+
+.icon-btn:hover { 
+  background: var(--surface); 
+}
+
+/* Settings FAB styling - follows existing FAB architecture */
+#btnSettings.fab-left {
+  /* Inherit FAB styles from existing CSS */
+  background: var(--accent) !important;
+  color: var(--btn-text) !important;
+  border-radius: 50% !important;
+  width: 50px !important;
+  height: 50px !important;
+  display: grid !important;
+  place-items: center !important;
+  font-size: 18px !important;
+  transition: all 0.2s ease !important;
+}
+
+#btnSettings.fab-left:hover {
+  background: var(--accent-2) !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+#btnSettings.fab-left:focus {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px !important;
+}

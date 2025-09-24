@@ -2999,6 +2999,11 @@ select,
 #settingsTab span {
   display: none;
 }
+
+/* Hide settings tab when FABs are active */
+#settingsTab {
+  display: none !important;
+}
 :root{
   --fab-size: 50px;
   --fab-gap: 10px;
@@ -3034,17 +3039,23 @@ select,
   place-items: center;
   border: none;
   cursor: pointer;
-  color: white;
+  color: var(--text, #1f2937);
   font-size: 24px;
   transition: all 0.2s ease;
   pointer-events: auto;
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 /* Hover effects */
 .fab:hover, .fab-left:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-  background: #2d3748;
+  opacity: 0.8;
 }
 
 /* Mobile adjustments */
@@ -3200,10 +3211,75 @@ select,
 /* Show FABs when they're in the dock */
 .fab-dock .fab-left {
   display: block !important;
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
 }
 
 .fab-dock .fab-stack {
   display: flex !important;
+}
+
+.fab-dock .fab {
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* Specific override for settings FAB to remove any background */
+#btnSettings {
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+#btnSettings:hover {
+  background: none !important;
+  box-shadow: none !important;
+  transform: scale(1.05);
+  opacity: 0.8;
+}
+
+/* Ultra-specific override to remove blue background from settings FAB */
+.fab-dock #btnSettings.fab-left {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: auto !important;
+  min-height: auto !important;
+}
+
+.fab-dock #btnSettings.fab-left:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  transform: scale(1.05);
+  opacity: 0.8;
+}
+
+.fab-dock #btnSettings.fab-left:active {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.fab-dock #btnSettings.fab-left:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: 2px solid color-mix(in oklab, currentColor 50%, transparent);
+  outline-offset: 2px;
 }
 
 /* Force hide tabs that should be hidden */
@@ -7681,5 +7757,38 @@ input:checked + .slider:hover {
     width: 58vw;
     min-width: 140px;
   }
+}
+
+/* FINAL OVERRIDE - Remove all backgrounds from settings FAB */
+button#btnSettings,
+button#btnSettings.fab-left,
+.fab-dock button#btnSettings,
+.fab-dock button#btnSettings.fab-left,
+button#btnSettings.fab-left.fab {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: auto !important;
+  min-height: auto !important;
+}
+
+button#btnSettings:hover,
+button#btnSettings.fab-left:hover,
+.fab-dock button#btnSettings:hover,
+.fab-dock button#btnSettings.fab-left:hover,
+button#btnSettings.fab-left.fab:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  transform: scale(1.05);
+  opacity: 0.8;
 }
 

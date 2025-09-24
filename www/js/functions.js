@@ -83,18 +83,47 @@ mobilePolishGate(); // Run immediately
 // Re-render when data is ready/updated
 window.addEventListener('app:data:ready', () => {
   console.log('🔄 Data ready event received, updating lists...');
-  ['watching','wishlist','watched'].forEach(loadListContent);
+  
+  // Clean up duplicates first
+  if (typeof window.cleanupDuplicateCards === 'function') {
+    window.cleanupDuplicateCards();
+  }
+  
+  // Only render if not already rendered
+  ['watching','wishlist','watched'].forEach(listType => {
+    if (!window[`render_${listType}`]) {
+      loadListContent(listType);
+    }
+  });
   
   // Also update tab counts
   if (typeof window.updateTabCounts === 'function') {
     window.updateTabCounts();
   }
   
-  // Update home content if on home tab
-  if (typeof window.loadHomeContent === 'function') {
+  // Update home content if on home tab (only if not already rendered)
+  if (typeof window.loadHomeContent === 'function' && !window.render_home) {
     window.loadHomeContent();
   }
 });
+
+// ---- Helper Functions ----
+/**
+ * Count actual rendered items in a list container
+ */
+function countRenderedItems(listType) {
+  try {
+    const container = document.getElementById(`${listType}List`);
+    if (!container) return 0;
+    
+    // Count cards with data attributes
+    const cards = container.querySelectorAll('[data-item-id][data-list-type]');
+    return cards.length;
+  } catch (e) {
+    console.warn(`[countRenderedItems] Failed for ${listType}:`, e?.message || e);
+    return 0;
+  }
+}
 
 // ---- Tab / Render Pipeline ----
 // Global switchToTab function as fallback
@@ -146,22 +175,35 @@ window.updateTabCounts = function updateTabCounts() {
     const log = (...a) => console.log(NS, ...a);
     const warn = (...a) => console.warn(NS, ...a);
 
-    const A = window.appData || {};
-    const tv = A.tv || {}, mv = A.movies || {};
-    const sum = (arr) => Array.isArray(arr) ? arr.length : 0;
+    // Count actual rendered items instead of appData
     const counts = {
-      watching: sum(tv.watching) + sum(mv.watching),
-      wishlist: sum(tv.wishlist) + sum(mv.wishlist),
-      watched:  sum(tv.watched)  + sum(mv.watched)
+      watching: countRenderedItems('watching'),
+      wishlist: countRenderedItems('wishlist'),
+      watched: countRenderedItems('watched')
     };
     
-    // Update badges with fallback selectors
+    // Fallback to appData if no rendered items found
+    if (counts.watching === 0 && counts.wishlist === 0 && counts.watched === 0) {
+      const A = window.appData || {};
+      const tv = A.tv || {}, mv = A.movies || {};
+      const sum = (arr) => Array.isArray(arr) ? arr.length : 0;
+      counts.watching = sum(tv.watching) + sum(mv.watching);
+      counts.wishlist = sum(tv.wishlist) + sum(mv.wishlist);
+      counts.watched = sum(tv.watched) + sum(mv.watched);
+      log("Using appData fallback counts:", counts);
+    } else {
+      log("Using rendered item counts:", counts);
+    }
+    
+    // Update badges and list header counts
     ['watching','wishlist','watched'].forEach(list => {
+      const count = counts[list];
+      
+      // Update tab badge
       const badge = document.getElementById(`${list}Badge`) || 
-                   document.getElementById(`${list}Count`) ||
                    document.querySelector(`[data-count="${list}"]`);
       if (badge) {
-        badge.textContent = counts[list];
+        badge.textContent = count;
         
         // Force badge to be visible with inline styles to override any CSS
         badge.style.setProperty('display', 'inline-block', 'important');
@@ -183,7 +225,7 @@ window.updateTabCounts = function updateTabCounts() {
         // Add class for additional CSS targeting
         badge.classList.add('tab-badge');
         
-        log(`Updated ${list}Badge: ${counts[list]}`, {
+        log(`Updated ${list}Badge: ${count}`, {
           element: badge,
           classes: badge.className,
           style: badge.style.cssText,
@@ -192,7 +234,16 @@ window.updateTabCounts = function updateTabCounts() {
           opacity: getComputedStyle(badge).opacity
         });
       } else {
-        warn(`Badge not found for ${list}: ${list}Badge, ${list}Count, or [data-count="${list}"]`);
+        warn(`Badge not found for ${list}: ${list}Badge or [data-count="${list}"]`);
+      }
+      
+      // Update list header count
+      const listCount = document.getElementById(`${list}Count`);
+      if (listCount) {
+        listCount.textContent = count;
+        log(`Updated ${list}Count: ${count}`);
+      } else {
+        warn(`List count not found for ${list}: ${list}Count`);
       }
     });
     
@@ -205,16 +256,8 @@ window.updateTabCounts = function updateTabCounts() {
 };
 
 // Respond to data ready events (from data-init)
-document.addEventListener("app:data:ready", (ev) => {
-  try {
-    const src = ev?.detail?.source || "unknown";
-    console.log("[functions] data ready:", src);
-    // Recompute counts; current tab renderer calls can remain where they are.
-    window.updateTabCounts();
-  } catch (e) {
-    console.warn("[functions] app:data:ready handler failed:", e?.message || e);
-  }
-});
+// REMOVED DUPLICATE LISTENER - was causing duplicate renders
+// Now handled by the main app:data:ready listener above
 
 // Ensure the function is called when the page loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -242,14 +285,29 @@ document.addEventListener('userDataLoaded', function() {
 
 // ---- Home ----
 window.loadHomeContent = function loadHomeContent() {
+  // Prevent duplicate renders
+  if (window.render_home) {
+    console.log('[functions] Skipping duplicate home render');
+    return;
+  }
+  window.render_home = true;
+  
   const container = document.getElementById('homeSection');
-  if (!container) return;
+  if (!container) {
+    window.render_home = false;
+    return;
+  }
   
   FlickletDebug.info('🏠 Loading home content - using improved loading');
   
   // Start performance monitoring
   if (window.PerformanceMonitor) {
     window.PerformanceMonitor.startHomeLoad();
+  }
+  
+  // Clean up any existing duplicates first
+  if (typeof window.cleanupDuplicateCards === 'function') {
+    window.cleanupDuplicateCards();
   }
   
   // Load content with better sequencing
@@ -266,7 +324,46 @@ window.loadHomeContent = function loadHomeContent() {
     if (window.PerformanceMonitor) {
       window.PerformanceMonitor.endHomeLoad();
     }
+    // Clear render flag
+    window.render_home = false;
   }, 50);
+};
+
+// ---- Duplicate Cleanup ----
+window.cleanupDuplicateCards = function cleanupDuplicateCards() {
+  try {
+    const NS = "[cleanup]";
+    const log = (...a) => console.log(NS, ...a);
+    
+    log("Starting duplicate card cleanup...");
+    
+    // Get all cards with data attributes
+    const allCards = document.querySelectorAll('[data-item-id][data-list-type]');
+    const cardMap = new Map();
+    let duplicatesRemoved = 0;
+    
+    allCards.forEach(card => {
+      const itemId = card.dataset.itemId;
+      const listType = card.dataset.listType;
+      const key = `${itemId}-${listType}`;
+      
+      if (cardMap.has(key)) {
+        // This is a duplicate, remove it
+        card.remove();
+        duplicatesRemoved++;
+        log(`Removed duplicate card: ${key}`);
+      } else {
+        cardMap.set(key, card);
+      }
+    });
+    
+    log(`Cleanup complete. Removed ${duplicatesRemoved} duplicate cards.`);
+    return duplicatesRemoved;
+    
+  } catch (e) {
+    console.warn("[cleanup] Failed:", e?.message || e);
+    return 0;
+  }
 };
 
 // ---- Lists ----
@@ -283,12 +380,35 @@ window.loadListContent = function loadListContent(listType) {
     const log = (...a) => console.log(NS, ...a);
     const warn = (...a) => console.warn(NS, ...a);
 
+    // Prevent duplicate renders
+    const renderKey = `render_${listType}`;
+    if (window[renderKey]) {
+      log(`Skipping duplicate render for ${listType}`);
+      return;
+    }
+    window[renderKey] = true;
+
     const A = window.appData || {};
     const tv = A.tv || {}, mv = A.movies || {};
-    const items = [
+    const allItems = [
       ...(Array.isArray(tv[listType]) ? tv[listType] : []),
       ...(Array.isArray(mv[listType]) ? mv[listType] : [])
     ];
+    
+    // Deduplicate items by ID
+    const items = [];
+    const seenIds = new Set();
+    allItems.forEach(item => {
+      const id = item.id || item.tmdb_id || item.tmdbId;
+      if (id && !seenIds.has(id)) {
+        seenIds.add(id);
+        items.push(item);
+      } else if (id) {
+        log(`Skipping duplicate item: ${item.title || item.name} (ID: ${id})`);
+      }
+    });
+    
+    log(`Deduplicated ${allItems.length} items to ${items.length} unique items for ${listType}`);
     
     const container = document.getElementById(`${listType}Grid`) || 
                      document.getElementById(`${listType}List`) ||
@@ -299,10 +419,27 @@ window.loadListContent = function loadListContent(listType) {
                        (document.querySelector('main,#app,body')||document.body).appendChild(d);
                        return d;
                      })();
+    
+    log(`Container for ${listType}:`, container.id || container.className, 'Children before clear:', container.children.length);
 
     // Use list-container class for tab sections to enable horizontal layout
     container.className = 'list-container';
-    container.innerHTML = '';
+    
+    // Clear existing content to prevent duplication
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+    log(`Children after clear:`, container.children.length);
+    
+    // Remove any duplicate cards that might exist elsewhere
+    const existingCards = document.querySelectorAll(`[data-list-type="${listType}"]`);
+    log(`Found ${existingCards.length} existing cards for ${listType}`);
+    existingCards.forEach(card => {
+      if (card.parentNode && card.parentNode !== container) {
+        log(`Removing duplicate card from:`, card.parentNode.id || card.parentNode.className);
+        card.remove();
+      }
+    });
 
     if (!items.length) {
       container.innerHTML = '<div class="poster-cards-empty">Nothing here yet.</div>';
@@ -311,14 +448,22 @@ window.loadListContent = function loadListContent(listType) {
 
     // Use unified Card component for tab sections
     if (typeof window.Card === 'function' && typeof window.createCardData === 'function') {
-      items.forEach((it) => {
+      log(`Rendering ${items.length} items for ${listType}`);
+      items.forEach((it, index) => {
         try {
           const cardData = window.createCardData(it, 'tmdb', listType);
           const card = window.Card({
-            variant: 'unified',
+            variant: 'detail', // Use detail variant for tabs
             ...cardData
           });
-          if (card) container.appendChild(card);
+          if (card) {
+            // Add unique identifier to prevent duplication
+            card.dataset.itemId = cardData.id;
+            card.dataset.listType = listType;
+            card.dataset.renderIndex = index;
+            container.appendChild(card);
+            log(`Added card ${index + 1}/${items.length} for ${listType}:`, cardData.title);
+          }
         } catch (e) {
           warn("render item failed:", e?.message || e);
         }
@@ -394,8 +539,282 @@ window.loadListContent = function loadListContent(listType) {
         section: listType 
       } 
     }));
+    
+    log(`Final children count for ${listType}:`, container.children.length);
+    
+    // Clear render flag after a short delay to allow for legitimate re-renders
+    setTimeout(() => {
+      window[renderKey] = false;
+    }, 100);
+    
   } catch (e) {
     console.warn("[functions] loadListContent failed:", e?.message || e);
+    // Clear render flag on error
+    window[renderKey] = false;
+  }
+};
+
+/**
+ * Process: Episode Tracking Modal
+ * Purpose: Opens modal for tracking TV show episodes with season/episode selection
+ * Data Source: TMDB API for episode data, appData for user progress
+ * Update Path: Modify modal HTML structure or episode data handling
+ * Dependencies: Modal system, TMDB API, appData structure
+ */
+window.openEpisodeTrackingModal = function openEpisodeTrackingModal(itemId) {
+  try {
+    const NS = "[functions]";
+    const log = (...a) => console.log(NS, ...a);
+    
+    // Find the item in appData
+    const appData = window.appData || {};
+    const tv = appData.tv || {};
+    const movies = appData.movies || {};
+    
+    let item = null;
+    let mediaType = 'movie';
+    
+    // Search through all lists
+    for (const listType of ['watching', 'wishlist', 'watched']) {
+      const tvList = tv[listType] || [];
+      const movieList = movies[listType] || [];
+      
+      item = tvList.find(i => (i.id || i.tmdb_id) == itemId) || 
+             movieList.find(i => (i.id || i.tmdb_id) == itemId);
+      
+      if (item) {
+        mediaType = item.media_type || item.mediaType || (item.first_air_date ? 'tv' : 'movie');
+        break;
+      }
+    }
+    
+    if (!item) {
+      log("Item not found for episode tracking:", itemId);
+      return;
+    }
+    
+    if (mediaType !== 'tv') {
+      log("Episode tracking only available for TV shows");
+      return;
+    }
+    
+    // Create modal HTML
+    const modalHTML = `
+      <div class="episode-modal" id="episodeTrackingModal" aria-hidden="false" role="dialog">
+        <div class="episode-modal-overlay" data-close></div>
+        <div class="episode-modal-dialog" role="document">
+          <header class="episode-modal-header">
+            <h3>📺 Episode Tracking - ${item.title || item.name}</h3>
+            <button class="episode-modal-close" type="button" aria-label="Close" data-close>&times;</button>
+          </header>
+          <main class="episode-modal-body">
+            <div class="episode-progress">
+              <label for="currentSeason">Current Season:</label>
+              <select id="currentSeason" class="episode-select">
+                <option value="1">Season 1</option>
+                <option value="2">Season 2</option>
+                <option value="3">Season 3</option>
+              </select>
+            </div>
+            <div class="episode-progress">
+              <label for="currentEpisode">Current Episode:</label>
+              <select id="currentEpisode" class="episode-select">
+                <option value="1">Episode 1</option>
+                <option value="2">Episode 2</option>
+                <option value="3">Episode 3</option>
+              </select>
+            </div>
+            <div class="episode-actions">
+              <button class="episode-btn episode-btn--primary" data-action="save-progress">Save Progress</button>
+              <button class="episode-btn episode-btn--secondary" data-action="mark-season-complete">Mark Season Complete</button>
+              <button class="episode-btn episode-btn--secondary" data-action="mark-series-complete">Mark Series Complete</button>
+            </div>
+          </main>
+        </div>
+      </div>
+    `;
+    
+    // Remove existing modal if present
+    const existingModal = document.getElementById('episodeTrackingModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Add event listeners
+    const modal = document.getElementById('episodeTrackingModal');
+    const closeButtons = modal.querySelectorAll('[data-close]');
+    const actionButtons = modal.querySelectorAll('[data-action]');
+    
+    closeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        modal.remove();
+      });
+    });
+    
+    actionButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const action = e.target.dataset.action;
+        const season = parseInt(document.getElementById('currentSeason').value);
+        const episode = parseInt(document.getElementById('currentEpisode').value);
+        
+        switch (action) {
+          case 'save-progress':
+            log("Save progress:", { itemId, season, episode });
+            // TODO: Implement progress saving
+            break;
+          case 'mark-season-complete':
+            log("Mark season complete:", { itemId, season });
+            // TODO: Implement season completion
+            break;
+          case 'mark-series-complete':
+            log("Mark series complete:", { itemId });
+            if (window.moveItem) {
+              window.moveItem(Number(itemId), 'watched');
+            }
+            modal.remove();
+            break;
+        }
+      });
+    });
+    
+    // Close on overlay click
+    modal.querySelector('.episode-modal-overlay').addEventListener('click', () => {
+      modal.remove();
+    });
+    
+    log("Episode tracking modal opened for:", item.title || item.name);
+    
+  } catch (e) {
+    console.warn("[functions] openEpisodeTrackingModal failed:", e?.message || e);
+  }
+};
+
+/**
+ * Process: User Rating Update
+ * Purpose: Updates user's personal rating for an item
+ * Data Source: appData structure, localStorage persistence
+ * Update Path: Modify rating storage or validation logic
+ * Dependencies: appData structure, saveAppData function
+ */
+window.updateUserRating = function updateUserRating(itemId, rating) {
+  try {
+    const NS = "[functions]";
+    const log = (...a) => console.log(NS, ...a);
+    
+    const appData = window.appData || {};
+    
+    // Find and update the item in all lists
+    for (const mediaType of ['tv', 'movies']) {
+      const media = appData[mediaType] || {};
+      for (const listType of ['watching', 'wishlist', 'watched']) {
+        const list = media[listType] || [];
+        const item = list.find(i => (i.id || i.tmdb_id) == itemId);
+        if (item) {
+          item.userRating = rating;
+          log("Updated rating for", item.title || item.name, "to", rating);
+          break;
+        }
+      }
+    }
+    
+    // Save to localStorage
+    if (window.saveAppData) {
+      window.saveAppData();
+    }
+    
+  } catch (e) {
+    console.warn("[functions] updateUserRating failed:", e?.message || e);
+  }
+};
+
+/**
+ * Process: User Note Update
+ * Purpose: Updates user's personal note for an item
+ * Data Source: appData structure, localStorage persistence
+ * Update Path: Modify note storage or validation logic
+ * Dependencies: appData structure, saveAppData function
+ */
+window.updateUserNote = function updateUserNote(itemId, note) {
+  try {
+    const NS = "[functions]";
+    const log = (...a) => console.log(NS, ...a);
+    
+    const appData = window.appData || {};
+    
+    // Find and update the item in all lists
+    for (const mediaType of ['tv', 'movies']) {
+      const media = appData[mediaType] || {};
+      for (const listType of ['watching', 'wishlist', 'watched']) {
+        const list = media[listType] || [];
+        const item = list.find(i => (i.id || i.tmdb_id) == itemId);
+        if (item) {
+          item.userNote = note;
+          log("Updated note for", item.title || item.name);
+          break;
+        }
+      }
+    }
+    
+    // Save to localStorage
+    if (window.saveAppData) {
+      window.saveAppData();
+    }
+    
+  } catch (e) {
+    console.warn("[functions] updateUserNote failed:", e?.message || e);
+  }
+};
+
+/**
+ * Process: Item Reordering
+ * Purpose: Reorders items within user-owned lists using drag and drop
+ * Data Source: appData structure, localStorage persistence
+ * Update Path: Modify reordering logic or validation
+ * Dependencies: appData structure, saveAppData function
+ */
+window.reorderItems = function reorderItems(draggedId, targetId, listType) {
+  try {
+    const NS = "[functions]";
+    const log = (...a) => console.log(NS, ...a);
+    
+    const appData = window.appData || {};
+    
+    // Find and reorder items in both TV and movies lists
+    for (const mediaType of ['tv', 'movies']) {
+      const media = appData[mediaType] || {};
+      const list = media[listType] || [];
+      
+      const draggedIndex = list.findIndex(i => (i.id || i.tmdb_id) == draggedId);
+      const targetIndex = list.findIndex(i => (i.id || i.tmdb_id) == targetId);
+      
+      if (draggedIndex !== -1 && targetIndex !== -1 && draggedIndex !== targetIndex) {
+        // Remove dragged item
+        const draggedItem = list.splice(draggedIndex, 1)[0];
+        
+        // Insert at target position
+        list.splice(targetIndex, 0, draggedItem);
+        
+        log("Reordered", draggedItem.title || draggedItem.name, "in", listType, "list");
+        
+        // Save to localStorage
+        if (window.saveAppData) {
+          window.saveAppData();
+        }
+        
+        // Refresh the UI
+        if (window.loadListContent) {
+          window.loadListContent(listType);
+        }
+        
+        break;
+      }
+    }
+    
+  } catch (e) {
+    console.warn("[functions] reorderItems failed:", e?.message || e);
   }
 };
 

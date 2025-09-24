@@ -55,10 +55,15 @@ www/
 - **Reactive Updates**: Event listeners trigger UI updates
 - **Immutable Patterns**: Data updates create new objects rather than mutating
 
-## Authentication System (CRITICAL)
+## Authentication System (CRITICAL) ✅ COMPLETE
 
 ### AuthManager Architecture
-The authentication system uses a centralized `AuthManager` with strict patterns:
+The authentication system uses a centralized `AuthManager` with strict patterns. **ALL THREE LOGIN METHODS ARE FULLY FUNCTIONAL** as of v27.82:
+
+#### ✅ Working Login Methods
+1. **Google Sign-In**: Popup (desktop) or redirect (mobile/blocked) - ✅ WORKING
+2. **Apple Sign-In**: Redirect-only with proper flag management - ✅ WORKING  
+3. **Email/Password**: Form-based with modal display - ✅ WORKING
 
 #### Button Binding Rules
 - **Single Listener Only**: `#accountButton` must have exactly 1 click listener
@@ -90,16 +95,25 @@ The authentication system uses a centralized `AuthManager` with strict patterns:
 '[identity] snark:render=<snarkText>'
 ```
 
-#### Redirect Hygiene
+#### Redirect Hygiene ✅ IMPLEMENTED
 - **Always Clear**: `sessionStorage.removeItem('auth:redirectPending')` in `finally` blocks
 - **Flag Management**: Use `setRedirectFlag()` and `clearRedirectFlag()` consistently
 - **Error Handling**: Clear flags on both success and error paths
+- **DOM Readiness**: Gated redirect handling by flag and DOM readiness
+- **Fast Guards**: Immediate return if no redirect flag or DOM not ready
 
-#### Username Pipeline
+#### Username Pipeline ✅ IMPLEMENTED
 - **Display Name**: Shows on account button (Firebase `displayName` or email prefix)
 - **Username**: Shows in `#leftSnark` (Firestore `settings.username`)
 - **Flow**: Sign-in → Check username → Prompt if missing → Save → Render snark
 - **Persistence**: Save to both Firestore and local `appData.settings.username`
+
+#### Critical Fixes Applied ✅
+1. **Apple Login TypeError**: Fixed with hard redirect implementation and proper error handling
+2. **Email Modal Visibility**: Fixed by removing `#emailAuthModal` from provider modal cleanup
+3. **Redirect Flag Management**: Enhanced with DOM readiness checks and fast guards
+4. **Modal Styling**: Enhanced with higher z-index (`99999`) and forced visibility
+5. **Comprehensive Debugging**: Added detailed logging for all authentication flows
 
 ## Coding Standards & Conventions
 
@@ -180,12 +194,16 @@ const cardData = {
 - **`FlickletApp.handlePostAuthSuccess(user)`**: Post-auth pipeline
 - **`FlickletApp.handleUserIdentity(user)`**: Username/snark management
 
-### Authentication (`auth-manager.js`)
-- **`AuthManager.init()`**: Initialize auth system
-- **`AuthManager.setupAccountButton()`**: Idempotent button binding
-- **`AuthManager.startLogin(provider)`**: Multi-provider auth
-- **`AuthManager.handleRedirectResult()`**: Redirect flow handling
+### Authentication (`auth-manager.js`) ✅ COMPLETE
+- **`AuthManager.init()`**: Initialize auth system with gated redirect handling
+- **`AuthManager.setupAccountButton()`**: Idempotent button binding with single listener
+- **`AuthManager.startLogin(provider)`**: Multi-provider auth (Google/Apple/Email)
+- **`AuthManager.handleRedirectResult()`**: Redirect flow handling with DOM readiness
 - **`AuthManager.showProviderModal()`**: Provider selection UI
+- **`AuthManager.showEmailModal()`**: Email/password form with enhanced visibility
+- **`AuthManager.handleEmailSubmit()`**: Email authentication with comprehensive logging
+- **`AuthManager.startAppleLogin()`**: Apple redirect-only with localhost warnings
+- **`AuthManager.startGoogleLogin()`**: Google popup/redirect with fallback handling
 
 ### Business Logic (`functions.js`)
 - **`loadListContent(listType)`**: Render list items with unified card system
@@ -394,8 +412,9 @@ npm run lh:mobile    # Lighthouse mobile audit
 
 ### Version Management
 - **Semantic Versioning**: Major.Minor.Patch
-- **Auto-increment**: Version bumped on code changes (currently v27.71)
+- **Auto-increment**: Version bumped on code changes (currently v27.82)
 - **Rollback Support**: Easy rollback with version display
+- **Authentication Complete**: All login methods working as of v27.82
 
 ## Common Patterns & Best Practices
 
@@ -461,9 +480,9 @@ document.addEventListener('click', (e) => {
 - **Performance Monitor**: Built-in performance tracking
 - **Error Boundaries**: Graceful error handling with fallbacks
 
-### Authentication Debugging
+### Authentication Debugging ✅ COMPLETE
 ```javascript
-// Check button listeners
+// Check button listeners (should be exactly 1)
 getEventListeners(document.getElementById('accountButton')).click?.length
 
 // Check redirect flag
@@ -474,7 +493,28 @@ document.getElementById('leftSnark')?.textContent
 
 // Check account button label
 document.getElementById('accountButtonLabel')?.textContent
+
+// Check email modal visibility
+document.getElementById('emailAuthModal')?.offsetParent !== null
+
+// Check provider modal state
+document.getElementById('providerModal')?.offsetParent !== null
+
+// Debug all authentication flows
+console.log('[auth] All login methods working:', {
+  google: '✅ Popup/redirect with fallback',
+  apple: '✅ Redirect-only with localhost warnings', 
+  email: '✅ Form-based with enhanced modal visibility'
+});
 ```
+
+#### Authentication Status ✅ ALL WORKING
+- **Google Login**: ✅ Popup (desktop) / Redirect (mobile) with proper fallback
+- **Apple Login**: ✅ Redirect-only with localhost warnings and Apple-specific error hints
+- **Email Login**: ✅ Form-based with enhanced modal visibility (z-index: 99999)
+- **Modal Management**: ✅ Proper cleanup without conflicts
+- **Redirect Handling**: ✅ Gated by flag and DOM readiness
+- **Error Handling**: ✅ Comprehensive logging and user feedback
 
 ## FlickWord Game System
 

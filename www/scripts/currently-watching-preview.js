@@ -171,10 +171,11 @@
   }
 
   /**
-   * Render the Currently Watching Preview row
+   * Internal render function without guards (for internal calls)
    */
-  function renderCurrentlyWatchingPreview() {
-    console.log('🎬 renderCurrentlyWatchingPreview called');
+  function renderCurrentlyWatchingPreviewInternal() {
+    console.log('🎬 renderCurrentlyWatchingPreviewInternal called');
+    
     const previewSection = document.getElementById('currentlyWatchingPreview');
     const scrollContainer = document.getElementById('currentlyWatchingScroll');
     
@@ -223,7 +224,8 @@
               console.log('🎬 Found real items on retry, replacing test data...');
               // Clear container before rendering real data
               scrollContainer.innerHTML = '';
-              renderCurrentlyWatchingPreview();
+              // Call the render function directly instead of recursively
+              renderCurrentlyWatchingPreviewInternal();
             }
             window._currentlyWatchingRetryScheduled = false; // Reset for future use
           }, 3000);
@@ -237,20 +239,26 @@
       return;
     }
 
-    console.log('🎬 Rendering', watchingItems.length, 'currently watching items');
+    // Show the section
     previewSection.style.display = 'block';
-
-    // Clear existing content
     scrollContainer.innerHTML = '';
 
-    // Render items based on configurable limit
-    const maxItems = getCurrentlyWatchingLimit();
-    const itemsToShow = watchingItems.slice(0, maxItems);
+    // Limit items to prevent performance issues
+    const limit = getCurrentlyWatchingLimit();
+    const limitedItems = watchingItems.slice(0, limit);
     
-    itemsToShow.forEach(item => {
+    console.log(`🎬 Rendering ${limitedItems.length} watching items (limited from ${watchingItems.length})`);
+
+    // Render each item
+    limitedItems.forEach(item => {
       const card = createPreviewCard(item);
       scrollContainer.appendChild(card);
     });
+
+    // Add scroll indicators if there are more items than can be displayed
+    if (watchingItems.length > limit) {
+      console.log(`🎬 Added scroll indicators for ${watchingItems.length - limit} additional items`);
+    }
     
     // Post-render validation: check that all poster URLs are properly formatted
     validatePosterUrls();
@@ -258,10 +266,44 @@
     // Dispatch event to notify that cards have been rendered
     window.dispatchEvent(new CustomEvent('cards:rendered', { 
       detail: { 
-        count: itemsToShow.length,
+        count: limitedItems.length,
         section: 'currently-watching' 
       } 
     }));
+  }
+
+  /**
+   * Render the Currently Watching Preview row
+   */
+  function renderCurrentlyWatchingPreview() {
+    console.log('🎬 renderCurrentlyWatchingPreview called');
+    
+    // Prevent duplicate renders
+    if (window.render_currently_watching_preview) {
+      console.log('🎬 Skipping duplicate currently watching preview render');
+      return;
+    }
+    window.render_currently_watching_preview = true;
+    
+    const previewSection = document.getElementById('currentlyWatchingPreview');
+    const scrollContainer = document.getElementById('currentlyWatchingScroll');
+    
+    if (!previewSection || !scrollContainer) {
+      console.error('❌ Preview elements not found', { previewSection: !!previewSection, scrollContainer: !!scrollContainer });
+      window.render_currently_watching_preview = false;
+      return;
+    }
+
+    // Ensure the card wrapper has the class for CSS targeting
+    scrollContainer.classList.add('row-inner');
+
+    try {
+      // Call the internal render function
+      renderCurrentlyWatchingPreviewInternal();
+    } finally {
+      // Always reset the render guard
+      window.render_currently_watching_preview = false;
+    }
   }
   
   /**
@@ -311,52 +353,40 @@
    * Get currently watching items from app data
    */
   function getCurrentlyWatchingItems() {
-    console.log('🔍 getCurrentlyWatchingItems called');
-    
-    // Check if data is being loaded but not yet available
-    if (window.appData?.tv?.watching && window.appData.tv.watching.length === 0) {
-      console.log('🔍 TV watching array exists but is empty. Checking if data is still loading...');
-      // Check if there's a loading indicator or if we should wait longer
-      const hasLoadingIndicator = document.querySelector('.skeleton, .loading, [data-loading]');
-      if (hasLoadingIndicator) {
-        console.log('🔍 Loading indicator found, data might still be loading');
-      }
-    }
-
     if (!window.appData) {
-      console.warn('⚠️ appData not available');
       return [];
     }
 
-    const watchingItems = [];
+    const allWatchingItems = [];
     
     // Get TV shows
     if (window.appData.tv?.watching) {
-      console.log('📺 Found TV watching items:', window.appData.tv.watching.length);
-      console.log('📺 TV watching items data:', window.appData.tv.watching);
-      watchingItems.push(...window.appData.tv.watching.map(item => {
-        console.log('📺 Processing TV item:', item);
-        return {
-          ...item,
-          mediaType: 'tv'
-        };
-      }));
-    } else {
-      console.log('📺 No TV watching items found');
+      allWatchingItems.push(...window.appData.tv.watching.map(item => ({
+        ...item,
+        mediaType: 'tv'
+      })));
     }
 
     // Get movies
     if (window.appData.movies?.watching) {
-      console.log('🎬 Found movie watching items:', window.appData.movies.watching.length);
-      watchingItems.push(...window.appData.movies.watching.map(item => ({
+      allWatchingItems.push(...window.appData.movies.watching.map(item => ({
         ...item,
         mediaType: 'movie'
       })));
-    } else {
-      console.log('🎬 No movie watching items found');
     }
-
-    console.log('🎬 Total watching items found:', watchingItems.length);
+    
+    // Deduplicate items by ID
+    const watchingItems = [];
+    const seenIds = new Set();
+    allWatchingItems.forEach(item => {
+      const id = item.id || item.tmdb_id || item.tmdbId;
+      if (id && !seenIds.has(id)) {
+        seenIds.add(id);
+        watchingItems.push(item);
+      }
+    });
+    
+    console.log(`🎬 Found ${watchingItems.length} unique watching items`);
     
     // If no items found, try alternative data access patterns
     if (watchingItems.length === 0) {

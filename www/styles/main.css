@@ -981,6 +981,16 @@ body.mardi {
   width: var(--home-card-width-desktop) !important;
 }
 
+/* Detail variant for tabs - horizontal layout */
+.unified-card--detail {
+  flex-direction: row !important;
+  width: 100% !important;
+  max-width: 600px;
+  min-width: 400px;
+  height: 180px !important;
+  margin: 0 !important;
+}
+
 .unified-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -995,6 +1005,14 @@ body.mardi {
   overflow: hidden;
   flex-shrink: 0;
   cursor: pointer;
+}
+
+/* Detail variant poster - left side */
+.unified-card--detail .unified-card-poster {
+  width: 120px !important;
+  height: 180px !important;
+  flex-shrink: 0 !important;
+  border-radius: 0 !important;
 }
 
 .unified-card-poster-container {
@@ -1072,6 +1090,18 @@ body.mardi {
   opacity: 1;
 }
 
+/* Detail variant actions - right side */
+.unified-card--detail .unified-card-actions {
+  position: static;
+  background: transparent;
+  padding: 8px 0;
+  opacity: 1;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
 .unified-card-action-btn {
   background: rgba(255, 255, 255, 0.9);
   color: var(--text);
@@ -1121,6 +1151,18 @@ body.mardi {
   text-align: center;
 }
 
+/* Detail variant content - right side */
+.unified-card--detail .unified-card-content {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+  overflow: hidden;
+  text-align: left;
+}
+
 .unified-card-title {
   font-size: 0.7rem;
   font-weight: 600;
@@ -1133,6 +1175,20 @@ body.mardi {
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-align: center;
+}
+
+/* Detail variant title - larger */
+.unified-card--detail .unified-card-title {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  margin: 0 0 8px 0 !important;
+  line-height: 1.3 !important;
+  display: block;
+  -webkit-line-clamp: initial;
+  line-clamp: initial;
+  -webkit-box-orient: initial;
+  overflow: visible;
+  text-align: left;
 }
 
 .unified-card-subtitle {
@@ -1148,6 +1204,285 @@ body.mardi {
   color: var(--accent);
   text-align: center;
   margin: 0;
+}
+
+/* Detail variant rating input */
+.unified-card-rating-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.unified-card-rating-input label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.unified-card-rating-select {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.8rem;
+  min-width: 120px;
+}
+
+/* Detail variant notes */
+.unified-card-notes {
+  margin: 8px 0;
+}
+
+.unified-card-notes label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.unified-card-note-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.8rem;
+  resize: vertical;
+  min-height: 40px;
+  font-family: inherit;
+}
+
+/* Pro action buttons */
+.unified-card-action-btn--pro {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e) !important;
+  color: white !important;
+  border: 1px solid #ff6b6b !important;
+}
+
+.unified-card-action-btn--pro:hover {
+  background: linear-gradient(135deg, #ff5252, #ff7979) !important;
+}
+
+/* Danger action buttons */
+.unified-card-action-btn--danger {
+  background: rgba(220, 53, 69, 0.9) !important;
+  color: white !important;
+}
+
+.unified-card-action-btn--danger:hover {
+  background: rgba(200, 35, 51, 0.95) !important;
+}
+
+/* Episode Tracking Modal */
+.episode-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.episode-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.episode-modal-dialog {
+  position: relative;
+  background: var(--bg);
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+}
+
+.episode-modal-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.episode-modal-header h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.2rem;
+}
+
+.episode-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.episode-modal-close:hover {
+  color: var(--text);
+}
+
+.episode-modal-body {
+  padding: 20px;
+}
+
+.episode-progress {
+  margin-bottom: 20px;
+}
+
+.episode-progress label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.episode-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.episode-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.episode-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.episode-btn--primary {
+  background: var(--primary);
+  color: white;
+}
+
+.episode-btn--primary:hover {
+  background: var(--primary-dark);
+}
+
+.episode-btn--secondary {
+  background: var(--border);
+  color: var(--text);
+}
+
+.episode-btn--secondary:hover {
+  background: var(--text-secondary);
+  color: white;
+}
+
+/* Back to Top Button */
+.back-to-top {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 768px) {
+  .back-to-top {
+    bottom: 15px;
+    right: 15px;
+    width: 45px;
+    height: 45px;
+    font-size: 1rem;
+  }
+}
+
+/* Drag and Drop Styles */
+.unified-card.draggable {
+  cursor: grab;
+  transition: all 0.2s ease;
+}
+
+.unified-card.draggable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.unified-card.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
+  cursor: grabbing;
+  z-index: 1000;
+}
+
+.unified-card.drag-over {
+  border: 2px dashed var(--primary);
+  background: rgba(var(--primary-rgb), 0.1);
+}
+
+.unified-card.drag-over::before {
+  content: 'Drop here';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--primary);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  z-index: 1001;
+  pointer-events: none;
 }
 
 /* Mobile Adjustments */
@@ -1188,6 +1523,36 @@ body.mardi {
   
   .unified-card-rating {
     font-size: 0.55rem;
+  }
+  
+  /* Detail variant mobile adjustments */
+  .unified-card--detail {
+    flex-direction: column !important;
+    max-width: none !important;
+    min-width: auto !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  
+  .unified-card--detail .unified-card-poster {
+    width: 80px !important;
+    height: 120px !important;
+    align-self: center !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .unified-card--detail .unified-card-content {
+    padding: 12px !important;
+    text-align: center !important;
+  }
+  
+  .unified-card--detail .unified-card-title {
+    font-size: 16px !important;
+  }
+  
+  .unified-card--detail .unified-card-actions {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
   }
 }
 

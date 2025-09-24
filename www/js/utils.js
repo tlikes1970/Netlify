@@ -124,10 +124,18 @@ window.toggleDarkMode = function toggleDarkMode() {
 
 // ---- TMDB Helpers ----
 window.openTMDBLink = function openTMDBLink(id, mediaType) {
-  const base = (window.TMDB_CONFIG && window.TMDB_CONFIG.baseUrl) ? window.TMDB_CONFIG.baseUrl : 'https://www.themoviedb.org';
-  const type = (mediaType === 'tv') ? 'tv' : 'movie';
-  const url = `${base}/${type}/${id}`;
-  window.open(url, '_blank', 'noopener');
+  try {
+    console.log('🔗 openTMDBLink called with:', { id, mediaType });
+    const base = 'https://www.themoviedb.org'; // Always use TMDB website directly
+    const type = (mediaType === 'tv') ? 'tv' : 'movie';
+    const url = `${base}/${type}/${id}`;
+    console.log('🔗 Opening URL:', url);
+    window.open(url, '_blank', 'noopener');
+  } catch (error) {
+    console.error('❌ openTMDBLink error:', error);
+    // Fallback: try to open URL anyway
+    window.open(`https://www.themoviedb.org/${mediaType === 'tv' ? 'tv' : 'movie'}/${id}`, '_blank');
+  }
 };
 
 // ---- List & Item Utilities ----

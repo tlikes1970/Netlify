@@ -3,12 +3,98 @@
    Expects items with { id, title, posterPath }. Map your data if needed.
 */
 
+/**
+ * Load dynamic content for a curated section based on genre
+ */
+async function loadDynamicContent(section, sectionIndex) {
+  try {
+    console.log(`🎯 Loading dynamic content for: ${section.title}`);
+    
+    // Map section titles to TMDB genre IDs
+    const genreMap = {
+      'Drama & Crime': { movie: 18, tv: 18 }, // Drama
+      'Comedy & Sitcoms': { movie: 35, tv: 35 }, // Comedy  
+      'Sci-Fi & Fantasy': { movie: 878, tv: 10765 } // Sci-Fi & Fantasy
+    };
+    
+    const genre = genreMap[section.title];
+    if (!genre) {
+      console.warn(`🎯 No genre mapping found for: ${section.title}`);
+      return [];
+    }
+    
+    // Get API key
+    const apiKey = window.__TMDB_API_KEY__ || window.TMDB_CONFIG?.apiKey;
+    if (!apiKey) {
+      console.error('🎯 TMDB API key not available');
+      return [];
+    }
+    
+    // Get current language
+    const currentLang = window.appData?.settings?.lang || 'en';
+    const tmdbLang = currentLang === 'es' ? 'es-ES' : 'en-US';
+    
+    // Load both movies and TV shows for this genre
+    const [moviesResponse, tvResponse] = await Promise.all([
+      fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genre.movie}&sort_by=popularity.desc&page=1&language=${tmdbLang}`),
+      fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&with_genres=${genre.tv}&sort_by=popularity.desc&page=1&language=${tmdbLang}`)
+    ]);
+    
+    if (!moviesResponse.ok || !tvResponse.ok) {
+      throw new Error('Failed to fetch dynamic content');
+    }
+    
+    const moviesData = await moviesResponse.json();
+    const tvData = await tvResponse.json();
+    
+    // Combine and format results
+    const allItems = [
+      ...moviesData.results.map(item => ({ 
+        ...item, 
+        media_type: 'movie',
+        mediaType: 'movie',
+        title: item.title,
+        year: new Date(item.release_date).getFullYear(),
+        posterPath: item.poster_path
+      })),
+      ...tvData.results.map(item => ({ 
+        ...item, 
+        media_type: 'tv',
+        mediaType: 'tv', 
+        title: item.name,
+        year: new Date(item.first_air_date).getFullYear(),
+        posterPath: item.poster_path
+      }))
+    ];
+    
+    // Limit to 12 items per section
+    const limitedItems = allItems.slice(0, 12);
+    
+    console.log(`🎯 Dynamic content loaded: ${limitedItems.length} items for ${section.title}`);
+    return limitedItems;
+    
+  } catch (error) {
+    console.error(`🎯 Error loading dynamic content for ${section.title}:`, error);
+    return [];
+  }
+}
+
 // Define initializeCurated function first
 function initializeCurated() {
+  // Prevent duplicate renders
+  if (window.render_curated) {
+    console.log('🎯 Skipping duplicate curated render');
+    return;
+  }
+  window.render_curated = true;
+  
   let mount = document.getElementById('curatedSections');
   if (!mount) {
     mount = document.getElementById('curatedSections');
-    if (!mount) return;
+    if (!mount) {
+      window.render_curated = false;
+      return;
+    }
   }
 
   // Defensive guard for Card component
@@ -26,7 +112,8 @@ function initializeCurated() {
   // Clear existing content
   mount.innerHTML = '';
 
-  limitedSections.forEach((section, index) => {
+  // Load dynamic content for each section
+  limitedSections.forEach(async (section, index) => {
     // Create horizontal row container
     const rowEl = document.createElement('div');
     rowEl.className = 'curated-row';
@@ -55,9 +142,14 @@ function initializeCurated() {
     // Make the container visible
     mount.style.display = 'block';
 
-    // Render items for this section
-    if (section.items && section.items.length > 0) {
-      section.items.forEach(item => {
+    // Load dynamic content for this section
+    try {
+      const items = await loadDynamicContent(section, index);
+      
+      if (items && items.length > 0) {
+        console.log(`🎯 Loaded ${items.length} dynamic items for section: ${section.title}`);
+        
+        items.forEach(item => {
         if (USE_CARD && window.Card && window.createCardData) {
           // Use unified card component
           const cardData = window.createCardData(item, 'tmdb', 'curated');
@@ -168,16 +260,27 @@ function initializeCurated() {
           itemsContainer.appendChild(itemEl);
         }
       });
+    } else {
+      console.log(`🎯 No dynamic content loaded for section: ${section.title}`);
+    }
+    } catch (error) {
+      console.error(`🎯 Error loading dynamic content for ${section.title}:`, error);
     }
   });
   
   // Dispatch event to notify that curated cards have been rendered
+  // Note: Count will be updated as dynamic content loads
   window.dispatchEvent(new CustomEvent('cards:rendered', { 
     detail: { 
-      count: limitedSections.reduce((total, section) => total + (section.items?.length || 0), 0),
+      count: 0, // Will be updated as content loads
       section: 'curated' 
     } 
   }));
+  
+  // Clear render flag after a short delay
+  setTimeout(() => {
+    window.render_curated = false;
+  }, 100);
 }
 
 // Export init function for idle import

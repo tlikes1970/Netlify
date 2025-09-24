@@ -112,6 +112,9 @@ window.FlickletDebug = window.FlickletDebug || {
           window.LanguageManager.reinitialize();
         }
 
+        // 2.6) Initialize FAB icons
+        this.initializeFABIcons();
+
         // 3) Initialize Firebase auth listener
         this.initFirebase();
 
@@ -131,12 +134,17 @@ window.FlickletDebug = window.FlickletDebug || {
         this.switchToTab('home');
         this.updateUI();
         
+        // 7.5) Dock FABs to active tab
+        this.dockFABsToActiveTab();
+        
         // 6) Update tab badges after UI is ready
         setTimeout(() => {
           if (typeof window.updateTabCounts === 'function') {
             console.log('🔢 Calling updateTabCounts during initialization');
             window.updateTabCounts();
           }
+          // Ensure FABs are docked after everything is ready
+          this.dockFABsToActiveTab();
         }, 500);
 
         // Auth listener handled in initFirebase()
@@ -640,22 +648,70 @@ waitForFirebaseReady() {
     },
 
     clearUserData() {
-      // Clear user data when signing out
+      console.log('🧹 FlickletApp.clearUserData called');
+      
+      // Clear user references
       this.currentUser = null;
       window.currentUser = null;
       
-      // Clear any cached user data
-      if (window.appData) {
-        window.appData.settings = window.appData.settings || {};
-        window.appData.settings.username = '';
+      // Clear localStorage data
+      try {
+        localStorage.removeItem("flicklet-data");
+        localStorage.removeItem("tvMovieTrackerData");
+        localStorage.removeItem("flicklet_lists");
+        localStorage.removeItem("flicklet_notes");
+        localStorage.removeItem("flicklet_prefs");
+        localStorage.removeItem("flicklet-language");
+        localStorage.removeItem("flicklet-theme");
+        localStorage.removeItem("flicklet:pro");
+        localStorage.removeItem("flicklet:episodeTracking:enabled");
+        localStorage.removeItem("flicklet:episodeTracking:series");
+        console.log('🧹 localStorage cleared');
+      } catch (e) {
+        console.warn('🧹 Failed to clear localStorage:', e);
       }
+      
+      // Reset appData to empty state
+      if (window.appData) {
+        window.appData.tv = { watching: [], wishlist: [], watched: [] };
+        window.appData.movies = { watching: [], wishlist: [], watched: [] };
+        window.appData.settings = {
+          isPro: true, // Default to true for dev testing
+          episodeTracking: true, // Default to true for dev testing
+          pro: true, // Default to true for dev testing
+          username: '',
+          displayName: '',
+          lang: 'en',
+          theme: 'light'
+        };
+        window.appData.searchCache = [];
+        window.appData.activeTagFilters = new Set();
+        console.log('🧹 appData reset to empty state');
+      }
+      
+      // Clear render flags
+      Object.keys(window).forEach(key => {
+        if (key.startsWith('render_')) {
+          window[key] = false;
+        }
+      });
       
       // Update UI to reflect signed out state
       if (window.UserViewModel) {
         window.UserViewModel.update(null);
       }
       
-      console.log('🧹 User data cleared');
+      // Clear any duplicate cards
+      if (typeof window.cleanupDuplicateCards === 'function') {
+        window.cleanupDuplicateCards();
+      }
+      
+      // Trigger UI refresh
+      if (typeof window.updateUI === 'function') {
+        window.updateUI();
+      }
+      
+      console.log('✅ FlickletApp user data cleared');
     },
 
     // Firestore settings helpers - now using direct path structure
@@ -1531,6 +1587,116 @@ waitForFirebaseReady() {
       if (typeof updateTabContent === 'function') {
         updateTabContent(tab);
       }
+      
+      // Dock FABs to the new active tab
+      this.dockFABsToActiveTab();
+    },
+
+    /**
+     * Toggle between light and dark theme
+     */
+    toggleTheme() {
+      if (!window.ThemeManager) {
+        console.warn('⚠️ ThemeManager not available');
+        return;
+      }
+      
+      const currentTheme = window.ThemeManager.theme;
+      let newTheme;
+      
+      if (currentTheme === 'system') {
+        newTheme = window.ThemeManager.effectiveTheme === 'dark' ? 'light' : 'dark';
+      } else if (currentTheme === 'light') {
+        newTheme = 'dark';
+      } else {
+        newTheme = 'light';
+      }
+      
+      window.ThemeManager.theme = newTheme;
+      
+      // Update FAB icon
+      const themeFab = document.getElementById('themeToggleFab');
+      if (themeFab) {
+        const icon = themeFab.querySelector('span');
+        if (icon) {
+          icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+      }
+      
+      console.log(`🌙 Theme switched to: ${newTheme}`);
+      this.showNotification(`Theme switched to ${newTheme}`, 'info');
+    },
+
+    /**
+     * Toggle Mardi Gras mode
+     */
+    toggleMardiGras() {
+      console.log('🎭 toggleMardiGras called');
+      
+      if (!window.ThemeManager) {
+        console.warn('⚠️ ThemeManager not available');
+        return;
+      }
+      
+      const currentMardi = window.ThemeManager.mardi;
+      console.log('🎭 Current Mardi Gras state:', currentMardi);
+      
+      const newMardi = currentMardi === 'on' ? 'off' : 'on';
+      console.log('🎭 New Mardi Gras state:', newMardi);
+      
+      window.ThemeManager.mardi = newMardi;
+      
+      // Debug: Check if the body attribute is being set
+      console.log('🎭 Body data-mardi attribute:', document.body.getAttribute('data-mardi'));
+      console.log('🎭 Body classes:', document.body.className);
+      
+      // Update FAB icon
+      const mardiFab = document.getElementById('mardiGrasFab');
+      console.log('🎭 Mardi Gras FAB element:', mardiFab);
+      if (mardiFab) {
+        const icon = mardiFab.querySelector('span');
+        console.log('🎭 Mardi Gras FAB icon element:', icon);
+        if (icon) {
+          icon.textContent = newMardi === 'on' ? '🎉' : '🎭';
+          console.log('🎭 Updated icon to:', icon.textContent);
+        }
+      }
+      
+      console.log(`🎭 Mardi Gras mode: ${newMardi}`);
+      this.showNotification(`Mardi Gras mode ${newMardi === 'on' ? 'enabled' : 'disabled'}`, 'info');
+    },
+
+    /**
+     * Initialize FAB icons based on current theme state
+     */
+    initializeFABIcons() {
+      // Wait for ThemeManager to be available
+      if (!window.ThemeManager) {
+        setTimeout(() => this.initializeFABIcons(), 100);
+        return;
+      }
+
+      // Set theme toggle icon
+      const themeFab = document.getElementById('themeToggleFab');
+      if (themeFab) {
+        const icon = themeFab.querySelector('span');
+        if (icon) {
+          const currentTheme = window.ThemeManager.effectiveTheme;
+          icon.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
+        }
+      }
+
+      // Set Mardi Gras toggle icon
+      const mardiFab = document.getElementById('mardiGrasFab');
+      if (mardiFab) {
+        const icon = mardiFab.querySelector('span');
+        if (icon) {
+          const currentMardi = window.ThemeManager.mardi;
+          icon.textContent = currentMardi === 'on' ? '🎉' : '🎭';
+        }
+      }
+
+      console.log('🎨 FAB icons initialized');
     },
 
     // ---------- UX Helpers ----------
@@ -1687,6 +1853,33 @@ waitForFirebaseReady() {
             break;
           default:
             console.warn(t('unknown_data_action') + ':', action);
+        }
+      });
+
+      // FAB Event Handlers
+      document.addEventListener('click', (e) => {
+        // Settings FAB
+        if (e.target.closest('#btnSettings')) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('⚙️ Settings FAB clicked');
+          this.switchToTab('settings');
+        }
+        
+        // Theme Toggle FAB
+        if (e.target.closest('#themeToggleFab')) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('🌙 Theme toggle FAB clicked');
+          this.toggleTheme();
+        }
+        
+        // Mardi Gras Toggle FAB
+        if (e.target.closest('#mardiGrasFab')) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('🎭 Mardi Gras FAB clicked - event handler triggered');
+          this.toggleMardiGras();
         }
       });
 
@@ -2243,6 +2436,9 @@ waitForFirebaseReady() {
 
          // Expose singleton
          window.FlickletApp = App;
+         
+         // Expose clearUserData function globally for auth manager
+         window.clearUserData = () => App.clearUserData();
 
          // Also expose as instance for compatibility
          window.FlickletAppInstance = App;
@@ -2361,4 +2557,65 @@ waitForFirebaseReady() {
       console.error('❌ Failed to save display name:', error);
     }
   };
+
+  /**
+   * Process: Back to Top Functionality
+   * Purpose: Adds floating back-to-top button that appears on scroll
+   * Data Source: Window scroll events
+   * Update Path: Modify scroll threshold or button styling
+   * Dependencies: CSS for .back-to-top class
+   */
+  FlickletApp.initBackToTop = function initBackToTop() {
+    try {
+      const NS = "[app]";
+      const log = (...a) => console.log(NS, ...a);
+      
+      // Create back-to-top button
+      const backToTopBtn = document.createElement('button');
+      backToTopBtn.className = 'back-to-top';
+      backToTopBtn.innerHTML = '↑';
+      backToTopBtn.setAttribute('aria-label', 'Back to top');
+      backToTopBtn.setAttribute('title', 'Back to top');
+      
+      // Add to body
+      document.body.appendChild(backToTopBtn);
+      
+      // Scroll handler
+      let isVisible = false;
+      const scrollThreshold = 300; // Show after scrolling 300px
+      
+      function handleScroll() {
+        const scrollY = window.scrollY || document.documentElement.scrollTop;
+        const shouldShow = scrollY > scrollThreshold;
+        
+        if (shouldShow !== isVisible) {
+          isVisible = shouldShow;
+          if (isVisible) {
+            backToTopBtn.classList.add('visible');
+          } else {
+            backToTopBtn.classList.remove('visible');
+          }
+        }
+      }
+      
+      // Click handler
+      backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      });
+      
+      // Add scroll listener
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      
+      log("Back-to-top functionality initialized");
+      
+    } catch (e) {
+      console.warn("[app] initBackToTop failed:", e?.message || e);
+    }
+  };
+
+  // Initialize back-to-top functionality
+  FlickletApp.initBackToTop();
 })();
