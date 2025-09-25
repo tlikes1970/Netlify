@@ -345,13 +345,7 @@ class LanguageManager {
         return;
       }
       
-      const tmdbLang = lang === 'es' ? 'es-ES' : 'en-US';
-      const apiKey = window.__TMDB_API_KEY__ || window.TMDB_CONFIG?.apiKey;
-      
-      if (!apiKey) {
-        console.warn('🔄 TMDB API key not available for metadata refresh');
-        return;
-      }
+      const tmdbLang = window.getTMDBLocale(lang);
       
       let updated = false;
       
@@ -361,9 +355,8 @@ class LanguageManager {
           const item = appData.tv.watching[i];
           if (item.id) {
             try {
-              const response = await window.tmdbGet(`tv/${item.id}`, { language: tmdbLang });
-              if (response.ok) {
-                const tmdbData = await response.json();
+              const tmdbData = await window.tmdbGet(`tv/${item.id}`, { language: tmdbLang });
+              if (tmdbData && tmdbData.id) {
                 // Update only the translatable fields, preserve user data
                 appData.tv.watching[i] = {
                   ...item, // Preserve user data (added_date, notes, etc.)
@@ -387,9 +380,8 @@ class LanguageManager {
           const item = appData.movies.watching[i];
           if (item.id) {
             try {
-              const response = await window.tmdbGet(`movie/${item.id}`, { language: tmdbLang });
-              if (response.ok) {
-                const tmdbData = await response.json();
+              const tmdbData = await window.tmdbGet(`movie/${item.id}`, { language: tmdbLang });
+              if (tmdbData && tmdbData.id) {
                 // Update only the translatable fields, preserve user data
                 appData.movies.watching[i] = {
                   ...item, // Preserve user data (added_date, notes, etc.)

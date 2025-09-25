@@ -1,12 +1,12 @@
 // Flags must exist before any feature checks in row modules.
 window.FLAGS = window.FLAGS || {};
-// Turn on Card v2 for validation; we can gate later via config.
+// Turn on Card v2 for validation; we can gate later via config. - DISABLED due to functionality issues
 if (typeof window.FLAGS.cards_v2 === 'undefined') {
-  window.FLAGS.cards_v2 = true;
+  window.FLAGS.cards_v2 = false;
 }
-// Turn on Home layout v2 (Option B structure)
+// Turn on Home layout v2 (Option B structure) - DISABLED due to functionality issues
 if (typeof window.FLAGS.home_layout_v2 === 'undefined') {
-  window.FLAGS.home_layout_v2 = true;
+  window.FLAGS.home_layout_v2 = false;
 }
 // Enable mobile layout fixes for Card v2 + Home Sections
 if (typeof window.FLAGS.layout_mobile_fix === 'undefined') {

@@ -45,13 +45,12 @@ export class Config {
 
       // Try to get from window object if available
       if (window.ENV) {
-        config.tmdbApiKey = window.ENV.TMDB_API_KEY || config.tmdbApiKey;
         config.firebase = window.ENV.FIREBASE || config.firebase;
         config.google = window.ENV.GOOGLE || config.google;
       }
     } else if (typeof process !== "undefined" && process.env) {
       // Node.js environment
-      config.tmdbApiKey = process.env.TMDB_API_KEY || "";
+      // TMDB API key is now handled by the proxy function
       config.firebase = {
         apiKey: process.env.FIREBASE_API_KEY || "",
         authDomain: process.env.FIREBASE_AUTH_DOMAIN || "",

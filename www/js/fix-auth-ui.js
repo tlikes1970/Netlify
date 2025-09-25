@@ -193,14 +193,7 @@
     // Run the fix
     fixAuthUI();
     
-    // Also listen for auth state changes
-    const auth = window.firebaseAuth;
-    auth.onAuthStateChanged((user) => {
-      console.log('🔧 Auth state changed:', user?.email || 'None');
-      setTimeout(() => {
-        fixAuthUI();
-      }, 100);
-    });
+    // Auth state changes now handled by centralized AuthManager
   }
 
   // Start the fix

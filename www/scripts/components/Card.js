@@ -295,6 +295,51 @@
       `;
     } else {
       // Standard vertical layout for home/curated
+      // Generate action buttons - use overflowActions if provided, otherwise default buttons
+      let actionButtonsHTML = '';
+      
+      if (overflowActions && overflowActions.length > 0) {
+        // Use overflowActions for search results and other custom contexts
+        actionButtonsHTML = overflowActions.map(action => `
+          <button class="unified-card-action-btn" 
+                  data-action="${action.dataAction || action.action || 'custom'}" 
+                  data-id="${id}" 
+                  aria-label="${action.label}"
+                  title="${action.label}">
+            <span class="unified-card-action-icon">${action.icon || '⚡'}</span>
+            <span class="unified-card-action-label">${action.label}</span>
+          </button>
+        `).join('');
+      } else {
+        // Default action buttons for home/curated sections
+        actionButtonsHTML = `
+          <button class="unified-card-action-btn" 
+                  data-action="mark-watched" 
+                  data-id="${id}" 
+                  aria-label="Mark as Watched"
+                  title="Mark as Watched">
+            <span class="unified-card-action-icon">✅</span>
+            <span class="unified-card-action-label" data-i18n="mark_watched">Mark Watched</span>
+          </button>
+          <button class="unified-card-action-btn" 
+                  data-action="want-to-watch" 
+                  data-id="${id}" 
+                  aria-label="Add to Want to Watch"
+                  title="Add to Want to Watch">
+            <span class="unified-card-action-icon">📖</span>
+            <span class="unified-card-action-label" data-i18n="want_to_watch">Want to Watch</span>
+          </button>
+          <button class="unified-card-action-btn" 
+                  data-action="start-watching" 
+                  data-id="${id}" 
+                  aria-label="Start Watching"
+                  title="Start Watching">
+            <span class="unified-card-action-icon">▶️</span>
+            <span class="unified-card-action-label" data-i18n="start_watching">Currently Watching</span>
+          </button>
+        `;
+      }
+      
       cardHTML = `
         <div class="unified-card-poster" role="button" tabindex="0" aria-label="${title}">
           <div class="unified-card-poster-container">
@@ -308,30 +353,7 @@
             </div>
           </div>
           <div class="unified-card-actions">
-            <button class="unified-card-action-btn" 
-                    data-action="mark-watched" 
-                    data-id="${id}" 
-                    aria-label="Mark as Watched"
-                    title="Mark as Watched">
-              <span class="unified-card-action-icon">✅</span>
-              <span class="unified-card-action-label" data-i18n="mark_watched">Mark Watched</span>
-            </button>
-            <button class="unified-card-action-btn" 
-                    data-action="want-to-watch" 
-                    data-id="${id}" 
-                    aria-label="Add to Want to Watch"
-                    title="Add to Want to Watch">
-              <span class="unified-card-action-icon">📖</span>
-              <span class="unified-card-action-label" data-i18n="want_to_watch">Want to Watch</span>
-            </button>
-            <button class="unified-card-action-btn" 
-                    data-action="remove" 
-                    data-id="${id}" 
-                    aria-label="Remove from List"
-                    title="Remove from List">
-              <span class="unified-card-action-icon">🗑️</span>
-              <span class="unified-card-action-label" data-i18n="remove">Remove</span>
-            </button>
+            ${actionButtonsHTML}
           </div>
         </div>
         <div class="unified-card-content">
@@ -395,19 +417,33 @@
           const action = element.dataset.action;
           const itemId = element.dataset.id;
           
+          // Debug logging for Card button clicks
+          console.log('[Card] Button clicked:', {
+            action: action,
+            id: itemId,
+            element: element,
+            moveItemAvailable: !!window.moveItem
+          });
+          
           switch (action) {
             case 'mark-watched':
-              if (window.moveItem) {
+              if (window.addToListFromCache) {
+                window.addToListFromCache(Number(itemId), 'watched');
+              } else if (window.moveItem) {
                 window.moveItem(Number(itemId), 'watched');
               }
               break;
             case 'want-to-watch':
-              if (window.moveItem) {
+              if (window.addToListFromCache) {
+                window.addToListFromCache(Number(itemId), 'wishlist');
+              } else if (window.moveItem) {
                 window.moveItem(Number(itemId), 'wishlist');
               }
               break;
             case 'start-watching':
-              if (window.moveItem) {
+              if (window.addToListFromCache) {
+                window.addToListFromCache(Number(itemId), 'watching');
+              } else if (window.moveItem) {
                 window.moveItem(Number(itemId), 'watching');
               }
               break;

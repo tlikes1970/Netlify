@@ -1,19 +1,20 @@
-// tmdb-config.js — Legacy compatibility for proxy migration
-(function(){
-  'use strict';
-  
-  console.log('🎬 TMDB Config: Using proxy-based API (no direct API key)');
-  
-  // Legacy compatibility - no direct API key exposure
-  window.TMDB_CONFIG = window.TMDB_CONFIG || {
-    apiKey: null, // No direct API key - using proxy
-    baseUrl: 'PROXY_ONLY', // All requests go through proxy
-    imgBase: 'https://image.tmdb.org/t/p/'
-  };
-  
-  // No API key exposure for security
-  window.__TMDB_API_KEY__ = null;
-  
-  console.info('[TMDB] Proxy-based configuration loaded - API key secured server-side');
-})();
+/**
+ * TMDB Configuration
+ * This file is loaded before other scripts to provide TMDB API configuration
+ */
 
+// TMDB API configuration
+window.TMDB_CONFIG = {
+  apiKey: null, // Will be set by environment variable
+  baseUrl: 'https://api.themoviedb.org/3',
+  imageBaseUrl: 'https://image.tmdb.org/t/p/',
+  language: 'en-US',
+  region: 'US'
+};
+
+// Set API key from environment (will be available in production)
+if (typeof process !== 'undefined' && process.env && process.env.TMDB_API_KEY) {
+  window.TMDB_CONFIG.apiKey = process.env.TMDB_API_KEY;
+}
+
+console.log('🎬 TMDB Config loaded');

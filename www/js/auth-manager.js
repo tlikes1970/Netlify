@@ -25,6 +25,10 @@
       REDIRECT: 'redirect'
     },
 
+    // Race condition protection
+    _activeLoginRequests: new Set(),
+    _processUserSignInLock: false,
+
     init() {
       console.info('[auth] apply:init');
       this.setupPostMessageListener();
@@ -74,7 +78,8 @@
     },
 
     /**
-     * Initialize Firebase auth state listener
+     * Initialize Firebase auth state listener - CENTRALIZED AUTH STATE MANAGEMENT
+     * This is the ONLY place where onAuthStateChanged should be registered
      */
     initializeAuthListener() {
       // Ensure single auth listener
@@ -83,11 +88,32 @@
         return;
       }
       
-      console.log('🔥 Setting up Firebase auth listener');
+      console.log('🔥 Setting up CENTRALIZED Firebase auth listener');
       console.info('[auth] apply:single-listener:attached');
       
       window.__AUTH_LISTENER_REGISTERED__ = true;
       window.firebaseAuth.onAuthStateChanged((user) => {
+        console.log('🔥 [CENTRALIZED] Auth state changed:', user ? `User: ${user.email}` : 'No user');
+        
+        // Update global currentUser references
+        if (window.FlickletApp) {
+          window.FlickletApp.currentUser = user;
+        }
+        window.currentUser = user;
+        
+        // Update UserViewModel
+        if (window.UserViewModel) {
+          window.UserViewModel.update(user);
+        }
+        
+        // Update UI markers
+        this.setAuthUI(!!user, user?.displayName || user?.email || null);
+        
+        // Emit auth events for other modules to consume
+        document.dispatchEvent(new CustomEvent('auth:changed', { 
+          detail: { user, timestamp: Date.now() } 
+        }));
+        
         if (user) {
           console.log('👤 User signed in:', user.email);
           this.handleLoginSuccess(user, 'Firebase');
@@ -96,17 +122,64 @@
           this.handleSignOut();
         }
       });
+      
+      // Emit initial auth:ready event
+      document.dispatchEvent(new CustomEvent('auth:ready', { 
+        detail: { timestamp: Date.now() } 
+      }));
+      
+      // Dev assert: log listener count
+      console.log('🔍 Auth listeners active = 1');
     },
 
     /**
-     * Main entry point for starting authentication
+     * Centralized UI state management for auth
+     */
+    setAuthUI(isIn, displayName) {
+      // Ensure DOM is ready before updating UI elements
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => this.setAuthUI(isIn, displayName), { once: true });
+        return;
+      }
+
+      const accountBtn = document.getElementById('accountButton');
+      const accountLabel = document.getElementById('accountButtonLabel');
+      const accountContext = document.getElementById('accountContext');
+      
+      if (accountBtn) {
+        accountBtn.setAttribute('data-auth-state', isIn ? 'signed-in' : 'signed-out');
+        accountBtn.setAttribute('aria-label', isIn ? `Account: ${displayName}` : 'Sign in to your account');
+      }
+      
+      if (accountLabel) {
+        accountLabel.textContent = isIn ? (displayName || 'Account') : 'Sign In';
+      }
+      
+      if (accountContext) {
+        accountContext.textContent = isIn ? `Signed in as ${displayName}` : 'Not signed in';
+      }
+    },
+
+    /**
+     * Main entry point for starting authentication with race condition protection
      * @param {string} provider - 'google', 'apple', or 'email'
      * @param {string} method - 'popup' or 'redirect' (optional, auto-detected)
      */
     async startLogin(provider, method = null) {
-      console.log(`🔐 Starting ${provider} login${method ? ` (${method})` : ''}`);
+      const requestId = `${provider}-${method || 'auto'}-${Date.now()}`;
+      
+      // Check for active login requests to prevent race conditions
+      if (this._activeLoginRequests.has(provider)) {
+        console.warn(`[auth] ${provider} login already in progress, ignoring duplicate request`);
+        return;
+      }
+      
+      console.log(`🔐 Starting ${provider} login${method ? ` (${method})` : ''} [${requestId}]`);
       
       try {
+        // Mark request as active
+        this._activeLoginRequests.add(provider);
+        
         switch (provider) {
           case this.PROVIDERS.GOOGLE:
             await this.startGoogleLogin(method);
@@ -127,6 +200,9 @@
       } catch (error) {
         console.error(`❌ ${provider} login failed:`, error);
         this.showError(`Sign-in failed. Please try again.`);
+      } finally {
+        // Always remove from active requests
+        this._activeLoginRequests.delete(provider);
       }
     },
 
@@ -149,7 +225,14 @@
       
       // Auto-detect method if not specified
       if (!method) {
-        method = this.isMobile() ? this.METHODS.REDIRECT : this.METHODS.POPUP;
+        const isMobile = this.isMobile();
+        method = isMobile ? this.METHODS.REDIRECT : this.METHODS.POPUP;
+        console.log('[auth] Mobile detection:', {
+          userAgent: navigator.userAgent,
+          viewportWidth: window.innerWidth,
+          isMobile,
+          selectedMethod: method
+        });
       }
 
       console.info(`[auth] apply:provider:start google ${method}`);
@@ -224,7 +307,8 @@
     },
 
     /**
-     * Handle successful login
+     * Handle successful login - CENTRALIZED LOGIN LOGIC
+     * Consolidates all login success logic from scattered files
      */
     handleLoginSuccess(user, provider) {
       console.log(`✅ ${provider} login successful:`, user.email);
@@ -242,10 +326,53 @@
       // Notify iframes
       this.notifyIframes('auth-success', { user: user.email, provider });
       
-      // Trigger app layer post-auth pipeline
-      if (window.FlickletApp && typeof window.FlickletApp.handlePostAuthSuccess === 'function') {
-        window.FlickletApp.handlePostAuthSuccess(user);
+      // === CENTRALIZED DATA LOADING LOGIC ===
+      // Consolidates logic from clean-data-loader.js, force-data-load.js, etc.
+      console.log('🔄 [CENTRALIZED] Starting post-login data loading...');
+      
+      // Enable cloud sync if not already enabled
+      if (!window.__CLOUD_ENABLED__) {
+        window.__CLOUD_ENABLED__ = true;
+        window.__AUTH_READY__ = true;
+        console.log('☁️ Cloud sync enabled for user:', user.uid);
       }
+      
+      // Load user data with delay to ensure Firebase is ready
+      setTimeout(async () => {
+        try {
+          // Use DataInit.trySync for proper cloud sync
+          if (window.__CLOUD_ENABLED__ && window.DataInit && typeof window.DataInit.trySync === 'function') {
+            console.log('🔄 [CENTRALIZED] Attempting cloud sync with DataInit...');
+            await window.DataInit.trySync("auth-change");
+          } else if (window.__CLOUD_ENABLED__ && typeof window.trySync === 'function') {
+            console.log('🔄 [CENTRALIZED] Attempting cloud sync with legacy trySync...');
+            await window.trySync("auth-change");
+          }
+          
+          // Load user data from Firebase directly if sync didn't work
+          if (window.__CLOUD_ENABLED__ && window.firebase && window.firebase.firestore) {
+            console.log('🔄 [CENTRALIZED] Loading data directly from Firebase...');
+            await this.loadUserDataFromFirebase(user);
+          }
+          
+          // Trigger UI refresh after data sync
+          setTimeout(() => {
+            if (typeof window.updateUI === 'function') {
+              console.log('🔄 [CENTRALIZED] Triggering UI refresh after auth change');
+              window.updateUI();
+            }
+            // Emit cards:changed event for centralized count updates
+            document.dispatchEvent(new CustomEvent('cards:changed', {
+              detail: { source: 'auth-change' }
+            }));
+          }, 500);
+          
+        } catch (error) {
+          console.warn('⚠️ [CENTRALIZED] Post-login data loading failed:', error?.message || error);
+        }
+      }, 1000);
+      
+      // Post-auth pipeline now handled by onAuthStateChanged observer only
     },
 
     /**
@@ -532,10 +659,121 @@
 
     /**
      * Handle sign out (called by both manual sign out and auth state change)
+     * CENTRALIZED SIGN OUT LOGIC - consolidates logic from data-init.js
      */
     handleSignOut() {
       console.log('🧹 Starting sign out process...');
       
+      // === CENTRALIZED SIGN OUT LOGIC ===
+      // Check if this is a redirect sign-in in progress (from data-init.js logic)
+      const isRedirectInProgress = window.location.search.includes('auth') || 
+                                 window.location.hash.includes('auth') ||
+                                 document.referrer.includes('accounts.google.com') ||
+                                 document.referrer.includes('google.com');
+      
+      // Check if sign-in was actually attempted
+      const signInAttempted = window.__SIGN_IN_ATTEMPTED__;
+      
+      console.log('🔍 [CENTRALIZED] Checking redirect status:', {
+        search: window.location.search,
+        hash: window.location.hash,
+        referrer: document.referrer,
+        isRedirectInProgress,
+        signInAttempted
+      });
+      
+      if (isRedirectInProgress) {
+        console.log('⏳ [CENTRALIZED] Auth state change during redirect - waiting for redirect result');
+        // Don't clear data during redirect, wait for redirect result
+        return;
+      }
+      
+      // Clear data on sign out (both manual and auth state change)
+      console.log('🧹 [CENTRALIZED] User signed out - clearing local data');
+      this._clearUserData();
+    },
+    
+    /**
+     * Load user data directly from Firebase
+     */
+    async loadUserDataFromFirebase(user) {
+      try {
+        console.log('🔄 [AUTHMANAGER] Loading user data from Firebase for:', user.email);
+        
+        const db = window.firebase.firestore();
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        
+        if (!userDoc.exists) {
+          console.log('ℹ️ [AUTHMANAGER] No user document found in Firebase');
+          return;
+        }
+        
+        const userData = userDoc.data();
+        console.log('✅ [AUTHMANAGER] User data loaded from Firebase:', Object.keys(userData));
+        
+        // Update local appData with Firebase data
+        if (window.appData) {
+          // Merge Firebase data into local appData
+          if (userData.watchlists) {
+            window.appData.tv = userData.watchlists.tv || { watching: [], wishlist: [], watched: [] };
+            window.appData.movies = userData.watchlists.movies || { watching: [], wishlist: [], watched: [] };
+            console.log('✅ [AUTHMANAGER] Updated watchlists from Firebase');
+          }
+          
+          // Also load direct tv and movies data (where actual show data is stored)
+          if (userData.tv) {
+            window.appData.tv = userData.tv;
+            console.log('✅ [AUTHMANAGER] Updated direct TV data from Firebase:', {
+              watching: userData.tv.watching?.length || 0,
+              wishlist: userData.tv.wishlist?.length || 0,
+              watched: userData.tv.watched?.length || 0
+            });
+          }
+          
+          if (userData.movies) {
+            window.appData.movies = userData.movies;
+            console.log('✅ [AUTHMANAGER] Updated direct movies data from Firebase:', {
+              watching: userData.movies.watching?.length || 0,
+              wishlist: userData.movies.wishlist?.length || 0,
+              watched: userData.movies.watched?.length || 0
+            });
+          }
+          
+          if (userData.settings) {
+            window.appData.settings = { ...window.appData.settings, ...userData.settings };
+            console.log('✅ [AUTHMANAGER] Updated settings from Firebase');
+          }
+          
+          // Save to localStorage
+          if (typeof window.saveAppData === 'function') {
+            window.saveAppData();
+            console.log('✅ [AUTHMANAGER] Saved data to localStorage');
+          }
+          
+          // Clear WatchlistsAdapter cache to force reload with new data
+          if (window.WatchlistsAdapter && typeof window.WatchlistsAdapter.invalidate === 'function') {
+            window.WatchlistsAdapter.invalidate();
+            console.log('✅ [AUTHMANAGER] Cleared WatchlistsAdapter cache');
+          }
+          
+          // Trigger data ready event
+          document.dispatchEvent(new CustomEvent('app:data:ready', { 
+            detail: { source: 'firebase' } 
+          }));
+          
+          console.log('✅ [AUTHMANAGER] Data loading completed successfully');
+        }
+        
+      } catch (error) {
+        console.error('❌ [AUTHMANAGER] Failed to load user data from Firebase:', error);
+        throw error;
+      }
+    },
+
+    /**
+     * Internal method to clear user data
+     */
+    _clearUserData() {
       // Clear user data first
       if (typeof window.clearUserData === 'function') {
         console.log('🧹 Calling clearUserData function...');
@@ -574,9 +812,26 @@
       
       // Clear any cached data
       if (window.appData) {
+        window.appData.tv = { watching: [], wishlist: [], watched: [] };
+        window.appData.movies = { watching: [], wishlist: [], watched: [] };
         window.appData.settings = window.appData.settings || {};
         window.appData.settings.username = '';
         window.appData.settings.displayName = '';
+        console.log('🧹 [AUTHMANAGER] Cleared show data from appData');
+      }
+      
+      // Clear localStorage
+      try {
+        localStorage.removeItem('flicklet-data');
+        console.log('🧹 [AUTHMANAGER] Cleared localStorage');
+      } catch (e) {
+        console.warn('⚠️ [AUTHMANAGER] Failed to clear localStorage:', e);
+      }
+      
+      // Clear WatchlistsAdapter cache
+      if (window.WatchlistsAdapter && typeof window.WatchlistsAdapter.invalidate === 'function') {
+        window.WatchlistsAdapter.invalidate();
+        console.log('🧹 [AUTHMANAGER] Cleared WatchlistsAdapter cache');
       }
       
       // Clear render flags to allow fresh rendering
@@ -585,6 +840,19 @@
           window[key] = false;
         }
       });
+      
+      // Clear any rendered cards
+      const listContainers = document.querySelectorAll('.list-container');
+      listContainers.forEach(container => {
+        container.innerHTML = '<div class="poster-cards-empty">Nothing here yet.</div>';
+      });
+      console.log('🧹 [AUTHMANAGER] Cleared rendered cards');
+      
+      // Emit cards:changed event for centralized count updates
+      document.dispatchEvent(new CustomEvent('cards:changed', {
+        detail: { source: 'sign-out-clear' }
+      }));
+      console.log('🧹 [AUTHMANAGER] Emitted cards:changed event after clear');
       
       // Trigger UI refresh
       if (typeof window.updateUI === 'function') {
@@ -976,10 +1244,17 @@
         // Handle specific iframe errors gracefully
         if (error.message && error.message.includes('No location for new iframe')) {
           console.log('[auth] Iframe error - likely no actual redirect in progress');
-        } else if (error.code !== 'auth/no-auth-event') {
-          this.showError(`Sign-in failed: ${error.message}`);
+        } else if (error.code === 'auth/no-auth-event') {
+          console.log('[auth] No auth event - redirect may have been cancelled or already processed');
+          // Check if user is actually signed in despite the error
+          const currentUser = window.firebaseAuth.currentUser;
+          if (currentUser) {
+            console.log('[auth] User is signed in despite no-auth-event error:', currentUser.email);
+            this.handleLoginSuccess(currentUser, 'Google');
+            return;
+          }
         } else {
-          console.log('[auth] Apple login redirect completed without error');
+          this.showError(`Sign-in failed: ${error.message}`);
         }
       } finally {
         sessionStorage.removeItem('auth:redirectPending');
@@ -1027,7 +1302,18 @@
      * Check if mobile device
      */
     isMobile() {
-      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      // More sophisticated mobile detection that considers viewport size
+      const userAgent = navigator.userAgent;
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      const isMobileViewport = window.innerWidth <= 768;
+      
+      // If user agent says mobile but viewport is desktop-sized, prefer desktop behavior
+      if (isMobileUA && !isMobileViewport && window.innerWidth > 1024) {
+        console.log('[auth] Mobile UA detected but desktop viewport - using desktop auth flow');
+        return false;
+      }
+      
+      return isMobileUA || isMobileViewport;
     },
 
     /**

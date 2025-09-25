@@ -278,6 +278,119 @@ users/{uid}/
 └── settings: { theme, lang, username, usernamePrompted }
 ```
 
+### Firebase Field Mapping (Evidence-Based)
+**CRITICAL**: This mapping is based on actual Firebase data analysis and must be followed exactly.
+
+#### User Profile Fields
+| App Field | Firebase Path | Type | Direction | Notes |
+|-----------|---------------|------|-----------|-------|
+| uid | users/{uid}.uid | string | read+write | Matches auth UID; present as string |
+| email | users/{uid}.email | string | read+write | Also present at profile.email |
+| email | users/{uid}.profile.email | string | read+write | Duplicate data; keep in sync with top-level |
+| displayName | users/{uid}.profile.displayName | string | read+write | Preferred name field; top-level username conflicts observed |
+| username | users/{uid}.username | string | read+write | Conflicts observed across users (e.g., 'Travis' vs 'Travis Likes') |
+| photoURL | users/{uid}.photoURL | string\|null | read+write | Also present at profile.photoURL (string or empty) |
+| photoURL | users/{uid}.profile.photoURL | string | read+write | Duplicate of top-level photoURL; empty string observed |
+| lastLoginAt | users/{uid}.lastLoginAt | string\|timestamp | read | Type varies across users: ISO string vs Firestore timestamp |
+| lastUpdated | users/{uid}.lastUpdated | timestamp | read+write | Observed on first user document |
+| ownerUid | users/{uid}.ownerUid | string | read+write | Observed on first user document |
+| pro | users/{uid}.pro | boolean | read+write | Top-level subscription flag observed on first user |
+
+#### Settings Fields
+| App Field | Firebase Path | Type | Direction | Notes |
+|-----------|---------------|------|-----------|-------|
+| lang | users/{uid}.settings.lang | string | read+write | Language code; 'en' observed |
+| mardiGras | users/{uid}.settings.mardiGras | boolean | read+write | Observed on first user |
+| settings_displayName | users/{uid}.settings.displayName | string | read | Literal dotted key at top-level (not nested). Treat as data anomaly |
+
+#### Notification Fields
+| App Field | Firebase Path | Type | Direction | Notes |
+|-----------|---------------|------|-----------|-------|
+| theme | users/{uid}.notif.theme | string | read+write | Observed 'light' |
+| episodesNotif | users/{uid}.notif.episodes | boolean | read+write | Episode notifications toggle |
+| digestNotif | users/{uid}.notif.digest | boolean | read+write | Observed on second user |
+| discoverNotif | users/{uid}.notif.discover | boolean | read+write | Observed on second user |
+| proNotif | users/{uid}.notif.pro | boolean | read+write | Observed on both; semantics distinct from top-level 'pro' |
+
+#### Custom Rows Fields
+| App Field | Firebase Path | Type | Direction | Notes |
+|-----------|---------------|------|-----------|-------|
+| myRows[].key | users/{uid}.myRows[].key | string | read+write | Preset keys like 'anime','horror' |
+| myRows[].type | users/{uid}.myRows[].type | string | read+write | Observed 'preset' |
+
+#### Watchlist Movie Fields
+**Movies Watched/Watching/Wishlist** - All arrays follow same structure:
+| App Field | Firebase Path | Type | Direction | Notes |
+|-----------|---------------|------|-----------|-------|
+| watchlists.movies.{list}[].adult | users/{uid}.watchlists.movies.{list}[].adult | boolean | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].backdrop_path | users/{uid}.watchlists.movies.{list}[].backdrop_path | string\|null | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].genre_ids | users/{uid}.watchlists.movies.{list}[].genre_ids | array<number> | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].id | users/{uid}.watchlists.movies.{list}[].id | number | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].media_type | users/{uid}.watchlists.movies.{list}[].media_type | string | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].original_language | users/{uid}.watchlists.movies.{list}[].original_language | string | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].original_title | users/{uid}.watchlists.movies.{list}[].original_title | string | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].overview | users/{uid}.watchlists.movies.{list}[].overview | string | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].popularity | users/{uid}.watchlists.movies.{list}[].popularity | number | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].poster_path | users/{uid}.watchlists.movies.{list}[].poster_path | string\|null | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].release_date | users/{uid}.watchlists.movies.{list}[].release_date | string | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].title | users/{uid}.watchlists.movies.{list}[].title | string | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].type | users/{uid}.watchlists.movies.{list}[].type | string | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].video | users/{uid}.watchlists.movies.{list}[].video | boolean | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].vote_average | users/{uid}.watchlists.movies.{list}[].vote_average | number | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].vote_count | users/{uid}.watchlists.movies.{list}[].vote_count | number | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+| watchlists.movies.{list}[].networks | users/{uid}.watchlists.movies.{list}[].networks | array\|absent | read+write | Observed in snapshots; 'type' optional; 'networks' occasionally present |
+
+#### Watchlist TV Fields
+**TV Watched/Watching/Wishlist** - All arrays follow same structure:
+| App Field | Firebase Path | Type | Direction | Notes |
+|-----------|---------------|------|-----------|-------|
+| watchlists.tv.{list}[].adult | users/{uid}.watchlists.tv.{list}[].adult | boolean | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].backdrop_path | users/{uid}.watchlists.tv.{list}[].backdrop_path | string | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].first_air_date | users/{uid}.watchlists.tv.{list}[].first_air_date | string | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].genre_ids | users/{uid}.watchlists.tv.{list}[].genre_ids | array<number> | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].genres | users/{uid}.watchlists.tv.{list}[].genres | array<object{id,name}> | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].homepage | users/{uid}.watchlists.tv.{list}[].homepage | string | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].id | users/{uid}.watchlists.tv.{list}[].id | number | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].in_production | users/{uid}.watchlists.tv.{list}[].in_production | boolean | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].languages | users/{uid}.watchlists.tv.{list}[].languages | array<string> | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].last_air_date | users/{uid}.watchlists.tv.{list}[].last_air_date | string | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].last_episode_to_air | users/{uid}.watchlists.tv.{list}[].last_episode_to_air | object | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].media_type | users/{uid}.watchlists.tv.{list}[].media_type | string | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].name | users/{uid}.watchlists.tv.{list}[].name | string | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].networks | users/{uid}.watchlists.tv.{list}[].networks | array<object{id,logo_path,name,origin_country}> | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].next_episode_to_air | users/{uid}.watchlists.tv.{list}[].next_episode_to_air | null\|object | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].number_of_episodes | users/{uid}.watchlists.tv.{list}[].number_of_episodes | number | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].number_of_seasons | users/{uid}.watchlists.tv.{list}[].number_of_seasons | number | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].origin_country | users/{uid}.watchlists.tv.{list}[].origin_country | array<string> | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].original_language | users/{uid}.watchlists.tv.{list}[].original_language | string | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].original_name | users/{uid}.watchlists.tv.{list}[].original_name | string | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].overview | users/{uid}.watchlists.tv.{list}[].overview | string | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].popularity | users/{uid}.watchlists.tv.{list}[].popularity | number | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].poster_path | users/{uid}.watchlists.tv.{list}[].poster_path | string | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].production_companies | users/{uid}.watchlists.tv.{list}[].production_companies | array<object{id,logo_path,name,origin_country}> | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].runtime | users/{uid}.watchlists.tv.{list}[].runtime | number\|absent | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].status | users/{uid}.watchlists.tv.{list}[].status | string\|absent | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].vote_average | users/{uid}.watchlists.tv.{list}[].vote_average | number | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].vote_count | users/{uid}.watchlists.tv.{list}[].vote_count | number | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[]._score | users/{uid}.watchlists.tv.{list}[]._score | number\|absent | read+write | Observed across users; some fields optional/absent in given items |
+| watchlists.tv.{list}[].because | users/{uid}.watchlists.tv.{list}[].because | string\|absent | read+write | Observed across users; some fields optional/absent in given items |
+
+#### Data Anomalies (Handle Carefully)
+| App Field | Firebase Path | Type | Direction | Notes |
+|-----------|---------------|------|-----------|-------|
+| person (anomaly).media_type | users/{uid}.watchlists.movies.watched[].media_type | string | read | One item had media_type 'person' with person-shaped fields; treat as anomaly |
+| person (anomaly).known_for[] | users/{uid}.watchlists.movies.watched[].known_for[] | array<object> | read | Present only when media_type='person' |
+| watchlists.tv.undefined[] | users/{uid}.watchlists.tv.undefined[] | array<object> | read | Unexpected list key 'undefined' observed on first user |
+| database_location | META.database_location | string | read | Provided as 'nam5'; not stored inside a user document |
+
+#### Critical Implementation Notes
+1. **Duplicate Fields**: `email` and `photoURL` exist at both top-level and `profile.*` - keep in sync
+2. **Username Conflicts**: Top-level `username` conflicts with `profile.displayName` - prefer `profile.displayName`
+3. **Type Variations**: `lastLoginAt` can be string or timestamp - handle both
+4. **Optional Fields**: Many watchlist fields are optional/absent - always check existence
+5. **Data Anomalies**: Handle `media_type='person'` and `undefined` list keys gracefully
+6. **Array Structure**: All watchlist arrays follow consistent structure across `watching`, `wishlist`, `watched`
+
 ### Sync Strategy
 1. **Local First**: All operations work offline
 2. **Cloud Sync**: Background sync when authenticated

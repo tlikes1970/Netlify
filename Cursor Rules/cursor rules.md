@@ -3,6 +3,9 @@
 ## Project Overview
 **Flicklet** is a modern TV and movie tracking web application built with vanilla JavaScript, Firebase, and TMDB API. It's a Progressive Web App (PWA) with mobile-first design, featuring user authentication, cloud sync, and comprehensive media management.
 
+**Current Version**: v28.31.0 (Post-Phase 1 Repository Hygiene)
+**Status**: Phase 2 - Code Quality & Technical Debt in progress
+
 ## Architecture & Framework
 
 ### Core Technology Stack
@@ -284,6 +287,44 @@ users/{uid}/
 }
 ```
 
+## Current Technical Debt & Code Quality Issues
+
+### Phase 2 Analysis Results (v28.31.0)
+**Critical Issues Identified:**
+
+#### 1. Massive Code Duplication
+- **552 functions across 75 files** - excessive function proliferation
+- **Monolithic files**: `functions.js` (3,513 lines) contains mixed responsibilities
+- **Duplicate card systems**: 3+ different card implementations
+- **Repeated patterns**: Similar functions across multiple modules
+
+#### 2. Architectural Problems
+- **Mixed patterns**: IIFE, ES6 modules, and global functions mixed together
+- **Global namespace pollution**: 552+ functions in global scope
+- **Circular dependencies**: Functions calling each other across modules
+- **No clear separation of concerns**: Business logic mixed with UI code
+
+#### 3. Performance Issues
+- **Large bundle size**: Multiple large files loaded synchronously
+- **Redundant API calls**: Similar data fetched multiple times
+- **Memory leaks**: Event listeners not properly cleaned up
+- **Inefficient DOM queries**: Repeated `getElementById` calls
+
+#### 4. Code Quality Issues
+- **Inconsistent naming**: camelCase, snake_case, and kebab-case mixed
+- **No error handling**: Many functions lack try-catch blocks
+- **Magic numbers**: Hardcoded values throughout
+- **Dead code**: Commented out code and unused functions
+
+### Phase 2 Remediation Plan
+1. **Consolidate duplicate functions** into shared utilities
+2. **Refactor monolithic files** into focused modules
+3. **Implement consistent patterns** (ES6 modules throughout)
+4. **Remove dead code** and unused functions
+5. **Optimize bundle loading** with proper module system
+6. **Add proper error handling** and validation
+7. **Enforce coding standards** with consistent naming and structure
+
 ## Performance Optimizations
 
 ### Loading Strategy
@@ -397,10 +438,17 @@ Before making any code changes, the assistant must:
 
 ## Development Workflow
 
+### Phase-Based Development
+**Current Phase**: Phase 2 - Code Quality & Technical Debt
+- **Phase 1**: ✅ Repository Hygiene (Gate A) - COMPLETED
+- **Phase 2**: 🔄 Code Quality & Technical Debt (Gate B) - IN PROGRESS
+- **Phase 3**: ⏳ Performance Optimization (Gate C) - PENDING
+- **Phase 4**: ⏳ Feature Enhancement (Gate D) - PENDING
+
 ### Build Process
 ```bash
 # Development
-npm run dev          # Vite dev server on port 8000
+netlify dev          # Netlify dev server on port 8888 (serves from www/)
 
 # Production
 npm run build        # Vite build with Terser minification
@@ -415,11 +463,12 @@ npm run lh:mobile    # Lighthouse mobile audit
 ```
 
 ### Version Management
-- **Semantic Versioning**: Major.Minor.Patch (currently v28.06)
+- **Semantic Versioning**: Major.Minor.Patch (currently v28.31.0)
 - **Auto-increment**: Version bumped on code changes [[memory:8428544]]
 - **Rollback Support**: Easy rollback with version display
-- **Version Location**: Updated in `www/index.html` title tag
+- **Version Location**: Updated in `www/index.html` title tag and `package.json`
 - **Change Tracking**: Version comments document what was fixed
+- **Phase Tracking**: Version reflects current development phase
 
 ## Common Patterns & Best Practices
 
@@ -666,6 +715,125 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 - **Dependencies**: No external libraries, pure vanilla JS
 - **Browser support**: Modern browsers with ES6+ support
 
+## Dynamic Checklist System
+
+### Pre-Development Validation
+**BEFORE making any code changes:**
+- [ ] **API Key Validation**: Verify TMDB API key is valid and functional
+- [ ] **Data Source Validation**: Confirm all data sources use real, valid IDs
+- [ ] **End-to-End Testing**: Test all interactive elements work without errors
+- [ ] **Visual Verification**: Take screenshot of current state before changes
+- [ ] **Dependency Check**: Identify all modules/functions that will be affected
+- [ ] **Rollback Plan**: Ensure version can be easily rolled back if needed
+
+### Post-Development Validation
+**AFTER making code changes:**
+- [ ] **Build Test**: Run `npm run build` to ensure no build errors
+- [ ] **Dev Server Test**: Run `netlify dev` and verify functionality
+- [ ] **Visual Verification**: Take screenshot of new state and compare
+- [ ] **Functionality Test**: Test all affected features work correctly
+- [ ] **Version Update**: Increment version number in `package.json` and `index.html`
+- [ ] **Documentation Update**: Update Cursor Rules with any new patterns/learnings
+
+### Phase Gate Validation
+**At each phase transition:**
+- [ ] **Phase Completion**: All phase objectives met and documented
+- [ ] **Learning Capture**: New patterns, gotchas, and solutions documented
+- [ ] **Critical Areas**: Updated critical areas map with new findings
+- [ ] **Version Tagging**: Version reflects completed phase
+- [ ] **Handoff Readiness**: Ready for next phase or user review
+
+## Critical Areas Map
+
+### High-Risk Areas (Require Extra Care)
+1. **Authentication System** (`auth-manager.js`)
+   - **Risk**: Button listener conflicts, redirect handling
+   - **Gotcha**: Always check for existing listeners before adding new ones
+   - **Pattern**: Use `__authClickHandler` property to prevent duplicates
+
+2. **Data Loading** (`data-init.js`, `functions.js`)
+   - **Risk**: Race conditions, duplicate data loading
+   - **Gotcha**: Use `window.render_*` flags to prevent duplicate renders
+   - **Pattern**: Always check if data already loaded before loading again
+
+3. **Card Rendering** (`Card.js`, `functions.js`)
+   - **Risk**: Duplicate cards, memory leaks
+   - **Gotcha**: Clear containers before rendering new content
+   - **Pattern**: Use `cleanupDuplicateCards()` after bulk operations
+
+4. **Firebase Integration** (`firebase-init.js`, `data-init.js`)
+   - **Risk**: Auth state conflicts, data sync issues
+   - **Gotcha**: Wait for auth ready before data operations
+   - **Pattern**: Use `waitForAuthReady()` before Firebase operations
+
+5. **Search System** (`search.js`)
+   - **Risk**: Search state conflicts, UI state corruption
+   - **Gotcha**: Clear search state when switching tabs
+   - **Pattern**: Use `SearchModule.clearSearch()` before tab switches
+
+### Medium-Risk Areas (Monitor Closely)
+1. **Theme Management** (`theme-manager.js`)
+2. **Modal Systems** (various modal files)
+3. **Tab Navigation** (`app.js`)
+4. **Data Persistence** (`utils.js`)
+
+### Low-Risk Areas (Standard Care)
+1. **CSS Styling** (`styles/`)
+2. **Static Content** (`index.html`)
+3. **Configuration** (`netlify.toml`, `vite.config.js`)
+
+## Learning Log
+
+### Phase 1 Learnings (Repository Hygiene)
+**Date**: 2025-01-25
+**What Worked**:
+- `cmd /c "rmdir /s /q"` successfully removed `node_modules` with long paths
+- Removing duplicate directories first, then files, was most efficient
+- Version incrementing after each major change enabled easy rollbacks
+
+**What Broke**:
+- PowerShell `Remove-Item` failed on long file paths even with registry fix
+- Some files had invalid characters in names causing removal failures
+- CSP header in `_headers` file had invalid characters causing Netlify crashes
+
+**Patterns Discovered**:
+- Always use `cmd /c` for Windows file operations with long paths
+- CSP headers should be in `netlify.toml`, not `_headers` file
+- Version tracking in both `package.json` and `index.html` title
+
+**Critical Gotchas**:
+- Long path support in Windows registry doesn't fix all PowerShell issues
+- Netlify CLI is sensitive to invalid characters in headers
+- Some files may have corrupted names that prevent normal deletion
+
+### Phase 2 Learnings (Code Quality Analysis)
+**Date**: 2025-01-25
+**What Worked**:
+- Semantic search identified major architectural issues quickly
+- Function counting revealed massive duplication (552 functions across 75 files)
+- Pattern analysis showed mixed architectural approaches
+
+**What Broke**:
+- N/A (Analysis phase)
+
+**Patterns Discovered**:
+- Monolithic `functions.js` (3,513 lines) contains mixed responsibilities
+- Multiple card systems exist: `Card.js`, `BasePosterCard.js`, `card.js`
+- Global namespace pollution with 552+ functions
+- Mixed patterns: IIFE, ES6 modules, and global functions
+
+**Critical Gotchas**:
+- Large codebases can have hidden duplication that's hard to spot
+- Mixed architectural patterns make refactoring complex
+- Global namespace pollution makes debugging difficult
+
+### Current Phase Status
+**Phase**: 2 - Code Quality & Technical Debt
+**Status**: Analysis complete, consolidation in progress
+**Next Actions**: Consolidate duplicate functions, refactor monolithic files
+**Risks**: Breaking existing functionality during refactoring
+**Mitigation**: Incremental changes with extensive testing at each step
+
 ## Future Considerations
 
 ### Scalability
@@ -681,11 +849,21 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 
 ## Document Maintenance Rules
 
+### Mandatory Update Protocol
+**The assistant MUST reference and update this document at every gate:**
+
+1. **Starting a Phase**: Update phase status, objectives, and critical areas
+2. **Completing Development & Starting Testing**: Update learning log with what worked/broke
+3. **Exiting Testing & Handing to User**: Update critical areas map with new findings
+4. **User Says "Complete"**: Update phase status to completed, capture final learnings
+
 ### Update Protocol
 - **Gap Identification**: When gaps or missing information are discovered in this document during development, the assistant must ask the user for approval before updating
 - **User Approval Required**: Always confirm with the user before adding new sections or modifying existing content
 - **Version Tracking**: Document updates should be noted in version comments when significant changes are made
 - **Completeness Check**: Regularly review the document for completeness against actual codebase implementation
+- **Learning Capture**: Always update the Learning Log with new patterns, gotchas, and solutions
+- **Critical Areas**: Always update the Critical Areas Map with new high-risk areas discovered
 
 ---
 

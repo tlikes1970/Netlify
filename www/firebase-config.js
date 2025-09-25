@@ -20,6 +20,9 @@
       window.firebaseAuth = firebase.auth();
       window.firebaseDb = firebase.firestore();
       
+      // Export db for module usage
+      window.db = window.firebaseDb;
+      
       console.log("[firebase-config] Firebase initialized successfully");
       
       // Dispatch ready event
@@ -30,6 +33,24 @@
           db: window.firebaseDb 
         }
       }));
+
+      // Dev-only: prove Firestore works
+      if (location.hostname === 'localhost') {
+        window._testFirestore = async (uid) => {
+          try {
+            const path = `users/${uid}`;
+            const ts = firebase.firestore.FieldValue.serverTimestamp();
+            await window.db.doc(path).set({ _ping: ts }, { merge: true });
+            const snap = await window.db.doc(path).get();
+            console.log('[Firestore] exists:', snap.exists, 'keys:', Object.keys(snap.data() || {}));
+            return { success: true, exists: snap.exists, keys: Object.keys(snap.data() || {}) };
+          } catch (e) {
+            console.error('[Firestore] test failed:', e);
+            return { success: false, error: e.message };
+          }
+        };
+        console.log('[Firestore] Test function available: window._testFirestore(uid)');
+      }
     } catch (error) {
       console.error("[firebase-config] Firebase initialization failed:", error);
     }

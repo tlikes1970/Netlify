@@ -36,8 +36,8 @@
 
   const today = isoDay(new Date()); // YYYY-MM-DD
 
-  // External trivia API integration
-  const TRIVIA_API_BASE = 'https://opentdb.com/api.php';
+  // External trivia API integration via proxy
+  const TRIVIA_API_BASE = '/.netlify/functions/trivia-proxy';
   
   // Fallback pool for when API fails
   const FALLBACK_POOL = [
@@ -92,7 +92,17 @@
       const utcDate = new Date().toISOString().split('T')[0];
       const seed = utcDate.replace(/-/g, ''); // Convert YYYY-MM-DD to YYYYMMDD
       
-      const response = await fetch(`${TRIVIA_API_BASE}?amount=5&category=14&difficulty=medium&type=multiple&encode=url3986&seed=${seed}`);
+      // 10s timeout so the modal never freezes
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 10000);
+
+      const response = await fetch(`${TRIVIA_API_BASE}?amount=5&category=14&difficulty=medium&type=multiple&encode=url3986&seed=${seed}`, { 
+        signal: ctrl.signal 
+      });
+      clearTimeout(t);
+      
+      if (!response.ok) throw new Error('Proxy error ' + response.status);
+      
       const data = await response.json();
       
       if (data.results && data.results.length > 0) {
@@ -117,7 +127,15 @@
         return triviaCache;
       }
     } catch (error) {
+      clearTimeout(t);
       console.warn('Trivia API failed, using fallback:', error);
+      
+      // Graceful failure: close modal and show a friendly message
+      if (window.closeTriviaModalWithError) {
+        window.closeTriviaModalWithError('Unable to load trivia questions right now.');
+      } else {
+        console.error('[Trivia] fetch failed', error);
+      }
     }
     
     // Fallback to hardcoded questions with deterministic selection

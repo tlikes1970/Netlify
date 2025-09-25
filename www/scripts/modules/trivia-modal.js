@@ -62,6 +62,22 @@ export function initializeTriviaModal() {
     }
   }
 
+  // Provide a single, idempotent closer with message
+  window.closeTriviaModalWithError = (msg) => {
+    try {
+      const modal = document.getElementById('modal-trivia');
+      if (modal) {
+        modal.setAttribute('aria-hidden', 'true');
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+      }
+    } catch {}
+    // Non-blocking notice
+    try {
+      console.warn('[Trivia] ' + (msg || 'Trivia unavailable.'));
+    } catch {}
+  };
+
   // Expose globally
   window.openTriviaModal = openTriviaModal;
   window.closeTriviaModal = closeTriviaModal;

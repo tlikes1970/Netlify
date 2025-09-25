@@ -111,7 +111,14 @@
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error(`❌ TMDB Proxy error: ${response.status} - ${errorData.error || 'Unknown error'}`);
+        const errorMessage = errorData.error || 'Service temporarily unavailable';
+        
+        // Log detailed error for debugging
+        if (window.DEBUG) {
+          console.error(`❌ TMDB Proxy error: ${response.status} - ${errorMessage}`);
+        }
+        
+        // Return user-safe empty results
         return { results: [], page: 1, total_pages: 0, total_results: 0 };
       }
       
@@ -121,9 +128,19 @@
       return data;
       
     } catch (error) {
-      console.error(`❌ TMDB Proxy request failed: ${endpoint}`, error);
+      // Log detailed error for debugging
+      if (window.DEBUG) {
+        console.error(`❌ TMDB Proxy request failed: ${endpoint}`, error);
+      }
+      
+      // Return user-safe empty results
       return { results: [], page: 1, total_pages: 0, total_results: 0 };
     }
+  };
+
+  // Locale mapping helper - centralized source of truth
+  window.getTMDBLocale = function(lang) {
+    return mapToTMDBLocale(lang);
   };
 
   // Genre mapping helper

@@ -280,7 +280,7 @@
     results.forEach(item => {
       try {
         const card = window.Card({
-          variant: 'poster',
+          variant: 'detail', // Use detail variant for proper button layout
           id: item.id,
           title: item.title || item.name,
           subtitle: item.release_date ? `${new Date(item.release_date).getFullYear()} • ${item.media_type === 'tv' ? 'TV Series' : 'Movie'}` : 
@@ -288,40 +288,16 @@
           posterUrl: item.poster_path ? (window.getPosterUrl ? window.getPosterUrl(item.poster_path, 'w200') : `https://image.tmdb.org/t/p/w200${item.poster_path}`) : null,
           rating: item.vote_average || 0,
           badges: [{ label: 'Search Result', kind: 'status' }],
-          primaryAction: {
-            label: 'View Details',
-            onClick: () => {
-              if (window.openTMDBLink) {
-                window.openTMDBLink(item.id, item.media_type || 'movie');
-              }
-            }
-          },
-          overflowActions: [
-            {
-              label: 'Add to Watching',
-              onClick: () => {
-                if (window.addToWatching) {
-                  window.addToWatching(item);
-                }
-              },
-              icon: '➕'
-            },
-            {
-              label: 'Add to Wishlist',
-              onClick: () => {
-                if (window.addToWishlist) {
-                  window.addToWishlist(item);
-                }
-              },
-              icon: '📖'
-            }
-          ],
+          currentList: 'discover', // This will show the proper discover buttons
           onOpenDetails: () => {
             if (window.openTMDBLink) {
               window.openTMDBLink(item.id, item.media_type || 'movie');
             }
           }
         });
+        
+        // Store the full item data in the card for addToListFromCache to access
+        card.dataset.itemData = JSON.stringify(item);
         
         searchGrid.appendChild(card);
       } catch (error) {

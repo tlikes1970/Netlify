@@ -142,12 +142,12 @@ window.FlickletDebug = window.FlickletDebug || {
         // 7.5) Dock FABs to active tab
         this.dockFABsToActiveTab();
         
-        // 6) Update tab badges after UI is ready
+        // 6) Emit cards:changed event for centralized count updates
         setTimeout(() => {
-          if (typeof window.updateTabCounts === 'function') {
-            console.log('🔢 Calling updateTabCounts during initialization');
-            window.updateTabCounts();
-          }
+          document.dispatchEvent(new CustomEvent('cards:changed', {
+            detail: { source: 'app-initialization' }
+          }));
+          console.log('🔢 Emitted cards:changed event during initialization');
           
           // Emit app:lists-rendered event for counter system
           document.dispatchEvent(new CustomEvent('app:lists-rendered', {
@@ -511,10 +511,8 @@ waitForFirebaseReady() {
           if (auth.currentUser) setAuthButtonSignedIn(auth.currentUser.displayName || auth.currentUser.email || '');
           else { setAuthButtonSignedOut(); showFirstLoadSignInPrompt(); }
 
-          auth.onAuthStateChanged((user) => {
-            if (user) ensureUsernameFlow(user);
-            else { setAuthButtonSignedOut(); }
-          });
+          // Auth state changes are now handled centrally by AuthManager
+          // This listener has been removed to prevent race conditions
         } else {
           setAuthButtonSignedOut();
         }
@@ -522,6 +520,14 @@ waitForFirebaseReady() {
     },
 
     async processUserSignIn(user) {
+      // Race condition protection - prevent concurrent processing
+      if (window.__PROCESS_USER_SIGNIN_LOCK__) {
+        console.warn('[app] processUserSignIn already in progress, skipping duplicate call');
+        return;
+      }
+      
+      window.__PROCESS_USER_SIGNIN_LOCK__ = true;
+      
       try {
         FlickletDebug.info('✅ User signed in, processing...');
         
@@ -564,11 +570,11 @@ waitForFirebaseReady() {
               window.updateUI();
             }
             
-            // Update tab badges after data is loaded
-            if (typeof window.updateTabCounts === 'function') {
-              FlickletDebug.info('🔢 Updating tab counts after cloud data load...');
-              window.updateTabCounts();
-            }
+            // Emit cards:changed event for centralized count updates
+            document.dispatchEvent(new CustomEvent('cards:changed', {
+              detail: { source: 'cloud-data-load' }
+            }));
+            FlickletDebug.info('🔢 Emitted cards:changed event after cloud data load...');
             
             // Also refresh the current tab content
             if (typeof window.FlickletApp?.updateTabContent === 'function') {
@@ -655,6 +661,9 @@ waitForFirebaseReady() {
       } catch (error) {
         console.error('❌ Error in processUserSignIn:', error);
         this.showNotification(t('error_processing_sign_in'), 'error');
+      } finally {
+        // Always release the lock
+        window.__PROCESS_USER_SIGNIN_LOCK__ = false;
       }
     },
 
@@ -813,17 +822,25 @@ waitForFirebaseReady() {
       
       try {
         const uid = user.uid;
+        const db = window.firebaseDb || firebase.firestore();
         
         // 1) Create/update Firestore user doc
         await this.createOrUpdateUserDoc(user);
         
-        // 2) Load cloud data and merge with local
-        await this.loadAndMergeCloudData(uid);
+        // 2) Cloud-first load
+        const gotCloud = await this.cloudFirstLoad(db, uid);
         
-        // 3) Handle identity (username vs displayName)
+        // 3) If no cloud doc, seed from local minimal
+        if (!gotCloud) {
+          await this.seedCloudIfNeeded(db, uid);
+          window.__cloudHydrated = true;
+          window.saveAppData('flicklet-data', window.pruneWatchlistsShape(window.appData || {}));
+        }
+        
+        // 4) Handle identity (username vs displayName)
         await this.handleUserIdentity(user);
         
-        // 4) Update UI
+        // 5) Update UI
         this.updateUI();
         
       } catch (error) {
@@ -857,7 +874,59 @@ waitForFirebaseReady() {
     },
 
     /**
-     * Load and merge cloud data
+     * Cloud-first load with LocalStorage mirroring
+     */
+    async cloudFirstLoad(db, uid) {
+      try {
+        const ref = db.doc(`users/${uid}`);
+        const snap = await ref.get();
+        if (snap.exists) {
+          const cloud = window.pruneWatchlistsShape({ ...(snap.data() || {}) });
+          window.appData = { ...(window.appData || {}), ...cloud };
+          window.saveAppData('flicklet-data', window.appData);
+          window.__cloudHydrated = true;
+          console.info('[CloudLoad] Hydrated from Firestore. Bytes:',
+            window.computeBytes(JSON.stringify(window.appData)));
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error('[CloudLoad] Failed:', error);
+        return false;
+      }
+    },
+
+    /**
+     * Seed cloud with minimal local data if no cloud doc exists
+     */
+    async seedCloudIfNeeded(db, uid) {
+      try {
+        const minimal = window.pruneWatchlistsShape(window.appData || {});
+        const payload = { 
+          ...minimal, 
+          uid, 
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp?.() 
+        };
+        const json = JSON.stringify(payload);
+        const bytes = window.computeBytes(json);
+        
+        // Keep a safety margin well below 1 MiB doc limit
+        if (bytes > 900 * 1024) {
+          console.warn('[SeedCloud] payload too large, aborting seed:', (bytes/1024).toFixed(1), 'KB');
+          return false;
+        }
+        
+        await db.doc(`users/${uid}`).set(payload, { merge: true });
+        console.info('[SeedCloud] Seeded cloud with minimal shape:', (bytes/1024).toFixed(1), 'KB');
+        return true;
+      } catch (error) {
+        console.error('[SeedCloud] Failed:', error);
+        return false;
+      }
+    },
+
+    /**
+     * Load and merge cloud data (legacy - now uses cloud-first approach)
      */
     async loadAndMergeCloudData(uid) {
       try {
@@ -1437,10 +1506,10 @@ waitForFirebaseReady() {
 
     // ---------- UI Lifecycle ----------
     updateUI() {
-      // Update tab counts
-      if (typeof updateTabCounts === 'function') {
-        updateTabCounts();
-      }
+      // Emit cards:changed event for centralized count updates
+      document.dispatchEvent(new CustomEvent('cards:changed', {
+        detail: { source: 'FlickletApp-updateUI' }
+      }));
       // Note: updateTabContent is called directly from switchToTab to avoid loops
     },
 
@@ -1608,13 +1677,13 @@ waitForFirebaseReady() {
         }
       }
 
-      // Render content for this tab
-      this.updateUI();
-      
-      // Load content for this tab
+      // Load content for this tab first
       if (typeof updateTabContent === 'function') {
         updateTabContent(tab);
       }
+      
+      // Then update UI (including tab counts) after content is loaded
+      this.updateUI();
       
       // Trigger counter system update after tab content is loaded
       if (window.CounterBootstrap && typeof window.CounterBootstrap.directRecount === 'function') {
@@ -1799,6 +1868,14 @@ waitForFirebaseReady() {
         const btn = e.target.closest('[data-action]');
         if (!btn) return;
         const action = btn.dataset.action;
+        
+        // Debug logging for button clicks
+        console.log('[App] Button clicked:', {
+          action: action,
+          id: btn.dataset.id,
+          element: btn,
+          target: e.target
+        });
 
         // Route actions
         switch (action) {
@@ -1807,6 +1884,21 @@ waitForFirebaseReady() {
             break;
           case 'move':
             moveItem?.(Number(btn.dataset.id), btn.dataset.list);
+            break;
+          case 'mark-watched':
+            if (window.moveItem) {
+              window.moveItem(Number(btn.dataset.id), 'watched');
+            }
+            break;
+          case 'want-to-watch':
+            if (window.moveItem) {
+              window.moveItem(Number(btn.dataset.id), 'wishlist');
+            }
+            break;
+          case 'start-watching':
+            if (window.moveItem) {
+              window.moveItem(Number(btn.dataset.id), 'watching');
+            }
             break;
           case 'remove':
             removeItemFromCurrentList?.(Number(btn.dataset.id));
@@ -2246,73 +2338,45 @@ waitForFirebaseReady() {
         // Auth guard: Ensure auth is ready before any Firestore operations
         const user = await window.ensureUser();
         const uid = user.uid;
-        
-        FlickletDebug.info('💾 FlickletApp.saveData: Starting data save to Firebase');
-        FlickletDebug.info('💾 FlickletApp.saveData: auth status:', { 
-          hasAuthUser: !!user, 
-          authUid: uid,
-          firebaseAuth: !!firebase?.auth,
-          authState: firebase?.auth?.currentUser?.uid 
-        });
-
-        // Get Firebase services
-        console.log('🔥 Getting Firebase Firestore instance...');
         const db = firebase.firestore();
-        console.log('✅ Firebase Firestore instance obtained');
         
-        // Prepare data payload with undefined value filtering
-        const cleanData = (obj) => {
-          if (obj === null || obj === undefined) return null;
-          if (Array.isArray(obj)) {
-            return obj.map(cleanData).filter(item => item !== null && item !== undefined);
-          }
-          if (typeof obj === 'object') {
-            const cleaned = {};
-            for (const [key, value] of Object.entries(obj)) {
-              if (value !== undefined) {
-                cleaned[key] = cleanData(value);
-              }
-            }
-            return cleaned;
-          }
-          return obj;
+        FlickletDebug.info('💾 FlickletApp.saveData: Starting lean save to Firebase');
+
+        // Use lean serializer for minimal payload
+        const minimal = window.pruneWatchlistsShape(window.appData || {});
+        const payload = { 
+          ...minimal, 
+          uid, 
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp?.() 
         };
+        const json = JSON.stringify(payload);
+        const bytes = window.computeBytes(json);
 
-        const payload = {
-          watchlists: { 
-            tv: cleanData(window.appData.tv) || { watching: [], wishlist: [], watched: [] },
-            movies: cleanData(window.appData.movies) || { watching: [], wishlist: [], watched: [] }
-          },
-          settings: cleanData(window.appData.settings) || {},
-          pro: !!window.appData.settings?.pro,
-          lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-        };
+        // Abort if payload is still too large
+        if (bytes > 900 * 1024) {
+          console.warn('[saveData] payload too large, skipping Firestore save:', (bytes/1024).toFixed(1), 'KB');
+          // Still try to save locally with lean data
+          window.saveAppData('flicklet-data', minimal);
+          return;
+        }
 
-        // Debug: Log the payload structure to identify any remaining undefined values
-        FlickletDebug.info('💾 Payload structure before Firebase save:', {
-          watchlists: {
-            tv: payload.watchlists.tv,
-            movies: payload.watchlists.movies
-          },
-          settings: payload.settings,
-          pro: payload.pro
-        });
+        // Save to Firestore
+        await db.doc(`users/${uid}`).set(payload, { merge: true });
+        console.info('[saveData] Firestore save OK:', (bytes/1024).toFixed(1), 'KB');
 
-        // Save to Firebase
-        await db.collection("users").doc(uid).set(payload, { merge: true });
+        // Mirror to LocalStorage (guarded)
+        window.saveAppData('flicklet-data', payload);
         
-        // Also save to localStorage as backup
-        localStorage.setItem("flicklet-data", JSON.stringify(window.appData));
-        
-        FlickletDebug.info('✅ FlickletApp.saveData: Data saved successfully to Firebase and localStorage');
+        FlickletDebug.info('✅ FlickletApp.saveData: Lean data saved successfully to Firebase and localStorage');
         
       } catch (error) {
         FlickletDebug.error('❌ FlickletApp.saveData failed:', error);
         
-        // Fallback to localStorage only
+        // Fallback to localStorage only with lean data
         try {
-          localStorage.setItem("flicklet-data", JSON.stringify(window.appData));
-          FlickletDebug.info('💾 Fallback: Data saved to localStorage only');
+          const minimal = window.pruneWatchlistsShape(window.appData || {});
+          window.saveAppData('flicklet-data', minimal);
+          FlickletDebug.info('💾 Fallback: Lean data saved to localStorage only');
         } catch (localError) {
           FlickletDebug.error('❌ Even localStorage save failed:', localError);
         }
@@ -2666,4 +2730,7 @@ waitForFirebaseReady() {
 
   // Initialize back-to-top functionality
   FlickletApp.initBackToTop();
+
+  // Expose saveData globally for use by other modules
+  window.saveData = FlickletApp.saveData.bind(FlickletApp);
 })();

@@ -111,13 +111,11 @@
   async function loadSeasonsAndEpisodes(showId, seasonSelect, episodeList) {
     try {
       // Load show details to get seasons
-      const response = await fetch(`https://api.themoviedb.org/3/tv/${showId}?api_key=${window.TMDB_API_KEY}`);
+      const showData = await window.tmdbGet(`tv/${showId}`);
       
-      if (!response.ok) {
+      if (!showData || !showData.id) {
         throw new Error('Failed to load show details');
       }
-      
-      const showData = await response.json();
       const seasons = showData.seasons || [];
       
       // Populate season select
@@ -156,13 +154,11 @@
     try {
       episodeList.innerHTML = '<div class="episode-guide__loading">Loading episodes...</div>';
       
-      const response = await fetch(`https://api.themoviedb.org/3/tv/${showId}/season/${seasonNumber}?api_key=${window.TMDB_API_KEY}`);
+      const seasonData = await window.tmdbGet(`tv/${showId}/season/${seasonNumber}`);
       
-      if (!response.ok) {
+      if (!seasonData || !seasonData.episodes) {
         throw new Error('Failed to load episodes');
       }
-      
-      const seasonData = await response.json();
       const episodes = seasonData.episodes || [];
       
       // Load user progress

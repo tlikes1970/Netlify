@@ -99,11 +99,11 @@
         console.log('✅ UI updated');
       }
       
-      // Update tab counts
-      if (typeof window.updateTabCounts === 'function') {
-        window.updateTabCounts();
-        console.log('✅ Tab counts updated');
-      }
+      // Emit cards:changed event for centralized count updates
+      document.dispatchEvent(new CustomEvent('cards:changed', {
+        detail: { source: 'force-data-load' }
+      }));
+      console.log('✅ Emitted cards:changed event');
       
       // Update tab content
       if (window.FlickletApp && typeof window.FlickletApp.updateTabContent === 'function') {
@@ -146,18 +146,7 @@
   async function init() {
     await waitForFirebase();
     
-    // Listen for auth state changes
-    const auth = window.firebaseAuth;
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        console.log('🔄 Auth state changed - user signed in:', user.email);
-        setTimeout(() => {
-          forceLoadUserData();
-        }, 1000);
-      } else {
-        console.log('🔄 Auth state changed - user signed out');
-      }
-    });
+    // Auth state changes now handled by centralized AuthManager
     
     // Also check if user is already signed in
     const currentUser = auth.currentUser;

@@ -1,4 +1,0 @@
-[2025-09-18T06:53:08.043Z] ERR Command failed: git archive -o _ops/nightly/backup/snap-2025-09-18T06-53-07-901Z.zip HEAD
-fatal: could not open '_ops/nightly/backup/snap-2025-09-18T06-53-07-901Z.zip' for writing: No such file or directory
-
-[2025-09-18T06:53:08.044Z] SNAPSHOT_FAIL _ops/nightly/backup/snap-2025-09-18T06-53-07-901Z.zip

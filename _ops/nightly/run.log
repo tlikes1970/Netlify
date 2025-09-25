@@ -1,5 +1,0 @@
-[2025-09-18T06:53:07.969Z] CMD git rev-parse --short HEAD
-[2025-09-18T06:53:07.969Z] OUT 6233496
-[2025-09-18T06:53:07.970Z] HEAD 6233496
-[2025-09-18T06:53:08.043Z] CMD git archive -o _ops/nightly/backup/snap-2025-09-18T06-53-07-901Z.zip HEAD
-[2025-09-18T06:53:08.044Z] ERR fatal: could not open '_ops/nightly/backup/snap-2025-09-18T06-53-07-901Z.zip' for writing: No such file or directory

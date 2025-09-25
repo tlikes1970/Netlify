@@ -25,10 +25,3 @@
 
   window.CardActions = { notInterested };
 })();
-
-
-
-
-
-
-

@@ -94,11 +94,33 @@
       // no DOM mutation here—functions.js handles rendering.
       log("local appData loaded:", { hasTV: !!A?.tv, hasMovies: !!A?.movies });
       document.dispatchEvent(new CustomEvent("app:data:ready", { detail: { source: "localStorage" }}));
-      if (window.__CLOUD_ENABLED__) await trySync("post-local");
+      // Do not call trySync here - it will be called after auth is ready
     } catch (e) {
       err("loadUserDataAndReplaceCards failed:", e?.message || e);
     }
   };
+
+  // --- compat helpers (data-init.js) ---
+  const getUser = () => (firebase.auth && firebase.auth().currentUser) || null;
+  const getDb   = () => window.db; // compat Firestore instance
+
+  async function waitForAuthReady() {
+    const u = getUser();
+    if (u) return u;
+    // Prefer AuthStateManager if present
+    if (window.AuthStateManager?.init) {
+      await window.AuthStateManager.init();
+      return window.AuthStateManager.getCurrentUser?.() || getUser();
+    }
+    return await new Promise(resolve => {
+      // Wait for auth:ready event instead of direct listener
+      const handleAuthReady = () => {
+        document.removeEventListener('auth:ready', handleAuthReady);
+        resolve(window.currentUser || null);
+      };
+      document.addEventListener('auth:ready', handleAuthReady);
+    });
+  }
 
   // Guarded Firebase import + readiness
   (async function init() {
@@ -131,70 +153,9 @@
       // Always surface local data immediately
       await window.loadUserDataAndReplaceCards();
 
-      // If cloud is enabled, observe auth and opportunistically sync
+      // If cloud is enabled, auth state changes are now handled by AuthManager
       if (window.__CLOUD_ENABLED__) {
-        const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
-        onAuthStateChanged(auth, async (user) => {
-          log("auth state:", user ? "signed-in" : "signed-out");
-          
-          if (user) {
-            // Re-enable cloud sync when user signs in
-            if (!window.__CLOUD_ENABLED__) {
-              window.__CLOUD_ENABLED__ = true;
-              window.__AUTH_READY__ = true;
-              log("Cloud sync re-enabled for user:", user.uid);
-            }
-            
-            try {
-              await trySync("auth-change");
-              
-              // Trigger UI refresh after data sync
-              setTimeout(() => {
-                if (typeof window.updateUI === 'function') {
-                  log("Triggering UI refresh after auth change");
-                  window.updateUI();
-                }
-                if (typeof window.updateTabCounts === 'function') {
-                  log("Triggering tab counts update after auth change");
-                  window.updateTabCounts();
-                }
-              }, 500);
-            } catch (e) {
-              warn("sync on auth-change failed:", e?.message || e);
-            }
-          } else {
-            // Check if this is a redirect sign-in in progress
-            const isRedirectInProgress = window.location.search.includes('auth') || 
-                                       window.location.hash.includes('auth') ||
-                                       document.referrer.includes('accounts.google.com') ||
-                                       document.referrer.includes('google.com');
-            
-            // Check if sign-in was actually attempted
-            const signInAttempted = window.__SIGN_IN_ATTEMPTED__;
-            
-            log("🔍 Checking redirect status:", {
-              search: window.location.search,
-              hash: window.location.hash,
-              referrer: document.referrer,
-              isRedirectInProgress,
-              signInAttempted
-            });
-            
-            if (isRedirectInProgress) {
-              log("⏳ Auth state change during redirect - waiting for redirect result");
-              // Don't clear data during redirect, wait for redirect result
-              return;
-            }
-            
-            // Only clear data if sign-in was actually attempted
-            if (signInAttempted) {
-              log("🧹 User signed out after sign-in attempt - clearing local data");
-              clearUserData();
-            } else {
-              log("ℹ️ No sign-in attempt detected - keeping existing data");
-            }
-          }
-        });
+        log("Cloud enabled - auth state changes handled by centralized AuthManager");
       } else {
         log("cloud disabled (auth/db not ready) — local-only mode");
         
@@ -212,9 +173,9 @@
             window.__AUTH_READY__ = true;
             log("Cloud sync enabled after Firebase ready event");
             
-            // Set up auth listener
-            const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
-            onAuthStateChanged(auth, async (user) => {
+            // Subscribe to auth events instead of direct listener
+            document.addEventListener('auth:changed', async (event) => {
+              const user = event.detail.user;
               log("auth state:", user ? "signed-in" : "signed-out");
               
               if (user) {
@@ -227,10 +188,11 @@
                       log("Triggering UI refresh after auth change (ready event)");
                       window.updateUI();
                     }
-                    if (typeof window.updateTabCounts === 'function') {
-                      log("Triggering tab counts update after auth change (ready event)");
-                      window.updateTabCounts();
-                    }
+                    // Emit cards:changed event for centralized count updates
+                    document.dispatchEvent(new CustomEvent('cards:changed', {
+                      detail: { source: 'data-init-ready' }
+                    }));
+                    log("Emitted cards:changed event after auth change (ready event)");
                   }, 500);
                 } catch (e) {
                   warn("sync on auth-change failed:", e?.message || e);
@@ -279,78 +241,16 @@
           }
         });
         
-        // Set up a fallback auth listener for when cloud becomes available
-        if (window.firebaseAuth) {
-          const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
-          onAuthStateChanged(window.firebaseAuth, async (user) => {
-            log("fallback auth state:", user ? "signed-in" : "signed-out");
-            
-            if (user) {
-              // Re-enable cloud sync when user signs in
-              window.__CLOUD_ENABLED__ = true;
-              window.__AUTH_READY__ = true;
-              log("Cloud sync enabled for user:", user.uid);
-              
-              try {
-                await trySync("auth-change-fallback");
-                
-                // Trigger UI refresh after data sync
-                setTimeout(() => {
-                  if (typeof window.updateUI === 'function') {
-                    log("Triggering UI refresh after auth change (fallback)");
-                    window.updateUI();
-                  }
-                  if (typeof window.updateTabCounts === 'function') {
-                    log("Triggering tab counts update after auth change (fallback)");
-                    window.updateTabCounts();
-                  }
-                }, 500);
-              } catch (e) {
-                warn("fallback sync failed:", e?.message || e);
-              }
-            } else {
-              // Check if this is a redirect sign-in in progress
-              const isRedirectInProgress = window.location.search.includes('auth') || 
-                                         window.location.hash.includes('auth') ||
-                                         document.referrer.includes('accounts.google.com') ||
-                                         document.referrer.includes('google.com');
-              
-              // Check if sign-in was actually attempted
-              const signInAttempted = window.__SIGN_IN_ATTEMPTED__;
-              
-              log("🔍 Checking redirect status (fallback):", {
-                search: window.location.search,
-                hash: window.location.hash,
-                referrer: document.referrer,
-                isRedirectInProgress,
-                signInAttempted
-              });
-              
-              if (isRedirectInProgress) {
-                log("⏳ Auth state change during redirect (fallback) - waiting for redirect result");
-                return;
-              }
-              
-              // Only clear data if sign-in was actually attempted
-              if (signInAttempted) {
-                log("🧹 User signed out after sign-in attempt (fallback) - clearing local data");
-                clearUserData();
-              } else {
-                log("ℹ️ No sign-in attempt detected (fallback) - keeping existing data");
-              }
-            }
-          });
-        }
+        // Fallback auth listener removed - now handled by centralized AuthManager
       }
     } catch (e) {
       err("init failure:", e?.message || e);
     }
   })();
 
-  // Safe Firestore doc accessor
-  async function getUserDocRef(kind) {
+  // Safe Firestore doc accessor (compat API)
+  function getUserDocRef(kind) {
     if (!window.__CLOUD_ENABLED__) throw new Error("cloud-disabled");
-    const { doc } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js");
     const currentAuth = window.firebaseAuth || auth;
     const uid = currentAuth?.currentUser?.uid;
     if (!uid) throw new Error("no-user");
@@ -359,8 +259,8 @@
     const db = window.firebaseDb;
     if (!db) throw new Error("no-db");
     
-    if (kind === "settings") return doc(db, `users/${uid}/settings/app`);
-    if (kind === "lists")    return doc(db, `users/${uid}`); // Read from user root document
+    if (kind === "settings") return db.collection('users').doc(uid).collection('settings').doc('app');
+    if (kind === "lists")    return db.collection('users').doc(uid); // Read from user root document
     throw new Error("bad-kind");
   }
 
@@ -370,63 +270,103 @@
   // Sync routine (pull settings + lists into localStorage); never throws out
   async function trySync(reason = "manual") {
     try {
-      const [{ getDoc, setDoc }] = await Promise.all([
-        import("https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js")
-      ]);
-
       // Guard: ensure user - use current auth state, not captured variable
-      const currentAuth = window.firebaseAuth || auth;
-      const uid = currentAuth?.currentUser?.uid || null;
-      if (!uid) { warn("sync skipped:", reason, "- no user"); return; }
+      const user = getUser();
+      if (!user) { 
+        warn("sync skipped:", reason, "- no user"); 
+        return; 
+      }
 
-      // Pull remote
-      const [settingsRef, listsRef] = await Promise.all([
+      const db = getDb();
+      if (!db) {
+        warn("sync skipped:", reason, "- no db");
+        return;
+      }
+
+      log("sync: starting (auth ready)");
+
+      // Read local data first to check timestamps
+      const local = readLocalAppData();
+      const localLastUpdated = local.settings?.lastUpdated || 0;
+      
+      // Pull remote using compat API
+      const [settingsRef, listsRef] = [
         getUserDocRef("settings"),
         getUserDocRef("lists")
-      ]);
+      ];
 
       const [settingsSnap, listsSnap] = await Promise.all([
-        getDoc(settingsRef),
-        getDoc(listsRef)
+        settingsRef.get(),
+        listsRef.get()
       ]);
 
-      const local = readLocalAppData();
-      if (settingsSnap.exists()) {
-        local.settings = { ...(local.settings || {}), ...(settingsSnap.data() || {}) };
-      }
-      if (listsSnap.exists()) {
+      // Check if local data is newer than Firebase data
+      let shouldOverwriteLocal = true;
+      // Handle both DocumentSnapshot (.exists()) and QuerySnapshot (.empty) cases
+      const hasData = listsSnap.exists ? listsSnap.exists() : !listsSnap.empty;
+      if (hasData) {
         const remote = listsSnap.data() || {};
-        const watchlists = remote.watchlists || {};
+        const remoteLastUpdated = remote.lastUpdated?.toMillis?.() || remote.lastUpdated || 0;
         
-        // Transform Firestore structure to app structure
-        local.tv = {
-          watching: watchlists.tv?.watching || [],
-          wishlist: watchlists.tv?.wishlist || [],
-          watched: watchlists.tv?.watched || []
-        };
-        
-        local.movies = {
-          watching: watchlists.movies?.watching || [],
-          wishlist: watchlists.movies?.wishlist || [],
-          watched: watchlists.movies?.watched || []
-        };
-        
-        log("Data transformation complete:", {
-          tvWatching: local.tv.watching.length,
-          tvWishlist: local.tv.wishlist.length,
-          tvWatched: local.tv.watched.length,
-          moviesWatching: local.movies.watching.length,
-          moviesWishlist: local.movies.wishlist.length,
-          moviesWatched: local.movies.watched.length
-        });
+        if (localLastUpdated > remoteLastUpdated) {
+          log("Local data is newer than Firebase data, skipping overwrite:", {
+            localLastUpdated,
+            remoteLastUpdated,
+            reason
+          });
+          shouldOverwriteLocal = false;
+        } else {
+          log("Firebase data is newer or equal, will sync:", {
+            localLastUpdated,
+            remoteLastUpdated,
+            reason
+          });
+        }
       }
 
-      writeLocalAppData(local);
-      
-      // Update window.appData from localStorage after sync
-      if (typeof window.loadAppData === 'function') {
-        window.loadAppData();
-        log("window.appData updated from localStorage after sync");
+      // Only overwrite local data if Firebase data is newer
+      if (shouldOverwriteLocal) {
+        if (settingsSnap.exists()) {
+          local.settings = { ...(local.settings || {}), ...(settingsSnap.data() || {}) };
+        }
+        // Handle both DocumentSnapshot (.exists()) and QuerySnapshot (.empty) cases
+        const hasListsData = listsSnap.exists ? listsSnap.exists() : !listsSnap.empty;
+        if (hasListsData) {
+          const remote = listsSnap.data() || {};
+          const watchlists = remote.watchlists || {};
+          
+          // Transform Firestore structure to app structure
+          local.tv = {
+            watching: watchlists.tv?.watching || [],
+            wishlist: watchlists.tv?.wishlist || [],
+            watched: watchlists.tv?.watched || []
+          };
+          
+          local.movies = {
+            watching: watchlists.movies?.watching || [],
+            wishlist: watchlists.movies?.wishlist || [],
+            watched: watchlists.movies?.watched || []
+          };
+          
+          log("Data transformation complete:", {
+            tvWatching: local.tv.watching.length,
+            tvWishlist: local.tv.wishlist.length,
+            tvWatched: local.tv.watched.length,
+            moviesWatching: local.movies.watching.length,
+            moviesWishlist: local.movies.wishlist.length,
+            moviesWatched: local.movies.watched.length
+          });
+        }
+
+        writeLocalAppData(local);
+        
+        // Update window.appData from localStorage after sync
+        if (typeof window.loadAppData === 'function') {
+          window.loadAppData();
+          log("window.appData updated from localStorage after sync");
+        }
+      } else {
+        log("Skipping Firebase sync - local data is newer");
       }
       
       document.dispatchEvent(new CustomEvent("app:data:ready", { detail: { source: "cloud" }}));
@@ -441,7 +381,18 @@
     }
   }
 
+  // Export init function that waits for auth readiness
+  async function init() {
+    const user = await waitForAuthReady();
+    if (!user) {
+      console.warn('[data-init] init: no auth user after wait; aborting sync');
+      return;
+    }
+    console.info('[data-init] sync: starting (auth ready)');
+    await trySync();
+  }
+
   // Export minimal API
-  window.DataInit = { trySync, readLocalAppData, writeLocalAppData };
+  window.DataInit = { init, trySync, readLocalAppData, writeLocalAppData };
 
 })();
