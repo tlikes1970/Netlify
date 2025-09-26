@@ -3,7 +3,7 @@
  * Renders game tiles and stats teaser inside the Community section
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🎮 Community Games component loaded');
@@ -34,7 +34,7 @@
   }
 
   // Render game tile
-  function renderGameTile({id, title, subtitle, icon, onClick}) {
+  function renderGameTile({ id, title, subtitle, icon, onClick }) {
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'game-tile';
@@ -63,10 +63,10 @@
       return {
         streak: raw.streak || 0,
         totalAnswered: raw.totalAnswered || 0,
-        bestScore: raw.bestScore || 0
+        bestScore: raw.bestScore || 0,
       };
-    } catch (_) { 
-      return {}; 
+    } catch (_) {
+      return {};
     }
   }
 
@@ -87,27 +87,31 @@
     tiles.className = 'community-games__tiles';
 
     // Daily Trivia tile → teaser modal (upsell to Pro)
-    tiles.appendChild(renderGameTile({
-      id: 'trivia',
-      title: t('games.trivia_title'),
-      subtitle: t('games.trivia_sub'),
-      icon: 'check',
-      onClick: (e) => {
-        e.preventDefault();
-        if (typeof window.openGamesTeaser === 'function') {
-          window.openGamesTeaser('trivia');
-        }
-      }
-    }));
+    tiles.appendChild(
+      renderGameTile({
+        id: 'trivia',
+        title: t('games.trivia_title'),
+        subtitle: t('games.trivia_sub'),
+        icon: 'check',
+        onClick: (e) => {
+          e.preventDefault();
+          if (typeof window.openGamesTeaser === 'function') {
+            window.openGamesTeaser('trivia');
+          }
+        },
+      }),
+    );
 
     // FlickWord tile → fully functional
-    tiles.appendChild(renderGameTile({
-      id: 'flickword',
-      title: t('games.flickword_title'),
-      subtitle: t('games.flickword_sub'),
-      icon: 'badge',
-      onClick: () => softNavigate('/games/flickword')
-    }));
+    tiles.appendChild(
+      renderGameTile({
+        id: 'flickword',
+        title: t('games.flickword_title'),
+        subtitle: t('games.flickword_sub'),
+        icon: 'badge',
+        onClick: () => softNavigate('/games/flickword'),
+      }),
+    );
 
     wrap.appendChild(tiles);
 
@@ -131,17 +135,16 @@
         </div>
         <button class="btn btn-link teaser__cta">${t('games.pro_cta')}</button>
       `;
-      
+
       // Add click handler for Pro CTA
       const ctaBtn = teaser.querySelector('.teaser__cta');
       if (ctaBtn) {
         ctaBtn.addEventListener('click', () => softNavigate('/pro'));
       }
-      
+
       wrap.appendChild(teaser);
     }
 
     return wrap;
   };
-
 })();

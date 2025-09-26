@@ -6,18 +6,18 @@ const ONE_PX_PNG =
 // TEST-ONLY: genre catalogs for TMDB mocks
 const GENRES = {
   movie: [
-    { id: 16,  name: 'Animation' },
-    { id: 27,  name: 'Horror' },
-    { id: 28,  name: 'Action' },
-    { id: 35,  name: 'Comedy' },
-    { id: 18,  name: 'Drama'  },
+    { id: 16, name: 'Animation' },
+    { id: 27, name: 'Horror' },
+    { id: 28, name: 'Action' },
+    { id: 35, name: 'Comedy' },
+    { id: 18, name: 'Drama' },
   ],
   tv: [
-    { id: 16,  name: 'Animation' },
-    { id: 9648, name: 'Mystery'  },
-    { id: 80,   name: 'Crime'    },
-    { id: 35,   name: 'Comedy'   },
-    { id: 18,   name: 'Drama'    },
+    { id: 16, name: 'Animation' },
+    { id: 9648, name: 'Mystery' },
+    { id: 80, name: 'Crime' },
+    { id: 35, name: 'Comedy' },
+    { id: 18, name: 'Drama' },
   ],
 };
 
@@ -31,8 +31,7 @@ function urlMatches(u: string) {
       /\/(api|functions)\/[^?]*tmdb[^?]*/i.test(u),
     // NEW: common local/static paths for FlickWord content
     isFlickwordJSON:
-      /\/(data|content|assets)\/flickword(\.json)?$/i.test(u) ||
-      /\/flickword(\.json)?$/i.test(u),
+      /\/(data|content|assets)\/flickword(\.json)?$/i.test(u) || /\/flickword(\.json)?$/i.test(u),
   };
 }
 
@@ -45,7 +44,9 @@ async function shimAppGlobals(page: import('@playwright/test').Page) {
         (window as any).tmdbGet = async function tmdbGet(pathOrUrl: string, params: any = {}) {
           try {
             const isFull = /^https?:\/\//i.test(pathOrUrl);
-            const url = new URL(isFull ? pathOrUrl : `https://api.themoviedb.org/3/${pathOrUrl.replace(/^\/+/, '')}`);
+            const url = new URL(
+              isFull ? pathOrUrl : `https://api.themoviedb.org/3/${pathOrUrl.replace(/^\/+/, '')}`,
+            );
             // add params if provided
             Object.entries(params || {}).forEach(([k, v]) => url.searchParams.set(k, String(v)));
             // default language if not present—tests flip it to es-ES in i18n spec
@@ -66,34 +67,42 @@ async function shimAppGlobals(page: import('@playwright/test').Page) {
       const fb: any = (window as any).firebase || {};
       fb.initializeApp = fb.initializeApp || ((cfg: any) => ({ __test: true, cfg }));
       fb.app = fb.app || (() => ({ __test: true }));
-      fb.auth = fb.auth || (() => ({
-        currentUser: null,
-        onAuthStateChanged: (cb: any) => setTimeout(() => cb(null), 0),
-        signInWithPopup: async () => ({ user: null }),
-      }));
-      fb.firestore = fb.firestore || (() => ({
-        collection: () => ({
-          doc: () => ({
-            get: async () => ({ exists: false, data: () => ({}) }),
-            set: async () => ({}),
-            update: async () => ({}),
+      fb.auth =
+        fb.auth ||
+        (() => ({
+          currentUser: null,
+          onAuthStateChanged: (cb: any) => setTimeout(() => cb(null), 0),
+          signInWithPopup: async () => ({ user: null }),
+        }));
+      fb.firestore =
+        fb.firestore ||
+        (() => ({
+          collection: () => ({
+            doc: () => ({
+              get: async () => ({ exists: false, data: () => ({}) }),
+              set: async () => ({}),
+              update: async () => ({}),
+            }),
           }),
-        }),
-      }));
+        }));
       fb.analytics = fb.analytics || (() => ({}));
       (window as any).firebase = fb;
     } catch {}
 
     // 3) App helpers that might be referenced from UI
     try {
-      if (!(window as any).loadUserDataFromCloud) (window as any).loadUserDataFromCloud = async () => ({});
+      if (!(window as any).loadUserDataFromCloud)
+        (window as any).loadUserDataFromCloud = async () => ({});
       if (!(window as any).addToList) (window as any).addToList = async () => ({ ok: true });
-      if (!(window as any).removeFromList) (window as any).removeFromList = async () => ({ ok: true });
+      if (!(window as any).removeFromList)
+        (window as any).removeFromList = async () => ({ ok: true });
       if (!(window as any).saveAppData) (window as any).saveAppData = async () => ({ ok: true });
     } catch {}
 
     // 4) Keep tests online and SW inert
-    try { Object.defineProperty(navigator, 'onLine', { get: () => true }); } catch {}
+    try {
+      Object.defineProperty(navigator, 'onLine', { get: () => true });
+    } catch {}
     try {
       // prevent offline banners or SW-dependent branches
       (window as any).__TEST__ = true;
@@ -101,12 +110,16 @@ async function shimAppGlobals(page: import('@playwright/test').Page) {
 
     // 5) Disable sign-in modal for tests
     try {
-      (window as any).showSignInModal = () => { console.log('Sign-in modal disabled for tests'); };
-      (window as any).hideSignInModal = () => { console.log('Hide sign-in modal disabled for tests'); };
-      
+      (window as any).showSignInModal = () => {
+        console.log('Sign-in modal disabled for tests');
+      };
+      (window as any).hideSignInModal = () => {
+        console.log('Hide sign-in modal disabled for tests');
+      };
+
       // Override the modal creation function
       const originalCreateElement = document.createElement;
-      document.createElement = function(tagName) {
+      document.createElement = function (tagName) {
         const element = originalCreateElement.call(this, tagName);
         if (tagName.toLowerCase() === 'div' && element.id === 'signin-info-modal') {
           console.log('Preventing sign-in modal creation');
@@ -116,11 +129,13 @@ async function shimAppGlobals(page: import('@playwright/test').Page) {
         }
         return element;
       };
-      
+
       // Close any existing modals
       const closeModals = () => {
-        const modals = document.querySelectorAll('#signin-info-modal, .modal-backdrop[data-modal="login"], #signInModal');
-        modals.forEach(modal => {
+        const modals = document.querySelectorAll(
+          '#signin-info-modal, .modal-backdrop[data-modal="login"], #signInModal',
+        );
+        modals.forEach((modal) => {
           if (modal instanceof HTMLElement) {
             modal.style.display = 'none';
             modal.style.visibility = 'hidden';
@@ -129,7 +144,7 @@ async function shimAppGlobals(page: import('@playwright/test').Page) {
           }
         });
       };
-      
+
       closeModals();
       setTimeout(closeModals, 100);
       setTimeout(closeModals, 500);
@@ -143,22 +158,26 @@ async function unhideCommonUI(page: import('@playwright/test').Page) {
   await page.addInitScript(() => {
     const unhide = () => {
       // Remove hidden attribute
-      document.querySelectorAll('[hidden]').forEach(el => el.removeAttribute('hidden'));
+      document.querySelectorAll('[hidden]').forEach((el) => el.removeAttribute('hidden'));
       // Remove hidden class
-      document.querySelectorAll('.hidden').forEach(el => el.classList.remove('hidden'));
+      document.querySelectorAll('.hidden').forEach((el) => el.classList.remove('hidden'));
       // Force visibility on common UI elements
-      document.querySelectorAll('#homeTab, #watchingTab, #wishlistTab, #watchedTab, #discoverTab, .tab, [role="tab"]').forEach(el => {
-        el.classList.remove('hidden');
-        el.removeAttribute('hidden');
-        (el as HTMLElement).style.display = '';
-      });
+      document
+        .querySelectorAll(
+          '#homeTab, #watchingTab, #wishlistTab, #watchedTab, #discoverTab, .tab, [role="tab"]',
+        )
+        .forEach((el) => {
+          el.classList.remove('hidden');
+          el.removeAttribute('hidden');
+          (el as HTMLElement).style.display = '';
+        });
     };
-    
+
     // Run immediately and also after a delay to catch dynamically added elements
     unhide();
     setTimeout(unhide, 100);
     setTimeout(unhide, 500);
-    
+
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
       unhide();
     } else {
@@ -195,7 +214,10 @@ async function ensureFlickWordVisible(page: Page) {
       setTimeout(inject, 150);
       setTimeout(inject, 600);
     } else {
-      document.addEventListener('DOMContentLoaded', () => { setTimeout(inject, 150); setTimeout(inject, 600); });
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(inject, 150);
+        setTimeout(inject, 600);
+      });
     }
   });
 }
@@ -203,7 +225,7 @@ async function ensureFlickWordVisible(page: Page) {
 
 /* -------- request telemetry -------- */
 async function wireTelemetry(page: Page) {
-  const reqLog: Array<{url:string, type:string, mocked:boolean}> = [];
+  const reqLog: Array<{ url: string; type: string; mocked: boolean }> = [];
   await page.exposeFunction('__getReqLog', () => reqLog);
   page.on('request', (req) => {
     const type = req.resourceType();
@@ -212,7 +234,12 @@ async function wireTelemetry(page: Page) {
     }
   });
   return (url: string, mocked: boolean) => {
-    const last = reqLog.findLast?.(r => r.url === url) || reqLog.slice().reverse().find(r => r.url === url);
+    const last =
+      reqLog.findLast?.((r) => r.url === url) ||
+      reqLog
+        .slice()
+        .reverse()
+        .find((r) => r.url === url);
     if (last) last.mocked = mocked;
   };
 }
@@ -220,7 +247,9 @@ async function wireTelemetry(page: Page) {
 /* -------- mocks -------- */
 async function mockNetwork(page: Page) {
   let lastTMDBUrl = '';
-  await page.exposeFunction('__setLastTMDB', (u: string) => { lastTMDBUrl = u; });
+  await page.exposeFunction('__setLastTMDB', (u: string) => {
+    lastTMDBUrl = u;
+  });
   await page.exposeFunction('__getLastTMDB', () => lastTMDBUrl);
 
   const mark = await wireTelemetry(page);
@@ -233,7 +262,11 @@ async function mockNetwork(page: Page) {
     // TMDB images → tiny png
     if (m.isTMDBImage) {
       mark(url, true);
-      return route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from(ONE_PX_PNG, 'base64') });
+      return route.fulfill({
+        status: 200,
+        contentType: 'image/png',
+        body: Buffer.from(ONE_PX_PNG, 'base64'),
+      });
     }
 
     // TMDB api/proxy → stable JSON
@@ -242,30 +275,57 @@ async function mockNetwork(page: Page) {
       // Capture ALL TMDB API calls, not just search
       await (page as any).__setLastTMDB?.(url);
       let body: any = { page: 1, results: [] };
-          if (/\/configuration/i.test(url)) {
-            body = { images: { base_url: 'https://image.tmdb.org/t/p/', secure_base_url: 'https://image.tmdb.org/t/p/' } };
-          } else if (/\/genre\/movie\/list/i.test(url)) {
-            mark(url, true);
-            return route.fulfill({
-              status: 200, contentType: 'application/json',
-              body: JSON.stringify({ genres: GENRES.movie })
-            });
-          } else if (/\/genre\/tv\/list/i.test(url)) {
-            mark(url, true);
-            return route.fulfill({
-              status: 200, contentType: 'application/json',
-              body: JSON.stringify({ genres: GENRES.tv })
-            });
-          } else if (/\/search\/(movie|tv)/i.test(url)) {
-            body.results = [
-              { id: 101, title: 'Star Voyage', name: 'Star Voyage', overview: 'Space stuff.', poster_path: '/p.png', vote_average: 7.2, release_date: '2023-01-01' }
-            ];
-          } else if (/\/(trending|discover|popular|now_playing|top_rated)\b/i.test(url)) {
-            body.results = [
-              { id: 201, title: 'Trending Show', name: 'Trending Show', overview: 'Hot now.', poster_path: '/t.png', vote_average: 8.1, first_air_date: '2024-06-01' }
-            ];
-          }
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+      if (/\/configuration/i.test(url)) {
+        body = {
+          images: {
+            base_url: 'https://image.tmdb.org/t/p/',
+            secure_base_url: 'https://image.tmdb.org/t/p/',
+          },
+        };
+      } else if (/\/genre\/movie\/list/i.test(url)) {
+        mark(url, true);
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ genres: GENRES.movie }),
+        });
+      } else if (/\/genre\/tv\/list/i.test(url)) {
+        mark(url, true);
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ genres: GENRES.tv }),
+        });
+      } else if (/\/search\/(movie|tv)/i.test(url)) {
+        body.results = [
+          {
+            id: 101,
+            title: 'Star Voyage',
+            name: 'Star Voyage',
+            overview: 'Space stuff.',
+            poster_path: '/p.png',
+            vote_average: 7.2,
+            release_date: '2023-01-01',
+          },
+        ];
+      } else if (/\/(trending|discover|popular|now_playing|top_rated)\b/i.test(url)) {
+        body.results = [
+          {
+            id: 201,
+            title: 'Trending Show',
+            name: 'Trending Show',
+            overview: 'Hot now.',
+            poster_path: '/t.png',
+            vote_average: 8.1,
+            first_air_date: '2024-06-01',
+          },
+        ];
+      }
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(body),
+      });
     }
 
     // FlickWord JSON mocks
@@ -276,8 +336,8 @@ async function mockNetwork(page: Page) {
         contentType: 'application/json',
         body: JSON.stringify({
           items: [{ id: 'fw_1', title: 'FlickWord Demo', blurb: 'Hello!', href: '#' }],
-          updatedAt: '2025-09-15T00:00:00Z'
-        })
+          updatedAt: '2025-09-15T00:00:00Z',
+        }),
       });
     }
 
@@ -288,7 +348,8 @@ async function mockNetwork(page: Page) {
 
 /* -------- environment shims -------- */
 async function neutralizeOverlays(page: Page) {
-  await page.addStyleTag({ content: `
+  await page.addStyleTag({
+    content: `
     #searchHelp, #searchHelp .hero-content, .offline-banner { pointer-events: none !important; }
     #signin-info-modal, .modal-backdrop[data-modal="login"], #signInModal { 
       display: none !important; 
@@ -299,7 +360,8 @@ async function neutralizeOverlays(page: Page) {
     [id*="signin"], [id*="modal"], [class*="modal"] {
       pointer-events: none !important;
     }
-  `});
+  `,
+  });
 }
 async function stubGeolocation(page: Page) {
   await page.context().grantPermissions(['geolocation']);
@@ -307,8 +369,10 @@ async function stubGeolocation(page: Page) {
   await page.addInitScript(() => {
     try {
       const fake = {
-        getCurrentPosition: (ok: any) => setTimeout(() => ok?.({ coords: { latitude: 37.7749, longitude: -122.4194 } }), 0),
-        watchPosition: () => 0, clearWatch: () => {}
+        getCurrentPosition: (ok: any) =>
+          setTimeout(() => ok?.({ coords: { latitude: 37.7749, longitude: -122.4194 } }), 0),
+        watchPosition: () => 0,
+        clearWatch: () => {},
       };
       // @ts-ignore
       if ('geolocation' in navigator) navigator.geolocation = fake as any;
@@ -318,39 +382,52 @@ async function stubGeolocation(page: Page) {
 async function stubWindowOpen(page: Page) {
   await page.addInitScript(() => {
     (window as any).__lastOpen = null;
-    window.open = (url?: string|URL) => { (window as any).__lastOpen = String(url||''); return { close(){}, closed:true } as any; };
+    window.open = (url?: string | URL) => {
+      (window as any).__lastOpen = String(url || '');
+      return { close() {}, closed: true } as any;
+    };
   });
 }
 async function accelerateIdle(page: Page) {
   await page.addInitScript(() => {
-    try { Object.defineProperty(window.navigator, 'onLine', { get: () => true }); } catch {}
+    try {
+      Object.defineProperty(window.navigator, 'onLine', { get: () => true });
+    } catch {}
     // @ts-ignore
-    window.requestIdleCallback = (fn: any) => setTimeout(() => fn({ didTimeout:false, timeRemaining: () => 50 }), 0);
+    window.requestIdleCallback = (fn: any) =>
+      setTimeout(() => fn({ didTimeout: false, timeRemaining: () => 50 }), 0);
   });
 }
 
 /* -------- error capture -------- */
 async function captureErrors(page: Page) {
-  await page.addInitScript(() => { (window as any).__errors = []; });
+  await page.addInitScript(() => {
+    (window as any).__errors = [];
+  });
   page.on('console', (m) => {
-    if (m.type() === 'error') (page as any).evaluate((msg) => (window as any).__errors.push(msg), String(m.text())).catch(()=>{});
+    if (m.type() === 'error')
+      (page as any)
+        .evaluate((msg) => (window as any).__errors.push(msg), String(m.text()))
+        .catch(() => {});
   });
   page.on('pageerror', (err) => {
-    (page as any).evaluate((msg) => (window as any).__errors.push(msg), String(err?.message||err)).catch(()=>{});
+    (page as any)
+      .evaluate((msg) => (window as any).__errors.push(msg), String(err?.message || err))
+      .catch(() => {});
   });
 }
 
 export const test = base.extend({
   page: async ({ page }, use) => {
     await captureErrors(page);
-    await shimAppGlobals(page);     // <-- NEW: before mocks so app init can proceed
+    await shimAppGlobals(page); // <-- NEW: before mocks so app init can proceed
     await accelerateIdle(page);
     await neutralizeOverlays(page);
     await stubGeolocation(page);
     await mockNetwork(page);
     await stubWindowOpen(page);
-    await ensureFlickWordVisible(page);  // <-- NEW safety net
-    await unhideCommonUI(page);          // your improved unhide
+    await ensureFlickWordVisible(page); // <-- NEW safety net
+    await unhideCommonUI(page); // your improved unhide
     await use(page);
   },
 });
@@ -366,9 +443,13 @@ export async function expectNoConsoleErrors(page: Page) {
 }
 export async function dumpDebug(page: Page) {
   const errors: string[] = await page.evaluate(() => (window as any).__errors || []);
-  const reqs: Array<{url:string,type:string,mocked:boolean}> = await page.evaluate(() => (window as any).__getReqLog?.() || []);
-  console.log('--- DEBUG: console errors ---'); console.log(errors);
-  console.log('--- DEBUG: requests (fetch/xhr) ---'); console.table(reqs);
+  const reqs: Array<{ url: string; type: string; mocked: boolean }> = await page.evaluate(
+    () => (window as any).__getReqLog?.() || [],
+  );
+  console.log('--- DEBUG: console errors ---');
+  console.log(errors);
+  console.log('--- DEBUG: requests (fetch/xhr) ---');
+  console.table(reqs);
 }
 
 /* optional: UI-only search fallback you can enable per-test */
@@ -384,14 +465,25 @@ export async function enableSearchFallback(page: Page) {
       const res = document.querySelector('#searchResults') as HTMLElement | null;
       if (!q || !btn || !res) return;
       const doFake = () => {
-        const v = (q.value||'').trim(); if (!v) return;
+        const v = (q.value || '').trim();
+        if (!v) return;
         res.innerHTML = `<div class="result-card" data-fake="1">Fake: ${v}</div>`;
         res.style.display = '';
       };
-      const clear = () => { q.value=''; res.innerHTML=''; res.style.display='none'; };
+      const clear = () => {
+        q.value = '';
+        res.innerHTML = '';
+        res.style.display = 'none';
+      };
       btn?.addEventListener('click', doFake);
-      q?.form?.addEventListener('submit', (e)=>{ e.preventDefault(); doFake(); });
-      (document.querySelector('#clearSearchBtn') as HTMLButtonElement | null)?.addEventListener('click', clear);
+      q?.form?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        doFake();
+      });
+      (document.querySelector('#clearSearchBtn') as HTMLButtonElement | null)?.addEventListener(
+        'click',
+        clear,
+      );
     };
     if (document.readyState === 'complete' || document.readyState === 'interactive') wire();
     else document.addEventListener('DOMContentLoaded', wire);
@@ -407,12 +499,13 @@ export async function clearSearchUI(page: Page, selectorOverride?: string) {
       'input[type="search"]',
       'input[name="search"]',
       '.top-search input',
-      '.top-search .search-input'
+      '.top-search .search-input',
     ].filter(Boolean);
 
-    const q = (selectors
-      .map(sel => document.querySelector(sel) as HTMLInputElement | null)
-      .find(el => !!el)) || null;
+    const q =
+      selectors
+        .map((sel) => document.querySelector(sel) as HTMLInputElement | null)
+        .find((el) => !!el) || null;
 
     const results = document.querySelector('#searchResults') as HTMLElement | null;
     const clearBtn = document.querySelector('#clearBtn') as HTMLButtonElement | null;
@@ -429,7 +522,7 @@ export async function clearSearchUI(page: Page, selectorOverride?: string) {
       }
       if (results) {
         results.innerHTML = '';
-        (results.style && (results.style.display = 'none'));
+        results.style && (results.style.display = 'none');
       }
     };
 
@@ -445,7 +538,9 @@ export async function clearSearchUI(page: Page, selectorOverride?: string) {
 
 // TEST-ONLY: read/reset the stubbed window.open URL
 export async function resetLastOpenedUrl(page: Page) {
-  await page.evaluate(() => { (window as any).__lastOpen = null; });
+  await page.evaluate(() => {
+    (window as any).__lastOpen = null;
+  });
 }
 export async function getLastOpenedUrl(page: Page) {
   return await page.evaluate(() => (window as any).__lastOpen || '');

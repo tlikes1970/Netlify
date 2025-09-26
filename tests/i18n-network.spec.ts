@@ -15,8 +15,10 @@ test('i18n sends language=es-ES', async ({ page }) => {
   await page.waitForTimeout(300);
 
   // Check if any TMDB requests were made with Spanish language
-  const reqs: Array<{url:string,type:string,mocked:boolean}> = await page.evaluate(() => (window as any).__getReqLog?.() || []);
-  const spanishRequests = reqs.filter(req => req.url.includes('language=es-ES'));
+  const reqs: Array<{ url: string; type: string; mocked: boolean }> = await page.evaluate(
+    () => (window as any).__getReqLog?.() || [],
+  );
+  const spanishRequests = reqs.filter((req) => req.url.includes('language=es-ES'));
   expect(spanishRequests.length).toBeGreaterThan(0);
 
   // Note: Console errors are expected due to missing tmdbGet function and Firebase

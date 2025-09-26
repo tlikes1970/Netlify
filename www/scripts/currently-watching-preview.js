@@ -4,11 +4,11 @@
  * Feature flag: homeRowCurrentlyWatching
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🎬 Currently Watching Preview script loaded');
-  
+
   // Import TMDB image utilities
   let getPosterUrl, isValidPosterUrl;
   if (typeof window.getPosterUrl === 'function') {
@@ -16,29 +16,33 @@
     isValidPosterUrl = window.isValidPosterUrl;
   } else {
     // Fallback implementation if utility not loaded
-    getPosterUrl = function(itemOrPath, size = 'w200') {
-      const path = typeof itemOrPath === 'string' 
-        ? itemOrPath 
-        : (itemOrPath?.poster_src || itemOrPath?.poster_path || '');
+    getPosterUrl = function (itemOrPath, size = 'w200') {
+      const path =
+        typeof itemOrPath === 'string'
+          ? itemOrPath
+          : itemOrPath?.poster_src || itemOrPath?.poster_path || '';
       if (!path) return '/assets/img/poster-placeholder.png';
       if (/^https?:\/\//i.test(path)) return path;
       return `https://image.tmdb.org/t/p/${size}/${path.replace(/^\/+/, '')}`;
     };
-    isValidPosterUrl = function(url) {
+    isValidPosterUrl = function (url) {
       return url && (url.startsWith('http') || url.startsWith('/assets'));
     };
   }
-  
+
   // Card component availability check
-  const USE_CARD = !!(window.Card);
+  const USE_CARD = !!window.Card;
 
   // Feature flag check
-  console.log('🎬 Checking feature flag:', { FLAGS: window.FLAGS, homeRowCurrentlyWatching: window.FLAGS?.homeRowCurrentlyWatching });
+  console.log('🎬 Checking feature flag:', {
+    FLAGS: window.FLAGS,
+    homeRowCurrentlyWatching: window.FLAGS?.homeRowCurrentlyWatching,
+  });
   if (!window.FLAGS?.homeRowCurrentlyWatching) {
     console.log('🚫 Currently Watching Preview disabled by feature flag');
     return;
   }
-  
+
   // Ensure the section is visible by default
   const previewSection = document.getElementById('currentlyWatchingPreview');
   if (previewSection) {
@@ -77,11 +81,11 @@
     // Listen for data changes
     document.addEventListener('appDataUpdated', renderCurrentlyWatchingPreview);
     document.addEventListener('curated:rerender', renderCurrentlyWatchingPreview);
-    
+
     // Listen for UI updates (when updateUI is called)
     const originalUpdateUI = window.updateUI;
     if (originalUpdateUI) {
-      window.updateUI = function(...args) {
+      window.updateUI = function (...args) {
         const result = originalUpdateUI.apply(this, args);
         // Trigger our preview update after a short delay
         setTimeout(renderCurrentlyWatchingPreview, 100);
@@ -129,7 +133,7 @@
    */
   function handlePreviewAction(cardOrAction, actionBtnOrItem) {
     let action, itemId;
-    
+
     // Check if this is the new signature (action, item)
     if (typeof cardOrAction === 'string' && actionBtnOrItem && actionBtnOrItem.id) {
       action = cardOrAction;
@@ -175,12 +179,15 @@
    */
   function renderCurrentlyWatchingPreviewInternal() {
     console.log('🎬 renderCurrentlyWatchingPreviewInternal called');
-    
+
     const previewSection = document.getElementById('currentlyWatchingPreview');
     const scrollContainer = document.getElementById('currentlyWatchingScroll');
-    
+
     if (!previewSection || !scrollContainer) {
-      console.error('❌ Preview elements not found', { previewSection: !!previewSection, scrollContainer: !!scrollContainer });
+      console.error('❌ Preview elements not found', {
+        previewSection: !!previewSection,
+        scrollContainer: !!scrollContainer,
+      });
       return;
     }
 
@@ -190,35 +197,35 @@
     // Get currently watching items
     const watchingItems = getCurrentlyWatchingItems();
     console.log('🎬 Retrieved watching items:', watchingItems);
-    
+
     if (!watchingItems || watchingItems.length === 0) {
       // Only show test data if no Firebase data is present and we haven't exceeded retry limit
-      const hasFirebaseData = window.appData && (
-        (window.appData.tv?.watching && window.appData.tv.watching.length > 0) ||
-        (window.appData.movies?.watching && window.appData.movies.watching.length > 0)
-      );
+      const hasFirebaseData =
+        window.appData &&
+        ((window.appData.tv?.watching && window.appData.tv.watching.length > 0) ||
+          (window.appData.movies?.watching && window.appData.movies.watching.length > 0));
       const isSignedIn = window.FlickletApp?.currentUser || window.currentUser;
       const shouldShowTestData = !hasFirebaseData && !isSignedIn && retryCount < MAX_RETRIES;
-      
+
       if (shouldShowTestData) {
         console.log('📭 No items currently watching, showing test data for layout verification');
-        
+
         // Show test data to verify layout is working
         const testItems = [
           { id: 'test1', title: 'Test Show 1', mediaType: 'tv', poster_path: null },
           { id: 'test2', title: 'Test Show 2', mediaType: 'tv', poster_path: null },
-          { id: 'test3', title: 'Test Show 3', mediaType: 'tv', poster_path: null }
+          { id: 'test3', title: 'Test Show 3', mediaType: 'tv', poster_path: null },
         ];
-        
+
         console.log('🎬 Rendering test data for layout verification');
         previewSection.style.display = 'block';
         scrollContainer.innerHTML = '';
-        
-        testItems.forEach(item => {
+
+        testItems.forEach((item) => {
           const card = createPreviewCard(item);
           scrollContainer.appendChild(card);
         });
-        
+
         // Set up a retry for real data (only once to prevent infinite loops)
         if (!window._currentlyWatchingRetryScheduled && retryCount < MAX_RETRIES) {
           window._currentlyWatchingRetryScheduled = true;
@@ -250,30 +257,36 @@
     // Limit items to prevent performance issues
     const limit = getCurrentlyWatchingLimit();
     const limitedItems = watchingItems.slice(0, limit);
-    
-    console.log(`🎬 Rendering ${limitedItems.length} watching items (limited from ${watchingItems.length})`);
+
+    console.log(
+      `🎬 Rendering ${limitedItems.length} watching items (limited from ${watchingItems.length})`,
+    );
 
     // Render each item
-    limitedItems.forEach(item => {
+    limitedItems.forEach((item) => {
       const card = createPreviewCard(item);
       scrollContainer.appendChild(card);
     });
 
     // Add scroll indicators if there are more items than can be displayed
     if (watchingItems.length > limit) {
-      console.log(`🎬 Added scroll indicators for ${watchingItems.length - limit} additional items`);
+      console.log(
+        `🎬 Added scroll indicators for ${watchingItems.length - limit} additional items`,
+      );
     }
-    
+
     // Post-render validation: check that all poster URLs are properly formatted
     validatePosterUrls();
-    
+
     // Dispatch event to notify that cards have been rendered
-    window.dispatchEvent(new CustomEvent('cards:rendered', { 
-      detail: { 
-        count: limitedItems.length,
-        section: 'currently-watching' 
-      } 
-    }));
+    window.dispatchEvent(
+      new CustomEvent('cards:rendered', {
+        detail: {
+          count: limitedItems.length,
+          section: 'currently-watching',
+        },
+      }),
+    );
   }
 
   /**
@@ -281,19 +294,22 @@
    */
   function renderCurrentlyWatchingPreview() {
     console.log('🎬 renderCurrentlyWatchingPreview called');
-    
+
     // Prevent duplicate renders
     if (window.render_currently_watching_preview) {
       console.log('🎬 Skipping duplicate currently watching preview render');
       return;
     }
     window.render_currently_watching_preview = true;
-    
+
     const previewSection = document.getElementById('currentlyWatchingPreview');
     const scrollContainer = document.getElementById('currentlyWatchingScroll');
-    
+
     if (!previewSection || !scrollContainer) {
-      console.error('❌ Preview elements not found', { previewSection: !!previewSection, scrollContainer: !!scrollContainer });
+      console.error('❌ Preview elements not found', {
+        previewSection: !!previewSection,
+        scrollContainer: !!scrollContainer,
+      });
       window.render_currently_watching_preview = false;
       return;
     }
@@ -309,18 +325,18 @@
       window.render_currently_watching_preview = false;
     }
   }
-  
+
   /**
    * Validate that all poster URLs in the currently watching preview are properly formatted
    */
   function validatePosterUrls() {
     const previewImages = document.querySelectorAll('#currentlyWatchingPreview img');
     const invalidUrls = [];
-    
+
     previewImages.forEach((img, index) => {
       const src = img.src;
       const itemId = img.closest('.preview-card')?.dataset?.itemId || `item-${index}`;
-      
+
       if (!isValidPosterUrl(src)) {
         invalidUrls.push({ itemId, src });
         console.error(`❌ Invalid poster URL for item ${itemId}:`, src);
@@ -328,13 +344,13 @@
         console.log(`✅ Valid poster URL for item ${itemId}:`, src);
       }
     });
-    
+
     if (invalidUrls.length > 0) {
       console.error('❌ Found invalid poster URLs:', invalidUrls);
     } else {
       console.log('✅ All poster URLs are properly formatted');
     }
-    
+
     return invalidUrls.length === 0;
   }
 
@@ -348,7 +364,7 @@
     if (userLimit && !isNaN(userLimit) && userLimit > 0) {
       return Math.min(parseInt(userLimit), 20); // Cap at 20 for performance
     }
-    
+
     // Default to 12 items (increased from original 5)
     return 12;
   }
@@ -362,40 +378,44 @@
     }
 
     const allWatchingItems = [];
-    
+
     // Get TV shows
     if (window.appData.tv?.watching) {
-      allWatchingItems.push(...window.appData.tv.watching.map(item => ({
-        ...item,
-        mediaType: 'tv'
-      })));
+      allWatchingItems.push(
+        ...window.appData.tv.watching.map((item) => ({
+          ...item,
+          mediaType: 'tv',
+        })),
+      );
     }
 
     // Get movies
     if (window.appData.movies?.watching) {
-      allWatchingItems.push(...window.appData.movies.watching.map(item => ({
-        ...item,
-        mediaType: 'movie'
-      })));
+      allWatchingItems.push(
+        ...window.appData.movies.watching.map((item) => ({
+          ...item,
+          mediaType: 'movie',
+        })),
+      );
     }
-    
+
     // Deduplicate items by ID
     const watchingItems = [];
     const seenIds = new Set();
-    allWatchingItems.forEach(item => {
+    allWatchingItems.forEach((item) => {
       const id = item.id || item.tmdb_id || item.tmdbId;
       if (id && !seenIds.has(id)) {
         seenIds.add(id);
         watchingItems.push(item);
       }
     });
-    
+
     console.log(`🎬 Found ${watchingItems.length} unique watching items`);
-    
+
     // If no items found, try alternative data access patterns
     if (watchingItems.length === 0) {
       console.log('🔍 Trying alternative data access patterns...');
-      
+
       // Try accessing through global functions
       if (typeof window.getWatchingItems === 'function') {
         console.log('🔍 Trying window.getWatchingItems()');
@@ -405,7 +425,7 @@
           return altItems;
         }
       }
-      
+
       // Try accessing through app instance
       if (window.FlickletApp && typeof window.FlickletApp.getWatchingItems === 'function') {
         console.log('🔍 Trying FlickletApp.getWatchingItems()');
@@ -415,53 +435,58 @@
           return altItems;
         }
       }
-      
+
       // Try accessing through DOM elements (fallback)
       const watchingList = document.getElementById('watchingList');
       if (watchingList) {
         console.log('🔍 Trying to extract from watchingList DOM');
         const cards = watchingList.querySelectorAll('.show-card, .list-card');
         console.log('🔍 Found', cards.length, 'cards in watchingList DOM');
-        
+
         if (cards.length > 0) {
-          const domItems = Array.from(cards).map(card => {
-            const itemId = card.dataset.id || card.getAttribute('data-id');
-            const title = card.querySelector('.card-title, .show-title')?.textContent || 'Unknown';
-            const posterImg = card.querySelector('img');
-            const poster = posterImg?.src;
-            
-            console.log('🔍 DOM Card data:', {
-              id: itemId,
-              title: title,
-              posterImg: posterImg,
-              posterSrc: poster,
-              posterPath: poster ? poster.split('/').pop() : null
-            });
-            
-            return {
-              id: itemId,
-              title: title,
-              poster_path: poster ? poster.split('/').pop() : null,
-              poster_src: poster, // Keep full URL for debugging
-              mediaType: 'tv' // Default assumption
-            };
-          }).filter(item => item.id);
-          
+          const domItems = Array.from(cards)
+            .map((card) => {
+              const itemId = card.dataset.id || card.getAttribute('data-id');
+              const title =
+                card.querySelector('.card-title, .show-title')?.textContent || 'Unknown';
+              const posterImg = card.querySelector('img');
+              const poster = posterImg?.src;
+
+              console.log('🔍 DOM Card data:', {
+                id: itemId,
+                title: title,
+                posterImg: posterImg,
+                posterSrc: poster,
+                posterPath: poster ? poster.split('/').pop() : null,
+              });
+
+              return {
+                id: itemId,
+                title: title,
+                poster_path: poster ? poster.split('/').pop() : null,
+                poster_src: poster, // Keep full URL for debugging
+                mediaType: 'tv', // Default assumption
+              };
+            })
+            .filter((item) => item.id);
+
           if (domItems.length > 0) {
             console.log('✅ Found items via DOM extraction:', domItems.length);
-            
+
             // Note: DOM extraction is only used as fallback for display purposes
             // The actual data should come from appData which is loaded from Firebase
-            
+
             return domItems;
           }
         }
       }
-      
+
       // Try waiting a bit more and checking again (with retry limit)
       if (retryCount < MAX_RETRIES) {
         retryCount++;
-        console.log(`🔍 No items found, will retry in 2 seconds... (attempt ${retryCount}/${MAX_RETRIES})`);
+        console.log(
+          `🔍 No items found, will retry in 2 seconds... (attempt ${retryCount}/${MAX_RETRIES})`,
+        );
         setTimeout(() => {
           console.log('🔄 Retrying Currently Watching Preview after delay...');
           renderCurrentlyWatchingPreview();
@@ -470,7 +495,7 @@
         console.log('❌ Max retries reached, stopping retry loop');
       }
     }
-    
+
     return watchingItems;
   }
 
@@ -479,22 +504,27 @@
    */
   function createPreviewCard(item) {
     console.log('🎬 createPreviewCard called with item:', item);
-    
+
     // Use Card component
     if (USE_CARD) {
       const title = item.title || item.name || 'Unknown Title';
-      
+
       // Use consistent poster URL handling
       const posterUrl = getPosterUrl(item, 'w200');
-      
+
       // Extract year from various possible sources
-      const year = item.release_date ? new Date(item.release_date).getFullYear() : 
-                   item.first_air_date ? new Date(item.first_air_date).getFullYear() : 
-                   item.year || '';
-      
-      const subtitle = year ? `${year} • ${item.mediaType === 'tv' ? 'TV Series' : 'Movie'}` : 
-                       (item.mediaType === 'tv' ? 'TV Series' : 'Movie');
-      
+      const year = item.release_date
+        ? new Date(item.release_date).getFullYear()
+        : item.first_air_date
+          ? new Date(item.first_air_date).getFullYear()
+          : item.year || '';
+
+      const subtitle = year
+        ? `${year} • ${item.mediaType === 'tv' ? 'TV Series' : 'Movie'}`
+        : item.mediaType === 'tv'
+          ? 'TV Series'
+          : 'Movie';
+
       return window.Card({
         variant: 'poster',
         id: item.id,
@@ -508,40 +538,40 @@
           onClick: () => {
             // Handle continue watching
             console.log('Continue watching:', title);
-          }
+          },
         },
         overflowActions: [
           {
             label: 'Move to Watched',
             onClick: () => handlePreviewAction('move-watched', item),
-            icon: '✅'
+            icon: '✅',
           },
           {
-            label: 'Move to Wishlist', 
+            label: 'Move to Wishlist',
             onClick: () => handlePreviewAction('move-wishlist', item),
-            icon: '📖'
+            icon: '📖',
           },
           {
             label: 'Remove',
             onClick: () => handlePreviewAction('remove', item),
-            icon: '🗑️'
-          }
+            icon: '🗑️',
+          },
         ],
         onOpenDetails: () => {
           console.log('🔗 Currently watching Card openDetails called:', item);
           const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
           const id = item.id || item.tmdb_id || item.tmdbId;
-          
+
           if (id && typeof window.openTMDBLink === 'function') {
             console.log('🔗 Calling openTMDBLink from currently watching Card:', { id, mediaType });
             window.openTMDBLink(id, mediaType);
           } else {
             console.warn('⚠️ openTMDBLink function not available or no ID found');
           }
-        }
+        },
       });
     }
-    
+
     // If Card component is not available, throw an error
     console.error('❌ Card component not available');
     throw new Error('Card component is required but not loaded');
@@ -565,7 +595,7 @@
     console.log('🎬 Firebase data loaded event received');
     console.log('🎬 Checking appData after firebaseDataLoaded:', {
       tvWatching: window.appData?.tv?.watching?.length || 0,
-      moviesWatching: window.appData?.movies?.watching?.length || 0
+      moviesWatching: window.appData?.movies?.watching?.length || 0,
     });
     initCurrentlyWatchingPreview();
   });
@@ -573,11 +603,11 @@
     console.log('🎬 User data loaded event received');
     console.log('🎬 Checking appData after userDataLoaded:', {
       tvWatching: window.appData?.tv?.watching?.length || 0,
-      moviesWatching: window.appData?.movies?.watching?.length || 0
+      moviesWatching: window.appData?.movies?.watching?.length || 0,
     });
     initCurrentlyWatchingPreview();
   });
-  
+
   // Listen for sign-out events to clear preview immediately
   document.addEventListener('userSignedOut', () => {
     console.log('🎬 User signed out, clearing Currently Watching Preview');
@@ -591,7 +621,7 @@
     }
     retryCount = 0; // Reset retry count
   });
-  
+
   // Listen for tab switches to watching tab (indicates data is loaded)
   document.addEventListener('tabSwitched', (event) => {
     if (event.detail && event.detail.tab === 'watching') {
@@ -601,7 +631,7 @@
   });
 
   // Expose debug function globally for testing
-  window.debugCurrentlyWatchingPreview = function() {
+  window.debugCurrentlyWatchingPreview = function () {
     console.log('🔍 Manual debug trigger');
     console.log('appData:', window.appData);
     console.log('appData.tv:', window.appData?.tv);
@@ -609,34 +639,37 @@
     console.log('watching items:', getCurrentlyWatchingItems());
     renderCurrentlyWatchingPreview();
   };
-  
+
   // Expose function to check if user has any watching items
-  window.checkWatchingData = function() {
+  window.checkWatchingData = function () {
     console.log('🔍 Checking all possible data sources...');
     console.log('1. appData.tv.watching:', window.appData?.tv?.watching);
     console.log('2. appData.movies.watching:', window.appData?.movies?.watching);
     console.log('3. Watching tab DOM:', document.getElementById('watchingList')?.innerHTML);
     console.log('4. All appData keys:', Object.keys(window.appData || {}));
   };
-  
+
   // Expose function to manually trigger Currently Watching Preview
-  window.triggerCurrentlyWatchingPreview = function() {
+  window.triggerCurrentlyWatchingPreview = function () {
     console.log('🎬 Manually triggering Currently Watching Preview...');
     retryCount = 0; // Reset retry count
     renderCurrentlyWatchingPreview();
   };
-  
+
   // Expose function to check data loading status
-  window.checkDataLoadingStatus = function() {
+  window.checkDataLoadingStatus = function () {
     console.log('🔍 Data Loading Status Check:');
     console.log('1. appData exists:', !!window.appData);
     console.log('2. appData.tv exists:', !!window.appData?.tv);
     console.log('3. appData.tv.watching exists:', !!window.appData?.tv?.watching);
     console.log('4. appData.tv.watching length:', window.appData?.tv?.watching?.length || 0);
     console.log('5. appData.tv.watching content:', window.appData?.tv?.watching);
-    console.log('6. appData.movies.watching length:', window.appData?.movies?.watching?.length || 0);
+    console.log(
+      '6. appData.movies.watching length:',
+      window.appData?.movies?.watching?.length || 0,
+    );
     console.log('7. appData.movies.watching content:', window.appData?.movies?.watching);
-    
+
     // Check if there are any items in the main watching list DOM
     const watchingList = document.getElementById('watchingList');
     if (watchingList) {
@@ -646,13 +679,12 @@
         console.log('9. First card data:', {
           id: cards[0].dataset.id,
           title: cards[0].querySelector('.show-title, .card-title')?.textContent,
-          poster: cards[0].querySelector('img')?.src
+          poster: cards[0].querySelector('img')?.src,
         });
       }
     }
-    
+
     // Check the actual data that getCurrentlyWatchingItems() would return
     console.log('10. getCurrentlyWatchingItems() result:', getCurrentlyWatchingItems());
   };
-
 })();

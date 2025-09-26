@@ -1,45 +1,91 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Data Loading Fix Test - Flicklet</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .test-card { background: white; margin: 15px 0; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .success { border-left: 4px solid #28a745; }
-        .error { border-left: 4px solid #dc3545; }
-        .warning { border-left: 4px solid #ffc107; }
-        .info { border-left: 4px solid #17a2b8; }
-        button { padding: 10px 20px; margin: 10px 5px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        .btn-primary { background: #007bff; color: white; }
-        .btn-success { background: #28a745; color: white; }
-        .log { background: #f8f9fa; padding: 15px; margin: 15px 0; border-radius: 4px; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
-        .status { font-weight: bold; margin: 10px 0; }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .test-card {
+        background: white;
+        margin: 15px 0;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .success {
+        border-left: 4px solid #28a745;
+      }
+      .error {
+        border-left: 4px solid #dc3545;
+      }
+      .warning {
+        border-left: 4px solid #ffc107;
+      }
+      .info {
+        border-left: 4px solid #17a2b8;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 10px 5px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+      .log {
+        background: #f8f9fa;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 4px;
+        font-family: monospace;
+        white-space: pre-wrap;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .status {
+        font-weight: bold;
+        margin: 10px 0;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1>🔧 Data Loading Fix Test</h1>
-        <p>Testing the fix for data loading after authentication.</p>
-        
-        <div class="test-card" id="status-card">
-            <h3>Current Status</h3>
-            <div id="status-info">Checking...</div>
-        </div>
-        
-        <div class="test-card" id="test-actions">
-            <h3>Test Actions</h3>
-            <button class="btn-primary" onclick="testDataLoad()">Test Data Load</button>
-            <button class="btn-success" onclick="testUIUpdate()">Test UI Update</button>
-            <button class="btn-warning" onclick="clearLogs()">Clear Logs</button>
-        </div>
-        
-        <div class="test-card">
-            <h3>Test Log</h3>
-            <div id="test-log" class="log"></div>
-        </div>
+      <h1>🔧 Data Loading Fix Test</h1>
+      <p>Testing the fix for data loading after authentication.</p>
+
+      <div class="test-card" id="status-card">
+        <h3>Current Status</h3>
+        <div id="status-info">Checking...</div>
+      </div>
+
+      <div class="test-card" id="test-actions">
+        <h3>Test Actions</h3>
+        <button class="btn-primary" onclick="testDataLoad()">Test Data Load</button>
+        <button class="btn-success" onclick="testUIUpdate()">Test UI Update</button>
+        <button class="btn-warning" onclick="clearLogs()">Clear Logs</button>
+      </div>
+
+      <div class="test-card">
+        <h3>Test Log</h3>
+        <div id="test-log" class="log"></div>
+      </div>
     </div>
 
     <!-- Load Firebase -->
@@ -50,152 +96,161 @@
     <script src="/js/auth-manager.js"></script>
     <script src="/js/functions.js"></script>
     <script src="/js/utils.js"></script>
-    
+
     <script>
-        let testLog = document.getElementById('test-log');
-        
-        function log(message, type = 'info') {
-            const timestamp = new Date().toLocaleTimeString();
-            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
-            testLog.textContent += `[${timestamp}] ${prefix} ${message}\n`;
-            testLog.scrollTop = testLog.scrollHeight;
-            console.log(`[Data Fix Test] ${message}`);
+      let testLog = document.getElementById('test-log');
+
+      function log(message, type = 'info') {
+        const timestamp = new Date().toLocaleTimeString();
+        const prefix =
+          type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+        testLog.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+        testLog.scrollTop = testLog.scrollHeight;
+        console.log(`[Data Fix Test] ${message}`);
+      }
+
+      function clearLogs() {
+        testLog.textContent = '';
+      }
+
+      function updateStatus(message, type = 'info') {
+        const statusDiv = document.getElementById('status-info');
+        statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        document.getElementById('status-card').className = `test-card ${type}`;
+      }
+
+      // Test data loading
+      async function testDataLoad() {
+        log('Testing data loading...');
+
+        const user = window.firebaseAuth?.currentUser;
+        if (!user) {
+          updateStatus('❌ Not signed in - cannot test data loading', 'error');
+          log('No user signed in', 'error');
+          return;
         }
-        
-        function clearLogs() {
-            testLog.textContent = '';
-        }
-        
-        function updateStatus(message, type = 'info') {
-            const statusDiv = document.getElementById('status-info');
-            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
-            document.getElementById('status-card').className = `test-card ${type}`;
-        }
-        
-        // Test data loading
-        async function testDataLoad() {
-            log('Testing data loading...');
-            
-            const user = window.firebaseAuth?.currentUser;
-            if (!user) {
-                updateStatus('❌ Not signed in - cannot test data loading', 'error');
-                log('No user signed in', 'error');
-                return;
-            }
-            
-            updateStatus('✅ User signed in - testing data loading...', 'info');
-            log(`User signed in: ${user.email}`, 'success');
-            
-            try {
-                // Test AuthManager data loading
-                if (window.AuthManager && typeof window.AuthManager.loadUserDataFromFirebase === 'function') {
-                    log('Using AuthManager.loadUserDataFromFirebase...');
-                    await window.AuthManager.loadUserDataFromFirebase(user);
-                    log('AuthManager data loading completed', 'success');
-                } else {
-                    log('AuthManager.loadUserDataFromFirebase not available', 'error');
-                }
-                
-                // Test WatchlistsAdapter
-                if (window.WatchlistsAdapter && typeof window.WatchlistsAdapter.load === 'function') {
-                    log('Testing WatchlistsAdapter...');
-                    const watchlists = await window.WatchlistsAdapter.load(user.uid);
-                    log(`WatchlistsAdapter loaded: ${watchlists.watchingIds.length} watching, ${watchlists.wishlistIds.length} wishlist, ${watchlists.watchedIds.length} watched`, 'success');
-                } else {
-                    log('WatchlistsAdapter not available', 'error');
-                }
-                
-                // Check appData
-                if (window.appData) {
-                    const tv = window.appData.tv || {};
-                    const movies = window.appData.movies || {};
-                    
-                    const tvCounts = {
-                        watching: (tv.watching || []).length,
-                        wishlist: (tv.wishlist || []).length,
-                        watched: (tv.watched || []).length
-                    };
-                    
-                    const movieCounts = {
-                        watching: (movies.watching || []).length,
-                        wishlist: (movies.wishlist || []).length,
-                        watched: (movies.watched || []).length
-                    };
-                    
-                    const totalItems = Object.values(tvCounts).reduce((a, b) => a + b, 0) + 
-                                      Object.values(movieCounts).reduce((a, b) => a + b, 0);
-                    
-                    if (totalItems > 0) {
-                        updateStatus(`✅ Data loaded successfully: ${totalItems} total items`, 'success');
-                        log(`Data loaded: TV(${tvCounts.watching}w/${tvCounts.wishlist}wl/${tvCounts.watched}wd) Movies(${movieCounts.watching}w/${movieCounts.wishlist}wl/${movieCounts.watched}wd)`, 'success');
-                    } else {
-                        updateStatus('⚠️ Data loaded but no items found', 'warning');
-                        log('Data loaded but all lists are empty', 'warning');
-                    }
-                } else {
-                    updateStatus('❌ appData not available', 'error');
-                    log('appData not available', 'error');
-                }
-                
-            } catch (error) {
-                updateStatus(`❌ Data loading failed: ${error.message}`, 'error');
-                log(`Data loading failed: ${error.message}`, 'error');
-            }
-        }
-        
-        // Test UI update
-        function testUIUpdate() {
-            log('Testing UI update...');
-            
-            try {
-                if (typeof window.updateTabCounts === 'function') {
-                    window.updateTabCounts();
-                    log('updateTabCounts() called', 'success');
-                } else {
-                    log('updateTabCounts() not available', 'error');
-                }
-                
-                if (typeof window.updateUI === 'function') {
-                    window.updateUI();
-                    log('updateUI() called', 'success');
-                } else {
-                    log('updateUI() not available', 'error');
-                }
-                
-            } catch (error) {
-                log(`UI update failed: ${error.message}`, 'error');
-            }
-        }
-        
-        // Check initial status
-        function checkInitialStatus() {
-            const user = window.firebaseAuth?.currentUser;
-            if (user) {
-                updateStatus(`✅ Signed in as: ${user.email}`, 'success');
-                log(`User signed in: ${user.email}`, 'success');
+
+        updateStatus('✅ User signed in - testing data loading...', 'info');
+        log(`User signed in: ${user.email}`, 'success');
+
+        try {
+          // Test AuthManager data loading
+          if (
+            window.AuthManager &&
+            typeof window.AuthManager.loadUserDataFromFirebase === 'function'
+          ) {
+            log('Using AuthManager.loadUserDataFromFirebase...');
+            await window.AuthManager.loadUserDataFromFirebase(user);
+            log('AuthManager data loading completed', 'success');
+          } else {
+            log('AuthManager.loadUserDataFromFirebase not available', 'error');
+          }
+
+          // Test WatchlistsAdapter
+          if (window.WatchlistsAdapter && typeof window.WatchlistsAdapter.load === 'function') {
+            log('Testing WatchlistsAdapter...');
+            const watchlists = await window.WatchlistsAdapter.load(user.uid);
+            log(
+              `WatchlistsAdapter loaded: ${watchlists.watchingIds.length} watching, ${watchlists.wishlistIds.length} wishlist, ${watchlists.watchedIds.length} watched`,
+              'success',
+            );
+          } else {
+            log('WatchlistsAdapter not available', 'error');
+          }
+
+          // Check appData
+          if (window.appData) {
+            const tv = window.appData.tv || {};
+            const movies = window.appData.movies || {};
+
+            const tvCounts = {
+              watching: (tv.watching || []).length,
+              wishlist: (tv.wishlist || []).length,
+              watched: (tv.watched || []).length,
+            };
+
+            const movieCounts = {
+              watching: (movies.watching || []).length,
+              wishlist: (movies.wishlist || []).length,
+              watched: (movies.watched || []).length,
+            };
+
+            const totalItems =
+              Object.values(tvCounts).reduce((a, b) => a + b, 0) +
+              Object.values(movieCounts).reduce((a, b) => a + b, 0);
+
+            if (totalItems > 0) {
+              updateStatus(`✅ Data loaded successfully: ${totalItems} total items`, 'success');
+              log(
+                `Data loaded: TV(${tvCounts.watching}w/${tvCounts.wishlist}wl/${tvCounts.watched}wd) Movies(${movieCounts.watching}w/${movieCounts.wishlist}wl/${movieCounts.watched}wd)`,
+                'success',
+              );
             } else {
-                updateStatus('❌ Not signed in', 'error');
-                log('No user signed in', 'error');
+              updateStatus('⚠️ Data loaded but no items found', 'warning');
+              log('Data loaded but all lists are empty', 'warning');
             }
+          } else {
+            updateStatus('❌ appData not available', 'error');
+            log('appData not available', 'error');
+          }
+        } catch (error) {
+          updateStatus(`❌ Data loading failed: ${error.message}`, 'error');
+          log(`Data loading failed: ${error.message}`, 'error');
         }
-        
-        // Initialize tests when page loads
-        window.addEventListener('load', () => {
-            log('Data fix test page loaded');
-            checkInitialStatus();
-        });
-        
-        // Listen for Firebase ready
-        window.addEventListener('firebase:ready', () => {
-            log('Firebase ready event received');
-            checkInitialStatus();
-        });
-        
-        // Listen for data ready
-        window.addEventListener('app:data:ready', (event) => {
-            log(`Data ready event received from: ${event.detail?.source || 'unknown'}`);
-            checkInitialStatus();
-        });
+      }
+
+      // Test UI update
+      function testUIUpdate() {
+        log('Testing UI update...');
+
+        try {
+          if (typeof window.updateTabCounts === 'function') {
+            window.updateTabCounts();
+            log('updateTabCounts() called', 'success');
+          } else {
+            log('updateTabCounts() not available', 'error');
+          }
+
+          if (typeof window.updateUI === 'function') {
+            window.updateUI();
+            log('updateUI() called', 'success');
+          } else {
+            log('updateUI() not available', 'error');
+          }
+        } catch (error) {
+          log(`UI update failed: ${error.message}`, 'error');
+        }
+      }
+
+      // Check initial status
+      function checkInitialStatus() {
+        const user = window.firebaseAuth?.currentUser;
+        if (user) {
+          updateStatus(`✅ Signed in as: ${user.email}`, 'success');
+          log(`User signed in: ${user.email}`, 'success');
+        } else {
+          updateStatus('❌ Not signed in', 'error');
+          log('No user signed in', 'error');
+        }
+      }
+
+      // Initialize tests when page loads
+      window.addEventListener('load', () => {
+        log('Data fix test page loaded');
+        checkInitialStatus();
+      });
+
+      // Listen for Firebase ready
+      window.addEventListener('firebase:ready', () => {
+        log('Firebase ready event received');
+        checkInitialStatus();
+      });
+
+      // Listen for data ready
+      window.addEventListener('app:data:ready', (event) => {
+        log(`Data ready event received from: ${event.detail?.source || 'unknown'}`);
+        checkInitialStatus();
+      });
     </script>
-</body>
+  </body>
 </html>

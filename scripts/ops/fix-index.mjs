@@ -6,8 +6,8 @@ const IDX = path.join(WWW, 'index.html');
 
 function nowStamp() {
   const d = new Date();
-  const pad = (n)=>String(n).padStart(2,'0');
-  return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
 }
 
 function backup() {
@@ -17,14 +17,27 @@ function backup() {
   return dst;
 }
 
-function load() { return fs.readFileSync(IDX, 'utf8'); }
-function save(s) { fs.writeFileSync(IDX, s); }
+function load() {
+  return fs.readFileSync(IDX, 'utf8');
+}
+function save(s) {
+  fs.writeFileSync(IDX, s);
+}
 
 function removeFirebaseCdnCompat(s) {
   return s
-    .replace(/<script[^>]*https:\/\/www\.gstatic\.com\/firebasejs\/[^>]*firebase-app-compat\.js[^>]*>\s*<\/script>\s*/gi, '')
-    .replace(/<script[^>]*https:\/\/www\.gstatic\.com\/firebasejs\/[^>]*firebase-auth-compat\.js[^>]*>\s*<\/script>\s*/gi, '')
-    .replace(/<script[^>]*https:\/\/www\.gstatic\.com\/firebasejs\/[^>]*firebase-firestore-compat\.js[^>]*>\s*<\/script>\s*/gi, '');
+    .replace(
+      /<script[^>]*https:\/\/www\.gstatic\.com\/firebasejs\/[^>]*firebase-app-compat\.js[^>]*>\s*<\/script>\s*/gi,
+      '',
+    )
+    .replace(
+      /<script[^>]*https:\/\/www\.gstatic\.com\/firebasejs\/[^>]*firebase-auth-compat\.js[^>]*>\s*<\/script>\s*/gi,
+      '',
+    )
+    .replace(
+      /<script[^>]*https:\/\/www\.gstatic\.com\/firebasejs\/[^>]*firebase-firestore-compat\.js[^>]*>\s*<\/script>\s*/gi,
+      '',
+    );
 }
 
 function removeDevScripts(s) {
@@ -32,7 +45,7 @@ function removeDevScripts(s) {
     '/verify-fixes.js',
     '/debug-verification.js',
     '/simple-translation-scanner.js',
-    '/comprehensive-translation-fix.js'
+    '/comprehensive-translation-fix.js',
   ];
   for (const d of devs) {
     const re = new RegExp(`<script[^>]*src=["']${d}["'][^>]*>\\s*<\\/script>\\s*`, 'gi');
@@ -45,11 +58,11 @@ function ensureDeferForInlineBundles(s) {
   const targets = [
     '/scripts/inline-script-01.js',
     '/scripts/inline-script-02.js',
-    '/scripts/inline-script-03.js'
+    '/scripts/inline-script-03.js',
   ];
   for (const t of targets) {
     const re = new RegExp(`(<script[^>]*src=["']${t}["'])([^>]*>)`, 'i');
-    s = s.replace(re, (m, p1, p2)=> {
+    s = s.replace(re, (m, p1, p2) => {
       if (/defer/i.test(m) || /type\s*=\s*["']module["']/i.test(m)) return m;
       return `${p1} defer${p2}`;
     });
@@ -64,7 +77,10 @@ function insertLocalFirebaseIfPresent(s) {
 
   // Prefer to insert after /js/firebase-init.js
   if (s.includes('/js/firebase-init.js')) {
-    return s.replace(/(<script[^>]*src=["']\/js\/firebase-init\.js["'][^>]*>\s*<\/script>\s*)/i, `$1${tag}`);
+    return s.replace(
+      /(<script[^>]*src=["']\/js\/firebase-init\.js["'][^>]*>\s*<\/script>\s*)/i,
+      `$1${tag}`,
+    );
   }
   // Fallback: insert before /js/app.js
   if (s.includes('/js/app.js')) {
@@ -100,11 +116,3 @@ function main() {
 }
 
 main();
-
-
-
-
-
-
-
-

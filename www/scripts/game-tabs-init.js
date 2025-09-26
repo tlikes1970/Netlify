@@ -1,6 +1,6 @@
 /**
  * Game Tabs Initialization - FlickWord and Trivia Tab Management
- * 
+ *
  * Process: Game Tabs Init
  * Purpose: Initialize and manage FlickWord and Trivia tabs with unified card system
  * Data Source: User stats, word archives, trivia categories
@@ -8,7 +8,7 @@
  * Dependencies: BasePosterCard.js, StatsCard.js, FlickWordTab.js, TriviaTab.js
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🎮 Game Tabs initialization loaded');
@@ -19,7 +19,7 @@
     winRate: 85,
     totalGames: 23,
     lastResult: '7/10',
-    lastPlayed: new Date().toISOString()
+    lastPlayed: new Date().toISOString(),
   };
 
   const sampleWordArchives = [
@@ -27,16 +27,58 @@
     { id: 'word-2', number: 2, date: '2024-01-16', title: 'RIDDLE' },
     { id: 'word-3', number: 3, date: '2024-01-17', title: 'BRAIN' },
     { id: 'word-4', number: 4, date: '2024-01-18', title: 'LOGIC' },
-    { id: 'word-5', number: 5, date: '2024-01-19', title: 'THINK' }
+    { id: 'word-5', number: 5, date: '2024-01-19', title: 'THINK' },
   ];
 
   const sampleTriviaCategories = [
-    { id: 'movies-90s', name: 'MOVIES: 1990s', type: 'movies', questionCount: 10, avgTime: '6:30', lastScore: '7/10' },
-    { id: 'tv-shows', name: 'TV SHOWS', type: 'tv', questionCount: 15, avgTime: '8:45', lastScore: '12/15' },
-    { id: 'music-classic', name: 'MUSIC: Classic Rock', type: 'music', questionCount: 12, avgTime: '5:20', lastScore: '9/12' },
-    { id: 'sports-nfl', name: 'SPORTS: NFL', type: 'sports', questionCount: 8, avgTime: '4:15', lastScore: '6/8' },
-    { id: 'history-ww2', name: 'HISTORY: World War II', type: 'history', questionCount: 20, avgTime: '12:30', lastScore: '16/20' },
-    { id: 'science-physics', name: 'SCIENCE: Physics', type: 'science', questionCount: 10, avgTime: '7:45', lastScore: '8/10' }
+    {
+      id: 'movies-90s',
+      name: 'MOVIES: 1990s',
+      type: 'movies',
+      questionCount: 10,
+      avgTime: '6:30',
+      lastScore: '7/10',
+    },
+    {
+      id: 'tv-shows',
+      name: 'TV SHOWS',
+      type: 'tv',
+      questionCount: 15,
+      avgTime: '8:45',
+      lastScore: '12/15',
+    },
+    {
+      id: 'music-classic',
+      name: 'MUSIC: Classic Rock',
+      type: 'music',
+      questionCount: 12,
+      avgTime: '5:20',
+      lastScore: '9/12',
+    },
+    {
+      id: 'sports-nfl',
+      name: 'SPORTS: NFL',
+      type: 'sports',
+      questionCount: 8,
+      avgTime: '4:15',
+      lastScore: '6/8',
+    },
+    {
+      id: 'history-ww2',
+      name: 'HISTORY: World War II',
+      type: 'history',
+      questionCount: 20,
+      avgTime: '12:30',
+      lastScore: '16/20',
+    },
+    {
+      id: 'science-physics',
+      name: 'SCIENCE: Physics',
+      type: 'science',
+      questionCount: 10,
+      avgTime: '7:45',
+      lastScore: '8/10',
+    },
   ];
 
   let currentTab = 'flickword';
@@ -65,7 +107,7 @@
         stats: sampleFlickWordStats,
         wordArchives: sampleWordArchives,
         onPlay: handleFlickWordPlay,
-        onWordClick: handleWordClick
+        onWordClick: handleWordClick,
       });
       flickwordContainer.appendChild(flickwordTab);
     }
@@ -75,13 +117,13 @@
       triviaTab = window.TriviaTab({
         categories: sampleTriviaCategories,
         onPlay: handleTriviaPlay,
-        onCategoryClick: handleCategoryClick
+        onCategoryClick: handleCategoryClick,
       });
       triviaContainer.appendChild(triviaTab);
     }
 
     // Add tab button event listeners
-    tabButtons.forEach(button => {
+    tabButtons.forEach((button) => {
       button.addEventListener('click', (e) => {
         const tabName = e.target.dataset.tab;
         switchTab(tabName);
@@ -102,13 +144,13 @@
     console.log(`🔄 Switching to ${tabName} tab`);
 
     // Update tab buttons
-    document.querySelectorAll('.game-tab-btn').forEach(btn => {
+    document.querySelectorAll('.game-tab-btn').forEach((btn) => {
       btn.classList.remove('active');
     });
     document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
 
     // Update tab content
-    document.querySelectorAll('.game-tab').forEach(tab => {
+    document.querySelectorAll('.game-tab').forEach((tab) => {
       tab.classList.remove('active');
     });
     document.getElementById(`${tabName}-tab`).classList.add('active');
@@ -212,5 +254,4 @@
   }
 
   console.log('✅ Game Tabs initialization ready');
-
 })();

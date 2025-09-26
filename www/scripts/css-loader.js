@@ -11,10 +11,10 @@ export function loadCSSAsync() {
   const nonCriticalCSS = [
     '/styles/consolidated.css',
     '/styles/action-bar.css',
-    '/styles/card-system.css', 
+    '/styles/card-system.css',
     '/styles/components.css',
     '/styles/consolidated-layout.css',
-    '/styles/mobile.css'
+    '/styles/mobile.css',
   ];
 
   // Function to load a single CSS file
@@ -36,11 +36,11 @@ export function loadCSSAsync() {
   // Load all non-critical CSS files
   function loadAllCSS() {
     console.log('🎨 Loading non-critical CSS asynchronously...');
-    
-    const loadPromises = nonCriticalCSS.map(href => 
-      loadCSSFile(href).catch(error => {
+
+    const loadPromises = nonCriticalCSS.map((href) =>
+      loadCSSFile(href).catch((error) => {
         console.warn(`⚠️ Failed to load CSS: ${href}`, error);
-      })
+      }),
     );
 
     Promise.all(loadPromises).then(() => {

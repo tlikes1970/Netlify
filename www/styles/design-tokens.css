@@ -1,0 +1,182 @@
+/**
+ * Process: Design Tokens
+ * Purpose: Single source of truth for all design tokens and CSS custom properties
+ * Data Source: Consolidated from all existing :root blocks across the codebase
+ * Update Path: Modify tokens here to update across entire application
+ * Dependencies: All CSS files should consume these tokens
+ */
+
+:root {
+  /* ===== CORE THEME TOKENS ===== */
+  --bg: #ffffff;
+  --text: #121212;
+  --primary: #e91e63;
+  --card: #f7f7f9;
+  --border: #dedee3;
+  --success: #51cf66;
+  --warning: #ffd43b;
+  --danger: #f06292;
+  --purple: #845ec2;
+  --focus: #1a73e8;
+
+  /* ===== SURFACE & ELEVATION ===== */
+  --surface: #f9f9f9;
+  --bg-page: #ffffff;
+  --bg-elevated: #f7f7f9;
+
+  /* ===== TEXT COLORS ===== */
+  --fg: #1f2937;
+  --fg-default: #1f2937;
+  --fg-muted: #6b7280;
+  --fg-subtle: #7f8c8d;
+  --fg-on-elevated: #111827;
+  --text-secondary: #666;
+
+  /* ===== ACCENT COLORS ===== */
+  --accent: #2563eb;
+
+  /* ===== SPACING SYSTEM ===== */
+  --s-4: 1rem;
+  --spacing-xs: 2px;
+  --spacing-sm: 4px;
+  --spacing-md: 8px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+
+  /* ===== BORDER RADIUS ===== */
+  --r-2: 8px;
+  --r: 12px;
+
+  /* ===== TYPOGRAPHY ===== */
+  --fs-0: 1rem;
+
+  /* ===== SHADOWS ===== */
+  --shadow-1: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  /* ===== CARD DIMENSIONS ===== */
+  --card-w: 180px;
+  --card-h: 270px;
+  --home-card-width-desktop: 184px;
+  --home-card-height-desktop: 276px;
+  --home-card-width-mobile: 64px;
+  --home-card-height-mobile: 96px;
+  --tab-card-poster-width-desktop: 120px;
+  --tab-card-poster-height-desktop: 180px;
+  --tab-card-poster-width-mobile: 80px;
+  --tab-card-poster-height-mobile: 120px;
+
+  /* ===== POSTER SYSTEM ===== */
+  --poster-w: 180px;
+  --poster-h: 270px;
+  --poster-w-mobile: 64px;
+  --poster-h-mobile: 96px;
+  --card-gap: 16px;
+  --card-gap-mobile: 12px;
+  --card-pad-y: 12px;
+  --card-pad-y-mobile: 8px;
+  --card-pad-x: 16px;
+  --card-pad-x-mobile: 12px;
+
+  /* ===== TYPOGRAPHY SCALE ===== */
+  --meta-title-size: 14px;
+  --meta-title-size-mobile: 12px;
+  --meta-line: 1.2;
+  --meta-line-mobile: 1.1;
+
+  /* ===== BADGE SYSTEM ===== */
+  --badge-bg: #e91e63;
+  --badge-color: white;
+  --badge-font-size: 11px;
+  --badge-padding: 2px 6px;
+  --badge-border-radius: 10px;
+  --badge-margin-left: 6px;
+  --badge-font-weight: 600;
+  --badge-min-width: 16px;
+  --badge-line-height: 1.2;
+  --badge-z-index: 1;
+
+  /* ===== FAB SYSTEM ===== */
+  --fab-size: 50px;
+  --fab-gap: 10px;
+  --fab-rail-height: 80px;
+
+  /* ===== SAFE AREAS ===== */
+  --safe-top: 0px;
+  --safe-bottom: 0px;
+  --safe-left: 0px;
+  --safe-right: 0px;
+
+  /* ===== CARD BACKGROUNDS ===== */
+  --card-bg: #fff;
+
+  /* ===== MARDI GRAS THEME ===== */
+  --mardi1: #6a0dad;
+  --mardi2: #28a745;
+  --mardi3: #ffd43b;
+}
+
+/* ===== THEME VARIANTS ===== */
+
+/* Light Theme (default) */
+:root[data-theme='light'] {
+  --bg-page: #ffffff;
+  --bg-elevated: #f7f7f9;
+  --fg-default: #1f2937;
+  --fg-muted: #6b7280;
+  --fg-subtle: #7f8c8d;
+  --fg-on-elevated: #111827;
+  --border: #e5e7eb;
+  --accent: #2563eb;
+}
+
+/* Dark Theme */
+:root[data-theme='dark'] {
+  --bg-page: #0b0f14;
+  --bg-elevated: #111827;
+  --fg-default: #e5e7eb;
+  --fg-muted: #9ca3af;
+  --fg-subtle: #9aa2a6;
+  --fg-on-elevated: #f9fafb;
+  --border: #243140;
+  --accent: #60a5fa;
+  --bg: #121212;
+  --surface: #1e1e1e;
+  --text: #f5f5f5;
+  --primary: #0066ff;
+  --shadow-1: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Mardi Gras Theme */
+:root[data-theme='mardi'] {
+  --bg-page: #0f1024;
+  --bg-elevated: #17183a;
+  --fg-default: #f2f2fb;
+  --fg-muted: #c9caf2;
+  --fg-subtle: #b3b7ff;
+  --fg-on-elevated: #ffffff;
+  --border: #31337a;
+  --accent: #ffbf00;
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --card-bg: #1e1f25;
+  }
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  :root {
+    --fab-size: 45px;
+    --fab-rail-height: 70px;
+    --poster-w: var(--poster-w-mobile);
+    --poster-h: var(--poster-h-mobile);
+    --card-gap: var(--card-gap-mobile);
+    --card-pad-y: var(--card-pad-y-mobile);
+    --card-pad-x: var(--card-pad-x-mobile);
+    --meta-title-size: var(--meta-title-size-mobile);
+    --meta-line: var(--meta-line-mobile);
+  }
+}

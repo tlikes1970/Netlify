@@ -3,7 +3,7 @@
  * Shows a modal when game tiles are clicked but games aren't fully implemented yet
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🎮 Games Teaser Modal loaded');
@@ -24,9 +24,9 @@
   }
 
   // Create and show games teaser modal
-  window.showGamesTeaserModal = function(gameType) {
+  window.showGamesTeaserModal = function (gameType) {
     console.log('🎮 Showing games teaser modal for:', gameType);
-    
+
     const modal = document.createElement('div');
     modal.className = 'modal games-teaser';
     modal.innerHTML = `
@@ -46,7 +46,7 @@
         </div>
       </div>
     `;
-    
+
     document.body.appendChild(modal);
 
     // Close modal function
@@ -58,7 +58,7 @@
     modal.querySelector('.modal__close').onclick = close;
     modal.querySelector('.close').onclick = close;
     modal.querySelector('.modal__backdrop').onclick = close;
-    
+
     // Close on Escape key
     const handleEscape = (e) => {
       if (e.key === 'Escape') {
@@ -95,5 +95,4 @@
       firstButton.focus();
     }
   };
-
 })();

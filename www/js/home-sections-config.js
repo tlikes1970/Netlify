@@ -3,9 +3,9 @@
    This ensures consistency across the entire application
 */
 
-(function() {
+(function () {
   'use strict';
-  
+
   // Single source of truth for home sections
   window.HomeSectionsConfig = {
     // All home sections that should be shown/hidden based on tab
@@ -18,9 +18,9 @@
       'triviaTile',
       'group-3-for-you',
       'group-4-theaters',
-      'group-5-feedback'
+      'group-5-feedback',
     ],
-    
+
     // Sections that are hidden during search
     SEARCH_HIDDEN_SECTIONS: [
       'quote-bar',
@@ -30,21 +30,21 @@
       'triviaTile',
       'group-3-for-you',
       'group-4-theaters',
-      'group-5-feedback'
+      'group-5-feedback',
     ],
-    
+
     // Tab content sections
     TAB_SECTIONS: [
       'homeSection',
-      'watchingSection', 
+      'watchingSection',
       'wishlistSection',
       'watchedSection',
-      'discoverSection'
+      'discoverSection',
     ],
-    
+
     // Get sections for a specific context
-    getSections: function(context) {
-      switch(context) {
+    getSections: function (context) {
+      switch (context) {
         case 'tab-switch':
           return this.ALL_SECTIONS;
         case 'search-hide':
@@ -58,24 +58,24 @@
           return [];
       }
     },
-    
+
     // Check if a section is a home section
-    isHomeSection: function(sectionId) {
+    isHomeSection: function (sectionId) {
       return this.ALL_SECTIONS.includes(sectionId);
     },
-    
+
     // Get all section elements safely with caching
-    getSectionElements: function(context) {
+    getSectionElements: function (context) {
       const sectionIds = this.getSections(context);
-      
+
       // Use DOM cache for better performance
       if (window.DOMCache) {
         return window.DOMCache.getMultiple(sectionIds);
       }
-      
+
       // Fallback to direct DOM queries
       const elements = {};
-      sectionIds.forEach(id => {
+      sectionIds.forEach((id) => {
         const element = document.getElementById(id);
         if (element) {
           elements[id] = element;
@@ -83,10 +83,10 @@
           FlickletDebug.warn('Home section not found:', id);
         }
       });
-      
+
       return elements;
-    }
+    },
   };
-  
+
   FlickletDebug.info('🏠 Home Sections Configuration loaded');
 })();

@@ -6,15 +6,15 @@
  * Dependencies: YouTube embeds, Chrome extension communication
  */
 
-(function() {
+(function () {
   'use strict';
-  
+
   // Suppress Chrome extension messaging errors
   if (typeof chrome !== 'undefined' && chrome.runtime) {
     // Override sendMessage to handle errors gracefully
     const originalSendMessage = chrome.runtime.sendMessage;
     if (originalSendMessage) {
-      chrome.runtime.sendMessage = function(...args) {
+      chrome.runtime.sendMessage = function (...args) {
         try {
           return originalSendMessage.apply(this, args);
         } catch (error) {
@@ -27,11 +27,11 @@
         }
       };
     }
-    
+
     // Handle runtime.lastError suppression
     const originalGetLastError = chrome.runtime.lastError;
     Object.defineProperty(chrome.runtime, 'lastError', {
-      get: function() {
+      get: function () {
         const error = originalGetLastError;
         if (error && error.message && error.message.includes('Could not establish connection')) {
           console.debug('Chrome runtime.lastError suppressed:', error.message);
@@ -39,23 +39,25 @@
         }
         return error;
       },
-      configurable: true
+      configurable: true,
     });
   }
-  
+
   // Global error handler for unhandled promise rejections from messaging
-  window.addEventListener('unhandledrejection', function(event) {
-    if (event.reason && 
-        typeof event.reason === 'object' && 
-        event.reason.message && 
-        event.reason.message.includes('Could not establish connection')) {
+  window.addEventListener('unhandledrejection', function (event) {
+    if (
+      event.reason &&
+      typeof event.reason === 'object' &&
+      event.reason.message &&
+      event.reason.message.includes('Could not establish connection')
+    ) {
       console.debug('Unhandled promise rejection suppressed:', event.reason.message);
       event.preventDefault();
     }
   });
-  
+
   // Handle YouTube iframe messaging errors
-  window.addEventListener('message', function(event) {
+  window.addEventListener('message', function (event) {
     // Suppress errors from YouTube embeds trying to communicate with extensions
     if (event.origin && event.origin.includes('youtube.com')) {
       try {
@@ -72,10 +74,10 @@
       }
     }
   });
-  
+
   // Wrapped sendMessage callback for polyfill compatibility
-  window.wrappedSendMessageCallback = function(callback) {
-    return function(response) {
+  window.wrappedSendMessageCallback = function (callback) {
+    return function (response) {
       try {
         if (callback) {
           callback(response);
@@ -89,23 +91,6 @@
       }
     };
   };
-  
+
   console.log('🔧 Chrome extension messaging polyfill loaded');
 })();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

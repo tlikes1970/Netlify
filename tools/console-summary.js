@@ -36,24 +36,36 @@ console.log('\n🔍 LIGHTHOUSE DESKTOP RESULTS:');
 try {
   const desktopLighthouse = readJSON(path.join(reportsDir, 'lighthouse', 'desktop.json'));
   if (desktopLighthouse && desktopLighthouse.categories) {
-    console.log(`   Performance: ${Math.round(desktopLighthouse.categories.performance.score * 100)}`);
-    console.log(`   Accessibility: ${Math.round(desktopLighthouse.categories.accessibility.score * 100)}`);
-    console.log(`   Best Practices: ${Math.round(desktopLighthouse.categories['best-practices'].score * 100)}`);
+    console.log(
+      `   Performance: ${Math.round(desktopLighthouse.categories.performance.score * 100)}`,
+    );
+    console.log(
+      `   Accessibility: ${Math.round(desktopLighthouse.categories.accessibility.score * 100)}`,
+    );
+    console.log(
+      `   Best Practices: ${Math.round(desktopLighthouse.categories['best-practices'].score * 100)}`,
+    );
     console.log(`   SEO: ${Math.round(desktopLighthouse.categories.seo.score * 100)}`);
-    
+
     // Key metrics
     const audits = desktopLighthouse.audits;
     if (audits['first-contentful-paint']) {
-      console.log(`   First Contentful Paint: ${Math.round(audits['first-contentful-paint'].numericValue)}ms`);
+      console.log(
+        `   First Contentful Paint: ${Math.round(audits['first-contentful-paint'].numericValue)}ms`,
+      );
     }
     if (audits['largest-contentful-paint']) {
-      console.log(`   Largest Contentful Paint: ${Math.round(audits['largest-contentful-paint'].numericValue)}ms`);
+      console.log(
+        `   Largest Contentful Paint: ${Math.round(audits['largest-contentful-paint'].numericValue)}ms`,
+      );
     }
     if (audits['cumulative-layout-shift']) {
       console.log(`   Cumulative Layout Shift: ${audits['cumulative-layout-shift'].numericValue}`);
     }
     if (audits['total-blocking-time']) {
-      console.log(`   Total Blocking Time: ${Math.round(audits['total-blocking-time'].numericValue)}ms`);
+      console.log(
+        `   Total Blocking Time: ${Math.round(audits['total-blocking-time'].numericValue)}ms`,
+      );
     }
   } else {
     console.log('   ❌ Desktop Lighthouse results not available');
@@ -69,11 +81,11 @@ try {
   if (axeResults && Array.isArray(axeResults) && axeResults.length > 0) {
     const result = axeResults[0];
     const violations = result.violations || [];
-    const serious = violations.filter(v => v.impact === 'serious').length;
-    const critical = violations.filter(v => v.impact === 'critical').length;
-    const moderate = violations.filter(v => v.impact === 'moderate').length;
-    const minor = violations.filter(v => v.impact === 'minor').length;
-    
+    const serious = violations.filter((v) => v.impact === 'serious').length;
+    const critical = violations.filter((v) => v.impact === 'critical').length;
+    const moderate = violations.filter((v) => v.impact === 'moderate').length;
+    const minor = violations.filter((v) => v.impact === 'minor').length;
+
     console.log(`   Total Violations: ${violations.length}`);
     console.log(`   Critical: ${critical}`);
     console.log(`   Serious: ${serious}`);
@@ -129,7 +141,7 @@ try {
     const unusedDeps = Object.keys(depcheckData.dependencies || {}).length;
     const unusedDevDeps = Object.keys(depcheckData.devDependencies || {}).length;
     const missing = Object.keys(depcheckData.missing || {}).length;
-    
+
     console.log(`   Unused Dependencies: ${unusedDeps}`);
     console.log(`   Unused Dev Dependencies: ${unusedDevDeps}`);
     console.log(`   Missing Dependencies: ${missing}`);
@@ -145,7 +157,7 @@ console.log('\n🔒 SECURITY SCAN:');
 try {
   const securityOutput = readText(path.join(reportsDir, 'security-scan.txt'));
   if (securityOutput) {
-    const lines = securityOutput.split('\n').filter(line => line.trim());
+    const lines = securityOutput.split('\n').filter((line) => line.trim());
     console.log(`   Potential Security Issues: ${lines.length}`);
   } else {
     console.log('   ✅ No security issues found');
@@ -157,15 +169,3 @@ try {
 console.log('\n' + '='.repeat(80));
 console.log('✅ Baseline audit summary complete!');
 console.log('='.repeat(80));
-
-
-
-
-
-
-
-
-
-
-
-

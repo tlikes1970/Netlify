@@ -15,7 +15,7 @@ if (typeof window.FLAGS.layout_mobile_fix === 'undefined') {
 
 // Apply mobile fix class to body when flag is enabled
 if (window.FLAGS.layout_mobile_fix) {
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     document.body.classList.add('layout-mobile-fix');
   });
 }

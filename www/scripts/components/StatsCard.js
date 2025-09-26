@@ -1,6 +1,6 @@
 /**
  * StatsCard Component - FlickWord Statistics Display
- * 
+ *
  * Process: StatsCard
  * Purpose: Reusable component for displaying FlickWord game statistics (streak, win%, games, last result)
  * Data Source: FlickWord game data from localStorage or API
@@ -8,7 +8,7 @@
  * Dependencies: components.css, i18n.js
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('📊 StatsCard component loaded');
@@ -28,7 +28,7 @@
     winRate = 0,
     totalGames = 0,
     lastResult = '',
-    lastPlayed = ''
+    lastPlayed = '',
   }) {
     const statsCard = document.createElement('div');
     statsCard.className = 'stats-card';
@@ -62,11 +62,15 @@
           <div class="stats-card__stat-label">Last Result</div>
         </div>
       </div>
-      ${formattedLastPlayed ? `
+      ${
+        formattedLastPlayed
+          ? `
         <div class="stats-card__footer">
           <div class="stats-card__last-played">Last played: ${formattedLastPlayed}</div>
         </div>
-      ` : ''}
+      `
+          : ''
+      }
     `;
 
     statsCard.innerHTML = statsHTML;
@@ -83,7 +87,7 @@
     if (!statsCard) return;
 
     const { streak, winRate, totalGames, lastResult, lastPlayed } = newStats;
-    
+
     // Update streak
     const streakElement = statsCard.querySelector('[data-testid="stats-streak"]');
     if (streakElement) streakElement.textContent = streak || 0;
@@ -120,13 +124,13 @@
     } catch (error) {
       console.warn('Failed to load FlickWord stats from localStorage:', error);
     }
-    
+
     return {
       streak: 0,
       winRate: 0,
       totalGames: 0,
       lastResult: '',
-      lastPlayed: ''
+      lastPlayed: '',
     };
   }
 
@@ -147,7 +151,7 @@
   window.updateStatsCard = updateStatsCard;
   window.loadStatsFromStorage = loadStatsFromStorage;
   window.saveStatsToStorage = saveStatsToStorage;
-  
+
   // Ensure global availability
   if (typeof window !== 'undefined') {
     window.StatsCard = window.StatsCard || StatsCard;
@@ -157,5 +161,4 @@
   }
 
   console.log('✅ StatsCard component ready');
-
 })();

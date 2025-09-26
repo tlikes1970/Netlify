@@ -11,16 +11,17 @@
  */
 function getPosterUrl(itemOrPath, size = 'w342') {
   // Extract path from item object or use direct string
-  const path = typeof itemOrPath === 'string' 
-    ? itemOrPath 
-    : (itemOrPath?.poster_src || itemOrPath?.poster_path || '');
-  
+  const path =
+    typeof itemOrPath === 'string'
+      ? itemOrPath
+      : itemOrPath?.poster_src || itemOrPath?.poster_path || '';
+
   // Return placeholder if no path
   if (!path) return '/assets/img/poster-placeholder.png';
-  
+
   // Return as-is if already a complete URL
   if (/^https?:\/\//i.test(path)) return path;
-  
+
   // Build TMDB URL, removing leading slashes
   return `https://image.tmdb.org/t/p/${size}/${path.replace(/^\/+/, '')}`;
 }
@@ -35,7 +36,7 @@ function getLazyPosterUrl(itemOrPath, size = 'w200') {
   const src = getPosterUrl(itemOrPath, size);
   return {
     src: src,
-    'data-src': src
+    'data-src': src,
   };
 }
 
@@ -63,18 +64,18 @@ function getPlaceholderUrl() {
  */
 function tmdbSrcset(path) {
   if (!path) return '';
-  
+
   const base = 'https://image.tmdb.org/t/p';
   const cleanPath = path || ''; // keep the leading '/'
-  
+
   const joinTMDB = (size, p) => `${base}/w${size}${p}`;
-  
+
   // pick responsive sources
   const s200 = joinTMDB(200, cleanPath);
   const s300 = joinTMDB(300, cleanPath);
   const s342 = joinTMDB(342, cleanPath);
   const s500 = joinTMDB(500, cleanPath);
-  
+
   return `${s200} 200w, ${s300} 300w, ${s342} 342w, ${s500} 500w`;
 }
 
@@ -93,36 +94,36 @@ function createResponsivePosterImg(poster_path, title = '') {
     img.src = '/assets/img/poster-placeholder.png';
     return img;
   }
-  
+
   const base = 'https://image.tmdb.org/t/p';
   const path = poster_path || ''; // keep the leading '/'
-  
+
   const joinTMDB = (size, p) => `${base}/w${size}${p}`;
-  
+
   // pick responsive sources
   const s200 = joinTMDB(200, path);
   const s300 = joinTMDB(300, path);
   const s500 = joinTMDB(500, path);
-  
+
   const img = document.createElement('img');
   img.alt = title || '';
   img.loading = 'lazy';
   img.decoding = 'async';
-  
+
   // set responsive attrs first
   img.setAttribute('srcset', `${s200} 200w, ${s300} 300w, ${s500} 500w`);
   img.setAttribute('sizes', '(max-width: 480px) 148px, 200px');
-  
+
   // give a real fallback src so it paints even if srcset parsing fails
   img.src = s300;
-  
+
   // graceful fallback if *network* fails
   img.onerror = () => {
     img.removeAttribute('srcset');
     img.removeAttribute('sizes');
     img.src = '/assets/img/poster-placeholder.png';
   };
-  
+
   return img;
 }
 

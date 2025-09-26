@@ -16,17 +16,17 @@
   --spacing-lg: 16px;
   --spacing-xl: 24px;
   --spacing-2xl: 32px;
-  
+
   /* Tab Container Spacing - Consolidated */
   --tab-container-margin-top: 4px;
   --tab-container-margin-bottom: 4px;
   --tab-container-padding: 8px;
   --tab-container-gap: 6px;
-  
+
   /* Mobile Tab Container Spacing */
   --tab-container-mobile-padding: 6px;
   --tab-container-mobile-gap: 4px;
-  
+
   /* Search to Tab Spacing */
   --search-to-tab-spacing: 4px;
 }

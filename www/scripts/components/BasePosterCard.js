@@ -1,6 +1,6 @@
 /**
  * Base Poster Card Component - Unified Card System
- * 
+ *
  * Process: Base Poster Card
  * Purpose: Single template for all poster-focused cards with 2:3 aspect ratio, unified layout
  * Data Source: Item data from various sources (FlickWord, Trivia, etc.)
@@ -8,7 +8,7 @@
  * Dependencies: components.css, i18n.js
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🎴 Base Poster Card component loaded');
@@ -38,13 +38,13 @@
     onClick,
     isDisabled = false,
     subline,
-    hideRating = false
+    hideRating = false,
   }) {
     const card = document.createElement('button');
     card.className = 'base-poster-card';
     card.dataset.id = id;
     card.dataset.testid = 'poster-card';
-    
+
     if (isDisabled) {
       card.classList.add('base-poster-card--disabled');
     }
@@ -60,9 +60,10 @@
     // Build card HTML
     const cardHTML = `
       <div class="base-poster-card__poster" data-testid="poster-image">
-        ${posterUrl ? 
-          `<img src="${posterUrl}" alt="${title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
-          '<div class="base-poster-card__placeholder">🎬</div>'
+        ${
+          posterUrl
+            ? `<img src="${posterUrl}" alt="${title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
+            : '<div class="base-poster-card__placeholder">🎬</div>'
         }
         <div class="base-poster-card__placeholder" style="display: ${posterUrl ? 'none' : 'flex'};">🎬</div>
       </div>
@@ -70,21 +71,29 @@
         <h3 class="base-poster-card__title" data-testid="poster-title">${titleWithYear}</h3>
         ${subline ? `<p class="base-poster-card__subline">${subline}</p>` : ''}
         ${showRating ? `<div class="base-poster-card__rating" data-testid="poster-rating">★${roundedRating}</div>` : ''}
-        ${overflowActions.length > 0 ? `
+        ${
+          overflowActions.length > 0
+            ? `
           <div class="base-poster-card__overflow" data-testid="poster-menu">
             <button class="base-poster-card__overflow-btn" aria-label="More options">
               <span class="base-poster-card__overflow-dots">•••</span>
             </button>
             <div class="base-poster-card__overflow-menu" aria-hidden="true">
-              ${overflowActions.map(action => `
+              ${overflowActions
+                .map(
+                  (action) => `
                 <button class="base-poster-card__overflow-item" onclick="(${action.onClick.toString()})()">
                   ${action.icon ? `<span class="base-poster-card__overflow-icon">${action.icon}</span>` : ''}
                   <span class="base-poster-card__overflow-label">${action.label}</span>
                 </button>
-              `).join('')}
+              `,
+                )
+                .join('')}
             </div>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
     `;
 
@@ -103,7 +112,7 @@
     // Add overflow menu toggle
     const overflowBtn = card.querySelector('.base-poster-card__overflow-btn');
     const overflowMenu = card.querySelector('.base-poster-card__overflow-menu');
-    
+
     if (overflowBtn && overflowMenu) {
       overflowBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -168,7 +177,7 @@
   window.BasePosterCard = BasePosterCard;
   window.createSkeletonCards = createSkeletonCards;
   window.createEmptyState = createEmptyState;
-  
+
   // Ensure global availability
   if (typeof window !== 'undefined') {
     window.BasePosterCard = window.BasePosterCard || BasePosterCard;
@@ -177,5 +186,4 @@
   }
 
   console.log('✅ Base Poster Card component ready');
-
 })();

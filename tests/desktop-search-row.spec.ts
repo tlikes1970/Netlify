@@ -27,10 +27,12 @@ test.describe('Desktop Search Row Grid Layout', () => {
     await expect(genreFilter).toBeVisible();
 
     // Check CSS properties
-    const display = await searchRow.evaluate(el => getComputedStyle(el).display);
-    const gridTemplateColumns = await searchRow.evaluate(el => getComputedStyle(el).gridTemplateColumns);
-    const inputMinWidth = await searchInput.evaluate(el => getComputedStyle(el).minWidth);
-    const genreWidth = await genreFilter.evaluate(el => getComputedStyle(el).width);
+    const display = await searchRow.evaluate((el) => getComputedStyle(el).display);
+    const gridTemplateColumns = await searchRow.evaluate(
+      (el) => getComputedStyle(el).gridTemplateColumns,
+    );
+    const inputMinWidth = await searchInput.evaluate((el) => getComputedStyle(el).minWidth);
+    const genreWidth = await genreFilter.evaluate((el) => getComputedStyle(el).width);
 
     expect(display).toBe('grid');
     // Grid template columns will be computed as pixel values, not the original CSS function
@@ -44,8 +46,10 @@ test.describe('Desktop Search Row Grid Layout', () => {
     await page.waitForTimeout(100);
 
     const searchRow = page.locator('#desktop-search-row');
-    const display = await searchRow.evaluate(el => getComputedStyle(el).display);
-    const gridTemplateColumns = await searchRow.evaluate(el => getComputedStyle(el).gridTemplateColumns);
+    const display = await searchRow.evaluate((el) => getComputedStyle(el).display);
+    const gridTemplateColumns = await searchRow.evaluate(
+      (el) => getComputedStyle(el).gridTemplateColumns,
+    );
 
     expect(display).toBe('grid');
     // Grid template columns will be computed as pixel values
@@ -57,8 +61,10 @@ test.describe('Desktop Search Row Grid Layout', () => {
     await page.waitForTimeout(100);
 
     const searchRow = page.locator('#desktop-search-row');
-    const display = await searchRow.evaluate(el => getComputedStyle(el).display);
-    const gridTemplateColumns = await searchRow.evaluate(el => getComputedStyle(el).gridTemplateColumns);
+    const display = await searchRow.evaluate((el) => getComputedStyle(el).display);
+    const gridTemplateColumns = await searchRow.evaluate(
+      (el) => getComputedStyle(el).gridTemplateColumns,
+    );
 
     expect(display).toBe('grid');
     // Grid template columns will be computed as pixel values
@@ -93,8 +99,8 @@ test.describe('Desktop Search Row Grid Layout', () => {
     await page.waitForTimeout(100);
 
     const searchInput = page.locator('#desktop-search-row #search');
-    const minWidth = await searchInput.evaluate(el => getComputedStyle(el).minWidth);
-    const width = await searchInput.evaluate(el => getComputedStyle(el).width);
+    const minWidth = await searchInput.evaluate((el) => getComputedStyle(el).minWidth);
+    const width = await searchInput.evaluate((el) => getComputedStyle(el).width);
 
     expect(minWidth).toBe('160px'); // Updated to match new CSS
     // Width should be flexible, not fixed
@@ -106,8 +112,8 @@ test.describe('Desktop Search Row Grid Layout', () => {
     await page.waitForTimeout(100);
 
     const genreFilter = page.locator('#desktop-search-row #genreSelect');
-    const width = await genreFilter.evaluate(el => getComputedStyle(el).width);
-    const minWidth = await genreFilter.evaluate(el => getComputedStyle(el).minWidth);
+    const width = await genreFilter.evaluate((el) => getComputedStyle(el).width);
+    const minWidth = await genreFilter.evaluate((el) => getComputedStyle(el).minWidth);
 
     // Should have auto width (flex: 0 0 auto)
     expect(minWidth).toBe('0px');
@@ -122,7 +128,7 @@ test.describe('Desktop Search Row Grid Layout', () => {
     await page.locator('#desktop-search-row #search').fill('dexter');
     await page.locator('#desktop-search-row #searchBtn').click();
     await page.waitForTimeout(50); // Short wait for UI to paint
-    
+
     // Verify search worked (degraded-mode modal/notice)
     await expect(searchSignal(page)).toBeVisible();
   });
@@ -135,7 +141,7 @@ test.describe('Desktop Search Row Grid Layout', () => {
     await page.locator('#desktop-search-row #search').fill('dexter');
     await page.locator('#desktop-search-row #search').press('Enter');
     await page.waitForTimeout(50); // Short wait for UI to paint
-    
+
     // Verify search worked (degraded-mode modal/notice)
     await expect(searchSignal(page)).toBeVisible();
   });
@@ -153,11 +159,13 @@ test.describe('Desktop Search Row Grid Layout', () => {
     // Clear the search
     await page.locator('#desktop-search-row #clearSearchBtn').click();
     await page.waitForTimeout(50);
-    
+
     // Verify input is cleared
     await expect(input).toHaveValue('');
     // If your app hides/unmounts the modal after clear, assert it; otherwise, assert no throw:
-    await expect(searchSignal(page)).toHaveCount(0).catch(() => {}); // tolerant
+    await expect(searchSignal(page))
+      .toHaveCount(0)
+      .catch(() => {}); // tolerant
   });
 
   test('no layout wrapping at edge cases', async ({ page }) => {
@@ -166,15 +174,15 @@ test.describe('Desktop Search Row Grid Layout', () => {
     await page.waitForTimeout(100);
 
     const searchRow = page.locator('#desktop-search-row');
-    const display = await searchRow.evaluate(el => getComputedStyle(el).display);
-    
+    const display = await searchRow.evaluate((el) => getComputedStyle(el).display);
+
     expect(display).toBe('grid');
 
     // Test at maximum width (1920px)
     await page.setViewportSize({ width: 1920, height: 800 });
     await page.waitForTimeout(100);
 
-    const displayMax = await searchRow.evaluate(el => getComputedStyle(el).display);
+    const displayMax = await searchRow.evaluate((el) => getComputedStyle(el).display);
     expect(displayMax).toBe('grid');
   });
 
@@ -184,8 +192,8 @@ test.describe('Desktop Search Row Grid Layout', () => {
     await page.waitForTimeout(100);
 
     const searchRow = page.locator('#desktop-search-row');
-    const display = await searchRow.evaluate(el => getComputedStyle(el).display);
-    
+    const display = await searchRow.evaluate((el) => getComputedStyle(el).display);
+
     // Should be flex at mobile width (not grid)
     expect(display).toBe('flex');
   });

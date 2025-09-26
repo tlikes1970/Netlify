@@ -37,12 +37,12 @@ export class PerformanceMonitor {
     this.observeUserInteractions();
     this.observeMemoryUsage();
 
-    console.log("📊 Performance monitoring initialized");
+    console.log('📊 Performance monitoring initialized');
   }
 
   // Largest Contentful Paint
   observeLCP() {
-    if (!("PerformanceObserver" in window)) return;
+    if (!('PerformanceObserver' in window)) return;
 
     const observer = new PerformanceObserver((list) => {
       const entries = list.getEntries();
@@ -52,19 +52,19 @@ export class PerformanceMonitor {
         value: lastEntry.startTime,
         element: lastEntry.element,
         timestamp: Date.now(),
-        rating: this.getRating("LCP", lastEntry.startTime),
+        rating: this.getRating('LCP', lastEntry.startTime),
       };
 
-      this.reportMetric("LCP", this.metrics.LCP);
+      this.reportMetric('LCP', this.metrics.LCP);
     });
 
-    observer.observe({ entryTypes: ["largest-contentful-paint"] });
+    observer.observe({ entryTypes: ['largest-contentful-paint'] });
     this.observers.push(observer);
   }
 
   // First Input Delay
   observeFID() {
-    if (!("PerformanceObserver" in window)) return;
+    if (!('PerformanceObserver' in window)) return;
 
     const observer = new PerformanceObserver((list) => {
       const entries = list.getEntries();
@@ -72,23 +72,20 @@ export class PerformanceMonitor {
         this.metrics.FID = {
           value: entry.processingStart - entry.startTime,
           timestamp: Date.now(),
-          rating: this.getRating(
-            "FID",
-            entry.processingStart - entry.startTime
-          ),
+          rating: this.getRating('FID', entry.processingStart - entry.startTime),
         };
 
-        this.reportMetric("FID", this.metrics.FID);
+        this.reportMetric('FID', this.metrics.FID);
       });
     });
 
-    observer.observe({ entryTypes: ["first-input"] });
+    observer.observe({ entryTypes: ['first-input'] });
     this.observers.push(observer);
   }
 
   // Cumulative Layout Shift
   observeCLS() {
-    if (!("PerformanceObserver" in window)) return;
+    if (!('PerformanceObserver' in window)) return;
 
     let clsValue = 0;
     const observer = new PerformanceObserver((list) => {
@@ -102,19 +99,19 @@ export class PerformanceMonitor {
       this.metrics.CLS = {
         value: clsValue,
         timestamp: Date.now(),
-        rating: this.getRating("CLS", clsValue),
+        rating: this.getRating('CLS', clsValue),
       };
 
-      this.reportMetric("CLS", this.metrics.CLS);
+      this.reportMetric('CLS', this.metrics.CLS);
     });
 
-    observer.observe({ entryTypes: ["layout-shift"] });
+    observer.observe({ entryTypes: ['layout-shift'] });
     this.observers.push(observer);
   }
 
   // First Contentful Paint
   observeFCP() {
-    if (!("PerformanceObserver" in window)) return;
+    if (!('PerformanceObserver' in window)) return;
 
     const observer = new PerformanceObserver((list) => {
       const entries = list.getEntries();
@@ -122,40 +119,37 @@ export class PerformanceMonitor {
         this.metrics.FCP = {
           value: entry.startTime,
           timestamp: Date.now(),
-          rating: this.getRating("FCP", entry.startTime),
+          rating: this.getRating('FCP', entry.startTime),
         };
 
-        this.reportMetric("FCP", this.metrics.FCP);
+        this.reportMetric('FCP', this.metrics.FCP);
       });
     });
 
-    observer.observe({ entryTypes: ["paint"] });
+    observer.observe({ entryTypes: ['paint'] });
     this.observers.push(observer);
   }
 
   // Time to First Byte
   observeTTFB() {
-    if (!("PerformanceObserver" in window)) return;
+    if (!('PerformanceObserver' in window)) return;
 
     const observer = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       entries.forEach((entry) => {
-        if (entry.entryType === "navigation") {
+        if (entry.entryType === 'navigation') {
           this.metrics.TTFB = {
             value: entry.responseStart - entry.requestStart,
             timestamp: Date.now(),
-            rating: this.getRating(
-              "TTFB",
-              entry.responseStart - entry.requestStart
-            ),
+            rating: this.getRating('TTFB', entry.responseStart - entry.requestStart),
           };
 
-          this.reportMetric("TTFB", this.metrics.TTFB);
+          this.reportMetric('TTFB', this.metrics.TTFB);
         }
       });
     });
 
-    observer.observe({ entryTypes: ["navigation"] });
+    observer.observe({ entryTypes: ['navigation'] });
     this.observers.push(observer);
   }
 
@@ -185,7 +179,7 @@ export class PerformanceMonitor {
     let interactionCount = 0;
     let totalInteractionTime = 0;
 
-    const interactionTypes = ["click", "keydown", "scroll", "touchstart"];
+    const interactionTypes = ['click', 'keydown', 'scroll', 'touchstart'];
 
     interactionTypes.forEach((type) => {
       document.addEventListener(
@@ -211,7 +205,7 @@ export class PerformanceMonitor {
             }
           });
         },
-        { passive: true }
+        { passive: true },
       );
     });
 
@@ -229,7 +223,7 @@ export class PerformanceMonitor {
 
   // Monitor memory usage
   observeMemoryUsage() {
-    if (!("memory" in performance)) return;
+    if (!('memory' in performance)) return;
 
     setInterval(() => {
       const memory = performance.memory;
@@ -243,10 +237,7 @@ export class PerformanceMonitor {
 
       // Warn if memory usage is high
       if (this.metrics.memory.usage > 80) {
-        console.warn(
-          "⚠️ High memory usage:",
-          this.metrics.memory.usage.toFixed(2) + "%"
-        );
+        console.warn('⚠️ High memory usage:', this.metrics.memory.usage.toFixed(2) + '%');
       }
     }, 10000); // Every 10 seconds
   }
@@ -261,12 +252,7 @@ export class PerformanceMonitor {
       module: modulePath,
       loadTime,
       timestamp: Date.now(),
-      rating:
-        loadTime > 1000
-          ? "poor"
-          : loadTime > 500
-          ? "needs-improvement"
-          : "good",
+      rating: loadTime > 1000 ? 'poor' : loadTime > 500 ? 'needs-improvement' : 'good',
     });
 
     // Keep only last 50 module loads
@@ -295,14 +281,14 @@ export class PerformanceMonitor {
   recordInteraction(type, responseTime) {
     try {
       if (!type || typeof type !== 'string') {
-        console.warn("[perf] recordInteraction: invalid type", type);
+        console.warn('[perf] recordInteraction: invalid type', type);
         return;
       }
-      
+
       if (!this.metrics) {
         this.metrics = {};
       }
-      
+
       if (!this.metrics.interactions) {
         this.metrics.interactions = {
           byType: {},
@@ -326,18 +312,18 @@ export class PerformanceMonitor {
 
       this.metrics.interactions.total++;
     } catch (e) {
-      console.warn("[perf] recordInteraction guard", e && e.message);
+      console.warn('[perf] recordInteraction guard', e && e.message);
     }
   }
 
   // Get performance rating
   getRating(metric, value) {
     const threshold = this.thresholds[metric];
-    if (!threshold) return "unknown";
+    if (!threshold) return 'unknown';
 
-    if (value <= threshold * 0.5) return "good";
-    if (value <= threshold) return "needs-improvement";
-    return "poor";
+    if (value <= threshold * 0.5) return 'good';
+    if (value <= threshold) return 'needs-improvement';
+    return 'poor';
   }
 
   // Report metric
@@ -346,7 +332,7 @@ export class PerformanceMonitor {
 
     // Send to analytics if available
     if (window.gtag) {
-      window.gtag("event", "performance_metric", {
+      window.gtag('event', 'performance_metric', {
         metric_name: name,
         metric_value: Math.round(metric.value),
         metric_rating: metric.rating,
@@ -355,13 +341,11 @@ export class PerformanceMonitor {
 
     // Store in localStorage for debugging
     try {
-      const stored = JSON.parse(
-        localStorage.getItem("flicklet_performance") || "{}"
-      );
+      const stored = JSON.parse(localStorage.getItem('flicklet_performance') || '{}');
       stored[name] = metric;
-      localStorage.setItem("flicklet_performance", JSON.stringify(stored));
+      localStorage.setItem('flicklet_performance', JSON.stringify(stored));
     } catch (error) {
-      console.warn("Failed to store performance metrics:", error);
+      console.warn('Failed to store performance metrics:', error);
     }
   }
 
@@ -378,30 +362,26 @@ export class PerformanceMonitor {
   // Get performance summary
   getSummary() {
     const summary = {
-      overall: "good",
+      overall: 'good',
       issues: [],
       score: 100,
     };
 
     // Check each metric
     Object.keys(this.metrics).forEach((metric) => {
-      if (this.metrics[metric].rating === "poor") {
-        summary.issues.push(
-          `${metric} is poor (${this.metrics[metric].value.toFixed(2)}ms)`
-        );
+      if (this.metrics[metric].rating === 'poor') {
+        summary.issues.push(`${metric} is poor (${this.metrics[metric].value.toFixed(2)}ms)`);
         summary.score -= 20;
-      } else if (this.metrics[metric].rating === "needs-improvement") {
+      } else if (this.metrics[metric].rating === 'needs-improvement') {
         summary.issues.push(
-          `${metric} needs improvement (${this.metrics[metric].value.toFixed(
-            2
-          )}ms)`
+          `${metric} needs improvement (${this.metrics[metric].value.toFixed(2)}ms)`,
         );
         summary.score -= 10;
       }
     });
 
-    if (summary.score < 60) summary.overall = "poor";
-    else if (summary.score < 80) summary.overall = "needs-improvement";
+    if (summary.score < 60) summary.overall = 'poor';
+    else if (summary.score < 80) summary.overall = 'needs-improvement';
 
     return summary;
   }
@@ -410,33 +390,27 @@ export class PerformanceMonitor {
   getRecommendations() {
     const recommendations = [];
 
-    if (this.metrics.LCP && this.metrics.LCP.rating === "poor") {
-      recommendations.push(
-        "Optimize images and reduce server response time for better LCP"
-      );
+    if (this.metrics.LCP && this.metrics.LCP.rating === 'poor') {
+      recommendations.push('Optimize images and reduce server response time for better LCP');
     }
 
-    if (this.metrics.FID && this.metrics.FID.rating === "poor") {
-      recommendations.push(
-        "Reduce JavaScript execution time and optimize third-party scripts"
-      );
+    if (this.metrics.FID && this.metrics.FID.rating === 'poor') {
+      recommendations.push('Reduce JavaScript execution time and optimize third-party scripts');
     }
 
-    if (this.metrics.CLS && this.metrics.CLS.rating === "poor") {
+    if (this.metrics.CLS && this.metrics.CLS.rating === 'poor') {
       recommendations.push(
-        "Add size attributes to images and avoid inserting content above existing content"
+        'Add size attributes to images and avoid inserting content above existing content',
       );
     }
 
     if (this.metrics.moduleLoads) {
-      const slowModules = this.metrics.moduleLoads.filter(
-        (m) => m.rating === "poor"
-      );
+      const slowModules = this.metrics.moduleLoads.filter((m) => m.rating === 'poor');
       if (slowModules.length > 0) {
         recommendations.push(
           `Consider code splitting for slow modules: ${slowModules
             .map((m) => m.module)
-            .join(", ")}`
+            .join(', ')}`,
         );
       }
     }

@@ -9,7 +9,7 @@ window.TMDB_CONFIG = {
   baseUrl: 'https://api.themoviedb.org/3',
   imageBaseUrl: 'https://image.tmdb.org/t/p/',
   language: 'en-US',
-  region: 'US'
+  region: 'US',
 };
 
 // Set API key from environment (will be available in production)

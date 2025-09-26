@@ -1,6 +1,6 @@
 /**
  * Auth UI Fix - Comprehensive UI State Correction
- * 
+ *
  * Process: Auth UI Fix
  * Purpose: Fix conflicting auth UI elements and sign-out functionality
  * Data Source: Firebase auth state, DOM elements
@@ -8,7 +8,7 @@
  * Dependencies: Firebase auth, DOM manipulation
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🔧 Auth UI Fix starting...');
@@ -18,18 +18,18 @@
    */
   function fixAuthUI() {
     console.log('🔧 Fixing auth UI state...');
-    
+
     try {
       // Get current Firebase auth state
       const auth = window.firebase?.auth();
       const currentUser = auth?.currentUser;
-      
+
       console.log('🔧 Current user:', currentUser?.email || 'None');
-      
+
       // Clear all conflicting text and states
       const signInArea = document.querySelector('[data-auth="signed-out-visible"]');
       const signOutArea = document.querySelector('[data-auth="signed-in-visible"]');
-      
+
       if (signInArea) {
         // Clear any conflicting text
         signInArea.innerHTML = `
@@ -37,7 +37,7 @@
         `;
         signInArea.hidden = !!currentUser; // Hide if signed in
       }
-      
+
       if (signOutArea) {
         // Clear any conflicting text and rebuild
         signOutArea.innerHTML = `
@@ -48,7 +48,7 @@
         `;
         signOutArea.hidden = !currentUser; // Show if signed in
       }
-      
+
       // Update global references
       if (currentUser) {
         window.currentUser = currentUser;
@@ -61,17 +61,20 @@
           window.FlickletApp.currentUser = null;
         }
       }
-      
+
       // Add proper event listeners
       setupAuthEventListeners();
-      
+
       console.log('🔧 Auth UI fixed! Signed in:', !!currentUser);
-      
+
       // Show success message
       if (currentUser && window.showToast) {
-        window.showToast('success', 'Signed In', `Welcome back, ${currentUser.displayName || currentUser.email?.split('@')[0] || 'User'}!`);
+        window.showToast(
+          'success',
+          'Signed In',
+          `Welcome back, ${currentUser.displayName || currentUser.email?.split('@')[0] || 'User'}!`,
+        );
       }
-      
     } catch (error) {
       console.error('🔧 Failed to fix auth UI:', error);
     }
@@ -83,7 +86,7 @@
   function setupAuthEventListeners() {
     // Remove existing listeners to prevent duplicates
     document.removeEventListener('click', handleAuthClick);
-    
+
     // Add new listener
     document.addEventListener('click', handleAuthClick);
   }
@@ -94,9 +97,9 @@
   function handleAuthClick(e) {
     const el = e.target.closest('[data-action="sign-in"], [data-action="sign-out"]');
     if (!el) return;
-    
+
     e.preventDefault();
-    
+
     try {
       if (el.matches('[data-action="sign-in"]')) {
         console.log('🔧 Sign in clicked');
@@ -119,20 +122,19 @@
         console.error('🔧 Firebase auth not available');
         return;
       }
-      
+
       const auth = window.firebaseAuth;
       const provider = new window.firebaseAuth.GoogleAuthProvider();
-      
+
       console.log('🔧 Starting Google sign in...');
       const result = await auth.signInWithPopup(provider);
-      
+
       console.log('🔧 Sign in successful:', result.user?.email);
-      
+
       // Update UI after successful sign in
       setTimeout(() => {
         fixAuthUI();
       }, 500);
-      
     } catch (error) {
       console.error('🔧 Sign in failed:', error);
       if (window.showToast) {
@@ -150,23 +152,22 @@
         console.error('🔧 Firebase auth not available');
         return;
       }
-      
+
       const auth = window.firebaseAuth;
-      
+
       console.log('🔧 Starting sign out...');
       await auth.signOut();
-      
+
       console.log('🔧 Sign out successful');
-      
+
       // Update UI after sign out
       setTimeout(() => {
         fixAuthUI();
       }, 100);
-      
+
       if (window.showToast) {
         window.showToast('success', 'Signed Out', 'You have been signed out');
       }
-      
     } catch (error) {
       console.error('🔧 Sign out failed:', error);
       if (window.showToast) {
@@ -189,10 +190,10 @@
   // Initialize the fix
   async function init() {
     await waitForFirebase();
-    
+
     // Run the fix
     fixAuthUI();
-    
+
     // Auth state changes now handled by centralized AuthManager
   }
 
@@ -205,6 +206,4 @@
   window.signIn = signIn;
 
   console.log('✅ Auth UI Fix loaded. Use window.fixAuthUI() to manually fix.');
-
 })();
-

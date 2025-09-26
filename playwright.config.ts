@@ -30,10 +30,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
 
   // Reporters
-  reporter: [
-    ['list'],
-    ['html', { outputFolder: 'playwright-report', open: 'never' }],
-  ],
+  reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
 
   // Global expectations
   expect: { timeout: 5_000 },

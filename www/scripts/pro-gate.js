@@ -1,26 +1,35 @@
 /* ========== pro-gate.js ==========
    Minimal Pro gating with hide/disable modes, tooltip, and upsell modal.
 */
-(function(){
-  if (window.__proInit__) return; window.__proInit__ = true;
+(function () {
+  if (window.__proInit__) return;
+  window.__proInit__ = true;
 
   const KEY = 'flicklet:pro'; // '1' = active
   const isPro = () => localStorage.getItem(KEY) === '1' || localStorage.getItem(KEY) === null; // Default to true if not set
   const setPro = (v) => localStorage.setItem(KEY, v ? '1' : '0');
 
   // Public QA helpers (type in console):
-  window.enablePro = () => { setPro(true); applyGates(); (window.Notify?.success || window.showNotification)?.('Pro ON'); };
-  window.disablePro = () => { setPro(false); applyGates(); (window.Notify?.info || window.showNotification)?.('Pro OFF'); };
+  window.enablePro = () => {
+    setPro(true);
+    applyGates();
+    (window.Notify?.success || window.showNotification)?.('Pro ON');
+  };
+  window.disablePro = () => {
+    setPro(false);
+    applyGates();
+    (window.Notify?.info || window.showNotification)?.('Pro OFF');
+  };
 
   // Find all gated elements
-  function applyGates(){
+  function applyGates() {
     console.log('🔒 Applying Pro gates...');
     const gated = document.querySelectorAll('[data-pro="required"]');
     console.log('🔒 Found', gated.length, 'gated elements');
     const proStatus = isPro();
     console.log('🔒 Pro status:', proStatus);
-    
-    gated.forEach(el => {
+
+    gated.forEach((el) => {
       const mode = (el.getAttribute('data-pro-mode') || 'disable').toLowerCase();
       // Clean previous state
       el.classList.remove('pro-locked');
@@ -57,12 +66,12 @@
     });
   }
 
-  function tipText(el){
+  function tipText(el) {
     const feat = el.getAttribute('data-pro-feature') || 'this feature';
     return `Pro required for ${feat}.`;
   }
 
-  function onLockedClick(e){
+  function onLockedClick(e) {
     if (isPro()) return; // safety
     e.preventDefault();
     e.stopPropagation();
@@ -75,23 +84,26 @@
   const startBtn = document.getElementById('proActivateBtn');
   let prevActive = null;
 
-  function openUpsell(){
+  function openUpsell() {
     if (!modal) return;
     prevActive = document.activeElement;
     modal.hidden = false;
     document.addEventListener('keydown', onKey, true);
     requestAnimationFrame(() => startBtn?.focus());
   }
-  function closeUpsell(){
+  function closeUpsell() {
     if (!modal) return;
     modal.hidden = true;
     document.removeEventListener('keydown', onKey, true);
     prevActive?.focus?.();
   }
-  function onKey(e){
-    if (e.key === 'Escape'){ e.preventDefault(); closeUpsell(); }
+  function onKey(e) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeUpsell();
+    }
   }
-  closeBtns.forEach(b => b.addEventListener('click', closeUpsell));
+  closeBtns.forEach((b) => b.addEventListener('click', closeUpsell));
   modal?.querySelector('.modal-backdrop')?.addEventListener('click', closeUpsell);
 
   startBtn?.addEventListener('click', () => {
@@ -108,36 +120,10 @@
   } else {
     applyGates();
   }
-  
+
   // Also apply gates after a short delay to ensure all elements are loaded
   setTimeout(applyGates, 100);
-  
+
   // Expose applyGates globally for manual triggering
   window.applyProGates = applyGates;
 })();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

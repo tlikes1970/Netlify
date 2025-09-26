@@ -10,26 +10,29 @@
      "thumbnail": "https://image.tmdb.org/t/p/w780/abc.jpg"               // optional
    }
 */
-(function(){
+(function () {
   const root = document.getElementById('videoSpotlight');
   if (!root) return;
 
   const mediaEl = document.getElementById('spotlightMedia');
   const titleEl = document.getElementById('spotlightItemTitle');
-  const descEl  = document.getElementById('spotlightDesc');
-  const dateEl  = root.querySelector('.spotlight-date');
+  const descEl = document.getElementById('spotlightDesc');
+  const dateEl = root.querySelector('.spotlight-date');
   const playBtn = document.getElementById('spotlightPlayBtn');
   const muteBtn = document.getElementById('spotlightMuteBtn');
 
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const item = loadSpotlight();
-  if (!item) { root.remove(); return; } // hide card if no spotlight available
+  if (!item) {
+    root.remove();
+    return;
+  } // hide card if no spotlight available
 
   // Render metadata
   titleEl.textContent = item.title || 'Featured clip';
-  descEl.textContent  = item.description || '';
-  dateEl.textContent  = item.date ? niceDate(item.date) : today();
+  descEl.textContent = item.description || '';
+  dateEl.textContent = item.date ? niceDate(item.date) : today();
 
   // Render media
   let player = null;
@@ -42,7 +45,7 @@
       playsinline: '1',
       rel: '0',
       modestbranding: '1',
-      controls: '1'
+      controls: '1',
     });
     const src = toYouTubeEmbed(item.videoUrl) + (params.toString() ? `?${params}` : '');
     const iframe = document.createElement('iframe');
@@ -55,13 +58,23 @@
     iframe.src = src;
     mediaEl.innerHTML = '';
     mediaEl.appendChild(iframe);
-    player = { kind: 'yt', el: iframe, muted: true, play(){ /* user interacts to play */ }, toggleMute(){ /* noop; YouTube handles UI */ } };
+    player = {
+      kind: 'yt',
+      el: iframe,
+      muted: true,
+      play() {
+        /* user interacts to play */
+      },
+      toggleMute() {
+        /* noop; YouTube handles UI */
+      },
+    };
     muteBtn.disabled = true; // we won't fight YouTube's controls
   } else {
     // HTML5 video
     const video = document.createElement('video');
     video.playsInline = true;
-    video.muted = !prefersReduced;  // muted if not reduced-motion
+    video.muted = !prefersReduced; // muted if not reduced-motion
     video.autoplay = !prefersReduced;
     video.loop = false;
     video.controls = true;
@@ -79,13 +92,17 @@
       kind: 'mp4',
       el: video,
       muted: video.muted,
-      play(){ try { video.play(); } catch(_){} },
-      toggleMute(){
+      play() {
+        try {
+          video.play();
+        } catch (_) {}
+      },
+      toggleMute() {
         video.muted = !video.muted;
         this.muted = video.muted;
         muteBtn.textContent = video.muted ? 'Unmute' : 'Mute';
         muteBtn.setAttribute('aria-pressed', String(!video.muted));
-      }
+      },
     };
 
     // If autoplay is blocked, we don't care — user can press Play
@@ -97,7 +114,7 @@
   muteBtn.addEventListener('click', () => player?.toggleMute && player.toggleMute());
 
   // --- helpers ---
-  function loadSpotlight(){
+  function loadSpotlight() {
     // 1) explicit single item wins
     try {
       const raw = localStorage.getItem('flicklet:spotlight:v1');
@@ -105,7 +122,7 @@
         const one = JSON.parse(raw);
         if (one && one.videoUrl) return one;
       }
-    } catch(_) {}
+    } catch (_) {}
 
     // 2) rotate from curated:trending
     const fromCur = fromCurated();
@@ -115,12 +132,12 @@
     return null;
   }
 
-  function fromCurated(){
+  function fromCurated() {
     try {
       const arr = JSON.parse(localStorage.getItem('curated:trending') || '[]');
       if (!Array.isArray(arr) || !arr.length) return null;
 
-      const idx = hashToIndex(new Date().toISOString().slice(0,10), arr.length);
+      const idx = hashToIndex(new Date().toISOString().slice(0, 10), arr.length);
       const pick = arr[idx];
       if (!pick) return null;
 
@@ -129,43 +146,48 @@
       if (!videoUrl) return null;
 
       return {
-        date: new Date().toISOString().slice(0,10),
+        date: new Date().toISOString().slice(0, 10),
         title: pick.title || pick.name || 'Spotlight',
         description: 'Featured from Trending',
         videoUrl,
-        thumbnail: pick.backdrop_path ? `https://image.tmdb.org/t/p/w780${pick.backdrop_path}` : ''
+        thumbnail: pick.backdrop_path ? `https://image.tmdb.org/t/p/w780${pick.backdrop_path}` : '',
       };
-    } catch(_) { return null; }
+    } catch (_) {
+      return null;
+    }
   }
 
   // Utility: deterministic index from date string
-  function hashToIndex(str, mod){
-    let h = 0; for (let i=0;i<str.length;i++) h = ((h<<5)-h) + str.charCodeAt(i) | 0;
+  function hashToIndex(str, mod) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0;
     return Math.abs(h) % mod;
   }
-  function toYouTubeEmbed(url){
+  function toYouTubeEmbed(url) {
     // Handles https://www.youtube.com/watch?v=ID or https://youtu.be/ID
-    try{
+    try {
       const u = new URL(url);
       let id = '';
       if (u.hostname.includes('youtu.be')) id = u.pathname.slice(1);
       else id = u.searchParams.get('v') || '';
       return id ? `https://www.youtube.com/embed/${id}` : url;
-    } catch(_){ return url; }
+    } catch (_) {
+      return url;
+    }
   }
-  function guessMime(u){
+  function guessMime(u) {
     if (!u) return 'video/mp4';
     const ext = u.split('?')[0].split('#')[0].split('.').pop().toLowerCase();
     return ext === 'webm' ? 'video/webm' : ext === 'ogg' ? 'video/ogg' : 'video/mp4';
   }
-  function niceDate(s){
+  function niceDate(s) {
     // expects YYYY-MM-DD
-    const [y,m,d] = s.split('-').map(Number);
-    const dt = new Date(Date.UTC(y, m-1, d));
-    return dt.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'2-digit' });
+    const [y, m, d] = s.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    return dt.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
   }
-  function today(){
+  function today() {
     const d = new Date();
-    return d.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'2-digit' });
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
   }
 })();

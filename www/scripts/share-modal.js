@@ -1,8 +1,8 @@
 /* ========== share-modal.js ==========
    Idempotent Share modal with Web Share fallback + a11y focus trap.
 */
-(function(){
-  if (window.__shareModalInit__) return;  // idempotent init
+(function () {
+  if (window.__shareModalInit__) return; // idempotent init
   window.__shareModalInit__ = true;
 
   const modal = document.getElementById('shareModal');
@@ -21,37 +21,42 @@
   const focusablesSel = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
   // Route guard: don't open in Settings/onboarding if your app exposes flags
-  function canOpen(){
+  function canOpen() {
     try {
       if (window.flicklet?.isInSettings) return false;
       if (document.body.classList.contains('modal-block-share')) return false; // your own guard hook
-    } catch(_){}
+    } catch (_) {}
     return true;
   }
 
   // Derive share payload
-  function payloadFromTrigger(btn){
+  function payloadFromTrigger(btn) {
     const title = btn?.dataset?.shareTitle || document.title || 'Share';
     const url = btn?.dataset?.shareUrl || location.href;
     const text = btn?.dataset?.shareText || '';
     return { title, url, text };
   }
 
-  function setPayload(p){
+  function setPayload(p) {
     urlInput.value = p.url;
     hint.textContent = p.text ? p.text : 'Share this page or item.';
     nativeBtn.hidden = !canUseWebShare(p);
   }
 
-  function canUseWebShare(p){
-    return !!(navigator.share && navigator.canShare ? navigator.canShare({ title:p.title, url:p.url, text:p.text }) : navigator.share);
+  function canUseWebShare(p) {
+    return !!(navigator.share && navigator.canShare
+      ? navigator.canShare({ title: p.title, url: p.url, text: p.text })
+      : navigator.share);
   }
 
-  function open(p){
+  function open(p) {
     // STEP 2.1 (optional) — Prevent accidental double-open even if someone calls twice
-    if (window.__shareModalOpened) { console.debug('Share modal already opened — skipping'); return; }
+    if (window.__shareModalOpened) {
+      console.debug('Share modal already opened — skipping');
+      return;
+    }
     window.__shareModalOpened = true;
-    
+
     if (!canOpen()) return;
     setPayload(p);
     prevActive = document.activeElement;
@@ -63,53 +68,65 @@
     document.addEventListener('focus', trapFocus, true);
   }
 
-  function close(){
+  function close() {
     modal.hidden = true;
     document.removeEventListener('keydown', onKey, true);
     document.removeEventListener('focus', trapFocus, true);
     if (prevActive && prevActive.focus) prevActive.focus();
   }
 
-  function onKey(e){
-    if (e.key === 'Escape'){ e.preventDefault(); close(); return; }
+  function onKey(e) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+      return;
+    }
     if (e.key !== 'Tab') return;
     // trap
-    const f = Array.from(modal.querySelectorAll(focusablesSel)).filter(x => !x.disabled && x.offsetParent !== null);
+    const f = Array.from(modal.querySelectorAll(focusablesSel)).filter(
+      (x) => !x.disabled && x.offsetParent !== null,
+    );
     if (!f.length) return;
-    const first = f[0], last = f[f.length - 1];
-    if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    const first = f[0],
+      last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   }
 
-  function trapFocus(e){
-    if (!modal.hidden && !modal.contains(e.target)){
+  function trapFocus(e) {
+    if (!modal.hidden && !modal.contains(e.target)) {
       e.stopPropagation();
       const f = modal.querySelector(focusablesSel);
       f && f.focus();
     }
   }
 
-  async function shareNative(){
+  async function shareNative() {
     const p = { title: document.title, url: urlInput.value, text: hint.textContent };
-    try{
+    try {
       if (!canUseWebShare(p)) throw new Error('unsupported');
       await navigator.share(p);
       feedback.textContent = 'Shared.';
       window.Notify?.success?.('Shared');
       close();
-    } catch(err){
+    } catch (err) {
       // Not fatal; fall back to copy
       copy();
     }
   }
 
-  async function copy(){
+  async function copy() {
     const value = urlInput.value;
-    try{
+    try {
       await navigator.clipboard.writeText(value);
       feedback.textContent = 'Link copied.';
       window.Notify?.success?.('Link copied');
-    } catch(_){
+    } catch (_) {
       // legacy fallback
       try {
         urlInput.select();
@@ -123,7 +140,7 @@
   }
 
   // Wire one example trigger; also support any future element with data-share-url
-  if (openBtn){
+  if (openBtn) {
     console.log('🔗 Share button found and bound');
     openBtn.addEventListener('click', () => {
       console.log('🔗 Share button clicked');
@@ -139,15 +156,15 @@
     open(payloadFromTrigger(t));
   });
 
-  closeBtns.forEach(b => b.addEventListener('click', close));
+  closeBtns.forEach((b) => b.addEventListener('click', close));
   nativeBtn.addEventListener('click', shareNative);
   copyBtn.addEventListener('click', copy);
 
   // Deep-link support: open modal if URL contains ?share=1
   try {
     const u = new URL(location.href);
-    if (u.searchParams.get('share') === '1' && canOpen()){
+    if (u.searchParams.get('share') === '1' && canOpen()) {
       open(payloadFromTrigger(openBtn));
     }
-  } catch(_){}
+  } catch (_) {}
 })();

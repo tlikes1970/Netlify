@@ -1,6 +1,6 @@
 /**
  * Trivia Tab Component - Home Surface Implementation
- * 
+ *
  * Process: Trivia Tab
  * Purpose: Trivia tab with header and TriviaCard grid layout using Base Poster Card
  * Data Source: Trivia category data, user progress, game statistics
@@ -8,7 +8,7 @@
  * Dependencies: BasePosterCard.js, components.css
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🧠 Trivia Tab component loaded');
@@ -23,7 +23,7 @@
     const dailyKey = `flicklet:trivia:daily:${today}`;
     const dailyCount = parseInt(localStorage.getItem(dailyKey) || '0');
     const streak = parseInt(localStorage.getItem('flicklet:trivia:v1:streak') || '0');
-    
+
     return `
       <div class="stats-panel">
         <div class="stats-row ${isPro ? 'pro-active' : 'basic-active'}">
@@ -52,11 +52,7 @@
    * @param {Function} options.onCategoryClick - Category card click handler
    * @returns {HTMLElement} Trivia tab element
    */
-  function TriviaTab({
-    categories = [],
-    onPlay,
-    onCategoryClick
-  }) {
+  function TriviaTab({ categories = [], onPlay, onCategoryClick }) {
     const tab = document.createElement('div');
     tab.className = 'trivia-tab';
     tab.dataset.testid = 'trivia-tab';
@@ -77,26 +73,48 @@
 
       <!-- Card Grid -->
       <div class="trivia-tab__grid" data-testid="trivia-grid">
-        ${categories.length > 0 ? 
-          categories.map(category => `
+        ${
+          categories.length > 0
+            ? categories
+                .map(
+                  (category) => `
             <div class="trivia-category-card" data-category-id="${category.id}">
-              ${window.BasePosterCard ? window.BasePosterCard({
-                id: category.id,
-                posterUrl: category.posterUrl || getCategoryIcon(category.type),
-                title: category.name || category.title,
-                subline: formatCategorySubline(category),
-                hideRating: true,
-                onClick: onCategoryClick || (() => {}),
-                overflowActions: [
-                  { label: 'Play', onClick: () => onCategoryClick ? onCategoryClick(category.id) : null, icon: '▶️' },
-                  { label: 'Details', onClick: () => console.log('Category details', category.id), icon: 'ℹ️' },
-                  { label: 'Save', onClick: () => console.log('Save category', category.id), icon: '💾' }
-                ]
-              }).outerHTML : ''
-            }
+              ${
+                window.BasePosterCard
+                  ? window.BasePosterCard({
+                      id: category.id,
+                      posterUrl: category.posterUrl || getCategoryIcon(category.type),
+                      title: category.name || category.title,
+                      subline: formatCategorySubline(category),
+                      hideRating: true,
+                      onClick: onCategoryClick || (() => {}),
+                      overflowActions: [
+                        {
+                          label: 'Play',
+                          onClick: () => (onCategoryClick ? onCategoryClick(category.id) : null),
+                          icon: '▶️',
+                        },
+                        {
+                          label: 'Details',
+                          onClick: () => console.log('Category details', category.id),
+                          icon: 'ℹ️',
+                        },
+                        {
+                          label: 'Save',
+                          onClick: () => console.log('Save category', category.id),
+                          icon: '💾',
+                        },
+                      ],
+                    }).outerHTML
+                  : ''
+              }
             </div>
-          `).join('') : 
-          (window.createEmptyState ? window.createEmptyState('No trivia categories available').outerHTML : '')
+          `,
+                )
+                .join('')
+            : window.createEmptyState
+              ? window.createEmptyState('No trivia categories available').outerHTML
+              : ''
         }
       </div>
     `;
@@ -111,7 +129,7 @@
 
     // Add category card click handlers
     const categoryCards = tab.querySelectorAll('.trivia-category-card');
-    categoryCards.forEach(card => {
+    categoryCards.forEach((card) => {
       const categoryId = card.dataset.categoryId;
       card.addEventListener('click', () => {
         if (onCategoryClick) {
@@ -130,18 +148,18 @@
    */
   function getCategoryIcon(type) {
     const iconMap = {
-      'movies': '/icons/movie-reel.png',
-      'tv': '/icons/tv-screen.png',
-      'music': '/icons/music-note.png',
-      'sports': '/icons/sports-ball.png',
-      'history': '/icons/history-book.png',
-      'science': '/icons/science-lab.png',
-      'geography': '/icons/globe.png',
-      'literature': '/icons/book.png',
-      'art': '/icons/palette.png',
-      'general': '/icons/brain.png'
+      movies: '/icons/movie-reel.png',
+      tv: '/icons/tv-screen.png',
+      music: '/icons/music-note.png',
+      sports: '/icons/sports-ball.png',
+      history: '/icons/history-book.png',
+      science: '/icons/science-lab.png',
+      geography: '/icons/globe.png',
+      literature: '/icons/book.png',
+      art: '/icons/palette.png',
+      general: '/icons/brain.png',
     };
-    
+
     return iconMap[type] || '/icons/trivia-default.png';
   }
 
@@ -152,19 +170,19 @@
    */
   function formatCategorySubline(category) {
     const parts = [];
-    
+
     if (category.questionCount) {
       parts.push(`${category.questionCount} questions`);
     }
-    
+
     if (category.avgTime) {
       parts.push(`avg ${category.avgTime}`);
     }
-    
+
     if (category.lastScore !== undefined) {
       parts.push(`last score ${category.lastScore}`);
     }
-    
+
     return parts.join(' • ') || '10 questions • avg 6:30';
   }
 
@@ -183,7 +201,7 @@
       avgTime: category.avgTime || '6:30',
       lastScore: category.lastScore,
       difficulty: category.difficulty || 'medium',
-      description: category.description || ''
+      description: category.description || '',
     }));
   }
 
@@ -202,23 +220,41 @@
       const grid = tab.querySelector('.trivia-tab__grid');
       if (grid && window.BasePosterCard) {
         const formattedCategories = createTriviaCategories(categories);
-        grid.innerHTML = formattedCategories.map(category => `
+        grid.innerHTML = formattedCategories
+          .map(
+            (category) => `
           <div class="trivia-category-card" data-category-id="${category.id}">
-            ${window.BasePosterCard({
-              id: category.id,
-              posterUrl: category.posterUrl,
-              title: category.name,
-              subline: formatCategorySubline(category),
-              hideRating: true,
-              onClick: () => console.log('Category clicked', category.id),
-              overflowActions: [
-                { label: 'Play', onClick: () => console.log('Play category', category.id), icon: '▶️' },
-                { label: 'Details', onClick: () => console.log('Category details', category.id), icon: 'ℹ️' },
-                { label: 'Save', onClick: () => console.log('Save category', category.id), icon: '💾' }
-              ]
-            }).outerHTML}
+            ${
+              window.BasePosterCard({
+                id: category.id,
+                posterUrl: category.posterUrl,
+                title: category.name,
+                subline: formatCategorySubline(category),
+                hideRating: true,
+                onClick: () => console.log('Category clicked', category.id),
+                overflowActions: [
+                  {
+                    label: 'Play',
+                    onClick: () => console.log('Play category', category.id),
+                    icon: '▶️',
+                  },
+                  {
+                    label: 'Details',
+                    onClick: () => console.log('Category details', category.id),
+                    icon: 'ℹ️',
+                  },
+                  {
+                    label: 'Save',
+                    onClick: () => console.log('Save category', category.id),
+                    icon: '💾',
+                  },
+                ],
+              }).outerHTML
+            }
           </div>
-        `).join('');
+        `,
+          )
+          .join('');
       }
     }
   }
@@ -234,7 +270,7 @@
     if (grid && window.createSkeletonCards) {
       const skeletons = window.createSkeletonCards(8);
       grid.innerHTML = '';
-      skeletons.forEach(skeleton => grid.appendChild(skeleton));
+      skeletons.forEach((skeleton) => grid.appendChild(skeleton));
     }
   }
 
@@ -243,7 +279,7 @@
   window.createTriviaCategories = createTriviaCategories;
   window.updateTriviaTab = updateTriviaTab;
   window.showTriviaLoading = showTriviaLoading;
-  
+
   // Ensure global availability
   if (typeof window !== 'undefined') {
     window.TriviaTab = window.TriviaTab || TriviaTab;
@@ -253,5 +289,4 @@
   }
 
   console.log('✅ Trivia Tab component ready');
-
 })();

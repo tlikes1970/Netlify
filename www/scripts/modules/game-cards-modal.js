@@ -9,7 +9,7 @@
 export function initializeGameCardsModal() {
   console.log('🎮 Script starting...');
   console.log('🎮 Initializing Game Cards Modal System');
-  
+
   const qs = (s, r = document) => r.querySelector(s);
   const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
 
@@ -20,7 +20,7 @@ export function initializeGameCardsModal() {
       this.frame = qs('#gameCardsFrame');
       this.openBtn = qs('[data-action="open-game-cards"]');
       this.closeBtn = qs('[data-action="close-game-cards"]');
-      
+
       this.init();
     }
 
@@ -34,7 +34,7 @@ export function initializeGameCardsModal() {
       if (this.openBtn) {
         this.openBtn.addEventListener('click', () => this.open());
       }
-      
+
       if (this.closeBtn) {
         this.closeBtn.addEventListener('click', () => this.close());
       }
@@ -56,16 +56,18 @@ export function initializeGameCardsModal() {
 
     open() {
       console.log('🎮 Opening Game Cards modal');
-      
+
       // Set iframe source
       this.frame.src = 'features/trivia.html';
-      
+
       // Show modal
       this.modal.style.display = 'block';
       this.modal.classList.add('show');
-      
+
       // Focus management
-      const firstFocusable = this.modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      const firstFocusable = this.modal.querySelector(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
       if (firstFocusable) {
         firstFocusable.focus();
       }
@@ -73,10 +75,10 @@ export function initializeGameCardsModal() {
 
     close() {
       console.log('🎮 Closing Game Cards modal');
-      
+
       this.modal.style.display = 'none';
       this.modal.classList.remove('show');
-      
+
       // Clear iframe source
       this.frame.src = 'about:blank';
     }

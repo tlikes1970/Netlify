@@ -7,12 +7,18 @@
 if (typeof bind !== 'function' && typeof window.bind !== 'function') {
   var bind = function (idOrEl, fn) {
     try {
-      var el = (typeof idOrEl === 'string') ? document.getElementById(idOrEl) : idOrEl;
-      if (!el) { console.warn('[bind] element not found:', idOrEl); return false; }
+      var el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+      if (!el) {
+        console.warn('[bind] element not found:', idOrEl);
+        return false;
+      }
       if (el.addEventListener) el.addEventListener('click', fn, false);
       else el.onclick = fn;
       return true;
-    } catch (e) { console.error('[bind] failed:', e); return false; }
+    } catch (e) {
+      console.error('[bind] failed:', e);
+      return false;
+    }
   };
   window.bind = bind;
 } else if (typeof bind !== 'function' && typeof window.bind === 'function') {
@@ -24,7 +30,14 @@ if (typeof bind !== 'function' && typeof window.bind !== 'function') {
 /* --- debounce --- */
 if (typeof debounce !== 'function' && typeof window.debounce !== 'function') {
   var debounce = function (fn, wait) {
-    var t; return function () { clearTimeout(t); var a = arguments; t = setTimeout(function(){ fn.apply(null, a); }, wait); };
+    var t;
+    return function () {
+      clearTimeout(t);
+      var a = arguments;
+      t = setTimeout(function () {
+        fn.apply(null, a);
+      }, wait);
+    };
   };
   window.debounce = debounce;
 } else if (typeof debounce !== 'function' && typeof window.debounce === 'function') {
@@ -40,8 +53,12 @@ if (typeof throttle !== 'function' && typeof window.throttle !== 'function') {
     return function () {
       if (inFlight) return;
       inFlight = true;
-      try { fn.apply(null, arguments); } finally {
-        setTimeout(function(){ inFlight = false; }, limit);
+      try {
+        fn.apply(null, arguments);
+      } finally {
+        setTimeout(function () {
+          inFlight = false;
+        }, limit);
       }
     };
   };

@@ -7,7 +7,7 @@
  * Dependencies: flags-init.js, container-alignment.css
  */
 
-(function() {
+(function () {
   'use strict';
 
   // Wait for flags to be initialized
@@ -48,15 +48,15 @@
     if (header) {
       const container = document.createElement('div');
       container.className = 'container';
-      
+
       // Move header content into container
       const headerContent = Array.from(header.children);
-      headerContent.forEach(child => {
+      headerContent.forEach((child) => {
         if (!child.classList.contains('container')) {
           container.appendChild(child);
         }
       });
-      
+
       header.appendChild(container);
     }
 
@@ -65,13 +65,13 @@
     if (tabContainer && !tabContainer.querySelector('.container')) {
       const container = document.createElement('div');
       container.className = 'container';
-      
+
       // Move tab buttons into container
       const tabButtons = Array.from(tabContainer.children);
-      tabButtons.forEach(button => {
+      tabButtons.forEach((button) => {
         container.appendChild(button);
       });
-      
+
       tabContainer.appendChild(container);
     }
 
@@ -82,13 +82,13 @@
       if (searchHelp) {
         const container = document.createElement('div');
         container.className = 'container';
-        
+
         // Move search help content into container
         const searchContent = Array.from(searchHelp.children);
-        searchContent.forEach(child => {
+        searchContent.forEach((child) => {
           container.appendChild(child);
         });
-        
+
         searchHelp.appendChild(container);
       }
 
@@ -96,30 +96,30 @@
       if (tagFilters) {
         const container = document.createElement('div');
         container.className = 'container';
-        
+
         // Move tag filters content into container
         const filterContent = Array.from(tagFilters.children);
-        filterContent.forEach(child => {
+        filterContent.forEach((child) => {
           container.appendChild(child);
         });
-        
+
         tagFilters.appendChild(container);
       }
     }
 
     // Apply container to all sections
     const sections = document.querySelectorAll('.tab-section, .home-section, #spotlight-row');
-    sections.forEach(section => {
+    sections.forEach((section) => {
       if (!section.querySelector('.container')) {
         const container = document.createElement('div');
         container.className = 'container';
-        
+
         // Move section content into container
         const sectionContent = Array.from(section.children);
-        sectionContent.forEach(child => {
+        sectionContent.forEach((child) => {
           container.appendChild(child);
         });
-        
+
         section.appendChild(container);
       }
     });
@@ -129,17 +129,19 @@
     // Look for spacer elements between tab rail and first section
     const tabContainer = document.querySelector('.tab-container');
     const firstSection = document.querySelector('.tab-section, .home-section');
-    
+
     if (tabContainer && firstSection) {
       // Check for elements between tab container and first section
       let element = tabContainer.nextElementSibling;
       while (element && element !== firstSection) {
         // Check if this looks like a spacer (empty div, specific classes, etc.)
-        if (element.tagName === 'DIV' && 
-            (element.children.length === 0 || 
-             element.classList.contains('spacer') ||
-             element.style.height ||
-             element.style.margin)) {
+        if (
+          element.tagName === 'DIV' &&
+          (element.children.length === 0 ||
+            element.classList.contains('spacer') ||
+            element.style.height ||
+            element.style.margin)
+        ) {
           console.log('📐 Container Alignment: Removing spacer element:', element);
           element.remove();
         }
@@ -149,8 +151,9 @@
 
     // Remove any empty sections or divs that might be spacers
     const emptySections = document.querySelectorAll('div:empty, section:empty');
-    emptySections.forEach(section => {
-      if (section.offsetHeight > 0) { // Only remove if it has height (spacer)
+    emptySections.forEach((section) => {
+      if (section.offsetHeight > 0) {
+        // Only remove if it has height (spacer)
         console.log('📐 Container Alignment: Removing empty spacer:', section);
         section.remove();
       }
@@ -158,15 +161,16 @@
   }
 
   function setupMutationObserver() {
-    const observer = new MutationObserver(mutations => {
-      mutations.forEach(mutation => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
         if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
           // Check if any new sections were added
-          const hasNewSections = Array.from(mutation.addedNodes).some(node => {
-            return node.nodeType === 1 && (
-              node.classList.contains('tab-section') || 
-              node.classList.contains('home-section') ||
-              node.id === 'spotlight-row'
+          const hasNewSections = Array.from(mutation.addedNodes).some((node) => {
+            return (
+              node.nodeType === 1 &&
+              (node.classList.contains('tab-section') ||
+                node.classList.contains('home-section') ||
+                node.id === 'spotlight-row')
             );
           });
 
@@ -182,7 +186,7 @@
 
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
     });
   }
 
@@ -192,8 +196,4 @@
   } else {
     initContainerAlignment();
   }
-
 })();
-
-
-

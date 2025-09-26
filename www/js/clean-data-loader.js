@@ -1,6 +1,6 @@
 /**
  * Clean Data Loader - Simple Data Loading and Card Replacement
- * 
+ *
  * Process: Clean Data Loader
  * Purpose: Load user data and replace all cards with clean unified cards
  * Data Source: Firebase Firestore, appData
@@ -8,7 +8,7 @@
  * Dependencies: clean-poster-card.js, Firebase Firestore
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🔄 Clean Data Loader starting...');
@@ -19,111 +19,120 @@
   async function loadUserDataAndReplaceCards() {
     try {
       console.log('🔄 Loading user data and replacing cards...');
-      
+
       // Check if user is signed in
       const auth = window.firebase?.auth();
       const currentUser = auth?.currentUser;
-      
+
       if (!currentUser) {
         console.log('❌ No user signed in - cannot load data');
         return;
       }
-      
+
       console.log('✅ User signed in:', currentUser.email);
-      
+
       // Check if Firebase Firestore is available
       const db = window.firebase?.firestore();
       if (!db) {
         console.log('❌ Firebase Firestore not available');
         return;
       }
-      
+
       // Load data directly from Firebase
       console.log('🔄 Loading data from Firebase...');
       const userDoc = await db.collection('users').doc(currentUser.uid).get();
-      
+
       if (!userDoc.exists) {
         console.log('❌ No Firebase document found for user');
         return;
       }
-      
+
       const userData = userDoc.data();
       console.log('✅ Firebase document found');
-      
+
       // Check if watchlists exist
       if (!userData.watchlists) {
         console.log('❌ No watchlists data in Firebase document');
         return;
       }
-      
+
       // Load TV data
       if (userData.watchlists.tv) {
         console.log('🔄 Loading TV data...');
         console.log('🔍 TV watching count:', userData.watchlists.tv.watching?.length || 0);
         console.log('🔍 TV wishlist count:', userData.watchlists.tv.wishlist?.length || 0);
         console.log('🔍 TV watched count:', userData.watchlists.tv.watched?.length || 0);
-        
+
         // Update appData
         if (window.appData) {
           window.appData.tv = userData.watchlists.tv;
           console.log('✅ TV data loaded into appData');
         }
       }
-      
+
       // Load Movie data
       if (userData.watchlists.movies) {
         console.log('🔄 Loading movie data...');
         console.log('🔍 Movie watching count:', userData.watchlists.movies.watching?.length || 0);
         console.log('🔍 Movie wishlist count:', userData.watchlists.movies.wishlist?.length || 0);
         console.log('🔍 Movie watched count:', userData.watchlists.movies.watched?.length || 0);
-        
+
         // Update appData
         if (window.appData) {
           window.appData.movies = userData.watchlists.movies;
           console.log('✅ Movie data loaded into appData');
         }
       }
-      
+
       // Save to localStorage
       if (window.appData) {
         localStorage.setItem('flicklet-data', JSON.stringify(window.appData));
         console.log('✅ Data saved to localStorage');
       }
-      
+
       // Replace all cards with clean unified cards
       replaceAllCardsWithCleanCards();
-      
+
       // Update UI
       console.log('🔄 Updating UI...');
       if (typeof window.updateUI === 'function') {
         window.updateUI();
         console.log('✅ UI updated');
       }
-      
+
       // Emit cards:changed event for centralized count updates
-      document.dispatchEvent(new CustomEvent('cards:changed', {
-        detail: { source: 'clean-data-loader' }
-      }));
+      document.dispatchEvent(
+        new CustomEvent('cards:changed', {
+          detail: { source: 'clean-data-loader' },
+        }),
+      );
       console.log('✅ Emitted cards:changed event');
-      
+
       // Update tab content
       if (window.FlickletApp && typeof window.FlickletApp.updateTabContent === 'function') {
         const currentTab = window.FlickletApp.currentTab || 'home';
         window.FlickletApp.updateTabContent(currentTab);
         console.log('✅ Tab content updated:', currentTab);
       }
-      
+
       console.log('✅ Data loading and card replacement completed successfully!');
-      
+
       // Show success message
       if (window.showToast) {
-        window.showToast('success', 'Data Loaded', 'Your shows and movies have been loaded with the new design!');
+        window.showToast(
+          'success',
+          'Data Loaded',
+          'Your shows and movies have been loaded with the new design!',
+        );
       }
-      
     } catch (error) {
       console.error('❌ Error loading user data:', error);
       if (window.showToast) {
-        window.showToast('error', 'Data Load Failed', 'Failed to load your data. Please try again.');
+        window.showToast(
+          'error',
+          'Data Load Failed',
+          'Failed to load your data. Please try again.',
+        );
       }
     }
   }
@@ -133,20 +142,20 @@
    */
   function replaceAllCardsWithCleanCards() {
     console.log('🔄 Replacing all cards with clean unified cards...');
-    
+
     try {
       // Find all card containers
       const cardContainers = [
         'watchingList',
-        'wishlistList', 
+        'wishlistList',
         'watchedList',
         'discoverList',
-        'searchList'
+        'searchList',
       ];
 
       let replacedCount = 0;
 
-      cardContainers.forEach(containerId => {
+      cardContainers.forEach((containerId) => {
         const container = document.getElementById(containerId);
         if (!container) {
           console.log(`⚠️ Container ${containerId} not found`);
@@ -155,32 +164,37 @@
 
         // Clear existing cards
         container.innerHTML = '';
-        
+
         // Get section name
         const section = containerId.replace('List', '');
-        
+
         // Get data for this section
         const sectionData = getSectionData(section);
-        
+
         if (sectionData && sectionData.length > 0) {
           console.log(`🔄 Creating ${sectionData.length} clean cards for ${section} section`);
-          
+
           // Create clean cards
-          sectionData.forEach(item => {
+          sectionData.forEach((item) => {
             const cleanCard = window.Card({
               variant: 'poster',
               id: item.id || item.tmdb_id || item.tmdbId,
               title: item.title || item.name,
-              subtitle: item.year ? `${item.year} • ${item.mediaType === 'tv' ? 'TV Series' : 'Movie'}` : 
-                       (item.mediaType === 'tv' ? 'TV Series' : 'Movie'),
+              subtitle: item.year
+                ? `${item.year} • ${item.mediaType === 'tv' ? 'TV Series' : 'Movie'}`
+                : item.mediaType === 'tv'
+                  ? 'TV Series'
+                  : 'Movie',
               posterUrl: item.posterUrl || item.poster_src,
               rating: item.vote_average || item.rating || 0,
-              badges: [{ label: section.charAt(0).toUpperCase() + section.slice(1), kind: 'status' }],
+              badges: [
+                { label: section.charAt(0).toUpperCase() + section.slice(1), kind: 'status' },
+              ],
               onOpenDetails: () => {
                 if (window.openTMDBLink) {
                   window.openTMDBLink(item.id || item.tmdb_id, item.mediaType || 'movie');
                 }
-              }
+              },
             });
             if (cleanCard) {
               container.appendChild(cleanCard);
@@ -195,7 +209,6 @@
       });
 
       console.log(`✅ Card replacement complete: ${replacedCount} cards replaced`);
-
     } catch (error) {
       console.error('❌ Card replacement failed:', error);
     }
@@ -208,16 +221,16 @@
    */
   function getSectionData(section) {
     if (!window.appData) return [];
-    
+
     const mediaTypes = ['tv', 'movies'];
     let sectionData = [];
-    
-    mediaTypes.forEach(mediaType => {
+
+    mediaTypes.forEach((mediaType) => {
       if (window.appData[mediaType] && window.appData[mediaType][section]) {
         sectionData = sectionData.concat(window.appData[mediaType][section]);
       }
     });
-    
+
     return sectionData;
   }
 
@@ -229,23 +242,23 @@
   function createEmptyState(section) {
     const emptyState = document.createElement('div');
     emptyState.className = 'clean-poster-cards-empty';
-    
+
     const sectionNames = {
       watching: 'Watching',
       wishlist: 'Wishlist',
       watched: 'Watched',
       discover: 'Discover',
-      search: 'Search'
+      search: 'Search',
     };
-    
+
     const sectionName = sectionNames[section] || section;
-    
+
     emptyState.innerHTML = `
       <div class="clean-poster-cards-empty__icon">🎬</div>
       <div class="clean-poster-cards-empty__title">Nothing here yet</div>
       <div class="clean-poster-cards-empty__description">Your ${sectionName.toLowerCase()} list is empty</div>
     `;
-    
+
     return emptyState;
   }
 
@@ -281,9 +294,9 @@
   async function init() {
     await waitForFirebase();
     await waitForCard();
-    
+
     // Auth state changes now handled by centralized AuthManager
-    
+
     // Also check if user is already signed in
     const currentUser = auth.currentUser;
     if (currentUser) {
@@ -300,7 +313,7 @@
   // Expose globally for manual use
   window.loadUserDataAndReplaceCards = loadUserDataAndReplaceCards;
 
-  console.log('✅ Clean Data Loader ready. Use window.loadUserDataAndReplaceCards() to manually load data.');
-
+  console.log(
+    '✅ Clean Data Loader ready. Use window.loadUserDataAndReplaceCards() to manually load data.',
+  );
 })();
-

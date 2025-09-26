@@ -3,38 +3,38 @@
    while preserving all functionality and maintaining error handling
 */
 
-(function() {
+(function () {
   'use strict';
-  
+
   // Files to process (in order of importance)
   const filesToProcess = [
     'www/js/app.js',
-    'www/js/functions.js', 
+    'www/js/functions.js',
     'www/scripts/inline-script-02.js',
     'www/scripts/inline-script-03.js',
     'www/scripts/curated-rows.js',
-    'www/scripts/community-spotlight.js'
+    'www/scripts/community-spotlight.js',
   ];
-  
+
   // Replacement patterns - these are safe and maintain functionality
   const replacements = [
     // Keep error logs as errors (critical)
     {
       pattern: /console\.error\(/g,
-      replacement: 'FlickletDebug.error('
+      replacement: 'FlickletDebug.error(',
     },
     // Keep warn logs as warnings (important)
     {
       pattern: /console\.warn\(/g,
-      replacement: 'FlickletDebug.warn('
+      replacement: 'FlickletDebug.warn(',
     },
     // Convert info logs (most common)
     {
       pattern: /console\.log\(/g,
-      replacement: 'FlickletDebug.info('
-    }
+      replacement: 'FlickletDebug.info(',
+    },
   ];
-  
+
   // Function to safely replace console logs in a file
   function processFile(filePath) {
     try {
@@ -47,13 +47,13 @@
       return false;
     }
   }
-  
+
   // Export for manual use
   window.SafeConsoleReplacement = {
     processFile,
     replacements,
-    filesToProcess
+    filesToProcess,
   };
-  
+
   console.log('🔧 Safe Console Replacement utility loaded');
 })();

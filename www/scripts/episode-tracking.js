@@ -5,30 +5,30 @@
    2) localStorage["flicklet:episodeTracking:series"] -> { [seriesId]: { trackEpisodes: boolean, watched: { [season]: { [episode]: boolean }}} }
    3) TMDB API for season/episode metadata
 */
-(function(){
+(function () {
   'use strict';
 
   // Configuration
   const TMDB_API_BASE = 'https://api.themoviedb.org/3';
   const TMDB_IMG_BASE = 'https://image.tmdb.org/t/p/w500';
   const DEBOUNCE_DELAY = 250;
-  
+
   // State
   let debounceTimer = null;
   let currentSeries = null;
   let seasonCache = new Map();
-  
+
   // Initialize
   init();
-  
+
   function init() {
     console.log('📺 Episode tracking system initialized');
-    
+
     // Expose global functions
     window.openEpisodeModal = openEpisodeModal;
     window.setEpisodeWatched = setEpisodeWatched;
     window.getEpisodeProgress = getEpisodeProgress;
-    
+
     // Update UI when settings change
     if (window.updateEpisodeTrackingUI) {
       window.updateEpisodeTrackingUI(isEpisodeTrackingEnabled());
@@ -46,22 +46,25 @@
     console.log('📺 openEpisodeModal called with:', seriesId, seriesTitle);
     console.log('📺 Episode tracking enabled:', isEpisodeTrackingEnabled());
     console.log('📺 window.openModal available:', typeof window.openModal);
-    
+
     if (!isEpisodeTrackingEnabled()) {
       console.warn('📺 Episode tracking is disabled');
       return;
     }
-    
+
     if (typeof window.openModal !== 'function') {
       console.warn('📺 No modal handler available for episode tracking');
-      console.log('📺 Available window functions:', Object.keys(window).filter(k => k.includes('modal') || k.includes('Modal')));
+      console.log(
+        '📺 Available window functions:',
+        Object.keys(window).filter((k) => k.includes('modal') || k.includes('Modal')),
+      );
       return;
     }
-    
+
     console.log('📺 Opening episode modal for:', seriesId, seriesTitle);
-    
+
     currentSeries = { id: seriesId, title: seriesTitle };
-    
+
     // Create modal HTML
     const modalHtml = `
       <div class="episode-modal-content" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
@@ -89,14 +92,14 @@
         </div>
       </div>
     `;
-    
+
     const modal = window.openModal(`${seriesTitle} — Episodes`, modalHtml, 'episode-modal');
-    
+
     if (!modal) {
       console.error('📺 Failed to create episode modal');
       return;
     }
-    
+
     // Add close functionality
     const closeBtn = modal.querySelector('#episode-modal-close');
     if (closeBtn) {
@@ -105,7 +108,7 @@
         currentSeries = null;
       });
     }
-    
+
     // Load series data
     await loadSeriesData(seriesId, seriesTitle);
   }
@@ -120,32 +123,31 @@
   async function loadSeriesData(seriesId, seriesTitle) {
     try {
       console.log('📺 Loading series data for:', seriesId);
-      
+
       // Load series basic info
       const seriesData = await fetchTMDBData(`/tv/${seriesId}`);
       if (!seriesData) {
         throw new Error('Failed to load series data');
       }
-      
+
       // Load seasons data
       const seasons = seriesData.seasons || [];
       const seasonsData = [];
-      
+
       for (const season of seasons) {
         if (season.season_number === 0) continue; // Skip specials for now
-        
+
         const seasonData = await loadSeasonData(seriesId, season.season_number);
         if (seasonData) {
           seasonsData.push(seasonData);
         }
       }
-      
+
       // Render the seasons
       renderSeasons(seasonsData, seriesId);
-      
+
       // Update progress
       updateProgress(seriesId);
-      
     } catch (error) {
       console.error('📺 Error loading series data:', error);
       const container = document.querySelector('#episode-seasons');
@@ -169,12 +171,12 @@
    */
   async function loadSeasonData(seriesId, seasonNumber) {
     const cacheKey = `${seriesId}-${seasonNumber}`;
-    
+
     // Check cache first
     if (seasonCache.has(cacheKey)) {
       return seasonCache.get(cacheKey);
     }
-    
+
     try {
       const seasonData = await fetchTMDBData(`/tv/${seriesId}/season/${seasonNumber}`);
       if (seasonData) {
@@ -184,7 +186,7 @@
     } catch (error) {
       console.warn(`📺 Failed to load season ${seasonNumber}:`, error);
     }
-    
+
     return null;
   }
 
@@ -198,20 +200,24 @@
   async function fetchTMDBData(endpoint) {
     try {
       // Use existing TMDB config if available
-      const apiKey = window.TMDB_CONFIG?.apiKey || window.__TMDB_API_KEY__ || window.TMDB_API_KEY || 'your-api-key-here';
+      const apiKey =
+        window.TMDB_CONFIG?.apiKey ||
+        window.__TMDB_API_KEY__ ||
+        window.TMDB_API_KEY ||
+        'your-api-key-here';
       console.log('📺 Episode tracking API key check:', {
         TMDB_CONFIG: !!window.TMDB_CONFIG?.apiKey,
         __TMDB_API_KEY__: !!window.__TMDB_API_KEY__,
         TMDB_API_KEY: !!window.TMDB_API_KEY,
-        finalKey: apiKey ? `${apiKey.slice(0,4)}...` : 'none'
+        finalKey: apiKey ? `${apiKey.slice(0, 4)}...` : 'none',
       });
       const url = `${TMDB_API_BASE}${endpoint}?api_key=${apiKey}`;
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`TMDB API error: ${response.status}`);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('📺 TMDB API error:', error);
@@ -229,18 +235,18 @@
   function renderSeasons(seasonsData, seriesId) {
     const container = document.querySelector('#episode-seasons');
     if (!container) return;
-    
+
     let html = '';
-    
+
     for (let i = 0; i < seasonsData.length; i++) {
       const season = seasonsData[i];
       const isFirstSeason = i === 0;
-      
+
       html += renderSeason(season, seriesId, isFirstSeason);
     }
-    
+
     container.innerHTML = html;
-    
+
     // Add event listeners
     addSeasonEventListeners(seriesId);
   }
@@ -257,12 +263,12 @@
     const episodes = season.episodes || [];
     const watchedCount = getWatchedCountForSeason(seriesId, seasonNumber);
     const totalEpisodes = episodes.length;
-    
+
     let episodesHtml = '';
     for (const episode of episodes) {
       episodesHtml += renderEpisode(episode, seriesId, seasonNumber);
     }
-    
+
     return `
       <div class="season-container" data-season="${seasonNumber}" style="margin-bottom: 20px; border: 1px solid var(--border, #ddd); border-radius: 8px; overflow: hidden;">
         <button class="season-header" data-season="${seasonNumber}" style="width: 100%; padding: 16px; background: var(--card, #f8f9fa); border: none; text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
@@ -300,7 +306,7 @@
     const airDate = episode.air_date ? formatDate(episode.air_date) : 'TBA';
     const runtime = episode.runtime ? `${episode.runtime}min` : '';
     const isWatched = isEpisodeWatched(seriesId, seasonNumber, episodeNumber);
-    
+
     return `
       <div class="episode-row" data-series="${seriesId}" data-season="${seasonNumber}" data-episode="${episodeNumber}" 
            style="padding: 12px 16px; border-bottom: 1px solid var(--border, #eee); display: flex; align-items: center; gap: 12px; cursor: pointer;"
@@ -340,9 +346,11 @@
       const seasonHeader = e.target.closest('.season-header');
       if (seasonHeader) {
         const seasonNumber = seasonHeader.dataset.season;
-        const episodesContainer = document.querySelector(`.season-episodes[data-season="${seasonNumber}"]`);
+        const episodesContainer = document.querySelector(
+          `.season-episodes[data-season="${seasonNumber}"]`,
+        );
         const chevron = seasonHeader.querySelector('.season-chevron');
-        
+
         if (episodesContainer && chevron) {
           const isExpanded = episodesContainer.style.display !== 'none';
           episodesContainer.style.display = isExpanded ? 'none' : 'block';
@@ -350,7 +358,7 @@
         }
       }
     });
-    
+
     // Episode toggle clicks
     document.addEventListener('change', (e) => {
       if (e.target.matches('.episode-toggle input[type="checkbox"]')) {
@@ -358,12 +366,12 @@
         const seasonNumber = e.target.dataset.season;
         const episodeNumber = e.target.dataset.episode;
         const watched = e.target.checked;
-        
+
         setEpisodeWatched(seriesId, seasonNumber, episodeNumber, watched);
         updateProgress(seriesId);
       }
     });
-    
+
     // Episode row clicks (for keyboard accessibility)
     document.addEventListener('click', (e) => {
       const episodeRow = e.target.closest('.episode-row');
@@ -375,7 +383,7 @@
         }
       }
     });
-    
+
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
       const episodeRow = e.target.closest('.episode-row');
@@ -401,12 +409,12 @@
    */
   function setEpisodeWatched(seriesId, seasonNumber, episodeNumber, watched) {
     console.log(`📺 Setting S${seasonNumber}E${episodeNumber} watched:`, watched);
-    
+
     // Clear existing debounce timer
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
-    
+
     // Set the data immediately for UI responsiveness
     const seriesData = getSeriesData(seriesId);
     if (!seriesData.watched[seasonNumber]) {
@@ -414,12 +422,12 @@
     }
     seriesData.watched[seasonNumber][episodeNumber] = watched;
     saveSeriesData(seriesId, seriesData);
-    
+
     // Debounce the sync operation
     debounceTimer = setTimeout(() => {
       syncEpisodeData(seriesId);
     }, DEBOUNCE_DELAY);
-    
+
     // Show personality feedback
     showEpisodeFeedback(watched);
   }
@@ -434,7 +442,7 @@
   function getSeriesData(seriesId) {
     const key = `flicklet:episodeTracking:series:${seriesId}`;
     const stored = localStorage.getItem(key);
-    
+
     if (stored) {
       try {
         return JSON.parse(stored);
@@ -442,11 +450,11 @@
         console.warn('📺 Error parsing series data:', e);
       }
     }
-    
+
     // Return default structure
     return {
       trackEpisodes: false,
-      watched: {}
+      watched: {},
     };
   }
 
@@ -489,18 +497,18 @@
     const progress = getEpisodeProgress(seriesId);
     const progressText = document.querySelector('#episode-progress');
     const progressBar = document.querySelector('.progress-fill');
-    
+
     if (progressText) {
       progressText.textContent = `${progress.watched}/${progress.total} watched`;
     }
-    
+
     if (progressBar) {
       const percentage = progress.total > 0 ? (progress.watched / progress.total) * 100 : 0;
       progressBar.style.width = `${percentage}%`;
     }
-    
+
     // Update season progress bars
-    document.querySelectorAll('.season-progress-fill').forEach(fill => {
+    document.querySelectorAll('.season-progress-fill').forEach((fill) => {
       const seasonContainer = fill.closest('.season-container');
       const seasonNumber = seasonContainer.dataset.season;
       const seasonProgress = getWatchedCountForSeason(seriesId, seasonNumber);
@@ -521,11 +529,11 @@
     const seriesData = getSeriesData(seriesId);
     let watched = 0;
     let total = 0;
-    
+
     // Count episodes from the modal
     const episodeRows = document.querySelectorAll('.episode-row[data-series="' + seriesId + '"]');
     total = episodeRows.length;
-    
+
     for (const row of episodeRows) {
       const seasonNumber = row.dataset.season;
       const episodeNumber = row.dataset.episode;
@@ -533,7 +541,7 @@
         watched++;
       }
     }
-    
+
     return { watched, total };
   }
 
@@ -547,7 +555,7 @@
   function getWatchedCountForSeason(seriesId, seasonNumber) {
     const seriesData = getSeriesData(seriesId);
     const seasonData = seriesData.watched[seasonNumber] || {};
-    return Object.values(seasonData).filter(watched => watched).length;
+    return Object.values(seasonData).filter((watched) => watched).length;
   }
 
   /**
@@ -570,18 +578,12 @@
    * Dependencies: Notification system
    */
   function showEpisodeFeedback(watched) {
-    const messages = watched ? [
-      "Marked as watched.",
-      "Episode down.",
-      "Nice. One more brain worm defeated."
-    ] : [
-      "Marked as unwatched.",
-      "Episode restored.",
-      "Back on the watchlist."
-    ];
-    
+    const messages = watched
+      ? ['Marked as watched.', 'Episode down.', 'Nice. One more brain worm defeated.']
+      : ['Marked as unwatched.', 'Episode restored.', 'Back on the watchlist.'];
+
     const message = messages[Math.floor(Math.random() * messages.length)];
-    
+
     if (window.Notify?.success) {
       window.Notify.success(message);
     } else {
@@ -610,10 +612,10 @@
   function formatDate(dateString) {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString(undefined, { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
+      return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
       });
     } catch (e) {
       return 'TBA';
@@ -628,13 +630,16 @@
    * Dependencies: None
    */
   function escapeHtml(s) {
-    return String(s ?? '').replace(/[&<>"']/g, m => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
-    }[m]));
+    return String(s ?? '').replace(
+      /[&<>"']/g,
+      (m) =>
+        ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;',
+        })[m],
+    );
   }
-
 })();

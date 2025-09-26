@@ -49,17 +49,23 @@ test.describe('Language Switching Validation', () => {
     const englishTexts = await page.evaluate(() => {
       const getTexts = (selector: string) => {
         return Array.from(document.querySelectorAll(selector))
-          .map(el => el.textContent?.trim())
+          .map((el) => el.textContent?.trim())
           .filter(Boolean);
       };
-      
+
       return {
         appTitle: getTexts('.title, [data-i18n="app_title"]'),
         subtitle: getTexts('.subtitle, [data-i18n="subtitle"]'),
         navTabs: getTexts('#homeTab, #watchingTab, #wishlistTab, #watchedTab, #discoverTab'),
-        settingsTabs: getTexts('[data-i18n*="general"], [data-i18n*="notifications"], [data-i18n*="layout"]'),
-        searchPlaceholder: getTexts('input[placeholder*="Search"], [data-i18n-placeholder="search_placeholder"]'),
-        buttons: getTexts('button, [data-i18n*="button"], [data-i18n*="add"], [data-i18n*="remove"]')
+        settingsTabs: getTexts(
+          '[data-i18n*="general"], [data-i18n*="notifications"], [data-i18n*="layout"]',
+        ),
+        searchPlaceholder: getTexts(
+          'input[placeholder*="Search"], [data-i18n-placeholder="search_placeholder"]',
+        ),
+        buttons: getTexts(
+          'button, [data-i18n*="button"], [data-i18n*="add"], [data-i18n*="remove"]',
+        ),
       };
     });
 
@@ -71,31 +77,37 @@ test.describe('Language Switching Validation', () => {
     const spanishTexts = await page.evaluate(() => {
       const getTexts = (selector: string) => {
         return Array.from(document.querySelectorAll(selector))
-          .map(el => el.textContent?.trim())
+          .map((el) => el.textContent?.trim())
           .filter(Boolean);
       };
-      
+
       return {
         appTitle: getTexts('.title, [data-i18n="app_title"]'),
         subtitle: getTexts('.subtitle, [data-i18n="subtitle"]'),
         navTabs: getTexts('#homeTab, #watchingTab, #wishlistTab, #watchedTab, #discoverTab'),
-        settingsTabs: getTexts('[data-i18n*="general"], [data-i18n*="notifications"], [data-i18n*="layout"]'),
-        searchPlaceholder: getTexts('input[placeholder*="Search"], [data-i18n-placeholder="search_placeholder"]'),
-        buttons: getTexts('button, [data-i18n*="button"], [data-i18n*="add"], [data-i18n*="remove"]')
+        settingsTabs: getTexts(
+          '[data-i18n*="general"], [data-i18n*="notifications"], [data-i18n*="layout"]',
+        ),
+        searchPlaceholder: getTexts(
+          'input[placeholder*="Search"], [data-i18n-placeholder="search_placeholder"]',
+        ),
+        buttons: getTexts(
+          'button, [data-i18n*="button"], [data-i18n*="add"], [data-i18n*="remove"]',
+        ),
       };
     });
 
     // Verify texts changed (not identical to English)
     expect(spanishTexts.appTitle).not.toEqual(englishTexts.appTitle);
     expect(spanishTexts.navTabs).not.toEqual(englishTexts.navTabs);
-    
+
     // Verify specific Spanish translations (handle emoji prefixes)
-    const hasInicio = spanishTexts.navTabs.some(text => text.includes('Inicio'));
-    const hasDescubrir = spanishTexts.navTabs.some(text => text.includes('Descubrir'));
-    const hasConfiguracion = spanishTexts.navTabs.some(text => text.includes('Configuración'));
-    
+    const hasInicio = spanishTexts.navTabs.some((text) => text.includes('Inicio'));
+    const hasDescubrir = spanishTexts.navTabs.some((text) => text.includes('Descubrir'));
+    const hasConfiguracion = spanishTexts.navTabs.some((text) => text.includes('Configuración'));
+
     expect(hasInicio).toBe(true); // Home in Spanish
-    expect(hasDescubrir).toBe(true); // Discover in Spanish  
+    expect(hasDescubrir).toBe(true); // Discover in Spanish
     expect(hasConfiguracion).toBe(true); // Settings in Spanish
   });
 
@@ -111,14 +123,17 @@ test.describe('Language Switching Validation', () => {
     const englishModalTexts = await page.evaluate(() => {
       const modal = document.querySelector('#settingsModal, .modal, [role="dialog"]');
       if (!modal) return { titles: [], descriptions: [], buttons: [] };
-      
+
       return {
         titles: Array.from(modal.querySelectorAll('h1, h2, h3, [data-i18n*="title"]'))
-          .map(el => el.textContent?.trim()).filter(Boolean),
+          .map((el) => el.textContent?.trim())
+          .filter(Boolean),
         descriptions: Array.from(modal.querySelectorAll('p, [data-i18n*="description"]'))
-          .map(el => el.textContent?.trim()).filter(Boolean),
+          .map((el) => el.textContent?.trim())
+          .filter(Boolean),
         buttons: Array.from(modal.querySelectorAll('button, [data-i18n*="button"]'))
-          .map(el => el.textContent?.trim()).filter(Boolean)
+          .map((el) => el.textContent?.trim())
+          .filter(Boolean),
       };
     });
 
@@ -130,14 +145,17 @@ test.describe('Language Switching Validation', () => {
     const spanishModalTexts = await page.evaluate(() => {
       const modal = document.querySelector('#settingsModal, .modal, [role="dialog"]');
       if (!modal) return { titles: [], descriptions: [], buttons: [] };
-      
+
       return {
         titles: Array.from(modal.querySelectorAll('h1, h2, h3, [data-i18n*="title"]'))
-          .map(el => el.textContent?.trim()).filter(Boolean),
+          .map((el) => el.textContent?.trim())
+          .filter(Boolean),
         descriptions: Array.from(modal.querySelectorAll('p, [data-i18n*="description"]'))
-          .map(el => el.textContent?.trim()).filter(Boolean),
+          .map((el) => el.textContent?.trim())
+          .filter(Boolean),
         buttons: Array.from(modal.querySelectorAll('button, [data-i18n*="button"]'))
-          .map(el => el.textContent?.trim()).filter(Boolean)
+          .map((el) => el.textContent?.trim())
+          .filter(Boolean),
       };
     });
 
@@ -152,14 +170,16 @@ test.describe('Language Switching Validation', () => {
 
     // Get English search text
     const englishSearchTexts = await page.evaluate(() => {
-      const searchInput = document.querySelector('#searchInput, input[type="search"]') as HTMLInputElement;
+      const searchInput = document.querySelector(
+        '#searchInput, input[type="search"]',
+      ) as HTMLInputElement;
       const searchButton = document.querySelector('#searchBtn, button[type="submit"]');
       const searchResults = document.querySelector('#searchResults');
-      
+
       return {
         placeholder: searchInput?.placeholder || '',
         buttonText: searchButton?.textContent?.trim() || '',
-        resultsText: searchResults?.textContent?.trim() || ''
+        resultsText: searchResults?.textContent?.trim() || '',
       };
     });
 
@@ -169,14 +189,16 @@ test.describe('Language Switching Validation', () => {
 
     // Get Spanish search text
     const spanishSearchTexts = await page.evaluate(() => {
-      const searchInput = document.querySelector('#searchInput, input[type="search"]') as HTMLInputElement;
+      const searchInput = document.querySelector(
+        '#searchInput, input[type="search"]',
+      ) as HTMLInputElement;
       const searchButton = document.querySelector('#searchBtn, button[type="submit"]');
       const searchResults = document.querySelector('#searchResults');
-      
+
       return {
         placeholder: searchInput?.placeholder || '',
         buttonText: searchButton?.textContent?.trim() || '',
-        resultsText: searchResults?.textContent?.trim() || ''
+        resultsText: searchResults?.textContent?.trim() || '',
       };
     });
 
@@ -191,7 +213,7 @@ test.describe('Language Switching Validation', () => {
 
     // Navigate to different tabs to test list headers
     const tabs = ['#watchingTab', '#wishlistTab', '#watchedTab'];
-    
+
     for (const tab of tabs) {
       await page.click(tab);
       await page.waitForTimeout(300);
@@ -200,10 +222,16 @@ test.describe('Language Switching Validation', () => {
       const englishListTexts = await page.evaluate(() => {
         const listContainer = document.querySelector('#watchingList, #wishlistList, #watchedList');
         return {
-          headers: Array.from(listContainer?.querySelectorAll('h1, h2, h3, [data-i18n*="title"]') || [])
-            .map(el => el.textContent?.trim()).filter(Boolean),
-          buttons: Array.from(listContainer?.querySelectorAll('button, [data-i18n*="button"]') || [])
-            .map(el => el.textContent?.trim()).filter(Boolean)
+          headers: Array.from(
+            listContainer?.querySelectorAll('h1, h2, h3, [data-i18n*="title"]') || [],
+          )
+            .map((el) => el.textContent?.trim())
+            .filter(Boolean),
+          buttons: Array.from(
+            listContainer?.querySelectorAll('button, [data-i18n*="button"]') || [],
+          )
+            .map((el) => el.textContent?.trim())
+            .filter(Boolean),
         };
       });
 
@@ -215,10 +243,16 @@ test.describe('Language Switching Validation', () => {
       const spanishListTexts = await page.evaluate(() => {
         const listContainer = document.querySelector('#watchingList, #wishlistList, #watchedList');
         return {
-          headers: Array.from(listContainer?.querySelectorAll('h1, h2, h3, [data-i18n*="title"]') || [])
-            .map(el => el.textContent?.trim()).filter(Boolean),
-          buttons: Array.from(listContainer?.querySelectorAll('button, [data-i18n*="button"]') || [])
-            .map(el => el.textContent?.trim()).filter(Boolean)
+          headers: Array.from(
+            listContainer?.querySelectorAll('h1, h2, h3, [data-i18n*="title"]') || [],
+          )
+            .map((el) => el.textContent?.trim())
+            .filter(Boolean),
+          buttons: Array.from(
+            listContainer?.querySelectorAll('button, [data-i18n*="button"]') || [],
+          )
+            .map((el) => el.textContent?.trim())
+            .filter(Boolean),
         };
       });
 
@@ -234,10 +268,10 @@ test.describe('Language Switching Validation', () => {
     // Count elements with data-i18n attributes
     const i18nElements = await page.evaluate(() => {
       const elements = document.querySelectorAll('[data-i18n]');
-      return Array.from(elements).map(el => ({
+      return Array.from(elements).map((el) => ({
         tag: el.tagName,
         key: el.getAttribute('data-i18n'),
-        text: el.textContent?.trim()
+        text: el.textContent?.trim(),
       }));
     });
 
@@ -250,16 +284,20 @@ test.describe('Language Switching Validation', () => {
     // Verify data-i18n elements were translated
     const translatedElements = await page.evaluate(() => {
       const elements = document.querySelectorAll('[data-i18n]');
-      return Array.from(elements).map(el => ({
+      return Array.from(elements).map((el) => ({
         tag: el.tagName,
         key: el.getAttribute('data-i18n'),
-        text: el.textContent?.trim()
+        text: el.textContent?.trim(),
       }));
     });
 
     // Check that some elements have Spanish text
-    const hasSpanishText = translatedElements.some(el => 
-      el.text && (el.text.includes('Inicio') || el.text.includes('Configuración') || el.text.includes('Descubrir'))
+    const hasSpanishText = translatedElements.some(
+      (el) =>
+        el.text &&
+        (el.text.includes('Inicio') ||
+          el.text.includes('Configuración') ||
+          el.text.includes('Descubrir')),
     );
     expect(hasSpanishText).toBe(true);
   });
@@ -271,19 +309,19 @@ test.describe('Language Switching Validation', () => {
     // Get elements with data-i18n-placeholder and data-i18n-title
     const placeholderElements = await page.evaluate(() => {
       const elements = document.querySelectorAll('[data-i18n-placeholder]');
-      return Array.from(elements).map(el => ({
+      return Array.from(elements).map((el) => ({
         tag: el.tagName,
         key: el.getAttribute('data-i18n-placeholder'),
-        placeholder: (el as HTMLInputElement).placeholder
+        placeholder: (el as HTMLInputElement).placeholder,
       }));
     });
 
     const titleElements = await page.evaluate(() => {
       const elements = document.querySelectorAll('[data-i18n-title]');
-      return Array.from(elements).map(el => ({
+      return Array.from(elements).map((el) => ({
         tag: el.tagName,
         key: el.getAttribute('data-i18n-title'),
-        title: el.getAttribute('title')
+        title: el.getAttribute('title'),
       }));
     });
 
@@ -294,19 +332,19 @@ test.describe('Language Switching Validation', () => {
     // Verify placeholder and title attributes were updated
     const updatedPlaceholders = await page.evaluate(() => {
       const elements = document.querySelectorAll('[data-i18n-placeholder]');
-      return Array.from(elements).map(el => ({
+      return Array.from(elements).map((el) => ({
         tag: el.tagName,
         key: el.getAttribute('data-i18n-placeholder'),
-        placeholder: (el as HTMLInputElement).placeholder
+        placeholder: (el as HTMLInputElement).placeholder,
       }));
     });
 
     const updatedTitles = await page.evaluate(() => {
       const elements = document.querySelectorAll('[data-i18n-title]');
-      return Array.from(elements).map(el => ({
+      return Array.from(elements).map((el) => ({
         tag: el.tagName,
         key: el.getAttribute('data-i18n-title'),
-        title: el.getAttribute('title')
+        title: el.getAttribute('title'),
       }));
     });
 
@@ -363,15 +401,17 @@ test.describe('Language Switching Validation', () => {
     // Check for any untranslated elements (should fall back to English or key)
     const untranslatedElements = await page.evaluate(() => {
       const elements = document.querySelectorAll('[data-i18n]');
-      return Array.from(elements).filter(el => {
-        const key = el.getAttribute('data-i18n');
-        const text = el.textContent?.trim();
-        // If text equals key, it means translation failed
-        return text === key;
-      }).map(el => ({
-        key: el.getAttribute('data-i18n'),
-        text: el.textContent?.trim()
-      }));
+      return Array.from(elements)
+        .filter((el) => {
+          const key = el.getAttribute('data-i18n');
+          const text = el.textContent?.trim();
+          // If text equals key, it means translation failed
+          return text === key;
+        })
+        .map((el) => ({
+          key: el.getAttribute('data-i18n'),
+          text: el.textContent?.trim(),
+        }));
     });
 
     // Should have minimal untranslated elements (some keys might not have Spanish translations)

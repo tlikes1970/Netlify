@@ -1,0 +1,162 @@
+/* ========= MOBILE HOTFIX: layout, overflow, search, cards ========= */
+
+/* Safe areas and base layout */
+:root {
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+html,
+body {
+  height: 100%;
+}
+body {
+  min-height: 100dvh;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden; /* kill sideways scroll */
+}
+
+/* Sticky search container: full-width on mobile, non-clipping */
+.top-search {
+  position: sticky;
+  top: calc(var(--safe-top) + 0px);
+  z-index: 1000;
+  background: inherit;
+  margin: 0; /* remove random centering margins */
+  border-radius: 0; /* avoid clipped children at corners on mobile */
+  box-shadow: none; /* heavy shadows + sticky = visual clipping */
+  padding: 8px 12px; /* give it breathing room */
+}
+
+/* Search row stacks cleanly on small screens */
+#desktop-search-row,
+.search-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  align-items: stretch;
+}
+
+/* Inputs and selects are full-width, readable, and not tiny */
+.search-input,
+.search-area-input,
+#search,
+#genreSelect,
+.search-area-genre {
+  width: 100%;
+  min-height: 44px;
+  font-size: 16px;
+}
+
+/* Buttons: single column, no overflow, consistent height */
+.search-buttons-row,
+.search-area-search,
+.search-area-clear {
+  display: grid;
+  grid-auto-flow: row;
+  gap: 8px;
+}
+.search-buttons-row .btn,
+#searchBtn,
+#clearSearchBtn,
+.search-btn,
+.clear-search-btn {
+  width: 100%;
+  min-height: 44px;
+  line-height: 1.1;
+}
+
+/* If there are two "Search" buttons (desktop+mobile variants), collapse spacing so it looks intentional */
+.search-buttons-row .btn + .btn {
+  margin-top: 0;
+}
+
+/* Widen hit targets everywhere */
+button,
+.tab,
+.fab,
+.icon-btn,
+.settings-checkbox-label,
+.select,
+.search-btn {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Tabs and headers: avoid mid-word breaks, keep within container */
+.tab,
+.group-title,
+.preview-row-title,
+h1,
+h2,
+h3,
+h4 {
+  word-break: normal;
+  overflow-wrap: anywhere; /* break at boundaries, not mid-letter */
+}
+
+/* Card containers: keep inside the rails */
+.list-container,
+.home-section,
+.preview-row-scroll,
+#curatedSections {
+  display: grid;
+  grid-template-columns: 1fr; /* one column by default */
+  gap: 12px;
+  overflow: hidden; /* stop child overflow */
+  content-visibility: auto; /* cheaper rendering for long lists */
+  contain-intrinsic-size: 1px 320px;
+}
+
+/* Two columns when there's room */
+@media (min-width: 390px) {
+  .list-container,
+  .home-section {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Posters/images: stable aspect and sizing */
+.card img,
+.poster,
+.tile img,
+.row-inner img {
+  aspect-ratio: 2/3;
+  height: auto;
+  width: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Avoid hover-only behaviors on touch */
+@media (hover: none) {
+  .card:hover,
+  .btn:hover {
+    transform: none;
+    filter: none;
+  }
+}
+
+/* Sticky content offset so anchors don't hide under search */
+main,
+.tab-section,
+#homeSection {
+  scroll-padding-top: calc(var(--safe-top) + 64px);
+}
+
+/* FABs not under the iOS home bar */
+.fab,
+.fab-left,
+.fab-stack {
+  bottom: calc(16px + var(--safe-bottom));
+}
+
+/* Right-edge gutter insurance: any rogue wide child gets clipped */
+.main-container,
+#appRoot,
+body,
+html {
+  max-width: 100%;
+}

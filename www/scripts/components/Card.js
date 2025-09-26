@@ -1,6 +1,6 @@
 /**
  * Card Component - Unified Card System
- * 
+ *
  * Process: Card Component
  * Purpose: Unified card component with compact/expanded/poster variants for all Home rows and search results
  * Data Source: Item data from various sources (curated, user lists, search)
@@ -8,7 +8,7 @@
  * Dependencies: i18n.js, components.css, row renderers
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🎴 Card component loaded');
@@ -23,11 +23,18 @@
    * @param {string} userNote - User's current note
    * @returns {string} HTML for action buttons
    */
-  function generateDetailActions(id, currentList, isPro, episodeTrackingEnabled, userRating, userNote) {
+  function generateDetailActions(
+    id,
+    currentList,
+    isPro,
+    episodeTrackingEnabled,
+    userRating,
+    userNote,
+  ) {
     // Create two-column layout for action buttons
     const leftColumn = [];
     const rightColumn = [];
-    
+
     // Left column: Want to Watch and Watched buttons
     if (currentList !== 'wishlist') {
       leftColumn.push(`
@@ -41,7 +48,7 @@
         </button>
       `);
     }
-    
+
     if (currentList !== 'watched') {
       leftColumn.push(`
         <button class="unified-card-action-btn unified-card-action-btn--compact" 
@@ -54,7 +61,7 @@
         </button>
       `);
     }
-    
+
     // Right column: Remove button
     if (currentList !== 'discover') {
       rightColumn.push(`
@@ -68,7 +75,7 @@
         </button>
       `);
     }
-    
+
     // Additional actions (if needed)
     if (currentList !== 'watching') {
       leftColumn.push(`
@@ -82,7 +89,7 @@
         </button>
       `);
     }
-    
+
     // Not Interested (only for Discover)
     if (currentList === 'discover') {
       leftColumn.push(`
@@ -96,7 +103,7 @@
         </button>
       `);
     }
-    
+
     // Details button
     rightColumn.push(`
       <button class="unified-card-action-btn unified-card-action-btn--compact" 
@@ -108,7 +115,7 @@
         <span class="unified-card-action-label">Details</span>
       </button>
     `);
-    
+
     // Episode Tracking (if enabled)
     if (episodeTrackingEnabled && currentList === 'watching') {
       rightColumn.push(`
@@ -122,7 +129,7 @@
         </button>
       `);
     }
-    
+
     // Pro features
     if (isPro) {
       rightColumn.push(`
@@ -135,7 +142,7 @@
           <span class="unified-card-action-label">Trivia</span>
         </button>
       `);
-      
+
       rightColumn.push(`
         <button class="unified-card-action-btn unified-card-action-btn--pro unified-card-action-btn--compact" 
                 data-action="behind-scenes" 
@@ -146,7 +153,7 @@
           <span class="unified-card-action-label">Behind Scenes</span>
         </button>
       `);
-      
+
       rightColumn.push(`
         <button class="unified-card-action-btn unified-card-action-btn--pro unified-card-action-btn--compact" 
                 data-action="bloopers" 
@@ -158,7 +165,7 @@
         </button>
       `);
     }
-    
+
     // Rating system
     const ratingHTML = `
       <div class="unified-card-rating-input">
@@ -173,7 +180,7 @@
         </select>
       </div>
     `;
-    
+
     // Notes system
     const notesHTML = `
       <div class="unified-card-notes">
@@ -186,7 +193,7 @@
                   rows="2">${userNote}</textarea>
       </div>
     `;
-    
+
     // Return structured two-column layout
     return `
       <div class="unified-card-actions-grid">
@@ -238,7 +245,7 @@
     userRating = 0,
     userNote = '',
     isPro = false,
-    episodeTrackingEnabled = false
+    episodeTrackingEnabled = false,
   }) {
     const card = document.createElement('article');
     card.className = `unified-card unified-card--${variant}`;
@@ -246,35 +253,38 @@
     card.dataset.variant = variant;
     card.dataset.mediaType = mediaType;
     card.dataset.card = 'poster'; // Required for unified counter selector
-    
+
     // Add drag functionality for user-owned lists
     if (variant === 'detail' && ['watching', 'wishlist', 'watched'].includes(currentList)) {
       card.draggable = true;
       card.classList.add('draggable');
     }
-    
+
     if (isDisabled) {
       card.classList.add('unified-card--disabled');
     }
 
     // Normalize rating to 0-5 scale for stars
     const normalizedRating = rating ? Math.min(5, Math.max(0, rating / 2)) : 0;
-    const stars = '★'.repeat(Math.floor(normalizedRating)) + '☆'.repeat(5 - Math.floor(normalizedRating));
+    const stars =
+      '★'.repeat(Math.floor(normalizedRating)) + '☆'.repeat(5 - Math.floor(normalizedRating));
 
     // Get proper poster URL using TMDB utilities
-    const finalPosterUrl = posterUrl || (posterPath && window.getPosterUrl ? window.getPosterUrl(posterPath) : null);
-    
+    const finalPosterUrl =
+      posterUrl || (posterPath && window.getPosterUrl ? window.getPosterUrl(posterPath) : null);
+
     // Build card HTML based on variant
     let cardHTML;
-    
+
     if (variant === 'detail') {
       // Horizontal detail layout for tabs
       cardHTML = `
         <div class="unified-card-poster" role="button" tabindex="0" aria-label="${title}">
           <div class="unified-card-poster-container">
-            ${finalPosterUrl ? 
-              `<img src="${finalPosterUrl}" alt="${title} poster" loading="lazy" class="unified-card-poster-image">` : 
-              ''
+            ${
+              finalPosterUrl
+                ? `<img src="${finalPosterUrl}" alt="${title} poster" loading="lazy" class="unified-card-poster-image">`
+                : ''
             }
             <div class="unified-card-poster-placeholder">
               <div class="unified-card-poster-skeleton"></div>
@@ -297,10 +307,12 @@
       // Standard vertical layout for home/curated
       // Generate action buttons - use overflowActions if provided, otherwise default buttons
       let actionButtonsHTML = '';
-      
+
       if (overflowActions && overflowActions.length > 0) {
         // Use overflowActions for search results and other custom contexts
-        actionButtonsHTML = overflowActions.map(action => `
+        actionButtonsHTML = overflowActions
+          .map(
+            (action) => `
           <button class="unified-card-action-btn" 
                   data-action="${action.dataAction || action.action || 'custom'}" 
                   data-id="${id}" 
@@ -309,7 +321,9 @@
             <span class="unified-card-action-icon">${action.icon || '⚡'}</span>
             <span class="unified-card-action-label">${action.label}</span>
           </button>
-        `).join('');
+        `,
+          )
+          .join('');
       } else {
         // Default action buttons for home/curated sections
         actionButtonsHTML = `
@@ -339,13 +353,14 @@
           </button>
         `;
       }
-      
+
       cardHTML = `
         <div class="unified-card-poster" role="button" tabindex="0" aria-label="${title}">
           <div class="unified-card-poster-container">
-            ${finalPosterUrl ? 
-              `<img src="${finalPosterUrl}" alt="${title} poster" loading="lazy" class="unified-card-poster-image">` : 
-              ''
+            ${
+              finalPosterUrl
+                ? `<img src="${finalPosterUrl}" alt="${title} poster" loading="lazy" class="unified-card-poster-image">`
+                : ''
             }
             <div class="unified-card-poster-placeholder">
               <div class="unified-card-poster-skeleton"></div>
@@ -383,24 +398,24 @@
         e.dataTransfer.setData('text/plain', id);
         card.classList.add('dragging');
       });
-      
+
       card.addEventListener('dragend', () => {
         card.classList.remove('dragging');
       });
-      
+
       card.addEventListener('dragover', (e) => {
         e.preventDefault();
         card.classList.add('drag-over');
       });
-      
+
       card.addEventListener('dragleave', () => {
         card.classList.remove('drag-over');
       });
-      
+
       card.addEventListener('drop', (e) => {
         e.preventDefault();
         card.classList.remove('drag-over');
-        
+
         const draggedId = e.dataTransfer.getData('text/plain');
         if (draggedId && draggedId !== id && window.reorderItems) {
           window.reorderItems(Number(draggedId), Number(id), currentList);
@@ -409,22 +424,27 @@
     }
 
     // Add action button handlers
-    const actionButtons = card.querySelectorAll('.unified-card-action-btn, .unified-card-rating-select, .unified-card-note-input');
-    actionButtons.forEach(element => {
+    const actionButtons = card.querySelectorAll(
+      '.unified-card-action-btn, .unified-card-rating-select, .unified-card-note-input',
+    );
+    actionButtons.forEach((element) => {
       if (element.tagName === 'BUTTON') {
         element.addEventListener('click', (e) => {
           e.stopPropagation();
           const action = element.dataset.action;
           const itemId = element.dataset.id;
-          
+
           // Debug logging for Card button clicks
           console.log('[Card] Button clicked:', {
             action: action,
             id: itemId,
             element: element,
-            moveItemAvailable: !!window.moveItem
+            moveItemAvailable: !!window.moveItem,
+            addToListFromCacheAvailable: !!window.addToListFromCache,
+            windowMoveItemType: typeof window.moveItem,
+            windowAddToListFromCacheType: typeof window.addToListFromCache,
           });
-          
+
           switch (action) {
             case 'mark-watched':
               if (window.addToListFromCache) {
@@ -513,18 +533,18 @@
       const placeholder = card.querySelector('.unified-card-poster-placeholder');
       const skeleton = card.querySelector('.unified-card-poster-skeleton');
       const brand = card.querySelector('.unified-card-poster-brand');
-      
+
       if (img && placeholder && skeleton && brand) {
         // Initially show skeleton, hide brand
         skeleton.style.display = 'block';
         brand.style.display = 'none';
         placeholder.style.display = 'flex';
-        
+
         img.addEventListener('load', () => {
           // Image loaded successfully - hide placeholder
           placeholder.style.display = 'none';
         });
-        
+
         img.addEventListener('error', () => {
           // Image failed to load - show brand placeholder
           skeleton.style.display = 'none';
@@ -537,7 +557,7 @@
       const placeholder = card.querySelector('.unified-card-poster-placeholder');
       const skeleton = card.querySelector('.unified-card-poster-skeleton');
       const brand = card.querySelector('.unified-card-poster-brand');
-      
+
       if (placeholder && skeleton && brand) {
         skeleton.style.display = 'none';
         brand.style.display = 'flex';
@@ -572,31 +592,44 @@
   }
 
   function createCardData(item, source = 'tmdb', section = 'home') {
-    const year = item.release_date ? new Date(item.release_date).getFullYear() : 
-                 item.first_air_date ? new Date(item.first_air_date).getFullYear() : 
-                 item.year || '';
+    const year = item.release_date
+      ? new Date(item.release_date).getFullYear()
+      : item.first_air_date
+        ? new Date(item.first_air_date).getFullYear()
+        : item.year || '';
     const mediaType = item.media_type || item.mediaType || (item.first_air_date ? 'tv' : 'movie');
-    
+
     // Construct proper poster URL using TMDB utilities
-    const posterUrl = item.posterUrl || item.poster_src || 
-                     (item.poster_path && window.getPosterUrl ? window.getPosterUrl(item.poster_path, 'w200') : 
-                      item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : null);
-    
+    const posterUrl =
+      item.posterUrl ||
+      item.poster_src ||
+      (item.poster_path && window.getPosterUrl
+        ? window.getPosterUrl(item.poster_path, 'w200')
+        : item.poster_path
+          ? `https://image.tmdb.org/t/p/w200${item.poster_path}`
+          : null);
+
     // Determine variant based on section
-    const variant = ['watching', 'wishlist', 'watched', 'discover'].includes(section) ? 'detail' : 'unified';
-    
+    const variant = ['watching', 'wishlist', 'watched', 'discover'].includes(section)
+      ? 'detail'
+      : 'unified';
+
     // Get user data from appData if available
     const appData = window.appData || {};
     const userRating = item.userRating || 0;
     const userNote = item.userNote || '';
     const isPro = appData.settings?.isPro || true; // Default to true for dev testing
     const episodeTrackingEnabled = appData.settings?.episodeTracking || true; // Default to true for dev testing
-    
+
     return {
       variant: variant,
       id: item.id || item.tmdb_id || item.tmdbId,
       title: getLocalizedTitle(item, mediaType),
-      subtitle: year ? `(${year}) • ${mediaType === 'tv' ? 'TV Show' : 'Movie'}` : (mediaType === 'tv' ? 'TV Show' : 'Movie'),
+      subtitle: year
+        ? `(${year}) • ${mediaType === 'tv' ? 'TV Show' : 'Movie'}`
+        : mediaType === 'tv'
+          ? 'TV Show'
+          : 'Movie',
       posterUrl: posterUrl,
       posterPath: item.posterPath || item.poster_path,
       rating: item.rating || item.vote_average,
@@ -611,19 +644,18 @@
         if (window.openTMDBLink) {
           window.openTMDBLink(Number(id), mediaType);
         }
-      }
+      },
     };
   }
 
   // Expose Card component globally
   window.Card = Card;
   window.createCardData = createCardData;
-  
+
   // Ensure global availability
   if (typeof window !== 'undefined') {
     window.Card = window.Card || Card;
   }
 
   console.log('✅ Card component ready');
-
 })();

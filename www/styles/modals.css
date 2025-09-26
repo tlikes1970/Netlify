@@ -233,7 +233,7 @@
   color: var(--text, #121212);
 }
 
-.episode-guide__episode-checkbox input[type="checkbox"] {
+.episode-guide__episode-checkbox input[type='checkbox'] {
   width: 16px;
   height: 16px;
   accent-color: var(--primary, #e91e63);
@@ -293,63 +293,63 @@
   .modal-backdrop {
     padding: 10px;
   }
-  
+
   .modal {
     max-width: 100%;
     max-height: 95vh;
   }
-  
+
   .modal__header {
     padding: 16px 20px;
   }
-  
+
   .modal__title {
     font-size: 18px;
   }
-  
+
   .modal__body {
     padding: 20px;
   }
-  
+
   .modal__footer {
     padding: 16px 20px;
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .modal__footer .btn {
     width: 100%;
   }
-  
+
   /* Episode Guide Mobile */
   .episode-guide__episode {
     grid-template-columns: 60px 1fr 80px 50px 80px;
     gap: 8px;
     padding: 10px 12px;
   }
-  
+
   .episode-guide__episode-number {
     font-size: 11px;
   }
-  
+
   .episode-guide__episode-title {
     font-size: 13px;
   }
-  
+
   .episode-guide__episode-date,
   .episode-guide__episode-rating {
     font-size: 11px;
   }
-  
+
   .episode-guide__episode-checkbox {
     font-size: 11px;
   }
-  
-  .episode-guide__episode-checkbox input[type="checkbox"] {
+
+  .episode-guide__episode-checkbox input[type='checkbox'] {
     width: 14px;
     height: 14px;
   }
-  
+
   /* Notes Modal Mobile */
   .notes-modal__textarea {
     font-size: 16px; /* Prevent zoom on iOS */
@@ -375,8 +375,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* === ACCESSIBILITY === */
@@ -385,7 +389,7 @@
   .modal {
     transition: none;
   }
-  
+
   .modal-backdrop--visible .modal {
     transform: none;
   }
@@ -396,19 +400,19 @@
   .modal {
     border: 2px solid var(--text, #121212);
   }
-  
+
   .modal__header {
     border-bottom-width: 2px;
   }
-  
+
   .modal__footer {
     border-top-width: 2px;
   }
-  
+
   .episode-guide__episode {
     border-bottom-width: 2px;
   }
-  
+
   .episode-guide__episode--watched {
     border-left-width: 6px;
   }
@@ -449,4 +453,3 @@
 .modal-backdrop--visible .modal--fade-in {
   opacity: 1;
 }
-

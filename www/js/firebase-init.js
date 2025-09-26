@@ -23,7 +23,7 @@
   // Get auth and firestore instances
   const auth = firebase.auth();
   const db = firebase.firestore();
-  
+
   // --- Expose minimal surface on window for non-module scripts/diagnostics ---
   window.firebaseApp = firebase.app();
   window.firebaseAuth = auth;

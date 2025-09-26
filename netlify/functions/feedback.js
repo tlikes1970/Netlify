@@ -5,7 +5,7 @@ exports.handler = async (event, context) => {
     'Access-Control-Allow-Headers': 'Content-Type, Accept',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Max-Age': '86400',
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   };
 
   // Debug logging
@@ -21,7 +21,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ message: 'CORS preflight successful' })
+      body: JSON.stringify({ message: 'CORS preflight successful' }),
     };
   }
 
@@ -31,11 +31,11 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         message: 'Feedback function is working!',
         endpoint: 'Use POST to submit feedback',
-        timestamp: new Date().toISOString()
-      })
+        timestamp: new Date().toISOString(),
+      }),
     };
   }
 
@@ -43,7 +43,7 @@ exports.handler = async (event, context) => {
   if (event.httpMethod === 'POST') {
     try {
       console.log('Processing POST request with feedback data');
-      
+
       // Parse the feedback data
       let feedback;
       try {
@@ -53,20 +53,20 @@ exports.handler = async (event, context) => {
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             error: 'Invalid JSON in request body',
-            details: parseError.message 
-          })
+            details: parseError.message,
+          }),
         };
       }
-      
+
       // Add server-side metadata
       const enhancedFeedback = {
         ...feedback,
         serverTimestamp: new Date().toISOString(),
         ip: event.headers['x-forwarded-for'] || event.headers['client-ip'] || 'unknown',
         userAgent: event.headers['user-agent'] || 'unknown',
-        netlifyId: context.awsRequestId || 'unknown'
+        netlifyId: context.awsRequestId || 'unknown',
       };
 
       // Log the feedback prominently
@@ -82,28 +82,27 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ 
-          success: true, 
+        body: JSON.stringify({
+          success: true,
           id: enhancedFeedback.id || 'unknown',
           message: 'Feedback received and logged successfully!',
-          timestamp: enhancedFeedback.serverTimestamp
-        })
+          timestamp: enhancedFeedback.serverTimestamp,
+        }),
       };
-      
     } catch (error) {
       console.error('=== FUNCTION ERROR ===');
       console.error('Error processing feedback:', error);
       console.error('Stack:', error.stack);
       console.error('====================');
-      
+
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Internal server error',
           message: 'Failed to process feedback',
-          timestamp: new Date().toISOString()
-        })
+          timestamp: new Date().toISOString(),
+        }),
       };
     }
   }
@@ -113,10 +112,10 @@ exports.handler = async (event, context) => {
   return {
     statusCode: 405,
     headers,
-    body: JSON.stringify({ 
+    body: JSON.stringify({
       error: 'Method not allowed',
       allowedMethods: ['GET', 'POST', 'OPTIONS'],
-      receivedMethod: event.httpMethod
-    })
+      receivedMethod: event.httpMethod,
+    }),
   };
 };

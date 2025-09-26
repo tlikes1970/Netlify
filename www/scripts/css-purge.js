@@ -10,11 +10,11 @@ export function analyzeCSSUsage() {
   // Get all CSS classes used in HTML
   const usedClasses = new Set();
   const allElements = document.querySelectorAll('*');
-  
-  allElements.forEach(element => {
+
+  allElements.forEach((element) => {
     if (element.className) {
       const classes = element.className.split(/\s+/);
-      classes.forEach(cls => {
+      classes.forEach((cls) => {
         if (cls.trim()) {
           usedClasses.add(cls.trim());
         }
@@ -25,18 +25,18 @@ export function analyzeCSSUsage() {
   // Get all CSS classes defined in stylesheets
   const definedClasses = new Set();
   const styleSheets = Array.from(document.styleSheets);
-  
-  styleSheets.forEach(sheet => {
+
+  styleSheets.forEach((sheet) => {
     try {
       const rules = Array.from(sheet.cssRules || []);
-      rules.forEach(rule => {
+      rules.forEach((rule) => {
         if (rule.type === CSSRule.STYLE_RULE) {
           const selector = rule.selectorText;
           if (selector) {
             // Extract class selectors
             const classMatches = selector.match(/\.([a-zA-Z0-9_-]+)/g);
             if (classMatches) {
-              classMatches.forEach(match => {
+              classMatches.forEach((match) => {
                 const className = match.substring(1); // Remove the dot
                 definedClasses.add(className);
               });
@@ -51,8 +51,8 @@ export function analyzeCSSUsage() {
   });
 
   // Find unused classes
-  const unusedClasses = Array.from(definedClasses).filter(cls => !usedClasses.has(cls));
-  const missingClasses = Array.from(usedClasses).filter(cls => !definedClasses.has(cls));
+  const unusedClasses = Array.from(definedClasses).filter((cls) => !usedClasses.has(cls));
+  const missingClasses = Array.from(usedClasses).filter((cls) => !definedClasses.has(cls));
 
   console.log('📊 CSS Usage Analysis:');
   console.log(`Used classes: ${usedClasses.size}`);
@@ -72,7 +72,7 @@ export function analyzeCSSUsage() {
     used: Array.from(usedClasses),
     defined: Array.from(definedClasses),
     unused: unusedClasses,
-    missing: missingClasses
+    missing: missingClasses,
   };
 }
 

@@ -1,6 +1,6 @@
 // Netlify Function: proxies OpenTDB safely from same origin
 // No secrets required. Validates and allowlists params. Adds short caching.
-const ALLOWED = new Set(['amount','category','difficulty','type','encode','seed']);
+const ALLOWED = new Set(['amount', 'category', 'difficulty', 'type', 'encode', 'seed']);
 
 exports.handler = async (event) => {
   try {
@@ -23,7 +23,7 @@ exports.handler = async (event) => {
     if (!qs.has('encode')) qs.set('encode', 'url3986');
 
     const url = `https://opentdb.com/api.php?${qs.toString()}`;
-    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
     const text = await res.text();
 
     return {
@@ -32,13 +32,17 @@ exports.handler = async (event) => {
         'Content-Type': 'application/json',
         'Cache-Control': 'public, max-age=300', // 5 min
       },
-      body: text
+      body: text,
     };
   } catch (err) {
-    return json(502, { error: 'Trivia proxy failed', detail: String(err && err.message || err) });
+    return json(502, { error: 'Trivia proxy failed', detail: String((err && err.message) || err) });
   }
 };
 
 function json(code, obj) {
-  return { statusCode: code, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(obj) };
+  return {
+    statusCode: code,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(obj),
+  };
 }

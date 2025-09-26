@@ -1,6 +1,6 @@
 /**
  * Force Data Loading - Direct Fix
- * 
+ *
  * Process: Force Data Loading
  * Purpose: Directly force data loading when auth state changes
  * Data Source: Firebase Firestore, appData
@@ -8,7 +8,7 @@
  * Dependencies: Firebase Firestore, appData
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🔄 Force Data Loading script starting...');
@@ -19,110 +19,115 @@
   async function forceLoadUserData() {
     try {
       console.log('🔄 Force loading user data...');
-      
+
       // Check if user is signed in
       const auth = window.firebase?.auth();
       const currentUser = auth?.currentUser;
-      
+
       if (!currentUser) {
         console.log('❌ No user signed in - cannot load data');
         return;
       }
-      
+
       console.log('✅ User signed in:', currentUser.email);
       console.log('🔍 User UID:', currentUser.uid);
-      
+
       // Check if Firebase Firestore is available
       const db = window.firebase?.firestore();
       if (!db) {
         console.log('❌ Firebase Firestore not available');
         return;
       }
-      
+
       // Load data directly from Firebase
       console.log('🔄 Loading data from Firebase...');
       const userDoc = await db.collection('users').doc(currentUser.uid).get();
-      
+
       if (!userDoc.exists) {
         console.log('❌ No Firebase document found for user');
         return;
       }
-      
+
       const userData = userDoc.data();
       console.log('✅ Firebase document found');
       console.log('🔍 Firebase data:', userData);
-      
+
       // Check if watchlists exist
       if (!userData.watchlists) {
         console.log('❌ No watchlists data in Firebase document');
         return;
       }
-      
+
       // Load TV data
       if (userData.watchlists.tv) {
         console.log('🔄 Loading TV data...');
         console.log('🔍 TV watching count:', userData.watchlists.tv.watching?.length || 0);
         console.log('🔍 TV wishlist count:', userData.watchlists.tv.wishlist?.length || 0);
         console.log('🔍 TV watched count:', userData.watchlists.tv.watched?.length || 0);
-        
+
         // Update appData
         if (window.appData) {
           window.appData.tv = userData.watchlists.tv;
           console.log('✅ TV data loaded into appData');
         }
       }
-      
+
       // Load Movie data
       if (userData.watchlists.movies) {
         console.log('🔄 Loading movie data...');
         console.log('🔍 Movie watching count:', userData.watchlists.movies.watching?.length || 0);
         console.log('🔍 Movie wishlist count:', userData.watchlists.movies.wishlist?.length || 0);
         console.log('🔍 Movie watched count:', userData.watchlists.movies.watched?.length || 0);
-        
+
         // Update appData
         if (window.appData) {
           window.appData.movies = userData.watchlists.movies;
           console.log('✅ Movie data loaded into appData');
         }
       }
-      
+
       // Save to localStorage
       if (window.appData) {
         localStorage.setItem('flicklet-data', JSON.stringify(window.appData));
         console.log('✅ Data saved to localStorage');
       }
-      
+
       // Update UI
       console.log('🔄 Updating UI...');
       if (typeof window.updateUI === 'function') {
         window.updateUI();
         console.log('✅ UI updated');
       }
-      
+
       // Emit cards:changed event for centralized count updates
-      document.dispatchEvent(new CustomEvent('cards:changed', {
-        detail: { source: 'force-data-load' }
-      }));
+      document.dispatchEvent(
+        new CustomEvent('cards:changed', {
+          detail: { source: 'force-data-load' },
+        }),
+      );
       console.log('✅ Emitted cards:changed event');
-      
+
       // Update tab content
       if (window.FlickletApp && typeof window.FlickletApp.updateTabContent === 'function') {
         const currentTab = window.FlickletApp.currentTab || 'home';
         window.FlickletApp.updateTabContent(currentTab);
         console.log('✅ Tab content updated:', currentTab);
       }
-      
+
       console.log('✅ Data loading completed successfully!');
-      
+
       // Show success message
       if (window.showToast) {
         window.showToast('success', 'Data Loaded', 'Your shows and movies have been loaded!');
       }
-      
     } catch (error) {
       console.error('❌ Error loading user data:', error);
       if (window.showToast) {
-        window.showToast('error', 'Data Load Failed', 'Failed to load your data. Please try again.');
+        window.showToast(
+          'error',
+          'Data Load Failed',
+          'Failed to load your data. Please try again.',
+        );
       }
     }
   }
@@ -145,9 +150,9 @@
    */
   async function init() {
     await waitForFirebase();
-    
+
     // Auth state changes now handled by centralized AuthManager
-    
+
     // Also check if user is already signed in
     const currentUser = auth.currentUser;
     if (currentUser) {
@@ -164,7 +169,7 @@
   // Expose globally for manual use
   window.forceLoadUserData = forceLoadUserData;
 
-  console.log('✅ Force Data Loading script ready. Use window.forceLoadUserData() to manually load data.');
-
+  console.log(
+    '✅ Force Data Loading script ready. Use window.forceLoadUserData() to manually load data.',
+  );
 })();
-

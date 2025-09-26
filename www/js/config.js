@@ -17,18 +17,18 @@ export class Config {
 
     // Fallback to default configuration
     const defaultConfig = {
-      tmdbApiKey: "",
+      tmdbApiKey: '',
       firebase: {
-        apiKey: "",
-        authDomain: "",
-        projectId: "",
+        apiKey: '',
+        authDomain: '',
+        projectId: '',
       },
       google: {
-        clientId: "",
+        clientId: '',
       },
       app: {
-        version: "27.69",
-        name: "Flicklet - TV & Movie Tracker",
+        version: '27.69',
+        name: 'Flicklet - TV & Movie Tracker',
       },
     };
 
@@ -39,25 +39,25 @@ export class Config {
     const config = {};
 
     // Browser environment - try to get from window object
-    if (typeof document !== "undefined") {
+    if (typeof document !== 'undefined') {
       // No direct API key access - using proxy system
-      config.tmdbApiKey = "";
+      config.tmdbApiKey = '';
 
       // Try to get from window object if available
       if (window.ENV) {
         config.firebase = window.ENV.FIREBASE || config.firebase;
         config.google = window.ENV.GOOGLE || config.google;
       }
-    } else if (typeof process !== "undefined" && process.env) {
+    } else if (typeof process !== 'undefined' && process.env) {
       // Node.js environment
       // TMDB API key is now handled by the proxy function
       config.firebase = {
-        apiKey: process.env.FIREBASE_API_KEY || "",
-        authDomain: process.env.FIREBASE_AUTH_DOMAIN || "",
-        projectId: process.env.FIREBASE_PROJECT_ID || "",
+        apiKey: process.env.FIREBASE_API_KEY || '',
+        authDomain: process.env.FIREBASE_AUTH_DOMAIN || '',
+        projectId: process.env.FIREBASE_PROJECT_ID || '',
       };
       config.google = {
-        clientId: process.env.GOOGLE_CLIENT_ID || "",
+        clientId: process.env.GOOGLE_CLIENT_ID || '',
       };
     }
 
@@ -69,7 +69,7 @@ export class Config {
   }
 
   getNestedValue(obj, path) {
-    return path.split(".").reduce((current, key) => {
+    return path.split('.').reduce((current, key) => {
       return current && current[key] !== undefined ? current[key] : undefined;
     }, obj);
   }
@@ -79,7 +79,7 @@ export class Config {
   }
 
   setNestedValue(obj, path, value) {
-    const keys = path.split(".");
+    const keys = path.split('.');
     const lastKey = keys.pop();
     const target = keys.reduce((current, key) => {
       if (!current[key]) current[key] = {};
@@ -93,11 +93,11 @@ export class Config {
     const errors = [];
 
     if (!this.config.tmdbApiKey) {
-      errors.push("TMDB API key is required");
+      errors.push('TMDB API key is required');
     }
 
     if (this.config.tmdbApiKey && this.config.tmdbApiKey.length < 32) {
-      errors.push("TMDB API key appears to be invalid (too short)");
+      errors.push('TMDB API key appears to be invalid (too short)');
     }
 
     return {
@@ -110,8 +110,8 @@ export class Config {
   getApiKey() {
     const validation = this.validate();
     if (!validation.isValid) {
-      console.warn("Configuration validation failed:", validation.errors);
-      return "";
+      console.warn('Configuration validation failed:', validation.errors);
+      return '';
     }
     return this.config.tmdbApiKey;
   }

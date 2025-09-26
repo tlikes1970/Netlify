@@ -26,13 +26,13 @@
   const handlers = {
     toggle: (element, config) => {
       if (!element) return;
-      
+
       // Load saved state
       const saved = getStorageKey(config.storageKey);
       if (saved !== null) {
         element.checked = saved === 'true';
       }
-      
+
       // Bind change handler
       element.addEventListener('change', () => {
         setStorageKey(config.storageKey, element.checked.toString());
@@ -42,13 +42,13 @@
 
     select: (element, config) => {
       if (!element) return;
-      
+
       // Load saved state
       const saved = getStorageKey(config.storageKey);
       if (saved !== null) {
         element.value = saved;
       }
-      
+
       // Bind change handler
       element.addEventListener('change', () => {
         setStorageKey(config.storageKey, element.value);
@@ -58,13 +58,13 @@
 
     text: (element, config) => {
       if (!element) return;
-      
+
       // Load saved state
       const saved = getStorageKey(config.storageKey);
       if (saved !== null) {
         element.value = saved;
       }
-      
+
       // Bind change handler
       element.addEventListener('input', () => {
         setStorageKey(config.storageKey, element.value);
@@ -74,7 +74,7 @@
 
     button: (element, config) => {
       if (!element) return;
-      
+
       // Bind action handler
       element.addEventListener('click', () => {
         if (config.action && window[config.action]) {
@@ -87,7 +87,7 @@
 
     file: (element, config) => {
       if (!element) return;
-      
+
       // Bind change handler for file input
       element.addEventListener('change', (e) => {
         if (config.action && window[config.action]) {
@@ -100,16 +100,16 @@
 
     multiselect: (element, config) => {
       if (!element) return;
-      
+
       // Handle multiple checkboxes
       const checkboxes = document.querySelectorAll(config.selector);
-      checkboxes.forEach(cb => {
+      checkboxes.forEach((cb) => {
         const key = `${config.storageKey}_${cb.id}`;
         const saved = getStorageKey(key);
         if (saved !== null) {
           cb.checked = saved === 'true';
         }
-        
+
         cb.addEventListener('change', () => {
           setStorageKey(key, cb.checked.toString());
           console.log(`[settings-wire] ${config.key}.${cb.id} = ${cb.checked}`);
@@ -122,7 +122,7 @@
       if (!element) {
         console.warn(`[settings-wire] missing label: ${config.selector}`);
       }
-    }
+    },
   };
 
   function bindControl(control) {
@@ -147,15 +147,15 @@
 
   function run(config) {
     console.log('[settings-wire] binding controls...');
-    
-    config.groups.forEach(group => {
+
+    config.groups.forEach((group) => {
       console.log(`[settings-wire] binding group: ${group.title}`);
       group.controls.forEach(bindControl);
     });
-    
+
     console.log('[settings-wire] binding complete');
   }
 
   const config = await loadConfig();
   run(config);
-})().catch(e => console.error('[settings-wire] failed to init', e));
+})().catch((e) => console.error('[settings-wire] failed to init', e));

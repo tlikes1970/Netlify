@@ -1,9 +1,13 @@
 // auth.js — hardened modal + login flows
-(function(){
-  if (window.__authInit__) return; window.__authInit__ = true;
+(function () {
+  if (window.__authInit__) return;
+  window.__authInit__ = true;
 
   function getCurrentModal() {
-    return document.querySelector('[data-modal="login"]') || document.querySelector('.modal-backdrop[data-testid="modal-backdrop"]');
+    return (
+      document.querySelector('[data-modal="login"]') ||
+      document.querySelector('.modal-backdrop[data-testid="modal-backdrop"]')
+    );
   }
 
   function getCurrentModalBody() {
@@ -14,12 +18,12 @@
   function getMsgElement() {
     const modal = getCurrentModal();
     let el = modal?.querySelector('[data-auth-msg]');
-    if (!el && modal) { 
-      el = document.createElement('div'); 
-      el.setAttribute('data-auth-msg',''); 
-      el.style.marginTop='8px'; 
-      el.style.color='var(--color-error,#b00020)'; 
-      modal.querySelector('[data-modal-actions]')?.insertAdjacentElement('beforebegin', el); 
+    if (!el && modal) {
+      el = document.createElement('div');
+      el.setAttribute('data-auth-msg', '');
+      el.style.marginTop = '8px';
+      el.style.color = 'var(--color-error,#b00020)';
+      modal.querySelector('[data-modal-actions]')?.insertAdjacentElement('beforebegin', el);
     }
     return el;
   }
@@ -28,33 +32,36 @@
     return document.getElementById(buttonId);
   }
 
-  function setBusy(buttonId, on, labelIdle){
+  function setBusy(buttonId, on, labelIdle) {
     const btn = getButton(buttonId);
     if (!btn) return;
     btn.disabled = !!on;
     if (on) btn.dataset._label = btn.textContent;
-    btn.textContent = on ? 'Working…' : (labelIdle || btn.dataset._label || btn.textContent);
+    btn.textContent = on ? 'Working…' : labelIdle || btn.dataset._label || btn.textContent;
   }
 
-  function ensureFirebase(){
+  function ensureFirebase() {
     const ok = !!(window.firebase && window.firebaseInitialized);
     if (!ok) {
       const error = 'Firebase not properly initialized. Please refresh the page and try again.';
       console.error('❌ Firebase check failed:', error);
       showInlineError(error);
-      
+
       // Show a more user-friendly notification
       if (window.showNotification) {
-        window.showNotification('Authentication system is not ready. Please refresh the page.', 'error');
+        window.showNotification(
+          'Authentication system is not ready. Please refresh the page.',
+          'error',
+        );
       }
-      
+
       throw new Error(error);
     }
     return true;
   }
 
-  function showInlineError(text){
-    const el = getMsgElement(); 
+  function showInlineError(text) {
+    const el = getMsgElement();
     if (el) {
       el.textContent = text !== undefined ? text : 'Something went wrong.';
       console.log('🔍 Error message set:', text !== undefined ? text : 'Something went wrong.');
@@ -71,7 +78,7 @@
 
   function closeAuthModal() {
     console.log('🚪 closeAuthModal called');
-    
+
     // First try to close the injected signInModal
     const injectedModal = document.getElementById('signInModal');
     if (injectedModal) {
@@ -79,7 +86,7 @@
       hideSignInModal();
       return;
     }
-    
+
     // Prefer the handle if we kept it
     if (window.__currentAuthModal?.isConnected) {
       console.log('🚪 Closing auth modal via global handle');
@@ -87,23 +94,22 @@
       window.__currentAuthModal = null;
       return;
     }
-    
+
     // Otherwise select by attribute, NOT by generic modal-backdrop
     const authModals = document.querySelectorAll('.modal-backdrop[data-modal="login"]');
     console.log('🔍 Found auth modals by data-modal="login":', authModals.length);
-    authModals.forEach(modal => {
+    authModals.forEach((modal) => {
       console.log('🚪 Removing auth modal:', modal);
       modal.remove();
     });
-    
+
     // Clear the global handle if it exists but is disconnected
     if (window.__currentAuthModal && !window.__currentAuthModal.isConnected) {
       window.__currentAuthModal = null;
     }
   }
 
-
-  async function loginWithGoogle(){
+  async function loginWithGoogle() {
     console.log('🔐 loginWithGoogle called');
     setBusy('googleBtn', true);
     try {
@@ -118,15 +124,15 @@
       console.log('🔐 Login successful!', result.user?.email);
       showInlineError(''); // clear
       closeAuthModal();
-      
+
       // Update account button immediately
       console.log('🔍 Debug: Checking FlickletApp availability:', {
         FlickletApp: !!window.FlickletApp,
         updateAccountButton: !!(window.FlickletApp && window.FlickletApp.updateAccountButton),
         currentUser: window.FlickletApp?.currentUser,
-        firebaseUser: result.user
+        firebaseUser: result.user,
       });
-      
+
       // Update account button immediately with the user data we have
       const accountBtn = document.getElementById('accountButton');
       if (accountBtn && result.user) {
@@ -138,7 +144,7 @@
         accountBtn.title = `Signed in as ${result.user.email}. Click to sign out.`;
         console.log('🔍 Updated account button directly with user data:', displayName);
       }
-      
+
       // Also try the FlickletApp method after a delay for consistency
       setTimeout(() => {
         if (window.FlickletApp && window.FlickletApp.updateAccountButton) {
@@ -146,20 +152,20 @@
           window.FlickletApp.updateAccountButton();
         }
       }, 500);
-      
+
       // Show success notification
       if (window.showNotification) {
         window.showNotification('Signed in successfully!', 'success');
       } else if (Notify?.info) {
         Notify.info('Signed in successfully');
       }
-      
+
       // DEPRECATED: Username prompt now handled by app layer post-auth pipeline
       console.warn('[auth] DEPRECATED: Username prompt trigger - handled by app layer');
-    } catch (e){
+    } catch (e) {
       console.error('[auth] google login failed', e);
       let errorMessage = 'Google sign-in failed. ';
-      
+
       if (e.code === 'auth/popup-closed-by-user') {
         errorMessage += 'Please try again and complete the sign-in process.';
       } else if (e.code === 'auth/popup-blocked') {
@@ -173,21 +179,21 @@
       } else {
         errorMessage += e.message || 'Please try again.';
       }
-      
+
       showInlineError(errorMessage);
-      
+
       // Show error notification
       if (window.showNotification) {
         window.showNotification(errorMessage, 'error');
       }
-      
+
       // do NOT close modal
     } finally {
       setBusy('googleBtn', false, '🔒 Google');
     }
   }
 
-  async function loginWithApple(){
+  async function loginWithApple() {
     setBusy('appleBtn', true);
     try {
       ensureFirebase();
@@ -198,7 +204,7 @@
       console.log('🍎 Apple login successful!', result.user?.email);
       showInlineError('');
       closeAuthModal();
-      
+
       // Update account button immediately
       const accountBtn = document.getElementById('accountButton');
       if (accountBtn && result.user) {
@@ -210,17 +216,17 @@
         accountBtn.title = `Signed in as ${result.user.email}. Click to sign out.`;
         console.log('🔍 Updated account button directly with user data:', displayName);
       }
-      
+
       if (window.FlickletApp && window.FlickletApp.updateAccountButton) {
         console.log('🔍 Updating account button after Apple sign-in');
         window.FlickletApp.updateAccountButton();
       }
-      
+
       Notify?.info?.('Signed in successfully');
-    } catch (e){
+    } catch (e) {
       console.error('[auth] apple login failed', e);
       let errorMessage = 'Apple sign-in failed. ';
-      
+
       if (e.code === 'auth/popup-closed-by-user') {
         errorMessage += 'Please try again and complete the sign-in process.';
       } else if (e.code === 'auth/popup-blocked') {
@@ -230,41 +236,41 @@
       } else {
         errorMessage += e.message || 'Please try again.';
       }
-      
+
       showInlineError(errorMessage);
     } finally {
       setBusy('appleBtn', false, '🍎 Apple');
     }
   }
 
-  async function loginWithEmail(){
+  async function loginWithEmail() {
     setBusy('emailBtn', true);
     try {
       ensureFirebase();
       const modal = getCurrentModal();
       const email = (modal?.querySelector('#emailInput')?.value || '').trim();
-      const pass  = (modal?.querySelector('#passwordInput')?.value || '').trim();
-      
-      if (!email || !pass) { 
-        showInlineError('Email and password are required'); 
-        return; 
+      const pass = (modal?.querySelector('#passwordInput')?.value || '').trim();
+
+      if (!email || !pass) {
+        showInlineError('Email and password are required');
+        return;
       }
-      
+
       if (!email.includes('@')) {
         showInlineError('Please enter a valid email address');
         return;
       }
-      
+
       if (pass.length < 6) {
         showInlineError('Password must be at least 6 characters');
         return;
       }
-      
+
       const result = await firebase.auth().signInWithEmailAndPassword(email, pass);
       console.log('✉️ Email login successful!', result.user?.email);
       showInlineError('');
       closeAuthModal();
-      
+
       // Update account button immediately
       const accountBtn = document.getElementById('accountButton');
       if (accountBtn && result.user) {
@@ -276,19 +282,20 @@
         accountBtn.title = `Signed in as ${result.user.email}. Click to sign out.`;
         console.log('🔍 Updated account button directly with user data:', displayName);
       }
-      
+
       if (window.FlickletApp && window.FlickletApp.updateAccountButton) {
         console.log('🔍 Updating account button after Email sign-in');
         window.FlickletApp.updateAccountButton();
       }
-      
+
       Notify?.info?.('Signed in successfully');
-    } catch (e){
+    } catch (e) {
       console.error('[auth] email login failed', e);
       let errorMessage = 'Email sign-in failed. ';
-      
+
       if (e.code === 'auth/user-not-found') {
-        errorMessage += 'No account found with this email. Please check your email or create a new account.';
+        errorMessage +=
+          'No account found with this email. Please check your email or create a new account.';
       } else if (e.code === 'auth/wrong-password') {
         errorMessage += 'Incorrect password. Please try again.';
       } else if (e.code === 'auth/invalid-email') {
@@ -300,7 +307,7 @@
       } else {
         errorMessage += e.message || 'Please try again.';
       }
-      
+
       showInlineError(errorMessage);
     } finally {
       setBusy('emailBtn', false, '✉️ Email');
@@ -351,21 +358,21 @@
     const googleBtn = tpl.querySelector('#googleBtn');
     const appleBtn = tpl.querySelector('#appleBtn');
     const emailBtn = tpl.querySelector('#emailBtn');
-    
+
     if (googleBtn) {
       googleBtn.addEventListener('click', () => {
         console.log('🔐 Google sign-in button clicked in injected modal');
         loginWithGoogle();
       });
     }
-    
+
     if (appleBtn) {
       appleBtn.addEventListener('click', () => {
         console.log('🍎 Apple sign-in button clicked in injected modal');
         loginWithApple();
       });
     }
-    
+
     if (emailBtn) {
       emailBtn.addEventListener('click', () => {
         console.log('✉️ Email sign-in button clicked in injected modal');
@@ -378,7 +385,10 @@
 
   function showSignInModal() {
     const m = ensureSignInModal();
-    if (!m) { console.warn('showSignInModal: no modal'); return; }
+    if (!m) {
+      console.warn('showSignInModal: no modal');
+      return;
+    }
     m.removeAttribute('hidden');
     m.classList.add('open');
     m.setAttribute('aria-hidden', 'false');
@@ -401,14 +411,18 @@
   window.hideSignInModal = hideSignInModal;
   if (window.FlickletApp) {
     window.FlickletApp.showSignInModal = showSignInModal;
-    window.FlickletApp.hideSignInModal  = hideSignInModal;
+    window.FlickletApp.hideSignInModal = hideSignInModal;
   } else {
-    window.addEventListener('app-ready', () => {
-      if (window.FlickletApp) {
-        window.FlickletApp.showSignInModal = showSignInModal;
-        window.FlickletApp.hideSignInModal  = hideSignInModal;
-      }
-    }, { once: true });
+    window.addEventListener(
+      'app-ready',
+      () => {
+        if (window.FlickletApp) {
+          window.FlickletApp.showSignInModal = showSignInModal;
+          window.FlickletApp.hideSignInModal = hideSignInModal;
+        }
+      },
+      { once: true },
+    );
   }
 
   // Export a single API for the rest of the app - delegate to AuthManager
@@ -444,7 +458,7 @@
       } else {
         console.error('[auth] AuthManager not available');
       }
-    }
+    },
   };
 
   console.log('🔐 Auth.js loaded - enhanced modal protection and login functions available');

@@ -3,7 +3,7 @@
  * Provides postMessage communication for iframe-to-parent auth requests
  */
 
-(function() {
+(function () {
   'use strict';
 
   const IFRAME_AUTH_HELPER = {
@@ -21,13 +21,13 @@
      */
     requestAuth(provider, method = null) {
       console.log(`📨 Requesting ${provider} auth from parent${method ? ` (${method})` : ''}`);
-      
+
       const message = {
         type: 'FLICKLET_START_LOGIN',
         provider: provider,
-        method: method
+        method: method,
       };
-      
+
       // Send to parent window
       if (window.parent && window.parent !== window) {
         window.parent.postMessage(message, '*');
@@ -42,7 +42,7 @@
     setupAuthRequestHandler() {
       // Handle Google auth requests
       const googleBtns = document.querySelectorAll('[data-auth-provider="google"]');
-      googleBtns.forEach(btn => {
+      googleBtns.forEach((btn) => {
         btn.addEventListener('click', (e) => {
           e.preventDefault();
           this.requestAuth('google');
@@ -51,7 +51,7 @@
 
       // Handle Apple auth requests
       const appleBtns = document.querySelectorAll('[data-auth-provider="apple"]');
-      appleBtns.forEach(btn => {
+      appleBtns.forEach((btn) => {
         btn.addEventListener('click', (e) => {
           e.preventDefault();
           this.requestAuth('apple');
@@ -60,7 +60,7 @@
 
       // Handle Email auth requests
       const emailBtns = document.querySelectorAll('[data-auth-provider="email"]');
-      emailBtns.forEach(btn => {
+      emailBtns.forEach((btn) => {
         btn.addEventListener('click', (e) => {
           e.preventDefault();
           this.requestAuth('email');
@@ -69,7 +69,7 @@
 
       // Handle generic sign-in requests
       const signInBtns = document.querySelectorAll('[data-auth-action="signin"]');
-      signInBtns.forEach(btn => {
+      signInBtns.forEach((btn) => {
         btn.addEventListener('click', (e) => {
           e.preventDefault();
           this.showSignInPrompt();
@@ -97,7 +97,7 @@
         color: white;
         font-family: sans-serif;
       `;
-      
+
       prompt.innerHTML = `
         <div style="
           background: white;
@@ -146,7 +146,7 @@
           ">Cancel</button>
         </div>
       `;
-      
+
       prompt.className = 'iframe-auth-prompt';
       document.body.appendChild(prompt);
     },
@@ -177,18 +177,20 @@
      */
     handleAuthSuccess(data) {
       console.log('✅ Auth success in iframe:', data);
-      
+
       // Remove any auth prompts
       const prompts = document.querySelectorAll('.iframe-auth-prompt');
-      prompts.forEach(prompt => prompt.remove());
-      
+      prompts.forEach((prompt) => prompt.remove());
+
       // Update UI to reflect signed-in state
       this.updateSignedInState(data.user, data.provider);
-      
+
       // Dispatch custom event for iframe-specific handling
-      window.dispatchEvent(new CustomEvent('flicklet-auth-success', {
-        detail: data
-      }));
+      window.dispatchEvent(
+        new CustomEvent('flicklet-auth-success', {
+          detail: data,
+        }),
+      );
     },
 
     /**
@@ -196,10 +198,10 @@
      */
     handleAuthSignOut() {
       console.log('👋 Auth sign out in iframe');
-      
+
       // Update UI to reflect signed-out state
       this.updateSignedOutState();
-      
+
       // Dispatch custom event for iframe-specific handling
       window.dispatchEvent(new CustomEvent('flicklet-auth-signout'));
     },
@@ -209,14 +211,16 @@
      */
     handleAuthError(data) {
       console.error('❌ Auth error in iframe:', data);
-      
+
       // Show error message
       this.showError(data.message || 'Authentication failed');
-      
+
       // Dispatch custom event for iframe-specific handling
-      window.dispatchEvent(new CustomEvent('flicklet-auth-error', {
-        detail: data
-      }));
+      window.dispatchEvent(
+        new CustomEvent('flicklet-auth-error', {
+          detail: data,
+        }),
+      );
     },
 
     /**
@@ -225,20 +229,20 @@
     updateSignedInState(user, provider) {
       // Update any user info displays
       const userElements = document.querySelectorAll('[data-user-info]');
-      userElements.forEach(el => {
+      userElements.forEach((el) => {
         el.textContent = user || 'Signed in';
         el.style.display = 'block';
       });
-      
+
       // Hide sign-in buttons
       const signInElements = document.querySelectorAll('[data-auth-action="signin"]');
-      signInElements.forEach(el => {
+      signInElements.forEach((el) => {
         el.style.display = 'none';
       });
-      
+
       // Show sign-out buttons
       const signOutElements = document.querySelectorAll('[data-auth-action="signout"]');
-      signOutElements.forEach(el => {
+      signOutElements.forEach((el) => {
         el.style.display = 'block';
       });
     },
@@ -249,19 +253,19 @@
     updateSignedOutState() {
       // Hide user info displays
       const userElements = document.querySelectorAll('[data-user-info]');
-      userElements.forEach(el => {
+      userElements.forEach((el) => {
         el.style.display = 'none';
       });
-      
+
       // Show sign-in buttons
       const signInElements = document.querySelectorAll('[data-auth-action="signin"]');
-      signInElements.forEach(el => {
+      signInElements.forEach((el) => {
         el.style.display = 'block';
       });
-      
+
       // Hide sign-out buttons
       const signOutElements = document.querySelectorAll('[data-auth-action="signout"]');
-      signOutElements.forEach(el => {
+      signOutElements.forEach((el) => {
         el.style.display = 'none';
       });
     },
@@ -286,14 +290,14 @@
       `;
       error.textContent = message;
       document.body.appendChild(error);
-      
+
       // Remove after 3 seconds
       setTimeout(() => {
         if (error.parentNode) {
           error.parentNode.removeChild(error);
         }
       }, 3000);
-    }
+    },
   };
 
   // Expose globally
@@ -305,5 +309,4 @@
   } else {
     IFRAME_AUTH_HELPER.init();
   }
-
 })();

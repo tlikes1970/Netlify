@@ -1,6 +1,6 @@
 /**
  * Action Bar Component - Unified Action System
- * 
+ *
  * Process: Action Bar Component
  * Purpose: Unified action bar with primary/secondary actions and mobile overflow menu
  * Data Source: Item data and current list context
@@ -8,7 +8,7 @@
  * Dependencies: i18n.js, components.css, card rendering system
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🎯 Action Bar component loaded');
@@ -32,15 +32,15 @@
         icon: '🗑️',
         action: 'remove',
         className: 'btn danger',
-        priority: 'always' // Always available but can drop to overflow
+        priority: 'always', // Always available but can drop to overflow
       },
       notes: {
         label: t('notes_tags'),
         icon: '✎',
         action: 'notes',
         className: 'btn secondary',
-        priority: 'secondary'
-      }
+        priority: 'secondary',
+      },
     };
 
     // List-specific primary actions
@@ -53,13 +53,10 @@
             action: 'move',
             list: 'watching',
             className: 'btn primary',
-            priority: 'primary'
-          }
+            priority: 'primary',
+          },
         ],
-        secondary: [
-          baseActions.remove,
-          baseActions.notes
-        ]
+        secondary: [baseActions.remove, baseActions.notes],
       },
       watching: {
         primary: [
@@ -69,13 +66,10 @@
             action: 'move',
             list: 'watched',
             className: 'btn primary',
-            priority: 'primary'
-          }
+            priority: 'primary',
+          },
         ],
-        secondary: [
-          baseActions.notes,
-          baseActions.remove
-        ]
+        secondary: [baseActions.notes, baseActions.remove],
       },
       watched: {
         primary: [
@@ -84,14 +78,11 @@
             icon: '⭐',
             action: 'rate',
             className: 'btn primary',
-            priority: 'primary'
-          }
+            priority: 'primary',
+          },
         ],
-        secondary: [
-          baseActions.notes,
-          baseActions.remove
-        ]
-      }
+        secondary: [baseActions.notes, baseActions.remove],
+      },
     };
 
     // Add TV-specific actions
@@ -101,11 +92,11 @@
         icon: '📺',
         action: 'track-episodes',
         className: 'btn secondary',
-        priority: 'secondary'
+        priority: 'secondary',
       };
 
       // Add to secondary actions for all lists
-      Object.values(listConfigs).forEach(config => {
+      Object.values(listConfigs).forEach((config) => {
         config.secondary.push(trackEpisodes);
       });
     }
@@ -125,7 +116,9 @@
     const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
 
     // Generate primary actions HTML
-    const primaryActionsHTML = config.primary.map(action => `
+    const primaryActionsHTML = config.primary
+      .map(
+        (action) => `
       <button 
         class="${action.className} action-btn action-btn--primary" 
         data-action="${action.action}" 
@@ -138,10 +131,14 @@
         ${action.icon ? `<span class="action-icon" aria-hidden="true">${action.icon}</span>` : ''}
         <span class="action-label">${action.label}</span>
       </button>
-    `).join('');
+    `,
+      )
+      .join('');
 
     // Generate secondary actions HTML
-    const secondaryActionsHTML = config.secondary.map(action => `
+    const secondaryActionsHTML = config.secondary
+      .map(
+        (action) => `
       <button 
         class="${action.className} action-btn action-btn--secondary" 
         data-action="${action.action}" 
@@ -154,10 +151,14 @@
         ${action.icon ? `<span class="action-icon" aria-hidden="true">${action.icon}</span>` : ''}
         <span class="action-label">${action.label}</span>
       </button>
-    `).join('');
+    `,
+      )
+      .join('');
 
     // Generate overflow menu HTML
-    const overflowMenuHTML = config.secondary.length > 0 ? `
+    const overflowMenuHTML =
+      config.secondary.length > 0
+        ? `
       <div class="action-overflow">
         <button 
           class="action-overflow-btn" 
@@ -168,7 +169,9 @@
           <span class="action-overflow-dots" aria-hidden="true">⋯</span>
         </button>
         <div class="action-overflow-menu" role="menu" aria-hidden="true">
-          ${config.secondary.map(action => `
+          ${config.secondary
+            .map(
+              (action) => `
             <button 
               class="action-overflow-item" 
               role="menuitem"
@@ -181,10 +184,13 @@
               ${action.icon ? `<span class="action-overflow-icon" aria-hidden="true">${action.icon}</span>` : ''}
               <span class="action-overflow-label">${action.label}</span>
             </button>
-          `).join('')}
+          `,
+            )
+            .join('')}
         </div>
       </div>
-    ` : '';
+    `
+        : '';
 
     return `
       <div class="action-bar" data-list-type="${listType}">
@@ -209,11 +215,11 @@
       if (overflowBtn) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         const isOpen = overflowBtn.getAttribute('aria-expanded') === 'true';
-        
+
         // Close all other overflow menus
-        document.querySelectorAll('.action-overflow-btn').forEach(btn => {
+        document.querySelectorAll('.action-overflow-btn').forEach((btn) => {
           if (btn !== overflowBtn) {
             btn.setAttribute('aria-expanded', 'false');
             const menu = btn.nextElementSibling;
@@ -222,7 +228,7 @@
             }
           }
         });
-        
+
         // Toggle current menu
         overflowBtn.setAttribute('aria-expanded', !isOpen);
         const menu = overflowBtn.nextElementSibling;
@@ -230,10 +236,10 @@
           menu.setAttribute('aria-hidden', isOpen);
         }
       }
-      
+
       // Close overflow menus when clicking outside
       if (!e.target.closest('.action-overflow')) {
-        document.querySelectorAll('.action-overflow-btn').forEach(btn => {
+        document.querySelectorAll('.action-overflow-btn').forEach((btn) => {
           btn.setAttribute('aria-expanded', 'false');
           const menu = btn.nextElementSibling;
           if (menu) {
@@ -305,9 +311,6 @@
   window.ActionBar = {
     createActionBarHTML,
     getActionConfig,
-    initializeActionBarEvents
+    initializeActionBarEvents,
   };
-
 })();
-
-

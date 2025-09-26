@@ -5,63 +5,219 @@
       "key": "general",
       "title": "General",
       "controls": [
-        { "key": "displayName", "type": "text",   "label": "Display Name",               "selector": "#displayNameInput", "storageKey": "pref_displayName" },
-        { "key": "myStats",     "type": "label", "label": "My Statistics",              "selector": "#statsContent" },
-        { "key": "notInterested","type": "button","label": "Not Interested Management",  "selector": "#manageNotInterestedBtn", "action": "openNotInterestedManager" }
+        {
+          "key": "displayName",
+          "type": "text",
+          "label": "Display Name",
+          "selector": "#displayNameInput",
+          "storageKey": "pref_displayName"
+        },
+        {
+          "key": "myStats",
+          "type": "label",
+          "label": "My Statistics",
+          "selector": "#statsContent"
+        },
+        {
+          "key": "notInterested",
+          "type": "button",
+          "label": "Not Interested Management",
+          "selector": "#manageNotInterestedBtn",
+          "action": "openNotInterestedManager"
+        }
       ]
     },
     {
       "key": "notifications",
       "title": "Notifications",
       "controls": [
-        { "key": "episodeAlerts",    "type": "toggle", "label": "Episode Alerts",          "selector": "#notifEpisodes", "storageKey": "pref_epAlerts" },
-        { "key": "weeklyDiscover",   "type": "toggle", "label": "Weekly Discover",         "selector": "#notifDiscover", "storageKey": "pref_weeklyDiscover" },
-        { "key": "monthlyDigest",    "type": "toggle", "label": "Monthly Digest",          "selector": "#notifDigest", "storageKey": "pref_monthlyDigest" },
-        { "key": "proNotifToggle",   "type": "toggle", "label": "Pro Notifications",       "selector": "#advOn", "storageKey": "pref_proNotifToggle" },
-        { "key": "proNotifLeadTime", "type": "select", "label": "Custom lead time",        "selector": "#advLead", "storageKey": "pref_proNotifLeadTime" },
-        { "key": "proNotifLists",    "type": "multiselect", "label": "List monitoring",    "selector": "#advListWatching, #advListWishlist, #advListWatched", "storageKey": "pref_proNotifLists" }
+        {
+          "key": "episodeAlerts",
+          "type": "toggle",
+          "label": "Episode Alerts",
+          "selector": "#notifEpisodes",
+          "storageKey": "pref_epAlerts"
+        },
+        {
+          "key": "weeklyDiscover",
+          "type": "toggle",
+          "label": "Weekly Discover",
+          "selector": "#notifDiscover",
+          "storageKey": "pref_weeklyDiscover"
+        },
+        {
+          "key": "monthlyDigest",
+          "type": "toggle",
+          "label": "Monthly Digest",
+          "selector": "#notifDigest",
+          "storageKey": "pref_monthlyDigest"
+        },
+        {
+          "key": "proNotifToggle",
+          "type": "toggle",
+          "label": "Pro Notifications",
+          "selector": "#advOn",
+          "storageKey": "pref_proNotifToggle"
+        },
+        {
+          "key": "proNotifLeadTime",
+          "type": "select",
+          "label": "Custom lead time",
+          "selector": "#advLead",
+          "storageKey": "pref_proNotifLeadTime"
+        },
+        {
+          "key": "proNotifLists",
+          "type": "multiselect",
+          "label": "List monitoring",
+          "selector": "#advListWatching, #advListWishlist, #advListWatched",
+          "storageKey": "pref_proNotifLists"
+        }
       ]
     },
     {
       "key": "layout",
       "title": "Layout",
       "controls": [
-        { "key": "condensedView",     "type": "toggle", "label": "Condensed list view",           "selector": "#condensedMode", "storageKey": "pref_condensed" },
-        { "key": "showPosters",       "type": "toggle", "label": "Show posters",                  "selector": "#showPosters", "storageKey": "pref_showPosters" },
-        { "key": "theme",             "type": "button", "label": "Theme (light/dark)",            "selector": "#themeToggleBtn", "action": "toggleTheme" },
-        { "key": "homeListsCount",    "type": "text", "label": "Home page lists count",         "selector": "#settingCuratedRows", "storageKey": "pref_homeListsCount" },
-        { "key": "watchingPreviewMax","type": "text", "label": "Currently watching preview",    "selector": "#settingCurrentlyWatchingLimit", "storageKey": "pref_watchingPreviewMax" },
-        { "key": "episodeTracking",   "type": "toggle", "label": "Episode tracking",               "selector": "#enableEpisodeTracking", "storageKey": "pref_episodeTracking" },
-        { "key": "proThemePack",      "type": "select", "label": "Theme pack (Pro)",               "selector": "#themePackSelect", "storageKey": "pref_proThemePack" }
+        {
+          "key": "condensedView",
+          "type": "toggle",
+          "label": "Condensed list view",
+          "selector": "#condensedMode",
+          "storageKey": "pref_condensed"
+        },
+        {
+          "key": "showPosters",
+          "type": "toggle",
+          "label": "Show posters",
+          "selector": "#showPosters",
+          "storageKey": "pref_showPosters"
+        },
+        {
+          "key": "theme",
+          "type": "button",
+          "label": "Theme (light/dark)",
+          "selector": "#themeToggleBtn",
+          "action": "toggleTheme"
+        },
+        {
+          "key": "homeListsCount",
+          "type": "text",
+          "label": "Home page lists count",
+          "selector": "#settingCuratedRows",
+          "storageKey": "pref_homeListsCount"
+        },
+        {
+          "key": "watchingPreviewMax",
+          "type": "text",
+          "label": "Currently watching preview",
+          "selector": "#settingCurrentlyWatchingLimit",
+          "storageKey": "pref_watchingPreviewMax"
+        },
+        {
+          "key": "episodeTracking",
+          "type": "toggle",
+          "label": "Episode tracking",
+          "selector": "#enableEpisodeTracking",
+          "storageKey": "pref_episodeTracking"
+        },
+        {
+          "key": "proThemePack",
+          "type": "select",
+          "label": "Theme pack (Pro)",
+          "selector": "#themePackSelect",
+          "storageKey": "pref_proThemePack"
+        }
       ]
     },
     {
       "key": "data",
       "title": "Data",
       "controls": [
-        { "key": "exportJson",      "type": "button", "label": "Export JSON",              "selector": "#exportBtn", "action": "exportDataJson" },
-        { "key": "importJson",      "type": "button",   "label": "Import JSON",              "selector": "#importBtn", "action": "importDataJson" },
-        { "key": "shareLists",      "type": "button", "label": "Share lists (text)",       "selector": "#shareOpenBtn", "action": "shareLists" },
-        { "key": "resetAll",        "type": "button", "label": "Reset all data",           "selector": "#resetBtn", "action": "resetAllData" },
-        { "key": "exportCsvPro",    "type": "button", "label": "Export CSV (Pro)",         "selector": "#exportCsvBtn", "action": "exportDataCsv" }
+        {
+          "key": "exportJson",
+          "type": "button",
+          "label": "Export JSON",
+          "selector": "#exportBtn",
+          "action": "exportDataJson"
+        },
+        {
+          "key": "importJson",
+          "type": "button",
+          "label": "Import JSON",
+          "selector": "#importBtn",
+          "action": "importDataJson"
+        },
+        {
+          "key": "shareLists",
+          "type": "button",
+          "label": "Share lists (text)",
+          "selector": "#shareOpenBtn",
+          "action": "shareLists"
+        },
+        {
+          "key": "resetAll",
+          "type": "button",
+          "label": "Reset all data",
+          "selector": "#resetBtn",
+          "action": "resetAllData"
+        },
+        {
+          "key": "exportCsvPro",
+          "type": "button",
+          "label": "Export CSV (Pro)",
+          "selector": "#exportCsvBtn",
+          "action": "exportDataCsv"
+        }
       ]
     },
     {
       "key": "pro",
       "title": "Pro",
       "controls": [
-        { "key": "previewPro",     "type": "button", "label": "Preview Pro Features", "selector": "#previewProBtn", "action": "toggleProPreview" },
-        { "key": "proFeaturesList","type": "label",  "label": "Pro Features List",    "selector": "#proFeaturesList" }
+        {
+          "key": "previewPro",
+          "type": "button",
+          "label": "Preview Pro Features",
+          "selector": "#previewProBtn",
+          "action": "toggleProPreview"
+        },
+        {
+          "key": "proFeaturesList",
+          "type": "label",
+          "label": "Pro Features List",
+          "selector": "#proFeaturesList"
+        }
       ]
     },
     {
       "key": "about",
       "title": "About",
       "controls": [
-        { "key": "aboutCompany", "type": "label", "label": "About Unique4U",     "selector": "h3[data-i18n='about_unique4u']" },
-        { "key": "aboutCreators","type": "label", "label": "About the Creators", "selector": "h3[data-i18n='about_the_creators']" },
-        { "key": "aboutApp",     "type": "label", "label": "About the App",      "selector": "h3[data-i18n='about_the_app']" },
-        { "key": "feedbackForm", "type": "label","label": "Feedback Form",      "selector": "form[name='feedback']" }
+        {
+          "key": "aboutCompany",
+          "type": "label",
+          "label": "About Unique4U",
+          "selector": "h3[data-i18n='about_unique4u']"
+        },
+        {
+          "key": "aboutCreators",
+          "type": "label",
+          "label": "About the Creators",
+          "selector": "h3[data-i18n='about_the_creators']"
+        },
+        {
+          "key": "aboutApp",
+          "type": "label",
+          "label": "About the App",
+          "selector": "h3[data-i18n='about_the_app']"
+        },
+        {
+          "key": "feedbackForm",
+          "type": "label",
+          "label": "Feedback Form",
+          "selector": "form[name='feedback']"
+        }
       ]
     }
   ]

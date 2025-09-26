@@ -36,30 +36,44 @@ async function readText(filePath) {
 async function generateSummary() {
   console.log('📊 BASELINE AUDIT SUMMARY');
   console.log('='.repeat(80));
-  
+
   // Lighthouse Desktop Results
   console.log('\n🔍 LIGHTHOUSE DESKTOP RESULTS:');
   try {
     const desktopLighthouse = await readJSON(path.join(reportsDir, 'lighthouse', 'desktop.json'));
     if (desktopLighthouse && desktopLighthouse.categories) {
-      console.log(`   Performance: ${Math.round(desktopLighthouse.categories.performance.score * 100)}`);
-      console.log(`   Accessibility: ${Math.round(desktopLighthouse.categories.accessibility.score * 100)}`);
-      console.log(`   Best Practices: ${Math.round(desktopLighthouse.categories['best-practices'].score * 100)}`);
+      console.log(
+        `   Performance: ${Math.round(desktopLighthouse.categories.performance.score * 100)}`,
+      );
+      console.log(
+        `   Accessibility: ${Math.round(desktopLighthouse.categories.accessibility.score * 100)}`,
+      );
+      console.log(
+        `   Best Practices: ${Math.round(desktopLighthouse.categories['best-practices'].score * 100)}`,
+      );
       console.log(`   SEO: ${Math.round(desktopLighthouse.categories.seo.score * 100)}`);
-      
+
       // Key metrics
       const audits = desktopLighthouse.audits;
       if (audits['first-contentful-paint']) {
-        console.log(`   First Contentful Paint: ${Math.round(audits['first-contentful-paint'].numericValue)}ms`);
+        console.log(
+          `   First Contentful Paint: ${Math.round(audits['first-contentful-paint'].numericValue)}ms`,
+        );
       }
       if (audits['largest-contentful-paint']) {
-        console.log(`   Largest Contentful Paint: ${Math.round(audits['largest-contentful-paint'].numericValue)}ms`);
+        console.log(
+          `   Largest Contentful Paint: ${Math.round(audits['largest-contentful-paint'].numericValue)}ms`,
+        );
       }
       if (audits['cumulative-layout-shift']) {
-        console.log(`   Cumulative Layout Shift: ${audits['cumulative-layout-shift'].numericValue}`);
+        console.log(
+          `   Cumulative Layout Shift: ${audits['cumulative-layout-shift'].numericValue}`,
+        );
       }
       if (audits['total-blocking-time']) {
-        console.log(`   Total Blocking Time: ${Math.round(audits['total-blocking-time'].numericValue)}ms`);
+        console.log(
+          `   Total Blocking Time: ${Math.round(audits['total-blocking-time'].numericValue)}ms`,
+        );
       }
     } else {
       console.log('   ❌ Desktop Lighthouse results not available');
@@ -67,27 +81,41 @@ async function generateSummary() {
   } catch (error) {
     console.log('   ❌ Desktop Lighthouse results not available');
   }
-  
+
   // Lighthouse Mobile Results
   console.log('\n📱 LIGHTHOUSE MOBILE RESULTS:');
   try {
     const mobileLighthouse = await readJSON(path.join(reportsDir, 'lighthouse', 'mobile.json'));
     if (mobileLighthouse && mobileLighthouse.categories) {
-      console.log(`   Performance: ${mobileLighthouse.categories.performance.score ? Math.round(mobileLighthouse.categories.performance.score * 100) : 'N/A'}`);
-      console.log(`   Accessibility: ${mobileLighthouse.categories.accessibility ? Math.round(mobileLighthouse.categories.accessibility.score * 100) : 'N/A'}`);
-      console.log(`   Best Practices: ${mobileLighthouse.categories['best-practices'] ? Math.round(mobileLighthouse.categories['best-practices'].score * 100) : 'N/A'}`);
-      console.log(`   SEO: ${mobileLighthouse.categories.seo ? Math.round(mobileLighthouse.categories.seo.score * 100) : 'N/A'}`);
-      
+      console.log(
+        `   Performance: ${mobileLighthouse.categories.performance.score ? Math.round(mobileLighthouse.categories.performance.score * 100) : 'N/A'}`,
+      );
+      console.log(
+        `   Accessibility: ${mobileLighthouse.categories.accessibility ? Math.round(mobileLighthouse.categories.accessibility.score * 100) : 'N/A'}`,
+      );
+      console.log(
+        `   Best Practices: ${mobileLighthouse.categories['best-practices'] ? Math.round(mobileLighthouse.categories['best-practices'].score * 100) : 'N/A'}`,
+      );
+      console.log(
+        `   SEO: ${mobileLighthouse.categories.seo ? Math.round(mobileLighthouse.categories.seo.score * 100) : 'N/A'}`,
+      );
+
       // Key metrics
       const audits = mobileLighthouse.audits;
       if (audits['first-contentful-paint']) {
-        console.log(`   First Contentful Paint: ${Math.round(audits['first-contentful-paint'].numericValue)}ms`);
+        console.log(
+          `   First Contentful Paint: ${Math.round(audits['first-contentful-paint'].numericValue)}ms`,
+        );
       }
       if (audits['largest-contentful-paint']) {
-        console.log(`   Largest Contentful Paint: ${Math.round(audits['largest-contentful-paint'].numericValue)}ms`);
+        console.log(
+          `   Largest Contentful Paint: ${Math.round(audits['largest-contentful-paint'].numericValue)}ms`,
+        );
       }
       if (audits['cumulative-layout-shift']) {
-        console.log(`   Cumulative Layout Shift: ${audits['cumulative-layout-shift'].numericValue}`);
+        console.log(
+          `   Cumulative Layout Shift: ${audits['cumulative-layout-shift'].numericValue}`,
+        );
       }
     } else {
       console.log('   ❌ Mobile Lighthouse results not available');
@@ -95,7 +123,7 @@ async function generateSummary() {
   } catch (error) {
     console.log('   ❌ Mobile Lighthouse results not available');
   }
-  
+
   // Axe Accessibility Results
   console.log('\n♿ AXE ACCESSIBILITY RESULTS:');
   try {
@@ -103,11 +131,11 @@ async function generateSummary() {
     if (axeResults && Array.isArray(axeResults) && axeResults.length > 0) {
       const result = axeResults[0];
       const violations = result.violations || [];
-      const serious = violations.filter(v => v.impact === 'serious').length;
-      const critical = violations.filter(v => v.impact === 'critical').length;
-      const moderate = violations.filter(v => v.impact === 'moderate').length;
-      const minor = violations.filter(v => v.impact === 'minor').length;
-      
+      const serious = violations.filter((v) => v.impact === 'serious').length;
+      const critical = violations.filter((v) => v.impact === 'critical').length;
+      const moderate = violations.filter((v) => v.impact === 'moderate').length;
+      const minor = violations.filter((v) => v.impact === 'minor').length;
+
       console.log(`   Total Violations: ${violations.length}`);
       console.log(`   Critical: ${critical}`);
       console.log(`   Serious: ${serious}`);
@@ -119,7 +147,7 @@ async function generateSummary() {
   } catch (error) {
     console.log('   ❌ Axe results not available');
   }
-  
+
   // Bundle Analysis
   console.log('\n📦 BUNDLE ANALYSIS:');
   try {
@@ -136,7 +164,7 @@ async function generateSummary() {
   } catch (error) {
     console.log('   ❌ Bundle analysis not available');
   }
-  
+
   // Duplication Analysis
   console.log('\n🔄 DUPLICATION ANALYSIS:');
   try {
@@ -154,7 +182,7 @@ async function generateSummary() {
   } catch (error) {
     console.log('   ❌ Duplication analysis not available');
   }
-  
+
   // Dependency Analysis
   console.log('\n📋 DEPENDENCY ANALYSIS:');
   try {
@@ -163,11 +191,11 @@ async function generateSummary() {
       const unusedDeps = Object.keys(depcheckData.dependencies || {}).length;
       const unusedDevDeps = Object.keys(depcheckData.devDependencies || {}).length;
       const missing = Object.keys(depcheckData.missing || {}).length;
-      
+
       console.log(`   Unused Dependencies: ${unusedDeps}`);
       console.log(`   Unused Dev Dependencies: ${unusedDevDeps}`);
       console.log(`   Missing Dependencies: ${missing}`);
-      
+
       if (unusedDeps > 0) {
         console.log(`   Unused Deps: ${depcheckData.dependencies.join(', ')}`);
       }
@@ -180,20 +208,20 @@ async function generateSummary() {
   } catch (error) {
     console.log('   ❌ Dependency analysis not available');
   }
-  
+
   // Knip Analysis
   console.log('\n🔍 KNIP ANALYSIS:');
   try {
     const knipOutput = await readText(path.join(reportsDir, 'knip.txt'));
     if (knipOutput) {
-      const lines = knipOutput.split('\n').filter(line => line.trim());
+      const lines = knipOutput.split('\n').filter((line) => line.trim());
       console.log(`   Issues Found: ${lines.length} lines`);
-      
+
       // Count different types of issues
-      const unusedExports = lines.filter(line => line.includes('unused export')).length;
-      const unusedFiles = lines.filter(line => line.includes('unused file')).length;
-      const unlistedDeps = lines.filter(line => line.includes('unlisted dependency')).length;
-      
+      const unusedExports = lines.filter((line) => line.includes('unused export')).length;
+      const unusedFiles = lines.filter((line) => line.includes('unused file')).length;
+      const unlistedDeps = lines.filter((line) => line.includes('unlisted dependency')).length;
+
       console.log(`   Unused Exports: ${unusedExports}`);
       console.log(`   Unused Files: ${unusedFiles}`);
       console.log(`   Unlisted Dependencies: ${unlistedDeps}`);
@@ -203,18 +231,18 @@ async function generateSummary() {
   } catch (error) {
     console.log('   ❌ Knip analysis not available');
   }
-  
+
   // Security Scan
   console.log('\n🔒 SECURITY SCAN:');
   try {
     const securityOutput = await readText(path.join(reportsDir, 'security-scan.txt'));
     if (securityOutput) {
-      const lines = securityOutput.split('\n').filter(line => line.trim());
+      const lines = securityOutput.split('\n').filter((line) => line.trim());
       console.log(`   Potential Security Issues: ${lines.length}`);
-      
+
       if (lines.length > 0) {
         console.log('   Issues found:');
-        lines.slice(0, 5).forEach(line => {
+        lines.slice(0, 5).forEach((line) => {
           console.log(`     - ${line}`);
         });
         if (lines.length > 5) {
@@ -227,7 +255,7 @@ async function generateSummary() {
   } catch (error) {
     console.log('   ❌ Security scan not available');
   }
-  
+
   console.log('\n' + '='.repeat(80));
   console.log('✅ Baseline audit summary complete!');
   console.log('='.repeat(80));
@@ -235,15 +263,3 @@ async function generateSummary() {
 
 // Run the summary
 generateSummary().catch(console.error);
-
-
-
-
-
-
-
-
-
-
-
-

@@ -2,7 +2,11 @@
 // Same-origin proxy for dictionaryapi.dev with basic validation & caching.
 
 function json(code, obj) {
-  return { statusCode: code, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(obj) };
+  return {
+    statusCode: code,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(obj),
+  };
 }
 
 exports.handler = async (event) => {
@@ -22,7 +26,7 @@ exports.handler = async (event) => {
     const url = `https://api.dictionaryapi.dev/api/v2/entries/${lang}/${encodeURIComponent(word)}`;
 
     const upstream = await fetch(url, {
-      headers: { 'Accept': 'application/json' },
+      headers: { Accept: 'application/json' },
     });
 
     const text = await upstream.text(); // pass-through body (array or error)
@@ -36,6 +40,9 @@ exports.handler = async (event) => {
       body: text,
     };
   } catch (err) {
-    return json(502, { error: 'Dictionary upstream failed', detail: String(err && err.message || err) });
+    return json(502, {
+      error: 'Dictionary upstream failed',
+      detail: String((err && err.message) || err),
+    });
   }
 };

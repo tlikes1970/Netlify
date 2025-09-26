@@ -52,25 +52,25 @@ test.describe('Theme & Mardi Gras', () => {
 
   test('settings modal accessibility', async ({ page }) => {
     await page.goto('http://localhost:8000');
-    
+
     // Check gear button accessibility
     const settingsBtn = page.locator('#btnSettings');
     await expect(settingsBtn).toHaveAttribute('aria-label', 'Open settings');
     await expect(settingsBtn).toHaveAttribute('aria-haspopup', 'dialog');
-    
+
     // Open modal and check accessibility
     await settingsBtn.click();
-    
+
     const modal = page.locator('#settingsModal');
     await expect(modal).toHaveAttribute('role', 'dialog');
     await expect(modal).toHaveAttribute('aria-modal', 'true');
     await expect(modal).toHaveAttribute('aria-labelledby', 'settingsTitle');
-    
+
     // Check focus trap
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
-    
+
     // ESC should close modal
     await page.keyboard.press('Escape');
     await expect(modal).toHaveAttribute('hidden', '');
@@ -78,35 +78,35 @@ test.describe('Theme & Mardi Gras', () => {
 
   test('theme switching works instantly', async ({ page }) => {
     await page.goto('http://localhost:8000');
-    
+
     // Open settings
     await page.click('#btnSettings');
     await page.waitForSelector('#settingsModal:not([hidden])');
-    
+
     // Switch to light theme
     await page.waitForSelector('#themeLight', { state: 'visible' });
     await page.check('#themeLight');
     await expect(page.locator('body')).toHaveAttribute('data-theme', 'light');
-    
+
     // Switch to dark theme
     await page.check('#themeDark');
     await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
-    
+
     // Switch back to system
     await page.check('#themeSystem');
     await expect(page.locator('body')).toHaveAttribute('data-theme', 'system');
-    
+
     // Toggle Mardi Gras
     await page.check('#mardiOverlayToggle');
     await expect(page.locator('body')).toHaveAttribute('data-mardi', 'on');
-    
+
     await page.uncheck('#mardiOverlayToggle');
     await expect(page.locator('body')).toHaveAttribute('data-mardi', 'off');
   });
 
   test('localStorage persistence', async ({ page, context }) => {
     await page.goto('http://localhost:8000');
-    
+
     // Set custom theme and mardi
     await page.click('#btnSettings');
     await page.waitForSelector('#settingsModal:not([hidden])');
@@ -115,21 +115,21 @@ test.describe('Theme & Mardi Gras', () => {
     await page.waitForSelector('#mardiOverlayToggle', { state: 'visible' });
     await page.check('#mardiOverlayToggle');
     await page.click('#settingsClose');
-    
+
     // Check localStorage
     const theme = await page.evaluate(() => localStorage.getItem('pref_theme'));
     const mardi = await page.evaluate(() => localStorage.getItem('pref_mardi'));
-    
+
     expect(theme).toBe('light');
     expect(mardi).toBe('on');
-    
+
     // Clear localStorage and reload
     await page.evaluate(() => {
       localStorage.removeItem('pref_theme');
       localStorage.removeItem('pref_mardi');
     });
     await page.reload();
-    
+
     // Should default to system/off
     await expect(page.locator('body')).toHaveAttribute('data-theme', 'system');
     await expect(page.locator('body')).toHaveAttribute('data-mardi', 'off');

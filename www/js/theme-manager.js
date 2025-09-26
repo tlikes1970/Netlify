@@ -6,16 +6,22 @@
  * Dependencies: CSS variables in theme.css, settings modal controls
  */
 (() => {
-  const THEME_KEY = 'pref_theme';   // 'system' | 'light' | 'dark'
-  const MARDI_KEY = 'pref_mardi';   // 'on' | 'off'
+  const THEME_KEY = 'pref_theme'; // 'system' | 'light' | 'dark'
+  const MARDI_KEY = 'pref_mardi'; // 'on' | 'off'
 
   const media = window.matchMedia('(prefers-color-scheme: dark)');
 
   function getStored(key, fallback) {
-    try { return localStorage.getItem(key) || fallback; } catch { return fallback; }
+    try {
+      return localStorage.getItem(key) || fallback;
+    } catch {
+      return fallback;
+    }
   }
   function setStored(key, val) {
-    try { localStorage.setItem(key, val); } catch {}
+    try {
+      localStorage.setItem(key, val);
+    } catch {}
   }
 
   function applyTheme(theme, mardi) {
@@ -59,11 +65,23 @@
 
     // Expose minimal API
     window.ThemeManager = {
-      get theme() { return getStored(THEME_KEY, 'system'); },
-      set theme(val) { setStored(THEME_KEY, val); applyTheme(val, getStored(MARDI_KEY, 'off')); },
-      get mardi() { return getStored(MARDI_KEY, 'off'); },
-      set mardi(val) { setStored(MARDI_KEY, val); applyTheme(getStored(THEME_KEY, 'system'), val); },
-      get effectiveTheme() { return currentComputedTheme(getStored(THEME_KEY, 'system')); }
+      get theme() {
+        return getStored(THEME_KEY, 'system');
+      },
+      set theme(val) {
+        setStored(THEME_KEY, val);
+        applyTheme(val, getStored(MARDI_KEY, 'off'));
+      },
+      get mardi() {
+        return getStored(MARDI_KEY, 'off');
+      },
+      set mardi(val) {
+        setStored(MARDI_KEY, val);
+        applyTheme(getStored(THEME_KEY, 'system'), val);
+      },
+      get effectiveTheme() {
+        return currentComputedTheme(getStored(THEME_KEY, 'system'));
+      },
     };
   }
 

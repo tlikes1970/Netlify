@@ -1,6 +1,6 @@
 /**
  * Notes Modal - Simple Note Taking
- * 
+ *
  * Process: Notes Modal
  * Purpose: Simple note taking modal with textarea and save/cancel
  * Data Source: localStorage for user notes
@@ -8,7 +8,7 @@
  * Dependencies: localStorage, modal system
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('📝 Notes Modal loaded');
@@ -22,17 +22,17 @@
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop';
     backdrop.dataset.modal = 'notes';
-    
+
     // Create modal content
     const modal = document.createElement('div');
     modal.className = 'modal modal--notes';
-    
+
     const itemTitle = item.title || item.name || 'Unknown Title';
     const itemId = item.id || item.tmdb_id || item.tmdbId;
-    
+
     // Get existing notes
     const existingNotes = getItemNotes(itemId);
-    
+
     modal.innerHTML = `
       <div class="modal__header">
         <h3 class="modal__title">Notes for ${itemTitle}</h3>
@@ -57,32 +57,32 @@
         <button class="btn btn--primary modal__save">Save Notes</button>
       </div>
     `;
-    
+
     backdrop.appendChild(modal);
     document.body.appendChild(backdrop);
-    
+
     // Add event listeners
     const closeBtn = modal.querySelector('.modal__close');
     const cancelBtn = modal.querySelector('.modal__cancel');
     const saveBtn = modal.querySelector('.modal__save');
     const textarea = modal.querySelector('#notesTextarea');
     const charCount = modal.querySelector('#charCount');
-    
+
     const closeModal = () => {
       backdrop.remove();
     };
-    
+
     closeBtn.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
     backdrop.addEventListener('click', (e) => {
       if (e.target === backdrop) closeModal();
     });
-    
+
     // Handle character count
     textarea.addEventListener('input', (e) => {
       const count = e.target.value.length;
       charCount.textContent = count;
-      
+
       // Update save button state
       if (count > 0 && count !== existingNotes.length) {
         saveBtn.disabled = false;
@@ -95,24 +95,24 @@
         saveBtn.textContent = 'No Changes';
       }
     });
-    
+
     // Handle save
     saveBtn.addEventListener('click', () => {
       const notes = textarea.value.trim();
       saveItemNotes(itemId, notes);
-      
+
       // Update note indicator on cards
       updateNoteIndicator(itemId, notes.length > 0);
-      
+
       if (notes.length > 0) {
         showToast('success', 'Notes Saved', `Notes saved for ${itemTitle}`);
       } else {
         showToast('success', 'Notes Cleared', `Notes cleared for ${itemTitle}`);
       }
-      
+
       closeModal();
     });
-    
+
     // Focus textarea
     setTimeout(() => {
       textarea.focus();
@@ -160,17 +160,17 @@
   function updateNoteIndicator(itemId, hasNotes) {
     // Find all cards with this item ID
     const cards = document.querySelectorAll(`[data-id="${itemId}"]`);
-    
-    cards.forEach(card => {
+
+    cards.forEach((card) => {
       let indicator = card.querySelector('.unified-poster-card__note-indicator');
-      
+
       if (hasNotes && !indicator) {
         // Add indicator
         indicator = document.createElement('div');
         indicator.className = 'unified-poster-card__note-indicator';
         indicator.title = 'Has notes';
         indicator.textContent = '📝';
-        
+
         const poster = card.querySelector('.unified-poster-card__poster');
         if (poster) {
           poster.appendChild(indicator);
@@ -198,8 +198,6 @@
 
   // Expose globally
   window.openNotesModal = openNotesModal;
-  
+
   console.log('✅ Notes Modal ready');
-
 })();
-

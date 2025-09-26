@@ -23,14 +23,16 @@ test.describe('Mobile Card Compaction', () => {
     // Check if we have any cards
     const cards = page.locator('.show-card');
     const cardCount = await cards.count();
-    
+
     if (cardCount > 0) {
       const firstCard = cards.first();
-      
+
       // Check grid layout
-      const display = await firstCard.evaluate(el => getComputedStyle(el).display);
-      const gridTemplateColumns = await firstCard.evaluate(el => getComputedStyle(el).gridTemplateColumns);
-      
+      const display = await firstCard.evaluate((el) => getComputedStyle(el).display);
+      const gridTemplateColumns = await firstCard.evaluate(
+        (el) => getComputedStyle(el).gridTemplateColumns,
+      );
+
       expect(display).toBe('grid');
       expect(gridTemplateColumns).toContain('64px');
       expect(gridTemplateColumns).toContain('1fr');
@@ -51,15 +53,15 @@ test.describe('Mobile Card Compaction', () => {
 
     const cards = page.locator('.show-card');
     const cardCount = await cards.count();
-    
+
     if (cardCount > 0) {
       // Check heights of first 5 cards
-      const heights = await cards.evaluateAll(cards => 
-        cards.slice(0, 5).map(card => card.getBoundingClientRect().height)
+      const heights = await cards.evaluateAll((cards) =>
+        cards.slice(0, 5).map((card) => card.getBoundingClientRect().height),
       );
-      
+
       // Heights should be compact (≤160px)
-      heights.forEach(height => {
+      heights.forEach((height) => {
         expect(height).toBeLessThanOrEqual(160);
         expect(height).toBeGreaterThan(80); // Should still be reasonable
       });
@@ -76,15 +78,17 @@ test.describe('Mobile Card Compaction', () => {
 
     await page.waitForTimeout(500);
 
-    const posters = page.locator('.show-card .poster, .show-card img.poster, .show-card .thumb, .show-card img.thumb');
+    const posters = page.locator(
+      '.show-card .poster, .show-card img.poster, .show-card .thumb, .show-card img.thumb',
+    );
     const posterCount = await posters.count();
-    
+
     if (posterCount > 0) {
       const firstPoster = posters.first();
-      
-      const width = await firstPoster.evaluate(el => getComputedStyle(el).width);
-      const height = await firstPoster.evaluate(el => getComputedStyle(el).height);
-      
+
+      const width = await firstPoster.evaluate((el) => getComputedStyle(el).width);
+      const height = await firstPoster.evaluate((el) => getComputedStyle(el).height);
+
       expect(width).toBe('64px');
       expect(height).toBe('96px'); // 64px * 1.5
     }
@@ -100,15 +104,17 @@ test.describe('Mobile Card Compaction', () => {
 
     await page.waitForTimeout(500);
 
-    const actionButtons = page.locator('.show-card .actions .btn, .show-card .actions button, .show-card .actions .icon-btn');
+    const actionButtons = page.locator(
+      '.show-card .actions .btn, .show-card .actions button, .show-card .actions .icon-btn',
+    );
     const buttonCount = await actionButtons.count();
-    
+
     if (buttonCount > 0) {
       const firstButton = actionButtons.first();
-      
-      const width = await firstButton.evaluate(el => getComputedStyle(el).width);
-      const minWidth = await firstButton.evaluate(el => getComputedStyle(el).minWidth);
-      
+
+      const width = await firstButton.evaluate((el) => getComputedStyle(el).width);
+      const minWidth = await firstButton.evaluate((el) => getComputedStyle(el).minWidth);
+
       expect(width).toBe('44px');
       expect(minWidth).toBe('44px');
     }
@@ -126,15 +132,19 @@ test.describe('Mobile Card Compaction', () => {
 
     const overviews = page.locator('.show-card .overview');
     const overviewCount = await overviews.count();
-    
+
     if (overviewCount > 0) {
       const firstOverview = overviews.first();
-      
-      const display = await firstOverview.evaluate(el => getComputedStyle(el).display);
-      const webkitBoxOrient = await firstOverview.evaluate(el => getComputedStyle(el).webkitBoxOrient);
-      const webkitLineClamp = await firstOverview.evaluate(el => getComputedStyle(el).webkitLineClamp);
-      const overflow = await firstOverview.evaluate(el => getComputedStyle(el).overflow);
-      
+
+      const display = await firstOverview.evaluate((el) => getComputedStyle(el).display);
+      const webkitBoxOrient = await firstOverview.evaluate(
+        (el) => getComputedStyle(el).webkitBoxOrient,
+      );
+      const webkitLineClamp = await firstOverview.evaluate(
+        (el) => getComputedStyle(el).webkitLineClamp,
+      );
+      const overflow = await firstOverview.evaluate((el) => getComputedStyle(el).overflow);
+
       expect(display).toBe('-webkit-box');
       expect(webkitBoxOrient).toBe('vertical');
       expect(webkitLineClamp).toBe('2');
@@ -156,12 +166,12 @@ test.describe('Mobile Card Compaction', () => {
 
     const cards = page.locator('.show-card');
     const cardCount = await cards.count();
-    
+
     if (cardCount > 0) {
       const firstCard = cards.first();
-      
+
       // Should not be grid layout on desktop
-      const display = await firstCard.evaluate(el => getComputedStyle(el).display);
+      const display = await firstCard.evaluate((el) => getComputedStyle(el).display);
       expect(display).not.toBe('grid');
     }
   });
@@ -179,12 +189,12 @@ test.describe('Mobile Card Compaction', () => {
 
     const cards = page.locator('.show-card');
     const cardCount = await cards.count();
-    
+
     if (cardCount > 0) {
       const firstCard = cards.first();
-      
+
       // At 640px, should not be grid (max-width: 640px means < 640px)
-      const display = await firstCard.evaluate(el => getComputedStyle(el).display);
+      const display = await firstCard.evaluate((el) => getComputedStyle(el).display);
       expect(display).not.toBe('grid');
     }
 
@@ -196,9 +206,9 @@ test.describe('Mobile Card Compaction', () => {
 
     if (cardCount > 0) {
       const firstCard = cards.first();
-      
+
       // At 639px, should be grid
-      const display = await firstCard.evaluate(el => getComputedStyle(el).display);
+      const display = await firstCard.evaluate((el) => getComputedStyle(el).display);
       expect(display).toBe('grid');
     }
   });
@@ -216,7 +226,7 @@ test.describe('Mobile Card Compaction', () => {
     // Check if there's horizontal scroll
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
     const viewportWidth = await page.evaluate(() => window.innerWidth);
-    
+
     expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + 10); // Allow small margin for rounding
   });
 
@@ -230,16 +240,18 @@ test.describe('Mobile Card Compaction', () => {
 
     await page.waitForTimeout(500);
 
-    const actionButtons = page.locator('.show-card .actions .btn, .show-card .actions button, .show-card .actions .icon-btn');
+    const actionButtons = page.locator(
+      '.show-card .actions .btn, .show-card .actions button, .show-card .actions .icon-btn',
+    );
     const buttonCount = await actionButtons.count();
-    
+
     if (buttonCount > 0) {
       const firstButton = actionButtons.first();
-      
-      const height = await firstButton.evaluate(el => getComputedStyle(el).height);
-      const paddingTop = await firstButton.evaluate(el => getComputedStyle(el).paddingTop);
-      const paddingBottom = await firstButton.evaluate(el => getComputedStyle(el).paddingBottom);
-      
+
+      const height = await firstButton.evaluate((el) => getComputedStyle(el).height);
+      const paddingTop = await firstButton.evaluate((el) => getComputedStyle(el).paddingTop);
+      const paddingBottom = await firstButton.evaluate((el) => getComputedStyle(el).paddingBottom);
+
       // Total height should be at least 40px for good touch targets
       const totalHeight = parseFloat(height) + parseFloat(paddingTop) + parseFloat(paddingBottom);
       expect(totalHeight).toBeGreaterThanOrEqual(40);

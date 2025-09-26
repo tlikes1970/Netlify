@@ -4,7 +4,7 @@
    Always shows content (never hidden)
 */
 
-(function(){
+(function () {
   'use strict';
 
   // Check if feature is enabled
@@ -100,7 +100,7 @@
 
     const videoEl = row.querySelector('.spotlight-video');
     const infoEl = row.querySelector('.spotlight-info');
-    
+
     if (!videoEl || !infoEl) {
       console.error('❌ Spotlight DOM elements not found');
       return;
@@ -114,11 +114,12 @@
       iframe.title = escapeHtml(item.title);
       iframe.loading = 'lazy';
       iframe.frameBorder = '0';
-      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      iframe.allow =
+        'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen = true;
       iframe.sandbox = 'allow-scripts allow-same-origin allow-presentation';
       iframe.referrerPolicy = 'no-referrer-when-downgrade';
-      
+
       videoEl.innerHTML = '';
       videoEl.appendChild(iframe);
     } else {
@@ -128,7 +129,7 @@
       img.alt = '';
       img.src = item.thumbnailUrl || '/img/spotlight-fallback-16x9.svg';
       img.loading = 'lazy';
-      
+
       videoEl.innerHTML = '';
       videoEl.appendChild(img);
     }
@@ -146,7 +147,7 @@
     // Render badges
     if (badgesEl) {
       badgesEl.innerHTML = '';
-      (item.badges || []).forEach(badge => {
+      (item.badges || []).forEach((badge) => {
         const span = document.createElement('span');
         span.className = 'badge';
         span.textContent = badge;
@@ -163,7 +164,7 @@
           window.openModal(
             'Submit Your Video',
             '<p>Share your TV/movie content for a chance to be featured in Community Spotlight!</p><p>Coming soon - for now, use the feedback form in Settings.</p>',
-            'spotlight-submit'
+            'spotlight-submit',
           );
         } else {
           // Fallback to feedback form
@@ -185,7 +186,7 @@
       source: 'community',
       youtubeId: item.youtubeId,
       thumbnailUrl: item.thumbnailUrl,
-      badges: item.badges || ['Community']
+      badges: item.badges || ['Community'],
     };
   }
 
@@ -198,7 +199,7 @@
       source: 'influencer',
       youtubeId: item.youtubeId,
       thumbnailUrl: item.thumbnailUrl,
-      badges: item.badges || ['Influencer']
+      badges: item.badges || ['Influencer'],
     };
   }
 
@@ -210,8 +211,10 @@
       description: item.overview || 'Official trailer/teaser',
       source: 'tmdb',
       youtubeId: item.youtubeId,
-      thumbnailUrl: item.backdrop_path ? `https://image.tmdb.org/t/p/w780${item.backdrop_path}` : undefined,
-      badges: ['Official', 'Trailer']
+      thumbnailUrl: item.backdrop_path
+        ? `https://image.tmdb.org/t/p/w780${item.backdrop_path}`
+        : undefined,
+      badges: ['Official', 'Trailer'],
     };
   }
 
@@ -224,7 +227,7 @@
       source: 'house',
       youtubeId: undefined,
       thumbnailUrl: '/img/spotlight-fallback-16x9.svg',
-      badges: ['Info']
+      badges: ['Info'],
     };
   }
 
@@ -236,13 +239,13 @@
   }
 
   // Placeholder functions for future implementation
-  window.fetchApprovedCommunitySpotlight = async function() {
+  window.fetchApprovedCommunitySpotlight = async function () {
     // TODO: Implement community content fetching
     console.log('🎬 fetchApprovedCommunitySpotlight not implemented yet');
     return null;
   };
 
-  window.fetchWhitelistedInfluencerSpotlight = async function() {
+  window.fetchWhitelistedInfluencerSpotlight = async function () {
     // TODO: Implement influencer content fetching
     console.log('🎬 fetchWhitelistedInfluencerSpotlight not implemented yet');
     return null;
@@ -255,10 +258,10 @@
    * Update Path: Modify API endpoints or filtering criteria in this function
    * Dependencies: TMDB_CONFIG, fetch API, YouTube video filtering
    */
-  window.fetchTmdbTrendingWithOfficialTrailer = async function() {
+  window.fetchTmdbTrendingWithOfficialTrailer = async function () {
     try {
       console.log('🎬 Fetching TMDB trending content...');
-      
+
       if (!window.TMDB_CONFIG?.apiKey) {
         console.warn('🎬 TMDB API key not available');
         return null;
@@ -266,8 +269,10 @@
 
       // Fetch trending movies and TV shows
       const [moviesResponse, tvResponse] = await Promise.all([
-        fetch(`${window.TMDB_CONFIG.baseUrl}/trending/movie/day?api_key=${window.TMDB_CONFIG.apiKey}`),
-        fetch(`${window.TMDB_CONFIG.baseUrl}/trending/tv/day?api_key=${window.TMDB_CONFIG.apiKey}`)
+        fetch(
+          `${window.TMDB_CONFIG.baseUrl}/trending/movie/day?api_key=${window.TMDB_CONFIG.apiKey}`,
+        ),
+        fetch(`${window.TMDB_CONFIG.baseUrl}/trending/tv/day?api_key=${window.TMDB_CONFIG.apiKey}`),
       ]);
 
       if (!moviesResponse.ok || !tvResponse.ok) {
@@ -276,27 +281,30 @@
 
       const moviesData = await moviesResponse.json();
       const tvData = await tvResponse.json();
-      
+
       // Combine and shuffle results
-      const allTrending = [...moviesData.results, ...tvData.results]
-        .sort(() => Math.random() - 0.5);
+      const allTrending = [...moviesData.results, ...tvData.results].sort(
+        () => Math.random() - 0.5,
+      );
 
       console.log(`🎬 Found ${allTrending.length} trending items`);
 
       // Try to find official YouTube trailers for each item
-      for (const item of allTrending.slice(0, 10)) { // Limit to first 10 for performance
+      for (const item of allTrending.slice(0, 10)) {
+        // Limit to first 10 for performance
         try {
           const videosResponse = await fetch(
-            `${window.TMDB_CONFIG.baseUrl}/${item.media_type || 'movie'}/${item.id}/videos?api_key=${window.TMDB_CONFIG.apiKey}`
+            `${window.TMDB_CONFIG.baseUrl}/${item.media_type || 'movie'}/${item.id}/videos?api_key=${window.TMDB_CONFIG.apiKey}`,
           );
-          
+
           if (!videosResponse.ok) continue;
-          
+
           const videosData = await videosResponse.json();
-          const officialTrailer = videosData.results?.find(video => 
-            video.site === 'YouTube' && 
-            video.official === true && 
-            ['Trailer', 'Teaser'].includes(video.type)
+          const officialTrailer = videosData.results?.find(
+            (video) =>
+              video.site === 'YouTube' &&
+              video.official === true &&
+              ['Trailer', 'Teaser'].includes(video.type),
           );
 
           if (officialTrailer) {
@@ -305,7 +313,7 @@
               ...item,
               youtubeId: officialTrailer.key,
               title: item.title || item.name,
-              overview: item.overview
+              overview: item.overview,
             };
           }
         } catch (error) {
@@ -321,5 +329,4 @@
       return null;
     }
   };
-
 })();

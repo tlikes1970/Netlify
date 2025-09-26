@@ -4,7 +4,7 @@
    Always shows content (never hidden)
 */
 
-(function(){
+(function () {
   'use strict';
 
   // Check if feature is enabled
@@ -26,7 +26,7 @@
     try {
       // Create the theaters section at the bottom of home page
       createTheatersSection();
-      
+
       const movies = await fetchCurrentTheatricalReleases();
       renderTheaters(movies);
       console.log('✅ Theaters Near Me initialized');
@@ -103,15 +103,15 @@
   async function fetchCurrentTheatricalReleases() {
     try {
       console.log('🎬 Fetching current theatrical releases...');
-      
+
       // Use proxy for API calls
       const data = await window.tmdbGet('movie/now_playing', {
         language: 'en-US',
         page: 1,
-        region: 'US'
+        region: 'US',
       });
       console.log('🎬 Fetched theatrical releases:', data.results?.length || 0);
-      
+
       return data.results?.slice(0, 8) || []; // Get top 8 movies
     } catch (error) {
       console.error('📺 TMDB API error:', error);
@@ -129,34 +129,40 @@
   function renderTheaters(movies) {
     const theatersList = document.getElementById('theatersList');
     const movieCount = document.getElementById('movieCount');
-    
+
     if (!theatersList) {
       console.warn('🎬 Theaters list not found');
       return;
     }
 
     if (!movies || movies.length === 0) {
-      theatersList.innerHTML = '<div class="no-movies"><p>Unable to load current movies. Please try again later.</p></div>';
+      theatersList.innerHTML =
+        '<div class="no-movies"><p>Unable to load current movies. Please try again later.</p></div>';
       if (movieCount) movieCount.textContent = '0 Movies';
       return;
     }
 
     // Render movies
-    theatersList.innerHTML = movies.map(movie => {
-      // Use TMDB utilities if available, otherwise fallback to direct URL
-      const posterUrl = movie.poster_path ? 
-        (window.getPosterUrl ? window.getPosterUrl(movie.poster_path, 'w200') : `https://image.tmdb.org/t/p/w200${movie.poster_path}`) : 
-        null;
-      
-      const placeholderSvg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBM0FGIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+Tm8gUG9zdGVyPC90ZXh0Pgo8L3N2Zz4K';
-      
-      return `
+    theatersList.innerHTML = movies
+      .map((movie) => {
+        // Use TMDB utilities if available, otherwise fallback to direct URL
+        const posterUrl = movie.poster_path
+          ? window.getPosterUrl
+            ? window.getPosterUrl(movie.poster_path, 'w200')
+            : `https://image.tmdb.org/t/p/w200${movie.poster_path}`
+          : null;
+
+        const placeholderSvg =
+          'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBM0FGIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+Tm8gUG9zdGVyPC90ZXh0Pgo8L3N2Zz4K';
+
+        return `
         <div class="theater-movie">
           <div class="movie-poster">
-            ${posterUrl ? 
-              `<img src="${posterUrl}" alt="${escapeHtml(movie.title)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-               <div class="movie-poster-placeholder" style="display: none;">🎬</div>` :
-              `<div class="movie-poster-placeholder">🎬</div>`
+            ${
+              posterUrl
+                ? `<img src="${posterUrl}" alt="${escapeHtml(movie.title)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+               <div class="movie-poster-placeholder" style="display: none;">🎬</div>`
+                : `<div class="movie-poster-placeholder">🎬</div>`
             }
           </div>
           <div class="movie-info">
@@ -169,7 +175,8 @@
           </div>
         </div>
       `;
-    }).join('');
+      })
+      .join('');
 
     // Update movie count
     if (movieCount) {
@@ -228,7 +235,10 @@
     }
 
     // Defer geolocation call to idle time to avoid blocking LCP
-    const idle = (fn) => ('requestIdleCallback' in window) ? requestIdleCallback(fn, {timeout: 2000}) : setTimeout(fn, 100);
+    const idle = (fn) =>
+      'requestIdleCallback' in window
+        ? requestIdleCallback(fn, { timeout: 2000 })
+        : setTimeout(fn, 100);
     idle(() => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -239,21 +249,20 @@
         (error) => {
           console.warn('Location error:', error);
           locationEl.textContent = '📍 Location unavailable';
-        }
+        },
       );
     });
   }
 
-
   function getFallbackContent() {
     return [
       {
-        title: "Sample Movie",
-        overview: "This is a sample movie description for when the API is unavailable.",
+        title: 'Sample Movie',
+        overview: 'This is a sample movie description for when the API is unavailable.',
         vote_average: 7.5,
         release_date: new Date().toISOString().split('T')[0],
-        poster_path: null
-      }
+        poster_path: null,
+      },
     ];
   }
 

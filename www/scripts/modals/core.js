@@ -6,7 +6,7 @@
  * Dependencies: DOM, event listeners, CSS classes
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🪟 Modal core system loaded');
@@ -63,7 +63,7 @@
      * Close all modals and clean up
      */
     closeAll() {
-      document.querySelectorAll('.modal-overlay').forEach(overlay => overlay.remove());
+      document.querySelectorAll('.modal-overlay').forEach((overlay) => overlay.remove());
       document.body.classList.remove('has-modal');
     },
 
@@ -73,13 +73,13 @@
      */
     isOpen() {
       return document.querySelectorAll('.modal-overlay').length > 0;
-    }
+    },
   };
 
   // Ensure modals are closed when switching tabs
   const originalSwitchToTab = window.switchToTab;
   if (originalSwitchToTab) {
-    window.switchToTab = function(tab) {
+    window.switchToTab = function (tab) {
       window.Modals?.closeAll();
       return originalSwitchToTab(tab);
     };
@@ -89,5 +89,4 @@
   window.addEventListener('beforeunload', () => {
     window.Modals?.closeAll();
   });
-
 })();

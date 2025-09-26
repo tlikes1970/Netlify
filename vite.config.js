@@ -6,22 +6,22 @@
  * Dependencies: Vite build system
  */
 
-import { defineConfig } from "vite";
-import { resolve } from "path";
+import { defineConfig } from 'vite';
+import { resolve } from 'path';
 
 export default defineConfig({
-  root: "www",
-  base: "/",
+  root: 'www',
+  base: '/',
   build: {
-    outDir: "../dist",
+    outDir: '../dist',
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, "www/index.html"),
+        main: resolve(__dirname, 'www/index.html'),
       },
     },
     // Performance optimizations
-    minify: "terser",
+    minify: 'terser',
     terserOptions: {
       compress: {
         drop_console: true,
@@ -31,7 +31,7 @@ export default defineConfig({
     // Asset optimization
     assetsInlineLimit: 4096,
     // Source maps for debugging - disabled in production to prevent CSP errors
-    sourcemap: process.env.NODE_ENV === "production" ? false : true,
+    sourcemap: process.env.NODE_ENV === 'production' ? false : true,
   },
   server: {
     port: 8000,
@@ -44,22 +44,22 @@ export default defineConfig({
   },
   // CSS optimization
   css: {
-    devSourcemap: process.env.NODE_ENV !== "production",
+    devSourcemap: process.env.NODE_ENV !== 'production',
   },
   // Plugin configuration
   plugins: [
     // Custom plugin for environment variables
     {
-      name: "env-loader",
+      name: 'env-loader',
       configResolved(config) {
         // Load environment variables
-        require("dotenv").config();
+        require('dotenv').config();
       },
     },
   ],
   // Define global constants
   define: {
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || "28.20"),
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '28.20'),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
 });

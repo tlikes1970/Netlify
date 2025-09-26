@@ -6,7 +6,7 @@
  * Dependencies: ROW_PRESETS, getMyRows, Card v2, i18n, existing list actions
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🎯 Personalized rows module loaded');
@@ -22,31 +22,36 @@
    */
   function getPersonalizedRowTitle(rowNumber, rowType = null) {
     // Get username from appData settings
-    const username = (window.appData && window.appData.settings && window.appData.settings.username) || 'Your';
-    
+    const username =
+      (window.appData && window.appData.settings && window.appData.settings.username) || 'Your';
+
     // Get row type display name using translation system
     let typeDisplay = '';
     if (rowType) {
       // Map row types to translation keys
       const typeMap = {
-        'anime': 'your_anime_suggestions',
-        'horror': 'your_horror_suggestions', 
-        'trending': 'trending',
-        'staff_picks': 'staff_picks',
-        'comedy': 'comedy',
-        'action': 'action',
-        'drama': 'drama',
+        anime: 'your_anime_suggestions',
+        horror: 'your_horror_suggestions',
+        trending: 'trending',
+        staff_picks: 'staff_picks',
+        comedy: 'comedy',
+        action: 'action',
+        drama: 'drama',
         'sci-fi': 'sci-fi',
-        'romance': 'romance',
-        'thriller': 'thriller'
+        romance: 'romance',
+        thriller: 'thriller',
       };
-      
+
       const translationKey = typeMap[rowType] || 'your_suggestions';
-      typeDisplay = (typeof window.t === 'function') ? window.t(translationKey) : `${username}'s ${rowType} suggestions`;
+      typeDisplay =
+        typeof window.t === 'function'
+          ? window.t(translationKey)
+          : `${username}'s ${rowType} suggestions`;
     } else {
-      typeDisplay = (typeof window.t === 'function') ? window.t('your_suggestions') : `${username}'s suggestions`;
+      typeDisplay =
+        typeof window.t === 'function' ? window.t('your_suggestions') : `${username}'s suggestions`;
     }
-    
+
     // Return the translated display name
     return typeDisplay;
   }
@@ -57,7 +62,7 @@
    */
   window.mountPersonalizedSection = function mountPersonalizedSection(sectionEl) {
     console.log('🎯 mountPersonalizedSection called with:', sectionEl);
-    
+
     if (!sectionEl) {
       console.error('❌ No section element provided for personalized rows');
       return;
@@ -67,7 +72,7 @@
 
     const body = sectionEl.querySelector('.section__body');
     console.log('🎯 Section body found:', !!body);
-    
+
     if (!body) {
       console.error('❌ No section body found in element:', sectionEl);
       console.error('❌ Element HTML:', sectionEl.outerHTML);
@@ -88,7 +93,7 @@
         body.appendChild(renderGhostRow(index));
       } else {
         // Find the preset and render populated row
-        const preset = (window.ROW_PRESETS || []).find(p => p.key === selection.key);
+        const preset = (window.ROW_PRESETS || []).find((p) => p.key === selection.key);
         if (preset) {
           body.appendChild(renderPresetRow(index, preset));
         } else {
@@ -104,12 +109,14 @@
    * @param {number} index - Row index (0 or 1)
    * @returns {HTMLElement} Ghost row element
    */
-  function renderGhostRow(idx){
+  function renderGhostRow(idx) {
     const ghost = document.createElement('div');
     ghost.className = 'row row--ghost';
     ghost.innerHTML = `
-      <div class="row__header"><h4>${getPersonalizedRowTitle(idx+1)}</h4></div>
-      <div class="row__ghost-cards">${Array.from({length:8}).map(()=>`<div class="ghost-card"></div>`).join('')}</div>
+      <div class="row__header"><h4>${getPersonalizedRowTitle(idx + 1)}</h4></div>
+      <div class="row__ghost-cards">${Array.from({ length: 8 })
+        .map(() => `<div class="ghost-card"></div>`)
+        .join('')}</div>
       <button type="button" class="row__cta" data-action="open-settings-my-rows">
         ${window.t ? window.t('rows.configure_cta') : 'Go to Settings to configure'}
       </button>
@@ -134,14 +141,16 @@
       </div>
       <div class="row__scroller" data-slot="${index}">
         <div class="row__skeleton">
-          ${Array.from({length: 8}).map(() => '<div class="ghost-card"></div>').join('')}
+          ${Array.from({ length: 8 })
+            .map(() => '<div class="ghost-card"></div>')
+            .join('')}
         </div>
       </div>
     `;
-    
+
     // Load content asynchronously
     loadPresetContent(row.querySelector('.row__scroller'), preset);
-    
+
     return row;
   }
 
@@ -158,17 +167,19 @@
 
     try {
       console.log(`🎯 Loading content for preset: ${preset.key}`);
-      
+
       // Show skeleton while loading
       scrollerEl.innerHTML = `
         <div class="row__skeleton">
-          ${Array.from({length: 8}).map(() => '<div class="ghost-card"></div>').join('')}
+          ${Array.from({ length: 8 })
+            .map(() => '<div class="ghost-card"></div>')
+            .join('')}
         </div>
       `;
 
       // Fetch content
       const data = await preset.fetch(1);
-      
+
       if (!data || !data.results || !Array.isArray(data.results)) {
         console.warn('[personalized] Invalid data from preset; skipping row');
         return;
@@ -176,24 +187,23 @@
 
       // Clear skeleton and render cards
       scrollerEl.innerHTML = '';
-      
+
       const items = data.results.slice(0, 20); // Limit to 20 items
       console.log(`🎯 Rendering ${items.length} items for ${preset.key}`);
 
-      items.forEach(item => {
+      items.forEach((item) => {
         const cardElement = createCardElement(item);
         if (cardElement) {
           scrollerEl.appendChild(cardElement);
         }
       });
-
     } catch (error) {
       console.error(`❌ Failed to load content for preset ${preset.key}:`, error);
-      
+
       // Show error state
       scrollerEl.innerHTML = `
         <div class="row__error">
-          ${window.t ? window.t('rows.load_error') : 'Couldn\'t load this row. Please try again.'}
+          ${window.t ? window.t('rows.load_error') : "Couldn't load this row. Please try again."}
         </div>
       `;
     }
@@ -232,8 +242,11 @@
         variant: 'poster',
         id: item.id || item.tmdb_id || item.tmdbId,
         title: item.title || item.name,
-        subtitle: item.release_date ? `${new Date(item.release_date).getFullYear()} • ${item.media_type === 'tv' ? 'TV Series' : 'Movie'}` : 
-                 (item.media_type === 'tv' ? 'TV Series' : 'Movie'),
+        subtitle: item.release_date
+          ? `${new Date(item.release_date).getFullYear()} • ${item.media_type === 'tv' ? 'TV Series' : 'Movie'}`
+          : item.media_type === 'tv'
+            ? 'TV Series'
+            : 'Movie',
         posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : null,
         rating: item.vote_average || 0,
         badges: [{ label: 'Personalized', kind: 'status' }],
@@ -241,10 +254,10 @@
           if (window.openTMDBLink) {
             window.openTMDBLink(item.id, item.media_type || 'movie');
           }
-        }
+        },
       });
     }
-    
+
     // Fallback to legacy system
     return null;
   }
@@ -256,7 +269,7 @@
    */
   function addToList(item, list = 'wishlist') {
     console.log('Adding to list:', item, list);
-    
+
     // Create a synthetic event for the centralized handler
     const syntheticEvent = {
       target: {
@@ -270,17 +283,17 @@
               },
               dataset: {
                 id: item.id,
-                list: list
-              }
+                list: list,
+              },
             };
           }
           return null;
-        }
+        },
       },
       preventDefault: () => {},
-      stopPropagation: () => {}
+      stopPropagation: () => {},
     };
-    
+
     // Trigger the centralized handler
     if (typeof window.handleAddClick === 'function') {
       window.handleAddClick(syntheticEvent);
@@ -297,7 +310,7 @@
    */
   function openMore(item) {
     console.log('Opening more options for:', item);
-    
+
     // Create overflow menu
     const menu = document.createElement('div');
     menu.className = 'overflow-menu';
@@ -309,7 +322,7 @@
         <button data-action="open" data-id="${item.id}" data-media-type="${item.media_type || 'movie'}">View Details</button>
       </div>
     `;
-    
+
     // Position and show menu
     menu.style.cssText = `
       position: absolute;
@@ -323,13 +336,13 @@
       padding: 8px 0;
       min-width: 150px;
     `;
-    
+
     // Add to card element
     const cardElement = document.querySelector(`[data-id="${item.id}"]`);
     if (cardElement) {
       cardElement.style.position = 'relative';
       cardElement.appendChild(menu);
-      
+
       // Close menu when clicking outside
       setTimeout(() => {
         document.addEventListener('click', function closeMenu(e) {
@@ -348,7 +361,7 @@
    */
   function openDetails(item) {
     console.log('Opening details for:', item);
-    
+
     // Open TMDB link if available
     if (typeof window.openTMDBLink === 'function') {
       window.openTMDBLink(item.id, item.media_type || 'movie');
@@ -372,15 +385,17 @@
   function createLegacyCard(item) {
     const card = document.createElement('div');
     card.className = 'card card--compact';
-    
+
     const title = item.title || item.name || 'Unknown Title';
     const year = item.release_date?.slice(0, 4) || item.first_air_date?.slice(0, 4) || '';
     const posterUrl = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
-    
+
     // Generate srcset for responsive images
-    const srcset = item.poster_path && typeof window.tmdbSrcset === 'function' ? 
-      window.tmdbSrcset(item.poster_path) : '';
-    
+    const srcset =
+      item.poster_path && typeof window.tmdbSrcset === 'function'
+        ? window.tmdbSrcset(item.poster_path)
+        : '';
+
     card.innerHTML = `
       <div class="card__poster" onclick="openDetails(${item.id})">
         ${posterUrl ? `<img src="${posterUrl}" ${srcset ? `srcset="${srcset}"` : ''} sizes="(max-width: 480px) 148px, 200px" alt="${title}" loading="lazy">` : '<div class="card__placeholder">📺</div>'}
@@ -395,7 +410,7 @@
         </div>
       </div>
     `;
-    
+
     return card;
   }
 
@@ -440,27 +455,26 @@
   function openDetails(item) {
     try {
       console.log('🔗 Card v2 openDetails called:', item);
-      
+
       // Extract media type and ID for TMDB link
       const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
       const id = item.id || item.tmdb_id || item.tmdbId;
-      
+
       if (!id) {
         console.error('❌ No ID found for item:', item);
         return;
       }
-      
+
       // Use our enhanced openTMDBLink function
       if (typeof window.openTMDBLink === 'function') {
         console.log('🔗 Calling openTMDBLink from Card v2:', { id, mediaType });
         window.openTMDBLink(id, mediaType);
       } else {
         console.warn('⚠️ openTMDBLink function not available, falling back to window.open');
-        window.open(`https://www.themoviedb.org/${mediaType}/${id}`, "_blank");
+        window.open(`https://www.themoviedb.org/${mediaType}/${id}`, '_blank');
       }
     } catch (error) {
       console.error('❌ Failed to open details:', error);
     }
   }
-
 })();

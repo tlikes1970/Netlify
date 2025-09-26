@@ -6,22 +6,24 @@
  * Dependencies: Emergency functions, FlickletDebug
  */
 
-(function() {
+(function () {
   'use strict';
-  
+
   FlickletDebug.info('🔧 Syntax fix loading - providing minimal working functions');
-  
+
   // Ensure critical functions are available
-  if (typeof window.tmdbGet === 'function' && 
-      typeof window.loadUserDataFromCloud === 'function' && 
-      typeof window.addToList === 'function' && 
-      typeof window.saveAppData === 'function') {
+  if (
+    typeof window.tmdbGet === 'function' &&
+    typeof window.loadUserDataFromCloud === 'function' &&
+    typeof window.addToList === 'function' &&
+    typeof window.saveAppData === 'function'
+  ) {
     FlickletDebug.info('✅ All critical functions available');
     return;
   }
-  
+
   FlickletDebug.warn('⚠️ Some critical functions missing, ensuring availability');
-  
+
   // The emergency-functions.js should have already loaded these
   // This is just a safety check
   setTimeout(() => {
@@ -38,14 +40,4 @@
       FlickletDebug.error('❌ saveAppData still not available after emergency functions');
     }
   }, 1000);
-  
 })();
-
-
-
-
-
-
-
-
-

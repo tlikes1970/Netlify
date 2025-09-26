@@ -8,7 +8,7 @@ window.FlickletDebug = window.FlickletDebug || {
   info: console.log,
   warn: console.warn,
   error: console.error,
-  log: console.log
+  log: console.log,
 };
 
 (function () {
@@ -29,7 +29,7 @@ window.FlickletDebug = window.FlickletDebug || {
     alias: '',
     avatarUrl: '',
     email: '',
-    
+
     update(user) {
       this.isAuthenticated = !!user;
       if (user) {
@@ -43,37 +43,37 @@ window.FlickletDebug = window.FlickletDebug || {
         this.avatarUrl = '';
         this.email = '';
       }
-      
+
       // Notify all UI components of auth state change
       this.notifyUI();
     },
-    
+
     notifyUI() {
       // Update account button
       const accountBtn = document.getElementById('accountBtn');
       if (accountBtn) {
         accountBtn.textContent = this.isAuthenticated ? `👤 ${this.displayName}` : '👤 Sign In';
-        accountBtn.title = this.isAuthenticated ? 
-          `Signed in as ${this.email}. Click to sign out.` : 
-          'Click to sign in';
+        accountBtn.title = this.isAuthenticated
+          ? `Signed in as ${this.email}. Click to sign out.`
+          : 'Click to sign in';
       }
-      
+
       // Update snark text
       const snarkElement = document.querySelector('[data-snark]');
       if (snarkElement && this.isAuthenticated) {
         const snarks = [
           `Welcome back, ${this.alias}!`,
           `Ready to discover, ${this.alias}?`,
-          `Let's find your next favorite show, ${this.alias}!`
+          `Let's find your next favorite show, ${this.alias}!`,
         ];
         snarkElement.textContent = snarks[Math.floor(Math.random() * snarks.length)];
       } else if (snarkElement) {
         snarkElement.textContent = '';
       }
-      
+
       // Update settings access
       const settingsElements = document.querySelectorAll('[data-requires-auth]');
-      settingsElements.forEach(el => {
+      settingsElements.forEach((el) => {
         if (this.isAuthenticated) {
           el.style.display = '';
           el.removeAttribute('disabled');
@@ -82,7 +82,7 @@ window.FlickletDebug = window.FlickletDebug || {
           el.setAttribute('disabled', 'true');
         }
       });
-    }
+    },
   };
 
   const App = {
@@ -95,7 +95,11 @@ window.FlickletDebug = window.FlickletDebug || {
 
     async init() {
       // Fallback for FlickletDebug if not loaded
-      const debug = window.FlickletDebug || { info: console.log, warn: console.warn, error: console.error };
+      const debug = window.FlickletDebug || {
+        info: console.log,
+        warn: console.warn,
+        error: console.error,
+      };
       debug.info('🚀 [FlickletApp] init');
       try {
         // 1) Load persisted data
@@ -106,7 +110,7 @@ window.FlickletDebug = window.FlickletDebug || {
         // 2) Apply theme & language
         this.applyTheme();
         this.applyLanguage();
-        
+
         // 2.5) Re-initialize language manager after appData is loaded
         if (window.LanguageManager && typeof window.LanguageManager.reinitialize === 'function') {
           window.LanguageManager.reinitialize();
@@ -114,7 +118,7 @@ window.FlickletDebug = window.FlickletDebug || {
 
         // 2.6) Initialize FAB icons
         this.initializeFABIcons();
-        
+
         // 2.7) Initialize Counter Bootstrap System
         if (window.CounterBootstrap) {
           window.CounterBootstrap.init();
@@ -138,22 +142,26 @@ window.FlickletDebug = window.FlickletDebug || {
         // 7) Ensure a default active tab and initial render
         this.switchToTab('home');
         this.updateUI();
-        
+
         // 7.5) Dock FABs to active tab
         this.dockFABsToActiveTab();
-        
+
         // 6) Emit cards:changed event for centralized count updates
         setTimeout(() => {
-          document.dispatchEvent(new CustomEvent('cards:changed', {
-            detail: { source: 'app-initialization' }
-          }));
+          document.dispatchEvent(
+            new CustomEvent('cards:changed', {
+              detail: { source: 'app-initialization' },
+            }),
+          );
           console.log('🔢 Emitted cards:changed event during initialization');
-          
+
           // Emit app:lists-rendered event for counter system
-          document.dispatchEvent(new CustomEvent('app:lists-rendered', {
-            detail: { source: 'initialization' }
-          }));
-          
+          document.dispatchEvent(
+            new CustomEvent('app:lists-rendered', {
+              detail: { source: 'initialization' },
+            }),
+          );
+
           // Ensure FABs are docked after everything is ready
           this.dockFABsToActiveTab();
         }, 500);
@@ -195,25 +203,29 @@ window.FlickletDebug = window.FlickletDebug || {
           resolve();
         }, 2000);
 
-        window.addEventListener('app:data:ready', () => {
-          clearTimeout(timeout);
-          console.log('[FlickletApp] Data init completed');
-          resolve();
-        }, { once: true });
+        window.addEventListener(
+          'app:data:ready',
+          () => {
+            clearTimeout(timeout);
+            console.log('[FlickletApp] Data init completed');
+            resolve();
+          },
+          { once: true },
+        );
       });
     },
 
     // ---------- Visual / Theme ----------
     applyTheme() {
       const local = localStorage.getItem('flicklet-theme');
-      const chosen = local || (appData?.settings?.theme || 'light');
-      
+      const chosen = local || appData?.settings?.theme || 'light';
+
       // Apply data-theme attribute for new token system
       document.documentElement.setAttribute('data-theme', chosen);
-      
+
       // Keep legacy dark-mode class for backward compatibility
       document.body.classList.toggle('dark-mode', chosen === 'dark');
-      
+
       // Keep both in sync
       appData.settings.theme = chosen;
       localStorage.setItem('flicklet-theme', chosen);
@@ -240,19 +252,19 @@ window.FlickletDebug = window.FlickletDebug || {
         console.info('initFirebase skipped (SDK not present)');
         return;
       }
-      
+
       // Prevent multiple initializations
       if (this.firebaseInitialized) {
         FlickletDebug.info('⚠️ Firebase already initialized, skipping');
         return;
       }
-      
+
       FlickletDebug.info('🔥 Initializing Firebase...');
       this.firebaseInitialized = true;
-      
+
       // Clear any existing username prompt modals
       this.clearExistingUsernameModals();
-      
+
       // Wait for Firebase ready event with timeout
       this.waitForFirebaseReady()
         .then(() => {
@@ -265,55 +277,58 @@ window.FlickletDebug = window.FlickletDebug || {
         });
     },
 
-waitForFirebaseReady() {
-  return new Promise((resolve, reject) => {
-    // ✅ If Firebase is already ready, resolve immediately (avoids race with early event)
-    try {
-      if (
-        window.firebaseInitialized === true ||
-        (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0)
-      ) {
-        resolve(true);
-        return;
-      }
-    } catch (e) {
-      // ignore state check errors; fall through to event wait
-    }
+    waitForFirebaseReady() {
+      return new Promise((resolve, reject) => {
+        // ✅ If Firebase is already ready, resolve immediately (avoids race with early event)
+        try {
+          if (
+            window.firebaseInitialized === true ||
+            (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0)
+          ) {
+            resolve(true);
+            return;
+          }
+        } catch (e) {
+          // ignore state check errors; fall through to event wait
+        }
 
-    const timeout = setTimeout(() => {
-      reject(new Error('Firebase initialization timeout'));
-    }, 8000);
+        const timeout = setTimeout(() => {
+          reject(new Error('Firebase initialization timeout'));
+        }, 8000);
 
-    const handleFirebaseReady = () => {
-      clearTimeout(timeout);
-      window.removeEventListener('firebase-ready', handleFirebaseReady);
-      if (window.firebaseInitialized) {
-        resolve(true);
-      } else {
-        reject(new Error('Firebase initialization failed'));
-      }
-    };
+        const handleFirebaseReady = () => {
+          clearTimeout(timeout);
+          window.removeEventListener('firebase-ready', handleFirebaseReady);
+          if (window.firebaseInitialized) {
+            resolve(true);
+          } else {
+            reject(new Error('Firebase initialization failed'));
+          }
+        };
 
-    // Listen once for the readiness signal
-    window.addEventListener('firebase-ready', handleFirebaseReady, { once: true });
-  });
-},
-
+        // Listen once for the readiness signal
+        window.addEventListener('firebase-ready', handleFirebaseReady, { once: true });
+      });
+    },
 
     setupFallbackAuth() {
       FlickletDebug.info('🔄 Setting up fallback authentication system');
       this.currentUser = null;
       this.firebaseInitialized = false;
-      
+
       // Update account button to show fallback message
       const accountBtn = document.getElementById('accountBtn');
       if (accountBtn) {
         accountBtn.textContent = `🔒 ${t('offline_mode') || 'Offline Mode'}`;
-        accountBtn.title = t('auth_unavailable_offline') || 'Authentication unavailable - working in offline mode';
+        accountBtn.title =
+          t('auth_unavailable_offline') || 'Authentication unavailable - working in offline mode';
       }
-      
+
       // Show a notification about offline mode
-      this.showNotification(t('working_offline_mode') || 'Working in offline mode - data will be stored locally only', 'info');
+      this.showNotification(
+        t('working_offline_mode') || 'Working in offline mode - data will be stored locally only',
+        'info',
+      );
     },
 
     setupAuthListener() {
@@ -321,28 +336,27 @@ waitForFirebaseReady() {
         console.log('🔥 Auth listener setup - using single observer from auth.js');
         // Auth state changes are now handled by the single observer in auth.js
         // This method is kept for compatibility but no longer registers its own observer
-        
+
         // Get current user state for initialization
         const user = firebase.auth().currentUser;
         FlickletDebug.info('👤 Current user on init:', user ? `User: ${user.email}` : 'No user');
         this.currentUser = user;
-        
+
         // Also update the global currentUser for compatibility with existing code
         if (typeof window !== 'undefined') {
           window.currentUser = user;
         }
-        
+
         // Update centralized UserViewModel
         UserViewModel.update(user);
-        
+
         // Initialize auth state
         this.authInitialized = true;
-        
+
         // If user is already signed in, process their data
         if (user) {
           this.processUserSignIn(user);
         }
-        
       } catch (error) {
         FlickletDebug.error('❌ Auth listener setup failed:', error);
       }
@@ -420,20 +434,22 @@ waitForFirebaseReady() {
                 </div>
               </div>`;
             document.body.appendChild(wrap);
-            
+
             // prevent overlay click from bubbling to app-level handlers
             wrap.querySelector('#username-modal')?.addEventListener('click', (e) => {
-              if (e.target === e.currentTarget) { /* click on backdrop */ }
+              if (e.target === e.currentTarget) {
+                /* click on backdrop */
+              }
             });
-            
-            const done = (val) => { 
-              wrap.remove(); 
-              resolve(val); 
+
+            const done = (val) => {
+              wrap.remove();
+              resolve(val);
             };
-            
+
             // Expose the done callback for global [data-action] handler
             wrap._usernameDone = done;
-            
+
             // Note: Event handlers are now managed by the global [data-action] delegate
           });
         }
@@ -447,7 +463,7 @@ waitForFirebaseReady() {
           const ref = userDocRef(uid);
           if (!ref) throw new Error('Firestore not available');
           const snap = await ref.get();
-          return snap.exists ? (snap.data()?.username || null) : null;
+          return snap.exists ? snap.data()?.username || null : null;
         }
         async function writeUsername(uid, name) {
           const ref = userDocRef(uid);
@@ -456,14 +472,16 @@ waitForFirebaseReady() {
         }
 
         function updateWelcome(name) {
-          const el = document.getElementById('welcomeNote') || (() => {
-            const n = document.createElement('div');
-            n.id = 'welcomeNote';
-            n.style.cssText = 'margin:8px 0;font-weight:600;';
-            const headerLeft = document.querySelector('#header-left, header .left, body'); // best-effort
-            (headerLeft || document.body).prepend(n);
-            return n;
-          })();
+          const el =
+            document.getElementById('welcomeNote') ||
+            (() => {
+              const n = document.createElement('div');
+              n.id = 'welcomeNote';
+              n.style.cssText = 'margin:8px 0;font-weight:600;';
+              const headerLeft = document.querySelector('#header-left, header .left, body'); // best-effort
+              (headerLeft || document.body).prepend(n);
+              return n;
+            })();
           el.innerHTML = name
             ? `${name}<div style="font-weight:400;opacity:.8">I have a PhD in binge-watching.</div>`
             : '';
@@ -474,11 +492,15 @@ waitForFirebaseReady() {
             const display = user.displayName || user.email || 'Signed in';
             setAuthButtonSignedIn(display);
             let uname = null;
-            try { uname = await readUsername(user.uid); } catch {}
+            try {
+              uname = await readUsername(user.uid);
+            } catch {}
             if (!uname) {
               const picked = await promptForUsername(display);
               if (picked) {
-                try { await writeUsername(user.uid, picked); } catch {}
+                try {
+                  await writeUsername(user.uid, picked);
+                } catch {}
                 uname = picked;
               }
             }
@@ -490,17 +512,23 @@ waitForFirebaseReady() {
         }
 
         function triggerSignIn() {
-          if (!window.firebase || !firebase.auth) { console.warn('[auth] Firebase not available'); return; }
+          if (!window.firebase || !firebase.auth) {
+            console.warn('[auth] Firebase not available');
+            return;
+          }
           const auth = firebase.auth();
           const provider = new firebase.auth.GoogleAuthProvider();
-          auth.signInWithPopup(provider).catch(err => console.error('[auth] Sign-in failed', err));
+          auth
+            .signInWithPopup(provider)
+            .catch((err) => console.error('[auth] Sign-in failed', err));
         }
 
         // Click handler
         btn.addEventListener('click', async () => {
           if (!window.firebase || !firebase.auth) return;
           const auth = firebase.auth();
-          if (auth.currentUser) auth.signOut().catch(e => console.error('[auth] Sign-out failed', e));
+          if (auth.currentUser)
+            auth.signOut().catch((e) => console.error('[auth] Sign-out failed', e));
           else triggerSignIn();
         });
 
@@ -508,8 +536,12 @@ waitForFirebaseReady() {
         if (window.firebase && firebase.auth) {
           const auth = firebase.auth();
           // First paint
-          if (auth.currentUser) setAuthButtonSignedIn(auth.currentUser.displayName || auth.currentUser.email || '');
-          else { setAuthButtonSignedOut(); showFirstLoadSignInPrompt(); }
+          if (auth.currentUser)
+            setAuthButtonSignedIn(auth.currentUser.displayName || auth.currentUser.email || '');
+          else {
+            setAuthButtonSignedOut();
+            showFirstLoadSignInPrompt();
+          }
 
           // Auth state changes are now handled centrally by AuthManager
           // This listener has been removed to prevent race conditions
@@ -525,32 +557,38 @@ waitForFirebaseReady() {
         console.warn('[app] processUserSignIn already in progress, skipping duplicate call');
         return;
       }
-      
+
       window.__PROCESS_USER_SIGNIN_LOCK__ = true;
-      
+
       try {
         FlickletDebug.info('✅ User signed in, processing...');
-        
+
         // ✅ 2-line guard: wait for a real user, then get uid
         const authUser = await window.ensureUser();
         const uid = authUser.uid;
-        
+
         // 1) Close ALL auth modals
-        document.querySelectorAll('.modal-backdrop[data-modal="login"]').forEach(n => n.remove());
+        document.querySelectorAll('.modal-backdrop[data-modal="login"]').forEach((n) => n.remove());
         window.__currentAuthModal = null;
 
         // 2) CREATE USER DATABASE ENTRY (CRITICAL FOR FIREBASE STORAGE)
         FlickletDebug.info('🔄 Creating user database entry...');
         try {
           const db = firebase.firestore();
-          await db.collection("users").doc(uid).set({
-            profile: {
-              email: user.email || "",
-              displayName: user.displayName || "",
-              photoURL: user.photoURL || "",
-            },
-            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
-          }, { merge: true });
+          await db
+            .collection('users')
+            .doc(uid)
+            .set(
+              {
+                profile: {
+                  email: user.email || '',
+                  displayName: user.displayName || '',
+                  photoURL: user.photoURL || '',
+                },
+                lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+              },
+              { merge: true },
+            );
           FlickletDebug.info('✅ User database entry created successfully');
         } catch (error) {
           FlickletDebug.error('❌ Failed to create user database entry:', error);
@@ -561,21 +599,23 @@ waitForFirebaseReady() {
         try {
           // Use the trySync function from data-init.js to load user data
           if (typeof window.DataInit?.trySync === 'function') {
-            await window.DataInit.trySync("user-sign-in");
+            await window.DataInit.trySync('user-sign-in');
             FlickletDebug.info('✅ User data loaded from cloud successfully');
-            
+
             // CRITICAL: Refresh UI after data is loaded to prevent "already in list" errors
             if (typeof window.updateUI === 'function') {
               FlickletDebug.info('🔄 Refreshing UI after cloud data load...');
               window.updateUI();
             }
-            
+
             // Emit cards:changed event for centralized count updates
-            document.dispatchEvent(new CustomEvent('cards:changed', {
-              detail: { source: 'cloud-data-load' }
-            }));
+            document.dispatchEvent(
+              new CustomEvent('cards:changed', {
+                detail: { source: 'cloud-data-load' },
+              }),
+            );
             FlickletDebug.info('🔢 Emitted cards:changed event after cloud data load...');
-            
+
             // Also refresh the current tab content
             if (typeof window.FlickletApp?.updateTabContent === 'function') {
               const currentTab = window.FlickletApp?.currentTab || 'home';
@@ -583,7 +623,9 @@ waitForFirebaseReady() {
               window.FlickletApp.updateTabContent(currentTab);
             }
           } else {
-            FlickletDebug.warn('⚠️ DataInit.trySync function not available - user data not loaded from cloud');
+            FlickletDebug.warn(
+              '⚠️ DataInit.trySync function not available - user data not loaded from cloud',
+            );
           }
         } catch (error) {
           FlickletDebug.error('❌ Failed to load user data from cloud:', error);
@@ -593,13 +635,13 @@ waitForFirebaseReady() {
         console.log('🔍 User signed in, Firebase user data:', {
           displayName: user.displayName,
           email: user.email,
-          providerData: user.providerData
+          providerData: user.providerData,
         });
-        
+
         // Set account button with Firebase displayName (this method will prioritize Firebase displayName)
         console.log('🔍 Setting account button label with Firebase displayName:', user.displayName);
         this.setAccountButtonLabel(user.displayName);
-        
+
         // Also update the account button to ensure it's using the latest Firebase data
         setTimeout(() => {
           console.log('🔍 Refreshing account button after sign-in');
@@ -614,31 +656,37 @@ waitForFirebaseReady() {
           // Load existing username into window.appData.settings for personalized rows
           if (username) {
             window.appData = window.appData || {};
-            window.appData.settings = { ...(window.appData.settings||{}), username };
+            window.appData.settings = { ...(window.appData.settings || {}), username };
             console.log('✅ Loaded existing username into appData:', username);
           }
 
           // single prompt gate stored in Firestore so it works across devices
           const alreadyPrompted = !!settings.usernamePrompted;
           console.log('🔍 Username check:', { username, alreadyPrompted, settings });
-          
+
           if (!username && !alreadyPrompted) {
-            console.log('🔧 Prompting for username...', {username, alreadyPrompted, settings});
-            username = await this.promptForUsernameOnce(user.displayName);  // returns string or null
+            console.log('🔧 Prompting for username...', { username, alreadyPrompted, settings });
+            username = await this.promptForUsernameOnce(user.displayName); // returns string or null
             console.log('🔧 Username prompt result:', username);
-            
+
             if (username && username.trim()) {
               await this.writeSettings(uid, { username: username.trim(), usernamePrompted: true });
               // keep local appData in sync (if you use it)
               window.appData = window.appData || {};
-              window.appData.settings = { ...(window.appData.settings||{}), username: username.trim() };
+              window.appData.settings = {
+                ...(window.appData.settings || {}),
+                username: username.trim(),
+              };
               console.log('✅ Username saved:', username.trim());
             } else {
               await this.writeSettings(uid, { usernamePrompted: true });
               console.log('✅ Username prompt marked as completed (skipped)');
             }
           } else {
-            console.log('🔍 Username already exists or was prompted:', { username, alreadyPrompted });
+            console.log('🔍 Username already exists or was prompted:', {
+              username,
+              alreadyPrompted,
+            });
           }
 
           // Update left snark AFTER username is set
@@ -646,18 +694,16 @@ waitForFirebaseReady() {
 
           // Run migration once per user
           await this.runMigration();
-          
+
           // Run cleanup for stray field
           await this.cleanupStrayField();
-          
+
           // Migrate legacy name fields
           await this.migrateLegacyNameFields(uid);
-          
         } catch (error) {
           console.error('❌ Error in user sign-in processing:', error);
           this.showNotification(t('error_loading_user_data'), 'error');
         }
-        
       } catch (error) {
         console.error('❌ Error in processUserSignIn:', error);
         this.showNotification(t('error_processing_sign_in'), 'error');
@@ -669,73 +715,73 @@ waitForFirebaseReady() {
 
     clearUserData() {
       console.log('🧹 FlickletApp.clearUserData called');
-      
+
       // Clear user references
       this.currentUser = null;
       window.currentUser = null;
-      
+
       // Clear localStorage data
       try {
-        localStorage.removeItem("flicklet-data");
-        localStorage.removeItem("tvMovieTrackerData");
-        localStorage.removeItem("flicklet_lists");
-        localStorage.removeItem("flicklet_notes");
-        localStorage.removeItem("flicklet_prefs");
-        localStorage.removeItem("flicklet-language");
-        localStorage.removeItem("flicklet-theme");
-        localStorage.removeItem("flicklet:pro");
-        localStorage.removeItem("flicklet:episodeTracking:enabled");
-        localStorage.removeItem("flicklet:episodeTracking:series");
+        localStorage.removeItem('flicklet-data');
+        localStorage.removeItem('tvMovieTrackerData');
+        localStorage.removeItem('flicklet_lists');
+        localStorage.removeItem('flicklet_notes');
+        localStorage.removeItem('flicklet_prefs');
+        localStorage.removeItem('flicklet-language');
+        localStorage.removeItem('flicklet-theme');
+        localStorage.removeItem('flicklet:pro');
+        localStorage.removeItem('flicklet:episodeTracking:enabled');
+        localStorage.removeItem('flicklet:episodeTracking:series');
         console.log('🧹 localStorage cleared');
       } catch (e) {
         console.warn('🧹 Failed to clear localStorage:', e);
       }
-      
+
       // Reset appData to empty state
       if (window.appData) {
         window.appData.tv = { watching: [], wishlist: [], watched: [] };
         window.appData.movies = { watching: [], wishlist: [], watched: [] };
         window.appData.settings = {
-          isPro: true, // Default to true for dev testing
-          episodeTracking: true, // Default to true for dev testing
-          pro: true, // Default to true for dev testing
+          pro: false, // Default to false - only true if user account has Pro
+          isPro: false, // Alias for pro
+          episodeTracking: false,
           username: '',
           displayName: '',
           lang: 'en',
-          theme: 'light'
+          theme: 'light',
         };
         window.appData.searchCache = [];
         window.appData.activeTagFilters = new Set();
         console.log('🧹 appData reset to empty state');
       }
-      
+
       // Clear render flags
-      Object.keys(window).forEach(key => {
+      Object.keys(window).forEach((key) => {
         if (key.startsWith('render_')) {
           window[key] = false;
         }
       });
-      
+
       // Update UI to reflect signed out state
       if (window.UserViewModel) {
         window.UserViewModel.update(null);
       }
-      
+
       // Clear any duplicate cards
       if (typeof window.cleanupDuplicateCards === 'function') {
         window.cleanupDuplicateCards();
       }
-      
+
       // Trigger UI refresh
       if (typeof window.updateUI === 'function') {
         window.updateUI();
       }
-      
+
       console.log('✅ FlickletApp user data cleared');
     },
 
     // Firestore settings helpers - now using direct path structure
-    
+
     async readSettings(uid) {
       try {
         // Auth guard: Ensure auth is ready before any Firestore operations
@@ -744,25 +790,27 @@ waitForFirebaseReady() {
         }
         const user = await window.ensureUser();
         const authUid = user.uid;
-        
+
         console.log('🔥 Reading from Firestore:', { uid, authUid });
         const db = firebase.firestore();
         const ref = db.collection('users').doc(authUid).collection('settings').doc('app');
         const snap = await ref.get();
-        
+
         if (snap.exists) {
           const data = snap.data();
           console.log('✅ Firestore read successful:', data);
-          
+
           // Emit userDataLoaded event for other components
-          document.dispatchEvent(new CustomEvent('userDataLoaded', {
-            detail: { uid: authUid, data: data }
-          }));
-          
+          document.dispatchEvent(
+            new CustomEvent('userDataLoaded', {
+              detail: { uid: authUid, data: data },
+            }),
+          );
+
           return data;
         } else {
           // Seed defaults so the next read always has data
-          const defaults = { theme: "system", lang: "en", createdAt: Date.now() };
+          const defaults = { theme: 'system', lang: 'en', createdAt: Date.now() };
           await ref.set(defaults, { merge: true });
           console.log('✅ Firestore defaults created:', defaults);
           return defaults;
@@ -772,7 +820,7 @@ waitForFirebaseReady() {
         return {};
       }
     },
-    
+
     async writeSettings(uid, data) {
       try {
         // Auth guard: Ensure auth is ready before any Firestore operations
@@ -781,7 +829,7 @@ waitForFirebaseReady() {
         }
         const user = await window.ensureUser();
         const authUid = user.uid;
-        
+
         console.log('🔥 Writing to Firestore:', { uid, authUid, data });
         const db = firebase.firestore();
         const ref = db.collection('users').doc(authUid).collection('settings').doc('app');
@@ -798,13 +846,13 @@ waitForFirebaseReady() {
       // Auth guard: Ensure auth is ready before any Firestore operations
       const user = await window.ensureUser();
       const authUid = user.uid;
-      
+
       const s = await this.readSettings(authUid);
       if (s && s.displayName && !s.username) {
         await this.writeSettings(authUid, { username: s.displayName });
       }
       // Optional: remove displayName field
-      try { 
+      try {
         const db = firebase.firestore();
         const ref = db.collection('users').doc(authUid).collection('settings').doc('app');
         await ref.set({ displayName: null }, { merge: true });
@@ -819,30 +867,39 @@ waitForFirebaseReady() {
      */
     async handlePostAuthSuccess(user) {
       console.log('🔄 [FlickletApp] handlePostAuthSuccess:', user.email);
-      
+
+      // Phase D: Auto-close auth modal on successful sign-in
+      if (
+        window.AUTH_MANAGER &&
+        window.AUTH_MANAGER._authModalManager &&
+        window.AUTH_MANAGER._authModalManager.isModalOpen()
+      ) {
+        console.log('✅ [FlickletApp] Auto-closing auth modal on sign-in');
+        window.AUTH_MANAGER._authModalManager.close();
+      }
+
       try {
         const uid = user.uid;
         const db = window.firebaseDb || firebase.firestore();
-        
+
         // 1) Create/update Firestore user doc
         await this.createOrUpdateUserDoc(user);
-        
+
         // 2) Cloud-first load
         const gotCloud = await this.cloudFirstLoad(db, uid);
-        
+
         // 3) If no cloud doc, seed from local minimal
         if (!gotCloud) {
           await this.seedCloudIfNeeded(db, uid);
           window.__cloudHydrated = true;
           window.saveAppData('flicklet-data', window.pruneWatchlistsShape(window.appData || {}));
         }
-        
+
         // 4) Handle identity (username vs displayName)
         await this.handleUserIdentity(user);
-        
+
         // 5) Update UI
         this.updateUI();
-        
       } catch (error) {
         console.error('❌ [FlickletApp] handlePostAuthSuccess failed:', error);
       }
@@ -860,9 +917,9 @@ waitForFirebaseReady() {
           displayName: user.displayName,
           photoURL: user.photoURL,
           lastLoginAt: new Date().toISOString(),
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
         };
-        
+
         // Update Firestore user doc
         if (window.firebaseDb) {
           await window.firebaseDb.collection('users').doc(uid).set(userDoc, { merge: true });
@@ -885,8 +942,10 @@ waitForFirebaseReady() {
           window.appData = { ...(window.appData || {}), ...cloud };
           window.saveAppData('flicklet-data', window.appData);
           window.__cloudHydrated = true;
-          console.info('[CloudLoad] Hydrated from Firestore. Bytes:',
-            window.computeBytes(JSON.stringify(window.appData)));
+          console.info(
+            '[CloudLoad] Hydrated from Firestore. Bytes:',
+            window.computeBytes(JSON.stringify(window.appData)),
+          );
           return true;
         }
         return false;
@@ -902,22 +961,30 @@ waitForFirebaseReady() {
     async seedCloudIfNeeded(db, uid) {
       try {
         const minimal = window.pruneWatchlistsShape(window.appData || {});
-        const payload = { 
-          ...minimal, 
-          uid, 
-          lastUpdated: firebase.firestore.FieldValue.serverTimestamp?.() 
+        const payload = {
+          ...minimal,
+          uid,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp?.(),
         };
         const json = JSON.stringify(payload);
         const bytes = window.computeBytes(json);
-        
+
         // Keep a safety margin well below 1 MiB doc limit
         if (bytes > 900 * 1024) {
-          console.warn('[SeedCloud] payload too large, aborting seed:', (bytes/1024).toFixed(1), 'KB');
+          console.warn(
+            '[SeedCloud] payload too large, aborting seed:',
+            (bytes / 1024).toFixed(1),
+            'KB',
+          );
           return false;
         }
-        
+
         await db.doc(`users/${uid}`).set(payload, { merge: true });
-        console.info('[SeedCloud] Seeded cloud with minimal shape:', (bytes/1024).toFixed(1), 'KB');
+        console.info(
+          '[SeedCloud] Seeded cloud with minimal shape:',
+          (bytes / 1024).toFixed(1),
+          'KB',
+        );
         return true;
       } catch (error) {
         console.error('[SeedCloud] Failed:', error);
@@ -934,48 +1001,77 @@ waitForFirebaseReady() {
           const userDoc = await window.firebaseDb.collection('users').doc(uid).get();
           if (userDoc.exists) {
             const cloudData = userDoc.data();
-            
+
             // Merge cloud data with local
             if (cloudData.watchlists) {
               console.log('🔄 Merging cloud watchlists data:', cloudData.watchlists);
-              
+
               // Merge TV data
               if (cloudData.watchlists.tv) {
                 if (cloudData.watchlists.tv.watching) {
-                  window.appData.tv.watching = [...new Set([...window.appData.tv.watching, ...cloudData.watchlists.tv.watching])];
+                  window.appData.tv.watching = [
+                    ...new Set([
+                      ...window.appData.tv.watching,
+                      ...cloudData.watchlists.tv.watching,
+                    ]),
+                  ];
                 }
                 if (cloudData.watchlists.tv.wishlist) {
-                  window.appData.tv.wishlist = [...new Set([...window.appData.tv.wishlist, ...cloudData.watchlists.tv.wishlist])];
+                  window.appData.tv.wishlist = [
+                    ...new Set([
+                      ...window.appData.tv.wishlist,
+                      ...cloudData.watchlists.tv.wishlist,
+                    ]),
+                  ];
                 }
                 if (cloudData.watchlists.tv.watched) {
-                  window.appData.tv.watched = [...new Set([...window.appData.tv.watched, ...cloudData.watchlists.tv.watched])];
+                  window.appData.tv.watched = [
+                    ...new Set([...window.appData.tv.watched, ...cloudData.watchlists.tv.watched]),
+                  ];
                 }
               }
-              
+
               // Merge Movies data
               if (cloudData.watchlists.movies) {
                 if (cloudData.watchlists.movies.watching) {
-                  window.appData.movies.watching = [...new Set([...window.appData.movies.watching, ...cloudData.watchlists.movies.watching])];
+                  window.appData.movies.watching = [
+                    ...new Set([
+                      ...window.appData.movies.watching,
+                      ...cloudData.watchlists.movies.watching,
+                    ]),
+                  ];
                 }
                 if (cloudData.watchlists.movies.wishlist) {
-                  window.appData.movies.wishlist = [...new Set([...window.appData.movies.wishlist, ...cloudData.watchlists.movies.wishlist])];
+                  window.appData.movies.wishlist = [
+                    ...new Set([
+                      ...window.appData.movies.wishlist,
+                      ...cloudData.watchlists.movies.wishlist,
+                    ]),
+                  ];
                 }
                 if (cloudData.watchlists.movies.watched) {
-                  window.appData.movies.watched = [...new Set([...window.appData.movies.watched, ...cloudData.watchlists.movies.watched])];
+                  window.appData.movies.watched = [
+                    ...new Set([
+                      ...window.appData.movies.watched,
+                      ...cloudData.watchlists.movies.watched,
+                    ]),
+                  ];
                 }
               }
-              
+
               // Persist merged data
               if (typeof window.saveAppData === 'function') {
                 window.saveAppData();
               }
-              
+
               console.log('✅ Cloud data merged with local');
-              
+
               // Emit firebaseDataLoaded event for other components
-              document.dispatchEvent(new CustomEvent('firebaseDataLoaded', {
-                detail: { uid: uid, watchlists: cloudData.watchlists }
-              }));
+              document.dispatchEvent(
+                new CustomEvent('firebaseDataLoaded', {
+                  detail: { uid: uid, watchlists: cloudData.watchlists },
+                }),
+              );
             }
           }
         }
@@ -990,17 +1086,17 @@ waitForFirebaseReady() {
     async handleUserIdentity(user) {
       try {
         const uid = user.uid;
-        
+
         // Get username from settings
         const username = await this.getUsername(uid);
-        
+
         if (username) {
           this.renderSnark(username);
         } else {
           console.info('[identity] username:missing → prompt');
           const suggestedName = user.displayName || user.email?.split('@')[0] || 'User';
           const pickedUsername = await this.promptForUsernameOnce(suggestedName);
-          
+
           if (pickedUsername) {
             await this.setUsername(uid, pickedUsername);
             this.renderSnark(pickedUsername);
@@ -1034,11 +1130,11 @@ waitForFirebaseReady() {
     async setUsername(uid, username) {
       try {
         const trimmedUsername = username.trim();
-        await this.writeSettings(uid, { 
-          username: trimmedUsername, 
-          usernamePrompted: true 
+        await this.writeSettings(uid, {
+          username: trimmedUsername,
+          usernamePrompted: true,
         });
-        
+
         // Update local appData
         if (window.appData) {
           window.appData.settings.username = trimmedUsername;
@@ -1046,7 +1142,7 @@ waitForFirebaseReady() {
             window.saveAppData();
           }
         }
-        
+
         console.info(`[identity] username:saved=${trimmedUsername}`);
         return true;
       } catch (error) {
@@ -1068,51 +1164,57 @@ waitForFirebaseReady() {
         leftSnark.style.textAlign = 'left';
         leftSnark.style.zIndex = 'auto';
         leftSnark.style.pointerEvents = 'none';
-        
+
         console.info(`[identity] snark:render=${snarkText}`);
       }
     },
 
     clearExistingUsernameModals() {
       // Clear any existing username prompt modals
-      const existingModals = document.querySelectorAll('.modal-backdrop[data-modal="username-prompt-modal"]');
-      existingModals.forEach(modal => {
+      const existingModals = document.querySelectorAll(
+        '.modal-backdrop[data-modal="username-prompt-modal"]',
+      );
+      existingModals.forEach((modal) => {
         console.log('🧹 Clearing existing username prompt modal');
         modal.remove();
       });
     },
 
-    async promptForUsernameOnce(suggest='') {
+    async promptForUsernameOnce(suggest = '') {
       // Check if username modal is already open
       if (document.querySelector('.modal-backdrop[data-modal="username"]')) {
         console.log('⚠️ Username modal already open, skipping duplicate');
         return null;
       }
-      
+
       // Prevent multiple simultaneous calls
       if (this._usernameModalPromise) {
         console.log('⚠️ Username modal already in progress, waiting for existing promise');
         return this._usernameModalPromise;
       }
-      
+
       this._usernameModalPromise = new Promise((resolve) => {
         console.log('🔧 Creating username modal...');
-        const body = this.openModal('What do I call you?', `
+        const body = this.openModal(
+          'What do I call you?',
+          `
           <div style="min-width:320px; max-width:480px;">
             <p style="margin:0 0 16px; color:#666; font-size:14px;">Choose a name to personalize your experience</p>
-            <input id="usernameInput" type="text" autocomplete="nickname" placeholder="Enter your name" value="${suggest.replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]))}" style="display:block;width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;margin-bottom:16px;font-size:16px;">
+            <input id="usernameInput" type="text" autocomplete="nickname" placeholder="Enter your name" value="${suggest.replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m])}" style="display:block;width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;margin-bottom:16px;font-size:16px;">
             <div style="display:flex;gap:12px;justify-content:flex-end;">
               <button id="uCancel" class="btn secondary" type="button" style="padding:8px 16px; border:1px solid #ddd; background:#f5f5f5; color:#333; border-radius:6px; cursor:pointer;">Skip</button>
               <button id="uSave" class="btn primary" type="button" style="padding:8px 16px; background:#1976d2; color:white; border:none; border-radius:6px; cursor:pointer;">Save</button>
             </div>
           </div>
-        `, 'username-modal');
+        `,
+          'username-modal',
+        );
 
         // tag so it's distinct from login modal
         const wrap = document.querySelector('.modal-backdrop[data-testid="username-modal"]');
         if (wrap) {
-          wrap.setAttribute('data-modal','username');
-          
+          wrap.setAttribute('data-modal', 'username');
+
           // Add click outside to close
           wrap.addEventListener('click', (e) => {
             if (e.target === wrap) {
@@ -1123,32 +1225,38 @@ waitForFirebaseReady() {
         }
 
         let isDone = false;
-        const done = (v) => { 
+        const done = (v) => {
           if (isDone) {
             console.log('🔧 Username modal already closed, ignoring duplicate call');
             return;
           }
           isDone = true;
           console.log('🔧 Username modal closing with value:', v);
-          
+
           // Close the modal properly
           this.closeModal();
-          
+
           // Also remove any remaining username modals
-          document.querySelectorAll('.modal-backdrop[data-modal="username"]').forEach(n=>n.remove()); 
-          
+          document
+            .querySelectorAll('.modal-backdrop[data-modal="username"]')
+            .forEach((n) => n.remove());
+
           this._usernameModalPromise = null; // Clear the promise
-          resolve(v); 
+          resolve(v);
         };
 
         // Use setTimeout to ensure DOM is ready
         setTimeout(() => {
-          const input  = document.getElementById('usernameInput');
-          const save   = document.getElementById('uSave');
+          const input = document.getElementById('usernameInput');
+          const save = document.getElementById('uSave');
           const cancel = document.getElementById('uCancel');
-          
-          console.log('🔧 Setting up username modal buttons:', { input: !!input, save: !!save, cancel: !!cancel });
-          
+
+          console.log('🔧 Setting up username modal buttons:', {
+            input: !!input,
+            save: !!save,
+            cancel: !!cancel,
+          });
+
           if (cancel) {
             cancel.addEventListener('click', (e) => {
               e.preventDefault();
@@ -1159,7 +1267,7 @@ waitForFirebaseReady() {
               }
             });
           }
-          
+
           if (save) {
             // Remove any existing listeners to prevent duplicates
             save.removeEventListener('click', save._clickHandler);
@@ -1168,7 +1276,7 @@ waitForFirebaseReady() {
               e.stopPropagation();
               const value = input?.value?.trim() || '';
               console.log('🔧 Save button clicked with value:', value);
-              
+
               // Validate input
               if (value.length < 1) {
                 console.log('🔧 Username too short, showing error');
@@ -1178,7 +1286,7 @@ waitForFirebaseReady() {
                 }
                 return;
               }
-              
+
               if (value.length > 50) {
                 console.log('🔧 Username too long, showing error');
                 const errorEl = document.querySelector('[data-auth-msg]');
@@ -1187,7 +1295,7 @@ waitForFirebaseReady() {
                 }
                 return;
               }
-              
+
               console.log('🔧 Username validated, closing modal');
               if (!isDone) {
                 done(value);
@@ -1198,9 +1306,9 @@ waitForFirebaseReady() {
           } else {
             console.error('❌ Save button not found!');
           }
-          
+
           if (input) {
-            input.addEventListener('keydown', (e) => { 
+            input.addEventListener('keydown', (e) => {
               if (e.key === t('enter_key')) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1212,13 +1320,13 @@ waitForFirebaseReady() {
               }
             });
           }
-          
+
           // Focus the input
           if (input) {
             input.focus();
             input.select();
           }
-          
+
           // Add backdrop click handler to close modal
           const backdrop = document.querySelector('.modal-backdrop[data-modal="username"]');
           if (backdrop) {
@@ -1231,7 +1339,7 @@ waitForFirebaseReady() {
           }
         }, 100);
       });
-      
+
       return this._usernameModalPromise;
     },
 
@@ -1240,7 +1348,7 @@ waitForFirebaseReady() {
       if (accountBtn) {
         const email = this.currentUser?.email || t('account');
         const emailPrefix = email.split('@')[0];
-        
+
         // Priority: Firebase displayName > passed displayName > email prefix
         let finalName;
         if (this.currentUser?.displayName?.trim()) {
@@ -1253,50 +1361,53 @@ waitForFirebaseReady() {
           finalName = emailPrefix || t('user');
           console.log('🔍 Using email prefix:', finalName);
         }
-        
+
         accountBtn.innerHTML = `👤 ${finalName}`;
         accountBtn.title = `${t('signed_in_as')} ${email}. ${t('click_to_sign_out')}`;
-        console.log('🔍 Account button updated:', { 
-          firebaseDisplayName: this.currentUser?.displayName, 
-          passedDisplayName: displayName, 
-          finalName, 
-          email 
+        console.log('🔍 Account button updated:', {
+          firebaseDisplayName: this.currentUser?.displayName,
+          passedDisplayName: displayName,
+          finalName,
+          email,
         });
       }
     },
-    
+
     setLeftSnark(username) {
       const leftSnark = document.getElementById('leftSnark');
       if (leftSnark && username) {
         leftSnark.textContent = this.makeSnark(username);
       }
     },
-    
+
     makeSnark(username) {
       const snarks = [
         `${username}, try not to binge 12 seasons tonight`,
         `${username}, your watchlist is judging you`,
         `${username}, remember to eat between episodes`,
         `${username}, sleep is also important`,
-        `${username}, your couch has a permanent dent`
+        `${username}, your couch has a permanent dent`,
       ];
       return snarks[Math.floor(Math.random() * snarks.length)];
     },
 
-    openModal(title, html, testId = "generic-modal") {
+    openModal(title, html, testId = 'generic-modal') {
       console.log('🔧 openModal called:', { title, testId });
-      
+
       // Guard against modal stacking
-      if (testId === 'auth-modal' && document.querySelector('.modal-backdrop[data-modal="login"]')) {
+      if (
+        testId === 'auth-modal' &&
+        document.querySelector('.modal-backdrop[data-modal="login"]')
+      ) {
         console.log('⚠️ Auth modal already exists, not creating another');
         return null;
       }
-      
-      const wrap = document.createElement("div");
-      wrap.className = "modal-backdrop";
-      wrap.setAttribute("data-testid", "modal-backdrop");
+
+      const wrap = document.createElement('div');
+      wrap.className = 'modal-backdrop';
+      wrap.setAttribute('data-testid', 'modal-backdrop');
       if (testId === 'auth-modal') {
-        wrap.setAttribute("data-modal", "login");
+        wrap.setAttribute('data-modal', 'login');
         wrap.id = `auth-modal-${Date.now()}`;
         window.__currentAuthModal = wrap;
       }
@@ -1315,25 +1426,29 @@ waitForFirebaseReady() {
         visibility: visible !important;
         opacity: 1 !important;
       `;
-      
+
       // Don't add default close button for username modals
       const showDefaultClose = testId !== 'username-modal';
-      
+
       wrap.innerHTML = `
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" data-testid="${testId}" data-modal-body tabindex="-1" style="position:relative; z-index:100000; pointer-events: auto !important;">
           <h3 id="modal-title">${title}</h3>
           <div class="modal-body" style="pointer-events: auto !important;">${html}</div>
           <div data-auth-msg aria-live="polite" style="min-height:1em; margin:8px 0; color:var(--color-error,#b00020); pointer-events: auto !important;"></div>
-          ${showDefaultClose ? `
+          ${
+            showDefaultClose
+              ? `
           <div class="modal-actions" data-modal-actions style="pointer-events: auto !important;">
             <button class="btn secondary" data-testid="modal-close" type="button" style="width: 120px !important; flex: 0 0 120px !important; font-size: 14px !important; padding: 12px 18px !important; height: 44px !important; min-height: 44px !important; pointer-events: auto !important;">Close</button>
           </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       `;
-      
+
       document.body.appendChild(wrap);
-      
+
       // Focus the modal for accessibility
       const modal = wrap.querySelector('[data-modal-body]');
       if (modal) {
@@ -1345,21 +1460,21 @@ waitForFirebaseReady() {
 
     closeModal() {
       console.log('🔧 closeModal called');
-      
+
       // Close any modal backdrop
       const modals = document.querySelectorAll('.modal-backdrop');
-      modals.forEach(modal => {
+      modals.forEach((modal) => {
         if (modal && modal.parentNode) {
           console.log('🔧 Removing modal:', modal.id || modal.className);
           modal.remove();
         }
       });
-      
+
       // Clear any global modal references
       if (window.__currentAuthModal) {
         window.__currentAuthModal = null;
       }
-      
+
       console.log('🔧 Modal closed');
     },
 
@@ -1372,7 +1487,7 @@ waitForFirebaseReady() {
         console.log('🔄 Running Firebase document migration...');
         const db = firebase.firestore();
         const ref = db.collection('users').doc(uid);
-        
+
         const snap = await ref.get();
         if (!snap.exists) {
           console.log('📄 No document to migrate');
@@ -1396,7 +1511,7 @@ waitForFirebaseReady() {
         } else {
           console.log('✅ No migration needed');
         }
-        
+
         this._migrationCompleted = true;
       } catch (error) {
         console.error('❌ Migration failed:', error);
@@ -1412,7 +1527,7 @@ waitForFirebaseReady() {
         console.log('🧹 Running cleanup for stray field...');
         const db = firebase.firestore();
         const ref = db.collection('users').doc(uid);
-        
+
         const snap = await ref.get();
         if (!snap.exists) {
           console.log('📄 No document to clean up');
@@ -1443,10 +1558,10 @@ waitForFirebaseReady() {
     showNotification(message, type = 'info') {
       // Simple notification implementation
       console.log(`🔔 ${type.toUpperCase()}: ${message}`);
-      
+
       // Avoid circular calls - don't call window.showNotification
       // This prevents the recursive loop with inline-script-02.js
-      
+
       // Fallback: create a simple toast notification
       const toast = document.createElement('div');
       toast.style.cssText = `
@@ -1464,7 +1579,7 @@ waitForFirebaseReady() {
       `;
       toast.textContent = message;
       document.body.appendChild(toast);
-      
+
       // Auto-remove after 5 seconds
       setTimeout(() => {
         if (toast.parentNode) {
@@ -1488,7 +1603,7 @@ waitForFirebaseReady() {
       // Use the same logic as setAccountButtonLabel for consistency
       const email = this.currentUser.email || t('account');
       const emailPrefix = email.split('@')[0];
-      
+
       // Priority: Firebase displayName > email prefix
       let finalName;
       if (this.currentUser.displayName?.trim()) {
@@ -1507,9 +1622,11 @@ waitForFirebaseReady() {
     // ---------- UI Lifecycle ----------
     updateUI() {
       // Emit cards:changed event for centralized count updates
-      document.dispatchEvent(new CustomEvent('cards:changed', {
-        detail: { source: 'FlickletApp-updateUI' }
-      }));
+      document.dispatchEvent(
+        new CustomEvent('cards:changed', {
+          detail: { source: 'FlickletApp-updateUI' },
+        }),
+      );
       // Note: updateTabContent is called directly from switchToTab to avoid loops
     },
 
@@ -1531,19 +1648,23 @@ waitForFirebaseReady() {
     switchToTab(tab) {
       console.log(`🔄 Switching to tab: ${tab}`);
       this.currentTab = tab;
-      
+
       // Dispatch custom event for other scripts to listen to
-      document.dispatchEvent(new CustomEvent('tabSwitched', { 
-        detail: { tab: tab, previousTab: this.previousTab } 
-      }));
-      
+      document.dispatchEvent(
+        new CustomEvent('tabSwitched', {
+          detail: { tab: tab, previousTab: this.previousTab },
+        }),
+      );
+
       // Dispatch tab:switched event for counter system
-      document.dispatchEvent(new CustomEvent('tab:switched', {
-        detail: { tab: tab, previousTab: this.previousTab }
-      }));
-      
+      document.dispatchEvent(
+        new CustomEvent('tab:switched', {
+          detail: { tab: tab, previousTab: this.previousTab },
+        }),
+      );
+
       this.previousTab = tab;
-      
+
       // Clear search when switching tabs (including when switching to home)
       if (window.SearchModule && typeof window.SearchModule.getSearchState === 'function') {
         try {
@@ -1556,7 +1677,7 @@ waitForFirebaseReady() {
           console.warn('⚠️ Error checking search state:', error);
         }
       }
-      
+
       // If we're switching away from search, make sure the target tab is visible
       if (window.SearchModule && typeof window.SearchModule.getSearchState === 'function') {
         try {
@@ -1575,7 +1696,7 @@ waitForFirebaseReady() {
 
       // Tab button classes - hide current tab, show others evenly spaced
       // BUT: During search, show all tabs for navigation
-      const TAB_IDS = ['home','watching','wishlist','watched','discover','settings'];
+      const TAB_IDS = ['home', 'watching', 'wishlist', 'watched', 'discover', 'settings'];
       const ids = TAB_IDS;
       let isSearching = false;
       if (this.isSearching !== undefined) {
@@ -1588,7 +1709,7 @@ waitForFirebaseReady() {
           console.warn('⚠️ Error getting search state for tab visibility:', error);
         }
       }
-      ids.forEach(name => {
+      ids.forEach((name) => {
         const btn = document.getElementById(`${name}Tab`);
         if (btn) {
           if (isSearching) {
@@ -1611,7 +1732,7 @@ waitForFirebaseReady() {
       });
 
       // Sections use .tab-section + .active
-      ids.forEach(name => {
+      ids.forEach((name) => {
         const section = document.getElementById(`${name}Section`);
         if (section) {
           section.classList.toggle('active', name === tab);
@@ -1625,33 +1746,54 @@ waitForFirebaseReady() {
       // Hide/show home-specific sections using unified visibility management
       if (window.VisibilityManager) {
         const results = window.VisibilityManager.manageHomeSections(
-          tab === 'home', 
-          `tab-switch-${tab}`
+          tab === 'home',
+          `tab-switch-${tab}`,
         );
-        
-        results.forEach(result => {
+
+        results.forEach((result) => {
           if (result.success) {
-            const debug = window.FlickletDebug || { info: console.log, warn: console.warn, error: console.error };
-            debug.info(`✅ ${result.sectionId} visibility: ${tab === 'home' ? 'visible' : 'hidden'}`);
+            const debug = window.FlickletDebug || {
+              info: console.log,
+              warn: console.warn,
+              error: console.error,
+            };
+            debug.info(
+              `✅ ${result.sectionId} visibility: ${tab === 'home' ? 'visible' : 'hidden'}`,
+            );
           } else {
-            const debug = window.FlickletDebug || { info: console.log, warn: console.warn, error: console.error };
+            const debug = window.FlickletDebug || {
+              info: console.log,
+              warn: console.warn,
+              error: console.error,
+            };
             debug.warn(`⚠️ Failed to update visibility for: ${result.sectionId}`);
           }
         });
       } else {
         // Fallback to original method if VisibilityManager not available
-        if (window.HomeSectionsConfig && typeof window.HomeSectionsConfig.getSections === 'function') {
+        if (
+          window.HomeSectionsConfig &&
+          typeof window.HomeSectionsConfig.getSections === 'function'
+        ) {
           const homeSections = window.HomeSectionsConfig.getSections('tab-switch');
           const sectionElements = window.HomeSectionsConfig.getSectionElements('tab-switch');
-        
-          homeSections.forEach(sectionId => {
+
+          homeSections.forEach((sectionId) => {
             const section = sectionElements[sectionId];
             if (section) {
               section.style.display = tab === 'home' ? 'block' : 'none';
-              const debug = window.FlickletDebug || { info: console.log, warn: console.warn, error: console.error };
+              const debug = window.FlickletDebug || {
+                info: console.log,
+                warn: console.warn,
+                error: console.error,
+              };
               debug.info(`✅ ${sectionId} visibility: ${tab === 'home' ? 'visible' : 'hidden'}`);
             } else {
-              const debug = window.FlickletDebug || { info: console.log, warn: console.warn, error: console.error };
+              const debug = window.FlickletDebug || {
+                info: console.log,
+                warn: console.warn,
+                error: console.error,
+              };
               debug.warn(`⚠️ Home section not found: ${sectionId}`);
             }
           });
@@ -1667,7 +1809,7 @@ waitForFirebaseReady() {
         // Define which tabs should hide the search bar
         const TABS_WITHOUT_SEARCH = ['settings'];
         const shouldHideSearch = TABS_WITHOUT_SEARCH.includes(tab);
-        
+
         if (shouldHideSearch) {
           searchContainer.style.display = 'none';
           console.log('🔍 Search bar hidden for', tab, 'tab');
@@ -1681,17 +1823,17 @@ waitForFirebaseReady() {
       if (typeof updateTabContent === 'function') {
         updateTabContent(tab);
       }
-      
+
       // Then update UI (including tab counts) after content is loaded
       this.updateUI();
-      
+
       // Trigger counter system update after tab content is loaded
       if (window.CounterBootstrap && typeof window.CounterBootstrap.directRecount === 'function') {
         setTimeout(() => {
           window.CounterBootstrap.directRecount();
         }, 200);
       }
-      
+
       // Dock FABs to the new active tab
       this.dockFABsToActiveTab();
     },
@@ -1704,10 +1846,10 @@ waitForFirebaseReady() {
         console.warn('⚠️ ThemeManager not available');
         return;
       }
-      
+
       const currentTheme = window.ThemeManager.theme;
       let newTheme;
-      
+
       if (currentTheme === 'system') {
         newTheme = window.ThemeManager.effectiveTheme === 'dark' ? 'light' : 'dark';
       } else if (currentTheme === 'light') {
@@ -1715,9 +1857,9 @@ waitForFirebaseReady() {
       } else {
         newTheme = 'light';
       }
-      
+
       window.ThemeManager.theme = newTheme;
-      
+
       // Update FAB icon
       const themeFab = document.getElementById('themeToggleFab');
       if (themeFab) {
@@ -1726,7 +1868,7 @@ waitForFirebaseReady() {
           icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
         }
       }
-      
+
       console.log(`🌙 Theme switched to: ${newTheme}`);
       this.showNotification(`Theme switched to ${newTheme}`, 'info');
     },
@@ -1736,24 +1878,24 @@ waitForFirebaseReady() {
      */
     toggleMardiGras() {
       console.log('🎭 toggleMardiGras called');
-      
+
       if (!window.ThemeManager) {
         console.warn('⚠️ ThemeManager not available');
         return;
       }
-      
+
       const currentMardi = window.ThemeManager.mardi;
       console.log('🎭 Current Mardi Gras state:', currentMardi);
-      
+
       const newMardi = currentMardi === 'on' ? 'off' : 'on';
       console.log('🎭 New Mardi Gras state:', newMardi);
-      
+
       window.ThemeManager.mardi = newMardi;
-      
+
       // Debug: Check if the body attribute is being set
       console.log('🎭 Body data-mardi attribute:', document.body.getAttribute('data-mardi'));
       console.log('🎭 Body classes:', document.body.className);
-      
+
       // Update FAB icon
       const mardiFab = document.getElementById('mardiGrasFab');
       console.log('🎭 Mardi Gras FAB element:', mardiFab);
@@ -1765,9 +1907,12 @@ waitForFirebaseReady() {
           console.log('🎭 Updated icon to:', icon.textContent);
         }
       }
-      
+
       console.log(`🎭 Mardi Gras mode: ${newMardi}`);
-      this.showNotification(`Mardi Gras mode ${newMardi === 'on' ? 'enabled' : 'disabled'}`, 'info');
+      this.showNotification(
+        `Mardi Gras mode ${newMardi === 'on' ? 'enabled' : 'disabled'}`,
+        'info',
+      );
     },
 
     /**
@@ -1807,40 +1952,44 @@ waitForFirebaseReady() {
     // STEP 3.1 — Delegated tab click handler (one place, works for all tab buttons/links)
     bindTabClicks() {
       // Delegate on document to catch future buttons too
-      document.addEventListener('click', (ev) => {
-        // Check if clicked element is a tab button or inside one
-        const tabButton = ev.target.closest('.tab');
-        if (!tabButton) return;
+      document.addEventListener(
+        'click',
+        (ev) => {
+          // Check if clicked element is a tab button or inside one
+          const tabButton = ev.target.closest('.tab');
+          if (!tabButton) return;
 
-        // Extract tab name from button ID (e.g., 'homeTab' -> 'home')
-        const buttonId = tabButton.id;
-        if (!buttonId) return;
+          // Extract tab name from button ID (e.g., 'homeTab' -> 'home')
+          const buttonId = tabButton.id;
+          if (!buttonId) return;
 
-        const tab = buttonId.replace('Tab', '');
-        if (!tab) return;
+          const tab = buttonId.replace('Tab', '');
+          if (!tab) return;
 
-        // Stop links from navigating and buttons from bubbling into overlays
-        ev.preventDefault();
-        ev.stopPropagation();
+          // Stop links from navigating and buttons from bubbling into overlays
+          ev.preventDefault();
+          ev.stopPropagation();
 
-        // Only handle known tabs
-        const allowed = ['home','watching','wishlist','watched','discover','settings'];
-        if (!allowed.includes(tab)) return;
+          // Only handle known tabs
+          const allowed = ['home', 'watching', 'wishlist', 'watched', 'discover', 'settings'];
+          if (!allowed.includes(tab)) return;
 
-        console.log(`🔄 Tab clicked: ${tab} (from ${buttonId})`);
+          console.log(`🔄 Tab clicked: ${tab} (from ${buttonId})`);
 
-        try {
-          if (typeof this.switchToTab === 'function') {
-            this.switchToTab(tab);
-          } else if (typeof window.switchToTab === 'function') {
-            window.switchToTab(tab);
-          } else {
-            console.warn('No switchToTab available; cannot switch to', tab);
+          try {
+            if (typeof this.switchToTab === 'function') {
+              this.switchToTab(tab);
+            } else if (typeof window.switchToTab === 'function') {
+              window.switchToTab(tab);
+            } else {
+              console.warn('No switchToTab available; cannot switch to', tab);
+            }
+          } catch (e) {
+            console.error('Tab switch failed:', tab, e);
           }
-        } catch (e) {
-          console.error('Tab switch failed:', tab, e);
-        }
-      }, { capture: true }); // capture reduces interference from other handlers
+        },
+        { capture: true },
+      ); // capture reduces interference from other handlers
     },
 
     setupEventListeners() {
@@ -1868,13 +2017,13 @@ waitForFirebaseReady() {
         const btn = e.target.closest('[data-action]');
         if (!btn) return;
         const action = btn.dataset.action;
-        
+
         // Debug logging for button clicks
         console.log('[App] Button clicked:', {
           action: action,
           id: btn.dataset.id,
           element: btn,
-          target: e.target
+          target: e.target,
         });
 
         // Route actions
@@ -1992,7 +2141,7 @@ waitForFirebaseReady() {
           console.log('⚙️ Settings FAB clicked');
           this.switchToTab('settings');
         }
-        
+
         // Theme Toggle FAB
         if (e.target.closest('#themeToggleFab')) {
           e.preventDefault();
@@ -2000,7 +2149,7 @@ waitForFirebaseReady() {
           console.log('🌙 Theme toggle FAB clicked');
           this.toggleTheme();
         }
-        
+
         // Mardi Gras Toggle FAB
         if (e.target.closest('#mardiGrasFab')) {
           e.preventDefault();
@@ -2028,20 +2177,23 @@ waitForFirebaseReady() {
     // Account management
     showSignInModal() {
       console.log('🔐 showSignInModal called - using FlickletAuth');
-      
+
       // Check if offline mode is active
       if (!this.firebaseInitialized) {
         console.log('🔒 Offline mode active, not showing sign-in modal');
-        this.showNotification('Authentication is currently unavailable. Your data is stored locally and will sync when Firebase is available.', 'info');
+        this.showNotification(
+          'Authentication is currently unavailable. Your data is stored locally and will sync when Firebase is available.',
+          'info',
+        );
         return;
       }
-      
+
       // Check if modal already exists
       if (document.querySelector('.modal-backdrop[data-modal="login"]')) {
         console.log('⚠️ Auth modal already exists, not creating another');
         return;
       }
-      
+
       // Use the existing openModal function from inline-script-02.js
       if (typeof window.openModal === 'function') {
         this.createSignInModal();
@@ -2110,15 +2262,15 @@ waitForFirebaseReady() {
               <button id="emailBtn" type="button" class="btn secondary" style="font-size:14px; padding:12px 18px; min-height:44px; grid-column: 1 / -1;">✉️ Email</button>
             </div>
           `,
-          "auth-modal"
+          'auth-modal',
         );
-        
+
         // Set up event listeners for the modal buttons
         setTimeout(() => {
           const googleBtn = document.getElementById('googleBtn');
           const appleBtn = document.getElementById('appleBtn');
           const emailBtn = document.getElementById('emailBtn');
-          
+
           if (googleBtn) {
             googleBtn.addEventListener('click', () => {
               if (window.FlickletAuth && window.FlickletAuth.loginWithGoogle) {
@@ -2129,7 +2281,7 @@ waitForFirebaseReady() {
               }
             });
           }
-          
+
           if (appleBtn) {
             appleBtn.addEventListener('click', () => {
               if (window.FlickletAuth && window.FlickletAuth.loginWithApple) {
@@ -2140,7 +2292,7 @@ waitForFirebaseReady() {
               }
             });
           }
-          
+
           if (emailBtn) {
             emailBtn.addEventListener('click', () => {
               if (window.FlickletAuth && window.FlickletAuth.loginWithEmail) {
@@ -2167,8 +2319,10 @@ waitForFirebaseReady() {
 
       const email = this.currentUser.email || t('unknown');
       const displayName = this.currentUser.displayName || email.split('@')[0] || t('user');
-      
-      const confirmed = confirm(`${t('sign_out_confirmation')} ${displayName}?\n\n${t('email_label')}: ${email}`);
+
+      const confirmed = confirm(
+        `${t('sign_out_confirmation')} ${displayName}?\n\n${t('email_label')}: ${email}`,
+      );
       if (confirmed) {
         console.log('✅ User confirmed sign out');
         // Call the new sign out method
@@ -2180,13 +2334,17 @@ waitForFirebaseReady() {
 
     signOut() {
       if (typeof firebase !== 'undefined' && firebase.auth) {
-        firebase.auth().signOut().then(() => {
-          console.log('✅ User signed out successfully');
-          showNotification?.(t('signed_out_successfully'), 'success');
-        }).catch((error) => {
-          console.error('❌ Sign out failed:', error);
-          showNotification?.(t('sign_out_failed'), 'error');
-        });
+        firebase
+          .auth()
+          .signOut()
+          .then(() => {
+            console.log('✅ User signed out successfully');
+            showNotification?.(t('signed_out_successfully'), 'success');
+          })
+          .catch((error) => {
+            console.error('❌ Sign out failed:', error);
+            showNotification?.(t('sign_out_failed'), 'error');
+          });
       } else {
         console.error('❌ Firebase auth not available for sign out');
       }
@@ -2197,12 +2355,12 @@ waitForFirebaseReady() {
       // Guard: Check if required containers exist before initializing
       const flickwordTile = document.getElementById('flickwordTile');
       const triviaTile = document.getElementById('triviaTile');
-      
+
       if (!flickwordTile && !triviaTile) {
         console.warn('[FlickletApp] Games containers not found, skipping games initialization');
         return;
       }
-      
+
       // Log once if containers are missing
       if (!flickwordTile) {
         console.warn('[FlickletApp] flickwordTile not found');
@@ -2216,16 +2374,18 @@ waitForFirebaseReady() {
       console.log('🎯 Initializing FlickWord modal...');
       try {
         // Import and initialize the flickword modal module
-        import('/scripts/modules/flickword-modal.js').then(module => {
-          if (module.initializeFlickWordModal) {
-            module.initializeFlickWordModal();
-            console.log('✅ FlickWord modal initialized successfully');
-          } else {
-            console.warn('⚠️ initializeFlickWordModal function not found in module');
-          }
-        }).catch(error => {
-          console.error('❌ Failed to load FlickWord modal module:', error);
-        });
+        import('/scripts/modules/flickword-modal.js')
+          .then((module) => {
+            if (module.initializeFlickWordModal) {
+              module.initializeFlickWordModal();
+              console.log('✅ FlickWord modal initialized successfully');
+            } else {
+              console.warn('⚠️ initializeFlickWordModal function not found in module');
+            }
+          })
+          .catch((error) => {
+            console.error('❌ Failed to load FlickWord modal module:', error);
+          });
       } catch (error) {
         console.error('❌ Error initializing FlickWord modal:', error);
       }
@@ -2235,28 +2395,30 @@ waitForFirebaseReady() {
       console.log('🧠 Initializing Trivia modal...');
       try {
         // Import and initialize the trivia modal module
-        import('/scripts/modules/trivia-modal.js').then(module => {
-          if (module.initializeTriviaModal) {
-            module.initializeTriviaModal();
-            console.log('✅ Trivia modal initialized successfully');
-          } else {
-            console.warn('⚠️ initializeTriviaModal function not found in module');
-          }
-        }).catch(error => {
-          console.error('❌ Failed to load Trivia modal module:', error);
-        });
+        import('/scripts/modules/trivia-modal.js')
+          .then((module) => {
+            if (module.initializeTriviaModal) {
+              module.initializeTriviaModal();
+              console.log('✅ Trivia modal initialized successfully');
+            } else {
+              console.warn('⚠️ initializeTriviaModal function not found in module');
+            }
+          })
+          .catch((error) => {
+            console.error('❌ Failed to load Trivia modal module:', error);
+          });
       } catch (error) {
         console.error('❌ Error initializing Trivia modal:', error);
       }
     },
     // checkAndPromptLogin() removed - handled in auth listener
-    
+
     // Search functionality moved to search.js module
 
     // ---------- Genres ----------
     initializeGenres() {
       console.log('🎬 Initializing genres...');
-      
+
       // Call loadGenres if available
       if (typeof window.loadGenres === 'function') {
         console.log('✅ loadGenres function found, calling it');
@@ -2264,7 +2426,7 @@ waitForFirebaseReady() {
       } else {
         console.log('❌ loadGenres function not available');
       }
-      
+
       console.log('✅ Genres initialization complete');
     },
 
@@ -2282,11 +2444,11 @@ waitForFirebaseReady() {
           title: accountBtn.title,
           currentUser: this.currentUser,
           firebaseDisplayName: this.currentUser?.displayName,
-          email: this.currentUser?.email
+          email: this.currentUser?.email,
         });
       }
     },
-    
+
     // Test method to verify sign-in modal works
     testSignInModal() {
       console.log('🧪 Testing sign-in modal...');
@@ -2297,7 +2459,7 @@ waitForFirebaseReady() {
         console.error('❌ Sign-in modal test failed:', error);
       }
     },
-    
+
     // Debug method to check authentication system status
     debugAuthSystem() {
       console.log('🔍 Authentication system debug info:', {
@@ -2309,19 +2471,21 @@ waitForFirebaseReady() {
         firebaseAuth: typeof firebase?.auth,
         currentUser: this.currentUser,
         authInitialized: this.authInitialized,
-        firebaseInitialized: this.firebaseInitialized
+        firebaseInitialized: this.firebaseInitialized,
       });
     },
-    
+
     // Language change function - delegates to centralized LanguageManager
     changeLanguage(newLang) {
       console.log('🌐 FlickletApp.changeLanguage delegating to LanguageManager:', newLang);
-      
+
       // Emit language:changed event for counter system
-      document.dispatchEvent(new CustomEvent('language:changed', {
-        detail: { newLang: newLang }
-      }));
-      
+      document.dispatchEvent(
+        new CustomEvent('language:changed', {
+          detail: { newLang: newLang },
+        }),
+      );
+
       if (window.LanguageManager) {
         return window.LanguageManager.changeLanguage(newLang);
       } else {
@@ -2339,22 +2503,26 @@ waitForFirebaseReady() {
         const user = await window.ensureUser();
         const uid = user.uid;
         const db = firebase.firestore();
-        
+
         FlickletDebug.info('💾 FlickletApp.saveData: Starting lean save to Firebase');
 
         // Use lean serializer for minimal payload
         const minimal = window.pruneWatchlistsShape(window.appData || {});
-        const payload = { 
-          ...minimal, 
-          uid, 
-          lastUpdated: firebase.firestore.FieldValue.serverTimestamp?.() 
+        const payload = {
+          ...minimal,
+          uid,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp?.(),
         };
         const json = JSON.stringify(payload);
         const bytes = window.computeBytes(json);
 
         // Abort if payload is still too large
         if (bytes > 900 * 1024) {
-          console.warn('[saveData] payload too large, skipping Firestore save:', (bytes/1024).toFixed(1), 'KB');
+          console.warn(
+            '[saveData] payload too large, skipping Firestore save:',
+            (bytes / 1024).toFixed(1),
+            'KB',
+          );
           // Still try to save locally with lean data
           window.saveAppData('flicklet-data', minimal);
           return;
@@ -2362,16 +2530,17 @@ waitForFirebaseReady() {
 
         // Save to Firestore
         await db.doc(`users/${uid}`).set(payload, { merge: true });
-        console.info('[saveData] Firestore save OK:', (bytes/1024).toFixed(1), 'KB');
+        console.info('[saveData] Firestore save OK:', (bytes / 1024).toFixed(1), 'KB');
 
         // Mirror to LocalStorage (guarded)
         window.saveAppData('flicklet-data', payload);
-        
-        FlickletDebug.info('✅ FlickletApp.saveData: Lean data saved successfully to Firebase and localStorage');
-        
+
+        FlickletDebug.info(
+          '✅ FlickletApp.saveData: Lean data saved successfully to Firebase and localStorage',
+        );
       } catch (error) {
         FlickletDebug.error('❌ FlickletApp.saveData failed:', error);
-        
+
         // Fallback to localStorage only with lean data
         try {
           const minimal = window.pruneWatchlistsShape(window.appData || {});
@@ -2380,7 +2549,7 @@ waitForFirebaseReady() {
         } catch (localError) {
           FlickletDebug.error('❌ Even localStorage save failed:', localError);
         }
-        
+
         throw error;
       }
     },
@@ -2396,7 +2565,7 @@ waitForFirebaseReady() {
     setSearching(searching) {
       this.isSearching = searching;
       console.log('🔍 FlickletApp search state changed:', searching);
-      
+
       // Ensure tabs remain visible during search
       if (searching) {
         const tabContainer = document.querySelector('.tab-container');
@@ -2462,9 +2631,10 @@ waitForFirebaseReady() {
         }
 
         // Move any individual FABs that aren't in a stack
-        const individualFabs = Array.from(document.querySelectorAll('.fab'))
-          .filter(btn => !btn.closest('.fab-stack') && !dock.contains(btn));
-        
+        const individualFabs = Array.from(document.querySelectorAll('.fab')).filter(
+          (btn) => !btn.closest('.fab-stack') && !dock.contains(btn),
+        );
+
         if (individualFabs.length > 0) {
           // Create a stack for individual FABs if it doesn't exist
           let individualStack = dock.querySelector('.individual-fab-stack');
@@ -2473,10 +2643,10 @@ waitForFirebaseReady() {
             individualStack.className = 'fab-stack individual-fab-stack';
             dock.appendChild(individualStack);
           }
-          
-          individualFabs.forEach(btn => individualStack.appendChild(btn));
+
+          individualFabs.forEach((btn) => individualStack.appendChild(btn));
         }
-        
+
         console.log('🔧 FAB Docking: Dock contents after move:', dock.innerHTML);
       }
 
@@ -2503,31 +2673,31 @@ waitForFirebaseReady() {
     // Settings tab functionality
     setupSettingsTabs() {
       const settingsTabs = document.querySelectorAll('.settings-tabs button[data-target]');
-      settingsTabs.forEach(tab => {
+      settingsTabs.forEach((tab) => {
         tab.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          
+
           const targetId = tab.getAttribute('data-target');
           console.log('Settings tab clicked:', targetId);
-          
+
           // Remove active class from all tabs
-          settingsTabs.forEach(btn => {
+          settingsTabs.forEach((btn) => {
             btn.classList.remove('active');
             btn.setAttribute('aria-selected', 'false');
           });
-          
+
           // Add active class to clicked tab
           tab.classList.add('active');
           tab.setAttribute('aria-selected', 'true');
-          
+
           // Hide all sections
           const sections = document.querySelectorAll('.settings-section');
-          sections.forEach(section => {
+          sections.forEach((section) => {
             section.classList.remove('active');
             section.style.display = 'none';
           });
-          
+
           // Show target section
           const targetSection = document.querySelector(targetId);
           if (targetSection) {
@@ -2539,32 +2709,32 @@ waitForFirebaseReady() {
     },
   };
 
-         // Expose singleton
-         window.FlickletApp = App;
-         
-         // Expose clearUserData function globally for auth manager
-         window.clearUserData = () => App.clearUserData();
+  // Expose singleton
+  window.FlickletApp = App;
 
-         // Also expose as instance for compatibility
-         window.FlickletAppInstance = App;
+  // Expose clearUserData function globally for auth manager
+  window.clearUserData = () => App.clearUserData();
 
-         // Initialize the app when DOM is ready
-         document.addEventListener('DOMContentLoaded', () => {
-           console.log('🚀 DOMContentLoaded - initializing FlickletApp');
-           App.init().catch(error => {
-             console.error('❌ FlickletApp initialization failed:', error);
-           });
-         });
-  
+  // Also expose as instance for compatibility
+  window.FlickletAppInstance = App;
+
+  // Initialize the app when DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 DOMContentLoaded - initializing FlickletApp');
+    App.init().catch((error) => {
+      console.error('❌ FlickletApp initialization failed:', error);
+    });
+  });
+
   // Expose UserViewModel globally for verification
   window.UserViewModel = UserViewModel;
 
   // Ensure user function for auth guards
-  window.ensureUser = async function() {
+  window.ensureUser = async function () {
     // Wait for Firebase to be ready
     if (!window.firebase || !window.firebaseAuth) {
       console.log('[ensureUser] Waiting for Firebase...');
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         const checkFirebase = () => {
           if (window.firebase && window.firebaseAuth) {
             resolve();
@@ -2575,39 +2745,41 @@ waitForFirebaseReady() {
         checkFirebase();
       });
     }
-    
+
     const user = window.firebaseAuth.currentUser;
     if (!user) {
       throw new Error('No authenticated user');
     }
-    
+
     return user;
   };
 
   // Global functions for HTML onclick handlers
-  window.saveDisplayName = async function() {
+  window.saveDisplayName = async function () {
     const input = document.getElementById('displayNameInput');
     if (!input) {
       console.error('Display name input not found');
       return;
     }
-    
+
     const newName = input.value.trim();
     if (!newName) {
       console.warn('Display name is empty');
       return;
     }
-    
+
     // Check if this is an overwrite of existing username
     const currentUsername = window.appData?.settings?.username;
     if (currentUsername && currentUsername !== newName) {
-      const confirmed = confirm(`Are you sure you want to change your username from "${currentUsername}" to "${newName}"? This will update your account settings.`);
+      const confirmed = confirm(
+        `Are you sure you want to change your username from "${currentUsername}" to "${newName}"? This will update your account settings.`,
+      );
       if (!confirmed) {
         console.log('Username change cancelled by user');
         return;
       }
     }
-    
+
     try {
       // Update appData
       if (!window.appData) {
@@ -2616,23 +2788,23 @@ waitForFirebaseReady() {
       if (!window.appData.settings) {
         window.appData.settings = {};
       }
-      
+
       window.appData.settings.username = newName;
       window.appData.settings.displayName = newName;
-      
+
       // Save to localStorage
       if (typeof window.saveAppData === 'function') {
         window.saveAppData();
       } else {
         localStorage.setItem('flicklet-data', JSON.stringify(window.appData));
       }
-      
+
       // Save to Firebase if user is signed in
       if (window.FlickletApp && window.FlickletApp.currentUser) {
         try {
-          await window.FlickletApp.writeSettings(window.FlickletApp.currentUser.uid, { 
+          await window.FlickletApp.writeSettings(window.FlickletApp.currentUser.uid, {
             username: newName,
-            displayName: newName 
+            displayName: newName,
           });
           console.log('✅ Username saved to Firebase:', newName);
         } catch (firebaseError) {
@@ -2640,12 +2812,12 @@ waitForFirebaseReady() {
           // Continue with local save even if Firebase fails
         }
       }
-      
+
       // Update UI
       UserViewModel.update({ displayName: newName });
-      
+
       console.log('✅ Display name saved:', newName);
-      
+
       // Show success feedback
       const btn = document.getElementById('saveNameBtn');
       if (btn) {
@@ -2657,7 +2829,6 @@ waitForFirebaseReady() {
           btn.style.background = '';
         }, 2000);
       }
-      
     } catch (error) {
       console.error('❌ Failed to save display name:', error);
     }
@@ -2672,34 +2843,34 @@ waitForFirebaseReady() {
    */
   FlickletApp.initBackToTop = function initBackToTop() {
     try {
-      const NS = "[app]";
+      const NS = '[app]';
       const log = (...a) => console.log(NS, ...a);
-      
+
       // Wait for DOM to be ready
       if (!document.body) {
-        log("DOM not ready, deferring back-to-top initialization");
+        log('DOM not ready, deferring back-to-top initialization');
         setTimeout(() => FlickletApp.initBackToTop(), 100);
         return;
       }
-      
+
       // Create back-to-top button
       const backToTopBtn = document.createElement('button');
       backToTopBtn.className = 'back-to-top';
       backToTopBtn.innerHTML = '↑';
       backToTopBtn.setAttribute('aria-label', 'Back to top');
       backToTopBtn.setAttribute('title', 'Back to top');
-      
+
       // Add to body
       document.body.appendChild(backToTopBtn);
-      
+
       // Scroll handler
       let isVisible = false;
       const scrollThreshold = 300; // Show after scrolling 300px
-      
+
       function handleScroll() {
         const scrollY = window.scrollY || document.documentElement.scrollTop;
         const shouldShow = scrollY > scrollThreshold;
-        
+
         if (shouldShow !== isVisible) {
           isVisible = shouldShow;
           if (isVisible) {
@@ -2709,22 +2880,21 @@ waitForFirebaseReady() {
           }
         }
       }
-      
+
       // Click handler
       backToTopBtn.addEventListener('click', () => {
         window.scrollTo({
           top: 0,
-          behavior: 'smooth'
+          behavior: 'smooth',
         });
       });
-      
+
       // Add scroll listener
       window.addEventListener('scroll', handleScroll, { passive: true });
-      
-      log("Back-to-top functionality initialized");
-      
+
+      log('Back-to-top functionality initialized');
     } catch (e) {
-      console.warn("[app] initBackToTop failed:", e?.message || e);
+      console.warn('[app] initBackToTop failed:', e?.message || e);
     }
   };
 

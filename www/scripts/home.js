@@ -1,6 +1,6 @@
 /**
  * Home Layout v2 - Option B Structure
- * 
+ *
  * ORDER (LOCKED):
  * 1. Search / Nav
  * 2. My Library (Currently Watching, Next Up)
@@ -11,16 +11,16 @@
  * 7. Feedback (banner → modal)
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🏠 Home Layout v2 loaded');
-  
+
   // Feature flag check
   const USE_V2 = !!(window.FLAGS && window.FLAGS.home_layout_v2);
   console.log('🏠 Home Layout v2 check:', USE_V2);
   console.log('🏠 FLAGS object:', window.FLAGS);
-  
+
   if (!USE_V2) {
     console.log('🚫 Home Layout v2 disabled by feature flag');
     return;
@@ -42,13 +42,13 @@
   // Mount My Library section
   function mountMyLibrary() {
     console.log('📚 Mounting My Library section');
-    
+
     // Initialize the currently watching preview if it exists
     const cwPreview = document.getElementById('currentlyWatchingPreview');
     if (cwPreview) {
       console.log('📚 Found currently watching preview, making visible');
       cwPreview.style.display = 'block';
-      
+
       // Trigger the currently watching preview rendering
       if (typeof window.renderCurrentlyWatchingPreview === 'function') {
         console.log('📚 Triggering currently watching preview render');
@@ -57,13 +57,13 @@
     } else {
       console.warn('📚 Currently watching preview not found');
     }
-    
+
     // Initialize the next up row if it exists
     const nextUpRow = document.getElementById('next-up-row');
     if (nextUpRow) {
       console.log('📚 Found next up row, making visible');
       nextUpRow.style.display = 'block';
-      
+
       // Trigger the next up row rendering
       if (typeof window.renderNextUpRow === 'function') {
         console.log('📚 Triggering next up this week render');
@@ -85,13 +85,13 @@
 
     // The HTML structure is already in place, just ensure visibility
     container.style.display = 'block';
-    
+
     // Initialize the spotlight row if it exists
     const spotlightRow = document.getElementById('spotlight-row');
     if (spotlightRow) {
       spotlightRow.style.display = 'block';
     }
-    
+
     // Initialize game functionality
     initializeCommunityGames();
   }
@@ -107,12 +107,12 @@
 
     // The HTML structure is already in place, just ensure visibility
     container.style.display = 'block';
-    
+
     // Initialize the curated sections if they exist
     const curatedSections = document.getElementById('curatedSections');
     if (curatedSections) {
       curatedSections.style.display = 'block';
-      
+
       // Initialize curated content after element is created
       setTimeout(() => {
         if (window.renderCuratedHomepage) {
@@ -133,7 +133,7 @@
       console.warn('🎨 Personalized section container not found, skipping');
       return;
     }
-    
+
     // Convert the existing HTML structure to match what the script expects
     if (container && !container.querySelector('.section__body')) {
       console.log('🎨 Converting personalized section structure...');
@@ -142,11 +142,11 @@
         sectionContent.className = 'section__body';
         sectionContent.id = 'section-personalized-body';
       }
-      
+
       // Update the container to match expected structure
       container.className = 'section';
       container.id = 'section-personalized';
-      
+
       const header = container.querySelector('.section-header');
       if (header) {
         header.className = 'section__header';
@@ -155,7 +155,7 @@
 
     // The HTML structure is already in place, just ensure visibility
     container.style.display = 'block';
-    
+
     // Initialize personalized section with actual content
     // Use setTimeout to ensure personalized scripts are loaded
     setTimeout(() => {
@@ -184,7 +184,7 @@
 
     // The HTML structure is already in place, just ensure visibility
     container.style.display = 'block';
-    
+
     // Initialize theater functionality
     initializeTheaterFunctionality();
   }
@@ -192,13 +192,13 @@
   // Initialize theater functionality (copied from theaters-near-me.js)
   function initializeTheaterFunctionality() {
     console.log('🎬 Initializing theater functionality');
-    
+
     const content = document.getElementById('theaters-content');
     if (!content) {
       console.warn('🎬 Theaters content container not found');
       return;
     }
-    
+
     // Add the complete theater content
     content.innerHTML = `
       <div class="theaters-container">
@@ -229,13 +229,13 @@
         </div>
       </div>
     `;
-    
+
     // Set up event listeners
     setupTheaterEventListeners();
-    
+
     // Load initial data
     loadTheaterData();
-    
+
     // Get user location
     updateUserLocation();
   }
@@ -275,7 +275,7 @@
   async function loadTheaterData() {
     try {
       console.log('🎬 Loading theater data...');
-      
+
       const movies = await fetchCurrentTheatricalReleases();
       if (movies && Array.isArray(movies)) {
         renderTheaterMovies(movies);
@@ -292,21 +292,21 @@
   async function fetchCurrentTheatricalReleases() {
     try {
       console.log('🎬 Fetching current theatrical releases...');
-      
+
       // Use existing TMDB config if available
       // Use proxy for API calls
       const data = await window.tmdbGet('movie/now_playing', {
         language: 'en-US',
         page: 1,
-        region: 'US'
+        region: 'US',
       });
       console.log('🎬 Fetched theatrical releases:', data.results?.length || 0);
-      
+
       if (!data.results || !Array.isArray(data.results)) {
         console.warn('🎬 Invalid data structure received from TMDB API');
         return getFallbackTheaterContent();
       }
-      
+
       return data.results.slice(0, 8); // Get top 8 movies
     } catch (error) {
       console.error('📺 TMDB API error:', error);
@@ -318,36 +318,41 @@
     try {
       const theatersList = document.getElementById('theatersList');
       const movieCount = document.getElementById('movieCount');
-      
+
       if (!theatersList) {
         console.warn('🎬 Theaters list not found');
         return;
       }
 
       if (!movies || movies.length === 0) {
-        theatersList.innerHTML = '<div class="no-movies"><p>Unable to load current movies. Please try again later.</p></div>';
+        theatersList.innerHTML =
+          '<div class="no-movies"><p>Unable to load current movies. Please try again later.</p></div>';
         if (movieCount) movieCount.textContent = '0 Movies';
         return;
       }
 
       // Render movies with error handling for each movie
-      theatersList.innerHTML = movies.map(movie => {
-        try {
-          const title = movie.title || 'Unknown Title';
-          const posterPath = movie.poster_path;
-          const overview = movie.overview || 'No description available';
-          const voteAverage = movie.vote_average;
-          const releaseDate = movie.release_date;
-          
-          const posterUrl = posterPath ? 
-            `https://image.tmdb.org/t/p/w200${posterPath}` : 
-            'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBM0FGIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+Tm8gUG9zdGVyPC90ZXh0Pgo8L3N2Zz4K';
-          
-          const releaseDateFormatted = releaseDate ? 
-            new Date(releaseDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 
-            'TBA';
-          
-          return `
+      theatersList.innerHTML = movies
+        .map((movie) => {
+          try {
+            const title = movie.title || 'Unknown Title';
+            const posterPath = movie.poster_path;
+            const overview = movie.overview || 'No description available';
+            const voteAverage = movie.vote_average;
+            const releaseDate = movie.release_date;
+
+            const posterUrl = posterPath
+              ? `https://image.tmdb.org/t/p/w200${posterPath}`
+              : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBM0FGIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+Tm8gUG9zdGVyPC90ZXh0Pgo8L3N2Zz4K';
+
+            const releaseDateFormatted = releaseDate
+              ? new Date(releaseDate).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                })
+              : 'TBA';
+
+            return `
             <div class="theater-movie">
               <div class="movie-poster">
                 <img src="${posterUrl}" 
@@ -365,11 +370,12 @@
               </div>
             </div>
           `;
-        } catch (movieError) {
-          console.error('🎬 Error rendering movie:', movieError, movie);
-          return '<div class="theater-movie error">Error loading movie data</div>';
-        }
-      }).join('');
+          } catch (movieError) {
+            console.error('🎬 Error rendering movie:', movieError, movie);
+            return '<div class="theater-movie error">Error loading movie data</div>';
+          }
+        })
+        .join('');
 
       // Update movie count
       if (movieCount) {
@@ -379,7 +385,8 @@
       console.error('❌ Error rendering theater movies:', error);
       const theatersList = document.getElementById('theatersList');
       if (theatersList) {
-        theatersList.innerHTML = '<div class="no-movies"><p>Error loading movies. Please refresh the page.</p></div>';
+        theatersList.innerHTML =
+          '<div class="no-movies"><p>Error loading movies. Please refresh the page.</p></div>';
       }
     }
   }
@@ -396,7 +403,10 @@
     }
 
     // Defer geolocation call to idle time to avoid blocking LCP
-    const idle = (fn) => ('requestIdleCallback' in window) ? requestIdleCallback(fn, {timeout: 2000}) : setTimeout(fn, 100);
+    const idle = (fn) =>
+      'requestIdleCallback' in window
+        ? requestIdleCallback(fn, { timeout: 2000 })
+        : setTimeout(fn, 100);
     idle(() => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -407,7 +417,7 @@
         (error) => {
           console.warn('Location error:', error);
           locationEl.textContent = '📍 Location unavailable';
-        }
+        },
       );
     });
   }
@@ -415,26 +425,29 @@
   function getFallbackTheaterContent() {
     return [
       {
-        title: "Dune: Part Two",
-        overview: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
+        title: 'Dune: Part Two',
+        overview:
+          'Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.',
         vote_average: 8.1,
-        release_date: "2024-03-01",
-        poster_path: "/8x9VvVeJ6x5qZ6Km6Af2wPr1xmp.jpg"
+        release_date: '2024-03-01',
+        poster_path: '/8x9VvVeJ6x5qZ6Km6Af2wPr1xmp.jpg',
       },
       {
-        title: "Oppenheimer",
-        overview: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
+        title: 'Oppenheimer',
+        overview:
+          'The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.',
         vote_average: 8.2,
-        release_date: "2023-07-21",
-        poster_path: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"
+        release_date: '2023-07-21',
+        poster_path: '/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
       },
       {
-        title: "Barbie",
-        overview: "Barbie and Ken are having the time of their lives in the colorful and seemingly perfect world of Barbie Land.",
+        title: 'Barbie',
+        overview:
+          'Barbie and Ken are having the time of their lives in the colorful and seemingly perfect world of Barbie Land.',
         vote_average: 6.9,
-        release_date: "2023-07-21",
-        poster_path: "/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg"
-      }
+        release_date: '2023-07-21',
+        poster_path: '/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg',
+      },
     ];
   }
 
@@ -456,22 +469,22 @@
   function initHomeLayoutV2() {
     console.log('🏠 Initializing Home Layout v2');
     console.log('🏠 Feature flag enabled:', !!window.FLAGS?.home_layout_v2);
-    
+
     // Mount sections with improved sequencing
     console.log('🏠 Mounting sections with improved sequencing');
     mountSectionsWithSequencing();
     setupEventListeners();
-    
+
     console.log('✅ Home Layout v2 initialized');
   }
-  
+
   // Improved section mounting with better sequencing
   function mountSectionsWithSequencing() {
     try {
       // Phase 1: Critical sections (immediate) - in correct visual order
       console.log('🏠 Mounting critical sections...');
       safeMountSection('My Library', mountMyLibrary);
-      
+
       // Phase 2: High priority sections (short delay)
       setTimeout(() => {
         try {
@@ -481,7 +494,7 @@
           console.error('❌ Error mounting high priority sections:', error);
         }
       }, 100);
-      
+
       // Phase 3: Medium priority sections
       setTimeout(() => {
         try {
@@ -492,7 +505,7 @@
           console.error('❌ Error mounting medium priority sections:', error);
         }
       }, 200);
-      
+
       // Phase 4: Low priority sections
       setTimeout(() => {
         try {
@@ -507,7 +520,7 @@
       console.error('❌ Critical error in section mounting sequence:', error);
     }
   }
-  
+
   // Safe section mounting with error handling
   function safeMountSection(sectionName, mountFunction) {
     try {
@@ -522,7 +535,7 @@
       // Continue with other sections even if one fails
     }
   }
-  
+
   // Fallback section mounting (original method)
   function mountSectionsFallback() {
     console.log('🏠 Mounting My Library...');
@@ -538,7 +551,7 @@
     console.log('🏠 Mounting Feedback Banner...');
     mountFeedbackBanner();
   }
-  
+
   // Setup event listeners (shared between optimized and fallback)
   function setupEventListeners() {
     // Set up feedback banner click handler
@@ -581,10 +594,10 @@
         const sectionHTML = createSection(
           'personalized',
           'home.personalized',
-          'home.personalized_sub'
+          'home.personalized_sub',
         );
         homeSection.insertAdjacentHTML('beforeend', sectionHTML);
-        
+
         // Initialize the section
         const sectionElement = document.getElementById('section-personalized');
         if (sectionElement && window.mountPersonalizedSection) {
@@ -599,10 +612,10 @@
   // Initialize Community Games functionality
   function initializeCommunityGames() {
     console.log('🎮 Initializing Community Games...');
-    
+
     // Update game stats
     updateGameStats();
-    
+
     // Set up trivia button
     const triviaBtn = document.getElementById('trivia-play-btn');
     if (triviaBtn) {
@@ -620,7 +633,7 @@
         }
       });
     }
-    
+
     // Set up FlickWord button
     const flickwordBtn = document.getElementById('flickword-play-btn');
     if (flickwordBtn) {
@@ -639,32 +652,32 @@
       });
     }
   }
-  
+
   // Update game statistics display
   function updateGameStats() {
     // Update trivia stats
     const triviaStreak = document.getElementById('trivia-streak');
     const triviaQuestions = document.getElementById('trivia-questions');
-    
+
     if (triviaStreak) {
       const streak = Number(localStorage.getItem('flicklet:trivia:v1:streak') || 0);
       triviaStreak.textContent = streak;
     }
-    
+
     if (triviaQuestions) {
       const isPro = window.FLAGS?.proEnabled || false;
       triviaQuestions.textContent = isPro ? '50' : '10';
     }
-    
+
     // Update FlickWord stats (placeholder for now)
     const flickwordStreak = document.getElementById('flickword-streak');
     const flickwordBest = document.getElementById('flickword-best');
-    
+
     if (flickwordStreak) {
       const streak = Number(localStorage.getItem('flicklet:flickword:streak') || 0);
       flickwordStreak.textContent = streak;
     }
-    
+
     if (flickwordBest) {
       const best = localStorage.getItem('flicklet:flickword:best') || '-';
       flickwordBest.textContent = best;
@@ -675,5 +688,4 @@
   window.initHomeLayoutV2 = initHomeLayoutV2;
   window.initializeCommunityGames = initializeCommunityGames;
   window.updateGameStats = updateGameStats;
-
 })();

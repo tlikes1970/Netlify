@@ -6,7 +6,7 @@
  * Dependencies: flags-init.js, home sections
  */
 
-(function() {
+(function () {
   'use strict';
 
   // Only run if flag is enabled
@@ -26,7 +26,7 @@
   function normalizeInitialLocation() {
     const hash = location.hash || '';
     const allowed = new Set(['', '#home']); // allow top/home only
-    
+
     if (!allowed.has(hash)) {
       // Strip unknown hash that can jump the page
       console.log('🔧 Route Fix: Removing hash', hash, 'to prevent auto-scroll');
@@ -37,10 +37,10 @@
   function ensureTopOnLoad() {
     // Ensure we're at the top on initial render
     requestAnimationFrame(() => {
-      window.scrollTo({ 
-        top: 0, 
-        left: 0, 
-        behavior: 'instant' 
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'instant',
       });
       console.log('🔧 Route Fix: Scrolled to top on initial load');
     });
@@ -55,7 +55,7 @@
   }
 
   // Prevent accidental hash navigation on load
-  window.addEventListener('load', function() {
+  window.addEventListener('load', function () {
     if (window.FLAGS?.route_fix_home_default) {
       // Double-check we're at the top after everything loads
       setTimeout(() => {
@@ -72,15 +72,7 @@
     window.RouteFix = {
       normalizeInitialLocation,
       ensureTopOnLoad,
-      isEnabled: () => !!window.FLAGS?.route_fix_home_default
+      isEnabled: () => !!window.FLAGS?.route_fix_home_default,
     };
   }
-
 })();
-
-
-
-
-
-
-

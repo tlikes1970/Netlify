@@ -5,7 +5,7 @@
    2) window.fetchSeries(id) -> same shape
    3) tvMovieTrackerData fallback -> seasons only (guesses by number_of_seasons)
 */
-(function(){
+(function () {
   const mount = document.getElementById('seriesOrg');
   if (!mount) return;
 
@@ -16,7 +16,7 @@
   init();
 
   // Expose refresh function globally
-  window.__FlickletRefreshSeriesOrganizer = function() {
+  window.__FlickletRefreshSeriesOrganizer = function () {
     console.log('🗂️ Refreshing series organizer content');
     // Clear any cached data to force fresh load
     if (series) {
@@ -31,9 +31,12 @@
     init();
   };
 
-  async function init(){
+  async function init() {
     const ctx = pickSeriesContext(forcedId);
-    if (!ctx) { mount.innerHTML = emptyState('No series selected.'); return; }
+    if (!ctx) {
+      mount.innerHTML = emptyState('No series selected.');
+      return;
+    }
 
     // Load data
     series = await loadSeries(ctx.id, ctx.title, ctx.seasonsGuess);
@@ -43,7 +46,7 @@
     const container = mount.querySelector('#seasons');
 
     // One section per season
-    for (const s of series.seasons){
+    for (const s of series.seasons) {
       container.insertAdjacentHTML('beforeend', seasonShellHTML(s));
     }
 
@@ -52,7 +55,7 @@
     mount.addEventListener('keydown', onKey);
   }
 
-  function onClick(e){
+  function onClick(e) {
     const btn = e.target.closest('.season-toggle');
     if (!btn) return;
     const wrap = btn.closest('.season');
@@ -60,7 +63,7 @@
     wrap.setAttribute('aria-expanded', String(!expanded));
 
     // Lazy render episodes
-    if (!expanded && !wrap.dataset.loaded){
+    if (!expanded && !wrap.dataset.loaded) {
       const sn = Number(wrap.dataset.seasonNumber);
       const epWrap = wrap.querySelector('.episodes');
       const eps = getEpisodesForSeason(sn);
@@ -69,19 +72,24 @@
     }
   }
 
-  function onKey(e){
+  function onKey(e) {
     const btn = e.target.closest('.season-toggle');
     if (!btn) return;
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
-    if (e.key === 'ArrowRight'){
-      const wrap = btn.closest('.season'); wrap.setAttribute('aria-expanded','true');
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      btn.click();
     }
-    if (e.key === 'ArrowLeft'){
-      const wrap = btn.closest('.season'); wrap.setAttribute('aria-expanded','false');
+    if (e.key === 'ArrowRight') {
+      const wrap = btn.closest('.season');
+      wrap.setAttribute('aria-expanded', 'true');
+    }
+    if (e.key === 'ArrowLeft') {
+      const wrap = btn.closest('.season');
+      wrap.setAttribute('aria-expanded', 'false');
     }
   }
 
-  function pickSeriesContext(forced){
+  function pickSeriesContext(forced) {
     if (forced) return { id: Number(forced), title: null, seasonsGuess: null };
 
     // Try current "watching" from tvMovieTrackerData
@@ -96,26 +104,28 @@
       const title = first.name || first.title || first.original_name || 'Series';
       const guess = first.number_of_seasons || null;
       return { id, title, seasonsGuess: guess };
-    } catch(_){ return null; }
+    } catch (_) {
+      return null;
+    }
   }
 
-  async function loadSeries(id, hintTitle, seasonsGuess){
+  async function loadSeries(id, hintTitle, seasonsGuess) {
     // 1) local cache
     try {
       const cached = JSON.parse(localStorage.getItem(seriesKey(id)) || 'null');
       if (cached && cached.seasons?.length) return cached;
-    } catch(_){}
+    } catch (_) {}
 
     // 2) optional app hook
-    if (typeof window.fetchSeries === 'function'){
+    if (typeof window.fetchSeries === 'function') {
       try {
         const fetched = await window.fetchSeries(id);
-        if (fetched?.seasons?.length){
+        if (fetched?.seasons?.length) {
           // persist for next time
           safeSet(seriesKey(id), fetched);
           return fetched;
         }
-      } catch(_){}
+      } catch (_) {}
     }
 
     // 3) fallback skeleton from tvMovieTrackerData entry if present
@@ -124,48 +134,57 @@
     return skeleton;
   }
 
-  function skeletonFromTracker(id, hintTitle, seasonsGuess){
+  function skeletonFromTracker(id, hintTitle, seasonsGuess) {
     // Try to extract a title/backdrop if available
     let title = hintTitle || 'Series';
     try {
       const raw = localStorage.getItem('tvMovieTrackerData');
-      if (raw){
+      if (raw) {
         const data = JSON.parse(raw);
         const all = [...(data?.tv?.watching || []), ...(data?.tv?.watched || [])];
-        const hit = all.find(x => Number(x.id) === Number(id));
-        if (hit){
+        const hit = all.find((x) => Number(x.id) === Number(id));
+        if (hit) {
           title = hit.name || hit.title || title;
         }
       }
-    } catch(_){}
+    } catch (_) {}
 
     const count = Number(seasonsGuess || 3) || 3;
     const seasons = [];
-    for (let i=1;i<=count;i++){
+    for (let i = 1; i <= count; i++) {
       seasons.push({
         season_number: i,
         name: `Season ${i}`,
         episode_count: 10,
-        episodes: fakeEpisodes(i, 10) // placeholder list; replaced if real data exists later
+        episodes: fakeEpisodes(i, 10), // placeholder list; replaced if real data exists later
       });
     }
     return { id, title, seasons };
   }
 
-  function seriesKey(id){ return `flicklet:series:${id}`; }
-  function safeSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(_){ } }
+  function seriesKey(id) {
+    return `flicklet:series:${id}`;
+  }
+  function safeSet(k, v) {
+    try {
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch (_) {}
+  }
 
-  function renderSeriesHead(s){
+  function renderSeriesHead(s) {
     const totalSeasons = s.seasons.length;
-    const totalEps = s.seasons.reduce((n, x) => n + (x.episode_count || x.episodes?.length || 0), 0);
+    const totalEps = s.seasons.reduce(
+      (n, x) => n + (x.episode_count || x.episodes?.length || 0),
+      0,
+    );
     return `
       <div class="series-head">
         <h2 class="series-title">${esc(s.title || 'Series')}</h2>
-        <div class="series-meta" aria-live="polite">${totalSeasons} season${totalSeasons!==1?'s':''} • ~${totalEps} episodes</div>
+        <div class="series-meta" aria-live="polite">${totalSeasons} season${totalSeasons !== 1 ? 's' : ''} • ~${totalEps} episodes</div>
       </div>`;
   }
 
-  function seasonShellHTML(season){
+  function seasonShellHTML(season) {
     const sn = Number(season.season_number);
     const name = season.name || `Season ${sn}`;
     const count = season.episode_count || (season.episodes?.length ?? 0) || '';
@@ -180,26 +199,29 @@
       </section>`;
   }
 
-  function getEpisodesForSeason(sn){
-    const season = series.seasons.find(s => Number(s.season_number) === Number(sn));
+  function getEpisodesForSeason(sn) {
+    const season = series.seasons.find((s) => Number(s.season_number) === Number(sn));
     return season?.episodes || [];
   }
 
-  function episodesHTML(episodes, sn){
-    if (!episodes?.length) return `<div class="ep-empty" style="opacity:.7;">No episodes available.</div>`;
-    const firstFive = episodes.slice(0,5).map(epHTML).join('');
+  function episodesHTML(episodes, sn) {
+    if (!episodes?.length)
+      return `<div class="ep-empty" style="opacity:.7;">No episodes available.</div>`;
+    const firstFive = episodes.slice(0, 5).map(epHTML).join('');
     const hasMore = episodes.length > 5;
-    const moreBtn = hasMore ? `
+    const moreBtn = hasMore
+      ? `
       <div class="more-row">
         <button class="btn" data-more data-sn="${sn}">Show all (${episodes.length})</button>
-      </div>` : '';
+      </div>`
+      : '';
     return `<div data-ep-wrap data-sn="${sn}">
       <div data-ep-list>${firstFive}</div>
       ${moreBtn}
     </div>`;
   }
 
-  function epHTML(ep){
+  function epHTML(ep) {
     const n = ep.episode_number ?? '?';
     const title = ep.name || `Episode ${n}`;
     const date = ep.air_date ? ` • ${niceDate(ep.air_date)}` : '';
@@ -221,43 +243,50 @@
   // Handle "Show all" + action buttons
   mount.addEventListener('click', (e) => {
     const more = e.target.closest('[data-more]');
-    if (more){
+    if (more) {
       const sn = Number(more.getAttribute('data-sn'));
       const listWrap = mount.querySelector(`[data-ep-wrap][data-sn="${sn}"]`);
-      const season = series.seasons.find(s => Number(s.season_number) === sn);
+      const season = series.seasons.find((s) => Number(s.season_number) === sn);
       if (!season || !listWrap) return;
       listWrap.querySelector('[data-ep-list]').innerHTML = season.episodes.map(epHTML).join('');
       more.remove();
       return;
     }
     const actionBtn = e.target.closest('.ep-actions .btn');
-    if (actionBtn){
+    if (actionBtn) {
       const act = actionBtn.dataset.action;
       const ep = actionBtn.closest('.episode')?.dataset?.ep;
-      if (act === 'watched'){
+      if (act === 'watched') {
         // Wire to your app's function if present
         window.Notify?.success?.(`Marked E${ep} watched`);
-      } else if (act === 'remind'){
+      } else if (act === 'remind') {
         window.Notify?.info?.(`Reminder set for E${ep}`);
       }
     }
   });
 
   // Utils
-  function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
-  function niceDate(s){
-    // Accept YYYY-MM-DD
-    const [y,m,d] = (s || '').split('-').map(Number);
-    if (!y || !m || !d) return '';
-    const dt = new Date(Date.UTC(y, m-1, d));
-    return dt.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'2-digit' });
+  function esc(s) {
+    return String(s ?? '').replace(
+      /[&<>"']/g,
+      (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[m],
+    );
   }
-  function fakeEpisodes(seasonNum, count){
+  function niceDate(s) {
+    // Accept YYYY-MM-DD
+    const [y, m, d] = (s || '').split('-').map(Number);
+    if (!y || !m || !d) return '';
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    return dt.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
+  }
+  function fakeEpisodes(seasonNum, count) {
     const out = [];
-    for (let i=1;i<=count;i++){
-      out.push({ episode_number:i, name:`Episode ${i}`, air_date:'', overview:'' });
+    for (let i = 1; i <= count; i++) {
+      out.push({ episode_number: i, name: `Episode ${i}`, air_date: '', overview: '' });
     }
     return out;
   }
-  function emptyState(msg){ return `<div style="padding:12px; opacity:.7;">${esc(msg)}</div>`; }
+  function emptyState(msg) {
+    return `<div style="padding:12px; opacity:.7;">${esc(msg)}</div>`;
+  }
 })();

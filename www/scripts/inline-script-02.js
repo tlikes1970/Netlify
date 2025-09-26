@@ -7,17 +7,17 @@
  */
 
 // Firebase data loading functions
-(function() {
+(function () {
   'use strict';
 
   // Sanitize data for Firestore compatibility
   function sanitizeForFirestore(value) {
     if (value === null || value === undefined) return null;
-    
+
     if (Array.isArray(value)) {
-      return value.map(item => sanitizeForFirestore(item));
+      return value.map((item) => sanitizeForFirestore(item));
     }
-    
+
     if (typeof value === 'object') {
       const out = {};
       for (const [k, v] of Object.entries(value)) {
@@ -27,60 +27,66 @@
       }
       return out;
     }
-    
+
     if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
       return value;
     }
-    
+
     return undefined;
   }
 
   async function loadUserDataFromCloud(uid) {
     try {
-      const snap = await db.collection("users").doc(uid).get();
+      const snap = await db.collection('users').doc(uid).get();
       if (!snap.exists) {
         FlickletDebug.info('🔄 No Firebase document found, preserving local settings');
         // Clear watchlist data but preserve settings when no Firebase document exists
-        const localLanguage = (appData.settings?.lang || "en");
-        const localTheme = (appData.settings?.theme || "light");
-        
+        const localLanguage = appData.settings?.lang || 'en';
+        const localTheme = appData.settings?.theme || 'light';
+
         appData.tv = { watching: [], wishlist: [], watched: [] };
         appData.movies = { watching: [], wishlist: [], watched: [] };
-        
+
         // Preserve language and theme settings
         if (localLanguage) appData.settings.lang = localLanguage;
         if (localTheme) appData.settings.theme = localTheme;
-        
+
         // Save the preserved settings
         localStorage.setItem('flicklet-data', JSON.stringify(appData));
         return;
       }
       const cloud = snap.data() || {};
-      
+
       // CRITICAL: Load from Firebase, but preserve local data if Firebase is empty
       FlickletDebug.info('🔄 User signed in - loading from Firebase');
-      
+
       // Preserve essential settings and current data
-      const localLanguage = (appData.settings?.lang || "en");
-      const localTheme = (appData.settings?.theme || "light");
+      const localLanguage = appData.settings?.lang || 'en';
+      const localTheme = appData.settings?.theme || 'light';
       const localTv = { ...appData.tv };
       const localMovies = { ...appData.movies };
-      
+
       // Load from Firebase if available, otherwise preserve local data
       if (cloud.watchlists) {
         if (cloud.watchlists.tv && cloud.watchlists.tv.watching?.length > 0) {
           FlickletDebug.info('🔄 Loading TV data from Firebase');
-          FlickletDebug.info('🔍 Firebase TV watching count:', cloud.watchlists.tv.watching?.length || 0);
+          FlickletDebug.info(
+            '🔍 Firebase TV watching count:',
+            cloud.watchlists.tv.watching?.length || 0,
+          );
           appData.tv = cloud.watchlists.tv;
         } else {
           FlickletDebug.info('🔄 No TV data in Firebase, preserving local data');
           // Keep local data if Firebase is empty
           appData.tv = localTv;
         }
-        
+
         if (cloud.watchlists.movies && cloud.watchlists.movies.watching?.length > 0) {
           FlickletDebug.info('🔄 Loading movie data from Firebase');
-          FlickletDebug.info('🔍 Firebase movie watching count:', cloud.watchlists.movies.watching?.length || 0);
+          FlickletDebug.info(
+            '🔍 Firebase movie watching count:',
+            cloud.watchlists.movies.watching?.length || 0,
+          );
           appData.movies = cloud.watchlists.movies;
         } else {
           FlickletDebug.info('🔄 No movie data in Firebase, preserving local data');
@@ -93,19 +99,19 @@
         appData.tv = localTv;
         appData.movies = localMovies;
       }
-      
+
       // Load settings from Firebase
       if (cloud.settings) {
         appData.settings = { ...(appData.settings || {}), ...cloud.settings };
       }
-      
+
       // Restore local settings
       if (localLanguage) appData.settings.lang = localLanguage;
       if (localTheme) appData.settings.theme = localTheme;
-      
+
       // Save to localStorage
-      localStorage.setItem("tvMovieTrackerData", JSON.stringify(appData));
-      
+      localStorage.setItem('tvMovieTrackerData', JSON.stringify(appData));
+
       // Sync to FlickletApp if available
       if (window.FlickletApp && window.FlickletApp.appData) {
         window.FlickletApp.appData.tv = appData.tv;
@@ -113,11 +119,11 @@
         window.FlickletApp.appData.settings = appData.settings;
         localStorage.setItem('flicklet-data', JSON.stringify(window.FlickletApp.appData));
       }
-      
+
       // Update UI
-      if (typeof updateUI === "function") updateUI();
-      if (typeof applyTranslations === "function") applyTranslations();
-      
+      if (typeof updateUI === 'function') updateUI();
+      if (typeof applyTranslations === 'function') applyTranslations();
+
       FlickletDebug.info('✅ User data loaded from Firebase successfully');
     } catch (e) {
       FlickletDebug.error('❌ Failed to load user data from Firebase:', e);
@@ -131,49 +137,49 @@
   window.AppState = {
     currentUser: null,
     isLoading: false,
-    
-    setLoading: function(loading) {
+
+    setLoading: function (loading) {
       this.isLoading = loading;
       const loader = document.getElementById('loading-indicator');
       if (loader) {
         loader.style.display = loading ? 'block' : 'none';
       }
     },
-    
-    setUser: function(user) {
+
+    setUser: function (user) {
       this.currentUser = user;
       this.updateUI();
     },
-    
-    updateUI: function() {
+
+    updateUI: function () {
       const userElements = document.querySelectorAll('[data-user]');
-      userElements.forEach(el => {
+      userElements.forEach((el) => {
         el.style.display = this.currentUser ? 'block' : 'none';
       });
-    }
+    },
   };
 
   // Search functionality
   window.Search = {
-    perform: function(query) {
+    perform: function (query) {
       if (!query || query.length < 2) return;
-      
+
       console.log('🔍 Searching for:', query);
       AppState.setLoading(true);
-      
+
       // Simulate search (replace with actual implementation)
       setTimeout(() => {
         AppState.setLoading(false);
         console.log('✅ Search completed');
       }, 500);
-    }
+    },
   };
 
   // Modal functionality
-  function openModal(title, html, testId = "generic-modal") {
+  function openModal(title, html, testId = 'generic-modal') {
     // Remove any existing modals
-    document.querySelectorAll('.modal-backdrop').forEach(modal => modal.remove());
-    
+    document.querySelectorAll('.modal-backdrop').forEach((modal) => modal.remove());
+
     // Create modal backdrop
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop';
@@ -192,7 +198,7 @@
       opacity: 0;
       transition: opacity 0.3s ease;
     `;
-    
+
     // Create modal content
     const modal = document.createElement('div');
     modal.className = 'modal-content';
@@ -208,7 +214,7 @@
       transform: scale(0.9);
       transition: transform 0.3s ease;
     `;
-    
+
     // Add title
     if (title) {
       const titleEl = document.createElement('h2');
@@ -221,7 +227,7 @@
       `;
       modal.appendChild(titleEl);
     }
-    
+
     // Add content
     if (html) {
       if (typeof html === 'string') {
@@ -230,7 +236,7 @@
         modal.appendChild(html);
       }
     }
-    
+
     // Add close button
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Close';
@@ -248,24 +254,24 @@
       backdrop.remove();
     });
     modal.appendChild(closeBtn);
-    
+
     // Add to DOM
     backdrop.appendChild(modal);
     document.body.appendChild(backdrop);
-    
+
     // Animate in
     requestAnimationFrame(() => {
       backdrop.style.opacity = '1';
       modal.style.transform = 'scale(1)';
     });
-    
+
     // Close on backdrop click
     backdrop.addEventListener('click', (e) => {
       if (e.target === backdrop) {
         backdrop.remove();
       }
     });
-    
+
     // Close on Escape key
     const handleEscape = (e) => {
       if (e.key === 'Escape') {
@@ -274,24 +280,23 @@
       }
     };
     document.addEventListener('keydown', handleEscape);
-    
+
     return backdrop;
   }
 
   // Export modal API
   window.openModal = openModal;
   window.dispatchEvent(new Event('modal-api-ready'));
-
 })();
 
 // Initialize app functionality
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   console.log('✅ App functionality initialized');
-  
+
   // Initialize search
   const searchInput = document.getElementById('search-input');
   if (searchInput) {
-    searchInput.addEventListener('input', function(e) {
+    searchInput.addEventListener('input', function (e) {
       Search.perform(e.target.value);
     });
   }

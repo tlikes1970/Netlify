@@ -24,13 +24,13 @@
     const allowed = new Set(['', '#', '#home']);
     if (!allowed.has(location.hash)) {
       console.log('🛡️ Anti-Jump: Removing hash', location.hash, 'to prevent auto-scroll');
-      try { 
-        history.replaceState(history.state, '', location.pathname); 
+      try {
+        history.replaceState(history.state, '', location.pathname);
       } catch (e) {
         console.warn('🛡️ Anti-Jump: Could not replace state:', e);
       }
     }
-    
+
     // Force scroll to top immediately
     console.log('🛡️ Anti-Jump: Forcing immediate scroll to top');
     try {
@@ -45,7 +45,7 @@
     const autofocusElements = document.querySelectorAll('[autofocus]');
     if (autofocusElements.length > 0) {
       console.log('🛡️ Anti-Jump: Removing autofocus from', autofocusElements.length, 'elements');
-      autofocusElements.forEach(n => n.removeAttribute('autofocus'));
+      autofocusElements.forEach((n) => n.removeAttribute('autofocus'));
     }
   });
 
@@ -105,5 +105,4 @@
   });
 
   console.log('🛡️ Anti-Jump: Simplified guard initialized');
-
 })();

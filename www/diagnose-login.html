@@ -1,64 +1,122 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login Diagnostics - Flicklet</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .diagnostic { background: white; margin: 15px 0; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .success { border-left: 4px solid #28a745; }
-        .error { border-left: 4px solid #dc3545; }
-        .warning { border-left: 4px solid #ffc107; }
-        .info { border-left: 4px solid #17a2b8; }
-        button { padding: 10px 20px; margin: 10px 5px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        .btn-primary { background: #007bff; color: white; }
-        .btn-success { background: #28a745; color: white; }
-        .btn-warning { background: #ffc107; color: black; }
-        .btn-danger { background: #dc3545; color: white; }
-        .log { background: #f8f9fa; padding: 15px; margin: 15px 0; border-radius: 4px; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
-        .status { font-weight: bold; margin: 10px 0; }
-        .solution { background: #e7f3ff; padding: 15px; margin: 15px 0; border-radius: 4px; border-left: 4px solid #007bff; }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .diagnostic {
+        background: white;
+        margin: 15px 0;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .success {
+        border-left: 4px solid #28a745;
+      }
+      .error {
+        border-left: 4px solid #dc3545;
+      }
+      .warning {
+        border-left: 4px solid #ffc107;
+      }
+      .info {
+        border-left: 4px solid #17a2b8;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 10px 5px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+      .btn-warning {
+        background: #ffc107;
+        color: black;
+      }
+      .btn-danger {
+        background: #dc3545;
+        color: white;
+      }
+      .log {
+        background: #f8f9fa;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 4px;
+        font-family: monospace;
+        white-space: pre-wrap;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .status {
+        font-weight: bold;
+        margin: 10px 0;
+      }
+      .solution {
+        background: #e7f3ff;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 4px;
+        border-left: 4px solid #007bff;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1>🔧 Login Diagnostics</h1>
-        <p>This tool will help diagnose why login might not be working.</p>
-        
-        <div class="diagnostic" id="browser-test">
-            <h3>Browser & Environment</h3>
-            <div id="browser-status">Checking...</div>
-        </div>
-        
-        <div class="diagnostic" id="firebase-test">
-            <h3>Firebase Status</h3>
-            <div id="firebase-status">Checking...</div>
-        </div>
-        
-        <div class="diagnostic" id="auth-test">
-            <h3>Authentication Test</h3>
-            <div id="auth-status">Ready to test</div>
-            <button class="btn-primary" onclick="testGoogleAuth()">Test Google Auth</button>
-            <button class="btn-warning" onclick="testEmailAuth()">Test Email Auth</button>
-            <button class="btn-danger" onclick="clearLogs()">Clear Logs</button>
-        </div>
-        
-        <div class="diagnostic" id="csp-test">
-            <h3>Security & CSP</h3>
-            <div id="csp-status">Checking...</div>
-        </div>
-        
-        <div class="diagnostic">
-            <h3>Diagnostic Log</h3>
-            <div id="diagnostic-log" class="log"></div>
-        </div>
-        
-        <div class="solution" id="solutions" style="display: none;">
-            <h3>💡 Solutions</h3>
-            <div id="solution-content"></div>
-        </div>
+      <h1>🔧 Login Diagnostics</h1>
+      <p>This tool will help diagnose why login might not be working.</p>
+
+      <div class="diagnostic" id="browser-test">
+        <h3>Browser & Environment</h3>
+        <div id="browser-status">Checking...</div>
+      </div>
+
+      <div class="diagnostic" id="firebase-test">
+        <h3>Firebase Status</h3>
+        <div id="firebase-status">Checking...</div>
+      </div>
+
+      <div class="diagnostic" id="auth-test">
+        <h3>Authentication Test</h3>
+        <div id="auth-status">Ready to test</div>
+        <button class="btn-primary" onclick="testGoogleAuth()">Test Google Auth</button>
+        <button class="btn-warning" onclick="testEmailAuth()">Test Email Auth</button>
+        <button class="btn-danger" onclick="clearLogs()">Clear Logs</button>
+      </div>
+
+      <div class="diagnostic" id="csp-test">
+        <h3>Security & CSP</h3>
+        <div id="csp-status">Checking...</div>
+      </div>
+
+      <div class="diagnostic">
+        <h3>Diagnostic Log</h3>
+        <div id="diagnostic-log" class="log"></div>
+      </div>
+
+      <div class="solution" id="solutions" style="display: none">
+        <h3>💡 Solutions</h3>
+        <div id="solution-content"></div>
+      </div>
     </div>
 
     <!-- Load Firebase -->
@@ -67,209 +125,243 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <script src="/firebase-config.js"></script>
     <script src="/js/auth-manager.js"></script>
-    
+
     <script>
-        let logDiv = document.getElementById('diagnostic-log');
-        let solutions = document.getElementById('solutions');
-        let solutionContent = document.getElementById('solution-content');
-        
-        function log(message, type = 'info') {
-            const timestamp = new Date().toLocaleTimeString();
-            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
-            logDiv.textContent += `[${timestamp}] ${prefix} ${message}\n`;
-            logDiv.scrollTop = logDiv.scrollHeight;
-            console.log(`[Login Diag] ${message}`);
+      let logDiv = document.getElementById('diagnostic-log');
+      let solutions = document.getElementById('solutions');
+      let solutionContent = document.getElementById('solution-content');
+
+      function log(message, type = 'info') {
+        const timestamp = new Date().toLocaleTimeString();
+        const prefix =
+          type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+        logDiv.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+        logDiv.scrollTop = logDiv.scrollHeight;
+        console.log(`[Login Diag] ${message}`);
+      }
+
+      function clearLogs() {
+        logDiv.textContent = '';
+      }
+
+      function showSolution(content) {
+        solutionContent.innerHTML = content;
+        solutions.style.display = 'block';
+      }
+
+      function updateStatus(elementId, status, message, type = 'info') {
+        const element = document.getElementById(elementId);
+        const statusDiv = element.querySelector('[id$="-status"]');
+
+        statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        element.className = `diagnostic ${type}`;
+      }
+
+      // Test browser and environment
+      function testBrowser() {
+        log('Testing browser and environment...');
+
+        const userAgent = navigator.userAgent;
+        const isChrome = userAgent.includes('Chrome');
+        const isFirefox = userAgent.includes('Firefox');
+        const isSafari = userAgent.includes('Safari') && !userAgent.includes('Chrome');
+        const isEdge = userAgent.includes('Edge');
+
+        const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        const isHttps = location.protocol === 'https:';
+
+        let browserName = 'Unknown';
+        if (isChrome) browserName = 'Chrome';
+        else if (isFirefox) browserName = 'Firefox';
+        else if (isSafari) browserName = 'Safari';
+        else if (isEdge) browserName = 'Edge';
+
+        log(`Browser: ${browserName}`);
+        log(`Localhost: ${isLocalhost}`);
+        log(`HTTPS: ${isHttps}`);
+
+        let issues = [];
+        let solutions = [];
+
+        if (isLocalhost && !isHttps) {
+          issues.push('Running on localhost without HTTPS');
+          solutions.push(
+            'Some authentication providers may not work on localhost. Try using the hosted version or enable HTTPS.',
+          );
         }
-        
-        function clearLogs() {
-            logDiv.textContent = '';
+
+        if (isSafari) {
+          issues.push('Safari may have stricter popup blocking');
+          solutions.push(
+            'Safari may block popups more aggressively. Try using redirect method or allow popups for this site.',
+          );
         }
-        
-        function showSolution(content) {
-            solutionContent.innerHTML = content;
-            solutions.style.display = 'block';
+
+        if (issues.length === 0) {
+          updateStatus(
+            'browser-test',
+            'success',
+            `✅ ${browserName} - No issues detected`,
+            'success',
+          );
+          log('Browser environment looks good', 'success');
+        } else {
+          updateStatus(
+            'browser-test',
+            'warning',
+            `⚠️ ${browserName} - ${issues.length} potential issues`,
+            'warning',
+          );
+          log(`Browser issues: ${issues.join(', ')}`, 'warning');
+          showSolution(`<ul><li>${solutions.join('</li><li>')}</li></ul>`);
         }
-        
-        function updateStatus(elementId, status, message, type = 'info') {
-            const element = document.getElementById(elementId);
-            const statusDiv = element.querySelector('[id$="-status"]');
-            
-            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
-            element.className = `diagnostic ${type}`;
+      }
+
+      // Test Firebase
+      function testFirebase() {
+        log('Testing Firebase...');
+
+        if (typeof firebase === 'undefined') {
+          updateStatus('firebase-test', 'error', '❌ Firebase SDK not loaded', 'error');
+          log('Firebase SDK not loaded', 'error');
+          showSolution(
+            '<p>Firebase SDK failed to load. Check your internet connection and try refreshing the page.</p>',
+          );
+          return false;
         }
-        
-        // Test browser and environment
-        function testBrowser() {
-            log('Testing browser and environment...');
-            
-            const userAgent = navigator.userAgent;
-            const isChrome = userAgent.includes('Chrome');
-            const isFirefox = userAgent.includes('Firefox');
-            const isSafari = userAgent.includes('Safari') && !userAgent.includes('Chrome');
-            const isEdge = userAgent.includes('Edge');
-            
-            const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-            const isHttps = location.protocol === 'https:';
-            
-            let browserName = 'Unknown';
-            if (isChrome) browserName = 'Chrome';
-            else if (isFirefox) browserName = 'Firefox';
-            else if (isSafari) browserName = 'Safari';
-            else if (isEdge) browserName = 'Edge';
-            
-            log(`Browser: ${browserName}`);
-            log(`Localhost: ${isLocalhost}`);
-            log(`HTTPS: ${isHttps}`);
-            
-            let issues = [];
-            let solutions = [];
-            
-            if (isLocalhost && !isHttps) {
-                issues.push('Running on localhost without HTTPS');
-                solutions.push('Some authentication providers may not work on localhost. Try using the hosted version or enable HTTPS.');
-            }
-            
-            if (isSafari) {
-                issues.push('Safari may have stricter popup blocking');
-                solutions.push('Safari may block popups more aggressively. Try using redirect method or allow popups for this site.');
-            }
-            
-            if (issues.length === 0) {
-                updateStatus('browser-test', 'success', `✅ ${browserName} - No issues detected`, 'success');
-                log('Browser environment looks good', 'success');
-            } else {
-                updateStatus('browser-test', 'warning', `⚠️ ${browserName} - ${issues.length} potential issues`, 'warning');
-                log(`Browser issues: ${issues.join(', ')}`, 'warning');
-                showSolution(`<ul><li>${solutions.join('</li><li>')}</li></ul>`);
-            }
+
+        if (!window.firebaseAuth) {
+          updateStatus('firebase-test', 'error', '❌ Firebase Auth not initialized', 'error');
+          log('Firebase Auth not initialized', 'error');
+          showSolution('<p>Firebase Auth not initialized. Check the firebase-config.js file.</p>');
+          return false;
         }
-        
-        // Test Firebase
-        function testFirebase() {
-            log('Testing Firebase...');
-            
-            if (typeof firebase === 'undefined') {
-                updateStatus('firebase-test', 'error', '❌ Firebase SDK not loaded', 'error');
-                log('Firebase SDK not loaded', 'error');
-                showSolution('<p>Firebase SDK failed to load. Check your internet connection and try refreshing the page.</p>');
-                return false;
-            }
-            
-            if (!window.firebaseAuth) {
-                updateStatus('firebase-test', 'error', '❌ Firebase Auth not initialized', 'error');
-                log('Firebase Auth not initialized', 'error');
-                showSolution('<p>Firebase Auth not initialized. Check the firebase-config.js file.</p>');
-                return false;
-            }
-            
-            if (!window.firebaseDb) {
-                updateStatus('firebase-test', 'error', '❌ Firebase Firestore not initialized', 'error');
-                log('Firebase Firestore not initialized', 'error');
-                showSolution('<p>Firebase Firestore not initialized. Check the firebase-config.js file.</p>');
-                return false;
-            }
-            
-            updateStatus('firebase-test', 'success', '✅ Firebase loaded and initialized', 'success');
-            log('Firebase loaded and initialized successfully', 'success');
-            return true;
+
+        if (!window.firebaseDb) {
+          updateStatus('firebase-test', 'error', '❌ Firebase Firestore not initialized', 'error');
+          log('Firebase Firestore not initialized', 'error');
+          showSolution(
+            '<p>Firebase Firestore not initialized. Check the firebase-config.js file.</p>',
+          );
+          return false;
         }
-        
-        // Test CSP
-        function testCSP() {
-            log('Testing CSP and security...');
-            
-            const cspMeta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
-            if (cspMeta) {
-                updateStatus('csp-test', 'warning', '⚠️ CSP meta tag found', 'warning');
-                log('CSP meta tag found: ' + cspMeta.content, 'warning');
-                showSolution('<p>CSP meta tag found that may block authentication. Consider removing it or updating the CSP to allow authentication domains.</p>');
-            } else {
-                updateStatus('csp-test', 'success', '✅ No CSP meta tag (good for auth)', 'success');
-                log('No CSP meta tag found', 'success');
-            }
-            
-            // Check for ad blockers
-            const testScript = document.createElement('script');
-            testScript.src = 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js';
-            testScript.onerror = () => {
-                log('Ad blocker may be blocking Firebase scripts', 'warning');
-                showSolution('<p>Ad blocker may be blocking Firebase scripts. Try disabling ad blockers or adding this site to the whitelist.</p>');
-            };
-            document.head.appendChild(testScript);
+
+        updateStatus('firebase-test', 'success', '✅ Firebase loaded and initialized', 'success');
+        log('Firebase loaded and initialized successfully', 'success');
+        return true;
+      }
+
+      // Test CSP
+      function testCSP() {
+        log('Testing CSP and security...');
+
+        const cspMeta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+        if (cspMeta) {
+          updateStatus('csp-test', 'warning', '⚠️ CSP meta tag found', 'warning');
+          log('CSP meta tag found: ' + cspMeta.content, 'warning');
+          showSolution(
+            '<p>CSP meta tag found that may block authentication. Consider removing it or updating the CSP to allow authentication domains.</p>',
+          );
+        } else {
+          updateStatus('csp-test', 'success', '✅ No CSP meta tag (good for auth)', 'success');
+          log('No CSP meta tag found', 'success');
         }
-        
-        // Test Google Auth
-        async function testGoogleAuth() {
-            log('Testing Google authentication...');
-            updateStatus('auth-test', 'info', 'Testing Google auth...', 'info');
-            
-            try {
-                if (!window.AuthManager) {
-                    throw new Error('AuthManager not available');
-                }
-                
-                log('AuthManager available, testing Google login...');
-                await window.AuthManager.startLogin('google', 'popup');
-                log('Google login initiated successfully', 'success');
-                updateStatus('auth-test', 'success', '✅ Google login initiated successfully', 'success');
-                
-            } catch (error) {
-                log(`Google login failed: ${error.message}`, 'error');
-                
-                if (error.code === 'auth/popup-blocked') {
-                    updateStatus('auth-test', 'warning', '⚠️ Popup blocked by browser/ad blocker', 'warning');
-                    showSolution('<p>Popup blocked by browser or ad blocker. Try:<br>1. Allow popups for this site<br>2. Disable ad blockers<br>3. Use redirect method instead</p>');
-                } else if (error.code === 'auth/network-request-failed') {
-                    updateStatus('auth-test', 'error', '❌ Network request failed', 'error');
-                    showSolution('<p>Network request failed. Check your internet connection and try again.</p>');
-                } else {
-                    updateStatus('auth-test', 'error', `❌ Google login failed: ${error.message}`, 'error');
-                    showSolution(`<p>Google login failed: ${error.message}. Check the console for more details.</p>`);
-                }
-            }
+
+        // Check for ad blockers
+        const testScript = document.createElement('script');
+        testScript.src = 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js';
+        testScript.onerror = () => {
+          log('Ad blocker may be blocking Firebase scripts', 'warning');
+          showSolution(
+            '<p>Ad blocker may be blocking Firebase scripts. Try disabling ad blockers or adding this site to the whitelist.</p>',
+          );
+        };
+        document.head.appendChild(testScript);
+      }
+
+      // Test Google Auth
+      async function testGoogleAuth() {
+        log('Testing Google authentication...');
+        updateStatus('auth-test', 'info', 'Testing Google auth...', 'info');
+
+        try {
+          if (!window.AuthManager) {
+            throw new Error('AuthManager not available');
+          }
+
+          log('AuthManager available, testing Google login...');
+          await window.AuthManager.startLogin('google', 'popup');
+          log('Google login initiated successfully', 'success');
+          updateStatus('auth-test', 'success', '✅ Google login initiated successfully', 'success');
+        } catch (error) {
+          log(`Google login failed: ${error.message}`, 'error');
+
+          if (error.code === 'auth/popup-blocked') {
+            updateStatus(
+              'auth-test',
+              'warning',
+              '⚠️ Popup blocked by browser/ad blocker',
+              'warning',
+            );
+            showSolution(
+              '<p>Popup blocked by browser or ad blocker. Try:<br>1. Allow popups for this site<br>2. Disable ad blockers<br>3. Use redirect method instead</p>',
+            );
+          } else if (error.code === 'auth/network-request-failed') {
+            updateStatus('auth-test', 'error', '❌ Network request failed', 'error');
+            showSolution(
+              '<p>Network request failed. Check your internet connection and try again.</p>',
+            );
+          } else {
+            updateStatus('auth-test', 'error', `❌ Google login failed: ${error.message}`, 'error');
+            showSolution(
+              `<p>Google login failed: ${error.message}. Check the console for more details.</p>`,
+            );
+          }
         }
-        
-        // Test Email Auth
-        async function testEmailAuth() {
-            log('Testing Email authentication...');
-            updateStatus('auth-test', 'info', 'Testing Email auth...', 'info');
-            
-            try {
-                if (!window.AuthManager) {
-                    throw new Error('AuthManager not available');
-                }
-                
-                log('AuthManager available, testing email modal...');
-                window.AuthManager.showProviderModal();
-                log('Email login modal should be showing', 'success');
-                updateStatus('auth-test', 'success', '✅ Email login modal displayed', 'success');
-                
-            } catch (error) {
-                log(`Email login failed: ${error.message}`, 'error');
-                updateStatus('auth-test', 'error', `❌ Email login failed: ${error.message}`, 'error');
-                showSolution(`<p>Email login failed: ${error.message}. Check the console for more details.</p>`);
-            }
+      }
+
+      // Test Email Auth
+      async function testEmailAuth() {
+        log('Testing Email authentication...');
+        updateStatus('auth-test', 'info', 'Testing Email auth...', 'info');
+
+        try {
+          if (!window.AuthManager) {
+            throw new Error('AuthManager not available');
+          }
+
+          log('AuthManager available, testing email modal...');
+          window.AuthManager.showProviderModal();
+          log('Email login modal should be showing', 'success');
+          updateStatus('auth-test', 'success', '✅ Email login modal displayed', 'success');
+        } catch (error) {
+          log(`Email login failed: ${error.message}`, 'error');
+          updateStatus('auth-test', 'error', `❌ Email login failed: ${error.message}`, 'error');
+          showSolution(
+            `<p>Email login failed: ${error.message}. Check the console for more details.</p>`,
+          );
         }
-        
-        // Run all tests
-        function runAllTests() {
-            log('Running all diagnostic tests...');
-            testBrowser();
-            testFirebase();
-            testCSP();
-        }
-        
-        // Initialize tests when page loads
-        window.addEventListener('load', () => {
-            log('Login diagnostic page loaded');
-            runAllTests();
-        });
-        
-        // Listen for Firebase ready
-        window.addEventListener('firebase:ready', () => {
-            log('Firebase ready event received');
-            testFirebase();
-        });
+      }
+
+      // Run all tests
+      function runAllTests() {
+        log('Running all diagnostic tests...');
+        testBrowser();
+        testFirebase();
+        testCSP();
+      }
+
+      // Initialize tests when page loads
+      window.addEventListener('load', () => {
+        log('Login diagnostic page loaded');
+        runAllTests();
+      });
+
+      // Listen for Firebase ready
+      window.addEventListener('firebase:ready', () => {
+        log('Firebase ready event received');
+        testFirebase();
+      });
     </script>
-</body>
+  </body>
 </html>

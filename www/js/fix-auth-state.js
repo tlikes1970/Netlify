@@ -1,6 +1,6 @@
 /**
  * Auth State Fix - Manual Trigger
- * 
+ *
  * Process: Auth State Fix
  * Purpose: Manually trigger auth state update when bridge fails
  * Data Source: Firebase auth currentUser
@@ -8,7 +8,7 @@
  * Dependencies: Firebase auth, setAuthUI function
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🔧 Auth State Fix starting...');
@@ -40,37 +40,35 @@
     try {
       await waitForFirebase();
       await waitForSetAuthUI();
-      
+
       const auth = window.firebaseAuth;
       const currentUser = auth.currentUser;
-      
+
       console.log('🔧 Current user from Firebase:', currentUser);
-      
+
       if (currentUser) {
         console.log('🔧 User is signed in, updating UI...');
-        
+
         // Update global references
         window.currentUser = currentUser;
         if (window.FlickletApp) {
           window.FlickletApp.currentUser = currentUser;
         }
-        
+
         // Update UI
         const displayName = currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
         window.setAuthUI(true, displayName);
-        
+
         console.log('🔧 Auth state fixed! User:', displayName);
-        
+
         // Show success message
         if (window.showToast) {
           window.showToast('success', 'Signed In', `Welcome back, ${displayName}!`);
         }
-        
       } else {
         console.log('🔧 No user signed in');
         window.setAuthUI(false, null);
       }
-      
     } catch (error) {
       console.error('🔧 Failed to fix auth state:', error);
     }
@@ -83,6 +81,4 @@
   window.fixAuthState = fixAuthState;
 
   console.log('✅ Auth State Fix loaded. Use window.fixAuthState() to manually fix.');
-
 })();
-

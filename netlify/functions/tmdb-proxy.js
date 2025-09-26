@@ -1,7 +1,7 @@
 /**
  * TMDB API Proxy Function
  * Provides secure access to TMDB API with rate limiting, caching, and input validation
- * 
+ *
  * Security Features:
  * - API key kept server-side only
  * - Endpoint allowlist validation
@@ -19,9 +19,9 @@ export async function handler(event) {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Max-Age': '86400'
+        'Access-Control-Max-Age': '86400',
       },
-      body: ''
+      body: '',
     };
   }
 
@@ -50,7 +50,7 @@ export async function handler(event) {
     // Endpoint allowlist for security
     const allowedPaths = new Set([
       'search/multi',
-      'search/movie', 
+      'search/movie',
       'search/tv',
       'movie/',
       'tv/',
@@ -60,10 +60,10 @@ export async function handler(event) {
       'genre/movie/list',
       'genre/tv/list',
       'discover/movie',
-      'discover/tv'
+      'discover/tv',
     ]);
 
-    if (![...allowedPaths].some(allowedPath => path.startsWith(allowedPath))) {
+    if (![...allowedPaths].some((allowedPath) => path.startsWith(allowedPath))) {
       return createResponse(400, { error: 'Disallowed path' });
     }
 
@@ -74,13 +74,13 @@ export async function handler(event) {
 
     // Build TMDB URL
     const tmdbUrl = new URL(`https://api.themoviedb.org/3/${path}`);
-    
+
     // Add query parameters
     if (query) tmdbUrl.searchParams.set('query', query);
     tmdbUrl.searchParams.set('page', String(page));
     tmdbUrl.searchParams.set('language', language);
     tmdbUrl.searchParams.set('include_adult', 'false');
-    
+
     if (mediaType) tmdbUrl.searchParams.set('media_type', mediaType);
 
     console.log(`🔍 TMDB Proxy Request: ${path}`, { query, page, language, mediaType });
@@ -88,17 +88,17 @@ export async function handler(event) {
     // Make request to TMDB with v4 bearer token
     const response = await fetch(tmdbUrl, {
       headers: {
-        'Authorization': `Bearer ${process.env.TMDB_API_KEY}`,
-        'Content-Type': 'application/json'
-      }
+        Authorization: `Bearer ${process.env.TMDB_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!response.ok) {
       console.error(`❌ TMDB API error: ${response.status} ${response.statusText}`);
-      return createResponse(response.status, { 
-        error: 'TMDB API error', 
+      return createResponse(response.status, {
+        error: 'TMDB API error',
         status: response.status,
-        message: response.statusText
+        message: response.statusText,
       });
     }
 
@@ -113,16 +113,15 @@ export async function handler(event) {
         'Cache-Control': 'public, max-age=300, s-maxage=300', // 5 minutes cache
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
+        'Access-Control-Allow-Headers': 'Content-Type',
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     };
-
   } catch (error) {
     console.error('❌ TMDB Proxy Error:', error);
-    return createResponse(500, { 
+    return createResponse(500, {
       error: 'Internal server error',
-      message: error.message 
+      message: error.message,
     });
   }
 }
@@ -143,8 +142,8 @@ function createResponse(statusCode, body) {
     statusCode,
     headers: {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*'
+      'Access-Control-Allow-Origin': '*',
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   };
 }

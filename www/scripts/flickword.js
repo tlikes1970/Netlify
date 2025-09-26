@@ -2,29 +2,45 @@
    Compact FlickWord game for community section
    Wordle-style word guessing game
 */
-(function(){
+(function () {
   const el = document.getElementById('flickwordTile');
   if (!el) return;
 
   // Game state
-  let game = { 
-    target: null, 
-    guesses: [], 
-    current: "", 
-    max: 6, 
-    done: false, 
-    status: {}, 
-    lastResults: [] 
+  let game = {
+    target: null,
+    guesses: [],
+    current: '',
+    max: 6,
+    done: false,
+    status: {},
+    lastResults: [],
   };
 
   // Word lists
-  const WORDS = ["bliss","crane","flick","gravy","masks","toast","crown","spine","tiger","pride","happy","smile","peace","light","dream"];
-  const ROWS = ["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"];
+  const WORDS = [
+    'bliss',
+    'crane',
+    'flick',
+    'gravy',
+    'masks',
+    'toast',
+    'crown',
+    'spine',
+    'tiger',
+    'pride',
+    'happy',
+    'smile',
+    'peace',
+    'light',
+    'dream',
+  ];
+  const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
 
   // Initialize FlickWord
   async function initFlickWord() {
     console.log('🎯 Initializing FlickWord...');
-    
+
     // Create game HTML
     el.innerHTML = `
       <div class="flickword-game">
@@ -47,7 +63,7 @@
     // Get today's word
     game.target = await getTodayWord();
     game.guesses = [];
-    game.current = "";
+    game.current = '';
     game.done = false;
     game.status = {};
     game.lastResults = [];
@@ -56,7 +72,7 @@
     renderGrid();
     renderKeyboard();
     updateStats();
-    
+
     console.log('🎯 FlickWord initialized with target:', game.target);
   }
 
@@ -64,16 +80,16 @@
   async function getTodayWord() {
     const today = new Date().toISOString().slice(0, 10);
     const cached = localStorage.getItem(`flickword:word:${today}`);
-    
+
     if (cached) {
       return cached.toUpperCase();
     }
-    
+
     // Use fallback word list
-    const start = new Date("2023-01-01T00:00:00");
+    const start = new Date('2023-01-01T00:00:00');
     const days = Math.floor((new Date() - start) / (1000 * 60 * 60 * 24));
     const word = WORDS[days % WORDS.length];
-    
+
     localStorage.setItem(`flickword:word:${today}`, word);
     return word.toUpperCase();
   }
@@ -82,20 +98,20 @@
   function renderGrid() {
     const grid = el.querySelector('.fw-grid');
     if (!grid) return;
-    
+
     grid.innerHTML = '';
     for (let i = 0; i < game.max; i++) {
-      const guess = game.guesses[i] || (i === game.guesses.length ? game.current : "");
+      const guess = game.guesses[i] || (i === game.guesses.length ? game.current : '');
       for (let j = 0; j < 5; j++) {
         const tile = document.createElement('div');
         tile.className = 'fw-tile';
         tile.textContent = guess[j] || '';
-        
+
         if (i < game.guesses.length) {
           const res = game.lastResults[i][j];
           tile.classList.add(res);
         }
-        
+
         grid.appendChild(tile);
       }
     }
@@ -105,22 +121,22 @@
   function renderKeyboard() {
     const kb = el.querySelector('.fw-keyboard');
     if (!kb) return;
-    
+
     kb.innerHTML = '';
-    
+
     // Row 1 + Backspace
     const r1 = document.createElement('div');
     r1.className = 'fw-kb-row';
     for (const L of ROWS[0]) r1.appendChild(makeKey(L));
     r1.appendChild(makeKey('⌫', 'fw-key-back', backspace));
     kb.appendChild(r1);
-    
+
     // Row 2
     const r2 = document.createElement('div');
     r2.className = 'fw-kb-row';
     for (const L of ROWS[1]) r2.appendChild(makeKey(L));
     kb.appendChild(r2);
-    
+
     // Row 3 + Enter
     const r3 = document.createElement('div');
     r3.className = 'fw-kb-row';
@@ -135,7 +151,7 @@
     btn.type = 'button';
     btn.textContent = label;
     btn.className = `fw-key ${extraClasses}`.trim();
-    
+
     if (label === '⌫') {
       btn.onclick = backspace;
     } else if (label === 'Enter') {
@@ -149,7 +165,7 @@
     } else if (handler) {
       btn.onclick = handler;
     }
-    
+
     return btn;
   }
 
@@ -170,10 +186,10 @@
   // Submit guess
   async function submit() {
     if (game.done || game.current.length !== 5) return;
-    
+
     const valid = await isValidWord(game.current);
     if (!valid) {
-      showNotification("Not a valid word!", "error");
+      showNotification('Not a valid word!', 'error');
       game.current = '';
       renderGrid();
       return;
@@ -191,16 +207,16 @@
     }
 
     game.guesses.push(game.current);
-    
+
     if (game.current === game.target) {
-      showNotification("🎉 Correct! Well done!", "success");
+      showNotification('🎉 Correct! Well done!', 'success');
       game.done = true;
       updateStats();
     } else if (game.guesses.length === game.max) {
-      showNotification(`Game over! The word was: ${game.target}`, "error");
+      showNotification(`Game over! The word was: ${game.target}`, 'error');
       game.done = true;
     }
-    
+
     game.current = '';
     renderGrid();
     renderKeyboard();
@@ -209,7 +225,9 @@
   // Validate word
   async function isValidWord(word) {
     try {
-      const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`);
+      const res = await fetch(
+        `https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`,
+      );
       return res.ok;
     } catch (e) {
       return false;
@@ -220,7 +238,7 @@
   function scoreGuess(guess, target) {
     const res = Array(5).fill('absent');
     const pool = target.split('');
-    
+
     // First pass: exact matches
     for (let i = 0; i < 5; i++) {
       if (guess[i] === pool[i]) {
@@ -228,7 +246,7 @@
         pool[i] = null;
       }
     }
-    
+
     // Second pass: present matches
     for (let i = 0; i < 5; i++) {
       if (res[i] === 'correct') continue;
@@ -238,7 +256,7 @@
         pool[idx] = null;
       }
     }
-    
+
     return res;
   }
 
@@ -247,12 +265,12 @@
     // Remove existing notifications
     const existing = el.querySelector('.fw-notification');
     if (existing) existing.remove();
-    
+
     const notification = document.createElement('div');
     notification.className = `fw-notification ${type}`;
     notification.textContent = message;
     el.appendChild(notification);
-    
+
     setTimeout(() => {
       if (notification.parentNode) notification.remove();
     }, 3000);
@@ -268,21 +286,21 @@
   }
 
   // Start new game
-  window.startNewGame = async function() {
+  window.startNewGame = async function () {
     await initFlickWord();
   };
 
   // Show hint
-  window.showHint = function() {
+  window.showHint = function () {
     if (game.done) return;
     const hint = game.target[0] + '____';
-    showNotification(`Hint: ${hint}`, "info");
+    showNotification(`Hint: ${hint}`, 'info');
   };
 
   // Keyboard event handling
-  document.addEventListener('keydown', function(e) {
+  document.addEventListener('keydown', function (e) {
     if (game.done) return;
-    
+
     if (e.key === 'Backspace') {
       e.preventDefault();
       backspace();
@@ -306,7 +324,6 @@
   window.FlickWord = {
     init: initFlickWord,
     startNewGame: window.startNewGame,
-    showHint: window.showHint
+    showHint: window.showHint,
   };
 })();
-

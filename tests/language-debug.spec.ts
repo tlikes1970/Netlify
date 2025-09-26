@@ -10,7 +10,7 @@ test('Debug language persistence', async ({ page }) => {
       localStorage: localStorage.getItem('flicklet-language'),
       appData: window.appData?.settings?.lang,
       dropdown: (document.getElementById('langToggle') as HTMLSelectElement)?.value,
-      languageManager: window.LanguageManager?.getCurrentLanguage?.()
+      languageManager: window.LanguageManager?.getCurrentLanguage?.(),
     };
   });
   console.log('Initial state:', initialLang);
@@ -26,7 +26,7 @@ test('Debug language persistence', async ({ page }) => {
       flickletData: localStorage.getItem('flicklet-data'),
       appData: window.appData?.settings?.lang,
       dropdown: (document.getElementById('langToggle') as HTMLSelectElement)?.value,
-      languageManager: window.LanguageManager?.getCurrentLanguage?.()
+      languageManager: window.LanguageManager?.getCurrentLanguage?.(),
     };
   });
   console.log('After switch:', afterSwitch);
@@ -42,7 +42,7 @@ test('Debug language persistence', async ({ page }) => {
       flickletData: localStorage.getItem('flicklet-data'),
       appData: window.appData?.settings?.lang,
       dropdown: (document.getElementById('langToggle') as HTMLSelectElement)?.value,
-      languageManager: window.LanguageManager?.getCurrentLanguage?.()
+      languageManager: window.LanguageManager?.getCurrentLanguage?.(),
     };
   });
   console.log('After reload:', afterReload);

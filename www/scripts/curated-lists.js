@@ -4,7 +4,7 @@
    Uses existing curated data providers
 */
 
-(function(){
+(function () {
   'use strict';
 
   // Check if feature is enabled
@@ -47,7 +47,7 @@
     // Use existing settings getter for: Settings → Layout → "Home Page TV/Movie Lists"
     try {
       const n = Number(localStorage.getItem('flicklet:curated:rows'));
-      if ([1,2,3].includes(n)) return n;
+      if ([1, 2, 3].includes(n)) return n;
       return 3; // safe default if the control exists but has unexpected value
     } catch (e) {
       console.error('[Curated] Error getting homeListsCount:', e);
@@ -57,9 +57,9 @@
 
   // Map the fixed list order to existing providers
   const CURATED_ORDER = [
-    { kind: 'trending',   title: 'Trending',     fetch: async () => loadSource('trending') },
-    { kind: 'staff',      title: 'Staff Picks',  fetch: async () => loadSource('staff') },
-    { kind: 'new',        title: 'New This Week',fetch: async () => loadSource('new') }
+    { kind: 'trending', title: 'Trending', fetch: async () => loadSource('trending') },
+    { kind: 'staff', title: 'Staff Picks', fetch: async () => loadSource('staff') },
+    { kind: 'new', title: 'New This Week', fetch: async () => loadSource('new') },
   ];
 
   /**
@@ -71,7 +71,7 @@
    */
   async function loadSource(kind) {
     console.log(`🎬 loadSource called for: ${kind}`);
-    
+
     try {
       const raw = localStorage.getItem(`curated:${kind}`);
       if (raw) {
@@ -79,7 +79,7 @@
         console.log(`🎬 Parsed data for ${kind}:`, parsed.length, 'items');
         return parsed;
       }
-    } catch(e) {
+    } catch (e) {
       console.error(`🎬 Error parsing localStorage data for ${kind}:`, e);
     }
 
@@ -96,12 +96,14 @@
    */
   function getPosterSrc(item) {
     // Use existing TMDB helper
-    const TMDB_IMG = (p, size='w342') => {
+    const TMDB_IMG = (p, size = 'w342') => {
       if (!p) return '';
       const s = String(p);
-      return s.startsWith('http') ? s : `https://image.tmdb.org/t/p/${size}${s.startsWith('/')?'':'/'}${s}`;
+      return s.startsWith('http')
+        ? s
+        : `https://image.tmdb.org/t/p/${size}${s.startsWith('/') ? '' : '/'}${s}`;
     };
-    
+
     const rawPoster = item.posterPath ?? item.poster_path ?? item.backdrop_path ?? '';
     return TMDB_IMG(rawPoster, 'w342');
   }
@@ -181,10 +183,10 @@
 
     const count = await getHomeListsCountStrict();
     console.log('🎬 Lists count from setting:', count);
-    if (!count) { 
+    if (!count) {
       console.log('🎬 No lists to show, removing section');
-      section.remove(); 
-      return; 
+      section.remove();
+      return;
     }
 
     console.log(`🎬 Rendering ${count} curated lists`);
@@ -234,7 +236,7 @@
       `;
       const row = block.querySelector('.curated-list-scroll');
 
-      items.forEach(it => row.appendChild(makeTile(it)));
+      items.forEach((it) => row.appendChild(makeTile(it)));
 
       stacks.appendChild(block);
       renderedLists++;
@@ -251,5 +253,4 @@
 
   // Expose render function globally for manual triggering
   window.renderCuratedRow = renderCuratedRow;
-
 })();

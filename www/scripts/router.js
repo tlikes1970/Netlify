@@ -3,7 +3,7 @@
  * Handles navigation between Home and Search views
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🛣️ Router loaded');
@@ -16,19 +16,19 @@
   const routes = {
     home: {
       path: '/',
-      handler: showHome
+      handler: showHome,
     },
     search: {
       path: '/search',
-      handler: showSearch
-    }
+      handler: showSearch,
+    },
   };
 
   // Show Home view
   function showHome() {
     console.log('🏠 Showing Home view');
     currentRoute = 'home';
-    
+
     // Hide search results
     const searchSection = document.getElementById('searchSection');
     if (searchSection) {
@@ -127,7 +127,7 @@
   // Navigate to a route
   function navigate(path, params = {}) {
     console.log('🛣️ Navigating to:', path, params);
-    
+
     if (path === '/' || path === '') {
       showHome();
     } else if (path.startsWith('/search')) {
@@ -166,7 +166,7 @@
     const initialPath = window.location.pathname;
     const initialParams = new URLSearchParams(window.location.search);
     const params = {};
-    
+
     if (initialParams.has('q')) {
       params.q = initialParams.get('q');
     }
@@ -187,7 +187,6 @@
     showHome,
     showSearch,
     getCurrentRoute: () => currentRoute,
-    getCurrentParams: () => currentParams
+    getCurrentParams: () => currentParams,
   };
-
 })();

@@ -10,7 +10,7 @@ export function initializeMobileDetection() {
   // Single mobile detection system - viewport width only
   function applyMobileClass() {
     const isMobileSize = window.innerWidth <= 768;
-    
+
     if (isMobileSize) {
       document.body.classList.add('mobile');
       document.body.classList.remove('desktop');

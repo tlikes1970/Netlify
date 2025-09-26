@@ -12,13 +12,13 @@ export function initializeTriviaModal() {
     console.log('🧠 Opening Trivia modal with data:', triviaData);
     const modal = document.getElementById('modal-trivia');
     const gameContainer = document.getElementById('dailytrivia-game');
-    
+
     if (modal && gameContainer) {
       // Show modal
       modal.setAttribute('aria-hidden', 'false');
       modal.style.display = 'flex';
       modal.classList.add('show');
-      
+
       // Mount the Trivia game
       if (window.DailyTriviaBridge && typeof window.DailyTriviaBridge.mount === 'function') {
         try {
@@ -30,9 +30,11 @@ export function initializeTriviaModal() {
       } else {
         console.error('🧠 DailyTriviaBridge not available');
       }
-      
+
       // Focus management
-      const firstFocusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      const firstFocusable = modal.querySelector(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
       if (firstFocusable) {
         firstFocusable.focus();
       }
@@ -44,12 +46,12 @@ export function initializeTriviaModal() {
   function closeTriviaModal() {
     console.log('🧠 Closing Trivia modal');
     const modal = document.getElementById('modal-trivia');
-    
+
     if (modal) {
       modal.setAttribute('aria-hidden', 'true');
       modal.style.display = 'none';
       modal.classList.remove('show');
-      
+
       // Unmount the Trivia game
       if (window.DailyTriviaBridge && typeof window.DailyTriviaBridge.unmount === 'function') {
         try {
@@ -85,13 +87,13 @@ export function initializeTriviaModal() {
   // Initialize event listeners immediately (not waiting for DOMContentLoaded)
   function initializeEventListeners() {
     console.log('🧠 Initializing Trivia modal event listeners...');
-    
+
     const openBtn = document.querySelector('[data-action="start-trivia"]');
     const closeBtn = document.querySelector('#modal-trivia .gm-close');
     const overlay = document.querySelector('#modal-trivia .gm-overlay');
-    
+
     console.log('🧠 Found elements:', { openBtn, closeBtn, overlay });
-    
+
     if (openBtn) {
       console.log('🧠 Adding click listener to open button');
       openBtn.addEventListener('click', (e) => {
@@ -100,7 +102,7 @@ export function initializeTriviaModal() {
         openTriviaModal();
       });
     }
-    
+
     if (closeBtn) {
       console.log('🧠 Adding click listener to close button');
       closeBtn.addEventListener('click', (e) => {
@@ -108,7 +110,7 @@ export function initializeTriviaModal() {
         closeTriviaModal();
       });
     }
-    
+
     if (overlay) {
       console.log('🧠 Adding click listener to overlay');
       overlay.addEventListener('click', (e) => {
@@ -116,7 +118,7 @@ export function initializeTriviaModal() {
         closeTriviaModal();
       });
     }
-    
+
     // Handle escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
@@ -126,7 +128,7 @@ export function initializeTriviaModal() {
         }
       }
     });
-    
+
     // Handle messages from iframe
     window.addEventListener('message', (e) => {
       console.log('🧠 Received message:', e.data);
@@ -144,4 +146,3 @@ export function initializeTriviaModal() {
     initializeEventListeners();
   }
 }
-

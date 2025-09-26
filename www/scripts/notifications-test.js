@@ -6,23 +6,23 @@
  * Dependencies: Notification system, window.FLAGS, settings UI
  */
 
-(function(){
+(function () {
   'use strict';
-  
+
   if (window.NotificationsTest) return; // Prevent double initialization
-  
+
   console.log('🔔 Initializing notifications testability system...');
-  
+
   // Notification modes
   const NOTIFICATION_MODES = {
     LIVE: 'live',
     MOCK: 'mock',
-    DISABLED: 'disabled'
+    DISABLED: 'disabled',
   };
-  
+
   // Current notification mode
   let currentMode = NOTIFICATION_MODES.LIVE;
-  
+
   // Mock notification data for testing
   const MOCK_NOTIFICATIONS = [
     {
@@ -35,7 +35,7 @@
       season: 1,
       episodeNumber: 1,
       airDate: new Date().toISOString(),
-      priority: 'high'
+      priority: 'high',
     },
     {
       id: 'mock-2',
@@ -47,7 +47,7 @@
       season: 2,
       episodeNumber: 1,
       airDate: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-      priority: 'medium'
+      priority: 'medium',
     },
     {
       id: 'mock-3',
@@ -55,23 +55,23 @@
       title: 'New Show Recommendation',
       message: 'Based on your watching history, you might like "Stranger Things"',
       show: 'Stranger Things',
-      priority: 'low'
+      priority: 'low',
     },
     {
       id: 'mock-4',
       type: 'digest',
       title: 'Weekly Digest',
       message: 'You watched 3 episodes this week. Keep it up!',
-      priority: 'low'
-    }
+      priority: 'low',
+    },
   ];
-  
+
   // Get notification mode from settings
   function getNotificationMode() {
     const saved = localStorage.getItem('flicklet:notifications:mode');
     return saved || NOTIFICATION_MODES.LIVE;
   }
-  
+
   // Set notification mode
   function setNotificationMode(mode) {
     currentMode = mode;
@@ -79,48 +79,48 @@
     updateModeIndicator();
     console.log('🔔 Notification mode set to:', mode);
   }
-  
+
   // Update mode indicator in UI
   function updateModeIndicator() {
     const indicator = document.getElementById('notificationModeIndicator');
     if (!indicator) return;
-    
+
     const modeText = {
       [NOTIFICATION_MODES.LIVE]: 'Live Mode',
       [NOTIFICATION_MODES.MOCK]: 'Mock Mode',
-      [NOTIFICATION_MODES.DISABLED]: 'Disabled'
+      [NOTIFICATION_MODES.DISABLED]: 'Disabled',
     };
-    
+
     const modeColor = {
       [NOTIFICATION_MODES.LIVE]: '#28a745',
       [NOTIFICATION_MODES.MOCK]: '#ffc107',
-      [NOTIFICATION_MODES.DISABLED]: '#dc3545'
+      [NOTIFICATION_MODES.DISABLED]: '#dc3545',
     };
-    
+
     indicator.textContent = modeText[currentMode];
     indicator.style.color = modeColor[currentMode];
     indicator.style.fontWeight = '600';
   }
-  
+
   // Show mock notification
   function showMockNotification(notification) {
     console.log('🔔 Showing mock notification:', notification);
-    
+
     if (window.Toast && window.Toast.show) {
       window.Toast.show(notification.message, 'info', { duration: 5000 });
     } else if (window.showNotification) {
       window.showNotification(notification.message, 'info');
     }
-    
+
     // Add to visible state log
     addToNotificationLog(notification);
   }
-  
+
   // Add notification to visible state log
   function addToNotificationLog(notification) {
     const log = document.getElementById('notificationLog');
     if (!log) return;
-    
+
     const logEntry = document.createElement('div');
     logEntry.className = 'notification-log-entry';
     logEntry.style.cssText = `
@@ -131,7 +131,7 @@
       border-left: 3px solid var(--color-primary, #007bff);
       font-size: 14px;
     `;
-    
+
     const timestamp = new Date().toLocaleTimeString();
     logEntry.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -142,35 +142,36 @@
         ${notification.message}
       </div>
     `;
-    
+
     log.insertBefore(logEntry, log.firstChild);
-    
+
     // Keep only last 10 entries
     while (log.children.length > 10) {
       log.removeChild(log.lastChild);
     }
   }
-  
+
   // Generate random mock notification
   function generateMockNotification() {
-    const randomNotification = MOCK_NOTIFICATIONS[Math.floor(Math.random() * MOCK_NOTIFICATIONS.length)];
+    const randomNotification =
+      MOCK_NOTIFICATIONS[Math.floor(Math.random() * MOCK_NOTIFICATIONS.length)];
     const notification = { ...randomNotification };
     notification.id = `mock-${Date.now()}`;
     notification.airDate = new Date().toISOString();
     return notification;
   }
-  
+
   // Test notification system
   function testNotifications() {
     console.log('🔔 Testing notification system...');
-    
+
     if (currentMode === NOTIFICATION_MODES.DISABLED) {
       if (window.showNotification) {
         window.showNotification('Notifications are disabled. Enable them to test.', 'warning');
       }
       return;
     }
-    
+
     if (currentMode === NOTIFICATION_MODES.MOCK) {
       const mockNotification = generateMockNotification();
       showMockNotification(mockNotification);
@@ -181,12 +182,12 @@
       }
     }
   }
-  
+
   // Create notification test UI
   function createNotificationTestUI() {
     const settingsSection = document.getElementById('notifications');
     if (!settingsSection) return;
-    
+
     // Add test controls
     const testControls = document.createElement('div');
     testControls.className = 'settings-control-group';
@@ -233,78 +234,78 @@
         </div>
       </div>
     `;
-    
+
     settingsSection.appendChild(testControls);
-    
+
     // Add event listeners
     document.getElementById('testNotificationBtn').addEventListener('click', testNotifications);
     document.getElementById('clearNotificationLogBtn').addEventListener('click', () => {
       const log = document.getElementById('notificationLog');
       if (log) {
-        log.innerHTML = '<div style="text-align: center; color: var(--color-text-secondary, #666); padding: 20px;">No notifications yet. Click "Test Notification" to start.</div>';
+        log.innerHTML =
+          '<div style="text-align: center; color: var(--color-text-secondary, #666); padding: 20px;">No notifications yet. Click "Test Notification" to start.</div>';
       }
     });
-    
+
     document.getElementById('notificationModeSelect').addEventListener('change', (e) => {
       setNotificationMode(e.target.value);
     });
-    
+
     // Set initial mode
     const modeSelect = document.getElementById('notificationModeSelect');
     modeSelect.value = currentMode;
     updateModeIndicator();
   }
-  
+
   // Override notification functions for mock mode
   function setupMockMode() {
     if (currentMode !== NOTIFICATION_MODES.MOCK) return;
-    
+
     console.log('🔔 Setting up mock mode...');
-    
+
     // Override notification functions to use mock data
     const originalShowNotification = window.showNotification;
-    window.showNotification = function(message, type, duration) {
+    window.showNotification = function (message, type, duration) {
       const mockNotification = generateMockNotification();
       showMockNotification(mockNotification);
     };
-    
+
     // Override Toast.show if available
     if (window.Toast && window.Toast.show) {
       const originalToastShow = window.Toast.show;
-      window.Toast.show = function(message, type, options) {
+      window.Toast.show = function (message, type, options) {
         const mockNotification = generateMockNotification();
         showMockNotification(mockNotification);
       };
     }
   }
-  
+
   // Initialize the system
   function init() {
     currentMode = getNotificationMode();
-    
+
     // Create test UI
     createNotificationTestUI();
-    
+
     // Setup mock mode if needed
     setupMockMode();
-    
+
     console.log('🔔 Notifications testability system initialized');
   }
-  
+
   // Public API
   window.NotificationsTest = {
     setMode: setNotificationMode,
     getMode: () => currentMode,
     test: testNotifications,
     generateMock: generateMockNotification,
-    showMock: showMockNotification
+    showMock: showMockNotification,
   };
-  
+
   // Initialize when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
-  
 })();

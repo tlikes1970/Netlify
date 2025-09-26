@@ -1,6 +1,7 @@
 # Flicklet TV Tracker - Cursor Rules
 
 ## Project Overview
+
 **Flicklet** is a modern TV and movie tracking web application built with vanilla JavaScript, Firebase, and TMDB API. It's a Progressive Web App (PWA) with mobile-first design, featuring user authentication, cloud sync, and comprehensive media management.
 
 **Current Version**: v28.31.0 (Post-Phase 1 Repository Hygiene)
@@ -9,6 +10,7 @@
 ## Architecture & Framework
 
 ### Core Technology Stack
+
 - **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3
 - **Build System**: Vite with Terser minification
 - **Backend**: Firebase (Auth, Firestore, Storage)
@@ -17,6 +19,7 @@
 - **Styling**: CSS Custom Properties, Mobile-first responsive design
 
 ### Project Structure
+
 ```
 www/
 ├── index.html                 # Main SPA entry point
@@ -41,12 +44,14 @@ www/
 ## Key Design Patterns
 
 ### 1. Modular JavaScript Architecture
+
 - **IIFE Pattern**: All modules use Immediately Invoked Function Expressions
 - **Global Namespace**: `window.FlickletApp` as main application controller
 - **Event-Driven**: Custom events for module communication (`app:data:ready`, `firebase:ready`)
 - **Dependency Injection**: Functions passed as parameters to avoid tight coupling
 
 ### 2. Component-Based UI System
+
 - **Unified Card Component**: Single `Card.js` component with variants (compact, expanded, poster)
 - **Floating Action Buttons (FABs)**: Always-visible action buttons docked to active tab
 - **CSS Custom Properties**: Centralized theming with `:root` variables
@@ -54,6 +59,7 @@ www/
 - **Accessibility**: ARIA attributes, semantic HTML, keyboard navigation
 
 ### 3. State Management
+
 - **Single Source of Truth**: `window.appData` global object
 - **Local Storage**: Primary data persistence with Firebase sync
 - **Reactive Updates**: Event listeners trigger UI updates
@@ -62,11 +68,12 @@ www/
 ## Coding Standards & Conventions
 
 ### JavaScript Style
+
 ```javascript
 // Function naming: camelCase with descriptive verbs
-function loadUserData() { }
-function updateTabCounts() { }
-function performSearch() { }
+function loadUserData() {}
+function updateTabCounts() {}
+function performSearch() {}
 
 // Constants: UPPER_SNAKE_CASE
 const TAB_IDS = ['home', 'watching', 'wishlist', 'watched', 'discover', 'settings'];
@@ -82,34 +89,42 @@ const cardData = {
   id: item.id,
   title: item.title,
   posterUrl: item.posterUrl,
-  rating: item.rating
+  rating: item.rating,
 };
 ```
 
 ### CSS Architecture
+
 ```css
 /* CSS Custom Properties for theming */
 :root {
-  --fg: #1f2937;                 /* Primary text */
-  --bg: #ffffff;                 /* Background */
-  --muted: #374151;              /* Muted text */
-  --accent: #ff4c8d;             /* Accent color */
-  --border: #e5e7eb;             /* Border color */
+  --fg: #1f2937; /* Primary text */
+  --bg: #ffffff; /* Background */
+  --muted: #374151; /* Muted text */
+  --accent: #ff4c8d; /* Accent color */
+  --border: #e5e7eb; /* Border color */
 }
 
 /* BEM-style naming for components */
-.card { }
-.card--poster { }
-.card__title { }
-.card__actions { }
+.card {
+}
+.card--poster {
+}
+.card__title {
+}
+.card__actions {
+}
 
 /* Mobile-first responsive design */
 @media (max-width: 768px) {
-  .card { /* mobile styles */ }
+  .card {
+    /* mobile styles */
+  }
 }
 ```
 
 ### HTML Structure
+
 ```html
 <!-- Semantic HTML5 with accessibility -->
 <main role="main">
@@ -131,20 +146,24 @@ const cardData = {
   <button id="themeToggleFab" class="fab" aria-label="Toggle theme" title="Toggle Light/Dark Mode">
     <span aria-hidden="true">🌙</span>
   </button>
-  <button id="mardiGrasFab" class="fab" aria-label="Toggle Mardi Gras mode" title="Toggle Mardi Gras Mode">
+  <button
+    id="mardiGrasFab"
+    class="fab"
+    aria-label="Toggle Mardi Gras mode"
+    title="Toggle Mardi Gras Mode"
+  >
     <span aria-hidden="true">🎭</span>
   </button>
 </div>
 
 <!-- Data attributes for JavaScript targeting -->
-<button data-action="add" data-id="123" data-list="wishlist">
-  Add to Wishlist
-</button>
+<button data-action="add" data-id="123" data-list="wishlist">Add to Wishlist</button>
 ```
 
 ## Key Functions & Modules
 
 ### Core Application (`app.js`)
+
 - **`FlickletApp.init()`**: Main initialization sequence
 - **`FlickletApp.switchToTab(tab)`**: Tab navigation with search clearing
 - **`FlickletApp.updateUI()`**: UI refresh after data changes
@@ -155,21 +174,25 @@ const cardData = {
 - **`FlickletApp.initializeFABIcons()`**: FAB icon state initialization
 
 ### Business Logic (`functions.js`)
+
 - **`loadListContent(listType)`**: Render list items with unified card system
 - **`updateTabCounts()`**: Update tab badges with counts
 - **`moveItem(id, dest)`**: Move items between lists
 - **`removeItemFromCurrentList(id)`**: Remove items from current list
 
 ### Search System (`search.js`)
+
 - **`SearchModule.performSearch()`**: Main search execution
 - **`SearchModule.clearSearch()`**: Clear search and return to previous tab
 - **`SearchModule.getSearchState()`**: Get current search state
 
 ### Card Component (`Card.js`)
+
 - **`Card(options)`**: Create standardized card elements
 - **`createCardData(item, source, section)`**: Normalize item data for cards
 
 ### Floating Action Button System
+
 - **`dockFABsToActiveTab()`**: Positions FABs relative to active tab
 - **`initializeFABIcons()`**: Sets initial FAB icons based on current state
 - **FAB Event Handlers**: Click handlers for settings, theme, and Mardi Gras toggles
@@ -178,12 +201,14 @@ const cardData = {
 ## Data Flow & State Management
 
 ### Data Sources
+
 1. **Local Storage**: Primary data persistence (`flicklet-data`)
 2. **Firebase Firestore**: Cloud sync for authenticated users
 3. **TMDB API**: Movie/TV show metadata and search
 4. **User Input**: Search queries, list modifications
 
 ### State Updates
+
 ```javascript
 // 1. User action triggers function
 moveItem(itemId, 'watched');
@@ -200,11 +225,14 @@ updateTabCounts();
 ```
 
 ### Event System
+
 ```javascript
 // Custom events for module communication
-document.dispatchEvent(new CustomEvent('app:data:ready', { 
-  detail: { source: 'localStorage' } 
-}));
+document.dispatchEvent(
+  new CustomEvent('app:data:ready', {
+    detail: { source: 'localStorage' },
+  }),
+);
 
 // Event listeners in modules
 document.addEventListener('app:data:ready', () => {
@@ -215,6 +243,7 @@ document.addEventListener('app:data:ready', () => {
 ## Firebase Integration
 
 ### Authentication
+
 - **Google Sign-In**: Primary authentication method
 - **Apple Sign-In**: Secondary authentication method
 - **Email/Password**: Tertiary authentication method
@@ -222,6 +251,7 @@ document.addEventListener('app:data:ready', () => {
 - **Persistence**: Local storage with cloud sync
 
 ### Data Structure
+
 ```javascript
 // Firestore document structure
 users/{uid}/
@@ -234,6 +264,7 @@ users/{uid}/
 ```
 
 ### Sync Strategy
+
 1. **Local First**: All operations work offline
 2. **Cloud Sync**: Background sync when authenticated
 3. **Conflict Resolution**: Last-write-wins with timestamps
@@ -241,6 +272,7 @@ users/{uid}/
 ## Theme & UI System
 
 ### Theme Management
+
 - **ThemeManager**: Centralized theme control (`theme-manager.js`)
 - **Theme Options**: `light`, `dark`, `system` (follows OS preference)
 - **Mardi Gras Mode**: Special festive theme toggle (`on`/`off`)
@@ -248,6 +280,7 @@ users/{uid}/
 - **Body Classes**: `mardi` class for Mardi Gras styling
 
 ### Floating Action Buttons (FABs)
+
 - **Settings FAB**: Left-side button for settings navigation
 - **Theme Toggle FAB**: Right-side button for light/dark mode
 - **Mardi Gras FAB**: Right-side button for festive mode toggle
@@ -256,9 +289,11 @@ users/{uid}/
 - **Accessibility**: Proper ARIA labels and keyboard support
 
 ### CSS Architecture for FABs
+
 ```css
 /* FAB positioning and styling */
-.fab, .fab-left {
+.fab,
+.fab-left {
   position: static !important;
   background: none !important;
   box-shadow: none !important;
@@ -290,33 +325,39 @@ users/{uid}/
 ## Current Technical Debt & Code Quality Issues
 
 ### Phase 2 Analysis Results (v28.31.0)
+
 **Critical Issues Identified:**
 
 #### 1. Massive Code Duplication
+
 - **552 functions across 75 files** - excessive function proliferation
 - **Monolithic files**: `functions.js` (3,513 lines) contains mixed responsibilities
 - **Duplicate card systems**: 3+ different card implementations
 - **Repeated patterns**: Similar functions across multiple modules
 
 #### 2. Architectural Problems
+
 - **Mixed patterns**: IIFE, ES6 modules, and global functions mixed together
 - **Global namespace pollution**: 552+ functions in global scope
 - **Circular dependencies**: Functions calling each other across modules
 - **No clear separation of concerns**: Business logic mixed with UI code
 
 #### 3. Performance Issues
+
 - **Large bundle size**: Multiple large files loaded synchronously
 - **Redundant API calls**: Similar data fetched multiple times
 - **Memory leaks**: Event listeners not properly cleaned up
 - **Inefficient DOM queries**: Repeated `getElementById` calls
 
 #### 4. Code Quality Issues
+
 - **Inconsistent naming**: camelCase, snake_case, and kebab-case mixed
 - **No error handling**: Many functions lack try-catch blocks
 - **Magic numbers**: Hardcoded values throughout
 - **Dead code**: Commented out code and unused functions
 
 ### Phase 2 Remediation Plan
+
 1. **Consolidate duplicate functions** into shared utilities
 2. **Refactor monolithic files** into focused modules
 3. **Implement consistent patterns** (ES6 modules throughout)
@@ -328,12 +369,14 @@ users/{uid}/
 ## Performance Optimizations
 
 ### Loading Strategy
+
 - **Critical CSS**: Inlined for above-the-fold content
 - **Async CSS**: Non-critical styles loaded asynchronously
 - **Script Loading**: Explicit order with dependencies
 - **Image Lazy Loading**: `loading="lazy"` on poster images
 
 ### Rendering Optimizations
+
 - **Virtual Scrolling**: Large lists use virtual scrolling
 - **Debounced Search**: 500ms delay on search input
 - **Memoization**: Cached search results and API calls
@@ -345,11 +388,13 @@ users/{uid}/
 ## Mobile & Responsive Design
 
 ### Breakpoints
+
 - **Mobile**: ≤640px (primary target)
 - **Tablet**: 641px - 768px
 - **Desktop**: ≥769px
 
 ### Mobile-Specific Features
+
 - **Touch Gestures**: Swipe navigation for carousels
 - **Viewport Units**: `100svh` for full-screen mobile
 - **Safe Areas**: `env(safe-area-inset-*)` for notched devices
@@ -358,6 +403,7 @@ users/{uid}/
 ## Testing & Quality Assurance
 
 ### Pre-Development Validation Requirements
+
 Before making any code changes, the assistant must:
 
 1. **API Key Validation**
@@ -383,6 +429,7 @@ Before making any code changes, the assistant must:
    - If no visual change, STOP and debug rendering
 
 ### Code Quality Tools
+
 - **ESLint**: JavaScript linting
 - **JSCPD**: Duplicate code detection
 - **Axe**: Accessibility testing
@@ -390,6 +437,7 @@ Before making any code changes, the assistant must:
 - **Depcheck**: Dependency analysis
 
 ### Accessibility Standards
+
 - **WCAG 2.1 AA Compliance**: All components must meet accessibility standards
 - **ARIA Labels**: Proper labeling for screen readers
 - **Keyboard Navigation**: Full keyboard accessibility
@@ -397,6 +445,7 @@ Before making any code changes, the assistant must:
 - **Focus Management**: Clear focus indicators and logical tab order
 
 #### WCAG 2.1 AA Compliance Checkpoints
+
 - **Perceivable**:
   - Text alternatives for images and media
   - Captions and transcripts for video content
@@ -418,6 +467,7 @@ Before making any code changes, the assistant must:
   - Future-proof code that works with evolving technologies
 
 ### Testing Strategy
+
 - **Unit Tests**: Individual function testing
 - **Visual Tests**: Screenshot comparison
 - **Integration Tests**: End-to-end user flows
@@ -426,12 +476,16 @@ Before making any code changes, the assistant must:
 ## Security Considerations
 
 ### Content Security Policy
+
 ```html
-<meta http-equiv="Content-Security-Policy" 
-      content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline';">
+<meta
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline';"
+/>
 ```
 
 ### Data Validation
+
 - **Input Sanitization**: XSS prevention
 - **API Validation**: TMDB response validation
 - **Firebase Rules**: Server-side data validation
@@ -439,13 +493,16 @@ Before making any code changes, the assistant must:
 ## Development Workflow
 
 ### Phase-Based Development
+
 **Current Phase**: Phase 2 - Code Quality & Technical Debt
+
 - **Phase 1**: ✅ Repository Hygiene (Gate A) - COMPLETED
 - **Phase 2**: 🔄 Code Quality & Technical Debt (Gate B) - IN PROGRESS
 - **Phase 3**: ⏳ Performance Optimization (Gate C) - PENDING
 - **Phase 4**: ⏳ Feature Enhancement (Gate D) - PENDING
 
 ### Build Process
+
 ```bash
 # Development
 netlify dev          # Netlify dev server on port 8888 (serves from www/)
@@ -463,6 +520,7 @@ npm run lh:mobile    # Lighthouse mobile audit
 ```
 
 ### Version Management
+
 - **Semantic Versioning**: Major.Minor.Patch (currently v28.31.0)
 - **Auto-increment**: Version bumped on code changes [[memory:8428544]]
 - **Rollback Support**: Easy rollback with version display
@@ -473,6 +531,7 @@ npm run lh:mobile    # Lighthouse mobile audit
 ## Common Patterns & Best Practices
 
 ### Error Handling
+
 ```javascript
 try {
   const result = await performOperation();
@@ -485,6 +544,7 @@ try {
 ```
 
 ### Async Operations
+
 ```javascript
 // Promise-based async operations
 async function loadData() {
@@ -498,10 +558,10 @@ async function loadData() {
 ```
 
 ### DOM Manipulation
+
 ```javascript
 // Safe DOM queries with fallbacks
-const element = document.getElementById('target') || 
-                document.querySelector('.fallback');
+const element = document.getElementById('target') || document.querySelector('.fallback');
 
 if (element) {
   element.classList.add('active');
@@ -509,6 +569,7 @@ if (element) {
 ```
 
 ### Event Delegation
+
 ```javascript
 // Use event delegation for dynamic content
 document.addEventListener('click', (e) => {
@@ -522,6 +583,7 @@ document.addEventListener('click', (e) => {
 ## Troubleshooting Guide
 
 ### Common Issues
+
 1. **Firebase Not Loading**: Check `firebase-config.js` and network connectivity
 2. **Search Not Working**: Verify TMDB API key and `searchTMDB` function
 3. **Cards Not Rendering**: Check `Card.js` component and CSS classes
@@ -532,6 +594,7 @@ document.addEventListener('click', (e) => {
 8. **FAB Styling Issues**: Verify CSS overrides with `!important` declarations
 
 ### Debug Tools
+
 - **Console Logging**: Extensive logging with `[module]` prefixes
 - **Performance Monitor**: Built-in performance tracking
 - **Error Boundaries**: Graceful error handling with fallbacks
@@ -539,17 +602,20 @@ document.addEventListener('click', (e) => {
 ## FlickWord Game System
 
 ### Overview
+
 FlickWord is a Wordle-style daily word guessing game integrated into the Flicklet app. It features a modal-based interface with responsive design, dynamic stats tracking, and keyboard color feedback.
 
 ### Architecture
 
 #### Core Files
+
 - **`www/features/flickword-v2.html`** - Main game implementation (iframe content)
 - **`www/scripts/modules/flickword-modal.js`** - Modal control and stats management
 - **`www/index.html`** - Game launcher and stats display (lines 536-575)
 - **`www/styles/main.css`** - Modal and stats styling (lines 2670-2715)
 
 #### Game Flow
+
 1. **Launch**: User clicks FlickWord button → opens modal with iframe
 2. **Play**: User enters 5-letter words → gets color feedback
 3. **Complete**: Game ends → stats update → modal closes
@@ -558,6 +624,7 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 ### Key Components
 
 #### 1. Modal System
+
 ```html
 <!-- Game Modal Structure -->
 <div class="game-modal" id="modal-flickword" aria-hidden="true" role="dialog">
@@ -568,14 +635,18 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
       <button class="gm-close" type="button" aria-label="Close" data-close>&times;</button>
     </header>
     <main class="gm-body">
-      <iframe id="flickword-game-frame" src="/features/flickword-v2.html" 
-              sandbox="allow-scripts allow-same-origin"></iframe>
+      <iframe
+        id="flickword-game-frame"
+        src="/features/flickword-v2.html"
+        sandbox="allow-scripts allow-same-origin"
+      ></iframe>
     </main>
   </div>
 </div>
 ```
 
 #### 2. Stats Display
+
 ```html
 <!-- Stats Card Layout -->
 <div class="game-stats">
@@ -609,6 +680,7 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 ```
 
 #### 3. Game Logic (flickword-v2.html)
+
 - **Word Generation**: Daily word from API with fallback to word list
 - **Validation**: Dictionary API check for valid words
 - **Scoring**: Letter-by-letter comparison with color coding
@@ -618,6 +690,7 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 ### CSS Architecture
 
 #### Responsive Sizing
+
 ```css
 :root {
   --tile: clamp(36px, 6vw, 56px);
@@ -627,13 +700,24 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 ```
 
 #### Keyboard Colors
+
 ```css
-.key.correct { background-color: #20b265; color: white; }
-.key.present { background-color: #f7c23c; color: white; }
-.key.absent { background-color: #6b7280; color: white; }
+.key.correct {
+  background-color: #20b265;
+  color: white;
+}
+.key.present {
+  background-color: #f7c23c;
+  color: white;
+}
+.key.absent {
+  background-color: #6b7280;
+  color: white;
+}
 ```
 
 #### Stats Grid Layout
+
 ```css
 #flickwordTile .game-stats {
   display: grid;
@@ -650,12 +734,14 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 ### Data Management
 
 #### LocalStorage Keys
+
 - **`flickword:stats`** - Main stats storage
 - **`flickword:results`** - Daily game results
 - **`flickword:word`** - Daily word cache
 - **`flicklet-data`** - App-wide data (includes FlickWord stats)
 
 #### Stats Structure
+
 ```javascript
 {
   games: 15,        // Total games played
@@ -669,28 +755,33 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 ### Event System
 
 #### Modal Events
+
 - **`openFlickWordModal()`** - Opens game modal
 - **`closeFlickWordModal()`** - Closes modal and updates stats
 - **Escape key** - Closes modal
 - **Overlay click** - Closes modal
 
 #### Game Events (PostMessage)
+
 - **`flickword:close`** - Game requests modal close
 - **`flickword:result`** - Game completion with stats
 
 ### Accessibility Features
+
 - **ARIA attributes**: `role="dialog"`, `aria-modal="true"`, `aria-labelledby`
 - **Keyboard navigation**: Tab order, Escape key support
 - **Focus management**: Focus trap within modal
 - **Screen reader support**: Semantic HTML and ARIA labels
 
 ### Mobile Responsiveness
+
 - **Viewport scaling**: CSS custom properties with `clamp()`
 - **Touch targets**: Minimum 44px touch targets
 - **Grid adaptation**: 3-column desktop, 2-column mobile
 - **Modal sizing**: Full-screen on mobile, constrained on desktop
 
 ### Integration Points
+
 - **Main App**: Launched from home page game section
 - **Stats System**: Updates main app stats display
 - **Modal System**: Uses shared modal infrastructure
@@ -699,17 +790,20 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 ### Troubleshooting Guide
 
 #### Common Issues
+
 1. **Modal won't open**: Check event listener attachment timing
 2. **Stats not updating**: Verify PostMessage communication
 3. **Keyboard colors missing**: Ensure CSS classes are defined
 4. **Responsive issues**: Check CSS custom property values
 
 #### Debug Logging
+
 - **`🎯` prefix**: FlickWord-specific logs
 - **`📊` prefix**: Stats-related logs
 - **Console output**: Extensive debugging for all game states
 
 ### Maintenance Notes
+
 - **Version tracking**: Increment version on any changes
 - **Testing**: Manual testing required for game flow
 - **Dependencies**: No external libraries, pure vanilla JS
@@ -718,7 +812,9 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 ## Dynamic Checklist System
 
 ### Pre-Development Validation
+
 **BEFORE making any code changes:**
+
 - [ ] **API Key Validation**: Verify TMDB API key is valid and functional
 - [ ] **Data Source Validation**: Confirm all data sources use real, valid IDs
 - [ ] **End-to-End Testing**: Test all interactive elements work without errors
@@ -727,7 +823,9 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 - [ ] **Rollback Plan**: Ensure version can be easily rolled back if needed
 
 ### Post-Development Validation
+
 **AFTER making code changes:**
+
 - [ ] **Build Test**: Run `npm run build` to ensure no build errors
 - [ ] **Dev Server Test**: Run `netlify dev` and verify functionality
 - [ ] **Visual Verification**: Take screenshot of new state and compare
@@ -736,7 +834,9 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 - [ ] **Documentation Update**: Update Cursor Rules with any new patterns/learnings
 
 ### Phase Gate Validation
+
 **At each phase transition:**
+
 - [ ] **Phase Completion**: All phase objectives met and documented
 - [ ] **Learning Capture**: New patterns, gotchas, and solutions documented
 - [ ] **Critical Areas**: Updated critical areas map with new findings
@@ -746,6 +846,7 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 ## Critical Areas Map
 
 ### High-Risk Areas (Require Extra Care)
+
 1. **Authentication System** (`auth-manager.js`)
    - **Risk**: Button listener conflicts, redirect handling
    - **Gotcha**: Always check for existing listeners before adding new ones
@@ -772,12 +873,14 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
    - **Pattern**: Use `SearchModule.clearSearch()` before tab switches
 
 ### Medium-Risk Areas (Monitor Closely)
+
 1. **Theme Management** (`theme-manager.js`)
 2. **Modal Systems** (various modal files)
 3. **Tab Navigation** (`app.js`)
 4. **Data Persistence** (`utils.js`)
 
 ### Low-Risk Areas (Standard Care)
+
 1. **CSS Styling** (`styles/`)
 2. **Static Content** (`index.html`)
 3. **Configuration** (`netlify.toml`, `vite.config.js`)
@@ -785,63 +888,271 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 ## Learning Log
 
 ### Phase 1 Learnings (Repository Hygiene)
+
 **Date**: 2025-01-25
 **What Worked**:
+
 - `cmd /c "rmdir /s /q"` successfully removed `node_modules` with long paths
 - Removing duplicate directories first, then files, was most efficient
 - Version incrementing after each major change enabled easy rollbacks
 
 **What Broke**:
+
 - PowerShell `Remove-Item` failed on long file paths even with registry fix
 - Some files had invalid characters in names causing removal failures
 - CSP header in `_headers` file had invalid characters causing Netlify crashes
 
 **Patterns Discovered**:
+
 - Always use `cmd /c` for Windows file operations with long paths
 - CSP headers should be in `netlify.toml`, not `_headers` file
 - Version tracking in both `package.json` and `index.html` title
 
 **Critical Gotchas**:
+
 - Long path support in Windows registry doesn't fix all PowerShell issues
 - Netlify CLI is sensitive to invalid characters in headers
 - Some files may have corrupted names that prevent normal deletion
 
 ### Phase 2 Learnings (Code Quality Analysis)
+
 **Date**: 2025-01-25
 **What Worked**:
+
 - Semantic search identified major architectural issues quickly
 - Function counting revealed massive duplication (552 functions across 75 files)
 - Pattern analysis showed mixed architectural approaches
 
 **What Broke**:
+
 - N/A (Analysis phase)
 
 **Patterns Discovered**:
+
 - Monolithic `functions.js` (3,513 lines) contains mixed responsibilities
 - Multiple card systems exist: `Card.js`, `BasePosterCard.js`, `card.js`
 - Global namespace pollution with 552+ functions
 - Mixed patterns: IIFE, ES6 modules, and global functions
 
 **Critical Gotchas**:
+
 - Large codebases can have hidden duplication that's hard to spot
 - Mixed architectural patterns make refactoring complex
 - Global namespace pollution makes debugging difficult
 
 ### Current Phase Status
+
 **Phase**: 2 - Code Quality & Technical Debt
 **Status**: Analysis complete, consolidation in progress
 **Next Actions**: Consolidate duplicate functions, refactor monolithic files
 **Risks**: Breaking existing functionality during refactoring
 **Mitigation**: Incremental changes with extensive testing at each step
 
+## Modal Management System (v28.65+)
+
+### Phase A-F Implementation: Single Authority for Auth Curtain
+
+**Status**: ✅ COMPLETED - Authentication modal freezing issue permanently resolved
+
+#### Core Principles
+
+1. **One Usher Team Per Curtain**: Auth, Share, Games have separate modal systems with unique classes
+2. **Class-Based Visibility**: Use `.is-active` class for visibility; no inline style sniffing; no `!important` force
+3. **Z-Index Hierarchy**: Auth (20000) > Share/Games (15000) > Other content (10000)
+4. **Normalized Close Paths**: All close methods (Esc, overlay, Cancel, auto-close) use same routine
+5. **Scoped Event Listeners**: No global duplicates; each modal manages its own listeners
+
+## Notification System (v28.70+)
+
+### Design Philosophy: Clean, Centered, Auto-Dismissing
+
+**Status**: ✅ COMPLETED - Modern notification system matching app design language
+
+#### Core Principles
+
+1. **Centered Positioning**: All notifications appear in center of screen for maximum visibility
+2. **Modal-Style Design**: Match sign-in modal styling (white background, blue accent, rounded corners)
+3. **No Close Button**: Clean design with auto-dismiss after 4 seconds
+4. **Smooth Animations**: Fade in/out with scale for professional feel
+5. **Consistent Typography**: 16px text, centered alignment, proper spacing
+
+#### Notification Design Standards
+
+```css
+/* Centered, clean notification design */
+.notification {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid #1976d2; /* Blue accent */
+  border-radius: 12px;
+  padding: 16px 24px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1f2937;
+  animation: fadeInScale 0.3s ease-out;
+}
+```
+
+#### Implementation Pattern
+
+```javascript
+// Clean notification function - no close button needed
+window.showNotification = function showNotification(message, type = 'info', duration = 4000) {
+  // Remove existing notifications
+  document.querySelectorAll('.notification').forEach((n) => n.remove());
+
+  // Create centered notification
+  const n = document.createElement('div');
+  n.className = `notification ${type}`;
+  n.innerHTML = `<span class="notification-message">${message}</span>`;
+
+  document.body.appendChild(n);
+
+  // Auto-dismiss with fade out
+  setTimeout(() => {
+    if (n.parentNode) {
+      n.style.animation = 'fadeOutScale 0.3s ease-in forwards';
+      setTimeout(() => n.remove(), 300);
+    }
+  }, duration);
+};
+```
+
+#### Anti-Patterns (FORBIDDEN)
+
+- ❌ Side-positioned notifications (top-right, bottom-right)
+- ❌ Close buttons (X) on notifications
+- ❌ Bright colored backgrounds (green, red, orange)
+- ❌ Slide animations (use fade + scale instead)
+- ❌ Long durations (keep under 5 seconds)
+- ❌ Multiple notifications at once
+
+#### Color Coding
+
+- **Success**: White background with blue accent border
+- **Error**: White background with red accent border
+- **Warning**: White background with orange accent border
+- **Info**: White background with blue accent border
+
+#### Animation Standards
+
+```css
+@keyframes fadeInScale {
+  from {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOutScale {
+  from {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0;
+  }
+}
+```
+
+#### Testing Requirements
+
+- **Visibility Test**: Notification appears centered and is clearly visible
+- **Auto-Dismiss Test**: Notification disappears after 4 seconds without user action
+- **Design Consistency Test**: Matches sign-in modal styling exactly
+- **Animation Test**: Smooth fade in/out with scale effect
+- **Single Notification Test**: Only one notification shows at a time
+
+#### Auth Modal Manager
+
+```javascript
+// Centralized auth modal control
+window.AUTH_MANAGER._authModalManager = {
+  open() {
+    /* Class-based visibility with .is-active */
+  },
+  close() {
+    /* Proper cleanup and state reset */
+  },
+  isModalOpen() {
+    /* Check both state and DOM visibility */
+  },
+};
+```
+
+#### CSS Architecture
+
+```css
+/* Auth Modal - Highest priority */
+.auth-modal-backdrop {
+  z-index: 20000;
+  display: none; /* Hidden by default */
+}
+.auth-modal-backdrop.is-active {
+  display: flex; /* Shown via class */
+}
+
+/* Share/Game Modals - Lower priority */
+.share-modal-backdrop,
+.game-modal {
+  z-index: 15000; /* Below auth */
+}
+```
+
+#### Anti-Patterns (FORBIDDEN)
+
+- ❌ Inline style sniffing: `[style*="display: flex"]`
+- ❌ `!important` to force visibility
+- ❌ Global modal cleanup: `document.querySelectorAll('.modal-backdrop').forEach(modal => modal.remove())`
+- ❌ Multiple modal systems using same classes
+- ❌ Event listeners not scoped to specific modals
+
+#### Testing Requirements
+
+- **Smoke Test 1**: Open/close auth modal twice without freezing
+- **Smoke Test 2**: Open Share → Auth → verify Auth on top, single dimmer
+- **Smoke Test 3**: Sign-in completion auto-closes auth modal
+- **Leak Check**: No duplicate listeners after close
+
+#### Console One-Liners for PM
+
+```javascript
+// Count curtains
+document.querySelectorAll('.modal-backdrop').length(
+  // Check auth visibility
+  () => {
+    const m = document.getElementById('providerModal');
+    if (!m) return 'no el';
+    const cs = getComputedStyle(m);
+    return { display: cs.display, aria: m.getAttribute('aria-hidden') };
+  },
+)();
+
+// Quick z-order sanity
+getComputedStyle(document.getElementById('providerModal')).zIndex;
+```
+
 ## Future Considerations
 
 ### Scalability
+
 - **Code Splitting**: Lazy load non-critical modules
 - **Service Workers**: Offline functionality and caching
 - **CDN Integration**: Static asset optimization
 
 ### Feature Roadmap
+
 - **Real-time Sync**: WebSocket integration for live updates
 - **Advanced Search**: Filters, sorting, and saved searches
 - **Social Features**: Sharing and collaboration
@@ -850,6 +1161,7 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 ## Document Maintenance Rules
 
 ### Mandatory Update Protocol
+
 **The assistant MUST reference and update this document at every gate:**
 
 1. **Starting a Phase**: Update phase status, objectives, and critical areas
@@ -858,6 +1170,7 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 4. **User Says "Complete"**: Update phase status to completed, capture final learnings
 
 ### Update Protocol
+
 - **Gap Identification**: When gaps or missing information are discovered in this document during development, the assistant must ask the user for approval before updating
 - **User Approval Required**: Always confirm with the user before adding new sections or modifying existing content
 - **Version Tracking**: Document updates should be noted in version comments when significant changes are made
@@ -867,4 +1180,4 @@ FlickWord is a Wordle-style daily word guessing game integrated into the Flickle
 
 ---
 
-*This document serves as the definitive guide for understanding and working with the Flicklet TV Tracker codebase. Keep it updated as the project evolves.*
+_This document serves as the definitive guide for understanding and working with the Flicklet TV Tracker codebase. Keep it updated as the project evolves._

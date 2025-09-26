@@ -15,23 +15,44 @@
         "muted": true
       },
       "stats": { "views": 0 },
-      "cta": { "label": "Share your reaction (soon)", "action": "none", "ariaLabel": "Reaction submissions coming soon" },
-      "attribution": { "kind": "staff", "displayName": "Flicklet Staff", "watermark": "Staff Pick" },
+      "cta": {
+        "label": "Share your reaction (soon)",
+        "action": "none",
+        "ariaLabel": "Reaction submissions coming soon"
+      },
+      "attribution": {
+        "kind": "staff",
+        "displayName": "Flicklet Staff",
+        "watermark": "Staff Pick"
+      },
       "tags": ["trailer", "spotlight"],
       "createdAtISO": "2025-09-22T12:00:00.000Z",
-      "accessibility": { "alt": "Featured trailer poster image", "summary": "Autoplay muted trailer teaser with poster fallback." }
+      "accessibility": {
+        "alt": "Featured trailer poster image",
+        "summary": "Autoplay muted trailer teaser with poster fallback."
+      }
     },
     {
       "id": "trivia-001",
       "type": "TRIVIA",
       "title": "Did You Know?",
       "description": "The Matrix's green code was made from sushi recipes!",
-      "media": { "kind": "image", "src": "/assets/trivia/matrix-code.jpg" },
-      "cta": { "label": "Submit trivia (soon)", "action": "none", "ariaLabel": "Trivia submission opening soon" },
+      "media": {
+        "kind": "text",
+        "content": "The Matrix's green code was made from sushi recipes!"
+      },
+      "cta": {
+        "label": "Submit trivia (soon)",
+        "action": "none",
+        "ariaLabel": "Trivia submission opening soon"
+      },
       "attribution": { "kind": "staff", "displayName": "Flicklet Staff", "watermark": "Seed" },
       "tags": ["trivia", "fun-fact"],
       "createdAtISO": "2025-09-22T12:00:00.000Z",
-      "accessibility": { "alt": "Green cascading Matrix code", "summary": "Fun film trivia with illustrative image." }
+      "accessibility": {
+        "alt": "Green cascading Matrix code",
+        "summary": "Fun film trivia with illustrative image."
+      }
     },
     {
       "id": "poll-results-001",
@@ -48,7 +69,12 @@
           { "label": "Affleck", "percent": 5 }
         ]
       },
-      "cta": { "label": "Vote in today's poll", "action": "open_url", "url": "/polls/today", "ariaLabel": "Open today's poll" },
+      "cta": {
+        "label": "Vote in today's poll",
+        "action": "open_url",
+        "url": "/polls/today",
+        "ariaLabel": "Open today's poll"
+      },
       "attribution": { "kind": "staff", "displayName": "Flicklet Staff", "watermark": "Seed" },
       "tags": ["poll", "results"],
       "createdAtISO": "2025-09-22T12:00:00.000Z",
@@ -61,10 +87,18 @@
       "description": "\"I rewatched Breaking Bad — still a 10/10 masterpiece!\"",
       "media": { "kind": "image", "src": "/assets/shows/breaking-bad-poster.jpg" },
       "cta": { "label": "Your take could be featured", "action": "none" },
-      "attribution": { "kind": "example_user", "displayName": "Example User", "avatarUrl": "/assets/avatars/user-placeholder.png", "watermark": "Example" },
+      "attribution": {
+        "kind": "example_user",
+        "displayName": "Example User",
+        "avatarUrl": "/assets/avatars/user-placeholder.png",
+        "watermark": "Example"
+      },
       "tags": ["review", "sample"],
       "createdAtISO": "2025-09-22T12:00:00.000Z",
-      "accessibility": { "alt": "Breaking Bad poster", "summary": "Mock review card previewing future user posts." }
+      "accessibility": {
+        "alt": "Breaking Bad poster",
+        "summary": "Mock review card previewing future user posts."
+      }
     },
     {
       "id": "hot-take-001",
@@ -85,11 +119,19 @@
       "subtitle": "The Boys",
       "media": { "kind": "image", "src": "/assets/shows/the-boys-poster.jpg" },
       "stats": { "trackedCountToday": 3245 },
-      "cta": { "label": "Track it", "action": "track", "url": "/track/the-boys", "ariaLabel": "Track The Boys" },
+      "cta": {
+        "label": "Track it",
+        "action": "track",
+        "url": "/track/the-boys",
+        "ariaLabel": "Track The Boys"
+      },
       "attribution": { "kind": "staff", "displayName": "Flicklet Staff", "watermark": "Seed" },
       "tags": ["top", "trending"],
       "createdAtISO": "2025-09-22T12:00:00.000Z",
-      "accessibility": { "alt": "The Boys poster", "summary": "Trending show with today's tracked count overlay." }
+      "accessibility": {
+        "alt": "The Boys poster",
+        "summary": "Trending show with today's tracked count overlay."
+      }
     },
     {
       "id": "coming-soon-001",
@@ -97,11 +139,23 @@
       "title": "Your Spotlight Awaits",
       "description": "Influencers & Fans — submit your clips when we open!",
       "media": { "kind": "image", "src": "/assets/community/coming-soon.jpg" },
-      "cta": { "label": "Follow for updates", "action": "open_url", "url": "/follow", "ariaLabel": "Follow Flicklet updates" },
-      "attribution": { "kind": "staff", "displayName": "Flicklet Staff", "watermark": "Staff Pick" },
+      "cta": {
+        "label": "Follow for updates",
+        "action": "open_url",
+        "url": "/follow",
+        "ariaLabel": "Follow Flicklet updates"
+      },
+      "attribution": {
+        "kind": "staff",
+        "displayName": "Flicklet Staff",
+        "watermark": "Staff Pick"
+      },
       "tags": ["coming-soon"],
       "createdAtISO": "2025-09-22T12:00:00.000Z",
-      "accessibility": { "alt": "Coming soon banner", "summary": "Teaser tile inviting early contributors." }
+      "accessibility": {
+        "alt": "Coming soon banner",
+        "summary": "Teaser tile inviting early contributors."
+      }
     }
   ]
 }
