@@ -4488,6 +4488,7 @@ body,
   z-index: 900; /* Below header (1000) but above content */
   margin: 0;
   margin-top: 130px; /* Perfect spacing - confirmed by user */
+  margin-bottom: 20px; /* Consistent spacing between containers */
   background: var(--bg, #ffffff); /* Ensure solid background */
   padding: 16px 0; /* Add padding to make it visible */
   border-bottom: 1px solid var(--border, #e5e7eb); /* Visual separation */
@@ -4514,6 +4515,7 @@ body,
   z-index: 800; /* Below header (1000) and search (900) but above content */
   margin: 0;
   margin-top: 120px; /* Account for fixed header */
+  margin-bottom: 20px; /* Consistent spacing between containers */
   height: var(--tabs-h);
   background: var(--bg) !important; /* Ensure solid background */
   border-bottom: 1px solid var(--border) !important; /* Visual separation */
@@ -4570,6 +4572,8 @@ body,
   position: relative;
   z-index: 1; /* Below header, search, and tabs */
   background: var(--bg, #ffffff); /* Ensure solid background */
+  max-height: 4300px; /* Perfect height - confirmed by user */
+  overflow-y: auto; /* Allow scrolling if content exceeds height */
 }
 #appRoot .tab-section.active {
   display: block;
