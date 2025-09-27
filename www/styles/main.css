@@ -637,6 +637,35 @@ body {
   justify-content: center !important;
 }
 
+/* OVERRIDE SEARCH HIDING - Force tabs to always be visible */
+.tab-container,
+#navigation,
+[role="tablist"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: sticky !important;
+  top: var(--header-h) !important;
+  z-index: 100 !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  height: 48px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Override any search-related hiding */
+body.has-search .tab-container,
+body.has-search #navigation,
+body.has-search [role="tablist"],
+#appRoot.has-search .tab-container,
+#appRoot.has-search #navigation,
+#appRoot.has-search [role="tablist"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 /* Base text elements */
 .dark-mode body,
 .dark-mode html {
