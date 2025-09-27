@@ -555,6 +555,54 @@ body {
   color: inherit !important;
 }
 
+/* FORCE LIGHT THEME - Reset all colors to readable defaults */
+:root {
+  --bg: #ffffff !important;
+  --text: #1f2937 !important;
+  --fg: #1f2937 !important;
+  --fg-default: #1f2937 !important;
+  --fg-muted: #6b7280 !important;
+  --fg-subtle: #7f8c8d !important;
+  --fg-on-elevated: #111827 !important;
+  --text-secondary: #666 !important;
+  --card: #ffffff !important;
+  --border: #e5e7eb !important;
+  --accent: #2563eb !important;
+  --primary: #e91e63 !important;
+  --surface: #f9f9f9 !important;
+  --bg-page: #ffffff !important;
+  --bg-elevated: #f7f7f9 !important;
+}
+
+/* Force light theme on body */
+body {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+/* Override any dark mode classes */
+.dark-mode,
+[data-theme="dark"],
+[data-theme="mardi"] {
+  --bg: #ffffff !important;
+  --text: #1f2937 !important;
+  --fg: #1f2937 !important;
+  --fg-default: #1f2937 !important;
+  --fg-muted: #6b7280 !important;
+  --fg-subtle: #7f8c8d !important;
+  --fg-on-elevated: #111827 !important;
+  --text-secondary: #666 !important;
+  --card: #ffffff !important;
+  --border: #e5e7eb !important;
+  --accent: #2563eb !important;
+  --primary: #e91e63 !important;
+  --surface: #f9f9f9 !important;
+  --bg-page: #ffffff !important;
+  --bg-elevated: #f7f7f9 !important;
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
 /* Base text elements */
 .dark-mode body,
 .dark-mode html {

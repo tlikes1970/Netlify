@@ -217,6 +217,28 @@
       import { initTabs } from './js/nav-init.js';
       initTabs();
     </script>
+    
+    <!-- Force Light Theme - Fix Color Readability -->
+    <script>
+      // Force light theme to fix color readability issues
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.body.setAttribute('data-theme', 'light');
+      document.body.classList.remove('dark-mode', 'mardi');
+      document.body.classList.add('light-mode');
+      
+      // Override any theme settings
+      if (window.ThemeManager) {
+        window.ThemeManager.theme = 'light';
+        window.ThemeManager.mardi = 'off';
+      }
+      
+      // Force localStorage to light theme
+      localStorage.setItem('pref_theme', 'light');
+      localStorage.setItem('flicklet-theme', 'light');
+      localStorage.setItem('pref_mardi', 'off');
+      
+      console.log('🎨 Forced light theme for better readability');
+    </script>
     <script type="module" src="/js/inline-script-10.js"></script>
 
     <!-- Layout helpers -->
