@@ -213,6 +213,10 @@
     <script type="module" src="/js/language-manager.js"></script>
     <script type="module" src="/js/functions.js"></script>
     <script type="module" src="/js/app.js"></script>
+    <script type="module">
+      import { initTabs } from './js/nav-init.js';
+      initTabs();
+    </script>
     <script type="module" src="/js/inline-script-10.js"></script>
 
     <!-- Layout helpers -->
@@ -893,10 +897,13 @@
       </div>
 
       <!-- Tab container moved outside homeSection for proper positioning -->
-      <div class="tab-container" id="navigation">
+      <div class="tab-container" id="navigation" role="tablist" aria-label="Main navigation">
         <button
           id="homeTab"
           class="tab active"
+          role="tab"
+          aria-controls="homeSection"
+          aria-selected="true"
           title="Overview of your TV & movie tracking"
           aria-label="Home tab - view dashboard and recommendations"
         >
@@ -905,6 +912,9 @@
         <button
           id="watchingTab"
           class="tab"
+          role="tab"
+          aria-controls="watchingSection"
+          aria-selected="false"
           title="Shows and movies you're currently watching"
           aria-label="Watching tab - view shows and movies you're currently watching"
         >
@@ -914,6 +924,9 @@
         <button
           id="wishlistTab"
           class="tab"
+          role="tab"
+          aria-controls="wishlistSection"
+          aria-selected="false"
           title="Shows and movies you want to watch later"
           aria-label="Wishlist tab - view shows and movies you want to watch"
         >
@@ -923,6 +936,9 @@
         <button
           id="watchedTab"
           class="tab"
+          role="tab"
+          aria-controls="watchedSection"
+          aria-selected="false"
           title="Shows and movies you've already finished"
           aria-label="Watched tab - view shows and movies you've completed"
         >
@@ -932,6 +948,9 @@
         <button
           id="discoverTab"
           class="tab"
+          role="tab"
+          aria-controls="discoverSection"
+          aria-selected="false"
           title="Get personalized recommendations based on your taste"
           aria-label="Discover tab - find new shows and movies"
         >
@@ -951,7 +970,7 @@
       <!-- Panels container for all tab sections -->
       <main id="panels" class="panels" role="main">
         <!-- Home - Immovable Layout Contract -->
-        <div id="homeSection" class="tab-section active">
+        <div id="homeSection" class="tab-section active" role="tabpanel" aria-labelledby="homeTab">
           <!-- Quote Bar -->
           <div
             id="quote-bar"
@@ -1310,7 +1329,7 @@
         </div>
         <!-- end #homeSection -->
         <!-- Watching -->
-        <div id="watchingSection" class="tab-section" style="display: none">
+        <div id="watchingSection" class="tab-section" role="tabpanel" aria-labelledby="watchingTab" style="display: none">
           <div class="section">
             <div class="section-header">
               <h3>
@@ -1323,7 +1342,7 @@
         </div>
 
         <!-- Wishlist -->
-        <div id="wishlistSection" class="tab-section" style="display: none">
+        <div id="wishlistSection" class="tab-section" role="tabpanel" aria-labelledby="wishlistTab" style="display: none">
           <div class="section">
             <div class="section-header">
               <h3>
@@ -1336,7 +1355,7 @@
         </div>
 
         <!-- Watched -->
-        <div id="watchedSection" class="tab-section" style="display: none">
+        <div id="watchedSection" class="tab-section" role="tabpanel" aria-labelledby="watchedTab" style="display: none">
           <div class="section">
             <div class="section-header">
               <h3>
@@ -1349,7 +1368,7 @@
         </div>
 
         <!-- Discover -->
-        <div id="discoverSection" class="tab-section" style="display: none">
+        <div id="discoverSection" class="tab-section" role="tabpanel" aria-labelledby="discoverTab" style="display: none">
           <div class="section">
             <h3>* <span data-i18n="discover">Discover</span></h3>
             <p data-i18n="discover_description">Recommendations based on your likes and ratings.</p>
@@ -1358,7 +1377,7 @@
         </div>
 
         <!-- Settings / Profile -->
-        <div id="settingsSection" class="tab-section" style="display: none">
+        <div id="settingsSection" class="tab-section" role="tabpanel" aria-labelledby="settingsTab" style="display: none">
           <div class="settings-tabs" role="tablist" aria-label="Settings Sections">
             <button role="tab" aria-selected="true" class="active" data-target="#general">
               <span data-i18n="general">General</span>
@@ -2291,7 +2310,7 @@
       </div>
     </div>
     <!-- FABs - Will be moved to active tab dock by JavaScript -->
-    <button id="settingsTab" class="tab" aria-label="Settings" data-requires-auth>
+    <button id="settingsTab" class="tab" role="tab" aria-controls="settingsSection" aria-selected="false" aria-label="Settings" data-requires-auth>
       ⚙️ <span data-i18n="settings">Settings</span>
     </button>
 
