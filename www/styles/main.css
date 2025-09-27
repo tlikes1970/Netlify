@@ -4464,15 +4464,19 @@ body,
   box-sizing: border-box;
 }
 
-/* Header sticks at top */
+/* Header sticks at top - force it to stay on top */
 #appRoot > header.header {
-  position: sticky;
-  top: 0;
-  z-index: 1000; /* Higher than all content sections */
-  margin: 0; /* no collapsing gaps */
-  height: var(--header-h);
-  background: var(--bg, #ffffff); /* Ensure solid background */
-  border-bottom: 2px solid var(--primary, #e91e63); /* Visual separation */
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 10000 !important; /* Much higher than all content sections */
+  margin: 0 !important; /* no collapsing gaps */
+  height: var(--header-h) !important;
+  background: var(--bg, #ffffff) !important; /* Ensure solid background */
+  border-bottom: 2px solid var(--primary, #e91e63) !important; /* Visual separation */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; /* Add shadow for separation */
+  width: 100% !important;
 }
 
 /* Search sticks under header when visible */
@@ -4482,6 +4486,7 @@ body,
   top: var(--header-h);
   z-index: 900; /* Below header (1000) but above content */
   margin: 0;
+  margin-top: var(--header-h); /* Account for fixed header */
   background: var(--bg, #ffffff); /* Ensure solid background */
 }
 
@@ -4501,6 +4506,7 @@ body,
   top: var(--header-h);
   z-index: 800; /* Below header (1000) and search (900) but above content */
   margin: 0;
+  margin-top: var(--header-h); /* Account for fixed header */
   height: var(--tabs-h);
   background: var(--bg) !important; /* Ensure solid background */
   border-bottom: 1px solid var(--border) !important; /* Visual separation */
@@ -4525,11 +4531,15 @@ body,
 #appRoot .tab-section {
   display: none;
   margin: 0;
+  margin-top: calc(var(--header-h) + var(--tabs-h)); /* Account for fixed header and tabs */
   position: relative;
   z-index: 1; /* Below header, search, and tabs */
+  background: var(--bg, #ffffff); /* Ensure solid background */
 }
 #appRoot .tab-section.active {
   display: block;
+  position: relative;
+  z-index: 1; /* Ensure it stays below header */
 }
 #appRoot .tab-section > *:first-child {
   margin-top: 0;
