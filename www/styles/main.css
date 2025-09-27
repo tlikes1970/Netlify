@@ -603,6 +603,40 @@ body {
   color: #1f2937 !important;
 }
 
+/* FORCE TAB VISIBILITY - Ensure tabs are always visible */
+.tab-container,
+#navigation,
+[role="tablist"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: sticky !important;
+  top: var(--header-h) !important;
+  z-index: 100 !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  height: 48px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.tab-container .tab,
+#navigation .tab,
+[role="tablist"] .tab {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  color: #1f2937 !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 12px 16px !important;
+  margin: 0 !important;
+  flex: 1 1 0 !important;
+  min-height: 44px !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
 /* Base text elements */
 .dark-mode body,
 .dark-mode html {
@@ -4401,7 +4435,7 @@ body,
 .search-row {
   position: sticky;
   top: var(--header-h);
-  z-index: 95;
+  z-index: 95; /* Lower than tabs to not cover them */
 }
 
 /* Tabs stick under header by default */
@@ -4410,9 +4444,11 @@ body,
 #appRoot > [role='tablist'] {
   position: sticky;
   top: var(--header-h);
-  z-index: 90;
+  z-index: 100; /* Higher than search row to ensure visibility */
   margin: 0;
   height: var(--tabs-h);
+  background: var(--bg) !important; /* Ensure solid background */
+  border-bottom: 1px solid var(--border) !important; /* Visual separation */
 }
 
 /* When search is shown, push tabs down by its measured height */

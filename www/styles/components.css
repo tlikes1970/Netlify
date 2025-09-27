@@ -1875,6 +1875,8 @@ body {
   position: relative;
   z-index: 100 !important;
   overflow-x: auto;
+  background: var(--bg) !important;
+  border-bottom: 1px solid var(--border) !important;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
