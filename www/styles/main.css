@@ -4348,6 +4348,14 @@ body,
   margin: 0;
 }
 
+/* Search row within search container also sticky */
+#desktop-search-row,
+.search-row {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 95;
+}
+
 /* Tabs stick under header by default */
 #appRoot > #navigation.tab-container,
 #appRoot > .tab-container,
