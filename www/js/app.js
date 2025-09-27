@@ -2127,6 +2127,18 @@ window.FlickletDebug = window.FlickletDebug || {
               }
             }
             break;
+          case 'toggle-theme': {
+            // mirror FAB behavior
+            if (typeof window.applyThemeToggle === 'function') {
+              window.applyThemeToggle();
+            } else {
+              // Fallback: read current and flip
+              const cur = document.documentElement.getAttribute('data-theme') || 'system';
+              const next = cur === 'light' ? 'dark' : 'light';
+              document.documentElement.setAttribute('data-theme', next);
+            }
+            break;
+          }
           default:
             console.warn(t('unknown_data_action') + ':', action);
         }

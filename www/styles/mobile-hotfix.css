@@ -160,3 +160,157 @@ body,
 html {
   max-width: 100%;
 }
+
+/* === Desktop gap fix: use dynamic viewport + safe-area fallback === */
+body {
+  min-height: 100dvh; /* dynamic viewport height */
+  padding-top: env(safe-area-inset-top, 0); /* 0 on non-notch browsers */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Desktop hard override: remove phantom top padding */
+@media (min-width: 769px) {
+  body {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+/* Normalize sticky search spacing so it doesn't "add" visual gap */
+.top-search {
+  margin-top: 0 !important;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Subtle visual for locked Pro controls */
+.pro-locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Inline error styling for Settings */
+.settings-error {
+  color: #b91c1c; /* red-700 */
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+/* Stronger desktop gap overrides (common wrappers) */
+@media (min-width: 769px) {
+  html,
+  body,
+  main,
+  .app,
+  .app-root,
+  .page,
+  .content,
+  .container,
+  .shell,
+  #appRoot {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+  header,
+  .top-header,
+  .header-bar,
+  .app-header {
+    margin-top: 0 !important;
+  }
+  .tab-section:first-of-type {
+    margin-top: 0 !important;
+  }
+}
+/* Keep sticky search compact */
+.top-search {
+  margin-top: 0 !important;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Subtle visual for locked Pro controls */
+.pro-locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+/* Prevent double top offset when main uses scroll-padding */
+main,
+.tab-section,
+#homeSection {
+  scroll-padding-top: 64px; /* fixed number on desktop avoids compounding with env() */
+}
+@media (max-width: 768px) {
+  main,
+  .tab-section,
+  #homeSection {
+    scroll-padding-top: calc(env(safe-area-inset-top, 0) + 64px);
+  }
+}
+
+@media (min-width: 769px) {
+  html,
+  body {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+header,
+.top-header,
+.header-bar {
+  margin-top: 0 !important;
+}
+.top-search {
+  margin-top: 0 !important;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Subtle visual for locked Pro controls */
+.pro-locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Inline error styling for Settings */
+.settings-error {
+  color: #b91c1c; /* red-700 */
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+/* Stronger desktop gap overrides (common wrappers) */
+@media (min-width: 769px) {
+  html,
+  body,
+  main,
+  .app,
+  .app-root,
+  .page,
+  .content,
+  .container,
+  .shell,
+  #appRoot {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+  header,
+  .top-header,
+  .header-bar,
+  .app-header {
+    margin-top: 0 !important;
+  }
+  .tab-section:first-of-type {
+    margin-top: 0 !important;
+  }
+}
+/* Keep sticky search compact */
+.top-search {
+  margin-top: 0 !important;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Subtle visual for locked Pro controls */
+.pro-locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

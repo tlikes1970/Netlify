@@ -1,0 +1,106 @@
+{
+  "$schemaVersion": 1,
+  "namespace": "flicklet.settings",
+  "settings": [
+    {
+      "id": "displayName",
+      "storageKey": "user.displayName",
+      "type": "string",
+      "default": "",
+      "i18n": { "label": "display_name", "hint": "display_name_hint" },
+      "validate": { "maxLength": 64 }
+    },
+    {
+      "id": "language",
+      "storageKey": "app.language",
+      "type": "enum",
+      "default": "en",
+      "options": ["en", "es", "pt"],
+      "i18n": { "label": "language", "hint": "language_hint" }
+    },
+    {
+      "id": "theme",
+      "storageKey": "ui.theme",
+      "type": "enum",
+      "default": "system",
+      "options": ["system", "light", "dark"],
+      "i18n": { "label": "theme_preference", "hint": "theme_hint" }
+    },
+    {
+      "id": "mardiGrasOverlay",
+      "storageKey": "ui.mardiGrasOverlay",
+      "type": "boolean",
+      "default": false,
+      "i18n": { "label": "mardi_overlay", "hint": "mardi_overlay_hint" }
+    },
+    {
+      "id": "notifEpisodes",
+      "storageKey": "notif.episodes",
+      "type": "boolean",
+      "default": false,
+      "i18n": { "label": "episode_alerts", "hint": "episode_alerts_hint" }
+    },
+    {
+      "id": "notifDiscover",
+      "storageKey": "notif.discover",
+      "type": "boolean",
+      "default": false,
+      "i18n": { "label": "weekly_discover", "hint": "weekly_discover_hint" }
+    },
+    {
+      "id": "notifDigest",
+      "storageKey": "notif.monthlyDigest",
+      "type": "boolean",
+      "default": false,
+      "i18n": { "label": "monthly_digest", "hint": "monthly_digest_hint" }
+    },
+    {
+      "id": "homeCuratedRows",
+      "storageKey": "home.curatedRows",
+      "type": "number",
+      "default": 3,
+      "validate": { "min": 1, "max": 3, "step": 1 },
+      "i18n": { "label": "home_page_lists", "hint": "home_page_lists_hint" }
+    },
+    {
+      "id": "currentlyWatchingLimit",
+      "storageKey": "home.currentlyWatchingLimit",
+      "type": "number",
+      "default": 12,
+      "validate": { "min": 5, "max": 20, "step": 1 },
+      "i18n": {
+        "label": "currently_watching_preview_limit",
+        "hint": "currently_watching_preview_hint"
+      }
+    },
+    {
+      "id": "cardEpisodeTracking",
+      "storageKey": "cards.episodeTracking",
+      "type": "boolean",
+      "default": false,
+      "i18n": { "label": "enable_episode_tracking", "hint": "episode_tracking_hint" }
+    },
+    {
+      "id": "proAdvancedNotifications",
+      "storageKey": "pro.advancedNotifications",
+      "type": "boolean",
+      "default": false,
+      "i18n": { "label": "pro_notifications", "hint": "pro_notifications_hint" }
+    },
+    {
+      "id": "proThemePack",
+      "storageKey": "pro.themePack",
+      "type": "enum",
+      "default": "classic",
+      "options": ["classic", "dark-pro", "neon-pro", "minimal-pro"],
+      "i18n": { "label": "theme_packs", "hint": "theme_packs_hint" }
+    },
+    {
+      "id": "socialEnabled",
+      "storageKey": "social.enabled",
+      "type": "boolean",
+      "default": false,
+      "i18n": { "label": "enable_friends_sharing", "hint": "enable_friends_sharing_hint" }
+    }
+  ]
+}
