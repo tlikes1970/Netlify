@@ -3342,8 +3342,32 @@ select,
   outline-offset: 2px;
 }
 
-/* Force hide tabs that should be hidden */
-.tab.hidden,
+/* Handle .hidden class on tabs - show tab but hide text for mobile optimization */
+.tab.hidden {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  width: 32px !important;
+  height: 44px !important;
+  min-width: 32px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  overflow: hidden !important;
+  flex: 0 0 32px !important;
+  pointer-events: auto !important;
+}
+
+.tab.hidden span,
+.tab.hidden .tab-badge {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Force hide tabs that are truly hidden (not mobile optimization) */
 .tab[style*='visibility: hidden'] {
   display: none !important;
   visibility: hidden !important;
@@ -3382,18 +3406,22 @@ select,
   }
 }
 
-/* Override flex: 1 for hidden tabs */
+/* Override flex: 1 for hidden tabs - show compact version */
 .tab-container .tab.hidden {
-  flex: 0 0 0 !important;
-  min-width: 0 !important;
-  max-width: 0 !important;
-  display: none !important;
+  flex: 0 0 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
-/* Override inline-flex for hidden tabs on desktop */
+/* Override inline-flex for hidden tabs on desktop - show compact version */
 @media (min-width: 769px) {
   .tab-container .tab.hidden {
-    display: none !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 }
 
@@ -3681,10 +3709,15 @@ button:focus-visible,
   opacity: 0.8;
 }
 
-/* Override grid display for hidden tabs on mobile */
+/* Override grid display for hidden tabs on mobile - show compact version */
 @media (max-width: 768px) {
   .tab-container .tab.hidden {
-    display: none !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    flex: 0 0 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
   }
 }
 
