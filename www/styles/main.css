@@ -1774,12 +1774,14 @@ body.mardi {
   opacity: 0;
   visibility: hidden;
   transform: translateY(20px);
+  pointer-events: none; /* Safe default: not interactive when invisible */
 }
 
 .back-to-top.visible {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
+  pointer-events: auto; /* Interactive when visible */
 }
 
 .back-to-top:hover {
