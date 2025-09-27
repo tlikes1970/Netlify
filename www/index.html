@@ -948,1314 +948,1348 @@
         <div id="searchResultsList" class="list-container"></div>
       </div>
 
-      <!-- Home - Immovable Layout Contract -->
-      <div id="homeSection" class="tab-section active">
-        <!-- Quote Bar -->
-        <div
-          id="quote-bar"
-          class="quote-bar"
-          role="region"
-          aria-label="Quote of the moment"
-          data-state="loading"
-          style="display: none"
-        >
-          <div class="quote-marquee">
-            <span class="quote-text" id="quoteText" data-i18n="loading_inspirational_quote"
-              >Loading inspirational quote...</span
-            >
-          </div>
-        </div>
-
-        <!-- Group 1 - Your Shows -->
-        <div id="group-1-your-shows" class="home-group">
-          <div class="group-header">
-            <h2 class="group-title" data-i18n="your_shows">Your Shows</h2>
-          </div>
-
-          <!-- Currently Watching (row): always present -->
-          <section
-            id="currentlyWatchingPreview"
-            class="home-preview-row"
-            aria-label="Currently Watching Preview"
-          >
-            <div class="preview-row-header">
-              <h3 class="preview-row-title" data-i18n="currently_watching_section">
-                Eye Currently Watching
-              </h3>
-            </div>
-            <div class="preview-row-container cw-row">
-              <div class="preview-row-scroll row-inner" id="currentlyWatchingScroll">
-                <!-- Cards will be populated by JavaScript -->
-                <div class="placeholder-message" id="cw-placeholder" style="display: none">
-                  Add something to your Currently Watching list and it'll show up here.
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Group divider -->
-          <div class="group-divider"></div>
-
-          <!-- Next Up This Week -->
-          <section
-            id="next-up-row"
-            class="home-preview-row"
-            data-feature="homeRowNextUp"
-            style="display: none"
-          >
-            <div class="preview-row-header">
-              <h3 class="preview-row-title" data-i18n="next_up_this_week">
-                Calendar Next Up This Week
-              </h3>
-            </div>
-            <div class="preview-row-container">
-              <div class="next-up-scroll row-inner preview-row-scroll">
-                <!-- tiles injected here -->
-                <div
-                  class="placeholder-message"
-                  id="nextup-placeholder"
-                  style="display: none"
-                  data-i18n="no_upcoming_episodes"
-                >
-                  No upcoming episodes this week.
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <!-- Group 2 - Community -->
-        <div id="group-2-community" class="home-group">
-          <div class="group-header">
-            <h2 class="group-title" data-i18n="community">Community</h2>
-          </div>
-
-          <!-- Community Content - Two Column Layout -->
-          <div class="community-content">
-            <!-- Left: Community Player -->
-            <div class="community-left">
-              <section id="community-player" aria-label="Community Player"></section>
-            </div>
-
-            <!-- Right: Game Cards Section -->
-            <div class="community-right">
-              <section id="home-games" class="home-games">
-                <article
-                  class="card card--game"
-                  id="flickwordTile"
-                  data-module="flickword"
-                  role="region"
-                  tabindex="0"
-                  aria-haspopup="dialog"
-                  aria-controls="modal-flickword"
-                  aria-labelledby="flickword-title"
-                >
-                  <div class="card__header">
-                    <h3 class="card__title" id="flickword-title" data-i18n="flickword">
-                      Target FlickWord
-                    </h3>
-                    <div class="card__tools">
-                      <div class="game-stats">
-                        <div class="stat-item">
-                          <span class="stat-label" data-i18n="games">Games</span>
-                          <span class="stat-value" data-fw-games>0</span>
-                        </div>
-                        <div class="stat-item">
-                          <span class="stat-label" data-i18n="won">Won</span>
-                          <span class="stat-value" data-fw-won>0</span>
-                        </div>
-                        <div class="stat-item">
-                          <span class="stat-label" data-i18n="lost">Lost</span>
-                          <span class="stat-value" data-fw-lost>0</span>
-                        </div>
-                        <div class="stat-item">
-                          <span class="stat-label" data-i18n="streak">Streak</span>
-                          <span class="stat-value" data-fw-streak>0</span>
-                        </div>
-                        <div class="stat-item">
-                          <span class="stat-label" data-i18n="best">Best</span>
-                          <span class="stat-value" data-fw-best>0</span>
-                        </div>
-                        <div class="stat-item">
-                          <span class="stat-label" data-i18n="win_percent">Win %</span>
-                          <span class="stat-value" data-fw-win>-</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="card__body card__body--scroll">
-                    <div class="flickword-hero">
-                      <div class="flickword-hero-placeholder">
-                        <div class="flickword-hero-icon">Game</div>
-                        <div class="flickword-hero-text">Word Game</div>
-                      </div>
-                    </div>
-                    <p class="card__description" data-i18n="flickword_tagline">
-                      Wordle-style daily word play
-                    </p>
-                    <div aria-live="polite" class="sr-only" data-status-live></div>
-                  </div>
-
-                  <div class="card__actions">
-                    <button
-                      class="btn btn--primary"
-                      data-action="open-flickword"
-                      data-i18n="play_now"
-                    >
-                      Play Now
-                    </button>
-                  </div>
-                </article>
-
-                <article
-                  class="card card--game"
-                  id="triviaTile"
-                  data-module="trivia"
-                  role="region"
-                  tabindex="0"
-                  aria-haspopup="dialog"
-                  aria-controls="modal-trivia"
-                  aria-labelledby="trivia-title"
-                >
-                  <div class="card__header">
-                    <h3 class="card__title" id="trivia-title" data-i18n="daily_trivia">
-                      Brain Daily Trivia
-                    </h3>
-                    <div class="card__tools">
-                      <div class="game-stats">
-                        <div class="stat-item">
-                          <span class="stat-label" data-i18n="streak">Streak</span>
-                          <span class="stat-value" data-tv-streak>1</span>
-                        </div>
-                        <div class="stat-item">
-                          <span class="stat-label" data-i18n="best">Best</span>
-                          <span class="stat-value" data-tv-best>5</span>
-                        </div>
-                        <div class="stat-item">
-                          <span class="stat-label" data-i18n="accuracy">Accuracy</span>
-                          <span class="stat-value" data-tv-acc>-</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="card__body card__body--scroll">
-                    <p class="card__description" data-i18n="daily_trivia_tagline">
-                      Fresh question, new bragging rights
-                    </p>
-                    <div aria-live="polite" class="sr-only" data-status-live></div>
-                  </div>
-
-                  <div class="card__actions">
-                    <button
-                      class="btn btn--primary"
-                      data-action="start-trivia"
-                      data-i18n="play_now"
-                    >
-                      Play Now
-                    </button>
-                  </div>
-                </article>
-              </section>
-            </div>
-          </div>
-        </div>
-
-        <!-- Group 3 - For You -->
-        <div id="group-3-for-you" class="home-group">
-          <div class="group-header">
-            <h2 class="group-title" data-i18n="for_you">For You</h2>
-          </div>
-
-          <!-- Personalized genre rows -->
-          <section id="personalized-section" class="home-preview-row" style="display: none">
-            <div class="preview-row-header">
-              <h3 class="preview-row-title">
-                Art
-                <span data-i18n="personalized_recommendations">Personalized Recommendations</span>
-              </h3>
-              <p class="section-subtitle" data-i18n="based_on_watching_history">
-                Based on your watching history and preferences
-              </p>
-            </div>
-            <div class="preview-row-container">
-              <div class="section-content" id="personalized-content"></div>
-            </div>
-          </section>
-
-          <div class="group-divider"></div>
-
-          <!-- Curated rows -->
-          <section id="curated-section" class="home-preview-row">
-            <div class="preview-row-header">
-              <h3 class="preview-row-title" data-i18n="curated_sections">
-                Target Curated Sections
-              </h3>
-            </div>
-            <div class="preview-row-container">
-              <div id="curatedSections" class="home-section"></div>
-            </div>
-          </section>
-        </div>
-
-        <!-- Group 4 - In Theaters Near You -->
-        <div id="group-4-theaters" class="home-group">
-          <div class="group-header">
-            <h2 class="group-title" data-i18n="in_theaters">In Theaters</h2>
-          </div>
-
-          <section id="theaters-section" class="home-preview-row">
-            <div class="preview-row-header">
-              <h3 class="preview-row-title">
-                Movie <span data-i18n="in_theaters_near_you">In Theaters Near You</span>
-              </h3>
-              <p class="section-subtitle" data-i18n="current_theatrical_releases">
-                Current theatrical releases
-              </p>
-            </div>
-            <div class="preview-row-container">
-              <div class="section-content" id="theaters-content">
-                <div class="theaters-container">
-                  <div class="theaters-header">
-                    <h3>Movie Now Playing</h3>
-                    <button class="btn secondary" id="refreshTheatersBtn">🔄 Refresh</button>
-                  </div>
-                  <div class="theaters-list" id="theatersList">
-                    <div class="loading">Loading movies...</div>
-                  </div>
-                </div>
-
-                <div class="theaters-info">
-                  <div class="theaters-meta">
-                    <h3>Find Showtimes</h3>
-                    <p>Click "Find Showtimes" to see showtimes at theaters near you</p>
-                    <div class="location-info">
-                      <span id="userLocation">📍 Getting your location...</span>
-                    </div>
-                  </div>
-                  <div class="theaters-cta">
-                    <button class="btn btn-primary" id="findShowtimesBtn">🎫 Find Showtimes</button>
-                    <button class="btn secondary" id="refreshLocationBtn">
-                      📍 Update Location
-                    </button>
-                  </div>
-                  <div class="theaters-badges">
-                    <span class="badge">Now Playing</span>
-                    <span class="badge" id="movieCount">Loading...</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <!-- Group 5 - Feedback -->
-        <div id="group-5-feedback" class="home-group">
-          <div class="group-header">
-            <h2 class="group-title" data-i18n="feedback">Feedback</h2>
-          </div>
-
-          <section id="feedbackSection" class="home-preview-row">
-            <div class="preview-row-header">
-              <h3 class="preview-row-title" data-i18n="share_your_thoughts">
-                💬 Share Your Thoughts
-              </h3>
-              <p class="section-subtitle" data-i18n="help_improve_feedback">
-                Help us improve Flicklet with your feedback
-              </p>
-            </div>
-            <div class="preview-row-container">
-              <div class="feedback-content">
-                <div class="feedback-card">
-                  <div class="feedback-actions">
-                    <button
-                      class="btn btn--primary"
-                      onclick="openSettingsToFeedback()"
-                      data-i18n="report_bug"
-                    >
-                      🐛 Report a Bug
-                    </button>
-                    <button
-                      class="btn btn--secondary"
-                      onclick="openSettingsToFeedback()"
-                      data-i18n="suggest_feature"
-                    >
-                      💡 Suggest a Feature
-                    </button>
-                    <button
-                      class="btn btn--secondary"
-                      onclick="openSettingsToFeedback()"
-                      data-i18n="general_feedback"
-                    >
-                      💬 General Feedback
-                    </button>
-                    <button
-                      class="btn btn--secondary"
-                      onclick="openSettingsToFeedback()"
-                      data-i18n="submit_video"
-                    >
-                      📹 Submit Video
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-      </div>
-      <!-- end #homeSection -->
-
       <!-- Panels container for all tab sections -->
       <main id="panels" class="panels" role="main">
-      <!-- Watching -->
-      <div id="watchingSection" class="tab-section" style="display: none">
-        <div class="section">
-          <div class="section-header">
-            <h3>
-              ▶️ <span data-i18n="currently_watching">Currently Watching</span>
-              <span class="count" id="watchingCount" data-count-for="#watchingList">0</span>
-            </h3>
+        <!-- Home - Immovable Layout Contract -->
+        <div id="homeSection" class="tab-section active">
+          <!-- Quote Bar -->
+          <div
+            id="quote-bar"
+            class="quote-bar"
+            role="region"
+            aria-label="Quote of the moment"
+            data-state="loading"
+            style="display: none"
+          >
+            <div class="quote-marquee">
+              <span class="quote-text" id="quoteText" data-i18n="loading_inspirational_quote"
+                >Loading inspirational quote...</span
+              >
+            </div>
           </div>
-          <div id="watchingList" class="list-container"></div>
-        </div>
-      </div>
 
-      <!-- Wishlist -->
-      <div id="wishlistSection" class="tab-section" style="display: none">
-        <div class="section">
-          <div class="section-header">
-            <h3>
-              + <span data-i18n="want_to_watch">Want to Watch</span>
-              <span class="count" id="wishlistCount" data-count-for="#wishlistList">0</span>
-            </h3>
-          </div>
-          <div id="wishlistList" class="list-container"></div>
-        </div>
-      </div>
+          <!-- Group 1 - Your Shows -->
+          <div id="group-1-your-shows" class="home-group">
+            <div class="group-header">
+              <h2 class="group-title" data-i18n="your_shows">Your Shows</h2>
+            </div>
 
-      <!-- Watched -->
-      <div id="watchedSection" class="tab-section" style="display: none">
-        <div class="section">
-          <div class="section-header">
-            <h3>
-              ✓ <span data-i18n="already_watched">Already Watched</span>
-              <span class="count" id="watchedCount" data-count-for="#watchedList">0</span>
-            </h3>
-          </div>
-          <div id="watchedList" class="list-container"></div>
-        </div>
-      </div>
-
-      <!-- Discover -->
-      <div id="discoverSection" class="tab-section" style="display: none">
-        <div class="section">
-          <h3>* <span data-i18n="discover">Discover</span></h3>
-          <p data-i18n="discover_description">Recommendations based on your likes and ratings.</p>
-          <div id="discoverList" class="list-container"></div>
-        </div>
-      </div>
-
-      <!-- Settings / Profile -->
-      <div id="settingsSection" class="tab-section" style="display: none">
-        <div class="settings-tabs" role="tablist" aria-label="Settings Sections">
-          <button role="tab" aria-selected="true" class="active" data-target="#general">
-            <span data-i18n="general">General</span>
-          </button>
-          <button role="tab" aria-selected="false" data-target="#notifications">
-            <span data-i18n="notifications">Notifications</span>
-          </button>
-          <button role="tab" aria-selected="false" data-target="#layout">
-            <span data-i18n="layout">Layout</span>
-          </button>
-          <button role="tab" aria-selected="false" data-target="#data">
-            <span data-i18n="data">Data</span>
-          </button>
-          <button role="tab" aria-selected="false" data-target="#pro">
-            <span data-i18n="pro">Pro</span>
-          </button>
-          <button role="tab" aria-selected="false" data-target="#about">
-            <span data-i18n="about">About</span>
-          </button>
-        </div>
-
-        <div class="settings-container">
-          <!-- General Section -->
-          <section id="general" class="settings-section active">
-            <div class="settings-subsection">
-              <h3 class="settings-title">⚙️ <span data-i18n="general">General</span></h3>
-              <p class="settings-description" data-i18n="general_description">
-                Manage your account and basic preferences
-              </p>
-
-              <!-- Display Name -->
-              <div class="settings-control-group">
-                <label for="displayNameInput" class="settings-label" data-i18n="display_name"
-                  >Display Name</label
-                >
-                <div class="settings-input-group">
-                  <input
-                    id="displayNameInput"
-                    class="settings-input"
-                    placeholder="Enter your name"
-                  />
-                  <button id="saveNameBtn" class="btn btn--primary" onclick="saveDisplayName()">
-                    💾 <span data-i18n="save">Save</span>
-                  </button>
+            <!-- Currently Watching (row): always present -->
+            <section
+              id="currentlyWatchingPreview"
+              class="home-preview-row"
+              aria-label="Currently Watching Preview"
+            >
+              <div class="preview-row-header">
+                <h3 class="preview-row-title" data-i18n="currently_watching_section">
+                  Eye Currently Watching
+                </h3>
+              </div>
+              <div class="preview-row-container cw-row">
+                <div class="preview-row-scroll row-inner" id="currentlyWatchingScroll">
+                  <!-- Cards will be populated by JavaScript -->
+                  <div class="placeholder-message" id="cw-placeholder" style="display: none">
+                    Add something to your Currently Watching list and it'll show up here.
+                  </div>
                 </div>
-                <p class="settings-hint">
-                  Your name will appear in the header and personalize your experience
-                </p>
               </div>
-            </div>
+            </section>
 
-            <div class="settings-subsection">
-              <h4 class="settings-subtitle">
-                📊 <span data-i18n="my_statistics">My Statistics</span>
-              </h4>
-              <p class="settings-hint">View your watching statistics and achievements</p>
-              <div id="statsContent" class="settings-stats">
-                <div class="loading" data-i18n="loading_stats">Loading stats...</div>
+            <!-- Group divider -->
+            <div class="group-divider"></div>
+
+            <!-- Next Up This Week -->
+            <section
+              id="next-up-row"
+              class="home-preview-row"
+              data-feature="homeRowNextUp"
+              style="display: none"
+            >
+              <div class="preview-row-header">
+                <h3 class="preview-row-title" data-i18n="next_up_this_week">
+                  Calendar Next Up This Week
+                </h3>
               </div>
-            </div>
-
-            <div class="settings-subsection">
-              <h4 class="settings-subtitle">
-                🚫 <span data-i18n="not_interested_management">Not Interested Management</span>
-              </h4>
-              <p class="settings-description" data-i18n="not_interested_description">
-                Manage shows and movies you've marked as not interested
-              </p>
-              <div class="settings-control-group">
-                <button id="manageNotInterestedBtn" class="btn" onclick="openNotInterestedModal()">
-                  🚫 <span data-i18n="manage_not_interested_list">Manage Not Interested List</span>
-                </button>
-                <p class="settings-hint">
-                  View and remove items from your "Not Interested" list to see them in
-                  recommendations again
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <!-- Notifications Section -->
-          <section id="notifications" class="settings-section">
-            <div class="settings-subsection">
-              <h3 class="settings-title">
-                🔔 <span data-i18n="notifications">Notifications</span>
-              </h3>
-              <p class="settings-description" data-i18n="notifications_description">
-                Choose which types of notifications you'd like to receive
-              </p>
-
-              <div class="settings-control-group">
-                <label class="settings-checkbox-label">
-                  <input type="checkbox" id="notifEpisodes" class="settings-checkbox" />
-                  <span class="settings-checkbox-text" data-i18n="episode_alerts"
-                    >Upcoming episode alerts</span
+              <div class="preview-row-container">
+                <div class="next-up-scroll row-inner preview-row-scroll">
+                  <!-- tiles injected here -->
+                  <div
+                    class="placeholder-message"
+                    id="nextup-placeholder"
+                    style="display: none"
+                    data-i18n="no_upcoming_episodes"
                   >
-                </label>
-                <p class="settings-hint">
-                  Get notified when new episodes of shows you're watching are about to air
-                </p>
-              </div>
-
-              <div class="settings-control-group">
-                <label class="settings-checkbox-label">
-                  <input type="checkbox" id="notifDiscover" class="settings-checkbox" />
-                  <span class="settings-checkbox-text" data-i18n="weekly_discover"
-                    >Weekly discover picks</span
-                  >
-                </label>
-                <p class="settings-hint">
-                  Receive weekly recommendations for new shows and movies based on your preferences
-                </p>
-              </div>
-
-              <div class="settings-control-group">
-                <label class="settings-checkbox-label">
-                  <input type="checkbox" id="notifDigest" class="settings-checkbox" />
-                  <span class="settings-checkbox-text" data-i18n="monthly_digest"
-                    >Monthly stats digest</span
-                  >
-                </label>
-                <p class="settings-hint">
-                  Get a monthly summary of your watching statistics and achievements
-                </p>
-              </div>
-            </div>
-
-            <div class="settings-subsection">
-              <h4 class="settings-subtitle" data-i18n="pro_notifications">⭐ Pro Notifications</h4>
-              <p class="settings-description" data-i18n="advanced_notification_features">
-                Advanced notification features for Pro users
-              </p>
-
-              <div class="settings-control-group">
-                <h5 class="settings-label">🔔 Advanced Notifications (PRO)</h5>
-                <p class="settings-hint">
-                  Configure advanced notification settings with custom lead times and list
-                  monitoring
-                </p>
-                <div
-                  class="settings-block card-surface"
-                  style="display: flex; flex-direction: column; gap: 15px; padding: 15px"
-                >
-                  <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
-                    <label style="display: flex; align-items: center; gap: 8px">
-                      <input type="checkbox" id="advOn" disabled aria-disabled="true" />
-                      <span>Enable advanced notifications</span>
-                    </label>
+                    No upcoming episodes this week.
                   </div>
-                  <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
-                    <label for="advLead" style="font-weight: 500">Lead time (hours):</label>
-                    <select
-                      id="advLead"
-                      disabled
-                      aria-disabled="true"
-                      aria-label="Notification lead time"
-                      style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px"
-                    >
-                      <option value="6">6</option>
-                      <option value="12">12</option>
-                      <option value="24" selected>24</option>
-                      <option value="48">48</option>
-                      <option value="custom">Custom…</option>
-                    </select>
-                    <input
-                      type="number"
-                      id="advLeadCustom"
-                      min="1"
-                      step="1"
-                      value="24"
-                      disabled
-                      aria-disabled="true"
-                      style="
-                        padding: 4px 8px;
-                        border: 1px solid #ccc;
-                        border-radius: 4px;
-                        width: 80px;
-                      "
-                    />
-                  </div>
-                  <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
-                    <label for="advLists" style="font-weight: 500">Monitor lists:</label>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap">
-                      <label style="display: flex; align-items: center; gap: 4px">
-                        <input
-                          type="checkbox"
-                          id="advListWatching"
-                          checked
-                          disabled
-                          aria-disabled="true"
-                        />
-                        <span>Currently Watching</span>
-                      </label>
-                      <label style="display: flex; align-items: center; gap: 4px">
-                        <input type="checkbox" id="advListWishlist" disabled aria-disabled="true" />
-                        <span>Want to Watch</span>
-                      </label>
-                      <label style="display: flex; align-items: center; gap: 4px">
-                        <input type="checkbox" id="advListWatched" disabled aria-disabled="true" />
-                        <span>Already Watched</span>
-                      </label>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <!-- Group 2 - Community -->
+          <div id="group-2-community" class="home-group">
+            <div class="group-header">
+              <h2 class="group-title" data-i18n="community">Community</h2>
+            </div>
+
+            <!-- Community Content - Two Column Layout -->
+            <div class="community-content">
+              <!-- Left: Community Player -->
+              <div class="community-left">
+                <section id="community-player" aria-label="Community Player"></section>
+              </div>
+
+              <!-- Right: Game Cards Section -->
+              <div class="community-right">
+                <section id="home-games" class="home-games">
+                  <article
+                    class="card card--game"
+                    id="flickwordTile"
+                    data-module="flickword"
+                    role="region"
+                    tabindex="0"
+                    aria-haspopup="dialog"
+                    aria-controls="modal-flickword"
+                    aria-labelledby="flickword-title"
+                  >
+                    <div class="card__header">
+                      <h3 class="card__title" id="flickword-title" data-i18n="flickword">
+                        Target FlickWord
+                      </h3>
+                      <div class="card__tools">
+                        <div class="game-stats">
+                          <div class="stat-item">
+                            <span class="stat-label" data-i18n="games">Games</span>
+                            <span class="stat-value" data-fw-games>0</span>
+                          </div>
+                          <div class="stat-item">
+                            <span class="stat-label" data-i18n="won">Won</span>
+                            <span class="stat-value" data-fw-won>0</span>
+                          </div>
+                          <div class="stat-item">
+                            <span class="stat-label" data-i18n="lost">Lost</span>
+                            <span class="stat-value" data-fw-lost>0</span>
+                          </div>
+                          <div class="stat-item">
+                            <span class="stat-label" data-i18n="streak">Streak</span>
+                            <span class="stat-value" data-fw-streak>0</span>
+                          </div>
+                          <div class="stat-item">
+                            <span class="stat-label" data-i18n="best">Best</span>
+                            <span class="stat-value" data-fw-best>0</span>
+                          </div>
+                          <div class="stat-item">
+                            <span class="stat-label" data-i18n="win_percent">Win %</span>
+                            <span class="stat-value" data-fw-win>-</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="card__body card__body--scroll">
+                      <div class="flickword-hero">
+                        <div class="flickword-hero-placeholder">
+                          <div class="flickword-hero-icon">Game</div>
+                          <div class="flickword-hero-text">Word Game</div>
+                        </div>
+                      </div>
+                      <p class="card__description" data-i18n="flickword_tagline">
+                        Wordle-style daily word play
+                      </p>
+                      <div aria-live="polite" class="sr-only" data-status-live></div>
+                    </div>
+
+                    <div class="card__actions">
+                      <button
+                        class="btn btn--primary"
+                        data-action="open-flickword"
+                        data-i18n="play_now"
+                      >
+                        Play Now
+                      </button>
+                    </div>
+                  </article>
+
+                  <article
+                    class="card card--game"
+                    id="triviaTile"
+                    data-module="trivia"
+                    role="region"
+                    tabindex="0"
+                    aria-haspopup="dialog"
+                    aria-controls="modal-trivia"
+                    aria-labelledby="trivia-title"
+                  >
+                    <div class="card__header">
+                      <h3 class="card__title" id="trivia-title" data-i18n="daily_trivia">
+                        Brain Daily Trivia
+                      </h3>
+                      <div class="card__tools">
+                        <div class="game-stats">
+                          <div class="stat-item">
+                            <span class="stat-label" data-i18n="streak">Streak</span>
+                            <span class="stat-value" data-tv-streak>1</span>
+                          </div>
+                          <div class="stat-item">
+                            <span class="stat-label" data-i18n="best">Best</span>
+                            <span class="stat-value" data-tv-best>5</span>
+                          </div>
+                          <div class="stat-item">
+                            <span class="stat-label" data-i18n="accuracy">Accuracy</span>
+                            <span class="stat-value" data-tv-acc>-</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="card__body card__body--scroll">
+                      <p class="card__description" data-i18n="daily_trivia_tagline">
+                        Fresh question, new bragging rights
+                      </p>
+                      <div aria-live="polite" class="sr-only" data-status-live></div>
+                    </div>
+
+                    <div class="card__actions">
+                      <button
+                        class="btn btn--primary"
+                        data-action="start-trivia"
+                        data-i18n="play_now"
+                      >
+                        Play Now
+                      </button>
+                    </div>
+                  </article>
+                </section>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 3 - For You -->
+          <div id="group-3-for-you" class="home-group">
+            <div class="group-header">
+              <h2 class="group-title" data-i18n="for_you">For You</h2>
+            </div>
+
+            <!-- Personalized genre rows -->
+            <section id="personalized-section" class="home-preview-row" style="display: none">
+              <div class="preview-row-header">
+                <h3 class="preview-row-title">
+                  Art
+                  <span data-i18n="personalized_recommendations">Personalized Recommendations</span>
+                </h3>
+                <p class="section-subtitle" data-i18n="based_on_watching_history">
+                  Based on your watching history and preferences
+                </p>
+              </div>
+              <div class="preview-row-container">
+                <div class="section-content" id="personalized-content"></div>
+              </div>
+            </section>
+
+            <div class="group-divider"></div>
+
+            <!-- Curated rows -->
+            <section id="curated-section" class="home-preview-row">
+              <div class="preview-row-header">
+                <h3 class="preview-row-title" data-i18n="curated_sections">
+                  Target Curated Sections
+                </h3>
+              </div>
+              <div class="preview-row-container">
+                <div id="curatedSections" class="home-section"></div>
+              </div>
+            </section>
+          </div>
+
+          <!-- Group 4 - In Theaters Near You -->
+          <div id="group-4-theaters" class="home-group">
+            <div class="group-header">
+              <h2 class="group-title" data-i18n="in_theaters">In Theaters</h2>
+            </div>
+
+            <section id="theaters-section" class="home-preview-row">
+              <div class="preview-row-header">
+                <h3 class="preview-row-title">
+                  Movie <span data-i18n="in_theaters_near_you">In Theaters Near You</span>
+                </h3>
+                <p class="section-subtitle" data-i18n="current_theatrical_releases">
+                  Current theatrical releases
+                </p>
+              </div>
+              <div class="preview-row-container">
+                <div class="section-content" id="theaters-content">
+                  <div class="theaters-container">
+                    <div class="theaters-header">
+                      <h3>Movie Now Playing</h3>
+                      <button class="btn secondary" id="refreshTheatersBtn">🔄 Refresh</button>
+                    </div>
+                    <div class="theaters-list" id="theatersList">
+                      <div class="loading">Loading movies...</div>
                     </div>
                   </div>
-                  <div class="meta-muted" role="note">
-                    🔒 Pro feature - upgrade to unlock advanced notifications
+
+                  <div class="theaters-info">
+                    <div class="theaters-meta">
+                      <h3>Find Showtimes</h3>
+                      <p>Click "Find Showtimes" to see showtimes at theaters near you</p>
+                      <div class="location-info">
+                        <span id="userLocation">📍 Getting your location...</span>
+                      </div>
+                    </div>
+                    <div class="theaters-cta">
+                      <button class="btn btn-primary" id="findShowtimesBtn">
+                        🎫 Find Showtimes
+                      </button>
+                      <button class="btn secondary" id="refreshLocationBtn">
+                        📍 Update Location
+                      </button>
+                    </div>
+                    <div class="theaters-badges">
+                      <span class="badge">Now Playing</span>
+                      <span class="badge" id="movieCount">Loading...</span>
+                    </div>
                   </div>
                 </div>
               </div>
+            </section>
+          </div>
+
+          <!-- Group 5 - Feedback -->
+          <div id="group-5-feedback" class="home-group">
+            <div class="group-header">
+              <h2 class="group-title" data-i18n="feedback">Feedback</h2>
             </div>
-          </section>
 
-          <!-- Layout Section -->
-          <section id="layout" class="settings-section">
-            <div class="settings-subsection">
-              <h3 class="settings-title">
-                Art <span data-i18n="layout_settings">Layout Settings</span>
-              </h3>
-              <p class="settings-description" data-i18n="layout_description">
-                Customize how your lists and cards are displayed
-              </p>
-
-              <h4 class="settings-subtitle" data-i18n="core_features">📋 Core Features</h4>
-              <p class="settings-description" data-i18n="basic_layout_customization">
-                Basic layout customization available to all users
-              </p>
-
-              <div class="settings-control-group">
-                <label class="settings-checkbox-label">
-                  <input type="checkbox" id="condensedMode" class="settings-checkbox" />
-                  <span class="settings-checkbox-text" data-i18n="condensed_list_view"
-                    >Condensed list view (more items per screen)</span
-                  >
-                </label>
-                <p class="settings-hint" data-i18n="show_more_items_per_screen">
-                  Show more items per screen by reducing card spacing and padding
+            <section id="feedbackSection" class="home-preview-row">
+              <div class="preview-row-header">
+                <h3 class="preview-row-title" data-i18n="share_your_thoughts">
+                  💬 Share Your Thoughts
+                </h3>
+                <p class="section-subtitle" data-i18n="help_improve_feedback">
+                  Help us improve Flicklet with your feedback
                 </p>
               </div>
-
-              <div class="settings-control-group">
-                <label class="settings-checkbox-label">
-                  <input type="checkbox" id="showPosters" class="settings-checkbox" checked />
-                  <span class="settings-checkbox-text" data-i18n="show_posters"
-                    >Show movie/TV show posters</span
-                  >
-                </label>
-                <p class="settings-hint" data-i18n="display_poster_images">
-                  Display poster images for each show and movie in your lists
-                </p>
-              </div>
-
-              <div class="settings-control-group">
-                <div class="settings-toggle-group">
-                  <label class="settings-label" data-i18n="theme_preference"
-                    >Theme Preference</label
-                  >
-                  <div class="theme-toggle-container">
-                    <button
-                      id="themeToggleBtn"
-                      class="btn btn--secondary theme-toggle-btn"
-                      data-action="toggle-theme"
-                    >
-                      <span id="themeToggleIcon">🌙</span>
-                      <span id="themeToggleText" data-i18n="dark_mode">Dark Mode</span>
-                    </button>
-                    <p class="settings-hint" data-i18n="theme_toggle_hint">
-                      Click to switch between light and dark themes
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="settings-control-group">
-                <label for="settingCuratedRows" class="settings-label" data-i18n="home_page_lists"
-                  >Home Page TV/Movie Lists</label
-                >
-                <div class="settings-input-group">
-                  <input
-                    type="number"
-                    id="settingCuratedRows"
-                    name="curatedRows"
-                    min="1"
-                    max="3"
-                    value="3"
-                    class="settings-input settings-input-number"
-                  />
-                  <span class="settings-hint">(1-3)</span>
-                  <span id="curatedRowsStatus" class="settings-status">Auto-saves</span>
-                </div>
-                <p class="settings-hint" data-i18n="number_of_curated_sections">
-                  Number of curated recommendation sections to show on the home page
-                </p>
-              </div>
-
-              <div class="settings-control-group">
-                <label
-                  for="settingCurrentlyWatchingLimit"
-                  class="settings-label"
-                  data-i18n="currently_watching_preview_limit"
-                  >Currently Watching Preview Limit</label
-                >
-                <div class="settings-input-group">
-                  <input
-                    type="number"
-                    id="settingCurrentlyWatchingLimit"
-                    name="currentlyWatchingLimit"
-                    min="5"
-                    max="20"
-                    value="12"
-                    class="settings-input settings-input-number"
-                  />
-                  <span class="settings-hint">(5-20)</span>
-                  <span id="currentlyWatchingLimitStatus" class="settings-status">Auto-saves</span>
-                </div>
-                <p class="settings-hint" data-i18n="number_of_currently_watching">
-                  Number of currently watching shows to display on the home page preview
-                </p>
-              </div>
-
-              <div class="settings-control-group settings-control-group--feature">
-                <div class="settings-feature-card">
-                  <div class="settings-feature-header">
-                    <label class="settings-checkbox-label settings-checkbox-label--feature">
-                      <input
-                        type="checkbox"
-                        id="enableEpisodeTracking"
-                        class="settings-checkbox settings-checkbox--feature"
-                      />
-                      <span
-                        class="settings-checkbox-text settings-checkbox-text--feature"
-                        data-i18n="enable_episode_tracking"
-                        >Movie Enable Episode Tracking</span
+              <div class="preview-row-container">
+                <div class="feedback-content">
+                  <div class="feedback-card">
+                    <div class="feedback-actions">
+                      <button
+                        class="btn btn--primary"
+                        onclick="openSettingsToFeedback()"
+                        data-i18n="report_bug"
                       >
-                    </label>
-                    <div class="settings-feature-badge" data-i18n="recommended">Recommended</div>
+                        🐛 Report a Bug
+                      </button>
+                      <button
+                        class="btn btn--secondary"
+                        onclick="openSettingsToFeedback()"
+                        data-i18n="suggest_feature"
+                      >
+                        💡 Suggest a Feature
+                      </button>
+                      <button
+                        class="btn btn--secondary"
+                        onclick="openSettingsToFeedback()"
+                        data-i18n="general_feedback"
+                      >
+                        💬 General Feedback
+                      </button>
+                      <button
+                        class="btn btn--secondary"
+                        onclick="openSettingsToFeedback()"
+                        data-i18n="submit_video"
+                      >
+                        📹 Submit Video
+                      </button>
+                    </div>
                   </div>
-                  <p
-                    class="settings-hint settings-hint--feature"
-                    data-i18n="allow_tracking_of_individual"
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+        <!-- end #homeSection -->
+        <!-- Watching -->
+        <div id="watchingSection" class="tab-section" style="display: none">
+          <div class="section">
+            <div class="section-header">
+              <h3>
+                ▶️ <span data-i18n="currently_watching">Currently Watching</span>
+                <span class="count" id="watchingCount" data-count-for="#watchingList">0</span>
+              </h3>
+            </div>
+            <div id="watchingList" class="list-container"></div>
+          </div>
+        </div>
+
+        <!-- Wishlist -->
+        <div id="wishlistSection" class="tab-section" style="display: none">
+          <div class="section">
+            <div class="section-header">
+              <h3>
+                + <span data-i18n="want_to_watch">Want to Watch</span>
+                <span class="count" id="wishlistCount" data-count-for="#wishlistList">0</span>
+              </h3>
+            </div>
+            <div id="wishlistList" class="list-container"></div>
+          </div>
+        </div>
+
+        <!-- Watched -->
+        <div id="watchedSection" class="tab-section" style="display: none">
+          <div class="section">
+            <div class="section-header">
+              <h3>
+                ✓ <span data-i18n="already_watched">Already Watched</span>
+                <span class="count" id="watchedCount" data-count-for="#watchedList">0</span>
+              </h3>
+            </div>
+            <div id="watchedList" class="list-container"></div>
+          </div>
+        </div>
+
+        <!-- Discover -->
+        <div id="discoverSection" class="tab-section" style="display: none">
+          <div class="section">
+            <h3>* <span data-i18n="discover">Discover</span></h3>
+            <p data-i18n="discover_description">Recommendations based on your likes and ratings.</p>
+            <div id="discoverList" class="list-container"></div>
+          </div>
+        </div>
+
+        <!-- Settings / Profile -->
+        <div id="settingsSection" class="tab-section" style="display: none">
+          <div class="settings-tabs" role="tablist" aria-label="Settings Sections">
+            <button role="tab" aria-selected="true" class="active" data-target="#general">
+              <span data-i18n="general">General</span>
+            </button>
+            <button role="tab" aria-selected="false" data-target="#notifications">
+              <span data-i18n="notifications">Notifications</span>
+            </button>
+            <button role="tab" aria-selected="false" data-target="#layout">
+              <span data-i18n="layout">Layout</span>
+            </button>
+            <button role="tab" aria-selected="false" data-target="#data">
+              <span data-i18n="data">Data</span>
+            </button>
+            <button role="tab" aria-selected="false" data-target="#pro">
+              <span data-i18n="pro">Pro</span>
+            </button>
+            <button role="tab" aria-selected="false" data-target="#about">
+              <span data-i18n="about">About</span>
+            </button>
+          </div>
+
+          <div class="settings-container">
+            <!-- General Section -->
+            <section id="general" class="settings-section active">
+              <div class="settings-subsection">
+                <h3 class="settings-title">⚙️ <span data-i18n="general">General</span></h3>
+                <p class="settings-description" data-i18n="general_description">
+                  Manage your account and basic preferences
+                </p>
+
+                <!-- Display Name -->
+                <div class="settings-control-group">
+                  <label for="displayNameInput" class="settings-label" data-i18n="display_name"
+                    >Display Name</label
                   >
-                    Track individual episodes for TV series with detailed progress monitoring
-                    (opt-in per series)
+                  <div class="settings-input-group">
+                    <input
+                      id="displayNameInput"
+                      class="settings-input"
+                      placeholder="Enter your name"
+                    />
+                    <button id="saveNameBtn" class="btn btn--primary" onclick="saveDisplayName()">
+                      💾 <span data-i18n="save">Save</span>
+                    </button>
+                  </div>
+                  <p class="settings-hint">
+                    Your name will appear in the header and personalize your experience
                   </p>
-                  <div class="settings-feature-details">
-                    <p class="settings-feature-benefit" data-i18n="episode_tracking_benefits">
-                      • Track your progress through each season<br />• Get notifications for new
-                      episodes<br />• See detailed watching statistics
-                    </p>
-                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="settings-subsection">
-              <h4 class="settings-subtitle" data-i18n="pro_layout_features">
-                ⭐ Pro Layout Features
-              </h4>
-              <p class="settings-description" data-i18n="advanced_layout_and_theming">
-                Advanced layout and theming features for Pro users
-              </p>
-
-              <div class="settings-control-group">
-                <h5 class="settings-label" data-i18n="theme_packs">Art Theme Packs</h5>
-                <p class="settings-hint" data-i18n="choose_a_visual_theme">
-                  Choose a visual theme for your Flicklet experience. Pro users get access to
-                  premium themes.
-                </p>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
-                  <label for="themePackSelect" style="font-weight: 500" data-i18n="theme"
-                    >Theme:</label
-                  >
-                  <select
-                    id="themePackSelect"
-                    aria-label="Choose theme"
-                    style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px"
-                  >
-                    <option value="classic" selected>Classic</option>
-                    <option value="dark" disabled aria-disabled="true">Dark Pro 🔒</option>
-                    <option value="neon" disabled aria-disabled="true">Neon Pro 🔒</option>
-                    <option value="minimal" disabled aria-disabled="true">Minimal Pro 🔒</option>
-                  </select>
-                  <div class="meta-muted" role="note" data-i18n="pro_unlocks_more_themes">
-                    🔒 Pro unlocks more themes
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Data Section -->
-          <section id="data" class="settings-section">
-            <div class="settings-subsection">
-              <h3 class="settings-title">
-                💾 <span data-i18n="data_management">Data Management</span>
-              </h3>
-              <p class="settings-description" data-i18n="data_description">
-                Export, import, or reset your data
-              </p>
-
-              <h4 class="settings-subtitle" data-i18n="core_features">📋 Core Features</h4>
-              <p class="settings-description" data-i18n="basic_data_management">
-                Basic data management features available to all users
-              </p>
-
-              <div class="settings-control-group">
-                <button id="exportBtn" class="btn btn--secondary" aria-label="Export data to JSON">
-                  📤 <span data-i18n="export_json">Export JSON</span>
-                </button>
-                <p class="settings-hint" data-i18n="download_a_complete_backup">
-                  Download a complete backup of your lists and settings as a JSON file
-                </p>
-              </div>
-
-              <div class="settings-control-group">
-                <input type="file" id="importInput" accept=".json,application/json" hidden />
-                <button
-                  id="importBtn"
-                  class="btn btn--secondary"
-                  aria-label="Import data from JSON"
-                >
-                  📥 <span data-i18n="import_json">Import JSON</span>
-                </button>
-                <p class="settings-hint" data-i18n="restore_your_data">
-                  Restore your data from a previously exported Flicklet backup file
-                </p>
-              </div>
-
-              <div class="settings-control-group">
-                <h4 class="settings-subtitle">🚫 Not Interested List</h4>
-                <p class="settings-description">
-                  Manage items you don't want to see in recommendations
-                </p>
-
-                <div class="not-interested-controls">
-                  <button id="viewNotInterestedBtn" class="btn btn--secondary">
-                    Eye View Not Interested Items
-                  </button>
-                  <button id="clearNotInterestedBtn" class="btn btn--danger">🗑️ Clear All</button>
-                </div>
-
-                <div id="notInterestedList" class="not-interested-list" style="display: none">
-                  <div class="not-interested-list__header">
-                    <h5>Items you're not interested in:</h5>
-                    <button id="closeNotInterestedBtn" class="btn btn--sm btn--secondary">×</button>
-                  </div>
-                  <div id="notInterestedItems" class="not-interested-items"></div>
-                </div>
-
-                <p class="settings-hint">
-                  Items marked as "Not Interested" won't appear in your Discover recommendations
-                </p>
-              </div>
-
-              <div class="settings-control-group">
-                <button
-                  id="shareOpenBtn"
-                  class="btn btn--secondary"
-                  data-action="share-lists"
-                  data-share-title="Flicklet - My List"
-                  data-share-url=""
-                  title="Share your lists"
-                  aria-label="Share your TV and movie lists"
-                >
-                  🔗 <span data-i18n="share_lists">Share Lists</span>
-                </button>
-                <p class="settings-hint" data-i18n="generate_a_shareable_text">
-                  Generate a shareable text list of your TV shows and movies to send to friends
-                </p>
-              </div>
-
-              <div class="settings-control-group">
-                <button
-                  id="resetBtn"
-                  class="btn btn--danger"
-                  aria-label="Reset all data (requires confirmation)"
-                >
-                  🗑️ <span data-i18n="reset_all_data">Reset All Data</span>
-                </button>
-                <p class="settings-hint" data-i18n="permanently_delete_all">
-                  ⚠️ Permanently delete all your lists, settings, and data. This cannot be undone.
-                </p>
-              </div>
-            </div>
-
-            <div class="settings-subsection">
-              <h4 class="settings-subtitle" data-i18n="pro_data_features">⭐ Pro Data Features</h4>
-              <p class="settings-description" data-i18n="advanced_data_management">
-                Advanced data management features for Pro users
-              </p>
-
-              <div class="settings-control-group">
-                <button
-                  class="btn"
-                  data-pro="required"
-                  data-pro-mode="hide"
-                  data-pro-feature="export-csv"
-                >
-                  📊 <span data-i18n="export_csv_pro">Export CSV (Pro)</span>
-                </button>
-                <p class="settings-hint" data-i18n="export_your_data_csv">
-                  Export your data in CSV format for use in spreadsheets (Pro feature)
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <!-- Pro Section -->
-          <section id="pro" class="settings-section">
-            <div class="settings-subsection">
-              <h3 class="settings-title">⭐ <span data-i18n="pro_features">Pro Features</span></h3>
-              <p class="settings-description" data-i18n="pro_description">
-                Unlock advanced features and premium content with Flicklet Pro
-              </p>
-
-              <div class="settings-control-group">
-                <button id="previewProBtn" class="btn btn--primary" onclick="toggleProPreview()">
-                  ⭐ <span data-i18n="preview_pro_features">Preview Pro Features</span>
-                </button>
-                <p class="settings-hint" data-i18n="pro_hint">
-                  Toggle Pro features on/off to see what's available without purchasing
-                </p>
-              </div>
-
-              <div class="settings-control-group">
-                <button
-                  class="btn"
-                  data-pro="required"
-                  data-pro-mode="disable"
-                  data-pro-feature="extra-trivia"
-                >
-                  Brain <span data-i18n="extra_trivia_pro">Extra Trivia (Pro)</span>
-                </button>
-                <p class="settings-hint" data-i18n="access_additional_trivia">
-                  Access additional trivia questions and behind-the-scenes content (Pro feature)
-                </p>
-              </div>
-
-              <div class="settings-control-group">
-                <button
-                  id="exportCsvBtn"
-                  class="btn"
-                  data-pro="required"
-                  data-pro-mode="disable"
-                  data-pro-feature="export-csv"
-                  onclick="exportToCSV()"
-                >
-                  📊 <span data-i18n="export_csv_pro">Export CSV (Pro)</span>
-                </button>
-                <p class="settings-hint" data-i18n="export_your_data_csv">
-                  Export your data in CSV format for use in spreadsheets (Pro feature)
-                </p>
-              </div>
-
-              <div class="settings-control-group">
+              <div class="settings-subsection">
                 <h4 class="settings-subtitle">
-                  * <span data-i18n="pro_features_include">Pro Features Include:</span>
+                  📊 <span data-i18n="my_statistics">My Statistics</span>
                 </h4>
-                <p class="settings-hint">
-                  Advanced features and premium content available with Flicklet Pro subscription
-                </p>
-                <div id="proFeaturesList" class="settings-pro-features"></div>
+                <p class="settings-hint">View your watching statistics and achievements</p>
+                <div id="statsContent" class="settings-stats">
+                  <div class="loading" data-i18n="loading_stats">Loading stats...</div>
+                </div>
               </div>
-            </div>
-          </section>
 
-          <!-- About Section -->
-          <section id="about" class="settings-section">
-            <div class="settings-subsection">
-              <h3 class="settings-title" data-i18n="about_unique4u">🏠 About Unique4U</h3>
-              <p class="settings-description" data-i18n="were_not_here_to_reinvent">
-                We're not here to reinvent the wheel - we're here to make the wheel less squeaky. At
-                Unique4U, our rule is simple: keep it simple. The world already has enough apps that
-                feel like a second job to use. We'd rather give you tools that just… work.
-              </p>
-              <p class="settings-description" data-i18n="everything_we_build">
-                Everything we build has its own personality, but they all live under one roof: a
-                people-first, all-inclusive, slightly offbeat house we call Unique4U. If it's fun,
-                useful, and a little different from the pack - it belongs here.
-              </p>
-            </div>
+              <div class="settings-subsection">
+                <h4 class="settings-subtitle">
+                  🚫 <span data-i18n="not_interested_management">Not Interested Management</span>
+                </h4>
+                <p class="settings-description" data-i18n="not_interested_description">
+                  Manage shows and movies you've marked as not interested
+                </p>
+                <div class="settings-control-group">
+                  <button
+                    id="manageNotInterestedBtn"
+                    class="btn"
+                    onclick="openNotInterestedModal()"
+                  >
+                    🚫
+                    <span data-i18n="manage_not_interested_list">Manage Not Interested List</span>
+                  </button>
+                  <p class="settings-hint">
+                    View and remove items from your "Not Interested" list to see them in
+                    recommendations again
+                  </p>
+                </div>
+              </div>
+            </section>
 
-            <div class="settings-subsection">
-              <h3 class="settings-title" data-i18n="about_the_creators">👥 About the Creators</h3>
-              <p class="settings-description" data-i18n="were_pam_and_travis">
-                We're Pam and Travis. Think of us as casual builders with a shared allergy to
-                overcomplication. We make things because we need them, and we figure you probably do
-                too.
-              </p>
-              <p class="settings-description" data-i18n="pam_once_trained_dolphins">
-                Pam once trained dolphins (true story) and also happens to be really good with
-                numbers. Travis studied English and Philosophy, which means he can overthink and
-                explain it in writing, then somehow turn that into practical business know-how.
-                Together, we're like a mash-up of "creative meets operations" - and that combo lets
-                us build apps that are simple, useful, and not boring.
-              </p>
-            </div>
+            <!-- Notifications Section -->
+            <section id="notifications" class="settings-section">
+              <div class="settings-subsection">
+                <h3 class="settings-title">
+                  🔔 <span data-i18n="notifications">Notifications</span>
+                </h3>
+                <p class="settings-description" data-i18n="notifications_description">
+                  Choose which types of notifications you'd like to receive
+                </p>
 
-            <div class="settings-subsection">
-              <h3 class="settings-title" data-i18n="about_the_app">📱 About the App</h3>
-              <p class="settings-description" data-i18n="heres_the_deal">
-                Here's the deal: you want to remember what you're watching without needing a PhD in
-                App Navigation. We built this because we got tired of two bad options - messy notes
-                on our phones or bloated apps that make you log your "episode 7 mid-season
-                thoughts." (Hard pass.)
-              </p>
-              <p class="settings-description">
-                <strong>Data Attribution:</strong> This product uses the TMDB API but is not
-                endorsed or certified by TMDB.
-              </p>
-              <p class="settings-description" data-i18n="so_we_made_this_instead">
-                So we made this instead:
-              </p>
-              <ul style="margin: 16px 0; padding-left: 20px" class="u-fg">
-                <li style="margin-bottom: 8px">
-                  <strong>Stupidly easy.</strong> Open it, add your show, done.
-                </li>
-                <li style="margin-bottom: 8px">
-                  <strong>Always free at the core.</strong> No paywalls for the basics.
-                </li>
-                <li style="margin-bottom: 8px">
-                  <strong>Friend-proof sharing.</strong> Copy your list and drop it in a text when
-                  someone asks, "What should I watch?"
-                </li>
-              </ul>
-              <p class="settings-description" data-i18n="if_you_watch_tv">
-                If you watch TV or movies and don't want to make it a hobby just to track them, this
-                app's for you. Simple lists, zero drama.
-              </p>
-            </div>
-
-            <div class="settings-subsection">
-              <h3 class="settings-title">
-                💬 <span data-i18n="share_your_thoughts">Share Your Thoughts</span>
-              </h3>
-              <p class="settings-description" data-i18n="feedback_working">
-                Share your thoughts! Give us app feedback, tell us what's working (or not), share a
-                quote for our rotation, make a confession, submit a video (describe your video idea
-                and we'll get back to you), or just vent. We're listening!
-              </p>
-
-              <form
-                name="feedback"
-                method="POST"
-                data-netlify="true"
-                netlify-honeypot="bot-field"
-                class="settings-form"
-                action="/thank-you"
-                onsubmit="console.log('🔍 Form onsubmit called'); return false;"
-              >
-                <input type="hidden" name="form-name" value="feedback" />
-                <input type="hidden" name="theme" id="feedbackThemeInput" />
-                <div style="display: none">
-                  <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+                <div class="settings-control-group">
+                  <label class="settings-checkbox-label">
+                    <input type="checkbox" id="notifEpisodes" class="settings-checkbox" />
+                    <span class="settings-checkbox-text" data-i18n="episode_alerts"
+                      >Upcoming episode alerts</span
+                    >
+                  </label>
+                  <p class="settings-hint">
+                    Get notified when new episodes of shows you're watching are about to air
+                  </p>
                 </div>
 
                 <div class="settings-control-group">
-                  <label for="feedbackMessage" class="settings-label" data-i18n="your_message"
-                    >Your Message</label
-                  >
-                  <textarea
-                    id="feedbackMessage"
-                    name="message"
-                    class="settings-textarea"
-                    placeholder="Share your thoughts, feedback, quotes, or just vent! We're listening."
-                    rows="3"
-                    required
-                  ></textarea>
+                  <label class="settings-checkbox-label">
+                    <input type="checkbox" id="notifDiscover" class="settings-checkbox" />
+                    <span class="settings-checkbox-text" data-i18n="weekly_discover"
+                      >Weekly discover picks</span
+                    >
+                  </label>
                   <p class="settings-hint">
-                    Your feedback helps us improve Flicklet. All messages are read and appreciated!
+                    Receive weekly recommendations for new shows and movies based on your
+                    preferences
                   </p>
-                  <button type="submit" class="btn btn--primary">
-                    📤 <span data-i18n="share_it">Share It!</span>
-                  </button>
                 </div>
-              </form>
-            </div>
-          </section>
+
+                <div class="settings-control-group">
+                  <label class="settings-checkbox-label">
+                    <input type="checkbox" id="notifDigest" class="settings-checkbox" />
+                    <span class="settings-checkbox-text" data-i18n="monthly_digest"
+                      >Monthly stats digest</span
+                    >
+                  </label>
+                  <p class="settings-hint">
+                    Get a monthly summary of your watching statistics and achievements
+                  </p>
+                </div>
+              </div>
+
+              <div class="settings-subsection">
+                <h4 class="settings-subtitle" data-i18n="pro_notifications">
+                  ⭐ Pro Notifications
+                </h4>
+                <p class="settings-description" data-i18n="advanced_notification_features">
+                  Advanced notification features for Pro users
+                </p>
+
+                <div class="settings-control-group">
+                  <h5 class="settings-label">🔔 Advanced Notifications (PRO)</h5>
+                  <p class="settings-hint">
+                    Configure advanced notification settings with custom lead times and list
+                    monitoring
+                  </p>
+                  <div
+                    class="settings-block card-surface"
+                    style="display: flex; flex-direction: column; gap: 15px; padding: 15px"
+                  >
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
+                      <label style="display: flex; align-items: center; gap: 8px">
+                        <input type="checkbox" id="advOn" disabled aria-disabled="true" />
+                        <span>Enable advanced notifications</span>
+                      </label>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
+                      <label for="advLead" style="font-weight: 500">Lead time (hours):</label>
+                      <select
+                        id="advLead"
+                        disabled
+                        aria-disabled="true"
+                        aria-label="Notification lead time"
+                        style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px"
+                      >
+                        <option value="6">6</option>
+                        <option value="12">12</option>
+                        <option value="24" selected>24</option>
+                        <option value="48">48</option>
+                        <option value="custom">Custom…</option>
+                      </select>
+                      <input
+                        type="number"
+                        id="advLeadCustom"
+                        min="1"
+                        step="1"
+                        value="24"
+                        disabled
+                        aria-disabled="true"
+                        style="
+                          padding: 4px 8px;
+                          border: 1px solid #ccc;
+                          border-radius: 4px;
+                          width: 80px;
+                        "
+                      />
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
+                      <label for="advLists" style="font-weight: 500">Monitor lists:</label>
+                      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                        <label style="display: flex; align-items: center; gap: 4px">
+                          <input
+                            type="checkbox"
+                            id="advListWatching"
+                            checked
+                            disabled
+                            aria-disabled="true"
+                          />
+                          <span>Currently Watching</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 4px">
+                          <input
+                            type="checkbox"
+                            id="advListWishlist"
+                            disabled
+                            aria-disabled="true"
+                          />
+                          <span>Want to Watch</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 4px">
+                          <input
+                            type="checkbox"
+                            id="advListWatched"
+                            disabled
+                            aria-disabled="true"
+                          />
+                          <span>Already Watched</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="meta-muted" role="note">
+                      🔒 Pro feature - upgrade to unlock advanced notifications
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Layout Section -->
+            <section id="layout" class="settings-section">
+              <div class="settings-subsection">
+                <h3 class="settings-title">
+                  Art <span data-i18n="layout_settings">Layout Settings</span>
+                </h3>
+                <p class="settings-description" data-i18n="layout_description">
+                  Customize how your lists and cards are displayed
+                </p>
+
+                <h4 class="settings-subtitle" data-i18n="core_features">📋 Core Features</h4>
+                <p class="settings-description" data-i18n="basic_layout_customization">
+                  Basic layout customization available to all users
+                </p>
+
+                <div class="settings-control-group">
+                  <label class="settings-checkbox-label">
+                    <input type="checkbox" id="condensedMode" class="settings-checkbox" />
+                    <span class="settings-checkbox-text" data-i18n="condensed_list_view"
+                      >Condensed list view (more items per screen)</span
+                    >
+                  </label>
+                  <p class="settings-hint" data-i18n="show_more_items_per_screen">
+                    Show more items per screen by reducing card spacing and padding
+                  </p>
+                </div>
+
+                <div class="settings-control-group">
+                  <label class="settings-checkbox-label">
+                    <input type="checkbox" id="showPosters" class="settings-checkbox" checked />
+                    <span class="settings-checkbox-text" data-i18n="show_posters"
+                      >Show movie/TV show posters</span
+                    >
+                  </label>
+                  <p class="settings-hint" data-i18n="display_poster_images">
+                    Display poster images for each show and movie in your lists
+                  </p>
+                </div>
+
+                <div class="settings-control-group">
+                  <div class="settings-toggle-group">
+                    <label class="settings-label" data-i18n="theme_preference"
+                      >Theme Preference</label
+                    >
+                    <div class="theme-toggle-container">
+                      <button
+                        id="themeToggleBtn"
+                        class="btn btn--secondary theme-toggle-btn"
+                        data-action="toggle-theme"
+                      >
+                        <span id="themeToggleIcon">🌙</span>
+                        <span id="themeToggleText" data-i18n="dark_mode">Dark Mode</span>
+                      </button>
+                      <p class="settings-hint" data-i18n="theme_toggle_hint">
+                        Click to switch between light and dark themes
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-control-group">
+                  <label for="settingCuratedRows" class="settings-label" data-i18n="home_page_lists"
+                    >Home Page TV/Movie Lists</label
+                  >
+                  <div class="settings-input-group">
+                    <input
+                      type="number"
+                      id="settingCuratedRows"
+                      name="curatedRows"
+                      min="1"
+                      max="3"
+                      value="3"
+                      class="settings-input settings-input-number"
+                    />
+                    <span class="settings-hint">(1-3)</span>
+                    <span id="curatedRowsStatus" class="settings-status">Auto-saves</span>
+                  </div>
+                  <p class="settings-hint" data-i18n="number_of_curated_sections">
+                    Number of curated recommendation sections to show on the home page
+                  </p>
+                </div>
+
+                <div class="settings-control-group">
+                  <label
+                    for="settingCurrentlyWatchingLimit"
+                    class="settings-label"
+                    data-i18n="currently_watching_preview_limit"
+                    >Currently Watching Preview Limit</label
+                  >
+                  <div class="settings-input-group">
+                    <input
+                      type="number"
+                      id="settingCurrentlyWatchingLimit"
+                      name="currentlyWatchingLimit"
+                      min="5"
+                      max="20"
+                      value="12"
+                      class="settings-input settings-input-number"
+                    />
+                    <span class="settings-hint">(5-20)</span>
+                    <span id="currentlyWatchingLimitStatus" class="settings-status"
+                      >Auto-saves</span
+                    >
+                  </div>
+                  <p class="settings-hint" data-i18n="number_of_currently_watching">
+                    Number of currently watching shows to display on the home page preview
+                  </p>
+                </div>
+
+                <div class="settings-control-group settings-control-group--feature">
+                  <div class="settings-feature-card">
+                    <div class="settings-feature-header">
+                      <label class="settings-checkbox-label settings-checkbox-label--feature">
+                        <input
+                          type="checkbox"
+                          id="enableEpisodeTracking"
+                          class="settings-checkbox settings-checkbox--feature"
+                        />
+                        <span
+                          class="settings-checkbox-text settings-checkbox-text--feature"
+                          data-i18n="enable_episode_tracking"
+                          >Movie Enable Episode Tracking</span
+                        >
+                      </label>
+                      <div class="settings-feature-badge" data-i18n="recommended">Recommended</div>
+                    </div>
+                    <p
+                      class="settings-hint settings-hint--feature"
+                      data-i18n="allow_tracking_of_individual"
+                    >
+                      Track individual episodes for TV series with detailed progress monitoring
+                      (opt-in per series)
+                    </p>
+                    <div class="settings-feature-details">
+                      <p class="settings-feature-benefit" data-i18n="episode_tracking_benefits">
+                        • Track your progress through each season<br />• Get notifications for new
+                        episodes<br />• See detailed watching statistics
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-subsection">
+                <h4 class="settings-subtitle" data-i18n="pro_layout_features">
+                  ⭐ Pro Layout Features
+                </h4>
+                <p class="settings-description" data-i18n="advanced_layout_and_theming">
+                  Advanced layout and theming features for Pro users
+                </p>
+
+                <div class="settings-control-group">
+                  <h5 class="settings-label" data-i18n="theme_packs">Art Theme Packs</h5>
+                  <p class="settings-hint" data-i18n="choose_a_visual_theme">
+                    Choose a visual theme for your Flicklet experience. Pro users get access to
+                    premium themes.
+                  </p>
+                  <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
+                    <label for="themePackSelect" style="font-weight: 500" data-i18n="theme"
+                      >Theme:</label
+                    >
+                    <select
+                      id="themePackSelect"
+                      aria-label="Choose theme"
+                      style="padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px"
+                    >
+                      <option value="classic" selected>Classic</option>
+                      <option value="dark" disabled aria-disabled="true">Dark Pro 🔒</option>
+                      <option value="neon" disabled aria-disabled="true">Neon Pro 🔒</option>
+                      <option value="minimal" disabled aria-disabled="true">Minimal Pro 🔒</option>
+                    </select>
+                    <div class="meta-muted" role="note" data-i18n="pro_unlocks_more_themes">
+                      🔒 Pro unlocks more themes
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Data Section -->
+            <section id="data" class="settings-section">
+              <div class="settings-subsection">
+                <h3 class="settings-title">
+                  💾 <span data-i18n="data_management">Data Management</span>
+                </h3>
+                <p class="settings-description" data-i18n="data_description">
+                  Export, import, or reset your data
+                </p>
+
+                <h4 class="settings-subtitle" data-i18n="core_features">📋 Core Features</h4>
+                <p class="settings-description" data-i18n="basic_data_management">
+                  Basic data management features available to all users
+                </p>
+
+                <div class="settings-control-group">
+                  <button
+                    id="exportBtn"
+                    class="btn btn--secondary"
+                    aria-label="Export data to JSON"
+                  >
+                    📤 <span data-i18n="export_json">Export JSON</span>
+                  </button>
+                  <p class="settings-hint" data-i18n="download_a_complete_backup">
+                    Download a complete backup of your lists and settings as a JSON file
+                  </p>
+                </div>
+
+                <div class="settings-control-group">
+                  <input type="file" id="importInput" accept=".json,application/json" hidden />
+                  <button
+                    id="importBtn"
+                    class="btn btn--secondary"
+                    aria-label="Import data from JSON"
+                  >
+                    📥 <span data-i18n="import_json">Import JSON</span>
+                  </button>
+                  <p class="settings-hint" data-i18n="restore_your_data">
+                    Restore your data from a previously exported Flicklet backup file
+                  </p>
+                </div>
+
+                <div class="settings-control-group">
+                  <h4 class="settings-subtitle">🚫 Not Interested List</h4>
+                  <p class="settings-description">
+                    Manage items you don't want to see in recommendations
+                  </p>
+
+                  <div class="not-interested-controls">
+                    <button id="viewNotInterestedBtn" class="btn btn--secondary">
+                      Eye View Not Interested Items
+                    </button>
+                    <button id="clearNotInterestedBtn" class="btn btn--danger">🗑️ Clear All</button>
+                  </div>
+
+                  <div id="notInterestedList" class="not-interested-list" style="display: none">
+                    <div class="not-interested-list__header">
+                      <h5>Items you're not interested in:</h5>
+                      <button id="closeNotInterestedBtn" class="btn btn--sm btn--secondary">
+                        ×
+                      </button>
+                    </div>
+                    <div id="notInterestedItems" class="not-interested-items"></div>
+                  </div>
+
+                  <p class="settings-hint">
+                    Items marked as "Not Interested" won't appear in your Discover recommendations
+                  </p>
+                </div>
+
+                <div class="settings-control-group">
+                  <button
+                    id="shareOpenBtn"
+                    class="btn btn--secondary"
+                    data-action="share-lists"
+                    data-share-title="Flicklet - My List"
+                    data-share-url=""
+                    title="Share your lists"
+                    aria-label="Share your TV and movie lists"
+                  >
+                    🔗 <span data-i18n="share_lists">Share Lists</span>
+                  </button>
+                  <p class="settings-hint" data-i18n="generate_a_shareable_text">
+                    Generate a shareable text list of your TV shows and movies to send to friends
+                  </p>
+                </div>
+
+                <div class="settings-control-group">
+                  <button
+                    id="resetBtn"
+                    class="btn btn--danger"
+                    aria-label="Reset all data (requires confirmation)"
+                  >
+                    🗑️ <span data-i18n="reset_all_data">Reset All Data</span>
+                  </button>
+                  <p class="settings-hint" data-i18n="permanently_delete_all">
+                    ⚠️ Permanently delete all your lists, settings, and data. This cannot be undone.
+                  </p>
+                </div>
+              </div>
+
+              <div class="settings-subsection">
+                <h4 class="settings-subtitle" data-i18n="pro_data_features">
+                  ⭐ Pro Data Features
+                </h4>
+                <p class="settings-description" data-i18n="advanced_data_management">
+                  Advanced data management features for Pro users
+                </p>
+
+                <div class="settings-control-group">
+                  <button
+                    class="btn"
+                    data-pro="required"
+                    data-pro-mode="hide"
+                    data-pro-feature="export-csv"
+                  >
+                    📊 <span data-i18n="export_csv_pro">Export CSV (Pro)</span>
+                  </button>
+                  <p class="settings-hint" data-i18n="export_your_data_csv">
+                    Export your data in CSV format for use in spreadsheets (Pro feature)
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <!-- Pro Section -->
+            <section id="pro" class="settings-section">
+              <div class="settings-subsection">
+                <h3 class="settings-title">
+                  ⭐ <span data-i18n="pro_features">Pro Features</span>
+                </h3>
+                <p class="settings-description" data-i18n="pro_description">
+                  Unlock advanced features and premium content with Flicklet Pro
+                </p>
+
+                <div class="settings-control-group">
+                  <button id="previewProBtn" class="btn btn--primary" onclick="toggleProPreview()">
+                    ⭐ <span data-i18n="preview_pro_features">Preview Pro Features</span>
+                  </button>
+                  <p class="settings-hint" data-i18n="pro_hint">
+                    Toggle Pro features on/off to see what's available without purchasing
+                  </p>
+                </div>
+
+                <div class="settings-control-group">
+                  <button
+                    class="btn"
+                    data-pro="required"
+                    data-pro-mode="disable"
+                    data-pro-feature="extra-trivia"
+                  >
+                    Brain <span data-i18n="extra_trivia_pro">Extra Trivia (Pro)</span>
+                  </button>
+                  <p class="settings-hint" data-i18n="access_additional_trivia">
+                    Access additional trivia questions and behind-the-scenes content (Pro feature)
+                  </p>
+                </div>
+
+                <div class="settings-control-group">
+                  <button
+                    id="exportCsvBtn"
+                    class="btn"
+                    data-pro="required"
+                    data-pro-mode="disable"
+                    data-pro-feature="export-csv"
+                    onclick="exportToCSV()"
+                  >
+                    📊 <span data-i18n="export_csv_pro">Export CSV (Pro)</span>
+                  </button>
+                  <p class="settings-hint" data-i18n="export_your_data_csv">
+                    Export your data in CSV format for use in spreadsheets (Pro feature)
+                  </p>
+                </div>
+
+                <div class="settings-control-group">
+                  <h4 class="settings-subtitle">
+                    * <span data-i18n="pro_features_include">Pro Features Include:</span>
+                  </h4>
+                  <p class="settings-hint">
+                    Advanced features and premium content available with Flicklet Pro subscription
+                  </p>
+                  <div id="proFeaturesList" class="settings-pro-features"></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- About Section -->
+            <section id="about" class="settings-section">
+              <div class="settings-subsection">
+                <h3 class="settings-title" data-i18n="about_unique4u">🏠 About Unique4U</h3>
+                <p class="settings-description" data-i18n="were_not_here_to_reinvent">
+                  We're not here to reinvent the wheel - we're here to make the wheel less squeaky.
+                  At Unique4U, our rule is simple: keep it simple. The world already has enough apps
+                  that feel like a second job to use. We'd rather give you tools that just… work.
+                </p>
+                <p class="settings-description" data-i18n="everything_we_build">
+                  Everything we build has its own personality, but they all live under one roof: a
+                  people-first, all-inclusive, slightly offbeat house we call Unique4U. If it's fun,
+                  useful, and a little different from the pack - it belongs here.
+                </p>
+              </div>
+
+              <div class="settings-subsection">
+                <h3 class="settings-title" data-i18n="about_the_creators">👥 About the Creators</h3>
+                <p class="settings-description" data-i18n="were_pam_and_travis">
+                  We're Pam and Travis. Think of us as casual builders with a shared allergy to
+                  overcomplication. We make things because we need them, and we figure you probably
+                  do too.
+                </p>
+                <p class="settings-description" data-i18n="pam_once_trained_dolphins">
+                  Pam once trained dolphins (true story) and also happens to be really good with
+                  numbers. Travis studied English and Philosophy, which means he can overthink and
+                  explain it in writing, then somehow turn that into practical business know-how.
+                  Together, we're like a mash-up of "creative meets operations" - and that combo
+                  lets us build apps that are simple, useful, and not boring.
+                </p>
+              </div>
+
+              <div class="settings-subsection">
+                <h3 class="settings-title" data-i18n="about_the_app">📱 About the App</h3>
+                <p class="settings-description" data-i18n="heres_the_deal">
+                  Here's the deal: you want to remember what you're watching without needing a PhD
+                  in App Navigation. We built this because we got tired of two bad options - messy
+                  notes on our phones or bloated apps that make you log your "episode 7 mid-season
+                  thoughts." (Hard pass.)
+                </p>
+                <p class="settings-description">
+                  <strong>Data Attribution:</strong> This product uses the TMDB API but is not
+                  endorsed or certified by TMDB.
+                </p>
+                <p class="settings-description" data-i18n="so_we_made_this_instead">
+                  So we made this instead:
+                </p>
+                <ul style="margin: 16px 0; padding-left: 20px" class="u-fg">
+                  <li style="margin-bottom: 8px">
+                    <strong>Stupidly easy.</strong> Open it, add your show, done.
+                  </li>
+                  <li style="margin-bottom: 8px">
+                    <strong>Always free at the core.</strong> No paywalls for the basics.
+                  </li>
+                  <li style="margin-bottom: 8px">
+                    <strong>Friend-proof sharing.</strong> Copy your list and drop it in a text when
+                    someone asks, "What should I watch?"
+                  </li>
+                </ul>
+                <p class="settings-description" data-i18n="if_you_watch_tv">
+                  If you watch TV or movies and don't want to make it a hobby just to track them,
+                  this app's for you. Simple lists, zero drama.
+                </p>
+              </div>
+
+              <div class="settings-subsection">
+                <h3 class="settings-title">
+                  💬 <span data-i18n="share_your_thoughts">Share Your Thoughts</span>
+                </h3>
+                <p class="settings-description" data-i18n="feedback_working">
+                  Share your thoughts! Give us app feedback, tell us what's working (or not), share
+                  a quote for our rotation, make a confession, submit a video (describe your video
+                  idea and we'll get back to you), or just vent. We're listening!
+                </p>
+
+                <form
+                  name="feedback"
+                  method="POST"
+                  data-netlify="true"
+                  netlify-honeypot="bot-field"
+                  class="settings-form"
+                  action="/thank-you"
+                  onsubmit="console.log('🔍 Form onsubmit called'); return false;"
+                >
+                  <input type="hidden" name="form-name" value="feedback" />
+                  <input type="hidden" name="theme" id="feedbackThemeInput" />
+                  <div style="display: none">
+                    <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+                  </div>
+
+                  <div class="settings-control-group">
+                    <label for="feedbackMessage" class="settings-label" data-i18n="your_message"
+                      >Your Message</label
+                    >
+                    <textarea
+                      id="feedbackMessage"
+                      name="message"
+                      class="settings-textarea"
+                      placeholder="Share your thoughts, feedback, quotes, or just vent! We're listening."
+                      rows="3"
+                      required
+                    ></textarea>
+                    <p class="settings-hint">
+                      Your feedback helps us improve Flicklet. All messages are read and
+                      appreciated!
+                    </p>
+                    <button type="submit" class="btn btn--primary">
+                      📤 <span data-i18n="share_it">Share It!</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </section>
+          </div>
+          <!-- end .settings-container -->
+
+          <!-- Settings Action Buttons -->
+          <div
+            class="settings-actions"
+            style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px"
+          >
+            <button id="settingsSave" class="btn btn--primary" disabled>Save</button>
+            <button id="settingsCancel" class="btn btn--secondary" disabled>Cancel</button>
+            <button id="settingsReset" class="btn btn--link">Reset to Defaults</button>
+          </div>
         </div>
-        <!-- end .settings-container -->
-        
-        <!-- Settings Action Buttons -->
-        <div class="settings-actions" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
-          <button id="settingsSave" class="btn btn--primary" disabled>Save</button>
-          <button id="settingsCancel" class="btn btn--secondary" disabled>Cancel</button>
-          <button id="settingsReset" class="btn btn--link">Reset to Defaults</button>
-        </div>
-      </div>
-      <!-- end #settingsSection -->
+        <!-- end #settingsSection -->
       </main>
       <!-- end panels -->
-
     </div>
     <!-- end #appRoot -->
 
     <!-- Share Selection Modal -->
+    <div
+      id="shareSelectionModal"
+      class="share-modal-backdrop"
+      style="
+        display: none;
+        z-index: 15000;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+      "
+    >
       <div
-        id="shareSelectionModal"
-        class="share-modal-backdrop"
+        class="share-modal-content"
         style="
-          display: none;
-          z-index: 15000;
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.5);
+          max-width: 800px;
+          max-height: 80vh;
+          z-index: 15001;
+          position: relative;
+          background: white;
+          border-radius: 8px;
+          padding: 20px;
+          margin: 20px auto;
+          pointer-events: auto;
         "
       >
-        <div
-          class="share-modal-content"
-          style="
-            max-width: 800px;
-            max-height: 80vh;
-            z-index: 15001;
-            position: relative;
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px auto;
-            pointer-events: auto;
-          "
-        >
-          <h3>🔗 <span data-i18n="share_selected">Share Selected Items</span></h3>
+        <h3>🔗 <span data-i18n="share_selected">Share Selected Items</span></h3>
 
-          <div class="select-all-controls card-surface" style="margin-bottom: 20px; padding: 15px">
-            <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center">
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 8px;
-                  cursor: pointer;
-                  pointer-events: auto;
-                "
-              >
-                <input
-                  type="checkbox"
-                  id="selectAllWatching"
-                  style="pointer-events: auto; cursor: pointer"
-                />
-                <strong>📺 <span data-i18n="currently_watching">Currently Watching</span></strong>
-              </label>
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 8px;
-                  cursor: pointer;
-                  pointer-events: auto;
-                "
-              >
-                <input
-                  type="checkbox"
-                  id="selectAllWishlist"
-                  style="pointer-events: auto; cursor: pointer"
-                />
-                <strong>+ <span data-i18n="want_to_watch">Want to Watch</span></strong>
-              </label>
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 8px;
-                  cursor: pointer;
-                  pointer-events: auto;
-                "
-              >
-                <input
-                  type="checkbox"
-                  id="selectAllWatched"
-                  style="pointer-events: auto; cursor: pointer"
-                />
-                <strong>✓ <span data-i18n="already_watched">Already Watched</span></strong>
-              </label>
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 8px;
-                  cursor: pointer;
-                  pointer-events: auto;
-                "
-              >
-                <input
-                  type="checkbox"
-                  id="selectAllEverything"
-                  style="pointer-events: auto; cursor: pointer"
-                />
-                <strong>🌟 <span data-i18n="select_all_everything">Select Everything</span></strong>
-              </label>
-            </div>
-          </div>
-
-          <div
-            class="share-items-container"
-            style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; pointer-events: auto"
-          >
-            <div
-              class="share-list-section"
+        <div class="select-all-controls card-surface" style="margin-bottom: 20px; padding: 15px">
+          <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center">
+            <label
               style="
-                margin-bottom: 20px;
-                padding: 10px;
-                border: 1px solid #e0e0e0;
-                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                pointer-events: auto;
               "
             >
-              <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold">
-                📺 <span data-i18n="currently_watching">Currently Watching</span>
-              </h4>
-              <div
-                id="shareWatchingList"
-                class="share-items-list"
-                style="
-                  display: grid;
-                  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                  gap: 10px;
-                "
-              ></div>
-            </div>
-
-            <div
-              class="share-list-section"
+              <input
+                type="checkbox"
+                id="selectAllWatching"
+                style="pointer-events: auto; cursor: pointer"
+              />
+              <strong>📺 <span data-i18n="currently_watching">Currently Watching</span></strong>
+            </label>
+            <label
               style="
-                margin-bottom: 20px;
-                padding: 10px;
-                border: 1px solid #e0e0e0;
-                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                pointer-events: auto;
               "
             >
-              <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold">
-                + <span data-i18n="want_to_watch">Want to Watch</span>
-              </h4>
-              <div
-                id="shareWishlistList"
-                class="share-items-list"
-                style="
-                  display: grid;
-                  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                  gap: 10px;
-                "
-              ></div>
-            </div>
-
-            <div
-              class="share-list-section"
+              <input
+                type="checkbox"
+                id="selectAllWishlist"
+                style="pointer-events: auto; cursor: pointer"
+              />
+              <strong>+ <span data-i18n="want_to_watch">Want to Watch</span></strong>
+            </label>
+            <label
               style="
-                margin-bottom: 20px;
-                padding: 10px;
-                border: 1px solid #e0e0e0;
-                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                pointer-events: auto;
               "
             >
-              <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold">
-                ✓ <span data-i18n="already_watched">Already Watched</span>
-              </h4>
-              <div
-                id="shareWatchedList"
-                class="share-items-list"
-                style="
-                  display: grid;
-                  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                  gap: 10px;
-                "
-              ></div>
-            </div>
-          </div>
-
-          <div
-            class="modal-actions"
-            style="display: flex; gap: 10px; justify-content: center; pointer-events: auto"
-          >
-            <button
-              id="generateShareLinkBtn"
-              class="btn btn--success"
-              style="display: none; pointer-events: auto; cursor: pointer"
-              onclick="generateShareLinkFromSelected()"
+              <input
+                type="checkbox"
+                id="selectAllWatched"
+                style="pointer-events: auto; cursor: pointer"
+              />
+              <strong>✓ <span data-i18n="already_watched">Already Watched</span></strong>
+            </label>
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                pointer-events: auto;
+              "
             >
-              📋 <span data-i18n="generate_share_link">Select what to share</span>
-            </button>
-            <button
-              id="copyShareBtn"
-              class="btn btn--primary"
-              style="display: none; pointer-events: auto; cursor: pointer"
-              onclick="copyShareList()"
-            >
-              📋 Copy
-            </button>
-            <button
-              id="closeShareModalBtn"
-              class="btn btn--secondary"
-              style="pointer-events: auto; cursor: pointer"
-              onclick="closeShareSelectionModal()"
-            >
-              ✖️ <span data-i18n="close">Close</span>
-            </button>
+              <input
+                type="checkbox"
+                id="selectAllEverything"
+                style="pointer-events: auto; cursor: pointer"
+              />
+              <strong>🌟 <span data-i18n="select_all_everything">Select Everything</span></strong>
+            </label>
           </div>
         </div>
+
+        <div
+          class="share-items-container"
+          style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; pointer-events: auto"
+        >
+          <div
+            class="share-list-section"
+            style="
+              margin-bottom: 20px;
+              padding: 10px;
+              border: 1px solid #e0e0e0;
+              border-radius: 4px;
+            "
+          >
+            <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold">
+              📺 <span data-i18n="currently_watching">Currently Watching</span>
+            </h4>
+            <div
+              id="shareWatchingList"
+              class="share-items-list"
+              style="
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 10px;
+              "
+            ></div>
+          </div>
+
+          <div
+            class="share-list-section"
+            style="
+              margin-bottom: 20px;
+              padding: 10px;
+              border: 1px solid #e0e0e0;
+              border-radius: 4px;
+            "
+          >
+            <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold">
+              + <span data-i18n="want_to_watch">Want to Watch</span>
+            </h4>
+            <div
+              id="shareWishlistList"
+              class="share-items-list"
+              style="
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 10px;
+              "
+            ></div>
+          </div>
+
+          <div
+            class="share-list-section"
+            style="
+              margin-bottom: 20px;
+              padding: 10px;
+              border: 1px solid #e0e0e0;
+              border-radius: 4px;
+            "
+          >
+            <h4 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold">
+              ✓ <span data-i18n="already_watched">Already Watched</span>
+            </h4>
+            <div
+              id="shareWatchedList"
+              class="share-items-list"
+              style="
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 10px;
+              "
+            ></div>
+          </div>
+        </div>
+
+        <div
+          class="modal-actions"
+          style="display: flex; gap: 10px; justify-content: center; pointer-events: auto"
+        >
+          <button
+            id="generateShareLinkBtn"
+            class="btn btn--success"
+            style="display: none; pointer-events: auto; cursor: pointer"
+            onclick="generateShareLinkFromSelected()"
+          >
+            📋 <span data-i18n="generate_share_link">Select what to share</span>
+          </button>
+          <button
+            id="copyShareBtn"
+            class="btn btn--primary"
+            style="display: none; pointer-events: auto; cursor: pointer"
+            onclick="copyShareList()"
+          >
+            📋 Copy
+          </button>
+          <button
+            id="closeShareModalBtn"
+            class="btn btn--secondary"
+            style="pointer-events: auto; cursor: pointer"
+            onclick="closeShareSelectionModal()"
+          >
+            ✖️ <span data-i18n="close">Close</span>
+          </button>
+        </div>
       </div>
+    </div>
     <!-- FABs - Will be moved to active tab dock by JavaScript -->
     <button id="settingsTab" class="tab" aria-label="Settings" data-requires-auth>
       ⚙️ <span data-i18n="settings">Settings</span>
@@ -2462,12 +2496,15 @@
       window.addEventListener('DOMContentLoaded', initSettingsState);
     </script>
 
+    <!-- Settings Pro Gate -->
+    <script type="module" src="/js/settings-pro-gate.js"></script>
+
     <!-- Layout validation script -->
     <script>
       window.addEventListener('load', () => {
         setTimeout(() => {
           const header = document.querySelector('#appRoot > header.header');
-          const tabs   = document.querySelector('#appRoot > .tab-container');
+          const tabs = document.querySelector('#appRoot > .tab-container');
           const panels = document.querySelector('#appRoot > .panels');
           const active = panels && panels.querySelector('.tab-section.active');
 
@@ -2479,7 +2516,7 @@
           console.log('[layout]', {
             header_to_tabs_gap: tt - hb,
             tabs_to_panel_gap: pt - tb,
-            panels_is_child_of_appRoot: panels?.parentElement?.id === 'appRoot'
+            panels_is_child_of_appRoot: panels?.parentElement?.id === 'appRoot',
           });
         }, 100);
       });

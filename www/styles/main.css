@@ -4311,13 +4311,15 @@ body {
 /* Layout Shell - Option A: Co-located tabs and panels */
 :root {
   /* Use existing tokens if available; otherwise keep these fallbacks */
-  --header-h: 80px;   /* match current measured header height */
-  --tabs-h:   48px;   /* update to your tab bar height */
+  --header-h: 80px; /* match current measured header height */
+  --tabs-h: 48px; /* update to your tab bar height */
 }
 
 /* Shell */
-html, body, #appRoot { 
-  height: 100%; 
+html,
+body,
+#appRoot {
+  height: 100%;
 }
 #appRoot {
   min-height: 100dvh;
@@ -4347,7 +4349,7 @@ html, body, #appRoot {
 /* Tabs stick under header by default */
 #appRoot > #navigation.tab-container,
 #appRoot > .tab-container,
-#appRoot > [role="tablist"] {
+#appRoot > [role='tablist'] {
   position: sticky;
   top: var(--header-h);
   z-index: 90;
@@ -4358,26 +4360,31 @@ html, body, #appRoot {
 /* When search is shown, push tabs down by its measured height */
 #appRoot.has-search > #navigation.tab-container,
 #appRoot.has-search > .tab-container,
-#appRoot.has-search > [role="tablist"] {
+#appRoot.has-search > [role='tablist'] {
   top: calc(var(--header-h) + var(--search-h, 0px));
 }
 
 /* Panels fill the rest; let window/body be the scroller so sticky works */
 #appRoot > .panels {
   flex: 1 1 auto;
-  overflow: visible;  /* IMPORTANT: sticky parents must not be overflow:auto */
+  overflow: visible; /* IMPORTANT: sticky parents must not be overflow:auto */
   padding: 12px 16px;
   box-sizing: border-box;
 }
 
 /* Show one panel at a time; avoid margin-collapse surprises */
-#appRoot .tab-section { 
-  display: none; 
-  margin: 0; 
+#appRoot .tab-section {
+  display: none;
+  margin: 0;
 }
-#appRoot .tab-section.active { 
-  display: block; 
+#appRoot .tab-section.active {
+  display: block;
 }
-#appRoot .tab-section > *:first-child { 
-  margin-top: 0; 
+#appRoot .tab-section > *:first-child {
+  margin-top: 0;
+}
+
+/* Small buffer when panels sit directly under tabs */
+#appRoot > .tab-container + .panels {
+  padding-top: 8px;
 }
