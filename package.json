@@ -1,6 +1,6 @@
 {
   "name": "flicklet-tv-tracker",
-  "version": "28.62.0",
+  "version": "28.81.0",
   "description": "Flicklet - TV & Movie Tracker",
   "main": "www/index.html",
   "scripts": {
@@ -15,6 +15,8 @@
     "lh:mobile": "lighthouse http://localhost:8000 --form-factor=mobile --output json --output-path=reports/lighthouse/mobile.json",
     "bundle:explore": "source-map-explorer 'www/**/*.js' --html reports/bundle.html",
     "validate:encoding": "node scripts/validate-encoding.js",
+    "qa": "node qa/run.js",
+    "qa:report": "node qa/run.js --report",
     "prepare": "husky install"
   },
   "dependencies": {

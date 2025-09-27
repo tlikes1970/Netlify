@@ -654,6 +654,29 @@ body {
   padding: 0 !important;
 }
 
+/* Handle .hidden class on tabs - show tab but hide text for mobile optimization */
+.tab.hidden {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  width: 32px !important;
+  height: 44px !important;
+  min-width: 32px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  overflow: hidden !important;
+}
+
+.tab.hidden span,
+.tab.hidden .tab-badge {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
 /* Override any search-related hiding */
 body.has-search .tab-container,
 body.has-search #navigation,
