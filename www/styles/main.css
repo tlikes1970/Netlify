@@ -4468,9 +4468,11 @@ body,
 #appRoot > header.header {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000; /* Higher than all content sections */
   margin: 0; /* no collapsing gaps */
   height: var(--header-h);
+  background: var(--bg, #ffffff); /* Ensure solid background */
+  border-bottom: 2px solid var(--primary, #e91e63); /* Visual separation */
 }
 
 /* Search sticks under header when visible */
@@ -4478,8 +4480,9 @@ body,
 #appRoot > .top-search {
   position: sticky;
   top: var(--header-h);
-  z-index: 95;
+  z-index: 900; /* Below header (1000) but above content */
   margin: 0;
+  background: var(--bg, #ffffff); /* Ensure solid background */
 }
 
 /* Search row within search container also sticky */
@@ -4496,7 +4499,7 @@ body,
 #appRoot > [role='tablist'] {
   position: sticky;
   top: var(--header-h);
-  z-index: 100; /* Higher than search row to ensure visibility */
+  z-index: 800; /* Below header (1000) and search (900) but above content */
   margin: 0;
   height: var(--tabs-h);
   background: var(--bg) !important; /* Ensure solid background */
@@ -4522,6 +4525,8 @@ body,
 #appRoot .tab-section {
   display: none;
   margin: 0;
+  position: relative;
+  z-index: 1; /* Below header, search, and tabs */
 }
 #appRoot .tab-section.active {
   display: block;
