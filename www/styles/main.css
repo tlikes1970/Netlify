@@ -4487,7 +4487,7 @@ body,
   top: 120px; /* Match new header height */
   z-index: 900; /* Below header (1000) but above content */
   margin: 0;
-  margin-top: 130px; /* Account for fixed header - perfect spacing */
+  margin-top: 130px; /* Perfect spacing - confirmed by user */
   background: var(--bg, #ffffff); /* Ensure solid background */
   padding: 16px 0; /* Add padding to make it visible */
   border-bottom: 1px solid var(--border, #e5e7eb); /* Visual separation */
@@ -4566,7 +4566,7 @@ body,
 #appRoot .tab-section {
   display: none;
   margin: 0;
-  margin-top: calc(120px + var(--tabs-h)); /* Account for fixed header and tabs */
+  margin-top: 20px; /* Perfect spacing - confirmed by user */
   position: relative;
   z-index: 1; /* Below header, search, and tabs */
   background: var(--bg, #ffffff); /* Ensure solid background */
