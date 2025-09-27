@@ -32,10 +32,18 @@ export function initTabs() {
     });
   }
 
-  // Initial activation - find the first visible panel
-  const initial = panels.keys().next().value || panelIds[0];
-  if (initial) {
+  // Initial activation - always start with home section
+  const initial = 'homeSection';
+  if (panels.has(initial)) {
     activate(initial);
+    console.log('[nav-init] Activated initial tab:', initial);
+  } else {
+    // Fallback to first available panel
+    const fallback = panels.keys().next().value || panelIds[0];
+    if (fallback) {
+      activate(fallback);
+      console.log('[nav-init] Activated fallback tab:', fallback);
+    }
   }
 
   // Wire events

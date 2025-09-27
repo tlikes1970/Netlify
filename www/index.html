@@ -222,9 +222,20 @@
     <script>
       // Force light theme to fix color readability issues
       document.documentElement.setAttribute('data-theme', 'light');
-      document.body.setAttribute('data-theme', 'light');
-      document.body.classList.remove('dark-mode', 'mardi');
-      document.body.classList.add('light-mode');
+      
+      // Wait for body to be available
+      if (document.body) {
+        document.body.setAttribute('data-theme', 'light');
+        document.body.classList.remove('dark-mode', 'mardi');
+        document.body.classList.add('light-mode');
+      } else {
+        // Wait for DOM ready
+        document.addEventListener('DOMContentLoaded', () => {
+          document.body.setAttribute('data-theme', 'light');
+          document.body.classList.remove('dark-mode', 'mardi');
+          document.body.classList.add('light-mode');
+        });
+      }
       
       // Override any theme settings
       if (window.ThemeManager) {
@@ -239,21 +250,38 @@
       
       console.log('🎨 Forced light theme for better readability');
       
-      // Debug tab visibility
+      // Debug tab visibility and force home tab active
       setTimeout(() => {
         const tabContainer = document.querySelector('#navigation, .tab-container, [role="tablist"]');
         const tabs = document.querySelectorAll('.tab, [role="tab"]');
+        const homeTab = document.querySelector('#homeTab');
+        const homeSection = document.querySelector('#homeSection');
+        
         console.log('🔍 Tab Debug:', {
           container: tabContainer,
           containerVisible: tabContainer ? getComputedStyle(tabContainer).display : 'not found',
           containerZIndex: tabContainer ? getComputedStyle(tabContainer).zIndex : 'not found',
           tabCount: tabs.length,
+          homeTab: homeTab,
+          homeSection: homeSection,
+          homeSectionVisible: homeSection ? getComputedStyle(homeSection).display : 'not found',
           tabs: Array.from(tabs).map(t => ({
             id: t.id,
             visible: getComputedStyle(t).display,
-            zIndex: getComputedStyle(t).zIndex
+            zIndex: getComputedStyle(t).zIndex,
+            ariaSelected: t.getAttribute('aria-selected'),
+            active: t.classList.contains('active')
           }))
         });
+        
+        // Force home tab to be active and visible
+        if (homeTab && homeSection) {
+          homeTab.setAttribute('aria-selected', 'true');
+          homeTab.classList.add('active');
+          homeSection.hidden = false;
+          homeSection.style.display = '';
+          console.log('🏠 Forced home tab active and visible');
+        }
       }, 1000);
     </script>
     <script type="module" src="/js/inline-script-10.js"></script>
