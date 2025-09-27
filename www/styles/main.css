@@ -4487,7 +4487,7 @@ body,
   top: 120px; /* Match new header height */
   z-index: 900; /* Below header (1000) but above content */
   margin: 0;
-  margin-top: 120px; /* Account for fixed header */
+  margin-top: 130px; /* Account for fixed header - perfect spacing */
   background: var(--bg, #ffffff); /* Ensure solid background */
   padding: 16px 0; /* Add padding to make it visible */
   border-bottom: 1px solid var(--border, #e5e7eb); /* Visual separation */
