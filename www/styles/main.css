@@ -4489,14 +4489,20 @@ body,
   margin: 0;
   margin-top: 120px; /* Account for fixed header */
   background: var(--bg, #ffffff); /* Ensure solid background */
+  padding: 16px 0; /* Add padding to make it visible */
+  border-bottom: 1px solid var(--border, #e5e7eb); /* Visual separation */
 }
 
 /* Search row within search container also sticky */
 #desktop-search-row,
 .search-row {
   position: sticky;
-  top: var(--header-h);
+  top: 120px; /* Match new header height */
   z-index: 95; /* Lower than tabs to not cover them */
+  padding: 0 16px; /* Add horizontal padding */
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 /* Tabs stick under header by default */
