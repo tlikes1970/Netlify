@@ -4307,3 +4307,77 @@ body {
 .menu-item:hover {
   background: var(--bg-page);
 }
+
+/* Layout Shell - Option A: Co-located tabs and panels */
+:root {
+  /* Use existing tokens if available; otherwise keep these fallbacks */
+  --header-h: 80px;   /* match current measured header height */
+  --tabs-h:   48px;   /* update to your tab bar height */
+}
+
+/* Shell */
+html, body, #appRoot { 
+  height: 100%; 
+}
+#appRoot {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* Header sticks at top */
+#appRoot > header.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  margin: 0; /* no collapsing gaps */
+  height: var(--header-h);
+}
+
+/* Search sticks under header when visible */
+#appRoot > #search-container.top-search,
+#appRoot > .top-search {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 95;
+  margin: 0;
+}
+
+/* Tabs stick under header by default */
+#appRoot > #navigation.tab-container,
+#appRoot > .tab-container,
+#appRoot > [role="tablist"] {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 90;
+  margin: 0;
+  height: var(--tabs-h);
+}
+
+/* When search is shown, push tabs down by its measured height */
+#appRoot.has-search > #navigation.tab-container,
+#appRoot.has-search > .tab-container,
+#appRoot.has-search > [role="tablist"] {
+  top: calc(var(--header-h) + var(--search-h, 0px));
+}
+
+/* Panels fill the rest; let window/body be the scroller so sticky works */
+#appRoot > .panels {
+  flex: 1 1 auto;
+  overflow: visible;  /* IMPORTANT: sticky parents must not be overflow:auto */
+  padding: 12px 16px;
+  box-sizing: border-box;
+}
+
+/* Show one panel at a time; avoid margin-collapse surprises */
+#appRoot .tab-section { 
+  display: none; 
+  margin: 0; 
+}
+#appRoot .tab-section.active { 
+  display: block; 
+}
+#appRoot .tab-section > *:first-child { 
+  margin-top: 0; 
+}

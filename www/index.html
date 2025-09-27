@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet v28.76 - TV & Movie Tracker</title>
+    <title>Flicklet v28.78 - TV & Movie Tracker</title>
     <meta name="description" content="Search, track, and rate shows & films fast." />
     <meta name="build" content="latest" />
 
@@ -214,6 +214,9 @@
     <script type="module" src="/js/functions.js"></script>
     <script type="module" src="/js/app.js"></script>
     <script type="module" src="/js/inline-script-10.js"></script>
+
+    <!-- Layout helpers -->
+    <script type="module" src="/js/layout/search-sticky.js"></script>
 
     <!-- TMDB Image utilities -->
     <script type="module" src="/scripts/tmdb-images.js"></script>
@@ -813,7 +816,7 @@
 
   <body>
     <!-- Skip Links for Accessibility -->
-    <a href="#main" class="skip-link">Skip to main content</a>
+    <a href="#panels" class="skip-link">Skip to main content</a>
     <a href="#search" class="skip-link">Skip to search</a>
     <a href="#navigation" class="skip-link">Skip to navigation</a>
 
@@ -828,7 +831,7 @@
           <div class="header-center">
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
-            <span class="version-display">v28.76</span>
+            <span class="version-display">v28.77</span>
           </div>
           <div class="header-right">
             <div id="accountContext" class="account-context" aria-live="polite"></div>
@@ -1302,11 +1305,9 @@
         </div>
       </div>
       <!-- end #homeSection -->
-    </div>
-    <!-- end #appRoot -->
 
-    <!-- Main sections outside of #appRoot to fix nesting -->
-    <main id="main" role="main">
+      <!-- Panels container for all tab sections -->
+      <main id="panels" class="panels" role="main">
       <!-- Watching -->
       <div id="watchingSection" class="tab-section" style="display: none">
         <div class="section">
@@ -2035,10 +2036,22 @@
           </section>
         </div>
         <!-- end .settings-container -->
+        
+        <!-- Settings Action Buttons -->
+        <div class="settings-actions" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+          <button id="settingsSave" class="btn btn--primary" disabled>Save</button>
+          <button id="settingsCancel" class="btn btn--secondary" disabled>Cancel</button>
+          <button id="settingsReset" class="btn btn--link">Reset to Defaults</button>
+        </div>
       </div>
       <!-- end #settingsSection -->
+      </main>
+      <!-- end panels -->
 
-      <!-- Share Selection Modal -->
+    </div>
+    <!-- end #appRoot -->
+
+    <!-- Share Selection Modal -->
       <div
         id="shareSelectionModal"
         class="share-modal-backdrop"
@@ -2243,8 +2256,6 @@
           </div>
         </div>
       </div>
-    </main>
-
     <!-- FABs - Will be moved to active tab dock by JavaScript -->
     <button id="settingsTab" class="tab" aria-label="Settings" data-requires-auth>
       ⚙️ <span data-i18n="settings">Settings</span>
@@ -2430,6 +2441,47 @@
             setTimeout(loadFlickWordStats, 100);
           }
         });
+      });
+    </script>
+
+    <!-- Settings Schema Renderer -->
+    <script type="module">
+      import { initSettings } from '/js/settings-renderer.js';
+      window.addEventListener('DOMContentLoaded', initSettings);
+    </script>
+
+    <!-- Settings Effects -->
+    <script type="module">
+      import { initSettingsEffects } from '/js/settings-effects.js';
+      window.addEventListener('DOMContentLoaded', initSettingsEffects);
+    </script>
+
+    <!-- Settings State -->
+    <script type="module">
+      import { initSettingsState } from '/js/settings-state.js';
+      window.addEventListener('DOMContentLoaded', initSettingsState);
+    </script>
+
+    <!-- Layout validation script -->
+    <script>
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const header = document.querySelector('#appRoot > header.header');
+          const tabs   = document.querySelector('#appRoot > .tab-container');
+          const panels = document.querySelector('#appRoot > .panels');
+          const active = panels && panels.querySelector('.tab-section.active');
+
+          const hb = Math.round(header?.getBoundingClientRect().bottom ?? NaN);
+          const tt = Math.round(tabs?.getBoundingClientRect().top ?? NaN);
+          const tb = Math.round(tabs?.getBoundingClientRect().bottom ?? NaN);
+          const pt = Math.round(active?.getBoundingClientRect().top ?? NaN);
+
+          console.log('[layout]', {
+            header_to_tabs_gap: tt - hb,
+            tabs_to_panel_gap: pt - tb,
+            panels_is_child_of_appRoot: panels?.parentElement?.id === 'appRoot'
+          });
+        }, 100);
       });
     </script>
   </body>
