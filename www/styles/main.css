@@ -4572,14 +4572,6 @@ body,
   position: relative;
   z-index: 1; /* Below header, search, and tabs */
   background: var(--bg, #ffffff); /* Ensure solid background */
-  max-height: 4300px !important; /* Perfect height - confirmed by user */
-  overflow-y: auto !important; /* Allow scrolling if content exceeds height */
-}
-
-/* Specific rule for home section to ensure height is applied */
-#appRoot #homeSection {
-  max-height: 4300px !important;
-  overflow-y: auto !important;
 }
 #appRoot .tab-section.active {
   display: block;

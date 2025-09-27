@@ -5826,6 +5826,8 @@ body[data-theme='forest'] {
 /* Reduce flickering during home loading */
 #homeSection {
   min-height: 400px; /* Prevent layout shift */
+  max-height: 4300px; /* Perfect height - confirmed by user */
+  overflow-y: auto; /* Allow scrolling if content exceeds height */
 }
 
 #homeSection .section {
