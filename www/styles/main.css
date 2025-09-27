@@ -4534,6 +4534,34 @@ body,
   box-sizing: border-box;
 }
 
+/* Quote Bar Styling */
+.quote-bar {
+  display: block !important;
+  background: var(--surface, #f9f9f9);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 16px 0;
+  text-align: center;
+  font-style: italic;
+  color: var(--text-secondary, #666);
+}
+
+.quote-marquee {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.quote-text {
+  display: inline-block;
+  animation: marquee 20s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
 /* Show one panel at a time; avoid margin-collapse surprises */
 #appRoot .tab-section {
   display: none;
