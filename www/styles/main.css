@@ -4472,21 +4472,22 @@ body,
   right: 0 !important;
   z-index: 10000 !important; /* Much higher than all content sections */
   margin: 0 !important; /* no collapsing gaps */
-  height: var(--header-h) !important;
+  height: 120px !important; /* Increased height to accommodate all elements */
   background: var(--bg, #ffffff) !important; /* Ensure solid background */
   border-bottom: 2px solid var(--primary, #e91e63) !important; /* Visual separation */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; /* Add shadow for separation */
   width: 100% !important;
+  padding: 16px 0 !important; /* Add padding to prevent cut-off */
 }
 
 /* Search sticks under header when visible */
 #appRoot > #search-container.top-search,
 #appRoot > .top-search {
   position: sticky;
-  top: var(--header-h);
+  top: 120px; /* Match new header height */
   z-index: 900; /* Below header (1000) but above content */
   margin: 0;
-  margin-top: var(--header-h); /* Account for fixed header */
+  margin-top: 120px; /* Account for fixed header */
   background: var(--bg, #ffffff); /* Ensure solid background */
 }
 
@@ -4503,10 +4504,10 @@ body,
 #appRoot > .tab-container,
 #appRoot > [role='tablist'] {
   position: sticky;
-  top: var(--header-h);
+  top: 120px; /* Match new header height */
   z-index: 800; /* Below header (1000) and search (900) but above content */
   margin: 0;
-  margin-top: var(--header-h); /* Account for fixed header */
+  margin-top: 120px; /* Account for fixed header */
   height: var(--tabs-h);
   background: var(--bg) !important; /* Ensure solid background */
   border-bottom: 1px solid var(--border) !important; /* Visual separation */
@@ -4531,7 +4532,7 @@ body,
 #appRoot .tab-section {
   display: none;
   margin: 0;
-  margin-top: calc(var(--header-h) + var(--tabs-h)); /* Account for fixed header and tabs */
+  margin-top: calc(120px + var(--tabs-h)); /* Account for fixed header and tabs */
   position: relative;
   z-index: 1; /* Below header, search, and tabs */
   background: var(--bg, #ffffff); /* Ensure solid background */
