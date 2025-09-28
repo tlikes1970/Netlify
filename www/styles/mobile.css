@@ -939,7 +939,7 @@
 
 /* Mobile header fix: neutralize legacy grid and center title */
 body.mobile-v1 header.header {
-  display: flex !important;
+  display: flex; /* PART2C */
   flex-direction: column !important;
   align-items: center !important;
   gap: 8px !important;
@@ -953,8 +953,8 @@ body.mobile-v1 header.header .app-title {
 }
 
 body.mobile-v1 header.header .username-snark {
-  min-width: 0 !important;
-  width: 100% !important;
+  min-width: 0; /* PART2C */
+  width: 100%; /* PART2C */
   text-align: center !important;
   order: 2 !important; /* stack under title */
 }

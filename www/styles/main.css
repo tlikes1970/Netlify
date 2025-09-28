@@ -567,6 +567,11 @@ body {
   --text-secondary: #666 !important;
   --card: #ffffff !important;
   --border: #e5e7eb !important;
+  
+  /* PART2A: Container-aware FAB positioning */
+  --container-max: 1200px; /* tune if you use a different max */
+  --container-pad: 16px;
+  --fab-gap: 16px;
   --accent: #2563eb !important;
   --primary: #e91e63 !important;
   --surface: #f9f9f9 !important;
@@ -607,74 +612,56 @@ body {
 .tab-container,
 #navigation,
 [role="tablist"] {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  position: sticky !important;
-  top: var(--header-h) !important;
-  z-index: 100 !important;
-  background: #ffffff !important;
-  border-bottom: 1px solid #e5e7eb !important;
-  height: 48px !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  display: flex;
+  visibility: visible;
+  opacity: 1;
+  position: sticky;
+  top: var(--header-h);
+  z-index: 100;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  height: 48px;
+  margin: 0;
+  padding: 0;
 }
 
 .tab-container .tab,
 #navigation .tab,
 [role="tablist"] .tab {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  color: #1f2937 !important;
-  background: transparent !important;
-  border: none !important;
-  padding: 12px 16px !important;
-  margin: 0 !important;
-  flex: 1 1 0 !important;
-  min-height: 44px !important;
-  align-items: center !important;
-  justify-content: center !important;
+  display: flex;
+  visibility: visible;
+  opacity: 1;
+  color: #1f2937;
+  background: transparent;
+  border: none;
+  padding: 12px 16px;
+  margin: 0;
+  flex: 1 1 0;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
 }
 
 /* OVERRIDE SEARCH HIDING - Force tabs to always be visible */
 .tab-container,
 #navigation,
 [role="tablist"] {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  position: sticky !important;
-  top: var(--header-h) !important;
-  z-index: 100 !important;
-  background: #ffffff !important;
-  border-bottom: 1px solid #e5e7eb !important;
-  height: 48px !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  display: flex;
+  visibility: visible;
+  opacity: 1;
+  position: sticky;
+  top: var(--header-h);
+  z-index: 100;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  height: 48px;
+  margin: 0;
+  padding: 0;
 }
 
-/* Handle .hidden class on tabs - show tab but hide text for mobile optimization */
+/* Handle .hidden class on tabs - simplified without !important */
 .tab.hidden {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  position: relative !important;
-  width: 32px !important;
-  height: 44px !important;
-  min-width: 32px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  overflow: hidden !important;
-}
-
-.tab.hidden span,
-.tab.hidden .tab-badge {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
+  display: none;
 }
 
 /* Override any search-related hiding */
@@ -684,9 +671,9 @@ body.has-search [role="tablist"],
 #appRoot.has-search .tab-container,
 #appRoot.has-search #navigation,
 #appRoot.has-search [role="tablist"] {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  display: flex;
+  visibility: visible;
+  opacity: 1;
 }
 
 /* Base text elements */
@@ -933,7 +920,7 @@ body.mardi {
 
 .mardi .tab-container .tab:hover {
   background: linear-gradient(45deg, var(--mardi3), var(--mardi1)) !important;
-  transform: scale(1.05) !important;
+  transform: scale(1.05); /* PART2C */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
@@ -1299,7 +1286,7 @@ body.mardi {
 }
 
 .preview-card {
-  flex: 0 0 var(--home-card-width-desktop) !important;
+  flex: 0 0 var(--home-card-w); /* H1 */
   background: var(--bg);
   border-radius: 6px;
   border: 1px solid var(--border);
@@ -1321,8 +1308,8 @@ body.mardi {
 }
 
 .preview-card-poster {
-  width: var(--home-card-width-desktop) !important; /* Using home card width */
-  height: var(--home-card-height-desktop) !important; /* Using home card height */
+  width: var(--home-card-w); /* H1 */
+  height: var(--home-card-h); /* H1 */
   background: var(--border);
   position: relative;
   overflow: hidden;
@@ -1448,7 +1435,7 @@ body.mardi {
 
 /* Unified Card Base Styles */
 .unified-card {
-  flex: 0 0 var(--home-card-width-desktop) !important;
+  flex: 0 0 var(--home-card-w); /* H1 */
   background: var(--bg);
   border-radius: 8px;
   border: 1px solid var(--border);
@@ -1480,8 +1467,8 @@ body.mardi {
 
 /* Poster Area */
 .unified-card-poster {
-  width: var(--home-card-width-desktop) !important;
-  height: var(--home-card-height-desktop) !important;
+  width: var(--home-card-w); /* H1 */
+  height: var(--home-card-h); /* H1 */
   background: var(--border);
   position: relative;
   overflow: hidden;
@@ -1976,14 +1963,14 @@ body.mardi {
 /* Mobile Adjustments */
 @media (max-width: 768px) {
   .unified-card {
-    width: var(--home-card-width-mobile) !important;
-    max-width: var(--home-card-width-mobile) !important;
-    min-width: var(--home-card-width-mobile) !important;
+    width: var(--home-card-w); /* H1 */
+    max-width: var(--home-card-w); /* H1 */
+    min-width: var(--home-card-w); /* H1 */
   }
 
   .unified-card-poster {
-    width: var(--home-card-width-mobile) !important;
-    height: var(--home-card-height-mobile) !important;
+    width: var(--home-card-w); /* H1 */
+    height: var(--home-card-h); /* H1 */
   }
 
   .unified-card-actions {
@@ -4269,14 +4256,14 @@ body.mardi {
 html,
 body {
   /* prevent global overflow from creating unwanted stacking contexts */
-  overflow: visible !important;
+  overflow: visible;
   overscroll-behavior: none;
 }
 
 /* neutralize wrapper that was forcing hidden/auto overflow */
 .supports-safe-area.a11y-v1.layout-mobile-fix.mobile.mobile-v1 {
-  overflow: visible !important;
-  contain: none !important;
+  overflow: visible; /* PART2C */
+  contain: none; /* PART2C */
 }
 
 /* belt-and-suspenders: make intended stacking explicit */
@@ -4453,12 +4440,12 @@ body {
 
 /* Shell */
 html,
-body,
-#appRoot {
+body {
   height: 100%;
 }
 #appRoot {
-  min-height: 100dvh;
+  height: 600vh; /* H1.1: Set to 600vh as requested */
+  min-height: 600vh; /* H1.1: Set to 600vh as requested */
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -4466,26 +4453,26 @@ body,
 
 /* Header sticks at top - force it to stay on top */
 #appRoot > header.header {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  z-index: 10000 !important; /* Much higher than all content sections */
-  margin: 0 !important; /* no collapsing gaps */
-  height: 120px !important; /* Increased height to accommodate all elements */
-  background: var(--bg, #ffffff) !important; /* Ensure solid background */
-  border-bottom: 2px solid var(--primary, #e91e63) !important; /* Visual separation */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; /* Add shadow for separation */
-  width: 100% !important;
-  padding: 16px 0 !important; /* Add padding to prevent cut-off */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10000; /* Much higher than all content sections */
+  margin: 0; /* no collapsing gaps */
+  height: 120px; /* Increased height to accommodate all elements */
+  background: var(--bg, #ffffff); /* Ensure solid background */
+  border-bottom: 2px solid var(--primary, #e91e63); /* Visual separation */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add shadow for separation */
+  width: 100%;
+  padding: 16px 0; /* Add padding to prevent cut-off */
 }
 
 /* Search sticks under header when visible */
 #appRoot > #search-container.top-search,
 #appRoot > .top-search {
   position: sticky;
-  top: 120px; /* Match new header height */
-  z-index: 900; /* Below header (1000) but above content */
+  top: 0; /* Stick to top during scroll */
+  z-index: 10; /* Lower z-index as requested */
   margin: 0;
   margin-top: 130px; /* Perfect spacing - confirmed by user */
   margin-bottom: 20px; /* Consistent spacing between containers */
@@ -4517,8 +4504,8 @@ body,
   margin-top: 120px; /* Account for fixed header */
   margin-bottom: 20px; /* Consistent spacing between containers */
   height: var(--tabs-h);
-  background: var(--bg) !important; /* Ensure solid background */
-  border-bottom: 1px solid var(--border) !important; /* Visual separation */
+  background: var(--bg); /* Ensure solid background */
+  border-bottom: 1px solid var(--border); /* Visual separation */
 }
 
 /* When search is shown, push tabs down by its measured height */
@@ -4585,4 +4572,60 @@ body,
 /* Small buffer when panels sit directly under tabs */
 #appRoot > .tab-container + .panels {
   padding-top: 8px;
+}
+
+/* PART2A: Container-aware FAB positioning */
+.fab-dock { 
+  position: fixed; 
+  inset-block-end: var(--fab-gap);
+  inset-inline-end: calc((100vw - min(var(--container-max), 100vw)) / 2 + var(--container-pad)); 
+  z-index: 50;
+  pointer-events: none; /* clicks pass only to buttons inside */
+}
+
+/* PART3: Scroll-to-top control */
+.scroll-top-btn {
+  position: fixed;
+  inset-block-end: clamp(16px, 2vh, 24px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  width: 40px; height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #ddd);
+  background: var(--bg-elevated, #fff);
+  color: var(--text, #333);
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  opacity: 0; visibility: hidden;
+  transition: opacity .2s ease, visibility .2s ease, transform .08s ease;
+}
+.scroll-top-btn.is-visible {
+  opacity: 1; visibility: visible;
+}
+.scroll-top-btn:focus-visible {
+  outline: 2px solid var(--primary, #2563eb);
+  outline-offset: 2px;
+}
+.scroll-top-btn:active {
+  transform: translateX(-50%) scale(.98);
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-top-btn { transition: none; }
+}
+
+.fab-dock .fab-stack { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 12px; 
+  pointer-events: auto;
+}
+
+.fab { 
+  position: static; /* buttons themselves don't need positioning; the dock handles it */
+}
+
+@media (max-width: 768px) {
+  .fab-dock { 
+    inset-inline-end: var(--container-pad);
+  }
 }

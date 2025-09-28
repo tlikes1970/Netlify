@@ -1,0 +1,259 @@
+/* H1: Layout variables */
+:root {
+  --container-max: 1200px;
+  --gutter: 16px;
+  --section-gap: 24px;
+  --section-gap-lg: 32px;
+  --row-gap: 16px;
+
+  /* Card sizing defaults; tune to current card templates */
+  --home-card-w: 180px;
+  --home-card-h: 270px;
+}
+@media (min-width: 768px) {
+  :root { --section-gap: 28px; --row-gap: 20px; --home-card-w: 200px; --home-card-h: 300px; } /* H1 */
+}
+@media (min-width: 1200px) {
+  :root { --home-card-w: 220px; --home-card-h: 330px; } /* H1 */
+}
+
+/* H1: Page container */
+.home-content {
+  max-width: min(var(--container-max), 100%);
+  margin-inline: auto;
+  padding-inline: max(var(--gutter), env(safe-area-inset-left));
+  padding-block: var(--section-gap);
+}
+
+/* H1.1: Quote bar positioned between search and tabs */
+.quote-bar, #quote-bar {
+  margin: 0 0 5px 0; /* H1.1: No gap above, normal below */
+  padding: 8px 12px;
+  border-radius: 8px;
+  background-color: var(--bg-elevated, #f8f9fa);
+  border: 1px solid var(--border, #ddd);
+  display: block;
+}
+
+/* H1: Home groups */
+.home-group {
+  margin-block: 0 var(--section-gap);
+  padding: 12px;
+  border-radius: 10px;
+}
+
+/* H1: Preview rows */
+.home-group .preview-row {
+  margin-block: 8px;
+}
+.preview-row-scroll,
+.row-inner,
+.home-preview-row .row-inner {
+  display: flex;
+  gap: var(--row-gap);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding-block: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.preview-row-scroll > *,
+.row-inner > * {
+  scroll-snap-align: start;
+}
+
+/* H1: Card sizing alignment (use vars; do not hardcode px in other files) */
+.preview-card,
+.unified-card,
+.tab-section .list-container .poster-card {
+  width: var(--home-card-w);
+  min-width: var(--home-card-w);
+  max-width: var(--home-card-w);
+}
+.preview-card-poster,
+.unified-card-poster {
+  height: var(--home-card-h);
+}
+
+/* H1: Community two-column grid (desktop) / stack (mobile) */
+.community-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--row-gap);
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .community-content { grid-template-columns: 1fr; } /* H1 */
+}
+
+/* H1: Community left video is responsive */
+.community-left iframe,
+.community-left .video-frame,
+.community-left .embed-responsive {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  display: block;
+}
+
+/* H1: Community right "games" grid */
+.community-right #home-games,
+.community-right .games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--row-gap);
+}
+
+/* H1: Kill legacy width hacks on columns left by old CSS (scoped to home) */
+.home-content .left-column,
+.home-content .flickword-card {
+  width: auto;
+  max-width: none;
+}
+
+/* H1: Remove any forced order/width from bingeMeter in home */
+.home-content #bingeMeter {
+  order: 0;
+  flex-basis: auto;
+  display: block;
+}
+
+/* H1: Ensure no horizontal scroll on page container */
+html, body { overflow-x: hidden; } /* keeps layout mishaps invisible; real fixes above */
+
+/* H1.1: home wrapper sizing */
+#homeSection.home-content {
+  display: block;              /* ensure it participates in normal flow */
+  min-height: 600vh;  /* much larger as requested */
+}
+#panels { isolation: isolate; } /* guard against stray transforms creating new stacking/containing blocks */
+/* Kill any accidental height caps on home area */
+#homeSection { height: auto; max-height: none; overflow: visible; }
+
+/* If a card-ish "page shell" wraps home content and has a shadow, make sure it grows */
+#homeSection .page-shell, #homeSection .container, #homeSection .wrapper {
+  min-height: 100%; height: auto; overflow: visible;
+}
+
+/* H1.1: Normalize vertical rhythm (even spacing between containers) */
+/* Section spacing */
+.home-content .home-group { margin: 0 0 var(--section-gap); padding: 12px; border-radius: 10px; }
+.home-content .home-group + .home-group { margin-top: var(--section-gap); }
+#quote-bar, .quote-bar { margin: 0 0 var(--section-gap-lg); }
+
+/* Remove legacy extra space from rows */
+.home-content .preview-row,
+.home-content .home-preview-row { margin: 0; }
+.home-content .preview-row-scroll,
+.home-content .row-inner { min-height: 0; align-items: stretch; }
+
+/* No surprise giant boxes */
+#next-up-row, .next-up-row { min-height: 0; height: auto; }
+
+/* H1.1: Header spacing - override main.css fixed positioning */
+#appRoot > header.header, header.header, .header {
+  padding-bottom: 20px;
+  margin-bottom: 5px !important; /* H1.1: Minimal space between header and search - force override */
+  position: static !important; /* H1.1: Make header scroll with page - force override */
+  z-index: auto !important; /* H1.1: Remove high z-index - force override */
+  top: auto !important; /* H1.1: Remove fixed positioning - force override */
+  left: auto !important; /* H1.1: Remove fixed positioning - force override */
+  right: auto !important; /* H1.1: Remove fixed positioning - force override */
+  height: auto !important; /* H1.1: Remove fixed height - force override */
+  width: auto !important; /* H1.1: Remove fixed width - force override */
+  box-shadow: none !important; /* H1.1: Remove fixed header shadow - force override */
+  border-bottom: 2px solid var(--primary, #e91e63) !important; /* H1.1: Add bottom border */
+}
+
+/* H1.1: Search bar sticky behavior */
+.top-search, #search-container.top-search {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: var(--bg, #fff);
+  border-bottom: 1px solid var(--border, #ddd);
+  margin-top: 0; /* H1.1: Override mobile hotfix margin-top: 130px */
+  margin-bottom: 0; /* H1.1: Quote bar handles spacing */
+}
+
+/* H1.1: Override main.css margin-top: 130px rule with higher specificity */
+#appRoot .top-search, #appRoot #search-container.top-search {
+  margin-top: 0; /* H1.1: Force override of main.css 130px margin */
+}
+
+/* H1.1: Override main-container padding that creates gap between search and quote */
+#appRoot.main-container {
+  padding-bottom: 0; /* H1.1: Remove padding that creates gap */
+}
+
+/* H1.1: Force tabs close to quote bar with higher specificity */
+#appRoot #navigation.tab-container, #appRoot .tab-container[role="tablist"] {
+  margin-top: 2px; /* H1.1: Force minimal gap to quote bar */
+}
+
+/* H1.1: Tabs: even, tab-like, not sticky */
+/* Scope to the nav container so we don't touch other tablists */
+#navigation.tab-container, .tab-container[role="tablist"], [role="tablist"].tab-container {
+  display: flex !important; 
+  gap: 8px; 
+  align-items: flex-end;
+  border-bottom: 1px solid var(--border, #ddd);
+  padding: 8px 4px; 
+  margin: 2px 0 20px 0; /* H1.1: Minimal top margin to quote bar, bottom margin for content */
+  position: static !important; /* H1.1: Force tabs to scroll with page */
+  top: auto !important; /* H1.1: Remove any sticky positioning */
+  z-index: auto !important; /* H1.1: Remove high z-index */
+  height: auto !important;
+  min-height: 40px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+.tab-container [role="tab"], .tab-container .tab {
+  display: inline-flex !important; 
+  align-items: center; 
+  justify-content: center;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  border-radius: 8px 8px 0 0;
+  min-width: 64px;
+  font-weight: 600;
+  cursor: pointer;
+  height: auto !important;
+  min-height: 32px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+.tab-container [role="tab"].active,
+.tab-container [aria-selected="true"],
+.tab-container .tab.active {
+  border-color: var(--border, #ddd);
+  border-bottom-color: var(--primary, #2563eb);
+  background: var(--bg-elevated, #fff);
+  color: var(--text, #111);
+}
+/* Hover affordance */
+.tab-container [role="tab"]:hover,
+.tab-container .tab:hover { background: color-mix(in oklab, var(--bg-elevated,#fff) 90%, #000 10% / 6%); }
+
+/* H1.1: Duplicate up-arrow: keep #scrollTopBtn, hide/remove any legacy arrow */
+/* Common legacy selectors to neutralize; safe, layout-only */
+.legacy-up, .up-arrow, .scroll-to-top, .fab .icon-up, .fab-up { display: none; }
+
+/* H1.1: Guard against some ancestor creating a containing block that clips children */
+/* If #appRoot or .panels accidentally has transform/contain set elsewhere, neutralize here */
+#appRoot, #appRoot > .panels { transform: none; contain: none; }
+
+/* H1.1: Set #appRoot to 600vh height as requested */
+#appRoot {
+  height: 600vh;
+  min-height: 600vh;
+}
+
+/* H1.1: FABs scroll with page (not fixed to viewport) */
+.fab, .fab-left, .fab-stack, .fab-dock {
+  position: absolute;
+  top: auto;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+}

@@ -5,11 +5,13 @@
  * Update Path: CSS custom property --search-h and appRoot.has-search class
  * Dependencies: #appRoot, #search-container.top-search, CSS sticky layout
  */
-(function(){
-  const root   = document.querySelector('#appRoot');
-  const search = document.querySelector('#appRoot > #search-container.top-search, #appRoot > .top-search');
+(function () {
+  const root = document.querySelector('#appRoot');
+  const search = document.querySelector(
+    '#appRoot > #search-container.top-search, #appRoot > .top-search',
+  );
 
-  function visible(element){
+  function visible(element) {
     if (!element) return false;
     const cs = getComputedStyle(element);
     if (cs.display === 'none' || cs.visibility === 'hidden') return false;
@@ -17,7 +19,7 @@
     return r.width > 0 && r.height > 0;
   }
 
-  function apply(){
+  function apply() {
     if (!root) return;
     const on = visible(search);
     if (on) {
@@ -35,7 +37,7 @@
   window.addEventListener('resize', apply);
 
   /* If app code toggles the search region, emit one of these events */
-  for (const eventName of ['app:view:changed','search:toggle','search:updated']) {
+  for (const eventName of ['app:view:changed', 'search:toggle', 'search:updated']) {
     window.addEventListener(eventName, apply);
   }
 })();

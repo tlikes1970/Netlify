@@ -1873,7 +1873,7 @@ body {
   border-bottom: 1px solid var(--border);
   animation: tabContainerSlideIn 0.8s ease-out 0.4s both;
   position: relative;
-  z-index: 100 !important;
+  z-index: 100; /* PART2C */
   overflow-x: auto;
   background: var(--bg) !important;
   border-bottom: 1px solid var(--border) !important;
@@ -1883,7 +1883,7 @@ body {
 
 /* Ensure tabs are always visible during search */
 .tab-container {
-  display: flex !important;
+  display: flex; /* PART2C */
 }
 
 /* Search results positioning - below tabs, above content */
@@ -3087,7 +3087,7 @@ select,
 /* Individual FAB buttons */
 .fab,
 .fab-left {
-  position: static !important; /* Force static positioning within rail */
+  position: static; /* Force static positioning within rail */
   display: grid;
   place-items: center;
   border: none;
@@ -3223,7 +3223,7 @@ select,
 
 /* Right side - Theme FABs stack */
 .fab-dock .fab-stack {
-  display: flex !important;
+  display: flex;
   flex-direction: column;
   gap: 12px;
   align-items: center;
@@ -3256,34 +3256,35 @@ select,
 /* Ensure FABs are not page-fixed anymore */
 .fab,
 .fab-left {
-  position: relative !important;
+  position: relative;
 }
 
+/* PART2A: removed layout !important; visuals unchanged */
 /* Hide FABs initially - they'll be shown when moved to dock */
 .fab-left {
-  display: none !important;
+  display: none;
 }
 
 .fab-stack {
-  display: none !important;
+  display: none;
 }
 
 /* Show FABs when they're in the dock */
 .fab-dock .fab-left {
-  display: block !important;
-  background: none !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
+  display: block;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 .fab-dock .fab-stack {
-  display: flex !important;
+  display: flex;
 }
 
 .fab-dock .fab {
-  background: none !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 /* Specific override for settings FAB to remove any background */
@@ -3408,20 +3409,14 @@ select,
 
 /* Override flex: 1 for hidden tabs - show compact version */
 .tab-container .tab.hidden {
-  flex: 0 0 32px !important;
-  min-width: 32px !important;
-  max-width: 32px !important;
-  display: flex !important;
-  visibility: visible !important;
+  display: none; /* PART2C: remove width forcing/visibility hacks */
   opacity: 1 !important;
 }
 
 /* Override inline-flex for hidden tabs on desktop - show compact version */
 @media (min-width: 769px) {
   .tab-container .tab.hidden {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+    display: none; /* PART2C */
   }
 }
 
@@ -3712,11 +3707,7 @@ button:focus-visible,
 /* Override grid display for hidden tabs on mobile - show compact version */
 @media (max-width: 768px) {
   .tab-container .tab.hidden {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    flex: 0 0 32px !important;
-    min-width: 32px !important;
+    display: none; /* PART2C */
     max-width: 32px !important;
   }
 }
@@ -5826,8 +5817,6 @@ body[data-theme='forest'] {
 /* Reduce flickering during home loading */
 #homeSection {
   min-height: 400px; /* Prevent layout shift */
-  max-height: 4300px; /* Perfect height - confirmed by user */
-  overflow-y: auto; /* Allow scrolling if content exceeds height */
 }
 
 #homeSection .section {

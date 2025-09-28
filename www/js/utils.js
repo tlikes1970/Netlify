@@ -183,13 +183,13 @@ function validateAppData(data) {
   }
 
   // Validate settings
-  const settings = data.settings || {};
+  let settings = data.settings || {};
   if (typeof settings !== 'object') {
     settings = {};
   }
 
   // Validate TV data
-  const tv = data.tv || {};
+  let tv = data.tv || {};
   if (typeof tv !== 'object') {
     tv = {};
   }
@@ -200,7 +200,7 @@ function validateAppData(data) {
   });
 
   // Validate movies data
-  const movies = data.movies || {};
+  let movies = data.movies || {};
   if (typeof movies !== 'object') {
     movies = {};
   }

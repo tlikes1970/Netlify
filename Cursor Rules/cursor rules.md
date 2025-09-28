@@ -67,6 +67,17 @@ www/
 
 ## Coding Standards & Conventions
 
+### CSS Layout !important Policy
+
+**No layout `!important` on core containers** (html, body, #appRoot, .panels, #homeSection, header, #navigation/.tab-container, .top-search, .fab-dock/.fab). 
+Allowed only for: third-party inline overrides, a11y utilities, OS/UA bug. 
+Every exception MUST include: `/* WHY | OWNER | EXPIRES */`.
+Preflight validation required; STOP on selector mismatch.
+
+**Up-arrow control**: appears only after the tab bar exits viewport; fixed bottom-center; no layout !important; created via JS (idempotent) and styled in CSS.
+Preflight validation required for sentinel tablist. If missing, fallback shows after 400px scroll.
+Do not change sticky search or FAB positioning.
+
 ### JavaScript Style
 
 ```javascript
