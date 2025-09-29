@@ -173,16 +173,14 @@
   content: "Pro feature";
   position: absolute;
   bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #374151;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
+  left: 0;
+  transform: translateY(-6px);
+  background: #111827;
+  color: #fff;
   font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 6px;
   white-space: nowrap;
-  z-index: 10;
-  margin-bottom: 4px;
 }
 
 /* Overflow Menu */

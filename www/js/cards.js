@@ -4,7 +4,8 @@
  */
 
 // Import data API functions
-let saveUserRating, currentUserIsPro, proActionsForContext;
+let saveUserRating, currentUserIsPro, getActionsForContext, openProUpsell;
+let dispatchAction;
 
 // Load data API functions dynamically
 (async () => {
@@ -12,42 +13,54 @@ let saveUserRating, currentUserIsPro, proActionsForContext;
     const dataApi = await import('./data-api.js');
     saveUserRating = dataApi.saveUserRating;
     currentUserIsPro = dataApi.currentUserIsPro;
-    proActionsForContext = dataApi.proActionsForContext;
+    getActionsForContext = dataApi.getActionsForContext;
+    openProUpsell = dataApi.openProUpsell;
+    
+    const actionsApi = await import('./actions.js');
+    dispatchAction = actionsApi.dispatchAction;
   } catch (e) {
-    console.warn('[MediaCard] Could not load data-api.js, using fallbacks');
+    console.warn('[MediaCard] Could not load data-api.js or actions.js, using fallbacks');
     // Fallback implementations
     saveUserRating = async (id, rating) => {
       console.log(`[MediaCard] Fallback saveUserRating for ${id}: ${rating}`);
       return Promise.resolve(true);
     };
     currentUserIsPro = () => !!window.appSettings?.user?.isPro;
-    proActionsForContext = (ctx) => {
-      const defaults = {
+    getActionsForContext = (ctx) => {
+      const fallbacks = {
         watching: [
-          { id: 'move-to-wishlist', label: 'Want to Watch', icon: '📥', primary: true },
-          { id: 'move-to-not', label: 'Not Interested', icon: '🚫', primary: true },
-          { id: 'details', label: 'Details', icon: '🔎', primary: false }
+          { id: 'move-to-wishlist', label: 'Want to Watch', icon: '📥', primary: true, pro: false, handler: 'move-to-wishlist' },
+          { id: 'move-to-not', label: 'Not Interested', icon: '🚫', primary: true, pro: false, handler: 'move-to-not' },
+          { id: 'details', label: 'Details', icon: '🔎', primary: false, pro: false, handler: 'details' }
         ],
         wishlist: [
-          { id: 'move-to-watching', label: 'Move to Watching', icon: '▶️', primary: true },
-          { id: 'move-to-not', label: 'Not Interested', icon: '🚫', primary: true },
-          { id: 'details', label: 'Details', icon: '🔎', primary: false }
+          { id: 'move-to-watching', label: 'Move to Watching', icon: '▶️', primary: true, pro: false, handler: 'move-to-watching' },
+          { id: 'move-to-not', label: 'Not Interested', icon: '🚫', primary: true, pro: false, handler: 'move-to-not' },
+          { id: 'details', label: 'Details', icon: '🔎', primary: false, pro: false, handler: 'details' }
         ],
         watched: [
-          { id: 'undo-to-wishlist', label: 'Back to Want', icon: '↩️', primary: true },
-          { id: 'move-to-not', label: 'Not Interested', icon: '🚫', primary: true },
-          { id: 'details', label: 'Details', icon: '🔎', primary: false }
+          { id: 'undo-to-wishlist', label: 'Back to Want', icon: '↩️', primary: true, pro: false, handler: 'undo-to-wishlist' },
+          { id: 'move-to-not', label: 'Not Interested', icon: '🚫', primary: true, pro: false, handler: 'move-to-not' },
+          { id: 'details', label: 'Details', icon: '🔎', primary: false, pro: false, handler: 'details' }
         ],
         discover: [
-          { id: 'add-to-wishlist', label: 'Add to Want', icon: '➕', primary: true },
-          { id: 'move-to-not', label: 'Not Interested', icon: '🚫', primary: true },
-          { id: 'details', label: 'Details', icon: '🔎', primary: false }
+          { id: 'add-to-wishlist', label: 'Add to Want', icon: '➕', primary: true, pro: false, handler: 'add-to-wishlist' },
+          { id: 'move-to-not', label: 'Not Interested', icon: '🚫', primary: true, pro: false, handler: 'move-to-not' },
+          { id: 'details', label: 'Details', icon: '🔎', primary: false, pro: false, handler: 'details' }
         ],
         home: [
-          { id: 'details', label: 'Details', icon: '🔎', primary: true }
+          { id: 'details', label: 'Details', icon: '🔎', primary: true, pro: false, handler: 'details' }
         ]
       };
-      return defaults[ctx] || defaults.home;
+      return fallbacks[ctx] || fallbacks.home;
+    };
+    openProUpsell = (contextItem) => {
+      window.dispatchEvent(new CustomEvent('app:upsell:open', { 
+        detail: { source: 'card-action', item: contextItem }
+      }));
+    };
+    dispatchAction = (name, item) => {
+      console.log(`[MediaCard] Fallback dispatchAction: ${name} for ${item.title}`);
     };
   }
 })();
@@ -112,71 +125,58 @@ function bindRating(root, item) {
 
 function renderActions(item, ctx) {
   const isPro = currentUserIsPro();
-  const actions = proActionsForContext(ctx);
+  const actions = getActionsForContext(ctx); // strictly from settings
   const primary = actions.filter(a => a.primary).map(a => btn(a, isPro)).join('');
-  const secondary = actions.filter(a => !a.primary).map(a => ov(a, isPro)).join('');
+  const secondaryItems = actions.filter(a => !a.primary);
+  const secondary = secondaryItems.map(a => ov(a, isPro)).join('');
   
   // Episode tracking for watching tab
   const epi = ctx === 'watching' ? 
-    `<button class="btn" data-action="episode-toggle">📺<span class="label">Episode Tracking</span></button>` : '';
-  
-  // Pro-locked export action
-  const proExport = `<button class="btn locked" aria-disabled="true" title="Pro feature">🔒<span class="label">Export (Pro)</span></button>`;
+    `<button class="btn" data-action="episode-toggle" data-handler="episode-toggle">📺<span class="label">Episode Tracking</span></button>` : '';
   
   // Overflow menu for secondary actions
-  const overflow = secondary ? 
+  const overflow = secondaryItems.length ? 
     `<div class="overflow" aria-expanded="false">
-      <button class="btn" data-overflow-toggle>⋯</button>
+      <button class="btn" data-overflow-toggle aria-label="More actions">⋯</button>
       <div class="overflow-menu">${secondary}</div>
     </div>` : '';
   
-  return primary + epi + proExport + overflow;
+  return primary + epi + overflow;
 }
 
 function btn(a, isPro) {
-  return a.pro && !isPro ? 
-    `<button class="btn locked" aria-disabled="true">🔒<span class="label">${a.label}</span></button>` :
-    `<button class="btn" data-action="${a.id}">${a.icon || ''}<span class="label">${a.label}</span></button>`;
+  return a.pro && !isPro
+    ? `<button class="btn locked" data-locked="${a.id}">🔒<span class="label">${a.label}</span></button>`
+    : `<button class="btn" data-action="${a.id}" data-handler="${a.handler || a.id}">${a.icon || ''}<span class="label">${a.label}</span></button>`;
 }
 
 function ov(a, isPro) {
-  return a.pro && !isPro ? 
-    `<div class="overflow-item" aria-disabled="true">🔒 ${a.label}</div>` :
-    `<a href="#" class="overflow-item" data-action="${a.id}">${a.icon || ''} ${a.label}</a>`;
+  return a.pro && !isPro
+    ? `<div class="overflow-item" data-locked="${a.id}" aria-disabled="true">🔒 ${a.label}</div>`
+    : `<a href="#" class="overflow-item" data-action="${a.id}" data-handler="${a.handler || a.id}">${a.icon || ''} ${a.label}</a>`;
 }
 
 function wireActions(root, item) {
-  root.querySelectorAll('[data-action]').forEach(b => b.addEventListener('click', e => {
-    e.preventDefault();
-    handleAction(b.dataset.action, item);
-  }));
-}
-
-function handleAction(action, item) {
-  console.log(`[MediaCard] Action: ${action} for item: ${item.id}`);
+  // Unlocked actions → dispatch handler
+  root.querySelectorAll('[data-action]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.preventDefault();
+      const handler = b.dataset.handler || b.dataset.action;
+      try { 
+        dispatchAction(handler, item); 
+      } catch(err) { 
+        console.warn('[actions] no handler for', handler, err); 
+      }
+    });
+  });
   
-  switch (action) {
-    case 'move-to-wishlist':
-      if (window.moveItem) window.moveItem(item.id, 'wishlist');
-      break;
-    case 'move-to-watching':
-      if (window.moveItem) window.moveItem(item.id, 'watching');
-      break;
-    case 'add-to-wishlist':
-      if (window.addToListFromCache) window.addToListFromCache(item.id, 'wishlist');
-      break;
-    case 'move-to-not':
-      if (window.removeItemFromCurrentList) window.removeItemFromCurrentList(item.id);
-      break;
-    case 'details':
-      if (window.openTMDBLink) window.openTMDBLink(item.id, item.mediaType);
-      break;
-    case 'episode-toggle':
-      if (window.openEpisodeTrackingModal) window.openEpisodeTrackingModal(item.id);
-      break;
-    default:
-      console.warn(`[MediaCard] Unknown action: ${action}`);
-  }
+  // Locked actions → upsell
+  root.querySelectorAll('[data-locked]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.preventDefault();
+      openProUpsell(item);
+    });
+  });
 }
 
 function svgStar() {
