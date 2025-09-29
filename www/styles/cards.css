@@ -183,6 +183,15 @@
   white-space: nowrap;
 }
 
+.btn[data-action="delete-item"] {
+  border-color: #fca5a5; /* red-300 */
+}
+
+.btn[data-action="delete-item"]:hover {
+  background: #fee2e2; /* red-100 */
+  border-color: #ef4444; /* red-500 */
+}
+
 /* Overflow Menu */
 .overflow {
   position: relative;

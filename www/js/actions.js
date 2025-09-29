@@ -9,17 +9,21 @@ export function dispatchAction(name, item) {
     'move-to-wishlist': () => moveToWishlist(item),
     'move-to-watching': () => moveToWatching(item),
     'undo-to-wishlist': () => undoToWishlist(item),
-    'move-to-not': () => markNotInterested(item),
-    'add-to-wishlist': () => addToWishlist(item),
-    'details': () => openDetails(item),
+    'mark-watched':     () => markWatched(item),
+    'move-to-not':      () => markNotInterested(item),
+    'add-to-wishlist':  () => addToWishlist(item),
+    'details':          () => openDetails(item),
+    'delete-item':      () => deleteItemSafely(item),
+    'export':           () => exportItem?.(item),
+    'share':            () => shareItem?.(item),
+    'recommend':        () => recommendToFriend?.(item),
+    'episode-toggle':   () => openEpisodeModal(item),
     // REAL Pro features from your app
     'smart-notifications': () => openSmartNotifications(item),
     'viewing-journey': () => openViewingJourney(item),
     'advanced-customization': () => openAdvancedCustomization(item),
     'extra-trivia': () => openExtraTrivia(item),
     'pro-preview': () => openProPreview(item),
-    // Episode toggle lives on cards.js as a dedicated button, keep behavior:
-    'episode-toggle': () => openEpisodeModal(item),
   };
   const fn = map[name];
   if (!fn) throw new Error(`Unknown action handler: ${name}`);
@@ -63,6 +67,13 @@ function addToWishlist(item) {
   console.log('[actions] Adding to wishlist:', item.title);
   if (window.addToListFromCache) {
     window.addToListFromCache(item.id, 'wishlist');
+  }
+}
+
+function markWatched(item) {
+  console.log('[actions] Marking as watched:', item.title);
+  if (window.moveItem) {
+    window.moveItem(item.id, 'watched');
   }
 }
 
@@ -148,4 +159,30 @@ function openProPreview(item) {
   }
   // Show Pro preview
   alert(`⭐ Pro Preview for "${item.title}"\n\nToggle Pro features on/off to see what's available without purchasing.`);
+}
+
+// Guarded delete with minimal UX
+function deleteItemSafely(item) {
+  // Prefer your modal; fallback to confirm
+  if (window.openConfirmModal) {
+    return window.openConfirmModal({
+      title: 'Delete item',
+      message: `Remove "${item?.title || 'this title'}" from your lists?`,
+      confirmText: 'Delete',
+      danger: true,
+      onConfirm: () => actuallyDelete(item)
+    });
+  }
+  if (confirm(`Delete "${item?.title || 'this title'}"? This cannot be undone.`)) {
+    return actuallyDelete(item);
+  }
+}
+
+function actuallyDelete(item) {
+  // Implement this with your existing data layer (all lists)
+  // e.g., removeFromAllLists(item.id)
+  if (typeof removeFromAllLists === 'function') return removeFromAllLists(item.id);
+  // Fallback: try individual removals if you exposed them
+  if (typeof removeItem === 'function') return removeItem(item.id);
+  console.warn('[delete] No remover wired for', item);
 }

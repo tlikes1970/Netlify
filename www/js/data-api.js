@@ -8,46 +8,45 @@ export function currentUserIsPro() {
 }
 
 export function getActionsForContext(ctx) {
-  const cfg = window.appSettings?.ui?.actions?.[ctx];
-  if (!Array.isArray(cfg)) {
-    console.warn(`[settings] Missing actions for context: ${ctx}, using fallback`);
-    // Fallback to basic actions if settings not available
-    const fallbacks = {
-      watching: [
-        { id: 'move-to-wishlist', label: 'Want to Watch', icon: '📥', primary: true, pro: false, handler: 'move-to-wishlist' },
-        { id: 'move-to-not', label: 'Not Interested', icon: '🚫', primary: true, pro: false, handler: 'move-to-not' },
-        { id: 'details', label: 'Details', icon: '🔎', primary: false, pro: false, handler: 'details' }
-      ],
-      wishlist: [
-        { id: 'move-to-watching', label: 'Move to Watching', icon: '▶️', primary: true, pro: false, handler: 'move-to-watching' },
-        { id: 'move-to-not', label: 'Not Interested', icon: '🚫', primary: true, pro: false, handler: 'move-to-not' },
-        { id: 'details', label: 'Details', icon: '🔎', primary: false, pro: false, handler: 'details' }
-      ],
-      watched: [
-        { id: 'undo-to-wishlist', label: 'Back to Want', icon: '↩️', primary: true, pro: false, handler: 'undo-to-wishlist' },
-        { id: 'move-to-not', label: 'Not Interested', icon: '🚫', primary: true, pro: false, handler: 'move-to-not' },
-        { id: 'details', label: 'Details', icon: '🔎', primary: false, pro: false, handler: 'details' }
-      ],
-      discover: [
-        { id: 'add-to-wishlist', label: 'Add to Want', icon: '➕', primary: true, pro: false, handler: 'add-to-wishlist' },
-        { id: 'move-to-not', label: 'Not Interested', icon: '🚫', primary: true, pro: false, handler: 'move-to-not' },
-        { id: 'details', label: 'Details', icon: '🔎', primary: false, pro: false, handler: 'details' }
-      ],
-      home: [
-        { id: 'details', label: 'Details', icon: '🔎', primary: true, pro: false, handler: 'details' }
-      ]
-    };
-    return fallbacks[ctx] || fallbacks.home;
-  }
-  // Minimal validation
-  return cfg.filter(a => a && a.id && typeof a.label === 'string').map(a => ({
-    id: a.id, 
-    label: a.label, 
-    icon: a.icon || '', 
-    primary: !!a.primary, 
-    pro: !!a.pro, 
-    handler: a.handler || a.id
-  }));
+  const cfg = Array.isArray(window.appSettings?.ui?.actions?.[ctx])
+    ? window.appSettings.ui.actions[ctx] : [];
+
+  // Baseline required actions per context (all free, primary by default)
+  const baseMap = {
+    watching: [
+      { id:'move-to-wishlist', label:'Want to Watch', icon:'📥', primary:true,  pro:false },
+      { id:'mark-watched',     label:'Watched',       icon:'✅', primary:true,  pro:false },
+      { id:'move-to-not',      label:'Not Interested',icon:'🚫', primary:true,  pro:false },
+      { id:'delete-item',      label:'Delete',        icon:'🗑️', primary:false, pro:false },
+    ],
+    wishlist: [
+      { id:'move-to-watching', label:'Currently Watching', icon:'▶️', primary:true,  pro:false },
+      { id:'mark-watched',     label:'Watched',            icon:'✅', primary:true,  pro:false },
+      { id:'move-to-not',      label:'Not Interested',     icon:'🚫', primary:true,  pro:false },
+      { id:'delete-item',      label:'Delete',             icon:'🗑️', primary:false, pro:false },
+    ],
+    watched: [
+      { id:'move-to-watching', label:'Currently Watching', icon:'▶️', primary:true,  pro:false },
+      { id:'move-to-wishlist', label:'Want to Watch',      icon:'📥', primary:true,  pro:false },
+      { id:'move-to-not',      label:'Not Interested',     icon:'🚫', primary:true,  pro:false },
+      { id:'delete-item',      label:'Delete',             icon:'🗑️', primary:false, pro:false },
+    ],
+    discover: [
+      { id:'delete-item',      label:'Delete',             icon:'🗑️', primary:false, pro:false },
+    ],
+  };
+
+  const baseline = baseMap[ctx] || [];
+  // Merge with settings, keeping first occurrence (baseline priority), normalize fields
+  const merged = [...baseline, ...cfg]
+    .filter(a => a && a.id && typeof a.label === 'string')
+    .reduce((acc,a) => {
+      if (!acc.find(x => x.id === a.id)) acc.push({
+        id:a.id, label:a.label, icon:a.icon||'', primary:!!a.primary, pro:!!a.pro, handler:a.handler||a.id
+      });
+      return acc;
+    }, []);
+  return merged;
 }
 
 export async function saveUserRating(id, rating) {
