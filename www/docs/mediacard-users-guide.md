@@ -1,4 +1,6 @@
-# MediaCard Unified System - User's Guide
+# MediaCard Unified System - Technical Guide
+
+> **📚 For the complete user experience guide, see [Complete User's Guide](./complete-users-guide.md)**
 
 ## Overview
 
