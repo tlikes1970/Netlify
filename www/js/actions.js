@@ -40,7 +40,8 @@ function moveToWishlist(item) {
     console.log('[actions] Calling window.addToListFromCache with:', item.id, 'wishlist');
     window.addToListFromCache(item.id, 'wishlist');
   } else {
-    console.error('[actions] No move function available!');
+    console.warn('[actions] No move function available, using fallback');
+    fallbackMoveItem(item.id, 'wishlist');
   }
 }
 
@@ -53,7 +54,8 @@ function moveToWatching(item) {
     console.log('[actions] Calling window.addToListFromCache with:', item.id, 'watching');
     window.addToListFromCache(item.id, 'watching');
   } else {
-    console.error('[actions] No move function available!');
+    console.warn('[actions] No move function available, using fallback');
+    fallbackMoveItem(item.id, 'watching');
   }
 }
 
@@ -61,6 +63,9 @@ function undoToWishlist(item) {
   console.log('[actions] Undoing to wishlist:', item.title);
   if (window.moveItem) {
     window.moveItem(item.id, 'wishlist');
+  } else {
+    console.warn('[actions] No move function available, using fallback');
+    fallbackMoveItem(item.id, 'wishlist');
   }
 }
 
@@ -193,4 +198,90 @@ function actuallyDelete(item) {
   // Fallback: try individual removals if you exposed them
   if (typeof removeItem === 'function') return removeItem(item.id);
   console.warn('[delete] No remover wired for', item);
+}
+
+// Fallback move function when WatchlistsAdapter isn't loaded yet
+function fallbackMoveItem(itemId, destinationList) {
+  console.log('[actions] Fallback move function called:', itemId, 'to', destinationList);
+  
+  // Ensure appData structure exists
+  if (!window.appData) {
+    window.appData = { tv: {}, movies: {} };
+  }
+  
+  // Find the item in the current data structure
+  let foundItem = null;
+  let sourceList = null;
+  let mediaType = null;
+  
+  // Search through all lists to find the item
+  const lists = ['watching', 'wishlist', 'watched'];
+  for (const list of lists) {
+    // Check TV shows
+    if (window.appData.tv && window.appData.tv[list]) {
+      const item = window.appData.tv[list].find(i => i.id == itemId);
+      if (item) {
+        foundItem = item;
+        sourceList = list;
+        mediaType = 'tv';
+        break;
+      }
+    }
+    // Check movies
+    if (window.appData.movies && window.appData.movies[list]) {
+      const item = window.appData.movies[list].find(i => i.id == itemId);
+      if (item) {
+        foundItem = item;
+        sourceList = list;
+        mediaType = 'movies';
+        break;
+      }
+    }
+  }
+  
+  if (!foundItem) {
+    console.error('[actions] Item not found for fallback move:', itemId);
+    return;
+  }
+  
+  if (sourceList === destinationList) {
+    console.log('[actions] Item already in target list:', destinationList);
+    return;
+  }
+  
+  // Remove from source list
+  const sourceArray = window.appData[mediaType][sourceList];
+  const sourceIndex = sourceArray.findIndex(i => i.id == itemId);
+  if (sourceIndex !== -1) {
+    sourceArray.splice(sourceIndex, 1);
+  }
+  
+  // Add to destination list
+  if (!window.appData[mediaType][destinationList]) {
+    window.appData[mediaType][destinationList] = [];
+  }
+  window.appData[mediaType][destinationList].push(foundItem);
+  
+  // Save data
+  if (typeof window.saveAppData === 'function') {
+    window.saveAppData();
+  }
+  
+  // Emit cards:changed event
+  document.dispatchEvent(new CustomEvent('cards:changed', {
+    detail: {
+      source: 'fallbackMoveItem',
+      action: 'move',
+      itemId: itemId,
+      fromList: sourceList,
+      toList: destinationList
+    }
+  }));
+  
+  // Update UI
+  if (window.FlickletApp && typeof window.FlickletApp.updateUI === 'function') {
+    window.FlickletApp.updateUI();
+  }
+  
+  console.log('[actions] Fallback move completed:', itemId, sourceList, '→', destinationList);
 }
