@@ -2090,6 +2090,11 @@ window.FlickletDebug = window.FlickletDebug || {
         if (!btn) return;
         const action = btn.dataset.action;
 
+        // Skip handling if this is a MediaCard button (new system handles its own events)
+        if (btn.closest('.media-card')) {
+          return;
+        }
+
         // Debug logging for button clicks
         console.log('[App] Button clicked:', {
           action: action,
