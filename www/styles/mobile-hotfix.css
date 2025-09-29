@@ -30,13 +30,14 @@ body {
   padding: 8px 12px; /* give it breathing room */
 }
 
-/* Search row stacks cleanly on small screens */
+/* Search row stays horizontal on small screens */
 #desktop-search-row,
 .search-row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-  align-items: stretch;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 /* Inputs and selects are full-width, readable, and not tiny */
@@ -50,20 +51,30 @@ body {
   font-size: 16px;
 }
 
-/* Buttons: single column, no overflow, consistent height */
+/* Buttons: horizontal layout, consistent height */
 .search-buttons-row,
 .search-area-search,
 .search-area-clear {
-  display: grid;
-  grid-auto-flow: row;
+  display: flex;
+  flex-direction: row;
   gap: 8px;
+  align-items: center;
 }
 .search-buttons-row .btn,
 #searchBtn,
 #clearSearchBtn,
 .search-btn,
 .clear-search-btn {
-  width: 100%;
+  flex: 0 0 auto;
+  min-width: 80px;
+  min-height: 44px;
+  line-height: 1.1;
+}
+
+.genre-filter {
+  flex: 0 0 auto;
+  min-width: 60px;
+  width: 60px;
   min-height: 44px;
   line-height: 1.1;
 }
@@ -171,8 +182,8 @@ body {
 /* Desktop hard override: remove phantom top padding */
 @media (min-width: 769px) {
   body {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
+    padding-top: 0 ;
+    padding-bottom: 0 ;
   }
 }
 /* Normalize sticky search spacing so it doesn't "add" visual gap */
@@ -207,17 +218,17 @@ body {
   .container,
   .shell,
   #appRoot {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
+    padding-top: 0 ;
+    margin-top: 0 ;
   }
   header,
   .top-header,
   .header-bar,
   .app-header {
-    margin-top: 0 !important;
+    margin-top: 0 ;
   }
   .tab-section:first-of-type {
-    margin-top: 20px !important; /* Allow proper spacing below search */
+    margin-top: 20px ; /* Allow proper spacing below search */
   }
 }
 /* Keep sticky search compact */
@@ -249,14 +260,14 @@ main,
 @media (min-width: 769px) {
   html,
   body {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
+    padding-top: 0 ;
+    padding-bottom: 0 ;
   }
 }
 header,
 .top-header,
 .header-bar {
-  margin-top: 0 !important;
+  margin-top: 0 ;
 }
 .top-search {
   margin-top: 0; /* PART2C: sticky handles offset; kill the 130px shove */
@@ -289,17 +300,17 @@ header,
   .container,
   .shell,
   #appRoot {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
+    padding-top: 0 ;
+    margin-top: 0 ;
   }
   header,
   .top-header,
   .header-bar,
   .app-header {
-    margin-top: 0 !important;
+    margin-top: 0 ;
   }
   .tab-section:first-of-type {
-    margin-top: 20px !important; /* Allow proper spacing below search */
+    margin-top: 20px ; /* Allow proper spacing below search */
   }
 }
 /* Keep sticky search compact */

@@ -5,7 +5,7 @@
   /* Mobile font size enforcement - WCAG AA compliance */
   body,
   html {
-    font-size: 16px !important;
+    font-size: 16px;
   }
 
   /* Base text elements - minimum 16px */
@@ -18,7 +18,7 @@
   select,
   textarea,
   label {
-    font-size: 16px !important;
+    font-size: 16px;
   }
 
   /* Smaller elements - minimum 12px */
@@ -28,25 +28,25 @@
   .tag,
   .pill,
   .chip {
-    font-size: 12px !important;
+    font-size: 12px;
   }
 
   /* Headings maintain relative sizing but ensure minimums */
   h1 {
-    font-size: max(2rem, 24px) !important;
+    font-size: max(2rem, 24px);
   }
   h2 {
-    font-size: max(1.5rem, 20px) !important;
+    font-size: max(1.5rem, 20px);
   }
   h3 {
-    font-size: max(1.25rem, 18px) !important;
+    font-size: max(1.25rem, 18px);
   }
   h4 {
-    font-size: max(1.1rem, 16px) !important;
+    font-size: max(1.1rem, 16px);
   }
   h5,
   h6 {
-    font-size: 16px !important;
+    font-size: 16px;
   }
   /* Main container adjustments */
   .main-container {
@@ -91,129 +91,130 @@
 
   /* Mobile search tips - prevent wrapping and overlap */
   .top-search .search-help {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    font-size: 0.75rem !important;
-    line-height: 1.1 !important;
-    margin: 0 !important;
-    padding: 2px 4px !important;
-    background: rgba(0, 0, 0, 0.1) !important;
-    border-radius: 4px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    max-width: 100% !important;
+    position: relative ;
+    top: auto ;
+    left: auto ;
+    font-size: 0.75rem ;
+    line-height: 1.1 ;
+    margin: 0 ;
+    padding: 2px 4px ;
+    background: rgba(0, 0, 0, 0.1) ;
+    border-radius: 4px ;
+    white-space: nowrap ;
+    overflow: hidden ;
+    text-overflow: ellipsis ;
+    max-width: 100% ;
   }
 
   /* Mobile search tips - truncate long text */
   .search-help span[data-i18n='search_tips'] {
-    font-size: 0.75rem !important;
-    line-height: 1.1 !important;
-    display: inline-block !important;
-    max-width: 200px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
+    font-size: 0.75rem ;
+    line-height: 1.1 ;
+    display: inline-block ;
+    max-width: 200px ;
+    overflow: hidden ;
+    text-overflow: ellipsis ;
+    white-space: nowrap ;
   }
 
   /* Also apply to mobile-v1 class */
   .mobile-v1 .top-search .search-help {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    font-size: 0.75rem !important;
-    line-height: 1.1 !important;
-    margin: 0 !important;
-    padding: 2px 4px !important;
-    background: rgba(0, 0, 0, 0.1) !important;
-    border-radius: 4px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    max-width: 100% !important;
+    position: relative ;
+    top: auto ;
+    left: auto ;
+    font-size: 0.75rem ;
+    line-height: 1.1 ;
+    margin: 0 ;
+    padding: 2px 4px ;
+    background: rgba(0, 0, 0, 0.1) ;
+    border-radius: 4px ;
+    white-space: nowrap ;
+    overflow: hidden ;
+    text-overflow: ellipsis ;
+    max-width: 100% ;
   }
 
   .mobile-v1 .search-help span[data-i18n='search_tips'] {
-    font-size: 0.75rem !important;
-    line-height: 1.1 !important;
-    display: inline-block !important;
-    max-width: 200px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
+    font-size: 0.75rem ;
+    line-height: 1.1 ;
+    display: inline-block ;
+    max-width: 200px ;
+    overflow: hidden ;
+    text-overflow: ellipsis ;
+    white-space: nowrap ;
   }
 
   .search-row {
-    display: flex !important;
-    flex-direction: column !important; /* FIXED: Stack input above buttons */
-    gap: 8px !important;
-    margin-top: 0 !important;
-    align-items: stretch !important; /* FIXED: Full width alignment */
+    display: flex ;
+    flex-direction: row ; /* FIXED: Keep horizontal layout on mobile */
+    gap: 8px ;
+    margin-top: 0 ;
+    align-items: stretch ; /* FIXED: Full width alignment */
   }
 
   /* Remove any gaps between search elements */
   .top-search > * {
-    margin-bottom: 0 !important;
+    margin-bottom: 0 ;
   }
 
   .top-search .search-help + * {
-    margin-top: 0 !important;
+    margin-top: 0 ;
   }
 
   .search-input {
-    width: 100% !important; /* FIXED: Full width on its own line */
-    padding: 8px 12px !important;
-    font-size: 16px !important; /* FIXED: Larger font for better mobile UX */
-    min-height: 44px !important; /* FIXED: Better touch target */
-    margin: 0 !important;
-    border-radius: 8px !important;
+    width: 100% ; /* FIXED: Full width on its own line */
+    padding: 8px 12px ;
+    font-size: 16px ; /* FIXED: Larger font for better mobile UX */
+    min-height: 44px ; /* FIXED: Better touch target */
+    margin: 0 ;
+    border-radius: 8px ;
   }
 
   /* Button row - All Genres, Search, Clear on one row */
   .search-row .search-buttons-row {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 8px !important;
-    align-items: center !important;
-    width: 100% !important;
+    display: flex ;
+    flex-direction: row ;
+    gap: 8px ;
+    align-items: center ;
+    width: 100% ;
   }
 
   /* FIXED: Better horizontal layout for search controls */
-  .search-row .genre-filter,
   .search-row .search-btn,
   .search-row .clear-search-btn,
   .search-row .advanced-search-btn {
-    flex: 1 !important; /* FIXED: Equal width distribution */
-    min-width: 0 !important; /* FIXED: Allow shrinking */
-    padding: 8px 12px !important; /* FIXED: Better padding */
-    font-size: 14px !important; /* FIXED: Larger font */
-    min-height: 44px !important; /* FIXED: Better touch target */
-    height: 44px !important;
-    margin: 0 !important;
-    text-align: center !important;
-    border-radius: 8px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    flex: 0 0 auto ; /* FIXED: Don't grow, size to content */
+    min-width: 80px ; /* FIXED: Minimum width for readability */
+    padding: 8px 12px ; /* FIXED: Better padding */
+    font-size: 14px ; /* FIXED: Larger font */
+    min-height: 44px ; /* FIXED: Better touch target */
+    height: 44px ;
+    margin: 0 ;
+    text-align: center ;
+    border-radius: 8px ;
+    white-space: nowrap ;
+    overflow: hidden ;
+    text-overflow: ellipsis ;
   }
 
-  /* All Genres gets slightly more space */
+  /* All Genres compact size */
   .search-row .genre-filter {
-    flex: 1.2 !important;
-    min-width: 80px !important;
+    flex: 0 0 auto ;
+    min-width: 60px ;
+    width: 60px ;
+    max-width: 60px ;
   }
 
   /* Tab adjustments */
   .tab-container {
     padding: 6px;
     gap: 4px;
-    margin: 2px 0 !important;
+    margin: 2px 0 ;
   }
 
   /* Ensure mobile search and tabs are close together */
   .main-container .top-search + .tab-container {
-    margin-top: 2px !important;
+    margin-top: 2px ;
   }
 
   .tab {
@@ -359,7 +360,7 @@
 
   /* Hide desktop-specific elements on mobile */
   .desktop-only {
-    display: none !important;
+    display: none ;
   }
 
   /* Ensure proper touch targets */
@@ -392,43 +393,43 @@
 
   /* Safe-area insets for mobile devices */
   .main-container {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 80px) !important;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 80px) ;
   }
 
   /* FAB positioning with safe-area */
   .fab-dock {
-    bottom: max(8px, env(safe-area-inset-bottom)) !important;
-    padding-left: max(16px, env(safe-area-inset-left)) !important;
-    padding-right: max(16px, env(safe-area-inset-right)) !important;
+    bottom: max(8px, env(safe-area-inset-bottom)) ;
+    padding-left: max(16px, env(safe-area-inset-left)) ;
+    padding-right: max(16px, env(safe-area-inset-right)) ;
   }
 
   /* Settings FAB - bottom left with safe-area */
   .fab-dock .fab-left {
-    margin-left: 0 !important;
-    margin-bottom: 0 !important;
+    margin-left: 0 ;
+    margin-bottom: 0 ;
   }
 
   /* Theme FABs - bottom right with safe-area */
   .fab-dock .fab-stack {
-    margin-right: 0 !important;
-    margin-bottom: 0 !important;
+    margin-right: 0 ;
+    margin-bottom: 0 ;
   }
 
   /* Ensure FABs are minimum 44x44px for touch targets */
   .fab,
   .fab-left {
-    min-width: 44px !important;
-    min-height: 44px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    min-width: 44px ;
+    min-height: 44px ;
+    display: flex ;
+    align-items: center ;
+    justify-content: center ;
   }
 
   /* Card consistency improvements */
   .unified-card,
   .preview-card,
   .show-card {
-    min-height: 120px !important; /* Ensure minimum card height */
+    min-height: 120px ; /* Ensure minimum card height */
   }
 
   /* Poster aspect ratio enforcement */
@@ -436,138 +437,138 @@
   .preview-card-poster,
   .show-poster,
   .poster-placeholder {
-    aspect-ratio: 2 / 3 !important;
-    object-fit: cover !important;
-    min-height: 80px !important; /* Minimum poster height */
+    aspect-ratio: 2 / 3 ;
+    object-fit: cover ;
+    min-height: 80px ; /* Minimum poster height */
   }
 
   /* Title clamping to 2 lines */
   .unified-card-title,
   .preview-card-title,
   .show-title {
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    line-height: 1.2 !important;
-    max-height: 2.4em !important; /* 2 lines max */
+    display: -webkit-box ;
+    -webkit-line-clamp: 2 ;
+    line-clamp: 2 ;
+    -webkit-box-orient: vertical ;
+    overflow: hidden ;
+    text-overflow: ellipsis ;
+    line-height: 1.2 ;
+    max-height: 2.4em ; /* 2 lines max */
   }
 
   /* Star rating visibility */
   .star-rating,
   .rating-container {
-    display: flex !important;
-    align-items: center !important;
-    gap: 2px !important;
-    font-size: 12px !important;
-    margin: 4px 0 !important;
-    min-height: 16px !important; /* Ensure rating row is visible */
+    display: flex ;
+    align-items: center ;
+    gap: 2px ;
+    font-size: 12px ;
+    margin: 4px 0 ;
+    min-height: 16px ; /* Ensure rating row is visible */
   }
 
   .star-display {
-    font-size: 12px !important;
-    line-height: 1 !important;
+    font-size: 12px ;
+    line-height: 1 ;
   }
 
   /* Year and meta info on separate line */
   .unified-card-subtitle,
   .preview-card-year,
   .show-meta {
-    font-size: 11px !important;
-    color: var(--text-secondary) !important;
-    margin: 2px 0 !important;
-    line-height: 1.1 !important;
+    font-size: 11px ;
+    color: var(--text-secondary) ;
+    margin: 2px 0 ;
+    line-height: 1.1 ;
   }
 
   /* Ensure no overlapping content */
   .unified-card-content,
   .preview-card-content,
   .show-details {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 4px !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
+    display: flex ;
+    flex-direction: column ;
+    gap: 4px ;
+    min-height: 0 ;
+    overflow: hidden ;
   }
 
   /* Section headers with proper gutters and emoji insets */
   .group-title,
   .preview-row-title,
   .section-title {
-    padding-left: max(12px, env(safe-area-inset-left)) !important;
-    padding-right: max(12px, env(safe-area-inset-right)) !important;
-    margin-bottom: 12px !important;
-    font-size: 1.2rem !important;
-    font-weight: 600 !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
+    padding-left: max(12px, env(safe-area-inset-left)) ;
+    padding-right: max(12px, env(safe-area-inset-right)) ;
+    margin-bottom: 12px ;
+    font-size: 1.2rem ;
+    font-weight: 600 ;
+    display: flex ;
+    align-items: center ;
+    gap: 8px ;
   }
 
   /* Decorative emojis with proper insets */
   .group-title::before,
   .preview-row-title::before,
   .section-title::before {
-    margin-right: 4px !important;
-    font-size: 1.1em !important;
-    flex-shrink: 0 !important;
+    margin-right: 4px ;
+    font-size: 1.1em ;
+    flex-shrink: 0 ;
   }
 
   /* Count badges alignment */
   .count,
   .tab-badge {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-width: 20px !important;
-    height: 20px !important;
-    padding: 2px 6px !important;
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    background: var(--primary) !important;
-    color: white !important;
-    border-radius: 10px !important;
-    margin-left: 8px !important;
-    flex-shrink: 0 !important;
+    display: inline-flex ;
+    align-items: center ;
+    justify-content: center ;
+    min-width: 20px ;
+    height: 20px ;
+    padding: 2px 6px ;
+    font-size: 11px ;
+    font-weight: 600 ;
+    background: var(--primary) ;
+    color: white ;
+    border-radius: 10px ;
+    margin-left: 8px ;
+    flex-shrink: 0 ;
   }
 
   /* Ensure badges don't wrap */
   .group-title,
   .preview-row-title,
   .section-title {
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    white-space: nowrap ;
+    overflow: hidden ;
+    text-overflow: ellipsis ;
   }
 
   /* Home group spacing */
   .home-group {
-    margin-bottom: 24px !important;
-    padding: 16px !important;
-    border-radius: 12px !important;
+    margin-bottom: 24px ;
+    padding: 16px ;
+    border-radius: 12px ;
   }
 
   /* Preview row spacing */
   .home-preview-row {
-    margin: 12px 0 !important;
-    padding: 12px !important;
-    border-radius: 8px !important;
+    margin: 12px 0 ;
+    padding: 12px ;
+    border-radius: 8px ;
   }
 
   /* Performance optimizations for mobile */
   .unified-card,
   .preview-card,
   .show-card {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important; /* Lighter shadow */
-    filter: none !important; /* Remove heavy filters */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) ; /* Lighter shadow */
+    filter: none ; /* Remove heavy filters */
   }
 
   /* Disable confetti and heavy animations on mobile */
   .confetti,
   .celebration-animation {
-    display: none !important;
+    display: none ;
   }
 
   /* Reduce motion for better performance */
@@ -575,24 +576,24 @@
     *,
     *::before,
     *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms ;
+      animation-iteration-count: 1 ;
+      transition-duration: 0.01ms ;
     }
   }
 
   /* Optimize scrolling performance */
   .preview-row-container,
   .carousel-container {
-    will-change: transform !important;
-    transform: translateZ(0) !important; /* Force hardware acceleration */
+    will-change: transform ;
+    transform: translateZ(0) ; /* Force hardware acceleration */
   }
 
   /* Reduce blur effects on mobile */
   .blur,
   .backdrop-blur {
-    filter: none !important;
-    backdrop-filter: none !important;
+    filter: none ;
+    backdrop-filter: none ;
   }
 }
 
@@ -608,25 +609,25 @@
   }
 
   .search-row {
-    flex-direction: column !important; /* FIXED: Only stack on very small screens */
-    gap: 4px !important;
+    flex-direction: row ; /* FIXED: Keep horizontal layout even on very small screens */
+    gap: 4px ;
   }
 
   .search-input {
-    padding: 4px 6px !important;
-    font-size: 13px !important;
-    min-height: 32px !important;
+    padding: 4px 6px ;
+    font-size: 13px ;
+    min-height: 32px ;
   }
 
   .genre-filter,
   .search-row .search-btn,
   .search-row .clear-search-btn,
   .search-row .advanced-search-btn {
-    width: calc(25% - 3px) !important;
-    padding: 4px 2px !important;
-    font-size: 11px !important;
-    min-height: 32px !important;
-    height: 32px !important;
+    width: calc(25% - 3px) ;
+    padding: 4px 2px ;
+    font-size: 11px ;
+    min-height: 32px ;
+    height: 32px ;
   }
 
   .btn {
@@ -655,7 +656,7 @@
   }
 
   .search-row {
-    gap: 6px !important;
+    gap: 6px ;
   }
 
   .search-input {
@@ -691,73 +692,73 @@
 
   /* UNIFIED: Mobile card layout using consistent variables */
   .mobile-v1 .show-card {
-    display: grid !important;
-    grid-template-columns: var(--poster-w-mobile) 1fr !important;
-    gap: var(--card-gap-mobile) !important;
-    padding: var(--card-pad-y-mobile) var(--card-pad-x-mobile) !important;
+    display: grid ;
+    grid-template-columns: var(--poster-w-mobile) 1fr ;
+    gap: var(--card-gap-mobile) ;
+    padding: var(--card-pad-y-mobile) var(--card-pad-x-mobile) ;
     background: var(--card-bg);
     border: var(--card-border);
-    width: 100% !important;
-    max-width: 100% !important;
+    width: 100% ;
+    max-width: 100% ;
     border-radius: var(--card-radius);
     align-items: start;
-    margin: 0 0 16px !important;
-    box-sizing: border-box !important;
+    margin: 0 0 16px ;
+    box-sizing: border-box ;
     box-shadow: var(--card-shadow);
     min-height: var(--poster-h-mobile);
   }
 
   /* UNIFIED: Fallback mobile layout for all cards */
   .show-card {
-    display: grid !important;
-    grid-template-columns: var(--poster-w-mobile) 1fr !important;
-    gap: var(--card-gap-mobile) !important;
-    padding: var(--card-pad-y-mobile) var(--card-pad-x-mobile) !important;
+    display: grid ;
+    grid-template-columns: var(--poster-w-mobile) 1fr ;
+    gap: var(--card-gap-mobile) ;
+    padding: var(--card-pad-y-mobile) var(--card-pad-x-mobile) ;
     background: var(--card-bg);
     border: var(--card-border);
-    width: 100% !important;
-    max-width: 100% !important;
+    width: 100% ;
+    max-width: 100% ;
     border-radius: var(--card-radius);
     align-items: start;
-    margin: 0 0 16px !important;
-    box-sizing: border-box !important;
+    margin: 0 0 16px ;
+    box-sizing: border-box ;
     box-shadow: var(--card-shadow);
     min-height: var(--poster-h-mobile);
   }
 
   /* UNIFIED: Mobile details layout */
   .show-card .show-details {
-    display: grid !important;
-    grid-template-rows: auto auto auto 1fr auto !important;
-    gap: 6px !important;
-    min-width: 0 !important;
+    display: grid ;
+    grid-template-rows: auto auto auto 1fr auto ;
+    gap: 6px ;
+    min-width: 0 ;
   }
 
   /* UNIFIED: Mobile actions styling */
   .show-card .show-actions {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    gap: 6px !important;
-    align-items: center !important;
-    margin-top: 8px !important;
-    justify-content: space-between !important;
+    display: flex ;
+    flex-direction: row ;
+    flex-wrap: nowrap ;
+    gap: 6px ;
+    align-items: center ;
+    margin-top: 8px ;
+    justify-content: space-between ;
   }
 
   .show-card .show-actions .btn {
-    flex: 1 !important;
-    min-width: 0 !important;
-    font-size: 11px !important;
-    padding: 6px 8px !important;
-    min-height: 32px !important;
+    flex: 1 ;
+    min-width: 0 ;
+    font-size: 11px ;
+    padding: 6px 8px ;
+    min-height: 32px ;
   }
 
   /* UNIFIED: Fallback mobile title and meta styling */
   .show-card .show-title {
     font-size: var(--meta-title-size-mobile);
-    line-height: var(--meta-line-mobile) !important;
-    margin: 0 0 6px !important;
-    padding: 0 !important;
+    line-height: var(--meta-line-mobile) ;
+    margin: 0 0 6px ;
+    padding: 0 ;
     font-weight: 600;
     color: var(--color-text, #121212);
   }
@@ -765,36 +766,36 @@
   .show-card .show-meta {
     font-size: 13px;
     color: var(--color-text-secondary, #666);
-    margin: 0 0 6px !important;
-    padding: 0 !important;
-    line-height: 1.3 !important;
+    margin: 0 0 6px ;
+    padding: 0 ;
+    line-height: 1.3 ;
   }
 
   .show-card .show-overview {
     font-size: 14px;
-    line-height: 1.4 !important;
-    margin: 0 0 8px !important;
-    padding: 0 !important;
+    line-height: 1.4 ;
+    margin: 0 0 8px ;
+    padding: 0 ;
     color: var(--color-text, #121212);
   }
 
   /* UNIFIED: Mobile details layout with actions at bottom */
   .mobile-v1 .show-card .show-details {
-    display: grid !important;
-    grid-template-rows: auto auto auto 1fr auto !important;
-    gap: 6px !important;
-    min-width: 0 !important;
+    display: grid ;
+    grid-template-rows: auto auto auto 1fr auto ;
+    gap: 6px ;
+    min-width: 0 ;
   }
 
   /* UNIFIED: Mobile actions styling */
   .mobile-v1 .show-card .show-actions {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    gap: 6px !important;
-    align-items: center !important;
-    margin-top: 8px !important;
-    justify-content: space-between !important;
+    display: flex ;
+    flex-direction: row ;
+    flex-wrap: nowrap ;
+    gap: 6px ;
+    align-items: center ;
+    margin-top: 8px ;
+    justify-content: space-between ;
   }
 
   /* UNIFIED: Mobile poster styling */
@@ -825,17 +826,17 @@
   /* Meta/details */
   .mobile-v1 .show-card .show-details {
     grid-column: 2;
-    min-width: 0 !important;
-    overflow: hidden !important;
+    min-width: 0 ;
+    overflow: hidden ;
     align-self: start;
   }
   .mobile-v1 .show-card .show-title {
     font-size: var(--meta-title-size-mobile);
-    line-height: var(--meta-line-mobile) !important;
-    margin: 0 0 6px !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    line-height: var(--meta-line-mobile) ;
+    margin: 0 0 6px ;
+    padding: 0 ;
+    overflow: hidden ;
+    text-overflow: ellipsis ;
     font-weight: 600;
     color: var(--color-text, #121212);
   }
@@ -843,30 +844,30 @@
   .mobile-v1 .show-card .show-meta {
     font-size: 13px;
     color: var(--color-text-secondary, #666);
-    margin: 0 0 6px !important;
-    padding: 0 !important;
-    line-height: 1.3 !important;
+    margin: 0 0 6px ;
+    padding: 0 ;
+    line-height: 1.3 ;
   }
   .mobile-v1 .show-card .show-overview {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2; /* FIXED: Added standard property for compatibility */
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    line-height: 1.2 !important;
+    overflow: hidden ;
+    text-overflow: ellipsis ;
+    margin: 0 ;
+    padding: 0 ;
+    line-height: 1.2 ;
   }
 
   .mobile-v1 .show-card .show-actions .btn,
   .mobile-v1 .show-card .show-actions button {
-    flex: 1 !important;
-    min-width: 0 !important;
-    min-height: 32px !important; /* FIXED: Increased from 24px */
-    padding: 6px 8px !important; /* FIXED: Increased padding */
-    font-size: 11px !important; /* FIXED: Increased from 10px */
-    margin: 0 !important;
+    flex: 1 ;
+    min-width: 0 ;
+    min-height: 32px ; /* FIXED: Increased from 24px */
+    padding: 6px 8px ; /* FIXED: Increased padding */
+    font-size: 11px ; /* FIXED: Increased from 10px */
+    margin: 0 ;
   }
 
   /* Sub-elements (bring parity back here) */
@@ -890,23 +891,23 @@
 
   /* FIXED: Mobile list container spacing */
   .mobile-v1 .list-container {
-    padding: 8px !important; /* FIXED: Increased from 4px */
-    gap: 0 !important;
+    padding: 8px ; /* FIXED: Increased from 4px */
+    gap: 0 ;
   }
 
   /* UNIFIED: Card spacing using consistent margins */
   .mobile-v1 .show-card + .show-card {
-    margin-top: 16px !important;
+    margin-top: 16px ;
   }
 
   .show-card + .show-card {
-    margin-top: 16px !important;
+    margin-top: 16px ;
   }
 
   /* UNIFIED: List container spacing */
   .list-container {
-    padding: 12px !important;
-    gap: 0 !important;
+    padding: 12px ;
+    gap: 0 ;
   }
 
   /* Mobile-only animation (scoped + a11y) */
@@ -927,7 +928,7 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .mobile-v1 .show-card {
-      animation: none !important;
+      animation: none ;
     }
   }
 }
@@ -938,25 +939,25 @@
    above is the only valid source of truth for mobile cards. */
 
 /* Mobile header fix: neutralize legacy grid and center title */
-body.mobile-v1 header.header {
+header.header {
   display: flex; /* PART2C */
-  flex-direction: column !important;
-  align-items: center !important;
-  gap: 8px !important;
-  grid-template-columns: unset !important; /* safety nuke */
+  flex-direction: column ;
+  align-items: center ;
+  gap: 8px ;
+  grid-template-columns: unset ; /* safety nuke */
 }
 
-body.mobile-v1 header.header .app-title {
-  flex: 1 1 auto !important;
-  text-align: center !important;
-  line-height: 1.2 !important;
+header.header .app-title {
+  flex: 1 1 auto ;
+  text-align: center ;
+  line-height: 1.2 ;
 }
 
-body.mobile-v1 header.header .username-snark {
+header.header .username-snark {
   min-width: 0; /* PART2C */
   width: 100%; /* PART2C */
-  text-align: center !important;
-  order: 2 !important; /* stack under title */
+  text-align: center ;
+  order: 2 ; /* stack under title */
 }
 
 /* Notifications: minor mobile adjustments */
@@ -971,7 +972,7 @@ body.mobile-v1 header.header .username-snark {
 @media (max-width: 480px) {
   /* Tighten header -> search without touching sticky mechanics */
   .header {
-    margin-bottom: 8px !important;
+    margin-bottom: 8px ;
   }
   .top-search {
     margin-top: 6px;

@@ -45,23 +45,23 @@ body {
   --card: #2a2a2a;
   --border: #404040;
   --text-secondary: #b0b0b0;
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6b 100%) !important;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6b 100%) ;
 }
 
 /* REMOVED: Duplicate dark mode component styles - now consolidated in main.css */
 
 .mardi .header {
-  border-color: var(--mardi3) !important;
+  border-color: var(--mardi3) ;
 }
 .mardi .btn {
-  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) !important;
+  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) ;
 }
 .mardi .tab {
-  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) !important;
-  color: #fff !important;
+  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) ;
+  color: #fff ;
 }
 body.mardi {
-  background: linear-gradient(135deg, var(--mardi1), var(--mardi2)) !important;
+  background: linear-gradient(135deg, var(--mardi1), var(--mardi2)) ;
 }
 
 .main-container {
@@ -193,17 +193,17 @@ body.mardi {
   gap: 16px;
   margin: 12px 0;
   animation: flickwordSlideIn 0.9s ease-out 0.6s both;
-  justify-content: space-between !important;
-  width: 100% !important;
+  justify-content: space-between ;
+  width: 100% ;
 }
 
 .left-column {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  flex: 0 0 48% !important;
-  max-width: 48% !important;
-  width: 48% !important;
+  flex: 0 0 48% ;
+  max-width: 48% ;
+  width: 48% ;
   justify-content: space-between;
 }
 
@@ -258,10 +258,10 @@ body.mardi {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   opacity: 0.9;
-  flex: 0 0 48% !important;
-  max-width: 48% !important;
+  flex: 0 0 48% ;
+  max-width: 48% ;
   min-width: 300px;
-  width: 48% !important;
+  width: 48% ;
   align-self: stretch;
 }
 
@@ -296,7 +296,8 @@ body.mardi {
 .quote-text {
   font-size: 14px;
   font-style: italic;
-  color: var(--text);
+  color: #333;
+  font-weight: 500;
   margin: 0 0 8px 0;
   line-height: 1.4;
 }
@@ -395,56 +396,56 @@ body.mardi {
 /* Mobile responsiveness for FlickWord */
 @media (max-width: 768px) {
   .quote-flickword-container {
-    flex-direction: column !important;
-    gap: 8px !important;
-    justify-content: flex-start !important;
+    flex-direction: column ;
+    gap: 8px ;
+    justify-content: flex-start ;
   }
 
   .left-column {
-    flex: 1 !important;
-    max-width: 100% !important;
-    min-width: auto !important;
-    width: 100% !important;
+    flex: 1 ;
+    max-width: 100% ;
+    min-width: auto ;
+    width: 100% ;
   }
 
   .quote-card,
   .flickword-card {
-    flex: 1 !important;
-    max-width: 100% !important;
-    min-width: auto !important;
-    width: 100% !important;
+    flex: 1 ;
+    max-width: 100% ;
+    min-width: auto ;
+    width: 100% ;
   }
 }
 
 /* iPhone portrait specific fixes */
 @media (max-width: 428px) {
   .quote-flickword-container {
-    margin: 8px 0 !important;
-    gap: 6px !important;
+    margin: 8px 0 ;
+    gap: 6px ;
   }
 
   .left-column {
-    gap: 6px !important;
+    gap: 6px ;
   }
 
   .quote-card,
   .flickword-card {
-    padding: 12px !important;
-    margin: 0 !important;
+    padding: 12px ;
+    margin: 0 ;
   }
 
   .quote-title,
   .flickword-title {
-    font-size: 14px !important;
-    margin-bottom: 12px !important;
+    font-size: 14px ;
+    margin-bottom: 12px ;
   }
 
   .quote-text {
-    font-size: 13px !important;
+    font-size: 13px ;
   }
 
   .quote-author {
-    font-size: 11px !important;
+    font-size: 11px ;
   }
 }
 
@@ -551,9 +552,10 @@ body.mardi {
 /* Responsive search row */
 @media (max-width: 768px) {
   .search-row {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 12px !important;
+    display: flex ;
+    flex-direction: row ;
+    gap: 8px ;
+    flex-wrap: wrap ;
   }
   .search-row .search-input {
     order: 1;
@@ -565,11 +567,20 @@ body.mardi {
   .search-row .search-btn,
   .search-row .clear-search-btn {
     order: 3;
-    display: inline-block !important;
-    width: auto !important;
-    flex: 0 0 auto !important;
-    min-height: 48px;
-    min-width: 48px;
+    display: flex ;
+    width: auto ;
+    flex: 0 0 auto ;
+    min-height: 44px;
+    min-width: 80px;
+  }
+  
+  .search-row .genre-filter {
+    order: 2;
+    display: flex ;
+    width: 60px ;
+    flex: 0 0 auto ;
+    min-height: 44px;
+    min-width: 60px;
   }
   .search-row .search-btn {
     margin-right: 8px;
@@ -577,8 +588,8 @@ body.mardi {
 
   /* Ensure buttons are properly spaced on mobile */
   .search-row .btn {
-    margin: 4px;
-    flex: 1;
+    margin: 0;
+    flex: 0 0 auto;
   }
 }
 /* Tab container styles moved to components.css */
@@ -967,9 +978,9 @@ button {
   letter-spacing: 0.6px;
 }
 #bingeMeter {
-  display: block !important;
-  flex-basis: 100% !important;
-  order: 0 !important;
+  display: block ;
+  flex-basis: 100% ;
+  order: 0 ;
 }
 
 .stat-num {
@@ -1097,16 +1108,16 @@ button {
   font-weight: 500;
 }
 .like-btn.active {
-  background: linear-gradient(45deg, #2ed573, #1dd1a1) !important;
-  color: #fff !important;
-  border-color: #1dd1a1 !important;
-  box-shadow: 0 2px 4px rgba(46, 213, 115, 0.3) !important;
+  background: linear-gradient(45deg, #2ed573, #1dd1a1) ;
+  color: #fff ;
+  border-color: #1dd1a1 ;
+  box-shadow: 0 2px 4px rgba(46, 213, 115, 0.3) ;
 }
 .dislike-btn.active {
-  background: linear-gradient(45deg, #ff4757, #ff3742) !important;
-  color: #fff !important;
-  border-color: #ff3742 !important;
-  box-shadow: 0 2px 4px rgba(255, 71, 87, 0.3) !important;
+  background: linear-gradient(45deg, #ff4757, #ff3742) ;
+  color: #fff ;
+  border-color: #ff3742 ;
+  box-shadow: 0 2px 4px rgba(255, 71, 87, 0.3) ;
 }
 
 .series-pill {
@@ -1174,55 +1185,55 @@ button {
 
 /* Notification styles - Centered, clean design */
 .notification {
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: 100000 !important;
-  padding: 16px 24px !important;
-  border-radius: 12px !important;
-  color: #1f2937 !important;
-  font-weight: 500 !important;
-  font-size: 16px !important;
+  position: fixed ;
+  top: 50% ;
+  left: 50% ;
+  transform: translate(-50%, -50%) ;
+  z-index: 100000 ;
+  padding: 16px 24px ;
+  border-radius: 12px ;
+  color: #1f2937 ;
+  font-weight: 500 ;
+  font-size: 16px ;
   box-shadow:
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-  max-width: 400px !important;
-  min-width: 250px !important;
-  word-wrap: break-word !important;
-  text-align: center !important;
-  cursor: default !important;
-  display: block !important;
-  animation: fadeInScale 0.3s ease-out !important;
-  border: 1px solid #e5e7eb !important;
-  background: #ffffff !important;
+    0 10px 10px -5px rgba(0, 0, 0, 0.04) ;
+  max-width: 400px ;
+  min-width: 250px ;
+  word-wrap: break-word ;
+  text-align: center ;
+  cursor: default ;
+  display: block ;
+  animation: fadeInScale 0.3s ease-out ;
+  border: 1px solid #e5e7eb ;
+  background: #ffffff ;
 }
 
 .notification-message {
-  font-size: 16px !important;
-  font-weight: 500 !important;
-  color: #1f2937 !important;
-  margin: 0 !important;
+  font-size: 16px ;
+  font-weight: 500 ;
+  color: #1f2937 ;
+  margin: 0 ;
 }
 
 .notification.success {
-  background: #ffffff !important;
-  border-left: 4px solid #1976d2 !important; /* Blue accent like sign-in modal */
+  background: #ffffff ;
+  border-left: 4px solid #1976d2 ; /* Blue accent like sign-in modal */
 }
 
 .notification.error {
-  background: #ffffff !important;
-  border-left: 4px solid #ef4444 !important; /* Red accent for errors */
+  background: #ffffff ;
+  border-left: 4px solid #ef4444 ; /* Red accent for errors */
 }
 
 .notification.warning {
-  background: #ffffff !important;
-  border-left: 4px solid #f59e0b !important; /* Orange accent for warnings */
+  background: #ffffff ;
+  border-left: 4px solid #f59e0b ; /* Orange accent for warnings */
 }
 
 .notification.info {
-  background: #ffffff !important;
-  border-left: 4px solid #1976d2 !important; /* Blue accent for info */
+  background: #ffffff ;
+  border-left: 4px solid #1976d2 ; /* Blue accent for info */
 }
 
 @keyframes fadeInScale {
@@ -1251,48 +1262,48 @@ button {
 
 /* Tab visibility control */
 .tab[style*='display: none'] {
-  display: none !important;
+  display: none ;
 }
 
 /* Handle .hidden class on tabs - show tab but hide text for mobile optimization */
 .tab.hidden {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  position: relative !important;
-  width: 32px !important;
-  height: 44px !important;
-  min-width: 32px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  overflow: hidden !important;
-  flex: 0 0 32px !important;
-  pointer-events: auto !important;
+  display: flex ;
+  visibility: visible ;
+  opacity: 1 ;
+  position: relative ;
+  width: 32px ;
+  height: 44px ;
+  min-width: 32px ;
+  padding: 0 ;
+  margin: 0 ;
+  background: transparent ;
+  border: none ;
+  overflow: hidden ;
+  flex: 0 0 32px ;
+  pointer-events: auto ;
 }
 
 .tab.hidden span,
 .tab.hidden .tab-badge {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
+  display: none ;
+  visibility: hidden ;
+  opacity: 0 ;
 }
 
 /* Force hide tabs that are truly hidden (not mobile optimization) */
 .tab[style*='visibility: hidden'] {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  position: absolute !important;
-  left: -9999px !important;
-  pointer-events: none !important;
-  flex: 0 !important;
-  width: 0 !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
+  display: none ;
+  visibility: hidden ;
+  opacity: 0 ;
+  position: absolute ;
+  left: -9999px ;
+  pointer-events: none ;
+  flex: 0 ;
+  width: 0 ;
+  height: 0 ;
+  margin: 0 ;
+  padding: 0 ;
+  overflow: hidden ;
 }
 
 /* REMOVED: Duplicate .tab-container .tab.hidden rules - now in components.css */
@@ -1477,20 +1488,20 @@ button {
     padding: 16px;
   }
   .search-row {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 8px !important;
+    display: flex ;
+    flex-direction: column ;
+    gap: 8px ;
   }
   .search-input {
-    width: 100% !important;
+    width: 100% ;
     font-size: 16px;
   }
   .search-filters {
-    display: flex !important;
-    gap: 8px !important;
+    display: flex ;
+    gap: 8px ;
   }
   #genreFilter {
-    flex: 1 !important;
+    flex: 1 ;
   }
   .search-container {
     background: var(--card);
@@ -1500,28 +1511,28 @@ button {
     margin: 14px 0;
   }
   .search-container .btn {
-    flex: 1 !important;
+    flex: 1 ;
     min-height: 44px;
   }
 
   @media (max-width: 640px) {
     .show-actions {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 8px !important;
+      display: flex ;
+      flex-direction: column ;
+      gap: 8px ;
     }
   }
   @media (max-width: 640px) {
     .show-actions .btn {
-      display: block !important;
-      width: 100% !important;
-      margin: 0 !important;
-      box-sizing: border-box !important;
-      text-align: center !important;
-      white-space: normal !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-      min-height: 44px !important;
+      display: block ;
+      width: 100% ;
+      margin: 0 ;
+      box-sizing: border-box ;
+      text-align: center ;
+      white-space: normal ;
+      overflow: hidden ;
+      text-overflow: ellipsis ;
+      min-height: 44px ;
     }
   }
 
@@ -1560,7 +1571,7 @@ button {
     padding: 12px;
   }
   .search-row {
-    gap: 6px !important;
+    gap: 6px ;
   }
   .search-input {
     padding: 8px 10px;
@@ -1727,7 +1738,7 @@ button {
 
 @media (prefers-reduced-motion: reduce) {
   #bingeBanner .binge-cta {
-    animation: none !important;
+    animation: none ;
   }
 }
 
@@ -1764,15 +1775,15 @@ button {
   outline: 3px solid #fff;
 }
 .sr-only {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: normal !important;
-  border: 0 !important;
+  position: absolute ;
+  width: 1px ;
+  height: 1px ;
+  padding: 0 ;
+  margin: -1px ;
+  overflow: hidden ;
+  clip: rect(0, 0, 0, 0) ;
+  white-space: normal ;
+  border: 0 ;
 }
 /* High-contrast focus ring */
 :focus-visible {

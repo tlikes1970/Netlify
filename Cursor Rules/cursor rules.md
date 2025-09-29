@@ -67,16 +67,77 @@ www/
 
 ## Coding Standards & Conventions
 
-### CSS Layout !important Policy
+### CSS !important Policy
 
-**No layout `!important` on core containers** (html, body, #appRoot, .panels, #homeSection, header, #navigation/.tab-container, .top-search, .fab-dock/.fab). 
-Allowed only for: third-party inline overrides, a11y utilities, OS/UA bug. 
-Every exception MUST include: `/* WHY | OWNER | EXPIRES */`.
-Preflight validation required; STOP on selector mismatch.
+**GENERAL RULE: Avoid `!important` declarations entirely.** Use proper CSS specificity, cascade order, and architectural patterns instead.
+
+**PROHIBITED USES:**
+- Layout properties on core containers (html, body, #appRoot, .panels, #homeSection, header, #navigation/.tab-container, .top-search, .fab-dock/.fab)
+- Component styling and responsive design
+- Theme and color overrides
+- Flexbox and Grid layout properties
+- Positioning and sizing properties
+
+**ALLOWED EXCEPTIONS (with strict documentation):**
+- Third-party library overrides (with `/* OVERRIDE: library-name | reason | owner */`)
+- Accessibility utilities (`.sr-only`, `.skip-link`, focus indicators)
+- OS/UA bug workarounds (with `/* BUGFIX: browser-version | issue | owner | expires */`)
+- Critical security-related overrides (with `/* SECURITY: reason | owner */`)
+
+**REQUIREMENTS FOR ALL EXCEPTIONS:**
+- Must include comment: `/* WHY | OWNER | EXPIRES */`
+- Must be documented in code review
+- Must have plan for removal
+- Preflight validation required; STOP on selector mismatch
 
 **Up-arrow control**: appears only after the tab bar exits viewport; fixed bottom-center; no layout !important; created via JS (idempotent) and styled in CSS.
 Preflight validation required for sentinel tablist. If missing, fallback shows after 400px scroll.
 Do not change sticky search or FAB positioning.
+
+### CSS Specificity & Cascade Order
+
+**PREFERRED ALTERNATIVES TO `!important`:**
+
+1. **Increase Specificity**: Use more specific selectors
+   ```css
+   /* Instead of: .btn { color: red !important; } */
+   .card .btn.btn--primary { color: red; }
+   ```
+
+2. **Use CSS Custom Properties**: Leverage CSS variables for overrides
+   ```css
+   :root { --btn-color: #007bff; }
+   .btn { color: var(--btn-color); }
+   .theme-dark { --btn-color: #ffffff; }
+   ```
+
+3. **Reorder CSS Files**: Place more specific styles after general ones
+   ```css
+   /* main.css - general styles */
+   .btn { padding: 8px 16px; }
+   
+   /* components.css - specific overrides */
+   .card .btn { padding: 12px 20px; }
+   ```
+
+4. **Use Attribute Selectors**: Higher specificity without !important
+   ```css
+   /* Instead of: .input { width: 100% !important; } */
+   .search-row input[type="text"] { width: 100%; }
+   ```
+
+5. **Leverage CSS Cascade**: Use natural cascade order
+   ```css
+   /* Later files override earlier ones naturally */
+   /* mobile.css can override main.css without !important */
+   ```
+
+**CSS LOAD ORDER (in index.html):**
+1. `spacing-system.css` - CSS variables and base spacing
+2. `main.css` - Core application styles
+3. `components.css` - Component-specific styles
+4. `mobile.css` - Mobile-specific overrides
+5. `home.css` - Home page specific styles
 
 ### JavaScript Style
 
@@ -529,6 +590,15 @@ npm run lint:strict  # Strict linting
 npm run a11y:axe     # Accessibility audit
 npm run lh:mobile    # Lighthouse mobile audit
 ```
+
+### ⚠️ CRITICAL: Server Management Rule
+
+**NEVER START A SECOND DEVELOPMENT SERVER** - The user always has a server running. Starting a second server will cause port conflicts and break the development environment.
+
+- **Current Server**: User maintains their own development server
+- **Assistant Action**: Only make code changes, never run `npm run dev`, `netlify dev`, or any server commands
+- **Port Conflicts**: Multiple servers on same port will cause errors and break functionality
+- **Hot Reload**: User's existing server will automatically reload changes made by the assistant
 
 ### Version Management
 

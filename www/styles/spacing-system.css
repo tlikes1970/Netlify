@@ -1,0 +1,165 @@
+/**
+ * Unified Spacing System
+ * Purpose: Single source of truth for all spacing values
+ * Data Source: Analysis of existing spacing patterns
+ * Update Path: Modify spacing values here to affect entire app
+ * Dependencies: All CSS files should use these variables
+ */
+
+:root {
+  /* === SPACING SCALE === */
+  /* Based on 4px base unit for consistent rhythm */
+  --space-xs: 4px;    /* 0.25rem - micro spacing */
+  --space-sm: 8px;    /* 0.5rem - small spacing */
+  --space-md: 12px;   /* 0.75rem - medium spacing */
+  --space-lg: 16px;   /* 1rem - large spacing */
+  --space-xl: 20px;   /* 1.25rem - extra large spacing */
+  --space-2xl: 24px;  /* 1.5rem - double large spacing */
+  --space-3xl: 32px;  /* 2rem - triple large spacing */
+  --space-4xl: 40px;  /* 2.5rem - quadruple large spacing */
+  --space-5xl: 48px;  /* 3rem - quintuple large spacing */
+
+  /* === LAYOUT SPACING === */
+  /* Container and section spacing */
+  --container-gutter: var(--space-lg);           /* 16px - side margins */
+  --container-max-width: 1200px;                 /* Max container width */
+  --section-gap: var(--space-2xl);               /* 24px - space between sections */
+  --section-gap-lg: var(--space-3xl);            /* 32px - large section gap */
+  --row-gap: var(--space-lg);                    /* 16px - space between rows */
+  --card-gap: var(--space-sm);                   /* 8px - space between cards */
+
+  /* === COMPONENT SPACING === */
+  /* Card and component internal spacing */
+  --card-padding: var(--space-md);               /* 12px - card internal padding */
+  --card-padding-sm: var(--space-sm);            /* 8px - small card padding */
+  --card-padding-lg: var(--space-lg);            /* 16px - large card padding */
+  --button-padding: var(--space-sm) var(--space-md); /* 8px 12px - button padding */
+  --input-padding: var(--space-sm) var(--space-md);  /* 8px 12px - input padding */
+
+  /* === UNIFIED CARD SIZING === */
+  /* Single source of truth for all card dimensions */
+  --card-w: 180px;                               /* Standard card width */
+  --card-h: 270px;                               /* Standard card height (3:2 aspect ratio) */
+  --card-w-mobile: 140px;                        /* Mobile card width */
+  --card-h-mobile: 210px;                        /* Mobile card height */
+  --card-w-desktop: 200px;                       /* Desktop card width */
+  --card-h-desktop: 300px;                       /* Desktop card height */
+  --card-w-large: 220px;                         /* Large screen card width */
+  --card-h-large: 330px;                         /* Large screen card height */
+
+  /* === POSTER SIZING === */
+  /* Unified poster dimensions for all contexts */
+  --poster-w: 120px;                             /* Standard poster width (2:3 aspect ratio) */
+  --poster-h: 180px;                             /* Standard poster height */
+  --poster-w-mobile: 80px;                       /* Mobile poster width */
+  --poster-h-mobile: 120px;                      /* Mobile poster height */
+  --poster-w-desktop: 140px;                     /* Desktop poster width */
+  --poster-h-desktop: 210px;                     /* Desktop poster height */
+
+  /* === RESPONSIVE SPACING === */
+  /* Mobile-first responsive adjustments */
+  --mobile-section-gap: var(--space-xl);         /* 20px - mobile section gap */
+  --mobile-row-gap: var(--space-md);             /* 12px - mobile row gap */
+  --mobile-card-gap: var(--space-xs);            /* 4px - mobile card gap */
+
+  /* === OVERFLOW & HEIGHT SYSTEM === */
+  /* Unified overflow and height management to fix container issues */
+  --body-height: auto;                           /* Allow body to expand with content */
+  --app-root-min-height: 100vh;                  /* App root minimum viewport height */
+  --app-root-overflow-x: hidden;                 /* Prevent horizontal overflow */
+  --app-root-overflow-y: visible;                /* Allow vertical expansion */
+  --content-overflow: visible;                   /* Allow content to expand naturally */
+  --safe-gutter: max(var(--container-gutter), env(safe-area-inset-left)); /* Safe area aware gutters */
+
+  /* === UNIFIED BREAKPOINT SYSTEM === */
+  /* Single source of truth for all responsive breakpoints */
+  --bp-mobile-xs: 375px;                         /* Extra small mobile */
+  --bp-mobile-sm: 480px;                         /* Small mobile */
+  --bp-mobile: 640px;                            /* Standard mobile */
+  --bp-mobile-lg: 768px;                         /* Large mobile / small tablet */
+  --bp-tablet: 900px;                            /* Tablet */
+  --bp-desktop: 1200px;                          /* Desktop */
+  --bp-desktop-lg: 1440px;                       /* Large desktop */
+}
+
+/* === RESPONSIVE BREAKPOINTS === */
+@media (min-width: var(--bp-mobile-lg)) {
+  :root {
+    --section-gap: var(--space-3xl);             /* 32px - desktop section gap */
+    --row-gap: var(--space-xl);                  /* 20px - desktop row gap */
+    --card-gap: var(--space-md);                 /* 12px - desktop card gap */
+    
+    /* Desktop card sizing */
+    --card-w: var(--card-w-desktop);             /* 200px - desktop card width */
+    --card-h: var(--card-h-desktop);             /* 300px - desktop card height */
+    --poster-w: var(--poster-w-desktop);         /* 140px - desktop poster width */
+    --poster-h: var(--poster-h-desktop);         /* 210px - desktop poster height */
+  }
+}
+
+@media (min-width: var(--bp-desktop)) {
+  :root {
+    --container-gutter: var(--space-2xl);        /* 24px - large screen gutters */
+    
+    /* Large screen card sizing */
+    --card-w: var(--card-w-large);               /* 220px - large screen card width */
+    --card-h: var(--card-h-large);               /* 330px - large screen card height */
+  }
+}
+
+/* === SAFE AREA SUPPORT === */
+/* Respect device safe areas */
+:root {
+  --safe-gutter: max(var(--container-gutter), env(safe-area-inset-left));
+  --safe-gutter-right: max(var(--container-gutter), env(safe-area-inset-right));
+}
+
+/* === UTILITY CLASSES === */
+/* Common spacing patterns as utility classes */
+.spacing-xs { margin: var(--space-xs); }
+.spacing-sm { margin: var(--space-sm); }
+.spacing-md { margin: var(--space-md); }
+.spacing-lg { margin: var(--space-lg); }
+.spacing-xl { margin: var(--space-xl); }
+
+.padding-xs { padding: var(--space-xs); }
+.padding-sm { padding: var(--space-sm); }
+.padding-md { padding: var(--space-md); }
+.padding-lg { padding: var(--space-lg); }
+.padding-xl { padding: var(--space-xl); }
+
+/* === LAYOUT UTILITIES === */
+.container {
+  max-width: var(--container-max-width);
+  margin-inline: auto;
+  padding-inline: var(--safe-gutter);
+}
+
+.section {
+  margin-bottom: var(--section-gap);
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.row {
+  display: flex;
+  gap: var(--row-gap);
+  margin-bottom: var(--space-lg);
+}
+
+/* Card styles are handled by main.css and components.css */
+
+/* === MOBILE ADJUSTMENTS === */
+@media (max-width: calc(var(--bp-mobile-lg) - 1px)) {
+  :root {
+    --section-gap: var(--mobile-section-gap);
+    --row-gap: var(--mobile-row-gap);
+    --card-gap: var(--mobile-card-gap);
+  }
+  
+  .container {
+    padding-inline: var(--space-md);
+  }
+}

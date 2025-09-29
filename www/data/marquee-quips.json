@@ -1,0 +1,1010 @@
+{
+  "version": 1,
+  "locale": "en-US",
+  "category": "snark",
+  "updated": "2025-09-28",
+  "license": "CC0-1.0",
+  "source": "Flicklet user-supplied copy",
+  "items": [
+    {
+      "id": 1,
+      "text": "There’s no place like 127.0.0.1.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 2,
+      "text": "In code we trust. Everyone else bring logs.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 3,
+      "text": "It worked on my machine. How’s yours?",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 4,
+      "text": "Errors are just features with stage fright.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 5,
+      "text": "Loading… because time is a flat circle.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 6,
+      "text": "Feature complete. User confusion pending.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 7,
+      "text": "Cache me if you can.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 8,
+      "text": "Ship it. Then fix it. Then act surprised.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 9,
+      "text": "If it’s not logged, it didn’t happen.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 10,
+      "text": "Move fast, document faster.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 11,
+      "text": "New bug discovered. Nature is healing.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 12,
+      "text": "My favorite language is whichever compiles.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 13,
+      "text": "Your DPI called. It wants a vacation.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 14,
+      "text": "We tested in prod. Accidentally. Allegedly.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 15,
+      "text": "Keyboard not found. Press F1 to continue.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 16,
+      "text": "Today’s forecast: 90% chance of TODOs.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 17,
+      "text": "I don’t make bugs. I create plot twists.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 18,
+      "text": "Working as designed. Sadly, the design was vibes.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 19,
+      "text": "Pro tip: refresh. The ancient ritual.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 20,
+      "text": "Latency builds character. Mostly mine.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 21,
+      "text": "If at first you don’t succeed, clear cache.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 22,
+      "text": "The roadmap is a mood board with dates.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 23,
+      "text": "CI is green. The lie detector determined that was a lie.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 24,
+      "text": "My code is clean. My desk is not.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 25,
+      "text": "Tabs vs spaces? I prefer results.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 26,
+      "text": "You had me at ‘it’s intermittent’.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 27,
+      "text": "99 little bugs in the code, take one down, patch it around…",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 28,
+      "text": "That’s not a bug, that’s an undocumented experience.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 29,
+      "text": "I came, I saw, I Ctrl+Z’d.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 30,
+      "text": "Meetings: where minutes are kept and hours are lost.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 31,
+      "text": "If it’s urgent, please send three more identical messages.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 32,
+      "text": "Keyboard shortcuts are self-care.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 33,
+      "text": "Design is what happens while tickets are rescheduled.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 34,
+      "text": "Docker solves problems you didn’t have locally.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 35,
+      "text": "Congratulations on reinventing the wheel. It’s a triangle.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 36,
+      "text": "Let me just push this tiny, harmless change.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 37,
+      "text": "Dark mode hides many sins.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 38,
+      "text": "If the spec disagrees with reality, reality wins.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 39,
+      "text": "You can’t rush greatness, but you can expedite regret.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 40,
+      "text": "Every backlog is just a wish list with consequences.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 41,
+      "text": "We’ll fix it in Q never.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 42,
+      "text": "Hold my beverage, I’m rebasing.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 43,
+      "text": "It’s not broken on my monitor.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 44,
+      "text": "The demo gods accept your offering of retries.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 45,
+      "text": "Security by obscurity is still obscurity.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 46,
+      "text": "I see your workaround and raise you a refactor.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 47,
+      "text": "We don’t have bugs; we have opportunities for storytelling.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 48,
+      "text": "Unit tests are love notes to future you.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 49,
+      "text": "I didn’t change anything. Everything changed me.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 50,
+      "text": "The feature works. Users don’t.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 51,
+      "text": "Nothing says ‘quality’ like a hotfix on Friday.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 52,
+      "text": "If it compiles, ship it. Kidding. Mostly.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 53,
+      "text": "You can’t optimize what you won’t measure.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 54,
+      "text": "Scope creep is cardio for projects.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 55,
+      "text": "Sprint planning is just astrology for engineers.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 56,
+      "text": "Yes, it’s fast. On localhost.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 57,
+      "text": "Your password is weak. Like my coffee.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 58,
+      "text": "We need alignment. Bring a ruler.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 59,
+      "text": "The cloud is just someone else’s computer on fire.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 60,
+      "text": "I love deadlines. Especially the whooshing sound.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 61,
+      "text": "Documentation: now with fewer lies.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 62,
+      "text": "Do not taunt happy fun cache.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 63,
+      "text": "That’s not tech debt; that’s an archaeological site.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 64,
+      "text": "If you can’t reproduce it, it will reproduce itself.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 65,
+      "text": "Never underestimate a determined user.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 66,
+      "text": "Telemetry is how apps gossip.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 67,
+      "text": "I refactor because therapy is expensive.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 68,
+      "text": "The MVP shipped. So did the bugs.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 69,
+      "text": "Asking for a friend named ‘grep’.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 70,
+      "text": "Silence is golden; logs are platinum.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 71,
+      "text": "One does not simply ‘quick fix’ CSS.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 72,
+      "text": "Your UX screams in lowercase.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 73,
+      "text": "The only thing agile here is the scope.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 74,
+      "text": "My kingdom for a reproducible repro.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 75,
+      "text": "If everything is P0, nothing is.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 76,
+      "text": "We’re blocking on a meeting to unblock the block.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 77,
+      "text": "Congrats, you fixed it locally. Now do it again globally.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 78,
+      "text": "I dream in stack traces.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 79,
+      "text": "Edge cases aren’t edge cases when they’re daily.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 80,
+      "text": "Feature flags: because commitment is scary.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 81,
+      "text": "If you’re not embarrassed by v1, you shipped v3.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 82,
+      "text": "The PM said ‘simple’. The code heard ‘complex’.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 83,
+      "text": "Latency: the silent performance review.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 84,
+      "text": "I would test that, but the test is flaky.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 85,
+      "text": "Retrying is just persistence with extra steps.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 86,
+      "text": "We have two environments: prod and explanations.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 87,
+      "text": "Nothing personal, it’s just the cache.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 88,
+      "text": "Keyboard warrior, mouse pacifist.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 89,
+      "text": "I put the fun in dysfunctional build pipeline.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 90,
+      "text": "Your breakpoint is my starting point.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 91,
+      "text": "The design file is a work of speculative fiction.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 92,
+      "text": "Clipboard driven development.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 93,
+      "text": "Regex is awesome, until it isn’t.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 94,
+      "text": "Accessibility isn’t a feature; it’s table stakes.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 95,
+      "text": "We don’t delete code, we put it in witness protection.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 96,
+      "text": "Data is the plural of anecdote. No, wait.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 97,
+      "text": "This sprint, we sprint to stand still.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 98,
+      "text": "Undefined is not a function, but it’s definitely a vibe.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 99,
+      "text": "The spec is Schrödinger’s document.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    },
+    {
+      "id": 100,
+      "text": "Merge conflicts build character.",
+      "tags": [
+        "snark",
+        "dev",
+        "marquee"
+      ],
+      "weight": 1
+    }
+  ]
+}

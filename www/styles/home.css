@@ -1,35 +1,19 @@
-/* H1: Layout variables */
-:root {
-  --container-max: 1200px;
-  --gutter: 16px;
-  --section-gap: 24px;
-  --section-gap-lg: 32px;
-  --row-gap: 16px;
-
-  /* Card sizing defaults; tune to current card templates */
-  --home-card-w: 180px;
-  --home-card-h: 270px;
-}
-@media (min-width: 768px) {
-  :root { --section-gap: 28px; --row-gap: 20px; --home-card-w: 200px; --home-card-h: 300px; } /* H1 */
-}
-@media (min-width: 1200px) {
-  :root { --home-card-w: 220px; --home-card-h: 330px; } /* H1 */
-}
+/* H1: Layout variables - Now using unified card sizing system */
+/* Card sizing is now handled by spacing-system.css */
 
 /* H1: Page container */
 .home-content {
-  max-width: min(var(--container-max), 100%);
+  max-width: min(var(--container-max-width), 100%);
   margin-inline: auto;
-  padding-inline: max(var(--gutter), env(safe-area-inset-left));
+  padding-inline: var(--safe-gutter);
   padding-block: var(--section-gap);
 }
 
 /* H1.1: Quote bar positioned between search and tabs */
 .quote-bar, #quote-bar {
-  margin: 0 0 5px 0; /* H1.1: No gap above, normal below */
-  padding: 8px 12px;
-  border-radius: 8px;
+  margin: 0 0 var(--space-xs) 0; /* H1.1: No gap above, minimal below */
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--space-sm);
   background-color: var(--bg-elevated, #f8f9fa);
   border: 1px solid var(--border, #ddd);
   display: block;
@@ -38,13 +22,13 @@
 /* H1: Home groups */
 .home-group {
   margin-block: 0 var(--section-gap);
-  padding: 12px;
-  border-radius: 10px;
+  padding: var(--space-md);
+  border-radius: var(--space-lg);
 }
 
 /* H1: Preview rows */
 .home-group .preview-row {
-  margin-block: 8px;
+  margin-block: var(--space-sm);
 }
 .preview-row-scroll,
 .row-inner,
@@ -53,7 +37,7 @@
   gap: var(--row-gap);
   overflow-x: auto;
   scroll-snap-type: x proximity;
-  padding-block: 4px;
+  padding-block: var(--space-xs);
   -webkit-overflow-scrolling: touch;
 }
 .preview-row-scroll > *,
@@ -61,17 +45,17 @@
   scroll-snap-align: start;
 }
 
-/* H1: Card sizing alignment (use vars; do not hardcode px in other files) */
+/* H1: Card sizing alignment (use unified vars; do not hardcode px in other files) */
 .preview-card,
 .unified-card,
 .tab-section .list-container .poster-card {
-  width: var(--home-card-w);
-  min-width: var(--home-card-w);
-  max-width: var(--home-card-w);
+  width: var(--card-w);
+  min-width: var(--card-w);
+  max-width: var(--card-w);
 }
 .preview-card-poster,
 .unified-card-poster {
-  height: var(--home-card-h);
+  height: var(--card-h);
 }
 
 /* H1: Community two-column grid (desktop) / stack (mobile) */
@@ -81,7 +65,7 @@
   gap: var(--row-gap);
   align-items: start;
 }
-@media (max-width: 900px) {
+@media (max-width: var(--bp-tablet)) {
   .community-content { grid-template-columns: 1fr; } /* H1 */
 }
 
@@ -123,7 +107,7 @@ html, body { overflow-x: hidden; } /* keeps layout mishaps invisible; real fixes
 /* H1.1: home wrapper sizing */
 #homeSection.home-content {
   display: block;              /* ensure it participates in normal flow */
-  min-height: 600vh;  /* much larger as requested */
+  min-height: auto;            /* let content determine height naturally */
 }
 #panels { isolation: isolate; } /* guard against stray transforms creating new stacking/containing blocks */
 /* Kill any accidental height caps on home area */
@@ -152,16 +136,16 @@ html, body { overflow-x: hidden; } /* keeps layout mishaps invisible; real fixes
 /* H1.1: Header spacing - override main.css fixed positioning */
 #appRoot > header.header, header.header, .header {
   padding-bottom: 20px;
-  margin-bottom: 5px !important; /* H1.1: Minimal space between header and search - force override */
-  position: static !important; /* H1.1: Make header scroll with page - force override */
-  z-index: auto !important; /* H1.1: Remove high z-index - force override */
-  top: auto !important; /* H1.1: Remove fixed positioning - force override */
-  left: auto !important; /* H1.1: Remove fixed positioning - force override */
-  right: auto !important; /* H1.1: Remove fixed positioning - force override */
-  height: auto !important; /* H1.1: Remove fixed height - force override */
-  width: auto !important; /* H1.1: Remove fixed width - force override */
-  box-shadow: none !important; /* H1.1: Remove fixed header shadow - force override */
-  border-bottom: 2px solid var(--primary, #e91e63) !important; /* H1.1: Add bottom border */
+  margin-bottom: 5px ; /* H1.1: Minimal space between header and search - force override */
+  position: static ; /* H1.1: Make header scroll with page - force override */
+  z-index: auto ; /* H1.1: Remove high z-index - force override */
+  top: auto ; /* H1.1: Remove fixed positioning - force override */
+  left: auto ; /* H1.1: Remove fixed positioning - force override */
+  right: auto ; /* H1.1: Remove fixed positioning - force override */
+  height: auto ; /* H1.1: Remove fixed height - force override */
+  width: auto ; /* H1.1: Remove fixed width - force override */
+  box-shadow: none ; /* H1.1: Remove fixed header shadow - force override */
+  border-bottom: 2px solid var(--primary, #e91e63) ; /* H1.1: Add bottom border */
 }
 
 /* H1.1: Search bar sticky behavior */
@@ -193,22 +177,22 @@ html, body { overflow-x: hidden; } /* keeps layout mishaps invisible; real fixes
 /* H1.1: Tabs: even, tab-like, not sticky */
 /* Scope to the nav container so we don't touch other tablists */
 #navigation.tab-container, .tab-container[role="tablist"], [role="tablist"].tab-container {
-  display: flex !important; 
+  display: flex ; 
   gap: 8px; 
   align-items: flex-end;
   border-bottom: 1px solid var(--border, #ddd);
   padding: 8px 4px; 
   margin: 2px 0 20px 0; /* H1.1: Minimal top margin to quote bar, bottom margin for content */
-  position: static !important; /* H1.1: Force tabs to scroll with page */
-  top: auto !important; /* H1.1: Remove any sticky positioning */
-  z-index: auto !important; /* H1.1: Remove high z-index */
-  height: auto !important;
-  min-height: 40px !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  position: static ; /* H1.1: Force tabs to scroll with page */
+  top: auto ; /* H1.1: Remove any sticky positioning */
+  z-index: auto ; /* H1.1: Remove high z-index */
+  height: auto ;
+  min-height: 40px ;
+  visibility: visible ;
+  opacity: 1 ;
 }
 .tab-container [role="tab"], .tab-container .tab {
-  display: inline-flex !important; 
+  display: inline-flex ; 
   align-items: center; 
   justify-content: center;
   padding: 8px 12px;
@@ -218,10 +202,10 @@ html, body { overflow-x: hidden; } /* keeps layout mishaps invisible; real fixes
   min-width: 64px;
   font-weight: 600;
   cursor: pointer;
-  height: auto !important;
-  min-height: 32px !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  height: auto ;
+  min-height: 32px ;
+  visibility: visible ;
+  opacity: 1 ;
 }
 .tab-container [role="tab"].active,
 .tab-container [aria-selected="true"],
@@ -243,10 +227,10 @@ html, body { overflow-x: hidden; } /* keeps layout mishaps invisible; real fixes
 /* If #appRoot or .panels accidentally has transform/contain set elsewhere, neutralize here */
 #appRoot, #appRoot > .panels { transform: none; contain: none; }
 
-/* H1.1: Set #appRoot to 600vh height as requested */
+/* H1.1: Let app root height be determined by content naturally */
 #appRoot {
-  height: 600vh;
-  min-height: 600vh;
+  height: auto;
+  min-height: 100vh;
 }
 
 /* H1.1: FABs scroll with page (not fixed to viewport) */

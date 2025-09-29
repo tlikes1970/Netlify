@@ -43,6 +43,20 @@ body[data-theme='dark'] {
   --shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
 }
 
+/* Light theme - explicit definition */
+body[data-theme='light'] {
+  --bg: #ffffff;
+  --text: #121212;
+  --surface: #f6f7fb;
+  --card: #ffffff;
+  --border: #e6e8f0;
+  --accent: #6c5ce7;
+  --accent-2: #00b894;
+  --link: #2962ff;
+  --btn-text: #ffffff;
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
 /* System theme - uses media query for actual values */
 body[data-theme='system'] {
   /* Will be overridden by .system-dark class when media query matches */

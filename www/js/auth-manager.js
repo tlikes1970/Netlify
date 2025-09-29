@@ -399,6 +399,15 @@
             console.log('✅ [CENTRALIZED] Direct Firebase load completed');
           }
 
+          // === CRITICAL: Call FlickletApp.handlePostAuthSuccess for username logic ===
+          if (window.FlickletApp && typeof window.FlickletApp.handlePostAuthSuccess === 'function') {
+            console.log('🔄 [CENTRALIZED] Calling FlickletApp.handlePostAuthSuccess for username logic...');
+            await window.FlickletApp.handlePostAuthSuccess(user);
+            console.log('✅ [CENTRALIZED] FlickletApp.handlePostAuthSuccess completed');
+          } else {
+            console.warn('⚠️ [CENTRALIZED] FlickletApp.handlePostAuthSuccess not available - username logic may not work');
+          }
+
           // Check what data we actually have after loading
           console.log('🔍 [CENTRALIZED] Data after loading:', {
             tvWatching: window.appData?.tv?.watching?.length || 0,

@@ -1,0 +1,311 @@
+{
+  "timestamp": "2025-09-27T18-56-00",
+  "serverUrl": "http://localhost:8888",
+  "environment": {
+    "node": "v22.19.0",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "git": {
+    "branch": "main",
+    "commit": "ed74e767ffc54a2d44db8dfa42b8eb6ef75f0f12",
+    "message": "refactor(settings): complete settings system with schema, validation, effects, and pro gating"
+  },
+  "results": [
+    {
+      "id": "file-www-js-settings-schema-json",
+      "kind": "File Presence",
+      "status": "PASS",
+      "evidence": "File exists",
+      "path": "www/js/settings-schema.json",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.651Z"
+    },
+    {
+      "id": "file-www-js-settings-schema-js",
+      "kind": "File Presence",
+      "status": "PASS",
+      "evidence": "File exists",
+      "path": "www/js/settings-schema.js",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.651Z"
+    },
+    {
+      "id": "file-www-js-settings-renderer-js",
+      "kind": "File Presence",
+      "status": "PASS",
+      "evidence": "File exists",
+      "path": "www/js/settings-renderer.js",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.651Z"
+    },
+    {
+      "id": "file-www-js-settings-state-js",
+      "kind": "File Presence",
+      "status": "PASS",
+      "evidence": "File exists",
+      "path": "www/js/settings-state.js",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.651Z"
+    },
+    {
+      "id": "file-www-js-settings-validate-js",
+      "kind": "File Presence",
+      "status": "PASS",
+      "evidence": "File exists",
+      "path": "www/js/settings-validate.js",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.651Z"
+    },
+    {
+      "id": "file-www-js-settings-effects-js",
+      "kind": "File Presence",
+      "status": "PASS",
+      "evidence": "File exists",
+      "path": "www/js/settings-effects.js",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.651Z"
+    },
+    {
+      "id": "file-www-js-settings-pro-gate-js",
+      "kind": "File Presence",
+      "status": "PASS",
+      "evidence": "File exists",
+      "path": "www/js/settings-pro-gate.js",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.651Z"
+    },
+    {
+      "id": "file-www-js-layout-search-sticky-js",
+      "kind": "File Presence",
+      "status": "PASS",
+      "evidence": "File exists",
+      "path": "www/js/layout/search-sticky.js",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.651Z"
+    },
+    {
+      "id": "file-scripts-dev-validate-sticky-js",
+      "kind": "File Presence",
+      "status": "PASS",
+      "evidence": "File exists",
+      "path": "scripts/dev/validate-sticky.js",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.651Z"
+    },
+    {
+      "id": "file-www-index-html",
+      "kind": "File Presence",
+      "status": "PASS",
+      "evidence": "File exists",
+      "path": "www/index.html",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.651Z"
+    },
+    {
+      "id": "file-www-js-app-js",
+      "kind": "File Presence",
+      "status": "PASS",
+      "evidence": "File exists",
+      "path": "www/js/app.js",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.651Z"
+    },
+    {
+      "id": "file-www-styles-main-css",
+      "kind": "File Presence",
+      "status": "PASS",
+      "evidence": "File exists",
+      "path": "www/styles/main.css",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.651Z"
+    },
+    {
+      "id": "file-www-styles-mobile-hotfix-css",
+      "kind": "File Presence",
+      "status": "PASS",
+      "evidence": "File exists",
+      "path": "www/styles/mobile-hotfix.css",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.651Z"
+    },
+    {
+      "id": "schema-sanity",
+      "kind": "Schema Validation",
+      "status": "PASS",
+      "evidence": "Schema valid with 13 settings",
+      "path": "www/js/settings-schema.json",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.651Z"
+    },
+    {
+      "id": "import-schema-module-import",
+      "kind": "Import Wiring",
+      "status": "FAIL",
+      "evidence": "Not found",
+      "path": "www/index.html",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.653Z"
+    },
+    {
+      "id": "import-effects-module-import",
+      "kind": "Import Wiring",
+      "status": "PASS",
+      "evidence": "Found 1 matches",
+      "path": "www/index.html",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.654Z"
+    },
+    {
+      "id": "import-pro-gate-module-import",
+      "kind": "Import Wiring",
+      "status": "PASS",
+      "evidence": "Found 1 matches",
+      "path": "www/index.html",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.655Z"
+    },
+    {
+      "id": "import-toggle-theme-handler",
+      "kind": "Import Wiring",
+      "status": "PASS",
+      "evidence": "Found 1 matches",
+      "path": "www/js/app.js",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.656Z"
+    },
+    {
+      "id": "css-header-height-variable",
+      "kind": "CSS Variables",
+      "status": "PASS",
+      "evidence": "Found 5 matches",
+      "path": "www/styles/main.css",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.657Z"
+    },
+    {
+      "id": "css-tabs-height-variable",
+      "kind": "CSS Variables",
+      "status": "PASS",
+      "evidence": "Found 2 matches",
+      "path": "www/styles/main.css",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.658Z"
+    },
+    {
+      "id": "css-search-height-variable",
+      "kind": "CSS Variables",
+      "status": "PASS",
+      "evidence": "Found 1 matches",
+      "path": "www/styles/main.css",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.660Z"
+    },
+    {
+      "id": "css-sticky-positioning",
+      "kind": "CSS Variables",
+      "status": "PASS",
+      "evidence": "Found 3 matches",
+      "path": "www/styles/main.css",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.662Z"
+    },
+    {
+      "id": "functions-syntax",
+      "kind": "Functions.js Syntax",
+      "status": "PASS",
+      "evidence": "Syntax OK in lines 3850-3494",
+      "path": "www/js/functions.js",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:00.662Z"
+    },
+    {
+      "id": "prettier-check",
+      "kind": "Code Formatting",
+      "status": "FAIL",
+      "evidence": "Prettier issues: Command failed: npx prettier --check www/\n[\u001b[33mwarn\u001b[39m] www/index.before-mobile-hotfix.snapshot.html\n[\u001b[33mwarn\u001b[39m] www/js/layout/search-sticky.js\n[\u001b[33mwarn\u001b[39m] Code style issues found in 2 files. Run Prettier with --write to fix.\n",
+      "path": "www/",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:05.978Z"
+    },
+    {
+      "id": "runtime-sticky-search",
+      "kind": "Sticky Search",
+      "status": "PASS",
+      "evidence": "Sticky search working: position=sticky, top=80px, z-index=95",
+      "path": "runtime",
+      "screenshot": "reports/assets/2025-09-27T18-56-10-273Z/sticky-search.png",
+      "timestamp": "2025-09-27T18:56:10.654Z"
+    },
+    {
+      "id": "runtime-z-index",
+      "kind": "Z-Index Order",
+      "status": "FAIL",
+      "evidence": "Z-index mismatch: expected {\"header\":\"100\",\"search\":\"95\",\"tabs\":\"90\"}, got {\"header\":\"100\",\"search\":\"95\",\"tabs\":\"100\"}",
+      "path": "runtime",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:10.656Z"
+    },
+    {
+      "id": "runtime-counts-parity",
+      "kind": "Counts Parity",
+      "status": "PASS",
+      "evidence": "Counts parity verified: adapter={\"watching\":0,\"wishlist\":0,\"watched\":0}",
+      "path": "runtime",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:10.658Z"
+    },
+    {
+      "id": "runtime-spanish",
+      "kind": "Spanish Translation",
+      "status": "PASS",
+      "evidence": "Found 148 i18n elements, 2 missing keys: toggle-theme, share-lists",
+      "path": "runtime",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:11.185Z"
+    },
+    {
+      "id": "runtime-discover",
+      "kind": "Discover Layout",
+      "status": "FAIL",
+      "evidence": "Discover tab not found",
+      "path": "runtime",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:11.188Z"
+    },
+    {
+      "id": "runtime-auth-modal",
+      "kind": "Auth Modal",
+      "status": "PASS",
+      "evidence": "Auth modal opened successfully, 1 alreadyOpen logs",
+      "path": "runtime",
+      "screenshot": "reports/assets/2025-09-27T18-56-12-254Z/auth-modal.png",
+      "timestamp": "2025-09-27T18:56:12.557Z"
+    },
+    {
+      "id": "runtime-flickword",
+      "kind": "FlickWord Modal",
+      "status": "FAIL",
+      "evidence": "FlickWord button not found",
+      "path": "runtime",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:12.561Z"
+    },
+    {
+      "id": "runtime-functions-syntax",
+      "kind": "Functions.js Syntax (Runtime)",
+      "status": "PASS",
+      "evidence": "Functions.js syntax OK in lines 3850-3494",
+      "path": "runtime",
+      "screenshot": "",
+      "timestamp": "2025-09-27T18:56:12.571Z"
+    }
+  ],
+  "summary": {
+    "total": 32,
+    "pass": 27,
+    "fail": 5,
+    "skip": 0,
+    "successRate": 84
+  }
+}

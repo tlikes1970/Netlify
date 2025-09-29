@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Body.mobile Fix Test</title>
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        .test-container { max-width: 1200px; margin: 0 auto; }
+        .test-section { margin-bottom: 30px; padding: 20px; border: 1px solid #ccc; }
+        .test-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        .test-result { padding: 10px; margin: 5px 0; border-radius: 4px; }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Body.mobile Fix Test</h1>
+        
+        <div class="test-section">
+            <div class="test-title">Search Interface Test (Desktop)</div>
+            <div id="desktop-test-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">Mobile Simulation Test</div>
+            <div id="mobile-test-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">Console Commands</div>
+            <div class="info">
+                <p>Run these commands in the browser console to test the layout:</p>
+                <pre>
+// Test desktop layout (should work the same)
+const searchRow = document.querySelector('.search-row');
+if (searchRow) {
+    const styles = getComputedStyle(searchRow);
+    console.log('Desktop Search Row:', {
+        display: styles.display,
+        flexDirection: styles.flexDirection,
+        gap: styles.gap
+    });
+}
+
+// Test genre filter width (should still be 60px)
+const genreFilter = document.querySelector('.genre-filter');
+if (genreFilter) {
+    const styles = getComputedStyle(genreFilter);
+    console.log('Genre Filter:', {
+        width: styles.width,
+        minWidth: styles.minWidth,
+        maxWidth: styles.maxWidth
+    });
+}
+
+// Test mobile breakpoint (resize window to <640px)
+// The layout should now work based on media queries, not body.mobile class
+                </pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            const desktopResults = document.getElementById('desktop-test-results');
+            const mobileResults = document.getElementById('mobile-test-results');
+            
+            // Test if search elements exist
+            const searchRow = document.querySelector('.search-row');
+            const genreFilter = document.querySelector('.genre-filter');
+            const searchInput = document.querySelector('.search-input');
+            const searchBtn = document.querySelector('.search-btn');
+            const clearBtn = document.querySelector('.clear-search-btn');
+            
+            if (searchRow) {
+                desktopResults.innerHTML += '<div class="test-result pass">✓ Search row element found</div>';
+            } else {
+                desktopResults.innerHTML += '<div class="test-result fail">✗ Search row element not found</div>';
+            }
+            
+            if (genreFilter) {
+                desktopResults.innerHTML += '<div class="test-result pass">✓ Genre filter element found</div>';
+            } else {
+                desktopResults.innerHTML += '<div class="test-result fail">✗ Genre filter element not found</div>';
+            }
+            
+            if (searchInput && searchBtn && clearBtn) {
+                desktopResults.innerHTML += '<div class="test-result pass">✓ All search elements found</div>';
+            } else {
+                desktopResults.innerHTML += '<div class="test-result fail">✗ Some search elements missing</div>';
+            }
+            
+            // Test mobile breakpoint
+            const isMobile = window.innerWidth <= 640;
+            if (isMobile) {
+                mobileResults.innerHTML += '<div class="test-result info">📱 Mobile breakpoint active (window ≤ 640px)</div>';
+            } else {
+                mobileResults.innerHTML += '<div class="test-result info">💻 Desktop breakpoint active (window > 640px)</div>';
+            }
+            
+            // Test if body.mobile class exists (it shouldn't be needed anymore)
+            if (document.body.classList.contains('mobile')) {
+                mobileResults.innerHTML += '<div class="test-result fail">⚠️ body.mobile class still exists (not needed anymore)</div>';
+            } else {
+                mobileResults.innerHTML += '<div class="test-result pass">✓ No body.mobile class dependency</div>';
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+

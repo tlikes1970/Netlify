@@ -133,7 +133,7 @@ function persistSaved() {
 
 function applyEffects() {
   // minimal: theme, language, mardi (others already handled by app code where present)
-  document.documentElement.setAttribute('data-theme', STATE.saved['ui.theme'] || 'system');
+  document.documentElement.setAttribute('data-theme', STATE.saved['ui.theme'] || 'light');
   document.documentElement.lang = String(STATE.saved['app.language'] || 'en');
   document.body.classList.toggle('mardi-gras', !!STATE.saved['ui.mardiGrasOverlay']);
 }

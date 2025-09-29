@@ -287,11 +287,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // 3. Load genres
   loadGenres?.();
 
-  // 4. Restore theme from localStorage
-  const savedTheme = localStorage.getItem('flicklet-theme');
-  if (savedTheme === 'dark') {
-    document.body.classList.add('dark-mode');
-  }
+  // 4. Force light theme (override any saved dark theme)
+  localStorage.setItem('flicklet-theme', 'light');
+  document.body.classList.remove('dark-mode');
+  document.body.classList.add('light-mode');
+  document.documentElement.setAttribute('data-theme', 'light');
+  document.body.setAttribute('data-theme', 'light');
 
   // 5. Ensure language dropdown is properly initialized
   const ensureLanguageDropdown = () => {
@@ -374,17 +375,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Account / Auth entry point (modal) - handled by FlickletApp.setupEventListeners()
 
-  // --- Save name button
-  bind('saveNameBtn', () => {
-    const val = (document.getElementById('displayNameInput')?.value || '').trim();
-    if (!val) return showNotification?.(t('enter_name_first'), 'warning');
-    if (appData?.settings) {
-      appData.settings.displayName = val;
-      saveAppData?.();
-      // updateWelcomeText?.(); // DISABLED - conflicts with dynamic header system
-      showNotification?.(t('name_saved'), 'success');
-    }
-  });
+  // --- Save name button - handled by window.saveDisplayName() in app.js
+  // Removed duplicate binding to prevent conflicts with proper Yes/No confirmation dialog
 
   // --- feedback handled by Netlify Forms
   function handleFeedbackSubmit(event) {

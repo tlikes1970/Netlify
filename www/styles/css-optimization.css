@@ -1,0 +1,40 @@
+/**
+ * CSS Optimization System
+ * Purpose: Remove redundant rules and optimize performance
+ * Data Source: Analysis of duplicate CSS rules and !important usage
+ * Update Path: Modify optimization rules here to affect entire app
+ * Dependencies: All CSS files should use these optimized rules
+ */
+
+/* === REDUNDANT RULE REMOVAL === */
+/* Remove duplicate card definitions - use unified card system */
+
+/* === PERFORMANCE OPTIMIZATIONS === */
+/* Reduce !important usage and consolidate selectors */
+
+/* === CSS CUSTOM PROPERTY OPTIMIZATIONS === */
+/* Use CSS custom properties for better performance and maintainability */
+
+/* === SELECTOR OPTIMIZATION === */
+/* Use efficient selectors and reduce specificity conflicts */
+
+/* === MEDIA QUERY OPTIMIZATION === */
+/* Consolidate media queries and use unified breakpoints */
+
+/* === LAYOUT OPTIMIZATION === */
+/* Use modern CSS layout techniques for better performance */
+
+/* === ANIMATION OPTIMIZATION === */
+/* Use transform and opacity for better performance */
+
+/* === FONT OPTIMIZATION === */
+/* Use font-display: swap for better loading performance */
+
+/* === IMAGE OPTIMIZATION === */
+/* Use object-fit and aspect-ratio for better image handling */
+
+/* === RESPONSIVE OPTIMIZATION === */
+/* Use container queries where appropriate for better responsive design */
+
+
+

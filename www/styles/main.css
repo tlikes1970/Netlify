@@ -308,7 +308,7 @@
 }
 
 /* Mobile responsive for modals */
-@media (max-width: 640px) {
+@media (max-width: var(--bp-mobile)) {
   .auth-modal-content,
   .signout-modal {
     margin: 16px;
@@ -373,49 +373,50 @@
 
 /* Badge System - Replaces JS style mutations */
 .tab-badge {
-  display: inline-block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  font-size: var(--badge-font-size) !important;
-  background-color: var(--badge-bg) !important;
-  color: var(--badge-color) !important;
-  padding: var(--badge-padding) !important;
-  border-radius: var(--badge-border-radius) !important;
-  margin-left: var(--badge-margin-left) !important;
-  font-weight: var(--badge-font-weight) !important;
-  min-width: var(--badge-min-width) !important;
-  text-align: center !important;
-  line-height: var(--badge-line-height) !important;
-  position: relative !important;
-  z-index: var(--badge-z-index) !important;
+  display: inline-block ;
+  visibility: visible ;
+  opacity: 1 ;
+  font-size: var(--badge-font-size) ;
+  background-color: var(--badge-bg) ;
+  color: var(--badge-color) ;
+  padding: var(--badge-padding) ;
+  border-radius: var(--badge-border-radius) ;
+  margin-left: var(--badge-margin-left) ;
+  font-weight: var(--badge-font-weight) ;
+  min-width: var(--badge-min-width) ;
+  text-align: center ;
+  line-height: var(--badge-line-height) ;
+  position: relative ;
+  z-index: var(--badge-z-index) ;
 }
 
 .tab-badge--hidden {
-  display: none !important;
+  display: none ;
 }
 
 .tab-badge--visible {
-  display: inline-block !important;
+  display: inline-block ;
 }
 
 /* Left Snark Styling */
 .left-snark {
-  font-size: 12px;
+  font-size: 16px;
   color: var(--text-secondary, #666);
   font-style: italic;
   text-align: left;
   margin: 4px 0;
   pointer-events: none;
   z-index: auto;
+  font-weight: 500;
 }
 
 /* Provider Modal Styling */
 .modal-backdrop {
-  z-index: 10000 !important;
+  z-index: 10000 ;
 }
 
 .modal-backdrop .modal-content {
-  z-index: 10001 !important;
+  z-index: 10001 ;
 }
 
 /* Feedback Card */
@@ -437,7 +438,7 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: var(--bp-mobile-lg)) {
   .home-group {
     margin-bottom: 24px;
   }
@@ -455,7 +456,7 @@
 
 html,
 body {
-  height: 100%;
+  height: var(--body-height);
 }
 
 body {
@@ -472,10 +473,10 @@ body {
   padding: 20px;
   color: var(--text);
   line-height: 1.5;
-  min-height: 100svh;
-  overflow-x: hidden;
+  min-height: var(--app-root-min-height);
+  overflow-x: var(--app-root-overflow-x);
   /* Ensure sticky positioning works */
-  overflow-y: visible;
+  overflow-y: var(--app-root-overflow-y);
   /* Reserve space so content isn't covered by floating buttons */
   padding-bottom: calc(env(safe-area-inset-bottom) + 120px);
 }
@@ -491,7 +492,7 @@ body {
   --shadow-1: 0 2px 4px rgba(0, 0, 0, 0.3);
   --border: #404040;
   --text-secondary: #b0b0b0;
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6b 100%) !important;
+  background: #ffffff; /* Override dark gradient with white */
 }
 
 .dark-mode .main-container {
@@ -512,19 +513,19 @@ body {
 
 /* Dark mode tab styling */
 .dark-mode .tab {
-  color: var(--text-muted) !important;
-  background: transparent !important;
+  color: var(--text-muted) ;
+  background: transparent ;
 }
 
 .dark-mode .tab:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: var(--text) !important;
+  background: rgba(255, 255, 255, 0.1) ;
+  color: var(--text) ;
 }
 
 .dark-mode .tab.active {
-  background: transparent !important;
-  color: var(--text) !important;
-  border-bottom-color: var(--primary) !important;
+  background: transparent ;
+  color: var(--text) ;
+  border-bottom-color: var(--primary) ;
 }
 
 /* Dark mode section titles and headers */
@@ -532,80 +533,89 @@ body {
 .dark-mode .preview-row-title,
 .dark-mode h2,
 .dark-mode h3 {
-  color: var(--text) !important;
+  color: var(--text) ;
 }
 
 .dark-mode .preview-row-header h3 {
-  color: var(--text) !important;
+  color: var(--text) ;
 }
 
 /* Dark mode text elements */
 .dark-mode .tab-badge {
-  color: var(--text) !important;
-  background: rgba(255, 255, 255, 0.2) !important;
+  color: var(--text) ;
+  background: rgba(255, 255, 255, 0.2) ;
 }
 
 .dark-mode .count {
-  color: var(--text-secondary) !important;
+  color: var(--text-secondary) ;
 }
 
 /* COMPREHENSIVE GLOBAL DARK MODE THEME */
 /* Universal text color inheritance - fixes ALL text readability issues */
 .dark-mode * {
-  color: inherit !important;
+  color: inherit ;
 }
 
 /* FORCE LIGHT THEME - Reset all colors to readable defaults */
 :root {
-  --bg: #ffffff !important;
-  --text: #1f2937 !important;
-  --fg: #1f2937 !important;
-  --fg-default: #1f2937 !important;
-  --fg-muted: #6b7280 !important;
-  --fg-subtle: #7f8c8d !important;
-  --fg-on-elevated: #111827 !important;
-  --text-secondary: #666 !important;
-  --card: #ffffff !important;
-  --border: #e5e7eb !important;
+  --bg: #ffffff ;
+  --text: #1f2937 ;
+  --fg: #1f2937 ;
+  --fg-default: #1f2937 ;
+  --fg-muted: #6b7280 ;
+  --fg-subtle: #7f8c8d ;
+  --fg-on-elevated: #111827 ;
+  --text-secondary: #666 ;
+  --card: #ffffff ;
+  --border: #e5e7eb ;
   
   /* PART2A: Container-aware FAB positioning */
   --container-max: 1200px; /* tune if you use a different max */
   --container-pad: 16px;
   --fab-gap: 16px;
-  --accent: #2563eb !important;
-  --primary: #e91e63 !important;
-  --surface: #f9f9f9 !important;
-  --bg-page: #ffffff !important;
-  --bg-elevated: #f7f7f9 !important;
+  --accent: #2563eb ;
+  --primary: #e91e63 ;
+  --surface: #f9f9f9 ;
+  --bg-page: #ffffff ;
+  --bg-elevated: #f7f7f9 ;
 }
 
 /* Force light theme on body */
 body {
-  background: #ffffff !important;
-  color: #1f2937 !important;
+  background: #ffffff ;
+  color: #1f2937 ;
 }
 
 /* Override any dark mode classes */
 .dark-mode,
 [data-theme="dark"],
 [data-theme="mardi"] {
-  --bg: #ffffff !important;
-  --text: #1f2937 !important;
-  --fg: #1f2937 !important;
-  --fg-default: #1f2937 !important;
-  --fg-muted: #6b7280 !important;
-  --fg-subtle: #7f8c8d !important;
-  --fg-on-elevated: #111827 !important;
-  --text-secondary: #666 !important;
-  --card: #ffffff !important;
-  --border: #e5e7eb !important;
-  --accent: #2563eb !important;
-  --primary: #e91e63 !important;
-  --surface: #f9f9f9 !important;
-  --bg-page: #ffffff !important;
-  --bg-elevated: #f7f7f9 !important;
-  background: #ffffff !important;
-  color: #1f2937 !important;
+  --bg: #ffffff ;
+  --text: #1f2937 ;
+  --fg: #1f2937 ;
+  --fg-default: #1f2937 ;
+  --fg-muted: #6b7280 ;
+  --fg-subtle: #7f8c8d ;
+  --fg-on-elevated: #111827 ;
+  --text-secondary: #666 ;
+  --card: #ffffff ;
+  --border: #e5e7eb ;
+  --accent: #2563eb ;
+  --primary: #e91e63 ;
+  --surface: #f9f9f9 ;
+  --bg-page: #ffffff ;
+  --bg-elevated: #f7f7f9 ;
+  background: #ffffff ;
+  color: #1f2937 ;
+}
+
+/* Fix specific containers that use dark CSS variables */
+.dark-mode .main-container,
+.dark-mode .home-group,
+.dark-mode .preview-card,
+.dark-mode .unified-card,
+.dark-mode .list-container {
+  background: #ffffff;
 }
 
 /* FORCE TAB VISIBILITY - Ensure tabs are always visible */
@@ -659,7 +669,7 @@ body {
   padding: 0;
 }
 
-/* Handle .hidden class on tabs - simplified without !important */
+/* Handle .hidden class on tabs - simplified without  */
 .tab.hidden {
   display: none;
 }
@@ -679,7 +689,8 @@ body.has-search [role="tablist"],
 /* Base text elements */
 .dark-mode body,
 .dark-mode html {
-  color: var(--text) !important;
+  color: var(--text) ;
+  background: #ffffff; /* Force white background */
 }
 
 /* All text elements inherit proper colors */
@@ -700,7 +711,7 @@ body.has-search [role="tablist"],
 .dark-mode input,
 .dark-mode textarea,
 .dark-mode select {
-  color: var(--text) !important;
+  color: var(--text) ;
 }
 
 /* Secondary text elements */
@@ -709,7 +720,7 @@ body.has-search [role="tablist"],
 .dark-mode .description,
 .dark-mode .meta,
 .dark-mode .caption {
-  color: var(--text-secondary) !important;
+  color: var(--text-secondary) ;
 }
 
 /* Container backgrounds */
@@ -719,8 +730,8 @@ body.has-search [role="tablist"],
 .dark-mode .main,
 .dark-mode .panel,
 .dark-mode .box {
-  background: var(--card) !important;
-  color: var(--text) !important;
+  background: var(--card) ;
+  color: var(--text) ;
 }
 
 /* Row and scroll containers */
@@ -728,16 +739,16 @@ body.has-search [role="tablist"],
 .dark-mode .preview-row-container,
 .dark-mode .scroll-container,
 .dark-mode .list-container {
-  color: var(--text) !important;
+  color: var(--text) ;
 }
 
 /* COMPREHENSIVE OVERRIDE - Force all elements to use theme colors */
 .dark-mode [style*='color'] {
-  color: var(--text) !important;
+  color: var(--text) ;
 }
 
 .dark-mode [style*='background'] {
-  background: var(--card) !important;
+  background: var(--card) ;
 }
 
 /* Specific overrides for common problematic elements */
@@ -746,7 +757,7 @@ body.has-search [role="tablist"],
 .dark-mode .success,
 .dark-mode .info,
 .dark-mode .warning {
-  color: var(--text) !important;
+  color: var(--text) ;
 }
 
 /* Form elements */
@@ -754,18 +765,18 @@ body.has-search [role="tablist"],
 .dark-mode input[type='email'],
 .dark-mode input[type='password'],
 .dark-mode textarea {
-  background: var(--card) !important;
-  color: var(--text) !important;
-  border-color: var(--border) !important;
+  background: var(--card) ;
+  color: var(--text) ;
+  border-color: var(--border) ;
 }
 
 /* Links and interactive elements */
 .dark-mode a {
-  color: var(--accent) !important;
+  color: var(--accent) ;
 }
 
 .dark-mode a:hover {
-  color: var(--text) !important;
+  color: var(--text) ;
 }
 
 /* Movie card content - specific overrides for visible elements */
@@ -775,37 +786,37 @@ body.has-search [role="tablist"],
 .dark-mode .card-description,
 .dark-mode .card-title,
 .dark-mode .card-meta {
-  color: var(--text) !important;
+  color: var(--text) ;
 }
 
 .dark-mode .card-description {
-  color: var(--text-secondary) !important;
+  color: var(--text-secondary) ;
 }
 
 /* Theater section specific styling */
 .dark-mode .theaters-near-me,
 .dark-mode .theater-section,
 .dark-mode .theater-content {
-  background: var(--card) !important;
-  color: var(--text) !important;
+  background: var(--card) ;
+  color: var(--text) ;
 }
 
 .dark-mode .theater-description {
-  color: var(--text-secondary) !important;
+  color: var(--text-secondary) ;
 }
 
 /* Movie overview descriptions - specific fix for now playing cards */
 .dark-mode .movie-overview {
-  color: var(--text-secondary) !important;
+  color: var(--text-secondary) ;
 }
 
 .dark-mode .show-overview {
-  color: var(--text-secondary) !important;
+  color: var(--text-secondary) ;
 }
 
 /* Movie card elements - complete styling */
 .dark-mode .movie-title {
-  color: var(--text) !important;
+  color: var(--text) ;
 }
 
 /* Additional title classes that might be used */
@@ -813,19 +824,19 @@ body.has-search [role="tablist"],
 .dark-mode .card-title,
 .dark-mode .show-title,
 .dark-mode .preview-card-title {
-  color: var(--text) !important;
+  color: var(--text) ;
 }
 
 .dark-mode .movie-meta {
-  color: var(--text) !important;
+  color: var(--text) ;
 }
 
 .dark-mode .movie-rating {
-  color: var(--text) !important;
+  color: var(--text) ;
 }
 
 .dark-mode .movie-release {
-  color: var(--text-secondary) !important;
+  color: var(--text-secondary) ;
 }
 
 .dark-mode .search-input,
@@ -857,7 +868,7 @@ body.has-search [role="tablist"],
 }
 
 /* MP-2.1: fence legacy card rules to desktop to avoid mobile collisions */
-@media (min-width: 641px) {
+@media (min-width: calc(var(--bp-mobile) + 1px)) {
   .dark-mode .show-card {
     background: var(--card);
     border-color: var(--border);
@@ -865,231 +876,231 @@ body.has-search [role="tablist"],
 }
 
 .mardi .header {
-  border-color: var(--mardi3) !important;
+  border-color: var(--mardi3) ;
 }
 
 .mardi .btn {
-  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) !important;
+  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) ;
 }
 
 .mardi .tab {
-  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) !important;
-  color: #fff !important;
+  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) ;
+  color: #fff ;
 }
 
 body.mardi {
-  background: linear-gradient(135deg, var(--mardi1), var(--mardi2)) !important;
+  background: linear-gradient(135deg, var(--mardi1), var(--mardi2)) ;
 }
 
 /* Mardi Gras Settings Tabs Styling */
 .mardi .settings-tabs button {
-  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) !important;
-  color: white !important;
-  border: 2px solid var(--mardi2) !important;
-  font-weight: bold !important;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
+  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) ;
+  color: white ;
+  border: 2px solid var(--mardi2) ;
+  font-weight: bold ;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) ;
 }
 
 .mardi .settings-tabs button:hover {
-  background: linear-gradient(45deg, var(--mardi3), var(--mardi1)) !important;
-  transform: scale(1.05) !important;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+  background: linear-gradient(45deg, var(--mardi3), var(--mardi1)) ;
+  transform: scale(1.05) ;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) ;
 }
 
 .mardi .settings-tabs button.active {
-  background: linear-gradient(45deg, var(--mardi2), var(--mardi1)) !important;
-  border-color: var(--mardi3) !important;
-  box-shadow: 0 0 10px var(--mardi3) !important;
+  background: linear-gradient(45deg, var(--mardi2), var(--mardi1)) ;
+  border-color: var(--mardi3) ;
+  box-shadow: 0 0 10px var(--mardi3) ;
 }
 
 /* Mardi Gras Settings Sections */
 .mardi .settings-section {
-  background: linear-gradient(135deg, rgba(106, 13, 173, 0.1), rgba(40, 167, 69, 0.1)) !important;
-  border: 2px solid var(--mardi2) !important;
-  border-radius: 10px !important;
+  background: linear-gradient(135deg, rgba(106, 13, 173, 0.1), rgba(40, 167, 69, 0.1)) ;
+  border: 2px solid var(--mardi2) ;
+  border-radius: 10px ;
 }
 
 /* Mardi Gras Main Tabs */
 .mardi .tab-container .tab {
-  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) !important;
-  color: white !important;
-  border: 2px solid var(--mardi2) !important;
-  font-weight: bold !important;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
+  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) ;
+  color: white ;
+  border: 2px solid var(--mardi2) ;
+  font-weight: bold ;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) ;
 }
 
 .mardi .tab-container .tab:hover {
-  background: linear-gradient(45deg, var(--mardi3), var(--mardi1)) !important;
+  background: linear-gradient(45deg, var(--mardi3), var(--mardi1)) ;
   transform: scale(1.05); /* PART2C */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) ;
 }
 
 .mardi .tab-container .tab.active {
-  background: linear-gradient(45deg, var(--mardi2), var(--mardi1)) !important;
-  border-color: var(--mardi3) !important;
-  box-shadow: 0 0 10px var(--mardi3) !important;
+  background: linear-gradient(45deg, var(--mardi2), var(--mardi1)) ;
+  border-color: var(--mardi3) ;
+  box-shadow: 0 0 10px var(--mardi3) ;
 }
 
 /* Mardi Gras Cards */
 .mardi .card {
-  background: linear-gradient(135deg, rgba(106, 13, 173, 0.1), rgba(40, 167, 69, 0.1)) !important;
-  border: 2px solid var(--mardi2) !important;
-  border-radius: 10px !important;
+  background: linear-gradient(135deg, rgba(106, 13, 173, 0.1), rgba(40, 167, 69, 0.1)) ;
+  border: 2px solid var(--mardi2) ;
+  border-radius: 10px ;
 }
 
 .mardi .card:hover {
-  border-color: var(--mardi3) !important;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+  border-color: var(--mardi3) ;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) ;
 }
 
 /* Mardi Gras Buttons */
 .mardi .btn.primary {
-  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) !important;
-  color: white !important;
-  border: 2px solid var(--mardi2) !important;
-  font-weight: bold !important;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
+  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) ;
+  color: white ;
+  border: 2px solid var(--mardi2) ;
+  font-weight: bold ;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) ;
 }
 
 .mardi .btn.primary:hover {
-  background: linear-gradient(45deg, var(--mardi3), var(--mardi1)) !important;
-  transform: scale(1.05) !important;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+  background: linear-gradient(45deg, var(--mardi3), var(--mardi1)) ;
+  transform: scale(1.05) ;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) ;
 }
 
 /* Mardi Gras Game Boxes (FlickWord & Daily Trivia) */
 .mardi .game-box {
-  background: linear-gradient(135deg, rgba(106, 13, 173, 0.15), rgba(40, 167, 69, 0.15)) !important;
-  border: 3px solid var(--mardi2) !important;
-  border-radius: 15px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  background: linear-gradient(135deg, rgba(106, 13, 173, 0.15), rgba(40, 167, 69, 0.15)) ;
+  border: 3px solid var(--mardi2) ;
+  border-radius: 15px ;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) ;
 }
 
 .mardi .game-box:hover {
-  border-color: var(--mardi3) !important;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3) !important;
-  transform: translateY(-2px) !important;
+  border-color: var(--mardi3) ;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3) ;
+  transform: translateY(-2px) ;
 }
 
 .mardi .game-title {
-  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
-  font-weight: bold !important;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3) !important;
+  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) ;
+  -webkit-background-clip: text ;
+  -webkit-text-fill-color: transparent ;
+  background-clip: text ;
+  font-weight: bold ;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3) ;
 }
 
 .mardi .game-play-btn {
-  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) !important;
-  color: white !important;
-  border: 2px solid var(--mardi2) !important;
-  font-weight: bold !important;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
-  border-radius: 8px !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) ;
+  color: white ;
+  border: 2px solid var(--mardi2) ;
+  font-weight: bold ;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) ;
+  border-radius: 8px ;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) ;
 }
 
 .mardi .game-play-btn:hover {
-  background: linear-gradient(45deg, var(--mardi3), var(--mardi1)) !important;
-  transform: scale(1.05) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  background: linear-gradient(45deg, var(--mardi3), var(--mardi1)) ;
+  transform: scale(1.05) ;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) ;
 }
 
 .mardi .game-stats {
-  background: linear-gradient(135deg, rgba(106, 13, 173, 0.1), rgba(40, 167, 69, 0.1)) !important;
-  border: 1px solid var(--mardi2) !important;
-  border-radius: 8px !important;
+  background: linear-gradient(135deg, rgba(106, 13, 173, 0.1), rgba(40, 167, 69, 0.1)) ;
+  border: 1px solid var(--mardi2) ;
+  border-radius: 8px ;
 }
 
 .mardi .stat-value {
-  color: var(--mardi1) !important;
-  font-weight: bold !important;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2) !important;
+  color: var(--mardi1) ;
+  font-weight: bold ;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2) ;
 }
 
 /* Mardi Gras FlickWord Card */
 .mardi .flickword-card {
-  background: linear-gradient(135deg, rgba(106, 13, 173, 0.1), rgba(40, 167, 69, 0.1)) !important;
-  border: 3px solid var(--mardi2) !important;
-  border-radius: 15px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  background: linear-gradient(135deg, rgba(106, 13, 173, 0.1), rgba(40, 167, 69, 0.1)) ;
+  border: 3px solid var(--mardi2) ;
+  border-radius: 15px ;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) ;
 }
 
 .mardi .flickword-card:hover {
-  border-color: var(--mardi3) !important;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3) !important;
-  transform: translateY(-2px) !important;
+  border-color: var(--mardi3) ;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3) ;
+  transform: translateY(-2px) ;
 }
 
 .mardi .flickword-title {
-  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
-  font-weight: bold !important;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3) !important;
+  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) ;
+  -webkit-background-clip: text ;
+  -webkit-text-fill-color: transparent ;
+  background-clip: text ;
+  font-weight: bold ;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3) ;
 }
 
 .mardi .flickword-actions .btn {
-  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) !important;
-  color: white !important;
-  border: 2px solid var(--mardi2) !important;
-  font-weight: bold !important;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
+  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) ;
+  color: white ;
+  border: 2px solid var(--mardi2) ;
+  font-weight: bold ;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) ;
 }
 
 .mardi .flickword-actions .btn:hover {
-  background: linear-gradient(45deg, var(--mardi3), var(--mardi1)) !important;
-  transform: scale(1.05) !important;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+  background: linear-gradient(45deg, var(--mardi3), var(--mardi1)) ;
+  transform: scale(1.05) ;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) ;
 }
 
 /* Mardi Gras Trivia Elements */
 .mardi .trivia-card {
-  background: linear-gradient(135deg, rgba(106, 13, 173, 0.1), rgba(40, 167, 69, 0.1)) !important;
-  border: 3px solid var(--mardi2) !important;
-  border-radius: 15px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  background: linear-gradient(135deg, rgba(106, 13, 173, 0.1), rgba(40, 167, 69, 0.1)) ;
+  border: 3px solid var(--mardi2) ;
+  border-radius: 15px ;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) ;
 }
 
 .mardi .trivia-card:hover {
-  border-color: var(--mardi3) !important;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3) !important;
+  border-color: var(--mardi3) ;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3) ;
 }
 
 .mardi .trivia-head h2 {
-  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
-  font-weight: bold !important;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3) !important;
+  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) ;
+  -webkit-background-clip: text ;
+  -webkit-text-fill-color: transparent ;
+  background-clip: text ;
+  font-weight: bold ;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3) ;
 }
 
 .mardi .trivia-choices li {
-  border: 2px solid var(--mardi2) !important;
-  background: linear-gradient(135deg, rgba(106, 13, 173, 0.05), rgba(40, 167, 69, 0.05)) !important;
+  border: 2px solid var(--mardi2) ;
+  background: linear-gradient(135deg, rgba(106, 13, 173, 0.05), rgba(40, 167, 69, 0.05)) ;
 }
 
 .mardi .trivia-choices li:hover {
-  border-color: var(--mardi3) !important;
-  background: linear-gradient(135deg, rgba(106, 13, 173, 0.1), rgba(40, 167, 69, 0.1)) !important;
-  transform: scale(1.02) !important;
+  border-color: var(--mardi3) ;
+  background: linear-gradient(135deg, rgba(106, 13, 173, 0.1), rgba(40, 167, 69, 0.1)) ;
+  transform: scale(1.02) ;
 }
 
 .mardi .trivia-actions .btn {
-  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) !important;
-  color: white !important;
-  border: 2px solid var(--mardi2) !important;
-  font-weight: bold !important;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
+  background: linear-gradient(45deg, var(--mardi1), var(--mardi3)) ;
+  color: white ;
+  border: 2px solid var(--mardi2) ;
+  font-weight: bold ;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) ;
 }
 
 .mardi .trivia-actions .btn:hover {
-  background: linear-gradient(45deg, var(--mardi3), var(--mardi1)) !important;
-  transform: scale(1.05) !important;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+  background: linear-gradient(45deg, var(--mardi3), var(--mardi1)) ;
+  transform: scale(1.05) ;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) ;
 }
 
 .main-container {
@@ -1286,7 +1297,7 @@ body.mardi {
 }
 
 .preview-card {
-  flex: 0 0 var(--home-card-w); /* H1 */
+  flex: 0 0 var(--card-w); /* H1 - using unified card sizing */
   background: var(--bg);
   border-radius: 6px;
   border: 1px solid var(--border);
@@ -1296,10 +1307,10 @@ body.mardi {
     box-shadow 0.2s ease;
   cursor: pointer;
   position: relative;
-  display: flex !important;
-  flex-direction: column !important;
-  height: auto !important;
-  width: var(--home-card-width-desktop) !important;
+  display: flex ;
+  flex-direction: column ;
+  height: auto ;
+  width: var(--card-w) ;
 }
 
 .preview-card:hover {
@@ -1308,8 +1319,8 @@ body.mardi {
 }
 
 .preview-card-poster {
-  width: var(--home-card-w); /* H1 */
-  height: var(--home-card-h); /* H1 */
+  width: var(--card-w); /* H1 - using unified card sizing */
+  height: var(--card-h); /* H1 - using unified card sizing */
   background: var(--border);
   position: relative;
   overflow: hidden;
@@ -1333,34 +1344,34 @@ body.mardi {
 }
 
 .preview-card-content {
-  padding: 4px 6px !important;
+  padding: 4px 6px ;
   flex: 1;
-  display: flex !important;
-  flex-direction: column !important;
+  display: flex ;
+  flex-direction: column ;
   justify-content: center;
   min-width: 0;
   overflow: hidden;
 }
 
 .preview-card-title {
-  font-size: 0.65rem !important;
+  font-size: 0.65rem ;
   font-weight: 600;
   color: var(--text);
-  margin: 0 0 1px 0 !important;
-  line-height: 1.1 !important;
+  margin: 0 0 1px 0 ;
+  line-height: 1.1 ;
   display: -webkit-box;
-  -webkit-line-clamp: 1 !important;
-  line-clamp: 1 !important;
+  -webkit-line-clamp: 1 ;
+  line-clamp: 1 ;
   -webkit-box-orient: vertical;
   overflow: hidden;
   white-space: nowrap;
 }
 
 .preview-card-year {
-  font-size: 0.55rem !important;
+  font-size: 0.55rem ;
   color: var(--text-secondary);
   margin: 0;
-  line-height: 1 !important;
+  line-height: 1 ;
 }
 
 .preview-card-status {
@@ -1369,9 +1380,9 @@ body.mardi {
   right: 2px;
   background: var(--success);
   color: white;
-  padding: 1px 4px !important;
-  border-radius: 4px !important;
-  font-size: 0.5rem !important;
+  padding: 1px 4px ;
+  border-radius: 4px ;
+  font-size: 0.5rem ;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.2px;
@@ -1395,13 +1406,13 @@ body.mardi {
   background: rgba(0, 0, 0, 0.7);
   color: white;
   border: none;
-  border-radius: 2px !important;
-  padding: 1px 2px !important;
-  font-size: 0.5rem !important;
+  border-radius: 2px ;
+  padding: 1px 2px ;
+  font-size: 0.5rem ;
   cursor: pointer;
   transition: background 0.2s ease;
-  min-width: 16px !important;
-  height: 16px !important;
+  min-width: 16px ;
+  height: 16px ;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1435,7 +1446,7 @@ body.mardi {
 
 /* Unified Card Base Styles */
 .unified-card {
-  flex: 0 0 var(--home-card-w); /* H1 */
+  flex: 0 0 var(--card-w); /* H1 - using unified card sizing */
   background: var(--bg);
   border-radius: 8px;
   border: 1px solid var(--border);
@@ -1444,20 +1455,20 @@ body.mardi {
     transform 0.2s ease,
     box-shadow 0.2s ease;
   position: relative;
-  display: flex !important;
-  flex-direction: column !important;
-  height: auto !important;
-  width: var(--home-card-width-desktop) !important;
+  display: flex ;
+  flex-direction: column ;
+  height: auto ;
+  width: var(--card-w) ;
 }
 
 /* Detail variant for tabs - horizontal layout */
 .unified-card--detail {
-  flex-direction: row !important;
-  width: 100% !important;
+  flex-direction: row ;
+  width: 100% ;
   max-width: 600px;
   min-width: 400px;
-  height: 180px !important;
-  margin: 0 !important;
+  height: 180px ;
+  margin: 0 ;
 }
 
 .unified-card:hover {
@@ -1467,8 +1478,8 @@ body.mardi {
 
 /* Poster Area */
 .unified-card-poster {
-  width: var(--home-card-w); /* H1 */
-  height: var(--home-card-h); /* H1 */
+  width: var(--card-w); /* H1 - using unified card sizing */
+  height: var(--card-h); /* H1 - using unified card sizing */
   background: var(--border);
   position: relative;
   overflow: hidden;
@@ -1478,10 +1489,10 @@ body.mardi {
 
 /* Detail variant poster - left side */
 .unified-card--detail .unified-card-poster {
-  width: 120px !important;
-  height: 180px !important;
-  flex-shrink: 0 !important;
-  border-radius: 0 !important;
+  width: 120px ;
+  height: 180px ;
+  flex-shrink: 0 ;
+  border-radius: 0 ;
 }
 
 .unified-card-poster-container {
@@ -1652,10 +1663,10 @@ body.mardi {
 
 /* Detail variant title - larger */
 .unified-card--detail .unified-card-title {
-  font-size: 18px !important;
-  font-weight: 600 !important;
-  margin: 0 0 8px 0 !important;
-  line-height: 1.3 !important;
+  font-size: 18px ;
+  font-weight: 600 ;
+  margin: 0 0 8px 0 ;
+  line-height: 1.3 ;
   display: block;
   -webkit-line-clamp: initial;
   line-clamp: initial;
@@ -1731,23 +1742,23 @@ body.mardi {
 
 /* Pro action buttons */
 .unified-card-action-btn--pro {
-  background: linear-gradient(135deg, #ff6b6b, #ff8e8e) !important;
-  color: white !important;
-  border: 1px solid #ff6b6b !important;
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e) ;
+  color: white ;
+  border: 1px solid #ff6b6b ;
 }
 
 .unified-card-action-btn--pro:hover {
-  background: linear-gradient(135deg, #ff5252, #ff7979) !important;
+  background: linear-gradient(135deg, #ff5252, #ff7979) ;
 }
 
 /* Danger action buttons */
 .unified-card-action-btn--danger {
-  background: rgba(220, 53, 69, 0.9) !important;
-  color: white !important;
+  background: rgba(220, 53, 69, 0.9) ;
+  color: white ;
 }
 
 .unified-card-action-btn--danger:hover {
-  background: rgba(200, 35, 51, 0.95) !important;
+  background: rgba(200, 35, 51, 0.95) ;
 }
 
 /* Episode Tracking Modal */
@@ -1911,7 +1922,7 @@ body.mardi {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
-@media (max-width: 768px) {
+@media (max-width: var(--bp-mobile-lg)) {
   .back-to-top {
     bottom: 15px;
     right: 15px;
@@ -1961,16 +1972,16 @@ body.mardi {
 }
 
 /* Mobile Adjustments */
-@media (max-width: 768px) {
+@media (max-width: var(--bp-mobile-lg)) {
   .unified-card {
-    width: var(--home-card-w); /* H1 */
-    max-width: var(--home-card-w); /* H1 */
-    min-width: var(--home-card-w); /* H1 */
+    width: var(--card-w-mobile); /* H1 - using unified mobile card sizing */
+    max-width: var(--card-w-mobile); /* H1 - using unified mobile card sizing */
+    min-width: var(--card-w-mobile); /* H1 - using unified mobile card sizing */
   }
 
   .unified-card-poster {
-    width: var(--home-card-w); /* H1 */
-    height: var(--home-card-h); /* H1 */
+    width: var(--card-w-mobile); /* H1 - using unified mobile card sizing */
+    height: var(--card-h-mobile); /* H1 - using unified mobile card sizing */
   }
 
   .unified-card-actions {
@@ -2002,32 +2013,32 @@ body.mardi {
 
   /* Detail variant mobile adjustments */
   .unified-card--detail {
-    flex-direction: column !important;
-    max-width: none !important;
-    min-width: auto !important;
-    width: 100% !important;
-    height: auto !important;
+    flex-direction: column ;
+    max-width: none ;
+    min-width: auto ;
+    width: 100% ;
+    height: auto ;
   }
 
   .unified-card--detail .unified-card-poster {
-    width: 80px !important;
-    height: 120px !important;
-    align-self: center !important;
-    margin-bottom: 12px !important;
+    width: 80px ;
+    height: 120px ;
+    align-self: center ;
+    margin-bottom: 12px ;
   }
 
   .unified-card--detail .unified-card-content {
-    padding: 12px !important;
-    text-align: center !important;
+    padding: 12px ;
+    text-align: center ;
   }
 
   .unified-card--detail .unified-card-title {
-    font-size: 16px !important;
+    font-size: 16px ;
   }
 
   .unified-card--detail .unified-card-actions {
-    justify-content: center !important;
-    flex-wrap: wrap !important;
+    justify-content: center ;
+    flex-wrap: wrap ;
   }
 }
 
@@ -2216,10 +2227,10 @@ body.mardi {
   width: 100%;
   max-width: 600px;
   min-width: 400px;
-  display: flex !important;
-  flex-direction: row !important;
-  height: auto !important;
-  margin: 0 !important;
+  display: flex ;
+  flex-direction: row ;
+  height: auto ;
+  margin: 0 ;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -2229,20 +2240,20 @@ body.mardi {
 
 /* Tab card poster section - left side on desktop */
 .tab-section .list-container .poster-card .poster-card__poster {
-  width: var(--tab-card-poster-width-desktop) !important;
-  height: var(--tab-card-poster-height-desktop) !important;
-  flex-shrink: 0 !important;
-  border-radius: 0 !important;
+  width: var(--tab-card-poster-width-desktop) ;
+  height: var(--tab-card-poster-height-desktop) ;
+  flex-shrink: 0 ;
+  border-radius: 0 ;
   overflow: hidden;
   aspect-ratio: 2 / 3;
 }
 
 /* Tab card content section - right side on desktop */
 .tab-section .list-container .poster-card .poster-card__content {
-  flex: 1 !important;
-  padding: 16px !important;
-  display: flex !important;
-  flex-direction: column !important;
+  flex: 1 ;
+  padding: 16px ;
+  display: flex ;
+  flex-direction: column ;
   justify-content: space-between;
   min-width: 0;
   overflow: hidden;
@@ -2250,18 +2261,18 @@ body.mardi {
 
 /* Tab card title - larger for horizontal layout */
 .tab-section .list-container .poster-card .poster-card__title {
-  font-size: 18px !important;
-  font-weight: 600 !important;
-  margin: 0 0 8px 0 !important;
-  line-height: 1.3 !important;
-  color: var(--text) !important;
+  font-size: 18px ;
+  font-weight: 600 ;
+  margin: 0 0 8px 0 ;
+  line-height: 1.3 ;
+  color: var(--text) ;
 }
 
 /* Tab card meta information */
 .tab-section .list-container .poster-card .poster-card__meta {
-  font-size: 14px !important;
-  color: var(--text-secondary) !important;
-  margin: 0 0 12px 0 !important;
+  font-size: 14px ;
+  color: var(--text-secondary) ;
+  margin: 0 0 12px 0 ;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2269,63 +2280,63 @@ body.mardi {
 
 /* Tab card rating - larger for horizontal layout */
 .tab-section .list-container .poster-card .poster-card__rating {
-  margin: 0 0 12px 0 !important;
-  font-size: 16px !important;
+  margin: 0 0 12px 0 ;
+  font-size: 16px ;
 }
 
 /* Tab card actions - bottom aligned */
 .tab-section .list-container .poster-card .poster-card__actions {
-  margin-top: auto !important;
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  gap: 12px !important;
+  margin-top: auto ;
+  display: flex ;
+  justify-content: space-between ;
+  align-items: center ;
+  gap: 12px ;
 }
 
 /* Tab card move buttons */
 .tab-section .list-container .poster-card .poster-card__move-buttons {
-  display: flex !important;
-  gap: 8px !important;
-  flex-wrap: wrap !important;
+  display: flex ;
+  gap: 8px ;
+  flex-wrap: wrap ;
 }
 
 /* Tab card move button styling */
 .tab-section .list-container .poster-card .poster-card__move-buttons button {
-  padding: 6px 12px !important;
-  font-size: 12px !important;
-  border-radius: 6px !important;
-  border: 1px solid var(--border) !important;
-  background: var(--surface) !important;
-  color: var(--text) !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
+  padding: 6px 12px ;
+  font-size: 12px ;
+  border-radius: 6px ;
+  border: 1px solid var(--border) ;
+  background: var(--surface) ;
+  color: var(--text) ;
+  cursor: pointer ;
+  transition: all 0.2s ease ;
 }
 
 .tab-section .list-container .poster-card .poster-card__move-buttons button:hover {
-  background: var(--primary) !important;
-  color: white !important;
-  border-color: var(--primary) !important;
+  background: var(--primary) ;
+  color: white ;
+  border-color: var(--primary) ;
 }
 
 /* Tab card overflow button */
 .tab-section .list-container .poster-card .poster-card__overflow-btn {
-  padding: 8px !important;
-  border-radius: 6px !important;
-  border: 1px solid var(--border) !important;
-  background: var(--surface) !important;
-  color: var(--text) !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
+  padding: 8px ;
+  border-radius: 6px ;
+  border: 1px solid var(--border) ;
+  background: var(--surface) ;
+  color: var(--text) ;
+  cursor: pointer ;
+  transition: all 0.2s ease ;
 }
 
 .tab-section .list-container .poster-card .poster-card__overflow-btn:hover {
-  background: var(--primary) !important;
-  color: white !important;
-  border-color: var(--primary) !important;
+  background: var(--primary) ;
+  color: white ;
+  border-color: var(--primary) ;
 }
 
 /* Mobile layout - vertical cards */
-@media (max-width: 768px) {
+@media (max-width: var(--bp-mobile-lg)) {
   .tab-section .list-container {
     flex-direction: column;
     gap: 12px;
@@ -2335,36 +2346,36 @@ body.mardi {
   }
 
   .tab-section .list-container .poster-card {
-    flex-direction: column !important;
-    max-width: none !important;
-    min-width: auto !important;
-    width: 100% !important;
+    flex-direction: column ;
+    max-width: none ;
+    min-width: auto ;
+    width: 100% ;
   }
 
   .tab-section .list-container .poster-card .poster-card__poster {
-    width: var(--tab-card-poster-width-mobile) !important;
-    height: var(--tab-card-poster-height-mobile) !important;
-    align-self: center !important;
-    margin-bottom: 12px !important;
+    width: var(--tab-card-poster-width-mobile) ;
+    height: var(--tab-card-poster-height-mobile) ;
+    align-self: center ;
+    margin-bottom: 12px ;
   }
 
   .tab-section .list-container .poster-card .poster-card__content {
-    padding: 12px !important;
-    text-align: center !important;
+    padding: 12px ;
+    text-align: center ;
   }
 
   .tab-section .list-container .poster-card .poster-card__title {
-    font-size: 16px !important;
+    font-size: 16px ;
   }
 
   .tab-section .list-container .poster-card .poster-card__meta {
-    font-size: 12px !important;
-    justify-content: center !important;
+    font-size: 12px ;
+    justify-content: center ;
   }
 
   .tab-section .list-container .poster-card .poster-card__actions {
-    justify-content: center !important;
-    flex-wrap: wrap !important;
+    justify-content: center ;
+    flex-wrap: wrap ;
   }
 }
 .cw-row {
@@ -2388,15 +2399,15 @@ body.mardi {
   width: var(--home-card-width-desktop); /* Standard home page card width */
   max-width: var(--home-card-width-desktop);
   min-width: var(--home-card-width-desktop);
-  display: flex !important;
-  flex-direction: column !important;
+  display: flex ;
+  flex-direction: column ;
   border-radius: 8px;
 }
 
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .preview-card-poster {
-  width: var(--home-card-width-desktop) !important; /* Standard home page card width */
-  height: var(--home-card-height-desktop) !important; /* Standard home page card height */
-  flex-shrink: 0 !important;
+  width: var(--card-w) ; /* Standard home page card width */
+  height: var(--home-card-height-desktop) ; /* Standard home page card height */
+  flex-shrink: 0 ;
   border-radius: 6px;
   overflow: hidden;
   aspect-ratio: 2 / 3;
@@ -2417,10 +2428,10 @@ body.mardi {
 }
 
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .preview-card-content {
-  flex: 1 !important;
+  flex: 1 ;
   padding: 6px 4px;
-  display: flex !important;
-  flex-direction: column !important;
+  display: flex ;
+  flex-direction: column ;
   justify-content: flex-start;
   min-width: 0;
   overflow: hidden;
@@ -2505,26 +2516,26 @@ body.mardi {
   padding: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: var(--bp-mobile-lg)) {
   .preview-card {
-    width: var(--home-card-width-mobile) !important;
-    flex: 0 0 var(--home-card-width-mobile) !important;
+    width: var(--home-card-width-mobile) ;
+    flex: 0 0 var(--home-card-width-mobile) ;
   }
 
   .preview-card-poster {
-    width: var(--home-card-width-mobile) !important; /* Using home card width mobile */
-    height: var(--home-card-height-mobile) !important; /* Using home card height mobile */
+    width: var(--home-card-width-mobile) ; /* Using home card width mobile */
+    height: var(--home-card-height-mobile) ; /* Using home card height mobile */
   }
 
   .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner > * {
-    width: var(--home-card-width-mobile) !important; /* Standard home page card width mobile */
-    max-width: var(--home-card-width-mobile) !important;
-    min-width: var(--home-card-width-mobile) !important;
+    width: var(--home-card-width-mobile) ; /* Standard home page card width mobile */
+    max-width: var(--home-card-width-mobile) ;
+    min-width: var(--home-card-width-mobile) ;
   }
 
   .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .preview-card-poster {
-    width: var(--home-card-width-mobile) !important; /* Standard home page card width mobile */
-    height: var(--home-card-height-mobile) !important; /* Standard home page card height mobile */
+    width: var(--home-card-width-mobile) ; /* Standard home page card width mobile */
+    height: var(--home-card-height-mobile) ; /* Standard home page card height mobile */
   }
 }
 
@@ -2597,7 +2608,7 @@ body.mardi {
   text-align: center; /* Match Currently Watching text alignment */
 }
 
-@media (max-width: 768px) {
+@media (max-width: var(--bp-mobile-lg)) {
   #next-up-row .row-inner > * {
     width: var(--home-card-width-mobile); /* Standard home page card width mobile */
     max-width: var(--home-card-width-mobile);
@@ -2723,7 +2734,7 @@ body.mardi {
 }
 
 /* Mobile: stack vertically, video on top */
-@media (max-width: 768px) {
+@media (max-width: var(--bp-mobile-lg)) {
   #spotlight-row .spotlight-grid {
     grid-template-columns: 1fr;
   }
@@ -2779,7 +2790,7 @@ body.mardi {
   border-radius: 6px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: var(--bp-mobile-lg)) {
   #feedback-row .feedback-card {
     grid-template-columns: 32px 1fr auto;
     padding: 10px;
@@ -2804,7 +2815,7 @@ body.mardi {
 }
 
 /* Desktop & tablet (≥641px) */
-@media (min-width: 641px) {
+@media (min-width: calc(var(--bp-mobile) + 1px)) {
   .header-bar {
     display: flex;
     align-items: center;
@@ -2828,12 +2839,12 @@ body.mardi {
     flex: 0 0 auto;
     justify-content: flex-end;
     margin-left: auto;
-    margin-top: 0 !important;
+    margin-top: 0 ;
   }
 }
 
 /* Mobile (≤640px) */
-@media (max-width: 640px) {
+@media (max-width: var(--bp-mobile)) {
   .header-bar {
     display: flex;
     flex-wrap: wrap;
@@ -2883,7 +2894,7 @@ body.mardi {
 
 /* Ensure Next Up section is visible */
 #next-up-row {
-  display: block !important;
+  display: block ;
 }
 
 /* Home Group Styling */
@@ -2982,20 +2993,20 @@ body.mardi {
 
 /* Override any padding on the preview row in community */
 .community-left .home-preview-row {
-  padding: 0 !important; /* Remove any padding */
-  margin: 0 !important; /* Remove any margin */
-  height: auto !important; /* Let it size to content */
-  display: block !important; /* Ensure block display */
-  line-height: 0 !important; /* Remove line-height spacing */
+  padding: 0 ; /* Remove any padding */
+  margin: 0 ; /* Remove any margin */
+  height: auto ; /* Let it size to content */
+  display: block ; /* Ensure block display */
+  line-height: 0 ; /* Remove line-height spacing */
 }
 
 /* Override preview row header and container */
 .community-left .preview-row-header,
 .community-left .preview-row-container {
-  padding: 0 !important;
-  margin: 0 !important;
-  height: auto !important;
-  line-height: 0 !important;
+  padding: 0 ;
+  margin: 0 ;
+  height: auto ;
+  line-height: 0 ;
 }
 
 /* Cap the visual height of vertical reels; width follows aspect-ratio */
@@ -3003,8 +3014,8 @@ body.mardi {
 .community-left .video-frame,
 .community-left .embed-responsive {
   display: block;
-  width: 100% !important;
-  height: 100% !important; /* Fill the container completely */
+  width: 100% ;
+  height: 100% ; /* Fill the container completely */
   aspect-ratio: 9 / 16; /* default vertical */
   max-height: clamp(300px, 50vh, 500px); /* More responsive to zoom */
   margin: 0; /* Remove any margins */
@@ -3139,9 +3150,9 @@ body.mardi {
   cursor: pointer;
   margin-top: 4px;
   font-size: 9px;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  display: block ;
+  visibility: visible ;
+  opacity: 1 ;
   width: 100%;
   min-height: 20px;
 }
@@ -3519,7 +3530,7 @@ body.mardi {
 }
 
 /* Responsive stack */
-@media (max-width: 900px) {
+@media (max-width: var(--bp-tablet)) {
   .community-content {
     flex-direction: column;
   }
@@ -3663,7 +3674,7 @@ body.mardi {
 }
 
 /* Mobile responsive */
-@media (max-width: 768px) {
+@media (max-width: var(--bp-mobile-lg)) {
   .community-content {
     flex-direction: column;
     gap: 16px;
@@ -3697,7 +3708,7 @@ body.mardi {
 }
 
 /* Desktop: Two neat sub-rows with divider */
-@media (min-width: 769px) {
+@media (min-width: calc(var(--bp-mobile-lg) + 1px)) {
   .home-group {
     display: flex;
     flex-direction: column;
@@ -3710,7 +3721,7 @@ body.mardi {
 }
 
 /* Mobile: Stack vertically, carousels snap-scroll one card at a time */
-@media (max-width: 768px) {
+@media (max-width: var(--bp-mobile-lg)) {
   .home-group {
     margin-bottom: 24px;
     padding: 16px;
@@ -3764,8 +3775,8 @@ body.mardi {
 }
 
 #next-up-row .preview-card-poster {
-  width: var(--home-card-width-desktop) !important;
-  height: var(--home-card-height-desktop) !important;
+  width: var(--card-w) ;
+  height: var(--home-card-height-desktop) ;
   border-radius: 6px;
   overflow: hidden;
   position: relative;
@@ -3809,16 +3820,16 @@ body.mardi {
 }
 
 /* Mobile adjustments for Next Up */
-@media (max-width: 768px) {
+@media (max-width: var(--bp-mobile-lg)) {
   #next-up-row .preview-card {
-    width: var(--home-card-width-mobile) !important;
-    max-width: var(--home-card-width-mobile) !important;
-    min-width: var(--home-card-width-mobile) !important;
+    width: var(--home-card-width-mobile) ;
+    max-width: var(--home-card-width-mobile) ;
+    min-width: var(--home-card-width-mobile) ;
   }
 
   #next-up-row .preview-card-poster {
-    width: var(--home-card-width-mobile) !important;
-    height: var(--home-card-height-mobile) !important;
+    width: var(--home-card-width-mobile) ;
+    height: var(--home-card-height-mobile) ;
   }
 
   #next-up-row .preview-card-title {
@@ -4010,7 +4021,7 @@ body.mardi {
   font-size: 1rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: var(--bp-mobile-lg)) {
   .flickword-hero-image,
   .flickword-hero-placeholder {
     max-width: 150px;
@@ -4058,7 +4069,7 @@ body.mardi {
   line-height: 1;
 }
 
-@media (max-width: 640px) {
+@media (max-width: var(--bp-mobile)) {
   #flickwordTile .game-stats {
     grid-template-columns: repeat(2, 1fr);
     gap: 6px;
@@ -4131,10 +4142,10 @@ body.mardi {
 }
 
 .game-modal .gm-close {
-  position: relative !important;
-  right: auto !important;
-  top: auto !important;
-  transform: none !important;
+  position: relative ;
+  right: auto ;
+  top: auto ;
+  transform: none ;
   font-size: 22px;
   line-height: 1;
   background: none;
@@ -4164,7 +4175,7 @@ body.mardi {
 }
 
 /* On smaller screens, cards shrink in height naturally */
-@media (max-width: 768px) {
+@media (max-width: var(--bp-mobile-lg)) {
   .home-games {
     gap: 12px;
   }
@@ -4196,7 +4207,7 @@ body.mardi {
 } /* remove any width constraints */
 
 /* Mobile fullscreen */
-@media (max-width: 640px) {
+@media (max-width: var(--bp-mobile)) {
   .game-modal {
     padding: 0;
   }
@@ -4335,7 +4346,7 @@ body {
 
 /* Auth visibility utility */
 [hidden] {
-  display: none !important;
+  display: none ;
 }
 
 /* Base readable font stack & sizing guard */
@@ -4441,11 +4452,11 @@ body {
 /* Shell */
 html,
 body {
-  height: 100%;
+  height: var(--body-height);
 }
 #appRoot {
-  height: 600vh; /* H1.1: Set to 600vh as requested */
-  min-height: 600vh; /* H1.1: Set to 600vh as requested */
+  height: auto; /* H1.1: Allow natural height based on content */
+  min-height: auto; /* H1.1: Allow natural height based on content */
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -4518,22 +4529,25 @@ body {
 /* Panels fill the rest; let window/body be the scroller so sticky works */
 #appRoot > .panels {
   flex: 1 1 auto;
-  overflow: visible; /* IMPORTANT: sticky parents must not be overflow:auto */
+  overflow: var(--content-overflow); /* IMPORTANT: sticky parents must not be overflow:auto */
   padding: 12px 16px;
   box-sizing: border-box;
 }
 
-/* Quote Bar Styling */
+/* Quote Bar Styling - Updated to use design tokens */
 .quote-bar {
   display: block !important;
-  background: var(--surface, #f9f9f9);
-  border: 1px solid var(--border, #e5e7eb);
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin: 16px 0;
+  background: var(--bg, #ffffff) !important;
+  border: 1px solid var(--border, #e5e7eb) !important;
+  border-radius: var(--r-2, 8px);
+  padding: var(--spacing-md, 12px) var(--spacing-lg, 16px);
+  margin: var(--spacing-lg, 16px) 0 var(--spacing-sm, 8px) 0;
   text-align: center;
+  color: var(--fg, #1f2937) !important;
+  min-height: 40px;
+  font-size: var(--fs-0, 1rem) !important;
+  font-weight: normal !important;
   font-style: italic;
-  color: var(--text-secondary, #666);
 }
 
 .quote-marquee {
@@ -4542,8 +4556,25 @@ body {
 }
 
 .quote-text {
-  display: inline-block;
+  display: inline-block !important;
   animation: marquee 20s linear infinite;
+  color: var(--fg, #1f2937) !important;
+  font-size: var(--fs-0, 1rem) !important;
+  font-weight: var(--font-weight-normal, normal) !important;
+  font-style: italic;
+}
+
+/* Override conflicting CSS rules with higher specificity */
+#quote-bar .quote-text,
+.quote-bar .quote-text {
+  font-weight: normal !important;
+  font-style: italic !important;
+}
+
+/* Marquee loaded state */
+.marquee-loaded {
+  opacity: 1;
+  transition: opacity 0.3s ease;
 }
 
 @keyframes marquee {
@@ -4569,35 +4600,72 @@ body {
   margin-top: 0;
 }
 
+/* Minimal Tab Visibility Fix - Override inline styles */
+.tab-section {
+  display: none !important;
+  transition: opacity 0.3s ease;
+}
+
+.tab-section.active {
+  display: block !important;
+  opacity: 1;
+  visibility: visible;
+}
+
 /* Small buffer when panels sit directly under tabs */
 #appRoot > .tab-container + .panels {
   padding-top: 8px;
 }
 
-/* PART2A: Container-aware FAB positioning */
+/* FAB positioning: Fixed to viewport but aligned with container edges */
 .fab-dock { 
-  position: fixed; 
-  inset-block-end: var(--fab-gap);
-  inset-inline-end: calc((100vw - min(var(--container-max), 100vw)) / 2 + var(--container-pad)); 
-  z-index: 50;
-  pointer-events: none; /* clicks pass only to buttons inside */
+  position: fixed !important; 
+  bottom: var(--fab-gap) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 50 !important;
+  pointer-events: none !important; /* clicks pass only to buttons inside */
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: space-between !important;
+  width: min(var(--container-max), 100vw) !important;
+  max-width: calc(100vw - 2 * var(--container-pad)) !important;
+  padding: 0 calc(var(--container-pad) + 16px) !important; /* Move FABs inward by 16px */
 }
 
 /* PART3: Scroll-to-top control */
 .scroll-top-btn {
-  position: fixed;
-  inset-block-end: clamp(16px, 2vh, 24px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 40;
-  width: 40px; height: 40px;
-  border-radius: 999px;
-  border: 1px solid var(--border, #ddd);
-  background: var(--bg-elevated, #fff);
-  color: var(--text, #333);
-  box-shadow: 0 2px 8px rgba(0,0,0,.12);
-  opacity: 0; visibility: hidden;
-  transition: opacity .2s ease, visibility .2s ease, transform .08s ease;
+  position: fixed !important;
+  bottom: var(--fab-gap) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 45 !important;
+  width: 40px !important; 
+  height: 40px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--border, #ddd) !important;
+  background: var(--bg-elevated, #fff) !important;
+  color: var(--text, #333) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12) !important;
+  opacity: 1 !important; 
+  visibility: visible !important;
+  transition: opacity .2s ease, visibility .2s ease, transform .08s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important;
+}
+
+/* Fix arrow color and content */
+.scroll-top-btn::before {
+  content: "↑" !important;
+  color: var(--text, #333) !important;
+  font-size: 18px !important;
+  font-weight: bold !important;
+}
+
+.scroll-top-btn * {
+  color: var(--text, #333) !important;
 }
 .scroll-top-btn.is-visible {
   opacity: 1; visibility: visible;
@@ -4620,12 +4688,71 @@ body {
   pointer-events: auto;
 }
 
-.fab { 
-  position: static; /* buttons themselves don't need positioning; the dock handles it */
+.fab-dock .fab-left {
+  pointer-events: auto !important;
+  margin-right: auto !important; /* Push to left side */
+  position: static !important;
 }
 
-@media (max-width: 768px) {
+.fab { 
+  position: static !important; /* buttons themselves don't need positioning; the dock handles it */
+  pointer-events: auto !important;
+}
+
+/* Override any conflicting positioning from other CSS files */
+.fab-dock .fab,
+.fab-dock .fab-left,
+.fab-dock .fab-stack {
+  position: static !important;
+  top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+}
+
+/* Override home.css rule that sets FABs to position: absolute */
+.fab, .fab-left, .fab-stack, .fab-dock {
+  position: static !important;
+}
+
+.fab-dock {
+  position: fixed !important;
+}
+
+/* Remove purple circle from settings FAB - make it just a cog icon */
+.fab-dock #btnSettings,
+.fab-dock #btnSettings.fab-left {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  color: var(--text, #333) !important;
+  font-size: 24px !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: auto !important;
+  min-height: auto !important;
+  padding: 8px !important;
+}
+
+.fab-dock #btnSettings:hover,
+.fab-dock #btnSettings.fab-left:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  opacity: 0.8 !important;
+}
+
+@media (max-width: var(--bp-mobile-lg)) {
   .fab-dock { 
-    inset-inline-end: var(--container-pad);
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 100vw !important;
+    max-width: none !important;
+    padding: 0 calc(var(--container-pad) + 16px) !important; /* Move FABs inward on mobile too */
   }
 }

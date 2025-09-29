@@ -5,7 +5,6 @@
 
   // Immovable Home Layout Contract - Exact 6 Section Order
   const REQUIRED_HOME_SECTIONS = [
-    'quote-bar',
     'group-1-your-shows',
     'group-2-community',
     'group-3-for-you',
@@ -84,63 +83,17 @@
     });
   }
 
-  // Initialize Quote Bar with Enhanced Quotes System
+  // Initialize Quote Bar - DISABLED: handled by marquee system
   function initQuoteBar() {
     const quoteBar = document.getElementById('quote-bar');
     if (!quoteBar) return;
 
-    // Set loading state
-    quoteBar.setAttribute('data-state', 'loading');
+    // Set loaded state and let marquee system handle the content
+    quoteBar.setAttribute('data-state', 'loaded');
     quoteBar.style.display = 'block';
-
-    // Wait for enhanced quotes system to load, then initialize
-    const waitForEnhancedQuotes = () => {
-      if (window.QuotesEnhanced && typeof window.QuotesEnhanced.drawQuote === 'function') {
-        // Enhanced quotes system is ready
-        const quote = window.QuotesEnhanced.drawQuote();
-        const quoteText = document.getElementById('quoteText');
-        if (quoteText) {
-          quoteText.textContent = quote;
-          quoteBar.setAttribute('data-state', 'loaded');
-
-          // Add smooth transition
-          quoteBar.style.opacity = '0';
-          requestAnimationFrame(() => {
-            quoteBar.style.transition = 'opacity 0.3s ease';
-            quoteBar.style.opacity = '1';
-          });
-        }
-      } else {
-        // Fallback to basic quotes if enhanced system not ready
-        const basicQuotes = [
-          'The best way to predict the future is to create it. - Peter Drucker',
-          "Life is what happens to you while you're busy making other plans. - John Lennon",
-          'The only way to do great work is to love what you do. - Steve Jobs',
-          'Innovation distinguishes between a leader and a follower. - Steve Jobs',
-          "Your time is limited, don't waste it living someone else's life. - Steve Jobs",
-          'Stay hungry, stay foolish. - Steve Jobs',
-          'The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt',
-          'It is during our darkest moments that we must focus to see the light. - Aristotle',
-        ];
-        const quote = basicQuotes[Math.floor(Math.random() * basicQuotes.length)];
-        const quoteText = document.getElementById('quoteText');
-        if (quoteText) {
-          quoteText.textContent = quote;
-          quoteBar.setAttribute('data-state', 'loaded');
-
-          // Add smooth transition
-          quoteBar.style.opacity = '0';
-          requestAnimationFrame(() => {
-            quoteBar.style.transition = 'opacity 0.3s ease';
-            quoteBar.style.opacity = '1';
-          });
-        }
-      }
-    };
-
-    // Try immediately, then retry after a short delay if needed
-    waitForEnhancedQuotes();
-    setTimeout(waitForEnhancedQuotes, 500);
+    quoteBar.classList.add('marquee-loaded');
+    
+    console.log('💬 Quote bar initialized - content handled by marquee system');
   }
 
   // Disable Auto-Inject Systems

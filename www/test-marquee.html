@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marquee Test</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .quote-bar {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 0;
+            text-align: center;
+            min-height: 40px;
+        }
+        .quote-text {
+            display: inline-block;
+            animation: marquee 20s linear infinite;
+            color: #333;
+            font-size: 1rem;
+            font-weight: normal;
+            font-style: italic;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .test-controls {
+            margin: 20px 0;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Marquee System Test</h1>
+    
+    <div class="test-controls">
+        <h3>Test Controls</h3>
+        <button onclick="testLoadQuips()">Test Load Quips</button>
+        <button onclick="testMarqueeInit()">Test Marquee Init</button>
+        <button onclick="testRotation()">Test Rotation</button>
+        <button onclick="testStopRotation()">Stop Rotation</button>
+    </div>
+
+    <div id="quote-bar" class="quote-bar" data-state="loading">
+        <div class="quote-marquee">
+            <span class="quote-text" id="quoteText" data-role="marquee">
+                Loading inspirational quote...
+            </span>
+        </div>
+    </div>
+
+    <div class="test-controls">
+        <h3>Console Output</h3>
+        <div id="console-output" style="background: #f8f8f8; padding: 12px; border-radius: 4px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto;">
+            Ready for testing...
+        </div>
+    </div>
+
+    <script type="module">
+        // Mock console.log to capture output
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const outputDiv = document.getElementById('console-output');
+        
+        function addOutput(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'warn' ? '#ff6b00' : '#333';
+            outputDiv.innerHTML += `<div style="color: ${color};">[${timestamp}] ${message}</div>`;
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+        
+        console.log = (...args) => {
+            originalLog(...args);
+            addOutput(args.join(' '));
+        };
+        
+        console.warn = (...args) => {
+            originalWarn(...args);
+            addOutput(args.join(' '), 'warn');
+        };
+
+        // Import and test the marquee system
+        let Marquee, loadQuips;
+        
+        try {
+            const marqueeModule = await import('./js/marquee.js');
+            Marquee = marqueeModule.Marquee;
+            console.log('✅ Marquee module loaded successfully');
+        } catch (e) {
+            console.error('❌ Failed to load marquee module:', e);
+        }
+        
+        try {
+            const dataModule = await import('./js/marquee-data.js');
+            loadQuips = dataModule.loadQuips;
+            console.log('✅ Marquee data module loaded successfully');
+        } catch (e) {
+            console.error('❌ Failed to load marquee data module:', e);
+        }
+
+        // Test functions
+        window.testLoadQuips = async () => {
+            try {
+                console.log('🔄 Testing loadQuips...');
+                const quotes = await loadQuips('/data/marquee-quips.json');
+                console.log(`✅ Loaded ${quotes.length} quotes:`, quotes.slice(0, 3));
+                return quotes;
+            } catch (e) {
+                console.warn('⚠️ loadQuips failed:', e.message);
+                return null;
+            }
+        };
+
+        window.testMarqueeInit = async () => {
+            try {
+                console.log('🔄 Testing Marquee.init...');
+                const quotes = await loadQuips('/data/marquee-quips.json');
+                Marquee.init({ list: quotes });
+                console.log('✅ Marquee initialized successfully');
+            } catch (e) {
+                console.warn('⚠️ Marquee init failed:', e.message);
+                // Test with fallback quotes
+                Marquee.init({
+                    list: [
+                        'There\'s no place like 127.0.0.1.',
+                        'In code we trust. Everyone else bring logs.',
+                        'Errors are just features with stage fright.'
+                    ]
+                });
+                console.log('✅ Marquee initialized with fallback quotes');
+            }
+        };
+
+        window.testRotation = () => {
+            console.log('🔄 Testing rotation...');
+            Marquee.startRotation([
+                'Test quote 1',
+                'Test quote 2', 
+                'Test quote 3'
+            ]);
+            console.log('✅ Rotation started');
+        };
+
+        window.testStopRotation = () => {
+            console.log('🔄 Stopping rotation...');
+            Marquee.stopRotation();
+            console.log('✅ Rotation stopped');
+        };
+
+        // Auto-test on load
+        setTimeout(async () => {
+            console.log('🚀 Starting auto-test...');
+            await testLoadQuips();
+            await testMarqueeInit();
+        }, 1000);
+    </script>
+</body>
+</html>

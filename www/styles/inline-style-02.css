@@ -3,12 +3,12 @@
 /* Guard: never create a scroll container on sticky */
 .top-search,
 header.header {
-  /* PART2C: remove layout !important */
+  /* PART2C: remove layout  */
 }
 
 /* StickySearch ancestor guard: never apply transform/contain/overflow to #appRoot */
 #appRoot.main-container {
-  /* PART2C: removed layout !important; normal flow */
+  /* PART2C: removed layout ; normal flow */
 }
 
 /* Tab container styles moved to components.css for single source of truth */

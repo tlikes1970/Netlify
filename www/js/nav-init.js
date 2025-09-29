@@ -14,6 +14,34 @@ export function initTabs() {
 
   const panels = new Map(panelIds.map(id => [id, document.getElementById(id)]));
   const tabs = [...bar.querySelectorAll('[role="tab"]')].filter(t => panels.has(t.getAttribute('aria-controls')));
+  
+  // Ensure each tab has a visible text label
+  tabs.forEach(t => {
+    if (!t.querySelector('.tab-label')) {
+      const span = document.createElement('span');
+      span.className = 'tab-label';
+      span.textContent = (t.textContent || t.getAttribute('aria-label') || 'Tab').trim();
+      
+      // Preserve existing badges when clearing innerHTML
+      const existingBadges = [...t.querySelectorAll('.badge')];
+      t.innerHTML = '';
+      t.appendChild(span);
+      
+      // Re-add existing badges
+      existingBadges.forEach(badge => t.appendChild(badge));
+    }
+    // If any stray number nodes exist, wrap as badge
+    const textOnly = t.querySelector('.tab-label');
+    [...t.childNodes].forEach(n => {
+      if (n.nodeType === 3 && n.textContent.trim().match(/^\d+$/)) {
+        const b = document.createElement('span');
+        b.className = 'badge';
+        b.textContent = n.textContent.trim();
+        t.appendChild(b);
+        n.remove();
+      }
+    });
+  });
 
   function activate(id) {
     // Hide all panels
@@ -24,16 +52,18 @@ export function initTabs() {
       }
     });
     
-    // Update tab states
+    // Update tab states - show all tabs with active styling
     tabs.forEach(t => {
       const isActive = t.getAttribute('aria-controls') === id;
+      t.classList.toggle('is-active', isActive);
       t.setAttribute('aria-selected', isActive ? 'true' : 'false');
-      t.classList.toggle('active', isActive);
+      t.setAttribute('tabindex', isActive ? '0' : '-1');
     });
   }
 
-  // Initial activation - always start with home section
-  const initial = 'homeSection';
+  // Initial activation: if a panel is already visible, respect it; else default to first
+  const visible = panelIds.find(id => panels.get(id) && !panels.get(id).hidden);
+  const initial = visible || 'homeSection';
   if (panels.has(initial)) {
     activate(initial);
     console.log('[nav-init] Activated initial tab:', initial);
@@ -56,6 +86,22 @@ export function initTabs() {
         console.log('[nav-init] Switched to tab:', id);
       }
     }, { capture: true });
+
+    // Arrow navigation for accessibility
+    t.addEventListener('keydown', ev => {
+      const i = tabs.indexOf(t);
+      if (ev.key === 'ArrowRight') {
+        ev.preventDefault();
+        const next = tabs[(i + 1) % tabs.length];
+        next?.focus();
+        next?.click();
+      } else if (ev.key === 'ArrowLeft') {
+        ev.preventDefault();
+        const prev = tabs[(i - 1 + tabs.length) % tabs.length];
+        prev?.focus();
+        prev?.click();
+      }
+    });
   });
 
   console.log('[nav-init] Tab navigation initialized with', tabs.length, 'tabs');

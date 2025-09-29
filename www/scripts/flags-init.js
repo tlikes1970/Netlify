@@ -4,10 +4,7 @@ window.FLAGS = window.FLAGS || {};
 if (typeof window.FLAGS.cards_v2 === 'undefined') {
   window.FLAGS.cards_v2 = false;
 }
-// Turn on Home layout v2 (Option B structure) - DISABLED due to functionality issues
-if (typeof window.FLAGS.home_layout_v2 === 'undefined') {
-  window.FLAGS.home_layout_v2 = false;
-}
+// Home layout v2 removed - using main layout system
 // Enable mobile layout fixes for Card v2 + Home Sections
 if (typeof window.FLAGS.layout_mobile_fix === 'undefined') {
   window.FLAGS.layout_mobile_fix = true;

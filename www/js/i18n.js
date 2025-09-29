@@ -1025,6 +1025,10 @@ function applyTranslations(lang = 'en') {
   };
 
   apply('[data-i18n]', (el, val) => {
+    // Skip marquee elements to prevent overwriting quotes
+    if (el.hasAttribute('data-role') && el.getAttribute('data-role') === 'marquee') {
+      return;
+    }
     el.textContent = val;
   });
   apply('[data-i18n-placeholder]', (el, val) => {

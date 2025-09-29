@@ -60,7 +60,7 @@ export async function initSettingsEffects() {
     .filter(Boolean);
   if (themeRadios.length === 3) {
     // seed
-    applyTheme(readSetting('ui.theme', 'system'));
+    applyTheme(readSetting('ui.theme', 'light'));
     // listen
     themeRadios.forEach((radio) => {
       radio.addEventListener('change', () => {

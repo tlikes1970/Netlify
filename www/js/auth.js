@@ -91,7 +91,7 @@
 
   // Update UI based on auth state
   function updateAuthUI(user) {
-    const button = document.getElementById('accountBtn');
+    const button = document.getElementById('accountButton');
     const label = document.getElementById('accountButtonLabel');
     const greeting = document.getElementById('headerGreeting');
 

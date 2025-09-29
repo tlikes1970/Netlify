@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab System Test</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+        }
+        .test-controls {
+            margin: 20px 0;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #f0f0f0;
+        }
+        .console-output {
+            background: #f8f8f8;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+    <link rel="stylesheet" href="/styles/tabs.css">
+</head>
+<body>
+    <h1>Tab System Test</h1>
+    
+    <div class="test-container">
+        <h3>Tab Navigation Test</h3>
+        <nav id="navigation" role="tablist" aria-label="Sections" class="tabs">
+            <button id="homeTab" class="tab is-active" role="tab" aria-controls="homeSection" aria-selected="true" tabindex="0">
+                Home
+            </button>
+            <button id="watchingTab" class="tab" role="tab" aria-controls="watchingSection" aria-selected="false" tabindex="-1">
+                Currently Watching <span class="badge" id="watchingBadge">5</span>
+            </button>
+            <button id="wishlistTab" class="tab" role="tab" aria-controls="wishlistSection" aria-selected="false" tabindex="-1">
+                Want to Watch <span class="badge" id="wishlistBadge">12</span>
+            </button>
+            <button id="watchedTab" class="tab" role="tab" aria-controls="watchedSection" aria-selected="false" tabindex="-1">
+                Already Watched <span class="badge" id="watchedBadge">23</span>
+            </button>
+            <button id="discoverTab" class="tab" role="tab" aria-controls="discoverSection" aria-selected="false" tabindex="-1">
+                Discover
+            </button>
+        </nav>
+    </div>
+
+    <div class="test-container">
+        <h3>Tab Panels</h3>
+        <div id="homeSection" class="tab-section" role="tabpanel" aria-labelledby="homeTab">
+            <h4>Home Section</h4>
+            <p>This is the home section content.</p>
+        </div>
+        <div id="watchingSection" class="tab-section" role="tabpanel" aria-labelledby="watchingTab" style="display: none">
+            <h4>Currently Watching Section</h4>
+            <p>This is the watching section content.</p>
+        </div>
+        <div id="wishlistSection" class="tab-section" role="tabpanel" aria-labelledby="wishlistTab" style="display: none">
+            <h4>Want to Watch Section</h4>
+            <p>This is the wishlist section content.</p>
+        </div>
+        <div id="watchedSection" class="tab-section" role="tabpanel" aria-labelledby="watchedTab" style="display: none">
+            <h4>Already Watched Section</h4>
+            <p>This is the watched section content.</p>
+        </div>
+        <div id="discoverSection" class="tab-section" role="tabpanel" aria-labelledby="discoverTab" style="display: none">
+            <h4>Discover Section</h4>
+            <p>This is the discover section content.</p>
+        </div>
+    </div>
+
+    <div class="test-controls">
+        <h3>Test Controls</h3>
+        <button onclick="testTabActivation()">Test Tab Activation</button>
+        <button onclick="testKeyboardNavigation()">Test Keyboard Navigation</button>
+        <button onclick="testBadgeUpdates()">Test Badge Updates</button>
+        <button onclick="checkTabStates()">Check Tab States</button>
+    </div>
+
+    <div class="test-controls">
+        <h3>Console Output</h3>
+        <div id="console-output" class="console-output">
+            Ready for testing...
+        </div>
+    </div>
+
+    <script type="module">
+        // Mock console.log to capture output
+        const originalLog = console.log;
+        const outputDiv = document.getElementById('console-output');
+        
+        function addOutput(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            outputDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+        
+        console.log = (...args) => {
+            originalLog(...args);
+            addOutput(args.join(' '));
+        };
+
+        // Import and test the nav system
+        let initTabs;
+        
+        try {
+            const navModule = await import('./js/nav-init.js');
+            initTabs = navModule.initTabs;
+            console.log('✅ Nav module loaded successfully');
+        } catch (e) {
+            console.error('❌ Failed to load nav module:', e);
+        }
+
+        // Initialize tabs
+        if (initTabs) {
+            initTabs();
+            console.log('✅ Tabs initialized');
+        }
+
+        // Test functions
+        window.testTabActivation = () => {
+            console.log('🔄 Testing tab activation...');
+            const tabs = document.querySelectorAll('.tab');
+            const panels = document.querySelectorAll('.tab-section');
+            
+            console.log(`Found ${tabs.length} tabs and ${panels.length} panels`);
+            
+            // Test clicking each tab
+            tabs.forEach((tab, index) => {
+                setTimeout(() => {
+                    tab.click();
+                    const activeTab = document.querySelector('.tab.is-active');
+                    const visiblePanel = document.querySelector('.tab-section:not([style*="display: none"])');
+                    console.log(`Tab ${index + 1} clicked - Active: ${activeTab?.textContent.trim()}, Visible: ${visiblePanel?.id}`);
+                }, index * 500);
+            });
+        };
+
+        window.testKeyboardNavigation = () => {
+            console.log('🔄 Testing keyboard navigation...');
+            const homeTab = document.getElementById('homeTab');
+            if (homeTab) {
+                homeTab.focus();
+                console.log('Home tab focused');
+                
+                // Test arrow keys
+                setTimeout(() => {
+                    const rightEvent = new KeyboardEvent('keydown', { key: 'ArrowRight' });
+                    homeTab.dispatchEvent(rightEvent);
+                    console.log('Right arrow pressed');
+                }, 500);
+            }
+        };
+
+        window.testBadgeUpdates = () => {
+            console.log('🔄 Testing badge updates...');
+            const badges = document.querySelectorAll('.badge');
+            badges.forEach((badge, index) => {
+                const newValue = Math.floor(Math.random() * 50);
+                badge.textContent = newValue;
+                console.log(`Badge ${index + 1} updated to ${newValue}`);
+            });
+        };
+
+        window.checkTabStates = () => {
+            console.log('🔄 Checking tab states...');
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                const isActive = tab.classList.contains('is-active');
+                const ariaSelected = tab.getAttribute('aria-selected');
+                const tabindex = tab.getAttribute('tabindex');
+                console.log(`${tab.textContent.trim()}: active=${isActive}, aria-selected=${ariaSelected}, tabindex=${tabindex}`);
+            });
+        };
+
+        // Auto-test on load
+        setTimeout(() => {
+            console.log('🚀 Starting auto-test...');
+            checkTabStates();
+        }, 1000);
+    </script>
+</body>
+</html>

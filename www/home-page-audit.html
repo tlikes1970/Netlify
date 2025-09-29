@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page Audit</title>
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        .audit-container { max-width: 1200px; margin: 0 auto; }
+        .audit-section { margin-bottom: 30px; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .audit-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #333; }
+        .test-result { padding: 10px; margin: 5px 0; border-radius: 4px; }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .console-command { background-color: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="audit-container">
+        <h1>🏠 Home Page Comprehensive Audit</h1>
+        
+        <div class="audit-section">
+            <div class="audit-title">1. Search Interface</div>
+            <div id="search-audit-results"></div>
+            <div class="console-command">
+                <strong>Test Commands:</strong><br>
+                // Test search row layout<br>
+                const searchRow = document.querySelector('.search-row');<br>
+                console.log('Search Row:', getComputedStyle(searchRow).display, getComputedStyle(searchRow).flexDirection);<br><br>
+                
+                // Test genre filter width<br>
+                const genreFilter = document.querySelector('.genre-filter');<br>
+                console.log('Genre Filter Width:', getComputedStyle(genreFilter).width);<br><br>
+                
+                // Test search functionality<br>
+                const searchInput = document.querySelector('#search');<br>
+                console.log('Search Input:', searchInput ? 'Found' : 'Missing');
+            </div>
+        </div>
+        
+        <div class="audit-section">
+            <div class="audit-title">2. Home Page Sections</div>
+            <div id="sections-audit-results"></div>
+            <div class="console-command">
+                <strong>Test Commands:</strong><br>
+                // Check all home sections exist<br>
+                const sections = ['group-1-your-shows', 'group-2-community', 'flickwordTile', 'triviaTile', 'group-3-for-you', 'group-4-theaters', 'group-5-feedback'];<br>
+                sections.forEach(id => {<br>
+                &nbsp;&nbsp;const el = document.getElementById(id);<br>
+                &nbsp;&nbsp;console.log(`${id}:`, el ? 'Found' : 'Missing');<br>
+                });
+            </div>
+        </div>
+        
+        <div class="audit-section">
+            <div class="audit-title">3. Card Rendering</div>
+            <div id="cards-audit-results"></div>
+            <div class="console-command">
+                <strong>Test Commands:</strong><br>
+                // Check card components<br>
+                const cards = document.querySelectorAll('.preview-card, .unified-card, .poster-card');<br>
+                console.log('Total Cards:', cards.length);<br><br>
+                
+                // Check card sizing<br>
+                if (cards.length > 0) {<br>
+                &nbsp;&nbsp;const firstCard = cards[0];<br>
+                &nbsp;&nbsp;const styles = getComputedStyle(firstCard);<br>
+                &nbsp;&nbsp;console.log('Card Width:', styles.width, 'Height:', styles.height);<br>
+                }
+            </div>
+        </div>
+        
+        <div class="audit-section">
+            <div class="audit-title">4. Responsive Layout</div>
+            <div id="responsive-audit-results"></div>
+            <div class="console-command">
+                <strong>Test Commands:</strong><br>
+                // Check viewport and responsive behavior<br>
+                console.log('Viewport Width:', window.innerWidth);<br>
+                console.log('Is Mobile:', window.innerWidth <= 640);<br><br>
+                
+                // Test media query behavior<br>
+                const homeContent = document.querySelector('.home-content');<br>
+                if (homeContent) {<br>
+                &nbsp;&nbsp;const styles = getComputedStyle(homeContent);<br>
+                &nbsp;&nbsp;console.log('Home Content Max Width:', styles.maxWidth);<br>
+                }
+            </div>
+        </div>
+        
+        <div class="audit-section">
+            <div class="audit-title">5. JavaScript Functionality</div>
+            <div id="js-audit-results"></div>
+            <div class="console-command">
+                <strong>Test Commands:</strong><br>
+                // Check if main app is loaded<br>
+                console.log('FlickletApp:', typeof window.FlickletApp);<br>
+                console.log('App Data:', typeof window.appData);<br><br>
+                
+                // Check if data is loaded<br>
+                if (window.appData) {<br>
+                &nbsp;&nbsp;console.log('Movies:', window.appData.movies ? 'Loaded' : 'Missing');<br>
+                &nbsp;&nbsp;console.log('TV Shows:', window.appData.tv ? 'Loaded' : 'Missing');<br>
+                }
+            </div>
+        </div>
+        
+        <div class="audit-section">
+            <div class="audit-title">6. Performance Check</div>
+            <div id="performance-audit-results"></div>
+            <div class="console-command">
+                <strong>Test Commands:</strong><br>
+                // Check for performance issues<br>
+                console.log('DOM Elements:', document.querySelectorAll('*').length);<br>
+                console.log('CSS Files:', document.querySelectorAll('link[rel="stylesheet"]').length);<br>
+                console.log('JS Files:', document.querySelectorAll('script[src]').length);<br><br>
+                
+                // Check for console errors<br>
+                console.log('Check browser console for any errors');
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-run audit when page loads
+        window.addEventListener('load', () => {
+            runHomePageAudit();
+        });
+        
+        function runHomePageAudit() {
+            // 1. Search Interface Audit
+            auditSearchInterface();
+            
+            // 2. Home Page Sections Audit
+            auditHomeSections();
+            
+            // 3. Card Rendering Audit
+            auditCardRendering();
+            
+            // 4. Responsive Layout Audit
+            auditResponsiveLayout();
+            
+            // 5. JavaScript Functionality Audit
+            auditJavaScriptFunctionality();
+            
+            // 6. Performance Audit
+            auditPerformance();
+        }
+        
+        function auditSearchInterface() {
+            const results = document.getElementById('search-audit-results');
+            
+            // Test search row
+            const searchRow = document.querySelector('.search-row');
+            if (searchRow) {
+                const styles = getComputedStyle(searchRow);
+                const isFlex = styles.display === 'flex';
+                const isRow = styles.flexDirection === 'row';
+                if (isFlex && isRow) {
+                    results.innerHTML += '<div class="test-result pass">✓ Search row layout correct (flex row)</div>';
+                } else {
+                    results.innerHTML += '<div class="test-result fail">✗ Search row layout incorrect</div>';
+                }
+            } else {
+                results.innerHTML += '<div class="test-result fail">✗ Search row not found</div>';
+            }
+            
+            // Test genre filter
+            const genreFilter = document.querySelector('.genre-filter');
+            if (genreFilter) {
+                const styles = getComputedStyle(genreFilter);
+                const width = styles.width;
+                if (width === '60px') {
+                    results.innerHTML += '<div class="test-result pass">✓ Genre filter width correct (60px)</div>';
+                } else {
+                    results.innerHTML += '<div class="test-result warning">⚠ Genre filter width: ' + width + '</div>';
+                }
+            } else {
+                results.innerHTML += '<div class="test-result fail">✗ Genre filter not found</div>';
+            }
+            
+            // Test search input
+            const searchInput = document.querySelector('#search');
+            if (searchInput) {
+                results.innerHTML += '<div class="test-result pass">✓ Search input found</div>';
+            } else {
+                results.innerHTML += '<div class="test-result fail">✗ Search input not found</div>';
+            }
+        }
+        
+        function auditHomeSections() {
+            const results = document.getElementById('sections-audit-results');
+            const sections = [
+                'group-1-your-shows',
+                'group-2-community', 
+                'flickwordTile',
+                'triviaTile',
+                'group-3-for-you',
+                'group-4-theaters',
+                'group-5-feedback'
+            ];
+            
+            let foundCount = 0;
+            sections.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    foundCount++;
+                    results.innerHTML += '<div class="test-result pass">✓ ' + id + ' found</div>';
+                } else {
+                    results.innerHTML += '<div class="test-result fail">✗ ' + id + ' missing</div>';
+                }
+            });
+            
+            if (foundCount === sections.length) {
+                results.innerHTML += '<div class="test-result pass">✓ All home sections found</div>';
+            } else {
+                results.innerHTML += '<div class="test-result warning">⚠ ' + foundCount + '/' + sections.length + ' sections found</div>';
+            }
+        }
+        
+        function auditCardRendering() {
+            const results = document.getElementById('cards-audit-results');
+            
+            const cards = document.querySelectorAll('.preview-card, .unified-card, .poster-card');
+            if (cards.length > 0) {
+                results.innerHTML += '<div class="test-result pass">✓ ' + cards.length + ' cards found</div>';
+                
+                // Check first card sizing
+                const firstCard = cards[0];
+                const styles = getComputedStyle(firstCard);
+                results.innerHTML += '<div class="test-result info">ℹ First card: ' + styles.width + ' x ' + styles.height + '</div>';
+            } else {
+                results.innerHTML += '<div class="test-result warning">⚠ No cards found (may be loading)</div>';
+            }
+        }
+        
+        function auditResponsiveLayout() {
+            const results = document.getElementById('responsive-audit-results');
+            
+            const viewportWidth = window.innerWidth;
+            const isMobile = viewportWidth <= 640;
+            
+            results.innerHTML += '<div class="test-result info">ℹ Viewport: ' + viewportWidth + 'px (' + (isMobile ? 'Mobile' : 'Desktop') + ')</div>';
+            
+            const homeContent = document.querySelector('.home-content');
+            if (homeContent) {
+                const styles = getComputedStyle(homeContent);
+                results.innerHTML += '<div class="test-result info">ℹ Home content max-width: ' + styles.maxWidth + '</div>';
+            }
+        }
+        
+        function auditJavaScriptFunctionality() {
+            const results = document.getElementById('js-audit-results');
+            
+            if (typeof window.FlickletApp !== 'undefined') {
+                results.innerHTML += '<div class="test-result pass">✓ FlickletApp loaded</div>';
+            } else {
+                results.innerHTML += '<div class="test-result fail">✗ FlickletApp not loaded</div>';
+            }
+            
+            if (typeof window.appData !== 'undefined') {
+                results.innerHTML += '<div class="test-result pass">✓ App data loaded</div>';
+                
+                if (window.appData.movies) {
+                    results.innerHTML += '<div class="test-result pass">✓ Movies data available</div>';
+                }
+                if (window.appData.tv) {
+                    results.innerHTML += '<div class="test-result pass">✓ TV data available</div>';
+                }
+            } else {
+                results.innerHTML += '<div class="test-result fail">✗ App data not loaded</div>';
+            }
+        }
+        
+        function auditPerformance() {
+            const results = document.getElementById('performance-audit-results');
+            
+            const domElements = document.querySelectorAll('*').length;
+            const cssFiles = document.querySelectorAll('link[rel="stylesheet"]').length;
+            const jsFiles = document.querySelectorAll('script[src]').length;
+            
+            results.innerHTML += '<div class="test-result info">ℹ DOM Elements: ' + domElements + '</div>';
+            results.innerHTML += '<div class="test-result info">ℹ CSS Files: ' + cssFiles + '</div>';
+            results.innerHTML += '<div class="test-result info">ℹ JS Files: ' + jsFiles + '</div>';
+            
+            if (domElements > 1000) {
+                results.innerHTML += '<div class="test-result warning">⚠ High DOM element count</div>';
+            }
+            if (cssFiles > 10) {
+                results.innerHTML += '<div class="test-result warning">⚠ Many CSS files</div>';
+            }
+            if (jsFiles > 15) {
+                results.innerHTML += '<div class="test-result warning">⚠ Many JS files</div>';
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+

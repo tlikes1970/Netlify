@@ -38,6 +38,12 @@
 
     <!-- Critical CSS - Inlined for performance -->
     <link rel="stylesheet" href="/styles/critical.css" />
+    
+    <!-- Unified Spacing System - Load early to establish spacing variables -->
+    <link rel="stylesheet" href="/styles/spacing-system.css" />
+    
+    <!-- CSS Optimization System - Load early to establish optimization rules -->
+    <link rel="stylesheet" href="/styles/css-optimization.css" />
 
     <!-- Critical CLS prevention CSS -->
     <style id="critical-cls-guard">
@@ -156,6 +162,7 @@
 
     <!-- Fallback for browsers without preload support -->
     <noscript>
+      <link rel="stylesheet" href="/styles/spacing-system.css" />
       <link rel="stylesheet" href="/styles/inline-style-01.css?v=v17.9" />
       <link rel="stylesheet" href="/styles/inline-style-02.css" />
       <link rel="stylesheet" href="/styles/components.css?v=v17.9" />
@@ -191,6 +198,9 @@
 
     <!-- Mobile Hotfix - Loaded last to override other styles -->
     <link rel="stylesheet" href="/styles/mobile-hotfix.css" />
+    
+    <!-- Tab Normalization - Loaded after all other styles -->
+    <link rel="stylesheet" href="/styles/tabs.css" />
 
     <!-- Settings Manager -->
     <script type="module" src="/js/settings-manager.js"></script>
@@ -213,6 +223,7 @@
     <script type="module" src="/js/utils.js"></script>
     <script type="module" src="/js/i18n.js"></script>
     <script type="module" src="/js/language-manager.js"></script>
+    <script type="module" src="/js/marquee.js"></script>
     <script type="module" src="/js/functions.js"></script>
     <script type="module" src="/js/app.js"></script>
     <script type="module">
@@ -300,6 +311,9 @@
     <!-- Theme system -->
     <script type="module" src="/js/theme-manager.js"></script>
     <script type="module" src="/js/settings-modal.js"></script>
+    
+    <!-- Marquee system initialization -->
+    <script type="module" src="/js/app-init-marquee.js"></script>
 
     <!-- Home page features -->
     <script type="module" src="/scripts/currently-watching-preview.js"></script>
@@ -940,29 +954,27 @@
             placeholder=""
             data-i18n-placeholder="search_placeholder"
           />
-          <div class="search-buttons-row">
-            <select id="genreSelect" class="genre-filter search-area-genre">
-              <option value="" data-i18n="all_genres">All Genres</option>
-            </select>
-            <button
-              id="searchBtn"
-              type="button"
-              class="btn search-btn search-area-search"
-              aria-label="Search for TV shows and movies"
-            >
-              <span class="icon" aria-hidden="true">Search</span>
-              <span class="label" data-i18n="search">Search</span>
-            </button>
-            <button
-              id="clearSearchBtn"
-              type="button"
-              class="btn btn--secondary clear-search-btn search-area-clear"
-              aria-label="Clear search results"
-            >
-              <span class="icon" aria-hidden="true">X</span>
-              <span class="label" data-i18n="clear">Clear</span>
-            </button>
-          </div>
+          <select id="genreSelect" class="genre-filter search-area-genre">
+            <option value="" data-i18n="all_genres">Gen</option>
+          </select>
+          <button
+            id="searchBtn"
+            type="button"
+            class="btn search-btn search-area-search"
+            aria-label="Search for TV shows and movies"
+          >
+            <span class="icon" aria-hidden="true">🔍</span>
+            <span class="label" data-i18n="search">Search</span>
+          </button>
+          <button
+            id="clearSearchBtn"
+            type="button"
+            class="btn btn--secondary clear-search-btn search-area-clear"
+            aria-label="Clear search results"
+          >
+            <span class="icon" aria-hidden="true">✕</span>
+            <span class="label" data-i18n="clear">Clear</span>
+          </button>
         </div>
 
         <div id="tagFilterRow" class="tag-filters" aria-label="Tag filters"></div>
@@ -977,24 +989,25 @@
         data-state="loading"
       >
         <div class="quote-marquee">
-          <span class="quote-text" id="quoteText" data-i18n="loading_inspirational_quote"
+          <span class="quote-text" id="quoteText" data-role="marquee"
             >Loading inspirational quote...</span
           >
         </div>
       </div>
 
-      <!-- Tab container moved outside homeSection for proper positioning -->
-      <div class="tab-container" id="navigation" role="tablist" aria-label="Main navigation">
+      <!-- Tab navigation positioned directly under marquee -->
+      <nav id="navigation" role="tablist" aria-label="Sections" class="tabs">
         <button
           id="homeTab"
-          class="tab active"
+          class="tab is-active"
           role="tab"
           aria-controls="homeSection"
           aria-selected="true"
+          tabindex="0"
           title="Overview of your TV & movie tracking"
           aria-label="Home tab - view dashboard and recommendations"
         >
-          Home <span data-i18n="home">Home</span>
+          <span class="tab-label" data-i18n="home">Home</span>
         </button>
         <button
           id="watchingTab"
@@ -1002,11 +1015,12 @@
           role="tab"
           aria-controls="watchingSection"
           aria-selected="false"
+          tabindex="-1"
           title="Shows and movies you're currently watching"
           aria-label="Watching tab - view shows and movies you're currently watching"
         >
-          > <span data-i18n="currently_watching">Currently Watching</span>
-          <span class="tab-badge" id="watchingBadge" data-count-for="#watchingList">0</span>
+          <span class="tab-label" data-i18n="currently_watching">Currently Watching</span>
+          <span class="badge" id="watchingBadge" data-count-for="#watchingList">0</span>
         </button>
         <button
           id="wishlistTab"
@@ -1014,11 +1028,12 @@
           role="tab"
           aria-controls="wishlistSection"
           aria-selected="false"
+          tabindex="-1"
           title="Shows and movies you want to watch later"
           aria-label="Wishlist tab - view shows and movies you want to watch"
         >
-          + <span data-i18n="want_to_watch">Want to Watch</span>
-          <span class="tab-badge" id="wishlistBadge" data-count-for="#wishlistList">0</span>
+          <span class="tab-label" data-i18n="want_to_watch">Want to Watch</span>
+          <span class="badge" id="wishlistBadge" data-count-for="#wishlistList">0</span>
         </button>
         <button
           id="watchedTab"
@@ -1026,11 +1041,12 @@
           role="tab"
           aria-controls="watchedSection"
           aria-selected="false"
+          tabindex="-1"
           title="Shows and movies you've already finished"
           aria-label="Watched tab - view shows and movies you've completed"
         >
-          ✓ <span data-i18n="already_watched">Already Watched</span>
-          <span class="tab-badge" id="watchedBadge" data-count-for="#watchedList">0</span>
+          <span class="tab-label" data-i18n="already_watched">Already Watched</span>
+          <span class="badge" id="watchedBadge" data-count-for="#watchedList">0</span>
         </button>
         <button
           id="discoverTab"
@@ -1038,12 +1054,13 @@
           role="tab"
           aria-controls="discoverSection"
           aria-selected="false"
+          tabindex="-1"
           title="Get personalized recommendations based on your taste"
           aria-label="Discover tab - find new shows and movies"
         >
-          * <span data-i18n="discover">Discover</span>
+          <span class="tab-label" data-i18n="discover">Discover</span>
         </button>
-      </div>
+      </nav>
 
       <!-- Search Results Container -->
       <div id="searchResults" class="search-results" style="display: none">
@@ -2479,10 +2496,10 @@
           <fieldset class="field-group" aria-labelledby="themeLegend">
             <legend id="themeLegend">Theme</legend>
             <label
-              ><input type="radio" name="theme" value="system" id="themeSystem" checked /> Use
-              system (default)</label
+              ><input type="radio" name="theme" value="system" id="themeSystem" /> Use
+              system</label
             >
-            <label><input type="radio" name="theme" value="light" id="themeLight" /> Light</label>
+            <label><input type="radio" name="theme" value="light" id="themeLight" checked /> Light (default)</label>
             <label><input type="radio" name="theme" value="dark" id="themeDark" /> Dark</label>
           </fieldset>
 
@@ -2610,6 +2627,59 @@
             panels_is_child_of_appRoot: panels?.parentElement?.id === 'appRoot',
           });
         }, 100);
+      });
+    </script>
+    <!-- FINAL THEME OVERRIDE - Run after all modules load -->
+    <script>
+      // Force light theme after all modules have loaded
+      window.addEventListener('load', () => {
+        console.log('🎨 FINAL THEME OVERRIDE - Forcing light mode');
+        
+        // Debug current state
+        console.log('🔍 Current state before override:', {
+          dataTheme: document.documentElement.getAttribute('data-theme'),
+          bodyDataTheme: document.body.getAttribute('data-theme'),
+          bodyClasses: document.body.className,
+          localStorage: {
+            flickletTheme: localStorage.getItem('flicklet-theme'),
+            prefTheme: localStorage.getItem('pref_theme'),
+            prefMardi: localStorage.getItem('pref_mardi')
+          },
+          themeManager: window.ThemeManager ? {
+            theme: window.ThemeManager.theme,
+            mardi: window.ThemeManager.mardi
+          } : 'not available'
+        });
+        
+        // Override any theme settings
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.body.setAttribute('data-theme', 'light');
+        document.body.classList.remove('dark-mode', 'mardi', 'system-dark');
+        document.body.classList.add('light-mode');
+        
+        // Force localStorage
+        localStorage.setItem('pref_theme', 'light');
+        localStorage.setItem('flicklet-theme', 'light');
+        localStorage.setItem('pref_mardi', 'off');
+        
+        // Override ThemeManager if it exists
+        if (window.ThemeManager) {
+          window.ThemeManager.theme = 'light';
+          window.ThemeManager.mardi = 'off';
+        }
+        
+        // Debug final state
+        console.log('🔍 Final state after override:', {
+          dataTheme: document.documentElement.getAttribute('data-theme'),
+          bodyDataTheme: document.body.getAttribute('data-theme'),
+          bodyClasses: document.body.className,
+          computedStyles: {
+            backgroundColor: getComputedStyle(document.body).backgroundColor,
+            color: getComputedStyle(document.body).color
+          }
+        });
+        
+        console.log('✅ Light theme forced successfully');
       });
     </script>
   </body>

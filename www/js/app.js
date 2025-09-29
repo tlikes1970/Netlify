@@ -33,10 +33,27 @@ window.FlickletDebug = window.FlickletDebug || {
     update(user) {
       this.isAuthenticated = !!user;
       if (user) {
-        this.displayName = user.displayName || user.email?.split('@')[0] || 'User';
-        this.alias = user.displayName || user.email?.split('@')[0] || 'User';
-        this.avatarUrl = user.photoURL || '';
-        this.email = user.email || '';
+        // Check if we just saved a username - don't override it
+        if (window.__USERNAME_JUST_SAVED__) {
+          console.log('🔄 Username just saved, preserving:', window.__USERNAME_JUST_SAVED__);
+          this.displayName = window.__USERNAME_JUST_SAVED__;
+          this.alias = window.__USERNAME_JUST_SAVED__;
+          this.avatarUrl = user.photoURL || '';
+          this.email = user.email || '';
+        } else {
+          // Check for display name in settings first, then fall back to Firebase user data
+          const settingsDisplayName = window.appData?.settings?.displayName || 
+                                     window.appData?.settings?.username ||
+                                     window.SettingsManager?.get('displayName');
+          
+          // Always prioritize the most recent settings over Firebase user data
+          this.displayName = settingsDisplayName || user.displayName || user.email?.split('@')[0] || 'User';
+          this.alias = settingsDisplayName || user.displayName || user.email?.split('@')[0] || 'User';
+          this.avatarUrl = user.photoURL || '';
+          this.email = user.email || '';
+          
+          console.log('✅ UserViewModel updated with display name:', this.displayName, 'from settings:', !!settingsDisplayName);
+        }
       } else {
         this.displayName = '';
         this.alias = '';
@@ -48,18 +65,26 @@ window.FlickletDebug = window.FlickletDebug || {
       this.notifyUI();
     },
 
+    // Method to update just the display name/username
+    updateDisplayName(newName) {
+      this.displayName = newName;
+      this.alias = newName;
+      this.notifyUI();
+    },
+
     notifyUI() {
       // Update account button
-      const accountBtn = document.getElementById('accountBtn');
-      if (accountBtn) {
-        accountBtn.textContent = this.isAuthenticated ? `👤 ${this.displayName}` : '👤 Sign In';
+      const accountBtn = document.getElementById('accountButton');
+      const accountLabel = document.getElementById('accountButtonLabel');
+      if (accountBtn && accountLabel) {
+        accountLabel.textContent = this.isAuthenticated ? `👤 ${this.displayName}` : 'Sign In';
         accountBtn.title = this.isAuthenticated
           ? `Signed in as ${this.email}. Click to sign out.`
           : 'Click to sign in';
       }
 
       // Update snark text
-      const snarkElement = document.querySelector('[data-snark]');
+      const snarkElement = document.getElementById('leftSnark');
       if (snarkElement && this.isAuthenticated) {
         const snarks = [
           `Welcome back, ${this.alias}!`,
@@ -767,6 +792,17 @@ window.FlickletDebug = window.FlickletDebug || {
         window.UserViewModel.update(null);
       }
 
+      // Clear username snark and restore generic greeting
+      const leftSnark = document.getElementById('leftSnark');
+      const headerGreeting = document.getElementById('headerGreeting');
+      if (leftSnark) {
+        leftSnark.textContent = 'Welcome back!';
+      }
+      if (headerGreeting) {
+        headerGreeting.style.display = '';
+        headerGreeting.textContent = 'Ready to discover your next favorite show?';
+      }
+
       // Clear any duplicate cards
       if (typeof window.cleanupDuplicateCards === 'function') {
         window.cleanupDuplicateCards();
@@ -810,7 +846,7 @@ window.FlickletDebug = window.FlickletDebug || {
           return data;
         } else {
           // Seed defaults so the next read always has data
-          const defaults = { theme: 'system', lang: 'en', createdAt: Date.now() };
+          const defaults = { theme: 'light', lang: 'en', createdAt: Date.now() };
           await ref.set(defaults, { merge: true });
           console.log('✅ Firestore defaults created:', defaults);
           return defaults;
@@ -1132,12 +1168,14 @@ window.FlickletDebug = window.FlickletDebug || {
         const trimmedUsername = username.trim();
         await this.writeSettings(uid, {
           username: trimmedUsername,
+          displayName: trimmedUsername, // Also save as displayName
           usernamePrompted: true,
         });
 
         // Update local appData
         if (window.appData) {
           window.appData.settings.username = trimmedUsername;
+          window.appData.settings.displayName = trimmedUsername; // Also update displayName
           if (typeof window.saveAppData === 'function') {
             window.saveAppData();
           }
@@ -1156,6 +1194,8 @@ window.FlickletDebug = window.FlickletDebug || {
      */
     renderSnark(username) {
       const leftSnark = document.getElementById('leftSnark');
+      const headerGreeting = document.getElementById('headerGreeting');
+      
       if (leftSnark && username) {
         const snarkText = this.makeSnark(username);
         // Make username bold in the snark text
@@ -1165,7 +1205,17 @@ window.FlickletDebug = window.FlickletDebug || {
         leftSnark.style.zIndex = 'auto';
         leftSnark.style.pointerEvents = 'none';
 
+        // Hide the generic greeting when username is displayed
+        if (headerGreeting) {
+          headerGreeting.style.display = 'none';
+        }
+
         console.info(`[identity] snark:render=${snarkText}`);
+      } else if (leftSnark && !username) {
+        // Show generic greeting when no username
+        if (headerGreeting) {
+          headerGreeting.style.display = '';
+        }
       }
     },
 
@@ -1715,18 +1765,25 @@ window.FlickletDebug = window.FlickletDebug || {
           if (isSearching) {
             // During search, show all tabs for navigation
             btn.classList.remove('hidden');
-            btn.classList.remove('active');
+            btn.classList.remove('is-active');
+            btn.classList.remove('active'); // Remove old active class
             console.log(`🔍 Search mode - showing tab: ${name}Tab`);
           } else if (name === tab) {
-            // Hide the current tab (normal mode)
-            btn.classList.add('hidden');
-            btn.classList.remove('active');
-            console.log(`✅ ${name}Tab hidden: true (current tab)`);
-          } else {
-            // Show other tabs (normal mode)
+            // Show current tab with active styling (new system)
             btn.classList.remove('hidden');
-            btn.classList.remove('active');
-            console.log(`✅ ${name}Tab hidden: false, active: false`);
+            btn.classList.add('is-active');
+            btn.classList.remove('active'); // Remove old active class
+            btn.setAttribute('aria-selected', 'true');
+            btn.setAttribute('tabindex', '0');
+            console.log(`✅ ${name}Tab is-active: true (current tab)`);
+          } else {
+            // Show other tabs without active styling
+            btn.classList.remove('hidden');
+            btn.classList.remove('is-active');
+            btn.classList.remove('active'); // Remove old active class
+            btn.setAttribute('aria-selected', 'false');
+            btn.setAttribute('tabindex', '-1');
+            console.log(`✅ ${name}Tab is-active: false`);
           }
         }
       });
@@ -2133,7 +2190,7 @@ window.FlickletDebug = window.FlickletDebug || {
               window.applyThemeToggle();
             } else {
               // Fallback: read current and flip
-              const cur = document.documentElement.getAttribute('data-theme') || 'system';
+              const cur = document.documentElement.getAttribute('data-theme') || 'light';
               const next = cur === 'light' ? 'dark' : 'light';
               document.documentElement.setAttribute('data-theme', next);
             }
@@ -2741,6 +2798,33 @@ window.FlickletDebug = window.FlickletDebug || {
   // Expose UserViewModel globally for verification
   window.UserViewModel = UserViewModel;
 
+  // Initialize display name input with current value
+  window.initializeDisplayNameInput = function() {
+    const input = document.getElementById('displayNameInput');
+    if (input) {
+      const currentName = window.appData?.settings?.displayName || 
+                         window.appData?.settings?.username || 
+                         window.SettingsManager?.get('displayName') || '';
+      input.value = currentName;
+      console.log('✅ Display name input initialized with:', currentName);
+    }
+  };
+
+  // Listen for data ready events to initialize display name input
+  document.addEventListener('app:data:ready', (event) => {
+    console.log('📊 Data ready event received:', event.detail?.source);
+    // Initialize display name input after data is loaded
+    setTimeout(() => {
+      window.initializeDisplayNameInput();
+      
+      // Also update UserViewModel if user is authenticated to pick up display name from settings
+      if (window.FlickletApp && window.FlickletApp.currentUser) {
+        UserViewModel.update(window.FlickletApp.currentUser);
+        console.log('✅ UserViewModel refreshed with settings data');
+      }
+    }, 100);
+  });
+
   // Ensure user function for auth guards
   window.ensureUser = async function () {
     // Wait for Firebase to be ready
@@ -2766,6 +2850,91 @@ window.FlickletDebug = window.FlickletDebug || {
     return user;
   };
 
+  // Custom Yes/No confirmation dialog
+  window.showYesNoDialog = function(message) {
+    return new Promise((resolve) => {
+      // Create modal overlay
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      `;
+
+      // Create dialog box
+      const dialog = document.createElement('div');
+      dialog.style.cssText = `
+        background: white;
+        padding: 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        max-width: 400px;
+        text-align: center;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      `;
+
+      dialog.innerHTML = `
+        <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.4;">${message}</p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button id="yesBtn" style="
+            background: #ff4c8d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+          ">Yes</button>
+          <button id="noBtn" style="
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+          ">No</button>
+        </div>
+      `;
+
+      overlay.appendChild(dialog);
+      document.body.appendChild(overlay);
+
+      // Handle button clicks
+      const yesBtn = dialog.querySelector('#yesBtn');
+      const noBtn = dialog.querySelector('#noBtn');
+
+      yesBtn.onclick = () => {
+        document.body.removeChild(overlay);
+        resolve(true);
+      };
+
+      noBtn.onclick = () => {
+        document.body.removeChild(overlay);
+        resolve(false);
+      };
+
+      // Handle escape key
+      const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+          document.body.removeChild(overlay);
+          document.removeEventListener('keydown', handleEscape);
+          resolve(false);
+        }
+      };
+      document.addEventListener('keydown', handleEscape);
+    });
+  };
+
   // Global functions for HTML onclick handlers
   window.saveDisplayName = async function () {
     const input = document.getElementById('displayNameInput');
@@ -2783,8 +2952,8 @@ window.FlickletDebug = window.FlickletDebug || {
     // Check if this is an overwrite of existing username
     const currentUsername = window.appData?.settings?.username;
     if (currentUsername && currentUsername !== newName) {
-      const confirmed = confirm(
-        `Are you sure you want to change your username from "${currentUsername}" to "${newName}"? This will update your account settings.`,
+      const confirmed = await window.showYesNoDialog(
+        `This will change your username from "${currentUsername}" to "${newName}". Are you sure you want to continue?`
       );
       if (!confirmed) {
         console.log('Username change cancelled by user');
@@ -2793,40 +2962,97 @@ window.FlickletDebug = window.FlickletDebug || {
     }
 
     try {
+      console.log('🔄 Starting display name save process for:', newName);
+      
       // Update appData
       if (!window.appData) {
         window.appData = { settings: {} };
+        console.log('📝 Created new appData object');
       }
       if (!window.appData.settings) {
         window.appData.settings = {};
+        console.log('📝 Created new appData.settings object');
       }
 
       window.appData.settings.username = newName;
       window.appData.settings.displayName = newName;
+      console.log('✅ Updated appData.settings:', { username: newName, displayName: newName });
 
-      // Save to localStorage
-      if (typeof window.saveAppData === 'function') {
-        window.saveAppData();
+      // Save to SettingsManager for proper persistence
+      if (window.SettingsManager && typeof window.SettingsManager.set === 'function') {
+        window.SettingsManager.set('displayName', newName);
+        window.SettingsManager.set('username', newName);
+        console.log('✅ Display name saved to SettingsManager:', newName);
       } else {
-        localStorage.setItem('flicklet-data', JSON.stringify(window.appData));
+        console.warn('⚠️ SettingsManager not available or set method missing');
       }
 
-      // Save to Firebase if user is signed in
+      // Save to localStorage
+      try {
+        if (typeof window.saveAppData === 'function') {
+          window.saveAppData();
+          console.log('✅ Data saved via saveAppData function');
+        } else {
+          localStorage.setItem('flicklet-data', JSON.stringify(window.appData));
+          console.log('✅ Data saved to localStorage directly');
+        }
+      } catch (storageError) {
+        console.error('❌ Failed to save to localStorage:', storageError);
+        throw new Error('Failed to save to localStorage: ' + storageError.message);
+      }
+
+      // Save to Firebase if user is signed in - use the dedicated setUsername method
       if (window.FlickletApp && window.FlickletApp.currentUser) {
         try {
-          await window.FlickletApp.writeSettings(window.FlickletApp.currentUser.uid, {
-            username: newName,
-            displayName: newName,
-          });
-          console.log('✅ Username saved to Firebase:', newName);
+          // Use the existing setUsername method which handles Firebase properly
+          const firebaseSuccess = await window.FlickletApp.setUsername(
+            window.FlickletApp.currentUser.uid, 
+            newName
+          );
+          
+          if (firebaseSuccess) {
+            console.log('✅ Username saved to Firebase via setUsername:', newName);
+          } else {
+            console.error('❌ setUsername returned false');
+            throw new Error('setUsername method returned false');
+          }
         } catch (firebaseError) {
           console.error('❌ Failed to save username to Firebase:', firebaseError);
-          // Continue with local save even if Firebase fails
+          // Don't continue if Firebase save fails - this is critical
+          throw new Error('Failed to save to Firebase: ' + firebaseError.message);
         }
       }
 
-      // Update UI
-      UserViewModel.update({ displayName: newName });
+      // Update current user object if authenticated
+      if (window.FlickletApp && window.FlickletApp.currentUser) {
+        window.FlickletApp.currentUser.displayName = newName;
+        console.log('✅ Updated currentUser.displayName:', newName);
+      }
+
+      // Set a flag to prevent data loading from overriding our changes
+      window.__USERNAME_JUST_SAVED__ = newName;
+      setTimeout(() => {
+        delete window.__USERNAME_JUST_SAVED__;
+      }, 5000); // Clear flag after 5 seconds
+
+      // Update UI immediately using the new method
+      try {
+        if (window.UserViewModel && typeof window.UserViewModel.updateDisplayName === 'function') {
+          window.UserViewModel.updateDisplayName(newName);
+          console.log('✅ UserViewModel.updateDisplayName called');
+        } else {
+          console.warn('⚠️ UserViewModel not available or updateDisplayName method missing');
+        }
+        
+        // Also trigger a full UserViewModel update to ensure consistency
+        if (window.FlickletApp && window.FlickletApp.currentUser && window.UserViewModel) {
+          window.UserViewModel.update(window.FlickletApp.currentUser);
+          console.log('✅ UserViewModel.update called with currentUser');
+        }
+      } catch (uiError) {
+        console.error('❌ Failed to update UI:', uiError);
+        // Don't throw here - data is saved, just UI update failed
+      }
 
       console.log('✅ Display name saved:', newName);
 
@@ -2843,6 +3069,20 @@ window.FlickletDebug = window.FlickletDebug || {
       }
     } catch (error) {
       console.error('❌ Failed to save display name:', error);
+      const errorMessage = error.message || 'Unknown error occurred';
+      alert(`Failed to save display name: ${errorMessage}. Please try again.`);
+      
+      // Show error feedback
+      const btn = document.getElementById('saveNameBtn');
+      if (btn) {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '❌ Error';
+        btn.style.background = '#dc3545';
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.background = '';
+        }, 3000);
+      }
     }
   };
 

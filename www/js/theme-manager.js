@@ -53,20 +53,20 @@
   }
 
   function init() {
-    const theme = getStored(THEME_KEY, 'system');
+    const theme = getStored(THEME_KEY, 'light');
     const mardi = getStored(MARDI_KEY, 'off');
     applyTheme(theme, mardi);
 
     // Live-react to OS changes if using system
     media.addEventListener?.('change', (e) => {
-      const t = getStored(THEME_KEY, 'system');
+      const t = getStored(THEME_KEY, 'light');
       if (t === 'system') applyTheme(t, getStored(MARDI_KEY, 'off'));
     });
 
     // Expose minimal API
     window.ThemeManager = {
       get theme() {
-        return getStored(THEME_KEY, 'system');
+        return getStored(THEME_KEY, 'light');
       },
       set theme(val) {
         setStored(THEME_KEY, val);
@@ -77,10 +77,10 @@
       },
       set mardi(val) {
         setStored(MARDI_KEY, val);
-        applyTheme(getStored(THEME_KEY, 'system'), val);
+        applyTheme(getStored(THEME_KEY, 'light'), val);
       },
       get effectiveTheme() {
-        return currentComputedTheme(getStored(THEME_KEY, 'system'));
+        return currentComputedTheme(getStored(THEME_KEY, 'light'));
       },
     };
   }

@@ -16,7 +16,7 @@
     modal.hidden = false;
 
     // Initialize controls from state
-    const theme = window.ThemeManager?.theme ?? 'system';
+    const theme = window.ThemeManager?.theme ?? 'light';
     const mardi = window.ThemeManager?.mardi ?? 'off';
 
     document.getElementById('themeSystem').checked = theme === 'system';
