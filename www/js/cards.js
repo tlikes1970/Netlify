@@ -125,23 +125,37 @@ function bindRating(root, item) {
 
 function renderActions(item, ctx) {
   const isPro = currentUserIsPro();
-  const actions = getActionsForContext(ctx); // strictly from settings
-  const primary = actions.filter(a => a.primary).map(a => btn(a, isPro)).join('');
-  const secondaryItems = actions.filter(a => !a.primary);
-  const secondary = secondaryItems.map(a => ov(a, isPro)).join('');
+  const actions = getActionsForContext(ctx);
   
-  // Episode tracking for watching tab
-  const epi = ctx === 'watching' ? 
-    `<button class="btn" data-action="episode-toggle" data-handler="episode-toggle">📺<span class="label">Episode Tracking</span></button>` : '';
+  // Group actions by function and availability
+  const cardMoves = actions.filter(a => 
+    ['move-to-wishlist', 'move-to-watching', 'mark-watched', 'undo-to-wishlist', 'add-to-wishlist'].includes(a.id)
+  );
   
-  // Overflow menu for secondary actions
-  const overflow = secondaryItems.length ? 
-    `<div class="overflow" aria-expanded="false">
-      <button class="btn" data-overflow-toggle aria-label="More actions">⋯</button>
-      <div class="overflow-menu">${secondary}</div>
-    </div>` : '';
+  const freeFunctions = actions.filter(a => 
+    ['move-to-not', 'delete-item', 'details'].includes(a.id)
+  );
   
-  return primary + epi + overflow;
+  const proFeatures = actions.filter(a => 
+    a.pro && !['move-to-wishlist', 'move-to-watching', 'mark-watched', 'undo-to-wishlist', 'add-to-wishlist', 'move-to-not', 'delete-item', 'details'].includes(a.id)
+  );
+  
+  // Episode tracking for watching tab (free function)
+  const episodeTracking = ctx === 'watching' ? 
+    [{ id: 'episode-toggle', label: 'Episode Tracking', icon: '📺', primary: false, pro: false, handler: 'episode-toggle' }] : [];
+  
+  // Render each group
+  const cardMovesHtml = cardMoves.map(a => btn(a, isPro)).join('');
+  const freeFunctionsHtml = [...freeFunctions, ...episodeTracking].map(a => btn(a, isPro)).join('');
+  const proFeaturesHtml = proFeatures.map(a => btn(a, isPro)).join('');
+  
+  // Group with separators
+  const groups = [];
+  if (cardMovesHtml) groups.push(`<div class="action-group card-moves">${cardMovesHtml}</div>`);
+  if (freeFunctionsHtml) groups.push(`<div class="action-group free-functions">${freeFunctionsHtml}</div>`);
+  if (proFeaturesHtml) groups.push(`<div class="action-group pro-features">${proFeaturesHtml}</div>`);
+  
+  return groups.join('');
 }
 
 function btn(a, isPro) {

@@ -136,10 +136,33 @@
 .actions {
   margin-top: auto;
   display: flex;
-  flex-direction: row;          /* force horizontal */
+  flex-direction: column;       /* stack groups vertically */
+  gap: 12px;
+}
+
+/* Action Groups */
+.action-group {
+  display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.action-group.card-moves {
+  /* Card movement actions - primary blue theme */
+}
+
+.action-group.free-functions {
+  /* Free functions - neutral theme */
+  border-top: 1px solid #f3f4f6;
+  padding-top: 8px;
+}
+
+.action-group.pro-features {
+  /* Pro features - premium theme */
+  border-top: 1px solid #f3f4f6;
+  padding-top: 8px;
 }
 
 .btn {
@@ -192,42 +215,7 @@
   border-color: #ef4444; /* red-500 */
 }
 
-/* Overflow Menu */
-.overflow {
-  position: relative;
-}
-
-.overflow-menu {
-  position: absolute;
-  right: 0;
-  top: 100%;
-  margin-top: 6px;
-  min-width: 160px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  box-shadow: 0 12px 28px rgba(0,0,0,.12);
-  padding: 6px;
-  display: none;
-  z-index: 30;
-}
-
-.overflow[aria-expanded="true"] .overflow-menu {
-  display: block;
-}
-
-.overflow-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 8px;
-  color: #111827;
-}
-
-.overflow-item:hover {
-  background: #f3f4f6;
-}
+/* Overflow Menu - REMOVED - All buttons now show inline */
 
 /* Hint */
 .hint {
@@ -256,11 +244,20 @@
     font-size: 15px;
   }
   
+  .actions {
+    gap: 8px;                  /* tighter spacing on mobile */
+  }
+  
+  .action-group {
+    gap: 6px;                  /* tighter button spacing */
+  }
+  
   .btn {
     padding: 6px;
+    font-size: 12px;
   }
   
   .btn .label {
-    display: none;
+    display: none;             /* hide labels on mobile, show only icons */
   }
 }
