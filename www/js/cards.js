@@ -68,6 +68,7 @@ export function renderMediaCard(item, context) {
         <span class="pill">${item.type}</span>
         ${item.genres?.slice(0,2).map(g => `<span class="pill">${escapeHtml(g)}</span>`).join('')}
       </div>
+      <div class="description">${escapeHtml(item.description || item.overview || 'No description available.')}</div>
       ${renderRating(item)}
       <div class="actions">${renderActions(item, context)}</div>
       <div class="hint">Poster opens TMDB</div>
@@ -114,14 +115,22 @@ function renderActions(item, ctx) {
   const actions = proActionsForContext(ctx);
   const primary = actions.filter(a => a.primary).map(a => btn(a, isPro)).join('');
   const secondary = actions.filter(a => !a.primary).map(a => ov(a, isPro)).join('');
+  
+  // Episode tracking for watching tab
   const epi = ctx === 'watching' ? 
     `<button class="btn" data-action="episode-toggle">📺<span class="label">Episode Tracking</span></button>` : '';
   
-  return primary + epi + (secondary ? 
+  // Pro-locked export action
+  const proExport = `<button class="btn locked" aria-disabled="true" title="Pro feature">🔒<span class="label">Export (Pro)</span></button>`;
+  
+  // Overflow menu for secondary actions
+  const overflow = secondary ? 
     `<div class="overflow" aria-expanded="false">
       <button class="btn" data-overflow-toggle>⋯</button>
       <div class="overflow-menu">${secondary}</div>
-    </div>` : '');
+    </div>` : '';
+  
+  return primary + epi + proExport + overflow;
 }
 
 function btn(a, isPro) {

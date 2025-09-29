@@ -823,7 +823,8 @@
       posterUrl: posterUrl,
       tmdbUrl: tmdbUrl,
       mediaType: mediaType,
-      userRating: item.userRating || 0
+      userRating: item.userRating || 0,
+      description: item.overview || item.description || ''
     };
   }
 
