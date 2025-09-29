@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaCard Test - v28.80</title>
+    <link rel="stylesheet" href="/styles/cards.css">
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin-bottom: 40px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎴 MediaCard Unified System Test - v28.80</h1>
+        
+        <div class="test-section">
+            <h2>Watching Tab Cards</h2>
+            <div id="watchingTest" class="list-container"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Wishlist Tab Cards</h2>
+            <div id="wishlistTest" class="list-container"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Discover Tab Cards</h2>
+            <div id="discoverTest" class="list-container"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Search Results</h2>
+            <div id="searchTest" class="media-grid"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Test data
+        const testItems = [
+            {
+                id: 1,
+                title: "The Matrix",
+                year: 1999,
+                type: "Movie",
+                genres: ["Action", "Sci-Fi"],
+                posterUrl: "https://image.tmdb.org/t/p/w200/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+                tmdbUrl: "https://www.themoviedb.org/movie/603",
+                mediaType: "movie",
+                userRating: 4
+            },
+            {
+                id: 2,
+                title: "Breaking Bad",
+                year: 2008,
+                type: "TV Show",
+                genres: ["Drama", "Crime"],
+                posterUrl: "https://image.tmdb.org/t/p/w200/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
+                tmdbUrl: "https://www.themoviedb.org/tv/1396",
+                mediaType: "tv",
+                userRating: 5
+            },
+            {
+                id: 3,
+                title: "Inception",
+                year: 2010,
+                type: "Movie",
+                genres: ["Action", "Sci-Fi", "Thriller"],
+                posterUrl: "https://image.tmdb.org/t/p/w200/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
+                tmdbUrl: "https://www.themoviedb.org/movie/27205",
+                mediaType: "movie",
+                userRating: 3
+            }
+        ];
+
+        // Load MediaCard system
+        async function loadMediaCard() {
+            try {
+                const cardsModule = await import('/js/cards.js');
+                window.renderMediaCard = cardsModule.renderMediaCard;
+                console.log('✅ MediaCard system loaded');
+                renderTestCards();
+            } catch (e) {
+                console.error('❌ Failed to load MediaCard system:', e);
+                document.body.innerHTML = '<h1>❌ MediaCard system failed to load</h1><p>Check console for errors.</p>';
+            }
+        }
+
+        function renderTestCards() {
+            // Test Watching tab
+            const watchingContainer = document.getElementById('watchingTest');
+            testItems.forEach(item => {
+                const card = window.renderMediaCard(item, 'watching');
+                watchingContainer.appendChild(card);
+            });
+
+            // Test Wishlist tab
+            const wishlistContainer = document.getElementById('wishlistTest');
+            testItems.forEach(item => {
+                const card = window.renderMediaCard(item, 'wishlist');
+                wishlistContainer.appendChild(card);
+            });
+
+            // Test Discover tab
+            const discoverContainer = document.getElementById('discoverTest');
+            testItems.forEach(item => {
+                const card = window.renderMediaCard(item, 'discover');
+                discoverContainer.appendChild(card);
+            });
+
+            // Test Search results
+            const searchContainer = document.getElementById('searchTest');
+            testItems.forEach(item => {
+                const card = window.renderMediaCard(item, 'discover');
+                searchContainer.appendChild(card);
+            });
+
+            console.log('✅ Test cards rendered');
+        }
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadMediaCard);
+        } else {
+            loadMediaCard();
+        }
+    </script>
+</body>
+</html>

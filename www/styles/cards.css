@@ -1,0 +1,209 @@
+/* MediaCard Unified System - v28.80 */
+
+/* Grid Layout */
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+/* Override list-container when using MediaCard system */
+.list-container:has(.media-card) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+/* Card Base */
+.media-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  transition: box-shadow .15s ease, transform .15s ease;
+}
+
+.media-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+}
+
+/* Poster */
+.poster {
+  width: 100%;
+  aspect-ratio: 2/3;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #f3f4f6;
+}
+
+/* Title */
+.title {
+  margin-top: 10px;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Subtitle */
+.sub {
+  margin-top: 6px;
+  color: #6b7280;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Pills */
+.pill {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+}
+
+/* Meta */
+.meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+/* Rating */
+.rating {
+  margin-top: 8px;
+  display: inline-flex;
+  gap: 2px;
+}
+
+.star {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.star svg {
+  width: 100%;
+  height: 100%;
+}
+
+.star[data-active="true"] path {
+  fill: #f59e0b; /* amber */
+}
+
+.star[data-active="false"] path {
+  fill: #e5e7eb;
+}
+
+/* Actions */
+.actions {
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+  color: #111827;
+}
+
+.btn:hover {
+  border-color: #cbd5e1;
+}
+
+.btn.locked {
+  color: #9ca3af;
+  border-style: dashed;
+  cursor: not-allowed;
+}
+
+.btn.locked .icon {
+  opacity: .6;
+}
+
+/* Overflow Menu */
+.overflow {
+  position: relative;
+}
+
+.overflow-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 6px;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0,0,0,.12);
+  padding: 6px;
+  display: none;
+  z-index: 30;
+}
+
+.overflow[aria-expanded="true"] .overflow-menu {
+  display: block;
+}
+
+.overflow-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  color: #111827;
+}
+
+.overflow-item:hover {
+  background: #f3f4f6;
+}
+
+/* Hint */
+.hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .media-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  
+  .title {
+    font-size: 15px;
+  }
+  
+  .btn {
+    padding: 6px;
+  }
+  
+  .btn .label {
+    display: none;
+  }
+}

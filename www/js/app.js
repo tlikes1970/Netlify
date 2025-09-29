@@ -2069,6 +2069,21 @@ window.FlickletDebug = window.FlickletDebug || {
         }
       });
 
+      // Overflow toggle functionality for MediaCard system
+      document.addEventListener('click', (e) => {
+        const t = e.target.closest('[data-overflow-toggle]');
+        if (t) {
+          const host = t.closest('.overflow');
+          const exp = host.getAttribute('aria-expanded') === 'true';
+          host.setAttribute('aria-expanded', !exp);
+          e.preventDefault();
+          return;
+        }
+        document.querySelectorAll('.overflow[aria-expanded="true"]').forEach(o => 
+          o.setAttribute('aria-expanded', 'false')
+        );
+      });
+
       // Delegated actions for dynamic content
       document.addEventListener('click', (e) => {
         const btn = e.target.closest('[data-action]');

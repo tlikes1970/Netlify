@@ -782,6 +782,51 @@
    * Update Path: Modify listType parameter handling, update createShowCard call if card structure changes
    * Dependencies: WatchlistsAdapter, createShowCard function, appData structure, container elements, moveItem and removeItemFromCurrentList functions
    */
+  /**
+   * Transform item data for MediaCard system
+   * @param {Object} item - Raw item data
+   * @param {string} listType - Current list type
+   * @returns {Object} MediaCard data format
+   */
+  function transformForMediaCard(item, listType) {
+    const year = item.release_date
+      ? new Date(item.release_date).getFullYear()
+      : item.first_air_date
+        ? new Date(item.first_air_date).getFullYear()
+        : item.year || '';
+    
+    const mediaType = item.media_type || item.mediaType || (item.first_air_date ? 'tv' : 'movie');
+    const title = item.title || item.name || item.original_title || item.original_name || 'Unknown';
+    
+    // Construct proper poster URL using TMDB utilities
+    const posterUrl = item.posterUrl ||
+      item.poster_src ||
+      (item.poster_path && window.getPosterUrl
+        ? window.getPosterUrl(item.poster_path, 'w200')
+        : item.poster_path
+          ? `https://image.tmdb.org/t/p/w200${item.poster_path}`
+          : null);
+    
+    // Construct TMDB URL
+    const tmdbUrl = item.tmdbUrl || 
+      (window.openTMDBLink ? `#tmdb-${item.id}` : `https://www.themoviedb.org/${mediaType}/${item.id}`);
+    
+    // Get genres
+    const genres = item.genres?.map(g => g.name) || [];
+    
+    return {
+      id: item.id || item.tmdb_id || item.tmdbId,
+      title: title,
+      year: year,
+      type: mediaType === 'tv' ? 'TV Show' : 'Movie',
+      genres: genres,
+      posterUrl: posterUrl,
+      tmdbUrl: tmdbUrl,
+      mediaType: mediaType,
+      userRating: item.userRating || 0
+    };
+  }
+
   window.loadListContent = async function loadListContent(listType) {
     try {
       const NS = '[functions]';
@@ -881,8 +926,29 @@
         container.innerHTML = '<div class="poster-cards-empty">Nothing here yet.</div>';
         return;
       }
-      // Use unified Card component for tab sections
-      if (typeof window.Card === 'function' && typeof window.createCardData === 'function') {
+      // Use MediaCard unified system if available, otherwise fallback to Card component
+      if (typeof window.renderMediaCard === 'function') {
+        log(`Rendering ${items.length} items for ${listType} using MediaCard system`);
+        items.forEach((it, index) => {
+          try {
+            // Transform item data for MediaCard
+            const mediaCardData = transformForMediaCard(it, listType);
+            const card = window.renderMediaCard(mediaCardData, listType);
+            if (card) {
+              // Add unique identifier to prevent duplication
+              card.dataset.itemId = mediaCardData.id;
+              card.dataset.listType = listType;
+              card.dataset.renderIndex = index;
+              container.appendChild(card);
+              log(`Added MediaCard ${index + 1}/${items.length} for ${listType}:`, mediaCardData.title);
+            } else {
+              warn(`MediaCard creation failed for ${it.title || it.name}`);
+            }
+          } catch (e) {
+            warn('MediaCard render item failed:', e?.message || e);
+          }
+        });
+      } else if (typeof window.Card === 'function' && typeof window.createCardData === 'function') {
         log(`Rendering ${items.length} items for ${listType} using createCardData + Card`);
         items.forEach((it, index) => {
           try {
@@ -1312,7 +1378,14 @@
    * @returns {HTMLElement} Card element
    */
   function createDiscoverCard(item) {
-    if (!window.Card) return null;
+    // Use MediaCard system if available, otherwise fallback to Card component
+    if (typeof window.renderMediaCard === 'function') {
+      const mediaCardData = transformForMediaCard(item, 'discover');
+      return window.renderMediaCard(mediaCardData, 'discover');
+    } else if (!window.Card) {
+      return null;
+    }
+    
     const card = window.Card({
       variant: 'poster',
       id: item.id || item.tmdb_id || item.tmdbId,

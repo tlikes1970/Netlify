@@ -256,12 +256,53 @@
     // Show results
     searchResults.style.display = 'block';
 
-    // Use Card system
-    if (window.Card) {
+    // Use MediaCard system if available, otherwise fallback to Card component
+    if (typeof window.renderMediaCard === 'function') {
+      renderWithMediaCard(filteredResults);
+    } else if (window.Card) {
       renderWithCard(filteredResults);
     } else {
       renderWithFallback(filteredResults);
     }
+  }
+
+  // Render with MediaCard system
+  function renderWithMediaCard(results) {
+    log('Rendering with MediaCard system');
+
+    searchResults.innerHTML = `
+      <h4>🎯 Search Results <span class="count">${results.length}</span></h4>
+      <div class="media-grid" id="searchResultsGrid"></div>
+    `;
+
+    const searchGrid = document.getElementById('searchResultsGrid');
+    if (!searchGrid) return;
+
+    results.forEach((item) => {
+      try {
+        // Transform item data for MediaCard
+        const mediaCardData = {
+          id: item.id,
+          title: item.title || item.name,
+          year: item.release_date ? new Date(item.release_date).getFullYear() : 
+                item.first_air_date ? new Date(item.first_air_date).getFullYear() : '',
+          type: item.media_type === 'tv' ? 'TV Show' : 'Movie',
+          genres: item.genre_ids ? [] : [], // TODO: Map genre IDs to names
+          posterUrl: item.poster_path ? 
+            `https://image.tmdb.org/t/p/w200${item.poster_path}` : null,
+          tmdbUrl: `https://www.themoviedb.org/${item.media_type}/${item.id}`,
+          mediaType: item.media_type,
+          userRating: 0
+        };
+        
+        const card = window.renderMediaCard(mediaCardData, 'discover');
+        if (card) {
+          searchGrid.appendChild(card);
+        }
+      } catch (e) {
+        log('MediaCard render error:', e);
+      }
+    });
   }
 
   // Render with Card system
