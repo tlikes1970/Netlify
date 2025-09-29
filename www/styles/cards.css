@@ -136,33 +136,10 @@
 .actions {
   margin-top: auto;
   display: flex;
-  flex-direction: column;       /* stack groups vertically */
-  gap: 12px;
-}
-
-/* Action Groups */
-.action-group {
-  display: flex;
-  flex-direction: row;
+  flex-direction: row;          /* single horizontal row */
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-.action-group.card-moves {
-  /* Card movement actions - primary blue theme */
-}
-
-.action-group.free-functions {
-  /* Free functions - neutral theme */
-  border-top: 1px solid #f3f4f6;
-  padding-top: 8px;
-}
-
-.action-group.pro-features {
-  /* Pro features - premium theme */
-  border-top: 1px solid #f3f4f6;
-  padding-top: 8px;
 }
 
 .btn {
@@ -245,11 +222,8 @@
   }
   
   .actions {
-    gap: 8px;                  /* tighter spacing on mobile */
-  }
-  
-  .action-group {
-    gap: 6px;                  /* tighter button spacing */
+    gap: 6px;                  /* tighter spacing on mobile */
+    flex-wrap: wrap;           /* allow wrapping on mobile */
   }
   
   .btn {

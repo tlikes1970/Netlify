@@ -127,35 +127,38 @@ function renderActions(item, ctx) {
   const isPro = currentUserIsPro();
   const actions = getActionsForContext(ctx);
   
-  // Group actions by function and availability
-  const cardMoves = actions.filter(a => 
-    ['move-to-wishlist', 'move-to-watching', 'mark-watched', 'undo-to-wishlist', 'add-to-wishlist'].includes(a.id)
-  );
+  // Define button order: card moves first, then other functions, with Not Interested and Delete last
+  const buttonOrder = [
+    // Card movement actions (first)
+    'move-to-wishlist', 'move-to-watching', 'mark-watched', 'undo-to-wishlist', 'add-to-wishlist',
+    // Episode tracking for watching tab
+    'episode-toggle',
+    // Other functions
+    'details',
+    // Pro features (if any)
+    ...actions.filter(a => a.pro && !['move-to-wishlist', 'move-to-watching', 'mark-watched', 'undo-to-wishlist', 'add-to-wishlist', 'move-to-not', 'delete-item', 'details', 'episode-toggle'].includes(a.id)).map(a => a.id),
+    // Always last: Not Interested and Delete
+    'move-to-not', 'delete-item'
+  ];
   
-  const freeFunctions = actions.filter(a => 
-    ['move-to-not', 'delete-item', 'details'].includes(a.id)
-  );
+  // Create ordered list of actions to render
+  const orderedActions = [];
   
-  const proFeatures = actions.filter(a => 
-    a.pro && !['move-to-wishlist', 'move-to-watching', 'mark-watched', 'undo-to-wishlist', 'add-to-wishlist', 'move-to-not', 'delete-item', 'details'].includes(a.id)
-  );
+  // Add actions in the specified order
+  buttonOrder.forEach(actionId => {
+    // Handle episode tracking specially for watching tab
+    if (actionId === 'episode-toggle' && ctx === 'watching') {
+      orderedActions.push({ id: 'episode-toggle', label: 'Episode Tracking', icon: '📺', primary: false, pro: false, handler: 'episode-toggle' });
+    } else {
+      const action = actions.find(a => a.id === actionId);
+      if (action) {
+        orderedActions.push(action);
+      }
+    }
+  });
   
-  // Episode tracking for watching tab (free function)
-  const episodeTracking = ctx === 'watching' ? 
-    [{ id: 'episode-toggle', label: 'Episode Tracking', icon: '📺', primary: false, pro: false, handler: 'episode-toggle' }] : [];
-  
-  // Render each group
-  const cardMovesHtml = cardMoves.map(a => btn(a, isPro)).join('');
-  const freeFunctionsHtml = [...freeFunctions, ...episodeTracking].map(a => btn(a, isPro)).join('');
-  const proFeaturesHtml = proFeatures.map(a => btn(a, isPro)).join('');
-  
-  // Group with separators
-  const groups = [];
-  if (cardMovesHtml) groups.push(`<div class="action-group card-moves">${cardMovesHtml}</div>`);
-  if (freeFunctionsHtml) groups.push(`<div class="action-group free-functions">${freeFunctionsHtml}</div>`);
-  if (proFeaturesHtml) groups.push(`<div class="action-group pro-features">${proFeaturesHtml}</div>`);
-  
-  return groups.join('');
+  // Render all buttons in a single horizontal row
+  return orderedActions.map(a => btn(a, isPro)).join('');
 }
 
 function btn(a, isPro) {
