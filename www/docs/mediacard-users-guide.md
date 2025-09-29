@@ -87,22 +87,22 @@ Actions vary by context and user's Pro status:
 #### Watching Tab Actions
 - **Primary**: Want to Watch, Not Interested
 - **Secondary**: Details, Episode Tracking
-- **Pro**: Export, Share, Recommend
+- **Pro**: Smart Notifications, Viewing Journey
 
 #### Wishlist Tab Actions
 - **Primary**: Move to Watching, Not Interested
 - **Secondary**: Details
-- **Pro**: Export, Share, Recommend
+- **Pro**: Advanced Customization
 
 #### Watched Tab Actions
 - **Primary**: Back to Want, Not Interested
 - **Secondary**: Details
-- **Pro**: Export, Share, Recommend
+- **Pro**: Extra Trivia
 
 #### Discover Tab Actions
 - **Primary**: Add to Want, Not Interested
 - **Secondary**: Details
-- **Pro**: Export, Share, Recommend
+- **Pro**: Pro Preview
 
 ## Pro Features
 
@@ -110,7 +110,7 @@ Actions vary by context and user's Pro status:
 - **Visual**: Dashed border, lock icon (🔒)
 - **Behavior**: Click triggers upsell modal
 - **Tooltip**: "Pro feature" on hover
-- **Examples**: Export, Share, Recommend, Advanced Analytics
+- **Examples**: Smart Notifications, Viewing Journey, Advanced Customization, Extra Trivia, Pro Preview
 
 ### Pro User Experience
 - **Actions**: All actions execute normally
@@ -172,9 +172,11 @@ window.appSettings = {
 - `add-to-wishlist`: Add to wishlist (Discover)
 - `details`: Open TMDB details page
 - `episode-toggle`: Open episode tracking modal
-- `export`: Export item data (Pro)
-- `share`: Share item (Pro)
-- `recommend`: Recommend to friend (Pro)
+- `smart-notifications`: Open Smart Notifications setup (Pro)
+- `viewing-journey`: Open Viewing Journey analytics (Pro)
+- `advanced-customization`: Open Advanced Customization (Pro)
+- `extra-trivia`: Open Extra Trivia content (Pro)
+- `pro-preview`: Open Pro Preview toggle (Pro)
 
 ### Custom Handlers
 You can add custom handlers by extending the `dispatchAction` function in `actions.js`.

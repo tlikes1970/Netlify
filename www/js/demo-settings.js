@@ -11,7 +11,7 @@ window.appSettings.user = {
   isPro: false  // Set to true to enable Pro features
 };
 
-// Configure actions for each context
+// Configure actions for each context using REAL Pro features
 window.appSettings.ui = {
   actions: {
     watching: [
@@ -40,20 +40,20 @@ window.appSettings.ui = {
         handler: 'details' 
       },
       { 
-        id: 'export', 
-        label: 'Export', 
-        icon: '⬇️', 
+        id: 'smart-notifications', 
+        label: 'Smart Notifications', 
+        icon: '🔔', 
         primary: false, 
         pro: true, 
-        handler: 'export' 
+        handler: 'smart-notifications' 
       },
       { 
-        id: 'share', 
-        label: 'Share', 
-        icon: '📤', 
+        id: 'viewing-journey', 
+        label: 'Viewing Journey', 
+        icon: '📊', 
         primary: false, 
         pro: true, 
-        handler: 'share' 
+        handler: 'viewing-journey' 
       }
     ],
     
@@ -83,12 +83,12 @@ window.appSettings.ui = {
         handler: 'details' 
       },
       { 
-        id: 'recommend', 
-        label: 'Recommend', 
-        icon: '💬', 
+        id: 'advanced-customization', 
+        label: 'Advanced Customization', 
+        icon: '🎨', 
         primary: false, 
         pro: true, 
-        handler: 'recommend' 
+        handler: 'advanced-customization' 
       }
     ],
     
@@ -118,12 +118,12 @@ window.appSettings.ui = {
         handler: 'details' 
       },
       { 
-        id: 'export', 
-        label: 'Export', 
-        icon: '⬇️', 
+        id: 'extra-trivia', 
+        label: 'Extra Trivia', 
+        icon: '🧠', 
         primary: false, 
         pro: true, 
-        handler: 'export' 
+        handler: 'extra-trivia' 
       }
     ],
     
@@ -153,20 +153,12 @@ window.appSettings.ui = {
         handler: 'details' 
       },
       { 
-        id: 'share', 
-        label: 'Share', 
-        icon: '📤', 
+        id: 'pro-preview', 
+        label: 'Pro Preview', 
+        icon: '⭐', 
         primary: false, 
         pro: true, 
-        handler: 'share' 
-      },
-      { 
-        id: 'recommend', 
-        label: 'Recommend', 
-        icon: '💬', 
-        primary: false, 
-        pro: true, 
-        handler: 'recommend' 
+        handler: 'pro-preview' 
       }
     ],
     
