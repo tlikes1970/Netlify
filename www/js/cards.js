@@ -8,7 +8,10 @@ let saveUserRating, currentUserIsPro, getActionsForContext, openProUpsell;
 let dispatchAction;
 
 // Load data API functions dynamically
-(async () => {
+let modulesLoaded = false;
+const loadModules = async () => {
+  if (modulesLoaded) return;
+  
   try {
     const dataApi = await import('./data-api.js');
     saveUserRating = dataApi.saveUserRating;
@@ -18,6 +21,9 @@ let dispatchAction;
     
     const actionsApi = await import('./actions.js');
     dispatchAction = actionsApi.dispatchAction;
+    
+    modulesLoaded = true;
+    console.log('[MediaCard] Modules loaded successfully');
   } catch (e) {
     console.warn('[MediaCard] Could not load data-api.js or actions.js, using fallbacks');
     // Fallback implementations
@@ -62,10 +68,17 @@ let dispatchAction;
     dispatchAction = (name, item) => {
       console.log(`[MediaCard] Fallback dispatchAction: ${name} for ${item.title}`);
     };
+    modulesLoaded = true;
   }
-})();
+};
 
-export function renderMediaCard(item, context) {
+// Load modules immediately
+loadModules();
+
+export async function renderMediaCard(item, context) {
+  // Ensure modules are loaded before rendering
+  await loadModules();
+  
   const el = document.createElement('article');
   el.className = 'media-card';
   el.setAttribute('aria-labelledby', `t-${item.id}`);
