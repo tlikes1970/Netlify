@@ -28,7 +28,7 @@
     inTheaters: (d) => d.inTheaters || [], // optional feed populated elsewhere
   };
 
-  function renderRail(container, items, limit, sectionHint = 'watching') {
+  async function renderRail(container, items, limit, sectionHint = 'watching') {
     container.innerHTML = '';
     const list = (limit ? items.slice(0, limit) : items).filter(Boolean);
     if (!list.length) {
@@ -40,14 +40,14 @@
     }
 
     // Use preview cards for home screen instead of detailed Card component
-    list.forEach((it) => {
+    for (const it of list) {
       try {
-        const el = createPreviewCard(it, sectionHint);
+        const el = await createPreviewCard(it, sectionHint);
         if (el) container.appendChild(el);
       } catch (e) {
         console.warn('[home-wire] render error', e);
       }
-    });
+    }
   }
 
   /**
@@ -56,8 +56,42 @@
    * @param {string} sectionHint - Section type (watching, wishlist, etc.)
    * @returns {HTMLElement} Unified card element
    */
-  function createPreviewCard(item, sectionHint = 'watching') {
-    // Use the unified Card component if available
+  async function createPreviewCard(item, sectionHint = 'watching') {
+    // Use MediaCard system if available
+    if (typeof window.renderMediaCard === 'function') {
+      try {
+        // Transform item data for MediaCard
+        const mediaCardData = {
+          id: item.id || item.tmdb_id || item.tmdbId,
+          title: item.title || item.name || 'Unknown Title',
+          year: item.release_date
+            ? new Date(item.release_date).getFullYear()
+            : item.first_air_date
+              ? new Date(item.first_air_date).getFullYear()
+              : item.year || '',
+          type: item.media_type === 'tv' || item.first_air_date ? 'TV Show' : 'Movie',
+          posterUrl: item.posterUrl || item.poster_src || (item.poster_path && window.getPosterUrl ? window.getPosterUrl(item.poster_path, 'w342') : item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null),
+          tmdbUrl: item.tmdbUrl || (item.id ? `https://www.themoviedb.org/${item.media_type || 'movie'}/${item.id}` : '#'),
+          genres: item.genres?.map(g => g.name) || [],
+          description: item.overview || '',
+          rating: item.vote_average || 0,
+          userRating: 0
+        };
+
+        // Create MediaCard with appropriate context
+        const card = await window.renderMediaCard(mediaCardData, sectionHint);
+        
+        // Add preview-specific styling
+        card.classList.add('preview-card');
+        
+        return card;
+      } catch (error) {
+        console.error('❌ MediaCard creation failed:', error);
+        // Fall through to old Card component
+      }
+    }
+
+    // Fallback to old Card component if MediaCard not available
     if (window.Card && window.createCardData) {
       const cardData = window.createCardData(item, 'tmdb', 'home');
       return window.Card({
@@ -179,18 +213,18 @@
     return card;
   }
 
-  function run(config) {
+  async function run(config) {
     const data = window.appData || { tv: {}, movies: {} };
-    config.rails.forEach((r) => {
+    for (const r of config.rails) {
       const container = document.querySelector(r.containerSelector);
       if (!container) {
         console.warn(`[home-wire] missing container ${r.containerSelector} for "${r.title}"`);
-        return;
+        continue;
       }
       const pick = pickers[r.picker] || (() => []);
       const items = pick(data);
-      renderRail(container, items, r.limit, r.picker === 'wishlist' ? 'wishlist' : 'watching');
-    });
+      await renderRail(container, items, r.limit, r.picker === 'wishlist' ? 'wishlist' : 'watching');
+    }
     console.info('[home-wire] rendered:', config.rails.map((r) => r.key).join(', '));
   }
 

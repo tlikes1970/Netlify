@@ -513,6 +513,15 @@ Before making any code changes, the assistant must:
 - **Apple Login limitation**: Apple Sign-In does NOT work on localhost - this is expected behavior, not a bug
 - **Server availability**: If localhost doesn't show up, user will start it - do not attempt to start servers
 
+### Legacy System Cleanup Rules (CRITICAL)
+- **Investigate thoroughly**: When encountering legacy systems, search the ENTIRE codebase for usage
+- **Search patterns**: Use multiple search strategies (grep, codebase_search, file patterns)
+- **Check all contexts**: Look in HTML, JS, CSS, config files, and any other file types
+- **Verify dependencies**: Check if other systems depend on the legacy system
+- **Remove if unused**: If no active usage found, remove the legacy system entirely
+- **Update references**: Clean up any remaining references or fallbacks to removed systems
+- **Test thoroughly**: Ensure removal doesn't break any functionality
+
 ### Build Process
 ```bash
 # Development (USER STARTS - NOT ASSISTANT)

@@ -75,7 +75,7 @@ async function loadDynamicContent(section, sectionIndex) {
 }
 
 // Define initializeCurated function first
-function initializeCurated() {
+async function initializeCurated() {
   // Prevent duplicate renders
   if (window.render_curated) {
     console.log('🎯 Skipping duplicate curated render');
@@ -114,7 +114,8 @@ function initializeCurated() {
   mount.innerHTML = '';
 
   // Load dynamic content for each section
-  limitedSections.forEach(async (section, index) => {
+  for (let index = 0; index < limitedSections.length; index++) {
+    const section = limitedSections[index];
     // Create horizontal row container
     const rowEl = document.createElement('div');
     rowEl.className = 'curated-row';
@@ -150,16 +151,40 @@ function initializeCurated() {
       if (items && items.length > 0) {
         console.log(`🎯 Loaded ${items.length} dynamic items for section: ${section.title}`);
 
-        items.forEach((item) => {
-          if (USE_CARD && window.Card && window.createCardData) {
-            // Use unified card component
-            const cardData = window.createCardData(item, 'tmdb', 'curated');
-            const card = window.Card({
-              variant: 'unified',
-              ...cardData,
-            });
-            itemsContainer.appendChild(card);
-          } else {
+        for (const item of items) {
+          try {
+            // Use MediaCard system if available
+            if (typeof window.renderMediaCard === 'function') {
+              // Transform item data for MediaCard
+              const mediaCardData = {
+                id: item.id || item.tmdb_id || item.tmdbId,
+                title: item.title || item.name || 'Unknown Title',
+                year: item.release_date
+                  ? new Date(item.release_date).getFullYear()
+                  : item.first_air_date
+                    ? new Date(item.first_air_date).getFullYear()
+                    : item.year || '',
+                type: item.media_type === 'tv' || item.first_air_date ? 'TV Show' : 'Movie',
+                posterUrl: item.posterUrl || item.poster_src || (item.poster_path && window.getPosterUrl ? window.getPosterUrl(item.poster_path, 'w342') : item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null),
+                tmdbUrl: item.tmdbUrl || (item.id ? `https://www.themoviedb.org/${item.media_type || 'movie'}/${item.id}` : '#'),
+                genres: item.genres?.map(g => g.name) || [],
+                description: item.overview || '',
+                rating: item.vote_average || 0,
+                userRating: 0
+              };
+
+              // Create MediaCard with 'discover' context for curated content
+              const card = await window.renderMediaCard(mediaCardData, 'discover');
+              itemsContainer.appendChild(card);
+            } else if (USE_CARD && window.Card && window.createCardData) {
+              // Fallback to old Card component
+              const cardData = window.createCardData(item, 'tmdb', 'curated');
+              const card = window.Card({
+                variant: 'unified',
+                ...cardData,
+              });
+              itemsContainer.appendChild(card);
+            } else {
             // Fallback to simple item display with click handler
             const itemEl = document.createElement('div');
             itemEl.className = 'unified-card';
@@ -260,15 +285,18 @@ function initializeCurated() {
             });
 
             itemsContainer.appendChild(itemEl);
+            }
+          } catch (error) {
+            console.error('❌ Failed to create curated card for item:', error);
           }
-        });
+        }
       } else {
         console.log(`🎯 No dynamic content loaded for section: ${section.title}`);
       }
     } catch (error) {
       console.error(`🎯 Error loading dynamic content for ${section.title}:`, error);
     }
-  });
+  }
 
   // Dispatch event to notify that curated cards have been rendered
   // Note: Count will be updated as dynamic content loads
@@ -288,30 +316,30 @@ function initializeCurated() {
 }
 
 // Export init function for idle import
-export function init() {
+export async function init() {
   let mount = document.getElementById('curatedSections');
   if (!mount) {
     // Wait for element to be created by V2 system
-    const checkForMount = () => {
+    const checkForMount = async () => {
       mount = document.getElementById('curatedSections');
       if (mount) {
         console.log('🎯 Curated sections element found, initializing');
-        initializeCurated();
+        await initializeCurated();
       } else {
         setTimeout(checkForMount, 100);
       }
     };
-    checkForMount();
+    await checkForMount();
     return;
   }
 
-  initializeCurated();
+  await initializeCurated();
 }
 
 // Listen for curated:rerender event to update when settings change
 document.addEventListener('curated:rerender', () => {
   console.log('🎯 Curated rerender event received, updating sections');
-  initializeCurated();
+  await initializeCurated();
 });
 
 // Also support IIFE for backward compatibility
@@ -319,24 +347,24 @@ document.addEventListener('curated:rerender', () => {
   let mount = document.getElementById('curatedSections');
   if (!mount) {
     // Wait for element to be created by V2 system
-    const checkForMount = () => {
+    const checkForMount = async () => {
       mount = document.getElementById('curatedSections');
       if (mount) {
         console.log('🎯 Curated sections element found, initializing');
-        initializeCurated();
+        await initializeCurated();
       } else {
         setTimeout(checkForMount, 100);
       }
     };
-    checkForMount();
+    await checkForMount();
     return;
   }
 
-  initializeCurated();
+  await initializeCurated();
 
   // Listen for curated:rerender event to update when settings change
   document.addEventListener('curated:rerender', () => {
     console.log('🎯 Curated rerender event received (IIFE), updating sections');
-    initializeCurated();
+    await initializeCurated();
   });
 })();

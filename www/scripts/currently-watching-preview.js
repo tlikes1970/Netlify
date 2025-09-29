@@ -177,7 +177,7 @@
   /**
    * Internal render function without guards (for internal calls)
    */
-  function renderCurrentlyWatchingPreviewInternal() {
+  async function renderCurrentlyWatchingPreviewInternal() {
     console.log('🎬 renderCurrentlyWatchingPreviewInternal called');
 
     const previewSection = document.getElementById('currentlyWatchingPreview');
@@ -221,22 +221,26 @@
         previewSection.style.display = 'block';
         scrollContainer.innerHTML = '';
 
-        testItems.forEach((item) => {
-          const card = createPreviewCard(item);
-          scrollContainer.appendChild(card);
-        });
+        for (const item of testItems) {
+          try {
+            const card = await createPreviewCard(item);
+            scrollContainer.appendChild(card);
+          } catch (error) {
+            console.error('❌ Failed to create preview card for test item:', error);
+          }
+        }
 
         // Set up a retry for real data (only once to prevent infinite loops)
         if (!window._currentlyWatchingRetryScheduled && retryCount < MAX_RETRIES) {
           window._currentlyWatchingRetryScheduled = true;
-          setTimeout(() => {
+          setTimeout(async () => {
             const retryItems = getCurrentlyWatchingItems();
             if (retryItems && retryItems.length > 0) {
               console.log('🎬 Found real items on retry, replacing test data...');
-              // Clear container before rendering real data
-              scrollContainer.innerHTML = '';
-              // Call the render function directly instead of recursively
-              renderCurrentlyWatchingPreviewInternal();
+            // Clear container before rendering real data
+            scrollContainer.innerHTML = '';
+            // Call the render function directly instead of recursively
+            await renderCurrentlyWatchingPreviewInternal();
             }
             window._currentlyWatchingRetryScheduled = false; // Reset for future use
           }, 3000);
@@ -263,10 +267,14 @@
     );
 
     // Render each item
-    limitedItems.forEach((item) => {
-      const card = createPreviewCard(item);
-      scrollContainer.appendChild(card);
-    });
+    for (const item of limitedItems) {
+      try {
+        const card = await createPreviewCard(item);
+        scrollContainer.appendChild(card);
+      } catch (error) {
+        console.error('❌ Failed to create preview card for item:', error);
+      }
+    }
 
     // Add scroll indicators if there are more items than can be displayed
     if (watchingItems.length > limit) {
@@ -319,7 +327,7 @@
 
     try {
       // Call the internal render function
-      renderCurrentlyWatchingPreviewInternal();
+      await renderCurrentlyWatchingPreviewInternal();
     } finally {
       // Always reset the render guard
       window.render_currently_watching_preview = false;
@@ -500,19 +508,49 @@
   }
 
   /**
-   * Create a preview card element
+   * Create a preview card element using MediaCard system
    */
-  function createPreviewCard(item) {
+  async function createPreviewCard(item) {
     console.log('🎬 createPreviewCard called with item:', item);
 
-    // Use Card component
+    // Use MediaCard system if available
+    if (typeof window.renderMediaCard === 'function') {
+      try {
+        // Transform item data for MediaCard
+        const mediaCardData = {
+          id: item.id || item.tmdb_id || item.tmdbId,
+          title: item.title || item.name || 'Unknown Title',
+          year: item.release_date
+            ? new Date(item.release_date).getFullYear()
+            : item.first_air_date
+              ? new Date(item.first_air_date).getFullYear()
+              : item.year || '',
+          type: item.media_type === 'tv' || item.first_air_date ? 'TV Show' : 'Movie',
+          posterUrl: getPosterUrl(item, 'w200'),
+          tmdbUrl: item.tmdbUrl || (item.id ? `https://www.themoviedb.org/${item.media_type || 'movie'}/${item.id}` : '#'),
+          genres: item.genres?.map(g => g.name) || [],
+          description: item.overview || '',
+          rating: item.vote_average || 0,
+          userRating: 0
+        };
+
+        // Create MediaCard with 'watching' context for proper action buttons
+        const card = await window.renderMediaCard(mediaCardData, 'watching');
+        
+        // Add preview-specific styling
+        card.classList.add('preview-card');
+        
+        return card;
+      } catch (error) {
+        console.error('❌ MediaCard creation failed:', error);
+        throw error;
+      }
+    }
+
+    // Fallback to old Card component if MediaCard not available
     if (USE_CARD) {
       const title = item.title || item.name || 'Unknown Title';
-
-      // Use consistent poster URL handling
       const posterUrl = getPosterUrl(item, 'w200');
-
-      // Extract year from various possible sources
       const year = item.release_date
         ? new Date(item.release_date).getFullYear()
         : item.first_air_date
@@ -536,7 +574,6 @@
         primaryAction: {
           label: window.i18n?.continue || 'Continue',
           onClick: () => {
-            // Handle continue watching
             console.log('Continue watching:', title);
           },
         },
@@ -572,8 +609,8 @@
       });
     }
 
-    // If Card component is not available, throw an error
-    console.error('❌ Card component not available');
+    // If neither system is available, throw an error
+    console.error('❌ Neither MediaCard nor Card component available');
     throw new Error('Card component is required but not loaded');
   }
 
