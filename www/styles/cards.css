@@ -17,13 +17,14 @@
 /* Card Base */
 .media-card {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;          /* desktop: poster left, content right */
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 14px;
   padding: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,.06);
   transition: box-shadow .15s ease, transform .15s ease;
+  gap: 16px;
 }
 
 .media-card:hover {
@@ -33,11 +34,20 @@
 
 /* Poster */
 .poster {
-  width: 100%;
+  width: 180px;                 /* fixed poster rail */
+  flex: 0 0 180px;
   aspect-ratio: 2/3;
   border-radius: 10px;
   object-fit: cover;
   background: #f3f4f6;
+}
+
+/* Card Body */
+.card-body {
+  flex: 1 1 auto;
+  min-width: 0;                 /* allow text ellipsis/clamps */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Title */
@@ -114,6 +124,8 @@
 .actions {
   margin-top: auto;
   display: flex;
+  flex-direction: row;          /* force horizontal */
+  align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
@@ -193,6 +205,15 @@
   .media-grid {
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 12px;
+  }
+  
+  .media-card {
+    flex-direction: column;     /* mobile stacks */
+  }
+  
+  .poster {
+    width: 100%;               /* full-width poster on mobile */
+    flex: 0 0 auto;
   }
   
   .title {

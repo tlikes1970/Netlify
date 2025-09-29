@@ -61,15 +61,17 @@ export function renderMediaCard(item, context) {
     <a href="${item.tmdbUrl}" target="_blank" rel="noopener">
       <img class="poster" src="${item.posterUrl || ''}" alt="${escapeHtml(item.title)} poster" loading="lazy" decoding="async"/>
     </a>
-    <h3 id="t-${item.id}" class="title">${escapeHtml(item.title)}</h3>
-    <div class="sub">${item.year || ''}</div>
-    <div class="meta">
-      <span class="pill">${item.type}</span>
-      ${item.genres?.slice(0,2).map(g => `<span class="pill">${escapeHtml(g)}</span>`).join('')}
+    <div class="card-body">
+      <h3 id="t-${item.id}" class="title">${escapeHtml(item.title)}</h3>
+      <div class="sub">${item.year || ''}</div>
+      <div class="meta">
+        <span class="pill">${item.type}</span>
+        ${item.genres?.slice(0,2).map(g => `<span class="pill">${escapeHtml(g)}</span>`).join('')}
+      </div>
+      ${renderRating(item)}
+      <div class="actions">${renderActions(item, context)}</div>
+      <div class="hint">Poster opens TMDB</div>
     </div>
-    ${renderRating(item)}
-    <div class="actions">${renderActions(item, context)}</div>
-    <div class="hint">Poster opens TMDB</div>
   `;
   
   bindRating(el, item);
