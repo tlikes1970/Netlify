@@ -202,7 +202,7 @@ const cardData = {
 - **`AuthManager.showProviderModal()`**: Provider selection UI
 - **`AuthManager.showEmailModal()`**: Email/password form with enhanced visibility
 - **`AuthManager.handleEmailSubmit()`**: Email authentication with comprehensive logging
-- **`AuthManager.startAppleLogin()`**: Apple redirect-only with localhost warnings
+- **`AuthManager.startAppleLogin()`**: Apple redirect-only (does NOT work on localhost)
 - **`AuthManager.startGoogleLogin()`**: Google popup/redirect with fallback handling
 
 ### Business Logic (`functions.js`)
@@ -506,9 +506,16 @@ Before making any code changes, the assistant must:
 
 ## Development Workflow
 
+### Localhost Server Rules (CRITICAL)
+- **NEVER start Vite dev server**: Assistant must never run `npm run dev` or start any localhost servers
+- **User controls servers**: User will start servers if needed, assistant should not assume or start them
+- **Port 8888 conflict**: User always has localhost on port 8888, starting another server will cause conflicts
+- **Apple Login limitation**: Apple Sign-In does NOT work on localhost - this is expected behavior, not a bug
+- **Server availability**: If localhost doesn't show up, user will start it - do not attempt to start servers
+
 ### Build Process
 ```bash
-# Development
+# Development (USER STARTS - NOT ASSISTANT)
 npm run dev          # Vite dev server on port 8000
 
 # Production
@@ -616,14 +623,14 @@ document.getElementById('providerModal')?.offsetParent !== null
 // Debug all authentication flows
 console.log('[auth] All login methods working:', {
   google: '✅ Popup/redirect with fallback',
-  apple: '✅ Redirect-only with localhost warnings', 
+  apple: '✅ Redirect-only (does NOT work on localhost)', 
   email: '✅ Form-based with enhanced modal visibility'
 });
 ```
 
 #### Authentication Status ✅ ALL WORKING
 - **Google Login**: ✅ Popup (desktop) / Redirect (mobile) with proper fallback
-- **Apple Login**: ✅ Redirect-only with localhost warnings and Apple-specific error hints
+- **Apple Login**: ✅ Redirect-only (does NOT work on localhost - expected behavior)
 - **Email Login**: ✅ Form-based with enhanced modal visibility (z-index: 99999)
 - **Modal Management**: ✅ Proper cleanup without conflicts
 - **Redirect Handling**: ✅ Gated by flag and DOM readiness

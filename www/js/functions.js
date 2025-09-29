@@ -684,7 +684,11 @@
         const item = allLists.find((item) => String(item.id || item.tmdb_id || item.tmdbId) === id);
         if (item) {
           log(`Found item data for ID ${id}:`, item.title || item.name || 'Unknown');
-          return item;
+          // Ensure the item has a normalized id field for action handlers
+          return {
+            ...item,
+            id: item.id || item.tmdb_id || item.tmdbId || id
+          };
         } else {
           log(`Item not found for ID ${id}`);
           return null;
