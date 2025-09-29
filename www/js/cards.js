@@ -234,12 +234,31 @@ window.renderMediaCard = renderMediaCard;
 document.addEventListener('cards:changed', (event) => {
   console.log('[MediaCard] cards:changed event received:', event.detail);
   
-  // Re-render the current tab if it's a list tab
-  const currentTab = window.FlickletApp?.currentTab;
-  if (currentTab && ['watching', 'wishlist', 'watched', 'discover'].includes(currentTab)) {
-    console.log('[MediaCard] Re-rendering current tab:', currentTab);
+  // If this is a move event, re-render both source and destination tabs
+  if (event.detail && event.detail.action === 'move') {
+    const fromList = event.detail.fromList;
+    const toList = event.detail.toList;
+    console.log('[MediaCard] Move event detected, re-rendering both tabs:', fromList, '→', toList);
+    
+    // Re-render both tabs involved in the move
     if (typeof window.updateTabContent === 'function') {
-      window.updateTabContent(currentTab);
+      if (fromList && ['watching', 'wishlist', 'watched', 'discover'].includes(fromList)) {
+        console.log('[MediaCard] Re-rendering source tab:', fromList);
+        window.updateTabContent(fromList);
+      }
+      if (toList && ['watching', 'wishlist', 'watched', 'discover'].includes(toList)) {
+        console.log('[MediaCard] Re-rendering destination tab:', toList);
+        window.updateTabContent(toList);
+      }
+    }
+  } else {
+    // For other events, re-render the current tab if it's a list tab
+    const currentTab = window.FlickletApp?.currentTab;
+    if (currentTab && ['watching', 'wishlist', 'watched', 'discover'].includes(currentTab)) {
+      console.log('[MediaCard] Re-rendering current tab:', currentTab);
+      if (typeof window.updateTabContent === 'function') {
+        window.updateTabContent(currentTab);
+      }
     }
   }
 });
