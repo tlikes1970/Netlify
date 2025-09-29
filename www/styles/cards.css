@@ -3,14 +3,14 @@
 /* Grid Layout */
 .media-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: 1fr;  /* single column - stack vertically */
   gap: 16px;
 }
 
 /* Override list-container when using MediaCard system */
 .list-container:has(.media-card) {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: 1fr;  /* single column - stack vertically */
   gap: 16px;
 }
 
