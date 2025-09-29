@@ -60,7 +60,24 @@ function moveToWatching(item) {
   } else {
     console.warn('[actions] No move function available, using fallback');
     console.log('[actions] Calling fallbackMoveItem with:', item.id, 'watching');
-    fallbackMoveItem(item.id, 'watching');
+    
+    // Only use fallback if we're sure the main system isn't available
+    if (window.WatchlistsAdapter) {
+      console.warn('[actions] WatchlistsAdapter is available but moveItem is not - this might be a timing issue');
+      // Wait a bit and try again
+      setTimeout(() => {
+        if (window.moveItem) {
+          console.log('[actions] Retrying with window.moveItem after delay');
+          window.moveItem(item.id, 'watching');
+        } else {
+          console.log('[actions] Still no moveItem after delay, using fallback');
+          fallbackMoveItem(item.id, 'watching');
+        }
+      }, 100);
+    } else {
+      console.log('[actions] WatchlistsAdapter not available, using fallback');
+      fallbackMoveItem(item.id, 'watching');
+    }
   }
 }
 
@@ -208,10 +225,20 @@ function actuallyDelete(item) {
 // Fallback move function when WatchlistsAdapter isn't loaded yet
 function fallbackMoveItem(itemId, destinationList) {
   console.log('[actions] Fallback move function called:', itemId, 'to', destinationList);
+  console.log('[actions] Current appData structure:', window.appData);
   
-  // Ensure appData structure exists
+  // Don't proceed if appData is corrupted or missing
   if (!window.appData) {
-    window.appData = { tv: {}, movies: {} };
+    console.error('[actions] No appData available for fallback move');
+    return;
+  }
+  
+  // Ensure appData has the expected structure
+  if (!window.appData.tv) {
+    window.appData.tv = {};
+  }
+  if (!window.appData.movies) {
+    window.appData.movies = {};
   }
   
   // Find the item in the current data structure
@@ -223,7 +250,7 @@ function fallbackMoveItem(itemId, destinationList) {
   const lists = ['watching', 'wishlist', 'watched'];
   for (const list of lists) {
     // Check TV shows
-    if (window.appData.tv && window.appData.tv[list]) {
+    if (window.appData.tv && window.appData.tv[list] && Array.isArray(window.appData.tv[list])) {
       const item = window.appData.tv[list].find(i => i.id == itemId);
       if (item) {
         foundItem = item;
@@ -233,7 +260,7 @@ function fallbackMoveItem(itemId, destinationList) {
       }
     }
     // Check movies
-    if (window.appData.movies && window.appData.movies[list]) {
+    if (window.appData.movies && window.appData.movies[list] && Array.isArray(window.appData.movies[list])) {
       const item = window.appData.movies[list].find(i => i.id == itemId);
       if (item) {
         foundItem = item;
@@ -246,6 +273,10 @@ function fallbackMoveItem(itemId, destinationList) {
   
   if (!foundItem) {
     console.error('[actions] Item not found for fallback move:', itemId);
+    console.log('[actions] Available items in appData:', {
+      tv: window.appData.tv,
+      movies: window.appData.movies
+    });
     return;
   }
   
@@ -256,16 +287,27 @@ function fallbackMoveItem(itemId, destinationList) {
   
   // Remove from source list
   const sourceArray = window.appData[mediaType][sourceList];
+  if (!Array.isArray(sourceArray)) {
+    console.error('[actions] Source array is not valid:', sourceArray);
+    return;
+  }
+  
   const sourceIndex = sourceArray.findIndex(i => i.id == itemId);
   if (sourceIndex !== -1) {
     sourceArray.splice(sourceIndex, 1);
+    console.log('[actions] Removed item from source list:', sourceList);
   }
   
   // Add to destination list
   if (!window.appData[mediaType][destinationList]) {
     window.appData[mediaType][destinationList] = [];
   }
+  if (!Array.isArray(window.appData[mediaType][destinationList])) {
+    window.appData[mediaType][destinationList] = [];
+  }
+  
   window.appData[mediaType][destinationList].push(foundItem);
+  console.log('[actions] Added item to destination list:', destinationList);
   
   // Save data
   if (typeof window.saveAppData === 'function') {
