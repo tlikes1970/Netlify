@@ -930,11 +930,13 @@
       // Use MediaCard unified system if available, otherwise fallback to Card component
       if (typeof window.renderMediaCard === 'function') {
         log(`Rendering ${items.length} items for ${listType} using MediaCard system`);
-        items.forEach((it, index) => {
+        // Use for...of loop to handle async calls
+        for (let index = 0; index < items.length; index++) {
+          const it = items[index];
           try {
             // Transform item data for MediaCard
             const mediaCardData = transformForMediaCard(it, listType);
-            const card = window.renderMediaCard(mediaCardData, listType);
+            const card = await window.renderMediaCard(mediaCardData, listType);
             if (card) {
               // Add unique identifier to prevent duplication
               card.dataset.itemId = mediaCardData.id;
@@ -948,7 +950,7 @@
           } catch (e) {
             warn('MediaCard render item failed:', e?.message || e);
           }
-        });
+        }
       } else if (typeof window.Card === 'function' && typeof window.createCardData === 'function') {
         log(`Rendering ${items.length} items for ${listType} using createCardData + Card`);
         items.forEach((it, index) => {
@@ -1284,7 +1286,7 @@
     return lists[(currentIndex + 1) % lists.length];
   }
   // ---- Discover ----
-  window.loadDiscoverContent = function loadDiscoverContent() {
+  window.loadDiscoverContent = async function loadDiscoverContent() {
     const container = document.getElementById('discoverList');
     if (!container) return;
     // Set up poster card grid layout
@@ -1350,12 +1352,12 @@
       // Clear loading state
       container.innerHTML = '';
       // Create poster cards
-      recommendations.forEach((item) => {
-        const card = createDiscoverCard(item);
+      for (const item of recommendations) {
+        const card = await createDiscoverCard(item);
         if (card) {
           container.appendChild(card);
         }
-      });
+      }
     } catch (error) {
       console.error('Failed to load discover recommendations:', error);
       const container = document.getElementById('discoverList');
@@ -1378,11 +1380,11 @@
    * @param {Object} item - Item data
    * @returns {HTMLElement} Card element
    */
-  function createDiscoverCard(item) {
+  async function createDiscoverCard(item) {
     // Use MediaCard system if available, otherwise fallback to Card component
     if (typeof window.renderMediaCard === 'function') {
       const mediaCardData = transformForMediaCard(item, 'discover');
-      return window.renderMediaCard(mediaCardData, 'discover');
+      return await window.renderMediaCard(mediaCardData, 'discover');
     } else if (!window.Card) {
       return null;
     }

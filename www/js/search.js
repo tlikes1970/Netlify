@@ -144,7 +144,7 @@
       log('Search results received:', results);
 
       // Display results
-      displayResults(results);
+      await displayResults(results);
     } catch (error) {
       err('Search failed:', error);
       showErrorState(error.message);
@@ -229,7 +229,7 @@
   }
 
   // Display search results
-  function displayResults(results) {
+  async function displayResults(results) {
     if (!searchResults) return;
 
     if (!results || !results.results || results.results.length === 0) {
@@ -258,7 +258,7 @@
 
     // Use MediaCard system if available, otherwise fallback to Card component
     if (typeof window.renderMediaCard === 'function') {
-      renderWithMediaCard(filteredResults);
+      await renderWithMediaCard(filteredResults);
     } else if (window.Card) {
       renderWithCard(filteredResults);
     } else {
@@ -267,7 +267,7 @@
   }
 
   // Render with MediaCard system
-  function renderWithMediaCard(results) {
+  async function renderWithMediaCard(results) {
     log('Rendering with MediaCard system');
 
     searchResults.innerHTML = `
@@ -278,7 +278,7 @@
     const searchGrid = document.getElementById('searchResultsGrid');
     if (!searchGrid) return;
 
-    results.forEach((item) => {
+    for (const item of results) {
       try {
         // Transform item data for MediaCard
         const mediaCardData = {
@@ -295,14 +295,14 @@
           userRating: 0
         };
         
-        const card = window.renderMediaCard(mediaCardData, 'discover');
+        const card = await window.renderMediaCard(mediaCardData, 'discover');
         if (card) {
           searchGrid.appendChild(card);
         }
       } catch (e) {
         log('MediaCard render error:', e);
       }
-    });
+    }
   }
 
   // Render with Card system
