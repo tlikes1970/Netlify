@@ -47,6 +47,10 @@ function moveToWishlist(item) {
 
 function moveToWatching(item) {
   console.log('[actions] Moving to watching:', item.title, 'ID:', item.id);
+  console.log('[actions] Debug - window.moveItem available:', !!window.moveItem);
+  console.log('[actions] Debug - window.addToListFromCache available:', !!window.addToListFromCache);
+  console.log('[actions] Debug - fallbackMoveItem available:', !!fallbackMoveItem);
+  
   if (window.moveItem) {
     console.log('[actions] Calling window.moveItem with:', item.id, 'watching');
     window.moveItem(item.id, 'watching');
@@ -55,6 +59,7 @@ function moveToWatching(item) {
     window.addToListFromCache(item.id, 'watching');
   } else {
     console.warn('[actions] No move function available, using fallback');
+    console.log('[actions] Calling fallbackMoveItem with:', item.id, 'watching');
     fallbackMoveItem(item.id, 'watching');
   }
 }
