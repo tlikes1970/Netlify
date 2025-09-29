@@ -32,20 +32,28 @@ export function dispatchAction(name, item) {
 
 // Stubbed concrete implementations
 function moveToWishlist(item) {
-  console.log('[actions] Moving to wishlist:', item.title);
+  console.log('[actions] Moving to wishlist:', item.title, 'ID:', item.id);
   if (window.moveItem) {
+    console.log('[actions] Calling window.moveItem with:', item.id, 'wishlist');
     window.moveItem(item.id, 'wishlist');
   } else if (window.addToListFromCache) {
+    console.log('[actions] Calling window.addToListFromCache with:', item.id, 'wishlist');
     window.addToListFromCache(item.id, 'wishlist');
+  } else {
+    console.error('[actions] No move function available!');
   }
 }
 
 function moveToWatching(item) {
-  console.log('[actions] Moving to watching:', item.title);
+  console.log('[actions] Moving to watching:', item.title, 'ID:', item.id);
   if (window.moveItem) {
+    console.log('[actions] Calling window.moveItem with:', item.id, 'watching');
     window.moveItem(item.id, 'watching');
   } else if (window.addToListFromCache) {
+    console.log('[actions] Calling window.addToListFromCache with:', item.id, 'watching');
     window.addToListFromCache(item.id, 'watching');
+  } else {
+    console.error('[actions] No move function available!');
   }
 }
 

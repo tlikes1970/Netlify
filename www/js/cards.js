@@ -229,3 +229,32 @@ function escapeHtml(s) {
 
 // Expose globally for integration with existing system
 window.renderMediaCard = renderMediaCard;
+
+// Listen for data changes to re-render cards
+document.addEventListener('cards:changed', (event) => {
+  console.log('[MediaCard] cards:changed event received:', event.detail);
+  
+  // Re-render the current tab if it's a list tab
+  const currentTab = window.FlickletApp?.currentTab;
+  if (currentTab && ['watching', 'wishlist', 'watched', 'discover'].includes(currentTab)) {
+    console.log('[MediaCard] Re-rendering current tab:', currentTab);
+    if (typeof window.updateTabContent === 'function') {
+      window.updateTabContent(currentTab);
+    }
+  }
+});
+
+// Listen for home page updates
+document.addEventListener('curated:rerender', () => {
+  console.log('[MediaCard] curated:rerender event received');
+  if (typeof window.renderHomeRails === 'function') {
+    window.renderHomeRails();
+  }
+});
+
+document.addEventListener('currentlyWatching:rerender', () => {
+  console.log('[MediaCard] currentlyWatching:rerender event received');
+  if (typeof window.renderCurrentlyWatchingPreview === 'function') {
+    window.renderCurrentlyWatchingPreview();
+  }
+});
