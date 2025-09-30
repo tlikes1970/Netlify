@@ -517,9 +517,9 @@
       const warn = (...a) => console.warn(NS, ...a);
       log('🔄 [CENTRALIZED] updateTabCounts called from watchlists:updated event');
       let counts;
-      // Use WatchlistsAdapter as canonical data source
+      // Use WatchlistsAdapterV2 as canonical data source
       const uid = window.firebaseAuth?.currentUser?.uid || null;
-      const watchlists = await window.WatchlistsAdapter.load(uid);
+      const watchlists = await window.WatchlistsAdapterV2.load(uid);
       counts = {
         watching: watchlists.watchingIds.length,
         wishlist: watchlists.wishlistIds.length,

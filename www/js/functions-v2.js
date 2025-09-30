@@ -54,7 +54,13 @@
         log('Item already exists in list:', list);
         if (typeof window.showNotification === 'function') {
           window.showNotification(`Already in ${list}`, 'info');
+        } else if (window.NotificationSystem) {
+          window.NotificationSystem.show(`Already in ${list}`, 'info');
         }
+        
+        // Update UI even if item already exists
+        updateUIAfterDataChange();
+        
         return true;
       }
 
