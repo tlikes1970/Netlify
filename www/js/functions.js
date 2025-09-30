@@ -1255,9 +1255,9 @@
       }
       window[renderKey] = true;
       let items, counts;
-      // Use WatchlistsAdapter as canonical data source
+      // Use WatchlistsAdapterV2 as canonical data source
       const uid = window.firebaseAuth?.currentUser?.uid || null;
-      const watchlists = await window.WatchlistsAdapter.load(uid);
+      const watchlists = await window.WatchlistsAdapterV2.load(uid);
       // Create three local arrays from the adapter (source of truth)
       const ids = {
         watching: watchlists.watchingIds || [],

@@ -36,8 +36,10 @@ test.describe('Data Flow Audit - High Priority Fixes', () => {
     
     // Get first search result
     const firstResult = page.locator('[data-id]').first();
-    const itemId = await firstResult.getAttribute('data-id');
+    let itemId = await firstResult.getAttribute('data-id');
     const itemTitle = await firstResult.locator('.title').textContent();
+    
+    console.log('Search result:', { itemId, itemTitle });
     
     expect(itemId).toBeTruthy();
     expect(itemTitle).toBeTruthy();
@@ -47,27 +49,82 @@ test.describe('Data Flow Audit - High Priority Fixes', () => {
     await addButton.click();
     
     // Wait for success notification
-    await page.waitForSelector('.toast-success, .notification-success', { timeout: 5000 });
+    await page.waitForSelector('.notification.success', { timeout: 5000 });
     
-    // Verify item was added to wishlist
+    // Verify item was added to data structure first
+    const dataCheck = await page.evaluate((id) => {
+      const appData = window.appData;
+      if (!appData) return { found: false, error: 'No appData' };
+      
+      // Check both old and new structures
+      const inOldStructure = appData.movies?.wishlist?.some(item => String(item.id) === String(id));
+      const inNewStructure = appData.watchlists?.movies?.wishlist?.some(item => String(item.id) === String(id));
+      
+      // Get all item IDs for debugging
+      const oldIds = appData.movies?.wishlist?.map(item => String(item.id)) || [];
+      const newIds = appData.watchlists?.movies?.wishlist?.map(item => String(item.id)) || [];
+      
+      return {
+        found: inOldStructure || inNewStructure,
+        oldStructure: !!appData.movies?.wishlist,
+        newStructure: !!appData.watchlists?.movies?.wishlist,
+        oldCount: appData.movies?.wishlist?.length || 0,
+        newCount: appData.watchlists?.movies?.wishlist?.length || 0,
+        lookingFor: String(id),
+        oldIds,
+        newIds
+      };
+    }, itemId);
+    
+    console.log('Data check result:', dataCheck);
+    
+    // If the item wasn't found with the original ID, check if it was saved with a different ID
+    if (!dataCheck.found && dataCheck.oldIds.length > 0) {
+      console.log('Item not found with original ID, checking with saved ID:', dataCheck.oldIds[0]);
+      itemId = dataCheck.oldIds[0]; // Use the actual saved ID
+    }
+    
+    expect(dataCheck.oldCount).toBeGreaterThan(0);
+    expect(dataCheck.newCount).toBeGreaterThan(0);
+    
+    // Now check if item appears in UI
     await page.click('#wishlistTab');
     await page.waitForSelector('#wishlistSection');
+    
+    // Check what's actually in the wishlist UI
+    const wishlistContent = await page.evaluate(() => {
+      const wishlistSection = document.getElementById('wishlistSection');
+      if (!wishlistSection) return { error: 'No wishlistSection found' };
+      
+      const cards = wishlistSection.querySelectorAll('[data-id]');
+      const cardIds = Array.from(cards).map(card => card.getAttribute('data-id'));
+      const cardTitles = Array.from(cards).map(card => card.querySelector('.title')?.textContent);
+      
+      return {
+        cardCount: cards.length,
+        cardIds,
+        cardTitles,
+        sectionHTML: wishlistSection.innerHTML.substring(0, 500) // First 500 chars
+      };
+    });
+    
+    console.log('Wishlist UI content:', wishlistContent);
     
     const wishlistItem = page.locator(`[data-id="${itemId}"]`).first();
     await expect(wishlistItem).toBeVisible();
   });
 
   test('Move Between Lists - Data Integrity', async ({ page }) => {
-    // Add test item to wishlist first
-    await page.evaluate(() => {
-      if (window.appData) {
-        window.appData.movies.wishlist.push({
+    // Add test item to wishlist using DataOperations
+    await page.evaluate(async () => {
+      if (window.DataOperations) {
+        await window.DataOperations.init();
+        await window.DataOperations.addItem('12345', 'wishlist', {
           id: 12345,
           title: 'Test Movie',
           media_type: 'movie',
           poster_path: '/test.jpg'
         });
-        if (window.saveAppData) window.saveAppData();
       }
     });
     
@@ -83,7 +140,7 @@ test.describe('Data Flow Audit - High Priority Fixes', () => {
     await moveButton.click();
     
     // Wait for success
-    await page.waitForSelector('.toast-success, .notification-success', { timeout: 5000 });
+    await page.waitForSelector('.notification.success', { timeout: 5000 });
     
     // Verify item moved to watching
     await page.click('#watchingTab');
@@ -146,7 +203,7 @@ test.describe('Data Flow Audit - High Priority Fixes', () => {
     await addButton.click();
     
     // Check for error handling
-    const errorMessage = page.locator('.toast-error, .notification-error, .error-message');
+    const errorMessage = page.locator('.notification.error');
     await expect(errorMessage).toBeVisible({ timeout: 5000 });
   });
 

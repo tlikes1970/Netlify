@@ -73,6 +73,8 @@
         // Show success notification
         if (typeof window.showNotification === 'function') {
           window.showNotification(`Added to ${list}`, 'success');
+        } else if (window.NotificationSystem) {
+          window.NotificationSystem.show(`Added to ${list}`, 'success');
         }
         
         // Remove from search results
@@ -88,10 +90,12 @@
     } catch (error) {
       err('addToListFromCacheV2 failed:', error.message);
       
-      // Show error notification
-      if (typeof window.showNotification === 'function') {
-        window.showNotification('Failed to add item', 'error');
-      }
+        // Show error notification
+        if (typeof window.showNotification === 'function') {
+          window.showNotification('Failed to add item', 'error');
+        } else if (window.NotificationSystem) {
+          window.NotificationSystem.show('Failed to add item', 'error');
+        }
       
       return false;
     }
@@ -136,6 +140,8 @@
         // Show success notification
         if (typeof window.showNotification === 'function') {
           window.showNotification(`Moved to ${dest}`, 'success');
+        } else if (window.NotificationSystem) {
+          window.NotificationSystem.show(`Moved to ${dest}`, 'success');
         }
         
         // Update UI
@@ -151,6 +157,8 @@
       // Show error notification
       if (typeof window.showNotification === 'function') {
         window.showNotification('Failed to move item', 'error');
+      } else if (window.NotificationSystem) {
+        window.NotificationSystem.show('Failed to move item', 'error');
       }
       
       return false;
@@ -187,6 +195,8 @@
         // Show success notification
         if (typeof window.showNotification === 'function') {
           window.showNotification('Item removed', 'success');
+        } else if (window.NotificationSystem) {
+          window.NotificationSystem.show('Item removed', 'success');
         }
         
         // Update UI
@@ -202,6 +212,8 @@
       // Show error notification
       if (typeof window.showNotification === 'function') {
         window.showNotification('Failed to remove item', 'error');
+      } else if (window.NotificationSystem) {
+        window.NotificationSystem.show('Failed to remove item', 'error');
       }
       
       return false;
