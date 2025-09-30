@@ -105,6 +105,12 @@
               const result = this._normalizeWatchlists(userData.watchlists);
               this._cache = result;
               this._lastUid = uid;
+              
+              // Emit hydration event
+              document.dispatchEvent(new CustomEvent('watchlists:hydrated', {
+                detail: { uid, cache: result }
+              }));
+              
               return result;
             }
             
@@ -118,6 +124,12 @@
               const result = this._normalizeWatchlists(oldStructure);
               this._cache = result;
               this._lastUid = uid;
+              
+              // Emit hydration event
+              document.dispatchEvent(new CustomEvent('watchlists:hydrated', {
+                detail: { uid, cache: result }
+              }));
+              
               return result;
             }
           }
@@ -145,6 +157,11 @@
         wishlist: result.wishlistIds.length,
         watched: result.watchedIds.length
       });
+      
+      // Emit hydration event
+      document.dispatchEvent(new CustomEvent('watchlists:hydrated', {
+        detail: { uid, cache: result }
+      }));
       
       return result;
     },
@@ -226,14 +243,14 @@
     /**
      * Add item to list with proper error handling
      */
-    async addItem(itemId, listName) {
-      return this._queueOperation(() => this._addItemSync(itemId, listName));
+    async addItem(itemId, listName, itemData = null) {
+      return this._queueOperation(() => this._addItemSync(itemId, listName, itemData));
     },
 
     /**
      * Synchronous add item (internal)
      */
-    _addItemSync(itemId, listName) {
+    _addItemSync(itemId, listName, itemData = null) {
       try {
         if (!this._cache) {
           err('No cache available for addItem');
@@ -255,6 +272,11 @@
 
         listSet.add(id);
         this._cache[listKey] = Array.from(listSet);
+        
+        // Store full item data if provided
+        if (itemData) {
+          this._storeItemData(id, itemData);
+        }
         
         log('Added item:', id, 'to', listName, 'new count:', this._cache[listKey].length);
         
@@ -438,9 +460,98 @@
       const listKey = listName + 'Ids';
       const ids = this._cache[listKey] || [];
       
-      // For now, return IDs as simple objects
-      // In a full implementation, you'd fetch full item data
-      return ids.map(id => ({ id: Number(id), media_type: mediaType }));
+      // Return full item data using getItemData to ensure we get complete data
+      return ids.map(id => {
+        const itemData = this.getItemData(id);
+        if (itemData) {
+          return itemData;
+        }
+        // Fallback to simple object only if getItemData fails
+        return { id: Number(id), media_type: mediaType };
+      });
+    },
+
+    /**
+     * Get full item data by ID from various sources
+     */
+    getItemData(id) {
+      try {
+        const idStr = String(id);
+        
+        // First, try to find in stored item data cache
+        if (this._cache && this._cache.itemData && this._cache.itemData[id]) {
+          const item = this._cache.itemData[id];
+          log(`Found item data for ID ${id} in cache:`, item.title || item.name || 'Unknown');
+          return item;
+        }
+        
+        // Second, try to find in appData (where full data is stored)
+        const appData = window.appData || {};
+        const tv = appData.tv || {};
+        const movies = appData.movies || {};
+        
+        // Debug: Log what we're searching through
+        log(`Searching for ID ${id} in appData:`, {
+          tvWatching: tv.watching?.length || 0,
+          tvWishlist: tv.wishlist?.length || 0,
+          tvWatched: tv.watched?.length || 0,
+          moviesWatching: movies.watching?.length || 0,
+          moviesWishlist: movies.wishlist?.length || 0,
+          moviesWatched: movies.watched?.length || 0
+        });
+        
+        // Search through all lists to find the item
+        const allLists = [
+          ...(Array.isArray(tv.watching) ? tv.watching : []),
+          ...(Array.isArray(tv.wishlist) ? tv.wishlist : []),
+          ...(Array.isArray(tv.watched) ? tv.watched : []),
+          ...(Array.isArray(movies.watching) ? movies.watching : []),
+          ...(Array.isArray(movies.wishlist) ? movies.wishlist : []),
+          ...(Array.isArray(movies.watched) ? movies.watched : []),
+        ];
+        
+        const item = allLists.find((item) => 
+          String(item.id || item.tmdb_id || item.tmdbId) === idStr
+        );
+        
+        if (item) {
+          log(`Found item data for ID ${id} in appData:`, item.title || item.name || 'Unknown');
+          return {
+            ...item,
+            id: item.id || item.tmdb_id || item.tmdbId || id,
+            media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie')
+          };
+        }
+        
+        log(`Item not found for ID ${id}`);
+        return null;
+      } catch (error) {
+        err('getItemData failed:', error.message);
+        return null;
+      }
+    },
+
+    /**
+     * Store full item data for later retrieval
+     */
+    _storeItemData(id, itemData) {
+      try {
+        // Ensure itemData cache exists
+        if (!this._cache.itemData) {
+          this._cache.itemData = {};
+        }
+        
+        // Store the full item data
+        this._cache.itemData[id] = {
+          ...itemData,
+          id: Number(id),
+          media_type: itemData.media_type || (itemData.first_air_date ? 'tv' : 'movie')
+        };
+        
+        log('Stored item data for ID', id, ':', itemData.title || itemData.name || 'Unknown');
+      } catch (error) {
+        err('Failed to store item data:', error.message);
+      }
     },
 
     /**

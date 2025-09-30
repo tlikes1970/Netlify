@@ -1721,13 +1721,18 @@ window.FlickletDebug = window.FlickletDebug || {
       if (window.SearchModule && typeof window.SearchModule.getSearchState === 'function') {
         try {
           const searchState = window.SearchModule.getSearchState();
-          if (searchState.isSearching) {
+          console.log('🔍 Search state check:', searchState);
+          if (searchState.isSearching || searchState.hasResults) {
             console.log('🧹 Clearing search due to tab switch to:', tab);
             window.SearchModule.clearSearch();
+          } else {
+            console.log('🔍 Search not active, no clearing needed');
           }
         } catch (error) {
           console.warn('⚠️ Error checking search state:', error);
         }
+      } else {
+        console.warn('⚠️ SearchModule not available for search clearing');
       }
 
       // If we're switching away from search, make sure the target tab is visible

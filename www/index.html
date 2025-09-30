@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet v28.84 - TV & Movie Tracker</title>
+    <title>Flicklet v28.112.0 - TV & Movie Tracker</title>
     <meta name="description" content="Search, track, and rate shows & films fast." />
     <meta name="build" content="latest" />
 
@@ -313,46 +313,46 @@
     </script>
     <script type="module" src="/js/inline-script-10.js"></script>
 
-    <!-- Layout helpers -->
-    <script type="module" src="/js/layout/search-sticky.js"></script>
+    <!-- Layout helpers - Defer non-critical layout features -->
+    <script type="module" src="/js/layout/search-sticky.js" defer></script>
 
-    <!-- TMDB Image utilities -->
-    <script type="module" src="/scripts/tmdb-images.js"></script>
+    <!-- TMDB Image utilities - Defer image handling -->
+    <script type="module" src="/scripts/tmdb-images.js" defer></script>
 
     <!-- Card component removed - using MediaCard system -->
     
-    <!-- MediaCard Unified System -->
-    <script type="module" src="/js/cards.js"></script>
+    <!-- MediaCard Unified System - Defer card components -->
+    <script type="module" src="/js/cards.js" defer></script>
     
-    <!-- Action Dispatcher -->
-    <script type="module" src="/js/actions.js"></script>
+    <!-- Action Dispatcher - Defer action handlers -->
+    <script type="module" src="/js/actions.js" defer></script>
     
-    <!-- Demo Settings for Pro Actions -->
-    <script src="/js/demo-settings.js"></script>
+    <!-- Demo Settings for Pro Actions - Defer demo features -->
+    <script src="/js/demo-settings.js" defer></script>
 
-    <!-- Theme system -->
-    <script type="module" src="/js/theme-manager.js"></script>
-    <script type="module" src="/js/settings-modal.js"></script>
+    <!-- Theme system - Defer settings for better initial load -->
+    <script type="module" src="/js/theme-manager.js" defer></script>
+    <script type="module" src="/js/settings-modal.js" defer></script>
     
-    <!-- Marquee system initialization -->
-    <script type="module" src="/js/app-init-marquee.js"></script>
+    <!-- Marquee system initialization - Defer for performance -->
+    <script type="module" src="/js/app-init-marquee.js" defer></script>
 
-    <!-- Home page features -->
-    <script type="module" src="/scripts/currently-watching-preview.js"></script>
-    <script type="module" src="/scripts/next-up-this-week.js"></script>
-    <script type="module" src="/scripts/theaters-near-me.js"></script>
+    <!-- Home page features - Defer non-critical features -->
+    <script type="module" src="/scripts/currently-watching-preview.js" defer></script>
+    <script type="module" src="/scripts/next-up-this-week.js" defer></script>
+    <script type="module" src="/scripts/theaters-near-me.js" defer></script>
     
-    <!-- Test script for adding currently airing shows -->
-    <script type="module" src="/test-add-airing-shows.js"></script>
+    <!-- Test script for adding currently airing shows - Defer test scripts -->
+    <script type="module" src="/test-add-airing-shows.js" defer></script>
     
-    <!-- Mock Currently Watching Data Generator -->
-    <script type="module" src="/test-mock-currently-watching.js"></script>
+    <!-- Mock Currently Watching Data Generator - Defer test scripts -->
+    <script type="module" src="/test-mock-currently-watching.js" defer></script>
 
-    <!-- New unified card components (for dedicated game pages) -->
-    <script type="module" src="/scripts/components/BasePosterCard.js"></script>
-    <script type="module" src="/scripts/components/StatsCard.js"></script>
-    <script type="module" src="/scripts/components/FlickWordTab.js"></script>
-    <script type="module" src="/scripts/components/TriviaTab.js"></script>
+    <!-- New unified card components (for dedicated game pages) - Defer components -->
+    <script type="module" src="/scripts/components/BasePosterCard.js" defer></script>
+    <script type="module" src="/scripts/components/StatsCard.js" defer></script>
+    <script type="module" src="/scripts/components/FlickWordTab.js" defer></script>
+    <script type="module" src="/scripts/components/TriviaTab.js" defer></script>
 
     <!-- Initialize curated sections -->
     <script>
