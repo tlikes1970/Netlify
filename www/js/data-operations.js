@@ -57,6 +57,8 @@
      */
     async addItem(itemId, listName, itemData = null) {
       try {
+        log('DataOperations.addItem called:', { itemId, listName, itemData });
+        
         await this._ensureInitialized();
         
         if (!itemId) {
@@ -69,14 +71,23 @@
 
         log('Adding item to list:', { itemId, listName });
 
+        // Check if adapter is available
+        if (!this._adapter) {
+          throw new Error('Adapter not available');
+        }
+
         // Add to adapter
+        log('Calling adapter.addItem...');
         const success = await this._adapter.addItem(itemId, listName);
+        log('Adapter.addItem result:', success);
         
         if (success) {
           // Save data
+          log('Saving data...');
           await this._saveData();
           
           // Emit event
+          log('Emitting event...');
           this._emitEvent('item:added', { itemId, listName, itemData });
           
           log('Item added successfully');
@@ -239,11 +250,15 @@
         // Save to localStorage
         if (typeof window.saveAppData === 'function') {
           window.saveAppData();
+          log('Data saved to localStorage');
         }
 
-        // Save to Firebase
-        if (typeof window.saveData === 'function') {
+        // Save to Firebase (only if user is authenticated)
+        if (typeof window.saveData === 'function' && window.firebaseAuth?.currentUser) {
           await window.saveData();
+          log('Data saved to Firebase');
+        } else {
+          log('Skipping Firebase save - no authenticated user');
         }
 
         log('Data saved successfully');

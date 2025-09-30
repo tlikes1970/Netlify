@@ -45,6 +45,10 @@
       const uid = window.firebaseAuth?.currentUser?.uid;
       if (uid) {
         await this.load(uid);
+      } else {
+        // If no user, load from local data
+        log('No user authenticated, loading from local data');
+        await this.load(null);
       }
       
       log('WatchlistsAdapter v2 initialized');
