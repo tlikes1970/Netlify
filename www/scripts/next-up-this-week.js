@@ -1,6 +1,6 @@
 /**
  * Process: Next Up This Week Row
- * Purpose: Displays TV shows from user's Watching list with next episode air dates within 7 days
+ * Purpose: Displays TV shows from user's Watching list with next episode air dates (any future date)
  * Data Source: appData.tv.watching, TMDB API for next_episode_to_air data
  * Update Path: Modify filtering logic, date range, or display format
  * Dependencies: tmdbGet function, appData, home page elements
@@ -51,15 +51,6 @@ function daysUntil(date) {
 
 // Get watching items and filter for next up shows
 async function getNextUpItems(watchingItems) {
-  const today = new Date();
-  const cutoff = new Date(today);
-  cutoff.setDate(cutoff.getDate() + 7);
-
-  console.log('📺 Date range:', {
-    today: today.toISOString().split('T')[0],
-    cutoff: cutoff.toISOString().split('T')[0],
-  });
-
   const tvShows = watchingItems.filter((it) => it.media_type === 'tv' || it.first_air_date);
   console.log('📺 TV shows found:', tvShows.length, tvShows);
 
@@ -68,29 +59,58 @@ async function getNextUpItems(watchingItems) {
       console.log('📺 Checking show:', it.name || it.title, 'ID:', it.id);
       const airDateISO = await fetchNextAirDate(it.id);
       console.log('📺 Next air date for', it.name || it.title, ':', airDateISO);
-      return { item: it, airDate: airDateISO ? new Date(airDateISO) : null };
+      
+      // Create show object with next_episode_to_air data
+      const show = {
+        ...it,
+        next_episode_to_air: airDateISO ? { air_date: airDateISO } : null,
+        status: it.status || 'Returning Series'
+      };
+      
+      return { item: it, show: show, airDate: airDateISO ? new Date(airDateISO) : null };
     }),
   );
 
   console.log('📺 Enriched data:', enriched);
 
-  const filtered = enriched.filter((x) => {
-    if (!x.airDate) return false;
-    const inRange = x.airDate >= startOfDay(today) && x.airDate <= endOfDay(cutoff);
-    console.log(
-      '📺 Show',
-      x.item.name || x.item.title,
-      'air date',
-      x.airDate.toISOString().split('T')[0],
-      'in range:',
-      inRange,
-    );
-    return inRange;
+  // Import the airdate utility
+  const { getNextAirInfo } = await import('/js/utils/airdate-utils.js');
+  
+  // Compute air info for each show
+  const withAirInfo = enriched.map(({ item, show, airDate }) => {
+    const air = getNextAirInfo(show);
+    console.log(`📺 Show: ${item.name || item.title} - Air info:`, air);
+    return {
+      item,
+      show,
+      air,
+      airDate
+    };
   });
+
+  console.log('📺 Shows with air info:', withAirInfo);
+
+  // Filter to show items where air.ended === false || air.label === 'Ended' || air.label.startsWith('Up next')
+  const filtered = withAirInfo.filter(x => 
+    x.air.ended === false || 
+    x.air.label === 'Ended' || 
+    x.air.label.startsWith('Up next')
+  );
 
   console.log('📺 Filtered results:', filtered);
 
-  return filtered.sort((a, b) => a.airDate - b.airDate).slice(0, 10);
+  // Sort by date where available: dated first ascending, then TBA, then Ended
+  const dated = filtered.filter(x => x.air.date);
+  const tba = filtered.filter(x => !x.air.date && !x.air.ended && x.air.label.includes('TBA'));
+  const ended = filtered.filter(x => x.air.ended);
+
+  dated.sort((a, b) => new Date(a.air.date) - new Date(b.air.date));
+  const sorted = [...dated, ...tba, ...ended];
+
+  console.log('📺 Sorted results:', sorted);
+  console.log('📺 Final count - dated:', dated.length, 'tba:', tba.length, 'ended:', ended.length);
+
+  return sorted.slice(0, 10);
 }
 
 // Format the label for display
@@ -144,7 +164,7 @@ async function renderNextUpRow() {
     return;
   }
 
-  const section = document.getElementById('next-up-row');
+  const section = document.getElementById('up-next-row');
   if (!section) {
     console.warn('📺 Next Up section not found');
     return;
@@ -242,39 +262,18 @@ async function renderNextUpRow() {
   section.style.display = 'block';
   inner.innerHTML = '';
 
-  for (const { item, airDate } of nextUp) {
-    const imgSrc = getPosterSrc(item);
-    const label = formatNextLabel(null, airDate);
+  // Import the card renderer
+  const { renderNextUpCard } = await import('/js/renderers/card-templates.js');
 
-    // Generate srcset for responsive images
-    const srcset =
-      (item.poster_path || item.backdrop_path) && typeof window.tmdbSrcset === 'function'
-        ? window.tmdbSrcset(item.poster_path || item.backdrop_path)
-        : '';
-
-    const tile = document.createElement('div');
-    tile.className = 'tile';
-    tile.style.cursor = 'pointer';
-
-    tile.innerHTML = `
-      <div class="media">
-        <img src="${imgSrc}" alt="${item.name || item.title || 'Unknown Title'}" loading="lazy" ${srcset ? `srcset="${srcset}"` : ''} sizes="(max-width: 480px) 148px, 200px">
-      </div>
-      <div class="meta">${label}</div>
-    `;
-
-    const img = tile.querySelector('img');
-
-    img.onerror = () => {
-      // Remove srcset and sizes on error, use data URI fallback to prevent infinite loop
-      img.removeAttribute('srcset');
-      img.removeAttribute('sizes');
-      img.src =
-        'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgdmlld0JveD0iMCAwIDMwMCA0NTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0xNTAgMjI1SDE2NVYzMzc1SDE1MFYyMjVaIiBmaWxsPSIjQ0NDQ0NDIi8+CjxwYXRoIGQ9Ik0xMjAgMjgxSDE4MFYzMDBIMTIwVjI4MVoiIGZpbGw9IiNDQ0NDQ0MiLz4KPC9zdmc+Cg==';
+  for (const { item, show, air } of nextUp) {
+    // Add posterUrl to the show object for the renderer
+    const showWithPoster = {
+      ...show,
+      posterUrl: getPosterSrc(item)
     };
-
-    tile.addEventListener('click', () => openShowDetail(item));
-    inner.appendChild(tile);
+    
+    const card = renderNextUpCard(showWithPoster, air);
+    inner.appendChild(card);
   }
 }
 

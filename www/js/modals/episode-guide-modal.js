@@ -111,7 +111,7 @@
   async function loadSeasonsAndEpisodes(showId, seasonSelect, episodeList) {
     try {
       // Load show details to get seasons
-      const showData = await window.tmdbGet(`tv/${showId}`);
+      const showData = await window.resolveTMDBItem(showId, 'tv');
 
       if (!showData || !showData.id) {
         throw new Error('Failed to load show details');

@@ -1,150 +1,480 @@
 /* ============== Core Application Functions (Cleaned) ============== */
 (function () {
   'use strict';
-  // Safe polyfill for guard function
-  window.guard ||= (cond, fn) => {
-    if (cond && typeof fn === 'function') fn();
+  console.log('🔧 functions.js IIFE starting execution...');
+  try {
+    // Safe polyfill for guard function
+    window.guard ||= (cond, fn) => {
+      if (cond && typeof fn === 'function') fn();
+    };
+  console.log('🔧 Basic setup completed, continuing...');
+  
+  // Type-aware TMDB resolver with movie→tv 404 fallback
+  window.resolveTMDBItem = async function resolveTMDBItem(id, typeHint = null) {
+    const NS = '[tmdb-resolver]';
+    const log = (...a) => console.log(NS, ...a);
+    
+    try {
+      // Try hinted type first if available
+      if (typeHint && (typeHint === 'movie' || typeHint === 'tv')) {
+        log(`Trying hinted type: ${typeHint} for id ${id}`);
+        try {
+          const data = await window.tmdbGet(`${typeHint}/${id}`);
+          if (data && data.id) {
+            return {
+              ...data,
+              media_type: typeHint
+            };
+          }
+        } catch (error) {
+          log(`Hinted type ${typeHint} failed for id ${id}, will try fallback`);
+        }
+      }
+      
+      // Smart fallback: try both movie and tv, return the first successful result
+      log(`Trying both movie and tv for id ${id}`);
+      const promises = [
+        window.tmdbGet(`movie/${id}`).then(data => ({ ...data, media_type: 'movie' })).catch(() => null),
+        window.tmdbGet(`tv/${id}`).then(data => ({ ...data, media_type: 'tv' })).catch(() => null)
+      ];
+      
+      const results = await Promise.allSettled(promises);
+      const successful = results.find(result => result.status === 'fulfilled' && result.value && result.value.id);
+      
+      if (successful) {
+        log(`Found ${successful.value.media_type} for id ${id}`);
+        return successful.value;
+      }
+      
+      throw new Error(`No data found for id ${id} in any media type`);
+    } catch (error) {
+      log(`All resolution attempts failed for id ${id}:`, error.message);
+      throw error;
+    }
   };
+  
+  // Define addToListFromCache function IMMEDIATELY after basic setup to ensure it's always available
+  console.log('🔧 Defining addToListFromCache function...');
+    window.addToListFromCache = async function addToListFromCache(id, list) {
+      console.log('📝 addToListFromCache called with:', { id, list });
+      // Try to find the item in search results or use a basic item structure
+      let item = null;
+      // Check if we can find the item in search results
+      const searchRoot =
+        document.getElementById('searchResultsList') ||
+        document.getElementById('searchResultsGrid') ||
+        document.getElementById('searchResults') ||
+        document;
+      if (searchRoot) {
+        const card = searchRoot.querySelector(`[data-id="${id}"]`);
+        if (card) {
+          // Try to get the stored item data first
+          if (card.dataset.itemData) {
+            try {
+              item = JSON.parse(card.dataset.itemData);
+              console.log('📝 Found stored item data:', item);
+            } catch (e) {
+              console.warn('⚠️ Failed to parse stored item data:', e);
+            }
+          }
+          // Fallback: extract item data from the card
+          if (!item) {
+            const title = card.querySelector('.unified-card-title')?.textContent || 'Unknown';
+            const subtitle = card.querySelector('.unified-card-subtitle')?.textContent || '';
+            const mediaType = card.dataset.mediaType || 'movie';
+            // Create a basic item structure
+            item = {
+              id: Number(id),
+              title: title,
+              name: title, // For TV shows
+              media_type: mediaType,
+              // Add other fields as needed
+            };
+            console.log('📝 Extracted item data from card:', item);
+          }
+        }
+      }
+      // If we couldn't find the item, check if it's already in appData first
+      if (!item) {
+        console.log('📝 Item not found in search cache, checking appData...');
+        const appData = window.appData || {};
+        const tv = appData.tv || {};
+        const movies = appData.movies || {};
+        
+        // Search through all lists to find the item
+        const allLists = [
+          ...(Array.isArray(tv.watching) ? tv.watching : []),
+          ...(Array.isArray(tv.wishlist) ? tv.wishlist : []),
+          ...(Array.isArray(tv.watched) ? tv.watched : []),
+          ...(Array.isArray(movies.watching) ? movies.watching : []),
+          ...(Array.isArray(movies.wishlist) ? movies.wishlist : []),
+          ...(Array.isArray(movies.watched) ? movies.watched : []),
+        ];
+        
+        const existingItem = allLists.find((item) => String(item.id) === String(id));
+        if (existingItem) {
+          console.log('📝 Found existing item in appData:', existingItem);
+          item = existingItem;
+        }
+      }
+      
+      // If we still couldn't find the item, fetch full data from TMDB using type-aware resolver
+      if (!item) {
+        console.log('📝 Item not found anywhere, fetching from TMDB...');
+        try {
+          // Extract type hint from search card if available
+          let typeHint = null;
+          if (searchRoot) {
+            const card = searchRoot.querySelector(`[data-id="${id}"]`);
+            if (card) {
+              typeHint = card.dataset.mediaType || card.dataset.type;
+            }
+          }
+          
+          // Use type-aware resolver
+          const tmdbData = await window.resolveTMDBItem(id, typeHint);
+          if (tmdbData && tmdbData.id) {
+            item = {
+              id: Number(id),
+              title: tmdbData.title || tmdbData.name || `Item ${id}`,
+              name: tmdbData.name || tmdbData.title || `Item ${id}`,
+              media_type: tmdbData.media_type,
+              poster_path: tmdbData.poster_path,
+              release_date: tmdbData.release_date || tmdbData.first_air_date,
+              vote_average: tmdbData.vote_average,
+              overview: tmdbData.overview,
+              // Add other fields as needed
+            };
+            console.log('📝 Fetched full TMDB data:', item);
+          } else {
+            throw new Error('No data from TMDB');
+          }
+        } catch (error) {
+          console.warn('⚠️ Failed to fetch TMDB data, creating basic item:', error);
+          // Fallback to basic structure
+          item = {
+            id: Number(id),
+            title: `Item ${id}`,
+            name: `Item ${id}`,
+            media_type: 'movie', // Default fallback
+          };
+        }
+      }
+      // Use the existing addToList function or create a fallback
+      if (typeof window.addToList === 'function') {
+        const success = window.addToList(item, list);
+        if (success) {
+          console.log('✅ Successfully added item to', list);
+          if (typeof window.showNotification === 'function') {
+            window.showNotification(`Added to ${list}`, 'success');
+          }
+          // Remove/hide the card from Search and update count
+          try {
+            const card =
+              searchRoot.querySelector(`[data-id="${id}"]`) ||
+              searchRoot.querySelector(`[data-item-id="${id}"]`);
+            if (card) {
+              card.remove(); // hide from Search instantly
+              const resultsCount = document.getElementById('resultsCount');
+              if (resultsCount) {
+                const remaining = searchRoot.querySelectorAll('[data-id], [data-item-id]').length;
+                resultsCount.textContent = String(remaining);
+              }
+            }
+          } catch (e) {
+            console.warn('Could not remove search card after add:', e);
+          }
+        } else {
+          console.log('⚠️ Failed to add item to', list);
+          if (typeof window.showNotification === 'function') {
+            window.showNotification(`Failed to add to ${list}`, 'error');
+          }
+        }
+      } else {
+        // Fallback: implement addToList directly here
+        console.log('📝 addToList not available, using fallback implementation');
+        try {
+          // Ensure appData structure exists
+          if (!window.appData) {
+            window.appData = { tv: {}, movies: {} };
+          }
+          const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+          const category = mediaType === 'tv' ? 'tv' : 'movies';
+          
+          // Ensure the item has the correct media_type field
+          if (!item.media_type) {
+            item.media_type = mediaType;
+          }
+          
+          if (!window.appData[category]) {
+            window.appData[category] = {};
+          }
+          if (!window.appData[category][list]) {
+            window.appData[category][list] = [];
+          }
+          // Use adapter as canonical source - check if item already exists
+          const uid = window.firebaseAuth?.currentUser?.uid || null;
+          const watchlists = await window.WatchlistsAdapter.load(uid);
+          const listKey = list + 'Ids';
+          const exists = watchlists[listKey] && watchlists[listKey].includes(String(item.id));
+          if (!exists) {
+            // Add to appData for legacy compatibility
+            window.appData[category][list].push(item);
+            console.log('✅ Successfully added item to', list, 'using fallback');
+            // Update adapter cache
+            if (
+              window.WatchlistsAdapter &&
+              typeof window.WatchlistsAdapter.addItem === 'function'
+            ) {
+              const adapterResult = window.WatchlistsAdapter.addItem(item.id, list);
+              console.log('📝 WatchlistsAdapter.addItem result:', adapterResult);
+            }
+            // Save data
+            if (typeof window.saveAppData === 'function') {
+              console.log('💾 Saving app data...');
+              window.saveAppData();
+            }
+            // Also save to Firebase
+            if (typeof window.saveData === 'function') {
+              console.log('🔄 Calling window.saveData() to sync to Firebase...');
+              window.saveData().then(() => {
+                // Invalidate WatchlistsAdapter cache after Firebase save to force reload
+                if (window.WatchlistsAdapter && typeof window.WatchlistsAdapter.invalidate === 'function') {
+                  console.log('🔄 Invalidating WatchlistsAdapter cache after Firebase save...');
+                  window.WatchlistsAdapter.invalidate();
+                }
+              }).catch((error) => {
+                console.error('❌ Firebase save failed:', error);
+              });
+            }
+            // Emit cards:changed event for centralized count updates
+            console.log('📡 Emitting cards:changed event...');
+            document.dispatchEvent(
+              new CustomEvent('cards:changed', {
+                detail: { source: 'addToListFromCache', itemId: id, list: list },
+              }),
+            );
+            if (window.FlickletApp && typeof window.FlickletApp.updateUI === 'function') {
+              console.log('🔄 Calling FlickletApp.updateUI...');
+              window.FlickletApp.updateUI();
+            }
+            if (typeof window.showNotification === 'function') {
+              console.log('🔔 Showing notification...');
+              window.showNotification(`Added to ${list}`, 'success');
+            }
+            // Remove/hide the card from Search and update count
+            try {
+              const card =
+                searchRoot.querySelector(`[data-id="${id}"]`) ||
+                searchRoot.querySelector(`[data-item-id="${id}"]`);
+              if (card) {
+                card.remove(); // hide from Search instantly
+                const resultsCount = document.getElementById('resultsCount');
+                if (resultsCount) {
+                  const remaining = searchRoot.querySelectorAll(
+                    '[data-id], [data-item-id]',
+                  ).length;
+                  resultsCount.textContent = String(remaining);
+                }
+              }
+            } catch (e) {
+              console.warn('Could not remove search card after add:', e);
+            }
+          } else {
+            console.log('ℹ️ Item already exists in list');
+            if (typeof window.showNotification === 'function') {
+              window.showNotification(`Already in ${list}`, 'info');
+            }
+          }
+        } catch (error) {
+          console.error('❌ Fallback addToList failed:', error);
+          if (typeof window.showNotification === 'function') {
+            window.showNotification('Failed to add item', 'error');
+          }
+        }
+      }
+    };
+    
+      console.log('✅ addToListFromCache function defined successfully');
+    
+  } catch (error) {
+    console.error('❌ Error in basic setup:', error);
+    return; // Exit the IIFE if there's an error
+  }
   // ==== Mobile polish guard (feature-flagged) ====
   // Ensure a FLAGS bucket exists
   window.FLAGS = window.FLAGS || {};
   if (typeof window.FLAGS.mobilePolishGuard === 'undefined') {
     window.FLAGS.mobilePolishGuard = true; // default ON
   }
-  // WatchlistsAdapter is now the canonical data source (v28.33)
+  // WatchlistsAdapter is now the canonical data source (v28.99)
   window.mobilePolishGate = function mobilePolishGate() {
-    if (!window.FLAGS.mobilePolishGuard) {
-      FlickletDebug.info('📱 Mobile polish guard disabled via FLAGS.mobilePolishGuard=false');
-      return;
-    }
-    // Prevent multiple initializations
-    if (window._mobilePolishInitialized) {
-      FlickletDebug.info('📱 Mobile polish already initialized, skipping');
-      return;
-    }
-    window._mobilePolishInitialized = true;
-    const MOBILE_BP = 640; // px
-    const forced = localStorage.getItem('forceMobileV1') === '1';
-    function applyMobileFlag() {
-      // Fallback for FlickletDebug if not loaded
-      const debug = window.FlickletDebug || {
-        info: console.log,
-        warn: console.warn,
-        error: console.error,
-      };
-      const viewportWidth = window.innerWidth;
-      const isMobileViewport = viewportWidth <= MOBILE_BP;
-      // More comprehensive mobile device detection
-      const userAgent = navigator.userAgent;
-      const isMobileDevice =
-        /iPhone|iPad|iPod|Android|Mobile|BlackBerry|IEMobile|Opera Mini|webOS|Windows Phone/i.test(
-          userAgent,
-        );
-      const isMobileSize = viewportWidth <= 640;
-      const isIPhone = /iPhone/i.test(userAgent);
-      // Debug info (only log once to prevent spam)
-      if (!window._mobileDebugLogged) {
-        debug.info(`📱 Mobile detection debug:`, {
-          viewportWidth,
-          userAgent: userAgent.substring(0, 50) + '...',
-          isMobileViewport,
-          isMobileDevice,
-          isMobileSize,
-          isIPhone,
-          forced,
-        });
-        window._mobileDebugLogged = true;
+    try {
+      console.log('🔧 Mobile polish gate starting...');
+      if (!window.FLAGS.mobilePolishGuard) {
+        FlickletDebug.info('📱 Mobile polish guard disabled via FLAGS.mobilePolishGuard=false');
+        return;
       }
-      // More aggressive mobile detection - force iPhone to mobile
-      const enable =
-        forced ||
-        isMobileDevice ||
-        isMobileViewport ||
-        isMobileSize ||
-        isIPhone ||
-        viewportWidth <= 768;
-      document.body.classList.toggle('mobile-v1', enable);
-      debug.info(
-        `📱 Mobile polish ${enable ? 'ENABLED' : 'DISABLED'} — vw:${viewportWidth} (device: ${isMobileDevice}, viewport: ${isMobileViewport}, size: ${isMobileSize})`,
+      // Prevent multiple initializations
+      if (window._mobilePolishInitialized) {
+        FlickletDebug.info('📱 Mobile polish already initialized, skipping');
+        return;
+      }
+      window._mobilePolishInitialized = true;
+      console.log('🔧 Mobile polish gate initialized...');
+      const MOBILE_BP = 640; // px
+      const forced = localStorage.getItem('forceMobileV1') === '1';
+      function applyMobileFlag() {
+        try {
+          // Fallback for FlickletDebug if not loaded
+          const debug = window.FlickletDebug || {
+            info: console.log,
+            warn: console.warn,
+            error: console.error,
+          };
+          const viewportWidth = window.innerWidth;
+          const isMobileViewport = viewportWidth <= MOBILE_BP;
+          // More comprehensive mobile device detection
+          const userAgent = navigator.userAgent;
+          const isMobileDevice =
+            /iPhone|iPad|iPod|Android|Mobile|BlackBerry|IEMobile|Opera Mini|webOS|Windows Phone/i.test(
+              userAgent,
+            );
+          const isMobileSize = viewportWidth <= 640;
+          const isIPhone = /iPhone/i.test(userAgent);
+          // Debug info (only log once to prevent spam)
+          if (!window._mobileDebugLogged) {
+            debug.info(`📱 Mobile detection debug:`, {
+              viewportWidth,
+              userAgent: userAgent.substring(0, 50) + '...',
+              isMobileViewport,
+              isMobileDevice,
+              isMobileSize,
+              isIPhone,
+              forced,
+            });
+            window._mobileDebugLogged = true;
+          }
+          // More aggressive mobile detection - force iPhone to mobile
+          const enable =
+            forced ||
+            isMobileDevice ||
+            isMobileViewport ||
+            isMobileSize ||
+            isIPhone ||
+            viewportWidth <= 768;
+          document.body.classList.toggle('mobile-v1', enable);
+          debug.info(
+            `📱 Mobile polish ${enable ? 'ENABLED' : 'DISABLED'} — vw:${viewportWidth} (device: ${isMobileDevice}, viewport: ${isMobileViewport}, size: ${isMobileSize})`,
+          );
+        } catch (error) {
+          console.error('❌ Error in applyMobileFlag:', error);
+        }
+      }
+      // Apply when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyMobileFlag);
+      } else {
+        applyMobileFlag();
+      }
+      // Listen for viewport changes (throttled to prevent loops)
+      let resizeTimeout;
+      window.addEventListener(
+        'resize',
+        () => {
+          clearTimeout(resizeTimeout);
+          resizeTimeout = setTimeout(applyMobileFlag, 250); // Throttle to 250ms
+        },
+        { passive: true },
       );
+      window.addEventListener('orientationchange', () => {
+        // Delay after orientation change to let viewport settle
+        setTimeout(applyMobileFlag, 100);
+      });
+    } catch (error) {
+      console.error('❌ Error in mobilePolishGate:', error);
     }
-    // Apply when DOM is ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', applyMobileFlag);
-    } else {
-      applyMobileFlag();
-    }
-    // Listen for viewport changes (throttled to prevent loops)
-    let resizeTimeout;
-    window.addEventListener(
-      'resize',
-      () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(applyMobileFlag, 250); // Throttle to 250ms
-      },
-      { passive: true },
-    );
-    window.addEventListener('orientationchange', () => {
-      // Delay after orientation change to let viewport settle
-      setTimeout(applyMobileFlag, 100);
-    });
   };
   // Run mobile polish guard once
-  mobilePolishGate(); // Run immediately
+  try {
+    console.log('🔧 Calling mobilePolishGate...');
+    mobilePolishGate(); // Run immediately
+    console.log('🔧 mobilePolishGate completed...');
+  } catch (error) {
+    console.error('❌ Error calling mobilePolishGate:', error);
+  }
   // ---- Data Ready Event Listener ----
-  // Re-render when data is ready/updated
-  window.addEventListener('app:data:ready', () => {
-    console.log('🔄 Data ready event received, updating lists...');
-    // Clean up duplicates first
-    if (typeof window.cleanupDuplicateCards === 'function') {
-      window.cleanupDuplicateCards();
-    }
-    // Only render if not already rendered
-    ['watching', 'wishlist', 'watched'].forEach((listType) => {
-      if (!window[`render_${listType}`]) {
-        loadListContent(listType);
+  try {
+    console.log('🔧 Setting up data ready event listener...');
+    // Re-render when data is ready/updated
+    window.addEventListener('app:data:ready', () => {
+      console.log('🔄 Data ready event received, updating lists...');
+      // Clean up duplicates first
+      if (typeof window.cleanupDuplicateCards === 'function') {
+        window.cleanupDuplicateCards();
+      }
+      // Only render if not already rendered
+      ['watching', 'wishlist', 'watched'].forEach((listType) => {
+        if (!window[`render_${listType}`]) {
+          loadListContent(listType);
+        }
+      });
+      // Emit cards:changed event for centralized count updates
+      document.dispatchEvent(
+        new CustomEvent('cards:changed', {
+          detail: { source: 'loadListContent' },
+        }),
+      );
+      // Update home content if on home tab (only if not already rendered)
+      if (typeof window.loadHomeContent === 'function' && !window.render_home) {
+        window.loadHomeContent();
       }
     });
-    // Emit cards:changed event for centralized count updates
-    document.dispatchEvent(
-      new CustomEvent('cards:changed', {
-        detail: { source: 'loadListContent' },
-      }),
-    );
-    // Update home content if on home tab (only if not already rendered)
-    if (typeof window.loadHomeContent === 'function' && !window.render_home) {
-      window.loadHomeContent();
-    }
-  });
+    console.log('🔧 Data ready event listener set up...');
+  } catch (error) {
+    console.error('❌ Error setting up data ready event listener:', error);
+  }
   // ---- Helper Functions ----
-  /**
-   * Count actual rendered items in a list container
-   */
-  function countRenderedItems(listType) {
-    try {
-      const container = document.getElementById(`${listType}List`);
-      if (!container) return 0;
-      // Count cards with data attributes
-      const cards = container.querySelectorAll('[data-item-id][data-list-type]');
-      return cards.length;
-    } catch (e) {
-      console.warn(`[countRenderedItems] Failed for ${listType}:`, e?.message || e);
-      return 0;
+  try {
+    console.log('🔧 Setting up helper functions...');
+    /**
+     * Count actual rendered items in a list container
+     */
+    function countRenderedItems(listType) {
+      try {
+        const container = document.getElementById(`${listType}List`);
+        if (!container) return 0;
+        // Count cards with data attributes
+        const cards = container.querySelectorAll('[data-item-id][data-list-type]');
+        return cards.length;
+      } catch (e) {
+        console.warn(`[countRenderedItems] Failed for ${listType}:`, e?.message || e);
+        return 0;
+      }
     }
+    console.log('🔧 Helper functions set up...');
+  } catch (error) {
+    console.error('❌ Error setting up helper functions:', error);
   }
   // ---- Tab / Render Pipeline ----
-  // Global switchToTab function as fallback
-  window.switchToTab = function switchToTab(tab) {
-    if (!window.FlickletApp) {
-      console.error('[switchToTab] FlickletApp missing');
-      return;
-    }
-    if (typeof window.FlickletApp.switchToTab === 'function') {
-      window.FlickletApp.switchToTab(tab);
-    } else {
-      console.error('[switchToTab] FlickletApp.switchToTab not available');
-    }
-  };
+  try {
+    console.log('🔧 Setting up tab/render pipeline...');
+    // Global switchToTab function as fallback
+    window.switchToTab = function switchToTab(tab) {
+      if (!window.FlickletApp) {
+        console.error('[switchToTab] FlickletApp missing');
+        return;
+      }
+      if (typeof window.FlickletApp.switchToTab === 'function') {
+        window.FlickletApp.switchToTab(tab);
+      } else {
+        console.error('[switchToTab] FlickletApp.switchToTab not available');
+      }
+    };
+    console.log('🔧 Tab/render pipeline set up...');
+  } catch (error) {
+    console.error('❌ Error setting up tab/render pipeline:', error);
+  }
   window.updateTabContent = function updateTabContent(tab) {
     console.log(`🔄 updateTabContent called for tab: ${tab}`);
     if (tab === 'home') {
@@ -185,7 +515,7 @@
       const NS = '[functions]';
       const log = (...a) => console.log(NS, ...a);
       const warn = (...a) => console.warn(NS, ...a);
-      log('🔄 [CENTRALIZED] updateTabCounts called from cards:changed event');
+      log('🔄 [CENTRALIZED] updateTabCounts called from watchlists:updated event');
       let counts;
       // Use WatchlistsAdapter as canonical data source
       const uid = window.firebaseAuth?.currentUser?.uid || null;
@@ -196,7 +526,7 @@
         watched: watchlists.watchedIds.length,
       };
       log(
-        `[WL v28.33] Canonical adapter counts - watching: ${counts.watching}, wishlist: ${counts.wishlist}, watched: ${counts.watched}`,
+        `[WL v28.99] Canonical adapter counts - watching: ${counts.watching}, wishlist: ${counts.wishlist}, watched: ${counts.watched}`,
       );
       // Update badges and list header counts
       ['watching', 'wishlist', 'watched'].forEach((list) => {
@@ -241,6 +571,22 @@
     console.log('🎯 [CENTRALIZED] cards:changed event received, updating counts');
     if (typeof window.updateTabCounts === 'function') {
       window.updateTabCounts();
+    }
+  });
+  
+  // Set up centralized event listener for watchlists:updated (new primary system)
+  document.addEventListener('watchlists:updated', async function (event) {
+    console.log('🎯 [CENTRALIZED] watchlists:updated event received, updating counts and lists');
+    if (typeof window.updateTabCounts === 'function') {
+      await window.updateTabCounts();
+    }
+    // Also trigger list re-rendering if needed
+    if (window.loadListContent && typeof window.loadListContent === 'function') {
+      const currentTab = document.querySelector('.tab.is-active')?.id?.replace('Tab', '');
+      if (currentTab && ['watching', 'wishlist', 'watched'].includes(currentTab)) {
+        console.log('🔄 Re-rendering current list after watchlists:updated');
+        window.loadListContent(currentTab);
+      }
     }
   });
   // Respond to data ready events (from data-init)
@@ -342,442 +688,501 @@
     }
   };
   // ---- WatchlistsAdapter ----
-  /**
-   * Process: WatchlistsAdapter
-   * Purpose: Single source of truth for watchlist data from Firebase users/{uid}.watchlists
-   * Data Source: Firebase users/{uid} document with watchlists.movies and watchlists.tv
-   * Update Path: Modify load() method if Firebase schema changes, update mutation methods if data structure changes
-   * Dependencies: Firebase firestore, window.appData for fallback, moveItem and removeItemFromCurrentList functions
-   */
-  window.WatchlistsAdapter = {
-    _cache: null,
-    _lastUid: null,
-    _loading: false,
-    _loadPromise: null,
-    _hasDataInWatchlists(watchlists) {
-      if (!watchlists || typeof watchlists !== 'object') return false;
-      const hasMoviesData =
-        watchlists.movies &&
-        ((watchlists.movies.watching && watchlists.movies.watching.length > 0) ||
-          (watchlists.movies.wishlist && watchlists.movies.wishlist.length > 0) ||
-          (watchlists.movies.watched && watchlists.movies.watched.length > 0));
-      const hasTvData =
-        watchlists.tv &&
-        ((watchlists.tv.watching && watchlists.tv.watching.length > 0) ||
-          (watchlists.tv.wishlist && watchlists.tv.wishlist.length > 0) ||
-          (watchlists.tv.watched && watchlists.tv.watched.length > 0));
-      return hasMoviesData || hasTvData;
-    },
-    async load(uid) {
-      const NS = '[WL v28.19]';
-      const log = (...a) => console.log(NS, ...a);
-      try {
-        // Return cached data if same user and cache exists
-        if (this._cache && this._lastUid === uid) {
-          log('Using cached watchlists data for uid:', uid);
-          return this._cache;
-        }
-        // Prevent concurrent loads
-        if (this._loading && this._loadPromise) {
-          log('Load already in progress, waiting...');
-          return await this._loadPromise;
-        }
-        this._loading = true;
-        this._loadPromise = this._performLoad(uid);
-        const result = await this._loadPromise;
-        this._loading = false;
-        this._loadPromise = null;
-        return result;
-      } catch (error) {
-        this._loading = false;
-        this._loadPromise = null;
-        log('WatchlistsAdapter.load failed:', error.message);
-        return { watchingIds: [], wishlistIds: [], watchedIds: [] };
-      }
-    },
-    async _performLoad(uid) {
-      const NS = '[WL v28.19]';
-      const log = (...a) => console.log(NS, ...a);
-      log('Loading watchlists for uid:', uid);
-      // Try to load from Firebase first
-      if (window.firebaseDb && uid) {
+  try {
+    console.log('🔧 Setting up WatchlistsAdapter...');
+    /**
+     * Process: WatchlistsAdapter
+     * Purpose: Single source of truth for watchlist data from Firebase users/{uid}.watchlists
+     * Data Source: Firebase users/{uid} document with watchlists.movies and watchlists.tv
+     * Update Path: Modify load() method if Firebase schema changes, update mutation methods if data structure changes
+     * Dependencies: Firebase firestore, window.appData for fallback, moveItem and removeItemFromCurrentList functions
+     */
+    window.WatchlistsAdapter = {
+      _cache: null,
+      _lastUid: null,
+      _loading: false,
+      _loadPromise: null,
+      _hasDataInWatchlists(watchlists) {
+        if (!watchlists || typeof watchlists !== 'object') return false;
+        const hasMoviesData =
+          watchlists.movies &&
+          ((watchlists.movies.watching && watchlists.movies.watching.length > 0) ||
+            (watchlists.movies.wishlist && watchlists.movies.wishlist.length > 0) ||
+            (watchlists.movies.watched && watchlists.movies.watched.length > 0));
+        const hasTvData =
+          watchlists.tv &&
+          ((watchlists.tv.watching && watchlists.tv.watching.length > 0) ||
+            (watchlists.tv.wishlist && watchlists.tv.wishlist.length > 0) ||
+            (watchlists.tv.watched && watchlists.tv.watched.length > 0));
+        return hasMoviesData || hasTvData;
+      },
+      async load(uid) {
+        const NS = '[WL v28.99]';
+        const log = (...a) => console.log(NS, ...a);
         try {
-          const userDoc = await window.firebaseDb.collection('users').doc(uid).get();
-          if (userDoc.exists) {
-            const userData = userDoc.data();
-            log(
-              'Firebase user doc found, watchlists keys:',
-              Object.keys(userData.watchlists || {}),
-            );
-            if (userData.watchlists && this._hasDataInWatchlists(userData.watchlists)) {
-              log(
-                'Firebase watchlists structure has data:',
-                JSON.stringify(userData.watchlists, null, 2),
-              );
-              const result = this._normalizeWatchlists(userData.watchlists);
-              this._cache = result;
-              this._lastUid = uid;
-            } else {
-              log('Watchlists empty or missing, checking direct movies and tv fields...');
-              log('Firebase movies field:', JSON.stringify(userData.movies, null, 2));
-              log('Firebase tv field:', JSON.stringify(userData.tv, null, 2));
-              // Try to normalize from the direct movies/tv fields
-              const directWatchlists = {
-                movies: userData.movies || {},
-                tv: userData.tv || {},
-              };
-              log(
-                'Created direct watchlists structure:',
-                JSON.stringify(directWatchlists, null, 2),
-              );
-              const result = this._normalizeWatchlists(directWatchlists);
-              this._cache = result;
-              this._lastUid = uid;
-              // Debug exposure
-              window.__wl = {
-                watchingIds: result.watchingIds,
-                wishlistIds: result.wishlistIds,
-                watchedIds: result.watchedIds,
-              };
-              log(
-                'Merged counts - watching:',
-                result.watchingIds.length,
-                'wishlist:',
-                result.wishlistIds.length,
-                'watched:',
-                result.watchedIds.length,
-              );
-              return result;
-            }
+          // Return cached data if same user and cache exists
+          if (this._cache && this._lastUid === uid) {
+            log('Using cached watchlists data for uid:', uid);
+            return this._cache;
           }
-        } catch (firebaseError) {
-          log('Firebase load failed, falling back to appData:', firebaseError.message);
+          // Prevent concurrent loads
+          if (this._loading && this._loadPromise) {
+            log('Load already in progress, waiting...');
+            return await this._loadPromise;
+          }
+          this._loading = true;
+          this._loadPromise = this._performLoad(uid);
+          const result = await this._loadPromise;
+          this._loading = false;
+          this._loadPromise = null;
+          return result;
+        } catch (error) {
+          this._loading = false;
+          this._loadPromise = null;
+          log('WatchlistsAdapter.load failed:', error.message);
+          return { watchingIds: [], wishlistIds: [], watchedIds: [] };
         }
-      }
-      try {
-        // Fallback to appData structure
-        log('Using appData fallback');
-        const A = window.appData || {};
-        const tv = A.tv || {};
-        const movies = A.movies || {};
-        const result = {
-          watchingIds: [
-            ...(Array.isArray(tv.watching)
-              ? tv.watching
-                  .map((item) => String(item.id || item.tmdb_id || item.tmdbId))
-                  .filter(Boolean)
-              : []),
-            ...(Array.isArray(movies.watching)
-              ? movies.watching
-                  .map((item) => String(item.id || item.tmdb_id || item.tmdbId))
-                  .filter(Boolean)
-              : []),
-          ],
-          wishlistIds: [
-            ...(Array.isArray(tv.wishlist)
-              ? tv.wishlist
-                  .map((item) => String(item.id || item.tmdb_id || item.tmdbId))
-                  .filter(Boolean)
-              : []),
-            ...(Array.isArray(movies.wishlist)
-              ? movies.wishlist
-                  .map((item) => String(item.id || item.tmdb_id || item.tmdbId))
-                  .filter(Boolean)
-              : []),
-          ],
-          watchedIds: [
-            ...(Array.isArray(tv.watched)
-              ? tv.watched
-                  .map((item) => String(item.id || item.tmdb_id || item.tmdbId))
-                  .filter(Boolean)
-              : []),
-            ...(Array.isArray(movies.watched)
-              ? movies.watched
-                  .map((item) => String(item.id || item.tmdb_id || item.tmdbId))
-                  .filter(Boolean)
-              : []),
-          ],
-        };
-        // Deduplicate
-        result.watchingIds = [...new Set(result.watchingIds)];
-        result.wishlistIds = [...new Set(result.wishlistIds)];
-        result.watchedIds = [...new Set(result.watchedIds)];
-        this._cache = result;
-        this._lastUid = uid;
-        log(
-          'Fallback merged counts - watching:',
-          result.watchingIds.length,
-          'wishlist:',
-          result.wishlistIds.length,
-          'watched:',
-          result.watchedIds.length,
-        );
-        return result;
-      } catch (error) {
-        log('WatchlistsAdapter.load failed:', error.message);
-        return { watchingIds: [], wishlistIds: [], watchedIds: [] };
-      }
-    },
-    _normalizeWatchlists(watchlists) {
-      const NS = '[WL v28.19]';
-      const log = (...a) => console.log(NS, ...a);
-      log('_normalizeWatchlists input:', JSON.stringify(watchlists, null, 2));
-      // Validate input data
-      if (!watchlists || typeof watchlists !== 'object') {
-        log('Invalid watchlists data:', watchlists);
-        return { watchingIds: [], wishlistIds: [], watchedIds: [] };
-      }
-      const normalizeList = (list, listName) => {
-        log(`normalizeList called for ${listName}:`, list);
-        if (Array.isArray(list)) {
-          // Firebase structure: each item has an 'id' field (number)
-          const result = list
-            .map((item) => {
-              if (typeof item === 'object' && item !== null) {
-                return String(item.id || item.tmdb_id || item.tmdbId);
+      },
+      async _performLoad(uid) {
+        const NS = '[WL v28.99]';
+        const log = (...a) => console.log(NS, ...a);
+        log('Loading watchlists for uid:', uid);
+        // Try to load from Firebase first
+        if (window.firebaseDb && uid) {
+          try {
+            const userDoc = await window.firebaseDb.collection('users').doc(uid).get();
+            if (userDoc.exists) {
+              const userData = userDoc.data();
+              log(
+                'Firebase user doc found, watchlists keys:',
+                Object.keys(userData.watchlists || {}),
+              );
+              if (userData.watchlists && this._hasDataInWatchlists(userData.watchlists)) {
+                log(
+                  'Firebase watchlists structure has data:',
+                  JSON.stringify(userData.watchlists, null, 2),
+                );
+                const result = this._normalizeWatchlists(userData.watchlists);
+                this._cache = result;
+                this._lastUid = uid;
+              } else {
+                log('Watchlists empty or missing, checking direct movies and tv fields...');
+                log('Firebase movies field:', JSON.stringify(userData.movies, null, 2));
+                log('Firebase tv field:', JSON.stringify(userData.tv, null, 2));
+                // Try to normalize from the direct movies/tv fields
+                const directWatchlists = {
+                  movies: userData.movies || {},
+                  tv: userData.tv || {},
+                };
+                log(
+                  'Created direct watchlists structure:',
+                  JSON.stringify(directWatchlists, null, 2),
+                );
+                const result = this._normalizeWatchlists(directWatchlists);
+                this._cache = result;
+                this._lastUid = uid;
+                // Debug exposure
+                window.__wl = {
+                  watchingIds: result.watchingIds,
+                  wishlistIds: result.wishlistIds,
+                  watchedIds: result.watchedIds,
+                };
+                log(
+                  'Merged counts - watching:',
+                  result.watchingIds.length,
+                  'wishlist:',
+                  result.wishlistIds.length,
+                  'watched:',
+                  result.watchedIds.length,
+                );
+                return result;
               }
-              return String(item);
-            })
-            .filter(Boolean);
-          log(`${listName} array result:`, result);
-          return result;
-        } else if (typeof list === 'object' && list !== null) {
-          // Fallback for object-based lists (not expected in Firebase)
-          const result = Object.keys(list).filter((id) => list[id] === true);
-          log(`${listName} object result:`, result);
-          return result;
-        }
-        log(`${listName} empty result`);
-        return [];
-      };
-      const watchingIds = [
-        ...normalizeList(watchlists.movies?.watching || [], 'movies.watching'),
-        ...normalizeList(watchlists.tv?.watching || [], 'tv.watching'),
-      ];
-      const wishlistIds = [
-        ...normalizeList(watchlists.movies?.wishlist || [], 'movies.wishlist'),
-        ...normalizeList(watchlists.tv?.wishlist || [], 'tv.wishlist'),
-      ];
-      const watchedIds = [
-        ...normalizeList(watchlists.movies?.watched || [], 'movies.watched'),
-        ...normalizeList(watchlists.tv?.watched || [], 'tv.watched'),
-      ];
-      // Deduplicate and ensure string IDs
-      return {
-        watchingIds: [...new Set(watchingIds.map(String))],
-        wishlistIds: [...new Set(wishlistIds.map(String))],
-        watchedIds: [...new Set(watchedIds.map(String))],
-      };
-    },
-    // Move item between lists
-    moveItem(itemId, fromList, toList) {
-      const NS = '[WL v28.19]';
-      const log = (...a) => console.log(NS, ...a);
-      try {
-        if (!this._cache) {
-          log('No cache available for moveItem');
-          return false;
-        }
-        const id = String(itemId);
-        const fromKey = fromList + 'Ids';
-        const toKey = toList + 'Ids';
-        // Remove from source list
-        if (this._cache[fromKey]) {
-          const fromIndex = this._cache[fromKey].indexOf(id);
-          if (fromIndex > -1) {
-            this._cache[fromKey].splice(fromIndex, 1);
-            log('Removed item:', id, 'from', fromList, 'new count:', this._cache[fromKey].length);
+            }
+          } catch (firebaseError) {
+            log('Firebase load failed, falling back to appData:', firebaseError.message);
           }
         }
-        // Add to destination list
-        if (this._cache[toKey]) {
-          if (!this._cache[toKey].includes(id)) {
-            this._cache[toKey].push(id);
-            log('Added item:', id, 'to', toList, 'new count:', this._cache[toKey].length);
-          }
-        }
-        return true;
-      } catch (error) {
-        log('moveItem failed:', error.message);
-        return false;
-      }
-    },
-    // Remove item from list
-    removeItem(itemId, fromList) {
-      const NS = '[WL v28.19]';
-      const log = (...a) => console.log(NS, ...a);
-      try {
-        if (!this._cache) {
-          log('No cache available for removeItem');
-          return false;
-        }
-        const id = String(itemId);
-        const fromKey = fromList + 'Ids';
-        if (this._cache[fromKey]) {
-          const index = this._cache[fromKey].indexOf(id);
-          if (index > -1) {
-            this._cache[fromKey].splice(index, 1);
-            log('Removed item:', id, 'from', fromList, 'new count:', this._cache[fromKey].length);
-            return true;
-          }
-        }
-        return false;
-      } catch (error) {
-        log('removeItem failed:', error.message);
-        return false;
-      }
-    },
-    // Add item to list
-    addItem(itemId, toList) {
-      const NS = '[WL v28.19]';
-      const log = (...a) => console.log(NS, ...a);
-      try {
-        if (!this._cache) {
-          log('No cache available for addItem, creating new cache');
-          this._cache = {
-            watchingIds: [],
-            wishlistIds: [],
-            watchedIds: [],
+        try {
+          // Fallback to appData structure (when uid is falsy or in mock mode)
+          log('Using appData fallback');
+          const A = window.appData || {};
+          const tv = A.tv || {};
+          const movies = A.movies || {};
+          const result = {
+            watchingIds: [
+              ...(Array.isArray(tv.watching)
+                ? tv.watching
+                    .map((item) => String(item.id || item.tmdb_id || item.tmdbId))
+                    .filter(Boolean)
+                : []),
+              ...(Array.isArray(movies.watching)
+                ? movies.watching
+                    .map((item) => String(item.id || item.tmdb_id || item.tmdbId))
+                    .filter(Boolean)
+                : []),
+            ],
+            wishlistIds: [
+              ...(Array.isArray(tv.wishlist)
+                ? tv.wishlist
+                    .map((item) => String(item.id || item.tmdb_id || item.tmdbId))
+                    .filter(Boolean)
+                : []),
+              ...(Array.isArray(movies.wishlist)
+                ? movies.wishlist
+                    .map((item) => String(item.id || item.tmdb_id || item.tmdbId))
+                    .filter(Boolean)
+                : []),
+            ],
+            watchedIds: [
+              ...(Array.isArray(tv.watched)
+                ? tv.watched
+                    .map((item) => String(item.id || item.tmdb_id || item.tmdbId))
+                    .filter(Boolean)
+                : []),
+              ...(Array.isArray(movies.watched)
+                ? movies.watched
+                    .map((item) => String(item.id || item.tmdb_id || item.tmdbId))
+                    .filter(Boolean)
+                : []),
+            ],
           };
+          // Deduplicate
+          result.watchingIds = [...new Set(result.watchingIds)];
+          result.wishlistIds = [...new Set(result.wishlistIds)];
+          result.watchedIds = [...new Set(result.watchedIds)];
+          this._cache = result;
+          this._lastUid = uid;
+          log(
+            'Fallback merged counts - watching:',
+            result.watchingIds.length,
+            'wishlist:',
+            result.wishlistIds.length,
+            'watched:',
+            result.watchedIds.length,
+          );
+          return result;
+        } catch (error) {
+          log('WatchlistsAdapter.load failed:', error.message);
+          return { watchingIds: [], wishlistIds: [], watchedIds: [] };
         }
-        const id = String(itemId);
-        const toKey = toList + 'Ids';
-        if (this._cache[toKey]) {
-          if (!this._cache[toKey].includes(id)) {
-            this._cache[toKey].push(id);
-            log('Added item:', id, 'to', toList, 'new count:', this._cache[toKey].length);
-            return true;
-          } else {
-            log('Item already exists in', toList);
+      },
+      _normalizeWatchlists(watchlists) {
+        const NS = '[WL v28.99]';
+        const log = (...a) => console.log(NS, ...a);
+        log('_normalizeWatchlists input:', JSON.stringify(watchlists, null, 2));
+        // Validate input data
+        if (!watchlists || typeof watchlists !== 'object') {
+          log('Invalid watchlists data:', watchlists);
+          return { watchingIds: [], wishlistIds: [], watchedIds: [] };
+        }
+        const normalizeList = (list, listName) => {
+          log(`normalizeList called for ${listName}:`, list);
+          if (Array.isArray(list)) {
+            // Firebase structure: each item has an 'id' field (number)
+            const result = list
+              .map((item) => {
+                if (typeof item === 'object' && item !== null) {
+                  return String(item.id || item.tmdb_id || item.tmdbId);
+                }
+                return String(item);
+              })
+              .filter(Boolean);
+            log(`${listName} array result:`, result);
+            return result;
+          } else if (typeof list === 'object' && list !== null) {
+            // Fallback for object-based lists (not expected in Firebase)
+            const result = Object.keys(list).filter((id) => list[id] === true);
+            log(`${listName} object result:`, result);
+            return result;
+          }
+          log(`${listName} empty result`);
+          return [];
+        };
+        const watchingIds = [
+          ...normalizeList(watchlists.movies?.watching || [], 'movies.watching'),
+          ...normalizeList(watchlists.tv?.watching || [], 'tv.watching'),
+        ];
+        const wishlistIds = [
+          ...normalizeList(watchlists.movies?.wishlist || [], 'movies.wishlist'),
+          ...normalizeList(watchlists.tv?.wishlist || [], 'tv.wishlist'),
+        ];
+        const watchedIds = [
+          ...normalizeList(watchlists.movies?.watched || [], 'movies.watched'),
+          ...normalizeList(watchlists.tv?.watched || [], 'tv.watched'),
+        ];
+        // Deduplicate and ensure string IDs
+        return {
+          watchingIds: [...new Set(watchingIds.map(String))],
+          wishlistIds: [...new Set(wishlistIds.map(String))],
+          watchedIds: [...new Set(watchedIds.map(String))],
+        };
+      },
+      // Move item between lists
+      moveItem(itemId, fromList, toList) {
+        const NS = '[WL v28.99]';
+        const log = (...a) => console.log(NS, ...a);
+        try {
+          if (!this._cache) {
+            log('No cache available for moveItem');
             return false;
           }
+          const id = String(itemId?.id ?? itemId);
+          const fromKey = fromList + 'Ids';
+          const toKey = toList + 'Ids';
+          let moved = false;
+          
+          // Remove from source list
+          if (this._cache[fromKey]) {
+            const fromSet = new Set(this._cache[fromKey]);
+            if (fromSet.has(id)) {
+              fromSet.delete(id);
+              this._cache[fromKey] = Array.from(fromSet);
+              log('Removed item:', id, 'from', fromList, 'new count:', this._cache[fromKey].length);
+              moved = true;
+            }
+          }
+          
+          // Add to destination list
+          if (this._cache[toKey]) {
+            const toSet = new Set(this._cache[toKey]);
+            if (!toSet.has(id)) {
+              toSet.add(id);
+              this._cache[toKey] = Array.from(toSet);
+              log('Added item:', id, 'to', toList, 'new count:', this._cache[toKey].length);
+              moved = true;
+            }
+          }
+          
+          if (moved) {
+            // Emit watchlists:updated event
+            document.dispatchEvent(new CustomEvent('watchlists:updated', { 
+              detail: { list: toList, action: 'move', id, fromList } 
+            }));
+          }
+          
+          return moved;
+        } catch (error) {
+          log('moveItem failed:', error.message);
+          return false;
         }
-        return false;
-      } catch (error) {
-        log('addItem failed:', error.message);
-        return false;
-      }
-    },
-    // Clear cache when data changes
-    invalidate() {
-      this._cache = null;
-      this._lastUid = null;
-    },
-    // Get item data by ID from appData (for rendering)
-    getItemData(itemId) {
-      const NS = '[WL v28.19]';
-      const log = (...a) => console.log(NS, ...a);
-      try {
-        const id = String(itemId);
-        const appData = window.appData || {};
-        const tv = appData.tv || {};
-        const movies = appData.movies || {};
-        // Search through all lists to find the item
-        const allLists = [
-          ...(Array.isArray(tv.watching) ? tv.watching : []),
-          ...(Array.isArray(tv.wishlist) ? tv.wishlist : []),
-          ...(Array.isArray(tv.watched) ? tv.watched : []),
-          ...(Array.isArray(movies.watching) ? movies.watching : []),
-          ...(Array.isArray(movies.wishlist) ? movies.wishlist : []),
-          ...(Array.isArray(movies.watched) ? movies.watched : []),
-        ];
-        const item = allLists.find((item) => String(item.id || item.tmdb_id || item.tmdbId) === id);
-        if (item) {
-          log(`Found item data for ID ${id}:`, item.title || item.name || 'Unknown');
-          // Ensure the item has a normalized id field for action handlers
-          return {
-            ...item,
-            id: item.id || item.tmdb_id || item.tmdbId || id
-          };
-        } else {
-          log(`Item not found for ID ${id}`);
+      },
+      // Remove item from list
+      removeItem(itemId, fromList) {
+        const NS = '[WL v28.99]';
+        const log = (...a) => console.log(NS, ...a);
+        try {
+          if (!this._cache) {
+            log('No cache available for removeItem');
+            return false;
+          }
+          const id = String(itemId?.id ?? itemId);
+          const fromKey = fromList + 'Ids';
+          if (this._cache[fromKey]) {
+            const fromSet = new Set(this._cache[fromKey]);
+            if (fromSet.has(id)) {
+              fromSet.delete(id);
+              this._cache[fromKey] = Array.from(fromSet);
+              log('Removed item:', id, 'from', fromList, 'new count:', this._cache[fromKey].length);
+              
+              // Emit watchlists:updated event
+              document.dispatchEvent(new CustomEvent('watchlists:updated', { 
+                detail: { list: fromList, action: 'remove', id } 
+              }));
+              
+              return true;
+            }
+          }
+          return false;
+        } catch (error) {
+          log('removeItem failed:', error.message);
+          return false;
+        }
+      },
+      // Add item to list
+      addItem(itemId, toList) {
+        const NS = '[WL v28.99]';
+        const log = (...a) => console.log(NS, ...a);
+        try {
+          if (!this._cache) {
+            log('No cache available for addItem, creating new cache');
+            this._cache = {
+              watchingIds: [],
+              wishlistIds: [],
+              watchedIds: [],
+            };
+          }
+          const id = String(itemId?.id ?? itemId);
+          const toKey = toList + 'Ids';
+          if (this._cache[toKey]) {
+            // Use Set to dedupe
+            const existingSet = new Set(this._cache[toKey]);
+            if (!existingSet.has(id)) {
+              existingSet.add(id);
+              this._cache[toKey] = Array.from(existingSet);
+              log('Added item:', id, 'to', toList, 'new count:', this._cache[toKey].length);
+              
+              // Emit watchlists:updated event
+              document.dispatchEvent(new CustomEvent('watchlists:updated', { 
+                detail: { list: toList, action: 'add', id } 
+              }));
+              
+              return true;
+            } else {
+              log('Item already exists in', toList);
+              return false;
+            }
+          }
+          return false;
+        } catch (error) {
+          log('addItem failed:', error.message);
+          return false;
+        }
+      },
+      // Clear cache when data changes
+      invalidate() {
+        this._cache = null;
+        this._lastUid = null;
+      },
+      // Get item data by ID from appData (for rendering)
+      getItemData(itemId) {
+        const NS = '[WL v28.99]';
+        const log = (...a) => console.log(NS, ...a);
+        try {
+          const id = String(itemId);
+          const appData = window.appData || {};
+          const tv = appData.tv || {};
+          const movies = appData.movies || {};
+          // Search through all lists to find the item
+          const allLists = [
+            ...(Array.isArray(tv.watching) ? tv.watching : []),
+            ...(Array.isArray(tv.wishlist) ? tv.wishlist : []),
+            ...(Array.isArray(tv.watched) ? tv.watched : []),
+            ...(Array.isArray(movies.watching) ? movies.watching : []),
+            ...(Array.isArray(movies.wishlist) ? movies.wishlist : []),
+            ...(Array.isArray(movies.watched) ? movies.watched : []),
+          ];
+          const item = allLists.find(
+            (item) => String(item.id || item.tmdb_id || item.tmdbId) === id,
+          );
+          if (item) {
+            log(`Found item data for ID ${id}:`, item.title || item.name || 'Unknown');
+            // Ensure the item has a normalized id field and correct media_type
+            const normalizedItem = {
+              ...item,
+              id: item.id || item.tmdb_id || item.tmdbId || id,
+            };
+            
+            // If media_type is missing or incorrect, try to resolve it
+            if (!normalizedItem.media_type || normalizedItem.media_type === 'unknown') {
+              // Try to determine from context (which list it's in)
+              const isInTvList = allLists.slice(0, 3).includes(item);
+              const isInMovieList = allLists.slice(3, 6).includes(item);
+              
+              if (isInTvList && !isInMovieList) {
+                normalizedItem.media_type = 'tv';
+              } else if (isInMovieList && !isInTvList) {
+                normalizedItem.media_type = 'movie';
+              } else if (normalizedItem.first_air_date) {
+                normalizedItem.media_type = 'tv';
+              } else if (normalizedItem.release_date) {
+                normalizedItem.media_type = 'movie';
+              }
+            }
+            
+            return normalizedItem;
+          } else {
+            log(`Item not found for ID ${id}`);
+            return null;
+          }
+        } catch (error) {
+          log('getItemData failed:', error.message);
           return null;
         }
-      } catch (error) {
-        log('getItemData failed:', error.message);
-        return null;
-      }
-    },
-    // Build appData from adapter as computed snapshot for legacy code
-    buildAppDataSnapshot() {
-      const NS = '[WL v28.19]';
-      const log = (...a) => console.log(NS, ...a);
-      try {
-        if (!this._cache) {
-          log('No cache available for buildAppDataSnapshot');
+      },
+      // Build appData from adapter as computed snapshot for legacy code
+      buildAppDataSnapshot() {
+        const NS = '[WL v28.99]';
+        const log = (...a) => console.log(NS, ...a);
+        try {
+          if (!this._cache) {
+            log('No cache available for buildAppDataSnapshot');
+            return {
+              tv: { watching: [], wishlist: [], watched: [] },
+              movies: { watching: [], wishlist: [], watched: [] },
+            };
+          }
+          const appData = window.appData || {};
+          const tv = appData.tv || {};
+          const movies = appData.movies || {};
+          // Build TV lists from adapter IDs
+          const tvWatching = this._cache.watchingIds
+            .map((id) => this.getItemData(id))
+            .filter((item) => item && (item.media_type === 'tv' || item.first_air_date))
+            .filter(Boolean);
+          const tvWishlist = this._cache.wishlistIds
+            .map((id) => this.getItemData(id))
+            .filter((item) => item && (item.media_type === 'tv' || item.first_air_date))
+            .filter(Boolean);
+          const tvWatched = this._cache.watchedIds
+            .map((id) => this.getItemData(id))
+            .filter((item) => item && (item.media_type === 'tv' || item.first_air_date))
+            .filter(Boolean);
+          // Build movies lists from adapter IDs
+          const moviesWatching = this._cache.watchingIds
+            .map((id) => this.getItemData(id))
+            .filter(
+              (item) =>
+                item && (item.media_type === 'movie' || (!item.first_air_date && !item.media_type)),
+            )
+            .filter(Boolean);
+          const moviesWishlist = this._cache.wishlistIds
+            .map((id) => this.getItemData(id))
+            .filter(
+              (item) =>
+                item && (item.media_type === 'movie' || (!item.first_air_date && !item.media_type)),
+            )
+            .filter(Boolean);
+          const moviesWatched = this._cache.watchedIds
+            .map((id) => this.getItemData(id))
+            .filter(
+              (item) =>
+                item && (item.media_type === 'movie' || (!item.first_air_date && !item.media_type)),
+            )
+            .filter(Boolean);
+          const snapshot = {
+            tv: {
+              watching: tvWatching,
+              wishlist: tvWishlist,
+              watched: tvWatched,
+            },
+            movies: {
+              watching: moviesWatching,
+              wishlist: moviesWishlist,
+              watched: moviesWatched,
+            },
+          };
+          log('Built appData snapshot from adapter:', {
+            tvWatching: snapshot.tv.watching.length,
+            tvWishlist: snapshot.tv.wishlist.length,
+            tvWatched: snapshot.tv.watched.length,
+            moviesWatching: snapshot.movies.watching.length,
+            moviesWishlist: snapshot.movies.wishlist.length,
+            moviesWatched: snapshot.movies.watched.length,
+          });
+          return snapshot;
+        } catch (error) {
+          log('buildAppDataSnapshot failed:', error.message);
           return {
             tv: { watching: [], wishlist: [], watched: [] },
             movies: { watching: [], wishlist: [], watched: [] },
           };
         }
-        const appData = window.appData || {};
-        const tv = appData.tv || {};
-        const movies = appData.movies || {};
-        // Build TV lists from adapter IDs
-        const tvWatching = this._cache.watchingIds
-          .map((id) => this.getItemData(id))
-          .filter((item) => item && (item.media_type === 'tv' || item.first_air_date))
-          .filter(Boolean);
-        const tvWishlist = this._cache.wishlistIds
-          .map((id) => this.getItemData(id))
-          .filter((item) => item && (item.media_type === 'tv' || item.first_air_date))
-          .filter(Boolean);
-        const tvWatched = this._cache.watchedIds
-          .map((id) => this.getItemData(id))
-          .filter((item) => item && (item.media_type === 'tv' || item.first_air_date))
-          .filter(Boolean);
-        // Build movies lists from adapter IDs
-        const moviesWatching = this._cache.watchingIds
-          .map((id) => this.getItemData(id))
-          .filter(
-            (item) =>
-              item && (item.media_type === 'movie' || (!item.first_air_date && !item.media_type)),
-          )
-          .filter(Boolean);
-        const moviesWishlist = this._cache.wishlistIds
-          .map((id) => this.getItemData(id))
-          .filter(
-            (item) =>
-              item && (item.media_type === 'movie' || (!item.first_air_date && !item.media_type)),
-          )
-          .filter(Boolean);
-        const moviesWatched = this._cache.watchedIds
-          .map((id) => this.getItemData(id))
-          .filter(
-            (item) =>
-              item && (item.media_type === 'movie' || (!item.first_air_date && !item.media_type)),
-          )
-          .filter(Boolean);
-        const snapshot = {
-          tv: {
-            watching: tvWatching,
-            wishlist: tvWishlist,
-            watched: tvWatched,
-          },
-          movies: {
-            watching: moviesWatching,
-            wishlist: moviesWishlist,
-            watched: moviesWatched,
-          },
-        };
-        log('Built appData snapshot from adapter:', {
-          tvWatching: snapshot.tv.watching.length,
-          tvWishlist: snapshot.tv.wishlist.length,
-          tvWatched: snapshot.tv.watched.length,
-          moviesWatching: snapshot.movies.watching.length,
-          moviesWishlist: snapshot.movies.wishlist.length,
-          moviesWatched: snapshot.movies.watched.length,
-        });
-        return snapshot;
-      } catch (error) {
-        log('buildAppDataSnapshot failed:', error.message);
-        return {
-          tv: { watching: [], wishlist: [], watched: [] },
-          movies: { watching: [], wishlist: [], watched: [] },
-        };
-      }
-    },
-  };
+      },
+    };
+    console.log('🔧 WatchlistsAdapter set up...');
+  } catch (error) {
+    console.error('❌ Error setting up WatchlistsAdapter:', error);
+  }
   // ---- Lists ----
   /**
    * Process: Tab Content Loading with Unified Card Rendering
@@ -798,26 +1203,30 @@
       : item.first_air_date
         ? new Date(item.first_air_date).getFullYear()
         : item.year || '';
-    
+
     const mediaType = item.media_type || item.mediaType || (item.first_air_date ? 'tv' : 'movie');
     const title = item.title || item.name || item.original_title || item.original_name || 'Unknown';
-    
+
     // Construct proper poster URL using TMDB utilities
-    const posterUrl = item.posterUrl ||
+    const posterUrl =
+      item.posterUrl ||
       item.poster_src ||
       (item.poster_path && window.getPosterUrl
         ? window.getPosterUrl(item.poster_path, 'w200')
         : item.poster_path
           ? `https://image.tmdb.org/t/p/w200${item.poster_path}`
           : null);
-    
+
     // Construct TMDB URL
-    const tmdbUrl = item.tmdbUrl || 
-      (window.openTMDBLink ? `#tmdb-${item.id}` : `https://www.themoviedb.org/${mediaType}/${item.id}`);
-    
+    const tmdbUrl =
+      item.tmdbUrl ||
+      (window.openTMDBLink
+        ? `#tmdb-${item.id}`
+        : `https://www.themoviedb.org/${mediaType}/${item.id}`);
+
     // Get genres
-    const genres = item.genres?.map(g => g.name) || [];
-    
+    const genres = item.genres?.map((g) => g.name) || [];
+
     return {
       id: item.id || item.tmdb_id || item.tmdbId,
       title: title,
@@ -828,7 +1237,7 @@
       tmdbUrl: tmdbUrl,
       mediaType: mediaType,
       userRating: item.userRating || 0,
-      description: item.overview || item.description || ''
+      description: item.overview || item.description || '',
     };
   }
 
@@ -947,7 +1356,10 @@
               card.dataset.listType = listType;
               card.dataset.renderIndex = index;
               container.appendChild(card);
-              log(`Added MediaCard ${index + 1}/${items.length} for ${listType}:`, mediaCardData.title);
+              log(
+                `Added MediaCard ${index + 1}/${items.length} for ${listType}:`,
+                mediaCardData.title,
+              );
             } else {
               warn(`MediaCard creation failed for ${it.title || it.name}`);
             }
@@ -1015,7 +1427,9 @@
           '<div class="poster-cards-empty">Card components not available.</div>';
       }
       // Add scroll indicators for horizontal layout
-      addScrollIndicators(container);
+      if (typeof window.addScrollIndicators === 'function') {
+        window.addScrollIndicators(container);
+      }
       // Dispatch event to notify that list cards have been rendered
       window.dispatchEvent(
         new CustomEvent('cards:rendered', {
@@ -1040,12 +1454,16 @@
       }
       // Clear render flag after a short delay to allow for legitimate re-renders
       setTimeout(() => {
-        window[renderKey] = false;
+        if (renderKey) {
+          window[renderKey] = false;
+        }
       }, 100);
     } catch (e) {
       console.warn('[functions] loadListContent failed:', e?.message || e);
       // Clear render flag on error
-      window[renderKey] = false;
+      if (renderKey) {
+        window[renderKey] = false;
+      }
     }
   };
   /**
@@ -1392,7 +1810,7 @@
     } else if (!window.Card) {
       return null;
     }
-    
+
     const card = window.Card({
       variant: 'poster',
       id: item.id || item.tmdb_id || item.tmdbId,
@@ -2549,95 +2967,17 @@
     // ---- Data Import / Export ----
     // Old flaky handlers replaced by robust implementation above
     // ---- Item Management ----
-    // addToListFromCache function - finds search result items and adds them to lists
-    window.addToListFromCache = async function addToListFromCache(id, list) {
-      console.log('📝 addToListFromCache called with:', { id, list });
-      // Try to find the item in search results or use a basic item structure
-      let item = null;
-      // Check if we can find the item in search results
-      const searchGrid = document.getElementById('searchResultsGrid');
-      if (searchGrid) {
-        const card = searchGrid.querySelector(`[data-id="${id}"]`);
-        if (card) {
-          // Try to get the stored item data first
-          if (card.dataset.itemData) {
-            try {
-              item = JSON.parse(card.dataset.itemData);
-              console.log('📝 Found stored item data:', item);
-            } catch (e) {
-              console.warn('⚠️ Failed to parse stored item data:', e);
-            }
-          }
-          // Fallback: extract item data from the card
-          if (!item) {
-            const title = card.querySelector('.unified-card-title')?.textContent || 'Unknown';
-            const subtitle = card.querySelector('.unified-card-subtitle')?.textContent || '';
-            const mediaType = card.dataset.mediaType || 'movie';
-            // Create a basic item structure
-            item = {
-              id: Number(id),
-              title: title,
-              name: title, // For TV shows
-              media_type: mediaType,
-              // Add other fields as needed
-            };
-            console.log('📝 Extracted item data from card:', item);
-          }
-        }
-      }
-      // If we couldn't find the item, fetch full data from TMDB
-      if (!item) {
-        console.log('📝 Item not found in cache, fetching from TMDB...');
-        // Try to determine media type from context or default to movie
-        const mediaType = 'movie'; // Default, could be enhanced to detect from context
+    // Now set up the rest of Item Management functions in try-catch
+    try {
+      console.log('🔧 Setting up remaining Item Management functions...');
+      // Create a proper addToList function for general use
+      window.addToList = function addToList(item, listName) {
+        console.log('📝 addToList called:', { item: item?.id, listName });
         try {
-          // Fetch full item data from TMDB
-          const tmdbData = await window.tmdbGet(`${mediaType}/${id}`);
-          if (tmdbData && tmdbData.id) {
-            item = {
-              id: Number(id),
-              title: tmdbData.title || tmdbData.name || `Item ${id}`,
-              name: tmdbData.name || tmdbData.title || `Item ${id}`,
-              media_type: tmdbData.media_type || mediaType,
-              poster_path: tmdbData.poster_path,
-              release_date: tmdbData.release_date || tmdbData.first_air_date,
-              vote_average: tmdbData.vote_average,
-              overview: tmdbData.overview,
-              // Add other fields as needed
-            };
-            console.log('📝 Fetched full TMDB data:', item);
-          } else {
-            throw new Error('No data from TMDB');
+          if (!item || !item.id) {
+            console.warn('⚠️ Invalid item for addToList');
+            return false;
           }
-        } catch (error) {
-          console.warn('⚠️ Failed to fetch TMDB data, creating basic item:', error);
-          // Fallback to basic structure
-          item = {
-            id: Number(id),
-            title: `Item ${id}`,
-            name: `Item ${id}`,
-            media_type: mediaType,
-          };
-        }
-      }
-      // Use the existing addToList function or create a fallback
-      if (typeof window.addToList === 'function') {
-        const success = window.addToList(item, list);
-        if (success) {
-          console.log('✅ Successfully added item to', list);
-          if (typeof window.showNotification === 'function') {
-            window.showNotification(`Added to ${list}`, 'success');
-          }
-        } else {
-          console.log('⚠️ Failed to add item to', list);
-          if (typeof window.showNotification === 'function') {
-            window.showNotification(`Failed to add to ${list}`, 'error');
-          }
-        }
-      } else {
-        // Fallback: implement addToList directly here
-        console.log('📝 addToList not available, using fallback implementation');
-        try {
           // Ensure appData structure exists
           if (!window.appData) {
             window.appData = { tv: {}, movies: {} };
@@ -2647,414 +2987,363 @@
           if (!window.appData[category]) {
             window.appData[category] = {};
           }
-          if (!window.appData[category][list]) {
-            window.appData[category][list] = [];
+          if (!window.appData[category][listName]) {
+            window.appData[category][listName] = [];
           }
-          // Use adapter as canonical source - check if item already exists
-          const uid = window.firebaseAuth?.currentUser?.uid || null;
-          const watchlists = await window.WatchlistsAdapter.load(uid);
-          const listKey = list + 'Ids';
-          const exists = watchlists[listKey] && watchlists[listKey].includes(String(item.id));
+          
+          // Ensure the item has the correct media_type field
+          if (!item.media_type) {
+            item.media_type = mediaType;
+          }
+          // Check if already exists using WatchlistsAdapter as canonical source
+          let exists = false;
+          if (window.WatchlistsAdapter && window.WatchlistsAdapter._cache) {
+            const cache = window.WatchlistsAdapter._cache;
+            const listKey = listName + 'Ids';
+            exists = cache[listKey] && cache[listKey].includes(String(item.id));
+          } else {
+            // Fallback to appData check
+            exists = window.appData[category][listName].some(
+              (existing) => Number(existing.id) === Number(item.id),
+            );
+          }
           if (!exists) {
-            // Add to appData for legacy compatibility
-            window.appData[category][list].push(item);
-            console.log('✅ Successfully added item to', list, 'using fallback');
-            // Update adapter cache
+            window.appData[category][listName].push(item);
+            console.log('✅ Successfully added item to', listName);
+            console.log('📊 Current appData structure:', {
+              tv: window.appData.tv,
+              movies: window.appData.movies,
+            });
+            // Update WatchlistsAdapter cache
             if (
               window.WatchlistsAdapter &&
               typeof window.WatchlistsAdapter.addItem === 'function'
             ) {
-              const adapterResult = window.WatchlistsAdapter.addItem(item.id, list);
+              const adapterResult = window.WatchlistsAdapter.addItem(item.id, listName);
               console.log('📝 WatchlistsAdapter.addItem result:', adapterResult);
             }
-            // Save data
+            // Save data to localStorage
             if (typeof window.saveAppData === 'function') {
               window.saveAppData();
+            }
+            // Also save to Firebase if available
+            if (typeof window.saveData === 'function') {
+              console.log('🔄 Calling window.saveData() to sync to Firebase...');
+              window.saveData().then(() => {
+                // Invalidate WatchlistsAdapter cache after Firebase save to force reload
+                if (window.WatchlistsAdapter && typeof window.WatchlistsAdapter.invalidate === 'function') {
+                  console.log('🔄 Invalidating WatchlistsAdapter cache after Firebase save...');
+                  window.WatchlistsAdapter.invalidate();
+                }
+              }).catch((error) => {
+                console.error('❌ Firebase save failed:', error);
+              });
             }
             // Emit cards:changed event for centralized count updates
             document.dispatchEvent(
               new CustomEvent('cards:changed', {
-                detail: { source: 'addToListFromCache', itemId: id, list: list },
+                detail: { source: 'addToList', itemId: item.id, list: listName },
               }),
             );
             if (window.FlickletApp && typeof window.FlickletApp.updateUI === 'function') {
+              console.log('🔄 Calling FlickletApp.updateUI...');
               window.FlickletApp.updateUI();
             }
-            if (typeof window.showNotification === 'function') {
-              window.showNotification(`Added to ${list}`, 'success');
-            }
+            return true;
           } else {
             console.log('ℹ️ Item already exists in list');
-            if (typeof window.showNotification === 'function') {
-              window.showNotification(`Already in ${list}`, 'info');
-            }
+            return false;
           }
         } catch (error) {
-          console.error('❌ Fallback addToList failed:', error);
-          if (typeof window.showNotification === 'function') {
-            window.showNotification('Failed to add item', 'error');
-          }
-        }
-      }
-    };
-    // Create a proper addToList function for general use
-    window.addToList = function addToList(item, listName) {
-      console.log('📝 addToList called:', { item: item?.id, listName });
-      try {
-        if (!item || !item.id) {
-          console.warn('⚠️ Invalid item for addToList');
+          console.error('❌ addToList failed:', error);
           return false;
         }
-        // Ensure appData structure exists
-        if (!window.appData) {
-          window.appData = { tv: {}, movies: {} };
+      };
+      window.moveItem = function moveItem(id, dest) {
+        const NS = '[WL v28.99]';
+        const log = (...a) => console.log(NS, ...a);
+        log('moveItem called:', { id, dest, type: typeof id });
+        console.log('✅ [DEBUG] moveItem function is now available on window');
+        const mediaType = findItemMediaType(id);
+        if (!mediaType) {
+          log('No mediaType found for id:', id);
+          return;
         }
-        const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
-        const category = mediaType === 'tv' ? 'tv' : 'movies';
-        if (!window.appData[category]) {
-          window.appData[category] = {};
+        const sourceList = findItemList(id, mediaType);
+        if (!sourceList) return;
+        // Update WatchlistsAdapter cache
+        if (window.WatchlistsAdapter.moveItem(id, sourceList, dest)) {
+          log('Updated adapter cache for move:', id, sourceList, '→', dest);
         }
-        if (!window.appData[category][listName]) {
-          window.appData[category][listName] = [];
-        }
-        // Check if already exists using WatchlistsAdapter as canonical source
-        let exists = false;
-        if (window.WatchlistsAdapter && window.WatchlistsAdapter._cache) {
-          const cache = window.WatchlistsAdapter._cache;
-          const listKey = listName + 'Ids';
-          exists = cache[listKey] && cache[listKey].includes(String(item.id));
-        } else {
-          // Fallback to appData check
-          exists = window.appData[category][listName].some(
-            (existing) => Number(existing.id) === Number(item.id),
-          );
-        }
-        if (!exists) {
-          window.appData[category][listName].push(item);
-          console.log('✅ Successfully added item to', listName);
-          console.log('📊 Current appData structure:', {
-            tv: window.appData.tv,
-            movies: window.appData.movies,
-          });
-          // Update WatchlistsAdapter cache
-          if (window.WatchlistsAdapter && typeof window.WatchlistsAdapter.addItem === 'function') {
-            const adapterResult = window.WatchlistsAdapter.addItem(item.id, listName);
-            console.log('📝 WatchlistsAdapter.addItem result:', adapterResult);
-          }
-          // Save data to localStorage
-          if (typeof window.saveAppData === 'function') {
-            window.saveAppData();
-          }
-          // Also save to Firebase if available
-          if (typeof window.saveData === 'function') {
-            console.log('🔄 Calling window.saveData() to sync to Firebase...');
-            window.saveData();
-          }
-          // Emit cards:changed event for centralized count updates
-          document.dispatchEvent(
-            new CustomEvent('cards:changed', {
-              detail: { source: 'addToList', itemId: item.id, list: listName },
-            }),
-          );
-          if (window.FlickletApp && typeof window.FlickletApp.updateUI === 'function') {
-            console.log('🔄 Calling FlickletApp.updateUI...');
-            window.FlickletApp.updateUI();
-          }
-          return true;
-        } else {
-          console.log('ℹ️ Item already exists in list');
-          return false;
-        }
-      } catch (error) {
-        console.error('❌ addToList failed:', error);
-        return false;
-      }
-    };
-    window.moveItem = function moveItem(id, dest) {
-      const NS = '[WL v28.19]';
-      const log = (...a) => console.log(NS, ...a);
-      log('moveItem called:', { id, dest, type: typeof id });
-      console.log('✅ [DEBUG] moveItem function is now available on window');
-      const mediaType = findItemMediaType(id);
-      if (!mediaType) {
-        log('No mediaType found for id:', id);
-        return;
-      }
-      const sourceList = findItemList(id, mediaType);
-      if (!sourceList) return;
-      // Update WatchlistsAdapter cache
-      if (window.WatchlistsAdapter.moveItem(id, sourceList, dest)) {
-        log('Updated adapter cache for move:', id, sourceList, '→', dest);
-      }
-      const srcArr = window.appData[mediaType][sourceList];
-      const idx = srcArr.findIndex((i) => i.id === id);
-      if (idx === -1) return;
-      const [item] = srcArr.splice(idx, 1);
-      window.appData[mediaType][dest].push(item);
-      window.saveAppData();
-      // Also save to Firebase if available
-      if (typeof window.saveData === 'function') {
-        window.saveData();
-      }
-      // Emit cards:changed event for centralized count updates
-      document.dispatchEvent(
-        new CustomEvent('cards:changed', {
-          detail: {
-            source: 'moveItem',
-            action: 'move',
-            itemId: id,
-            fromList: sourceList,
-            toList: dest,
-          },
-        }),
-      );
-      if (window.FlickletApp) window.FlickletApp.updateUI();
-      rerenderIfVisible(sourceList);
-      rerenderIfVisible(dest);
-      // Trigger home page re-render if available
-      if (window.renderHomeRails) window.renderHomeRails();
-      showToast('success', 'Item Moved', `Item moved to ${dest}`);
-    };
-    // Helper functions for search results and other components
-    window.addToWatching = function addToWatching(item) {
-      console.log('[Search] Adding to watching:', item);
-      if (window.moveItem && item.id) {
-        window.moveItem(Number(item.id), 'watching');
-      } else {
-        console.error('[Search] Cannot add to watching - missing moveItem function or item.id');
-      }
-    };
-    window.addToWishlist = function addToWishlist(item) {
-      console.log('[Search] Adding to wishlist:', item);
-      if (window.moveItem && item.id) {
-        window.moveItem(Number(item.id), 'wishlist');
-      } else {
-        console.error('[Search] Cannot add to wishlist - missing moveItem function or item.id');
-      }
-    };
-    window.removeItemFromCurrentList = async function removeItemFromCurrentList(id) {
-      const NS = '[WL v28.23]';
-      const log = (...a) => console.log(NS, ...a);
-      const uid = firebase.auth().currentUser?.uid;
-      const db = window.firebaseDb || firebase.firestore();
-      if (!uid || !db) {
-        log('No auth or DB available for cloud-confirmed delete');
-        return;
-      }
-      const mediaType = findItemMediaType(id);
-      if (!mediaType) return;
-      const sourceList = findItemList(id, mediaType);
-      if (!sourceList) return;
-      // 1) Optimistic local removal
-      const prevState = JSON.parse(JSON.stringify(window.appData || {}));
-      const ok = adapterRemove(id, sourceList);
-      if (!ok) return;
-      try {
-        // 2) Persist minimal state to Firestore
-        const minimal = window.pruneWatchlistsShape(window.appData || {});
-        await db.doc(`users/${uid}`).set(
-          {
-            ...minimal,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp?.(),
-          },
-          { merge: true },
-        );
-        log('Cloud confirm OK for', id, 'from', sourceList);
-        // 3) Mirror to local (guarded)
+        const srcArr = window.appData[mediaType][sourceList];
+        const idx = srcArr.findIndex((i) => i.id === id);
+        if (idx === -1) return;
+        const [item] = srcArr.splice(idx, 1);
+        window.appData[mediaType][dest].push(item);
+        window.saveAppData();
+        // Also save to Firebase if available
         if (typeof window.saveData === 'function') {
           window.saveData();
         }
-        showToast('success', 'Item Removed', 'Item removed successfully');
-      } catch (e) {
-        log('Cloud save failed, rolling back:', e);
-        // 4) Rollback local state
-        window.appData = prevState;
-        // Re-render UI with restored state
+        // Emit cards:changed event for centralized count updates
+        document.dispatchEvent(
+          new CustomEvent('cards:changed', {
+            detail: {
+              source: 'moveItem',
+              action: 'move',
+              itemId: id,
+              fromList: sourceList,
+              toList: dest,
+            },
+          }),
+        );
         if (window.FlickletApp) window.FlickletApp.updateUI();
         rerenderIfVisible(sourceList);
-        if (window.renderHomeRails) window.renderHomeRails();
-        // Emit cards:changed event for centralized count updates
-        document.dispatchEvent(
-          new CustomEvent('cards:changed', {
-            detail: {
-              source: 'adapterRemove-fallback',
-              action: 'remove',
-              itemId: id,
-              list: sourceList,
-            },
-          }),
-        );
-        showToast('error', 'Remove Failed', 'Failed to remove item. Please try again.');
-      }
-    };
-    // Helper that applies existing removal logic; return true if changed
-    function adapterRemove(itemId, listKey) {
-      try {
-        const mediaType = findItemMediaType(itemId);
-        if (!mediaType) return false;
-        // Update WatchlistsAdapter cache
-        if (window.WatchlistsAdapter && window.WatchlistsAdapter.removeItem(itemId, listKey)) {
-          console.log('[WL v28.23] Updated adapter cache for removal:', itemId, 'from', listKey);
-        }
-        const srcArr = window.appData[mediaType][listKey];
-        const idx = srcArr.findIndex((i) => i.id === itemId);
-        if (idx === -1) return false;
-        srcArr.splice(idx, 1);
-        // Emit cards:changed event for centralized count updates
-        document.dispatchEvent(
-          new CustomEvent('cards:changed', {
-            detail: {
-              source: 'adapterRemove-direct',
-              action: 'remove',
-              itemId: itemId,
-              list: listKey,
-            },
-          }),
-        );
-        if (window.FlickletApp) window.FlickletApp.updateUI();
-        rerenderIfVisible(listKey);
+        rerenderIfVisible(dest);
         // Trigger home page re-render if available
         if (window.renderHomeRails) window.renderHomeRails();
-        return true;
-      } catch (error) {
-        console.error('[WL v28.23] adapterRemove failed:', error);
-        return false;
-      }
-    }
-    function findItemMediaType(id) {
-      // Use adapter as canonical source
-      if (window.WatchlistsAdapter && window.WatchlistsAdapter._cache) {
-        const cache = window.WatchlistsAdapter._cache;
-        const idStr = String(id);
-        // Check if item exists in any list
-        if (
-          cache.watchingIds?.includes(idStr) ||
-          cache.wishlistIds?.includes(idStr) ||
-          cache.watchedIds?.includes(idStr)
-        ) {
-          // Determine media type by checking which list contains the item
-          // and looking up the actual item data
-          const item = window.WatchlistsAdapter.getItemData(id);
-          if (item) {
-            return item.media_type === 'tv' ? 'tv' : 'movies';
+        showToast('success', 'Item Moved', `Item moved to ${dest}`);
+      };
+      // Helper functions for search results and other components
+      window.addToWatching = function addToWatching(item) {
+        console.log('[Search] Adding to watching:', item);
+        if (window.moveItem && item.id) {
+          window.moveItem(Number(item.id), 'watching');
+        } else {
+          console.error('[Search] Cannot add to watching - missing moveItem function or item.id');
+        }
+      };
+      window.addToWishlist = function addToWishlist(item) {
+        console.log('[Search] Adding to wishlist:', item);
+        if (window.moveItem && item.id) {
+          window.moveItem(Number(item.id), 'wishlist');
+        } else {
+          console.error('[Search] Cannot add to wishlist - missing moveItem function or item.id');
+        }
+      };
+      window.removeItemFromCurrentList = async function removeItemFromCurrentList(id) {
+        const NS = '[WL v28.23]';
+        const log = (...a) => console.log(NS, ...a);
+        const uid = firebase.auth().currentUser?.uid;
+        const db = window.firebaseDb || firebase.firestore();
+        if (!uid || !db) {
+          log('No auth or DB available for cloud-confirmed delete');
+          return;
+        }
+        const mediaType = findItemMediaType(id);
+        if (!mediaType) return;
+        const sourceList = findItemList(id, mediaType);
+        if (!sourceList) return;
+        // 1) Optimistic local removal
+        const prevState = JSON.parse(JSON.stringify(window.appData || {}));
+        const ok = adapterRemove(id, sourceList);
+        if (!ok) return;
+        try {
+          // 2) Persist minimal state to Firestore
+          const minimal = window.pruneWatchlistsShape(window.appData || {});
+          await db.doc(`users/${uid}`).set(
+            {
+              ...minimal,
+              lastUpdated: firebase.firestore.FieldValue.serverTimestamp?.(),
+            },
+            { merge: true },
+          );
+          log('Cloud confirm OK for', id, 'from', sourceList);
+          // 3) Mirror to local (guarded)
+          if (typeof window.saveData === 'function') {
+            window.saveData();
           }
+          showToast('success', 'Item Removed', 'Item removed successfully');
+        } catch (e) {
+          log('Cloud save failed, rolling back:', e);
+          // 4) Rollback local state
+          window.appData = prevState;
+          // Re-render UI with restored state
+          if (window.FlickletApp) window.FlickletApp.updateUI();
+          rerenderIfVisible(sourceList);
+          if (window.renderHomeRails) window.renderHomeRails();
+          // Emit cards:changed event for centralized count updates
+          document.dispatchEvent(
+            new CustomEvent('cards:changed', {
+              detail: {
+                source: 'adapterRemove-fallback',
+                action: 'remove',
+                itemId: id,
+                list: sourceList,
+              },
+            }),
+          );
+          showToast('error', 'Remove Failed', 'Failed to remove item. Please try again.');
+        }
+      };
+      // Helper that applies existing removal logic; return true if changed
+      function adapterRemove(itemId, listKey) {
+        try {
+          const mediaType = findItemMediaType(itemId);
+          if (!mediaType) return false;
+          // Update WatchlistsAdapter cache
+          if (window.WatchlistsAdapter && window.WatchlistsAdapter.removeItem(itemId, listKey)) {
+            console.log('[WL v28.23] Updated adapter cache for removal:', itemId, 'from', listKey);
+          }
+          const srcArr = window.appData[mediaType][listKey];
+          const idx = srcArr.findIndex((i) => i.id === itemId);
+          if (idx === -1) return false;
+          srcArr.splice(idx, 1);
+          // Emit cards:changed event for centralized count updates
+          document.dispatchEvent(
+            new CustomEvent('cards:changed', {
+              detail: {
+                source: 'adapterRemove-direct',
+                action: 'remove',
+                itemId: itemId,
+                list: listKey,
+              },
+            }),
+          );
+          if (window.FlickletApp) window.FlickletApp.updateUI();
+          rerenderIfVisible(listKey);
+          // Trigger home page re-render if available
+          if (window.renderHomeRails) window.renderHomeRails();
+          return true;
+        } catch (error) {
+          console.error('[WL v28.23] adapterRemove failed:', error);
+          return false;
         }
       }
-      // Fallback to appData for legacy compatibility
-      const appData = window.appData || {};
-      if (
-        appData.tv?.watching?.some((i) => i.id === id) ||
-        appData.tv?.wishlist?.some((i) => i.id === id) ||
-        appData.tv?.watched?.some((i) => i.id === id)
-      ) {
-        return 'tv';
+      function findItemMediaType(id) {
+        // Use adapter as canonical source
+        if (window.WatchlistsAdapter && window.WatchlistsAdapter._cache) {
+          const cache = window.WatchlistsAdapter._cache;
+          const idStr = String(id);
+          // Check if item exists in any list
+          if (
+            cache.watchingIds?.includes(idStr) ||
+            cache.wishlistIds?.includes(idStr) ||
+            cache.watchedIds?.includes(idStr)
+          ) {
+            // Determine media type by checking which list contains the item
+            // and looking up the actual item data
+            const item = window.WatchlistsAdapter.getItemData(id);
+            if (item) {
+              return item.media_type === 'tv' ? 'tv' : 'movies';
+            }
+          }
+        }
+        // Fallback to appData for legacy compatibility
+        const appData = window.appData || {};
+        if (
+          appData.tv?.watching?.some((i) => i.id === id) ||
+          appData.tv?.wishlist?.some((i) => i.id === id) ||
+          appData.tv?.watched?.some((i) => i.id === id)
+        ) {
+          return 'tv';
+        }
+        if (
+          appData.movies?.watching?.some((i) => i.id === id) ||
+          appData.movies?.wishlist?.some((i) => i.id === id) ||
+          appData.movies?.watched?.some((i) => i.id === id)
+        ) {
+          return 'movies';
+        }
+        return null;
       }
-      if (
-        appData.movies?.watching?.some((i) => i.id === id) ||
-        appData.movies?.wishlist?.some((i) => i.id === id) ||
-        appData.movies?.watched?.some((i) => i.id === id)
-      ) {
-        return 'movies';
-      }
-      return null;
-    }
-    function findItemList(id, mediaType) {
-      // Use adapter as canonical source
-      if (window.WatchlistsAdapter && window.WatchlistsAdapter._cache) {
-        const cache = window.WatchlistsAdapter._cache;
-        const idStr = String(id);
+      function findItemList(id, mediaType) {
+        // Use adapter as canonical source
+        if (window.WatchlistsAdapter && window.WatchlistsAdapter._cache) {
+          const cache = window.WatchlistsAdapter._cache;
+          const idStr = String(id);
+          const lists = ['watching', 'wishlist', 'watched'];
+          for (const list of lists) {
+            const listKey = list + 'Ids';
+            if (cache[listKey]?.includes(idStr)) {
+              return list;
+            }
+          }
+        }
+        // Fallback to appData for legacy compatibility
+        const appData = window.appData || {};
         const lists = ['watching', 'wishlist', 'watched'];
         for (const list of lists) {
-          const listKey = list + 'Ids';
-          if (cache[listKey]?.includes(idStr)) {
+          if (appData[mediaType]?.[list]?.some((i) => i.id === id)) {
             return list;
           }
         }
+        return null;
       }
-      // Fallback to appData for legacy compatibility
-      const appData = window.appData || {};
-      const lists = ['watching', 'wishlist', 'watched'];
-      for (const list of lists) {
-        if (appData[mediaType]?.[list]?.some((i) => i.id === id)) {
-          return list;
-        }
-      }
-      return null;
-    }
-    // ---- Theme Management ----
-    // toggleDarkMode is now centralized in utils.js
-    // ---- Language Management ----
-    // OLD changeLanguage function removed - now using LanguageManager
-    // The new changeLanguage is defined in language-manager.js
-    // ---- FlickWord Game ----
-    window.startDailyCountdown = function startDailyCountdown() {
-      const countdownElement = document.getElementById('flickwordCountdown');
-      if (!countdownElement) return;
-      const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
-      const timeLeft = tomorrow - now;
-      const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-      countdownElement.textContent = `${hours}h ${minutes}m`;
-      // Update every minute
-      setTimeout(startDailyCountdown, 60000);
-    };
-    window.updateFlickWordStats = function updateFlickWordStats() {
-      const todayScore = document.getElementById('flickwordTodayScore');
-      const bestStreak = document.getElementById('flickwordBestStreak');
-      const gamesPlayed = document.getElementById('flickwordGamesPlayed');
-      if (todayScore) todayScore.textContent = appData.flickword?.todayScore || 0;
-      if (bestStreak) bestStreak.textContent = appData.flickword?.bestStreak || '-';
-      if (gamesPlayed) gamesPlayed.textContent = appData.flickword?.gamesPlayed || 0;
-    };
-    window.startFlickWordGame = function startFlickWordGame() {
-      showNotification('FlickWord game starting soon! 🎮', 'success');
-    };
-    // ---- Scroll Indicators for Horizontal Layout ----
-    function addScrollIndicators(container) {
-      if (!container || !container.classList.contains('list-container')) return;
-      // Add scroll event listener to show/hide scroll indicators
-      const updateScrollIndicators = () => {
-        const scrollLeft = container.scrollLeft;
-        const scrollWidth = container.scrollWidth;
-        const clientWidth = container.clientWidth;
-        if (scrollWidth > clientWidth) {
-          container.classList.add('scrollable');
-          if (scrollLeft > 0) {
-            container.classList.add('scrollable-left');
-          } else {
-            container.classList.remove('scrollable-left');
-          }
-        } else {
-          container.classList.remove('scrollable', 'scrollable-left');
-        }
+      // ---- Theme Management ----
+      // toggleDarkMode is now centralized in utils.js
+      // ---- Language Management ----
+      // OLD changeLanguage function removed - now using LanguageManager
+      // The new changeLanguage is defined in language-manager.js
+      // ---- FlickWord Game ----
+      window.startDailyCountdown = function startDailyCountdown() {
+        const countdownElement = document.getElementById('flickwordCountdown');
+        if (!countdownElement) return;
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        const timeLeft = tomorrow - now;
+        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        countdownElement.textContent = `${hours}h ${minutes}m`;
+        // Update every minute
+        setTimeout(startDailyCountdown, 60000);
       };
-      // Initial check
-      updateScrollIndicators();
-      // Add scroll listener
-      container.addEventListener('scroll', updateScrollIndicators);
-      // Add resize listener to recalculate on window resize
-      window.addEventListener('resize', updateScrollIndicators);
-    }
-    // ---- Stats Card Renderer ----
-    window.renderStatsCard = function renderStatsCard() {
-      if (!window.FLAGS?.statsEnabled) return;
-      const statsContent = document.getElementById('statsContent');
-      if (!statsContent) return;
-      try {
-        const appData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
-        const tvWatching = appData.tv?.watching || [];
-        const tvWishlist = appData.tv?.wishlist || [];
-        const tvWatched = appData.tv?.watched || [];
-        const movieWatching = appData.movies?.watching || [];
-        const movieWishlist = appData.movies?.wishlist || [];
-        const movieWatched = appData.movies?.watched || [];
-        const totalShows = tvWatching.length + tvWishlist.length + tvWatched.length;
-        const totalMovies = movieWatching.length + movieWishlist.length + movieWatched.length;
-        const totalItems = totalShows + totalMovies;
-        statsContent.innerHTML = `
+      window.updateFlickWordStats = function updateFlickWordStats() {
+        const todayScore = document.getElementById('flickwordTodayScore');
+        const bestStreak = document.getElementById('flickwordBestStreak');
+        const gamesPlayed = document.getElementById('flickwordGamesPlayed');
+        if (todayScore) todayScore.textContent = appData.flickword?.todayScore || 0;
+        if (bestStreak) bestStreak.textContent = appData.flickword?.bestStreak || '-';
+        if (gamesPlayed) gamesPlayed.textContent = appData.flickword?.gamesPlayed || 0;
+      };
+      window.startFlickWordGame = function startFlickWordGame() {
+        showNotification('FlickWord game starting soon! 🎮', 'success');
+      };
+      // ---- Scroll Indicators for Horizontal Layout ----
+      window.addScrollIndicators = function addScrollIndicators(container) {
+        if (!container || !container.classList.contains('list-container')) return;
+        // Add scroll event listener to show/hide scroll indicators
+        const updateScrollIndicators = () => {
+          const scrollLeft = container.scrollLeft;
+          const scrollWidth = container.scrollWidth;
+          const clientWidth = container.clientWidth;
+          if (scrollWidth > clientWidth) {
+            container.classList.add('scrollable');
+            if (scrollLeft > 0) {
+              container.classList.add('scrollable-left');
+            } else {
+              container.classList.remove('scrollable-left');
+            }
+          } else {
+            container.classList.remove('scrollable', 'scrollable-left');
+          }
+        };
+        // Initial check
+        updateScrollIndicators();
+        // Add scroll listener
+        container.addEventListener('scroll', updateScrollIndicators);
+        // Add resize listener to recalculate on window resize
+        window.addEventListener('resize', updateScrollIndicators);
+      };
+      // ---- Stats Card Renderer ----
+      window.renderStatsCard = function renderStatsCard() {
+        if (!window.FLAGS?.statsEnabled) return;
+        const statsContent = document.getElementById('statsContent');
+        if (!statsContent) return;
+        try {
+          const appData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
+          const tvWatching = appData.tv?.watching || [];
+          const tvWishlist = appData.tv?.wishlist || [];
+          const tvWatched = appData.tv?.watched || [];
+          const movieWatching = appData.movies?.watching || [];
+          const movieWishlist = appData.movies?.wishlist || [];
+          const movieWatched = appData.movies?.watched || [];
+          const totalShows = tvWatching.length + tvWishlist.length + tvWatched.length;
+          const totalMovies = movieWatching.length + movieWishlist.length + movieWatched.length;
+          const totalItems = totalShows + totalMovies;
+          statsContent.innerHTML = `
       <div class="stats-grid">
         <div class="stat">
           <div class="stat-number">${tvWatching.length + movieWatching.length}</div>
@@ -3088,17 +3377,17 @@
         </div>
       </div>
     `;
-      } catch (error) {
-        console.error('Error rendering stats card:', error);
-        statsContent.innerHTML = '<div class="error">Failed to load stats</div>';
-      }
-    };
-    // ---- Pro Features List Renderer ----
-    window.renderProFeaturesList = function renderProFeaturesList() {
-      const proFeaturesList = document.getElementById('proFeaturesList');
-      if (!proFeaturesList) return;
-      const isProEnabled = window.SettingsManager ? window.SettingsManager.isPro() : false;
-      proFeaturesList.innerHTML = `
+        } catch (error) {
+          console.error('Error rendering stats card:', error);
+          statsContent.innerHTML = '<div class="error">Failed to load stats</div>';
+        }
+      };
+      // ---- Pro Features List Renderer ----
+      window.renderProFeaturesList = function renderProFeaturesList() {
+        const proFeaturesList = document.getElementById('proFeaturesList');
+        if (!proFeaturesList) return;
+        const isProEnabled = window.SettingsManager ? window.SettingsManager.isPro() : false;
+        proFeaturesList.innerHTML = `
     <div class="pro-features">
       <div class="pro-feature ${isProEnabled ? 'unlocked' : 'locked'}">
         <div class="pro-feature-icon">🔔</div>
@@ -3142,79 +3431,79 @@
       </div>
     </div>
   `;
-    };
-    // ---- Upcoming Episodes (Tonight On) ----
-    window.loadUpcomingEpisodes = function loadUpcomingEpisodes() {
-      if (!window.FLAGS?.upcomingEpisodesEnabled) {
-        // Force hide the section if it exists
-        const upcomingEpisodes = document.getElementById('upcomingEpisodes');
-        if (upcomingEpisodes) {
-          upcomingEpisodes.style.display = 'none';
+      };
+      // ---- Upcoming Episodes (Tonight On) ----
+      window.loadUpcomingEpisodes = function loadUpcomingEpisodes() {
+        if (!window.FLAGS?.upcomingEpisodesEnabled) {
+          // Force hide the section if it exists
+          const upcomingEpisodes = document.getElementById('upcomingEpisodes');
+          if (upcomingEpisodes) {
+            upcomingEpisodes.style.display = 'none';
+          }
+          return;
         }
-        return;
-      }
-      const upcomingSectionEl = document.getElementById('upcomingEpisodes');
-      const upcomingListEl = document.getElementById('upcomingEpisodesList');
-      if (!upcomingSectionEl || !upcomingListEl) return;
-      console.log('🌙 Loading upcoming episodes content');
-      try {
-        const appData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
-        // Get watching shows from both tv and movies categories
-        const tvWatching = appData.tv?.watching || [];
-        const movieWatching = appData.movies?.watching || [];
-        const watching = [...tvWatching, ...movieWatching];
-        console.log('🔍 Front spotlight data check:', {
-          tvWatching: tvWatching.length,
-          movieWatching: movieWatching.length,
-          totalWatching: watching.length,
-          sampleShow: watching[0],
-        });
-        const now = new Date();
-        const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        const episodes = [];
-        // Test episode removed - now using real data
-        watching.forEach((show) => {
-          // Skip shows with invalid data
-          if (!show || (!show.name && !show.original_name)) {
-            console.log('⚠️ Skipping invalid show:', show);
-            return;
-          }
-          const showName = show.name || show.original_name || 'Unknown Show';
-          // Check multiple possible fields for next air date
-          const nextAirDate =
-            show.nextEpisodeAirDate ||
-            show.next_air_date ||
-            show.next_episode_to_air?.air_date ||
-            show.next_episode_to_air?.first_air_date;
-          console.log(
-            '🔍 Checking show:',
-            showName,
-            'nextAirDate:',
-            nextAirDate,
-            'next_episode_to_air:',
-            show.next_episode_to_air,
-          );
-          if (!nextAirDate) return;
-          const airDate = new Date(nextAirDate);
-          console.log('🔍 Air date parsed:', airDate, 'is valid:', !isNaN(airDate.getTime()));
-          if (airDate >= now && airDate <= nextWeek) {
-            console.log('✅ Found upcoming episode:', showName);
-            episodes.push({
-              showName: showName,
-              airDate: airDate,
-              episodeInfo: show.nextEpisodeName || 'New Episode',
-            });
-          }
-        });
-        episodes.sort((a, b) => a.airDate - b.airDate);
-        if (episodes.length === 0) {
-          upcomingListEl.innerHTML =
-            '<div class="no-episodes">No upcoming episodes this week.</div>';
-        } else {
-          const top8 = episodes.slice(0, 8);
-          upcomingListEl.innerHTML = top8
-            .map(
-              (episode) => `
+        const upcomingSectionEl = document.getElementById('upcomingEpisodes');
+        const upcomingListEl = document.getElementById('upcomingEpisodesList');
+        if (!upcomingSectionEl || !upcomingListEl) return;
+        console.log('🌙 Loading upcoming episodes content');
+        try {
+          const appData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
+          // Get watching shows from both tv and movies categories
+          const tvWatching = appData.tv?.watching || [];
+          const movieWatching = appData.movies?.watching || [];
+          const watching = [...tvWatching, ...movieWatching];
+          console.log('🔍 Front spotlight data check:', {
+            tvWatching: tvWatching.length,
+            movieWatching: movieWatching.length,
+            totalWatching: watching.length,
+            sampleShow: watching[0],
+          });
+          const now = new Date();
+          const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+          const episodes = [];
+          // Test episode removed - now using real data
+          watching.forEach((show) => {
+            // Skip shows with invalid data
+            if (!show || (!show.name && !show.original_name)) {
+              console.log('⚠️ Skipping invalid show:', show);
+              return;
+            }
+            const showName = show.name || show.original_name || 'Unknown Show';
+            // Check multiple possible fields for next air date
+            const nextAirDate =
+              show.nextEpisodeAirDate ||
+              show.next_air_date ||
+              show.next_episode_to_air?.air_date ||
+              show.next_episode_to_air?.first_air_date;
+            console.log(
+              '🔍 Checking show:',
+              showName,
+              'nextAirDate:',
+              nextAirDate,
+              'next_episode_to_air:',
+              show.next_episode_to_air,
+            );
+            if (!nextAirDate) return;
+            const airDate = new Date(nextAirDate);
+            console.log('🔍 Air date parsed:', airDate, 'is valid:', !isNaN(airDate.getTime()));
+            if (airDate >= now && airDate <= nextWeek) {
+              console.log('✅ Found upcoming episode:', showName);
+              episodes.push({
+                showName: showName,
+                airDate: airDate,
+                episodeInfo: show.nextEpisodeName || 'New Episode',
+              });
+            }
+          });
+          episodes.sort((a, b) => a.airDate - b.airDate);
+          if (episodes.length === 0) {
+            upcomingListEl.innerHTML =
+              '<div class="no-episodes">No upcoming episodes this week.</div>';
+          } else {
+            const top8 = episodes.slice(0, 8);
+            upcomingListEl.innerHTML = top8
+              .map(
+                (episode) => `
         <div class="upcoming-episode-item">
           <div class="show-info">
             <div class="show-name">${episode.showName}</div>
@@ -3229,345 +3518,352 @@
           </div>
         </div>
       `,
-            )
-            .join('');
+              )
+              .join('');
+          }
+          upcomingSectionEl.style.display = 'block';
+        } catch (error) {
+          console.error('Error loading upcoming episodes:', error);
+          upcomingSectionEl.style.display = 'none';
         }
-        upcomingSectionEl.style.display = 'block';
-      } catch (error) {
-        console.error('Error loading upcoming episodes:', error);
-        upcomingSectionEl.style.display = 'none';
-      }
-    };
-    /**
-     * Process: Counter Bootstrap System
-     * Purpose: Real-time count updates for tabs and sections based on visible cards
-     * Data Source: DOM elements with data-count-for attributes
-     * Update Path: MutationObserver watches for DOM changes in target sections
-     * Dependencies: data-count-for attributes in HTML, cards:refreshed events
-     */
-    // Counter Bootstrap System
-    window.CounterBootstrap = {
-      observers: new Map(),
-      updateThrottle: new Map(),
-      lastUpdate: new Map(),
-      armed: false,
-      // Unified card selector - single source of truth
-      UNIFIED_CARD_SELECTOR: '[data-item-id][data-list-type]',
-      EXCLUSION_SELECTORS: [
-        '.unified-card-poster-skeleton',
-        '.unified-card-poster-placeholder',
-        '.skeleton',
-        '.placeholder',
-        '.empty',
-        '.ad',
-        '.hidden',
-        '[aria-hidden="true"]',
-        '[hidden]',
-      ],
-      init() {
-        // Prevent duplicate initialization
-        if (this.initialized) {
-          console.log('[Counts v28.17] Counter Bootstrap already initialized, skipping');
-          return;
-        }
-        console.log('[Counts v28.17] Initializing Counter Bootstrap System');
-        this.armed = true;
-        this.setupGlobalListeners();
-        // Try immediate scan, but don't fail if containers aren't ready
-        if (this.scanAndAttach()) {
-          this.initialized = true;
-        } else {
-          console.log('[Counts v28.17] Armed but waiting for first render signal');
-        }
-      },
-      scanAndAttach() {
-        // Find all elements with data-count-for attributes
-        const countElements = document.querySelectorAll('[data-count-for]');
-        console.log(`[Counts v28.17] Found ${countElements.length} count elements to attach`);
-        let allMapped = true;
-        countElements.forEach((element) => {
-          const targetSelector = element.getAttribute('data-count-for');
-          const targetSection = document.querySelector(targetSelector);
-          if (!targetSection) {
-            console.warn(`[Counts v28.17] Target section not found: ${targetSelector}`);
-            allMapped = false;
+      };
+      /**
+       * Process: Counter Bootstrap System
+       * Purpose: Real-time count updates for tabs and sections based on visible cards
+       * Data Source: DOM elements with data-count-for attributes
+       * Update Path: MutationObserver watches for DOM changes in target sections
+       * Dependencies: data-count-for attributes in HTML, cards:refreshed events
+       */
+      // Counter Bootstrap System
+      window.CounterBootstrap = {
+        observers: new Map(),
+        updateThrottle: new Map(),
+        lastUpdate: new Map(),
+        armed: false,
+        // Unified card selector - single source of truth
+        UNIFIED_CARD_SELECTOR: '[data-item-id][data-list-type]',
+        EXCLUSION_SELECTORS: [
+          '.unified-card-poster-skeleton',
+          '.unified-card-poster-placeholder',
+          '.skeleton',
+          '.placeholder',
+          '.empty',
+          '.ad',
+          '.hidden',
+          '[aria-hidden="true"]',
+          '[hidden]',
+        ],
+        init() {
+          // Prevent duplicate initialization
+          if (this.initialized) {
+            console.log('[Counts v28.17] Counter Bootstrap already initialized, skipping');
             return;
           }
-          // Check if observer already exists for this element
-          const observerId = `${element.id}-${targetSection.id}`;
-          if (this.observers.has(observerId)) {
-            console.log(`[Counts v28.17] Observer already exists for ${element.id}, skipping`);
-            return;
+          console.log('[Counts v28.17] Initializing Counter Bootstrap System');
+          this.armed = true;
+          this.setupGlobalListeners();
+          // Try immediate scan, but don't fail if containers aren't ready
+          if (this.scanAndAttach()) {
+            this.initialized = true;
+          } else {
+            console.log('[Counts v28.17] Armed but waiting for first render signal');
           }
-          // Attach MutationObserver to target section
-          this.attachObserver(element, targetSection);
-          // Initial count update
-          this.updateCount(element, targetSection);
-        });
-        return allMapped;
-      },
-      attachObserver(countElement, targetSection) {
-        const observerId = `${countElement.id}-${targetSection.id}`;
-        // Remove existing observer if any
-        if (this.observers.has(observerId)) {
-          this.observers.get(observerId).disconnect();
-        }
-        // Create new observer
-        const observer = new MutationObserver((mutations) => {
-          this.throttledUpdate(countElement, targetSection);
-        });
-        // Start observing with reduced sensitivity
-        observer.observe(targetSection, {
-          childList: true,
-          subtree: true,
-          attributes: false, // Disable attribute watching to reduce triggers
-        });
-        this.observers.set(observerId, observer);
-        console.log(`🔢 Attached observer for ${countElement.id} -> ${targetSection.id}`);
-      },
-      throttledUpdate(countElement, targetSection) {
-        const key = `${countElement.id}-${targetSection.id}`;
-        const now = Date.now();
-        // Check if we've updated recently (debounce)
-        if (this.lastUpdate.has(key) && now - this.lastUpdate.get(key) < 100) {
-          return; // Skip if updated within last 100ms
-        }
-        // Clear existing timeout
-        if (this.updateThrottle.has(key)) {
-          clearTimeout(this.updateThrottle.get(key));
-        }
-        // Set new timeout with reduced debounce
-        const timeoutId = setTimeout(() => {
-          this.updateCount(countElement, targetSection);
-          this.updateThrottle.delete(key);
-          this.lastUpdate.set(key, Date.now());
-        }, 75); // Reduced to 75ms throttle for responsiveness
-        this.updateThrottle.set(key, timeoutId);
-      },
-      // Direct recount bypassing debounce for UI actions
-      directRecount() {
-        console.log('[Counts v28.17] Direct recount triggered');
-        this.observers.forEach((observer, observerId) => {
-          const [elementId, sectionId] = observerId.split('-');
-          const element = document.getElementById(elementId);
-          const section = document.getElementById(sectionId);
-          if (element && section) {
-            this.updateCount(element, section);
-          }
-        });
-      },
-      updateCount(countElement, targetSection) {
-        try {
-          // Count visible cards in target section
-          let visibleCards = this.countVisibleCards(targetSection);
-          // Debug logging
-          console.log(`🔢 Counting cards in ${targetSection.id}:`, {
-            elementId: countElement.id,
-            visibleCards: visibleCards,
-            sectionId: targetSection.id,
-            sectionChildren: targetSection.children.length,
+        },
+        scanAndAttach() {
+          // Find all elements with data-count-for attributes
+          const countElements = document.querySelectorAll('[data-count-for]');
+          console.log(`[Counts v28.17] Found ${countElements.length} count elements to attach`);
+          let allMapped = true;
+          countElements.forEach((element) => {
+            const targetSelector = element.getAttribute('data-count-for');
+            const targetSection = document.querySelector(targetSelector);
+            if (!targetSection) {
+              console.warn(`[Counts v28.17] Target section not found: ${targetSelector}`);
+              allMapped = false;
+              return;
+            }
+            // Check if observer already exists for this element
+            const observerId = `${element.id}-${targetSection.id}`;
+            if (this.observers.has(observerId)) {
+              console.log(`[Counts v28.17] Observer already exists for ${element.id}, skipping`);
+              return;
+            }
+            // Attach MutationObserver to target section
+            this.attachObserver(element, targetSection);
+            // Initial count update
+            this.updateCount(element, targetSection);
           });
-          // If no visible cards found, use fallback count from WatchlistsAdapter
-          if (visibleCards === 0) {
-            const fallbackCount = this.getFallbackCount(countElement.id, targetSection.id);
-            if (fallbackCount > 0) {
-              console.log(`🔢 Using fallback count for ${countElement.id}: ${fallbackCount}`);
-              visibleCards = fallbackCount;
+          return allMapped;
+        },
+        attachObserver(countElement, targetSection) {
+          const observerId = `${countElement.id}-${targetSection.id}`;
+          // Remove existing observer if any
+          if (this.observers.has(observerId)) {
+            this.observers.get(observerId).disconnect();
+          }
+          // Create new observer
+          const observer = new MutationObserver((mutations) => {
+            this.throttledUpdate(countElement, targetSection);
+          });
+          // Start observing with reduced sensitivity
+          observer.observe(targetSection, {
+            childList: true,
+            subtree: true,
+            attributes: false, // Disable attribute watching to reduce triggers
+          });
+          this.observers.set(observerId, observer);
+          console.log(`🔢 Attached observer for ${countElement.id} -> ${targetSection.id}`);
+        },
+        throttledUpdate(countElement, targetSection) {
+          const key = `${countElement.id}-${targetSection.id}`;
+          const now = Date.now();
+          // Check if we've updated recently (debounce)
+          if (this.lastUpdate.has(key) && now - this.lastUpdate.get(key) < 100) {
+            return; // Skip if updated within last 100ms
+          }
+          // Clear existing timeout
+          if (this.updateThrottle.has(key)) {
+            clearTimeout(this.updateThrottle.get(key));
+          }
+          // Set new timeout with reduced debounce
+          const timeoutId = setTimeout(() => {
+            this.updateCount(countElement, targetSection);
+            this.updateThrottle.delete(key);
+            this.lastUpdate.set(key, Date.now());
+          }, 75); // Reduced to 75ms throttle for responsiveness
+          this.updateThrottle.set(key, timeoutId);
+        },
+        // Direct recount bypassing debounce for UI actions
+        directRecount() {
+          console.log('[Counts v28.17] Direct recount triggered');
+          this.observers.forEach((observer, observerId) => {
+            const [elementId, sectionId] = observerId.split('-');
+            const element = document.getElementById(elementId);
+            const section = document.getElementById(sectionId);
+            if (element && section) {
+              this.updateCount(element, section);
+            }
+          });
+        },
+        updateCount(countElement, targetSection) {
+          try {
+            // Count visible cards in target section
+            let visibleCards = this.countVisibleCards(targetSection);
+            // Debug logging
+            console.log(`🔢 Counting cards in ${targetSection.id}:`, {
+              elementId: countElement.id,
+              visibleCards: visibleCards,
+              sectionId: targetSection.id,
+              sectionChildren: targetSection.children.length,
+            });
+            // If no visible cards found, use fallback count from WatchlistsAdapter
+            if (visibleCards === 0) {
+              const fallbackCount = this.getFallbackCount(countElement.id, targetSection.id);
+              if (fallbackCount > 0) {
+                console.log(`🔢 Using fallback count for ${countElement.id}: ${fallbackCount}`);
+                visibleCards = fallbackCount;
+              }
+            }
+            // Only update if count has actually changed
+            const currentCount = parseInt(countElement.textContent) || 0;
+            if (currentCount === visibleCards) {
+              return; // No change, skip update
+            }
+            // Update count element
+            countElement.textContent = visibleCards;
+            // Apply badge styling if it's a badge element
+            if (
+              countElement.classList.contains('tab-badge') ||
+              countElement.classList.contains('badge')
+            ) {
+              this.applyBadgeStyling(countElement);
+            }
+            // Log all count updates for debugging
+            console.log(
+              `🔢 Updated count for ${countElement.id}: ${visibleCards} visible cards (was ${currentCount})`,
+            );
+          } catch (error) {
+            console.error(`🔢 Error updating count for ${countElement.id}:`, error);
+          }
+        },
+        getFallbackCount(countElementId, sectionId) {
+          // Use WatchlistsAdapter as primary source for accurate counts
+          if (window.WatchlistsAdapter && window.WatchlistsAdapter._cache) {
+            const cache = window.WatchlistsAdapter._cache;
+            // Map count element IDs to list types
+            const listTypeMap = {
+              watchingBadge: 'watchingIds',
+              watchingCount: 'watchingIds',
+              wishlistBadge: 'wishlistIds',
+              wishlistCount: 'wishlistIds',
+              watchedBadge: 'watchedIds',
+              watchedCount: 'watchedIds',
+            };
+            const listKey = listTypeMap[countElementId];
+            if (listKey && cache[listKey]) {
+              console.log(
+                `🔢 Using WatchlistsAdapter cache for ${countElementId}: ${cache[listKey].length}`,
+              );
+              return cache[listKey].length;
             }
           }
-          // Only update if count has actually changed
-          const currentCount = parseInt(countElement.textContent) || 0;
-          if (currentCount === visibleCards) {
-            return; // No change, skip update
-          }
-          // Update count element
-          countElement.textContent = visibleCards;
-          // Apply badge styling if it's a badge element
-          if (
-            countElement.classList.contains('tab-badge') ||
-            countElement.classList.contains('badge')
-          ) {
-            this.applyBadgeStyling(countElement);
-          }
-          // Log all count updates for debugging
-          console.log(
-            `🔢 Updated count for ${countElement.id}: ${visibleCards} visible cards (was ${currentCount})`,
-          );
-        } catch (error) {
-          console.error(`🔢 Error updating count for ${countElement.id}:`, error);
-        }
-      },
-      getFallbackCount(countElementId, sectionId) {
-        // Use WatchlistsAdapter as primary source for accurate counts
-        if (window.WatchlistsAdapter && window.WatchlistsAdapter._cache) {
-          const cache = window.WatchlistsAdapter._cache;
+          // Fallback to appData count when WatchlistsAdapter not available
+          if (!window.appData) return 0;
+          const appData = window.appData;
+          const tv = appData.tv || {};
+          const movies = appData.movies || {};
           // Map count element IDs to list types
           const listTypeMap = {
-            watchingBadge: 'watchingIds',
-            watchingCount: 'watchingIds',
-            wishlistBadge: 'wishlistIds',
-            wishlistCount: 'wishlistIds',
-            watchedBadge: 'watchedIds',
-            watchedCount: 'watchedIds',
+            watchingBadge: 'watching',
+            watchingCount: 'watching',
+            wishlistBadge: 'wishlist',
+            wishlistCount: 'wishlist',
+            watchedBadge: 'watched',
+            watchedCount: 'watched',
           };
-          const listKey = listTypeMap[countElementId];
-          if (listKey && cache[listKey]) {
-            console.log(
-              `🔢 Using WatchlistsAdapter cache for ${countElementId}: ${cache[listKey].length}`,
-            );
-            return cache[listKey].length;
+          const listType = listTypeMap[countElementId];
+          if (!listType) return 0;
+          // Use the same deduplication logic as loadListContent
+          const allItems = [
+            ...(Array.isArray(tv[listType]) ? tv[listType] : []),
+            ...(Array.isArray(movies[listType]) ? movies[listType] : []),
+          ];
+          // Deduplicate items by ID (same logic as loadListContent)
+          const items = [];
+          const seenIds = new Set();
+          allItems.forEach((item) => {
+            const id = item.id || item.tmdb_id || item.tmdbId;
+            if (id && !seenIds.has(id)) {
+              seenIds.add(id);
+              items.push(item);
+            }
+          });
+          console.log(
+            `🔢 Fallback count for ${countElementId}: ${items.length} (deduplicated from ${allItems.length})`,
+          );
+          return items.length;
+        },
+        countVisibleCards(section) {
+          // Use unified selector - single source of truth
+          const cards = section.querySelectorAll(this.UNIFIED_CARD_SELECTOR);
+          let visibleCount = 0;
+          console.log(`[Counts v28.17] Counting cards in ${section.id}:`, {
+            totalCards: cards.length,
+            sectionChildren: section.children.length,
+          });
+          cards.forEach((card) => {
+            if (this.isCardVisible(card)) {
+              visibleCount++;
+            }
+          });
+          // Log exclusions for debugging
+          const excludedCount = cards.length - visibleCount;
+          if (excludedCount > 0) {
+            console.log(`[Counts v28.17] Excluded ${excludedCount} cards (hidden/inactive)`);
           }
-        }
-        // Fallback to appData count when WatchlistsAdapter not available
-        if (!window.appData) return 0;
-        const appData = window.appData;
-        const tv = appData.tv || {};
-        const movies = appData.movies || {};
-        // Map count element IDs to list types
-        const listTypeMap = {
-          watchingBadge: 'watching',
-          watchingCount: 'watching',
-          wishlistBadge: 'wishlist',
-          wishlistCount: 'wishlist',
-          watchedBadge: 'watched',
-          watchedCount: 'watched',
-        };
-        const listType = listTypeMap[countElementId];
-        if (!listType) return 0;
-        // Use the same deduplication logic as loadListContent
-        const allItems = [
-          ...(Array.isArray(tv[listType]) ? tv[listType] : []),
-          ...(Array.isArray(movies[listType]) ? movies[listType] : []),
-        ];
-        // Deduplicate items by ID (same logic as loadListContent)
-        const items = [];
-        const seenIds = new Set();
-        allItems.forEach((item) => {
-          const id = item.id || item.tmdb_id || item.tmdbId;
-          if (id && !seenIds.has(id)) {
-            seenIds.add(id);
-            items.push(item);
-          }
-        });
-        console.log(
-          `🔢 Fallback count for ${countElementId}: ${items.length} (deduplicated from ${allItems.length})`,
-        );
-        return items.length;
-      },
-      countVisibleCards(section) {
-        // Use unified selector - single source of truth
-        const cards = section.querySelectorAll(this.UNIFIED_CARD_SELECTOR);
-        let visibleCount = 0;
-        console.log(`[Counts v28.17] Counting cards in ${section.id}:`, {
-          totalCards: cards.length,
-          sectionChildren: section.children.length,
-        });
-        cards.forEach((card) => {
-          if (this.isCardVisible(card)) {
-            visibleCount++;
-          }
-        });
-        // Log exclusions for debugging
-        const excludedCount = cards.length - visibleCount;
-        if (excludedCount > 0) {
-          console.log(`[Counts v28.17] Excluded ${excludedCount} cards (hidden/inactive)`);
-        }
-        console.log(`[Counts v28.17] Final count for ${section.id}: ${visibleCount} visible cards`);
-        return visibleCount;
-      },
-      isCardVisible(card) {
-        // Check if card is visible (not hidden by common patterns)
-        const computedStyle = window.getComputedStyle(card);
-        // Check display property
-        if (computedStyle.display === 'none') return false;
-        // Check visibility property
-        if (computedStyle.visibility === 'hidden') return false;
-        // Check opacity
-        if (parseFloat(computedStyle.opacity) === 0) return false;
-        // Check for hidden attributes/classes
-        if (card.hasAttribute('hidden')) return false;
-        if (card.classList.contains('hidden')) return false;
-        if (card.classList.contains('is-hidden')) return false;
-        if (card.hasAttribute('aria-hidden') && card.getAttribute('aria-hidden') === 'true')
-          return false;
-        // Check if card is in an inactive tab pane
-        const tabSection = card.closest('.tab-section');
-        if (tabSection && !tabSection.classList.contains('active')) {
-          return false;
-        }
-        // Check for exclusion selectors
-        for (const exclusionSelector of this.EXCLUSION_SELECTORS) {
-          if (card.matches(exclusionSelector)) {
+          console.log(
+            `[Counts v28.17] Final count for ${section.id}: ${visibleCount} visible cards`,
+          );
+          return visibleCount;
+        },
+        isCardVisible(card) {
+          // Check if card is visible (not hidden by common patterns)
+          const computedStyle = window.getComputedStyle(card);
+          // Check display property
+          if (computedStyle.display === 'none') return false;
+          // Check visibility property
+          if (computedStyle.visibility === 'hidden') return false;
+          // Check opacity
+          if (parseFloat(computedStyle.opacity) === 0) return false;
+          // Check for hidden attributes/classes
+          if (card.hasAttribute('hidden')) return false;
+          if (card.classList.contains('hidden')) return false;
+          if (card.classList.contains('is-hidden')) return false;
+          if (card.hasAttribute('aria-hidden') && card.getAttribute('aria-hidden') === 'true')
+            return false;
+          // Check if card is in an inactive tab pane
+          const tabSection = card.closest('.tab-section');
+          if (tabSection && !tabSection.classList.contains('active')) {
             return false;
           }
-        }
-        // Check inline styles
-        const style = card.style;
-        if (style.display === 'none') return false;
-        if (style.visibility === 'hidden') return false;
-        if (style.opacity === '0') return false;
-        return true;
-      },
-      setupGlobalListeners() {
-        // Listen for cards:changed events (emitted after render batches)
-        document.addEventListener('cards:changed', () => {
-          console.log('[Counts v28.17] cards:changed event received - triggering recount');
-          this.directRecount();
-        });
-        // Listen for app:lists-rendered events
-        document.addEventListener('app:lists-rendered', () => {
-          console.log('[Counts v28.17] app:lists-rendered event received');
-          if (!this.initialized && this.armed) {
-            if (this.scanAndAttach()) {
-              this.initialized = true;
-              console.log('[Counts v28.17] Late bind successful - first real recount complete');
+          // Check for exclusion selectors
+          for (const exclusionSelector of this.EXCLUSION_SELECTORS) {
+            if (card.matches(exclusionSelector)) {
+              return false;
             }
-          } else {
+          }
+          // Check inline styles
+          const style = card.style;
+          if (style.display === 'none') return false;
+          if (style.visibility === 'hidden') return false;
+          if (style.opacity === '0') return false;
+          return true;
+        },
+        setupGlobalListeners() {
+          // Listen for cards:changed events (emitted after render batches)
+          document.addEventListener('cards:changed', () => {
+            console.log('[Counts v28.17] cards:changed event received - triggering recount');
             this.directRecount();
-          }
-        });
-        // Listen for tab switches
-        document.addEventListener('tab:switched', () => {
-          console.log('[Counts v28.17] tab:switched event received - triggering recount');
-          this.directRecount();
-        });
-        // Listen for language changes
-        document.addEventListener('language:changed', () => {
-          console.log('[Counts v28.17] language:changed event received - triggering recount');
-          this.directRecount();
-        });
-      },
-      applyBadgeStyling(badge) {
-        // Use CSS classes instead of inline styles
-        badge.classList.add('tab-badge', 'tab-badge--visible');
-      },
-      updateAllCounts() {
-        // Update counts for all existing observers without re-scanning
-        this.observers.forEach((observer, observerId) => {
-          const [elementId, sectionId] = observerId.split('-');
-          const element = document.getElementById(elementId);
-          const section = document.getElementById(sectionId);
-          if (element && section) {
-            this.updateCount(element, section);
-          }
-        });
-      },
-      destroy() {
-        // Clean up all observers
-        this.observers.forEach((observer) => observer.disconnect());
-        this.observers.clear();
-        // Clear all timeouts
-        this.updateThrottle.forEach((timeoutId) => clearTimeout(timeoutId));
-        this.updateThrottle.clear();
-        console.log('🔢 Counter Bootstrap System destroyed');
-      },
-    };
-    // Initialize the counter bootstrap system
-    // CounterBootstrap is already defined as an object above, no need to instantiate
-    // Main FlickletApp object wrapper
-    window.FlickletApp = {
-      // All functions are already defined above
-      // This wrapper ensures proper namespace
-    };
+          });
+          // Listen for app:lists-rendered events
+          document.addEventListener('app:lists-rendered', () => {
+            console.log('[Counts v28.17] app:lists-rendered event received');
+            if (!this.initialized && this.armed) {
+              if (this.scanAndAttach()) {
+                this.initialized = true;
+                console.log('[Counts v28.17] Late bind successful - first real recount complete');
+              }
+            } else {
+              this.directRecount();
+            }
+          });
+          // Listen for tab switches
+          document.addEventListener('tab:switched', () => {
+            console.log('[Counts v28.17] tab:switched event received - triggering recount');
+            this.directRecount();
+          });
+          // Listen for language changes
+          document.addEventListener('language:changed', () => {
+            console.log('[Counts v28.17] language:changed event received - triggering recount');
+            this.directRecount();
+          });
+        },
+        applyBadgeStyling(badge) {
+          // Use CSS classes instead of inline styles
+          badge.classList.add('tab-badge', 'tab-badge--visible');
+        },
+        updateAllCounts() {
+          // Update counts for all existing observers without re-scanning
+          this.observers.forEach((observer, observerId) => {
+            const [elementId, sectionId] = observerId.split('-');
+            const element = document.getElementById(elementId);
+            const section = document.getElementById(sectionId);
+            if (element && section) {
+              this.updateCount(element, section);
+            }
+          });
+        },
+        destroy() {
+          // Clean up all observers
+          this.observers.forEach((observer) => observer.disconnect());
+          this.observers.clear();
+          // Clear all timeouts
+          this.updateThrottle.forEach((timeoutId) => clearTimeout(timeoutId));
+          this.updateThrottle.clear();
+          console.log('🔢 Counter Bootstrap System destroyed');
+        },
+      };
+      // Initialize the counter bootstrap system
+      // CounterBootstrap is already defined as an object above, no need to instantiate
+      // Main FlickletApp object wrapper
+      window.FlickletApp = {
+        // All functions are already defined above
+        // This wrapper ensures proper namespace
+      };
+        console.log('🔧 Item Management functions set up...');
+      } catch (error) {
+        console.error('❌ Error setting up remaining Item Management functions:', error);
+      }
+    console.log('🔧 functions.js IIFE completed - addToListFromCache should now be available');
   };
 })();

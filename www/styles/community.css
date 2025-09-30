@@ -1,0 +1,74 @@
+/* --- Community Layout (Scoped) --- */
+#group-2-community {
+  --comm-gap: 16px;
+  --comm-sticky-top: var(--header-offset, 64px);
+}
+
+/* Grid shell that contains feed + player */
+#group-2-community .community-content {
+  display: grid;
+  gap: var(--comm-gap);
+}
+
+/* Mobile: single column */
+@media (max-width: 959px) {
+  #group-2-community .community-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Desktop: feed + player aside */
+@media (min-width: 960px) {
+  #group-2-community .community-content {
+    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+    align-items: start;
+  }
+}
+
+/* Sticky player on desktop */
+@media (min-width: 960px) {
+  #group-2-community .community-left {
+    position: sticky;
+    top: var(--comm-sticky-top);
+  }
+}
+
+/* Tidy feed spacing without touching global cards */
+#group-2-community .community-feed .community-card {
+  margin-bottom: var(--comm-gap);
+}
+
+/* Internal player bits if they exist; safe no-ops otherwise */
+#group-2-community .community-player .player-viewport {
+  display: block;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+#group-2-community .community-player .player-caption {
+  margin-top: 8px;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+/* Nav controls (if injected) */
+#group-2-community .community-player .player-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+#group-2-community .community-player .player-controls button {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #ddd);
+  background: var(--card, #fff);
+  cursor: pointer;
+}
+
+#group-2-community .community-player .player-controls button:focus-visible {
+  outline: 2px solid var(--primary, #6b5bff);
+  outline-offset: 2px;
+}
+

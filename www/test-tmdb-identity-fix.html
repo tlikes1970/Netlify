@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMDB Identity Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 3px; }
+        .pass { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .fail { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        #console-output { background: #f8f9fa; padding: 10px; border: 1px solid #dee2e6; border-radius: 3px; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>TMDB Identity Fix Test</h1>
+    <p>This page tests the type-aware TMDB resolver and identity stability fixes.</p>
+    
+    <div class="test-section">
+        <h2>Test Controls</h2>
+        <button onclick="testResolver()">Test Type-Aware Resolver</button>
+        <button onclick="testIdentityStability()">Test Identity Stability</button>
+        <button onclick="testCacheCollision()">Test Cache Collision Prevention</button>
+        <button onclick="clearOutput()">Clear Output</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="console-output"></div>
+    </div>
+
+    <script>
+        // Capture console output
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        
+        const output = document.getElementById('console-output');
+        
+        function addOutput(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            output.appendChild(div);
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function log(message) {
+            originalLog(message);
+            addOutput(message, 'info');
+        }
+        
+        function warn(message) {
+            originalWarn(message);
+            addOutput(message, 'fail');
+        }
+        
+        function error(message) {
+            originalError(message);
+            addOutput(message, 'fail');
+        }
+        
+        // Override console methods
+        console.log = log;
+        console.warn = warn;
+        console.error = error;
+        
+        function clearOutput() {
+            output.innerHTML = '';
+        }
+        
+        // Test functions
+        async function testResolver() {
+            log('🧪 Testing type-aware TMDB resolver...');
+            
+            try {
+                // Test with a known TV show ID that might conflict with a movie
+                const testId = 651; // "60 Minutes" - known to be TV only
+                
+                log(`Testing ID ${testId} with type hint 'tv'...`);
+                const tvResult = await window.resolveTMDBItem(testId, 'tv');
+                if (tvResult && tvResult.media_type === 'tv') {
+                    log(`✅ TV resolution successful: ${tvResult.name || tvResult.title}`);
+                } else {
+                    warn(`❌ TV resolution failed or wrong type: ${tvResult?.media_type}`);
+                }
+                
+                log(`Testing ID ${testId} with type hint 'movie'...`);
+                const movieResult = await window.resolveTMDBItem(testId, 'movie');
+                if (movieResult && movieResult.media_type === 'tv') {
+                    log(`✅ Movie→TV fallback successful: ${movieResult.name || movieResult.title}`);
+                } else {
+                    warn(`❌ Movie→TV fallback failed: ${movieResult?.media_type}`);
+                }
+                
+                log(`Testing ID ${testId} without type hint...`);
+                const autoResult = await window.resolveTMDBItem(testId);
+                if (autoResult && autoResult.media_type) {
+                    log(`✅ Auto-resolution successful: ${autoResult.name || autoResult.title} (${autoResult.media_type})`);
+                } else {
+                    warn(`❌ Auto-resolution failed: ${autoResult?.media_type}`);
+                }
+                
+            } catch (err) {
+                error(`❌ Resolver test failed: ${err.message}`);
+            }
+        }
+        
+        async function testIdentityStability() {
+            log('🧪 Testing identity stability across moves...');
+            
+            try {
+                // This test would require actual app data, so we'll simulate
+                log('Note: This test requires the full app to be loaded with actual data');
+                log('In a real test, you would:');
+                log('1. Add a TV show to wishlist');
+                log('2. Move it to watching');
+                log('3. Verify the title remains the same');
+                log('4. Check that no 404 errors occur in console');
+                
+                // Check if resolver function exists
+                if (typeof window.resolveTMDBItem === 'function') {
+                    log('✅ resolveTMDBItem function is available');
+                } else {
+                    warn('❌ resolveTMDBItem function not found');
+                }
+                
+            } catch (err) {
+                error(`❌ Identity stability test failed: ${err.message}`);
+            }
+        }
+        
+        async function testCacheCollision() {
+            log('🧪 Testing cache collision prevention...');
+            
+            try {
+                // This test would require items with the same ID but different types
+                log('Note: This test requires items with conflicting IDs');
+                log('In a real test, you would:');
+                log('1. Add a movie with ID X');
+                log('2. Add a TV show with ID X');
+                log('3. Verify both can be retrieved independently');
+                log('4. Check that moving one doesn\'t affect the other');
+                
+                // Check if getItemData function exists and has been updated
+                if (window.WatchlistsAdapter && typeof window.WatchlistsAdapter.getItemData === 'function') {
+                    log('✅ WatchlistsAdapter.getItemData function is available');
+                } else {
+                    warn('❌ WatchlistsAdapter.getItemData function not found');
+                }
+                
+            } catch (err) {
+                error(`❌ Cache collision test failed: ${err.message}`);
+            }
+        }
+        
+        // Auto-run basic tests when page loads
+        window.addEventListener('load', () => {
+            log('🚀 TMDB Identity Fix Test Page Loaded');
+            log('Click the test buttons above to run specific tests');
+            log('Note: Some tests require the full Flicklet app to be loaded');
+        });
+    </script>
+</body>
+</html>

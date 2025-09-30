@@ -83,13 +83,15 @@ window.FlickletDebug = window.FlickletDebug || {
           : 'Click to sign in';
       }
 
-      // Update snark text
+      // Update snark text (username + snarky message)
       const snarkElement = document.getElementById('leftSnark');
       if (snarkElement && this.isAuthenticated) {
         const snarks = [
-          `Welcome back, ${this.alias}!`,
-          `Ready to discover, ${this.alias}?`,
-          `Let's find your next favorite show, ${this.alias}!`,
+          `${this.alias}, your couch has a permanent dent`,
+          `${this.alias}, ready to binge?`,
+          `${this.alias}, what's next on your list?`,
+          `${this.alias}, time to discover something new`,
+          `${this.alias}, your watchlist is calling`,
         ];
         snarkElement.textContent = snarks[Math.floor(Math.random() * snarks.length)];
       } else if (snarkElement) {
@@ -232,7 +234,7 @@ window.FlickletDebug = window.FlickletDebug || {
           'app:data:ready',
           () => {
             clearTimeout(timeout);
-            console.log('[FlickletApp] Data init completed');
+            // Data initialization completed
             resolve();
           },
           { once: true },
@@ -902,7 +904,7 @@ window.FlickletDebug = window.FlickletDebug || {
      * Called by AuthManager after successful authentication
      */
     async handlePostAuthSuccess(user) {
-      console.log('🔄 [FlickletApp] handlePostAuthSuccess:', user.email);
+      // Handling post-auth success for user
 
       // Phase D: Auto-close auth modal on successful sign-in
       if (
@@ -910,7 +912,7 @@ window.FlickletDebug = window.FlickletDebug || {
         window.AUTH_MANAGER._authModalManager &&
         window.AUTH_MANAGER._authModalManager.isModalOpen()
       ) {
-        console.log('✅ [FlickletApp] Auto-closing auth modal on sign-in');
+        // Auto-closing auth modal on sign-in
         window.AUTH_MANAGER._authModalManager.close();
       }
 
@@ -2693,30 +2695,23 @@ window.FlickletDebug = window.FlickletDebug || {
       }
 
       function moveFABsToDock() {
-        console.log('🔧 FAB Docking: Starting moveFABsToDock');
         const panel = getActivePanel();
-        console.log('🔧 FAB Docking: Active panel:', panel);
         if (!panel) return;
         const dock = ensureDock(panel);
-        console.log('🔧 FAB Docking: Dock created/found:', dock);
         if (!dock) return;
 
         // Move settings FAB (fab-left) to left side
         const settingsFab = document.querySelector('.fab-left');
-        console.log('🔧 FAB Docking: Settings FAB found:', settingsFab);
         if (settingsFab && !dock.contains(settingsFab)) {
           settingsFab.style.display = ''; // Show the FAB
           dock.appendChild(settingsFab);
-          console.log('🔧 FAB Docking: Settings FAB moved to dock');
         }
 
         // Move fab-stack (theme buttons) to right side
         const fabStack = document.querySelector('.fab-stack');
-        console.log('🔧 FAB Docking: Fab stack found:', fabStack);
         if (fabStack && !dock.contains(fabStack)) {
           fabStack.style.display = 'flex'; // Show the stack
           dock.appendChild(fabStack);
-          console.log('🔧 FAB Docking: Fab stack moved to dock');
         }
 
         // Move any individual FABs that aren't in a stack
@@ -2736,7 +2731,7 @@ window.FlickletDebug = window.FlickletDebug || {
           individualFabs.forEach((btn) => individualStack.appendChild(btn));
         }
 
-        console.log('🔧 FAB Docking: Dock contents after move:', dock.innerHTML);
+        // FAB docking completed
       }
 
       // Initial run - try multiple times to ensure it works

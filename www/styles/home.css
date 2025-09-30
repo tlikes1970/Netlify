@@ -126,12 +126,62 @@ html, body { overflow-x: hidden; } /* keeps layout mishaps invisible; real fixes
 
 /* Remove legacy extra space from rows */
 .home-content .preview-row,
-.home-content .home-preview-row { margin: 0; }
+.home-content .home-preview-row { 
+  margin: 0; 
+  /* Card styling handled by parent .home-group */
+}
 .home-content .preview-row-scroll,
 .home-content .row-inner { min-height: 0; align-items: stretch; }
 
+/* Ensure normal flow in the Your Shows group only */
+#group-1-your-shows {
+  display: block;
+}
+
+#group-1-your-shows > .home-preview-row {
+  order: 0;
+}
+
+/* Style the Up Next row to match Currently Watching */
+#group-1-your-shows #up-next-row.home-preview-row {
+  margin: 16px 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Currently Watching card actions grid */
+.cw-card .action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+.cw-card .action-grid .btn {
+  width: 100%;
+  min-height: 36px;
+  font-weight: 600;
+}
+
+/* Next Up compact meta */
+.nu-card .meta {
+  font-size: 0.9rem;
+  opacity: 0.85;
+  margin-top: 8px;
+}
+.nu-card .meta .line { 
+  margin-top: 2px; 
+}
+
+/* General card bits kept neutral; no TMDB link affordance */
+.card .poster-wrap { 
+  cursor: default; 
+}
+
 /* No surprise giant boxes */
-#next-up-row, .next-up-row { min-height: 0; height: auto; }
+#up-next-row, .up-next-row { min-height: 0; height: auto; }
 
 /* H1.1: Header spacing - override main.css fixed positioning */
 #appRoot > header.header, header.header, .header {

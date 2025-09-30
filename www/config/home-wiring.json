@@ -11,7 +11,7 @@
     {
       "key": "nextUp",
       "title": "📅 Next Up This Week",
-      "headingSelector": "#next-up-row .preview-row-title",
+      "headingSelector": "#up-next-row .preview-row-title",
       "containerSelector": ".next-up-scroll.row-inner",
       "picker": "nextUp",
       "limit": 30

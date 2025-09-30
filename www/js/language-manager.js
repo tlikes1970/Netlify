@@ -357,7 +357,7 @@ class LanguageManager {
           const item = appData.tv.watching[i];
           if (item.id) {
             try {
-              const tmdbData = await window.tmdbGet(`tv/${item.id}`, { language: tmdbLang });
+              const tmdbData = await window.resolveTMDBItem(item.id, 'tv');
               if (tmdbData && tmdbData.id) {
                 // Update only the translatable fields, preserve user data
                 appData.tv.watching[i] = {
@@ -382,7 +382,7 @@ class LanguageManager {
           const item = appData.movies.watching[i];
           if (item.id) {
             try {
-              const tmdbData = await window.tmdbGet(`movie/${item.id}`, { language: tmdbLang });
+              const tmdbData = await window.resolveTMDBItem(item.id, 'movie');
               if (tmdbData && tmdbData.id) {
                 // Update only the translatable fields, preserve user data
                 appData.movies.watching[i] = {

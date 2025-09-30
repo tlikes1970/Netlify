@@ -551,10 +551,13 @@
   }
 
   /* Preview row spacing */
-  .home-preview-row {
-    margin: 12px 0 ;
-    padding: 12px ;
-    border-radius: 8px ;
+  #group-1-your-shows .home-preview-row {
+    margin: 12px 0 !important;
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
   }
 
   /* Performance optimizations for mobile */

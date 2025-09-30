@@ -57,7 +57,7 @@
   /**
    * Initialize the Currently Watching Preview row
    */
-  function initCurrentlyWatchingPreview() {
+  async function initCurrentlyWatchingPreview() {
     console.log('🎬 initCurrentlyWatchingPreview called, isInitialized:', isInitialized);
     if (isInitialized) {
       console.log('⚠️ Currently Watching Preview already initialized');
@@ -76,11 +76,11 @@
     setupEventListeners();
 
     // Initial render
-    renderCurrentlyWatchingPreview();
+    await renderCurrentlyWatchingPreview();
 
     // Listen for data changes
-    document.addEventListener('appDataUpdated', renderCurrentlyWatchingPreview);
-    document.addEventListener('curated:rerender', renderCurrentlyWatchingPreview);
+    document.addEventListener('appDataUpdated', () => renderCurrentlyWatchingPreview());
+    document.addEventListener('curated:rerender', () => renderCurrentlyWatchingPreview());
 
     // Listen for UI updates (when updateUI is called)
     const originalUpdateUI = window.updateUI;
@@ -204,7 +204,7 @@
         window.appData &&
         ((window.appData.tv?.watching && window.appData.tv.watching.length > 0) ||
           (window.appData.movies?.watching && window.appData.movies.watching.length > 0));
-      const isSignedIn = window.FlickletApp?.currentUser || window.currentUser;
+      const isSignedIn = window.FlickletApp?.currentUser || window.currentUser || window.firebaseAuth?.currentUser;
       const shouldShowTestData = !hasFirebaseData && !isSignedIn && retryCount < MAX_RETRIES;
 
       if (shouldShowTestData) {
@@ -300,7 +300,7 @@
   /**
    * Render the Currently Watching Preview row
    */
-  function renderCurrentlyWatchingPreview() {
+  async function renderCurrentlyWatchingPreview() {
     console.log('🎬 renderCurrentlyWatchingPreview called');
 
     // Prevent duplicate renders
@@ -381,7 +381,18 @@
    * Get currently watching items from app data
    */
   function getCurrentlyWatchingItems() {
+    console.log('🎬 getCurrentlyWatchingItems called, appData:', window.appData);
+    console.log('🎬 appData structure:', {
+      hasAppData: !!window.appData,
+      hasTv: !!window.appData?.tv,
+      hasMovies: !!window.appData?.movies,
+      tvWatching: window.appData?.tv?.watching?.length || 0,
+      moviesWatching: window.appData?.movies?.watching?.length || 0,
+      tvWatchingData: window.appData?.tv?.watching,
+      moviesWatchingData: window.appData?.movies?.watching
+    });
     if (!window.appData) {
+      console.log('🎬 No appData available');
       return [];
     }
 
@@ -423,6 +434,50 @@
     // If no items found, try alternative data access patterns
     if (watchingItems.length === 0) {
       console.log('🔍 Trying alternative data access patterns...');
+      console.log('🔍 Checking if data might be in different structure...');
+      
+      // Check if data is in localStorage directly
+      try {
+        const localData = localStorage.getItem('flicklet-data');
+        if (localData) {
+          const parsed = JSON.parse(localData);
+          console.log('🔍 Found localStorage data:', {
+            hasTv: !!parsed.tv,
+            hasMovies: !!parsed.movies,
+            tvWatching: parsed.tv?.watching?.length || 0,
+            moviesWatching: parsed.movies?.watching?.length || 0
+          });
+          
+          // Try to use localStorage data directly
+          if (parsed.tv?.watching?.length > 0 || parsed.movies?.watching?.length > 0) {
+            console.log('🔍 Using localStorage data as fallback');
+            const localWatchingItems = [];
+            
+            if (parsed.tv?.watching) {
+              localWatchingItems.push(
+                ...parsed.tv.watching.map((item) => ({
+                  ...item,
+                  mediaType: 'tv',
+                }))
+              );
+            }
+            
+            if (parsed.movies?.watching) {
+              localWatchingItems.push(
+                ...parsed.movies.watching.map((item) => ({
+                  ...item,
+                  mediaType: 'movie',
+                }))
+              );
+            }
+            
+            console.log('🔍 LocalStorage fallback found', localWatchingItems.length, 'items');
+            return localWatchingItems;
+          }
+        }
+      } catch (e) {
+        console.log('🔍 Error reading localStorage:', e);
+      }
 
       // Try accessing through global functions
       if (typeof window.getWatchingItems === 'function') {
@@ -495,9 +550,9 @@
         console.log(
           `🔍 No items found, will retry in 2 seconds... (attempt ${retryCount}/${MAX_RETRIES})`,
         );
-        setTimeout(() => {
+        setTimeout(async () => {
           console.log('🔄 Retrying Currently Watching Preview after delay...');
-          renderCurrentlyWatchingPreview();
+          await renderCurrentlyWatchingPreview();
         }, 2000);
       } else {
         console.log('❌ Max retries reached, stopping retry loop');
@@ -508,141 +563,78 @@
   }
 
   /**
-   * Create a preview card element using MediaCard system
+   * Create a preview card element using new card renderer
    */
   async function createPreviewCard(item) {
     console.log('🎬 createPreviewCard called with item:', item);
 
-    // Use MediaCard system if available
-    if (typeof window.renderMediaCard === 'function') {
-      try {
-        // Transform item data for MediaCard
-        const mediaCardData = {
-          id: item.id || item.tmdb_id || item.tmdbId,
-          title: item.title || item.name || 'Unknown Title',
-          year: item.release_date
-            ? new Date(item.release_date).getFullYear()
-            : item.first_air_date
-              ? new Date(item.first_air_date).getFullYear()
-              : item.year || '',
-          type: item.media_type === 'tv' || item.first_air_date ? 'TV Show' : 'Movie',
-          posterUrl: getPosterUrl(item, 'w200'),
-          tmdbUrl: item.tmdbUrl || (item.id ? `https://www.themoviedb.org/${item.media_type || 'movie'}/${item.id}` : '#'),
-          genres: item.genres?.map(g => g.name) || [],
-          description: item.overview || '',
-          rating: item.vote_average || 0,
-          userRating: 0
-        };
+    try {
+      // Import the card renderer
+      const { renderCurrentlyWatchingCard } = await import('/js/renderers/card-templates.js');
+      
+      // Transform item data for the new card renderer
+      const cardData = {
+        id: item.id || item.tmdb_id || item.tmdbId,
+        title: item.title || item.name || 'Unknown Title',
+        name: item.name || item.title || 'Unknown Title',
+        posterUrl: getPosterUrl(item, 'w200'),
+        poster_path: item.poster_path,
+        media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie'),
+        release_date: item.release_date,
+        first_air_date: item.first_air_date,
+        year: item.year,
+        vote_average: item.vote_average || 0,
+        genres: item.genres?.map(g => g.name) || [],
+        overview: item.overview || ''
+      };
 
-        // Create MediaCard with 'watching' context for proper action buttons
-        const card = await window.renderMediaCard(mediaCardData, 'watching');
-        
-        // Add preview-specific styling
-        card.classList.add('preview-card');
-        
-        return card;
-      } catch (error) {
-        console.error('❌ MediaCard creation failed:', error);
-        throw error;
-      }
+      // Create card with new renderer
+      const card = renderCurrentlyWatchingCard(cardData);
+      
+      // Add preview-specific styling
+      card.classList.add('preview-card');
+      
+      return card;
+    } catch (error) {
+      console.error('❌ Card creation failed:', error);
+      throw error;
     }
-
-    // Fallback to old Card component if MediaCard not available
-    if (USE_CARD) {
-      const title = item.title || item.name || 'Unknown Title';
-      const posterUrl = getPosterUrl(item, 'w200');
-      const year = item.release_date
-        ? new Date(item.release_date).getFullYear()
-        : item.first_air_date
-          ? new Date(item.first_air_date).getFullYear()
-          : item.year || '';
-
-      const subtitle = year
-        ? `${year} • ${item.mediaType === 'tv' ? 'TV Series' : 'Movie'}`
-        : item.mediaType === 'tv'
-          ? 'TV Series'
-          : 'Movie';
-
-      return window.Card({
-        variant: 'poster',
-        id: item.id,
-        posterUrl: posterUrl,
-        title: title,
-        subtitle: subtitle,
-        rating: item.vote_average || 0,
-        badges: [{ label: 'Watching', kind: 'status' }],
-        primaryAction: {
-          label: window.i18n?.continue || 'Continue',
-          onClick: () => {
-            console.log('Continue watching:', title);
-          },
-        },
-        overflowActions: [
-          {
-            label: 'Move to Watched',
-            onClick: () => handlePreviewAction('move-watched', item),
-            icon: '✅',
-          },
-          {
-            label: 'Move to Wishlist',
-            onClick: () => handlePreviewAction('move-wishlist', item),
-            icon: '📖',
-          },
-          {
-            label: 'Remove',
-            onClick: () => handlePreviewAction('remove', item),
-            icon: '🗑️',
-          },
-        ],
-        onOpenDetails: () => {
-          console.log('🔗 Currently watching Card openDetails called:', item);
-          const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
-          const id = item.id || item.tmdb_id || item.tmdbId;
-
-          if (id && typeof window.openTMDBLink === 'function') {
-            console.log('🔗 Calling openTMDBLink from currently watching Card:', { id, mediaType });
-            window.openTMDBLink(id, mediaType);
-          } else {
-            console.warn('⚠️ openTMDBLink function not available or no ID found');
-          }
-        },
-      });
-    }
-
-    // If neither system is available, throw an error
-    console.error('❌ Neither MediaCard nor Card component available');
-    throw new Error('Card component is required but not loaded');
   }
 
   // Expose render function globally for settings
   window.renderCurrentlyWatchingPreview = renderCurrentlyWatchingPreview;
 
   // Initialize when DOM is ready
+  console.log('🎬 Currently Watching Preview script loaded, readyState:', document.readyState);
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initCurrentlyWatchingPreview);
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initCurrentlyWatchingPreview();
+    });
   } else {
     initCurrentlyWatchingPreview();
   }
 
   // Also initialize after a single delay to ensure other scripts are loaded
-  setTimeout(initCurrentlyWatchingPreview, 1000);
+  setTimeout(async () => {
+    await initCurrentlyWatchingPreview();
+  }, 1000);
 
   // Listen for Firebase data loaded events
-  document.addEventListener('firebaseDataLoaded', () => {
+  document.addEventListener('firebaseDataLoaded', async () => {
     console.log('🎬 Firebase data loaded event received');
     console.log('🎬 Checking appData after firebaseDataLoaded:', {
       tvWatching: window.appData?.tv?.watching?.length || 0,
       moviesWatching: window.appData?.movies?.watching?.length || 0,
     });
-    initCurrentlyWatchingPreview();
+    await initCurrentlyWatchingPreview();
   });
-  document.addEventListener('userDataLoaded', () => {
+  document.addEventListener('userDataLoaded', async () => {
     console.log('🎬 User data loaded event received');
     console.log('🎬 Checking appData after userDataLoaded:', {
       tvWatching: window.appData?.tv?.watching?.length || 0,
       moviesWatching: window.appData?.movies?.watching?.length || 0,
     });
-    initCurrentlyWatchingPreview();
+    await initCurrentlyWatchingPreview();
   });
 
   // Listen for sign-out events to clear preview immediately
@@ -663,7 +655,9 @@
   document.addEventListener('tabSwitched', (event) => {
     if (event.detail && event.detail.tab === 'watching') {
       console.log('🔄 Watching tab activated, retrying Currently Watching Preview...');
-      setTimeout(initCurrentlyWatchingPreview, 500);
+      setTimeout(async () => {
+        await initCurrentlyWatchingPreview();
+      }, 500);
     }
   });
 

@@ -1259,6 +1259,15 @@ getComputedStyle(document.getElementById('providerModal')).zIndex;
 - **Learning Capture**: Always update the Learning Log with new patterns, gotchas, and solutions
 - **Critical Areas**: Always update the Critical Areas Map with new high-risk areas discovered
 
+## UI Design Rules
+
+### Username + Snark Display ✅ IMPLEMENTED
+- **Location**: `#leftSnark` element (left side of header)
+- **Content**: Username with snarky message (e.g., "Travis, your couch has a permanent dent")
+- **Persistence**: Stays permanently visible when user is signed in
+- **No Flash Messages**: No temporary messages should appear before the real username+snark
+- **Account Button**: Username also appears in account button (right side) - this is correct
+
 ---
 
 _This document serves as the definitive guide for understanding and working with the Flicklet TV Tracker codebase. Keep it updated as the project evolves._

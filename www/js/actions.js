@@ -9,15 +9,15 @@ export function dispatchAction(name, item) {
     'move-to-wishlist': () => moveToWishlist(item),
     'move-to-watching': () => moveToWatching(item),
     'undo-to-wishlist': () => undoToWishlist(item),
-    'mark-watched':     () => markWatched(item),
-    'move-to-not':      () => markNotInterested(item),
-    'add-to-wishlist':  () => addToWishlist(item),
-    'details':          () => openDetails(item),
-    'delete-item':      () => deleteItemSafely(item),
-    'export':           () => exportItem?.(item),
-    'share':            () => shareItem?.(item),
-    'recommend':        () => recommendToFriend?.(item),
-    'episode-toggle':   () => openEpisodeModal(item),
+    'mark-watched': () => markWatched(item),
+    'move-to-not': () => markNotInterested(item),
+    'add-to-wishlist': () => addToWishlist(item),
+    details: () => openDetails(item),
+    'delete-item': () => deleteItemSafely(item),
+    export: () => exportItem?.(item),
+    share: () => shareItem?.(item),
+    recommend: () => recommendToFriend?.(item),
+    'episode-toggle': () => openEpisodeModal(item),
     // REAL Pro features from your app
     'smart-notifications': () => openSmartNotifications(item),
     'viewing-journey': () => openViewingJourney(item),
@@ -48,9 +48,12 @@ function moveToWishlist(item) {
 function moveToWatching(item) {
   console.log('[actions] Moving to watching:', item.title, 'ID:', item.id);
   console.log('[actions] Debug - window.moveItem available:', !!window.moveItem);
-  console.log('[actions] Debug - window.addToListFromCache available:', !!window.addToListFromCache);
+  console.log(
+    '[actions] Debug - window.addToListFromCache available:',
+    !!window.addToListFromCache,
+  );
   console.log('[actions] Debug - fallbackMoveItem available:', !!fallbackMoveItem);
-  
+
   if (window.moveItem) {
     console.log('[actions] Calling window.moveItem with:', item.id, 'watching');
     window.moveItem(item.id, 'watching');
@@ -60,10 +63,12 @@ function moveToWatching(item) {
   } else {
     console.warn('[actions] No move function available, using fallback');
     console.log('[actions] Calling fallbackMoveItem with:', item.id, 'watching');
-    
+
     // Only use fallback if we're sure the main system isn't available
     if (window.WatchlistsAdapter) {
-      console.warn('[actions] WatchlistsAdapter is available but moveItem is not - this might be a timing issue');
+      console.warn(
+        '[actions] WatchlistsAdapter is available but moveItem is not - this might be a timing issue',
+      );
       // Wait a bit and try again
       setTimeout(() => {
         if (window.moveItem) {
@@ -101,7 +106,38 @@ function markNotInterested(item) {
 function addToWishlist(item) {
   console.log('[actions] Adding to wishlist:', item.title);
   if (window.addToListFromCache) {
+    console.log('[actions] Calling addToListFromCache for:', item.id, 'wishlist');
     window.addToListFromCache(item.id, 'wishlist');
+    console.log('[actions] addToListFromCache completed');
+  } else {
+    console.error(
+      '[actions] addToListFromCache function not available, polling for availability...',
+    );
+    // Poll for function availability with exponential backoff
+    let attempts = 0;
+    const maxAttempts = 20; // 20 attempts max
+    const pollForFunction = () => {
+      attempts++;
+      if (window.addToListFromCache) {
+        console.log(
+          `[actions] Function available after ${attempts} attempts, calling addToListFromCache for:`,
+          item.id,
+          'wishlist',
+        );
+        window.addToListFromCache(item.id, 'wishlist');
+      } else if (attempts < maxAttempts) {
+        const delay = Math.min(100 * Math.pow(1.5, attempts), 1000); // Exponential backoff, max 1s
+        console.log(`[actions] Attempt ${attempts}/${maxAttempts}, retrying in ${delay}ms...`);
+        setTimeout(pollForFunction, delay);
+      } else {
+        console.error(
+          '[actions] addToListFromCache still not available after',
+          maxAttempts,
+          'attempts',
+        );
+      }
+    };
+    pollForFunction();
   }
 }
 
@@ -109,6 +145,29 @@ function markWatched(item) {
   console.log('[actions] Marking as watched:', item.title);
   if (window.moveItem) {
     window.moveItem(item.id, 'watched');
+  } else {
+    console.error('[actions] moveItem function not available, polling for availability...');
+    // Poll for function availability with exponential backoff
+    let attempts = 0;
+    const maxAttempts = 20; // 20 attempts max
+    const pollForFunction = () => {
+      attempts++;
+      if (window.moveItem) {
+        console.log(
+          `[actions] Function available after ${attempts} attempts, calling moveItem for:`,
+          item.id,
+          'watched',
+        );
+        window.moveItem(item.id, 'watched');
+      } else if (attempts < maxAttempts) {
+        const delay = Math.min(100 * Math.pow(1.5, attempts), 1000); // Exponential backoff, max 1s
+        console.log(`[actions] Attempt ${attempts}/${maxAttempts}, retrying in ${delay}ms...`);
+        setTimeout(pollForFunction, delay);
+      } else {
+        console.error('[actions] moveItem still not available after', maxAttempts, 'attempts');
+      }
+    };
+    pollForFunction();
   }
 }
 
@@ -153,7 +212,9 @@ function openSmartNotifications(item) {
     window.SettingsManager.openSettings('pro');
   }
   // Show notification setup for this specific item
-  alert(`🔔 Smart Notifications for "${item.title}"\n\nSet custom lead times for new episodes and choose which lists to monitor.`);
+  alert(
+    `🔔 Smart Notifications for "${item.title}"\n\nSet custom lead times for new episodes and choose which lists to monitor.`,
+  );
 }
 
 function openViewingJourney(item) {
@@ -163,7 +224,9 @@ function openViewingJourney(item) {
     window.SettingsManager.openSettings('pro');
   }
   // Show analytics for this specific item
-  alert(`📊 Viewing Journey for "${item.title}"\n\nDiscover your watching habits with beautiful charts showing your favorite genres, binge patterns, and viewing trends.`);
+  alert(
+    `📊 Viewing Journey for "${item.title}"\n\nDiscover your watching habits with beautiful charts showing your favorite genres, binge patterns, and viewing trends.`,
+  );
 }
 
 function openAdvancedCustomization(item) {
@@ -173,7 +236,9 @@ function openAdvancedCustomization(item) {
     window.SettingsManager.openSettings('pro');
   }
   // Show customization options
-  alert(`🎨 Advanced Customization for "${item.title}"\n\nUnlock premium color schemes, custom accent colors, and advanced layout options.`);
+  alert(
+    `🎨 Advanced Customization for "${item.title}"\n\nUnlock premium color schemes, custom accent colors, and advanced layout options.`,
+  );
 }
 
 function openExtraTrivia(item) {
@@ -183,7 +248,9 @@ function openExtraTrivia(item) {
     window.SettingsManager.openSettings('pro');
   }
   // Show extra trivia content
-  alert(`🧠 Extra Trivia for "${item.title}"\n\nAccess additional trivia questions and behind-the-scenes content.`);
+  alert(
+    `🧠 Extra Trivia for "${item.title}"\n\nAccess additional trivia questions and behind-the-scenes content.`,
+  );
 }
 
 function openProPreview(item) {
@@ -193,7 +260,9 @@ function openProPreview(item) {
     window.toggleProPreview();
   }
   // Show Pro preview
-  alert(`⭐ Pro Preview for "${item.title}"\n\nToggle Pro features on/off to see what's available without purchasing.`);
+  alert(
+    `⭐ Pro Preview for "${item.title}"\n\nToggle Pro features on/off to see what's available without purchasing.`,
+  );
 }
 
 // Guarded delete with minimal UX
@@ -205,7 +274,7 @@ function deleteItemSafely(item) {
       message: `Remove "${item?.title || 'this title'}" from your lists?`,
       confirmText: 'Delete',
       danger: true,
-      onConfirm: () => actuallyDelete(item)
+      onConfirm: () => actuallyDelete(item),
     });
   }
   if (confirm(`Delete "${item?.title || 'this title'}"? This cannot be undone.`)) {
@@ -214,25 +283,128 @@ function deleteItemSafely(item) {
 }
 
 function actuallyDelete(item) {
-  // Implement this with your existing data layer (all lists)
-  // e.g., removeFromAllLists(item.id)
-  if (typeof removeFromAllLists === 'function') return removeFromAllLists(item.id);
-  // Fallback: try individual removals if you exposed them
-  if (typeof removeItem === 'function') return removeItem(item.id);
+  console.log(
+    '[delete] Debug - removeItemFromCurrentList available:',
+    typeof window.removeItemFromCurrentList,
+  );
+  console.log(
+    '[delete] Debug - window.removeItemFromCurrentList:',
+    window.removeItemFromCurrentList,
+  );
+
+  // Use the existing removeItemFromCurrentList function
+  if (typeof window.removeItemFromCurrentList === 'function') {
+    console.log('[delete] Removing item:', item.title, 'ID:', item.id);
+    window.removeItemFromCurrentList(item.id);
+
+    // Save data after deletion
+    if (typeof window.saveAppData === 'function') {
+      window.saveAppData();
+    }
+
+    // Sync to Firebase
+    if (typeof window.saveData === 'function') {
+      console.log('🔄 [delete] Syncing deletion to Firebase...');
+      window.saveData();
+    }
+
+    // Clear WatchlistsAdapter cache
+    if (window.WatchlistsAdapter && typeof window.WatchlistsAdapter.invalidate === 'function') {
+      console.log('🔄 [delete] Invalidating WatchlistsAdapter cache...');
+      window.WatchlistsAdapter.invalidate();
+    }
+
+    // Emit cards:changed event
+    document.dispatchEvent(
+      new CustomEvent('cards:changed', {
+        detail: {
+          source: 'deleteItem',
+          action: 'delete',
+          itemId: item.id,
+          itemTitle: item.title,
+        },
+      }),
+    );
+
+    return true;
+  }
+
+  // Fallback: try to wait for the function to be available
+  console.log('[delete] removeItemFromCurrentList not available, trying fallback...');
+
+  // Try direct removal from appData as fallback
+  if (window.appData) {
+    console.log('[delete] Using fallback removal from appData');
+
+    // Remove from all lists
+    const lists = ['watching', 'wishlist', 'watched'];
+    const mediaTypes = ['tv', 'movies'];
+
+    let removed = false;
+    for (const mediaType of mediaTypes) {
+      for (const list of lists) {
+        if (window.appData[mediaType] && window.appData[mediaType][list]) {
+          const index = window.appData[mediaType][list].findIndex(
+            (listItem) => listItem.id == item.id,
+          );
+          if (index !== -1) {
+            window.appData[mediaType][list].splice(index, 1);
+            removed = true;
+            console.log(`[delete] Removed from ${mediaType}.${list}`);
+          }
+        }
+      }
+    }
+
+    if (removed) {
+      // Save data after deletion
+      if (typeof window.saveAppData === 'function') {
+        window.saveAppData();
+      }
+
+      // Sync to Firebase
+      if (typeof window.saveData === 'function') {
+        console.log('🔄 [delete] Syncing deletion to Firebase...');
+        window.saveData();
+      }
+
+      // Clear WatchlistsAdapter cache
+      if (window.WatchlistsAdapter && typeof window.WatchlistsAdapter.invalidate === 'function') {
+        console.log('🔄 [delete] Invalidating WatchlistsAdapter cache...');
+        window.WatchlistsAdapter.invalidate();
+      }
+
+      // Emit cards:changed event
+      document.dispatchEvent(
+        new CustomEvent('cards:changed', {
+          detail: {
+            source: 'deleteItem',
+            action: 'delete',
+            itemId: item.id,
+            itemTitle: item.title,
+          },
+        }),
+      );
+
+      return true;
+    }
+  }
+
   console.warn('[delete] No remover wired for', item);
+  return false;
 }
 
 // Fallback move function when WatchlistsAdapter isn't loaded yet
 function fallbackMoveItem(itemId, destinationList) {
   console.log('[actions] Fallback move function called:', itemId, 'to', destinationList);
   console.log('[actions] Current appData structure:', window.appData);
-  
+
   // Don't proceed if appData is corrupted or missing
   if (!window.appData) {
     console.error('[actions] No appData available for fallback move');
     return;
   }
-  
+
   // Ensure appData has the expected structure
   if (!window.appData.tv) {
     window.appData.tv = {};
@@ -240,18 +412,18 @@ function fallbackMoveItem(itemId, destinationList) {
   if (!window.appData.movies) {
     window.appData.movies = {};
   }
-  
+
   // Find the item in the current data structure
   let foundItem = null;
   let sourceList = null;
   let mediaType = null;
-  
+
   // Search through all lists to find the item
   const lists = ['watching', 'wishlist', 'watched'];
   for (const list of lists) {
     // Check TV shows
     if (window.appData.tv && window.appData.tv[list] && Array.isArray(window.appData.tv[list])) {
-      const item = window.appData.tv[list].find(i => i.id == itemId);
+      const item = window.appData.tv[list].find((i) => i.id == itemId);
       if (item) {
         foundItem = item;
         sourceList = list;
@@ -260,8 +432,12 @@ function fallbackMoveItem(itemId, destinationList) {
       }
     }
     // Check movies
-    if (window.appData.movies && window.appData.movies[list] && Array.isArray(window.appData.movies[list])) {
-      const item = window.appData.movies[list].find(i => i.id == itemId);
+    if (
+      window.appData.movies &&
+      window.appData.movies[list] &&
+      Array.isArray(window.appData.movies[list])
+    ) {
+      const item = window.appData.movies[list].find((i) => i.id == itemId);
       if (item) {
         foundItem = item;
         sourceList = list;
@@ -270,34 +446,34 @@ function fallbackMoveItem(itemId, destinationList) {
       }
     }
   }
-  
+
   if (!foundItem) {
     console.error('[actions] Item not found for fallback move:', itemId);
     console.log('[actions] Available items in appData:', {
       tv: window.appData.tv,
-      movies: window.appData.movies
+      movies: window.appData.movies,
     });
     return;
   }
-  
+
   if (sourceList === destinationList) {
     console.log('[actions] Item already in target list:', destinationList);
     return;
   }
-  
+
   // Remove from source list
   const sourceArray = window.appData[mediaType][sourceList];
   if (!Array.isArray(sourceArray)) {
     console.error('[actions] Source array is not valid:', sourceArray);
     return;
   }
-  
-  const sourceIndex = sourceArray.findIndex(i => i.id == itemId);
+
+  const sourceIndex = sourceArray.findIndex((i) => i.id == itemId);
   if (sourceIndex !== -1) {
     sourceArray.splice(sourceIndex, 1);
     console.log('[actions] Removed item from source list:', sourceList);
   }
-  
+
   // Add to destination list
   if (!window.appData[mediaType][destinationList]) {
     window.appData[mediaType][destinationList] = [];
@@ -305,30 +481,44 @@ function fallbackMoveItem(itemId, destinationList) {
   if (!Array.isArray(window.appData[mediaType][destinationList])) {
     window.appData[mediaType][destinationList] = [];
   }
-  
+
   window.appData[mediaType][destinationList].push(foundItem);
   console.log('[actions] Added item to destination list:', destinationList);
-  
-  // Save data
+
+  // Save data to localStorage and Firebase
   if (typeof window.saveAppData === 'function') {
     window.saveAppData();
   }
-  
+
+  // Sync to Firebase
+  if (typeof window.saveData === 'function') {
+    console.log('🔄 [actions] Syncing fallback move to Firebase...');
+    window.saveData();
+  }
+
+  // Clear WatchlistsAdapter cache to force reload
+  if (window.WatchlistsAdapter && typeof window.WatchlistsAdapter.invalidate === 'function') {
+    console.log('🔄 [actions] Invalidating WatchlistsAdapter cache...');
+    window.WatchlistsAdapter.invalidate();
+  }
+
   // Emit cards:changed event
-  document.dispatchEvent(new CustomEvent('cards:changed', {
-    detail: {
-      source: 'fallbackMoveItem',
-      action: 'move',
-      itemId: itemId,
-      fromList: sourceList,
-      toList: destinationList
-    }
-  }));
-  
+  document.dispatchEvent(
+    new CustomEvent('cards:changed', {
+      detail: {
+        source: 'fallbackMoveItem',
+        action: 'move',
+        itemId: itemId,
+        fromList: sourceList,
+        toList: destinationList,
+      },
+    }),
+  );
+
   // Update UI
   if (window.FlickletApp && typeof window.FlickletApp.updateUI === 'function') {
     window.FlickletApp.updateUI();
   }
-  
+
   console.log('[actions] Fallback move completed:', itemId, sourceList, '→', destinationList);
 }

@@ -114,7 +114,7 @@
       const homeSections = [
         'curatedSections',
         'currentlyWatchingPreview',
-        'next-up-row',
+        'up-next-row',
         'spotlight-row',
         'quote-flickword-container',
         'feedbackSection',

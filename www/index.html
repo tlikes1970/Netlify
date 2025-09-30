@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet v28.93 - TV & Movie Tracker</title>
+    <title>Flicklet v29.14 - TV & Movie Tracker</title>
     <meta name="description" content="Search, track, and rate shows & films fast." />
     <meta name="build" content="latest" />
 
@@ -154,6 +154,7 @@
       onload="this.onload=null;this.rel='stylesheet'"
     />
     <link rel="stylesheet" href="/css/community-player.css" />
+    <link rel="stylesheet" href="/styles/community.css" />
     <link rel="stylesheet" href="/css/theme.css" />
 
     <!-- Module preload hints for lazy-loaded game modals -->
@@ -181,10 +182,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <!-- Firebase config FIRST (plain script is fine) -->
-    <script type="module" src="/firebase-config.js?v=v27.77"></script>
+    <script type="module" src="/firebase-config.js?v=v28.95"></script>
 
     <!-- Firebase modular init SECOND as an ES module -->
-    <script type="module" src="/js/firebase-init.js?v=v27.77"></script>
+    <script type="module" src="/js/firebase-init.js?v=v28.95"></script>
 
     <!-- TMDB API client -->
     <script type="module" src="/tmdb-config.js"></script>
@@ -328,7 +329,14 @@
 
     <!-- Home page features -->
     <script type="module" src="/scripts/currently-watching-preview.js"></script>
+    <script type="module" src="/scripts/next-up-this-week.js"></script>
     <script type="module" src="/scripts/theaters-near-me.js"></script>
+    
+    <!-- Test script for adding currently airing shows -->
+    <script type="module" src="/test-add-airing-shows.js"></script>
+    
+    <!-- Mock Currently Watching Data Generator -->
+    <script type="module" src="/test-mock-currently-watching.js"></script>
 
     <!-- New unified card components (for dedicated game pages) -->
     <script type="module" src="/scripts/components/BasePosterCard.js"></script>
@@ -926,13 +934,13 @@
       <header class="header" role="banner" data-lang-layout="inline">
         <div class="header-bar">
           <div class="header-left">
-            <div id="leftSnark" class="left-snark" aria-live="polite">Welcome back!</div>
+            <div id="leftSnark" class="left-snark" aria-live="polite"></div>
             <div id="headerGreeting" class="header-greeting" aria-live="polite">Ready to discover your next favorite show?</div>
           </div>
           <div class="header-center">
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
-            <span class="version-display">v28.102</span>
+            <span class="version-display">v29.15</span>
           </div>
           <div class="header-right">
             <div id="accountContext" class="account-context" aria-live="polite"></div>
@@ -1089,6 +1097,7 @@
 
           <!-- Group 1 - Your Shows -->
           <div id="group-1-your-shows" class="home-group">
+            <!-- Group title at top left -->
             <div class="group-header">
               <h2 class="group-title" data-i18n="your_shows">Your Shows</h2>
             </div>
@@ -1101,7 +1110,7 @@
             >
               <div class="preview-row-header">
                 <h3 class="preview-row-title" data-i18n="currently_watching_section">
-                  Eye Currently Watching
+                  Currently Watching
                 </h3>
               </div>
               <div class="preview-row-container cw-row">
@@ -1117,28 +1126,28 @@
             <!-- Group divider -->
             <div class="group-divider"></div>
 
-            <!-- Next Up This Week -->
+            <!-- Up Next -->
             <section
-              id="next-up-row"
+              id="up-next-row"
               class="home-preview-row"
               data-feature="homeRowNextUp"
-              style="display: none"
+              style="display: block"
             >
               <div class="preview-row-header">
-                <h3 class="preview-row-title" data-i18n="next_up_this_week">
-                  Calendar Next Up This Week
+                <h3 class="preview-row-title" data-i18n="up_next">
+                  Up Next
                 </h3>
               </div>
               <div class="preview-row-container">
-                <div class="next-up-scroll row-inner preview-row-scroll">
+                <div class="up-next-scroll row-inner preview-row-scroll">
                   <!-- tiles injected here -->
                   <div
                     class="placeholder-message"
-                    id="nextup-placeholder"
+                    id="upnext-placeholder"
                     style="display: none"
                     data-i18n="no_upcoming_episodes"
                   >
-                    No upcoming episodes this week.
+                    No upcoming episodes.
                   </div>
                 </div>
               </div>
@@ -2460,7 +2469,6 @@
           <iframe
             id="flickword-game-frame"
             src="/features/flickword-v2.html"
-            sandbox="allow-scripts allow-same-origin"
           ></iframe>
         </main>
       </div>

@@ -450,6 +450,13 @@ Before making any code changes, the assistant must:
    - Verify changes are visible and functional
    - If no visual change, STOP and debug rendering
 
+5. **CSS Debugging Workflow (CRITICAL)**
+   - Test CSS Loading: Add obvious visual change (e.g., `background: red !important`) to verify file is being served
+   - Specificity Issues: Use more specific selectors (e.g., `#group-1-your-shows .home-preview-row`) when rules are overridden
+   - Cache Testing: User uses "Empty Cache and Hard Reload" to test changes
+   - No Build Process: CSS changes take effect immediately with Netlify Dev - no compilation needed
+   - File Location: All CSS changes go directly in `www/styles/` directory
+
 ### Code Quality Tools
 - **ESLint**: JavaScript linting
 - **JSCPD**: Duplicate code detection
@@ -512,6 +519,13 @@ Before making any code changes, the assistant must:
 - **Port 8888 conflict**: User always has localhost on port 8888, starting another server will cause conflicts
 - **Apple Login limitation**: Apple Sign-In does NOT work on localhost - this is expected behavior, not a bug
 - **Server availability**: If localhost doesn't show up, user will start it - do not attempt to start servers
+
+### Development Environment (CRITICAL)
+- **Netlify Dev**: User runs "Netlify Dev" on localhost:8888 for development
+- **Static File Serving**: No build process needed - CSS/JS changes take effect immediately
+- **Cache Management**: User uses "Empty Cache and Hard Reload" (right-click refresh button → Empty Cache and Hard Reload)
+- **DevTools**: User typically has "Disable cache" checked in Network tab, but uses hard reload for testing
+- **File Changes**: All changes to `www/` directory are served directly without compilation
 
 ### Legacy System Cleanup Rules (CRITICAL)
 - **Investigate thoroughly**: When encountering legacy systems, search the ENTIRE codebase for usage

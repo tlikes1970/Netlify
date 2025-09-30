@@ -1,7 +1,13 @@
 (function () {
   const NS = '[data-init]';
   const log = (...a) => console.log(NS, ...a);
-  const warn = (...a) => console.warn(NS, ...a);
+  const warn = (...a) => {
+    try {
+      console.warn(NS, ...a);
+    } catch (e) {
+      console.error('[data-init] warn function error:', e);
+    }
+  };
   const err = (...a) => console.error(NS, ...a);
 
   // Public flags
@@ -344,7 +350,7 @@
         }
       }
 
-      // Only overwrite local data if Firebase data is newer
+      // Only overwrite local data if Firebase data is newer AND has actual content
       if (shouldOverwriteLocal) {
         if (settingsSnap.exists()) {
           local.settings = { ...(local.settings || {}), ...(settingsSnap.data() || {}) };
@@ -362,18 +368,31 @@
 
           const watchlists = remote.watchlists || {};
 
-          // Transform Firestore structure to app structure
-          local.tv = {
-            watching: watchlists.tv?.watching || [],
-            wishlist: watchlists.tv?.wishlist || [],
-            watched: watchlists.tv?.watched || [],
-          };
+          // Check if Firebase data has actual content before overwriting
+          const firebaseHasContent = 
+            (watchlists.tv?.watching?.length > 0) ||
+            (watchlists.tv?.wishlist?.length > 0) ||
+            (watchlists.tv?.watched?.length > 0) ||
+            (watchlists.movies?.watching?.length > 0) ||
+            (watchlists.movies?.wishlist?.length > 0) ||
+            (watchlists.movies?.watched?.length > 0);
 
-          local.movies = {
-            watching: watchlists.movies?.watching || [],
-            wishlist: watchlists.movies?.wishlist || [],
-            watched: watchlists.movies?.watched || [],
-          };
+          if (firebaseHasContent) {
+            // Transform Firestore structure to app structure
+            local.tv = {
+              watching: watchlists.tv?.watching || [],
+              wishlist: watchlists.tv?.wishlist || [],
+              watched: watchlists.tv?.watched || [],
+            };
+
+            local.movies = {
+              watching: watchlists.movies?.watching || [],
+              wishlist: watchlists.movies?.wishlist || [],
+              watched: watchlists.movies?.watched || [],
+            };
+          } else {
+            log('Firebase data is empty, preserving local data to prevent data loss');
+          }
 
           log('Data transformation complete:', {
             tvWatching: local.tv.watching.length,
@@ -404,7 +423,7 @@
         ),
       });
     } catch (e) {
-      warn('sync error:', e?.message || e);
+      warn('sync error:', e?.message || e || 'Unknown error');
       // light backoff if network-related; do not spin forever
       const msg = (e && (e.code || e.message || '')) + '';
       if (/network|unavailable|deadline/i.test(msg)) {

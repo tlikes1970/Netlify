@@ -11,38 +11,59 @@
   btn.className = 'scroll-top-btn';
   btn.type = 'button';
   btn.setAttribute('aria-label', 'Scroll to top');
-  btn.textContent = '▲';
+  btn.textContent = '↑';
   (document.getElementById('appRoot') || document.body).appendChild(btn);
+  console.log('Scroll-top button created and attached:', btn);
 
   // Find the tablist sentinel
   const tablist = document.querySelector('#navigation[role="tablist"], .tab-container[role="tablist"], [role="tablist"]');
 
-  // Fallback: if no tablist found, reveal after modest scroll distance
-  const fallbackReveal = () => {
-    if (!tablist) btn.classList.toggle('is-visible', window.scrollY > 400);
+  // Show button when scrolling down
+  const showOnScroll = () => {
+    const scrollThreshold = 50; // Show after scrolling 50px
+    
+    // Check multiple scroll sources
+    const windowScrollY = window.scrollY || window.pageYOffset || 0;
+    const documentScrollY = document.documentElement.scrollTop || document.body.scrollTop || 0;
+    const maxScrollY = Math.max(windowScrollY, documentScrollY);
+    
+    const shouldShow = maxScrollY > scrollThreshold;
+    console.log('Scroll event triggered!', { 
+      windowScrollY, 
+      documentScrollY, 
+      maxScrollY, 
+      scrollThreshold, 
+      shouldShow 
+    });
+    btn.classList.toggle('is-visible', shouldShow);
+    console.log('Button classes after toggle:', btn.className);
+    console.log('Button has is-visible class:', btn.classList.contains('is-visible'));
   };
 
-  // Observer shows btn only when tabs are OUT of view
-  if (tablist) {
-    const io = new IntersectionObserver(entries => {
-      const e = entries[0];
-      if (!e) return;
-      if (e.isIntersecting) btn.classList.remove('is-visible');
-      else btn.classList.add('is-visible');
-    }, { root: null, threshold: 0 });
-    io.observe(tablist);
-  } else {
-    document.addEventListener('scroll', fallbackReveal, { passive: true });
-    fallbackReveal();
-  }
+  // Always use scroll detection for simplicity
+  window.addEventListener('scroll', showOnScroll, { passive: true });
+  document.addEventListener('scroll', showOnScroll, { passive: true });
+  document.documentElement.addEventListener('scroll', showOnScroll, { passive: true });
+  document.body.addEventListener('scroll', showOnScroll, { passive: true });
+  console.log('Scroll event listeners attached to window, document, documentElement, and body');
+  
+  // Test if scroll events work at all
+  let testScrollCount = 0;
+  const testScroll = () => {
+    testScrollCount++;
+    console.log(`Test scroll event #${testScrollCount} - scrollY: ${window.scrollY}`);
+  };
+  window.addEventListener('scroll', testScroll, { passive: true });
+  
+  // Initial check
+  showOnScroll();
 
-  // Hide near top regardless of IO state
-  const onScroll = () => { if (window.scrollY < 80) btn.classList.remove('is-visible'); };
-  document.addEventListener('scroll', onScroll, { passive: true });
-
-  // Action: smooth scroll respecting reduced motion
+  // Action: immediately scroll to top
   btn.addEventListener('click', () => {
-    const opts = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? {} : { behavior: 'smooth' };
-    window.scrollTo({ top: 0, ...opts });
+    console.log('Arrow clicked, scrolling to top');
+    // Scroll both window and document to ensure it works
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   });
 })();

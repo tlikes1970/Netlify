@@ -52,9 +52,7 @@
 /* Quote Bar - Moved to card-system.css for standardization */
 
 /* Home Groups - Immovable Layout Contract */
-.home-group {
-  margin-bottom: 32px;
-}
+/* Card styling moved to line 2896 - see "Home Group Styling" section */
 
 .home-group:last-child {
   margin-bottom: 0;
@@ -1240,13 +1238,24 @@ body.mardi {
   border: 1px solid var(--border);
 }
 
-/* Currently Watching Preview Row Styles */
-.home-preview-row {
-  margin: 16px 0;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 8px;
-  padding: 12px 16px;
-  border: 1px solid var(--border);
+/* Currently Watching Preview Row Styles - Force layout fix */
+#group-1-your-shows .home-preview-row {
+  margin: 16px 0 !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ULTRA SPECIFIC - Force the layout fix */
+#group-1-your-shows #currentlyWatchingPreview.home-preview-row {
+  margin: 16px 0 !important;
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
 }
 
 .preview-row-header {
@@ -1423,9 +1432,12 @@ body.mardi {
 }
 
 /* Dark mode adjustments for preview row */
-.dark-mode .home-preview-row {
-  background: var(--card);
-  border-color: var(--border);
+#group-1-your-shows .dark-mode .home-preview-row {
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
 }
 
 .dark-mode .preview-card {
@@ -2540,7 +2552,7 @@ body.mardi {
 }
 
 /* === Next Up This Week (scoped) === */
-#next-up-row {
+#up-next-row {
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
@@ -2548,20 +2560,20 @@ body.mardi {
   padding-inline: 12px;
 }
 
-#next-up-row::-webkit-scrollbar {
+#up-next-row::-webkit-scrollbar {
   height: 8px;
 }
 
-#next-up-row::-webkit-scrollbar-track {
+#up-next-row::-webkit-scrollbar-track {
   background: transparent;
 }
 
-#next-up-row::-webkit-scrollbar-thumb {
+#up-next-row::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
 }
 
-#next-up-row .row-inner {
+#up-next-row .row-inner {
   display: flex;
   flex-direction: row;
   align-items: stretch;
@@ -2569,7 +2581,7 @@ body.mardi {
 }
 
 /* Match Currently Watching sizing (standard home page card size) */
-#next-up-row .row-inner > * {
+#up-next-row .row-inner > * {
   flex: 0 0 auto;
   width: var(--home-card-width-desktop); /* Standard home page card width */
   max-width: var(--home-card-width-desktop);
@@ -2581,14 +2593,14 @@ body.mardi {
 }
 
 /* Poster frame - match Currently Watching proportions */
-#next-up-row .row-inner .media {
+#up-next-row .row-inner .media {
   width: var(--home-card-width-desktop); /* Standard home page card width */
   height: var(--home-card-height-desktop); /* Standard home page card height */
   border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
 }
-#next-up-row .row-inner .media img {
+#up-next-row .row-inner .media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -2596,7 +2608,7 @@ body.mardi {
 }
 
 /* Text content - match Currently Watching sizing */
-#next-up-row .row-inner .meta {
+#up-next-row .row-inner .meta {
   padding: 6px 6px 8px;
   font-size: 0.7rem; /* Match Currently Watching font size */
   font-weight: 600; /* Match Currently Watching font weight */
@@ -2609,13 +2621,13 @@ body.mardi {
 }
 
 @media (max-width: var(--bp-mobile-lg)) {
-  #next-up-row .row-inner > * {
+  #up-next-row .row-inner > * {
     width: var(--home-card-width-mobile); /* Standard home page card width mobile */
     max-width: var(--home-card-width-mobile);
     min-width: var(--home-card-width-mobile);
   }
 
-  #next-up-row .row-inner .media {
+  #up-next-row .row-inner .media {
     width: var(--home-card-width-mobile); /* Standard home page card width mobile */
     height: var(--home-card-height-mobile); /* Standard home page card height mobile */
   }
@@ -2893,7 +2905,7 @@ body.mardi {
 /* Home section visibility is now handled by tab switching system */
 
 /* Ensure Next Up section is visible */
-#next-up-row {
+#up-next-row {
   display: block ;
 }
 
@@ -2905,6 +2917,15 @@ body.mardi {
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* LAYOUT FIX: Remove card styling from Your Shows group */
+#group-1-your-shows.home-group {
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
 }
 
 /* COMMUNITY LAYOUT v14 — simplified three-section layout */
@@ -3738,7 +3759,7 @@ body.mardi {
 
   .home-preview-row {
     margin: 12px 0;
-    padding: 10px 12px;
+    /* Padding removed - handled by parent .home-group */
   }
 
   /* Snap scroll for carousels on mobile */
@@ -3754,7 +3775,7 @@ body.mardi {
 }
 
 /* Next Up section specific styling */
-#next-up-row .preview-row-scroll {
+#up-next-row .preview-row-scroll {
   display: flex;
   gap: 16px;
   overflow-x: auto;
@@ -3762,7 +3783,7 @@ body.mardi {
   scroll-behavior: smooth;
 }
 
-#next-up-row .preview-card {
+#up-next-row .preview-card {
   flex: 0 0 auto;
   width: var(--home-card-width-desktop);
   max-width: var(--home-card-width-desktop);
@@ -3774,7 +3795,7 @@ body.mardi {
   border: 1px solid var(--border);
 }
 
-#next-up-row .preview-card-poster {
+#up-next-row .preview-card-poster {
   width: var(--card-w) ;
   height: var(--home-card-height-desktop) ;
   border-radius: 6px;
@@ -3782,7 +3803,7 @@ body.mardi {
   position: relative;
 }
 
-#next-up-row .preview-card-content {
+#up-next-row .preview-card-content {
   padding: 8px;
   flex: 1;
   display: flex;
@@ -3791,7 +3812,7 @@ body.mardi {
   text-align: center;
 }
 
-#next-up-row .preview-card-title {
+#up-next-row .preview-card-title {
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text);
@@ -3801,13 +3822,13 @@ body.mardi {
   text-overflow: ellipsis;
 }
 
-#next-up-row .preview-card-year {
+#up-next-row .preview-card-year {
   font-size: 0.7rem;
   color: var(--text-secondary);
   margin: 0;
 }
 
-#next-up-row .preview-card-status {
+#up-next-row .preview-card-status {
   position: absolute;
   top: 4px;
   right: 4px;
@@ -3821,22 +3842,22 @@ body.mardi {
 
 /* Mobile adjustments for Next Up */
 @media (max-width: var(--bp-mobile-lg)) {
-  #next-up-row .preview-card {
+  #up-next-row .preview-card {
     width: var(--home-card-width-mobile) ;
     max-width: var(--home-card-width-mobile) ;
     min-width: var(--home-card-width-mobile) ;
   }
 
-  #next-up-row .preview-card-poster {
+  #up-next-row .preview-card-poster {
     width: var(--home-card-width-mobile) ;
     height: var(--home-card-height-mobile) ;
   }
 
-  #next-up-row .preview-card-title {
+  #up-next-row .preview-card-title {
     font-size: 0.7rem;
   }
 
-  #next-up-row .preview-card-year {
+  #up-next-row .preview-card-year {
     font-size: 0.6rem;
   }
 }
@@ -4635,37 +4656,36 @@ body {
 
 /* PART3: Scroll-to-top control */
 .scroll-top-btn {
-  position: fixed !important;
-  bottom: var(--fab-gap) !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  z-index: 45 !important;
-  width: 40px !important; 
-  height: 40px !important;
-  border-radius: 999px !important;
-  border: 1px solid var(--border, #ddd) !important;
-  background: var(--bg-elevated, #fff) !important;
-  color: var(--text, #333) !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,.12) !important;
-  opacity: 1 !important; 
-  visibility: visible !important;
-  transition: opacity .2s ease, visibility .2s ease, transform .08s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 18px !important;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  background: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  width: auto;
+  height: auto;
+  color: rgba(0, 0, 0, 0.3);
+  opacity: 0; 
+  visibility: hidden;
+  transition: opacity .2s ease, visibility .2s ease, transform .08s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: normal;
 }
 
 /* Fix arrow color and content */
 .scroll-top-btn::before {
-  content: "↑" !important;
-  color: var(--text, #333) !important;
-  font-size: 18px !important;
-  font-weight: bold !important;
+  display: none;
 }
 
 .scroll-top-btn * {
-  color: var(--text, #333) !important;
+  color: rgba(0, 0, 0, 0.3);
 }
 .scroll-top-btn.is-visible {
   opacity: 1; visibility: visible;

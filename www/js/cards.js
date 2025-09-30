@@ -82,6 +82,7 @@ export async function renderMediaCard(item, context) {
   const el = document.createElement('article');
   el.className = 'media-card';
   el.setAttribute('aria-labelledby', `t-${item.id}`);
+  el.setAttribute('data-id', item.id);
   
   el.innerHTML = `
     <a href="${item.tmdbUrl}" target="_blank" rel="noopener">
@@ -100,6 +101,9 @@ export async function renderMediaCard(item, context) {
       <div class="hint">Poster opens TMDB</div>
     </div>
   `;
+  
+  // Store the full item data for addToListFromCache to access
+  el.dataset.itemData = JSON.stringify(item);
   
   bindRating(el, item);
   wireActions(el, item);
