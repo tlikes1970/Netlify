@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet v28.112.0 - TV & Movie Tracker</title>
+    <title>Flicklet v28.115.0 - TV & Movie Tracker</title>
     <meta name="description" content="Search, track, and rate shows & films fast." />
     <meta name="build" content="latest" />
 
@@ -203,11 +203,21 @@
     <!-- Tab Normalization - Loaded after all other styles -->
     <link rel="stylesheet" href="/styles/tabs.css" />
     
-    <!-- MediaCard Unified System -->
+    <!-- Cards V2 System -->
     <link rel="stylesheet" href="/styles/cards.css" />
 
     <!-- Settings Manager -->
     <script type="module" src="/js/settings-manager.js"></script>
+
+    <!-- Cards V2 system - Load early, before main app -->
+    
+    <!-- Core V2 system components -->
+    <script src="/js/adapters/card-data-adapter.js?v=28.113.0"></script>
+    <script src="/js/actions/card-actions.js?v=28.113.0"></script>
+    <script src="/js/cards-v2-config.js?v=28.113.0"></script>
+    <script src="/js/renderers/card-v2.js?v=28.113.0"></script>
+    <script src="/js/renderers/card-v2-cw.js?v=28.113.0"></script>
+    <script src="/js/renderers/card-v2-curated.js?v=28.113.0"></script>
 
     <!-- Search module -->
     <script type="module" src="/js/search.js"></script>
@@ -319,10 +329,7 @@
     <!-- TMDB Image utilities - Defer image handling -->
     <script type="module" src="/scripts/tmdb-images.js" defer></script>
 
-    <!-- Card component removed - using MediaCard system -->
-    
-    <!-- MediaCard Unified System - Defer card components -->
-    <script type="module" src="/js/cards.js" defer></script>
+    <!-- Card components handled by Cards V2 system -->
     
     <!-- Action Dispatcher - Defer action handlers -->
     <script type="module" src="/js/actions.js" defer></script>
@@ -1091,17 +1098,17 @@
         </button>
       </nav>
 
-      <!-- Search Results Container -->
-      <div id="searchResults" class="search-results" style="display: none">
-        <h4>
-          Target <span data-i18n="search_results">Search Results</span>
-          <span class="count" id="resultsCount">0</span>
-        </h4>
-        <div id="searchResultsList" class="list-container"></div>
-      </div>
-
       <!-- Panels container for all tab sections -->
       <main id="panels" class="panels" role="main">
+        
+        <!-- Search Results Container -->
+        <div id="searchResults" class="search-results tab-section" style="display: none">
+          <h4>
+            Target <span data-i18n="search_results">Search Results</span>
+            <span class="count" id="resultsCount">0</span>
+          </h4>
+          <div id="searchResultsList" class="list-container"></div>
+        </div>
         <!-- Home - Immovable Layout Contract -->
         <div id="homeSection" class="tab-section active home-content" role="tabpanel" aria-labelledby="homeTab"> <!-- H1 -->
 

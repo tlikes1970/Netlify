@@ -31,7 +31,17 @@
   async function renderRail(container, items, limit, sectionHint = 'watching') {
     container.innerHTML = '';
     const list = (limit ? items.slice(0, limit) : items).filter(Boolean);
-    if (!list.length) {
+    
+    // Filter items to only include those with poster data
+    const itemsWithPosters = list.filter(item => {
+      const hasPoster = item.posterUrl || item.poster_src || item.poster_path;
+      if (!hasPoster) {
+        console.warn('[home-wire] Skipping item without poster:', item.title || item.name || item.id);
+      }
+      return hasPoster;
+    });
+    
+    if (!itemsWithPosters.length) {
       const empty = document.createElement('div');
       empty.className = 'rail-empty';
       empty.textContent = 'Nothing here yet.';
@@ -40,7 +50,7 @@
     }
 
     // Use preview cards for home screen instead of detailed Card component
-    for (const it of list) {
+    for (const it of itemsWithPosters) {
       try {
         const el = await createPreviewCard(it, sectionHint);
         if (el) container.appendChild(el);
@@ -57,41 +67,46 @@
    * @returns {HTMLElement} Unified card element
    */
   async function createPreviewCard(item, sectionHint = 'watching') {
-    // Use MediaCard system if available
-    if (typeof window.renderMediaCard === 'function') {
+    // Try to fetch poster data if missing
+    if (!item.posterUrl && !item.poster_src && !item.poster_path && item.id && window.tmdbGet) {
       try {
-        // Transform item data for MediaCard
-        const mediaCardData = {
-          id: item.id || item.tmdb_id || item.tmdbId,
-          title: item.title || item.name || 'Unknown Title',
-          year: item.release_date
-            ? new Date(item.release_date).getFullYear()
-            : item.first_air_date
-              ? new Date(item.first_air_date).getFullYear()
-              : item.year || '',
-          type: item.media_type === 'tv' || item.first_air_date ? 'TV Show' : 'Movie',
-          posterUrl: item.posterUrl || item.poster_src || (item.poster_path && window.getPosterUrl ? window.getPosterUrl(item.poster_path, 'w342') : item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null),
-          tmdbUrl: item.tmdbUrl || (item.id ? `https://www.themoviedb.org/${item.media_type || 'movie'}/${item.id}` : '#'),
-          genres: item.genres?.map(g => g.name) || [],
-          description: item.overview || '',
-          rating: item.vote_average || 0,
-          userRating: 0
-        };
+        console.log('[home-wire] Attempting to fetch poster data for item:', item.title || item.name, 'ID:', item.id);
+        const mediaType = item.media_type === 'tv' ? 'tv' : 'movie';
+        const tmdbData = await window.tmdbGet(`${mediaType}/${item.id}`, {});
+        
+        if (tmdbData && tmdbData.poster_path) {
+          item.poster_path = tmdbData.poster_path;
+          console.log('[home-wire] Successfully fetched poster data:', tmdbData.poster_path);
+        }
+      } catch (error) {
+        console.warn('[home-wire] Failed to fetch poster data from TMDB:', error);
+      }
+    }
 
-        // Create MediaCard with appropriate context
-        const card = await window.renderMediaCard(mediaCardData, sectionHint);
+    // Use Cards V2 system if available
+    if (window.renderSearchCardV2) {
+      try {
+        // Cards V2 renderer (flagged). If V2 is available, use it; otherwise fall back to V1.
+        let card;
+        if (sectionHint === 'watching' && window.renderCurrentlyWatchingCardV2) {
+          card = window.renderCurrentlyWatchingCardV2(item);
+        } else if (window.renderCurrentlyWatchingCard) {
+          card = window.renderCurrentlyWatchingCard(item);
+        } else {
+          card = window.renderSearchCardV2(item);
+        }
         
         // Add preview-specific styling
         card.classList.add('preview-card');
         
         return card;
       } catch (error) {
-        console.error('❌ MediaCard creation failed:', error);
+        console.error('❌ Cards V2 creation failed:', error);
         // Fall through to old Card component
       }
     }
 
-    // Fallback to old Card component if MediaCard not available
+    // Fallback to old Card component if Cards V2 not available
     if (window.Card && window.createCardData) {
       const cardData = window.createCardData(item, 'tmdb', 'home');
       return window.Card({
@@ -112,7 +127,7 @@
       : item.first_air_date
         ? new Date(item.first_air_date).getFullYear()
         : item.year || '';
-    const mediaType = item.media_type || item.mediaType || (item.first_air_date ? 'tv' : 'movie');
+    const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
 
     // Handle poster URL using TMDB utilities if available
     const posterUrl =
@@ -214,7 +229,65 @@
   }
 
   async function run(config) {
-    const data = window.appData || { tv: {}, movies: {} };
+    let data = { tv: {}, movies: {} };
+    
+    // Use WatchlistsAdapterV2 as the data source for consistency with list tabs
+    if (window.WatchlistsAdapterV2 && typeof window.WatchlistsAdapterV2.load === 'function') {
+      try {
+        const uid = window.firebaseAuth?.currentUser?.uid || null;
+        const adapterData = await window.WatchlistsAdapterV2.load(uid);
+        
+        // Transform adapter data to the format expected by pickers
+        if (adapterData) {
+          // Get full item data for each list
+          const getItemsWithData = async (ids) => {
+            if (!ids || !Array.isArray(ids)) return [];
+            
+            const items = [];
+            for (const id of ids) {
+              try {
+                const itemData = window.WatchlistsAdapterV2.getItemData(id);
+                if (itemData) {
+                  items.push(itemData);
+                }
+                // Skip items without data - no fallback objects
+              } catch (error) {
+                console.warn('[home-wire] Failed to get item data for ID:', id, error);
+                // Skip items with errors - no fallback objects
+              }
+            }
+            return items;
+          };
+          
+          // Get items for each list with full data
+          const watchingItems = await getItemsWithData(adapterData.watchingIds);
+          const wishlistItems = await getItemsWithData(adapterData.wishlistIds);
+          const watchedItems = await getItemsWithData(adapterData.watchedIds);
+          
+          // Separate TV and movie items
+          data = {
+            tv: {
+              watching: watchingItems.filter(item => item.media_type === 'tv'),
+              wishlist: wishlistItems.filter(item => item.media_type === 'tv'),
+              watched: watchedItems.filter(item => item.media_type === 'tv')
+            },
+            movies: {
+              watching: watchingItems.filter(item => item.media_type === 'movie'),
+              wishlist: wishlistItems.filter(item => item.media_type === 'movie'),
+              watched: watchedItems.filter(item => item.media_type === 'movie')
+            }
+          };
+        }
+      } catch (error) {
+        console.warn('[home-wire] Failed to load from adapter:', error);
+        // Do not fall back to appData - keep empty data structure
+        data = { tv: {}, movies: {} };
+      }
+    } else {
+      // No adapter available - use appData as fallback
+      data = window.appData || { tv: {}, movies: {} };
+    }
+    
     for (const r of config.rails) {
       const container = document.querySelector(r.containerSelector);
       if (!container) {

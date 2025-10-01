@@ -144,7 +144,9 @@
       log('Search results received:', results);
 
       // Display results
+      log('About to call displayResults with:', results);
       await displayResults(results);
+      log('displayResults completed successfully');
     } catch (error) {
       err('Search failed:', error);
       showErrorState(error.message);
@@ -170,6 +172,7 @@
     // Hide results
     if (searchResults) {
       searchResults.style.display = 'none';
+      searchResults.classList.remove('active');
       searchResults.innerHTML = '';
     }
 
@@ -230,45 +233,92 @@
 
   // Display search results
   async function displayResults(results) {
-    if (!searchResults) return;
+    log('displayResults called with:', results);
+    if (!searchResults) {
+      log('ERROR: searchResults element not found');
+      return;
+    }
 
-    if (!results || !results.results || results.results.length === 0) {
+    log('Checking results structure:', {
+      hasResults: !!results,
+      hasResultsProperty: !!(results && results.results),
+      hasDataProperty: !!(results && results.data),
+      hasDataResults: !!(results && results.data && results.data.results),
+      resultsLength: results?.results?.length || 0,
+      dataResultsLength: results?.data?.results?.length || 0,
+      resultsType: typeof results,
+      resultsKeys: results ? Object.keys(results) : 'none',
+      dataKeys: results?.data ? Object.keys(results.data) : 'none'
+    });
+    
+    // Check for results in the correct structure
+    const actualResults = results?.data?.results || results?.results;
+    
+    if (!results || !actualResults || actualResults.length === 0) {
+      log('No results found, showing no results message');
       showNoResults();
       return;
     }
 
     // Filter out person results
-    const filteredResults = results.results.filter((item) => item.media_type !== 'person');
+    log('Filtering results, original count:', actualResults.length);
+    const filteredResults = actualResults.filter((item) => item.media_type !== 'person');
+    log('After filtering, count:', filteredResults.length);
 
     if (filteredResults.length === 0) {
+      log('All results filtered out, showing no results message');
       showNoResults();
       return;
     }
 
+    // Sort by date in descending order (most recent first)
+    const sortedResults = filteredResults.sort((a, b) => {
+      // Get release/air date for comparison
+      const dateA = a.release_date || a.first_air_date || '';
+      const dateB = b.release_date || b.first_air_date || '';
+      
+      // Convert to Date objects for comparison
+      const dateObjA = dateA ? new Date(dateA) : new Date(0); // Use epoch for missing dates
+      const dateObjB = dateB ? new Date(dateB) : new Date(0);
+      
+      // Sort in descending order (newest first)
+      return dateObjB - dateObjA;
+    });
+
     // Update count
     if (resultsCount) {
-      resultsCount.textContent = filteredResults.length;
+      resultsCount.textContent = sortedResults.length;
     }
 
     // Hide other tabs when showing search results
     hideOtherTabs();
 
-    // Show results
+    // Show search results section
     searchResults.style.display = 'block';
+    searchResults.classList.add('active');
 
-    // Use MediaCard system if available, otherwise fallback to Card component
-    if (typeof window.renderMediaCard === 'function') {
-      await renderWithMediaCard(filteredResults);
-    } else if (window.Card) {
-      renderWithCard(filteredResults);
+    // Use Cards V2 system if available, otherwise fallback to basic HTML
+    log('Checking card rendering systems:', {
+      renderSearchCardV2: typeof window.renderSearchCardV2,
+      renderWithFallback: typeof renderWithFallback
+    });
+    
+    if (window.renderSearchCardV2) {
+      log('Using Cards V2 system');
+      await renderWithCardsV2(sortedResults);
     } else {
-      renderWithFallback(filteredResults);
+      log('Using fallback system');
+      renderWithFallback(sortedResults);
     }
   }
 
-  // Render with MediaCard system
-  async function renderWithMediaCard(results) {
-    log('Rendering with MediaCard system');
+  // Render with Cards V2 system
+  async function renderWithCardsV2(results) {
+    log('Rendering with Cards V2 system');
+    log('Cards V2 availability:', {
+      renderSearchCardV2: typeof window.renderSearchCardV2,
+      V2_ACTIONS: !!window.V2_ACTIONS
+    });
 
     searchResults.innerHTML = `
       <h4>🎯 Search Results <span class="count">${results.length}</span></h4>
@@ -276,34 +326,29 @@
     `;
 
     const searchGrid = document.getElementById('searchResultsGrid');
-    if (!searchGrid) return;
+    if (!searchGrid) {
+      log('ERROR: searchResultsGrid not found!');
+      return;
+    }
 
+    log('Processing', results.length, 'results...');
     for (const item of results) {
       try {
-        // Transform item data for MediaCard
-        const mediaCardData = {
-          id: item.id,
-          title: item.title || item.name,
-          year: item.release_date ? new Date(item.release_date).getFullYear() : 
-                item.first_air_date ? new Date(item.first_air_date).getFullYear() : '',
-          type: item.media_type === 'tv' ? 'TV Show' : 'Movie',
-          genres: item.genre_ids ? [] : [], // TODO: Map genre IDs to names
-          posterUrl: item.poster_path ? 
-            `https://image.tmdb.org/t/p/w200${item.poster_path}` : null,
-          tmdbUrl: `https://www.themoviedb.org/${item.media_type}/${item.id}`,
-          mediaType: item.media_type,
-          userRating: 0
-        };
-        
-        const card = await window.renderMediaCard(mediaCardData, 'discover');
+        // Use V2 system - no capabilities needed as actions are built-in
+        const card = window.renderSearchCardV2(item);
         if (card) {
           searchGrid.appendChild(card);
+          log('Added card for:', item.title || item.name);
+        } else {
+          log('WARNING: renderSearchCardV2 returned null for:', item.title || item.name);
         }
       } catch (e) {
-        log('MediaCard render error:', e);
+        log('Cards V2 render error:', e);
       }
     }
+    log('Cards V2 rendering complete. Grid children:', searchGrid.children.length);
   }
+
 
   // Render with Card system
   function renderWithCard(results) {

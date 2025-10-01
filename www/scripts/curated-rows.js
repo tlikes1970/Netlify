@@ -153,29 +153,18 @@ async function initializeCurated() {
 
         for (const item of items) {
           try {
-            // Use MediaCard system if available
-            if (typeof window.renderMediaCard === 'function') {
-              // Transform item data for MediaCard
-              const mediaCardData = {
-                id: item.id || item.tmdb_id || item.tmdbId,
-                title: item.title || item.name || 'Unknown Title',
-                year: item.release_date
-                  ? new Date(item.release_date).getFullYear()
-                  : item.first_air_date
-                    ? new Date(item.first_air_date).getFullYear()
-                    : item.year || '',
-                type: item.media_type === 'tv' || item.first_air_date ? 'TV Show' : 'Movie',
-                posterUrl: item.posterUrl || item.poster_src || (item.poster_path && window.getPosterUrl ? window.getPosterUrl(item.poster_path, 'w342') : item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null),
-                tmdbUrl: item.tmdbUrl || (item.id ? `https://www.themoviedb.org/${item.media_type || 'movie'}/${item.id}` : '#'),
-                genres: item.genres?.map(g => g.name) || [],
-                description: item.overview || '',
-                rating: item.vote_average || 0,
-                userRating: 0
-              };
-
-              // Create MediaCard with 'discover' context for curated content
-              const card = await window.renderMediaCard(mediaCardData, 'discover');
+            // Use Cards V2 system if available
+            let card;
+            if (window.renderCuratedCardV2) {
+              card = window.renderCuratedCardV2(item);
+            } else if (window.renderSearchCardV2) {
+              card = window.renderSearchCardV2(item);
+            } else {
+              card = null;
+            }
+            if (card) {
               itemsContainer.appendChild(card);
+            }
             } else if (USE_CARD && window.Card && window.createCardData) {
               // Fallback to old Card component
               const cardData = window.createCardData(item, 'tmdb', 'curated');

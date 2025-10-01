@@ -4,8 +4,8 @@
 
 **Flicklet** is a modern TV and movie tracking web application built with vanilla JavaScript, Firebase, and TMDB API. It's a Progressive Web App (PWA) with mobile-first design, featuring user authentication, cloud sync, and comprehensive media management.
 
-**Current Version**: v28.82 (Post-Data Architecture Refactor)
-**Status**: Phase 3 - Data Flow & UI Integration Complete
+**Current Version**: v28.103.0 (Complete Data Flow & Poster Resolution)
+**Status**: Phase 4 - Complete Data Flow & Poster Resolution Complete
 
 ## Architecture & Framework
 
@@ -22,7 +22,7 @@
 
 ```
 www/
-├── index.html                 # Main SPA entry point (v28.82)
+├── index.html                 # Main SPA entry point (v28.103.0)
 ├── js/                       # Core JavaScript modules
 │   ├── app.js               # Main application controller
 │   ├── functions.js         # Core business logic (updated for v2)
@@ -538,6 +538,22 @@ npx playwright test tests/data-flow-audit.spec.ts --grep "Move Between Lists"
 npx playwright test tests/debug-integration.spec.ts --headed
 ```
 
+### Core Testing Principles (CRITICAL)
+
+#### Never Assume Rule
+- **NEVER assume** code works without testing
+- **NEVER assume** changes don't break other functionality  
+- **NEVER assume** data structures match expectations
+- **NEVER assume** UI changes are visible without verification
+- **ALWAYS verify** with actual testing before proceeding
+
+#### Always Test Before Moving On Rule
+- **MANDATORY**: Test every change before moving to the next task
+- **MANDATORY**: Verify functionality works end-to-end
+- **MANDATORY**: Check that changes don't break existing features
+- **MANDATORY**: Confirm visual changes are actually visible
+- **STOP**: If any test fails, fix before proceeding
+
 ### Pre-Development Validation Requirements
 
 Before making any code changes, the assistant must:
@@ -609,6 +625,30 @@ Before making any code changes, the assistant must:
 - **Integration Tests**: End-to-end user flows
 - **Performance Tests**: Core Web Vitals monitoring
 
+### Testing Best Practices (v28.103)
+**CRITICAL**: Always test complete user journeys, not individual components in isolation.
+
+#### ✅ Required Testing Approach
+1. **End-to-End Flow Testing**: Test complete user journeys (Search → Add → Move → Display)
+2. **Data Consistency Verification**: Verify same data appears across all components
+3. **Cross-Component Validation**: Ensure all card systems use consistent data transformation
+4. **Real User Scenarios**: Test actual user workflows, not just technical components
+5. **Comprehensive Debugging**: When issues found, compare working vs broken components side-by-side
+
+#### ❌ Testing Anti-Patterns (Avoid These)
+1. **Component Isolation**: Testing individual components without integration
+2. **Assumption-Based Testing**: Assuming components work without verification
+3. **Incomplete Data Verification**: Not checking that data flows correctly between components
+4. **Fragmented Testing**: Testing pieces separately instead of complete flows
+5. **Insufficient Debugging**: Not digging deep enough when issues are found
+
+#### 🎯 Testing Success Criteria
+- **Complete Flow**: Search → Add → Move → Home Display works end-to-end
+- **Data Consistency**: Same poster URLs, titles, and metadata across all components
+- **User Experience**: Actual user workflows function correctly
+- **Cross-Platform**: Works on both list tabs and home page
+- **Real Data**: Uses actual TMDB data, not placeholders or test data
+
 ## Security Considerations
 
 ### Content Security Policy
@@ -630,12 +670,13 @@ Before making any code changes, the assistant must:
 
 ### Phase-Based Development
 
-**Current Phase**: Phase 2 - Code Quality & Technical Debt
+**Current Phase**: Phase 4 - Complete Data Flow & Poster Resolution Complete
 
 - **Phase 1**: ✅ Repository Hygiene (Gate A) - COMPLETED
-- **Phase 2**: 🔄 Code Quality & Technical Debt (Gate B) - IN PROGRESS
-- **Phase 3**: ⏳ Performance Optimization (Gate C) - PENDING
-- **Phase 4**: ⏳ Feature Enhancement (Gate D) - PENDING
+- **Phase 2**: ✅ Code Quality & Technical Debt (Gate B) - COMPLETED
+- **Phase 3**: ✅ Performance Optimization (Gate C) - COMPLETED
+- **Phase 4**: ✅ Complete Data Flow & Poster Resolution (Gate D) - COMPLETED
+- **Phase 5**: ⏳ Feature Enhancement & Testing (Gate E) - NEXT
 
 ### Build Process
 
@@ -666,7 +707,7 @@ npm run lh:mobile    # Lighthouse mobile audit
 
 ### Version Management
 
-- **Semantic Versioning**: Major.Minor.Patch (currently v28.31.0)
+- **Semantic Versioning**: Major.Minor.Patch (currently v28.103.0)
 - **Auto-increment**: Version bumped on code changes [[memory:8428544]]
 - **Rollback Support**: Easy rollback with version display
 - **Version Location**: Updated in `www/index.html` title tag and `package.json`
@@ -729,6 +770,8 @@ document.addEventListener('click', (e) => {
 
 ### Common Issues
 
+**⚠️ IMPORTANT**: Before troubleshooting, always check recent git history and current version to avoid duplicating recent work.
+
 1. **Firebase Not Loading**: Check `firebase-config.js` and network connectivity
 2. **Search Not Working**: Verify TMDB API key and `searchTMDB` function
 3. **Cards Not Rendering**: Check `Card.js` component and CSS classes
@@ -737,6 +780,9 @@ document.addEventListener('click', (e) => {
 6. **Settings FAB Opens Modal**: Verify `aria-haspopup="dialog"` is removed from HTML
 7. **Mardi Gras Not Working**: Check `ThemeManager.mardi` property and CSS `.mardi` class
 8. **FAB Styling Issues**: Verify CSS overrides with `!important` declarations
+9. **Tab Visibility Issues**: Check recent commits - extensive work done in v28.80-v28.102
+10. **Modal Blocking**: Review recent modal fixes and test fixture updates
+11. **Layout Problems**: Verify CSS specificity fixes implemented in recent versions
 
 ### Debug Tools
 
@@ -1288,7 +1334,7 @@ document.querySelectorAll('.modal-backdrop').length(
 getComputedStyle(document.getElementById('providerModal')).zIndex;
 ```
 
-## Current Status & Achievements (v28.82)
+## Current Status & Achievements (v28.103.0)
 
 ### ✅ Completed Features
 1. **Data Architecture Refactor** (v28.81)
@@ -1313,6 +1359,25 @@ getComputedStyle(document.getElementById('providerModal')).zIndex;
    - ✅ UI updates and notifications
    - ✅ Error handling and user feedback
 
+4. **Layout Normalization & Performance** (v28.80 - v28.102)
+   - ✅ Tab visibility and CSS conflict resolution
+   - ✅ Layout normalization across all breakpoints
+   - ✅ CSS specificity fixes and cleanup
+   - ✅ Performance optimization with script deferring
+   - ✅ Modal blocking prevention for tests
+   - ✅ Mobile layout fixes and responsive design
+   - ✅ Header positioning and z-index layering
+   - ✅ Search container spacing and visibility
+
+5. **Complete Data Flow & Poster Resolution** (v28.103)
+   - ✅ End-to-end data flow validation: Search → Add → Move → Home Display
+   - ✅ Unified data transformation across all card systems
+   - ✅ Poster URL consistency between list tabs and home page
+   - ✅ Home page adapter integration for data consistency
+   - ✅ Complete user journey testing with proper data verification
+   - ✅ Fixed poster resolution issue on home page
+   - ✅ Data source unification (WatchlistsAdapterV2 as single source of truth)
+
 ### 📊 Test Results
 - **Total Tests**: 18 comprehensive Playwright tests
 - **Passing Tests**: 6/18 (33% success rate)
@@ -1325,6 +1390,51 @@ getComputedStyle(document.getElementById('providerModal')).zIndex;
 - **Event-Driven Architecture**: Clean separation between data and UI layers
 - **Backward Compatibility**: Seamless migration from old data structures
 - **Comprehensive Testing**: Full data flow validation with Playwright
+- **Performance Optimization**: Script deferring and loading optimization
+- **Layout Stability**: CSS conflict resolution and responsive design fixes
+- **Data Flow Integrity**: Complete end-to-end data consistency across all components
+- **Unified Card Systems**: Consistent data transformation and poster URL construction
+
+## Process Improvements & Development Workflow
+
+### 📋 Pre-Development Checklist
+**CRITICAL**: Before making any changes, always:
+
+1. **Review Git History First**
+   - Check recent commits to understand current work
+   - Verify current version vs documentation
+   - Identify if issues are already being addressed
+   - Look for patterns in recent fixes
+
+2. **Check Current Version**
+   - Compare `package.json` version with documentation
+   - Note: Documentation may be outdated (v28.82 vs actual v28.102.0)
+   - Review version progression to understand scope of recent work
+
+3. **Understand Recent Work Context**
+   - v28.80+: Major layout fixes and CSS conflict resolution
+   - v28.102: Layout normalization and performance optimization
+   - v28.103: Complete data flow and poster resolution
+   - Extensive work on tab visibility, modal blocking, and responsive design
+
+4. **Avoid Assumptions**
+   - Don't assume issues are new problems
+   - Don't "fix" things that may be intentionally designed
+   - Don't duplicate work already in progress
+   - Always check if solutions already exist
+
+### 🔍 Investigation Protocol
+1. **Git Status Check**: `git status` to see current changes
+2. **Recent Commits**: `git log --oneline -20` to understand recent work
+3. **Version Verification**: Check `package.json` for actual version
+4. **Documentation Review**: Read cursor rules and project documentation
+5. **Issue Analysis**: Determine if issue is new or ongoing
+
+### 📝 Documentation Maintenance
+- **Keep version numbers current** in documentation
+- **Update status sections** to reflect actual project state
+- **Document process improvements** as they're identified
+- **Maintain git history awareness** in development workflow
 
 ### 🔄 Next Phase Opportunities
 - Fix remaining test edge cases (12 failing tests)

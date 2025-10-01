@@ -32,9 +32,9 @@
   /**
    * Enhanced addToListFromCache with proper error handling
    */
-  window.addToListFromCacheV2 = async function addToListFromCacheV2(id, list) {
+  window.addToListFromCacheV2 = async function addToListFromCacheV2(id, list, options = {}) {
     try {
-      log('addToListFromCacheV2 called:', { id, list });
+      log('addToListFromCacheV2 called:', { id, list, options });
       
       // Validate inputs
       if (!id) {
@@ -64,13 +64,40 @@
         return true;
       }
 
-      // Get item data
-      const itemData = await getItemData(id);
+      // Extract item data from options first, then from search results
+      let itemData = options.itemData || null;
+      
       if (!itemData) {
-        throw new Error('Could not retrieve item data');
+        const searchRoot =
+          document.getElementById('searchResultsList') ||
+          document.getElementById('searchResultsGrid') ||
+          document.getElementById('searchResults') ||
+          document;
+        
+        if (searchRoot) {
+          const card = searchRoot.querySelector(`[data-id="${id}"]`);
+          if (card && card.dataset.itemData) {
+            try {
+              itemData = JSON.parse(card.dataset.itemData);
+              log('Found item data from search results:', itemData);
+            } catch (e) {
+              warn('Failed to parse item data from search results:', e);
+            }
+          }
+        }
+      } else {
+        log('Using item data from options:', itemData);
+      }
+      
+      // If no item data from search, try to get it from other sources
+      if (!itemData) {
+        itemData = await getItemData(id);
+        if (!itemData) {
+          throw new Error('Could not retrieve item data');
+        }
       }
 
-      // Add item using DataOperations
+      // Add item using DataOperations with full item data
       const success = await dataOps.addItem(id, list, itemData);
       
       if (success) {
@@ -360,6 +387,48 @@
       // Update main UI
       if (window.FlickletApp && typeof window.FlickletApp.updateUI === 'function') {
         window.FlickletApp.updateUI();
+      }
+      
+      // Wait for adapter hydration before rendering home components
+      const uid = window.firebaseAuth?.currentUser?.uid || null;
+      if (window.WatchlistsAdapterV2 && uid) {
+        // Listen for hydration event before rendering home components
+        const handleHydration = () => {
+          // Refresh home page rails
+          if (typeof window.renderHomeRails === 'function') {
+            window.renderHomeRails();
+          }
+          
+          // Refresh currently watching preview
+          if (typeof window.renderCurrentlyWatchingPreview === 'function') {
+            window.renderCurrentlyWatchingPreview();
+          }
+          
+          // Remove the event listener
+          document.removeEventListener('watchlists:hydrated', handleHydration);
+        };
+        
+        // Check if already hydrated
+        if (window.WatchlistsAdapterV2._cache && window.WatchlistsAdapterV2._lastUid === uid) {
+          // Already hydrated, render immediately
+          if (typeof window.renderHomeRails === 'function') {
+            window.renderHomeRails();
+          }
+          if (typeof window.renderCurrentlyWatchingPreview === 'function') {
+            window.renderCurrentlyWatchingPreview();
+          }
+        } else {
+          // Wait for hydration
+          document.addEventListener('watchlists:hydrated', handleHydration);
+        }
+      } else {
+        // Fallback: render immediately if no adapter
+        if (typeof window.renderHomeRails === 'function') {
+          window.renderHomeRails();
+        }
+        if (typeof window.renderCurrentlyWatchingPreview === 'function') {
+          window.renderCurrentlyWatchingPreview();
+        }
       }
       
       // Emit cards changed event

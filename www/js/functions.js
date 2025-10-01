@@ -79,9 +79,17 @@
           }
           // Fallback: extract item data from the card
           if (!item) {
-            const title = card.querySelector('.unified-card-title')?.textContent || 'Unknown';
-            const subtitle = card.querySelector('.unified-card-subtitle')?.textContent || '';
-            const mediaType = card.dataset.mediaType || 'movie';
+            // Try multiple selectors for title (MediaCard system uses .title)
+            const title = card.querySelector('.title')?.textContent || 
+                         card.querySelector('.unified-card-title')?.textContent || 
+                         card.querySelector('.media-card-title')?.textContent ||
+                         card.querySelector('h3')?.textContent ||
+                         'Unknown';
+            const subtitle = card.querySelector('.sub')?.textContent || 
+                           card.querySelector('.unified-card-subtitle')?.textContent || 
+                           card.querySelector('.media-card-subtitle')?.textContent ||
+                           '';
+            const mediaType = card.dataset.mediaType || card.dataset.type || 'movie';
             // Create a basic item structure
             item = {
               id: Number(id),
@@ -1191,55 +1199,6 @@
    * Update Path: Modify listType parameter handling, update createShowCard call if card structure changes
    * Dependencies: WatchlistsAdapter, createShowCard function, appData structure, container elements, moveItem and removeItemFromCurrentList functions
    */
-  /**
-   * Transform item data for MediaCard system
-   * @param {Object} item - Raw item data
-   * @param {string} listType - Current list type
-   * @returns {Object} MediaCard data format
-   */
-  function transformForMediaCard(item, listType) {
-    const year = item.release_date
-      ? new Date(item.release_date).getFullYear()
-      : item.first_air_date
-        ? new Date(item.first_air_date).getFullYear()
-        : item.year || '';
-
-    const mediaType = item.media_type || item.mediaType || (item.first_air_date ? 'tv' : 'movie');
-    const title = item.title || item.name || item.original_title || item.original_name || 'Unknown';
-
-    // Construct proper poster URL using TMDB utilities
-    const posterUrl =
-      item.posterUrl ||
-      item.poster_src ||
-      (item.poster_path && window.getPosterUrl
-        ? window.getPosterUrl(item.poster_path, 'w200')
-        : item.poster_path
-          ? `https://image.tmdb.org/t/p/w200${item.poster_path}`
-          : null);
-
-    // Construct TMDB URL
-    const tmdbUrl =
-      item.tmdbUrl ||
-      (window.openTMDBLink
-        ? `#tmdb-${item.id}`
-        : `https://www.themoviedb.org/${mediaType}/${item.id}`);
-
-    // Get genres
-    const genres = item.genres?.map((g) => g.name) || [];
-
-    return {
-      id: item.id || item.tmdb_id || item.tmdbId,
-      title: title,
-      year: year,
-      type: mediaType === 'tv' ? 'TV Show' : 'Movie',
-      genres: genres,
-      posterUrl: posterUrl,
-      tmdbUrl: tmdbUrl,
-      mediaType: mediaType,
-      userRating: item.userRating || 0,
-      description: item.overview || item.description || '',
-    };
-  }
 
   window.loadListContent = async function loadListContent(listType) {
     try {
@@ -1291,10 +1250,30 @@
       });
       // Map IDs → card data using adapter as source of truth
       log(`[WL v28.33] Looking for ${idList.length} IDs:`, idList);
-      // Get items that match the adapter IDs using adapter's getItemData method
+      // Get items that match the adapter IDs using the correct getItemData method
       items = idList
         .map((id) => {
-          const item = window.WatchlistsAdapter.getItemData(id);
+          // Try the new adapter first, then fall back to legacy
+          let item = null;
+          if (window.WatchlistsAdapterV2 && typeof window.WatchlistsAdapterV2.getItemData === 'function') {
+            item = window.WatchlistsAdapterV2.getItemData(id);
+          } else if (window.WatchlistsAdapter && typeof window.WatchlistsAdapter.getItemData === 'function') {
+            item = window.WatchlistsAdapter.getItemData(id);
+          } else {
+            // Fallback: search in appData directly
+            const appData = window.appData || {};
+            const tv = appData.tv || {};
+            const movies = appData.movies || {};
+            const allLists = [
+              ...(Array.isArray(tv.watching) ? tv.watching : []),
+              ...(Array.isArray(tv.wishlist) ? tv.wishlist : []),
+              ...(Array.isArray(tv.watched) ? tv.watched : []),
+              ...(Array.isArray(movies.watching) ? movies.watching : []),
+              ...(Array.isArray(movies.wishlist) ? movies.wishlist : []),
+              ...(Array.isArray(movies.watched) ? movies.watched : []),
+            ];
+            item = allLists.find((item) => String(item.id || item.tmdb_id || item.tmdbId) === String(id));
+          }
           log(`[WL v28.33] ID ${id} ->`, item ? item.title || item.name || 'Unknown' : 'NOT FOUND');
           return item;
         })
@@ -1302,7 +1281,15 @@
       log(`[WL v28.33] Mapped ${idList.length} IDs to ${items.length} items for ${listType}`);
       // If we have missing items, log for debugging
       if (idList.length > items.length) {
-        const missingIds = idList.filter((id) => !window.WatchlistsAdapter.getItemData(id));
+        const missingIds = idList.filter((id) => {
+          let item = null;
+          if (window.WatchlistsAdapterV2 && typeof window.WatchlistsAdapterV2.getItemData === 'function') {
+            item = window.WatchlistsAdapterV2.getItemData(id);
+          } else if (window.WatchlistsAdapter && typeof window.WatchlistsAdapter.getItemData === 'function') {
+            item = window.WatchlistsAdapter.getItemData(id);
+          }
+          return !item;
+        });
         log(`[WL v28.33] Missing items for ${listType}:`, missingIds);
       }
       const container =
@@ -1340,33 +1327,35 @@
         container.innerHTML = '<div class="poster-cards-empty">Nothing here yet.</div>';
         return;
       }
-      // Use MediaCard unified system if available, otherwise fallback to Card component
-      if (typeof window.renderMediaCard === 'function') {
-        log(`Rendering ${items.length} items for ${listType} using MediaCard system`);
-        // Use for...of loop to handle async calls
-        for (let index = 0; index < items.length; index++) {
-          const it = items[index];
-          try {
-            // Transform item data for MediaCard
-            const mediaCardData = transformForMediaCard(it, listType);
-            const card = await window.renderMediaCard(mediaCardData, listType);
-            if (card) {
-              // Add unique identifier to prevent duplication
-              card.dataset.itemId = mediaCardData.id;
-              card.dataset.listType = listType;
-              card.dataset.renderIndex = index;
-              container.appendChild(card);
-              log(
-                `Added MediaCard ${index + 1}/${items.length} for ${listType}:`,
-                mediaCardData.title,
-              );
-            } else {
-              warn(`MediaCard creation failed for ${it.title || it.name}`);
-            }
-          } catch (e) {
-            warn('MediaCard render item failed:', e?.message || e);
+      // Prefer Cards V2 for all lists when available; fall back to legacy Card.
+      const canUseV2 = typeof window.renderCardV2 === 'function';
+
+      if (canUseV2) {
+        log(`Rendering ${items.length} items for ${listType} using Cards V2`);
+        items.forEach((item, index) => {
+          const snap = {
+            id: item.id,
+            media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie'),
+            title: item.title || item.name || 'Unknown',
+            name: item.title || item.name || 'Unknown',
+            release_date: item.release_date || null,
+            first_air_date: item.first_air_date || null,
+            poster: item.poster_path || null, // V2 renderer expects 'poster', not 'poster_path'
+          };
+          
+          // Create a temporary container for each card
+          const tempContainer = document.createElement('div');
+          const card = window.renderCardV2(tempContainer, snap, { listType });
+          if (card) {
+            card.dataset.itemId = snap.id;
+            card.dataset.listType = listType;
+            card.dataset.renderIndex = index;
+            container.appendChild(card);
+            log(`Added V2 card ${index + 1}/${items.length} for ${listType}: ${snap.title}`);
+          } else {
+            warn(`V2 card creation failed for ${snap.title}`);
           }
-        }
+        });
       } else if (typeof window.Card === 'function' && typeof window.createCardData === 'function') {
         log(`Rendering ${items.length} items for ${listType} using createCardData + Card`);
         items.forEach((it, index) => {
@@ -1803,11 +1792,8 @@
    * @returns {HTMLElement} Card element
    */
   async function createDiscoverCard(item) {
-    // Use MediaCard system if available, otherwise fallback to Card component
-    if (typeof window.renderMediaCard === 'function') {
-      const mediaCardData = transformForMediaCard(item, 'discover');
-      return await window.renderMediaCard(mediaCardData, 'discover');
-    } else if (!window.Card) {
+    // Use Card component if available
+    if (!window.Card) {
       return null;
     }
 
@@ -2995,9 +2981,13 @@
           if (!item.media_type) {
             item.media_type = mediaType;
           }
-          // Check if already exists using WatchlistsAdapter as canonical source
+          // Check if already exists using the new adapter as canonical source
           let exists = false;
-          if (window.WatchlistsAdapter && window.WatchlistsAdapter._cache) {
+          if (window.WatchlistsAdapterV2 && window.WatchlistsAdapterV2._cache) {
+            const cache = window.WatchlistsAdapterV2._cache;
+            const listKey = listName + 'Ids';
+            exists = cache[listKey] && cache[listKey].includes(String(item.id));
+          } else if (window.WatchlistsAdapter && window.WatchlistsAdapter._cache) {
             const cache = window.WatchlistsAdapter._cache;
             const listKey = listName + 'Ids';
             exists = cache[listKey] && cache[listKey].includes(String(item.id));
@@ -3016,6 +3006,12 @@
             });
             // Update WatchlistsAdapter cache
             if (
+              window.WatchlistsAdapterV2 &&
+              typeof window.WatchlistsAdapterV2.addItem === 'function'
+            ) {
+              const adapterResult = window.WatchlistsAdapterV2.addItem(item.id, listName);
+              console.log('📝 WatchlistsAdapterV2.addItem result:', adapterResult);
+            } else if (
               window.WatchlistsAdapter &&
               typeof window.WatchlistsAdapter.addItem === 'function'
             ) {

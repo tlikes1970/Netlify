@@ -1,5 +1,193 @@
 /* MediaCard Unified System - v28.80 */
 
+/* Cards V2 System - Theme-aware Cards */
+.search-card.v2,
+.cw-card.v2,
+.curated-card.v2 {
+  display: flex;
+  flex-direction: row;
+  background: #171a21;
+  border: 1px solid #242a33;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.35);
+  transition: transform .2s ease;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* Light theme support */
+.light-mode .search-card.v2,
+.light-mode .cw-card.v2,
+.light-mode .curated-card.v2 {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 24px rgba(0,0,0,.1);
+}
+
+.search-card.v2:hover,
+.cw-card.v2:hover,
+.curated-card.v2:hover {
+  transform: translateY(-2px);
+}
+
+.search-card.v2 .poster-wrap,
+.cw-card.v2 .poster-wrap,
+.curated-card.v2 .poster-wrap {
+  flex: 0 0 120px;
+  aspect-ratio: 2/3;
+  background: #0b0d12;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Light theme poster background */
+.light-mode .search-card.v2 .poster-wrap,
+.light-mode .cw-card.v2 .poster-wrap,
+.light-mode .curated-card.v2 .poster-wrap {
+  background: #f3f4f6;
+}
+
+.search-card.v2 .poster-wrap img,
+.cw-card.v2 .poster-wrap img,
+.curated-card.v2 .poster-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.search-card.v2 .meta,
+.cw-card.v2 .meta,
+.curated-card.v2 .meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.search-card.v2 .title,
+.cw-card.v2 .title,
+.curated-card.v2 .title {
+  font-weight: 700;
+  font-size: 16px;
+  color: #e6eaf0;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Light theme text */
+.light-mode .search-card.v2 .title,
+.light-mode .cw-card.v2 .title,
+.light-mode .curated-card.v2 .title {
+  color: #1f2937;
+}
+
+.search-card.v2 .sub,
+.cw-card.v2 .sub,
+.curated-card.v2 .sub {
+  color: #a9b3c1;
+  font-size: 12px;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Light theme subtitle */
+.light-mode .search-card.v2 .sub,
+.light-mode .cw-card.v2 .sub,
+.light-mode .curated-card.v2 .sub {
+  color: #6b7280;
+}
+
+/* Date styling */
+.search-card.v2 .date,
+.cw-card.v2 .date,
+.curated-card.v2 .date {
+  color: #a9b3c1;
+  font-size: 12px;
+  margin: 0;
+}
+
+/* Light theme date */
+.light-mode .search-card.v2 .date,
+.light-mode .cw-card.v2 .date,
+.light-mode .curated-card.v2 .date {
+  color: #6b7280;
+}
+
+.search-card.v2 .actions,
+.cw-card.v2 .actions,
+.curated-card.v2 .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.search-card.v2 .actions button,
+.cw-card.v2 .actions button,
+.curated-card.v2 .actions button {
+  background: #232a34;
+  color: #e6eaf0;
+  border: 1px solid #242a33;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+
+/* Light theme buttons */
+.light-mode .search-card.v2 .actions button,
+.light-mode .cw-card.v2 .actions button,
+.light-mode .curated-card.v2 .actions button {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.search-card.v2 .actions button:hover:not([disabled]),
+.cw-card.v2 .actions button:hover:not([disabled]),
+.curated-card.v2 .actions button:hover:not([disabled]) {
+  background: #2a3441;
+}
+
+/* Light theme button hover */
+.light-mode .search-card.v2 .actions button:hover:not([disabled]),
+.light-mode .cw-card.v2 .actions button:hover:not([disabled]),
+.light-mode .curated-card.v2 .actions button:hover:not([disabled]) {
+  background: #e5e7eb;
+}
+
+.search-card.v2 .actions button[disabled],
+.cw-card.v2 .actions button[disabled],
+.curated-card.v2 .actions button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Preview variant styling */
+.cw-card.v2.preview-variant {
+  max-width: 300px;
+  margin-bottom: 12px;
+}
+
+.cw-card.v2.preview-variant .poster-wrap {
+  flex: 0 0 80px;
+  aspect-ratio: 2/3;
+}
+
+.cw-card.v2.preview-variant .actions {
+  margin-top: 8px;
+}
+
+.cw-card.v2.preview-variant .actions .preview-action {
+  font-size: 10px;
+  padding: 4px 8px;
+  margin: 2px;
+}
+
 /* Grid Layout */
 .media-grid {
   display: grid;

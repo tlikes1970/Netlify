@@ -4,6 +4,8 @@
  * Feature flag: homeRowCurrentlyWatching
  */
 
+// toCardProps will be available globally from card-data-adapter.js
+
 (function () {
   'use strict';
 
@@ -26,7 +28,7 @@
       return `https://image.tmdb.org/t/p/${size}/${path.replace(/^\/+/, '')}`;
     };
     isValidPosterUrl = function (url) {
-      return url && (url.startsWith('http') || url.startsWith('/assets'));
+      return url && (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('/assets'));
     };
   }
 
@@ -174,127 +176,164 @@
     }
   }
 
+  // Duplicate render prevention
+  let _lastSig = '';
+
   /**
    * Internal render function without guards (for internal calls)
    */
   async function renderCurrentlyWatchingPreviewInternal() {
     console.log('🎬 renderCurrentlyWatchingPreviewInternal called');
 
-    const previewSection = document.getElementById('currentlyWatchingPreview');
-    const scrollContainer = document.getElementById('currentlyWatchingScroll');
-
-    if (!previewSection || !scrollContainer) {
-      console.error('❌ Preview elements not found', {
-        previewSection: !!previewSection,
-        scrollContainer: !!scrollContainer,
-      });
+    // Idempotent render guard - prevent duplicate renders
+    const renderKey = 'cw_preview_render';
+    if (window[renderKey]) {
+      console.log('🎬 Skipping duplicate render - already in progress');
       return;
     }
+    window[renderKey] = true;
 
-    // Ensure the card wrapper has the class for CSS targeting
-    scrollContainer.classList.add('row-inner');
+    try {
+      const previewSection = document.getElementById('currentlyWatchingPreview');
+      const scrollContainer = document.getElementById('currentlyWatchingScroll');
 
-    // Get currently watching items
-    const watchingItems = getCurrentlyWatchingItems();
-    console.log('🎬 Retrieved watching items:', watchingItems);
+      if (!previewSection || !scrollContainer) {
+        console.error('❌ Preview elements not found', {
+          previewSection: !!previewSection,
+          scrollContainer: !!scrollContainer,
+        });
+        return;
+      }
 
-    if (!watchingItems || watchingItems.length === 0) {
-      // Only show test data if no Firebase data is present and we haven't exceeded retry limit
-      const hasFirebaseData =
-        window.appData &&
-        ((window.appData.tv?.watching && window.appData.tv.watching.length > 0) ||
-          (window.appData.movies?.watching && window.appData.movies.watching.length > 0));
-      const isSignedIn = window.FlickletApp?.currentUser || window.currentUser || window.firebaseAuth?.currentUser;
-      const shouldShowTestData = !hasFirebaseData && !isSignedIn && retryCount < MAX_RETRIES;
+      // Ensure the card wrapper has the class for CSS targeting
+      scrollContainer.classList.add('row-inner');
 
-      if (shouldShowTestData) {
-        console.log('📭 No items currently watching, showing test data for layout verification');
+      // Get currently watching items
+      const watchingItems = await getCurrentlyWatchingItems();
+      console.log('🎬 Retrieved watching items:', watchingItems);
 
-        // Show test data to verify layout is working
-        const testItems = [
-          { id: 'test1', title: 'Test Show 1', mediaType: 'tv', poster_path: null },
-          { id: 'test2', title: 'Test Show 2', mediaType: 'tv', poster_path: null },
-          { id: 'test3', title: 'Test Show 3', mediaType: 'tv', poster_path: null },
-        ];
+      // Check for duplicate renders using signature
+      const sig = watchingItems.map(x => `${x.id}:${x.poster}`).join('|');
+      if (sig === _lastSig) { 
+        console.log('🛑 CW Preview: no changes'); 
+        return; 
+      }
+      _lastSig = sig;
 
-        console.log('🎬 Rendering test data for layout verification');
-        previewSection.style.display = 'block';
-        scrollContainer.innerHTML = '';
+      if (!watchingItems || watchingItems.length === 0) {
+        // Only show test data if no Firebase data is present and we haven't exceeded retry limit
+        const hasFirebaseData =
+          window.appData &&
+          ((window.appData.tv?.watching && window.appData.tv.watching.length > 0) ||
+            (window.appData.movies?.watching && window.appData.movies.watching.length > 0));
+        const isSignedIn = window.FlickletApp?.currentUser || window.currentUser || window.firebaseAuth?.currentUser;
+        const shouldShowTestData = !hasFirebaseData && !isSignedIn && retryCount < MAX_RETRIES;
 
-        for (const item of testItems) {
-          try {
-            const card = await createPreviewCard(item);
-            scrollContainer.appendChild(card);
-          } catch (error) {
-            console.error('❌ Failed to create preview card for test item:', error);
-          }
-        }
+        if (shouldShowTestData) {
+          console.log('📭 No items currently watching, showing test data for layout verification');
 
-        // Set up a retry for real data (only once to prevent infinite loops)
-        if (!window._currentlyWatchingRetryScheduled && retryCount < MAX_RETRIES) {
-          window._currentlyWatchingRetryScheduled = true;
-          setTimeout(async () => {
-            const retryItems = getCurrentlyWatchingItems();
-            if (retryItems && retryItems.length > 0) {
-              console.log('🎬 Found real items on retry, replacing test data...');
-            // Clear container before rendering real data
-            scrollContainer.innerHTML = '';
-            // Call the render function directly instead of recursively
-            await renderCurrentlyWatchingPreviewInternal();
+          // Show test data to verify layout is working
+          const testItems = [
+            { id: 'test1', title: 'Test Show 1', mediaType: 'tv', poster_path: null },
+            { id: 'test2', title: 'Test Show 2', mediaType: 'tv', poster_path: null },
+            { id: 'test3', title: 'Test Show 3', mediaType: 'tv', poster_path: null },
+          ];
+
+          console.log('🎬 Rendering test data for layout verification');
+          previewSection.style.display = 'block';
+          scrollContainer.innerHTML = '';
+
+          for (const item of testItems) {
+            try {
+              const card = await createPreviewCard(item);
+              if (card) {
+                scrollContainer.appendChild(card);
+              }
+            } catch (error) {
+              console.error('❌ Failed to create preview card for test item:', error);
             }
-            window._currentlyWatchingRetryScheduled = false; // Reset for future use
-          }, 3000);
+          }
+
+          // Set up a retry for real data (only once to prevent infinite loops)
+          if (!window._currentlyWatchingRetryScheduled && retryCount < MAX_RETRIES) {
+            window._currentlyWatchingRetryScheduled = true;
+            setTimeout(async () => {
+              const retryItems = await getCurrentlyWatchingItems();
+              if (retryItems && retryItems.length > 0) {
+                console.log('🎬 Found real items on retry, replacing test data...');
+                // Clear container before rendering real data
+                scrollContainer.innerHTML = '';
+                // Call the render function directly instead of recursively
+                await renderCurrentlyWatchingPreviewInternal();
+              }
+              window._currentlyWatchingRetryScheduled = false; // Reset for future use
+            }, 3000);
+          }
+        } else {
+          // Hide section if no data and no test mode
+          console.log('📭 No items currently watching, hiding section');
+          previewSection.style.display = 'none';
+          scrollContainer.innerHTML = '';
         }
-      } else {
-        // Hide section if no data and no test mode
-        console.log('📭 No items currently watching, hiding section');
-        previewSection.style.display = 'none';
-        scrollContainer.innerHTML = '';
+        return;
       }
-      return;
-    }
 
-    // Show the section
-    previewSection.style.display = 'block';
-    scrollContainer.innerHTML = '';
+      // Show the section
+      previewSection.style.display = 'block';
+      scrollContainer.innerHTML = '';
 
-    // Limit items to prevent performance issues
-    const limit = getCurrentlyWatchingLimit();
-    const limitedItems = watchingItems.slice(0, limit);
+      // Limit items to prevent performance issues
+      const limit = getCurrentlyWatchingLimit();
+      const limitedItems = watchingItems.slice(0, limit);
 
-    console.log(
-      `🎬 Rendering ${limitedItems.length} watching items (limited from ${watchingItems.length})`,
-    );
-
-    // Render each item
-    for (const item of limitedItems) {
-      try {
-        const card = await createPreviewCard(item);
-        scrollContainer.appendChild(card);
-      } catch (error) {
-        console.error('❌ Failed to create preview card for item:', error);
-      }
-    }
-
-    // Add scroll indicators if there are more items than can be displayed
-    if (watchingItems.length > limit) {
       console.log(
-        `🎬 Added scroll indicators for ${watchingItems.length - limit} additional items`,
+        `🎬 Rendering ${limitedItems.length} watching items (limited from ${watchingItems.length})`,
       );
+
+      // Transform items using centralized adapter before rendering
+      const transformedItems = limitedItems.map(item => window.toCardProps ? window.toCardProps(item) : item);
+      console.log('🎬 Transformed items using toCardProps:', transformedItems);
+
+      // Render each item
+      for (const item of transformedItems) {
+        try {
+          const card = await createPreviewCard(item);
+          if (card) {
+            scrollContainer.appendChild(card);
+          }
+          // If card is null (no poster), it's already logged in createPreviewCard
+        } catch (error) {
+          console.error('❌ Failed to create preview card for item:', error);
+        }
+      }
+
+      // Add scroll indicators if there are more items than can be displayed
+      if (watchingItems.length > limit) {
+        console.log(
+          `🎬 Added scroll indicators for ${watchingItems.length - limit} additional items`,
+        );
+      }
+
+      // Post-render validation: check that all poster URLs are properly formatted (with delay to allow images to load)
+      setTimeout(() => {
+        validatePosterUrls();
+      }, 500);
+
+      // Dispatch event to notify that cards have been rendered
+      window.dispatchEvent(
+        new CustomEvent('cards:rendered', {
+          detail: {
+            count: limitedItems.length,
+            section: 'currently-watching',
+          },
+        }),
+      );
+    } catch (error) {
+      console.error('❌ Error in renderCurrentlyWatchingPreviewInternal:', error);
+    } finally {
+      // Always clear the render guard
+      window[renderKey] = false;
     }
-
-    // Post-render validation: check that all poster URLs are properly formatted
-    validatePosterUrls();
-
-    // Dispatch event to notify that cards have been rendered
-    window.dispatchEvent(
-      new CustomEvent('cards:rendered', {
-        detail: {
-          count: limitedItems.length,
-          section: 'currently-watching',
-        },
-      }),
-    );
   }
 
   /**
@@ -345,9 +384,15 @@
       const src = img.src;
       const itemId = img.closest('.preview-card')?.dataset?.itemId || `item-${index}`;
 
+      // Skip validation for SVG placeholders - they're temporary
+      if (src.startsWith('data:image/svg+xml')) {
+        console.log(`⏭️ Skipping validation for SVG placeholder for item ${itemId}`);
+        return;
+      }
+
       if (!isValidPosterUrl(src)) {
         invalidUrls.push({ itemId, src });
-        console.error(`❌ Invalid poster URL for item ${itemId}:`, src);
+        console.warn(`⚠️ Invalid poster URL for item ${itemId}:`, src);
       } else {
         console.log(`✅ Valid poster URL for item ${itemId}:`, src);
       }
@@ -380,7 +425,7 @@
   /**
    * Get currently watching items from app data
    */
-  function getCurrentlyWatchingItems() {
+  async function getCurrentlyWatchingItems() {
     console.log('🎬 getCurrentlyWatchingItems called, appData:', window.appData);
     console.log('🎬 appData structure:', {
       hasAppData: !!window.appData,
@@ -391,6 +436,43 @@
       tvWatchingData: window.appData?.tv?.watching,
       moviesWatchingData: window.appData?.movies?.watching
     });
+
+    // Use adapter system if available
+    if (window.WatchlistsAdapterV2 && typeof window.WatchlistsAdapterV2.load === 'function') {
+      try {
+        const uid = window.firebaseAuth?.currentUser?.uid || null;
+        const adapterData = await window.WatchlistsAdapterV2.load(uid);
+        
+        if (adapterData && adapterData.watchingIds && adapterData.watchingIds.length > 0) {
+          console.log('🎬 Using adapter data for currently watching items');
+          
+          // Get full item data for each watching ID
+          const watchingItems = [];
+          for (const id of adapterData.watchingIds) {
+            try {
+              const itemData = window.WatchlistsAdapterV2.getItemData(id);
+              if (itemData) {
+                watchingItems.push({
+                  ...itemData,
+                  media_type: itemData.media_type || 'movie'
+                });
+              }
+            } catch (error) {
+              console.warn('🎬 Failed to get item data for ID:', id, error);
+            }
+          }
+          
+          console.log('🎬 Found', watchingItems.length, 'watching items from adapter');
+          return watchingItems;
+        }
+      } catch (error) {
+        console.warn('🎬 Failed to load from adapter:', error);
+        // Do not fall back to appData - return empty array
+        return [];
+      }
+    }
+
+    // Fallback to appData only if adapter system is not available
     if (!window.appData) {
       console.log('🎬 No appData available');
       return [];
@@ -403,7 +485,7 @@
       allWatchingItems.push(
         ...window.appData.tv.watching.map((item) => ({
           ...item,
-          mediaType: 'tv',
+          media_type: 'tv',
         })),
       );
     }
@@ -413,7 +495,7 @@
       allWatchingItems.push(
         ...window.appData.movies.watching.map((item) => ({
           ...item,
-          mediaType: 'movie',
+          media_type: 'movie',
         })),
       );
     }
@@ -457,7 +539,7 @@
               localWatchingItems.push(
                 ...parsed.tv.watching.map((item) => ({
                   ...item,
-                  mediaType: 'tv',
+                  media_type: 'tv',
                 }))
               );
             }
@@ -528,7 +610,7 @@
                 title: title,
                 poster_path: poster ? poster.split('/').pop() : null,
                 poster_src: poster, // Keep full URL for debugging
-                mediaType: 'tv', // Default assumption
+                media_type: 'tv', // Default assumption
               };
             })
             .filter((item) => item.id);
@@ -563,41 +645,107 @@
   }
 
   /**
-   * Create a preview card element using new card renderer
+   * Create a preview card element using Cards V2 renderer
    */
   async function createPreviewCard(item) {
     console.log('🎬 createPreviewCard called with item:', item);
 
-    try {
-      // Import the card renderer
-      const { renderCurrentlyWatchingCard } = await import('/js/renderers/card-templates.js');
+    // Use Cards V2 if available, otherwise fallback to legacy
+    if (window.renderCurrentlyWatchingCardV2) {
+      console.log('🎬 Using Cards V2 for preview card');
       
-      // Transform item data for the new card renderer
-      const cardData = {
+      // Ensure minimal snapshot shape for V2 actions/poster logic
+      const snap = {
         id: item.id || item.tmdb_id || item.tmdbId,
-        title: item.title || item.name || 'Unknown Title',
-        name: item.name || item.title || 'Unknown Title',
-        posterUrl: getPosterUrl(item, 'w200'),
-        poster_path: item.poster_path,
         media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie'),
-        release_date: item.release_date,
-        first_air_date: item.first_air_date,
-        year: item.year,
-        vote_average: item.vote_average || 0,
+        title: item.title || item.name || 'Unknown',
+        name: item.title || item.name || 'Unknown',
+        release_date: item.release_date || null,
+        first_air_date: item.first_air_date || null,
+        poster_path: item.poster_path || null,
         genres: item.genres?.map(g => g.name) || [],
         overview: item.overview || ''
       };
 
-      // Create card with new renderer
-      const card = renderCurrentlyWatchingCard(cardData);
+      // Create V2 card with preview variant
+      const card = window.renderCurrentlyWatchingCardV2(snap, { variant: 'preview' });
       
-      // Add preview-specific styling
-      card.classList.add('preview-card');
+      if (card) {
+        // Add preview-specific styling
+        card.classList.add('preview-card');
+        return card;
+      } else {
+        console.warn('🎬 V2 card creation failed for:', snap.title);
+        return null;
+      }
+    } else {
+      console.log('🎬 Falling back to legacy preview card renderer');
       
-      return card;
-    } catch (error) {
-      console.error('❌ Card creation failed:', error);
-      throw error;
+      // Legacy fallback - check if item has poster data before rendering
+      let hasPoster = item.posterUrl || item.poster_src || item.poster_path;
+      
+      // If no poster data, try to fetch it from TMDB
+      if (!hasPoster && item.id && window.tmdbGet) {
+        try {
+          console.log('🎬 Attempting to fetch poster data for item:', item.title || item.name, 'ID:', item.id);
+          const mediaType = item.media_type === 'tv' ? 'tv' : 'movie';
+          const tmdbData = await window.tmdbGet(`${mediaType}/${item.id}`, {});
+          
+          if (tmdbData && tmdbData.poster_path) {
+            item.poster_path = tmdbData.poster_path;
+            hasPoster = true;
+            console.log('🎬 Successfully fetched poster data:', tmdbData.poster_path);
+          }
+        } catch (error) {
+          console.warn('🎬 Failed to fetch poster data from TMDB:', error);
+        }
+      }
+      
+      if (!hasPoster) {
+        console.warn('🎬 Skipping item without poster:', item.title || item.name || item.id);
+        return null;
+      }
+
+      try {
+        // Import the card renderer
+        const { renderCurrentlyWatchingCard } = await import('/js/renderers/card-templates.js');
+        
+        // Transform item data for the new card renderer
+        // Construct proper poster URL using same logic as list tabs
+        const posterUrl = item.posterUrl ||
+          item.poster_src ||
+          (item.poster_path && window.getPosterUrl
+            ? window.getPosterUrl(item.poster_path, 'w200')
+            : item.poster_path
+              ? `https://image.tmdb.org/t/p/w200${item.poster_path}`
+              : null);
+        
+        const cardData = {
+          id: item.id || item.tmdb_id || item.tmdbId,
+          title: item.title || item.name || 'Unknown Title',
+          name: item.name || item.title || 'Unknown Title',
+          posterUrl: posterUrl,
+          poster_path: item.poster_path,
+          media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie'),
+          release_date: item.release_date,
+          first_air_date: item.first_air_date,
+          year: item.year,
+          vote_average: item.vote_average || 0,
+          genres: item.genres?.map(g => g.name) || [],
+          overview: item.overview || ''
+        };
+
+        // Create card with new renderer
+        const card = renderCurrentlyWatchingCard(cardData);
+        
+        // Add preview-specific styling
+        card.classList.add('preview-card');
+        
+        return card;
+      } catch (error) {
+        console.error('❌ Card creation failed:', error);
+        throw error;
+      }
     }
   }
 
