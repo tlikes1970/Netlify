@@ -78,7 +78,7 @@
 
         // Add to adapter
         log('Calling adapter.addItem...');
-        const success = await this._adapter.addItem(itemId, listName);
+        const success = await this._adapter.addItem(itemId, listName, itemData);
         log('Adapter.addItem result:', success);
         
         if (success) {

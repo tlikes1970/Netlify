@@ -43,9 +43,14 @@ async function loadDynamicContent(section, sectionIndex) {
       }),
     ]);
 
-    // Combine and format results
+    console.log(`🎯 TMDB API responses for ${section.title}:`, {
+      moviesData: moviesData ? `Found ${moviesData.results?.length || 0} movies` : 'undefined',
+      tvData: tvData ? `Found ${tvData.results?.length || 0} TV shows` : 'undefined'
+    });
+
+    // Combine and format results - check for valid data first
     const allItems = [
-      ...moviesData.results.map((item) => ({
+      ...(moviesData?.results || []).map((item) => ({
         ...item,
         media_type: 'movie',
         mediaType: 'movie',
@@ -53,7 +58,7 @@ async function loadDynamicContent(section, sectionIndex) {
         year: new Date(item.release_date).getFullYear(),
         posterPath: item.poster_path,
       })),
-      ...tvData.results.map((item) => ({
+      ...(tvData?.results || []).map((item) => ({
         ...item,
         media_type: 'tv',
         mediaType: 'tv',
@@ -67,15 +72,41 @@ async function loadDynamicContent(section, sectionIndex) {
     const limitedItems = allItems.slice(0, 12);
 
     console.log(`🎯 Dynamic content loaded: ${limitedItems.length} items for ${section.title}`);
+    
+    // If no dynamic content was loaded, fall back to static data
+    if (limitedItems.length === 0) {
+      console.log(`🎯 No dynamic content found, falling back to static data for ${section.title}`);
+      const staticSection = window.CURATED_SECTIONS?.find(s => s.title === section.title);
+      if (staticSection && staticSection.items) {
+        console.log(`🎯 Using static data: ${staticSection.items.length} items for ${section.title}`);
+        return staticSection.items;
+      }
+    }
+    
     return limitedItems;
   } catch (error) {
     console.error(`🎯 Error loading dynamic content for ${section.title}:`, error);
+    console.log(`🎯 Falling back to static data for ${section.title}`);
+    
+    // Fallback to static data from window.CURATED_SECTIONS
+    const staticSection = window.CURATED_SECTIONS?.find(s => s.title === section.title);
+    if (staticSection && staticSection.items) {
+      console.log(`🎯 Using static data: ${staticSection.items.length} items for ${section.title}`);
+      return staticSection.items;
+    }
+    
     return [];
   }
 }
 
 // Define initializeCurated function first
 async function initializeCurated() {
+  // Check feature flag
+  if (!window.FLAGS?.homeRowCurated) {
+    console.log('🎯 Curated sections disabled by feature flag');
+    return;
+  }
+
   // Prevent duplicate renders
   if (window.render_curated) {
     console.log('🎯 Skipping duplicate curated render');
@@ -153,130 +184,45 @@ async function initializeCurated() {
 
         for (const item of items) {
           try {
+            console.log(`🎯 Creating card for item: ${item.title}`, item);
+            
             // Use Cards V2 system if available
             let card;
             if (window.renderCuratedCardV2) {
+              console.log('🎯 Using renderCuratedCardV2');
               card = window.renderCuratedCardV2(item);
             } else if (window.renderSearchCardV2) {
+              console.log('🎯 Using renderSearchCardV2');
               card = window.renderSearchCardV2(item);
-            } else {
-              card = null;
-            }
-            if (card) {
-              itemsContainer.appendChild(card);
-            }
             } else if (USE_CARD && window.Card && window.createCardData) {
+              console.log('🎯 Using old Card component');
               // Fallback to old Card component
               const cardData = window.createCardData(item, 'tmdb', 'curated');
-              const card = window.Card({
+              card = window.Card({
                 variant: 'unified',
                 ...cardData,
               });
-              itemsContainer.appendChild(card);
             } else {
-            // Fallback to simple item display with click handler
-            const itemEl = document.createElement('div');
-            itemEl.className = 'unified-card';
-            itemEl.setAttribute('tabindex', '0');
-            itemEl.setAttribute('role', 'button');
-            itemEl.setAttribute('aria-label', `View details for ${item.title}`);
-
-            const posterUrl = item.posterPath
-              ? `https://image.tmdb.org/t/p/w200${item.posterPath}`
-              : null;
-
-            const year = item.year || '';
-            const mediaType = item.mediaType || 'movie';
-
-            itemEl.innerHTML = `
-            <div class="unified-card-poster" role="button" tabindex="0" aria-label="${item.title}">
-              <div class="unified-card-poster-container">
-                ${
-                  posterUrl
-                    ? `<img src="${posterUrl}" alt="${item.title} poster" loading="lazy" class="unified-card-poster-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
-                    : ''
-                }
-                <div class="unified-card-poster-placeholder" style="display: ${posterUrl ? 'none' : 'flex'};">
-                  <div class="unified-card-poster-skeleton"></div>
-                  <div class="unified-card-poster-brand">🎬</div>
-                </div>
-              </div>
-              <div class="unified-card-actions">
-                <button class="unified-card-action-btn" 
-                        data-action="mark-watched" 
-                        data-id="${item.id}" 
-                        aria-label="Mark as Watched"
-                        title="Mark as Watched">
-                  <span class="unified-card-action-icon">✅</span>
-                  <span class="unified-card-action-label">Mark Watched</span>
-                </button>
-                <button class="unified-card-action-btn" 
-                        data-action="want-to-watch" 
-                        data-id="${item.id}" 
-                        aria-label="Add to Want to Watch"
-                        title="Add to Want to Watch">
-                  <span class="unified-card-action-icon">📖</span>
-                  <span class="unified-card-action-label">Want to Watch</span>
-                </button>
-                <button class="unified-card-action-btn" 
-                        data-action="remove" 
-                        data-id="${item.id}" 
-                        aria-label="Remove from List"
-                        title="Remove from List">
-                  <span class="unified-card-action-icon">🗑️</span>
-                  <span class="unified-card-action-label">Remove</span>
-                </button>
-              </div>
-            </div>
-            <div class="unified-card-content">
-              <h3 class="unified-card-title">${item.title}</h3>
-              <div class="unified-card-subtitle">${year ? `(${year}) • ${mediaType === 'tv' ? 'TV Show' : 'Movie'}` : mediaType === 'tv' ? 'TV Show' : 'Movie'}</div>
-            </div>
-          `;
-
-            // Add click handler for poster
-            const poster = itemEl.querySelector('.unified-card-poster');
-            if (poster && window.openTMDBLink) {
-              poster.addEventListener('click', (e) => {
-                // Don't trigger if clicking on action buttons
-                if (!e.target.closest('.unified-card-action-btn')) {
-                  window.openTMDBLink(item.id, mediaType);
-                }
-              });
+              console.log('🎯 Using simple fallback card');
+              // Fallback to simple item display with click handler
+              const itemEl = document.createElement('div');
+              itemEl.className = 'unified-card';
+              itemEl.setAttribute('tabindex', '0');
+              itemEl.setAttribute('role', 'button');
+              itemEl.setAttribute('aria-label', `View details for ${item.title}`);
+              itemEl.innerHTML = `<div class="card-title">${item.title}</div>`;
+              card = itemEl;
             }
-
-            // Add action button handlers
-            const actionButtons = itemEl.querySelectorAll('.unified-card-action-btn');
-            actionButtons.forEach((button) => {
-              button.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const action = button.dataset.action;
-                const itemId = button.dataset.id;
-
-                switch (action) {
-                  case 'mark-watched':
-                    if (window.moveItem) {
-                      window.moveItem(Number(itemId), 'watched');
-                    }
-                    break;
-                  case 'want-to-watch':
-                    if (window.moveItem) {
-                      window.moveItem(Number(itemId), 'wishlist');
-                    }
-                    break;
-                  case 'remove':
-                    if (window.removeItemFromCurrentList) {
-                      window.removeItemFromCurrentList(Number(itemId));
-                    }
-                    break;
-                }
-              });
-            });
-
-            itemsContainer.appendChild(itemEl);
+            
+            console.log(`🎯 Card created for ${item.title}:`, card);
+            if (card) {
+              itemsContainer.appendChild(card);
+              console.log(`🎯 Card appended for ${item.title}`);
+            } else {
+              console.warn(`🎯 No card created for ${item.title}`);
             }
           } catch (error) {
-            console.error('❌ Failed to create curated card for item:', error);
+            console.error('🎯 Error creating card for item:', item.title, error);
           }
         }
       } else {
@@ -304,9 +250,13 @@ async function initializeCurated() {
   }, 100);
 }
 
-// Export init function for idle import
-export async function init() {
+// Initialize curated sections
+async function initCuratedSections() {
+  console.log('🎯 initCuratedSections called');
+  console.log('🎯 Feature flag check:', window.FLAGS?.homeRowCurated);
+  
   let mount = document.getElementById('curatedSections');
+  console.log('🎯 Mount element found:', !!mount);
   if (!mount) {
     // Wait for element to be created by V2 system
     const checkForMount = async () => {
@@ -326,34 +276,15 @@ export async function init() {
 }
 
 // Listen for curated:rerender event to update when settings change
-document.addEventListener('curated:rerender', () => {
+document.addEventListener('curated:rerender', async () => {
   console.log('🎯 Curated rerender event received, updating sections');
   await initializeCurated();
 });
 
-// Also support IIFE for backward compatibility
-(function () {
-  let mount = document.getElementById('curatedSections');
-  if (!mount) {
-    // Wait for element to be created by V2 system
-    const checkForMount = async () => {
-      mount = document.getElementById('curatedSections');
-      if (mount) {
-        console.log('🎯 Curated sections element found, initializing');
-        await initializeCurated();
-      } else {
-        setTimeout(checkForMount, 100);
-      }
-    };
-    await checkForMount();
-    return;
-  }
-
-  await initializeCurated();
-
-  // Listen for curated:rerender event to update when settings change
-  document.addEventListener('curated:rerender', () => {
-    console.log('🎯 Curated rerender event received (IIFE), updating sections');
-    await initializeCurated();
-  });
-})();
+// Initialize curated sections when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCuratedSections);
+} else {
+  // DOM is already ready, initialize immediately
+  setTimeout(initCuratedSections, 100);
+}

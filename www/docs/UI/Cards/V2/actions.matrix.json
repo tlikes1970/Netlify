@@ -1,0 +1,22 @@
+{
+  "Search": {
+    "wantToWatch": "wired:addToListFromCache|www/js/app.js#2116",
+    "moveToWatching": "wired:moveItem|www/js/app.js#2119",
+    "markWatched": "wired:moveItem|www/js/app.js#2122",
+    "notInterested": "wired:removeItemFromCurrentList|www/js/app.js#2137",
+    "reviewNotes": "planned",
+    "addTag": "planned",
+    "similarTo": "planned",
+    "refineSearch": "planned"
+  },
+  "CurrentlyWatching": {
+    "wantToWatch": "wired:moveItem|www/js/home-wire-strict.js#227",
+    "markWatched": "wired:moveItem|www/js/home-wire-strict.js#221",
+    "notInterested": "wired:removeItemFromCurrentList|www/js/home-wire-strict.js#231",
+    "delete": "wired:removeItemFromCurrentList|www/js/home-wire-strict.js#231"
+  },
+  "Curated": {
+    "wantToWatch": "wired:moveItem|www/scripts/curated-rows.js#269"
+  },
+  "UpNext": {}
+}

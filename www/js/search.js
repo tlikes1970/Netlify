@@ -350,9 +350,9 @@
   }
 
 
-  // Render with Card system
+  // Render with Cards V2 system
   function renderWithCard(results) {
-    log('Rendering with Card system');
+    log('Rendering with Cards V2 system');
 
     searchResults.innerHTML = `
       <h4>🎯 Search Results <span class="count">${results.length}</span></h4>
@@ -364,36 +364,31 @@
 
     results.forEach((item) => {
       try {
-        const card = window.Card({
-          variant: 'detail', // Use detail variant for proper button layout
+        const props = {
           id: item.id,
-          title: item.title || item.name,
-          subtitle: item.release_date
-            ? `${new Date(item.release_date).getFullYear()} • ${item.media_type === 'tv' ? 'TV Series' : 'Movie'}`
-            : item.media_type === 'tv'
-              ? 'TV Series'
-              : 'Movie',
-          posterUrl: item.poster_path
-            ? window.getPosterUrl
-              ? window.getPosterUrl(item.poster_path, 'w200')
-              : `https://image.tmdb.org/t/p/w200${item.poster_path}`
-            : null,
-          rating: item.vote_average || 0,
-          badges: [{ label: 'Search Result', kind: 'status' }],
-          currentList: 'discover', // This will show the proper discover buttons
-          onOpenDetails: () => {
-            if (window.openTMDBLink) {
-              window.openTMDBLink(item.id, item.media_type || 'movie');
-            }
-          },
-        });
-
-        // Store the full item data in the card for addToListFromCache to access
-        card.dataset.itemData = JSON.stringify(item);
-
-        searchGrid.appendChild(card);
+          mediaType: item.media_type || 'movie',
+          title: item.title || item.name || 'Unknown',
+          poster: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '',
+          releaseDate: item.release_date || item.first_air_date || '',
+          genre: item.genre || (item.genres && item.genres[0]?.name) || '',
+          seasonEpisode: item.seasonEpisode || item.sxxExx || '',
+          overview: item.overview || '',
+          badges: [{ label: 'Search Result', type: 'default' }],
+          whereToWatch: item.whereToWatch || '',
+          userRating: item.userRating || item.rating || 0
+        };
+        
+        const container = document.createElement('div');
+        // Design spec: Search uses compact horizontal search variant with user stars, no Pro buttons
+        const card = window.renderCardV2(container, props, { listType: 'search', context: 'search' });
+        
+        if (card) {
+          // Store the full item data in the card for addToListFromCache to access
+          card.dataset.itemData = JSON.stringify(item);
+          searchGrid.appendChild(card);
+        }
       } catch (error) {
-        warn('Error creating Card:', error);
+        warn('Error creating V2 card:', error);
       }
     });
   }

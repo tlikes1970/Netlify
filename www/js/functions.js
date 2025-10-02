@@ -1341,17 +1341,26 @@
             release_date: item.release_date || null,
             first_air_date: item.first_air_date || null,
             poster: item.poster_path || null, // V2 renderer expects 'poster', not 'poster_path'
+            genre: item.genre || (item.genres && item.genres[0]?.name) || '',
+            seasonEpisode: item.seasonEpisode || item.sxxExx || '',
+            nextAirDate: item.next_episode_air_date || item.nextAirDate || item.next_air_date || '',
+            userRating: item.userRating || item.rating || 0,
+            progress: item.progress || '',
+            badges: item.badges || [],
+            whereToWatch: item.whereToWatch || '',
+            overview: item.overview || ''
           };
           
           // Create a temporary container for each card
           const tempContainer = document.createElement('div');
-          const card = window.renderCardV2(tempContainer, snap, { listType });
+          // Design spec: Tabs use horizontal tab/list variant with user stars and Pro buttons
+          const card = window.renderCardV2(tempContainer, snap, { listType, context: 'tab' });
           if (card) {
             card.dataset.itemId = snap.id;
             card.dataset.listType = listType;
             card.dataset.renderIndex = index;
             container.appendChild(card);
-            log(`Added V2 card ${index + 1}/${items.length} for ${listType}: ${snap.title}`);
+            log(`Added V2 tab card ${index + 1}/${items.length} for ${listType}: ${snap.title}`);
           } else {
             warn(`V2 card creation failed for ${snap.title}`);
           }
@@ -1441,6 +1450,13 @@
           window.CounterBootstrap.directRecount();
         }, 100);
       }
+      
+      // Enable drag and drop for tab lists
+      if (typeof window.makeSortable === 'function') {
+        window.makeSortable(container);
+        log(`Enabled drag and drop for ${listType} container`);
+      }
+      
       // Clear render flag after a short delay to allow for legitimate re-renders
       setTimeout(() => {
         if (renderKey) {
@@ -2326,21 +2342,30 @@
   function makeSortable(container) {
     let draggedElement = null;
     let draggedIndex = -1;
-    // Add drag handles to all cards
+    // Add drag handles to all cards (both legacy and V2)
     const addDragHandles = () => {
-      const cards = container.querySelectorAll('.poster-card');
-      cards.forEach((card) => {
+      // Legacy poster cards
+      const legacyCards = container.querySelectorAll('.poster-card');
+      legacyCards.forEach((card) => {
         if (!card.querySelector('.poster-card__drag-handle')) {
           const dragHandle = document.createElement('div');
           dragHandle.className = 'poster-card__drag-handle';
           dragHandle.innerHTML = '⋮⋮';
           dragHandle.setAttribute('draggable', 'true');
           dragHandle.setAttribute('aria-label', 'Drag to reorder');
-          // Add to actions area
           const actions = card.querySelector('.poster-card__actions');
           if (actions) {
             actions.insertBefore(dragHandle, actions.firstChild);
           }
+        }
+      });
+      
+      // V2 cards - make existing drag handles draggable
+      const v2Cards = container.querySelectorAll('.card.v2 .drag-handle');
+      v2Cards.forEach((dragHandle) => {
+        if (!dragHandle.hasAttribute('draggable')) {
+          dragHandle.setAttribute('draggable', 'true');
+          dragHandle.style.cursor = 'grab';
         }
       });
     };
@@ -2404,8 +2429,9 @@
     addDragHandles();
     // Set up drag events
     container.addEventListener('dragstart', (e) => {
-      if (e.target.classList.contains('poster-card__drag-handle')) {
-        draggedElement = e.target.closest('.poster-card');
+      if (e.target.classList.contains('poster-card__drag-handle') || e.target.classList.contains('drag-handle')) {
+        // Support both legacy and V2 cards
+        draggedElement = e.target.closest('.poster-card') || e.target.closest('.card.v2');
         draggedIndex = Array.from(container.children).indexOf(draggedElement);
         draggedElement.classList.add('poster-card--dragging');
         container.classList.add('poster-cards-grid--reordering');
@@ -2414,11 +2440,11 @@
       }
     });
     container.addEventListener('dragend', (e) => {
-      if (e.target.classList.contains('poster-card__drag-handle')) {
+      if (e.target.classList.contains('poster-card__drag-handle') || e.target.classList.contains('drag-handle')) {
         draggedElement.classList.remove('poster-card--dragging');
         container.classList.remove('poster-cards-grid--reordering');
         // Remove drag-over classes
-        const cards = container.querySelectorAll('.poster-card');
+        const cards = container.querySelectorAll('.poster-card, .card.v2');
         cards.forEach((card) => card.classList.remove('poster-card--drag-over'));
         draggedElement = null;
         draggedIndex = -1;
@@ -2428,13 +2454,13 @@
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       const afterElement = getDragAfterElement(container, e.clientY);
-      const card = e.target.closest('.poster-card');
+      const card = e.target.closest('.poster-card') || e.target.closest('.card.v2');
       if (card && card !== draggedElement) {
         card.classList.add('poster-card--drag-over');
       }
     });
     container.addEventListener('dragleave', (e) => {
-      const card = e.target.closest('.poster-card');
+      const card = e.target.closest('.poster-card') || e.target.closest('.card.v2');
       if (card) {
         card.classList.remove('poster-card--drag-over');
       }
@@ -2442,7 +2468,7 @@
     container.addEventListener('drop', (e) => {
       e.preventDefault();
       const afterElement = getDragAfterElement(container, e.clientY);
-      const card = e.target.closest('.poster-card');
+      const card = e.target.closest('.poster-card') || e.target.closest('.card.v2');
       if (card && card !== draggedElement) {
         if (afterElement == null) {
           container.appendChild(draggedElement);
@@ -2453,7 +2479,7 @@
         updateListOrder(container, draggedElement);
       }
       // Clean up
-      const cards = container.querySelectorAll('.poster-card');
+      const cards = container.querySelectorAll('.poster-card, .card.v2');
       cards.forEach((card) => card.classList.remove('poster-card--drag-over'));
     });
     // Re-add drag handles when new cards are added
@@ -2462,6 +2488,9 @@
     });
     observer.observe(container, { childList: true, subtree: true });
   }
+  
+  // Expose makeSortable globally
+  window.makeSortable = makeSortable;
   /**
    * Get the element after which to insert the dragged element
    * @param {HTMLElement} container - Container element
@@ -2470,7 +2499,7 @@
    */
   function getDragAfterElement(container, y) {
     const draggableElements = [
-      ...container.querySelectorAll('.poster-card:not(.poster-card--dragging)'),
+      ...container.querySelectorAll('.poster-card:not(.poster-card--dragging), .card.v2:not(.poster-card--dragging)'),
     ];
     return draggableElements.reduce(
       (closest, child) => {
@@ -2502,8 +2531,8 @@
         : 'tv';
     const mediaKey = mediaType === 'tv' ? 'tv' : 'movies';
     if (!window.appData[mediaKey] || !window.appData[mediaKey][section]) return;
-    // Get new order from DOM
-    const cards = container.querySelectorAll('.poster-card');
+    // Get new order from DOM - support both legacy and V2 cards
+    const cards = container.querySelectorAll('.poster-card, .card.v2');
     const newOrder = Array.from(cards)
       .map((card) => {
         const itemId = card.dataset.id || card.querySelector('[data-id]')?.dataset.id;

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet v28.115.0 - TV & Movie Tracker</title>
+    <title>Flicklet v28.116.0 - TV & Movie Tracker</title>
     <meta name="description" content="Search, track, and rate shows & films fast." />
     <meta name="build" content="latest" />
 
@@ -347,6 +347,14 @@
     <!-- Home page features - Defer non-critical features -->
     <script type="module" src="/scripts/currently-watching-preview.js" defer></script>
     <script type="module" src="/scripts/next-up-this-week.js" defer></script>
+    
+    <!-- Curated data seeding -->
+    <script src="/scripts/curated-seed.js"></script>
+    <script src="/scripts/curated-rows.js"></script>
+    <script src="/scripts/tmdb-seed.js"></script>
+    
+    <!-- Home wiring system -->
+    <script type="module" src="/js/home-wire-strict.js"></script>
     <script type="module" src="/scripts/theaters-near-me.js" defer></script>
     
     <!-- Test script for adding currently airing shows - Defer test scripts -->

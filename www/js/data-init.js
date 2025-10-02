@@ -144,20 +144,11 @@
       auth = window.firebaseAuth || null;
       db = window.firebaseDb || null;
 
+      // Skip dynamic imports for better performance - use compat versions already loaded
       if (!app || !auth || !db) {
-        // Attempt modular imports lazily (won't throw if CSP blocks—caught)
-        try {
-          const [{ getAuth }, { getFirestore }] = await Promise.all([
-            import('https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js'),
-            import('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js'),
-          ]);
-          if (!app) app = window.firebaseApp || null;
-          if (!auth) auth = window.firebaseAuth || getAuth(app);
-          if (!db) db = window.firebaseDb || getFirestore(app);
-        } catch (e) {
-          // This is expected when CSP blocks dynamic imports - not an error
-          log('modular import skipped (CSP policy):', e?.message || e);
-        }
+        log('Firebase not available - using local-only mode');
+        // Don't attempt dynamic imports as they slow down loading
+        // The compat versions are already loaded in HTML
       }
 
       window.__AUTH_READY__ = !!auth;

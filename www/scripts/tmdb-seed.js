@@ -17,13 +17,6 @@
     API_KEY: API_KEY ? `${API_KEY.slice(0, 4)}...` : 'none',
   });
 
-  // Force clear all curated data for fresh start
-  console.log('🌱 TMDB Seeder: Clearing all curated data for fresh start');
-  localStorage.removeItem('curated:trending');
-  localStorage.removeItem('curated:staff');
-  localStorage.removeItem('curated:new');
-  localStorage.removeItem('flicklet:seed:v1');
-
   // If curated keys exist and not stale, bail early
   if (!needsSeed()) {
     console.log('🌱 TMDB Seeder: Keys exist and fresh, skipping');
@@ -39,6 +32,13 @@
     touchStamp();
     return;
   }
+
+  // Only clear curated data if we have an API key and are going to replace it
+  console.log('🌱 TMDB Seeder: Clearing curated data for fresh TMDB data');
+  localStorage.removeItem('curated:trending');
+  localStorage.removeItem('curated:staff');
+  localStorage.removeItem('curated:new');
+  localStorage.removeItem('flicklet:seed:v1');
 
   console.log('🌱 TMDB Seeder: Proceeding with seeding...');
 
@@ -65,16 +65,35 @@
 
     const missingAny = !trending || !staff || !newData;
 
+    // Check if the data is actually valid curated data (not just sample data with empty posterPath)
+    let hasValidData = false;
+    if (trending && staff && newData) {
+      try {
+        const trendingData = JSON.parse(trending);
+        const staffData = JSON.parse(staff);
+        const newDataParsed = JSON.parse(newData);
+        
+        // Check if any of the data has real poster paths (not empty strings)
+        const hasRealPosters = [...trendingData, ...staffData, ...newDataParsed]
+          .some(item => item.posterPath && item.posterPath.trim() !== '');
+        
+        hasValidData = hasRealPosters;
+      } catch (e) {
+        hasValidData = false;
+      }
+    }
+
     console.log('🌱 Seeder needsSeed check:', {
       trending: trending ? `${trending.length} chars` : 'missing',
       staff: staff ? `${staff.length} chars` : 'missing',
       newData: newData ? `${newData.length} chars` : 'missing',
       fresh,
       missingAny,
-      shouldSeed: missingAny || !fresh,
+      hasValidData,
+      shouldSeed: missingAny || !fresh || !hasValidData,
     });
 
-    return missingAny || !fresh;
+    return missingAny || !fresh || !hasValidData;
   }
 
   function touchStamp() {

@@ -1,64 +1,142 @@
-/* MediaCard Unified System - v28.80 */
+/* Cards V2 System - Design Parity Implementation */
 
-/* Cards V2 System - Theme-aware Cards */
-.search-card.v2,
-.cw-card.v2,
-.curated-card.v2 {
-  display: flex;
-  flex-direction: row;
-  background: #171a21;
-  border: 1px solid #242a33;
+/* Base V2 Card Styles */
+.card.v2 {
+  position: relative;
   border-radius: 14px;
-  padding: 16px;
   box-shadow: 0 6px 24px rgba(0,0,0,.35);
   transition: transform .2s ease;
-  gap: 16px;
   margin-bottom: 16px;
 }
 
-/* Light theme support */
-.light-mode .search-card.v2,
-.light-mode .cw-card.v2,
-.light-mode .curated-card.v2 {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 6px 24px rgba(0,0,0,.1);
-}
-
-.search-card.v2:hover,
-.cw-card.v2:hover,
-.curated-card.v2:hover {
+.card.v2:hover {
   transform: translateY(-2px);
 }
 
-.search-card.v2 .poster-wrap,
-.cw-card.v2 .poster-wrap,
-.curated-card.v2 .poster-wrap {
-  flex: 0 0 120px;
+/* Theme-aware colors using CSS custom properties */
+.card.v2 {
+  background: var(--surface, #171a21);
+  border: 1px solid var(--border, #242a33);
+  color: var(--fg, #e6eaf0);
+}
+
+.light-mode .card.v2 {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e5e7eb);
+  color: var(--fg, #1f2937);
+  box-shadow: 0 6px 24px rgba(0,0,0,.1);
+}
+
+/* Home Vertical Cards */
+.card.v2.v2-home-cw,
+.card.v2.v2-home-nextup,
+.card.v2.v2-home-curated {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center;
+  padding: 12px;
+  min-width: 200px;
+  max-width: 200px;
+}
+
+/* Tab/List Horizontal Cards - Maximum specificity to override all other rules */
+.card.v2.v2-tab-card,
+.card.v2.v2-tab-card.card,
+.card.v2.v2-tab-card.card.card,
+body .card.v2.v2-tab-card,
+html body .card.v2.v2-tab-card,
+html body .card.v2.v2-tab-card.card,
+html body .card.v2.v2-tab-card.card.card,
+html body .card.v2.v2-tab-card.card.card.card {
+  display: flex !important;
+  flex-direction: row !important;
+  padding: 16px;
+  gap: 16px;
+}
+
+/* Search Compact Horizontal Cards - Maximum specificity to override all other rules */
+.card.v2.v2-search-card,
+.card.v2.v2-search-card.card,
+.card.v2.v2-search-card.card.card,
+body .card.v2.v2-search-card,
+html body .card.v2.v2-search-card,
+html body .card.v2.v2-search-card.card,
+html body .card.v2.v2-search-card.card.card,
+html body .card.v2.v2-search-card.card.card.card {
+  display: flex !important;
+  flex-direction: row !important;
+  padding: 14px 16px;
+  gap: 16px;
+}
+
+/* CRITICAL OVERRIDE - Force horizontal layout for all V2 tab/search cards */
+.card.v2.v2-tab-card,
+.card.v2.v2-search-card {
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+/* Additional override for any remaining conflicts */
+.card.v2[class*="v2-tab"],
+.card.v2[class*="v2-search"] {
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+/* CRITICAL: Force list containers to stack V2 cards vertically */
+.list-container:has(.card.v2) {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+}
+
+/* Poster Styling */
+.card.v2 .poster-wrap {
   aspect-ratio: 2/3;
-  background: #0b0d12;
+  background: var(--muted-bg, #0b0d12);
   border-radius: 10px;
   overflow: hidden;
+  position: relative;
 }
 
-/* Light theme poster background */
-.light-mode .search-card.v2 .poster-wrap,
-.light-mode .cw-card.v2 .poster-wrap,
-.light-mode .curated-card.v2 .poster-wrap {
-  background: #f3f4f6;
+.light-mode .card.v2 .poster-wrap {
+  background: var(--muted-bg, #f3f4f6);
 }
 
-.search-card.v2 .poster-wrap img,
-.cw-card.v2 .poster-wrap img,
-.curated-card.v2 .poster-wrap img {
+/* Home vertical cards - full width poster */
+.card.v2.v2-home-cw .poster-wrap,
+.card.v2.v2-home-nextup .poster-wrap,
+.card.v2.v2-home-curated .poster-wrap {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+/* Tab card poster sizing - force horizontal layout */
+.card.v2.v2-tab-card .poster-wrap {
+  flex: 0 0 160px !important;
+  width: 160px !important;
+  height: 240px !important;
+}
+
+/* Search card poster sizing - force horizontal layout */
+.card.v2.v2-search-card .poster-wrap {
+  flex: 0 0 120px !important;
+  width: 120px !important;
+  height: 180px !important;
+}
+
+
+
+.card.v2 .poster-wrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.search-card.v2 .meta,
-.cw-card.v2 .meta,
-.curated-card.v2 .meta {
+/* Content Styling */
+.card.v2 .card-content {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
@@ -66,38 +144,284 @@
   gap: 8px;
 }
 
-.search-card.v2 .title,
-.cw-card.v2 .title,
-.curated-card.v2 .title {
+/* Home vertical cards - centered content */
+.card.v2.v2-home-cw .card-content,
+.card.v2.v2-home-nextup .card-content,
+.card.v2.v2-home-curated .card-content {
+  text-align: center;
+  width: 100%;
+}
+
+/* Tab and search cards - left-aligned content */
+.card.v2.v2-tab-card .card-content,
+.card.v2.v2-search-card .card-content {
+  text-align: left;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+/* Title styling */
+.card.v2 .title {
   font-weight: 700;
   font-size: 16px;
-  color: #e6eaf0;
+  color: var(--fg, #e6eaf0);
   margin: 0;
   line-height: 1.2;
 }
 
-/* Light theme text */
-.light-mode .search-card.v2 .title,
-.light-mode .cw-card.v2 .title,
-.light-mode .curated-card.v2 .title {
-  color: #1f2937;
+.light-mode .card.v2 .title {
+  color: var(--fg, #1f2937);
 }
 
-.search-card.v2 .sub,
-.cw-card.v2 .sub,
-.curated-card.v2 .sub {
-  color: #a9b3c1;
+/* Meta information */
+.card.v2 .meta {
+  color: var(--fg-muted, #a9b3c1);
   font-size: 12px;
   margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-/* Light theme subtitle */
-.light-mode .search-card.v2 .sub,
-.light-mode .cw-card.v2 .sub,
-.light-mode .curated-card.v2 .sub {
-  color: #6b7280;
+.light-mode .card.v2 .meta {
+  color: var(--fg-muted, #6b7280);
+}
+
+/* Next up styling */
+.card.v2 .next-air {
+  color: var(--accent, #4da3ff);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Where to watch styling */
+.card.v2 .where-to-watch {
+  color: var(--accent, #4da3ff);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Curator blurb styling */
+.card.v2 .curator-blurb {
+  color: var(--fg-muted, #a9b3c1);
+  font-size: 12px;
+  text-align: center;
+  max-height: 3.2em;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.light-mode .card.v2 .curator-blurb {
+  color: var(--fg-muted, #6b7280);
+}
+
+/* Actions Styling */
+.card.v2 .actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Tab and search card actions - left-aligned */
+.card.v2.v2-tab-card .actions,
+.card.v2.v2-search-card .actions {
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+/* Tab and search card content - left-aligned */
+.card.v2.v2-tab-card .card-content,
+.card.v2.v2-search-card .card-content {
+  text-align: left !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+}
+
+/* Tab and search card free actions - left-aligned */
+.card.v2.v2-tab-card .free-actions,
+.card.v2.v2-search-card .free-actions {
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+}
+
+/* Tab and search card pro actions - left-aligned */
+.card.v2.v2-tab-card .pro-actions,
+.card.v2.v2-search-card .pro-actions {
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+}
+
+/* Free Actions - horizontal layout with wrapping */
+.card.v2 .free-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px dashed var(--border, #242a33);
+}
+
+/* Pro Actions - horizontal layout with wrapping */
+.card.v2 .pro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px dashed var(--pro, #f0b90b);
+}
+
+/* 2x2 Action Grid for Home Currently Watching */
+.card.v2 .action-grid-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.card.v2 .action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* Action buttons */
+.card.v2 .btn {
+  background: var(--btn-bg, #232a34);
+  color: var(--fg, #e6eaf0);
+  border: 1px solid var(--border, #242a33);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card.v2 .btn:hover {
+  background: var(--btn-hover, #2a3441);
+  transform: translateY(-1px);
+}
+
+.light-mode .card.v2 .btn {
+  background: var(--btn-bg, #f3f4f6);
+  color: var(--fg, #1f2937);
+  border: 1px solid var(--border, #e5e7eb);
+}
+
+.light-mode .card.v2 .btn:hover {
+  background: var(--btn-hover, #e5e7eb);
+}
+
+/* Pro button outline style */
+.card.v2 .btn--pro-outline {
+  border-color: var(--pro, #f0b90b);
+  color: var(--pro, #f0b90b);
+  background: transparent;
+}
+
+.card.v2 .btn--pro-outline:hover {
+  background: var(--pro, #f0b90b);
+  color: var(--fg, #1f2937);
+}
+
+/* Delete button */
+.card.v2 .delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #802626;
+  color: #fff;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.card.v2 .delete-btn:hover {
+  background: #a03030;
+}
+
+/* Drag handle */
+.card.v2 .drag-handle {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  cursor: grab;
+  font-size: 18px;
+  color: var(--fg-muted, #a9b3c1);
+  padding: 4px;
+}
+
+.card.v2 .drag-handle:hover {
+  color: var(--fg, #e6eaf0);
+}
+
+.light-mode .card.v2 .drag-handle {
+  color: var(--fg-muted, #6b7280);
+}
+
+.light-mode .card.v2 .drag-handle:hover {
+  color: var(--fg, #1f2937);
+}
+
+/* User Rating Stars */
+.card.v2 .user-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.card.v2 .user-rating .star {
+  font-size: 20px;
+  color: var(--accent, #4da3ff);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.card.v2 .user-rating .star.filled {
+  color: var(--accent, #4da3ff);
+}
+
+.card.v2 .user-rating .star:hover {
+  color: var(--accent-hover, #66b3ff);
+}
+
+.card.v2 .user-rating .rating-label {
+  color: var(--fg-muted, #a9b3c1);
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.light-mode .card.v2 .user-rating .rating-label {
+  color: var(--fg-muted, #6b7280);
+}
+
+/* Status Badges */
+.card.v2 .status-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.card.v2 .badge {
+  border: 1px solid var(--border, #242a33);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: var(--fg-muted, #a9b3c1);
+}
+
+.light-mode .card.v2 .badge {
+  border-color: var(--border, #e5e7eb);
+  color: var(--fg-muted, #6b7280);
+}
+
+.card.v2 .badge.pro {
+  border-color: var(--pro, #f0b90b);
+  color: var(--pro, #f0b90b);
 }
 
 /* Date styling */
@@ -421,5 +745,335 @@
   
   .btn .label {
     display: none;             /* hide labels on mobile, show only icons */
+  }
+}
+
+/* ===== CARDS V2 ENHANCED STYLING ===== */
+
+/* Vertical layout for home cards */
+.cw-card.v2.vertical,
+.curated-card.v2.vertical,
+.next-up-card.v2.vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 200px;
+  max-width: 200px;
+  min-height: auto;
+  padding: 12px;
+}
+
+/* Next Up cards - wider for home */
+.next-up-card.v2.vertical {
+  min-width: 220px;
+  max-width: 220px;
+}
+
+/* Curated cards - wider for home */
+.curated-card.v2.vertical {
+  min-width: 220px;
+  max-width: 220px;
+}
+
+/* Horizontal layout for tab and search cards */
+.search-card.v2.horizontal,
+.cw-card.v2.horizontal,
+.curated-card.v2.horizontal {
+  display: flex;
+  flex-direction: row;
+  min-height: 120px;
+  gap: 16px;
+}
+
+/* Tab cards - wider poster */
+.cw-card.v2.horizontal .poster-wrap {
+  flex: 0 0 160px;
+}
+
+/* Search cards - compact poster */
+.search-card.v2.horizontal .poster-wrap {
+  flex: 0 0 120px;
+}
+
+/* Card content wrapper */
+.card-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Vertical cards content */
+.cw-card.v2.vertical .card-content,
+.curated-card.v2.vertical .card-content,
+.next-up-card.v2.vertical .card-content {
+  width: 100%;
+  text-align: center;
+}
+
+/* Meta information styling */
+.meta {
+  color: #a9b3c1;
+  font-size: 12px;
+  margin: 0;
+}
+
+.light-mode .meta {
+  color: #6b7280;
+}
+
+/* Next air date styling */
+.next-air {
+  color: #4da3ff;
+  font-size: 12px;
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* Where to watch styling */
+.where-to-watch {
+  color: #4da3ff;
+  font-size: 12px;
+  margin: 4px 0 6px;
+  text-align: center;
+}
+
+/* Curator blurb styling */
+.curator-blurb {
+  color: #a9b3c1;
+  font-size: 12px;
+  text-align: center;
+  max-height: 3.2em;
+  overflow: hidden;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.light-mode .curator-blurb {
+  color: #6b7280;
+}
+
+/* Overview text for horizontal cards */
+.overview {
+  color: #a9b3c1;
+  font-size: 13px;
+  margin: 6px 0 10px;
+  max-height: 3.2em;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+.light-mode .overview {
+  color: #6b7280;
+}
+
+/* Status badges */
+.status-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.badge {
+  border: 1px solid #242a33;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: #a9b3c1;
+}
+
+.badge.new {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.badge.trending {
+  background: #f59e0b;
+  color: white;
+  border-color: #f59e0b;
+}
+
+.badge.returning {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.badge.ended {
+  background: #6b7280;
+  color: white;
+  border-color: #6b7280;
+}
+
+.badge.cancelled {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+.light-mode .badge {
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+/* User rating stars */
+.user-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.user-rating .star {
+  font-size: 20px;
+  color: #4da3ff;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.user-rating .star.filled {
+  color: #fbbf24;
+}
+
+.user-rating .star:hover {
+  color: #f59e0b;
+}
+
+.user-rating .rating-label {
+  font-size: 12px;
+  color: #a9b3c1;
+  margin-left: 4px;
+}
+
+.light-mode .user-rating .rating-label {
+  color: #6b7280;
+}
+
+/* Progress summary */
+.progress-summary {
+  color: #a9b3c1;
+  font-size: 12px;
+  margin: 6px 0;
+}
+
+.light-mode .progress-summary {
+  color: #6b7280;
+}
+
+/* Action grid for vertical cards */
+.action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.action-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* Pro actions styling */
+.pro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px dashed #f0b90b;
+  margin-top: 6px;
+}
+
+.pro-actions button {
+  background: transparent;
+  color: #f0b90b;
+  border: 1px solid #f0b90b;
+}
+
+.pro-actions button:hover {
+  background: rgba(240, 185, 11, 0.1);
+}
+
+/* Delete button */
+.delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #802626;
+  color: #fff;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: background 0.2s ease;
+}
+
+.delete-btn:hover {
+  background: #991b1b;
+}
+
+/* Drag handle */
+.drag-handle {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  cursor: grab;
+  font-size: 18px;
+  color: #a9b3c1;
+  padding: 4px;
+  user-select: none;
+}
+
+.drag-handle:hover {
+  color: #e6eaf0;
+}
+
+.light-mode .drag-handle {
+  color: #6b7280;
+}
+
+.light-mode .drag-handle:hover {
+  color: #374151;
+}
+
+/* TMDB link styling */
+.poster-wrap a {
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+}
+
+.poster-wrap a:hover {
+  opacity: 0.9;
+}
+
+/* Mobile responsive for vertical cards */
+@media (max-width: 640px) {
+  .cw-card.v2.vertical,
+  .curated-card.v2.vertical,
+  .next-up-card.v2.vertical {
+    min-width: 180px;
+    max-width: 180px;
+  }
+  
+  .next-up-card.v2.vertical,
+  .curated-card.v2.vertical {
+    min-width: 200px;
+    max-width: 200px;
+  }
+  
+  .action-grid {
+    gap: 6px;
+  }
+  
+  .action-row {
+    gap: 6px;
   }
 }

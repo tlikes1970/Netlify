@@ -14,11 +14,12 @@
   port      = 8888
   functions = "netlify/functions"
 
-# SPA fallback so /settings, /watching, etc. don’t 404 on reload
-[[redirects]]
-  from = "/*"
-  to   = "/index.html"
-  status = 200
+# SPA fallback so /settings, /watching, etc. don't 404 on reload
+# Temporarily disabled to fix JavaScript loading
+# [[redirects]]
+#   from = "/*"
+#   to   = "/index.html"
+#   status = 200
 
 # API to functions passthrough (keep yours)
 [[redirects]]

@@ -24,7 +24,19 @@
         return t >= now - 864e5 && t <= now + wk;
       }),
     discover: (d) => d.discover || [], // optional feed you already populate
-    curated: (d) => d.curated || [], // optional curated content
+    curated: (d) => {
+      // Load curated data from localStorage keys
+      const curatedData = [];
+      try {
+        const trending = JSON.parse(localStorage.getItem('curated:trending') || '[]');
+        const staff = JSON.parse(localStorage.getItem('curated:staff') || '[]');
+        const fresh = JSON.parse(localStorage.getItem('curated:new') || '[]');
+        curatedData.push(...trending, ...staff, ...fresh);
+      } catch (e) {
+        console.warn('[home-wire] Error loading curated data:', e);
+      }
+      return curatedData;
+    },
     inTheaters: (d) => d.inTheaters || [], // optional feed populated elsewhere
   };
 
@@ -83,27 +95,72 @@
       }
     }
 
-    // Use Cards V2 system if available
-    if (window.renderSearchCardV2) {
-      try {
-        // Cards V2 renderer (flagged). If V2 is available, use it; otherwise fall back to V1.
-        let card;
-        if (sectionHint === 'watching' && window.renderCurrentlyWatchingCardV2) {
-          card = window.renderCurrentlyWatchingCardV2(item);
-        } else if (window.renderCurrentlyWatchingCard) {
-          card = window.renderCurrentlyWatchingCard(item);
-        } else {
-          card = window.renderSearchCardV2(item);
-        }
-        
+    // Use Cards V2 system with proper context routing per design specs
+    try {
+      let card;
+      const container = document.createElement('div');
+      
+      if (sectionHint === 'watching' && window.renderCardV2) {
+        // Design spec: Home Currently Watching - vertical layout with 2x2 buttons
+        const props = {
+          id: item.id,
+          mediaType: item.media_type || 'tv',
+          title: item.title || item.name || 'Unknown',
+          poster: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : (item.posterUrl || ''),
+          releaseDate: item.release_date || item.first_air_date || '',
+          genre: item.genre || (item.genres && item.genres[0]?.name) || '',
+          seasonEpisode: item.seasonEpisode || item.sxxExx || ''
+        };
+        card = window.renderCardV2(container, props, { listType: 'watching', context: 'home' });
+      } else if (sectionHint === 'nextUp' && window.renderCardV2) {
+        // Design spec: Home Next Up - vertical layout with NO buttons, single "Up next: <date>" line
+        const props = {
+          id: item.id,
+          mediaType: item.media_type || 'tv',
+          title: item.title || item.name || 'Unknown',
+          poster: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : (item.posterUrl || ''),
+          releaseDate: item.release_date || item.first_air_date || '',
+          genre: item.genre || (item.genres && item.genres[0]?.name) || '',
+          seasonEpisode: item.seasonEpisode || item.sxxExx || '',
+          nextAirDate: item.next_episode_air_date || item.nextAirDate || item.next_air_date || 'TBA'
+        };
+        card = window.renderCardV2(container, props, { listType: 'next-up', context: 'home' });
+      } else if (sectionHint === 'curated' && window.renderCardV2) {
+        // Design spec: Home Curated - vertical layout with single button and TMDB link
+        const props = {
+          id: item.id,
+          mediaType: item.media_type || 'movie',
+          title: item.title || item.name || 'Unknown',
+          poster: (item.poster_path || item.posterPath) ? `https://image.tmdb.org/t/p/w200${item.poster_path || item.posterPath}` : (item.posterUrl || ''),
+          releaseDate: item.release_date || item.first_air_date || '',
+          genre: item.genre || (item.genres && item.genres[0]?.name) || '',
+          tmdbId: item.tmdbId || item.id,
+          whereToWatch: item.whereToWatch || item.provider || '',
+          curatorBlurb: item.curatorBlurb || item.description || ''
+        };
+        card = window.renderCardV2(container, props, { listType: 'curated', context: 'home' });
+      } else if (window.renderCardV2) {
+        // Fallback to generic V2 renderer
+        const props = {
+          id: item.id,
+          mediaType: item.media_type || 'tv',
+          title: item.title || item.name || 'Unknown',
+          poster: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : (item.posterUrl || ''),
+          releaseDate: item.release_date || item.first_air_date || '',
+          genre: item.genre || (item.genres && item.genres[0]?.name) || '',
+          seasonEpisode: item.seasonEpisode || item.sxxExx || ''
+        };
+        card = window.renderCardV2(container, props, { listType: sectionHint, context: 'home' });
+      }
+      
+      if (card) {
         // Add preview-specific styling
         card.classList.add('preview-card');
-        
         return card;
-      } catch (error) {
-        console.error('❌ Cards V2 creation failed:', error);
-        // Fall through to old Card component
       }
+    } catch (error) {
+      console.error('❌ Cards V2 creation failed:', error);
+      // Fall through to old Card component
     }
 
     // Fallback to old Card component if Cards V2 not available
@@ -296,7 +353,8 @@
       }
       const pick = pickers[r.picker] || (() => []);
       const items = pick(data);
-      await renderRail(container, items, r.limit, r.picker === 'wishlist' ? 'wishlist' : 'watching');
+      // Use the picker name as sectionHint to get correct card variant
+      await renderRail(container, items, r.limit, r.picker);
     }
     console.info('[home-wire] rendered:', config.rails.map((r) => r.key).join(', '));
   }

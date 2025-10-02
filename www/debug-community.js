@@ -64,3 +64,10 @@ console.log('🔍 Debugging Community Rotator...');
 
 console.log('🔍 Debug complete - check results above');
 
+
+
+
+
+
+
+

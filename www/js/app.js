@@ -3,6 +3,8 @@
    This build removes duplicate init paths and normalizes tab/UI/render behavior.
 */
 
+// Card action handlers will be loaded via global functions
+
 // Fallback for FlickletDebug if not loaded
 window.FlickletDebug = window.FlickletDebug || {
   info: console.log,
@@ -149,6 +151,15 @@ window.FlickletDebug = window.FlickletDebug || {
         // 2.7) Initialize Counter Bootstrap System
         if (window.CounterBootstrap) {
           window.CounterBootstrap.init();
+        }
+
+        // 2.8) Install centralized card action handlers
+        if (window.installCardActionHandlers) {
+          window.installCardActionHandlers({
+            addToList: (id, list, ctx) => window.addToListFromCacheV2?.(id, list, ctx),
+            removeFromList: (id, list, ctx) => window.removeItemFromCurrentList?.(id, list, ctx),
+            markWatched: (id, ctx) => window.addToListFromCacheV2?.(id, 'watched', ctx),
+          });
         }
 
         // 3) Initialize Firebase auth listener

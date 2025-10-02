@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Flicklet CardModel (per-card-type)",
+  "type": "object",
+  "properties": {
+    "CurrentlyWatching": {
+      "type": "object",
+      "required": [
+        "title",
+        "poster",
+        "genre",
+        "sxxexx"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "poster": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "genre": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "sxxexx": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "capabilities": {
+          "type": "array",
+          "description": "UI actions available on this card",
+          "items": {
+            "enum": [
+              "wantToWatch",
+              "markWatched",
+              "notInterested",
+              "delete"
+            ]
+          }
+        }
+      }
+    },
+    "UpNext": {
+      "type": "object",
+      "required": [
+        "title",
+        "poster",
+        "genre",
+        "sxxexx",
+        "nextAirDate"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "poster": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "genre": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "sxxexx": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "nextAirDate": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "capabilities": {
+          "type": "array",
+          "description": "UI actions available on this card",
+          "items": {
+            "enum": []
+          }
+        }
+      }
+    },
+    "Curated": {
+      "type": "object",
+      "required": [
+        "title",
+        "poster",
+        "year",
+        "genre",
+        "whereToWatch"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "poster": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "year": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "genre": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "whereToWatch": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "curatorBlurb": {
+          "type": "string",
+          "source": "UNKNOWN",
+          "nullable": true
+        },
+        "capabilities": {
+          "type": "array",
+          "description": "UI actions available on this card",
+          "items": {
+            "enum": [
+              "wantToWatch"
+            ]
+          }
+        }
+      }
+    },
+    "Search": {
+      "type": "object",
+      "required": [
+        "title",
+        "poster",
+        "year",
+        "mediaType"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "poster": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "year": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "mediaType": {
+          "type": "string",
+          "source": "UNKNOWN"
+        },
+        "rating": {
+          "type": "number",
+          "source": "UNKNOWN",
+          "nullable": true
+        },
+        "whereToWatch": {
+          "type": "string",
+          "source": "UNKNOWN",
+          "nullable": true
+        },
+        "overview": {
+          "type": "string",
+          "source": "UNKNOWN",
+          "nullable": true
+        },
+        "capabilities": {
+          "type": "array",
+          "description": "UI actions available on this card",
+          "items": {
+            "enum": [
+              "wantToWatch",
+              "moveToWatching",
+              "markWatched",
+              "notInterested",
+              "reviewNotes",
+              "addTag",
+              "similarTo",
+              "refineSearch"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

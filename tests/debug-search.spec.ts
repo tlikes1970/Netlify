@@ -1,86 +1,68 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from './fixtures';
 
-test('Debug search functionality step by step', async ({ page }) => {
-  console.log('🚀 Starting debug test...');
-
-  // Navigate to the page
-  await page.goto('/');
-  console.log('✅ Page loaded');
-
-  // Wait for page to load and check if search input exists
-  try {
-    await page.waitForSelector('#searchInput', { timeout: 10000 });
-    console.log('✅ Search input found');
-  } catch (error) {
-    console.log('❌ Search input not found:', error);
-    return;
-  }
-
-  // Check if search button exists
-  try {
-    await page.waitForSelector('#searchBtn', { timeout: 10000 });
-    console.log('✅ Search button found');
-  } catch (error) {
-    console.log('❌ Search button not found:', error);
-    return;
-  }
-
-  // Check if clear search button exists
-  try {
-    await page.waitForSelector('#clearSearchBtn', { timeout: 10000 });
-    console.log('✅ Clear search button found');
-  } catch (error) {
-    console.log('❌ Clear search button not found:', error);
-    return;
-  }
-
-  // Check if search results container exists
-  try {
-    await page.waitForSelector('#searchResults', { timeout: 10000 });
-    console.log('✅ Search results container found');
-  } catch (error) {
-    console.log('❌ Search results container not found:', error);
-    return;
-  }
-
-  // Fill search input
-  await page.fill('#searchInput', 'archer');
-  console.log('✅ Filled search input with "archer"');
-
-  // Check if search input has the value
-  const inputValue = await page.locator('#searchInput').inputValue();
-  console.log('📝 Search input value:', inputValue);
-
-  // Click search button
-  console.log('🔍 Clicking search button...');
-  await page.click('#searchBtn');
-  console.log('✅ Search button clicked');
-
-  // Wait a moment for search to process
-  await page.waitForTimeout(2000);
-
-  // Check if search results are visible
-  const isVisible = await page.locator('#searchResults').isVisible();
-  console.log('👁️ Search results visible:', isVisible);
-
-  // Check search results content
-  const resultsContent = await page.locator('#searchResults').innerHTML();
-  console.log('📄 Search results content length:', resultsContent.length);
-  console.log('📄 Search results content preview:', resultsContent.substring(0, 200));
-
-  // Check if there are any error messages
-  const errorElements = await page.locator('.error, [class*="error"], [class*="fail"]').count();
-  console.log('❌ Error elements found:', errorElements);
-
-  // Check console for errors
-  const consoleLogs = [];
-  page.on('console', (msg) => {
-    consoleLogs.push(msg.text());
-    console.log('📱 Console:', msg.text());
+test.describe('Debug Search', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
   });
 
-  // Wait a bit more to capture console logs
-  await page.waitForTimeout(1000);
-
-  console.log('📊 Test completed. Console logs captured:', consoleLogs.length);
+  test('Debug Search Functionality', async ({ page }) => {
+    console.log('🔍 Starting search debug test...');
+    
+    // Check if search input exists
+    const searchInput = page.locator('#search');
+    await expect(searchInput).toBeVisible();
+    console.log('✅ Search input found');
+    
+    // Perform search
+    await searchInput.fill('test movie');
+    await searchInput.press('Enter');
+    console.log('✅ Search performed');
+    
+    // Wait for search results
+    await page.waitForTimeout(2000);
+    
+    // Check search results container
+    const searchResults = page.locator('#searchResults');
+    await expect(searchResults).toBeVisible();
+    console.log('✅ Search results container visible');
+    
+    // Get the HTML content to see what's actually there
+    const searchHTML = await searchResults.innerHTML();
+    console.log('Search results HTML:', searchHTML);
+    
+    // Check if there are any cards
+    const cards = page.locator('#searchResults .media-card, #searchResults [data-id]');
+    const cardCount = await cards.count();
+    console.log(`Found ${cardCount} cards`);
+    
+    // Check network requests
+    const requests = [];
+    page.on('request', request => {
+      if (request.url().includes('tmdb') || request.url().includes('search')) {
+        requests.push({
+          url: request.url(),
+          method: request.method(),
+          headers: request.headers()
+        });
+      }
+    });
+    
+    // Wait a bit more to capture requests
+    await page.waitForTimeout(1000);
+    
+    console.log('Network requests:', requests);
+    
+    // Check if search function exists
+    const searchFunction = await page.evaluate(() => {
+      return typeof window.performSearch === 'function';
+    });
+    console.log('Search function exists:', searchFunction);
+    
+    // Check if searchTMDB function exists
+    const tmdbFunction = await page.evaluate(() => {
+      return typeof window.searchTMDB === 'function';
+    });
+    console.log('searchTMDB function exists:', tmdbFunction);
+  });
 });

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flicklet – Tab Card Mockups (Improved)</title>
+  <style>
+    :root{
+      --bg:#0f1115; --card:#171a21; --muted:#a9b3c1; --text:#e6eaf0; --line:#242a33; --accent:#4da3ff; --pro:#f0b90b;
+      --btn:#232a34; --btn2:#1c222b; --shadow:0 6px 24px rgba(0,0,0,.35);
+    }
+    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
+    .wrap{max-width:1000px;margin:24px auto;padding:0 16px 64px}
+    h1{font-size:22px;margin:8px 0 24px}
+    h2{font-size:18px;margin:24px 0 12px;color:var(--muted)}
+    .card{position:relative;display:flex;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:24px;transition:transform .2s}
+    .card:hover{transform:translateY(-2px)}
+    .poster{flex:0 0 160px;aspect-ratio:2/3;background:#0b0d12 url('https://placehold.co/320x480?text=Poster') center/cover no-repeat}
+    .content{flex:1;padding:14px 16px;display:flex;flex-direction:column;position:relative}
+    .title{font-weight:700;font-size:16px;margin-bottom:4px}
+    .meta{color:var(--muted);font-size:12px;margin-bottom:4px}
+    .overview{color:var(--muted);font-size:13px;margin:6px 0 10px;max-height:3.2em;overflow:hidden}
+    .where{font-size:12px;color:var(--accent);margin-bottom:6px}
+    .badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+    .badge{border:1px solid var(--line);border-radius:6px;padding:2px 6px;font-size:11px;color:var(--muted)}
+    .badge.pro{border-color:var(--pro);color:var(--pro)}
+    .rating{display:flex;align-items:center;gap:4px;margin:6px 0}
+    .rating span{font-size:22px;color:var(--accent);cursor:pointer}
+    .actions{margin-top:auto;display:flex;flex-direction:column;gap:6px}
+    .free-actions, .pro-actions{display:flex;flex-wrap:wrap;gap:8px;padding:8px;border-radius:8px;border:1px dashed var(--line)}
+    .pro-actions{border-color:var(--pro)}
+    button{background:var(--btn);color:var(--text);border:1px solid var(--line);padding:6px 10px;border-radius:8px;font-size:12px;cursor:pointer}
+    button.secondary{background:var(--btn2)}
+    .summary{color:var(--muted);font-size:12px;margin:6px 0}
+    .delete-btn{position:absolute;top:8px;right:8px;background:#802626;color:#fff;border:none;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:11px}
+    .handle{position:absolute;top:50%;right:0;transform:translateY(-50%);cursor:grab;font-size:18px;color:var(--muted);padding:4px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Flicklet – Improved Tab Card Mockups</h1>
+
+    <!-- Currently Watching -->
+    <h2>Currently Watching</h2>
+    <div class="card">
+      <div class="poster"></div>
+      <div class="content">
+        <button class="delete-btn">Delete</button>
+        <div class="title">TV Show (2023)</div>
+        <div class="meta">Drama • S02E05 • Next: Oct 12</div>
+        <div class="where">Where to Watch: Netflix</div>
+        <div class="badges"><span class="badge">RETURNING</span></div>
+        <div class="rating">★ ★ ★ ☆ ☆ <span class="muted">(Your rating)</span></div>
+        <div class="summary">Progress: 5 of 10 episodes watched</div>
+        <div class="actions">
+          <div class="free-actions">
+            <button>Want to Watch</button><button>Watched</button><button>Not Interested</button>
+            <button>Set Episode Progress</button><button>Review/Notes</button><button>Add Tag</button>
+          </div>
+          <div class="pro-actions">
+            <button class="secondary">Trailer / Extras</button>
+            <button class="secondary">Remind Me (Configurable)</button>
+          </div>
+        </div>
+        <div class="handle">≡</div>
+      </div>
+    </div>
+
+    <!-- Want to Watch -->
+    <h2>Want to Watch</h2>
+    <div class="card">
+      <div class="poster"></div>
+      <div class="content">
+        <button class="delete-btn">Delete</button>
+        <div class="title">Show Title (2022)</div>
+        <div class="meta">Comedy</div>
+        <div class="where">Where to Watch: Hulu</div>
+        <div class="overview">Overview a few lines long. Tabs show overview text for better context.</div>
+        <div class="badges"><span class="badge">ENDED</span></div>
+        <div class="rating">★ ☆ ☆ ☆ ☆ <span class="muted">(Your rating)</span></div>
+        <div class="actions">
+          <div class="free-actions">
+            <button>Currently Watching</button><button>Watched</button><button>Not Interested</button>
+            <button>Set Episode Progress</button><button>Review/Notes</button><button>Add Tag</button>
+          </div>
+          <div class="pro-actions">
+            <button class="secondary">Trailer / Extras</button>
+          </div>
+        </div>
+        <div class="handle">≡</div>
+      </div>
+    </div>
+
+    <!-- Watched -->
+    <h2>Watched</h2>
+    <div class="card">
+      <div class="poster"></div>
+      <div class="content">
+        <button class="delete-btn">Delete</button>
+        <div class="title">Movie Title (2021)</div>
+        <div class="meta">Action • Runtime: 98m</div>
+        <div class="where">Where to Watch: Prime Video</div>
+        <div class="overview">Overview a few lines long. Tabs show overview text for better context.</div>
+        <div class="badges"><span class="badge">ENDED</span></div>
+        <div class="rating">★ ★ ★ ★ ☆ <span class="muted">(Your rating)</span></div>
+        <div class="actions">
+          <div class="free-actions">
+            <button>Want to Watch</button><button>Currently Watching</button><button>Not Interested</button>
+            <button>Review/Notes</button><button>Add Tag</button>
+          </div>
+          <div class="pro-actions">
+            <button class="secondary">Trailer / Extras</button>
+          </div>
+        </div>
+        <div class="handle">≡</div>
+      </div>
+    </div>
+
+    <!-- Discovery -->
+    <h2>Discovery</h2>
+    <div class="card">
+      <div class="poster"></div>
+      <div class="content">
+        <button class="delete-btn">Delete</button>
+        <div class="title">Curated Pick (2020)</div>
+        <div class="meta">Documentary</div>
+        <div class="where">Where to Watch: Disney+</div>
+        <div class="overview">Curated overview a few lines, to browse and add.</div>
+        <div class="badges"><span class="badge">NEW</span></div>
+        <div class="actions">
+          <div class="free-actions">
+            <button>Want to Watch</button><button>Currently Watching</button><button>Watched</button><button>Not Interested</button>
+            <button>Review/Notes</button><button>Add Tag</button>
+          </div>
+        </div>
+        <div class="handle">≡</div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

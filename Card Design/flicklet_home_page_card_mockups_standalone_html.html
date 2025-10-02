@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flicklet – Home: Currently Watching + Next Up Rails</title>
+  <style>
+    :root{
+      --bg:#0f1115; --card:#171a21; --muted:#a9b3c1; --text:#e6eaf0; --line:#242a33;
+      --btn:#232a34; --shadow:0 6px 24px rgba(0,0,0,.35);
+    }
+    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px 64px}
+    h1{font-size:22px;margin:8px 0 24px}
+    h2{font-size:18px;margin:24px 0 12px;color:var(--muted)}
+
+    .rail{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+    .rail::-webkit-scrollbar{height:8px}
+    .rail::-webkit-scrollbar-thumb{background:#1d2330;border-radius:999px}
+
+    .home-card{min-width:200px;max-width:200px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:12px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center}
+    .poster{width:100%;aspect-ratio:2/3;background:#0b0d12 url('https://placehold.co/200x300?text=Poster') center/cover no-repeat;border-radius:10px;margin-bottom:8px}
+    .home-title{font-weight:700;font-size:14px;margin:0 0 4px;text-align:center}
+    .home-meta{color:var(--muted);font-size:12px;margin:0 0 8px;text-align:center}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;width:100%}
+    button{background:var(--btn);color:var(--text);border:1px solid var(--line);padding:6px 8px;border-radius:8px;font-size:12px;cursor:pointer;width:100%}
+
+    /* Next Up */
+    .next-card{min-width:220px;max-width:220px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:12px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center}
+    .next-poster{width:100%;aspect-ratio:2/3;background:#0b0d12 url('https://placehold.co/220x330?text=Poster') center/cover no-repeat;border-radius:10px;margin-bottom:8px}
+    .next-title{font-weight:700;font-size:14px;margin:0 0 4px;text-align:center}
+    .next-meta{color:var(--muted);font-size:12px;margin:0 0 6px;text-align:center}
+    .next-air{font-size:12px;color:var(--accent);text-align:center}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Flicklet – Home Rails</h1>
+
+    <h2>Currently Watching</h2>
+    <div class="rail" aria-label="Currently Watching">
+      <!-- Card 1 -->
+      <div class="home-card">
+        <div class="poster"></div>
+        <div class="home-title">TV Show One (2024)</div>
+        <div class="home-meta">Thriller • S03E02</div>
+        <div class="row2"><button>Want to Watch</button><button>Watched</button></div>
+        <div class="row2"><button>Not Interested</button><button>Delete</button></div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="home-card">
+        <div class="poster"></div>
+        <div class="home-title">TV Show Two (2023)</div>
+        <div class="home-meta">Drama • S01E08</div>
+        <div class="row2"><button>Want to Watch</button><button>Watched</button></div>
+        <div class="row2"><button>Not Interested</button><button>Delete</button></div>
+      </div>
+
+      <!-- Card 3 (movie example) -->
+      <div class="home-card">
+        <div class="poster"></div>
+        <div class="home-title">Movie Title (2021)</div>
+        <div class="home-meta">Action</div>
+        <div class="row2"><button>Want to Watch</button><button>Watched</button></div>
+        <div class="row2"><button>Not Interested</button><button>Delete</button></div>
+      </div>
+    </div>
+
+    <h2>Up Next</h2>
+    <div class="rail" aria-label="Up Next">
+      <!-- Next Up Card 1 -->
+      <div class="next-card">
+        <div class="next-poster"></div>
+        <div class="next-title">TV Show One (2024)</div>
+        <div class="next-meta">Thriller • S03E03</div>
+        <div class="next-air">Up Next: Oct 12</div>
+      </div>
+
+      <!-- Next Up Card 2 -->
+      <div class="next-card">
+        <div class="next-poster"></div>
+        <div class="next-title">TV Show Two (2023)</div>
+        <div class="next-meta">Drama • S01E09</div>
+        <div class="next-air">Up Next: Nov 02</div>
+          </div>
+
+    <h2>Curated Rows</h2>
+    <div class="rail" aria-label="Curated Picks">
+      <!-- Curated Card 1 -->
+      <div class="home-card" style="min-width:220px;max-width:220px">
+        <a href="https://example.com/tmdb" target="_blank" rel="noopener noreferrer" style="width:100%"><div class="poster" style="background-image:url('https://placehold.co/220x330?text=Poster')" title="Opens in TMDB"></div></a>
+        <div class="home-title">Curated Pick One (2020)</div>
+        <div class="home-meta">Documentary</div>
+        <div class="home-meta" style="color:var(--muted);font-size:12px;margin:4px 0 6px;text-align:center">Where to Watch: Netflix</div>
+        <div style="color:var(--muted);font-size:12px;text-align:center;max-height:3.2em;overflow:hidden;margin-bottom:8px">Short curator blurb or overview, a couple lines max for scannability.</div>
+        <div class="row2" style="grid-template-columns:1fr"><button>Want to Watch</button></div>
+      </div>
+
+      <!-- Curated Card 2 -->
+      <div class="home-card" style="min-width:220px;max-width:220px">
+        <a href="https://example.com/tmdb" target="_blank" rel="noopener noreferrer" style="width:100%"><div class="poster" style="background-image:url('https://placehold.co/220x330?text=Poster')" title="Opens in TMDB"></div></a>
+        <div class="home-title">Curated Pick Two (2019)</div>
+        <div class="home-meta">Drama</div>
+        <div class="home-meta" style="color:var(--muted);font-size:12px;margin:4px 0 6px;text-align:center">Where to Watch: Prime Video</div>
+        <div style="color:var(--muted);font-size:12px;text-align:center;max-height:3.2em;overflow:hidden;margin-bottom:8px">Short curator blurb, limited to two lines to avoid vertical bloat.</div>
+        <div class="row2" style="grid-template-columns:1fr"><button>Want to Watch</button></div>
+      </div>
+
+      <!-- Curated Card 3 -->
+      <div class="home-card" style="min-width:220px;max-width:220px">
+        <a href="https://example.com/tmdb" target="_blank" rel="noopener noreferrer" style="width:100%"><div class="poster" style="background-image:url('https://placehold.co/220x330?text=Poster')" title="Opens in TMDB"></div></a>
+        <div class="home-title">Curated Pick Three (2018)</div>
+        <div class="home-meta">Action</div>
+        <div class="home-meta" style="color:var(--muted);font-size:12px;margin:4px 0 6px;text-align:center">Where to Watch: Hulu</div>
+        <div style="color:var(--muted);font-size:12px;text-align:center;max-height:3.2em;overflow:hidden;margin-bottom:8px">Another short blurb. Keep it tight and readable.</div>
+        <div class="row2" style="grid-template-columns:1fr"><button>Want to Watch</button></div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

@@ -25,6 +25,7 @@ window.FLAGS = Object.assign(
     seriesOrganizerEnabled: true, // card declutter (progressive disclosure)
     homeRowCurrentlyWatching: true, // Currently Watching Preview row
     homeRowNextUp: true, // Next Up This Week row
+    homeRowCurated: true, // Curated Sections row
     homeRowSpotlight: true, // Community Spotlight row
     homeRowPlayAlong: true, // Play Along row (Trivia & FlickWord)
     homeRowFeedback: true, // Feedback Tile row

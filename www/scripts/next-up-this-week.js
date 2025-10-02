@@ -31,6 +31,23 @@ async function fetchNextAirDate(showId) {
   }
 }
 
+// Helper function to get show data (including poster) from TMDB
+async function fetchShowData(showId, mediaType) {
+  try {
+    if (typeof window.tmdbGet !== 'function') {
+      console.warn('📺 tmdbGet not available for show data');
+      return null;
+    }
+
+    const endpoint = mediaType === 'tv' ? `tv/${showId}` : `movie/${showId}`;
+    const data = await window.tmdbGet(endpoint, {});
+    return data;
+  } catch (error) {
+    console.warn('📺 Failed to fetch show data for', showId, error);
+    return null;
+  }
+}
+
 // Helper functions for date calculations
 function startOfDay(d) {
   const x = new Date(d);
@@ -51,14 +68,29 @@ function daysUntil(date) {
 
 // Get watching items and filter for next up shows
 async function getNextUpItems(watchingItems) {
-  const tvShows = watchingItems.filter((it) => it.media_type === 'tv' || it.first_air_date);
+  // Include items that are explicitly TV shows (first_air_date is optional)
+  const tvShows = watchingItems.filter((it) => 
+    it.media_type === 'tv'
+  );
   console.log('📺 TV shows found:', tvShows.length, tvShows);
 
   const enriched = await Promise.all(
     tvShows.map(async (it) => {
       console.log('📺 Checking show:', it.name || it.title, 'ID:', it.id);
-      const airDateISO = await fetchNextAirDate(it.id);
+      
+      // Fetch both air date and poster data from TMDB
+      const [airDateISO, tmdbData] = await Promise.all([
+        fetchNextAirDate(it.id),
+        fetchShowData(it.id, it.media_type)
+      ]);
+      
       console.log('📺 Next air date for', it.name || it.title, ':', airDateISO);
+      
+      // Update item with poster data if missing
+      if (tmdbData && tmdbData.poster_path && !it.poster_path) {
+        it.poster_path = tmdbData.poster_path;
+        console.log('📺 Fetched poster data for', it.name || it.title, ':', tmdbData.poster_path);
+      }
       
       // Create show object with next_episode_to_air data
       const show = {
@@ -176,25 +208,56 @@ async function renderNextUpRow() {
     return;
   }
 
-  // Get watching items - use same method as Currently Watching section
+  // Get watching items - use adapter system like other components
   const watchingItems = [];
 
-  // Try appData first
-  if (window.appData?.tv?.watching) {
-    watchingItems.push(
-      ...window.appData.tv.watching.map((item) => ({
-        ...item,
-        media_type: 'tv',
-      })),
-    );
+  // Use adapter system if available
+  if (window.WatchlistsAdapterV2 && typeof window.WatchlistsAdapterV2.load === 'function') {
+    try {
+      const uid = window.firebaseAuth?.currentUser?.uid || null;
+      const adapterData = await window.WatchlistsAdapterV2.load(uid);
+      
+      if (adapterData && adapterData.watchingIds && adapterData.watchingIds.length > 0) {
+        console.log('📺 Using adapter data for next up items');
+        
+        // Get full item data for each watching ID
+        for (const id of adapterData.watchingIds) {
+          try {
+            const itemData = window.WatchlistsAdapterV2.getItemData(id);
+            if (itemData) {
+              watchingItems.push({
+                ...itemData,
+                media_type: itemData.media_type || 'movie'
+              });
+            }
+          } catch (error) {
+            console.warn('📺 Failed to get item data for ID:', id, error);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('📺 Failed to load from adapter, falling back to appData:', error);
+    }
   }
-  if (window.appData?.movies?.watching) {
-    watchingItems.push(
-      ...window.appData.movies.watching.map((item) => ({
-        ...item,
-        media_type: item.media_type || 'movie',
-      })),
-    );
+
+  // Fallback to appData if adapter system is not available
+  if (watchingItems.length === 0) {
+    if (window.appData?.tv?.watching) {
+      watchingItems.push(
+        ...window.appData.tv.watching.map((item) => ({
+          ...item,
+          media_type: 'tv',
+        })),
+      );
+    }
+    if (window.appData?.movies?.watching) {
+      watchingItems.push(
+        ...window.appData.movies.watching.map((item) => ({
+          ...item,
+          media_type: item.media_type || 'movie',
+        })),
+      );
+    }
   }
 
   // If no items found in appData, try DOM extraction (same as Currently Watching)
@@ -217,7 +280,7 @@ async function renderNextUpRow() {
 
         if (id) {
           watchingItems.push({
-            id: parseInt(id),
+            id: id,
             name: title,
             title: title,
             poster_path: posterPath,

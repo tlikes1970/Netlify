@@ -1,0 +1,24 @@
+<!doctype html><meta charset="utf-8">
+<title>Cards V2 — Search Harness (static)</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:24px}
+  .search-card{border:1px solid #ddd;border-radius:10px;padding:16px;max-width:520px}
+  .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .actions button[aria-disabled="true"]{opacity:.5;cursor:not-allowed}
+  .legend{margin-top:12px;font-size:12px;color:#555}
+</style>
+<div class="search-card">
+  <h3>Harness Item</h3>
+  <p>TV • 2024</p>
+  <div class="actions">
+    <button>wantToWatch</button>
+    <button>moveToWatching</button>
+    <button>markWatched</button>
+    <button>notInterested</button>
+    <button disabled aria-disabled="true" title="Planned">reviewNotes</button>
+    <button disabled aria-disabled="true" title="Planned">addTag</button>
+    <button disabled aria-disabled="true" title="Planned">similarTo</button>
+    <button disabled aria-disabled="true" title="Planned">refineSearch</button>
+  </div>
+  <p class="legend"><strong>Wired:</strong> wantToWatch, moveToWatching, markWatched, notInterested &nbsp;|&nbsp; <strong>Planned:</strong> reviewNotes, addTag, similarTo, refineSearch</p>
+</div>

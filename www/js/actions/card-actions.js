@@ -18,13 +18,67 @@
           options.itemData = itemData;
         }
         
-        if (action === 'wishlist') await addToList(id, 'wishlist', options);
-        else if (action === 'watched') await addToList(id, 'watched', options);
-        else if (action === 'watching') await addToList(id, 'watching', options);
-        else if (action === 'remove-watching') await removeFromList(id, 'watching', options);
-        else if (action === 'remove-wishlist') await removeFromList(id, 'wishlist', options);
-        else if (action === 'remove-watched') await removeFromList(id, 'watched', options);
+        // Helper function to move item between lists
+        async function moveItemToList(targetList) {
+          // First remove from current list (removeItemFromCurrentList only takes id)
+          if (typeof window.removeItemFromCurrentList === 'function') {
+            await window.removeItemFromCurrentList(id);
+          }
+          // Then add to target list
+          await addToList(id, targetList, options);
+        }
+        
+        if (action === 'wishlist') await moveItemToList('wishlist');
+        else if (action === 'watched') await moveItemToList('watched');
+        else if (action === 'watching') await moveItemToList('watching');
+        else if (action === 'remove-watching') {
+          // removeItemFromCurrentList only takes id parameter
+          if (typeof window.removeItemFromCurrentList === 'function') {
+            await window.removeItemFromCurrentList(id);
+          }
+        }
+        else if (action === 'remove-wishlist') {
+          if (typeof window.removeItemFromCurrentList === 'function') {
+            await window.removeItemFromCurrentList(id);
+          }
+        }
+        else if (action === 'remove-watched') {
+          if (typeof window.removeItemFromCurrentList === 'function') {
+            await window.removeItemFromCurrentList(id);
+          }
+        }
+        else if (action === 'delete') {
+          // Remove from current list (removeItemFromCurrentList only takes id)
+          if (typeof window.removeItemFromCurrentList === 'function') {
+            await window.removeItemFromCurrentList(id);
+          }
+        }
+        else if (action === 'not-interested') {
+          // Remove from current list (removeItemFromCurrentList only takes id)
+          if (typeof window.removeItemFromCurrentList === 'function') {
+            await window.removeItemFromCurrentList(id);
+          }
+        }
         else console.warn('[card-actions] Unknown action', action);
+        
+        // Trigger UI refresh after any action
+        if (typeof window.updateUI === 'function') {
+          window.updateUI();
+        }
+        if (typeof window.FlickletApp?.updateUI === 'function') {
+          window.FlickletApp.updateUI();
+        }
+        
+        // Trigger specific list refresh for tab context
+        if (typeof window.loadListContent === 'function') {
+          // Refresh all tab lists
+          ['watching', 'wishlist', 'watched'].forEach(listType => {
+            setTimeout(() => {
+              window.loadListContent(listType);
+            }, 100);
+          });
+        }
+        
       } catch (err) {
         console.error('[card-actions] Failed', action, id, err);
         window?.notify?.('Failed to update list', 'error');

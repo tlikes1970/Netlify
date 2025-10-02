@@ -11,6 +11,9 @@
 
   console.log('🎬 TMDB API client loading...');
 
+  // Request deduplication
+  const _inflight = new Map();
+
   // Proxy configuration
   const TMDB_PROXY_URL = '/.netlify/functions/tmdb-proxy';
 
@@ -82,59 +85,45 @@
     return langMap[lang] || 'en-US';
   }
 
+  // Build proxy URL helper
+  function buildProxyUrl(endpoint, params = {}) {
+    const currentLang = getCurrentLanguage();
+    const tmdbLang = mapToTMDBLocale(currentLang);
+
+    const url = new URL(TMDB_PROXY_URL, window.location.origin);
+    url.searchParams.set('path', endpoint);
+
+    // Add parameters
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        url.searchParams.set(key, String(value));
+      }
+    });
+
+    // Add language parameter
+    url.searchParams.set('language', tmdbLang);
+
+    return url.toString();
+  }
+
   // Central TMDB API client via proxy
-  window.tmdbGet = async function tmdbGet(endpoint, params = {}) {
-    try {
-      checkRateLimit();
+  window.tmdbGet = async function tmdbGet(path, params = {}) {
+    const key = path + '::' + JSON.stringify(params);
+    if (_inflight.has(key)) return _inflight.get(key);
 
-      // Get current language from LanguageManager or fallback to appData
-      const currentLang = getCurrentLanguage();
-      const tmdbLang = mapToTMDBLocale(currentLang);
+    const promise = (async () => {
+      const url = buildProxyUrl(path, params);
+      const res = await fetch(url);
+      if (res.status === 404) { console.warn('[tmdb] 404', path); return { ok:false, status:404 }; }
+      if (!res.ok)        { console.warn('[tmdb] error', path, res.status); return { ok:false, status:res.status }; }
+      const data = await res.json();
+      if (Array.isArray(data?.results)) console.log('✅ TMDB', path, `results:${data.results.length}`);
+      else                              console.log('✅ TMDB', path, 'object');
+      return { ok:true, data };
+    })().finally(() => _inflight.delete(key));
 
-      // Build proxy URL
-      const url = new URL(TMDB_PROXY_URL, window.location.origin);
-      url.searchParams.set('path', endpoint);
-
-      // Add parameters
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          url.searchParams.set(key, String(value));
-        }
-      });
-
-      // Add language parameter
-      url.searchParams.set('language', tmdbLang);
-
-      console.log(`🔍 TMDB Proxy Request: ${endpoint}`, { ...params, language: tmdbLang });
-
-      const response = await fetch(url.toString());
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || 'Service temporarily unavailable';
-
-        // Log detailed error for debugging
-        if (window.DEBUG) {
-          console.error(`❌ TMDB Proxy error: ${response.status} - ${errorMessage}`);
-        }
-
-        // Return user-safe empty results
-        return { results: [], page: 1, total_pages: 0, total_results: 0 };
-      }
-
-      const data = await response.json();
-      console.log(`✅ TMDB Proxy Response: ${endpoint} - ${data.results?.length || 0} results`);
-
-      return data;
-    } catch (error) {
-      // Log detailed error for debugging
-      if (window.DEBUG) {
-        console.error(`❌ TMDB Proxy request failed: ${endpoint}`, error);
-      }
-
-      // Return user-safe empty results
-      return { results: [], page: 1, total_pages: 0, total_results: 0 };
-    }
+    _inflight.set(key, promise);
+    return promise;
   };
 
   // Locale mapping helper - centralized source of truth

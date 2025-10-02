@@ -303,12 +303,12 @@
       console.log('🔄 User already signed in, loading data...');
       setTimeout(() => {
         loadUserDataAndReplaceCards();
-      }, 1000);
+      }, 100); // Reduced from 1000ms to 100ms
     }
   }
 
-  // Start the clean data loader
-  setTimeout(init, 2000);
+  // Start the clean data loader - Reduced delay for better performance
+  setTimeout(init, 500); // Reduced from 2000ms to 500ms
 
   // Expose globally for manual use
   window.loadUserDataAndReplaceCards = loadUserDataAndReplaceCards;

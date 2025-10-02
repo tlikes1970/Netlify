@@ -108,7 +108,7 @@ async function shimAppGlobals(page: import('@playwright/test').Page) {
       (window as any).__TEST__ = true;
     } catch {}
 
-    // 5) Disable sign-in modal for tests
+    // 5) Disable all modals for tests
     try {
       (window as any).showSignInModal = () => {
         console.log('Sign-in modal disabled for tests');
@@ -121,8 +121,8 @@ async function shimAppGlobals(page: import('@playwright/test').Page) {
       const originalCreateElement = document.createElement;
       document.createElement = function (tagName) {
         const element = originalCreateElement.call(this, tagName);
-        if (tagName.toLowerCase() === 'div' && element.id === 'signin-info-modal') {
-          console.log('Preventing sign-in modal creation');
+        if (tagName.toLowerCase() === 'div' && (element.id === 'signin-info-modal' || element.id === 'settingsModal')) {
+          console.log('Preventing modal creation:', element.id);
           element.style.display = 'none';
           element.style.visibility = 'hidden';
           element.style.pointerEvents = 'none';
@@ -130,17 +130,34 @@ async function shimAppGlobals(page: import('@playwright/test').Page) {
         return element;
       };
 
+      // Override modal show functions
+      const originalShowModal = (window as any).showModal;
+      if (originalShowModal) {
+        (window as any).showModal = function() {
+          console.log('Modal show prevented in tests');
+        };
+      }
+
+      // Override any modal opening functions
+      const originalOpenModal = (window as any).openModal;
+      if (originalOpenModal) {
+        (window as any).openModal = function() {
+          console.log('Modal open prevented in tests');
+        };
+      }
+
       // Close any existing modals
       const closeModals = () => {
         const modals = document.querySelectorAll(
-          '#signin-info-modal, .modal-backdrop[data-modal="login"], #signInModal',
+          '#signin-info-modal, .modal-backdrop[data-modal="login"], #signInModal, #settingsModal, [role="dialog"]',
         );
         modals.forEach((modal) => {
           if (modal instanceof HTMLElement) {
             modal.style.display = 'none';
             modal.style.visibility = 'hidden';
             modal.style.pointerEvents = 'none';
-            modal.remove();
+            modal.setAttribute('hidden', 'true');
+            modal.removeAttribute('aria-modal');
           }
         });
       };
@@ -149,6 +166,9 @@ async function shimAppGlobals(page: import('@playwright/test').Page) {
       setTimeout(closeModals, 100);
       setTimeout(closeModals, 500);
       setTimeout(closeModals, 1000);
+      
+      // Continuous modal hiding for parallel tests
+      setInterval(closeModals, 2000);
     } catch {}
   });
 }
@@ -351,14 +371,24 @@ async function neutralizeOverlays(page: Page) {
   await page.addStyleTag({
     content: `
     #searchHelp, #searchHelp .hero-content, .offline-banner { pointer-events: none !important; }
-    #signin-info-modal, .modal-backdrop[data-modal="login"], #signInModal { 
+    #signin-info-modal, .modal-backdrop[data-modal="login"], #signInModal, #settingsModal { 
       display: none !important; 
       visibility: hidden !important; 
       pointer-events: none !important;
       z-index: -1 !important;
     }
-    [id*="signin"], [id*="modal"], [class*="modal"] {
+    [id*="signin"], [id*="modal"], [class*="modal"], [role="dialog"] {
       pointer-events: none !important;
+      display: none !important;
+      visibility: hidden !important;
+      z-index: -1 !important;
+    }
+    /* Force hide any modal that might appear */
+    .modal, .modal-backdrop, [aria-modal="true"] {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      z-index: -1 !important;
     }
   `,
   });

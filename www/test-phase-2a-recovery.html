@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phase 2A Recovery Test - Routing & Context Verification</title>
+  <link rel="stylesheet" href="/styles/cards.css">
+  <link rel="stylesheet" href="/styles/main.css">
+  <style>
+    body {
+      background: #0f1115;
+      color: #e6eaf0;
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .test-section {
+      margin-bottom: 40px;
+      border: 1px solid #242a33;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .test-section h2 {
+      color: #a9b3c1;
+      margin-bottom: 16px;
+    }
+    .test-rail {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    .test-result {
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    .test-pass {
+      background: #10b981;
+      color: white;
+    }
+    .test-fail {
+      background: #ef4444;
+      color: white;
+    }
+    .test-info {
+      background: #3b82f6;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>Phase 2A Recovery Test - Routing & Context Verification</h1>
+  
+  <div id="test-results"></div>
+  
+  <!-- Home Currently Watching Test -->
+  <div class="test-section">
+    <h2>Home - Currently Watching (Vertical, 2x2 buttons)</h2>
+    <div class="test-rail" id="home-cw-test"></div>
+  </div>
+  
+  <!-- Home Next Up Test -->
+  <div class="test-section">
+    <h2>Home - Next Up (Vertical, NO buttons)</h2>
+    <div class="test-rail" id="home-nextup-test"></div>
+  </div>
+  
+  <!-- Home Curated Test -->
+  <div class="test-section">
+    <h2>Home - Curated (Vertical, single button, TMDB link)</h2>
+    <div class="test-rail" id="home-curated-test"></div>
+  </div>
+  
+  <!-- Tab Cards Test -->
+  <div class="test-section">
+    <h2>Tab Cards - Currently Watching (Horizontal, full features)</h2>
+    <div class="test-grid" id="tab-cw-test"></div>
+  </div>
+  
+  <!-- Search Cards Test -->
+  <div class="test-section">
+    <h2>Search Cards (Horizontal, compact)</h2>
+    <div class="test-grid" id="search-test"></div>
+  </div>
+
+  <script src="/js/renderers/card-v2.js"></script>
+  <script src="/js/renderers/card-v2-cw.js"></script>
+  <script src="/js/renderers/card-v2-curated.js"></script>
+  <script src="/js/cards-v2-config.js"></script>
+  
+  <script>
+    // Test data
+    const testItems = {
+      tv: {
+        id: 12345,
+        media_type: 'tv',
+        title: 'Breaking Bad',
+        name: 'Breaking Bad',
+        poster_path: '/ggFHVNu6YYI5L9pCfOacDizbPaE.jpg',
+        release_date: '2008-01-20',
+        first_air_date: '2008-01-20',
+        genres: [{ name: 'Drama' }],
+        overview: 'A high school chemistry teacher diagnosed with inoperable lung cancer turns to manufacturing and selling methamphetamine in order to secure his family\'s future.',
+        next_episode_air_date: '2024-10-15',
+        userRating: 5,
+        progress: '5 of 10 episodes watched',
+        badges: [{ label: 'RETURNING', type: 'returning' }],
+        whereToWatch: 'Netflix'
+      },
+      movie: {
+        id: 67890,
+        media_type: 'movie',
+        title: 'The Dark Knight',
+        name: 'The Dark Knight',
+        poster_path: '/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
+        release_date: '2008-07-18',
+        genres: [{ name: 'Action' }],
+        overview: 'When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.',
+        userRating: 4,
+        badges: [{ label: 'NEW', type: 'new' }],
+        whereToWatch: 'HBO Max'
+      },
+      curated: {
+        id: 11111,
+        media_type: 'movie',
+        title: 'Parasite',
+        name: 'Parasite',
+        poster_path: '/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg',
+        release_date: '2019-05-30',
+        genres: [{ name: 'Thriller' }],
+        overview: 'A poor family schemes to become employed by a wealthy family and infiltrate their household by posing as unrelated, highly qualified individuals.',
+        tmdbId: 496243,
+        whereToWatch: 'Hulu',
+        curatorBlurb: 'A masterful blend of comedy and horror that explores class inequality with razor-sharp precision.'
+      }
+    };
+
+    // Test results container
+    const testResults = document.getElementById('test-results');
+    
+    function addTestResult(message, type = 'info') {
+      const div = document.createElement('div');
+      div.className = `test-result test-${type}`;
+      div.textContent = message;
+      testResults.appendChild(div);
+    }
+
+    // Test functions
+    function testHomeCurrentlyWatching() {
+      try {
+        const container = document.getElementById('home-cw-test');
+        const card = window.renderCurrentlyWatchingCardV2(testItems.tv, { 
+          context: 'home',
+          variant: 'preview' 
+        });
+        container.appendChild(card);
+        
+        // Verify card structure
+        const isVertical = card.classList.contains('vertical');
+        const hasActionGrid = card.querySelector('.action-grid');
+        const buttons = card.querySelectorAll('.actions button');
+        
+        if (isVertical && hasActionGrid && buttons.length === 4) {
+          addTestResult('✅ Home Currently Watching: Vertical layout with 2x2 buttons', 'pass');
+        } else {
+          addTestResult('❌ Home Currently Watching: Layout or button count incorrect', 'fail');
+        }
+      } catch (e) {
+        addTestResult(`❌ Home Currently Watching test failed: ${e.message}`, 'fail');
+      }
+    }
+
+    function testHomeNextUp() {
+      try {
+        const container = document.getElementById('home-nextup-test');
+        const props = {
+          id: testItems.tv.id,
+          mediaType: 'tv',
+          title: testItems.tv.title,
+          poster: `https://image.tmdb.org/t/p/w200${testItems.tv.poster_path}`,
+          releaseDate: testItems.tv.release_date,
+          genre: testItems.tv.genres[0].name,
+          seasonEpisode: 'S05E14',
+          nextAirDate: 'Oct 15'
+        };
+        const card = window.renderCardV2(container, props, {
+          listType: 'next-up',
+          context: 'home'
+        });
+        
+        // Verify card structure
+        const isVertical = card.classList.contains('vertical');
+        const hasNextAir = card.querySelector('.next-air');
+        const buttons = card.querySelectorAll('.actions button');
+        
+        if (isVertical && hasNextAir && buttons.length === 0) {
+          addTestResult('✅ Home Next Up: Vertical layout with NO buttons and "Up next" text', 'pass');
+        } else {
+          addTestResult('❌ Home Next Up: Layout, buttons, or "Up next" text incorrect', 'fail');
+        }
+      } catch (e) {
+        addTestResult(`❌ Home Next Up test failed: ${e.message}`, 'fail');
+      }
+    }
+
+    function testHomeCurated() {
+      try {
+        const container = document.getElementById('home-curated-test');
+        const card = window.renderCuratedCardV2(testItems.curated, { 
+          context: 'home',
+          variant: 'preview' 
+        });
+        container.appendChild(card);
+        
+        // Verify card structure
+        const isVertical = card.classList.contains('vertical');
+        const hasTMDBLink = card.querySelector('.poster-wrap a');
+        const hasWhereToWatch = card.querySelector('.where-to-watch');
+        const hasCuratorBlurb = card.querySelector('.curator-blurb');
+        const buttons = card.querySelectorAll('.actions button');
+        
+        if (isVertical && hasTMDBLink && hasWhereToWatch && hasCuratorBlurb && buttons.length === 1) {
+          addTestResult('✅ Home Curated: Vertical layout with TMDB link, single button, and curator content', 'pass');
+        } else {
+          addTestResult('❌ Home Curated: Layout, TMDB link, or button count incorrect', 'fail');
+        }
+      } catch (e) {
+        addTestResult(`❌ Home Curated test failed: ${e.message}`, 'fail');
+      }
+    }
+
+    function testTabCurrentlyWatching() {
+      try {
+        const container = document.getElementById('tab-cw-test');
+        const card = window.renderCurrentlyWatchingCardV2(testItems.tv, { 
+          context: 'tab',
+          variant: 'detail' 
+        });
+        container.appendChild(card);
+        
+        // Verify card structure
+        const isHorizontal = card.classList.contains('horizontal');
+        const hasUserRating = card.querySelector('.user-rating');
+        const hasProgress = card.querySelector('.progress-summary');
+        const hasBadges = card.querySelector('.status-badges');
+        const hasDeleteBtn = card.querySelector('.delete-btn');
+        const hasDragHandle = card.querySelector('.drag-handle');
+        const hasProActions = card.querySelector('.pro-actions');
+        
+        if (isHorizontal && hasUserRating && hasProgress && hasBadges && hasDeleteBtn && hasDragHandle && hasProActions) {
+          addTestResult('✅ Tab Currently Watching: Horizontal layout with all features (ratings, progress, badges, delete, drag, Pro actions)', 'pass');
+        } else {
+          addTestResult('❌ Tab Currently Watching: Missing features or wrong layout', 'fail');
+        }
+      } catch (e) {
+        addTestResult(`❌ Tab Currently Watching test failed: ${e.message}`, 'fail');
+      }
+    }
+
+    function testSearchCards() {
+      try {
+        const container = document.getElementById('search-test');
+        const props = {
+          id: testItems.movie.id,
+          mediaType: 'movie',
+          title: testItems.movie.title,
+          poster: `https://image.tmdb.org/t/p/w200${testItems.movie.poster_path}`,
+          releaseDate: testItems.movie.release_date,
+          genre: testItems.movie.genres[0].name,
+          overview: testItems.movie.overview,
+          badges: testItems.movie.badges,
+          whereToWatch: testItems.movie.whereToWatch,
+          userRating: testItems.movie.userRating
+        };
+        const card = window.renderCardV2(container, props, {
+          listType: 'search',
+          context: 'search'
+        });
+        
+        // Verify card structure
+        const isHorizontal = card.classList.contains('horizontal');
+        const hasOverview = card.querySelector('.overview');
+        const hasWhereToWatch = card.querySelector('.where-to-watch');
+        const hasUserRating = card.querySelector('.user-rating');
+        const hasBadges = card.querySelector('.status-badges');
+        const buttons = card.querySelectorAll('.actions button');
+        
+        if (isHorizontal && hasOverview && hasWhereToWatch && hasUserRating && hasBadges && buttons.length > 0) {
+          addTestResult('✅ Search Cards: Horizontal compact layout with all features', 'pass');
+        } else {
+          addTestResult('❌ Search Cards: Missing features or wrong layout', 'fail');
+        }
+      } catch (e) {
+        addTestResult(`❌ Search Cards test failed: ${e.message}`, 'fail');
+      }
+    }
+
+    // Run tests when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('🧪 Running Phase 2A Recovery Tests...');
+      addTestResult('🚀 Starting Phase 2A Recovery Tests...', 'info');
+      
+      try {
+        testHomeCurrentlyWatching();
+      } catch (e) {
+        addTestResult(`❌ Home Currently Watching test failed: ${e.message}`, 'fail');
+      }
+      
+      try {
+        testHomeNextUp();
+      } catch (e) {
+        addTestResult(`❌ Home Next Up test failed: ${e.message}`, 'fail');
+      }
+      
+      try {
+        testHomeCurated();
+      } catch (e) {
+        addTestResult(`❌ Home Curated test failed: ${e.message}`, 'fail');
+      }
+      
+      try {
+        testTabCurrentlyWatching();
+      } catch (e) {
+        addTestResult(`❌ Tab Currently Watching test failed: ${e.message}`, 'fail');
+      }
+      
+      try {
+        testSearchCards();
+      } catch (e) {
+        addTestResult(`❌ Search Cards test failed: ${e.message}`, 'fail');
+      }
+      
+      addTestResult('🎯 Phase 2A Recovery Tests completed!', 'info');
+      console.log('🎯 Phase 2A Recovery Tests completed');
+    });
+  </script>
+</body>
+</html>

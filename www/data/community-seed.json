@@ -138,7 +138,7 @@
       "type": "COMING_SOON",
       "title": "Your Spotlight Awaits",
       "description": "Influencers & Fans — submit your clips when we open!",
-      "media": { "kind": "image", "src": "/assets/community/coming-soon.jpg" },
+      "media": { "kind": "image", "src": "/assets/community/coming-soon.svg" },
       "cta": {
         "label": "Follow for updates",
         "action": "open_url",

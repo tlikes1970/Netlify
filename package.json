@@ -1,6 +1,6 @@
 {
   "name": "flicklet-tv-tracker",
-  "version": "28.102.0",
+  "version": "28.116.0",
   "description": "Flicklet - TV & Movie Tracker",
   "main": "www/index.html",
   "scripts": {
@@ -17,7 +17,8 @@
     "validate:encoding": "node scripts/validate-encoding.js",
     "qa": "node qa/run.js",
     "qa:report": "node qa/run.js --report",
-    "prepare": "husky install"
+    "prepare": "husky install",
+	"test:cards-v2": "npx playwright test tests/cards-v2.harness.spec.* tests/cards-v2.cw-harness.spec.* tests/cards-v2.upnext-harness.spec.*"
   },
   "dependencies": {
     "@playwright/test": "^1.55.0",

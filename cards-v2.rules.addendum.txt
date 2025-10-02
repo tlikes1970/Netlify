@@ -1,0 +1,3 @@
+# Addendum (A1)
+- Compat shim exists temporarily in compat/cards-compat-shim.js implementing window.Card and window.createCardData by delegating to V2.
+- Remove compat in Milestone B after all call sites are migrated.

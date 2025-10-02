@@ -667,8 +667,8 @@
         overview: item.overview || ''
       };
 
-      // Create V2 card with preview variant
-      const card = window.renderCurrentlyWatchingCardV2(snap, { variant: 'preview' });
+      // Create V2 card with preview variant and home context
+      const card = window.renderCurrentlyWatchingCardV2(snap, { variant: 'preview', context: 'home' });
       
       if (card) {
         // Add preview-specific styling
@@ -710,22 +710,12 @@
         // Import the card renderer
         const { renderCurrentlyWatchingCard } = await import('/js/renderers/card-templates.js');
         
-        // Transform item data for the new card renderer
-        // Construct proper poster URL using same logic as list tabs
-        const posterUrl = item.posterUrl ||
-          item.poster_src ||
-          (item.poster_path && window.getPosterUrl
-            ? window.getPosterUrl(item.poster_path, 'w200')
-            : item.poster_path
-              ? `https://image.tmdb.org/t/p/w200${item.poster_path}`
-              : null);
-        
-        const cardData = {
+        // Transform item data using the card data adapter for consistent poster handling
+        const cardData = window.toCardProps ? window.toCardProps(item) : {
           id: item.id || item.tmdb_id || item.tmdbId,
           title: item.title || item.name || 'Unknown Title',
           name: item.name || item.title || 'Unknown Title',
-          posterUrl: posterUrl,
-          poster_path: item.poster_path,
+          poster: item.posterUrl || item.poster_src || item.poster_path || '',
           media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie'),
           release_date: item.release_date,
           first_air_date: item.first_air_date,
