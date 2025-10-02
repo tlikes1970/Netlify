@@ -43,3 +43,4 @@ test('Preview harness handles missing posters gracefully', async ({ page }) => {
   await expect(img).toHaveAttribute('loading', 'lazy');
 });
 
+
