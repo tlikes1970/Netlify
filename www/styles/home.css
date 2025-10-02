@@ -283,11 +283,3 @@ html, body { overflow-x: hidden; } /* keeps layout mishaps invisible; real fixes
   min-height: 100vh;
 }
 
-/* H1.1: FABs scroll with page (not fixed to viewport) */
-.fab, .fab-left, .fab-stack, .fab-dock {
-  position: absolute;
-  top: auto;
-  bottom: 20px;
-  right: 20px;
-  z-index: 100;
-}

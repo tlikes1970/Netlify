@@ -571,6 +571,7 @@ body {
   --container-max: 1200px; /* tune if you use a different max */
   --container-pad: 16px;
   --fab-gap: 16px;
+  --fab-size: 56px;
   --accent: #2563eb ;
   --primary: #e91e63 ;
   --surface: #f9f9f9 ;
@@ -4481,6 +4482,7 @@ body {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  padding-bottom: calc(var(--fab-size, 56px) + var(--fab-gap, 16px)); /* Reserve space for fixed FAB dock */
 }
 
 /* Header sticks at top - force it to stay on top */
@@ -4638,20 +4640,20 @@ body {
   padding-top: 8px;
 }
 
-/* FAB positioning: Fixed to viewport but aligned with container edges */
+/* FAB positioning: Sticky bottom aligned to content container */
 .fab-dock { 
-  position: fixed !important; 
-  bottom: var(--fab-gap) !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  z-index: 50 !important;
-  pointer-events: none !important; /* clicks pass only to buttons inside */
-  display: flex !important;
-  align-items: flex-end !important;
-  justify-content: space-between !important;
-  width: min(var(--container-max), 100vw) !important;
-  max-width: calc(100vw - 2 * var(--container-pad)) !important;
-  padding: 0 calc(var(--container-pad) + 16px) !important; /* Move FABs inward by 16px */
+  position: sticky; 
+  bottom: var(--fab-gap);
+  width: min(var(--container-max), 100%);
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+  z-index: 50;
+  pointer-events: none; /* clicks pass only to buttons inside */
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: var(--fab-gap, 12px);
+  align-items: flex-end;
 }
 
 /* PART3: Scroll-to-top control */
@@ -4701,78 +4703,56 @@ body {
   .scroll-top-btn { transition: none; }
 }
 
-.fab-dock .fab-stack { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 12px; 
-  pointer-events: auto;
-}
-
-.fab-dock .fab-left {
-  pointer-events: auto !important;
-  margin-right: auto !important; /* Push to left side */
-  position: static !important;
-}
-
-.fab { 
-  position: static !important; /* buttons themselves don't need positioning; the dock handles it */
-  pointer-events: auto !important;
-}
-
-/* Override any conflicting positioning from other CSS files */
+/* Override conflicting FAB positioning from home.css */
 .fab-dock .fab,
 .fab-dock .fab-left,
 .fab-dock .fab-stack {
-  position: static !important;
-  top: auto !important;
-  bottom: auto !important;
-  left: auto !important;
-  right: auto !important;
-  transform: none !important;
+  position: static;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  z-index: auto;
+  flex: 0 0 auto;
+  width: auto;
+  max-width: none;
+  pointer-events: auto;
 }
 
-/* Override home.css rule that sets FABs to position: absolute */
-.fab, .fab-left, .fab-stack, .fab-dock {
-  position: static !important;
+/* Internal layout for fab-stack (contains multiple FABs) */
+.fab-dock .fab-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.fab-dock {
-  position: fixed !important;
-}
+
+
 
 /* Remove purple circle from settings FAB - make it just a cog icon */
 .fab-dock #btnSettings,
 .fab-dock #btnSettings.fab-left {
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  box-shadow: none !important;
-  border: none !important;
-  border-radius: 0 !important;
-  color: var(--text, #333) !important;
-  font-size: 24px !important;
-  width: auto !important;
-  height: auto !important;
-  min-width: auto !important;
-  min-height: auto !important;
-  padding: 8px !important;
+  background: transparent;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  color: var(--text, #333);
+  font-size: 24px;
+  width: auto;
+  height: auto;
+  min-width: auto;
+  min-height: auto;
+  padding: 8px;
 }
 
 .fab-dock #btnSettings:hover,
 .fab-dock #btnSettings.fab-left:hover {
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  box-shadow: none !important;
-  opacity: 0.8 !important;
+  background: transparent;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  opacity: 0.8;
 }
 
-@media (max-width: var(--bp-mobile-lg)) {
-  .fab-dock { 
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    width: 100vw !important;
-    max-width: none !important;
-    padding: 0 calc(var(--container-pad) + 16px) !important; /* Move FABs inward on mobile too */
-  }
-}
