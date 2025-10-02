@@ -198,7 +198,7 @@
       
       const img = document.createElement('img');
       // Use poster URL as-is since card data adapter already handles URL resolution
-      img.src = props.poster || PLACEHOLDER_SVG;
+      img.src = (props.poster && props.poster.trim()) ? props.poster : PLACEHOLDER_SVG;
       img.alt = props.title || 'Unknown';
       img.loading = 'lazy';
       img.referrerPolicy = 'no-referrer';
@@ -208,7 +208,7 @@
     } else {
       const img = document.createElement('img');
       // Use poster URL as-is since card data adapter already handles URL resolution
-      img.src = props.poster || PLACEHOLDER_SVG;
+      img.src = (props.poster && props.poster.trim()) ? props.poster : PLACEHOLDER_SVG;
       img.alt = props.title || 'Unknown';
       img.loading = 'lazy';
       img.referrerPolicy = 'no-referrer';

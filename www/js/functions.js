@@ -1340,7 +1340,7 @@
             name: item.title || item.name || 'Unknown',
             release_date: item.release_date || null,
             first_air_date: item.first_air_date || null,
-            poster: item.poster_path || null, // V2 renderer expects 'poster', not 'poster_path'
+            poster: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : (item.posterUrl || item.poster || '/assets/img/poster-placeholder.png'), // V2 renderer expects full URL
             genre: item.genre || (item.genres && item.genres[0]?.name) || '',
             seasonEpisode: item.seasonEpisode || item.sxxExx || '',
             nextAirDate: item.next_episode_air_date || item.nextAirDate || item.next_air_date || '',
