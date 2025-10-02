@@ -1,10 +1,11 @@
 {
   "name": "flicklet-tv-tracker",
-  "version": "28.120.0",
+  "version": "28.121.0",
   "description": "Flicklet - TV & Movie Tracker",
   "main": "www/index.html",
   "scripts": {
     "dev": "vite",
+	"scan:important": "node scripts/scan-important.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "serve": "vite preview --port 8000",
@@ -20,12 +21,7 @@
     "prepare": "husky install",
     "test:cards-v2": "npx playwright test tests/cards-v2.harness.spec.* tests/cards-v2.cw-harness.spec.* tests/cards-v2.upnext-harness.spec.*"
   },
-  {
-  "scripts": {
-    "scan:important": "node scripts/scan-important.mjs"
-  }
-}
-  "dependencies": {
+    "dependencies": {
     "@playwright/test": "^1.55.0",
     "dotenv": "^16.3.1",
     "playwright": "^1.55.0"
