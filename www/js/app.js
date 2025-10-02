@@ -13,6 +13,9 @@ window.FlickletDebug = window.FlickletDebug || {
   log: console.log,
 };
 
+// Feature flag for tab system - defaults to new system
+window.__useLegacyTabs = false;
+
 (function () {
   // Helper function to get translation
   function t(key) {
@@ -1702,24 +1705,37 @@ window.FlickletDebug = window.FlickletDebug || {
     },
 
     /**
-     * Process: Tab Navigation with Search Clearing
-     * Purpose: Switches the active tab and clears any active search to show normal tab content
-     * Data Source: this.currentTab tracks current state, DOM elements control visibility
-     * Update Path: Modify tab IDs in the 'ids' array, update clearSearch logic if search behavior changes
-     * Dependencies: clearSearch function, tab button elements, section elements, loadListContent function
+     * Process: Tab Navigation - Legacy Shim
+     * Purpose: Thin wrapper that delegates to nav-init.js engine
+     * Data Source: nav-init.js manages [aria-selected] and [hidden] attributes
+     * Update Path: All tab logic moved to nav-init.js - this is temporary shim
+     * Dependencies: nav-init.js activate function
      */
     switchToTab(tab) {
-      console.log(`🔄 Switching to tab: ${tab}`);
+      console.log(`[app.js] LEGACY SHIM: Delegating tab switch to nav engine: ${tab}`);
+      
+      // Feature flag check
+      if (window.__useLegacyTabs) {
+        console.warn('[app.js] LEGACY MODE: Using old tab system');
+        return this._legacySwitchToTab(tab);
+      }
+      
+      // Delegate to nav-init.js engine
+      const targetId = `${tab}Section`;
+      if (window.navEngine && typeof window.navEngine.activate === 'function') {
+        window.navEngine.activate(targetId);
+      } else {
+        console.error('[app.js] Nav engine not available - falling back to legacy');
+        return this._legacySwitchToTab(tab);
+      }
+    },
+
+    // Legacy implementation (kept for rollback)
+    _legacySwitchToTab(tab) {
+      console.log(`🔄 LEGACY: Switching to tab: ${tab}`);
       this.currentTab = tab;
 
-      // Dispatch custom event for other scripts to listen to
-      document.dispatchEvent(
-        new CustomEvent('tabSwitched', {
-          detail: { tab: tab, previousTab: this.previousTab },
-        }),
-      );
-
-      // Dispatch tab:switched event for counter system
+      // Dispatch single tab:switched event for all systems
       document.dispatchEvent(
         new CustomEvent('tab:switched', {
           detail: { tab: tab, previousTab: this.previousTab },
@@ -2024,55 +2040,12 @@ window.FlickletDebug = window.FlickletDebug || {
     },
 
     // ---------- UX Helpers ----------
-    // STEP 3.1 — Delegated tab click handler (one place, works for all tab buttons/links)
-    bindTabClicks() {
-      // Delegate on document to catch future buttons too
-      document.addEventListener(
-        'click',
-        (ev) => {
-          // Check if clicked element is a tab button or inside one
-          const tabButton = ev.target.closest('.tab');
-          if (!tabButton) return;
-
-          // Extract tab name from button ID (e.g., 'homeTab' -> 'home')
-          const buttonId = tabButton.id;
-          if (!buttonId) return;
-
-          const tab = buttonId.replace('Tab', '');
-          if (!tab) return;
-
-          // Stop links from navigating and buttons from bubbling into overlays
-          ev.preventDefault();
-          ev.stopPropagation();
-
-          // Only handle known tabs
-          const allowed = ['home', 'watching', 'wishlist', 'watched', 'discover', 'settings'];
-          if (!allowed.includes(tab)) return;
-
-          console.log(`🔄 Tab clicked: ${tab} (from ${buttonId})`);
-
-          try {
-            if (typeof this.switchToTab === 'function') {
-              this.switchToTab(tab);
-            } else if (typeof window.switchToTab === 'function') {
-              window.switchToTab(tab);
-            } else {
-              console.warn('No switchToTab available; cannot switch to', tab);
-            }
-          } catch (e) {
-            console.error('Tab switch failed:', tab, e);
-          }
-        },
-        { capture: true },
-      ); // capture reduces interference from other handlers
-    },
+    // Tab clicks are now handled by nav-init.js - single delegated listener
+    // Legacy bindTabClicks removed to prevent conflicts
 
     setupEventListeners() {
-      // STEP 3.1 — Delegated tab click handler (one place, works for all tab buttons/links)
-      this.bindTabClicks();
-
-      // Tab clicks are handled by the delegated handler above
-      // Individual handlers removed to prevent duplicate event handling
+      // Tab clicks are now handled by nav-init.js - no need to bind here
+      // Legacy bindTabClicks() call removed to prevent conflicts
 
       // Keyboard shortcuts
       document.addEventListener('keydown', (e) => {
@@ -2687,13 +2660,13 @@ window.FlickletDebug = window.FlickletDebug || {
     /**
      * Process: FAB Docking
      * Purpose: Dock all FABs to the currently active tab container
-     * Data Source: DOM query for .tab-section.active and FAB elements
+     * Data Source: DOM query for .tab-section:not([hidden]) and FAB elements
      * Update Path: Automatically triggered on tab switches
      * Dependencies: CSS .fab-dock class, tab switching system
      */
     dockFABsToActiveTab() {
       const FAB_SELECTORS = '.fab, .fab-left'; // include all FAB variants
-      const ACTIVE_PANEL_SELECTOR = '.tab-section.active';
+      const ACTIVE_PANEL_SELECTOR = '.tab-section:not([hidden])';
 
       function getActivePanel() {
         return document.querySelector(ACTIVE_PANEL_SELECTOR);

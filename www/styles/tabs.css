@@ -8,112 +8,116 @@
   --badge-bg:   #f3f4f6;     /* gray-100 */
 }
 
-/* Higher specificity to override main.css */
+/* Tab navigation container */
 nav#navigation.tabs {
-  display: flex !important;
-  justify-content: center !important;
-  gap: .25rem !important;
-  padding: .25rem .5rem !important;
-  border-bottom: 1px solid var(--tab-edge) !important;
-  margin-top: 0 !important;
-  position: static !important;  /* Override sticky positioning */
-  top: auto !important;         /* Remove sticky top */
-  z-index: auto !important;     /* Remove high z-index */
-  height: auto !important;      /* Remove fixed height */
-  margin-bottom: 0 !important;  /* Remove bottom margin */
+  display: flex;
+  justify-content: center;
+  gap: .25rem;
+  padding: .25rem .5rem;
+  border-bottom: 1px solid var(--tab-edge);
+  margin-top: 0;
+  position: static;
+  top: auto;
+  z-index: auto;
+  height: auto;
+  margin-bottom: 0;
 }
 
 nav#navigation.tabs::before,
 nav#navigation.tabs::after { content: ""; }
 
-/* Override existing tab styles with higher specificity */
+/* Tab button styling */
 nav#navigation.tabs .tab {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: .5rem !important;
-  padding: .45rem .8rem !important;
-  border: 1px solid var(--tab-edge) !important;
-  border-radius: .6rem !important;
-  background: #fff !important;
-  color: var(--tab-text) !important;
-  text-decoration: none !important;
-  line-height: 1 !important;
-  transition: background .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease !important;
-  cursor: pointer !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  min-height: 44px !important; /* Respect mobile accessibility */
-  min-width: auto !important; /* Override mobile-hotfix min-width */
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .45rem .8rem;
+  border: 1px solid var(--tab-edge);
+  border-radius: .6rem;
+  background: #fff;
+  color: var(--tab-text);
+  text-decoration: none;
+  line-height: 1;
+  transition: background .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
+  cursor: pointer;
+  visibility: visible;
+  opacity: 1;
+  min-height: 44px; /* Respect mobile accessibility */
+  min-width: auto;
 }
 
 nav#navigation.tabs .tab:hover,
 nav#navigation.tabs .tab:focus-visible {
-  border-color: #cbd5e1 !important; /* gray-300 */
-  box-shadow: 0 0 0 3px rgba(14,165,233,.15) !important;
+  border-color: #cbd5e1; /* gray-300 */
+  box-shadow: 0 0 0 3px rgba(14,165,233,.15);
 }
 
 nav#navigation.tabs .tab.is-active {
-  background: var(--tab-accent) !important;
-  border-color: var(--tab-accent) !important;
-  color: #fff !important;
+  background: var(--tab-accent);
+  border-color: var(--tab-accent);
+  color: #fff;
 }
 
 nav#navigation.tabs .tab-label { 
-  white-space: nowrap !important;
-  color: inherit !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  display: inline !important;
+  white-space: nowrap;
+  color: inherit;
+  opacity: 1;
+  visibility: visible;
+  display: inline;
 }
 
-/* Override existing badge styles */
+/* Badge styling */
 nav#navigation.tabs .badge {
-  min-width: 1.25rem !important;
-  height: 1.25rem !important;
-  padding: 0 .4rem !important;
-  border-radius: 999px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: .72rem !important;
-  font-weight: 700 !important;
-  line-height: 1 !important;
-  background: var(--badge-bg) !important;
-  color: var(--tab-muted) !important;
-  border: 1px solid var(--tab-edge) !important;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 .4rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .72rem;
+  font-weight: 700;
+  line-height: 1;
+  background: var(--badge-bg);
+  color: var(--tab-muted);
+  border: 1px solid var(--tab-edge);
 }
 
 nav#navigation.tabs .tab.is-active .badge {
-  background: rgba(255,255,255,.18) !important;
-  border-color: rgba(255,255,255,.35) !important;
-  color: #fff !important;
+  background: rgba(255,255,255,.18);
+  border-color: rgba(255,255,255,.35);
+  color: #fff;
 }
 
 /* Ensure active tab labels are visible */
 nav#navigation.tabs .tab.is-active .tab-label {
-  color: #fff !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  display: inline !important;
+  color: #fff;
+  opacity: 1;
+  visibility: visible;
+  display: inline;
 }
 
-/* Override dark mode styles */
+/* Dark mode styles */
 .dark-mode nav#navigation.tabs .tab {
-  background: #fff !important;
-  color: var(--tab-text) !important;
+  background: #fff;
+  color: var(--tab-text);
 }
 
 .dark-mode nav#navigation.tabs .tab:hover {
-  background: #fff !important;
-  color: var(--tab-text) !important;
+  background: #fff;
+  color: var(--tab-text);
 }
 
 .dark-mode nav#navigation.tabs .tab.is-active {
-  background: var(--tab-accent) !important;
-  color: #fff !important;
+  background: var(--tab-accent);
+  color: #fff;
 }
 
 @media (max-width: 480px) {
-  nav#navigation.tabs .tab { padding: .4rem .6rem !important; }
-  nav#navigation.tabs .tab-label { font-size: .95rem !important; }
+  nav#navigation.tabs .tab { 
+    padding: .4rem .6rem; 
+  }
+  nav#navigation.tabs .tab-label { 
+    font-size: .95rem; 
+  }
 }

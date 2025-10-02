@@ -467,16 +467,26 @@
   // ---- Tab / Render Pipeline ----
   try {
     console.log('🔧 Setting up tab/render pipeline...');
-    // Global switchToTab function as fallback
+    // Global switchToTab function - DEPRECATED, use nav-init.js
+    // This is kept only for backward compatibility during transition
     window.switchToTab = function switchToTab(tab) {
-      if (!window.FlickletApp) {
-        console.error('[switchToTab] FlickletApp missing');
-        return;
+      console.warn('[functions.js] DEPRECATED: window.switchToTab is deprecated, use nav-init.js');
+      
+      // Feature flag check
+      if (window.__useLegacyTabs) {
+        console.warn('[functions.js] LEGACY MODE: Using old tab system');
+        // Call legacy implementation directly
+        if (window.FlickletApp && typeof window.FlickletApp._legacySwitchToTab === 'function') {
+          return window.FlickletApp._legacySwitchToTab(tab);
+        }
       }
-      if (typeof window.FlickletApp.switchToTab === 'function') {
-        window.FlickletApp.switchToTab(tab);
+      
+      // Delegate to nav-init.js engine
+      const targetId = `${tab}Section`;
+      if (window.navEngine && typeof window.navEngine.activate === 'function') {
+        window.navEngine.activate(targetId);
       } else {
-        console.error('[switchToTab] FlickletApp.switchToTab not available');
+        console.error('[functions.js] Nav engine not available');
       }
     };
     console.log('🔧 Tab/render pipeline set up...');
@@ -1332,6 +1342,11 @@
 
       if (canUseV2) {
         log(`Rendering ${items.length} items for ${listType} using Cards V2`);
+        
+        // Performance optimization: Batch DOM operations
+        const fragment = document.createDocumentFragment();
+        const startTime = performance.now();
+        
         items.forEach((item, index) => {
           const snap = {
             id: item.id,
@@ -1359,12 +1374,18 @@
             card.dataset.itemId = snap.id;
             card.dataset.listType = listType;
             card.dataset.renderIndex = index;
-            container.appendChild(card);
+            fragment.appendChild(card);
             log(`Added V2 tab card ${index + 1}/${items.length} for ${listType}: ${snap.title}`);
           } else {
             warn(`V2 card creation failed for ${snap.title}`);
           }
         });
+        
+        // Single DOM operation for all cards
+        container.appendChild(fragment);
+        
+        const endTime = performance.now();
+        log(`[Performance] Rendered ${items.length} cards in ${(endTime - startTime).toFixed(2)}ms`);
       } else if (typeof window.Card === 'function' && typeof window.createCardData === 'function') {
         log(`Rendering ${items.length} items for ${listType} using createCardData + Card`);
         items.forEach((it, index) => {

@@ -50,8 +50,28 @@
       });
     },
 
-    // Switch to a tab
+    // Switch to a tab - Legacy Shim
     switchToTab: function (tab) {
+      console.warn('[SimpleTabManager] LEGACY SHIM: Tab switching disabled - delegating to nav engine:', tab);
+      
+      // Feature flag check
+      if (window.__useLegacyTabs) {
+        console.warn('[SimpleTabManager] LEGACY MODE: Using old tab system');
+        return this._legacySwitchToTab(tab);
+      }
+      
+      // Delegate to nav engine
+      const targetId = `${tab}Section`;
+      if (window.navEngine && typeof window.navEngine.activate === 'function') {
+        window.navEngine.activate(targetId);
+      } else {
+        console.error('[SimpleTabManager] Nav engine not available - falling back to legacy');
+        return this._legacySwitchToTab(tab);
+      }
+    },
+
+    // Legacy implementation (kept for rollback)
+    _legacySwitchToTab: function (tab) {
       this.setCurrentTab(tab);
 
       // Clear search when switching tabs (unless switching to home while already searching)

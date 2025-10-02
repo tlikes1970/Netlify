@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet v28.121.0 - TV & Movie Tracker</title>
+    <title>Flicklet v28.128.0 - TV & Movie Tracker</title>
     <meta name="description" content="Search, track, and rate shows & films fast." />
     <meta name="build" content="latest" />
 
@@ -965,7 +965,7 @@
           <div class="header-center">
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
-            <span class="version-display">v29.15</span>
+            <span class="version-display">v27.83</span>
           </div>
           <div class="header-right">
             <div id="accountContext" class="account-context" aria-live="polite"></div>
@@ -1027,7 +1027,7 @@
       <!-- Quote Bar positioned between search and tabs -->
       <div
         id="quote-bar"
-        class="quote-bar"
+        class="quote-bar home-only"
         role="region"
         aria-label="Quote of the moment"
         data-state="loading"
@@ -1110,7 +1110,7 @@
       <main id="panels" class="panels" role="main">
         
         <!-- Search Results Container -->
-        <div id="searchResults" class="search-results tab-section" style="display: none">
+        <div id="searchResults" class="search-results tab-section" hidden>
           <h4>
             Target <span data-i18n="search_results">Search Results</span>
             <span class="count" id="resultsCount">0</span>
@@ -1118,7 +1118,7 @@
           <div id="searchResultsList" class="list-container"></div>
         </div>
         <!-- Home - Immovable Layout Contract -->
-        <div id="homeSection" class="tab-section active home-content" role="tabpanel" aria-labelledby="homeTab"> <!-- H1 -->
+        <div id="homeSection" class="tab-section home-content" role="tabpanel" aria-labelledby="homeTab" hidden> <!-- H1 -->
 
           <!-- Group 1 - Your Shows -->
           <div id="group-1-your-shows" class="home-group">
@@ -1463,7 +1463,7 @@
         </div>
         <!-- end #homeSection -->
         <!-- Watching -->
-        <div id="watchingSection" class="tab-section" role="tabpanel" aria-labelledby="watchingTab" style="display: none">
+        <div id="watchingSection" class="tab-section" role="tabpanel" aria-labelledby="watchingTab" hidden>
           <div class="section">
             <div class="section-header">
               <h3>
@@ -1476,7 +1476,7 @@
         </div>
 
         <!-- Wishlist -->
-        <div id="wishlistSection" class="tab-section" role="tabpanel" aria-labelledby="wishlistTab" style="display: none">
+        <div id="wishlistSection" class="tab-section" role="tabpanel" aria-labelledby="wishlistTab" hidden>
           <div class="section">
             <div class="section-header">
               <h3>
@@ -1489,7 +1489,7 @@
         </div>
 
         <!-- Watched -->
-        <div id="watchedSection" class="tab-section" role="tabpanel" aria-labelledby="watchedTab" style="display: none">
+        <div id="watchedSection" class="tab-section" role="tabpanel" aria-labelledby="watchedTab" hidden>
           <div class="section">
             <div class="section-header">
               <h3>
@@ -1502,7 +1502,7 @@
         </div>
 
         <!-- Discover -->
-        <div id="discoverSection" class="tab-section" role="tabpanel" aria-labelledby="discoverTab" style="display: none">
+        <div id="discoverSection" class="tab-section" role="tabpanel" aria-labelledby="discoverTab" hidden>
           <div class="section">
             <h3>* <span data-i18n="discover">Discover</span></h3>
             <p data-i18n="discover_description">Recommendations based on your likes and ratings.</p>
@@ -1511,24 +1511,24 @@
         </div>
 
         <!-- Settings / Profile -->
-        <div id="settingsSection" class="tab-section" role="tabpanel" aria-labelledby="settingsTab" style="display: none">
-          <div class="settings-tabs" role="tablist" aria-label="Settings Sections">
-            <button role="tab" aria-selected="true" class="active" data-target="#general">
+        <div id="settingsSection" class="tab-section" role="tabpanel" aria-labelledby="settingsTab" hidden>
+          <div class="settings-tabs" data-scope="settings" role="tablist" aria-label="Settings Sections">
+            <button role="tab" aria-selected="false" class="active" data-target="#general" aria-disabled="true" tabindex="-1">
               <span data-i18n="general">General</span>
             </button>
-            <button role="tab" aria-selected="false" data-target="#notifications">
+            <button role="tab" aria-selected="false" data-target="#notifications" aria-disabled="true" tabindex="-1">
               <span data-i18n="notifications">Notifications</span>
             </button>
-            <button role="tab" aria-selected="false" data-target="#layout">
+            <button role="tab" aria-selected="false" data-target="#layout" aria-disabled="true" tabindex="-1">
               <span data-i18n="layout">Layout</span>
             </button>
-            <button role="tab" aria-selected="false" data-target="#data">
+            <button role="tab" aria-selected="false" data-target="#data" aria-disabled="true" tabindex="-1">
               <span data-i18n="data">Data</span>
             </button>
-            <button role="tab" aria-selected="false" data-target="#pro">
+            <button role="tab" aria-selected="false" data-target="#pro" aria-disabled="true" tabindex="-1">
               <span data-i18n="pro">Pro</span>
             </button>
-            <button role="tab" aria-selected="false" data-target="#about">
+            <button role="tab" aria-selected="false" data-target="#about" aria-disabled="true" tabindex="-1">
               <span data-i18n="about">About</span>
             </button>
           </div>
@@ -2658,7 +2658,7 @@
           const header = document.querySelector('#appRoot > header.header');
           const tabs = document.querySelector('#appRoot > .tab-container');
           const panels = document.querySelector('#appRoot > .panels');
-          const active = panels && panels.querySelector('.tab-section.active');
+          const active = panels && panels.querySelector('.tab-section:not([hidden])');
 
           const hb = Math.round(header?.getBoundingClientRect().bottom ?? NaN);
           const tt = Math.round(tabs?.getBoundingClientRect().top ?? NaN);

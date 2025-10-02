@@ -173,7 +173,7 @@ body.mardi {
   align-items: center;
   justify-content: center;
 }
-.tab.active {
+.tab.is-active {
   background: linear-gradient(45deg, var(--primary), var(--purple));
   color: #fff;
 }
@@ -604,7 +604,7 @@ body.mardi {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.tab.active {
+.tab.is-active {
   background: linear-gradient(45deg, var(--primary), var(--purple));
   color: #fff;
 }
@@ -1634,10 +1634,7 @@ button {
   gap: 8px;
 }
 .tab-section {
-  display: none;
-}
-.tab-section.active {
-  display: block;
+  /* Visibility controlled by [hidden] attribute - CSS does not control visibility */
 }
 .count {
   background: var(--primary);

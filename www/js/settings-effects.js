@@ -147,7 +147,7 @@ document.addEventListener('click', (e) => {
 });
 // Also observe section activation by class change
 const mo = new MutationObserver(() => {
-  const active = document.querySelector('#settingsSection.tab-section.active');
+  const active = document.querySelector('#settingsSection.tab-section:not([hidden])');
   if (active) bindSettingsControlsOnce();
 });
 mo.observe(document.documentElement, {

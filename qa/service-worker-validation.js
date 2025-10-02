@@ -260,3 +260,6 @@
   
   console.log('✅ [SW Validation] Service worker validation script loaded');
 })();
+
+
+

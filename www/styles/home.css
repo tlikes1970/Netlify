@@ -105,7 +105,7 @@
 html, body { overflow-x: hidden; } /* keeps layout mishaps invisible; real fixes above */
 
 /* H1.1: home wrapper sizing */
-#homeSection.home-content {
+#homeSection.home-content:not([hidden]) {
   display: block;              /* ensure it participates in normal flow */
   min-height: auto;            /* let content determine height naturally */
 }
@@ -257,9 +257,9 @@ html, body { overflow-x: hidden; } /* keeps layout mishaps invisible; real fixes
   visibility: visible ;
   opacity: 1 ;
 }
-.tab-container [role="tab"].active,
+.tab-container [role="tab"].is-active,
 .tab-container [aria-selected="true"],
-.tab-container .tab.active {
+.tab-container .tab.is-active {
   border-color: var(--border, #ddd);
   border-bottom-color: var(--primary, #2563eb);
   background: var(--bg-elevated, #fff);
