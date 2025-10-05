@@ -271,17 +271,21 @@ html body .card.v2.v2-search-card.card.card.card {
 }
 
 /* 2x2 Action Grid for Home Currently Watching */
-.card.v2 .action-grid-2x2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  width: 100%;
+.card.v2 .action-grid-2x2,
+.cw-card.v2 .action-grid-2x2,
+.v2-home-cw .action-grid-2x2 {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  width: 100% !important;
 }
 
-.card.v2 .action-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+.card.v2 .action-row,
+.cw-card.v2 .action-row,
+.v2-home-cw .action-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
 }
 
 /* Action buttons */
@@ -975,6 +979,15 @@ html body .card.v2.v2-search-card.card.card.card {
 .action-row {
   display: flex;
   gap: 8px;
+}
+
+/* Override for V2 Cards - ensure grid layout takes precedence */
+.card.v2 .action-row,
+.cw-card.v2 .action-row,
+.v2-home-cw .action-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
 }
 
 /* Pro actions styling */

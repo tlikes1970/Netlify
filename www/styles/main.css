@@ -1131,7 +1131,7 @@ body.mardi {
 }
 
 .main-container {
-  max-width: var(--page-max);
+  max-width: var(--page-max, 1200px);
   margin: 0 auto;
   background: var(--bg);
   border-radius: 16px;
@@ -2542,6 +2542,38 @@ body.mardi {
   display: flex;
   gap: 6px;
   margin-top: 6px;
+}
+
+/* V2 Cards Override - Force grid layout for V2 cards in currently watching */
+.cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .card.v2 .actions,
+.cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .card.v2 .card-actions,
+.cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .cw-card.v2 .actions,
+.cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .cw-card.v2 .card-actions,
+.cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .v2-home-cw .actions,
+.cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .v2-home-cw .card-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  margin-top: 6px !important;
+}
+
+/* V2 Cards Action Grid Override */
+.cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .card.v2 .action-grid-2x2,
+.cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .cw-card.v2 .action-grid-2x2,
+.cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .v2-home-cw .action-grid-2x2 {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+/* V2 Cards Action Row Override */
+.cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .card.v2 .action-row,
+.cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .cw-card.v2 .action-row,
+.cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .v2-home-cw .action-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
 }
 
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .actions .btn,
