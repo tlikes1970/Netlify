@@ -12,7 +12,7 @@
       id: item.id,
       mediaType: item.media_type || 'tv',
       title: item.title || item.name || 'Unknown',
-      poster: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : (item.posterUrl || ''),
+      poster: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : (item.posterUrl || '/assets/img/poster-placeholder.png'),
       releaseDate: item.release_date || item.first_air_date || '',
       overview: item.overview || '',
       genre: item.genre || (item.genres && item.genres[0]?.name) || '',

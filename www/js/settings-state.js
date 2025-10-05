@@ -191,7 +191,7 @@ document.addEventListener('click', (e) => {
   }
 });
 const mo = new MutationObserver(() => {
-  const active = document.querySelector('#settingsSection.tab-section.active');
+  const active = document.querySelector('#settingsSection.tab-section:not([hidden])');
   if (active) initSettingsState().catch(console.error);
 });
 mo.observe(document.documentElement, {

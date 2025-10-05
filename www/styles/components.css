@@ -1970,7 +1970,7 @@ body {
   color: var(--text);
 }
 
-.tab.active {
+.tab.is-active {
   background: transparent;
   color: var(--text);
   border-bottom-color: var(--primary);
@@ -2006,7 +2006,7 @@ body {
   opacity: 1;
 }
 
-.tab.active .tab-badge {
+.tab.is-active .tab-badge {
   background: var(--primary);
   color: white;
 }
@@ -2693,13 +2693,9 @@ html[data-theme='light'] .welcome-message {
   opacity: 0.7;
 }
 
-/* Tab Sections */
+/* Tab Sections - Visibility controlled by [hidden] attribute */
 .tab-section {
-  display: none;
-}
-
-.tab-section.active {
-  display: block;
+  /* Visibility controlled by [hidden] attribute - CSS does not control visibility */
 }
 
 /* Sections */
@@ -4857,12 +4853,9 @@ html[data-theme='dark'] .notes-chip:hover {
     z-index: 10 ;
   }
 
-  /* Fix tab visibility - ensure active tab shows content */
+  /* Tab visibility controlled by [hidden] attribute - CSS does not control visibility */
 .tab-section {
-    display: none;
-  }
-.tab-section.active {
-    display: block;
+    /* Visibility controlled by [hidden] attribute */
   }
 
   /* Ensure list containers are visible */

@@ -1,0 +1,211 @@
+commit,file,line,selector,property,value,inline,category
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,191,.switch,display,flex,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,197,.switch,visibility,visible,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,198,.switch,opacity,1,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,209,.switch input[type='checkbox'],display,inline-block,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,210,.switch input[type='checkbox'],visibility,visible,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,211,.switch input[type='checkbox'],opacity,1,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,212,.switch input[type='checkbox'],width,16px,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,213,.switch input[type='checkbox'],height,16px,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,235,#btnSettings.fab-left,background,var(--accent),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,236,#btnSettings.fab-left,color,var(--btn-text),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,237,#btnSettings.fab-left,border-radius,50%,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,238,#btnSettings.fab-left,width,50px,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,239,#btnSettings.fab-left,height,50px,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,240,#btnSettings.fab-left,display,grid,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,241,#btnSettings.fab-left,place-items,center,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,242,#btnSettings.fab-left,font-size,18px,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,243,#btnSettings.fab-left,transition,all 0.2s ease,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,247,#btnSettings.fab-left:hover,background,var(--accent-2),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,248,#btnSettings.fab-left:hover,transform,scale(1.05),no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,249,#btnSettings.fab-left:hover,box-shadow,0 6px 16px rgba(0⎵ 0⎵ 0⎵ 0.2),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,253,#btnSettings.fab-left:focus,outline,2px solid var(--accent),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\css\theme.css,254,#btnSettings.fab-left:focus,outline-offset,2px,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,34,.card.v2.v2-home-cw;
+.card.v2.v2-home-nextup;
+.card.v2.v2-home-curated,display,flex,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,35,.card.v2.v2-home-cw;
+.card.v2.v2-home-nextup;
+.card.v2.v2-home-curated,flex-direction,column,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,51,.card.v2.v2-tab-card;
+.card.v2.v2-tab-card.card;
+.card.v2.v2-tab-card.card.card;
+body .card.v2.v2-tab-card;
+html body .card.v2.v2-tab-card;
+html body .card.v2.v2-tab-card.card;
+html body .card.v2.v2-tab-card.card.card;
+html body .card.v2.v2-tab-card.card.card.card,display,flex,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,52,.card.v2.v2-tab-card;
+.card.v2.v2-tab-card.card;
+.card.v2.v2-tab-card.card.card;
+body .card.v2.v2-tab-card;
+html body .card.v2.v2-tab-card;
+html body .card.v2.v2-tab-card.card;
+html body .card.v2.v2-tab-card.card.card;
+html body .card.v2.v2-tab-card.card.card.card,flex-direction,row,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,66,.card.v2.v2-search-card;
+.card.v2.v2-search-card.card;
+.card.v2.v2-search-card.card.card;
+body .card.v2.v2-search-card;
+html body .card.v2.v2-search-card;
+html body .card.v2.v2-search-card.card;
+html body .card.v2.v2-search-card.card.card;
+html body .card.v2.v2-search-card.card.card.card,display,flex,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,67,.card.v2.v2-search-card;
+.card.v2.v2-search-card.card;
+.card.v2.v2-search-card.card.card;
+body .card.v2.v2-search-card;
+html body .card.v2.v2-search-card;
+html body .card.v2.v2-search-card.card;
+html body .card.v2.v2-search-card.card.card;
+html body .card.v2.v2-search-card.card.card.card,flex-direction,row,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,75,.card.v2.v2-tab-card;
+.card.v2.v2-search-card,display,flex,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,76,.card.v2.v2-tab-card;
+.card.v2.v2-search-card,flex-direction,row,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,82,.card.v2[class*="v2-tab"];
+.card.v2[class*="v2-search"],display,flex,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,83,.card.v2[class*="v2-tab"];
+.card.v2[class*="v2-search"],flex-direction,row,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,88,.list-container:has(.card.v2),display,flex,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,89,.list-container:has(.card.v2),flex-direction,column,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,90,.list-container:has(.card.v2),gap,16px,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,91,.list-container:has(.card.v2),overflow-x,visible,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,92,.list-container:has(.card.v2),overflow-y,visible,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,118,.card.v2.v2-tab-card .poster-wrap,flex,0 0 160px,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,119,.card.v2.v2-tab-card .poster-wrap,width,160px,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,120,.card.v2.v2-tab-card .poster-wrap,height,240px,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,125,.card.v2.v2-search-card .poster-wrap,flex,0 0 120px,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,126,.card.v2.v2-search-card .poster-wrap,width,120px,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,127,.card.v2.v2-search-card .poster-wrap,height,180px,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,226,.card.v2.v2-tab-card .actions;
+.card.v2.v2-search-card .actions,align-items,flex-start,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,227,.card.v2.v2-tab-card .actions;
+.card.v2.v2-search-card .actions,justify-content,flex-start,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,228,.card.v2.v2-tab-card .actions;
+.card.v2.v2-search-card .actions,text-align,left,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,234,.card.v2.v2-tab-card .card-content;
+.card.v2.v2-search-card .card-content,text-align,left,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,235,.card.v2.v2-tab-card .card-content;
+.card.v2.v2-search-card .card-content,justify-content,flex-start,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,236,.card.v2.v2-tab-card .card-content;
+.card.v2.v2-search-card .card-content,align-items,flex-start,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,242,.card.v2.v2-tab-card .free-actions;
+.card.v2.v2-search-card .free-actions,justify-content,flex-start,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,243,.card.v2.v2-tab-card .free-actions;
+.card.v2.v2-search-card .free-actions,align-items,flex-start,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,249,.card.v2.v2-tab-card .pro-actions;
+.card.v2.v2-search-card .pro-actions,justify-content,flex-start,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\cards.css,250,.card.v2.v2-tab-card .pro-actions;
+.card.v2.v2-search-card .pro-actions,align-items,flex-start,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1244,#group-1-your-shows .home-preview-row,margin,16px 0,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1245,#group-1-your-shows .home-preview-row,background,none,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1246,#group-1-your-shows .home-preview-row,border,none,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1247,#group-1-your-shows .home-preview-row,border-radius,0,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1248,#group-1-your-shows .home-preview-row,padding,0,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1249,#group-1-your-shows .home-preview-row,box-shadow,none,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1254,#group-1-your-shows #currentlyWatchingPreview.home-preview-row,margin,16px 0,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1255,#group-1-your-shows #currentlyWatchingPreview.home-preview-row,background,var(--card),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1256,#group-1-your-shows #currentlyWatchingPreview.home-preview-row,border,1px solid var(--border),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1257,#group-1-your-shows #currentlyWatchingPreview.home-preview-row,border-radius,12px,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1258,#group-1-your-shows #currentlyWatchingPreview.home-preview-row,padding,20px,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1259,#group-1-your-shows #currentlyWatchingPreview.home-preview-row,box-shadow,0 2px 8px rgba(0⎵ 0⎵ 0⎵ 0.05),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1437,#group-1-your-shows .dark-mode .home-preview-row,background,none,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1438,#group-1-your-shows .dark-mode .home-preview-row,border,none,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1439,#group-1-your-shows .dark-mode .home-preview-row,border-radius,0,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1440,#group-1-your-shows .dark-mode .home-preview-row,padding,0,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,1441,#group-1-your-shows .dark-mode .home-preview-row,box-shadow,none,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,2925,#group-1-your-shows.home-group,background,none,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,2926,#group-1-your-shows.home-group,border,none,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,2927,#group-1-your-shows.home-group,border-radius,0,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,2928,#group-1-your-shows.home-group,padding,0,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,2929,#group-1-your-shows.home-group,box-shadow,none,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,4562,.quote-bar,display,block,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,4563,.quote-bar,background,var(--bg⎵ #ffffff),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,4564,.quote-bar,border,1px solid var(--border⎵ #e5e7eb),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,4569,.quote-bar,color,var(--fg⎵ #1f2937),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,4571,.quote-bar,font-size,var(--fs-0⎵ 1rem),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,4572,.quote-bar,font-weight,normal,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,4582,.quote-text,display,inline-block,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,4584,.quote-text,color,var(--fg⎵ #1f2937),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,4585,.quote-text,font-size,var(--fs-0⎵ 1rem),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,4586,.quote-text,font-weight,var(--font-weight-normal⎵ normal),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,4593,#quote-bar .quote-text;
+.quote-bar .quote-text,font-weight,normal,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,4594,#quote-bar .quote-text;
+.quote-bar .quote-text,font-style,italic,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,4628,.tab-section,display,none,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\main.css,4633,.tab-section.active,display,block,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\mobile.css,555,#group-1-your-shows .home-preview-row,margin,12px 0,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\mobile.css,556,#group-1-your-shows .home-preview-row,background,none,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\mobile.css,557,#group-1-your-shows .home-preview-row,border,none,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\mobile.css,558,#group-1-your-shows .home-preview-row,border-radius,0,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\mobile.css,559,#group-1-your-shows .home-preview-row,padding,0,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\mobile.css,560,#group-1-your-shows .home-preview-row,box-shadow,none,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,13,nav#navigation.tabs,display,flex,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,14,nav#navigation.tabs,justify-content,center,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,15,nav#navigation.tabs,gap,.25rem,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,16,nav#navigation.tabs,padding,.25rem .5rem,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,17,nav#navigation.tabs,border-bottom,1px solid var(--tab-edge),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,18,nav#navigation.tabs,margin-top,0,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,19,nav#navigation.tabs,position,static,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,20,nav#navigation.tabs,top,auto,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,21,nav#navigation.tabs,z-index,auto,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,22,nav#navigation.tabs,height,auto,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,23,nav#navigation.tabs,margin-bottom,0,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,31,nav#navigation.tabs .tab,display,inline-flex,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,32,nav#navigation.tabs .tab,align-items,center,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,33,nav#navigation.tabs .tab,gap,.5rem,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,34,nav#navigation.tabs .tab,padding,.45rem .8rem,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,35,nav#navigation.tabs .tab,border,1px solid var(--tab-edge),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,36,nav#navigation.tabs .tab,border-radius,.6rem,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,37,nav#navigation.tabs .tab,background,#fff,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,38,nav#navigation.tabs .tab,color,var(--tab-text),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,39,nav#navigation.tabs .tab,text-decoration,none,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,40,nav#navigation.tabs .tab,line-height,1,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,41,nav#navigation.tabs .tab,transition,background .15s ease⎵ color .15s ease⎵ border-color .15s ease⎵ box-shadow .15s ease,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,42,nav#navigation.tabs .tab,cursor,pointer,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,43,nav#navigation.tabs .tab,visibility,visible,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,44,nav#navigation.tabs .tab,opacity,1,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,45,nav#navigation.tabs .tab,min-height,44px,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,46,nav#navigation.tabs .tab,min-width,auto,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,51,nav#navigation.tabs .tab:hover;
+nav#navigation.tabs .tab:focus-visible,border-color,#cbd5e1,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,52,nav#navigation.tabs .tab:hover;
+nav#navigation.tabs .tab:focus-visible,box-shadow,0 0 0 3px rgba(14⎵165⎵233⎵.15),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,56,nav#navigation.tabs .tab.is-active,background,var(--tab-accent),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,57,nav#navigation.tabs .tab.is-active,border-color,var(--tab-accent),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,58,nav#navigation.tabs .tab.is-active,color,#fff,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,62,nav#navigation.tabs .tab-label,white-space,nowrap,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,63,nav#navigation.tabs .tab-label,color,inherit,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,64,nav#navigation.tabs .tab-label,opacity,1,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,65,nav#navigation.tabs .tab-label,visibility,visible,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,66,nav#navigation.tabs .tab-label,display,inline,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,71,nav#navigation.tabs .badge,min-width,1.25rem,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,72,nav#navigation.tabs .badge,height,1.25rem,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,73,nav#navigation.tabs .badge,padding,0 .4rem,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,74,nav#navigation.tabs .badge,border-radius,999px,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,75,nav#navigation.tabs .badge,display,inline-flex,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,76,nav#navigation.tabs .badge,align-items,center,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,77,nav#navigation.tabs .badge,justify-content,center,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,78,nav#navigation.tabs .badge,font-size,.72rem,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,79,nav#navigation.tabs .badge,font-weight,700,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,80,nav#navigation.tabs .badge,line-height,1,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,81,nav#navigation.tabs .badge,background,var(--badge-bg),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,82,nav#navigation.tabs .badge,color,var(--tab-muted),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,83,nav#navigation.tabs .badge,border,1px solid var(--tab-edge),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,87,nav#navigation.tabs .tab.is-active .badge,background,rgba(255⎵255⎵255⎵.18),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,88,nav#navigation.tabs .tab.is-active .badge,border-color,rgba(255⎵255⎵255⎵.35),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,89,nav#navigation.tabs .tab.is-active .badge,color,#fff,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,94,nav#navigation.tabs .tab.is-active .tab-label,color,#fff,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,95,nav#navigation.tabs .tab.is-active .tab-label,opacity,1,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,96,nav#navigation.tabs .tab.is-active .tab-label,visibility,visible,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,97,nav#navigation.tabs .tab.is-active .tab-label,display,inline,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,102,.dark-mode nav#navigation.tabs .tab,background,#fff,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,103,.dark-mode nav#navigation.tabs .tab,color,var(--tab-text),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,107,.dark-mode nav#navigation.tabs .tab:hover,background,#fff,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,108,.dark-mode nav#navigation.tabs .tab:hover,color,var(--tab-text),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,112,.dark-mode nav#navigation.tabs .tab.is-active,background,var(--tab-accent),no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,113,.dark-mode nav#navigation.tabs .tab.is-active,color,#fff,no,COSMETIC
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,117,nav#navigation.tabs .tab,padding,.4rem .6rem,no,LAYOUT
+492631add6873735f21ef310f02fca2d9fbabe44,www\styles\tabs.css,118,nav#navigation.tabs .tab-label,font-size,.95rem,no,COSMETIC

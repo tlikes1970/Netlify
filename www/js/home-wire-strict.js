@@ -131,7 +131,7 @@
           id: item.id,
           mediaType: item.media_type || 'movie',
           title: item.title || item.name || 'Unknown',
-          poster: (item.poster_path || item.posterPath) ? `https://image.tmdb.org/t/p/w200${item.poster_path || item.posterPath}` : (item.posterUrl || ''),
+          poster: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : (item.posterPath || item.posterUrl || ''),
           releaseDate: item.release_date || item.first_air_date || '',
           genre: item.genre || (item.genres && item.genres[0]?.name) || '',
           tmdbId: item.tmdbId || item.id,

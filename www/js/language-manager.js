@@ -516,7 +516,7 @@ class LanguageManager {
   // Handle search results language change
   handleSearchResultsLanguageChange(lang) {
     const searchResults = document.getElementById('searchResults');
-    if (searchResults && searchResults.style.display !== 'none') {
+    if (searchResults && !searchResults.hidden) {
       console.log('🔄 Search results visible, re-performing search in new language');
 
       // Clear search cache to force fresh results in new language

@@ -171,7 +171,7 @@
 
     // Hide results
     if (searchResults) {
-      searchResults.style.display = 'none';
+      searchResults.hidden = true;
       searchResults.classList.remove('active');
       searchResults.innerHTML = '';
     }
@@ -203,7 +203,7 @@
     // Hide other tabs when showing loading state
     hideOtherTabs();
 
-    searchResults.style.display = 'block';
+    searchResults.hidden = false;
     searchResults.innerHTML = `
       <div style="text-align: center; padding: 40px;">
         <div style="font-size: 24px; margin-bottom: 10px;">🔍</div>
@@ -219,7 +219,7 @@
     // Hide other tabs when showing error state
     hideOtherTabs();
 
-    searchResults.style.display = 'block';
+    searchResults.hidden = false;
     searchResults.innerHTML = `
       <div style="text-align: center; padding: 40px; color: #e74c3c;">
         <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
@@ -294,7 +294,7 @@
     hideOtherTabs();
 
     // Show search results section
-    searchResults.style.display = 'block';
+    searchResults.hidden = false;
     searchResults.classList.add('active');
 
     // Use Cards V2 system if available, otherwise fallback to basic HTML
@@ -368,7 +368,7 @@
           id: item.id,
           mediaType: item.media_type || 'movie',
           title: item.title || item.name || 'Unknown',
-          poster: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '',
+          poster: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '/assets/img/poster-placeholder.png',
           releaseDate: item.release_date || item.first_air_date || '',
           genre: item.genre || (item.genres && item.genres[0]?.name) || '',
           seasonEpisode: item.seasonEpisode || item.sxxExx || '',
@@ -409,10 +409,8 @@
             : '';
         const mediaType = item.media_type || 'movie';
         const poster = item.poster_path
-          ? window.getPosterUrl
-            ? window.getPosterUrl(item.poster_path, 'w200')
-            : `https://image.tmdb.org/t/p/w200${item.poster_path}`
-          : '';
+          ? `https://image.tmdb.org/t/p/w200${item.poster_path}`
+          : '/assets/img/poster-placeholder.png';
 
         return `
         <div class="search-result-item" data-id="${item.id}" data-media-type="${mediaType}" style="display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #eee; cursor: pointer;" onclick="window.SearchModule.openItemDetails(${item.id}, '${mediaType}')">
@@ -443,7 +441,7 @@
     // Hide other tabs when showing no results
     hideOtherTabs();
 
-    searchResults.style.display = 'block';
+    searchResults.hidden = false;
     searchResults.innerHTML = `
       <div style="text-align: center; padding: 40px;">
         <div style="font-size: 24px; margin-bottom: 10px;">🔍</div>
@@ -476,24 +474,15 @@
     // Hide home section during search (but keep tab button available)
     const homeSection = document.getElementById('homeSection');
     if (homeSection) {
-      homeSection.style.display = 'none';
+      homeSection.hidden = true;
       log(`Home section hidden during search`);
     }
   }
 
-  // Show other tabs when search is cleared
+  // Show other tabs when search is cleared - let tab system handle visibility
   function showOtherTabs() {
-    // Use same tab IDs as app.js for consistency
-    const TAB_IDS = ['home', 'watching', 'wishlist', 'watched', 'discover', 'settings'];
-    TAB_IDS.forEach((tabId) => {
-      const section = document.getElementById(`${tabId}Section`);
-      if (section) {
-        section.style.display = '';
-        log(`Shown tab: ${tabId}Section`);
-      } else {
-        log(`Tab section not found: ${tabId}Section`);
-      }
-    });
+    // Don't interfere with tab system - let nav-init.js handle panel visibility
+    log(`Search cleared - tab system will handle panel visibility`);
   }
 
   // Open item details

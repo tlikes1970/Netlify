@@ -1,5 +1,10 @@
 /* Flicklet - Main CSS Styles */
 
+/* Tab System - Clean [hidden] rule - DOM state wins without shouting */
+[hidden] { 
+  display: none; 
+}
+
 /* Design tokens moved to design-tokens.css */
 
 /* Notification System - Rules Compliant (v28.70+) */
@@ -520,7 +525,7 @@ body {
   color: var(--text) ;
 }
 
-.dark-mode .tab.active {
+.dark-mode .tab.is-active {
   background: transparent ;
   color: var(--text) ;
   border-bottom-color: var(--primary) ;
@@ -567,10 +572,34 @@ body {
   --card: #ffffff ;
   --border: #e5e7eb ;
   
-  /* PART2A: Container-aware FAB positioning */
+  /* Spacing tokens for vertical rhythm */
+  --stack: 16px;
+  --stack-sm: 12px;
+}
+
+/* Home preview row wrappers - canonical spacing rule */
+.home-preview-row {
+  margin: var(--stack) 0;
+  padding: 0;
+}
+
+/* Tab state management - home-only elements */
+.home-only {
+  display: none;
+}
+
+.tab-home .home-only {
+  display: block;
+}
+
+/* Search visibility control - REMOVED: handled by tab activation system */
+
+/* PART2A: Container-aware FAB positioning */
+:root {
   --container-max: 1200px; /* tune if you use a different max */
   --container-pad: 16px;
   --fab-gap: 16px;
+  --fab-size: 56px;
   --accent: #2563eb ;
   --primary: #e91e63 ;
   --surface: #f9f9f9 ;
@@ -933,7 +962,7 @@ body.mardi {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) ;
 }
 
-.mardi .tab-container .tab.active {
+.mardi .tab-container .tab.is-active {
   background: linear-gradient(45deg, var(--mardi2), var(--mardi1)) ;
   border-color: var(--mardi3) ;
   box-shadow: 0 0 10px var(--mardi3) ;
@@ -1238,24 +1267,24 @@ body.mardi {
   border: 1px solid var(--border);
 }
 
-/* Currently Watching Preview Row Styles - Force layout fix */
+/* Currently Watching Preview Row Styles - Layout fix */
 #group-1-your-shows .home-preview-row {
-  margin: 16px 0 !important;
-  background: none !important;
-  border: none !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
-  box-shadow: none !important;
+  margin: var(--stack) 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
 }
 
-/* ULTRA SPECIFIC - Force the layout fix */
+/* Currently Watching Preview - specific styling moved to card components */
 #group-1-your-shows #currentlyWatchingPreview.home-preview-row {
-  margin: 16px 0 !important;
-  background: var(--card) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 12px !important;
-  padding: 20px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  margin: var(--stack) 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
 }
 
 .preview-row-header {
@@ -1433,11 +1462,11 @@ body.mardi {
 
 /* Dark mode adjustments for preview row */
 #group-1-your-shows .dark-mode .home-preview-row {
-  background: none !important;
-  border: none !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
-  box-shadow: none !important;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
 }
 
 .dark-mode .preview-card {
@@ -2921,11 +2950,11 @@ body.mardi {
 
 /* LAYOUT FIX: Remove card styling from Your Shows group */
 #group-1-your-shows.home-group {
-  background: none !important;
-  border: none !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
-  box-shadow: none !important;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
 }
 
 /* COMMUNITY LAYOUT v14 — simplified three-section layout */
@@ -4481,6 +4510,7 @@ body {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  padding-bottom: calc(var(--fab-size, 56px) + var(--fab-gap, 16px)); /* Reserve space for fixed FAB dock */
 }
 
 /* Header sticks at top - force it to stay on top */
@@ -4513,14 +4543,13 @@ body {
   border-bottom: 1px solid var(--border, #e5e7eb); /* Visual separation */
 }
 
-/* Search row within search container also sticky */
+/* Search row within search container also sticky - display controlled by tab activation system */
 #desktop-search-row,
 .search-row {
   position: sticky;
   top: 120px; /* Match new header height */
   z-index: 95; /* Lower than tabs to not cover them */
   padding: 0 16px; /* Add horizontal padding */
-  display: flex;
   align-items: center;
   gap: 12px;
 }
@@ -4603,34 +4632,22 @@ body {
   100% { transform: translateX(-100%); }
 }
 
-/* Show one panel at a time; avoid margin-collapse surprises */
-#appRoot .tab-section {
+/* Tab panel visibility - single source of truth using hidden attribute */
+.tab-section[hidden], .tab-panel[hidden] {
   display: none;
+}
+
+/* Visible tab sections styling */
+.tab-section:not([hidden]), .tab-panel:not([hidden]) {
   margin: 0;
   margin-top: 20px; /* Perfect spacing - confirmed by user */
   position: relative;
   z-index: 1; /* Below header, search, and tabs */
   background: var(--bg, #ffffff); /* Ensure solid background */
 }
-#appRoot .tab-section.active {
-  display: block;
-  position: relative;
-  z-index: 1; /* Ensure it stays below header */
-}
-#appRoot .tab-section > *:first-child {
+
+.tab-section:not([hidden]) > *:first-child {
   margin-top: 0;
-}
-
-/* Minimal Tab Visibility Fix - Override inline styles */
-.tab-section {
-  display: none !important;
-  transition: opacity 0.3s ease;
-}
-
-.tab-section.active {
-  display: block !important;
-  opacity: 1;
-  visibility: visible;
 }
 
 /* Small buffer when panels sit directly under tabs */
@@ -4638,20 +4655,20 @@ body {
   padding-top: 8px;
 }
 
-/* FAB positioning: Fixed to viewport but aligned with container edges */
+/* FAB positioning: Sticky bottom aligned to content container */
 .fab-dock { 
-  position: fixed !important; 
-  bottom: var(--fab-gap) !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  z-index: 50 !important;
-  pointer-events: none !important; /* clicks pass only to buttons inside */
-  display: flex !important;
-  align-items: flex-end !important;
-  justify-content: space-between !important;
-  width: min(var(--container-max), 100vw) !important;
-  max-width: calc(100vw - 2 * var(--container-pad)) !important;
-  padding: 0 calc(var(--container-pad) + 16px) !important; /* Move FABs inward by 16px */
+  position: sticky; 
+  bottom: var(--fab-gap);
+  width: min(var(--container-max), 100%);
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+  z-index: 50;
+  pointer-events: none; /* clicks pass only to buttons inside */
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: var(--fab-gap, 12px);
+  align-items: flex-end;
 }
 
 /* PART3: Scroll-to-top control */
@@ -4701,78 +4718,82 @@ body {
   .scroll-top-btn { transition: none; }
 }
 
-.fab-dock .fab-stack { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 12px; 
-  pointer-events: auto;
-}
-
-.fab-dock .fab-left {
-  pointer-events: auto !important;
-  margin-right: auto !important; /* Push to left side */
-  position: static !important;
-}
-
-.fab { 
-  position: static !important; /* buttons themselves don't need positioning; the dock handles it */
-  pointer-events: auto !important;
-}
-
-/* Override any conflicting positioning from other CSS files */
+/* Override conflicting FAB positioning from home.css */
 .fab-dock .fab,
 .fab-dock .fab-left,
 .fab-dock .fab-stack {
-  position: static !important;
-  top: auto !important;
-  bottom: auto !important;
-  left: auto !important;
-  right: auto !important;
-  transform: none !important;
+  position: static;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  z-index: auto;
+  flex: 0 0 auto;
+  width: auto;
+  max-width: none;
+  pointer-events: auto;
 }
 
-/* Override home.css rule that sets FABs to position: absolute */
-.fab, .fab-left, .fab-stack, .fab-dock {
-  position: static !important;
+/* Internal layout for fab-stack (contains multiple FABs) */
+.fab-dock .fab-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.fab-dock {
-  position: fixed !important;
-}
+
+
 
 /* Remove purple circle from settings FAB - make it just a cog icon */
 .fab-dock #btnSettings,
 .fab-dock #btnSettings.fab-left {
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  box-shadow: none !important;
-  border: none !important;
-  border-radius: 0 !important;
-  color: var(--text, #333) !important;
-  font-size: 24px !important;
-  width: auto !important;
-  height: auto !important;
-  min-width: auto !important;
-  min-height: auto !important;
-  padding: 8px !important;
+  background: transparent;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  color: var(--text, #333);
+  font-size: 24px;
+  width: auto;
+  height: auto;
+  min-width: auto;
+  min-height: auto;
+  padding: 8px;
 }
 
 .fab-dock #btnSettings:hover,
 .fab-dock #btnSettings.fab-left:hover {
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  box-shadow: none !important;
-  opacity: 0.8 !important;
+  background: transparent;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  opacity: 0.8;
 }
 
-@media (max-width: var(--bp-mobile-lg)) {
-  .fab-dock { 
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    width: 100vw !important;
-    max-width: none !important;
-    padding: 0 calc(var(--container-pad) + 16px) !important; /* Move FABs inward on mobile too */
-  }
+/* Tab Activation System - Home-only elements and search policy */
+
+/* Home-only elements: hidden by default, shown only on home tab */
+.home-only {
+  display: none;
 }
+
+.tab-home .home-only {
+  display: block;
+}
+
+/* Search policy: search rows only visible on tabs that allow search */
+.top-search,
+.search-row {
+  display: none;
+}
+
+.has-search .top-search,
+.has-search .search-row {
+  display: block;
+}
+
+.has-search .search-row {
+  display: flex;
+}
+

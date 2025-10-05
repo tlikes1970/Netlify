@@ -50,7 +50,7 @@ export function renderNextUpCard(show, air) {
       id: show.id,
       mediaType: show.media_type || 'tv',
       title: show.title || show.name || 'Unknown',
-      poster: show.posterUrl || show.poster_path ? `https://image.tmdb.org/t/p/w200${show.poster_path}` : '',
+      poster: show.posterUrl || (show.poster_path ? `https://image.tmdb.org/t/p/w200${show.poster_path}` : '/assets/img/poster-placeholder.png'),
       releaseDate: show.release_date || show.first_air_date || '',
       genre: (show.genres && show.genres[0]?.name) || '',
       seasonEpisode: calcSxxExx(show) || '',

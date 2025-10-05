@@ -663,6 +663,8 @@
         release_date: item.release_date || null,
         first_air_date: item.first_air_date || null,
         poster_path: item.poster_path || null,
+        poster: item.poster || null, // Pass the full poster URL
+        posterUrl: item.posterUrl || null, // Also pass posterUrl
         genres: item.genres?.map(g => g.name) || [],
         overview: item.overview || ''
       };
