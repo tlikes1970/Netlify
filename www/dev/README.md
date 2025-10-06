@@ -41,19 +41,24 @@ Verifies the complete Home frame structure and gutter behavior.
 🔍 Verifying Home frame structure...
 
 📊 Home Frame Verification Results:
-Groups: 5/5 passed
-Panels: 15/15 passed
-Rails: 8/8 passed
+┌─────────────────────┬───────────┬───────────┬─────────────────────┐
+│ groupId             │ groupOK   │ gutterOK  │ panel               │
+├─────────────────────┼───────────┼───────────┼─────────────────────┤
+│ group-1-your-shows  │ PASS      │ PASS      │ div.home-preview-row│
+│ group-2-community   │ PASS      │ PASS      │ div.section-content │
+│ group-3-for-you     │ PASS      │ PASS      │ div.home-preview-row│
+│ group-4-theaters    │ PASS      │ PASS      │ div.home-preview-row│
+│ group-5-feedback    │ PASS      │ PASS      │ div.home-preview-row│
+└─────────────────────┴───────────┴───────────┴─────────────────────┘
 
 ✅ All Home frames verified successfully!
-
 ✅ Home frames: PASS
 ```
 
 **Common Issues:**
 - `❌ Group group-1-your-shows: paddingLeft=32px` - Double gutter detected
-- `❌ Panel group-2-community .home-preview-row[0]: paddingLeft=0px` - Missing panel gutter
-- `❌ Rail group-3-for-you .preview-row-scroll[0]: display=flex` - Not using grid layout
+- `❌ Panel group-2-community: paddingLeft=0px` - Missing panel gutter
+- `❌ group-1-your-shows deep rail[0]: display=block` - Not using grid layout
 
 ### `verifyRailNormalization()`
 
@@ -71,20 +76,29 @@ Verifies rail normalization for deepest rails only.
 🔍 Verifying Home rail normalization...
 
 📊 Rail Normalization Results:
-Groups with rails: 5/5
-Rails checked: 8
-Rails passed: 8/8
-Cards with snap: 24/24
+┌─────────────────────┬───────────┬─────────────┬─────────────┬─────────────┐
+│ groupId             │ deepRails │ deepRailsOK │ cardsWithSnap│ totalCards  │
+├─────────────────────┼───────────┼─────────────┼─────────────┼─────────────┤
+│ group-1-your-shows  │ 2         │ PASS        │ 8           │ 8           │
+│ group-2-community   │ 1         │ PASS        │ 4           │ 4           │
+│ group-3-for-you     │ 1         │ PASS        │ 6           │ 6           │
+│ group-4-theaters    │ 1         │ PASS        │ 5           │ 5           │
+│ group-5-feedback    │ 0         │ N/A         │ 0           │ 0           │
+└─────────────────────┴───────────┴─────────────┴─────────────┴─────────────┘
+
+🔍 Deep Rail Details:
+Deep rails checked: 5
+Deep rails passed: 5/5
+Cards with snap: 23/23
 
 ✅ All rails normalized successfully!
-
 ✅ Rail normalization: PASS
 ```
 
 **Common Issues:**
-- `❌ group-1-your-shows .preview-row-scroll[0]: display=flex` - Not using grid
-- `❌ group-2-community .row-inner[0]: paddingLeft=16px` - Non-zero rail padding
-- `⚠️  Potential conflicts in home.css: Found 2 rules for .preview-row-scroll` - Conflicting rules
+- `❌ group-1-your-shows deep rail[0]: display=block` - Not using grid
+- `❌ group-2-community deep rail[0]: paddingLeft=16px` - Non-zero rail padding
+- `❌ group-3-for-you deep rail[0]: overflowX=visible` - Missing horizontal scroll
 
 ### `forceHomeVisible(enable)`
 
@@ -221,13 +235,13 @@ console.log('Rails:', rails.overallPass);   // true
 
 ### Individual checks
 ```javascript
-// Frame structure
+// Frame structure - shows 5 lines (one per section)
 window.__DEV_TOOLS.verifyHomeFrames();
-// Expected: Groups: 5/5 passed, Panels: 15/15 passed, Rails: 8/8 passed
+// Expected: Per-section table with groupOK: PASS, gutterOK: PASS
 
-// Rail normalization  
+// Rail normalization - shows deep rails only
 window.__DEV_TOOLS.verifyRailNormalization();
-// Expected: Rails: 8/8 passed, Cards with snap: 24/24
+// Expected: Per-section table with deepRailsOK: PASS, Deep Rail Details table
 
 // Visibility toggle
 window.__DEV_TOOLS.forceHomeVisible(true);

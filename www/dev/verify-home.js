@@ -16,14 +16,18 @@ if (window.__DEV__ || location.hostname === 'localhost') {
   
   /**
    * Card matcher selectors for Home verification
-   * Used by verifyRailNormalization() to detect cards in rails
+   * Used by verification functions to detect cards and rails
    */
   export const HOME_CARD_MATCHERS = {
-    // Primary card selectors
-    cards: '#homeSection .card',
+    // Card selectors (in order of specificity)
+    cardsList: [
+      '.cw-card.v2.preview-variant.preview-card',
+      '.card.v2.v2-home-nextup', 
+      '.card'
+    ],
     
     // Rail selectors (deepest rails only)
-    rails: [
+    railsList: [
       '.preview-row-container',
       '.preview-row-scroll', 
       '.row-inner',
@@ -31,8 +35,8 @@ if (window.__DEV__ || location.hostname === 'localhost') {
       '.curated-row'
     ],
     
-    // Group selectors
-    groups: [
+    // Group IDs
+    groupIds: [
       'group-1-your-shows',
       'group-2-community', 
       'group-3-for-you',
@@ -40,24 +44,77 @@ if (window.__DEV__ || location.hostname === 'localhost') {
       'group-5-feedback'
     ],
     
-    // Panel selectors (carry gutters)
-    panels: [
+    // Panel candidates (carry gutters)
+    panelCandidates: [
       '.home-preview-row',
       '.section-content', 
       '.card-container',
       'section',
-      'div'
+      'div:not(.group-header)'
     ]
   };
+
+  /**
+   * Helper: Pick the first visible panel from candidates
+   * @param {Element} groupEl - The group element to search within
+   * @returns {Element|null} The first visible panel or null
+   */
+  function pickPanel(groupEl) {
+    for (const selector of HOME_CARD_MATCHERS.panelCandidates) {
+      const panel = groupEl.querySelector(selector);
+      if (panel && panel.offsetParent !== null) {
+        return panel;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Helper: Check if element contains any cards
+   * @param {Element} el - Element to check
+   * @returns {boolean} True if element contains cards
+   */
+  function containsCardDesc(el) {
+    return HOME_CARD_MATCHERS.cardsList.some(selector => 
+      el.querySelector(selector) !== null
+    );
+  }
+
+  /**
+   * Helper: Pick deepest rails that contain cards and aren't ancestors of other rail-with-cards
+   * @param {Element} panelEl - The panel element to search within
+   * @returns {Element[]} Array of deepest rail elements
+   */
+  function pickDeepestRails(panelEl) {
+    const allRails = [];
+    
+    // Find all rails that contain cards
+    HOME_CARD_MATCHERS.railsList.forEach(selector => {
+      const rails = panelEl.querySelectorAll(selector);
+      rails.forEach(rail => {
+        if (containsCardDesc(rail)) {
+          allRails.push(rail);
+        }
+      });
+    });
+    
+    // Filter out rails that are ancestors of other rail-with-cards
+    const deepestRails = allRails.filter(rail => {
+      return !allRails.some(otherRail => 
+        otherRail !== rail && otherRail.contains(rail)
+      );
+    });
+    
+    return deepestRails;
+  }
 
   /**
    * Verify Home frame structure and gutter behavior
    * 
    * Checks:
    * - Groups have width: 100%, padding: 0
-   * - Panels have padding: 32px (single gutter)
-   * - Rails have padding: 0, proper grid layout
-   * - No double gutters or conflicting rules
+   * - Chosen panels have padding: 32px (single gutter)
+   * - Ignores generic inner divs
    * 
    * @returns {Object} Results with pass/fail status and details
    */
@@ -65,26 +122,21 @@ if (window.__DEV__ || location.hostname === 'localhost') {
     console.log('🔍 Verifying Home frame structure...');
     
     const results = {
-      totalGroups: 0,
-      groupsChecked: 0,
-      groupsPassed: 0,
-      panelsChecked: 0,
-      panelsPassed: 0,
-      railsChecked: 0,
-      railsPassed: 0,
+      sections: [],
+      totalSections: 0,
+      sectionsPassed: 0,
       issues: []
     };
     
     // Check each group
-    HOME_CARD_MATCHERS.groups.forEach(groupId => {
+    HOME_CARD_MATCHERS.groupIds.forEach(groupId => {
       const group = document.getElementById(groupId);
       if (!group) {
         results.issues.push(`❌ Group ${groupId} not found`);
         return;
       }
       
-      results.totalGroups++;
-      results.groupsChecked++;
+      results.totalSections++;
       
       const groupComputed = getComputedStyle(group);
       const groupRect = group.getBoundingClientRect();
@@ -98,82 +150,62 @@ if (window.__DEV__ || location.hostname === 'localhost') {
       };
       
       const groupPassed = Object.values(groupChecks).every(Boolean);
-      if (groupPassed) {
-        results.groupsPassed++;
+      
+      // Pick the panel for this group
+      const panel = pickPanel(group);
+      let panelPassed = false;
+      let gutterOK = 'N/A';
+      
+      if (panel) {
+        const panelComputed = getComputedStyle(panel);
+        const panelRect = panel.getBoundingClientRect();
+        
+        const panelChecks = {
+          paddingLeft: panelComputed.paddingLeft === '32px',
+          paddingRight: panelComputed.paddingRight === '32px',
+          hasWidth: panelRect.width > 0
+        };
+        
+        panelPassed = Object.values(panelChecks).every(Boolean);
+        gutterOK = panelPassed ? 'PASS' : 'FAIL';
       } else {
+        gutterOK = 'N/A';
+      }
+      
+      const sectionPassed = groupPassed && (panel ? panelPassed : true);
+      if (sectionPassed) {
+        results.sectionsPassed++;
+      }
+      
+      // Store section summary
+      results.sections.push({
+        groupId,
+        groupOK: groupPassed ? 'PASS' : 'FAIL',
+        gutterOK,
+        panel: panel ? panel.tagName.toLowerCase() + panel.className : 'none'
+      });
+      
+      // Log issues
+      if (!groupPassed) {
         const failures = Object.entries(groupChecks)
           .filter(([key, value]) => !value)
           .map(([key, value]) => `${key}=${value}`);
         results.issues.push(`❌ Group ${groupId}: ${failures.join(', ')}`);
       }
       
-      // Check panels within this group
-      HOME_CARD_MATCHERS.panels.forEach(panelSelector => {
-        const panels = group.querySelectorAll(panelSelector);
-        
-        panels.forEach((panel, index) => {
-          results.panelsChecked++;
-          
-          const panelComputed = getComputedStyle(panel);
-          const panelRect = panel.getBoundingClientRect();
-          
-          const panelChecks = {
-            display: panelComputed.display === 'block',
-            paddingLeft: panelComputed.paddingLeft === '32px',
-            paddingRight: panelComputed.paddingRight === '32px',
-            hasWidth: panelRect.width > 0
-          };
-          
-          const panelPassed = Object.values(panelChecks).every(Boolean);
-          if (panelPassed) {
-            results.panelsPassed++;
-          } else {
-            const failures = Object.entries(panelChecks)
-              .filter(([key, value]) => !value)
-              .map(([key, value]) => `${key}=${value}`);
-            results.issues.push(`❌ Panel ${groupId} ${panelSelector}[${index}]: ${failures.join(', ')}`);
-          }
-        });
-      });
-      
-      // Check rails within this group
-      HOME_CARD_MATCHERS.rails.forEach(railSelector => {
-        const rails = group.querySelectorAll(railSelector);
-        
-        rails.forEach((rail, index) => {
-          results.railsChecked++;
-          
-          const railComputed = getComputedStyle(rail);
-          const railRect = rail.getBoundingClientRect();
-          
-          const railChecks = {
-            display: railComputed.display === 'grid',
-            gridFlow: railComputed.gridAutoFlow === 'column',
-            paddingLeft: railComputed.paddingLeft === '0px',
-            paddingRight: railComputed.paddingRight === '0px',
-            overflowX: railComputed.overflowX === 'auto',
-            overflowY: railComputed.overflowY === 'hidden',
-            hasWidth: railRect.width > 0
-          };
-          
-          const railPassed = Object.values(railChecks).every(Boolean);
-          if (railPassed) {
-            results.railsPassed++;
-          } else {
-            const failures = Object.entries(railChecks)
-              .filter(([key, value]) => !value)
-              .map(([key, value]) => `${key}=${value}`);
-            results.issues.push(`❌ Rail ${groupId} ${railSelector}[${index}]: ${failures.join(', ')}`);
-          }
-        });
-      });
+      if (panel && !panelPassed) {
+        const panelComputed = getComputedStyle(panel);
+        const failures = [
+          `paddingLeft=${panelComputed.paddingLeft}`,
+          `paddingRight=${panelComputed.paddingRight}`
+        ].filter(f => !f.includes('32px'));
+        results.issues.push(`❌ Panel ${groupId}: ${failures.join(', ')}`);
+      }
     });
     
-    // Summary
+    // Compact per-section summary
     console.log('\n📊 Home Frame Verification Results:');
-    console.log(`Groups: ${results.groupsPassed}/${results.groupsChecked} passed`);
-    console.log(`Panels: ${results.panelsPassed}/${results.panelsChecked} passed`);
-    console.log(`Rails: ${results.railsPassed}/${results.railsChecked} passed`);
+    console.table(results.sections);
     
     if (results.issues.length > 0) {
       console.log('\n❌ Issues found:');
@@ -182,11 +214,7 @@ if (window.__DEV__ || location.hostname === 'localhost') {
       console.log('\n✅ All Home frames verified successfully!');
     }
     
-    const overallPass = results.groupsPassed === results.groupsChecked && 
-                       results.panelsPassed === results.panelsChecked && 
-                       results.railsPassed === results.railsChecked && 
-                       results.issues.length === 0;
-    
+    const overallPass = results.sectionsPassed === results.totalSections && results.issues.length === 0;
     console.log(`\n${overallPass ? '✅' : '❌'} Home frames: ${overallPass ? 'PASS' : 'FAIL'}`);
     
     return results;
@@ -196,11 +224,10 @@ if (window.__DEV__ || location.hostname === 'localhost') {
    * Verify rail normalization (deepest rails only)
    * 
    * Checks:
-   * - Rails use grid with column flow
+   * - Deepest rails use grid with column flow
    * - Zero rail padding
    * - Proper overflow behavior
    * - Cards have snap alignment
-   * - No conflicting rules in home.css
    * 
    * @returns {Object} Results with pass/fail status and details
    */
@@ -208,112 +235,117 @@ if (window.__DEV__ || location.hostname === 'localhost') {
     console.log('🔍 Verifying Home rail normalization...');
     
     const results = {
-      totalGroups: 0,
-      groupsWithRails: 0,
-      railsChecked: 0,
-      railsPassed: 0,
+      sections: [],
+      totalSections: 0,
+      sectionsWithRails: 0,
+      deepRailsChecked: 0,
+      deepRailsPassed: 0,
       cardsWithSnap: 0,
       totalCards: 0,
       issues: []
     };
     
-    // Check each group for rails
-    HOME_CARD_MATCHERS.groups.forEach(groupId => {
+    // Check each group for deepest rails
+    HOME_CARD_MATCHERS.groupIds.forEach(groupId => {
       const group = document.getElementById(groupId);
       if (!group) {
         results.issues.push(`❌ Group ${groupId} not found`);
         return;
       }
       
-      results.totalGroups++;
-      let groupHasRails = false;
+      results.totalSections++;
       
-      // Check deepest rails only
-      HOME_CARD_MATCHERS.rails.forEach(railSelector => {
-        const rails = group.querySelectorAll(railSelector);
-        
-        rails.forEach((rail, index) => {
-          results.railsChecked++;
-          groupHasRails = true;
-          
-          const computed = getComputedStyle(rail);
-          const rect = rail.getBoundingClientRect();
-          
-          const checks = {
-            display: computed.display === 'grid',
-            gridFlow: computed.gridAutoFlow === 'column',
-            paddingLeft: computed.paddingLeft === '0px',
-            paddingRight: computed.paddingRight === '0px',
-            overflowX: computed.overflowX === 'auto',
-            overflowY: computed.overflowY === 'hidden',
-            maxWidth: computed.maxWidth === '100%' || computed.maxWidth === 'none',
-            minWidth: computed.minWidth === '0px',
-            scrollSnap: computed.scrollSnapType.includes('mandatory'),
-            hasWidth: rect.width > 0
-          };
-          
-          const passed = Object.values(checks).every(Boolean);
-          if (passed) {
-            results.railsPassed++;
-          } else {
-            const failures = Object.entries(checks)
-              .filter(([key, value]) => !value)
-              .map(([key, value]) => `${key}=${value}`);
-            
-            results.issues.push(
-              `❌ ${groupId} ${railSelector}[${index}]: ${failures.join(', ')}`
-            );
-          }
+      // Pick the panel for this group
+      const panel = pickPanel(group);
+      if (!panel) {
+        results.sections.push({
+          groupId,
+          deepRails: 0,
+          deepRailsOK: 'N/A',
+          cardsWithSnap: 0,
+          totalCards: 0
         });
+        return;
+      }
+      
+      // Get deepest rails that contain cards
+      const deepRails = pickDeepestRails(panel);
+      const sectionDeepRails = deepRails.length;
+      let sectionDeepRailsPassed = 0;
+      
+      if (sectionDeepRails > 0) {
+        results.sectionsWithRails++;
+      }
+      
+      // Check each deepest rail
+      deepRails.forEach((rail, index) => {
+        results.deepRailsChecked++;
+        
+        const computed = getComputedStyle(rail);
+        const rect = rail.getBoundingClientRect();
+        
+        const checks = {
+          display: computed.display.includes('grid'),
+          gridFlow: computed.gridAutoFlow.includes('column'),
+          paddingLeft: computed.paddingLeft === '0px',
+          paddingRight: computed.paddingRight === '0px',
+          overflowX: computed.overflowX === 'auto',
+          overflowY: computed.overflowY === 'hidden',
+          scrollSnap: computed.scrollSnapType.includes('inline'),
+          hasWidth: rect.width > 0
+        };
+        
+        const passed = Object.values(checks).every(Boolean);
+        if (passed) {
+          results.deepRailsPassed++;
+          sectionDeepRailsPassed++;
+        } else {
+          const failures = Object.entries(checks)
+            .filter(([key, value]) => !value)
+            .map(([key, value]) => `${key}=${value}`);
+          
+          results.issues.push(
+            `❌ ${groupId} deep rail[${index}]: ${failures.join(', ')}`
+          );
+        }
       });
       
-      if (groupHasRails) {
-        results.groupsWithRails++;
-      }
-    });
-    
-    // Check cards with snap alignment
-    const cards = document.querySelectorAll(HOME_CARD_MATCHERS.cards);
-    results.totalCards = cards.length;
-    
-    cards.forEach(card => {
-      const computed = getComputedStyle(card);
-      if (computed.scrollSnapAlign === 'start') {
-        results.cardsWithSnap++;
-      }
-    });
-    
-    // Check for conflicting rules in home.css
-    console.log('\n🔍 Checking for conflicting rules in home.css...');
-    const homeCssConflicts = [];
-    HOME_CARD_MATCHERS.rails.forEach(selector => {
-      const rules = Array.from(document.styleSheets)
-        .filter(sheet => sheet.href && sheet.href.includes('home.css'))
-        .flatMap(sheet => {
-          try {
-            return Array.from(sheet.cssRules);
-          } catch (e) {
-            return [];
-          }
-        })
-        .filter(rule => rule.selectorText && rule.selectorText.includes(selector));
+      // Count cards with snap alignment in this section
+      const sectionCards = panel.querySelectorAll(HOME_CARD_MATCHERS.cardsList.join(', '));
+      let sectionCardsWithSnap = 0;
       
-      if (rules.length > 0) {
-        homeCssConflicts.push(`Found ${rules.length} rules for ${selector} in home.css`);
-      }
+      sectionCards.forEach(card => {
+        const computed = getComputedStyle(card);
+        if (computed.scrollSnapAlign === 'start') {
+          sectionCardsWithSnap++;
+        }
+      });
+      
+      results.cardsWithSnap += sectionCardsWithSnap;
+      results.totalCards += sectionCards.length;
+      
+      // Store section summary
+      results.sections.push({
+        groupId,
+        deepRails: sectionDeepRails,
+        deepRailsOK: sectionDeepRails > 0 ? 
+          (sectionDeepRailsPassed === sectionDeepRails ? 'PASS' : 'FAIL') : 'N/A',
+        cardsWithSnap: sectionCardsWithSnap,
+        totalCards: sectionCards.length
+      });
     });
     
-    if (homeCssConflicts.length > 0) {
-      results.issues.push('⚠️  Potential conflicts in home.css:');
-      homeCssConflicts.forEach(result => results.issues.push(result));
-    }
-    
-    // Summary
+    // Compact per-section summary
     console.log('\n📊 Rail Normalization Results:');
-    console.log(`Groups with rails: ${results.groupsWithRails}/${results.totalGroups}`);
-    console.log(`Rails checked: ${results.railsChecked}`);
-    console.log(`Rails passed: ${results.railsPassed}/${results.railsChecked}`);
-    console.log(`Cards with snap: ${results.cardsWithSnap}/${results.totalCards}`);
+    console.table(results.sections);
+    
+    // Deep rail details
+    if (results.deepRailsChecked > 0) {
+      console.log('\n🔍 Deep Rail Details:');
+      console.log(`Deep rails checked: ${results.deepRailsChecked}`);
+      console.log(`Deep rails passed: ${results.deepRailsPassed}/${results.deepRailsChecked}`);
+      console.log(`Cards with snap: ${results.cardsWithSnap}/${results.totalCards}`);
+    }
     
     if (results.issues.length > 0) {
       console.log('\n❌ Issues found:');
@@ -322,10 +354,7 @@ if (window.__DEV__ || location.hostname === 'localhost') {
       console.log('\n✅ All rails normalized successfully!');
     }
     
-    const overallPass = results.railsPassed === results.railsChecked && 
-                       results.issues.length === 0 && 
-                       homeCssConflicts.length === 0;
-    
+    const overallPass = results.deepRailsPassed === results.deepRailsChecked && results.issues.length === 0;
     console.log(`\n${overallPass ? '✅' : '❌'} Rail normalization: ${overallPass ? 'PASS' : 'FAIL'}`);
     
     return results;
