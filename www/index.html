@@ -229,9 +229,7 @@
     
     <!-- Dev Home Verification Utilities (dev only) -->
     <script type="module">
-      if (window.__DEV__ || location.hostname === 'localhost') {
-        import('/dev/verify-home.js');
-      }
+      if (location.hostname === 'localhost') import('/dev/verify-home.mjs');
     </script>
 
     <!-- Settings Manager -->
