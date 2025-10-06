@@ -1289,14 +1289,7 @@ body.mardi {
   overflow: hidden;
 }
 
-.preview-row-scroll {
-  display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: 8px;
-  scroll-behavior: smooth;
-}
+/* .preview-row-scroll layout rules moved to home-layout.css */
 
 .preview-row-scroll::-webkit-scrollbar {
   height: 8px;
@@ -2398,12 +2391,7 @@ body.mardi {
 }
 
 /* You reported this exact wrapper: <div id="currentlyWatchingScroll" class="preview-row-scroll row-inner"> */
-.cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  gap: 8px;
-}
+/* #currentlyWatchingScroll layout rules moved to home-layout.css */
 
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner > * {
   flex: 0 0 auto;
@@ -2602,12 +2590,7 @@ body.mardi {
   border-radius: 8px;
 }
 
-#up-next-row .row-inner {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  gap: 8px;
-}
+/* #up-next-row .row-inner layout rules moved to home-layout.css */
 
 /* Match Currently Watching sizing - width controlled by home-layout.css */
 #up-next-row .row-inner > * {
@@ -3758,26 +3741,11 @@ body.mardi {
 
   /* Home preview row styling moved to home-layout.css */
 
-  /* Snap scroll for carousels on mobile */
-  .preview-row-scroll {
-    scroll-snap-type: x mandatory;
-    scroll-padding: 16px;
-  }
-
-  .preview-row-scroll > * {
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-  }
+  /* Snap scroll for carousels on mobile - moved to home-layout.css */
 }
 
 /* Next Up section specific styling */
-#up-next-row .preview-row-scroll {
-  display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  padding: 8px 0;
-  scroll-behavior: smooth;
-}
+/* #up-next-row .preview-row-scroll layout rules moved to home-layout.css */
 
 #up-next-row .preview-card {
   flex: 0 0 auto;

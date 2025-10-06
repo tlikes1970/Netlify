@@ -79,6 +79,25 @@ main#panels {
   scroll-snap-type: inline mandatory;
 }
 
+/* === DEEP RAIL GRID RULES === */
+/* Cover both variants we saw: #currentlyWatchingScroll and .preview-row-scroll */
+#homeSection #currentlyWatchingScroll,
+#homeSection .preview-row-scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--rail-col-w, 224px);
+  gap: var(--rail-gap, 12px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: inline mandatory;
+  padding: 0;
+}
+
+#homeSection #currentlyWatchingScroll > *,
+#homeSection .preview-row-scroll > * { 
+  scroll-snap-align: start; 
+}
+
 /* Responsive rail sizing */
 @media (max-width: var(--bp-md)) {
   :is(#group-1-your-shows,
@@ -142,6 +161,15 @@ main#panels {
     flex: 1 1 150px; 
     min-height: 36px; 
   }
+}
+
+/* === COMMUNITY PANEL GUTTER === */
+/* Community panel gutter (actual selector in use is #group-2-community section) */
+#group-2-community section,
+#group-2-community .section-content,
+#group-2-community .home-preview-row {
+  padding-left: 32px;
+  padding-right: 32px;
 }
 
 /* === COMMUNITY SPLIT: 2 COLUMNS === */

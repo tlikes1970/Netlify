@@ -295,6 +295,12 @@ if (window.__DEV__ || location.hostname === 'localhost') {
           hasWidth: rect.width > 0
         };
         
+        // Log the exact node being judged
+        console.log(`🔍 Judging deep rail: ${rail.tagName.toLowerCase()}${rail.className ? '.' + rail.className.split(' ').join('.') : ''}${rail.id ? '#' + rail.id : ''}`);
+        console.log(`   display: ${computed.display} (includes 'grid': ${checks.display})`);
+        console.log(`   gridAutoFlow: ${computed.gridAutoFlow} (includes 'column': ${checks.gridFlow})`);
+        console.log(`   scrollSnapType: ${computed.scrollSnapType} (includes 'inline': ${checks.scrollSnap})`);
+        
         const passed = Object.values(checks).every(Boolean);
         if (passed) {
           results.deepRailsPassed++;
