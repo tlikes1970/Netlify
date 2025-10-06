@@ -7,6 +7,9 @@
 
 /* Design tokens moved to design-tokens.css */
 
+/* Per-rail width variables removed - now controlled by home-layout.css */
+/* These per-rail specials caused inconsistency and are replaced by centralized sizing */
+
 /* Notification System - Rules Compliant (v28.70+) */
 .notification {
   position: fixed;
@@ -56,12 +59,8 @@
 
 /* Quote Bar - Moved to card-system.css for standardization */
 
-/* Home Groups - Immovable Layout Contract */
-/* Card styling moved to line 2896 - see "Home Group Styling" section */
-
-.home-group:last-child {
-  margin-bottom: 0;
-}
+/* Home Groups - MOVED to home-layout.css */
+/* Layout rules now handled by token-driven system */
 
 /* Placeholder Messages */
 .placeholder-message {
@@ -442,9 +441,7 @@
 
 /* Responsive adjustments */
 @media (max-width: var(--bp-mobile-lg)) {
-  .home-group {
-    margin-bottom: 24px;
-  }
+  /* Home group layout moved to home-layout.css */
 
   .feedback-actions {
     flex-direction: column;
@@ -577,11 +574,8 @@ body {
   --stack-sm: 12px;
 }
 
-/* Home preview row wrappers - canonical spacing rule */
-.home-preview-row {
-  margin: var(--stack) 0;
-  padding: 0;
-}
+/* Home preview row wrappers - MOVED to home-layout.css */
+/* Layout rules now handled by token-driven system */
 
 /* Tab state management - home-only elements */
 .home-only {
@@ -1267,25 +1261,8 @@ body.mardi {
   border: 1px solid var(--border);
 }
 
-/* Currently Watching Preview Row Styles - Layout fix */
-#group-1-your-shows .home-preview-row {
-  margin: var(--stack) 0;
-  background: none;
-  border: none;
-  border-radius: 0;
-  padding: 0;
-  box-shadow: none;
-}
-
-/* Currently Watching Preview - specific styling moved to card components */
-#group-1-your-shows #currentlyWatchingPreview.home-preview-row {
-  margin: var(--stack) 0;
-  background: none;
-  border: none;
-  border-radius: 0;
-  padding: 0;
-  box-shadow: none;
-}
+/* Currently Watching Preview Row Styles - MOVED to home-layout.css */
+/* Layout rules now handled by token-driven system */
 
 .preview-row-header {
   margin-bottom: 8px;
@@ -1460,14 +1437,7 @@ body.mardi {
   background: rgba(0, 0, 0, 0.9);
 }
 
-/* Dark mode adjustments for preview row */
-#group-1-your-shows .dark-mode .home-preview-row {
-  background: none;
-  border: none;
-  border-radius: 0;
-  padding: 0;
-  box-shadow: none;
-}
+/* Dark mode adjustments for preview row - MOVED to home-layout.css */
 
 .dark-mode .preview-card {
   background: var(--bg);
@@ -2437,9 +2407,7 @@ body.mardi {
 
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner > * {
   flex: 0 0 auto;
-  width: var(--home-card-width-desktop); /* Standard home page card width */
-  max-width: var(--home-card-width-desktop);
-  min-width: var(--home-card-width-desktop);
+  /* Width/min-width/max-width removed - controlled by home-layout.css */
   display: flex ;
   flex-direction: column ;
   border-radius: 8px;
@@ -2641,21 +2609,19 @@ body.mardi {
   gap: 8px;
 }
 
-/* Match Currently Watching sizing (standard home page card size) */
+/* Match Currently Watching sizing - width controlled by home-layout.css */
 #up-next-row .row-inner > * {
   flex: 0 0 auto;
-  width: var(--home-card-width-desktop); /* Standard home page card width */
-  max-width: var(--home-card-width-desktop);
-  min-width: var(--home-card-width-desktop);
+  /* Width/min-width/max-width removed - controlled by home-layout.css */
   display: flex;
   flex-direction: column;
   border-radius: 8px;
   position: relative;
 }
 
-/* Poster frame - match Currently Watching proportions */
+/* Poster frame - width controlled by home-layout.css */
 #up-next-row .row-inner .media {
-  width: var(--home-card-width-desktop); /* Standard home page card width */
+  /* Width removed - controlled by home-layout.css */
   height: var(--home-card-height-desktop); /* Standard home page card height */
   border-radius: 6px;
   overflow: hidden;
@@ -2970,24 +2936,9 @@ body.mardi {
   display: block ;
 }
 
-/* Home Group Styling */
-.home-group {
-  margin-bottom: 32px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-/* LAYOUT FIX: Remove card styling from Your Shows group */
-#group-1-your-shows.home-group {
-  background: none;
-  border: none;
-  border-radius: 0;
-  padding: 0;
-  box-shadow: none;
-}
+/* Home Group Styling - MOVED to home-layout.css */
+/* Layout rules now handled by token-driven system in home-layout.css */
+/* Visual styling (borders, shadows, radius) preserved in home.css */
 
 /* COMMUNITY LAYOUT v14 — simplified three-section layout */
 
@@ -3073,14 +3024,8 @@ body.mardi {
   line-height: 0; /* Remove any line-height spacing */
 }
 
-/* Override any padding on the preview row in community */
-.community-left .home-preview-row {
-  padding: 0 ; /* Remove any padding */
-  margin: 0 ; /* Remove any margin */
-  height: auto ; /* Let it size to content */
-  display: block ; /* Ensure block display */
-  line-height: 0 ; /* Remove line-height spacing */
-}
+/* Community layout - MOVED to home-layout.css */
+/* Layout rules now handled by token-driven system */
 
 /* Override preview row header and container */
 .community-left .preview-row-header,
@@ -3791,11 +3736,7 @@ body.mardi {
 
 /* Desktop: Two neat sub-rows with divider */
 @media (min-width: calc(var(--bp-mobile-lg) + 1px)) {
-  .home-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
+  /* Home group layout moved to home-layout.css */
 
   .group-divider {
     margin: 8px 0;
@@ -3804,10 +3745,7 @@ body.mardi {
 
 /* Mobile: Stack vertically, carousels snap-scroll one card at a time */
 @media (max-width: var(--bp-mobile-lg)) {
-  .home-group {
-    margin-bottom: 24px;
-    padding: 16px;
-  }
+  /* Home group layout moved to home-layout.css */
 
   .group-title {
     font-size: 1.3rem;
@@ -3818,10 +3756,7 @@ body.mardi {
     margin: 12px 0;
   }
 
-  .home-preview-row {
-    margin: 12px 0;
-    /* Padding removed - handled by parent .home-group */
-  }
+  /* Home preview row styling moved to home-layout.css */
 
   /* Snap scroll for carousels on mobile */
   .preview-row-scroll {
@@ -3846,9 +3781,7 @@ body.mardi {
 
 #up-next-row .preview-card {
   flex: 0 0 auto;
-  width: var(--home-card-width-desktop);
-  max-width: var(--home-card-width-desktop);
-  min-width: var(--home-card-width-desktop);
+  /* Width/min-width/max-width removed - controlled by home-layout.css */
   display: flex;
   flex-direction: column;
   background: var(--bg);
@@ -3923,25 +3856,7 @@ body.mardi {
   }
 }
 
-/* Collapsed section styling for empty "Next Up" */
-.home-preview-row.collapsed {
-  padding: 8px 16px;
-  min-height: auto;
-}
-
-.home-preview-row.collapsed .preview-row-container {
-  display: none;
-}
-
-.home-preview-row.collapsed .preview-row-header {
-  margin-bottom: 0;
-}
-
-.home-preview-row.collapsed .preview-row-title {
-  font-size: 1rem;
-  font-weight: 500;
-  opacity: 0.7;
-}
+/* Collapsed section styling moved to home-layout.css */
 
 /* === Game Cards & Modals === */
 
@@ -4666,7 +4581,7 @@ body {
 
 /* Tab panel visibility - single source of truth using hidden attribute */
 .tab-section[hidden], .tab-panel[hidden] {
-  display: none;
+  display: none !important;
 }
 
 /* Visible tab sections styling */

@@ -1,0 +1,241 @@
+/* Home Layout System - Token-Driven, Container Query, RTL-Safe */
+/* Load AFTER main.css to override layout rules */
+
+/* === DESIGN TOKENS === */
+:root {
+  /* Frame gutters */
+  --home-gutter: 32px;
+  
+  /* Rail sizing */
+  --rail-col-w: 260px;
+  --rail-col-w-sm: 200px;
+  --rail-gap: 16px;
+  
+  /* Breakpoints (canonical) */
+  --bp-xs: 480px;
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+}
+
+/* === FRAME NORMALIZATION === */
+/* Wrappers: width 100%, no padding */
+#homeSection, 
+.home-content, 
+main#panels { 
+  box-sizing: border-box; 
+  width: 100%; 
+  max-width: none; 
+}
+
+/* Top-level group wrappers: fill width; zero inner L/R padding */
+#group-1-your-shows.home-group,
+#group-2-community.home-group,
+#group-3-for-you.home-group,
+#group-4-theaters.home-group,
+#group-5-feedback.home-group {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: 0; /* kill double gutters */
+}
+
+/* === PANELS OWN THE SINGLE GUTTER === */
+/* The visible "panel" inside each group carries the gutter once */
+:where(#group-1-your-shows,
+       #group-2-community,
+       #group-3-for-you,
+       #group-4-theaters,
+       #group-5-feedback)
+  > :is(.home-preview-row, .section-content, .card-container, section, div) {
+  display: block;                 /* ensure width > 0 and consistent sizing */
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  padding-inline: var(--home-gutter);  /* the one and only horizontal gutter */
+  margin: 0;
+}
+
+/* === RAILS: GRID COLUMN-FLOW WITH ZERO PADDING === */
+/* Deepest rails are grid with column flow, zero padding, scroll on X only */
+:is(#group-1-your-shows,
+    #group-2-community,
+    #group-3-for-you,
+    #group-4-theaters,
+    #group-5-feedback)
+  :is(.preview-row-container, .preview-row-scroll, .row-inner, #currentlyWatchingScroll, .curated-row) {
+  box-sizing: border-box;
+  display: grid;
+  grid-auto-flow: column;                   /* lay items left→right (RTL flips logically) */
+  grid-auto-columns: var(--rail-col-w);
+  gap: var(--rail-gap);
+  padding: 0;                               /* zero rail padding */
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;                         /* scroll on X only */
+  overflow-y: hidden;
+  scroll-snap-type: inline mandatory;
+}
+
+/* Responsive rail sizing */
+@media (max-width: var(--bp-md)) {
+  :is(#group-1-your-shows,
+      #group-2-community,
+      #group-3-for-you,
+      #group-4-theaters,
+      #group-5-feedback)
+    :is(.preview-row-container, .preview-row-scroll, .row-inner, #currentlyWatchingScroll, .curated-row) {
+    grid-auto-columns: var(--rail-col-w-sm);
+  }
+}
+
+/* === CARD SNAP TARGETS === */
+/* Cards snap cleanly and don't exceed panel width */
+#homeSection .card { 
+  scroll-snap-align: start; 
+  min-width: 0; 
+}
+
+#homeSection .card img, 
+#homeSection .card picture { 
+  display: block; 
+  max-width: 100%; 
+}
+
+/* === ACTION BUTTONS: 2x2 GRID, NO LABEL CLIPPING === */
+/* Actions: container-query first, flex fallback; no mid-word splits */
+#homeSection :is(.actions, .card-actions) {
+  display: grid;
+  grid-template-columns: 1fr;          /* default: single column */
+  gap: 8px;
+  padding-block: 8px;
+  align-items: center;
+}
+
+/* Container query: 2 columns when card is wide enough */
+@container (min-width: 260px) {
+  #homeSection :is(.actions, .card-actions) { 
+    grid-template-columns: repeat(2, 1fr); 
+  }
+}
+
+#homeSection :is(.actions, .card-actions) :is(button, [role="button"], a.button) {
+  width: 100%;
+  min-height: 36px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  justify-content: center;
+}
+
+/* Container query fallback for older browsers */
+@supports not (container-type: inline-size) {
+  #homeSection :is(.actions, .card-actions) { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 8px; 
+  }
+  
+  #homeSection :is(.actions, .card-actions) > * { 
+    flex: 1 1 150px; 
+    min-height: 36px; 
+  }
+}
+
+/* === COMMUNITY SPLIT: 2 COLUMNS === */
+/* Community = 2 columns for now (Player | Right rail w/ Flickword + Trivia) */
+#group-2-community > :is(.home-preview-row, .section-content, section, div) {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+#group-2-community .the-player { 
+  grid-column: 1; 
+}
+
+#group-2-community .right-rail { 
+  grid-column: 2; 
+  display: grid; 
+  gap: 24px; 
+  grid-auto-rows: minmax(180px, auto); 
+}
+
+/* === SAFETY & RTL SUPPORT === */
+/* Safety: prevent content from forcing tracks wider than panels */
+#homeSection .preview-row-scroll * { 
+  min-width: 0; 
+}
+
+/* RTL scroll behavior */
+#homeSection .preview-row-scroll {
+  scroll-behavior: smooth;
+}
+
+/* RTL-aware scroll indicators (if you have them) */
+#homeSection .preview-row-scroll::before,
+#homeSection .preview-row-scroll::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+#homeSection .preview-row-scroll::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg, #fff), transparent);
+}
+
+#homeSection .preview-row-scroll::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg, #fff), transparent);
+}
+
+/* RTL flip scroll indicators */
+[dir="rtl"] #homeSection .preview-row-scroll::before {
+  left: auto;
+  right: 0;
+  background: linear-gradient(to left, var(--bg, #fff), transparent);
+}
+
+[dir="rtl"] #homeSection .preview-row-scroll::after {
+  right: auto;
+  left: 0;
+  background: linear-gradient(to right, var(--bg, #fff), transparent);
+}
+
+/* === DARK MODE ADJUSTMENTS === */
+/* Dark mode adjustments for preview row */
+#group-1-your-shows .dark-mode .home-preview-row {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+/* === COLLAPSED SECTIONS === */
+/* Collapsed section styling for empty "Next Up" */
+.home-preview-row.collapsed {
+  padding: 8px 16px;
+  min-height: auto;
+}
+
+.home-preview-row.collapsed .preview-row-container {
+  display: none;
+}
+
+.home-preview-row.collapsed .preview-row-header {
+  margin-bottom: 0;
+}
+
+.home-preview-row.collapsed .preview-row-title {
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 0.7;
+}
