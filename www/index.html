@@ -196,6 +196,9 @@
 
     <!-- Design Tokens -->
     <link rel="stylesheet" href="/styles/design-tokens.css" />
+    
+    <!-- Layout Tokens - Load early to establish variables -->
+    <link rel="stylesheet" href="/styles/tokens.css" />
 
     <!-- Mobile Hotfix - Loaded last to override other styles -->
     <link rel="stylesheet" href="/styles/mobile-hotfix.css" />
@@ -205,6 +208,31 @@
     
     <!-- Cards V2 System -->
     <link rel="stylesheet" href="/styles/cards.css" />
+    
+    <!-- Home Layout System - Token-driven, container query, RTL-safe -->
+    <link rel="stylesheet" href="/styles/home-layout.css" />
+    
+    <!-- Tabs Layout System - Token-driven for tab/search views -->
+    <link rel="stylesheet" href="/styles/tabs-layout.css" />
+
+    <!-- RTL Scroll Helper -->
+    <script src="/js/rtl-scroll-helper.js"></script>
+    
+    <!-- Home Frame Verification Helper -->
+    <script src="/js/verify-home-frames.js"></script>
+    
+    <!-- Panel Gutter Verification Helper -->
+    <script src="/js/verify-panel-gutters.js"></script>
+    
+    <!-- Rail Normalization Verification Helper -->
+    <script src="/js/verify-rail-normalization.js"></script>
+    
+    <!-- Dev Home Verification Utilities (dev only) -->
+    <script type="module">
+      if (window.__DEV__ || location.hostname === 'localhost') {
+        import('/dev/verify-home.js');
+      }
+    </script>
 
     <!-- Settings Manager -->
     <script type="module" src="/js/settings-manager.js"></script>
