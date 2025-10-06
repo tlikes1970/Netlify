@@ -228,8 +228,12 @@
     <script src="/js/verify-rail-normalization.js"></script>
     
     <!-- Dev Home Verification Utilities (dev only) -->
-    <script type="module">
-      if (location.hostname === 'localhost') import('/dev/verify-home.mjs');
+    <script>
+      if (location.hostname === 'localhost') {
+        const s = document.createElement('script');
+        s.src = '/dev/verify-home.js';
+        document.head.appendChild(s);
+      }
     </script>
 
     <!-- Settings Manager -->

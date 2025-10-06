@@ -1,9 +1,60 @@
 /* H1: Layout variables - Now using unified card sizing system */
 /* Card sizing is now handled by spacing-system.css */
 
-/* H1: Page container */
+/* === Home Frame Normalization =========================================== */
+:root {
+  /* Match the app frame's L/R padding. Update in one place if design changes. */
+  --home-frame-gutter: 32px;
+}
+
+/* Remove upstream caps so Home can actually reach the frame width */
+main#panels,
+#homeSection,
 .home-content {
-  max-width: min(var(--container-max-width), 100%);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+}
+
+/* Top-level group wrappers: fill width; zero inner L/R padding (equal specificity to main.css) */
+#group-1-your-shows.home-group,
+#group-2-community.home-group,
+#group-3-for-you.home-group,
+#group-4-theaters.home-group,
+#group-5-feedback.home-group {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Panel gutter rules moved to home-layout.css */
+
+/* Rail layout rules moved to home-layout.css for proper cascade control */
+
+/* === Your Shows: actions layout (2×2), centered ========================= */
+#group-1-your-shows :is(.actions, .card-actions) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  justify-items: center;
+  align-items: center;
+  padding: 8px 0;
+}
+#group-1-your-shows :is(.actions, .card-actions)
+  :is(button, [role="button"], a.button) {
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+}
+/* === End normalization =================================================== */
+
+/* H1: Page container - Updated for frame normalization */
+.home-content {
+  /* max-width removed - now handled by frame normalization above */
   margin-inline: auto;
   padding-inline: var(--safe-gutter);
   padding-block: var(--section-gap);
@@ -19,31 +70,17 @@
   display: block;
 }
 
-/* H1: Home groups */
+/* H1: Home groups - Visual styling only (layout moved to home-layout.css) */
 .home-group {
-  margin-block: 0 var(--section-gap);
-  padding: var(--space-md);
-  border-radius: var(--space-lg);
+  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  /* Layout properties moved to home-layout.css */
 }
 
-/* H1: Preview rows */
-.home-group .preview-row {
-  margin-block: var(--space-sm);
-}
-.preview-row-scroll,
-.row-inner,
-.home-preview-row .row-inner {
-  display: flex;
-  gap: var(--row-gap);
-  overflow-x: auto;
-  scroll-snap-type: x proximity;
-  padding-block: var(--space-xs);
-  -webkit-overflow-scrolling: touch;
-}
-.preview-row-scroll > *,
-.row-inner > * {
-  scroll-snap-align: start;
-}
+/* H1: Preview rows - Layout moved to home-layout.css */
+/* Visual styling only preserved here */
 
 /* H1: Card sizing alignment (use unified vars; do not hardcode px in other files) */
 .preview-card,
@@ -119,8 +156,7 @@ html, body { overflow-x: hidden; } /* keeps layout mishaps invisible; real fixes
 }
 
 /* H1.1: Normalize vertical rhythm (even spacing between containers) */
-/* Section spacing */
-.home-content .home-group { margin: 0 0 var(--section-gap); padding: 12px; border-radius: 10px; }
+/* Section spacing - REMOVED conflicting .home-group padding rule for frame normalization */
 .home-content .home-group + .home-group { margin-top: var(--section-gap); }
 #quote-bar, .quote-bar { margin: 0 0 var(--section-gap-lg); }
 
@@ -130,8 +166,7 @@ html, body { overflow-x: hidden; } /* keeps layout mishaps invisible; real fixes
   margin: 0; 
   /* Card styling handled by parent .home-group */
 }
-.home-content .preview-row-scroll,
-.home-content .row-inner { min-height: 0; align-items: stretch; }
+/* Rail layout rules moved to home-layout.css */
 
 /* Ensure normal flow in the Your Shows group only */
 #group-1-your-shows {

@@ -18,7 +18,7 @@ if (window.__DEV__ || location.hostname === 'localhost') {
    * Card matcher selectors for Home verification
    * Used by verification functions to detect cards and rails
    */
-  export const HOME_CARD_MATCHERS = {
+  const HOME_CARD_MATCHERS = {
     // Card selectors (in order of specificity)
     cardsList: [
       '.cw-card.v2.preview-variant.preview-card',
@@ -118,7 +118,7 @@ if (window.__DEV__ || location.hostname === 'localhost') {
    * 
    * @returns {Object} Results with pass/fail status and details
    */
-  export function verifyHomeFrames() {
+  function verifyHomeFrames() {
     console.log('🔍 Verifying Home frame structure...');
     
     const results = {
@@ -231,7 +231,7 @@ if (window.__DEV__ || location.hostname === 'localhost') {
    * 
    * @returns {Object} Results with pass/fail status and details
    */
-  export function verifyRailNormalization() {
+  function verifyRailNormalization() {
     console.log('🔍 Verifying Home rail normalization...');
     
     const results = {
@@ -375,7 +375,7 @@ if (window.__DEV__ || location.hostname === 'localhost') {
    * @param {boolean} enable - Whether to enable or disable diagnostic visibility
    * @returns {boolean} Current state after toggle
    */
-  export function forceHomeVisible(enable = true) {
+  function forceHomeVisible(enable = true) {
     const styleId = 'force-home-visible';
     let styleEl = document.getElementById(styleId);
     
@@ -410,21 +410,13 @@ if (window.__DEV__ || location.hostname === 'localhost') {
   }
 
   // Expose utilities to window.__DEV_TOOLS for console access
-  if (!window.__DEV_TOOLS) {
-    window.__DEV_TOOLS = {};
-  }
+  window.__DEV_TOOLS = { 
+    verifyHomeFrames, 
+    verifyRailNormalization, 
+    HOME_CARD_MATCHERS, 
+    forceHomeVisible 
+  };
   
-  window.__DEV_TOOLS.verifyHomeFrames = verifyHomeFrames;
-  window.__DEV_TOOLS.verifyRailNormalization = verifyRailNormalization;
-  window.__DEV_TOOLS.forceHomeVisible = forceHomeVisible;
-  window.__DEV_TOOLS.HOME_CARD_MATCHERS = HOME_CARD_MATCHERS;
+  console.log('🛠️ Home verification utilities loaded.');
   
-  console.log('🛠️  Home verification utilities loaded. Use window.__DEV_TOOLS.* to access them.');
-  
-} else {
-  // Production: no-op exports
-  export const HOME_CARD_MATCHERS = {};
-  export function verifyHomeFrames() { return { error: 'Dev utilities not available in production' }; }
-  export function verifyRailNormalization() { return { error: 'Dev utilities not available in production' }; }
-  export function forceHomeVisible() { return false; }
 }

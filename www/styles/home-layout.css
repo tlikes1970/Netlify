@@ -43,19 +43,13 @@ main#panels {
 }
 
 /* === PANELS OWN THE SINGLE GUTTER === */
-/* The visible "panel" inside each group carries the gutter once */
-:where(#group-1-your-shows,
-       #group-2-community,
-       #group-3-for-you,
-       #group-4-theaters,
-       #group-5-feedback)
-  > :is(.home-preview-row, .section-content, .card-container, section, div) {
-  display: block;                 /* ensure width > 0 and consistent sizing */
-  box-sizing: border-box;
-  width: 100%;
-  max-width: none;
-  padding-inline: var(--home-gutter);  /* the one and only horizontal gutter */
-  margin: 0;
+/* Apply 32px left/right padding to all Home panels */
+#homeSection .home-preview-row,
+#homeSection .section-content,
+#group-1-your-shows section,
+#group-2-community section {
+  padding-left: var(--home-gutter, 32px);
+  padding-right: var(--home-gutter, 32px);
 }
 
 /* === RAILS: GRID COLUMN-FLOW WITH ZERO PADDING === */
@@ -161,15 +155,6 @@ main#panels {
     flex: 1 1 150px; 
     min-height: 36px; 
   }
-}
-
-/* === COMMUNITY PANEL GUTTER === */
-/* Community panel gutter (actual selector in use is #group-2-community section) */
-#group-2-community section,
-#group-2-community .section-content,
-#group-2-community .home-preview-row {
-  padding-left: 32px;
-  padding-right: 32px;
 }
 
 /* === COMMUNITY SPLIT: 2 COLUMNS === */
