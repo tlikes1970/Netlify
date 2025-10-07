@@ -1,0 +1,173 @@
+/* community-layout.v2.css */
+/* Contract: two equal columns desktop (1:1), single column ≤ 960px. No sticky behavior. */
+
+/* Clean CSS with maximum specificity to override all conflicting rules */
+#group-2-community.community-v2.home-group .community-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: auto;
+  gap: var(--space-4, 16px);
+  align-items: start;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  width: 100%;
+  padding: 0; /* Override community-player.css padding */
+}
+
+#group-2-community.community-v2.home-group .community-left {
+  grid-row: auto; /* Override community-player.css grid-row: 1 / span 2 */
+  align-self: stretch; /* Stretch to fill grid cell height */
+  height: 100%; /* Take full height of grid cell */
+  min-height: 0;
+  display: flex; /* Keep flex from community-player.css */
+  width: 100%;
+  min-width: 0;
+  max-width: none; /* Override main.css max-width: 50% */
+  flex: none; /* Override main.css flex: 0 1 50% */
+}
+
+#group-2-community.community-v2.home-group .community-right {
+  display: flex; /* Override community-player.css grid */
+  flex-direction: column;
+  grid-template-rows: none; /* Override community-player.css grid-template-rows */
+  height: 100%;
+  min-height: 0;
+  align-items: stretch;
+  flex: none;
+  max-width: none;
+  min-width: 0;
+  width: 100%;
+  overflow: visible;
+  align-self: stretch;
+  gap: 0; /* Override community-player.css gap */
+}
+
+/* Player section - fill full width and height with maximum specificity */
+body #group-2-community.community-v2.home-group .community-left #community-player {
+  width: 100%; /* Fill full width of left column */
+  height: 100%; /* Fill full height of left column */
+  padding: 32px; /* Restore proper gutters */
+  margin: 0; /* Remove any margins */
+  display: block;
+  flex-direction: column;
+  min-width: 0; /* Allow shrinking */
+  max-width: none; /* Remove any max-width constraints */
+}
+
+/* Player content inside - ensure it fills the player section */
+body #group-2-community.community-v2.home-group .community-left #community-player > * {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+
+/* Override community-player.css card width constraints */
+body #group-2-community.community-v2.home-group .community-left #community-player .c-card {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+
+/* YouTube iframe styling - prevent overflow and maintain aspect ratio */
+body #group-2-community.community-v2.home-group .community-left #community-player iframe {
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  position: relative;
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Ensure iframe is properly contained */
+body #group-2-community.community-v2.home-group .community-left #community-player .media,
+body #group-2-community.community-v2.home-group .community-left #community-player .media-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+/* Media container for responsive iframe */
+body #group-2-community.community-v2.home-group .community-left #community-player .media-container {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+}
+
+body #group-2-community.community-v2.home-group .community-left #community-player .media-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Card content layout */
+body #group-2-community.community-v2.home-group .community-left #community-player .c-card {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+/* Card header and footer spacing */
+body #group-2-community.community-v2.home-group .community-left #community-player .c-card header,
+body #group-2-community.community-v2.home-group .community-left #community-player .c-card footer {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+body #group-2-community.community-v2.home-group .community-left #community-player .c-card .body {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+/* Games grid defaults - stacked vertically on desktop */
+#group-2-community.community-v2.home-group #home-games {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr; /* Equal height for both games */
+  align-items: stretch; /* Stretch to fill available height */
+  gap: var(--space-3, 12px);
+  height: 100%; /* Take full height of right column */
+}
+
+/* Mobile ≤ 960px: single column, no sticky */
+@media (max-width: 960px) {
+  #group-2-community.community-v2.home-group .community-content {
+    grid-template-columns: 1fr;
+  }
+  #group-2-community.community-v2.home-group .community-left {
+    position: static;
+    top: auto;
+  }
+  #group-2-community.community-v2.home-group #home-games {
+    grid-template-columns: 1fr 1fr; /* side by side on mobile */
+    grid-template-rows: none;
+  }
+}
+
+/* Override ALL conflicting rules with maximum specificity */
+@media (max-width: var(--bp-tablet)) {
+  #group-2-community.community-v2.home-group .community-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Desktop ≥ 961px: two equal columns, no sticky */
+@media (min-width: 961px) {
+  #group-2-community.community-v2.home-group .community-content {
+    grid-template-columns: 1fr 1fr;
+  }
+  #group-2-community.community-v2.home-group .community-left {
+    position: static;
+    top: auto;
+  }
+}

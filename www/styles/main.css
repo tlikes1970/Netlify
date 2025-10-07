@@ -2575,7 +2575,7 @@ body.mardi {
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-  padding-inline: 12px;
+  padding-inline: 32px;
 }
 
 #up-next-row::-webkit-scrollbar {
