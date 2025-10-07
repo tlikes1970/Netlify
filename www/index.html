@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet v28.128.0 - TV & Movie Tracker</title>
+    <title>Flicklet v28.130.0 - TV & Movie Tracker</title>
     <meta name="description" content="Search, track, and rate shows & films fast." />
     <meta name="build" content="latest" />
 
@@ -134,7 +134,7 @@
       as="style"
       onload="this.onload=null;this.rel='stylesheet'"
     />
-    <link rel="stylesheet" href="/styles/home.css"> <!-- H1 -->
+    <link rel="stylesheet" href="/styles/your-shows.css"> <!-- Unified Your Shows CSS -->
     <link
       rel="preload"
       href="/styles/consolidated-layout.css?v=v17.9"
@@ -169,7 +169,7 @@
       <link rel="stylesheet" href="/styles/components.css?v=v17.9" />
       <link rel="stylesheet" href="/styles/mobile.css?v=v17.9" />
       <link rel="stylesheet" href="/styles/main.css?v=v17.9" />
-      <link rel="stylesheet" href="/styles/home.css"> <!-- H1 -->
+      <link rel="stylesheet" href="/styles/your-shows.css"> <!-- Unified Your Shows CSS -->
       <link rel="stylesheet" href="/styles/consolidated-layout.css?v=v17.9" />
       <link rel="stylesheet" href="/styles/action-bar.css?v=v22.21" />
       <link rel="stylesheet" href="/css/community-player.css" />
@@ -211,6 +211,9 @@
     
     <!-- Home Layout System - Token-driven, container query, RTL-safe -->
     <link rel="stylesheet" href="/styles/home-layout.css" />
+    
+    <!-- Community V2 Layout - Scoped CSS containment -->
+    <link rel="stylesheet" href="/styles/community-layout.v2.css" />
     
     <!-- Tabs Layout System - Token-driven for tab/search views -->
     <link rel="stylesheet" href="/styles/tabs-layout.css" />
@@ -255,6 +258,7 @@
     <!-- Data migration and structure fixes - v28.81 -->
     <script type="module" src="/js/data-migration.js"></script>
     <script type="module" src="/js/watchlists-adapter-v2.js"></script>
+    <script type="module" src="/js/unified-data-loader.js"></script>
     <script type="module" src="/js/data-operations.js"></script>
     
     <!-- UI integration fixes - v28.82 -->
@@ -1210,7 +1214,7 @@
           </div>
 
           <!-- Group 2 - Community -->
-          <div id="group-2-community" class="home-group">
+          <div id="group-2-community" class="home-group community-v2">
             <div class="group-header">
               <h2 class="group-title" data-i18n="community">Community</h2>
             </div>
