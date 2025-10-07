@@ -472,3 +472,35 @@ main#panels {
 @media (max-width: 768px) {
   :root { --home-gutter: 32px; }
 }
+
+/* ===== COMMUNITY GROUP PROTECTION ===== */
+/* Ensure community group maintains its existing layout while other groups use new contract */
+#group-2-community.home-group {
+  display: block;
+  padding-left: var(--home-gutter, 32px);
+  padding-right: var(--home-gutter, 32px);
+  box-sizing: border-box;
+}
+
+/* Community rails should maintain their existing behavior */
+#group-2-community .home-preview-row .preview-row-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+#group-2-community .home-preview-row .preview-row-scroll.row-inner,
+#group-2-community .home-preview-row .cw-row #currentlyWatchingScroll,
+#group-2-community .home-preview-row .up-next-scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--rail-col-w, 224px);
+  gap: var(--rail-gap, 12px);
+  width: max-content;
+  min-width: 100%;
+}
+
+/* Community actions should maintain existing layout (not forced to 2x2 grid) */
+#group-2-community .actions,
+#group-2-community .card-actions {
+  /* Let existing rules handle community actions - don't force grid */
+}
