@@ -324,9 +324,9 @@ main#panels {
 #homeSection .home-group section,
 #homeSection #up-next-row,
 #homeSection #home-games {
-  padding-left: 32px !important;
-  padding-right: 32px !important;
-  display: block !important;
+  padding-left: 32px;
+  padding-right: 32px;
+  display: block;
 }
 
 /* === HOME ACTIONS: CANONICAL 2x2 GRID === */
@@ -336,7 +336,7 @@ main#panels {
 #homeSection .preview-card .actions,
 #homeSection .unified-card .actions,
 #homeSection .curated-card .actions {
-  display: grid !important;
-  grid-template-columns: repeat(2, 1fr) !important;
-  gap: 8px !important;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
 }
