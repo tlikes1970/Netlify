@@ -3827,7 +3827,35 @@ body.mardi {
 
 /* Collapsed section styling moved to home-layout.css */
 
-/* === Game Cards & Modals === */
+/* === HOME LAYOUT FIXES === */
+/* Enforce 32px gutters and proper display for home sections */
+#homeSection .home-preview-row,
+#homeSection .section-content,
+#homeSection .panel,
+#homeSection .home-group section,
+#homeSection #up-next-row {
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+  display: block !important;
+}
+
+/* #home-games is a grid container, not a panel */
+#homeSection #home-games {
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+  /* Keep display: grid for games layout */
+}
+
+/* Force all actions within home to use grid layout */
+#homeSection .actions,
+#homeSection .card-actions,
+#homeSection .preview-card .actions,
+#homeSection .unified-card .actions,
+#homeSection .curated-card .actions {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 8px !important;
+}
 
 /* --- GAME TEASER COLUMN LAYOUT --- */
 .home-games {
