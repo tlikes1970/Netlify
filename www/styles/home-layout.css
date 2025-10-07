@@ -322,11 +322,17 @@ main#panels {
 #homeSection .section-content,
 #homeSection .panel,
 #homeSection .home-group section,
-#homeSection #up-next-row,
-#homeSection #home-games {
+#homeSection #up-next-row {
   padding-left: 32px;
   padding-right: 32px;
   display: block;
+}
+
+/* #home-games is a grid container, not a panel - don't force block display */
+#homeSection #home-games {
+  padding-left: 32px;
+  padding-right: 32px;
+  /* Keep display: grid for games layout */
 }
 
 /* === HOME ACTIONS: CANONICAL 2x2 GRID === */
