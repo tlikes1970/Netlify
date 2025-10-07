@@ -321,7 +321,9 @@ main#panels {
 #homeSection .home-preview-row,
 #homeSection .section-content,
 #homeSection .panel,
-#homeSection .home-group section {
+#homeSection .home-group section,
+#homeSection #up-next-row,
+#homeSection #home-games {
   padding-left: 32px !important;
   padding-right: 32px !important;
   display: block !important;
