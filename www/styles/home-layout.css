@@ -182,11 +182,10 @@ main#panels {
 
 /* 3. COMMUNITY RIGHT (games container) */
 #group-2-community .community-right {
-  display: grid;
-  grid-template-rows: min-content min-content;
-  align-items: start;
+  display: block;
   height: auto;
   min-height: 0;
+  align-items: start;
 }
 
 /* 4. HOME GAMES CARDS */
