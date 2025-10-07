@@ -27,7 +27,7 @@
   box-shadow: 0 6px 24px rgba(0,0,0,.1);
 }
 
-/* Home Vertical Cards */
+/* Home Vertical Cards - Width controlled by home-layout.css */
 .card.v2.v2-home-cw,
 .card.v2.v2-home-nextup,
 .card.v2.v2-home-curated {
@@ -35,8 +35,7 @@
   flex-direction: column !important;
   align-items: center;
   padding: 12px;
-  min-width: 200px;
-  max-width: 200px;
+  /* Width/min-width/max-width removed - controlled by home-layout.css */
 }
 
 /* Tab/List Horizontal Cards - Maximum specificity to override all other rules */
@@ -215,8 +214,8 @@ html body .card.v2.v2-search-card.card.card.card {
 /* Actions Styling */
 .card.v2 .actions {
   margin-top: auto;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 6px;
 }
 
@@ -447,10 +446,19 @@ html body .card.v2.v2-search-card.card.card.card {
 .search-card.v2 .actions,
 .cw-card.v2 .actions,
 .curated-card.v2 .actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   margin-top: 12px;
+}
+
+/* Override for home page - force 2x2 grid layout */
+#homeSection .v2-home-cw .actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  grid-auto-rows: minmax(36px, auto);
+  gap: 8px !important;
+  flex-wrap: unset !important;
 }
 
 .search-card.v2 .actions button,
@@ -651,11 +659,10 @@ html body .card.v2.v2-search-card.card.card.card {
 /* Actions */
 .actions {
   margin-top: auto;
-  display: flex;
-  flex-direction: row;          /* single horizontal row */
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
 }
 
 .btn {
@@ -761,22 +768,19 @@ html body .card.v2.v2-search-card.card.card.card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 200px;
-  max-width: 200px;
+  /* Width/min-width/max-width removed - controlled by home-layout.css */
   min-height: auto;
   padding: 12px;
 }
 
-/* Next Up cards - wider for home */
+/* Next Up cards - width controlled by home-layout.css */
 .next-up-card.v2.vertical {
-  min-width: 220px;
-  max-width: 220px;
+  /* Width/min-width/max-width removed - controlled by home-layout.css */
 }
 
-/* Curated cards - wider for home */
+/* Curated cards - width controlled by home-layout.css */
 .curated-card.v2.vertical {
-  min-width: 220px;
-  max-width: 220px;
+  /* Width/min-width/max-width removed - controlled by home-layout.css */
 }
 
 /* Horizontal layout for tab and search cards */
@@ -1067,19 +1071,17 @@ html body .card.v2.v2-search-card.card.card.card {
   opacity: 0.9;
 }
 
-/* Mobile responsive for vertical cards */
+/* Mobile responsive for vertical cards - width controlled by home-layout.css */
 @media (max-width: 640px) {
   .cw-card.v2.vertical,
   .curated-card.v2.vertical,
   .next-up-card.v2.vertical {
-    min-width: 180px;
-    max-width: 180px;
+    /* Width/min-width/max-width removed - controlled by home-layout.css */
   }
   
   .next-up-card.v2.vertical,
   .curated-card.v2.vertical {
-    min-width: 200px;
-    max-width: 200px;
+    /* Width/min-width/max-width removed - controlled by home-layout.css */
   }
   
   .action-grid {
@@ -1089,4 +1091,37 @@ html body .card.v2.v2-search-card.card.card.card {
   .action-row {
     gap: 6px;
   }
+}
+
+/* Rail-specific action layouts for home cards */
+
+/* CW: two-column grid, equal tracks */
+.v2-home-cw .card-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: row;
+  gap: 8px;
+}
+
+/* Up Next: no actions */
+.v2-home-nextup .card-actions {
+  display: none;
+}
+
+/* Curated: single column */
+.v2-home-curated .card-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-flow: row;
+  gap: 8px;
+}
+
+/* Safety: buttons shouldn't hard-size and collapse a track */
+.card-actions button,
+.card-actions [role="button"],
+.card-actions a.button {
+  inline-size: auto;
+  max-width: none;
+  min-height: 44px;
+  box-sizing: border-box;
 }

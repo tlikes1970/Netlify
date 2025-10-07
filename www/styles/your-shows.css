@@ -1,0 +1,466 @@
+/**
+ * Your Shows Layout System - v28.82
+ * Unified CSS for Your Shows section with proper specificity hierarchy
+ * Eliminates !important declarations and consolidates layout/visual rules
+ */
+
+/* === DESIGN TOKENS === */
+:root {
+  /* Frame gutters */
+  --home-gutter: 32px;
+  --home-frame-gutter: 32px;
+  
+  /* Rail sizing */
+  --rail-col-w: 260px;
+  --rail-col-w-sm: 200px;
+  --rail-gap: 16px;
+  
+  /* Breakpoints (canonical) */
+  --bp-xs: 480px;
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+}
+
+/* === FRAME NORMALIZATION === */
+/* Remove upstream caps so Home can actually reach the frame width */
+main#panels,
+#homeSection,
+.home-content {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+}
+
+/* Top-level group wrappers: fill width; zero inner L/R padding */
+#group-1-your-shows.home-group,
+#group-2-community.home-group,
+#group-3-for-you.home-group,
+#group-4-theaters.home-group,
+#group-5-feedback.home-group {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: var(--home-gutter, 32px);
+  padding-right: var(--home-gutter, 32px);
+}
+
+/* === PANELS OWN THE SINGLE GUTTER === */
+/* Apply 32px left/right padding to all Home panels */
+#homeSection .home-preview-row,
+#homeSection .section-content,
+#group-1-your-shows section,
+#group-2-community section {
+  padding-left: var(--home-gutter, 32px);
+  padding-right: var(--home-gutter, 32px);
+}
+
+/* === RAILS: GRID COLUMN-FLOW WITH ZERO PADDING === */
+/* Deepest rails are grid with column flow, zero padding, scroll on X only */
+:is(#group-1-your-shows,
+    #group-2-community,
+    #group-3-for-you,
+    #group-4-theaters,
+    #group-5-feedback)
+  :is(.preview-row-container, .preview-row-scroll, .row-inner, #currentlyWatchingScroll, .curated-row) {
+  
+  display: grid;
+  grid-auto-flow: column;                   /* lay items left→right (RTL flips logically) */
+  grid-auto-columns: var(--rail-col-w);
+  gap: var(--rail-gap);
+  padding: 0;                               /* zero rail padding */
+  min-width: 0;
+  overflow-x: auto;                         /* scroll on X only */
+  overflow-y: hidden;
+  scroll-snap-type: inline mandatory;
+}
+
+/* === DEEP RAIL GRID RULES === */
+/* Cover both variants we saw: #currentlyWatchingScroll and .preview-row-scroll */
+#homeSection #currentlyWatchingScroll,
+#homeSection .preview-row-scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--rail-col-w, 224px);
+  gap: var(--rail-gap, 12px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: inline mandatory;
+  padding: 0;
+}
+
+#homeSection #currentlyWatchingScroll > *,
+#homeSection .preview-row-scroll > * { 
+  scroll-snap-align: start; 
+}
+
+/* Responsive rail sizing */
+@media (max-width: var(--bp-md)) {
+  :is(#group-1-your-shows,
+      #group-2-community,
+      #group-3-for-you,
+      #group-4-theaters,
+      #group-5-feedback)
+    :is(.preview-row-container, .preview-row-scroll, .row-inner, #currentlyWatchingScroll, .curated-row) {
+    grid-auto-columns: var(--rail-col-w-sm);
+  }
+}
+
+/* === CARD SNAP TARGETS === */
+/* Cards snap cleanly and don't exceed panel width */
+#homeSection .card { 
+  scroll-snap-align: start; 
+  min-width: 0; 
+}
+
+#homeSection .card img, 
+#homeSection .card picture { 
+  display: block; 
+  max-width: 100%; 
+}
+
+/* === YOUR SHOWS: ACTIONS LAYOUT (2×2), CENTERED === */
+#group-1-your-shows :is(.actions, .card-actions) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  justify-items: center;
+  align-items: center;
+  padding: 8px 0;
+}
+
+#group-1-your-shows :is(.actions, .card-actions)
+  :is(button, [role="button"], a.button) {
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+}
+
+/* Container query: 2 columns when card is wide enough */
+@container (min-width: 260px) {
+  #homeSection :is(.actions, .card-actions) { 
+    grid-template-columns: repeat(2, 1fr); 
+  }
+}
+
+#homeSection :is(.actions, .card-actions) :is(button, [role="button"], a.button) {
+  width: 100%;
+  min-height: 36px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  justify-content: center;
+}
+
+/* Container query fallback for older browsers */
+@supports not (container-type: inline-size) {
+  #homeSection :is(.actions, .card-actions) { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 8px; 
+  }
+  
+  #homeSection :is(.actions, .card-actions) > * { 
+    flex: 1 1 150px; 
+    min-height: 36px; 
+  }
+}
+
+/* === HOME GROUPS VISUAL STYLING === */
+.home-group {
+  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* === YOUR SHOWS SPECIFIC STYLING === */
+/* Ensure normal flow in the Your Shows group only */
+#group-1-your-shows {
+  display: block;
+}
+
+#group-1-your-shows > .home-preview-row {
+  order: 0;
+}
+
+/* Style the Up Next row to match Currently Watching */
+#group-1-your-shows #up-next-row.home-preview-row {
+  margin: 16px 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Currently Watching card actions grid */
+.cw-card .action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.cw-card .action-grid .btn {
+  width: 100%;
+  min-height: 36px;
+  font-weight: 600;
+}
+
+/* Next Up compact meta */
+.nu-card .meta {
+  font-size: 0.9rem;
+  opacity: 0.85;
+  margin-top: 8px;
+}
+
+.nu-card .meta .line { 
+  margin-top: 2px; 
+}
+
+/* General card bits kept neutral; no TMDB link affordance */
+.card .poster-wrap { 
+  cursor: default; 
+}
+
+/* No surprise giant boxes */
+#up-next-row, .up-next-row { 
+  min-height: 0; 
+  height: auto; 
+}
+
+/* === CARD SIZING ALIGNMENT === */
+/* Card sizing alignment (use unified vars; do not hardcode px in other files) */
+.preview-card,
+.unified-card,
+.tab-section .list-container .poster-card {
+  width: var(--card-w);
+  min-width: var(--card-w);
+  max-width: var(--card-w);
+}
+
+.preview-card-poster,
+.unified-card-poster {
+  height: var(--card-h);
+}
+
+/* === VERTICAL RHYTHM === */
+/* Normalize vertical rhythm (even spacing between containers) */
+.home-content .home-group + .home-group { 
+  margin-top: var(--section-gap); 
+}
+
+#quote-bar, .quote-bar { 
+  margin: 0 0 var(--section-gap-lg); 
+}
+
+/* Remove legacy extra space from rows */
+.home-content .preview-row,
+.home-content .home-preview-row { 
+  margin: 0; 
+  /* Card styling handled by parent .home-group */
+}
+
+/* === SAFETY & RTL SUPPORT === */
+/* Safety: prevent content from forcing tracks wider than panels */
+#homeSection .preview-row-scroll * { 
+  min-width: 0; 
+}
+
+/* RTL scroll behavior */
+#homeSection .preview-row-scroll {
+  scroll-behavior: smooth;
+}
+
+/* RTL-aware scroll indicators (if you have them) */
+#homeSection .preview-row-scroll::before,
+#homeSection .preview-row-scroll::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+#homeSection .preview-row-scroll::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg, #fff), transparent);
+}
+
+#homeSection .preview-row-scroll::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg, #fff), transparent);
+}
+
+/* RTL flip scroll indicators */
+[dir="rtl"] #homeSection .preview-row-scroll::before {
+  left: auto;
+  right: 0;
+  background: linear-gradient(to left, var(--bg, #fff), transparent);
+}
+
+[dir="rtl"] #homeSection .preview-row-scroll::after {
+  right: auto;
+  left: 0;
+  background: linear-gradient(to right, var(--bg, #fff), transparent);
+}
+
+/* === DARK MODE ADJUSTMENTS === */
+/* Dark mode adjustments for preview row */
+#group-1-your-shows .dark-mode .home-preview-row {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+/* === COLLAPSED SECTIONS === */
+/* Collapsed section styling for empty "Next Up" */
+.home-preview-row.collapsed {
+  padding: 8px 16px;
+  min-height: auto;
+}
+
+.home-preview-row.collapsed .preview-row-container {
+  display: none;
+}
+
+.home-preview-row.collapsed .preview-row-header {
+  margin-bottom: 0;
+}
+
+.home-preview-row.collapsed .preview-row-title {
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+/* === MOBILE RESPONSIVE RULES === */
+/* Mobile-specific adjustments without !important */
+@media (max-width: var(--bp-sm)) {
+  /* Preview row spacing for mobile */
+  #group-1-your-shows .home-preview-row {
+    margin: 12px 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  /* Performance optimizations for mobile */
+  .unified-card,
+  .preview-card,
+  .show-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Lighter shadow */
+    filter: none; /* Remove heavy filters */
+  }
+
+  /* Disable confetti and heavy animations on mobile */
+  .confetti,
+  .celebration-animation {
+    display: none;
+  }
+
+  /* Reduce motion for better performance */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms;
+      animation-iteration-count: 1;
+      transition-duration: 0.01ms;
+    }
+  }
+
+  /* Optimize scrolling performance */
+  .preview-row-container,
+  .carousel-container {
+    will-change: transform;
+    transform: translateZ(0); /* Force hardware acceleration */
+  }
+
+  /* Reduce blur effects on mobile */
+  .blur,
+  .backdrop-blur {
+    filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* === LEGACY CLEANUP === */
+/* Kill legacy width hacks on columns left by old CSS (scoped to home) */
+.home-content .left-column,
+.home-content .flickword-card {
+  width: auto;
+  max-width: none;
+}
+
+/* Remove any forced order/width from bingeMeter in home */
+.home-content #bingeMeter {
+  order: 0;
+  flex-basis: auto;
+  display: block;
+}
+
+/* Ensure no horizontal scroll on page container */
+html, body { 
+  overflow-x: hidden; /* keeps layout mishaps invisible; real fixes above */
+}
+
+/* Home wrapper sizing */
+#homeSection.home-content:not([hidden]) {
+  display: block;              /* ensure it participates in normal flow */
+  min-height: auto;            /* let content determine height naturally */
+}
+
+#panels { 
+  isolation: isolate; /* guard against stray transforms creating new stacking/containing blocks */
+}
+
+/* Kill any accidental height caps on home area */
+#homeSection { 
+  height: auto; 
+  max-height: none; 
+  overflow: visible; 
+}
+
+/* If a card-ish "page shell" wraps home content and has a shadow, make sure it grows */
+#homeSection .page-shell, 
+#homeSection .container, 
+#homeSection .wrapper {
+  min-height: 100%; 
+  height: auto; 
+  overflow: visible;
+}
+
+/* Duplicate up-arrow: keep #scrollTopBtn, hide/remove any legacy arrow */
+/* Common legacy selectors to neutralize; safe, layout-only */
+.legacy-up, 
+.up-arrow, 
+.scroll-to-top, 
+.fab .icon-up, 
+.fab-up { 
+  display: none; 
+}
+
+/* Guard against some ancestor creating a containing block that clips children */
+/* If #appRoot or .panels accidentally has transform/contain set elsewhere, neutralize here */
+#appRoot, 
+#appRoot > .panels { 
+  transform: none; 
+  contain: none; 
+}
+
+/* Let app root height be determined by content naturally */
+#appRoot {
+  height: auto;
+  min-height: 100vh;
+}

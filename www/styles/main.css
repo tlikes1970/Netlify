@@ -2495,7 +2495,8 @@ body.mardi {
 
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .actions,
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .card-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 6px;
   margin-top: 6px;
 }
@@ -2507,29 +2508,29 @@ body.mardi {
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .cw-card.v2 .card-actions,
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .v2-home-cw .actions,
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .v2-home-cw .card-actions {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 8px !important;
-  margin-top: 6px !important;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 6px;
 }
 
 /* V2 Cards Action Grid Override */
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .card.v2 .action-grid-2x2,
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .cw-card.v2 .action-grid-2x2,
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .v2-home-cw .action-grid-2x2 {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 8px !important;
-  width: 100% !important;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
 }
 
 /* V2 Cards Action Row Override */
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .card.v2 .action-row,
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .cw-card.v2 .action-row,
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .v2-home-cw .action-row {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 8px !important;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .actions .btn,
@@ -4501,17 +4502,17 @@ body {
 
 /* Quote Bar Styling - Updated to use design tokens */
 .quote-bar {
-  display: block !important;
-  background: var(--bg, #ffffff) !important;
-  border: 1px solid var(--border, #e5e7eb) !important;
+  display: block;
+  background: var(--bg, #ffffff);
+  border: 1px solid var(--border, #e5e7eb);
   border-radius: var(--r-2, 8px);
   padding: var(--spacing-md, 12px) var(--spacing-lg, 16px);
   margin: var(--spacing-lg, 16px) 0 var(--spacing-sm, 8px) 0;
   text-align: center;
-  color: var(--fg, #1f2937) !important;
+  color: var(--fg, #1f2937);
   min-height: 40px;
-  font-size: var(--fs-0, 1rem) !important;
-  font-weight: normal !important;
+  font-size: var(--fs-0, 1rem);
+  font-weight: normal;
   font-style: italic;
 }
 
@@ -4521,19 +4522,19 @@ body {
 }
 
 .quote-text {
-  display: inline-block !important;
+  display: inline-block;
   animation: marquee 20s linear infinite;
-  color: var(--fg, #1f2937) !important;
-  font-size: var(--fs-0, 1rem) !important;
-  font-weight: var(--font-weight-normal, normal) !important;
+  color: var(--fg, #1f2937);
+  font-size: var(--fs-0, 1rem);
+  font-weight: var(--font-weight-normal, normal);
   font-style: italic;
 }
 
 /* Override conflicting CSS rules with higher specificity */
 #quote-bar .quote-text,
 .quote-bar .quote-text {
-  font-weight: normal !important;
-  font-style: italic !important;
+  font-weight: normal;
+  font-style: italic;
 }
 
 /* Marquee loaded state */
@@ -4549,7 +4550,7 @@ body {
 
 /* Tab panel visibility - single source of truth using hidden attribute */
 .tab-section[hidden], .tab-panel[hidden] {
-  display: none !important;
+  display: none;
 }
 
 /* Visible tab sections styling */

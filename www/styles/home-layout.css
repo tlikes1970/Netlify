@@ -19,6 +19,20 @@
   --bp-xl: 1280px;
 }
 
+/* === SEARCH CONTAINER FIX === */
+/* ✅ Fix: ensure search bar stays visible and sticky on home tab */
+#appRoot.has-search #search-container,
+#appRoot.has-search .top-search,
+body.has-search #search-container,
+body.has-search .top-search {
+  display: block !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  height: auto;
+  min-height: 48px;
+}
+
 /* === FRAME NORMALIZATION === */
 /* Wrappers: width 100%, no padding */
 #homeSection, 
@@ -161,15 +175,15 @@ main#panels {
 
 /* 1. COMMUNITY GRID - Override main.css conflicting rules */
 #group-2-community .community-content {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  grid-auto-rows: 1fr !important;        /* ensures balanced columns */
-  align-items: start !important;
-  height: auto !important;
-  min-height: 0 !important;
-  overflow: visible !important;
-  gap: 24px !important;
-  width: 100% !important;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 1fr;        /* ensures balanced columns */
+  align-items: start;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  gap: 24px;
+  width: 100%;
 }
 
 /* 2. COMMUNITY LEFT (player) */
@@ -183,16 +197,16 @@ main#panels {
 
 /* 3. COMMUNITY RIGHT (games container) - Override main.css conflicting rules */
 #group-2-community .community-right {
-  display: block !important;
-  height: auto !important;
-  min-height: 0 !important;
-  align-items: start !important;
-  flex: none !important;
-  max-width: none !important;
-  min-width: 0 !important;
-  width: 100% !important;
-  overflow: visible !important;
-  align-self: stretch !important;
+  display: block;
+  height: auto;
+  min-height: 0;
+  align-items: start;
+  flex: none;
+  max-width: none;
+  min-width: 0;
+  width: 100%;
+  overflow: visible;
+  align-self: stretch;
 }
 
 /* 4. HOME GAMES CARDS */
@@ -300,4 +314,27 @@ main#panels {
   font-size: 1rem;
   font-weight: 500;
   opacity: 0.7;
+}
+
+/* === HOME WRAPPER CONTRACT === */
+/* Enforce 32px gutters on all home panels - highest specificity */
+#homeSection .home-preview-row,
+#homeSection .section-content,
+#homeSection .panel,
+#homeSection .home-group section {
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+  display: block !important;
+}
+
+/* === HOME ACTIONS: CANONICAL 2x2 GRID === */
+/* Force all actions within home to use grid layout */
+#homeSection .actions,
+#homeSection .card-actions,
+#homeSection .preview-card .actions,
+#homeSection .unified-card .actions,
+#homeSection .curated-card .actions {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 8px !important;
 }
