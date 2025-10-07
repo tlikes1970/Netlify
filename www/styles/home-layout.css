@@ -157,23 +157,49 @@ main#panels {
   }
 }
 
-/* === COMMUNITY SPLIT: 2 COLUMNS === */
-/* Community = 2 columns for now (Player | Right rail w/ Flickword + Trivia) */
-#group-2-community > :is(.home-preview-row, .section-content, section, div) {
+/* === COMMUNITY GRID NORMALIZATION === */
+/* Community = 2 columns (Player | Games container) with verified layout */
+
+/* 1. COMMUNITY GRID */
+#group-2-community .community-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  align-items: start;
+  grid-auto-rows: min-content;
+  row-gap: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
-#group-2-community .the-player { 
-  grid-column: 1; 
+/* 2. COMMUNITY LEFT (player) */
+#group-2-community .community-left {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: auto;
+  min-height: 0;
 }
 
-#group-2-community .right-rail { 
-  grid-column: 2; 
-  display: grid; 
-  gap: 24px; 
-  grid-auto-rows: minmax(180px, auto); 
+/* 3. COMMUNITY RIGHT (games container) */
+#group-2-community .community-right {
+  display: grid;
+  grid-template-rows: min-content min-content;
+  align-items: start;
+  height: auto;
+  min-height: 0;
+}
+
+/* 4. HOME GAMES CARDS */
+#group-2-community #home-games {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: none;
+  align-items: start;
+  gap: 12px;
+}
+
+#group-2-community #home-games .card--game {
+  max-height: 220px;
 }
 
 /* === SAFETY & RTL SUPPORT === */
