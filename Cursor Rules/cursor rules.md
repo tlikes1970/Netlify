@@ -1,5 +1,18 @@
 # Flicklet TV Tracker - Cursor Rules
 
+## CRITICAL: Code Review Standards
+
+**NEVER make assumptions or pull conclusions from git history when asked to review code.**
+
+When asked to perform ANY level of code review (forensic, detailed, or otherwise):
+1. **Read the actual code files line by line**
+2. **Test the current state in the browser**
+3. **Verify functionality with real data**
+4. **Never assume based on git commits or previous work**
+5. **Always provide evidence-based analysis**
+
+Git history shows what was changed, not what is currently working. Always verify the current state.
+
 ## Project Overview
 
 **Flicklet** is a modern TV and movie tracking web application built with vanilla JavaScript, Firebase, and TMDB API. It's a Progressive Web App (PWA) with mobile-first design, featuring user authentication, cloud sync, and comprehensive media management.
