@@ -475,17 +475,18 @@ main#panels {
 
 /* ===== COMMUNITY GROUP PROTECTION ===== */
 /* Ensure community group maintains its existing layout while other groups use new contract */
-#group-2-community.home-group {
+/* Use higher specificity to override conflicting rules without !important */
+#homeSection #group-2-community.home-group {
   display: block;
-  padding-left: var(--home-gutter, 32px) !important;
-  padding-right: var(--home-gutter, 32px) !important;
+  padding-left: var(--home-gutter, 32px);
+  padding-right: var(--home-gutter, 32px);
   box-sizing: border-box;
 }
 
-/* Override any conflicting padding rules on community content */
-#group-2-community.community-v2.home-group .community-content {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+/* Override any conflicting padding rules on community content with higher specificity */
+#homeSection #group-2-community.community-v2.home-group .community-content {
+  padding-left: 0;
+  padding-right: 0;
   /* Keep other properties from community-layout.v2.css */
 }
 
