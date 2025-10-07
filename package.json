@@ -18,6 +18,9 @@
     "validate:encoding": "node scripts/validate-encoding.js",
     "qa": "node qa/run.js",
     "qa:report": "node qa/run.js --report",
+    "analyze:layout": "node scripts/dev/layoutForensics.js",
+    "css:guard": "node scripts/css-architecture-guard.js",
+    "grep:layout": "rg -n --hidden -S -i '\\.home-group|#group-(1|2|3|4|5)-|\\.home-preview-row|\\.section-content|\\.preview-row-(container|scroll)|\\.row-inner|#currentlyWatchingScroll|#curated-section|#curatedSections|\\.curated-row|\\.card(\\b|--)|\\.card-actions|\\.(actions)\\b' --glob '!node_modules'",
     "prepare": "husky install",
     "test:cards-v2": "npx playwright test tests/cards-v2.harness.spec.* tests/cards-v2.cw-harness.spec.* tests/cards-v2.upnext-harness.spec.*"
   },

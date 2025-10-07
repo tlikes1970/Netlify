@@ -1,10 +1,32 @@
 /* Home Layout System - Token-Driven, Container Query, RTL-Safe */
 /* Load AFTER main.css to override layout rules */
 
+/* ===== CSS ARCHITECTURE GUARD ===== */
+/*
+ * SINGLE SOURCE OF TRUTH: This file contains ALL home page layout rules
+ * 
+ * CRITICAL RULES:
+ * 1. NO other CSS file should contain home layout rules
+ * 2. All home page styling must be defined here
+ * 3. Use design tokens (--home-gutter, --rail-col-w, etc.)
+ * 4. Follow the established pattern: Frame → Panels → Rails → Cards → Actions
+ * 
+ * FORBIDDEN: Adding home layout rules to main.css, components.css, or mobile.css
+ * 
+ * If you need to modify home layout:
+ * 1. Edit this file ONLY
+ * 2. Use proper CSS specificity
+ * 3. Test that no other file conflicts
+ * 4. Update this comment if architecture changes
+ */
+
 /* === DESIGN TOKENS === */
 :root {
   /* Frame gutters */
   --home-gutter: 32px;
+  
+  /* Home loading states */
+  --home-min-height: 400px;
   
   /* Rail sizing */
   --rail-col-w: 260px;
@@ -41,6 +63,12 @@ main#panels {
   box-sizing: border-box; 
   width: 100%; 
   max-width: none; 
+  min-height: var(--home-min-height); /* Prevent layout shift during loading */
+}
+
+/* Smooth section appearance */
+#homeSection .section {
+  transition: opacity 0.2s ease-in-out;
 }
 
 /* Top-level group wrappers: fill width; zero inner L/R padding */

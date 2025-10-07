@@ -13,6 +13,28 @@ When asked to perform ANY level of code review (forensic, detailed, or otherwise
 
 Git history shows what was changed, not what is currently working. Always verify the current state.
 
+## CSS Architecture Rules
+
+**SINGLE SOURCE OF TRUTH: Each layout system must have ONE authoritative CSS file.**
+
+### Home Page Layout
+- **ONLY** `www/styles/home-layout.css` may contain home page layout rules
+- **FORBIDDEN**: Adding home layout rules to `main.css`, `components.css`, or `mobile.css`
+- **Pattern**: Frame → Panels → Rails → Cards → Actions
+- **Tokens**: Use `--home-gutter`, `--rail-col-w`, `--rail-gap` for consistency
+
+### CSS File Responsibilities
+- `home-layout.css`: Home page layout ONLY
+- `main.css`: Global styles, utilities, non-home layouts
+- `components.css`: Reusable component styles
+- `mobile.css`: Mobile-specific overrides
+
+### Anti-Pattern Detection
+Before adding CSS rules, check:
+1. Does this belong in the correct file?
+2. Will this conflict with existing layout systems?
+3. Am I duplicating rules that exist elsewhere?
+
 ## Project Overview
 
 **Flicklet** is a modern TV and movie tracking web application built with vanilla JavaScript, Firebase, and TMDB API. It's a Progressive Web App (PWA) with mobile-first design, featuring user authentication, cloud sync, and comprehensive media management.

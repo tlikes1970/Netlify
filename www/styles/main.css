@@ -3827,42 +3827,16 @@ body.mardi {
 
 /* Collapsed section styling moved to home-layout.css */
 
-/* === HOME LAYOUT FIXES === */
-/* Enforce 32px gutters and proper display for home sections using higher specificity */
-#homeSection .home-preview-row,
-#homeSection .section-content,
-#homeSection .panel,
-#homeSection .home-group section,
-#homeSection #up-next-row {
-  padding-left: 32px;
-  padding-right: 32px;
-  display: block;
-}
-
-/* Extra specific rule for up-next-row to override any conflicting rules */
-#homeSection #up-next-row {
-  padding-left: 32px;
-  padding-right: 32px;
-  padding-inline: 32px;
-}
-
-/* #home-games is a grid container, not a panel */
-#homeSection #home-games {
-  padding-left: 32px;
-  padding-right: 32px;
-  /* Keep display: grid for games layout */
-}
-
-/* Force all actions within home to use grid layout */
-#homeSection .actions,
-#homeSection .card-actions,
-#homeSection .preview-card .actions,
-#homeSection .unified-card .actions,
-#homeSection .curated-card .actions {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
+/* === HOME LAYOUT RULES MOVED TO home-layout.css === */
+/* 
+ * CRITICAL: All home page layout rules are now in home-layout.css
+ * This file should NOT contain home layout rules to prevent conflicts
+ * 
+ * If you need to modify home layout:
+ * 1. Edit www/styles/home-layout.css
+ * 2. Do NOT add home layout rules to this file
+ * 3. Follow the CSS Architecture Guard rules
+ */
 
 /* --- GAME TEASER COLUMN LAYOUT --- */
 .home-games {

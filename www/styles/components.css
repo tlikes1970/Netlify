@@ -5811,14 +5811,7 @@ body[data-theme='forest'] {
   width: 100%;
 }
 
-/* Reduce flickering during home loading */
-#homeSection {
-  min-height: 400px; /* Prevent layout shift */
-}
-
-#homeSection .section {
-  transition: opacity 0.2s ease-in-out;
-}
+/* MOVED TO home-layout.css - Home layout rules belong there */
 
 /* Smooth section appearance */
 .section {
@@ -6257,8 +6250,8 @@ body.has-banner {
   opacity: 0.75;
 }
 
-/* Horizontal row with scroll-snap; safe (not an ancestor of .top-search) */
-.curated-row {
+/* Horizontal row with scroll-snap - scoped to non-Home pages */
+body:not(.home) .curated-row {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 44vw; /* mobile card width; tuned below for desktop */
@@ -6269,25 +6262,28 @@ body.has-banner {
   padding: 4px 2px 8px 2px;
   -webkit-overflow-scrolling: touch;
 }
-.curated-row::-webkit-scrollbar {
+body:not(.home) .curated-row::-webkit-scrollbar {
   height: 8px;
 }
-.curated-row::-webkit-scrollbar-thumb {
+body:not(.home) .curated-row::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
 }
 
-.curated-card {
+/* Curated card - scoped to non-Home pages */
+body:not(.home) .curated-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 10px;
-  width: 180px;
-  flex-shrink: 0;
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  flex: 0 0 auto;
   scroll-snap-align: start;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
-.curated-card + .curated-card {
+body:not(.home) .curated-card + .curated-card {
   margin-left: 10px;
 }
 .curated-card .poster {
