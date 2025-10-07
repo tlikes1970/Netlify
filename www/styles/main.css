@@ -3839,6 +3839,13 @@ body.mardi {
   display: block !important;
 }
 
+/* Extra specific rule for up-next-row to override any conflicting rules */
+#homeSection #up-next-row {
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+  padding-inline: 32px !important;
+}
+
 /* #home-games is a grid container, not a panel */
 #homeSection #home-games {
   padding-left: 32px !important;
