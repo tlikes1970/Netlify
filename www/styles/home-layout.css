@@ -346,3 +346,32 @@ main#panels {
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
+
+/* === YOUR SHOWS WRAPPER & RAIL CONTRACT === */
+/* 1) Your Shows wrapper must be neutral */
+#group-1-your-shows.home-group {
+  display: block;          /* not flex */
+  padding-left: var(--home-gutter, 32px);
+  padding-right: var(--home-gutter, 32px);
+  box-sizing: border-box;
+}
+
+/* 2) Rail contract: horizontal grid that grows to content */
+#homeSection .home-preview-row .preview-row-container {
+  /* host that owns scrolling; keep your overflow-x: auto elsewhere if set */
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+#homeSection .home-preview-row .preview-row-scroll.row-inner,
+#homeSection .home-preview-row .cw-row #currentlyWatchingScroll,
+#homeSection .home-preview-row .up-next-scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--rail-col-w, 224px);
+  gap: var(--rail-gap, 12px);
+
+  /* the key: allow rail to expand beyond one column */
+  width: max-content;         /* expands to sum of columns */
+  min-width: 100%;            /* never smaller than viewport */
+}
