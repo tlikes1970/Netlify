@@ -477,9 +477,16 @@ main#panels {
 /* Ensure community group maintains its existing layout while other groups use new contract */
 #group-2-community.home-group {
   display: block;
-  padding-left: var(--home-gutter, 32px);
-  padding-right: var(--home-gutter, 32px);
+  padding-left: var(--home-gutter, 32px) !important;
+  padding-right: var(--home-gutter, 32px) !important;
   box-sizing: border-box;
+}
+
+/* Override any conflicting padding rules on community content */
+#group-2-community.community-v2.home-group .community-content {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  /* Keep other properties from community-layout.v2.css */
 }
 
 /* Community rails should maintain their existing behavior */
