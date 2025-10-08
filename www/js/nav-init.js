@@ -44,10 +44,19 @@ export function initTabs() {
     .filter(id => document.getElementById(id));
 
   const panels = new Map(panelIds.map(id => [id, document.getElementById(id)]));
-  const tabs = [...bar.querySelectorAll('[role="tab"]:not([aria-disabled="true"])')].filter(t => panels.has(t.getAttribute('aria-controls')));
+  const allTabs = [...bar.querySelectorAll('[role="tab"]:not([aria-disabled="true"])')];
+  console.log('[nav-init] All tabs before filtering:', allTabs.map(t => ({
+    id: t.id,
+    ariaControls: t.getAttribute('aria-controls'),
+    ariaDisabled: t.getAttribute('aria-disabled'),
+    ariaSelected: t.getAttribute('aria-selected'),
+    hasPanel: panels.has(t.getAttribute('aria-controls'))
+  })));
   
-  // Debug: Log all tabs found
-  console.log('[nav-init] All tabs found:', tabs.map(t => ({
+  const tabs = allTabs.filter(t => panels.has(t.getAttribute('aria-controls')));
+  
+  // Debug: Log filtered tabs
+  console.log('[nav-init] Filtered tabs:', tabs.map(t => ({
     id: t.id,
     ariaControls: t.getAttribute('aria-controls'),
     ariaDisabled: t.getAttribute('aria-disabled'),
