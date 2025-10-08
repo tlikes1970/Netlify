@@ -46,6 +46,14 @@ export function initTabs() {
   const panels = new Map(panelIds.map(id => [id, document.getElementById(id)]));
   const tabs = [...bar.querySelectorAll('[role="tab"]:not([aria-disabled="true"])')].filter(t => panels.has(t.getAttribute('aria-controls')));
   
+  // Debug: Log all tabs found
+  console.log('[nav-init] All tabs found:', tabs.map(t => ({
+    id: t.id,
+    ariaControls: t.getAttribute('aria-controls'),
+    ariaDisabled: t.getAttribute('aria-disabled'),
+    ariaSelected: t.getAttribute('aria-selected')
+  })));
+  
   // Cache frequently accessed elements for performance
   const searchContainer = document.querySelector('.top-search');
   const fabDock = document.querySelector('.fab-dock');

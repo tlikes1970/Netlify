@@ -2304,6 +2304,8 @@ window.__useLegacyTabs = false;
           e.preventDefault();
           e.stopPropagation();
           console.log('⚙️ Settings FAB clicked');
+          console.log('⚙️ Nav engine available:', !!window.navEngine);
+          console.log('⚙️ Nav engine activate function:', typeof window.navEngine?.activate);
           this.switchToTab('settings');
         }
 
