@@ -318,7 +318,7 @@
         let remote = {};
         if (isDoc) {
           remote = listsSnap.data() || {};
-        } else if (!listsSnap.empty) {
+        } else if (!listsSnap.empty && listsSnap.docs && listsSnap.docs.length > 0) {
           // Merge the first doc, or all docs depending on your schema
           remote = listsSnap.docs[0]?.data() || {};
         }
@@ -353,7 +353,7 @@
           let remote = {};
           if (isDoc2) {
             remote = listsSnap.data() || {};
-          } else {
+          } else if (listsSnap.docs && listsSnap.docs.length > 0) {
             remote = listsSnap.docs[0]?.data() || {};
           }
 
