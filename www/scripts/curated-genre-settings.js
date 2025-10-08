@@ -30,6 +30,108 @@
     }
   ];
 
+  /**
+   * Analyze user's currently watching data to determine smart defaults
+   */
+  function analyzeUserPreferences() {
+    try {
+      console.log('🎯 Analyzing user preferences from currently watching data...');
+      
+      // Get currently watching data
+      const appData = window.appData;
+      if (!appData) {
+        console.log('🎯 No appData available, using static defaults');
+        return DEFAULT_GENRES;
+      }
+
+      const tvWatching = appData.tv?.watching || [];
+      const movieWatching = appData.movies?.watching || [];
+      const allWatching = [...tvWatching, ...movieWatching];
+
+      if (allWatching.length === 0) {
+        console.log('🎯 No currently watching items, using static defaults');
+        return DEFAULT_GENRES;
+      }
+
+      console.log(`🎯 Analyzing ${allWatching.length} currently watching items`);
+
+      // Count genre occurrences
+      const genreCounts = {};
+      const mediaTypeCounts = { movie: 0, tv: 0 };
+
+      allWatching.forEach(item => {
+        // Count media types
+        if (item.media_type === 'movie' || item.mediaType === 'movie') {
+          mediaTypeCounts.movie++;
+        } else if (item.media_type === 'tv' || item.mediaType === 'tv') {
+          mediaTypeCounts.tv++;
+        }
+
+        // Count genres
+        if (item.genre_ids && Array.isArray(item.genre_ids)) {
+          item.genre_ids.forEach(genreId => {
+            genreCounts[genreId] = (genreCounts[genreId] || 0) + 1;
+          });
+        }
+      });
+
+      console.log('🎯 Genre analysis:', genreCounts);
+      console.log('🎯 Media type analysis:', mediaTypeCounts);
+
+      // Get top 3 genres
+      const topGenres = Object.entries(genreCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 3)
+        .map(([genreId]) => genreId);
+
+      console.log('🎯 Top 3 genres:', topGenres);
+
+      // Determine preferred media type
+      const preferredMediaType = mediaTypeCounts.movie > mediaTypeCounts.tv ? 'movie' : 
+                                mediaTypeCounts.tv > mediaTypeCounts.movie ? 'tv' : 'both';
+
+      console.log('🎯 Preferred media type:', preferredMediaType);
+
+      // Generate smart defaults based on analysis
+      const smartDefaults = [];
+      
+      for (let i = 0; i < 3; i++) {
+        const genreId = topGenres[i] || DEFAULT_GENRES[i].mainGenre;
+        const subGenreId = getSmartSubGenre(genreId);
+        
+        smartDefaults.push({
+          mainGenre: genreId,
+          subGenre: subGenreId,
+          mediaType: preferredMediaType,
+          title: generateTitle({ mainGenre: genreId, subGenre: subGenreId, mediaType: preferredMediaType })
+        });
+      }
+
+      console.log('🎯 Generated smart defaults:', smartDefaults);
+      return smartDefaults;
+
+    } catch (error) {
+      console.error('🎯 Error analyzing user preferences:', error);
+      return DEFAULT_GENRES;
+    }
+  }
+
+  /**
+   * Get a smart sub-genre based on the main genre
+   */
+  function getSmartSubGenre(mainGenreId) {
+    const subGenreMappings = window.CustomGenreSelector?.subGenreMappings || {};
+    const subGenres = subGenreMappings[mainGenreId];
+    
+    if (subGenres && subGenres.length > 0) {
+      // Return the first sub-genre (most common/popular)
+      return subGenres[0].tmdbId;
+    }
+    
+    // Fallback: return the main genre ID
+    return mainGenreId;
+  }
+
   // Storage key for genre preferences
   const STORAGE_KEY = 'flicklet:curated:genres';
 
@@ -48,8 +150,14 @@
       console.warn('🎯 Error loading genre preferences:', error);
     }
     
-    console.log('🎯 Using default genre preferences');
-    return DEFAULT_GENRES;
+    // No saved preferences - generate smart defaults based on user's watching data
+    console.log('🎯 No saved preferences, generating smart defaults from user data');
+    const smartDefaults = analyzeUserPreferences();
+    
+    // Save the smart defaults for future use
+    saveGenrePreferences(smartDefaults);
+    
+    return smartDefaults;
   }
 
   /**
@@ -172,13 +280,14 @@
   }
 
   /**
-   * Reset to default genres
+   * Reset to smart defaults based on current user data
    */
   function resetToDefaults() {
-    console.log('🎯 Resetting to default genres');
-    saveGenrePreferences(DEFAULT_GENRES);
+    console.log('🎯 Resetting to smart defaults based on current user data');
+    const smartDefaults = analyzeUserPreferences();
+    saveGenrePreferences(smartDefaults);
     
-    // Reinitialize selectors with defaults
+    // Reinitialize selectors with smart defaults
     setTimeout(() => {
       initializeGenreSelectors();
     }, 100);
@@ -223,8 +332,19 @@
     saveGenrePreferences,
     getCurrentGenrePreferences,
     resetToDefaults,
+    analyzeUserPreferences,
     DEFAULT_GENRES
   };
+
+  // Listen for changes to user's watching data to refresh smart defaults
+  document.addEventListener('app:data:ready', () => {
+    console.log('🎯 App data ready, checking if smart defaults need refresh');
+    // Only refresh if no saved preferences exist
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) {
+      console.log('🎯 No saved preferences, will generate smart defaults on next load');
+    }
+  });
 
   // Initialize when DOM is ready
   if (document.readyState === 'loading') {
