@@ -167,5 +167,192 @@
     });
   };
 
+  // Get detailed information for a specific movie or TV show
+  window.getTMDBDetails = async function (id, mediaType) {
+    try {
+      console.log(`[tmdb] Fetching details for ${mediaType} ID: ${id}`);
+      const result = await window.tmdbGet(`${mediaType}/${id}`);
+      
+      if (!result.ok) {
+        console.warn(`[tmdb] Failed to fetch details for ${mediaType}/${id}:`, result.status);
+        return null;
+      }
+      
+      return result.data;
+    } catch (error) {
+      console.error(`[tmdb] Error fetching details for ${mediaType}/${id}:`, error);
+      return null;
+    }
+  };
+
+  // Enhance search result with detailed information
+  window.enhanceTMDBItem = async function (item) {
+    try {
+      // Determine media type
+      const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+      const id = item.id || item.tmdb_id || item.tmdbId;
+      
+      if (!id) {
+        console.warn('[tmdb] No ID found for item:', item);
+        return item;
+      }
+      
+      // Fetch detailed information
+      const details = await window.getTMDBDetails(id, mediaType);
+      if (!details) {
+        console.warn('[tmdb] No details found for item:', item.title || item.name);
+        return item;
+      }
+      
+      // Merge search result with detailed information
+      const enhanced = {
+        ...item,
+        ...details,
+        // Preserve original search result fields
+        id: item.id || details.id,
+        media_type: mediaType,
+        // Add enhanced metadata
+        genres: details.genres || [],
+        runtime: details.runtime || details.episode_run_time?.[0] || null,
+        vote_average: details.vote_average || item.vote_average,
+        vote_count: details.vote_count || item.vote_count,
+        // TV show specific
+        number_of_seasons: details.number_of_seasons,
+        number_of_episodes: details.number_of_episodes,
+        next_episode_to_air: details.next_episode_to_air,
+        // Movie specific
+        release_date: details.release_date || item.release_date,
+        first_air_date: details.first_air_date || item.first_air_date,
+        // Common fields
+        overview: details.overview || item.overview,
+        poster_path: details.poster_path || item.poster_path,
+        backdrop_path: details.backdrop_path || item.backdrop_path,
+        original_title: details.original_title || item.original_title,
+        original_name: details.original_name || item.original_name,
+        original_language: details.original_language || item.original_language,
+        popularity: details.popularity || item.popularity,
+        adult: details.adult || item.adult,
+        video: details.video || item.video,
+        // Production info
+        production_companies: details.production_companies || [],
+        production_countries: details.production_countries || [],
+        spoken_languages: details.spoken_languages || [],
+        // TV specific
+        created_by: details.created_by || [],
+        networks: details.networks || [],
+        origin_country: details.origin_country || [],
+        status: details.status,
+        type: details.type,
+        // Additional metadata
+        tagline: details.tagline,
+        homepage: details.homepage,
+        imdb_id: details.imdb_id,
+        external_ids: details.external_ids || {}
+      };
+      
+  console.log(`[tmdb] Enhanced item: ${enhanced.title || enhanced.name} with ${enhanced.genres?.length || 0} genres`);
+  return enhanced;
+  
+} catch (error) {
+  console.error('[tmdb] Error enhancing item:', error);
+  return item; // Return original item if enhancement fails
+}
+};
+
+// Function to enhance all existing items in appData
+window.enhanceAllExistingItems = async function() {
+  console.log('[tmdb] Starting enhancement of all existing items...');
+  
+  if (!window.appData) {
+    console.warn('[tmdb] No appData found');
+    return;
+  }
+  
+  let enhancedCount = 0;
+  let totalCount = 0;
+  
+  // Process TV shows
+  if (window.appData.tv) {
+    for (const listName of ['watching', 'wishlist', 'watched']) {
+      if (window.appData.tv[listName]) {
+        console.log(`[tmdb] Enhancing TV ${listName} items...`);
+        for (let i = 0; i < window.appData.tv[listName].length; i++) {
+          const item = window.appData.tv[listName][i];
+          totalCount++;
+          
+          // Check if item already has detailed data
+          if (item.genres && item.genres.length > 0 && item.runtime) {
+            console.log(`[tmdb] Item ${item.title || item.name} already enhanced, skipping`);
+            continue;
+          }
+          
+          try {
+            const enhanced = await window.enhanceTMDBItem(item);
+            if (enhanced && enhanced !== item) {
+              window.appData.tv[listName][i] = enhanced;
+              enhancedCount++;
+              console.log(`[tmdb] Enhanced TV item: ${enhanced.title || enhanced.name}`);
+            }
+          } catch (error) {
+            console.error(`[tmdb] Failed to enhance TV item ${item.title || item.name}:`, error);
+          }
+        }
+      }
+    }
+  }
+  
+  // Process movies
+  if (window.appData.movies) {
+    for (const listName of ['watching', 'wishlist', 'watched']) {
+      if (window.appData.movies[listName]) {
+        console.log(`[tmdb] Enhancing movie ${listName} items...`);
+        for (let i = 0; i < window.appData.movies[listName].length; i++) {
+          const item = window.appData.movies[listName][i];
+          totalCount++;
+          
+          // Check if item already has detailed data
+          if (item.genres && item.genres.length > 0 && item.runtime) {
+            console.log(`[tmdb] Item ${item.title || item.name} already enhanced, skipping`);
+            continue;
+          }
+          
+          try {
+            const enhanced = await window.enhanceTMDBItem(item);
+            if (enhanced && enhanced !== item) {
+              window.appData.movies[listName][i] = enhanced;
+              enhancedCount++;
+              console.log(`[tmdb] Enhanced movie item: ${enhanced.title || enhanced.name}`);
+            }
+          } catch (error) {
+            console.error(`[tmdb] Failed to enhance movie item ${item.title || item.name}:`, error);
+          }
+        }
+      }
+    }
+  }
+  
+  console.log(`[tmdb] Enhancement complete: ${enhancedCount}/${totalCount} items enhanced`);
+  
+  // Save the enhanced data
+  if (enhancedCount > 0 && typeof window.saveAppData === 'function') {
+    window.saveAppData();
+    console.log('[tmdb] Enhanced data saved to localStorage');
+    
+    // Also save to Firebase if available
+    if (typeof window.saveData === 'function') {
+      window.saveData();
+      console.log('[tmdb] Enhanced data saved to Firebase');
+    }
+    
+    // Trigger UI update
+    if (window.FlickletApp && typeof window.FlickletApp.updateUI === 'function') {
+      window.FlickletApp.updateUI();
+      console.log('[tmdb] UI updated with enhanced data');
+    }
+  }
+  
+  return { enhancedCount, totalCount };
+};
+
   console.log('✅ TMDB API client loaded successfully');
 })();

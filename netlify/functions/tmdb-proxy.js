@@ -85,10 +85,11 @@ export async function handler(event) {
 
     console.log(`🔍 TMDB Proxy Request: ${path}`, { query, page, language, mediaType });
 
-    // Make request to TMDB with v4 bearer token
+    // Make request to TMDB with v3 API key
+    tmdbUrl.searchParams.set('api_key', 'b7247bb415b50f25b5e35e2566430b96');
+    
     const response = await fetch(tmdbUrl, {
       headers: {
-        Authorization: `Bearer ${process.env.TMDB_API_KEY}`,
         'Content-Type': 'application/json',
       },
     });

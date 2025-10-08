@@ -22,9 +22,14 @@
     const overview = raw.overview || '';
     
     // Normalize additional fields to remove "Unknown" values
-    const genre = raw.genre || (raw.genres && raw.genres[0]?.name) || '';
+    // Extract genres - prefer first genre, but handle multiple
+    let genre = raw.genre || '';
+    if (!genre && raw.genres && Array.isArray(raw.genres)) {
+      genre = raw.genres.slice(0, 2).map(g => g.name).join(', ');
+    }
     const seasonEpisode = raw.seasonEpisode || raw.sxxExx || '';
     const nextAirDate = raw.next_episode_air_date || raw.nextAirDate || raw.next_air_date || '';
+    const runtime = raw.runtime || raw.episode_run_time || '';
     const whereToWatch = raw.whereToWatch || raw.provider || '';
     const curatorBlurb = raw.curatorBlurb || raw.description || '';
     const userRating = raw.userRating || raw.rating || 0;
@@ -42,6 +47,7 @@
       genre,
       seasonEpisode,
       nextAirDate,
+      runtime,
       whereToWatch,
       curatorBlurb,
       userRating,

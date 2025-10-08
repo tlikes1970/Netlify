@@ -2,159 +2,363 @@
   "version": "1.0.0",
   "rotation": [
     {
-      "id": "trailer-spotlight-001",
+      "id": "horror-001",
       "type": "TRAILER_SPOTLIGHT",
-      "title": "Today's Featured Trailer",
-      "subtitle": "New & trending",
-      "description": "Catch the buzz: today's hyped release.",
+      "title": "The Exorcist (1973)",
+      "subtitle": "The Scariest Movie of All Time",
+      "description": "A classic tale of demonic possession and exorcism.",
       "media": {
-        "kind": "video",
-        "src": "/assets/trailers/sample-upcoming.mp4",
-        "poster": "/assets/trailers/sample-upcoming-poster.jpg",
-        "autoplay": true,
-        "muted": true
+        "kind": "youtube",
+        "src": "https://www.youtube.com/embed/YDGw1MTEe9k",
+        "poster": "https://image.tmdb.org/t/p/w500/4ucLGcXVVT1x0IxXyN0EaHUdWXc.jpg",
+        "autoplay": false,
+        "muted": true,
+        "controls": true,
+        "showinfo": true,
+        "rel": false,
+        "loop": false
       },
-      "stats": { "views": 0 },
+      "stats": { "views": 12345678 },
       "cta": {
-        "label": "Share your reaction (soon)",
-        "action": "none",
-        "ariaLabel": "Reaction submissions coming soon"
+        "label": "Watch Trailer on YouTube",
+        "action": "open_url",
+        "url": "https://www.youtube.com/watch?v=YDGw1MTEe9k",
+        "ariaLabel": "Watch The Exorcist trailer on YouTube"
       },
       "attribution": {
-        "kind": "staff",
-        "displayName": "Flicklet Staff",
-        "watermark": "Staff Pick"
+        "kind": "flicklet",
+        "displayName": "Flicklet Picks",
+        "watermark": "Top Horror"
       },
-      "tags": ["trailer", "spotlight"],
-      "createdAtISO": "2025-09-22T12:00:00.000Z",
+      "tags": ["horror", "classic", "possession"],
+      "createdAtISO": "2023-10-26T10:00:00.000Z",
       "accessibility": {
-        "alt": "Featured trailer poster image",
-        "summary": "Autoplay muted trailer teaser with poster fallback."
+        "alt": "The Exorcist movie poster",
+        "summary": "Trailer for the classic horror film The Exorcist."
       }
     },
     {
-      "id": "trivia-001",
-      "type": "TRIVIA",
-      "title": "Did You Know?",
-      "description": "The Matrix's green code was made from sushi recipes!",
+      "id": "horror-002",
+      "type": "TRAILER_SPOTLIGHT",
+      "title": "Hereditary (2018)",
+      "subtitle": "Modern Psychological Horror",
+      "description": "A modern masterpiece of psychological horror that will haunt you.",
       "media": {
-        "kind": "text",
-        "content": "The Matrix's green code was made from sushi recipes!"
+        "kind": "youtube",
+        "src": "https://www.youtube.com/embed/V6wWKNij_1M",
+        "poster": "https://image.tmdb.org/t/p/w500/lHV8HHl7NqNLOwOTnQ9nYx26VYp.jpg",
+        "autoplay": false,
+        "muted": true,
+        "controls": true,
+        "showinfo": true,
+        "rel": false,
+        "loop": false
       },
+      "stats": { "views": 9876543 },
       "cta": {
-        "label": "Submit trivia (soon)",
-        "action": "none",
-        "ariaLabel": "Trivia submission opening soon"
-      },
-      "attribution": { "kind": "staff", "displayName": "Flicklet Staff", "watermark": "Seed" },
-      "tags": ["trivia", "fun-fact"],
-      "createdAtISO": "2025-09-22T12:00:00.000Z",
-      "accessibility": {
-        "alt": "Green cascading Matrix code",
-        "summary": "Fun film trivia with illustrative image."
-      }
-    },
-    {
-      "id": "poll-results-001",
-      "type": "POLL_RESULTS",
-      "title": "Yesterday's Poll",
-      "subtitle": "Best Batman actor?",
-      "media": { "kind": "none" },
-      "stats": {
-        "votesTotal": 100,
-        "poll": [
-          { "label": "Keaton", "percent": 30 },
-          { "label": "Bale", "percent": 45 },
-          { "label": "Pattinson", "percent": 20 },
-          { "label": "Affleck", "percent": 5 }
-        ]
-      },
-      "cta": {
-        "label": "Vote in today's poll",
+        "label": "Watch Trailer on YouTube",
         "action": "open_url",
-        "url": "/polls/today",
-        "ariaLabel": "Open today's poll"
-      },
-      "attribution": { "kind": "staff", "displayName": "Flicklet Staff", "watermark": "Seed" },
-      "tags": ["poll", "results"],
-      "createdAtISO": "2025-09-22T12:00:00.000Z",
-      "accessibility": { "summary": "Poll results bar chart: Bale leads at 45%." }
-    },
-    {
-      "id": "sample-review-001",
-      "type": "STAFF_PICK_REVIEW",
-      "title": "Sample User Post",
-      "description": "\"I rewatched Breaking Bad — still a 10/10 masterpiece!\"",
-      "media": { "kind": "image", "src": "/assets/shows/breaking-bad-poster.jpg" },
-      "cta": { "label": "Your take could be featured", "action": "none" },
-      "attribution": {
-        "kind": "example_user",
-        "displayName": "Example User",
-        "avatarUrl": "/assets/avatars/user-placeholder.png",
-        "watermark": "Example"
-      },
-      "tags": ["review", "sample"],
-      "createdAtISO": "2025-09-22T12:00:00.000Z",
-      "accessibility": {
-        "alt": "Breaking Bad poster",
-        "summary": "Mock review card previewing future user posts."
-      }
-    },
-    {
-      "id": "hot-take-001",
-      "type": "HOT_TAKE",
-      "title": "Spicy Opinion",
-      "description": "\"Stranger Things should have ended after Season 3.\"",
-      "media": { "kind": "none" },
-      "cta": { "label": "Debate coming soon", "action": "none" },
-      "attribution": { "kind": "staff", "displayName": "Flicklet Staff", "watermark": "Seed" },
-      "tags": ["hot-take"],
-      "createdAtISO": "2025-09-22T12:00:00.000Z",
-      "accessibility": { "summary": "Opinion card for upcoming community debates." }
-    },
-    {
-      "id": "top-show-001",
-      "type": "TOP_SHOW",
-      "title": "What Everyone's Watching",
-      "subtitle": "The Boys",
-      "media": { "kind": "image", "src": "/assets/shows/the-boys-poster.jpg" },
-      "stats": { "trackedCountToday": 3245 },
-      "cta": {
-        "label": "Track it",
-        "action": "track",
-        "url": "/track/the-boys",
-        "ariaLabel": "Track The Boys"
-      },
-      "attribution": { "kind": "staff", "displayName": "Flicklet Staff", "watermark": "Seed" },
-      "tags": ["top", "trending"],
-      "createdAtISO": "2025-09-22T12:00:00.000Z",
-      "accessibility": {
-        "alt": "The Boys poster",
-        "summary": "Trending show with today's tracked count overlay."
-      }
-    },
-    {
-      "id": "coming-soon-001",
-      "type": "COMING_SOON",
-      "title": "Your Spotlight Awaits",
-      "description": "Influencers & Fans — submit your clips when we open!",
-      "media": { "kind": "image", "src": "/assets/community/coming-soon.svg" },
-      "cta": {
-        "label": "Follow for updates",
-        "action": "open_url",
-        "url": "/follow",
-        "ariaLabel": "Follow Flicklet updates"
+        "url": "https://www.youtube.com/watch?v=V6wWKNij_1M",
+        "ariaLabel": "Watch Hereditary trailer on YouTube"
       },
       "attribution": {
-        "kind": "staff",
-        "displayName": "Flicklet Staff",
-        "watermark": "Staff Pick"
+        "kind": "flicklet",
+        "displayName": "Flicklet Picks",
+        "watermark": "Modern Horror"
       },
-      "tags": ["coming-soon"],
-      "createdAtISO": "2025-09-22T12:00:00.000Z",
+      "tags": ["horror", "psychological", "family"],
+      "createdAtISO": "2023-10-26T10:00:00.000Z",
       "accessibility": {
-        "alt": "Coming soon banner",
-        "summary": "Teaser tile inviting early contributors."
+        "alt": "Hereditary movie poster",
+        "summary": "Trailer for the psychological horror film Hereditary."
+      }
+    },
+    {
+      "id": "horror-003",
+      "type": "TRAILER_SPOTLIGHT",
+      "title": "The Shining (1980)",
+      "subtitle": "Kubrick's Masterpiece",
+      "description": "Kubrick's terrifying adaptation of Stephen King's novel.",
+      "media": {
+        "kind": "youtube",
+        "src": "https://www.youtube.com/embed/5Cb3ik6zP2I",
+        "poster": "https://image.tmdb.org/t/p/w500/9fgh3Ns1iRzlQNy9aK8u9WfX3Hr.jpg",
+        "autoplay": false,
+        "muted": true,
+        "controls": true,
+        "showinfo": true,
+        "rel": false,
+        "loop": false
+      },
+      "stats": { "views": 8765432 },
+      "cta": {
+        "label": "Watch Trailer on YouTube",
+        "action": "open_url",
+        "url": "https://www.youtube.com/watch?v=5Cb3ik6zP2I",
+        "ariaLabel": "Watch The Shining trailer on YouTube"
+      },
+      "attribution": {
+        "kind": "flicklet",
+        "displayName": "Flicklet Picks",
+        "watermark": "Classic Horror"
+      },
+      "tags": ["horror", "psychological", "kubrick"],
+      "createdAtISO": "2023-10-26T10:00:00.000Z",
+      "accessibility": {
+        "alt": "The Shining movie poster",
+        "summary": "Trailer for the classic psychological horror film The Shining."
+      }
+    },
+    {
+      "id": "horror-004",
+      "type": "TRAILER_SPOTLIGHT",
+      "title": "Get Out (2017)",
+      "subtitle": "Jordan Peele's Masterpiece",
+      "description": "Jordan Peele's groundbreaking social thriller.",
+      "media": {
+        "kind": "youtube",
+        "src": "https://www.youtube.com/embed/sRfnevzM9kQ",
+        "poster": "https://image.tmdb.org/t/p/w500/tFXcE0SJcl4Ujgp7vIuWZTPbXIN.jpg",
+        "autoplay": false,
+        "muted": true,
+        "controls": true,
+        "showinfo": true,
+        "rel": false,
+        "loop": false
+      },
+      "stats": { "views": 7654321 },
+      "cta": {
+        "label": "Watch Trailer on YouTube",
+        "action": "open_url",
+        "url": "https://www.youtube.com/watch?v=sRfnevzM9kQ",
+        "ariaLabel": "Watch Get Out trailer on YouTube"
+      },
+      "attribution": {
+        "kind": "flicklet",
+        "displayName": "Flicklet Picks",
+        "watermark": "Modern Horror"
+      },
+      "tags": ["horror", "thriller", "social"],
+      "createdAtISO": "2023-10-26T10:00:00.000Z",
+      "accessibility": {
+        "alt": "Get Out movie poster",
+        "summary": "Trailer for the social thriller horror film Get Out."
+      }
+    },
+    {
+      "id": "horror-005",
+      "type": "TRAILER_SPOTLIGHT",
+      "title": "The Babadook (2014)",
+      "subtitle": "Australian Psychological Horror",
+      "description": "Australian psychological horror that explores grief and motherhood.",
+      "media": {
+        "kind": "youtube",
+        "src": "https://www.youtube.com/embed/k5WQZzDRVtw",
+        "poster": "https://image.tmdb.org/t/p/w500/4eWj8QY7VQZPz1bG7CzFm0dFjB8.jpg",
+        "autoplay": false,
+        "muted": true,
+        "controls": true,
+        "showinfo": true,
+        "rel": false,
+        "loop": false
+      },
+      "stats": { "views": 6543210 },
+      "cta": {
+        "label": "Watch Trailer on YouTube",
+        "action": "open_url",
+        "url": "https://www.youtube.com/watch?v=k5WQZzDRVtw",
+        "ariaLabel": "Watch The Babadook trailer on YouTube"
+      },
+      "attribution": {
+        "kind": "flicklet",
+        "displayName": "Flicklet Picks",
+        "watermark": "Indie Horror"
+      },
+      "tags": ["horror", "psychological", "indie"],
+      "createdAtISO": "2023-10-26T10:00:00.000Z",
+      "accessibility": {
+        "alt": "The Babadook movie poster",
+        "summary": "Trailer for the psychological horror film The Babadook."
+      }
+    },
+    {
+      "id": "horror-006",
+      "type": "TRAILER_SPOTLIGHT",
+      "title": "It Follows (2014)",
+      "subtitle": "Unique Supernatural Horror",
+      "description": "A unique take on horror with an unstoppable supernatural entity.",
+      "media": {
+        "kind": "youtube",
+        "src": "https://www.youtube.com/embed/HkZYbOH0ujw",
+        "poster": "https://image.tmdb.org/t/p/w500/4M7x4GjU3Q4Nl1B3B3B3B3B3B3B3B3B.jpg",
+        "autoplay": false,
+        "muted": true,
+        "controls": true,
+        "showinfo": true,
+        "rel": false,
+        "loop": false
+      },
+      "stats": { "views": 5432109 },
+      "cta": {
+        "label": "Watch Trailer on YouTube",
+        "action": "open_url",
+        "url": "https://www.youtube.com/watch?v=HkZYbOH0ujw",
+        "ariaLabel": "Watch It Follows trailer on YouTube"
+      },
+      "attribution": {
+        "kind": "flicklet",
+        "displayName": "Flicklet Picks",
+        "watermark": "Indie Horror"
+      },
+      "tags": ["horror", "supernatural", "indie"],
+      "createdAtISO": "2023-10-26T10:00:00.000Z",
+      "accessibility": {
+        "alt": "It Follows movie poster",
+        "summary": "Trailer for the supernatural horror film It Follows."
+      }
+    },
+    {
+      "id": "horror-007",
+      "type": "TRAILER_SPOTLIGHT",
+      "title": "A Quiet Place (2018)",
+      "subtitle": "Silence is Survival",
+      "description": "Silence is survival in this post-apocalyptic horror thriller.",
+      "media": {
+        "kind": "youtube",
+        "src": "https://www.youtube.com/embed/WR7cc5t7tv8",
+        "poster": "https://image.tmdb.org/t/p/w500/nAU74GmpUk7t5iklEp3bufwDq4n.jpg",
+        "autoplay": false,
+        "muted": true,
+        "controls": true,
+        "showinfo": true,
+        "rel": false,
+        "loop": false
+      },
+      "stats": { "views": 4321098 },
+      "cta": {
+        "label": "Watch Trailer on YouTube",
+        "action": "open_url",
+        "url": "https://www.youtube.com/watch?v=WR7cc5t7tv8",
+        "ariaLabel": "Watch A Quiet Place trailer on YouTube"
+      },
+      "attribution": {
+        "kind": "flicklet",
+        "displayName": "Flicklet Picks",
+        "watermark": "Modern Horror"
+      },
+      "tags": ["horror", "thriller", "post-apocalyptic"],
+      "createdAtISO": "2023-10-26T10:00:00.000Z",
+      "accessibility": {
+        "alt": "A Quiet Place movie poster",
+        "summary": "Trailer for the post-apocalyptic horror thriller A Quiet Place."
+      }
+    },
+    {
+      "id": "horror-008",
+      "type": "TRAILER_SPOTLIGHT",
+      "title": "Midsommar (2019)",
+      "subtitle": "Ari Aster's Folk Horror",
+      "description": "Ari Aster's disturbing folk horror masterpiece.",
+      "media": {
+        "kind": "youtube",
+        "src": "https://www.youtube.com/embed/1Vnghdsjmd0",
+        "poster": "https://image.tmdb.org/t/p/w500/7WUHnWGx5OO145IRxPDUkQSh4C7.jpg",
+        "autoplay": false,
+        "muted": true,
+        "controls": true,
+        "showinfo": true,
+        "rel": false,
+        "loop": false
+      },
+      "stats": { "views": 3210987 },
+      "cta": {
+        "label": "Watch Trailer on YouTube",
+        "action": "open_url",
+        "url": "https://www.youtube.com/watch?v=1Vnghdsjmd0",
+        "ariaLabel": "Watch Midsommar trailer on YouTube"
+      },
+      "attribution": {
+        "kind": "flicklet",
+        "displayName": "Flicklet Picks",
+        "watermark": "Folk Horror"
+      },
+      "tags": ["horror", "folk", "psychological"],
+      "createdAtISO": "2023-10-26T10:00:00.000Z",
+      "accessibility": {
+        "alt": "Midsommar movie poster",
+        "summary": "Trailer for the folk horror film Midsommar."
+      }
+    },
+    {
+      "id": "horror-009",
+      "type": "TRAILER_SPOTLIGHT",
+      "title": "The Conjuring (2013)",
+      "subtitle": "Based on Real Events",
+      "description": "Based on real paranormal investigations by the Warrens.",
+      "media": {
+        "kind": "youtube",
+        "src": "https://www.youtube.com/embed/k10ETZ41q5o",
+        "poster": "https://image.tmdb.org/t/p/w500/7QGY7Tg5g4yFf8kZP0jHxZzZzZzZ.jpg",
+        "autoplay": false,
+        "muted": true,
+        "controls": true,
+        "showinfo": true,
+        "rel": false,
+        "loop": false
+      },
+      "stats": { "views": 2109876 },
+      "cta": {
+        "label": "Watch Trailer on YouTube",
+        "action": "open_url",
+        "url": "https://www.youtube.com/watch?v=k10ETZ41q5o",
+        "ariaLabel": "Watch The Conjuring trailer on YouTube"
+      },
+      "attribution": {
+        "kind": "flicklet",
+        "displayName": "Flicklet Picks",
+        "watermark": "Paranormal"
+      },
+      "tags": ["horror", "paranormal", "supernatural"],
+      "createdAtISO": "2023-10-26T10:00:00.000Z",
+      "accessibility": {
+        "alt": "The Conjuring movie poster",
+        "summary": "Trailer for the paranormal horror film The Conjuring."
+      }
+    },
+    {
+      "id": "horror-010",
+      "type": "TRAILER_SPOTLIGHT",
+      "title": "The Witch (2015)",
+      "subtitle": "Period Horror Masterpiece",
+      "description": "A period horror film that will make you fear the woods.",
+      "media": {
+        "kind": "youtube",
+        "src": "https://www.youtube.com/embed/iQzQF9QvxZc",
+        "poster": "https://image.tmdb.org/t/p/w500/7QGY7Tg5g4yFf8kZP0jHxZzZzZzZ.jpg",
+        "autoplay": false,
+        "muted": true,
+        "controls": true,
+        "showinfo": true,
+        "rel": false,
+        "loop": false
+      },
+      "stats": { "views": 1098765 },
+      "cta": {
+        "label": "Watch Trailer on YouTube",
+        "action": "open_url",
+        "url": "https://www.youtube.com/watch?v=iQzQF9QvxZc",
+        "ariaLabel": "Watch The Witch trailer on YouTube"
+      },
+      "attribution": {
+        "kind": "flicklet",
+        "displayName": "Flicklet Picks",
+        "watermark": "Period Horror"
+      },
+      "tags": ["horror", "period", "supernatural"],
+      "createdAtISO": "2023-10-26T10:00:00.000Z",
+      "accessibility": {
+        "alt": "The Witch movie poster",
+        "summary": "Trailer for the period horror film The Witch."
       }
     }
   ]

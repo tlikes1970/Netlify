@@ -1147,7 +1147,7 @@ body.mardi {
 }
 
 .header {
-  border-bottom: 2px solid var(--primary);
+  border-bottom: none;
   padding-bottom: 16px;
   margin-bottom: 12px;
   animation: headerFadeIn 0.6s ease-out;
@@ -2849,7 +2849,7 @@ body.mardi {
   }
   .header-left {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 8px;
     flex: 1 1 auto;
     min-width: 0;
@@ -2862,7 +2862,7 @@ body.mardi {
     flex: 0 0 auto;
     justify-content: flex-end;
     margin-left: auto;
-    margin-top: 0 ;
+    margin-top: 0;
   }
 }
 
@@ -2878,6 +2878,7 @@ body.mardi {
   .header-right {
     width: 100%;
     justify-content: center;
+    align-items: center;
   }
   .header-right {
     margin-top: 6px;
@@ -3838,6 +3839,43 @@ body.mardi {
  * 3. Follow the CSS Architecture Guard rules
  */
 
+/* PERMANENT OVERRIDE: Force action-row elements to be contents for 2x2 grid */
+#homeSection .card.v2 .action-grid-2x2 .action-row,
+#homeSection .cw-card.v2 .action-grid-2x2 .action-row,
+#homeSection .v2-home-cw .action-grid-2x2 .action-row {
+  display: contents !important;
+  grid-template-columns: none !important;
+  gap: 0 !important;
+}
+
+/* Fix button sizing - make them larger and more readable */
+#homeSection .card.v2 .actions .btn,
+#homeSection .cw-card.v2 .actions .btn,
+#homeSection .v2-home-cw .actions .btn {
+  min-height: 44px !important;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+
+/* NUCLEAR OPTION: Override ALL button sizing with maximum specificity */
+#homeSection .actions .btn,
+#homeSection .card-actions .btn,
+#homeSection .action-grid-2x2 .btn,
+#homeSection .action-row .btn {
+  min-height: 44px !important;
+  height: auto !important;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+
+/* Fix card spacing - ensure even spacing between cards */
+#homeSection .preview-row-scroll.row-inner,
+#homeSection #currentlyWatchingScroll {
+  gap: 16px !important;
+}
+
 /* --- GAME TEASER COLUMN LAYOUT --- */
 .home-games {
   display: contents;
@@ -4420,7 +4458,7 @@ body {
 /* Layout Shell - Option A: Co-located tabs and panels */
 :root {
   /* Use existing tokens if available; otherwise keep these fallbacks */
-  --header-h: 80px; /* match current measured header height */
+  --header-h: 120px; /* match current measured header height */
   --tabs-h: 48px; /* update to your tab bar height */
 }
 
@@ -4440,15 +4478,15 @@ body {
 
 /* Header sticks at top - force it to stay on top */
 #appRoot > header.header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 10000; /* Much higher than all content sections */
+  position: static;
+  top: auto;
+  left: auto;
+  right: auto;
+  z-index: auto; /* Let search bar be the sticky element */
   margin: 0; /* no collapsing gaps */
   height: 120px; /* Increased height to accommodate all elements */
   background: var(--bg, #ffffff); /* Ensure solid background */
-  border-bottom: 2px solid var(--primary, #e91e63); /* Visual separation */
+  border-bottom: none; /* Remove red border */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add shadow for separation */
   width: 100%;
   padding: 16px 0; /* Add padding to prevent cut-off */
@@ -4458,47 +4496,39 @@ body {
 #appRoot > #search-container.top-search,
 #appRoot > .top-search {
   position: sticky;
-  top: 0; /* Stick to top during scroll */
-  z-index: 10; /* Lower z-index as requested */
+  top: var(--header-h, 120px); /* Stick below header */
+  z-index: 1000; /* High z-index to stay above content */
   margin: 0;
-  margin-top: 130px; /* Perfect spacing - confirmed by user */
+  margin-top: 20px; /* Add space between header and search bar */
   margin-bottom: 20px; /* Consistent spacing between containers */
   background: var(--bg, #ffffff); /* Ensure solid background */
   padding: 16px 0; /* Add padding to make it visible */
   border-bottom: 1px solid var(--border, #e5e7eb); /* Visual separation */
 }
 
-/* Search row within search container also sticky - display controlled by tab activation system */
+/* Search row within search container - no need for sticky since container is sticky */
 #desktop-search-row,
 .search-row {
-  position: sticky;
-  top: 120px; /* Match new header height */
-  z-index: 95; /* Lower than tabs to not cover them */
+  position: relative;
+  top: auto;
+  z-index: auto;
   padding: 0 16px; /* Add horizontal padding */
   align-items: center;
   gap: 12px;
 }
 
-/* Tabs stick under header by default */
+/* Tabs stick under search bar */
 #appRoot > #navigation.tab-container,
 #appRoot > .tab-container,
 #appRoot > [role='tablist'] {
   position: sticky;
-  top: 120px; /* Match new header height */
-  z-index: 800; /* Below header (1000) and search (900) but above content */
+  top: calc(var(--header-h, 120px) + 80px); /* Below header + search bar + margin */
+  z-index: 800; /* Below search bar but above content */
   margin: 0;
-  margin-top: 120px; /* Account for fixed header */
   margin-bottom: 20px; /* Consistent spacing between containers */
   height: var(--tabs-h);
   background: var(--bg); /* Ensure solid background */
   border-bottom: 1px solid var(--border); /* Visual separation */
-}
-
-/* When search is shown, push tabs down by its measured height */
-#appRoot.has-search > #navigation.tab-container,
-#appRoot.has-search > .tab-container,
-#appRoot.has-search > [role='tablist'] {
-  top: calc(var(--header-h) + var(--search-h, 0px));
 }
 
 /* Panels fill the rest; let window/body be the scroller so sticky works */
@@ -4710,7 +4740,38 @@ body {
 /* Search policy: search rows only visible on tabs that allow search */
 .top-search,
 .search-row {
-  display: none;
+  display: block;
+}
+
+/* Ensure navigation is always visible */
+#navigation,
+.tab-container,
+nav[role="tablist"] {
+  display: flex !important;
+  visibility: visible !important;
+}
+
+/* Ensure home section is visible by default - but allow tab switching */
+/* Only apply when home section is the active tab and not hidden */
+body.tab-home #homeSection:not([hidden]) {
+  display: block;
+  visibility: visible;
+}
+
+/* Default: show home section unless explicitly hidden by tab switching */
+#homeSection {
+  display: block;
+  visibility: visible;
+}
+
+/* Only hide home section when other tabs are explicitly active */
+body.tab-watching #homeSection,
+body.tab-wishlist #homeSection,
+body.tab-watched #homeSection,
+body.tab-discover #homeSection,
+body.tab-settings #homeSection {
+  display: none !important;
+  visibility: hidden !important;
 }
 
 .has-search .top-search,

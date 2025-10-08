@@ -681,23 +681,33 @@
       const NS = '[cleanup]';
       const log = (...a) => console.log(NS, ...a);
       log('Starting duplicate card cleanup...');
-      // Get all cards with data attributes
-      const allCards = document.querySelectorAll('[data-item-id][data-list-type]');
+      
+      // Get all cards - both legacy and V2
+      const allCards = document.querySelectorAll('.card, .cw-card, .media-card, [data-id]');
       const cardMap = new Map();
       let duplicatesRemoved = 0;
+      
       allCards.forEach((card) => {
-        const itemId = card.dataset.itemId;
-        const listType = card.dataset.listType;
-        const key = `${itemId}-${listType}`;
-        if (cardMap.has(key)) {
-          // This is a duplicate, remove it
-          card.remove();
-          duplicatesRemoved++;
-          log(`Removed duplicate card: ${key}`);
-        } else {
-          cardMap.set(key, card);
+        // Try to get unique identifier from various possible attributes
+        const itemId = card.dataset.itemId || card.dataset.id || card.getAttribute('data-id');
+        const listType = card.dataset.listType || card.dataset.list || 
+                        (card.closest('#currentlyWatchingPreview') ? 'watching' : 
+                         card.closest('#wishlistSection') ? 'wishlist' :
+                         card.closest('#watchedSection') ? 'watched' : 'unknown');
+        
+        if (itemId) {
+          const key = `${itemId}-${listType}`;
+          if (cardMap.has(key)) {
+            // This is a duplicate, remove it
+            card.remove();
+            duplicatesRemoved++;
+            log(`Removed duplicate card: ${key}`);
+          } else {
+            cardMap.set(key, card);
+          }
         }
       });
+      
       log(`Cleanup complete. Removed ${duplicatesRemoved} duplicate cards.`);
       return duplicatesRemoved;
     } catch (e) {
@@ -1348,23 +1358,41 @@
         const startTime = performance.now();
         
         items.forEach((item, index) => {
-          const snap = {
-            id: item.id,
-            media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie'),
-            title: item.title || item.name || 'Unknown',
-            name: item.title || item.name || 'Unknown',
-            release_date: item.release_date || null,
-            first_air_date: item.first_air_date || null,
-            poster: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : (item.posterUrl || item.poster || '/assets/img/poster-placeholder.png'), // V2 renderer expects full URL
-            genre: item.genre || (item.genres && item.genres[0]?.name) || '',
-            seasonEpisode: item.seasonEpisode || item.sxxExx || '',
-            nextAirDate: item.next_episode_air_date || item.nextAirDate || item.next_air_date || '',
-            userRating: item.userRating || item.rating || 0,
-            progress: item.progress || '',
-            badges: item.badges || [],
-            whereToWatch: item.whereToWatch || '',
-            overview: item.overview || ''
-          };
+          // Use toCardProps adapter to properly extract all metadata from enhanced data
+          let snap;
+          if (window.toCardProps && typeof window.toCardProps === 'function') {
+            try {
+              snap = window.toCardProps(item);
+              log(`[WL v28.33] Using toCardProps adapter for ${item.title || item.name}`);
+            } catch (error) {
+              console.warn('[functions] toCardProps failed, using fallback:', error);
+              snap = createFallbackSnap(item);
+            }
+          } else {
+            snap = createFallbackSnap(item);
+          }
+          
+          // Helper function to create fallback snap object
+          function createFallbackSnap(item) {
+            return {
+              id: item.id,
+              media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie'),
+              title: item.title || item.name || 'Unknown',
+              name: item.title || item.name || 'Unknown',
+              release_date: item.release_date || null,
+              first_air_date: item.first_air_date || null,
+              poster: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : (item.posterUrl || item.poster || '/assets/img/poster-placeholder.png'),
+              genre: item.genre || (item.genres && Array.isArray(item.genres) ? item.genres.slice(0, 2).map(g => g.name).join(', ') : '') || '',
+              seasonEpisode: item.seasonEpisode || item.sxxExx || '',
+              nextAirDate: item.next_episode_air_date || item.nextAirDate || item.next_air_date || '',
+              runtime: item.runtime || item.episode_run_time || '',
+              userRating: item.userRating || item.rating || 0,
+              progress: item.progress || '',
+              badges: item.badges || [],
+              whereToWatch: item.whereToWatch || '',
+              overview: item.overview || ''
+            };
+          }
           
           // Create a temporary container for each card
           const tempContainer = document.createElement('div');
@@ -3125,7 +3153,14 @@
         const idx = srcArr.findIndex((i) => i.id === id);
         if (idx === -1) return;
         const [item] = srcArr.splice(idx, 1);
-        window.appData[mediaType][dest].push(item);
+        
+        // Use enhanced data if available, otherwise use original item
+        const itemToAdd = window._tempEnhancedItem || item;
+        if (window._tempEnhancedItem) {
+          log('Using enhanced item data for moveItem');
+        }
+        
+        window.appData[mediaType][dest].push(itemToAdd);
         window.saveAppData();
         // Also save to Firebase if available
         if (typeof window.saveData === 'function') {
@@ -3151,20 +3186,64 @@
         showToast('success', 'Item Moved', `Item moved to ${dest}`);
       };
       // Helper functions for search results and other components
-      window.addToWatching = function addToWatching(item) {
+      window.addToWatching = async function addToWatching(item) {
         console.log('[Search] Adding to watching:', item);
-        if (window.moveItem && item.id) {
-          window.moveItem(Number(item.id), 'watching');
-        } else {
-          console.error('[Search] Cannot add to watching - missing moveItem function or item.id');
+        
+        try {
+          // Enhance the item with detailed TMDB data
+          let enhancedItem = item;
+          if (window.enhanceTMDBItem && typeof window.enhanceTMDBItem === 'function') {
+            console.log('[Search] Enhancing item with detailed TMDB data...');
+            enhancedItem = await window.enhanceTMDBItem(item);
+            console.log('[Search] Enhanced item:', enhancedItem);
+          }
+          
+          if (window.moveItem && enhancedItem.id) {
+            // Store the enhanced item temporarily for moveItem to use
+            window._tempEnhancedItem = enhancedItem;
+            window.moveItem(Number(enhancedItem.id), 'watching');
+            delete window._tempEnhancedItem; // Clean up
+          } else {
+            console.error('[Search] Cannot add to watching - missing moveItem function or item.id');
+          }
+        } catch (error) {
+          console.error('[Search] Error enhancing item for watching:', error);
+          // Fallback to original behavior
+          if (window.moveItem && item.id) {
+            window.moveItem(Number(item.id), 'watching');
+          } else {
+            console.error('[Search] Cannot add to watching - missing moveItem function or item.id');
+          }
         }
       };
-      window.addToWishlist = function addToWishlist(item) {
+      window.addToWishlist = async function addToWishlist(item) {
         console.log('[Search] Adding to wishlist:', item);
-        if (window.moveItem && item.id) {
-          window.moveItem(Number(item.id), 'wishlist');
-        } else {
-          console.error('[Search] Cannot add to wishlist - missing moveItem function or item.id');
+        
+        try {
+          // Enhance the item with detailed TMDB data
+          let enhancedItem = item;
+          if (window.enhanceTMDBItem && typeof window.enhanceTMDBItem === 'function') {
+            console.log('[Search] Enhancing item with detailed TMDB data...');
+            enhancedItem = await window.enhanceTMDBItem(item);
+            console.log('[Search] Enhanced item:', enhancedItem);
+          }
+          
+          if (window.moveItem && enhancedItem.id) {
+            // Store the enhanced item temporarily for moveItem to use
+            window._tempEnhancedItem = enhancedItem;
+            window.moveItem(Number(enhancedItem.id), 'wishlist');
+            delete window._tempEnhancedItem; // Clean up
+          } else {
+            console.error('[Search] Cannot add to wishlist - missing moveItem function or item.id');
+          }
+        } catch (error) {
+          console.error('[Search] Error enhancing item for wishlist:', error);
+          // Fallback to original behavior
+          if (window.moveItem && item.id) {
+            window.moveItem(Number(item.id), 'wishlist');
+          } else {
+            console.error('[Search] Cannot add to wishlist - missing moveItem function or item.id');
+          }
         }
       };
       window.removeItemFromCurrentList = async function removeItemFromCurrentList(id) {
@@ -3479,100 +3558,7 @@
   `;
       };
       // ---- Upcoming Episodes (Tonight On) ----
-      window.loadUpcomingEpisodes = function loadUpcomingEpisodes() {
-        if (!window.FLAGS?.upcomingEpisodesEnabled) {
-          // Force hide the section if it exists
-          const upcomingEpisodes = document.getElementById('upcomingEpisodes');
-          if (upcomingEpisodes) {
-            upcomingEpisodes.style.display = 'none';
-          }
-          return;
-        }
-        const upcomingSectionEl = document.getElementById('upcomingEpisodes');
-        const upcomingListEl = document.getElementById('upcomingEpisodesList');
-        if (!upcomingSectionEl || !upcomingListEl) return;
-        console.log('🌙 Loading upcoming episodes content');
-        try {
-          const appData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
-          // Get watching shows from both tv and movies categories
-          const tvWatching = appData.tv?.watching || [];
-          const movieWatching = appData.movies?.watching || [];
-          const watching = [...tvWatching, ...movieWatching];
-          console.log('🔍 Front spotlight data check:', {
-            tvWatching: tvWatching.length,
-            movieWatching: movieWatching.length,
-            totalWatching: watching.length,
-            sampleShow: watching[0],
-          });
-          const now = new Date();
-          const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-          const episodes = [];
-          // Test episode removed - now using real data
-          watching.forEach((show) => {
-            // Skip shows with invalid data
-            if (!show || (!show.name && !show.original_name)) {
-              console.log('⚠️ Skipping invalid show:', show);
-              return;
-            }
-            const showName = show.name || show.original_name || 'Unknown Show';
-            // Check multiple possible fields for next air date
-            const nextAirDate =
-              show.nextEpisodeAirDate ||
-              show.next_air_date ||
-              show.next_episode_to_air?.air_date ||
-              show.next_episode_to_air?.first_air_date;
-            console.log(
-              '🔍 Checking show:',
-              showName,
-              'nextAirDate:',
-              nextAirDate,
-              'next_episode_to_air:',
-              show.next_episode_to_air,
-            );
-            if (!nextAirDate) return;
-            const airDate = new Date(nextAirDate);
-            console.log('🔍 Air date parsed:', airDate, 'is valid:', !isNaN(airDate.getTime()));
-            if (airDate >= now && airDate <= nextWeek) {
-              console.log('✅ Found upcoming episode:', showName);
-              episodes.push({
-                showName: showName,
-                airDate: airDate,
-                episodeInfo: show.nextEpisodeName || 'New Episode',
-              });
-            }
-          });
-          episodes.sort((a, b) => a.airDate - b.airDate);
-          if (episodes.length === 0) {
-            upcomingListEl.innerHTML =
-              '<div class="no-episodes">No upcoming episodes this week.</div>';
-          } else {
-            const top8 = episodes.slice(0, 8);
-            upcomingListEl.innerHTML = top8
-              .map(
-                (episode) => `
-        <div class="upcoming-episode-item">
-          <div class="show-info">
-            <div class="show-name">${episode.showName}</div>
-            <div class="episode-info">${episode.episodeInfo}</div>
-          </div>
-          <div class="air-date">
-            ${episode.airDate.toLocaleDateString('en-US', {
-              weekday: 'short',
-              month: 'short',
-              day: 'numeric',
-            })}
-          </div>
-        </div>
-      `,
-              )
-              .join('');
-          }
-          upcomingSectionEl.style.display = 'block';
-        } catch (error) {
-          console.error('Error loading upcoming episodes:', error);
-          upcomingSectionEl.style.display = 'none';
-        }
-      };
+      // Removed - feature was disabled and unused
       /**
        * Process: Counter Bootstrap System
        * Purpose: Real-time count updates for tabs and sections based on visible cards

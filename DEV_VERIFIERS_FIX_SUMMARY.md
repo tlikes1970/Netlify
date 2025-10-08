@@ -187,3 +187,5 @@ window.__DEV_TOOLS.verifyRailNormalization();
 - **Frames**: All sections show `groupOK: PASS`, `gutterOK: PASS`
 - **Rails**: Only deepest rails checked, no wrapper rail failures
 - **Compact output**: Easy-to-read tables instead of verbose counts
+
+

@@ -360,7 +360,7 @@ main#panels {
 #homeSection #home-games {
   padding-left: 32px;
   padding-right: 32px;
-  /* Keep display: grid for games layout */
+  display: grid;  /* Explicitly set grid for games layout */
 }
 
 /* === HOME ACTIONS: CANONICAL 2x2 GRID === */
@@ -457,15 +457,11 @@ main#panels {
 }
 
 /* 4) Flatten the inner wrapper so buttons become grid items */
-#group-1-your-shows .actions > .action-grid-2x2,
-#group-1-your-shows .card-actions > .action-grid-2x2,
-#group-3-for-you  .actions > .action-grid-2x2,
-#group-3-for-you  .card-actions > .action-grid-2x2,
-#group-4-theaters .actions > .action-grid-2x2,
-#group-4-theaters .card-actions > .action-grid-2x2,
-#group-5-feedback .actions > .action-grid-2x2,
-#group-5-feedback .card-actions > .action-grid-2x2 {
-  display: contents;
+/* Override cards.css conflicting rules with correct specificity */
+#homeSection .card.v2 .action-grid-2x2,
+#homeSection .cw-card.v2 .action-grid-2x2,
+#homeSection .v2-home-cw .action-grid-2x2 {
+  display: contents !important;
 }
 
 /* 5) Don't let children force full-width or span both columns by default */
@@ -539,4 +535,133 @@ main#panels {
 #group-2-community .actions,
 #group-2-community .card-actions {
   /* Let existing rules handle community actions - don't force grid */
+}
+
+/* Give preview cards a sizing container so container queries work */
+.card.v2.preview-card {
+  container-type: inline-size;
+}
+
+/* Home preview actions: real 2×2 tracks that don't collapse to postage stamps */
+.card.v2.v2-home-cw.preview-card.with-actions .actions,
+.card.v2.v2-home-nextup.preview-card.with-actions .actions {
+  display: grid;
+  /* Don't let each column shrink below 120px */
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 8px;
+  align-items: stretch;
+  justify-items: stretch;
+  inline-size: 100%;
+}
+
+/* Make sure the actions container can actually fill the card */
+.card.v2.v2-home-cw.preview-card .card-content,
+.card.v2.v2-home-nextup.preview-card .card-content {
+  inline-size: 100%;
+}
+
+/* Rails: ensure sane card width via tokens - matching design specs */
+:root { 
+  --rail-col-w: 200px;              /* Currently Watching cards - design spec */
+  --rail-col-w-nextup: 220px;       /* Next Up cards - design spec */
+  --rail-col-w-curated: 220px;      /* Curated cards - design spec */
+}
+@media (max-width: 768px) { 
+  :root { 
+    --rail-col-w: 180px;            /* Mobile: slightly smaller */
+    --rail-col-w-nextup: 200px;     /* Mobile: slightly smaller */
+    --rail-col-w-curated: 200px;    /* Mobile: slightly smaller */
+  } 
+}
+
+/* If your rail already sets auto-columns, keep it aligned with tokens */
+#homeSection .preview-row-scroll,
+#homeSection #currentlyWatchingScroll {
+  grid-auto-columns: var(--rail-col-w);
+}
+
+/* Specific card sizing based on design specs */
+#homeSection .card.v2-home-cw {
+  width: var(--rail-col-w);
+  min-width: var(--rail-col-w);
+  max-width: var(--rail-col-w);
+}
+
+#homeSection .card.v2-home-nextup {
+  width: var(--rail-col-w-nextup);
+  min-width: var(--rail-col-w-nextup);
+  max-width: var(--rail-col-w-nextup);
+}
+
+#homeSection .card.v2-home-curated {
+  width: var(--rail-col-w-curated);
+  min-width: var(--rail-col-w-curated);
+  max-width: var(--rail-col-w-curated);
+}
+
+/* === Home "Currently Watching" card (Design.docx spec) === */
+.card.v2.v2-home-cw.preview-card,
+.home-card {
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 12px;
+}
+
+.card.v2.v2-home-cw.preview-card .poster,
+.home-card .poster {
+  width: 100%;
+  aspect-ratio: 2 / 3;          /* keeps poster dominant and proportional */
+  border-radius: 10px;
+  background-color: #0b0d12;
+  object-fit: cover;
+  margin-bottom: 8px;
+}
+
+.card.v2.v2-home-cw.preview-card .card-content,
+.home-card .card-content {
+  width: 100%;
+  text-align: center;
+}
+
+.card.v2.v2-home-cw.preview-card .title,
+.home-card .home-title {
+  font-weight: 700;
+  font-size: 14px;
+  margin: 0 0 4px;
+}
+
+.card.v2.v2-home-cw.preview-card .meta,
+.home-card .home-meta {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0 0 8px;
+}
+
+/* The two tight rows of actions */
+.card.v2.v2-home-cw.preview-card .actions,
+.home-card .row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.card.v2.v2-home-cw.preview-card .actions button,
+.home-card .row2 button {
+  width: 100%;
+  min-height: 44px;             /* per spec */
+  border-radius: 8px;
+  background: var(--btn);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  cursor: pointer;
 }

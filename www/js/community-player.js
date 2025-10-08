@@ -70,6 +70,40 @@
       mediaEl = `<video ${autoplay} ${muted} ${poster} playsinline>
           <source src="${c.media.src}" type="video/mp4">
         </video>`;
+    } else if (c.media?.kind === 'youtube' && c.media.src) {
+      const autoplay = c.media.autoplay ? '1' : '0';
+      const muted = c.media.muted ? '1' : '0';
+      const controls = c.media.controls !== false ? '1' : '0';
+      const showinfo = c.media.showinfo !== false ? '1' : '0';
+      const rel = c.media.rel !== false ? '1' : '0';
+      const loop = c.media.loop ? '1' : '0';
+      
+      // Build clean YouTube embed URL
+      let embedUrl = c.media.src;
+      if (!embedUrl.includes('?')) {
+        embedUrl += '?';
+      } else {
+        embedUrl += '&';
+      }
+      
+      embedUrl += `autoplay=${autoplay}&mute=${muted}&controls=${controls}&showinfo=${showinfo}&rel=${rel}&loop=${loop}`;
+      
+      // Only add playlist if loop is enabled and we have a playlist
+      if (loop === '1' && c.media.playlist) {
+        embedUrl += `&playlist=${c.media.playlist}`;
+      }
+      
+      mediaEl = `<div class="media-container">
+        <iframe 
+          src="${embedUrl}"
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowfullscreen
+          loading="lazy"
+          title="${c.title || 'YouTube video'}"
+          aria-label="${c.accessibility?.alt || c.title || 'YouTube video'}">
+        </iframe>
+      </div>`;
     }
 
     const subtitle = c.subtitle ? `<p class="subtitle">${c.subtitle}</p>` : '';

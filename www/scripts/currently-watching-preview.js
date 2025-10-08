@@ -53,8 +53,6 @@
   }
 
   let isInitialized = false;
-  let retryCount = 0;
-  const MAX_RETRIES = 5;
 
   /**
    * Initialize the Currently Watching Preview row
@@ -221,60 +219,10 @@
       _lastSig = sig;
 
       if (!watchingItems || watchingItems.length === 0) {
-        // Only show test data if no Firebase data is present and we haven't exceeded retry limit
-        const hasFirebaseData =
-          window.appData &&
-          ((window.appData.tv?.watching && window.appData.tv.watching.length > 0) ||
-            (window.appData.movies?.watching && window.appData.movies.watching.length > 0));
-        const isSignedIn = window.FlickletApp?.currentUser || window.currentUser || window.firebaseAuth?.currentUser;
-        const shouldShowTestData = !hasFirebaseData && !isSignedIn && retryCount < MAX_RETRIES;
-
-        if (shouldShowTestData) {
-          console.log('📭 No items currently watching, showing test data for layout verification');
-
-          // Show test data to verify layout is working
-          const testItems = [
-            { id: 'test1', title: 'Test Show 1', mediaType: 'tv', poster_path: null },
-            { id: 'test2', title: 'Test Show 2', mediaType: 'tv', poster_path: null },
-            { id: 'test3', title: 'Test Show 3', mediaType: 'tv', poster_path: null },
-          ];
-
-          console.log('🎬 Rendering test data for layout verification');
-          previewSection.style.display = 'block';
-          scrollContainer.innerHTML = '';
-
-          for (const item of testItems) {
-            try {
-              const card = await createPreviewCard(item);
-              if (card) {
-                scrollContainer.appendChild(card);
-              }
-            } catch (error) {
-              console.error('❌ Failed to create preview card for test item:', error);
-            }
-          }
-
-          // Set up a retry for real data (only once to prevent infinite loops)
-          if (!window._currentlyWatchingRetryScheduled && retryCount < MAX_RETRIES) {
-            window._currentlyWatchingRetryScheduled = true;
-            setTimeout(async () => {
-              const retryItems = await getCurrentlyWatchingItems();
-              if (retryItems && retryItems.length > 0) {
-                console.log('🎬 Found real items on retry, replacing test data...');
-                // Clear container before rendering real data
-                scrollContainer.innerHTML = '';
-                // Call the render function directly instead of recursively
-                await renderCurrentlyWatchingPreviewInternal();
-              }
-              window._currentlyWatchingRetryScheduled = false; // Reset for future use
-            }, 3000);
-          }
-        } else {
-          // Hide section if no data and no test mode
-          console.log('📭 No items currently watching, hiding section');
-          previewSection.style.display = 'none';
-          scrollContainer.innerHTML = '';
-        }
+        // Hide section if no data - no retry logic
+        console.log('📭 No items currently watching, hiding section');
+        previewSection.style.display = 'none';
+        scrollContainer.innerHTML = '';
         return;
       }
 
@@ -423,225 +371,17 @@
   }
 
   /**
-   * Get currently watching items from app data
+   * Get currently watching items using unified data loader
    */
   async function getCurrentlyWatchingItems() {
-    console.log('🎬 getCurrentlyWatchingItems called, appData:', window.appData);
-    console.log('🎬 appData structure:', {
-      hasAppData: !!window.appData,
-      hasTv: !!window.appData?.tv,
-      hasMovies: !!window.appData?.movies,
-      tvWatching: window.appData?.tv?.watching?.length || 0,
-      moviesWatching: window.appData?.movies?.watching?.length || 0,
-      tvWatchingData: window.appData?.tv?.watching,
-      moviesWatchingData: window.appData?.movies?.watching
-    });
-
-    // Use adapter system if available
-    if (window.WatchlistsAdapterV2 && typeof window.WatchlistsAdapterV2.load === 'function') {
-      try {
-        const uid = window.firebaseAuth?.currentUser?.uid || null;
-        const adapterData = await window.WatchlistsAdapterV2.load(uid);
-        
-        if (adapterData && adapterData.watchingIds && adapterData.watchingIds.length > 0) {
-          console.log('🎬 Using adapter data for currently watching items');
-          
-          // Get full item data for each watching ID
-          const watchingItems = [];
-          for (const id of adapterData.watchingIds) {
-            try {
-              const itemData = window.WatchlistsAdapterV2.getItemData(id);
-              if (itemData) {
-                watchingItems.push({
-                  ...itemData,
-                  media_type: itemData.media_type || 'movie'
-                });
-              }
-            } catch (error) {
-              console.warn('🎬 Failed to get item data for ID:', id, error);
-            }
-          }
-          
-          console.log('🎬 Found', watchingItems.length, 'watching items from adapter');
-          return watchingItems;
-        }
-      } catch (error) {
-        console.warn('🎬 Failed to load from adapter:', error);
-        // Do not fall back to appData - return empty array
-        return [];
-      }
+    // Use unified data loader - single path, no retry
+    if (window.UnifiedDataLoader) {
+      return await window.UnifiedDataLoader.getCurrentlyWatchingItems();
     }
 
-    // Fallback to appData only if adapter system is not available
-    if (!window.appData) {
-      console.log('🎬 No appData available');
-      return [];
-    }
-
-    const allWatchingItems = [];
-
-    // Get TV shows
-    if (window.appData.tv?.watching) {
-      allWatchingItems.push(
-        ...window.appData.tv.watching.map((item) => ({
-          ...item,
-          media_type: 'tv',
-        })),
-      );
-    }
-
-    // Get movies
-    if (window.appData.movies?.watching) {
-      allWatchingItems.push(
-        ...window.appData.movies.watching.map((item) => ({
-          ...item,
-          media_type: 'movie',
-        })),
-      );
-    }
-
-    // Deduplicate items by ID
-    const watchingItems = [];
-    const seenIds = new Set();
-    allWatchingItems.forEach((item) => {
-      const id = item.id || item.tmdb_id || item.tmdbId;
-      if (id && !seenIds.has(id)) {
-        seenIds.add(id);
-        watchingItems.push(item);
-      }
-    });
-
-    console.log(`🎬 Found ${watchingItems.length} unique watching items`);
-
-    // If no items found, try alternative data access patterns
-    if (watchingItems.length === 0) {
-      console.log('🔍 Trying alternative data access patterns...');
-      console.log('🔍 Checking if data might be in different structure...');
-      
-      // Check if data is in localStorage directly
-      try {
-        const localData = localStorage.getItem('flicklet-data');
-        if (localData) {
-          const parsed = JSON.parse(localData);
-          console.log('🔍 Found localStorage data:', {
-            hasTv: !!parsed.tv,
-            hasMovies: !!parsed.movies,
-            tvWatching: parsed.tv?.watching?.length || 0,
-            moviesWatching: parsed.movies?.watching?.length || 0
-          });
-          
-          // Try to use localStorage data directly
-          if (parsed.tv?.watching?.length > 0 || parsed.movies?.watching?.length > 0) {
-            console.log('🔍 Using localStorage data as fallback');
-            const localWatchingItems = [];
-            
-            if (parsed.tv?.watching) {
-              localWatchingItems.push(
-                ...parsed.tv.watching.map((item) => ({
-                  ...item,
-                  media_type: 'tv',
-                }))
-              );
-            }
-            
-            if (parsed.movies?.watching) {
-              localWatchingItems.push(
-                ...parsed.movies.watching.map((item) => ({
-                  ...item,
-                  mediaType: 'movie',
-                }))
-              );
-            }
-            
-            console.log('🔍 LocalStorage fallback found', localWatchingItems.length, 'items');
-            return localWatchingItems;
-          }
-        }
-      } catch (e) {
-        console.log('🔍 Error reading localStorage:', e);
-      }
-
-      // Try accessing through global functions
-      if (typeof window.getWatchingItems === 'function') {
-        console.log('🔍 Trying window.getWatchingItems()');
-        const altItems = window.getWatchingItems();
-        if (altItems && altItems.length > 0) {
-          console.log('✅ Found items via getWatchingItems():', altItems.length);
-          return altItems;
-        }
-      }
-
-      // Try accessing through app instance
-      if (window.FlickletApp && typeof window.FlickletApp.getWatchingItems === 'function') {
-        console.log('🔍 Trying FlickletApp.getWatchingItems()');
-        const altItems = window.FlickletApp.getWatchingItems();
-        if (altItems && altItems.length > 0) {
-          console.log('✅ Found items via FlickletApp.getWatchingItems():', altItems.length);
-          return altItems;
-        }
-      }
-
-      // Try accessing through DOM elements (fallback)
-      const watchingList = document.getElementById('watchingList');
-      if (watchingList) {
-        console.log('🔍 Trying to extract from watchingList DOM');
-        const cards = watchingList.querySelectorAll('.show-card, .list-card');
-        console.log('🔍 Found', cards.length, 'cards in watchingList DOM');
-
-        if (cards.length > 0) {
-          const domItems = Array.from(cards)
-            .map((card) => {
-              const itemId = card.dataset.id || card.getAttribute('data-id');
-              const title =
-                card.querySelector('.card-title, .show-title')?.textContent || 'Unknown';
-              const posterImg = card.querySelector('img');
-              const poster = posterImg?.src;
-
-              console.log('🔍 DOM Card data:', {
-                id: itemId,
-                title: title,
-                posterImg: posterImg,
-                posterSrc: poster,
-                posterPath: poster ? poster.split('/').pop() : null,
-              });
-
-              return {
-                id: itemId,
-                title: title,
-                poster_path: poster ? poster.split('/').pop() : null,
-                poster_src: poster, // Keep full URL for debugging
-                media_type: 'tv', // Default assumption
-              };
-            })
-            .filter((item) => item.id);
-
-          if (domItems.length > 0) {
-            console.log('✅ Found items via DOM extraction:', domItems.length);
-
-            // Note: DOM extraction is only used as fallback for display purposes
-            // The actual data should come from appData which is loaded from Firebase
-
-            return domItems;
-          }
-        }
-      }
-
-      // Try waiting a bit more and checking again (with retry limit)
-      if (retryCount < MAX_RETRIES) {
-        retryCount++;
-        console.log(
-          `🔍 No items found, will retry in 2 seconds... (attempt ${retryCount}/${MAX_RETRIES})`,
-        );
-        setTimeout(async () => {
-          console.log('🔄 Retrying Currently Watching Preview after delay...');
-          await renderCurrentlyWatchingPreview();
-        }, 2000);
-      } else {
-        console.log('❌ Max retries reached, stopping retry loop');
-      }
-    }
-
-    return watchingItems;
+    // Fallback if unified loader not available
+    console.warn('🎬 UnifiedDataLoader not available - returning empty array');
+    return [];
   }
 
   /**
@@ -654,23 +394,52 @@
     if (window.renderCurrentlyWatchingCardV2) {
       console.log('🎬 Using Cards V2 for preview card');
       
-      // Ensure minimal snapshot shape for V2 actions/poster logic
-      const snap = {
-        id: item.id || item.tmdb_id || item.tmdbId,
-        media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie'),
-        title: item.title || item.name || 'Unknown',
-        name: item.title || item.name || 'Unknown',
-        release_date: item.release_date || null,
-        first_air_date: item.first_air_date || null,
-        poster_path: item.poster_path || null,
-        poster: item.poster || null, // Pass the full poster URL
-        posterUrl: item.posterUrl || null, // Also pass posterUrl
-        genres: item.genres?.map(g => g.name) || [],
-        overview: item.overview || ''
-      };
+      // Use toCardProps adapter to get all enhanced metadata
+      let snap;
+      if (window.toCardProps && typeof window.toCardProps === 'function') {
+        try {
+          snap = window.toCardProps(item);
+          console.log('🎬 Using toCardProps adapter for enhanced metadata:', snap);
+        } catch (error) {
+          console.warn('🎬 toCardProps failed, using fallback:', error);
+          // Fallback to minimal snapshot
+          snap = {
+            id: item.id || item.tmdb_id || item.tmdbId,
+            media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie'),
+            title: item.title || item.name || 'Unknown',
+            name: item.title || item.name || 'Unknown',
+            release_date: item.release_date || null,
+            first_air_date: item.first_air_date || null,
+            poster_path: item.poster_path || null,
+            poster: item.poster || null,
+            posterUrl: item.posterUrl || null,
+            genres: item.genres?.map(g => g.name) || [],
+            overview: item.overview || ''
+          };
+        }
+      } else {
+        // Fallback to minimal snapshot
+        snap = {
+          id: item.id || item.tmdb_id || item.tmdbId,
+          media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie'),
+          title: item.title || item.name || 'Unknown',
+          name: item.title || item.name || 'Unknown',
+          release_date: item.release_date || null,
+          first_air_date: item.first_air_date || null,
+          poster_path: item.poster_path || null,
+          poster: item.poster || null,
+          posterUrl: item.posterUrl || null,
+          genres: item.genres?.map(g => g.name) || [],
+          overview: item.overview || ''
+        };
+      }
 
-      // Create V2 card with preview variant and home context
-      const card = window.renderCurrentlyWatchingCardV2(snap, { variant: 'preview', context: 'home' });
+    // Create V2 card with preview variant and home context
+    const card = (window.renderHomePreviewCardV2
+      ? window.renderHomePreviewCardV2(snap, { variant: 'preview', context: 'home', withActions: true, listType: 'watching' })
+      : window.renderCardV2(snap, { listType: 'watching', context: 'home', variant: 'preview' }) // fallback
+    );
+    if (card) card.classList.add('v2-home-cw'); // ensure class in case renderer didn't set it
       
       if (card) {
         // Add preview-specific styling
@@ -708,36 +477,9 @@
         return null;
       }
 
-      try {
-        // Import the card renderer
-        const { renderCurrentlyWatchingCard } = await import('/js/renderers/card-templates.js');
-        
-        // Transform item data using the card data adapter for consistent poster handling
-        const cardData = window.toCardProps ? window.toCardProps(item) : {
-          id: item.id || item.tmdb_id || item.tmdbId,
-          title: item.title || item.name || 'Unknown Title',
-          name: item.name || item.title || 'Unknown Title',
-          poster: item.posterUrl || item.poster_src || item.poster_path || '',
-          media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie'),
-          release_date: item.release_date,
-          first_air_date: item.first_air_date,
-          year: item.year,
-          vote_average: item.vote_average || 0,
-          genres: item.genres?.map(g => g.name) || [],
-          overview: item.overview || ''
-        };
-
-        // Create card with new renderer
-        const card = renderCurrentlyWatchingCard(cardData);
-        
-        // Add preview-specific styling
-        card.classList.add('preview-card');
-        
-        return card;
-      } catch (error) {
-        console.error('❌ Card creation failed:', error);
-        throw error;
-      }
+      // Use V2 renderer directly - no legacy fallback needed
+      console.warn('🎬 V2 renderer not available - this should not happen');
+      return null;
     }
   }
 

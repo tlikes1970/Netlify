@@ -3,9 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet v28.130.0 - TV & Movie Tracker</title>
+    <title>Flicklet v28.147.0 - TV & Movie Tracker</title>
     <meta name="description" content="Search, track, and rate shows & films fast." />
     <meta name="build" content="latest" />
+    
+    <!-- TMDB API Key for local development -->
+    <meta name="tmdb-api-key" content="b7247bb415b50f25b5e35e2566430b96" />
 
     <!-- Permissions Policy to prevent compute-pressure violations -->
     <meta
@@ -188,8 +191,8 @@
     <script type="module" src="/js/firebase-init.js?v=v28.95"></script>
 
     <!-- TMDB API client -->
-    <script type="module" src="/tmdb-config.js"></script>
-    <script type="module" src="/scripts/tmdb.js"></script>
+    <script type="module" src="/tmdb-config.js?v=28.147.0"></script>
+    <script type="module" src="/scripts/tmdb.js?v=28.147.0"></script>
 
     <!-- Modal Utility -->
     <script type="module" src="/js/modal-utility.js"></script>
@@ -245,15 +248,18 @@
     <!-- Cards V2 system - Load early, before main app -->
     
     <!-- Core V2 system components -->
-    <script src="/js/adapters/card-data-adapter.js?v=28.113.0"></script>
+    <script src="/js/adapters/card-data-adapter.js?v=28.141.0"></script>
     <script src="/js/actions/card-actions.js?v=28.113.0"></script>
     <script src="/js/cards-v2-config.js?v=28.113.0"></script>
-    <script src="/js/renderers/card-v2.js?v=28.113.0"></script>
+    <script src="/js/renderers/card-v2.js?v=28.151.0"></script>
     <script src="/js/renderers/card-v2-cw.js?v=28.113.0"></script>
     <script src="/js/renderers/card-v2-curated.js?v=28.113.0"></script>
 
     <!-- Search module -->
-    <script type="module" src="/js/search.js"></script>
+    <script type="module" src="/js/search.js?v=28.150.0"></script>
+    
+    <!-- Search Controller - Orchestrates search UI and connects to SearchModule -->
+    <script src="/scripts/search-controller.js"></script>
 
     <!-- Data migration and structure fixes - v28.81 -->
     <script type="module" src="/js/data-migration.js"></script>
@@ -281,9 +287,9 @@
     <script type="module" src="/js/i18n.js"></script>
     <script type="module" src="/js/language-manager.js"></script>
     <script type="module" src="/js/marquee.js"></script>
-    <script type="module" src="/js/functions.js"></script>
+    <script type="module" src="/js/functions.js?v=28.150.0"></script>
     <script type="module" src="/js/functions-v2.js"></script>
-    <script type="module" src="/js/app.js"></script>
+    <script type="module" src="/js/app.js?v=28.149.0"></script>
     <script type="module">
       import { initTabs } from './js/nav-init.js';
       initTabs();
@@ -379,7 +385,7 @@
     <script type="module" src="/js/app-init-marquee.js" defer></script>
 
     <!-- Home page features - Defer non-critical features -->
-    <script type="module" src="/scripts/currently-watching-preview.js" defer></script>
+    <script type="module" src="/scripts/currently-watching-preview.js?v=28.152.0" defer></script>
     <script type="module" src="/scripts/next-up-this-week.js" defer></script>
     
     <!-- Curated data seeding -->
@@ -999,7 +1005,7 @@
           <div class="header-center">
             <h1 class="brand" data-i18n="app_title">Flicklet</h1>
             <span class="tagline" data-i18n="app_subtitle">TV &amp; Movie Tracker</span>
-            <span class="version-display">v27.83</span>
+            <span class="version-display">v28.147.0</span>
           </div>
           <div class="header-right">
             <div id="accountContext" class="account-context" aria-live="polite"></div>

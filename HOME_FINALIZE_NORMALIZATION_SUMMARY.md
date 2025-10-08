@@ -317,3 +317,5 @@ window.__DEV_TOOLS.forceHomeVisible(true);
 - **No polyfills needed**: Native browser features only
 
 The Home normalization is now **finalized with proven CSS rules** and **tolerant dev verifiers** that **pass completely**! 🎉
+
+

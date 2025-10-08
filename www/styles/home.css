@@ -230,17 +230,17 @@ html, body { overflow-x: hidden; } /* keeps layout mishaps invisible; real fixes
   height: auto ; /* H1.1: Remove fixed height - force override */
   width: auto ; /* H1.1: Remove fixed width - force override */
   box-shadow: none ; /* H1.1: Remove fixed header shadow - force override */
-  border-bottom: 2px solid var(--primary, #e91e63) ; /* H1.1: Add bottom border */
+  border-bottom: none; /* H1.1: Remove red border */
 }
 
 /* H1.1: Search bar sticky behavior */
 .top-search, #search-container.top-search {
   position: sticky;
-  top: 0;
+  top: var(--header-h, 120px); /* Stick below header */
   z-index: 1000;
   background-color: var(--bg, #fff);
   border-bottom: 1px solid var(--border, #ddd);
-  margin-top: 0; /* H1.1: Override mobile hotfix margin-top: 130px */
+  margin-top: 20px; /* Add space between header and search bar */
   margin-bottom: 0; /* H1.1: Quote bar handles spacing */
 }
 

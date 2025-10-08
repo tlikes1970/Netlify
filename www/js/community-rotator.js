@@ -105,6 +105,43 @@
       video.autoplay = item.media.autoplay || false;
       video.controls = true;
       card.appendChild(video);
+    } else if (item.media?.kind === 'youtube' && item.media.src) {
+      const mediaContainer = document.createElement('div');
+      mediaContainer.className = 'media-container';
+      
+      const iframe = document.createElement('iframe');
+      const autoplay = item.media.autoplay ? '1' : '0';
+      const muted = item.media.muted ? '1' : '0';
+      const controls = item.media.controls !== false ? '1' : '0';
+      const showinfo = item.media.showinfo !== false ? '1' : '0';
+      const rel = item.media.rel !== false ? '1' : '0';
+      const loop = item.media.loop ? '1' : '0';
+      
+      // Build clean YouTube embed URL
+      let embedUrl = item.media.src;
+      if (!embedUrl.includes('?')) {
+        embedUrl += '?';
+      } else {
+        embedUrl += '&';
+      }
+      
+      embedUrl += `autoplay=${autoplay}&mute=${muted}&controls=${controls}&showinfo=${showinfo}&rel=${rel}&loop=${loop}`;
+      
+      // Only add playlist if loop is enabled and we have a playlist
+      if (loop === '1' && item.media.playlist) {
+        embedUrl += `&playlist=${item.media.playlist}`;
+      }
+      
+      iframe.src = embedUrl;
+      iframe.frameBorder = '0';
+      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+      iframe.allowFullscreen = true;
+      iframe.loading = 'lazy';
+      iframe.title = item.title || 'YouTube video';
+      iframe.setAttribute('aria-label', item.accessibility?.alt || item.title || 'YouTube video');
+      
+      mediaContainer.appendChild(iframe);
+      card.appendChild(mediaContainer);
     } else if (item.media?.kind === 'image' && item.media.src) {
       const img = document.createElement('img');
       img.src = item.media.src;

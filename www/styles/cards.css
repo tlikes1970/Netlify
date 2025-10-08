@@ -49,8 +49,10 @@ html body .card.v2.v2-tab-card.card.card,
 html body .card.v2.v2-tab-card.card.card.card {
   display: flex !important;
   flex-direction: row !important;
-  padding: 16px;
-  gap: 16px;
+  padding: 20px;
+  gap: 20px;
+  min-height: 180px;
+  align-items: flex-start;
 }
 
 /* Search Compact Horizontal Cards - Maximum specificity to override all other rules */
@@ -91,6 +93,15 @@ html body .card.v2.v2-search-card.card.card.card {
   overflow-y: visible !important;
 }
 
+/* Card Content Area - Professional Layout */
+.card.v2 .card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Allow content to shrink */
+  gap: 8px;
+}
+
 /* Poster Styling */
 .card.v2 .poster-wrap {
   aspect-ratio: 2/3;
@@ -98,6 +109,7 @@ html body .card.v2.v2-search-card.card.card.card {
   border-radius: 10px;
   overflow: hidden;
   position: relative;
+  flex: 0 0 120px; /* Fixed width for poster */
 }
 
 .light-mode .card.v2 .poster-wrap {
@@ -162,10 +174,12 @@ html body .card.v2.v2-search-card.card.card.card {
 /* Title styling */
 .card.v2 .title {
   font-weight: 700;
-  font-size: 16px;
+  font-size: 20px;
   color: var(--fg, #e6eaf0);
   margin: 0;
   line-height: 1.2;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .light-mode .card.v2 .title {
@@ -175,8 +189,10 @@ html body .card.v2.v2-search-card.card.card.card {
 /* Meta information */
 .card.v2 .meta {
   color: var(--fg-muted, #a9b3c1);
-  font-size: 12px;
+  font-size: 14px;
   margin: 0;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .light-mode .card.v2 .meta {
@@ -211,20 +227,60 @@ html body .card.v2.v2-search-card.card.card.card {
   color: var(--fg-muted, #6b7280);
 }
 
-/* Actions Styling */
-.card.v2 .actions {
-  margin-top: auto;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
+/* Actions Styling - Keep flex for tab/search contexts only */
+.card.v2.v2-tab-card .actions,
+.card.v2.v2-search-card .actions {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
 }
 
-/* Tab and search card actions - left-aligned */
+/* Tab and search card actions - organized layout */
 .card.v2.v2-tab-card .actions,
 .card.v2.v2-search-card .actions {
   align-items: flex-start !important;
   justify-content: flex-start !important;
   text-align: left !important;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Action buttons styling */
+.card.v2 .actions button {
+  background: var(--surface-secondary, #232a34);
+  color: var(--fg, #e6eaf0);
+  border: 1px solid var(--border, #242a33);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.light-mode .card.v2 .actions button {
+  background: var(--surface-secondary, #f3f4f6);
+  color: var(--fg, #374151);
+  border-color: var(--border, #d1d5db);
+}
+
+.card.v2 .actions button:hover:not([disabled]) {
+  background: var(--surface-hover, #2a3441);
+  transform: translateY(-1px);
+}
+
+.light-mode .card.v2 .actions button:hover:not([disabled]) {
+  background: var(--surface-hover, #e5e7eb);
+}
+
+.card.v2 .actions button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Tab and search card content - left-aligned */
@@ -233,6 +289,32 @@ html body .card.v2.v2-search-card.card.card.card {
   text-align: left !important;
   justify-content: flex-start !important;
   align-items: flex-start !important;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Ensure proper spacing between elements */
+.card.v2 .title + .meta {
+  margin-top: 4px;
+}
+
+.card.v2 .meta + .overview {
+  margin-top: 8px;
+}
+
+.card.v2 .overview + .where-to-watch {
+  margin-top: 4px;
+}
+
+.card.v2 .where-to-watch + .user-rating {
+  margin-top: 8px;
+}
+
+.card.v2 .user-rating + .actions {
+  margin-top: 12px;
 }
 
 /* Tab and search card free actions - left-aligned */
@@ -277,6 +359,46 @@ html body .card.v2.v2-search-card.card.card.card {
   grid-template-columns: 1fr 1fr !important;
   gap: 8px !important;
   width: 100% !important;
+}
+
+/* Override for home page - flatten wrapper to make buttons direct children */
+#homeSection .card.v2 .action-grid-2x2,
+#homeSection .cw-card.v2 .action-grid-2x2,
+#homeSection .v2-home-cw .action-grid-2x2 {
+  display: contents !important;
+}
+
+/* Also flatten action-row wrappers */
+#homeSection .card.v2 .action-row,
+#homeSection .cw-card.v2 .action-row,
+#homeSection .v2-home-cw .action-row {
+  display: contents !important;
+}
+
+/* Override any conflicting action-row rules with higher specificity */
+#homeSection .card.v2 .action-grid-2x2 .action-row,
+#homeSection .cw-card.v2 .action-grid-2x2 .action-row,
+#homeSection .v2-home-cw .action-grid-2x2 .action-row {
+  display: contents !important;
+}
+
+/* Override main.css conflicting rules with even higher specificity */
+#homeSection .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .card.v2 .action-grid-2x2 .action-row,
+#homeSection .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .cw-card.v2 .action-grid-2x2 .action-row,
+#homeSection .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .v2-home-cw .action-grid-2x2 .action-row {
+  display: contents !important;
+}
+
+/* NUCLEAR OPTION: Override ALL action-row rules with maximum specificity */
+#homeSection .card.v2 .action-grid-2x2 .action-row,
+#homeSection .cw-card.v2 .action-grid-2x2 .action-row,
+#homeSection .v2-home-cw .action-grid-2x2 .action-row,
+#homeSection .card.v2 .actions .action-grid-2x2 .action-row,
+#homeSection .cw-card.v2 .actions .action-grid-2x2 .action-row,
+#homeSection .v2-home-cw .actions .action-grid-2x2 .action-row {
+  display: contents !important;
+  grid-template-columns: none !important;
+  gap: 0 !important;
 }
 
 .card.v2 .action-row,
@@ -368,12 +490,43 @@ html body .card.v2.v2-search-card.card.card.card {
   color: var(--fg, #1f2937);
 }
 
+/* Overview styling */
+.card.v2 .overview {
+  color: var(--fg-muted, #a9b3c1);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 8px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.light-mode .card.v2 .overview {
+  color: var(--fg-muted, #6b7280);
+}
+
+/* Where to Watch styling */
+.card.v2 .where-to-watch {
+  color: var(--fg-muted, #a9b3c1);
+  font-size: 13px;
+  margin: 4px 0;
+  font-style: italic;
+}
+
+.light-mode .card.v2 .where-to-watch {
+  color: var(--fg-muted, #6b7280);
+}
+
 /* User Rating Stars */
 .card.v2 .user-rating {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin: 6px 0;
+  margin: 8px 0;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .card.v2 .user-rating .star {
@@ -395,6 +548,9 @@ html body .card.v2.v2-search-card.card.card.card {
   color: var(--fg-muted, #a9b3c1);
   font-size: 12px;
   margin-left: 4px;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: unset;
 }
 
 .light-mode .card.v2 .user-rating .rating-label {
@@ -1124,4 +1280,20 @@ html body .card.v2.v2-search-card.card.card.card {
   max-width: none;
   min-height: 44px;
   box-sizing: border-box;
+}
+
+/* Home preview cards: canonical 2×2 grid */
+.card.v2.v2-home-cw.preview-card.with-actions .actions,
+.card.v2.v2-home-nextup.preview-card.with-actions .actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  align-items: stretch;
+  justify-items: stretch;
+}
+
+.card.v2.v2-home-cw.preview-card.with-actions .actions > *,
+.card.v2.v2-home-nextup.preview-card.with-actions .actions > * {
+  width: 100%;
+  min-height: 36px;
 }

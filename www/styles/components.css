@@ -6182,12 +6182,12 @@ body.has-banner {
 
 /* ========== Header spacing + account controls (shared) ========== */
 
-/* Vertical rhythm inside header */
-.header .header-bar {
+/* Vertical rhythm inside header - disabled to preserve flex layout */
+/* .header .header-bar {
   display: grid;
   grid-auto-rows: min-content;
   row-gap: 6px;
-}
+} */
 
 /* Titles compact but readable */
 .header .app-title {

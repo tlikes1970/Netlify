@@ -202,3 +202,5 @@ window.__DEV_TOOLS.verifyRailNormalization();
 - **Frames**: All sections show `groupOK: PASS`, `gutterOK: PASS`
 - **Rails**: Detailed node logging, tolerant checks, N/A for empty sections
 - **No conflicts**: Clean CSS cascade with home-layout.css ownership
+
+

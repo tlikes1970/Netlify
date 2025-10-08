@@ -322,7 +322,7 @@
 
     searchResults.innerHTML = `
       <h4>🎯 Search Results <span class="count">${results.length}</span></h4>
-      <div class="media-grid" id="searchResultsGrid"></div>
+      <div class="poster-cards-grid" id="searchResultsGrid"></div>
     `;
 
     const searchGrid = document.getElementById('searchResultsGrid');
@@ -334,13 +334,50 @@
     log('Processing', results.length, 'results...');
     for (const item of results) {
       try {
-        // Use V2 system - no capabilities needed as actions are built-in
-        const card = window.renderSearchCardV2(item);
+        // Use toCardProps adapter to properly extract metadata
+        const props = window.toCardProps ? window.toCardProps(item) : {
+          id: item.id,
+          mediaType: item.media_type || 'movie',
+          title: item.title || item.name || 'Unknown',
+          poster: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '/assets/img/poster-placeholder.png',
+          releaseDate: item.release_date || item.first_air_date || '',
+          genre: item.genre || (item.genres && item.genres[0]?.name) || '',
+          seasonEpisode: item.seasonEpisode || item.sxxExx || '',
+          overview: item.overview || '',
+          badges: [{ label: 'Search Result', type: 'default' }],
+          whereToWatch: item.whereToWatch || '',
+          userRating: item.userRating || item.rating || 0
+        };
+        
+        // Enhance the item with detailed TMDB data if available
+        let enhancedItem = item;
+        if (window.enhanceTMDBItem && typeof window.enhanceTMDBItem === 'function') {
+          try {
+            log('Enhancing search item with detailed TMDB data...');
+            enhancedItem = await window.enhanceTMDBItem(item);
+            log('Enhanced search item:', enhancedItem);
+            
+            // Re-run toCardProps with enhanced data
+            if (enhancedItem && enhancedItem !== item) {
+              const enhancedProps = window.toCardProps ? window.toCardProps(enhancedItem) : props;
+              Object.assign(props, enhancedProps);
+            }
+          } catch (error) {
+            log('Failed to enhance search item, using original data:', error);
+          }
+        }
+        
+        const container = document.createElement('div');
+        // Design spec: Search uses compact horizontal search variant with user stars, no Pro buttons
+        const card = window.renderCardV2(container, props, { listType: 'search', context: 'search' });
+        
         if (card) {
+          // Store the enhanced item data in the card for addToListFromCache to access
+          card.dataset.itemData = JSON.stringify(enhancedItem);
           searchGrid.appendChild(card);
           log('Added card for:', item.title || item.name);
         } else {
-          log('WARNING: renderSearchCardV2 returned null for:', item.title || item.name);
+          log('WARNING: renderCardV2 returned null for:', item.title || item.name);
         }
       } catch (e) {
         log('Cards V2 render error:', e);
@@ -362,9 +399,10 @@
     const searchGrid = document.getElementById('searchResultsGrid');
     if (!searchGrid) return;
 
-    results.forEach((item) => {
+    results.forEach(async (item) => {
       try {
-        const props = {
+        // Use toCardProps adapter to properly extract metadata
+        const props = window.toCardProps ? window.toCardProps(item) : {
           id: item.id,
           mediaType: item.media_type || 'movie',
           title: item.title || item.name || 'Unknown',
@@ -378,13 +416,31 @@
           userRating: item.userRating || item.rating || 0
         };
         
+        // Enhance the item with detailed TMDB data if available
+        let enhancedItem = item;
+        if (window.enhanceTMDBItem && typeof window.enhanceTMDBItem === 'function') {
+          try {
+            log('Enhancing search item with detailed TMDB data...');
+            enhancedItem = await window.enhanceTMDBItem(item);
+            log('Enhanced search item:', enhancedItem);
+            
+            // Re-run toCardProps with enhanced data
+            if (enhancedItem && enhancedItem !== item) {
+              const enhancedProps = window.toCardProps ? window.toCardProps(enhancedItem) : props;
+              Object.assign(props, enhancedProps);
+            }
+          } catch (error) {
+            log('Failed to enhance search item, using original data:', error);
+          }
+        }
+        
         const container = document.createElement('div');
         // Design spec: Search uses compact horizontal search variant with user stars, no Pro buttons
         const card = window.renderCardV2(container, props, { listType: 'search', context: 'search' });
         
         if (card) {
-          // Store the full item data in the card for addToListFromCache to access
-          card.dataset.itemData = JSON.stringify(item);
+          // Store the enhanced item data in the card for addToListFromCache to access
+          card.dataset.itemData = JSON.stringify(enhancedItem);
           searchGrid.appendChild(card);
         }
       } catch (error) {
@@ -479,9 +535,25 @@
     }
   }
 
-  // Show other tabs when search is cleared - let tab system handle visibility
+  // Show other tabs when search is cleared - clear inline styles and let tab system handle visibility
   function showOtherTabs() {
-    // Don't interfere with tab system - let nav-init.js handle panel visibility
+    // Clear inline display styles that were set by hideOtherTabs()
+    const TAB_IDS = ['watching', 'wishlist', 'watched', 'discover', 'settings'];
+    TAB_IDS.forEach((tabId) => {
+      const section = document.getElementById(`${tabId}Section`);
+      if (section) {
+        section.style.display = '';
+        log(`Cleared inline style for tab: ${tabId}Section`);
+      }
+    });
+
+    // Clear home section hidden attribute
+    const homeSection = document.getElementById('homeSection');
+    if (homeSection) {
+      homeSection.hidden = false;
+      log(`Home section unhidden`);
+    }
+
     log(`Search cleared - tab system will handle panel visibility`);
   }
 
@@ -510,6 +582,9 @@
     getSearchState,
     openItemDetails,
   };
+
+  // Expose performSearch globally for SearchController compatibility
+  window.performSearch = performSearch;
 
   // Auto-initialize when DOM is ready
   if (document.readyState === 'loading') {

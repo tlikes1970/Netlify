@@ -408,9 +408,9 @@
 
       document.dispatchEvent(new CustomEvent('app:data:ready', { detail: { source: 'cloud' } }));
       log('sync complete:', reason, {
-        tvCounts: Object.fromEntries(Object.entries(local.tv).map(([k, v]) => [k, v.length])),
+        tvCounts: Object.fromEntries(Object.entries(local.tv || {}).map(([k, v]) => [k, v.length])),
         movieCounts: Object.fromEntries(
-          Object.entries(local.movies).map(([k, v]) => [k, v.length]),
+          Object.entries(local.movies || {}).map(([k, v]) => [k, v.length]),
         ),
       });
     } catch (e) {

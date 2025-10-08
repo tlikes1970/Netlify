@@ -6,9 +6,7 @@
  * Dependencies: tmdbGet function, appData, home page elements
  */
 
-// Retry counter to prevent infinite loops
-let nextUpRetryCount = 0;
-const MAX_RETRIES = 5;
+// No retry logic - single data path
 
 // Helper function to get next air date from TMDB
 async function fetchNextAirDate(showId) {
@@ -208,88 +206,10 @@ async function renderNextUpRow() {
     return;
   }
 
-  // Get watching items - use adapter system like other components
-  const watchingItems = [];
-
-  // Use adapter system if available
-  if (window.WatchlistsAdapterV2 && typeof window.WatchlistsAdapterV2.load === 'function') {
-    try {
-      const uid = window.firebaseAuth?.currentUser?.uid || null;
-      const adapterData = await window.WatchlistsAdapterV2.load(uid);
-      
-      if (adapterData && adapterData.watchingIds && adapterData.watchingIds.length > 0) {
-        console.log('📺 Using adapter data for next up items');
-        
-        // Get full item data for each watching ID
-        for (const id of adapterData.watchingIds) {
-          try {
-            const itemData = window.WatchlistsAdapterV2.getItemData(id);
-            if (itemData) {
-              watchingItems.push({
-                ...itemData,
-                media_type: itemData.media_type || 'movie'
-              });
-            }
-          } catch (error) {
-            console.warn('📺 Failed to get item data for ID:', id, error);
-          }
-        }
-      }
-    } catch (error) {
-      console.warn('📺 Failed to load from adapter, falling back to appData:', error);
-    }
-  }
-
-  // Fallback to appData if adapter system is not available
-  if (watchingItems.length === 0) {
-    if (window.appData?.tv?.watching) {
-      watchingItems.push(
-        ...window.appData.tv.watching.map((item) => ({
-          ...item,
-          media_type: 'tv',
-        })),
-      );
-    }
-    if (window.appData?.movies?.watching) {
-      watchingItems.push(
-        ...window.appData.movies.watching.map((item) => ({
-          ...item,
-          media_type: item.media_type || 'movie',
-        })),
-      );
-    }
-  }
-
-  // If no items found in appData, try DOM extraction (same as Currently Watching)
-  if (watchingItems.length === 0) {
-    console.log('📺 No items in appData, trying DOM extraction...');
-    const watchingList = document.getElementById('watchingList');
-    if (watchingList) {
-      const cards = watchingList.querySelectorAll('.show-card');
-      console.log('📺 Found', cards.length, 'cards in watchingList DOM');
-
-      cards.forEach((card) => {
-        const id = card.getAttribute('data-id');
-        const titleEl = card.querySelector('.show-title, .card-title, h3');
-        const title = titleEl
-          ? titleEl.textContent.trim().replace('🔗', '').trim()
-          : 'Unknown Title';
-        const posterImg = card.querySelector('img.show-poster, img.poster');
-        const posterSrc = posterImg ? posterImg.src : '';
-        const posterPath = posterSrc ? posterSrc.split('/').pop().split('?')[0] : '';
-
-        if (id) {
-          watchingItems.push({
-            id: id,
-            name: title,
-            title: title,
-            poster_path: posterPath,
-            media_type: 'tv', // Assume TV shows for now
-          });
-        }
-      });
-    }
-  }
+  // Get watching items using unified data loader
+  const watchingItems = window.UnifiedDataLoader 
+    ? await window.UnifiedDataLoader.getCurrentlyWatchingItems()
+    : [];
 
   console.log('📺 Found watching items:', watchingItems.length);
   console.log('📺 Watching items details:', watchingItems);
@@ -301,42 +221,41 @@ async function renderNextUpRow() {
   if (!nextUp.length) {
     console.log('📺 No upcoming episodes, hiding section');
     section.style.display = 'none';
-
-    // If we found 0 watching items, retry after a delay (like Currently Watching does)
-    if (watchingItems.length === 0 && nextUpRetryCount < MAX_RETRIES) {
-      nextUpRetryCount++;
-      console.log(
-        `📺 No watching items found, will retry in 2 seconds... (attempt ${nextUpRetryCount}/${MAX_RETRIES})`,
-      );
-      setTimeout(() => {
-        console.log('🔄 Retrying Next Up This Week after delay...');
-        renderNextUpRow();
-      }, 2000);
-    } else if (nextUpRetryCount >= MAX_RETRIES) {
-      console.log('📺 Max retries reached, stopping Next Up This Week retries');
-    }
     return;
   }
-
-  // Reset retry counter on success
-  nextUpRetryCount = 0;
 
   // Show section and populate
   section.style.display = 'block';
   inner.innerHTML = '';
 
-  // Import the card renderer
-  const { renderNextUpCard } = await import('/js/renderers/card-templates.js');
-
+  // Use V2 renderer directly
   for (const { item, show, air } of nextUp) {
-    // Add posterUrl to the show object for the renderer
-    const showWithPoster = {
-      ...show,
-      posterUrl: getPosterSrc(item)
-    };
-    
-    const card = renderNextUpCard(showWithPoster, air);
-    inner.appendChild(card);
+    // Use V2 renderer if available
+    if (window.renderCardV2) {
+      const container = document.createElement('div');
+      const props = {
+        id: show.id,
+        mediaType: show.media_type || 'tv',
+        title: show.title || show.name || 'Unknown',
+        poster: getPosterSrc(item),
+        releaseDate: show.release_date || show.first_air_date || '',
+        genre: (show.genres && show.genres[0]?.name) || '',
+        seasonEpisode: air.epNumber || '',
+        nextAirDate: air.date || air.label || ''
+      };
+      
+      const card = window.renderCardV2(container, props, {
+        listType: 'next-up',
+        context: 'home'
+      });
+      
+      if (card) {
+        card.classList.add('nu-card', 'preview-card');
+        inner.appendChild(card);
+      }
+    } else {
+      console.warn('📺 V2 renderer not available for Next Up cards');
+    }
   }
 }
 

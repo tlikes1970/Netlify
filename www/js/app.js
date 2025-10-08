@@ -181,8 +181,26 @@ window.__useLegacyTabs = false;
         this.setupSettingsTabs();
 
         // 7) Ensure a default active tab and initial render
-        this.switchToTab('home');
-        this.updateUI();
+        // Add has-search class to make search bar visible
+        document.body.classList.add('has-search');
+        
+        // Ensure home tab is active by default
+        document.body.classList.add('tab-home');
+        
+        // Try to switch to home tab - let navigation engine handle it
+        try {
+          this.switchToTab('home');
+        } catch (error) {
+          console.error('[app.js] Error switching to home tab:', error);
+          // Fallback: manually ensure home is visible
+          this.ensureHomeTabActive();
+        }
+        
+        try {
+          this.updateUI();
+        } catch (error) {
+          console.error('[app.js] Error updating UI:', error);
+        }
 
         // 7.5) Dock FABs to active tab
         this.dockFABsToActiveTab();
@@ -1714,6 +1732,12 @@ window.__useLegacyTabs = false;
     switchToTab(tab) {
       console.log(`[app.js] LEGACY SHIM: Delegating tab switch to nav engine: ${tab}`);
       
+      // Clear search when switching tabs (except when switching to home)
+      if (tab !== 'home' && window.SearchModule && typeof window.SearchModule.clearSearch === 'function') {
+        console.log('[app.js] Clearing search due to tab switch');
+        window.SearchModule.clearSearch();
+      }
+      
       // Feature flag check
       if (window.__useLegacyTabs) {
         console.warn('[app.js] LEGACY MODE: Using old tab system');
@@ -1724,10 +1748,71 @@ window.__useLegacyTabs = false;
       const targetId = `${tab}Section`;
       if (window.navEngine && typeof window.navEngine.activate === 'function') {
         window.navEngine.activate(targetId);
+        console.log(`[app.js] Activated ${tab} tab via nav engine`);
       } else {
-        console.error('[app.js] Nav engine not available - falling back to legacy');
-        return this._legacySwitchToTab(tab);
+        console.error('[app.js] Nav engine not available - using fallback');
+        if (tab === 'home') {
+          this.ensureHomeTabActive();
+        } else {
+          return this._legacySwitchToTab(tab);
+        }
       }
+      
+      // Ensure search bar is visible for home tab
+      if (tab === 'home') {
+        document.body.classList.add('has-search');
+      }
+    },
+
+    // Ensure home tab is active and visible
+    ensureHomeTabActive() {
+      console.log('[app.js] Ensuring home tab is active and visible');
+      
+      // First try the navigation engine
+      if (window.navEngine && typeof window.navEngine.activate === 'function') {
+        window.navEngine.activate('homeSection');
+        console.log('[app.js] Activated home tab via nav engine');
+        return;
+      }
+      
+      // Fallback: manually activate home tab
+      console.log('[app.js] Nav engine not ready, manually activating home tab');
+      
+      // Hide all tab sections
+      const allSections = document.querySelectorAll('.tab-section');
+      allSections.forEach(section => {
+        section.hidden = true;
+        section.setAttribute('aria-hidden', 'true');
+      });
+      
+      // Show home section
+      const homeSection = document.getElementById('homeSection');
+      if (homeSection) {
+        homeSection.hidden = false;
+        homeSection.setAttribute('aria-hidden', 'false');
+        console.log('[app.js] Home section made visible');
+      }
+      
+      // Update tab states
+      const allTabs = document.querySelectorAll('[role="tab"]');
+      allTabs.forEach(tab => {
+        tab.setAttribute('aria-selected', 'false');
+        tab.classList.remove('is-active');
+      });
+      
+      // Activate home tab
+      const homeTab = document.querySelector('[aria-controls="homeSection"]');
+      if (homeTab) {
+        homeTab.setAttribute('aria-selected', 'true');
+        homeTab.classList.add('is-active');
+        console.log('[app.js] Home tab activated');
+      }
+      
+      // Set current tab
+      this.currentTab = 'home';
+      
+      // Ensure body has the correct class
+      document.body.classList.add('tab-home');
     },
 
     // Legacy implementation (kept for rollback)
@@ -2794,6 +2879,24 @@ window.__useLegacyTabs = false;
   // Initialize the app when DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 DOMContentLoaded - initializing FlickletApp');
+    
+    // Immediate fallback: ensure navigation is visible
+    console.log('[app.js] DOMContentLoaded - ensuring navigation is visible');
+    
+    // Make search bar visible
+    document.body.classList.add('has-search');
+    
+    // Ensure home tab is active by default
+    document.body.classList.add('tab-home');
+    
+    // Ensure navigation is visible
+    const navigation = document.getElementById('navigation');
+    if (navigation) {
+      navigation.style.display = 'flex';
+      navigation.style.visibility = 'visible';
+      console.log('[app.js] Navigation made visible on DOMContentLoaded');
+    }
+    
     App.init().catch((error) => {
       console.error('❌ FlickletApp initialization failed:', error);
     });

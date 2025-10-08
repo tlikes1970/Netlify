@@ -4,6 +4,37 @@
   
   const PLACEHOLDER_SVG = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDEyMCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMTgwIiBmaWxsPSIjMGYxMTE3Ii8+CjxwYXRoIGQ9Ik01NiA2MEw2NCA2OEw3MiA2MEw4MCA2OEw4OCA2MEw5NiA2OEwxMDQgNjBMMTEyIDY4VjEwMEw5NiAxMTJMODAgMTAwTDY0IDExMkw0OCAxMDBWNjZaIiBmaWxsPSIjMjQyYTMzIi8+Cjx0ZXh0IHg9IjYwIiB5PSIxNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI2E5YjNjMSI+Tm8gUG9zdGVyPC90ZXh0Pgo8L3N2Zz4K';
 
+  // Safeguard: Prevent inline width mutations on Home cards
+  function isHomeCard(element) {
+    return element && element.closest && element.closest('#homeSection');
+  }
+  
+  function safeSetStyle(element, property, value) {
+    if (!element || !element.style) return;
+    
+    // Block width-related properties on Home cards
+    if (isHomeCard(element) && ['width', 'min-width', 'max-width'].includes(property)) {
+      console.warn(`[card-v2] Blocked inline ${property} on Home card - use CSS instead`);
+      return;
+    }
+    
+    element.style.setProperty(property, value);
+  }
+  
+  // Override style.setProperty for Home cards
+  function protectHomeCardSizing(cardElement) {
+    if (!cardElement || !isHomeCard(cardElement)) return;
+    
+    const originalSetProperty = cardElement.style.setProperty;
+    cardElement.style.setProperty = function(property, value, priority) {
+      if (['width', 'min-width', 'max-width'].includes(property)) {
+        console.warn(`[card-v2] Blocked inline ${property} on Home card - use CSS instead`);
+        return;
+      }
+      return originalSetProperty.call(this, property, value, priority);
+    };
+  }
+
   // Get context-appropriate actions based on design specs
   function getActionsForListType(listType, context = 'default') {
     // Use the centralized configuration from cards-v2-config.js
@@ -127,30 +158,35 @@
   }
 
   // Format meta information
-  function formatMeta(item) {
+  function formatMeta(props) {
     const parts = [];
     
-    // Add genre
-    if (item.genre) {
-      parts.push(item.genre);
+    // Debug logging
+    console.log('[card-v2] formatMeta called with props:', props);
+    
+    // Add genre (props.genre from toCardProps)
+    if (props.genre && props.genre.trim()) {
+      parts.push(props.genre);
     }
     
-    // Add SxxExx for TV shows
-    if (item.seasonEpisode) {
-      parts.push(item.seasonEpisode);
+    // Add SxxExx for TV shows (props.seasonEpisode from toCardProps)
+    if (props.seasonEpisode && props.seasonEpisode.trim()) {
+      parts.push(props.seasonEpisode);
     }
     
-    // Add runtime for movies
-    if (item.runtime) {
-      parts.push(`Runtime: ${item.runtime}m`);
+    // Add runtime for movies (props.runtime from toCardProps)
+    if (props.runtime && props.runtime.toString().trim()) {
+      parts.push(`Runtime: ${props.runtime}m`);
     }
     
-    // Add next air date for TV shows
-    if (item.nextAirDate) {
-      parts.push(`Next: ${item.nextAirDate}`);
+    // Add next air date for TV shows (props.nextAirDate from toCardProps)
+    if (props.nextAirDate && props.nextAirDate.trim()) {
+      parts.push(`Next: ${props.nextAirDate}`);
     }
     
-    return parts.join(' • ');
+    const result = parts.join(' • ');
+    console.log('[card-v2] formatMeta result:', result);
+    return result;
   }
 
   function renderCardV2(container, props, options = {}) {
@@ -180,6 +216,15 @@
     // Create card element with proper classes
     const card = document.createElement('div');
     card.className = `card v2 ${cardType}`;
+    
+    // Add data attributes for duplicate detection and identification
+    card.dataset.id = props.id;
+    card.dataset.listType = listType;
+    card.dataset.context = context;
+    card.dataset.mediaType = props.mediaType;
+    
+    // Apply Home card sizing protection
+    protectHomeCardSizing(card);
     
     // Debug logging
     console.log(`[card-v2] Card type selected: ${cardType}, className: ${card.className}`);
@@ -525,6 +570,38 @@
     };
     return renderCardV2(container, props);
   }
+
+  // Home preview card renderer with actions
+  window.renderHomePreviewCardV2 = function renderHomePreviewCardV2(props, opts = {}) {
+    const { withActions = true, variant = 'preview', context = 'home', listType = 'watching' } = opts;
+    const posterUrl = props.poster || PLACEHOLDER_SVG;
+    const card = document.createElement('div');
+    // v2-home-cw for currently watching; for Up Next, caller can swap to v2-home-nextup
+    card.className = 'card v2 v2-home-cw preview-card' + (withActions ? ' with-actions' : '');
+    card.dataset.id = props.id;
+    card.dataset.listType = listType;
+    card.dataset.context = context;
+    card.dataset.mediaType = props.mediaType;
+
+    card.innerHTML = `
+      <div class="poster-wrap">
+        <img src="${posterUrl}" alt="${props.title}" loading="lazy" referrerpolicy="no-referrer">
+      </div>
+      <div class="card-content">
+        <h3 class="title">${props.title}</h3>
+        ${props.genre ? `<div class="meta">${props.genre}</div>` : ''}
+        ${props.nextAirDate ? `<div class="next-air">Up next: ${props.nextAirDate}</div>` : ''}
+        ${withActions ? `
+        <div class="actions">
+          <button data-action="wishlist" data-id="${props.id}">Want to Watch</button>
+          <button data-action="watched"  data-id="${props.id}">Watched</button>
+          <button data-action="not-int"  data-id="${props.id}">Not Interested</button>
+          <button data-action="progress" data-id="${props.id}">Set Episode Progress</button>
+        </div>` : ''}
+      </div>
+    `;
+    return card;
+  };
 
   // Expose globally
   window.renderCardV2 = renderCardV2;
