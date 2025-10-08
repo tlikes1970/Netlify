@@ -75,9 +75,33 @@ async function loadDynamicContent(section, sectionIndex) {
       tvData: tvData ? `Found ${tvData.results?.length || 0} TV shows` : 'undefined'
     });
 
+    // Debug: Log the actual response structure
+    console.log(`🎯 Raw TMDB responses for ${section.title}:`, {
+      moviesData: moviesData,
+      tvData: tvData
+    });
+
+    // Extract results from wrapped response format
+    const extractResults = (data) => {
+      if (data && data.ok && data.data && data.data.results) {
+        return data.data.results;
+      } else if (data && data.results) {
+        return data.results;
+      }
+      return [];
+    };
+
+    const movieResults = extractResults(moviesData);
+    const tvResults = extractResults(tvData);
+
+    console.log(`🎯 Extracted results for ${section.title}:`, {
+      movieResults: movieResults.length,
+      tvResults: tvResults.length
+    });
+
     // Combine and format results - check for valid data first
     const allItems = [
-      ...(moviesData?.results || []).map((item) => ({
+      ...movieResults.map((item) => ({
         ...item,
         media_type: 'movie',
         mediaType: 'movie',
@@ -85,7 +109,7 @@ async function loadDynamicContent(section, sectionIndex) {
         year: new Date(item.release_date).getFullYear(),
         posterPath: item.poster_path,
       })),
-      ...(tvData?.results || []).map((item) => ({
+      ...tvResults.map((item) => ({
         ...item,
         media_type: 'tv',
         mediaType: 'tv',
@@ -328,6 +352,12 @@ document.addEventListener('curated:genres:updated', async () => {
   console.log('🎯 Genre preferences updated, refreshing curated sections');
   await initializeCurated();
 });
+
+// Export refresh function for manual triggering
+window.refreshCuratedRows = async () => {
+  console.log('🎯 Manual curated rows refresh triggered');
+  await initializeCurated();
+};
 
 // Initialize curated sections when DOM is ready
 if (document.readyState === 'loading') {
