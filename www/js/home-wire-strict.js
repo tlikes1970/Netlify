@@ -44,16 +44,8 @@
     container.innerHTML = '';
     const list = (limit ? items.slice(0, limit) : items).filter(Boolean);
     
-    // Filter items to only include those with poster data
-    const itemsWithPosters = list.filter(item => {
-      const hasPoster = item.posterUrl || item.poster_src || item.poster_path;
-      if (!hasPoster) {
-        console.warn('[home-wire] Skipping item without poster:', item.title || item.name || item.id);
-      }
-      return hasPoster;
-    });
-    
-    if (!itemsWithPosters.length) {
+    // Don't filter out items without posters - let createPreviewCard handle placeholders
+    if (!list.length) {
       const empty = document.createElement('div');
       empty.className = 'rail-empty';
       empty.textContent = 'Nothing here yet.';
@@ -62,7 +54,7 @@
     }
 
     // Use preview cards for home screen instead of detailed Card component
-    for (const it of itemsWithPosters) {
+    for (const it of list) {
       try {
         const el = await createPreviewCard(it, sectionHint);
         if (el) container.appendChild(el);
