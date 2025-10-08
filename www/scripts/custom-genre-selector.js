@@ -114,11 +114,19 @@
       
       console.log(`🎭 TMDB response for ${mediaType} genres:`, response);
       
-      if (response && response.genres) {
-        genreCache[mediaType] = response.genres;
+      // Handle wrapped response format {ok: true, data: {...}}
+      let genres = null;
+      if (response && response.ok && response.data && response.data.genres) {
+        genres = response.data.genres;
+      } else if (response && response.genres) {
+        genres = response.genres;
+      }
+      
+      if (genres && genres.length > 0) {
+        genreCache[mediaType] = genres;
         genreCache.lastFetch = now;
-        console.log(`🎭 Loaded ${response.genres.length} ${mediaType} genres from TMDB`);
-        return response.genres;
+        console.log(`🎭 Loaded ${genres.length} ${mediaType} genres from TMDB`);
+        return genres;
       } else {
         console.warn(`🎭 Invalid response format for ${mediaType} genres:`, response);
       }
