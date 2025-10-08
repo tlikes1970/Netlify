@@ -394,6 +394,8 @@
     <!-- Curated data seeding -->
     <script src="/scripts/curated-seed.js"></script>
     <script src="/scripts/curated-rows.js"></script>
+    <script src="/scripts/custom-genre-selector.js"></script>
+    <script src="/scripts/curated-genre-settings.js"></script>
     <script src="/scripts/tmdb-seed.js"></script>
     
     <!-- Home wiring system -->
@@ -1864,6 +1866,39 @@
                   <p class="settings-hint" data-i18n="number_of_curated_sections">
                     Number of curated recommendation sections to show on the home page
                   </p>
+                </div>
+
+                <!-- Custom Genre Selection for Curated Rows -->
+                <div class="settings-control-group">
+                  <h4 class="settings-section-title">🎯 Customize Curated Row Genres</h4>
+                  <p class="settings-hint">
+                    Choose the genres for each curated row on your home page. Changes will be applied immediately.
+                  </p>
+                  
+                  <!-- Curated Row 1 -->
+                  <div class="curated-genre-section">
+                    <h5 class="curated-genre-title">Curated Row 1</h5>
+                    <div id="curatedGenre1"></div>
+                  </div>
+                  
+                  <!-- Curated Row 2 -->
+                  <div class="curated-genre-section">
+                    <h5 class="curated-genre-title">Curated Row 2</h5>
+                    <div id="curatedGenre2"></div>
+                  </div>
+                  
+                  <!-- Curated Row 3 -->
+                  <div class="curated-genre-section">
+                    <h5 class="curated-genre-title">Curated Row 3</h5>
+                    <div id="curatedGenre3"></div>
+                  </div>
+                  
+                  <div class="settings-input-group">
+                    <button id="resetCuratedGenres" class="btn btn--secondary">
+                      Reset to Defaults
+                    </button>
+                    <span id="curatedGenresStatus" class="settings-status">Auto-saves</span>
+                  </div>
                 </div>
 
                 <div class="settings-control-group">

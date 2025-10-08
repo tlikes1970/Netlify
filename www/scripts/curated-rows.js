@@ -4,44 +4,71 @@
 */
 
 /**
- * Load dynamic content for a curated section based on genre
+ * Load dynamic content for a curated section based on user's genre preferences
  */
 async function loadDynamicContent(section, sectionIndex) {
   try {
     console.log(`🎯 Loading dynamic content for: ${section.title}`);
 
-    // Map section titles to TMDB genre IDs
-    const genreMap = {
-      'Drama & Crime': { movie: 18, tv: 18 }, // Drama
-      'Comedy & Sitcoms': { movie: 35, tv: 35 }, // Comedy
-      'Sci-Fi & Fantasy': { movie: 878, tv: 10765 }, // Sci-Fi & Fantasy
-    };
+    // Get user's genre preferences
+    const preferences = window.CuratedGenreSettings?.getCurrentGenrePreferences() || [];
+    const userPreference = preferences[sectionIndex];
+    
+    if (!userPreference || !userPreference.mainGenre) {
+      console.warn(`🎯 No user preference found for section ${sectionIndex}, using fallback`);
+      return loadFallbackContent(section);
+    }
 
-    const genre = genreMap[section.title];
-    if (!genre) {
-      console.warn(`🎯 No genre mapping found for: ${section.title}`);
-      return [];
+    console.log(`🎯 Using user preference for section ${sectionIndex}:`, userPreference);
+
+    // Determine which genres to use based on media type
+    let movieGenreId = userPreference.mainGenre;
+    let tvGenreId = userPreference.mainGenre;
+    
+    // Use sub-genre if specified
+    if (userPreference.subGenre) {
+      if (userPreference.mediaType === 'movie') {
+        movieGenreId = userPreference.subGenre;
+      } else if (userPreference.mediaType === 'tv') {
+        tvGenreId = userPreference.subGenre;
+      } else {
+        // For 'both', use sub-genre for both
+        movieGenreId = userPreference.subGenre;
+        tvGenreId = userPreference.subGenre;
+      }
     }
 
     // Get current language
     const currentLang = window.appData?.settings?.lang || 'en';
     const tmdbLang = currentLang === 'es' ? 'es-ES' : 'en-US';
 
-    // Use proxy for API calls
-    const [moviesData, tvData] = await Promise.all([
-      window.tmdbGet('discover/movie', {
-        with_genres: genre.movie,
-        sort_by: 'popularity.desc',
-        page: 1,
-        language: tmdbLang,
-      }),
-      window.tmdbGet('discover/tv', {
-        with_genres: genre.tv,
-        sort_by: 'popularity.desc',
-        page: 1,
-        language: tmdbLang,
-      }),
-    ]);
+    // Fetch content based on user preferences
+    const promises = [];
+    
+    if (userPreference.mediaType === 'movie' || userPreference.mediaType === 'both') {
+      promises.push(
+        window.tmdbGet('discover/movie', {
+          with_genres: movieGenreId,
+          sort_by: 'popularity.desc',
+          page: 1,
+          language: tmdbLang,
+        })
+      );
+    }
+    
+    if (userPreference.mediaType === 'tv' || userPreference.mediaType === 'both') {
+      promises.push(
+        window.tmdbGet('discover/tv', {
+          with_genres: tvGenreId,
+          sort_by: 'popularity.desc',
+          page: 1,
+          language: tmdbLang,
+        })
+      );
+    }
+
+    const results = await Promise.all(promises);
+    const [moviesData, tvData] = results;
 
     console.log(`🎯 TMDB API responses for ${section.title}:`, {
       moviesData: moviesData ? `Found ${moviesData.results?.length || 0} movies` : 'undefined',
@@ -76,27 +103,42 @@ async function loadDynamicContent(section, sectionIndex) {
     // If no dynamic content was loaded, fall back to static data
     if (limitedItems.length === 0) {
       console.log(`🎯 No dynamic content found, falling back to static data for ${section.title}`);
-      const staticSection = window.CURATED_SECTIONS?.find(s => s.title === section.title);
-      if (staticSection && staticSection.items) {
-        console.log(`🎯 Using static data: ${staticSection.items.length} items for ${section.title}`);
-        return staticSection.items;
-      }
+      return loadFallbackContent(section);
     }
     
     return limitedItems;
   } catch (error) {
     console.error(`🎯 Error loading dynamic content for ${section.title}:`, error);
     console.log(`🎯 Falling back to static data for ${section.title}`);
-    
-    // Fallback to static data from window.CURATED_SECTIONS
-    const staticSection = window.CURATED_SECTIONS?.find(s => s.title === section.title);
-    if (staticSection && staticSection.items) {
-      console.log(`🎯 Using static data: ${staticSection.items.length} items for ${section.title}`);
-      return staticSection.items;
-    }
-    
+    return loadFallbackContent(section);
+  }
+}
+
+/**
+ * Load fallback content when user preferences fail
+ */
+function loadFallbackContent(section) {
+  // Map section titles to TMDB genre IDs (fallback)
+  const genreMap = {
+    'Drama & Crime': { movie: 18, tv: 18 }, // Drama
+    'Comedy & Sitcoms': { movie: 35, tv: 35 }, // Comedy
+    'Sci-Fi & Fantasy': { movie: 878, tv: 10765 }, // Sci-Fi & Fantasy
+  };
+
+  const genre = genreMap[section.title];
+  if (!genre) {
+    console.warn(`🎯 No fallback genre mapping found for: ${section.title}`);
     return [];
   }
+
+  // Return static data from window.CURATED_SECTIONS
+  const staticSection = window.CURATED_SECTIONS?.find(s => s.title === section.title);
+  if (staticSection && staticSection.items) {
+    console.log(`🎯 Using static data: ${staticSection.items.length} items for ${section.title}`);
+    return staticSection.items;
+  }
+  
+  return [];
 }
 
 // Define initializeCurated function first
@@ -278,6 +320,12 @@ async function initCuratedSections() {
 // Listen for curated:rerender event to update when settings change
 document.addEventListener('curated:rerender', async () => {
   console.log('🎯 Curated rerender event received, updating sections');
+  await initializeCurated();
+});
+
+// Listen for genre preferences updates
+document.addEventListener('curated:genres:updated', async () => {
+  console.log('🎯 Genre preferences updated, refreshing curated sections');
   await initializeCurated();
 });
 

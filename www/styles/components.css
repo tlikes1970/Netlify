@@ -6352,6 +6352,97 @@ body:not(.home) .curated-card + .curated-card {
   margin-right: 10px;
 }
 
+/* === Custom Genre Selector === */
+.genre-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+.genre-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.genre-label {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text);
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.genre-select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  min-height: 36px;
+  transition: all 0.2s ease;
+}
+
+.genre-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(156, 39, 176, 0.1);
+}
+
+.genre-select:hover {
+  border-color: var(--primary);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .genre-selector-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+  
+  .genre-label {
+    min-width: auto;
+    font-size: 13px;
+  }
+  
+  .genre-select {
+    min-height: 40px;
+  }
+}
+
+/* === Curated Genre Settings === */
+.curated-genre-section {
+  margin: 16px 0;
+  padding: 12px;
+  background: var(--bg-secondary, rgba(0, 0, 0, 0.02));
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.curated-genre-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 8px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 8px 0;
+}
+
 .curated-row .card:last-child {
   margin-right: 0;
 }
