@@ -111,12 +111,19 @@ h4 {
 /* Card containers: keep inside the rails */
 .list-container,
 .home-section,
-.preview-row-scroll,
-#curatedSections {
+.preview-row-scroll {
   display: grid;
   grid-template-columns: 1fr; /* one column by default */
   gap: 12px;
   overflow: hidden; /* stop child overflow */
+  content-visibility: auto; /* cheaper rendering for long lists */
+  contain-intrinsic-size: 1px 320px;
+}
+
+/* Curated sections need different layout - allow horizontal scrolling */
+#curatedSections {
+  display: block; /* Allow natural flow for curated rows */
+  overflow: visible; /* Allow child overflow for horizontal scrolling */
   content-visibility: auto; /* cheaper rendering for long lists */
   contain-intrinsic-size: 1px 320px;
 }
