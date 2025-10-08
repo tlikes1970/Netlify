@@ -44,7 +44,12 @@ export function initTabs() {
     .filter(id => document.getElementById(id));
 
   const panels = new Map(panelIds.map(id => [id, document.getElementById(id)]));
-  const allTabs = [...bar.querySelectorAll('[role="tab"]:not([aria-disabled="true"])')];
+  // Include all tabs, even if they're hidden (for auth-required tabs)
+  const allTabs = [...bar.querySelectorAll('[role="tab"]')].filter(t => {
+    const isDisabled = t.getAttribute('aria-disabled') === 'true';
+    const hasPanel = panels.has(t.getAttribute('aria-controls'));
+    return !isDisabled && hasPanel;
+  });
   console.log('[nav-init] All tabs before filtering:', allTabs.map(t => ({
     id: t.id,
     ariaControls: t.getAttribute('aria-controls'),
@@ -81,7 +86,24 @@ export function initTabs() {
   // Function to re-run tab discovery after authentication
   function refreshTabDiscovery() {
     console.log('[nav-init] Refreshing tab discovery after authentication...');
-    const newTabs = [...bar.querySelectorAll('[role="tab"]:not([aria-disabled="true"])')].filter(t => panels.has(t.getAttribute('aria-controls')));
+    
+    // Check settings tab specifically
+    const settingsTab = document.getElementById('settingsTab');
+    console.log('[nav-init] Settings tab during refresh:', {
+      exists: !!settingsTab,
+      role: settingsTab?.getAttribute('role'),
+      ariaDisabled: settingsTab?.getAttribute('aria-disabled'),
+      ariaControls: settingsTab?.getAttribute('aria-controls'),
+      display: settingsTab?.style.display,
+      computedDisplay: settingsTab ? getComputedStyle(settingsTab).display : 'N/A',
+      offsetParent: settingsTab?.offsetParent
+    });
+    
+    const newTabs = [...bar.querySelectorAll('[role="tab"]')].filter(t => {
+      const isDisabled = t.getAttribute('aria-disabled') === 'true';
+      const hasPanel = panels.has(t.getAttribute('aria-controls'));
+      return !isDisabled && hasPanel;
+    });
     console.log('[nav-init] New tabs found after auth:', newTabs.map(t => ({
       id: t.id,
       ariaControls: t.getAttribute('aria-controls'),
