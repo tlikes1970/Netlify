@@ -1,0 +1,13 @@
+/* Tabs Layout System - Token-driven for tab/search views */
+
+.tab-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.tab-content {
+  padding: var(--space-lg);
+  border-radius: var(--border-radius);
+  background: var(--color-background);
+}

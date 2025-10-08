@@ -1,0 +1,23 @@
+/* Design Tokens - CSS Custom Properties */
+/* This file establishes design system variables */
+
+:root {
+  /* Color Tokens */
+  --color-primary: #ff4c8d;
+  --color-secondary: #1f2937;
+  --color-background: #ffffff;
+  --color-text: #1f2937;
+  --color-muted: #374151;
+  
+  /* Spacing Tokens */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  
+  /* Layout Tokens */
+  --container-padding: 32px;
+  --border-radius: 8px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
