@@ -102,15 +102,25 @@
       return genreCache[mediaType];
     }
 
+    // Check if tmdbGet is available
+    if (!window.tmdbGet) {
+      console.warn(`🎭 tmdbGet not available, using fallback ${mediaType} genres`);
+      return fallbackGenres[mediaType] || [];
+    }
+
     try {
       console.log(`🎭 Fetching ${mediaType} genres from TMDB...`);
       const response = await window.tmdbGet(`genre/${mediaType}/list`);
+      
+      console.log(`🎭 TMDB response for ${mediaType} genres:`, response);
       
       if (response && response.genres) {
         genreCache[mediaType] = response.genres;
         genreCache.lastFetch = now;
         console.log(`🎭 Loaded ${response.genres.length} ${mediaType} genres from TMDB`);
         return response.genres;
+      } else {
+        console.warn(`🎭 Invalid response format for ${mediaType} genres:`, response);
       }
     } catch (error) {
       console.warn(`🎭 Failed to load ${mediaType} genres from TMDB:`, error);
@@ -175,23 +185,32 @@
     async function populateMainGenres() {
       try {
         const mediaType = mediaTypeSelect.value || 'movie';
+        console.log(`🎭 Populating main genres for media type: ${mediaType}`);
+        
         const genres = await loadGenres(mediaType);
+        console.log(`🎭 Received ${genres.length} genres for ${mediaType}`);
         
         mainGenreSelect.innerHTML = '<option value="">Select main genre</option>';
         
-        genres.forEach(genre => {
-          const option = document.createElement('option');
-          option.value = genre.id;
-          option.textContent = genre.name;
-          mainGenreSelect.appendChild(option);
-        });
+        if (genres && genres.length > 0) {
+          genres.forEach(genre => {
+            const option = document.createElement('option');
+            option.value = genre.id;
+            option.textContent = genre.name;
+            mainGenreSelect.appendChild(option);
+          });
+          console.log(`🎭 Populated ${genres.length} main genres for ${mediaType}`);
+        } else {
+          console.warn(`🎭 No genres received for ${mediaType}`);
+          mainGenreSelect.innerHTML = '<option value="">No genres available</option>';
+        }
 
         // Set initial value if provided
         if (initialValues.mainGenre) {
           mainGenreSelect.value = initialValues.mainGenre;
+          console.log(`🎭 Set initial main genre: ${initialValues.mainGenre}`);
         }
 
-        console.log(`🎭 Populated ${genres.length} main genres for ${mediaType}`);
       } catch (error) {
         console.error('🎭 Error populating main genres:', error);
         mainGenreSelect.innerHTML = '<option value="">Error loading genres</option>';
@@ -261,8 +280,19 @@
       }
     });
 
-    // Initialize
-    populateMainGenres();
+    // Initialize with fallback
+    populateMainGenres().catch(error => {
+      console.error('🎭 Failed to populate genres, using fallback:', error);
+      // Use fallback genres immediately
+      const fallbackGenresList = fallbackGenres[mediaTypeSelect.value || 'movie'] || [];
+      mainGenreSelect.innerHTML = '<option value="">Select main genre</option>';
+      fallbackGenresList.forEach(genre => {
+        const option = document.createElement('option');
+        option.value = genre.id;
+        option.textContent = genre.name;
+        mainGenreSelect.appendChild(option);
+      });
+    });
     
     // Set initial values
     if (initialValues.mediaType) {

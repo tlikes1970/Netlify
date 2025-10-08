@@ -309,16 +309,22 @@
     // Wait for CustomGenreSelector to be available
     const checkForSelector = () => {
       if (window.CustomGenreSelector) {
-        initializeGenreSelectors();
+        console.log('🎯 CustomGenreSelector found, initializing genre selectors...');
         
-        // Set up reset button
-        const resetBtn = document.getElementById('resetCuratedGenres');
-        if (resetBtn) {
-          resetBtn.addEventListener('click', resetToDefaults);
-        }
-        
-        console.log('🎯 Curated genre settings initialized');
+        // Wait a bit more for TMDB to be ready
+        setTimeout(() => {
+          initializeGenreSelectors();
+          
+          // Set up reset button
+          const resetBtn = document.getElementById('resetCuratedGenres');
+          if (resetBtn) {
+            resetBtn.addEventListener('click', resetToDefaults);
+          }
+          
+          console.log('🎯 Curated genre settings initialized');
+        }, 500);
       } else {
+        console.log('🎯 CustomGenreSelector not ready, retrying...');
         setTimeout(checkForSelector, 100);
       }
     };
