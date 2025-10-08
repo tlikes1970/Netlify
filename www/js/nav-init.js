@@ -66,8 +66,19 @@ export function initTabs() {
     ariaDisabled: settingsTab?.getAttribute('aria-disabled'),
     ariaControls: settingsTab?.getAttribute('aria-controls'),
     display: settingsTab?.style.display,
-    computedDisplay: settingsTab ? getComputedStyle(settingsTab).display : 'N/A'
+    computedDisplay: settingsTab ? getComputedStyle(settingsTab).display : 'N/A',
+    parentElement: settingsTab?.parentElement?.tagName,
+    isConnected: settingsTab?.isConnected
   });
+  
+  // Debug: Check all tabs with role="tab" in the navigation bar
+  const allTabsInBar = [...bar.querySelectorAll('[role="tab"]')];
+  console.log('[nav-init] All tabs in bar:', allTabsInBar.map(t => ({
+    id: t.id,
+    role: t.getAttribute('role'),
+    ariaDisabled: t.getAttribute('aria-disabled'),
+    ariaControls: t.getAttribute('aria-controls')
+  })));
   
   const tabs = allTabs.filter(t => panels.has(t.getAttribute('aria-controls')));
   
@@ -96,8 +107,19 @@ export function initTabs() {
       ariaControls: settingsTab?.getAttribute('aria-controls'),
       display: settingsTab?.style.display,
       computedDisplay: settingsTab ? getComputedStyle(settingsTab).display : 'N/A',
-      offsetParent: settingsTab?.offsetParent
+      offsetParent: settingsTab?.offsetParent,
+      parentElement: settingsTab?.parentElement?.tagName,
+      isConnected: settingsTab?.isConnected
     });
+    
+    // Debug: Check all tabs in bar during refresh
+    const allTabsInBarRefresh = [...bar.querySelectorAll('[role="tab"]')];
+    console.log('[nav-init] All tabs in bar during refresh:', allTabsInBarRefresh.map(t => ({
+      id: t.id,
+      role: t.getAttribute('role'),
+      ariaDisabled: t.getAttribute('aria-disabled'),
+      ariaControls: t.getAttribute('aria-controls')
+    })));
     
     const newTabs = [...bar.querySelectorAll('[role="tab"]')].filter(t => {
       const isDisabled = t.getAttribute('aria-disabled') === 'true';
