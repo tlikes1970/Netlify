@@ -65,7 +65,7 @@ main#panels,
     #group-3-for-you,
     #group-4-theaters,
     #group-5-feedback)
-  :is(.preview-row-container, .preview-row-scroll, .row-inner, #currentlyWatchingScroll, .curated-row) {
+  :is(.preview-row-container, .preview-row-scroll, .row-inner, #currentlyWatchingScroll) {
   
   display: grid;
   grid-auto-flow: column;                   /* lay items left→right (RTL flips logically) */
@@ -104,7 +104,7 @@ main#panels,
       #group-3-for-you,
       #group-4-theaters,
       #group-5-feedback)
-    :is(.preview-row-container, .preview-row-scroll, .row-inner, #currentlyWatchingScroll, .curated-row) {
+    :is(.preview-row-container, .preview-row-scroll, .row-inner, #currentlyWatchingScroll) {
     grid-auto-columns: var(--rail-col-w-sm);
   }
 }
