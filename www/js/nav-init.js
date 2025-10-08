@@ -146,6 +146,8 @@ export function initTabs() {
     }
 
     console.log('[nav-init] Activating tab:', id);
+    console.log('[nav-init] Available panels:', Array.from(panels.keys()));
+    console.log('[nav-init] Available tabs:', tabs.map(t => t.getAttribute('aria-controls')));
     
     // Performance monitoring
     const startTime = performance.now();
@@ -156,6 +158,8 @@ export function initTabs() {
         p.hidden = (k !== id);
         // Remove any inline style overrides
         p.style.display = '';
+      } else {
+        console.warn('[nav-init] Panel not found for ID:', k);
       }
     });
     
