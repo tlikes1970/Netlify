@@ -1732,10 +1732,15 @@ window.__useLegacyTabs = false;
     switchToTab(tab) {
       console.log(`[app.js] LEGACY SHIM: Delegating tab switch to nav engine: ${tab}`);
       
-      // Clear search when switching tabs (except when switching to home)
-      if (tab !== 'home' && window.SearchModule && typeof window.SearchModule.clearSearch === 'function') {
-        console.log('[app.js] Clearing search due to tab switch');
-        window.SearchModule.clearSearch();
+      // Clear search results UI immediately when switching tabs (except home)
+      if (tab !== 'home') {
+        const searchResults = document.getElementById('searchResults');
+        if (searchResults && searchResults.classList.contains('active')) {
+          console.log('[app.js] Hiding search results due to tab switch');
+          searchResults.hidden = true;
+          searchResults.classList.remove('active');
+          searchResults.innerHTML = '';
+        }
       }
       
       // Feature flag check

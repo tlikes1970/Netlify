@@ -1,0 +1,48 @@
+/* Design Tokens - Single Source of Truth for Layout */
+/* Load this BEFORE other layout files to establish variables */
+
+:root {
+  /* Frame Gutters */
+  --home-frame-gutter: 32px;
+  
+  /* Home Cards */
+  --home-card-w: 260px;
+  --home-card-w-sm: 200px;
+  --home-card-gap: 16px;
+  --home-row-gap: 24px;
+  
+  /* Tabs Cards */
+  --tab-card-w: 180px;
+  --tab-card-gap: 12px;
+  
+  /* Actions */
+  --card-action-minw: 150px;
+  --card-action-minh: 36px;
+  
+  /* Breakpoints (canonical) */
+  --bp-xs: 480px;
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+}
+
+/* RTL-aware logical property fallbacks */
+@supports not (padding-inline: 1px) {
+  :root {
+    --padding-inline-start: padding-left;
+    --padding-inline-end: padding-right;
+    --margin-inline-start: margin-left;
+    --margin-inline-end: margin-right;
+  }
+}
+
+/* Container query fallback detection */
+@supports not (container-type: inline-size) {
+  :root {
+    --container-query-fallback: true;
+  }
+}
+
+
+

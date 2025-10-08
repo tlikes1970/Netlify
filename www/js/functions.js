@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   console.log('🔧 functions.js IIFE starting execution...');
+  console.log('🔧 DEBUG: functions.js is executing at', new Date().toISOString());
   try {
     // Safe polyfill for guard function
     window.guard ||= (cond, fn) => {
@@ -206,7 +207,19 @@
           if (!window.appData) {
             window.appData = { tv: {}, movies: {} };
           }
-          const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+          // Use media_type from item if available, otherwise determine from TMDB data
+          let mediaType = item.media_type;
+          if (!mediaType) {
+            // Check if it's a TV show by looking for TV-specific fields
+            if (item.first_air_date && item.number_of_episodes) {
+              mediaType = 'tv';
+            } else if (item.release_date && !item.first_air_date) {
+              mediaType = 'movie';
+            } else {
+              // Fallback: assume movie if uncertain
+              mediaType = 'movie';
+            }
+          }
           const category = mediaType === 'tv' ? 'tv' : 'movies';
           
           // Ensure the item has the correct media_type field
@@ -506,6 +519,9 @@
       loadSettingsContent();
     }
   };
+  
+  // Debug: Log that functions.js is loaded
+  console.log('✅ functions.js loaded - updateTabContent available:', typeof window.updateTabContent);
   window.updateUI = function updateUI() {
     // Emit cards:changed event for centralized count updates
     document.dispatchEvent(
@@ -534,9 +550,14 @@
       const log = (...a) => console.log(NS, ...a);
       const warn = (...a) => console.warn(NS, ...a);
       log('🔄 [CENTRALIZED] updateTabCounts called from watchlists:updated event');
+      
+      // Force refresh the adapter data before counting
+      const uid = window.firebaseAuth?.currentUser?.uid || null;
+      if (window.WatchlistsAdapterV2 && uid) {
+        await window.WatchlistsAdapterV2.load(uid);
+      }
       let counts;
       // Use WatchlistsAdapterV2 as canonical data source
-      const uid = window.firebaseAuth?.currentUser?.uid || null;
       const watchlists = await window.WatchlistsAdapterV2.load(uid);
       counts = {
         watching: watchlists.watchingIds.length,
@@ -1226,12 +1247,28 @@
       const log = (...a) => console.log(NS, ...a);
       const warn = (...a) => console.warn(NS, ...a);
       log(`🔄 loadListContent called for ${listType}`);
-      // Prevent duplicate renders
+      
+      // Check if content is actually visible before skipping
+      const container = document.getElementById(`${listType}List`);
+      const isContentVisible = container && container.children.length > 0;
+      
+      log(`[DEBUG] ${listType} container:`, container ? container.id : 'NOT FOUND');
+      log(`[DEBUG] ${listType} children count:`, container ? container.children.length : 'N/A');
+      log(`[DEBUG] ${listType} isContentVisible:`, isContentVisible);
+      
+      // Prevent duplicate renders only if content is already visible
       const renderKey = `render_${listType}`;
-      if (window[renderKey]) {
-        log(`Skipping duplicate render for ${listType}`);
+      if (window[renderKey] && isContentVisible) {
+        log(`Skipping duplicate render for ${listType} - content already visible`);
         return;
       }
+      
+      // Clear the render flag if content is not visible
+      if (window[renderKey] && !isContentVisible) {
+        log(`Clearing render flag for ${listType} - content not visible`);
+        window[renderKey] = false;
+      }
+      
       window[renderKey] = true;
       let items, counts;
       // Use WatchlistsAdapterV2 as canonical data source
@@ -1246,6 +1283,8 @@
       // Get the appropriate ID list based on listType
       const idList = ids[listType] || [];
       log(`[WL v28.33] Loaded ${idList.length} IDs for ${listType} from canonical adapter`);
+      log(`[DEBUG] All IDs:`, ids);
+      log(`[DEBUG] ${listType} IDs:`, idList);
       // Set counts before rendering (counts first, then render, then event bridge)
       counts = {
         watching: ids.watching.length,
@@ -1312,15 +1351,16 @@
         });
         log(`[WL v28.33] Missing items for ${listType}:`, missingIds);
       }
-      const container =
-        document.getElementById(`${listType}List`) ||
-        document.querySelector(`[data-section="${listType}"] .section-content`) ||
-        (() => {
-          const d = document.createElement('div');
-          d.className = 'list-container';
-          (document.querySelector('main,#app,body') || document.body).appendChild(d);
-          return d;
-        })();
+      // Use the container we already found, or find/create one
+      if (!container) {
+        container = document.querySelector(`[data-section="${listType}"] .section-content`) ||
+          (() => {
+            const d = document.createElement('div');
+            d.className = 'list-container';
+            (document.querySelector('main,#app,body') || document.body).appendChild(d);
+            return d;
+          })();
+      }
       log(
         `Container for ${listType}:`,
         container.id || container.className,
@@ -3046,7 +3086,19 @@
           if (!window.appData) {
             window.appData = { tv: {}, movies: {} };
           }
-          const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+          // Use media_type from item if available, otherwise determine from TMDB data
+          let mediaType = item.media_type;
+          if (!mediaType) {
+            // Check if it's a TV show by looking for TV-specific fields
+            if (item.first_air_date && item.number_of_episodes) {
+              mediaType = 'tv';
+            } else if (item.release_date && !item.first_air_date) {
+              mediaType = 'movie';
+            } else {
+              // Fallback: assume movie if uncertain
+              mediaType = 'movie';
+            }
+          }
           const category = mediaType === 'tv' ? 'tv' : 'movies';
           if (!window.appData[category]) {
             window.appData[category] = {};
@@ -3306,9 +3358,13 @@
         try {
           const mediaType = findItemMediaType(itemId);
           if (!mediaType) return false;
-          // Update WatchlistsAdapter cache
-          if (window.WatchlistsAdapter && window.WatchlistsAdapter.removeItem(itemId, listKey)) {
+          // Update WatchlistsAdapterV2 cache
+          if (window.WatchlistsAdapterV2 && window.WatchlistsAdapterV2.removeItem(itemId, listKey)) {
             console.log('[WL v28.23] Updated adapter cache for removal:', itemId, 'from', listKey);
+          }
+          // Fallback to old WatchlistsAdapter
+          else if (window.WatchlistsAdapter && window.WatchlistsAdapter.removeItem(itemId, listKey)) {
+            console.log('[WL v28.23] Updated old adapter cache for removal:', itemId, 'from', listKey);
           }
           const srcArr = window.appData[mediaType][listKey];
           const idx = srcArr.findIndex((i) => i.id === itemId);
@@ -3336,7 +3392,25 @@
         }
       }
       function findItemMediaType(id) {
-        // Use adapter as canonical source
+        // Use WatchlistsAdapterV2 as canonical source
+        if (window.WatchlistsAdapterV2 && window.WatchlistsAdapterV2._cache) {
+          const cache = window.WatchlistsAdapterV2._cache;
+          const idStr = String(id);
+          // Check if item exists in any list
+          if (
+            cache.watchingIds?.includes(idStr) ||
+            cache.wishlistIds?.includes(idStr) ||
+            cache.watchedIds?.includes(idStr)
+          ) {
+            // Determine media type by checking which list contains the item
+            // and looking up the actual item data
+            const item = window.WatchlistsAdapterV2.getItemData(id);
+            if (item) {
+              return item.media_type === 'tv' ? 'tv' : 'movies';
+            }
+          }
+        }
+        // Fallback to old WatchlistsAdapter
         if (window.WatchlistsAdapter && window.WatchlistsAdapter._cache) {
           const cache = window.WatchlistsAdapter._cache;
           const idStr = String(id);
@@ -3373,7 +3447,19 @@
         return null;
       }
       function findItemList(id, mediaType) {
-        // Use adapter as canonical source
+        // Use WatchlistsAdapterV2 as canonical source
+        if (window.WatchlistsAdapterV2 && window.WatchlistsAdapterV2._cache) {
+          const cache = window.WatchlistsAdapterV2._cache;
+          const idStr = String(id);
+          const lists = ['watching', 'wishlist', 'watched'];
+          for (const list of lists) {
+            const listKey = list + 'Ids';
+            if (cache[listKey]?.includes(idStr)) {
+              return list;
+            }
+          }
+        }
+        // Fallback to old WatchlistsAdapter
         if (window.WatchlistsAdapter && window.WatchlistsAdapter._cache) {
           const cache = window.WatchlistsAdapter._cache;
           const idStr = String(id);

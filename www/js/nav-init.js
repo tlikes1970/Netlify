@@ -184,6 +184,28 @@ export function initTabs() {
       document.body.classList.add('has-search');
     } else {
       document.body.classList.remove('has-search');
+      
+      // Clear search results when switching to non-search tabs
+      const searchResults = document.getElementById('searchResults');
+      if (searchResults && searchResults.classList.contains('active')) {
+        console.log('[nav-init] Clearing search results for non-search tab');
+        searchResults.hidden = true;
+        searchResults.classList.remove('active');
+        searchResults.innerHTML = '';
+        
+        // Clear search input
+        const searchInput = document.getElementById('search');
+        if (searchInput) {
+          searchInput.value = '';
+        }
+        
+        // Clear search state without triggering full clearSearch (which interferes with tab content)
+        if (window.SearchModule) {
+          // Reset search state directly without calling clearSearch
+          window.SearchModule.currentQuery = '';
+          window.SearchModule.isSearching = false;
+        }
+      }
     }
 
     // ACCEPTANCE CHECKS - Run assertions in dev
@@ -201,15 +223,47 @@ export function initTabs() {
         detail: { id, previousId } 
       }));
       
-      // Load content for the new tab
+      // Load content for the new tab with a small delay to ensure search clearing doesn't interfere
       const tabSlug = slugMap[id];
+      console.log('[nav-init] DEBUG: id=', id, 'tabSlug=', tabSlug, 'updateTabContent=', typeof window.updateTabContent);
+      
       if (tabSlug && typeof window.updateTabContent === 'function') {
         console.log('[nav-init] Loading content for tab:', tabSlug);
         // Update FlickletApp.currentTab for compatibility
         if (window.FlickletApp) {
           window.FlickletApp.currentTab = tabSlug;
         }
-        window.updateTabContent(tabSlug);
+        
+        // Small delay to ensure search clearing doesn't interfere with content loading
+        setTimeout(() => {
+          console.log('[nav-init] About to load content for tab:', tabSlug);
+          window.updateTabContent(tabSlug);
+          
+          // Force a UI update after content loading
+          if (window.FlickletApp && typeof window.FlickletApp.updateUI === 'function') {
+            setTimeout(() => {
+              console.log('[nav-init] Forcing UI update after content load');
+              window.FlickletApp.updateUI();
+            }, 100);
+          }
+        }, 50);
+      } else {
+        console.warn('[nav-init] Cannot load content: tabSlug=', tabSlug, 'updateTabContent type=', typeof window.updateTabContent);
+        
+        // Try to wait for the function to be available
+        if (tabSlug) {
+          console.log('[nav-init] Waiting for updateTabContent to be available...');
+          const checkFunction = () => {
+            if (typeof window.updateTabContent === 'function') {
+              console.log('[nav-init] updateTabContent now available, loading content for:', tabSlug);
+              window.updateTabContent(tabSlug);
+            } else {
+              console.log('[nav-init] Still waiting for updateTabContent...');
+              setTimeout(checkFunction, 100);
+            }
+          };
+          setTimeout(checkFunction, 100);
+        }
       }
       
       // Performance logging

@@ -159,12 +159,18 @@
   function clearSearch() {
     log('Clearing search');
 
+    // Prevent infinite loops by checking if already clearing
+    if (isSearching === false && !searchResults.classList.contains('active') && searchInput.value === '') {
+      log('Search already cleared, skipping');
+      return;
+    }
+
     // Clear input
     searchInput.value = '';
     currentQuery = '';
     isSearching = false;
 
-    // Notify FlickletApp of search state change
+    // Notify FlickletApp of search state change (only once)
     if (window.FlickletApp && typeof window.FlickletApp.setSearching === 'function') {
       window.FlickletApp.setSearching(false);
     }
@@ -174,16 +180,28 @@
       searchResults.hidden = true;
       searchResults.classList.remove('active');
       searchResults.innerHTML = '';
+      
+      // Reset positioning styles
+      searchResults.style.position = '';
+      searchResults.style.top = '';
+      searchResults.style.left = '';
+      searchResults.style.right = '';
+      searchResults.style.zIndex = '';
+      searchResults.style.backgroundColor = '';
+      searchResults.style.border = '';
+      searchResults.style.borderRadius = '';
+      searchResults.style.boxShadow = '';
     }
 
     // Show other tabs when search is cleared
     showOtherTabs();
 
-    // Return to previous tab if available
+    // Return to previous tab if available (but don't trigger another clear)
     if (previousTab && window.FlickletApp && typeof window.FlickletApp.switchToTab === 'function') {
       log(`Returning to previous tab: ${previousTab}`);
-      window.FlickletApp.switchToTab(previousTab);
-      previousTab = null;
+      const tabToSwitch = previousTab;
+      previousTab = null; // Clear before switching to prevent loop
+      window.FlickletApp.switchToTab(tabToSwitch);
     }
 
     // Clear timeout
@@ -271,17 +289,29 @@
       return;
     }
 
-    // Sort by date in descending order (most recent first)
+    // Sort by popularity first, then by date for better relevance
     const sortedResults = filteredResults.sort((a, b) => {
-      // Get release/air date for comparison
+      // Primary sort: by popularity (highest first) - this puts popular shows like Friends at the top
+      const popularityA = a.popularity || 0;
+      const popularityB = b.popularity || 0;
+      const popularityComparison = popularityB - popularityA;
+      if (popularityComparison !== 0) {
+        return popularityComparison;
+      }
+      
+      // Secondary sort: by vote average (highest first) - quality indicator
+      const voteA = a.vote_average || 0;
+      const voteB = b.vote_average || 0;
+      const voteComparison = voteB - voteA;
+      if (voteComparison !== 0) {
+        return voteComparison;
+      }
+      
+      // Tertiary sort: by date (newest first) - only if popularity and votes are equal
       const dateA = a.release_date || a.first_air_date || '';
       const dateB = b.release_date || b.first_air_date || '';
-      
-      // Convert to Date objects for comparison
-      const dateObjA = dateA ? new Date(dateA) : new Date(0); // Use epoch for missing dates
+      const dateObjA = dateA ? new Date(dateA) : new Date(0);
       const dateObjB = dateB ? new Date(dateB) : new Date(0);
-      
-      // Sort in descending order (newest first)
       return dateObjB - dateObjA;
     });
 
@@ -290,8 +320,8 @@
       resultsCount.textContent = sortedResults.length;
     }
 
-    // Hide other tabs when showing search results
-    hideOtherTabs();
+    // Hide ALL other content when showing search results
+    hideAllContent();
 
     // Show search results section
     searchResults.hidden = false;
@@ -535,24 +565,59 @@
     }
   }
 
+  // Hide ALL content when search is active - more aggressive hiding
+  function hideAllContent() {
+    // Remember current tab before hiding
+    if (window.FlickletApp && window.FlickletApp.currentTab) {
+      previousTab = window.FlickletApp.currentTab;
+      log(`Remembered previous tab: ${previousTab}`);
+    }
+
+    // Hide ALL main content sections including home
+    const allSections = ['homeSection', 'watchingSection', 'wishlistSection', 'watchedSection', 'discoverSection', 'settingsSection'];
+    allSections.forEach(sectionId => {
+      const section = document.getElementById(sectionId);
+      if (section) {
+        section.hidden = true;
+        section.style.display = 'none';
+        section.style.visibility = 'hidden';
+        log(`Hidden content: ${sectionId}`);
+      }
+    });
+    
+    // Also hide any other content containers
+    const contentContainers = document.querySelectorAll('.content, .main-content, .tab-content, [class*="content"]');
+    contentContainers.forEach(container => {
+      if (container.id !== 'searchResults') {
+        container.style.display = 'none';
+        container.style.visibility = 'hidden';
+        log(`Hidden container: ${container.className || container.tagName}`);
+      }
+    });
+  }
+
   // Show other tabs when search is cleared - clear inline styles and let tab system handle visibility
   function showOtherTabs() {
-    // Clear inline display styles that were set by hideOtherTabs()
-    const TAB_IDS = ['watching', 'wishlist', 'watched', 'discover', 'settings'];
-    TAB_IDS.forEach((tabId) => {
-      const section = document.getElementById(`${tabId}Section`);
+    // Clear inline styles that were set by hideAllContent()
+    const allSections = ['homeSection', 'watchingSection', 'wishlistSection', 'watchedSection', 'discoverSection', 'settingsSection'];
+    allSections.forEach(sectionId => {
+      const section = document.getElementById(sectionId);
       if (section) {
         section.style.display = '';
-        log(`Cleared inline style for tab: ${tabId}Section`);
+        section.style.visibility = '';
+        log(`Cleared inline style for tab: ${sectionId}`);
       }
     });
 
-    // Clear home section hidden attribute
-    const homeSection = document.getElementById('homeSection');
-    if (homeSection) {
-      homeSection.hidden = false;
-      log(`Home section unhidden`);
-    }
+    // Restore content containers
+    const contentContainers = document.querySelectorAll('.content, .main-content, .tab-content, [class*="content"]');
+    contentContainers.forEach(container => {
+      if (container.id !== 'searchResults') {
+        container.style.display = '';
+        container.style.visibility = '';
+        log(`Restored container: ${container.className || container.tagName}`);
+      }
+    });
 
     log(`Search cleared - tab system will handle panel visibility`);
   }

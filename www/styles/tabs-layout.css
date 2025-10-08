@@ -1,0 +1,144 @@
+/* Tabs/Search Layout System - Token-Driven, RTL-Safe */
+/* Load AFTER main.css for tab and search views */
+
+/* Tabs/Search rails: same model, smaller cards */
+.tabs-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--tab-card-w);
+  gap: var(--tab-card-gap);
+  padding-inline: 0;
+  overflow-x: auto; 
+  overflow-y: hidden;
+  scroll-snap-type: inline mandatory;
+  scroll-behavior: smooth;
+}
+
+.tabs-rail .card { 
+  min-width: 0; 
+  scroll-snap-align: start; 
+  container-type: inline-size;
+}
+
+/* Tab card actions: flex layout for horizontal cards */
+.tabs-rail :is(.actions, .card-actions) { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 8px; 
+}
+
+.tabs-rail :is(.actions, .card-actions) > * { 
+  flex: 1 1 140px; 
+  min-height: var(--card-action-minh);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* Responsive tab card sizing */
+@media (max-width: var(--bp-sm)) {
+  .tabs-rail {
+    grid-auto-columns: calc(var(--tab-card-w) * 0.8);
+    gap: calc(var(--tab-card-gap) * 0.75);
+  }
+}
+
+/* RTL scroll behavior for tabs */
+.tabs-rail {
+  scroll-behavior: smooth;
+}
+
+/* RTL-aware scroll indicators for tabs */
+.tabs-rail::before,
+.tabs-rail::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tabs-rail::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg, #fff), transparent);
+}
+
+.tabs-rail::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg, #fff), transparent);
+}
+
+.tabs-rail.scrollable-left::before,
+.tabs-rail.scrollable-right::after {
+  opacity: 1;
+}
+
+/* RTL flip scroll indicators */
+[dir="rtl"] .tabs-rail::before {
+  left: auto;
+  right: 0;
+  background: linear-gradient(to left, var(--bg, #fff), transparent);
+}
+
+[dir="rtl"] .tabs-rail::after {
+  right: auto;
+  left: 0;
+  background: linear-gradient(to right, var(--bg, #fff), transparent);
+}
+
+[dir="rtl"] .tabs-rail.scrollable-left::before,
+[dir="rtl"] .tabs-rail.scrollable-right::after {
+  opacity: 1;
+}
+
+/* Tab list containers */
+.list-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tab-card-gap);
+  padding-inline: var(--home-frame-gutter);
+}
+
+/* Tab list cards - horizontal layout */
+.list-container .card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  min-height: 120px;
+}
+
+.list-container .card .poster-wrap {
+  flex: 0 0 120px;
+  height: 180px;
+  aspect-ratio: 2/3;
+}
+
+.list-container .card .card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Search results */
+#searchResultsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--tab-card-w), 1fr));
+  gap: var(--tab-card-gap);
+  padding-inline: var(--home-frame-gutter);
+}
+
+/* Responsive search results */
+@media (max-width: var(--bp-sm)) {
+  #searchResultsList {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: calc(var(--tab-card-gap) * 0.75);
+  }
+}
+
+
+

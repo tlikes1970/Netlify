@@ -101,11 +101,11 @@
           "action": "toggleTheme"
         },
         {
-          "key": "homeListsCount",
+          "key": "customRowsCount",
           "type": "text",
-          "label": "Home page lists count",
-          "selector": "#settingCuratedRows",
-          "storageKey": "pref_homeListsCount"
+          "label": "Custom rows count",
+          "selector": "#settingCustomRowsCount",
+          "storageKey": "pref_customRowsCount"
         },
         {
           "key": "watchingPreviewMax",

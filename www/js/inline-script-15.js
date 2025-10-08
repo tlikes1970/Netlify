@@ -12,7 +12,7 @@
       return true;
     }
 
-    input = document.querySelector('#settingCuratedRows, [name="curatedRows"]');
+    input = document.querySelector('#settingCustomRowsCount, [name="customRowsCount"]');
     console.log('🔧 Input found:', !!input, input);
     if (!input) {
       console.warn('🔧 Curated rows input not found, will retry...');

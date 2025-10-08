@@ -457,7 +457,19 @@
       console.log('🔗 Card v2 openDetails called:', item);
 
       // Extract media type and ID for TMDB link
-      const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+      // Determine media type - use item's media_type if available, otherwise determine from TMDB data
+      let mediaType = item.media_type;
+      if (!mediaType) {
+        // Check if it's a TV show by looking for TV-specific fields
+        if (item.first_air_date && item.number_of_episodes) {
+          mediaType = 'tv';
+        } else if (item.release_date && !item.first_air_date) {
+          mediaType = 'movie';
+        } else {
+          // Fallback: assume movie if uncertain
+          mediaType = 'movie';
+        }
+      }
       const id = item.id || item.tmdb_id || item.tmdbId;
 
       if (!id) {

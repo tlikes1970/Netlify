@@ -38,7 +38,7 @@ function setDirty(v) {
 const ID_TO_KEY = {
   '#displayNameInput': 'user.displayName',
   '#langToggle': 'app.language',
-  '#settingCuratedRows': 'home.curatedRows',
+  '#settingCustomRowsCount': 'home.customRowsCount',
   '#settingCurrentlyWatchingLimit': 'home.currentlyWatchingLimit',
   '#mardiOverlayToggle': 'ui.mardiGrasOverlay',
   '#notifEpisodes': 'notif.episodes',
@@ -80,7 +80,7 @@ function readControlsIntoDraft() {
   const map = {
     '#displayNameInput': ['user.displayName', (v) => String(v)],
     '#langToggle': ['app.language', (v) => String(v)],
-    '#settingCuratedRows': ['home.curatedRows', (v) => Number(v)],
+    '#settingCustomRowsCount': ['home.customRowsCount', (v) => Number(v)],
     '#settingCurrentlyWatchingLimit': ['home.currentlyWatchingLimit', (v) => Number(v)],
     '#mardiOverlayToggle': ['ui.mardiGrasOverlay', (v) => !!v],
     '#notifEpisodes': ['notif.episodes', (v) => !!v],

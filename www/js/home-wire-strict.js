@@ -25,7 +25,16 @@
       }),
     discover: (d) => d.discover || [], // optional feed you already populate
     curated: (d) => {
-      // Load curated data from localStorage keys
+      // Use custom curated rows system - return empty array and let custom system handle rendering
+      if (window.CustomCuratedRows) {
+        // Trigger custom curated rows rendering asynchronously
+        setTimeout(() => {
+          window.CustomCuratedRows.render();
+        }, 500);
+        return []; // Custom system handles its own rendering
+      }
+      
+      // Fallback to old system if custom system not available
       const curatedData = [];
       try {
         const trending = JSON.parse(localStorage.getItem('curated:trending') || '[]');
@@ -184,7 +193,19 @@
       : item.first_air_date
         ? new Date(item.first_air_date).getFullYear()
         : item.year || '';
-    const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+    // Determine media type - use item's media_type if available, otherwise determine from TMDB data
+    let mediaType = item.media_type;
+    if (!mediaType) {
+      // Check if it's a TV show by looking for TV-specific fields
+      if (item.first_air_date && item.number_of_episodes) {
+        mediaType = 'tv';
+      } else if (item.release_date && !item.first_air_date) {
+        mediaType = 'movie';
+      } else {
+        // Fallback: assume movie if uncertain
+        mediaType = 'movie';
+      }
+    }
 
     // Handle poster URL using TMDB utilities if available
     const posterUrl =

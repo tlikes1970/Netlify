@@ -59,7 +59,7 @@ export async function initSettings() {
     '#notifEpisodes': { key: 'notif.episodes', type: 'boolean' },
     '#notifDiscover': { key: 'notif.discover', type: 'boolean' },
     '#notifDigest': { key: 'notif.monthlyDigest', type: 'boolean' },
-    '#settingCuratedRows': { key: 'home.curatedRows', type: 'number' },
+    '#settingCustomRowsCount': { key: 'home.customRowsCount', type: 'number' },
     '#settingCurrentlyWatchingLimit': { key: 'home.currentlyWatchingLimit', type: 'number' },
     '#enableEpisodeTracking': { key: 'cards.episodeTracking', type: 'boolean' },
     '#advOn': { key: 'pro.advancedNotifications', type: 'boolean' },

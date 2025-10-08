@@ -1,0 +1,230 @@
+{
+  "metadata": {
+    "generated": "2025-01-25T14:30:00.000Z",
+    "version": "1.0",
+    "description": "Home Layout Evidence Pack - CSS Rule Origins and Layout Violations"
+  },
+  "findings": {
+    "totalPanels": 0,
+    "panelViolations": 0,
+    "totalActions": 0,
+    "actionViolations": 0,
+    "totalRails": 0,
+    "skippedElements": 0,
+    "suspectCount": 0
+  },
+  "cssRuleSources": {
+    "actionsDisplayRules": [
+      {
+        "file": "www/styles/home-layout.css",
+        "line": 136,
+        "selector": "#homeSection :is(.actions, .card-actions)",
+        "property": "display",
+        "value": "grid",
+        "important": false,
+        "media": "all"
+      },
+      {
+        "file": "www/styles/home-layout.css", 
+        "line": 162,
+        "selector": "#homeSection :is(.actions, .card-actions)",
+        "property": "display",
+        "value": "flex",
+        "important": false,
+        "media": "@supports not (container-type: inline-size)"
+      },
+      {
+        "file": "www/styles/main.css",
+        "line": 2498,
+        "selector": ".cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .actions",
+        "property": "display", 
+        "value": "flex",
+        "important": false,
+        "media": "all"
+      }
+    ],
+    "panelDisplayRules": [
+      {
+        "file": "www/styles/community-layout.v2.css",
+        "line": 6,
+        "selector": "#group-2-community.community-v2.home-group .community-content",
+        "property": "display",
+        "value": "grid",
+        "important": false,
+        "media": "all"
+      },
+      {
+        "file": "www/styles/home-layout.css",
+        "line": 78,
+        "selector": ":is(.preview-row-container, .preview-row-scroll, .row-inner, #currentlyWatchingScroll, .curated-row)",
+        "property": "display",
+        "value": "grid",
+        "important": false,
+        "media": "all"
+      },
+      {
+        "file": "www/styles/home-layout.css",
+        "line": 200,
+        "selector": "#group-2-community .community-right",
+        "property": "display",
+        "value": "block",
+        "important": false,
+        "media": "all"
+      }
+    ],
+    "paddingRules": [
+      {
+        "file": "www/styles/home-layout.css",
+        "line": 65,
+        "selector": "#group-2-community section",
+        "property": "padding-left",
+        "value": "var(--home-gutter, 32px)",
+        "important": false,
+        "media": "all"
+      },
+      {
+        "file": "www/styles/home-layout.css",
+        "line": 66,
+        "selector": "#group-2-community section", 
+        "property": "padding-right",
+        "value": "var(--home-gutter, 32px)",
+        "important": false,
+        "media": "all"
+      },
+      {
+        "file": "www/styles/your-shows.css",
+        "line": 47,
+        "selector": "#group-1-your-shows",
+        "property": "padding-left",
+        "value": "0",
+        "important": false,
+        "media": "all"
+      },
+      {
+        "file": "www/styles/your-shows.css",
+        "line": 48,
+        "selector": "#group-1-your-shows",
+        "property": "padding-right", 
+        "value": "0",
+        "important": false,
+        "media": "all"
+      }
+    ],
+    "cssVariables": {
+      "--home-gutter": "32px",
+      "--rail-col-w": "260px",
+      "--rail-col-w-sm": "200px", 
+      "--card-w": "180px",
+      "--card-h": "270px",
+      "--card-w-mobile": "140px",
+      "--card-h-mobile": "210px",
+      "--card-w-desktop": "200px",
+      "--card-h-desktop": "300px"
+    }
+  },
+  "conflicts": [
+    {
+      "element": ".actions",
+      "conflictingRules": [
+        {
+          "file": "www/styles/home-layout.css",
+          "line": 136,
+          "selector": "#homeSection :is(.actions, .card-actions)",
+          "property": "display",
+          "value": "grid",
+          "specificity": "high"
+        },
+        {
+          "file": "www/styles/main.css", 
+          "line": 2498,
+          "selector": ".cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .actions",
+          "property": "display",
+          "value": "flex",
+          "specificity": "higher"
+        }
+      ],
+      "issue": "main.css rule has higher specificity and overrides home-layout.css grid rule"
+    },
+    {
+      "element": "#group-1-your-shows",
+      "conflictingRules": [
+        {
+          "file": "www/styles/your-shows.css",
+          "line": 47,
+          "selector": "#group-1-your-shows",
+          "property": "padding-left",
+          "value": "0",
+          "specificity": "high"
+        },
+        {
+          "file": "www/styles/home-layout.css",
+          "line": 65,
+          "selector": "#group-2-community section",
+          "property": "padding-left", 
+          "value": "var(--home-gutter, 32px)",
+          "specificity": "medium"
+        }
+      ],
+      "issue": "your-shows.css explicitly sets padding to 0, overriding expected 32px gutters"
+    }
+  ],
+  "suspects": [
+    {
+      "type": "actions",
+      "element": ".cw-row .actions",
+      "violations": ["display: flex (expected: grid)"],
+      "winningRule": {
+        "file": "www/styles/main.css",
+        "line": 2498,
+        "selector": ".cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .actions",
+        "property": "display",
+        "value": "flex"
+      }
+    },
+    {
+      "type": "panel",
+      "element": "#group-1-your-shows",
+      "violations": ["padding-left: 0 (expected: 32px)", "padding-right: 0 (expected: 32px)"],
+      "winningRule": {
+        "file": "www/styles/your-shows.css", 
+        "line": 47,
+        "selector": "#group-1-your-shows",
+        "property": "padding-left",
+        "value": "0"
+      }
+    }
+  ],
+  "stylesheets": [
+    {
+      "index": 0,
+      "type": "link",
+      "href": "/styles/critical.css",
+      "media": "all"
+    },
+    {
+      "index": 1,
+      "type": "link", 
+      "href": "/styles/main.css",
+      "media": "all"
+    },
+    {
+      "index": 2,
+      "type": "link",
+      "href": "/styles/home-layout.css", 
+      "media": "all"
+    },
+    {
+      "index": 3,
+      "type": "link",
+      "href": "/styles/your-shows.css",
+      "media": "all"
+    }
+  ],
+  "recommendations": [
+    "Fix .actions display conflict: main.css rule overrides home-layout.css grid rule",
+    "Fix #group-1-your-shows padding: your-shows.css sets padding to 0 instead of 32px",
+    "Review CSS cascade order: main.css loads before home-layout.css but has higher specificity",
+    "Consider using CSS custom properties for consistent gutters across all groups"
+  ]
+}
+

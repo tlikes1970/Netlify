@@ -18,7 +18,7 @@
     },
     {
       "key": "curated",
-      "title": "🎯 Curated Sections",
+      "title": "🎯 Your Custom Rows",
       "headingSelector": "#curated-section .preview-row-title",
       "containerSelector": "#curatedSections",
       "picker": "curated",

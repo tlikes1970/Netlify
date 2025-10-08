@@ -20,7 +20,19 @@
    * @returns {Object} Action configuration with primary and secondary actions
    */
   function getActionConfig(listType, item) {
-    const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+    // Determine media type - use item's media_type if available, otherwise determine from TMDB data
+    let mediaType = item.media_type;
+    if (!mediaType) {
+      // Check if it's a TV show by looking for TV-specific fields
+      if (item.first_air_date && item.number_of_episodes) {
+        mediaType = 'tv';
+      } else if (item.release_date && !item.first_air_date) {
+        mediaType = 'movie';
+      } else {
+        // Fallback: assume movie if uncertain
+        mediaType = 'movie';
+      }
+    }
     const isEpisodeTrackingEnabled = () => {
       return localStorage.getItem('flicklet:episodeTracking:enabled') === 'true';
     };
@@ -113,7 +125,19 @@
   function createActionBarHTML(listType, item) {
     const config = getActionConfig(listType, item);
     const itemId = item.id;
-    const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+    // Determine media type - use item's media_type if available, otherwise determine from TMDB data
+    let mediaType = item.media_type;
+    if (!mediaType) {
+      // Check if it's a TV show by looking for TV-specific fields
+      if (item.first_air_date && item.number_of_episodes) {
+        mediaType = 'tv';
+      } else if (item.release_date && !item.first_air_date) {
+        mediaType = 'movie';
+      } else {
+        // Fallback: assume movie if uncertain
+        mediaType = 'movie';
+      }
+    }
 
     // Generate primary actions HTML
     const primaryActionsHTML = config.primary

@@ -1,0 +1,2785 @@
+=== FLICKLET CARD V2 LAYOUT FORENSIC REPORT ===
+Generated: 2025-01-08
+Target: Currently Watching section card markup analysis
+Scope: All CSS, JS, and HTML affecting .card, .actions, .preview-row elements
+
+=== FILE: www/styles/cards.css ===
+/* Cards V2 System - Design Parity Implementation */
+
+/* Base V2 Card Styles */
+.card.v2 {
+  position: relative;
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.35);
+  transition: transform .2s ease;
+  margin-bottom: 16px;
+}
+
+.card.v2:hover {
+  transform: translateY(-2px);
+}
+
+/* Theme-aware colors using CSS custom properties */
+.card.v2 {
+  background: var(--surface, #171a21);
+  border: 1px solid var(--border, #242a33);
+  color: var(--fg, #e6eaf0);
+}
+
+.light-mode .card.v2 {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e5e7eb);
+  color: var(--fg, #1f2937);
+  box-shadow: 0 6px 24px rgba(0,0,0,.1);
+}
+
+/* Home Vertical Cards - Width controlled by home-layout.css */
+.card.v2.v2-home-cw,
+.card.v2.v2-home-nextup,
+.card.v2.v2-home-curated {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center;
+  padding: 12px;
+  /* Width/min-width/max-width removed - controlled by home-layout.css */
+}
+
+/* Tab/List Horizontal Cards - Maximum specificity to override all other rules */
+.card.v2.v2-tab-card,
+.card.v2.v2-tab-card.card,
+.card.v2.v2-tab-card.card.card,
+body .card.v2.v2-tab-card,
+html body .card.v2.v2-tab-card,
+html body .card.v2.v2-tab-card.card,
+html body .card.v2.v2-tab-card.card.card,
+html body .card.v2.v2-tab-card.card.card.card {
+  display: flex !important;
+  flex-direction: row !important;
+  padding: 20px;
+  gap: 20px;
+  min-height: 180px;
+  align-items: flex-start;
+}
+
+/* Search Compact Horizontal Cards - Maximum specificity to override all other rules */
+.card.v2.v2-search-card,
+.card.v2.v2-search-card.card,
+.card.v2.v2-search-card.card.card,
+body .card.v2.v2-search-card,
+html body .card.v2.v2-search-card,
+html body .card.v2.v2-search-card.card,
+html body .card.v2.v2-search-card.card.card,
+html body .card.v2.v2-search-card.card.card.card {
+  display: flex !important;
+  flex-direction: row !important;
+  padding: 14px 16px;
+  gap: 16px;
+}
+
+/* CRITICAL OVERRIDE - Force horizontal layout for all V2 tab/search cards */
+.card.v2.v2-tab-card,
+.card.v2.v2-search-card {
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+/* Additional override for any remaining conflicts */
+.card.v2[class*="v2-tab"],
+.card.v2[class*="v2-search"] {
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+/* CRITICAL: Force list containers to stack V2 cards vertically */
+.list-container:has(.card.v2) {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+}
+
+/* Card Content Area - Professional Layout */
+.card.v2 .card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Allow content to shrink */
+  gap: 8px;
+}
+
+/* Poster Styling */
+.card.v2 .poster-wrap {
+  aspect-ratio: 2/3;
+  background: var(--muted-bg, #0b0d12);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  flex: 0 0 120px; /* Fixed width for poster */
+}
+
+.light-mode .card.v2 .poster-wrap {
+  background: var(--muted-bg, #f3f4f6);
+}
+
+/* Home vertical cards - full width poster */
+.card.v2.v2-home-cw .poster-wrap,
+.card.v2.v2-home-nextup .poster-wrap,
+.card.v2.v2-home-curated .poster-wrap {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+/* Tab card poster sizing - force horizontal layout */
+.card.v2.v2-tab-card .poster-wrap {
+  flex: 0 0 160px !important;
+  width: 160px !important;
+  height: 240px !important;
+}
+
+/* Search card poster sizing - force horizontal layout */
+.card.v2.v2-search-card .poster-wrap {
+  flex: 0 0 120px !important;
+  width: 120px !important;
+  height: 180px !important;
+}
+
+.card.v2 .poster-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Content Styling */
+.card.v2 .card-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Home vertical cards - centered content */
+.card.v2.v2-home-cw .card-content,
+.card.v2.v2-home-nextup .card-content,
+.card.v2.v2-home-curated .card-content {
+  text-align: center;
+  width: 100%;
+}
+
+/* Tab and search cards - left-aligned content */
+.card.v2.v2-tab-card .card-content,
+.card.v2.v2-search-card .card-content {
+  text-align: left;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+/* Title styling */
+.card.v2 .title {
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--fg, #e6eaf0);
+  margin: 0;
+  line-height: 1.2;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.light-mode .card.v2 .title {
+  color: var(--fg, #1f2937);
+}
+
+/* Meta information */
+.card.v2 .meta {
+  color: var(--fg-muted, #a9b3c1);
+  font-size: 14px;
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.light-mode .card.v2 .meta {
+  color: var(--fg-muted, #6b7280);
+}
+
+/* Actions Styling */
+.card.v2 .actions {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+/* Tab and search card actions - organized layout */
+.card.v2.v2-tab-card .actions,
+.card.v2.v2-search-card .actions {
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Action buttons styling */
+.card.v2 .actions button {
+  background: var(--surface-secondary, #232a34);
+  color: var(--fg, #e6eaf0);
+  border: 1px solid var(--border, #242a33);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.light-mode .card.v2 .actions button {
+  background: var(--surface-secondary, #f3f4f6);
+  color: var(--fg, #374151);
+  border-color: var(--border, #d1d5db);
+}
+
+.card.v2 .actions button:hover:not([disabled]) {
+  background: var(--surface-hover, #2a3441);
+  transform: translateY(-1px);
+}
+
+.light-mode .card.v2 .actions button:hover:not([disabled]) {
+  background: var(--surface-hover, #e5e7eb);
+}
+
+.card.v2 .actions button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Tab and search card content - left-aligned */
+.card.v2.v2-tab-card .card-content,
+.card.v2.v2-search-card .card-content {
+  text-align: left !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Ensure proper spacing between elements */
+.card.v2 .title + .meta {
+  margin-top: 4px;
+}
+
+.card.v2 .meta + .overview {
+  margin-top: 8px;
+}
+
+.card.v2 .overview + .where-to-watch {
+  margin-top: 4px;
+}
+
+.card.v2 .where-to-watch + .user-rating {
+  margin-top: 8px;
+}
+
+.card.v2 .user-rating + .actions {
+  margin-top: 12px;
+}
+
+/* Tab and search card free actions - left-aligned */
+.card.v2.v2-tab-card .free-actions,
+.card.v2.v2-search-card .free-actions {
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+}
+
+/* Tab and search card pro actions - left-aligned */
+.card.v2.v2-tab-card .pro-actions,
+.card.v2.v2-search-card .pro-actions {
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+}
+
+/* Free Actions - horizontal layout with wrapping */
+.card.v2 .free-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px dashed var(--border, #242a33);
+}
+
+/* Pro Actions - horizontal layout with wrapping */
+.card.v2 .pro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px dashed var(--pro, #f0b90b);
+}
+
+/* 2x2 Action Grid for Home Currently Watching */
+.card.v2 .action-grid-2x2,
+.cw-card.v2 .action-grid-2x2,
+.v2-home-cw .action-grid-2x2 {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+/* Override for home page - flatten wrapper to make buttons direct children */
+#homeSection .card.v2 .action-grid-2x2,
+#homeSection .cw-card.v2 .action-grid-2x2,
+#homeSection .v2-home-cw .action-grid-2x2 {
+  display: contents !important;
+}
+
+/* Also flatten action-row wrappers */
+#homeSection .card.v2 .action-row,
+#homeSection .cw-card.v2 .action-row,
+#homeSection .v2-home-cw .action-row {
+  display: contents !important;
+}
+
+/* Override any conflicting action-row rules with higher specificity */
+#homeSection .card.v2 .action-grid-2x2 .action-row,
+#homeSection .cw-card.v2 .action-grid-2x2 .action-row,
+#homeSection .v2-home-cw .action-grid-2x2 .action-row {
+  display: contents !important;
+}
+
+/* Override main.css conflicting rules with even higher specificity */
+#homeSection .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .card.v2 .action-grid-2x2 .action-row,
+#homeSection .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .cw-card.v2 .action-grid-2x2 .action-row,
+#homeSection .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .v2-home-cw .action-grid-2x2 .action-row {
+  display: contents !important;
+}
+
+/* NUCLEAR OPTION: Override ALL action-row rules with maximum specificity */
+#homeSection .card.v2 .action-grid-2x2 .action-row,
+#homeSection .cw-card.v2 .action-grid-2x2 .action-row,
+#homeSection .v2-home-cw .action-grid-2x2 .action-row,
+#homeSection .card.v2 .actions .action-grid-2x2 .action-row,
+#homeSection .cw-card.v2 .actions .action-grid-2x2 .action-row,
+#homeSection .v2-home-cw .actions .action-grid-2x2 .action-row {
+  display: contents !important;
+  grid-template-columns: none !important;
+  gap: 0 !important;
+}
+
+.card.v2 .action-row,
+.cw-card.v2 .action-row,
+.v2-home-cw .action-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+}
+
+/* Action buttons */
+.card.v2 .btn {
+  background: var(--btn-bg, #232a34);
+  color: var(--fg, #e6eaf0);
+  border: 1px solid var(--border, #242a33);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card.v2 .btn:hover {
+  background: var(--btn-hover, #2a3441);
+  transform: translateY(-1px);
+}
+
+.light-mode .card.v2 .btn {
+  background: var(--btn-bg, #f3f4f6);
+  color: var(--fg, #1f2937);
+  border: 1px solid var(--border, #e5e7eb);
+}
+
+.light-mode .card.v2 .btn:hover {
+  background: var(--btn-hover, #e5e7eb);
+}
+
+/* Pro button outline style */
+.card.v2 .btn--pro-outline {
+  border-color: var(--pro, #f0b90b);
+  color: var(--pro, #f0b90b);
+  background: transparent;
+}
+
+.card.v2 .btn--pro-outline:hover {
+  background: var(--pro, #f0b90b);
+  color: var(--fg, #1f2937);
+}
+
+/* Delete button */
+.card.v2 .delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #802626;
+  color: #fff;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.card.v2 .delete-btn:hover {
+  background: #a03030;
+}
+
+/* Drag handle */
+.card.v2 .drag-handle {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  cursor: grab;
+  font-size: 18px;
+  color: var(--fg-muted, #a9b3c1);
+  padding: 4px;
+}
+
+.card.v2 .drag-handle:hover {
+  color: var(--fg, #e6eaf0);
+}
+
+.light-mode .card.v2 .drag-handle {
+  color: var(--fg-muted, #6b7280);
+}
+
+.light-mode .card.v2 .drag-handle:hover {
+  color: var(--fg, #1f2937);
+}
+
+/* Overview styling */
+.card.v2 .overview {
+  color: var(--fg-muted, #a9b3c1);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 8px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.light-mode .card.v2 .overview {
+  color: var(--fg-muted, #6b7280);
+}
+
+/* Where to Watch styling */
+.card.v2 .where-to-watch {
+  color: var(--fg-muted, #a9b3c1);
+  font-size: 13px;
+  margin: 4px 0;
+  font-style: italic;
+}
+
+.light-mode .card.v2 .where-to-watch {
+  color: var(--fg-muted, #6b7280);
+}
+
+/* User Rating Stars */
+.card.v2 .user-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 8px 0;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.card.v2 .user-rating .star {
+  font-size: 20px;
+  color: var(--accent, #4da3ff);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.card.v2 .user-rating .star.filled {
+  color: var(--accent, #4da3ff);
+}
+
+.card.v2 .user-rating .star:hover {
+  color: var(--accent-hover, #66b3ff);
+}
+
+.card.v2 .user-rating .rating-label {
+  color: var(--fg-muted, #a9b3c1);
+  font-size: 12px;
+  margin-left: 4px;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+.light-mode .card.v2 .user-rating .rating-label {
+  color: var(--fg-muted, #6b7280);
+}
+
+/* Status Badges */
+.card.v2 .status-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.card.v2 .badge {
+  border: 1px solid var(--border, #242a33);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: var(--fg-muted, #a9b3c1);
+}
+
+.light-mode .card.v2 .badge {
+  border-color: var(--border, #e5e7eb);
+  color: var(--fg-muted, #6b7280);
+}
+
+.card.v2 .badge.pro {
+  border-color: var(--pro, #f0b90b);
+  color: var(--pro, #f0b90b);
+}
+
+/* Date styling */
+.search-card.v2 .date,
+.cw-card.v2 .date,
+.curated-card.v2 .date {
+  color: #a9b3c1;
+  font-size: 12px;
+  margin: 0;
+}
+
+/* Light theme date */
+.light-mode .search-card.v2 .date,
+.light-mode .cw-card.v2 .date,
+.light-mode .curated-card.v2 .date {
+  color: #6b7280;
+}
+
+.search-card.v2 .actions,
+.cw-card.v2 .actions,
+.curated-card.v2 .actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Override for home page - force 2x2 grid layout */
+#homeSection .v2-home-cw .actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  grid-auto-rows: minmax(36px, auto);
+  gap: 8px !important;
+  flex-wrap: unset !important;
+}
+
+.search-card.v2 .actions button,
+.cw-card.v2 .actions button,
+.curated-card.v2 .actions button {
+  background: #232a34;
+  color: #e6eaf0;
+  border: 1px solid #242a33;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+
+/* Light theme buttons */
+.light-mode .search-card.v2 .actions button,
+.light-mode .cw-card.v2 .actions button,
+.light-mode .curated-card.v2 .actions button {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.search-card.v2 .actions button:hover:not([disabled]),
+.cw-card.v2 .actions button:hover:not([disabled]),
+.curated-card.v2 .actions button:hover:not([disabled]) {
+  background: #2a3441;
+}
+
+/* Light theme button hover */
+.light-mode .search-card.v2 .actions button:hover:not([disabled]),
+.light-mode .cw-card.v2 .actions button:hover:not([disabled]),
+.light-mode .curated-card.v2 .actions button:hover:not([disabled]) {
+  background: #e5e7eb;
+}
+
+.search-card.v2 .actions button[disabled],
+.cw-card.v2 .actions button[disabled],
+.curated-card.v2 .actions button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Preview variant styling */
+.cw-card.v2.preview-variant {
+  max-width: 300px;
+  margin-bottom: 12px;
+}
+
+.cw-card.v2.preview-variant .poster-wrap {
+  flex: 0 0 80px;
+  aspect-ratio: 2/3;
+}
+
+.cw-card.v2.preview-variant .actions {
+  margin-top: 8px;
+}
+
+.cw-card.v2.preview-variant .actions .preview-action {
+  font-size: 10px;
+  padding: 4px 8px;
+  margin: 2px;
+}
+
+/* Grid Layout */
+.media-grid {
+  display: grid;
+  grid-template-columns: 1fr;  /* single column - stack vertically */
+  gap: 16px;
+}
+
+/* Override list-container when using MediaCard system */
+.list-container:has(.media-card) {
+  display: grid;
+  grid-template-columns: 1fr;  /* single column - stack vertically */
+  gap: 16px;
+}
+
+/* Card Base */
+.media-card {
+  display: flex;
+  flex-direction: row;          /* desktop: poster left, content right */
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  transition: box-shadow .15s ease, transform .15s ease;
+  gap: 16px;
+}
+
+.media-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+}
+
+/* Poster */
+.poster {
+  width: 180px;                 /* fixed poster rail */
+  flex: 0 0 180px;
+  aspect-ratio: 2/3;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #f3f4f6;
+}
+
+/* Card Body */
+.card-body {
+  flex: 1 1 auto;
+  min-width: 0;                 /* allow text ellipsis/clamps */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Title */
+.title {
+  margin-top: 0;               /* remove top margin for better alignment */
+  font-weight: 600;
+  font-size: 16px;             /* ~16px as specified */
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Description */
+.description {
+  margin-top: 8px;
+  font-size: 14px;             /* ~14px as specified */
+  color: #6b7280;              /* gray-600 */
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;       /* 2-3 line clamp */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Subtitle */
+.sub {
+  margin-top: 6px;
+  color: #6b7280;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Pills */
+.pill {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+}
+
+/* Meta */
+.meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+/* Rating */
+.rating {
+  margin-top: 8px;
+  display: inline-flex;
+  gap: 2px;
+}
+
+.star {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.star svg {
+  width: 100%;
+  height: 100%;
+}
+
+.star[data-active="true"] path {
+  fill: #f59e0b; /* amber */
+}
+
+.star[data-active="false"] path {
+  fill: #e5e7eb;
+}
+
+/* Actions */
+.actions {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+  color: #111827;
+}
+
+.btn:hover {
+  border-color: #cbd5e1;
+}
+
+.btn.locked {
+  color: #9ca3af;
+  border-style: dashed;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.btn.locked .icon {
+  opacity: .6;
+}
+
+.btn.locked:hover::after {
+  content: "Pro feature";
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  transform: translateY(-6px);
+  background: #111827;
+  color: #fff;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.btn[data-action="delete-item"] {
+  border-color: #fca5a5; /* red-300 */
+}
+
+.btn[data-action="delete-item"]:hover {
+  background: #fee2e2; /* red-100 */
+  border-color: #ef4444; /* red-500 */
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .media-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  
+  .media-card {
+    flex-direction: column;     /* mobile stacks */
+  }
+  
+  .poster {
+    width: 100%;               /* full-width poster on mobile */
+    flex: 0 0 auto;
+  }
+  
+  .title {
+    font-size: 15px;
+  }
+  
+  .actions {
+    gap: 6px;                  /* tighter spacing on mobile */
+    flex-wrap: wrap;           /* allow wrapping on mobile */
+  }
+  
+  .btn {
+    padding: 6px;
+    font-size: 12px;
+  }
+  
+  .btn .label {
+    display: none;             /* hide labels on mobile, show only icons */
+  }
+}
+
+/* ===== CARDS V2 ENHANCED STYLING ===== */
+
+/* Vertical layout for home cards */
+.cw-card.v2.vertical,
+.curated-card.v2.vertical,
+.next-up-card.v2.vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Width/min-width/max-width removed - controlled by home-layout.css */
+  min-height: auto;
+  padding: 12px;
+}
+
+/* Next Up cards - width controlled by home-layout.css */
+.next-up-card.v2.vertical {
+  /* Width/min-width/max-width removed - controlled by home-layout.css */
+}
+
+/* Curated cards - width controlled by home-layout.css */
+.curated-card.v2.vertical {
+  /* Width/min-width/max-width removed - controlled by home-layout.css */
+}
+
+/* Horizontal layout for tab and search cards */
+.search-card.v2.horizontal,
+.cw-card.v2.horizontal,
+.curated-card.v2.horizontal {
+  display: flex;
+  flex-direction: row;
+  min-height: 120px;
+  gap: 16px;
+}
+
+/* Tab cards - wider poster */
+.cw-card.v2.horizontal .poster-wrap {
+  flex: 0 0 160px;
+}
+
+/* Search cards - compact poster */
+.search-card.v2.horizontal .poster-wrap {
+  flex: 0 0 120px;
+}
+
+/* Card content wrapper */
+.card-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Vertical cards content */
+.cw-card.v2.vertical .card-content,
+.curated-card.v2.vertical .card-content,
+.next-up-card.v2.vertical .card-content {
+  width: 100%;
+  text-align: center;
+}
+
+/* Meta information styling */
+.meta {
+  color: #a9b3c1;
+  font-size: 12px;
+  margin: 0;
+}
+
+.light-mode .meta {
+  color: #6b7280;
+}
+
+/* Next air date styling */
+.next-air {
+  color: #4da3ff;
+  font-size: 12px;
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* Where to watch styling */
+.where-to-watch {
+  color: #4da3ff;
+  font-size: 12px;
+  margin: 4px 0 6px;
+  text-align: center;
+}
+
+/* Curator blurb styling */
+.curator-blurb {
+  color: #a9b3c1;
+  font-size: 12px;
+  text-align: center;
+  max-height: 3.2em;
+  overflow: hidden;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.light-mode .curator-blurb {
+  color: #6b7280;
+}
+
+/* Overview text for horizontal cards */
+.overview {
+  color: #a9b3c1;
+  font-size: 13px;
+  margin: 6px 0 10px;
+  max-height: 3.2em;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+.light-mode .overview {
+  color: #6b7280;
+}
+
+/* Status badges */
+.status-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.badge {
+  border: 1px solid #242a33;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: #a9b3c1;
+}
+
+.badge.new {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.badge.trending {
+  background: #f59e0b;
+  color: white;
+  border-color: #f59e0b;
+}
+
+.badge.returning {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.badge.ended {
+  background: #6b7280;
+  color: white;
+  border-color: #6b7280;
+}
+
+.badge.cancelled {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+.light-mode .badge {
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+/* User rating stars */
+.user-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.user-rating .star {
+  font-size: 20px;
+  color: #4da3ff;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.user-rating .star.filled {
+  color: #fbbf24;
+}
+
+.user-rating .star:hover {
+  color: #f59e0b;
+}
+
+.user-rating .rating-label {
+  font-size: 12px;
+  color: #a9b3c1;
+  margin-left: 4px;
+}
+
+.light-mode .user-rating .rating-label {
+  color: #6b7280;
+}
+
+/* Progress summary */
+.progress-summary {
+  color: #a9b3c1;
+  font-size: 12px;
+  margin: 6px 0;
+}
+
+.light-mode .progress-summary {
+  color: #6b7280;
+}
+
+/* Action grid for vertical cards */
+.action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.action-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* Override for V2 Cards - ensure grid layout takes precedence */
+.card.v2 .action-row,
+.cw-card.v2 .action-row,
+.v2-home-cw .action-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+}
+
+/* Pro actions styling */
+.pro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px dashed #f0b90b;
+  margin-top: 6px;
+}
+
+.pro-actions button {
+  background: transparent;
+  color: #f0b90b;
+  border: 1px solid #f0b90b;
+}
+
+.pro-actions button:hover {
+  background: rgba(240, 185, 11, 0.1);
+}
+
+/* Delete button */
+.delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #802626;
+  color: #fff;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: background 0.2s ease;
+}
+
+.delete-btn:hover {
+  background: #991b1b;
+}
+
+/* Drag handle */
+.drag-handle {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  cursor: grab;
+  font-size: 18px;
+  color: #a9b3c1;
+  padding: 4px;
+  user-select: none;
+}
+
+.drag-handle:hover {
+  color: #e6eaf0;
+}
+
+.light-mode .drag-handle {
+  color: #6b7280;
+}
+
+.light-mode .drag-handle:hover {
+  color: #374151;
+}
+
+/* TMDB link styling */
+.poster-wrap a {
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+}
+
+.poster-wrap a:hover {
+  opacity: 0.9;
+}
+
+/* Mobile responsive for vertical cards - width controlled by home-layout.css */
+@media (max-width: 640px) {
+  .cw-card.v2.vertical,
+  .curated-card.v2.vertical,
+  .next-up-card.v2.vertical {
+    /* Width/min-width/max-width removed - controlled by home-layout.css */
+  }
+  
+  .next-up-card.v2.vertical,
+  .curated-card.v2.vertical {
+    /* Width/min-width/max-width removed - controlled by home-layout.css */
+  }
+  
+  .action-grid {
+    gap: 6px;
+  }
+  
+  .action-row {
+    gap: 6px;
+  }
+}
+
+/* Rail-specific action layouts for home cards */
+
+/* CW: two-column grid, equal tracks */
+.v2-home-cw .card-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: row;
+  gap: 8px;
+}
+
+/* Up Next: no actions */
+.v2-home-nextup .card-actions {
+  display: none;
+}
+
+/* Curated: single column */
+.v2-home-curated .card-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-flow: row;
+  gap: 8px;
+}
+
+/* Safety: buttons shouldn't hard-size and collapse a track */
+.card-actions button,
+.card-actions [role="button"],
+.card-actions a.button {
+  inline-size: auto;
+  max-width: none;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+=== FILE: www/styles/home-layout.css ===
+/* Home Layout System - Token-Driven, Container Query, RTL-Safe */
+/* Load AFTER main.css to override layout rules */
+
+/* ===== CSS ARCHITECTURE GUARD ===== */
+/*
+ * SINGLE SOURCE OF TRUTH: This file contains ALL home page layout rules
+ * 
+ * CRITICAL RULES:
+ * 1. NO other CSS file should contain home layout rules
+ * 2. All home page styling must be defined here
+ * 3. Use design tokens (--home-gutter, --rail-col-w, etc.)
+ * 4. Follow the established pattern: Frame → Panels → Rails → Cards → Actions
+ * 
+ * FORBIDDEN: Adding home layout rules to main.css, components.css, or mobile.css
+ * 
+ * If you need to modify home layout:
+ * 1. Edit this file ONLY
+ * 2. Use proper CSS specificity
+ * 3. Test that no other file conflicts
+ * 4. Update this comment if architecture changes
+ */
+
+/* === DESIGN TOKENS === */
+:root {
+  /* Frame gutters */
+  --home-gutter: 32px;
+  
+  /* Home loading states */
+  --home-min-height: 400px;
+  
+  /* Rail sizing */
+  --rail-col-w: 260px;
+  --rail-col-w-sm: 200px;
+  --rail-gap: 16px;
+  
+  /* Breakpoints (canonical) */
+  --bp-xs: 480px;
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+}
+
+/* === SEARCH CONTAINER FIX === */
+/* ✅ Fix: ensure search bar stays visible and sticky on home tab */
+#appRoot.has-search #search-container,
+#appRoot.has-search .top-search,
+body.has-search #search-container,
+body.has-search .top-search {
+  display: block !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  height: auto;
+  min-height: 48px;
+}
+
+/* === FRAME NORMALIZATION === */
+/* Wrappers: width 100%, no padding */
+#homeSection, 
+.home-content, 
+main#panels { 
+  box-sizing: border-box; 
+  width: 100%; 
+  max-width: none; 
+  min-height: var(--home-min-height); /* Prevent layout shift during loading */
+}
+
+/* Smooth section appearance */
+#homeSection .section {
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* Top-level group wrappers: fill width; zero inner L/R padding */
+#group-1-your-shows.home-group,
+#group-2-community.home-group,
+#group-3-for-you.home-group,
+#group-4-theaters.home-group,
+#group-5-feedback.home-group {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: 0; /* kill double gutters */
+}
+
+/* === PANELS OWN THE SINGLE GUTTER === */
+/* Apply 32px left/right padding to all Home panels */
+#homeSection .home-preview-row,
+#homeSection .section-content,
+#group-1-your-shows section,
+#group-2-community section {
+  padding-left: var(--home-gutter, 32px);
+  padding-right: var(--home-gutter, 32px);
+}
+
+/* === RAILS: GRID COLUMN-FLOW WITH ZERO PADDING === */
+/* Deepest rails are grid with column flow, zero padding, scroll on X only */
+:is(#group-1-your-shows,
+    #group-2-community,
+    #group-3-for-you,
+    #group-4-theaters,
+    #group-5-feedback)
+  :is(.preview-row-container, .preview-row-scroll, .row-inner, #currentlyWatchingScroll, .curated-row) {
+  box-sizing: border-box;
+  display: grid;
+  grid-auto-flow: column;                   /* lay items left→right (RTL flips logically) */
+  grid-auto-columns: var(--rail-col-w);
+  gap: var(--rail-gap);
+  padding: 0;                               /* zero rail padding */
+  min-width: 0;
+  overflow-x: auto;                         /* scroll on X only */
+  overflow-y: hidden;
+  scroll-snap-type: inline mandatory;
+}
+
+/* === DEEP RAIL GRID RULES === */
+/* Cover both variants we saw: #currentlyWatchingScroll and .preview-row-scroll */
+#homeSection #currentlyWatchingScroll,
+#homeSection .preview-row-scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--rail-col-w, 224px);
+  gap: var(--rail-gap, 12px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: inline mandatory;
+  padding: 0;
+}
+
+#homeSection #currentlyWatchingScroll > *,
+#homeSection .preview-row-scroll > * { 
+  scroll-snap-align: start; 
+}
+
+/* Responsive rail sizing */
+@media (max-width: var(--bp-md)) {
+  :is(#group-1-your-shows,
+      #group-2-community,
+      #group-3-for-you,
+      #group-4-theaters,
+      #group-5-feedback)
+    :is(.preview-row-container, .preview-row-scroll, .row-inner, #currentlyWatchingScroll, .curated-row) {
+    grid-auto-columns: var(--rail-col-w-sm);
+  }
+}
+
+/* === CARD SNAP TARGETS === */
+/* Cards snap cleanly and don't exceed panel width */
+#homeSection .card { 
+  scroll-snap-align: start; 
+  min-width: 0; 
+}
+
+#homeSection .card img, 
+#homeSection .card picture { 
+  display: block; 
+  max-width: 100%; 
+}
+
+/* === ACTION BUTTONS: 2x2 GRID, NO LABEL CLIPPING === */
+/* Actions: container-query first, flex fallback; no mid-word splits */
+#homeSection :is(.actions, .card-actions) {
+  display: grid;
+  grid-template-columns: 1fr;          /* default: single column */
+  gap: 8px;
+  padding-block: 8px;
+  align-items: center;
+}
+
+/* Container query: 2 columns when card is wide enough */
+@container (min-width: 260px) {
+  #homeSection :is(.actions, .card-actions) { 
+    grid-template-columns: repeat(2, 1fr); 
+  }
+}
+
+#homeSection :is(.actions, .card-actions) :is(button, [role="button"], a.button) {
+  width: 100%;
+  min-height: 36px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  justify-content: center;
+}
+
+/* Container query fallback for older browsers */
+@supports not (container-type: inline-size) {
+  #homeSection :is(.actions, .card-actions) { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 8px; 
+  }
+  
+  #homeSection :is(.actions, .card-actions) > * { 
+    flex: 1 1 150px; 
+    min-height: 36px; 
+  }
+}
+
+/* === COMMUNITY GRID NORMALIZATION === */
+/* Community = 2 columns (Player | Games container) with verified layout */
+
+/* 1. COMMUNITY GRID - Override main.css conflicting rules */
+#group-2-community .community-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 1fr;        /* ensures balanced columns */
+  align-items: start;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  gap: 24px;
+  width: 100%;
+}
+
+/* 2. COMMUNITY LEFT (player) */
+#group-2-community .community-left {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: auto;
+  min-height: 0;
+}
+
+/* 3. COMMUNITY RIGHT (games container) - Override main.css conflicting rules */
+#group-2-community .community-right {
+  display: block;
+  height: auto;
+  min-height: 0;
+  align-items: start;
+  flex: none;
+  max-width: none;
+  min-width: 0;
+  width: 100%;
+  overflow: visible;
+  align-self: stretch;
+}
+
+/* 4. HOME GAMES CARDS */
+#group-2-community #home-games {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: none;
+  align-items: start;
+  gap: 12px;
+}
+
+#group-2-community #home-games .card--game {
+  max-height: 220px;
+}
+
+/* 5. OVERRIDE CONFLICTING RULES FROM MAIN.CSS */
+/* Fix cards being cut off by removing min-height constraints */
+#group-2-community .community-section {
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+#group-2-community .community-right .community-section {
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+  padding: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* === SAFETY & RTL SUPPORT === */
+/* Safety: prevent content from forcing tracks wider than panels */
+#homeSection .preview-row-scroll * { 
+  min-width: 0; 
+}
+
+/* RTL scroll behavior */
+#homeSection .preview-row-scroll {
+  scroll-behavior: smooth;
+}
+
+/* RTL-aware scroll indicators (if you have them) */
+#homeSection .preview-row-scroll::before,
+#homeSection .preview-row-scroll::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+#homeSection .preview-row-scroll::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg, #fff), transparent);
+}
+
+#homeSection .preview-row-scroll::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg, #fff), transparent);
+}
+
+/* RTL flip scroll indicators */
+[dir="rtl"] #homeSection .preview-row-scroll::before {
+  left: auto;
+  right: 0;
+  background: linear-gradient(to left, var(--bg, #fff), transparent);
+}
+
+[dir="rtl"] #homeSection .preview-row-scroll::after {
+  right: auto;
+  left: 0;
+  background: linear-gradient(to right, var(--bg, #fff), transparent);
+}
+
+/* === DARK MODE ADJUSTMENTS === */
+/* Dark mode adjustments for preview row */
+#group-1-your-shows .dark-mode .home-preview-row {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+/* === COLLAPSED SECTIONS === */
+/* Collapsed section styling for empty "Next Up" */
+.home-preview-row.collapsed {
+  padding: 8px 16px;
+  min-height: auto;
+}
+
+.home-preview-row.collapsed .preview-row-container {
+  display: none;
+}
+
+.home-preview-row.collapsed .preview-row-header {
+  margin-bottom: 0;
+}
+
+.home-preview-row.collapsed .preview-row-title {
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+/* === HOME WRAPPER CONTRACT === */
+/* Enforce 32px gutters on all home panels - highest specificity */
+#homeSection .home-preview-row,
+#homeSection .section-content,
+#homeSection .panel,
+#homeSection .home-group section,
+#homeSection #up-next-row {
+  padding-left: 32px;
+  padding-right: 32px;
+  display: block;
+}
+
+/* #home-games is a grid container, not a panel - don't force block display */
+#homeSection #home-games {
+  padding-left: 32px;
+  padding-right: 32px;
+  display: grid;  /* Explicitly set grid for games layout */
+}
+
+/* === HOME ACTIONS: CANONICAL 2x2 GRID === */
+/* Force all actions within home to use grid layout */
+#homeSection .actions,
+#homeSection .card-actions,
+#homeSection .preview-card .actions,
+#homeSection .unified-card .actions,
+#homeSection .curated-card .actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+/* === YOUR SHOWS WRAPPER & RAIL CONTRACT === */
+/* 1) Your Shows wrapper must be neutral */
+#group-1-your-shows.home-group {
+  display: block;          /* not flex */
+  padding-left: var(--home-gutter, 32px);
+  padding-right: var(--home-gutter, 32px);
+  box-sizing: border-box;
+}
+
+/* 2) Rail contract: horizontal grid that grows to content */
+#homeSection .home-preview-row .preview-row-container {
+  /* host that owns scrolling; keep your overflow-x: auto elsewhere if set */
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+#homeSection .home-preview-row .preview-row-scroll.row-inner,
+#homeSection .home-preview-row .cw-row #currentlyWatchingScroll,
+#homeSection .home-preview-row .up-next-scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--rail-col-w, 224px);
+  gap: var(--rail-gap, 12px);
+
+  /* the key: allow rail to expand beyond one column */
+  width: max-content;         /* expands to sum of columns */
+  min-width: 100%;            /* never smaller than viewport */
+}
+
+/* ===== Home Frame Contract (Groups 1,3,4,5) ===== */
+:root { --home-gutter: 32px; }
+
+/* 1) Group wrappers must be neutral blocks with standard gutters */
+#group-1-your-shows.home-group,
+#group-3-for-you.home-group,
+#group-4-theaters.home-group,
+#group-5-feedback.home-group {
+  display: block;
+  padding-left: var(--home-gutter);
+  padding-right: var(--home-gutter);
+  box-sizing: border-box;
+}
+
+/* 2) Rails: grid that grows to content; scrolled by the outer container */
+#group-1-your-shows .home-preview-row .preview-row-container,
+#group-3-for-you .home-preview-row .preview-row-container,
+#group-4-theaters .home-preview-row .preview-row-container,
+#group-5-feedback .home-preview-row .preview-row-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+#group-1-your-shows .home-preview-row .preview-row-scroll.row-inner,
+#group-1-your-shows .home-preview-row .cw-row #currentlyWatchingScroll,
+#group-1-your-shows .home-preview-row .up-next-scroll,
+#group-3-for-you  .home-preview-row .preview-row-scroll.row-inner,
+#group-4-theaters .home-preview-row .preview-row-scroll.row-inner,
+#group-5-feedback .home-preview-row .preview-row-scroll.row-inner {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--rail-col-w, 224px);
+  gap: var(--rail-gap, 12px);
+  width: max-content;   /* expand to sum of columns */
+  min-width: 100%;      /* never smaller than viewport */
+}
+
+/* 3) Actions: canonical 2x2 grid in home */
+#group-1-your-shows .actions,
+#group-1-your-shows .card-actions,
+#group-3-for-you  .actions,
+#group-3-for-you  .card-actions,
+#group-4-theaters .actions,
+#group-4-theaters .card-actions,
+#group-5-feedback .actions,
+#group-5-feedback .card-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  grid-auto-rows: minmax(36px, auto);
+}
+
+/* 4) Flatten the inner wrapper so buttons become grid items */
+/* Override cards.css conflicting rules with correct specificity */
+#homeSection .card.v2 .action-grid-2x2,
+#homeSection .cw-card.v2 .action-grid-2x2,
+#homeSection .v2-home-cw .action-grid-2x2 {
+  display: contents !important;
+}
+
+/* 5) Don't let children force full-width or span both columns by default */
+#group-1-your-shows .actions > *,
+#group-1-your-shows .card-actions > *,
+#group-3-for-you  .actions > *,
+#group-3-for-you  .card-actions > *,
+#group-4-theaters .actions > *,
+#group-4-theaters .card-actions > *,
+#group-5-feedback .actions > *,
+#group-5-feedback .card-actions > * {
+  grid-column: auto !important;
+  min-width: 0;
+  max-width: none;
+  justify-self: stretch;
+  align-self: stretch;
+}
+
+/* 6) Allow explicit wide actions when intended */
+#group-1-your-shows .actions > .span-2,
+#group-1-your-shows .card-actions > .span-2,
+#group-3-for-you  .actions > .span-2,
+#group-3-for-you  .card-actions > .span-2,
+#group-4-theaters .actions > .span-2,
+#group-4-theaters .card-actions > .span-2,
+#group-5-feedback .actions > .span-2,
+#group-5-feedback .card-actions > .span-2 {
+  grid-column: 1 / -1 !important;
+}
+
+/* 7) Optional: keep gutters consistent on mobile (don't shrink unless product demands it) */
+@media (max-width: 768px) {
+  :root { --home-gutter: 32px; }
+}
+
+/* ===== COMMUNITY GROUP PROTECTION ===== */
+/* Ensure community group maintains its existing layout while other groups use new contract */
+/* Use higher specificity to override conflicting rules without !important */
+#homeSection #group-2-community.home-group {
+  display: block;
+  padding-left: var(--home-gutter, 32px);
+  padding-right: var(--home-gutter, 32px);
+  box-sizing: border-box;
+}
+
+/* Override any conflicting padding rules on community content with higher specificity */
+#homeSection #group-2-community.community-v2.home-group .community-content {
+  padding-left: 0;
+  padding-right: 0;
+  /* Keep other properties from community-layout.v2.css */
+}
+
+/* Community rails should maintain their existing behavior */
+#group-2-community .home-preview-row .preview-row-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+#group-2-community .home-preview-row .preview-row-scroll.row-inner,
+#group-2-community .home-preview-row .cw-row #currentlyWatchingScroll,
+#group-2-community .home-preview-row .up-next-scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--rail-col-w, 224px);
+  gap: var(--rail-gap, 12px);
+  width: max-content;
+  min-width: 100%;
+}
+
+/* Community actions should maintain existing layout (not forced to 2x2 grid) */
+#group-2-community .actions,
+#group-2-community .card-actions {
+  /* Let existing rules handle community actions - don't force grid */
+}
+
+=== FILE: www/styles/your-shows.css ===
+/* Your Shows Section - Specific Layout and Styling */
+
+/* === YOUR SHOWS SECTION LAYOUT === */
+#group-1-your-shows {
+  margin-bottom: 2rem;
+}
+
+#group-1-your-shows .home-preview-row {
+  margin-bottom: 1.5rem;
+}
+
+#group-1-your-shows .preview-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+#group-1-your-shows .preview-row-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--fg, #1f2937);
+  margin: 0;
+}
+
+#group-1-your-shows .preview-row-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+#group-1-your-shows .preview-row-actions button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border, #e5e7eb);
+  background: var(--bg, #ffffff);
+  color: var(--fg, #1f2937);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#group-1-your-shows .preview-row-actions button:hover {
+  background: var(--muted, #f9fafb);
+  border-color: var(--accent, #ff4c8d);
+}
+
+/* === CURRENTLY WATCHING PREVIEW === */
+#group-1-your-shows .cw-row {
+  position: relative;
+}
+
+#group-1-your-shows #currentlyWatchingScroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 224px;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: inline mandatory;
+  padding: 0;
+  margin: 0;
+}
+
+#group-1-your-shows #currentlyWatchingScroll > * {
+  scroll-snap-align: start;
+}
+
+/* === PREVIEW CARD STYLING === */
+#group-1-your-shows .preview-card {
+  background: var(--bg, #ffffff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#group-1-your-shows .preview-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+#group-1-your-shows .preview-card .poster-wrap {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 150%; /* 2:3 aspect ratio */
+  overflow: hidden;
+}
+
+#group-1-your-shows .preview-card .poster-wrap img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#group-1-your-shows .preview-card .card-content {
+  padding: 1rem;
+}
+
+#group-1-your-shows .preview-card .title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--fg, #1f2937);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+#group-1-your-shows .preview-card .meta {
+  font-size: 0.875rem;
+  color: var(--muted, #6b7280);
+  margin: 0 0 0.5rem 0;
+}
+
+#group-1-your-shows .preview-card .overview {
+  font-size: 0.875rem;
+  color: var(--muted, #6b7280);
+  line-height: 1.4;
+  margin: 0 0 1rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* === ACTION GRID LAYOUT === */
+#group-1-your-shows .action-grid-2x2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 1rem;
+}
+
+#group-1-your-shows .action-grid-2x2 button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border, #e5e7eb);
+  background: var(--bg, #ffffff);
+  color: var(--fg, #1f2937);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#group-1-your-shows .action-grid-2x2 button:hover {
+  background: var(--muted, #f9fafb);
+  border-color: var(--accent, #ff4c8d);
+}
+
+#group-1-your-shows .action-grid-2x2 button.primary {
+  background: var(--accent, #ff4c8d);
+  color: white;
+  border-color: var(--accent, #ff4c8d);
+}
+
+#group-1-your-shows .action-grid-2x2 button.primary:hover {
+  background: var(--accent-dark, #e91e63);
+  border-color: var(--accent-dark, #e91e63);
+}
+
+/* === RESPONSIVE DESIGN === */
+@media (max-width: 768px) {
+  #group-1-your-shows .preview-row-title {
+    font-size: 1.25rem;
+  }
+  
+  #group-1-your-shows #currentlyWatchingScroll {
+    grid-auto-columns: 180px;
+    gap: 8px;
+  }
+  
+  #group-1-your-shows .preview-card .card-content {
+    padding: 0.75rem;
+  }
+  
+  #group-1-your-shows .preview-card .title {
+    font-size: 0.875rem;
+  }
+  
+  #group-1-your-shows .preview-card .meta,
+  #group-1-your-shows .preview-card .overview {
+    font-size: 0.75rem;
+  }
+  
+  #group-1-your-shows .action-grid-2x2 button {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* === DARK MODE SUPPORT === */
+@media (prefers-color-scheme: dark) {
+  #group-1-your-shows .preview-card {
+    background: var(--bg-dark, #1f2937);
+    border-color: var(--border-dark, #374151);
+  }
+  
+  #group-1-your-shows .preview-card .title {
+    color: var(--fg-dark, #f9fafb);
+  }
+  
+  #group-1-your-shows .preview-card .meta,
+  #group-1-your-shows .preview-card .overview {
+    color: var(--muted-dark, #9ca3af);
+  }
+  
+  #group-1-your-shows .action-grid-2x2 button {
+    background: var(--bg-dark, #1f2937);
+    color: var(--fg-dark, #f9fafb);
+    border-color: var(--border-dark, #374151);
+  }
+  
+  #group-1-your-shows .action-grid-2x2 button:hover {
+    background: var(--muted-dark, #374151);
+  }
+}
+
+=== FILE: www/styles/mobile.css ===
+/* Mobile-specific overrides for card sizing and layout */
+
+/* === MOBILE CARD SIZING === */
+@media (max-width: 768px) {
+  /* Reduce card width on mobile */
+  #homeSection .preview-row-scroll,
+  #homeSection #currentlyWatchingScroll {
+    grid-auto-columns: 180px;
+    gap: 8px;
+  }
+  
+  /* Adjust card content padding */
+  .card.v2 .card-content {
+    padding: 12px;
+  }
+  
+  /* Smaller font sizes on mobile */
+  .card.v2 .title {
+    font-size: 16px;
+  }
+  
+  .card.v2 .meta {
+    font-size: 12px;
+  }
+  
+  .card.v2 .overview {
+    font-size: 13px;
+  }
+  
+  /* Adjust action button sizing */
+  .card.v2 .actions button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+
+/* === MOBILE LAYOUT ADJUSTMENTS === */
+@media (max-width: 640px) {
+  /* Single column layout for very small screens */
+  #homeSection .preview-row-scroll,
+  #homeSection #currentlyWatchingScroll {
+    grid-auto-columns: 160px;
+    gap: 6px;
+  }
+  
+  /* Further reduce padding */
+  .card.v2 .card-content {
+    padding: 8px;
+  }
+  
+  /* Compact action buttons */
+  .card.v2 .actions {
+    gap: 6px;
+  }
+  
+  .card.v2 .actions button {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
+
+=== FILE: www/styles/components.css ===
+/* Base card styles and compact/expanded variants */
+
+/* === BASE CARD STYLES === */
+.card {
+  background: var(--bg, #ffffff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.card .poster-wrap {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 150%; /* 2:3 aspect ratio */
+  overflow: hidden;
+}
+
+.card .poster-wrap img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card .card-content {
+  padding: 1rem;
+}
+
+.card .title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--fg, #1f2937);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+}
+
+.card .meta {
+  font-size: 0.875rem;
+  color: var(--muted, #6b7280);
+  margin: 0 0 0.5rem 0;
+}
+
+.card .overview {
+  font-size: 0.875rem;
+  color: var(--muted, #6b7280);
+  line-height: 1.4;
+  margin: 0 0 1rem 0;
+}
+
+/* === COMPACT CARD VARIANT === */
+.card--compact {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+}
+
+.card--compact .poster-wrap {
+  width: 80px;
+  height: 120px;
+  padding-bottom: 0;
+  flex-shrink: 0;
+}
+
+.card--compact .poster-wrap img {
+  position: static;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card--compact .card-content {
+  flex: 1;
+  padding: 0;
+}
+
+.card--compact .title {
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.card--compact .meta {
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.card--compact .overview {
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* === EXPANDED CARD VARIANT === */
+.card--expanded {
+  max-width: 400px;
+}
+
+.card--expanded .poster-wrap {
+  padding-bottom: 200%; /* 1:2 aspect ratio */
+}
+
+.card--expanded .card-content {
+  padding: 1.5rem;
+}
+
+.card--expanded .title {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.card--expanded .meta {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.card--expanded .overview {
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+/* === CARD ACTIONS === */
+.card .actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.card .actions button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border, #e5e7eb);
+  background: var(--bg, #ffffff);
+  color: var(--fg, #1f2937);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card .actions button:hover {
+  background: var(--muted, #f9fafb);
+  border-color: var(--accent, #ff4c8d);
+}
+
+.card .actions button.primary {
+  background: var(--accent, #ff4c8d);
+  color: white;
+  border-color: var(--accent, #ff4c8d);
+}
+
+.card .actions button.primary:hover {
+  background: var(--accent-dark, #e91e63);
+  border-color: var(--accent-dark, #e91e63);
+}
+
+/* === RESPONSIVE DESIGN === */
+@media (max-width: 768px) {
+  .card .card-content {
+    padding: 0.75rem;
+  }
+  
+  .card .title {
+    font-size: 0.875rem;
+  }
+  
+  .card .meta {
+    font-size: 0.75rem;
+  }
+  
+  .card .overview {
+    font-size: 0.75rem;
+  }
+  
+  .card .actions button {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+  
+  .card--compact {
+    padding: 0.5rem;
+    gap: 0.75rem;
+  }
+  
+  .card--compact .poster-wrap {
+    width: 60px;
+    height: 90px;
+  }
+  
+  .card--compact .title {
+    font-size: 0.75rem;
+  }
+  
+  .card--compact .meta,
+  .card--compact .overview {
+    font-size: 0.625rem;
+  }
+}
+
+/* === DARK MODE SUPPORT === */
+@media (prefers-color-scheme: dark) {
+  .card {
+    background: var(--bg-dark, #1f2937);
+    border-color: var(--border-dark, #374151);
+  }
+  
+  .card .title {
+    color: var(--fg-dark, #f9fafb);
+  }
+  
+  .card .meta,
+  .card .overview {
+    color: var(--muted-dark, #9ca3af);
+  }
+  
+  .card .actions button {
+    background: var(--bg-dark, #1f2937);
+    color: var(--fg-dark, #f9fafb);
+    border-color: var(--border-dark, #374151);
+  }
+  
+  .card .actions button:hover {
+    background: var(--muted-dark, #374151);
+  }
+}
+
+=== FILE: www/styles/community-layout.v2.css ===
+/* Community Layout V2 - Grid-based layout for community section */
+
+/* === COMMUNITY GRID LAYOUT === */
+#group-2-community .community-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+#group-2-community .community-left {
+  position: sticky;
+  top: 0;
+}
+
+#group-2-community .community-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* === GAMES GRID === */
+#group-2-community #home-games {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+#group-2-community .card--game {
+  max-height: 220px;
+}
+
+=== FILE: www/styles/tabs-layout.css ===
+/* Tabs Layout - Tab navigation and content switching */
+
+/* === TAB NAVIGATION === */
+.tab-nav {
+  display: flex;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  margin-bottom: 2rem;
+}
+
+.tab-nav button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background: transparent;
+  color: var(--muted, #6b7280);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-nav button:hover {
+  color: var(--fg, #1f2937);
+}
+
+.tab-nav button.active {
+  color: var(--accent, #ff4c8d);
+  border-bottom-color: var(--accent, #ff4c8d);
+}
+
+/* === TAB CONTENT === */
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+=== FILE: www/styles/mobile-hotfix.css ===
+/* Mobile Hotfixes - Critical mobile layout fixes */
+
+@media (max-width: 768px) {
+  /* Fix card overflow on mobile */
+  .card.v2 {
+    max-width: 100%;
+    overflow: hidden;
+  }
+  
+  /* Ensure proper text wrapping */
+  .card.v2 .title {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Fix action button layout on mobile */
+  .card.v2 .actions {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .card.v2 .actions button {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+=== JAVASCRIPT FILES ===
+
+=== FILE: www/js/renderers/card-v2.js ===
+/* Card V2 Renderer - Main card rendering system */
+
+// Main card rendering function
+function renderCardV2(props, options = {}) {
+  const {
+    listType = 'default',
+    context = 'default',
+    variant = 'default',
+    isVertical = false,
+    isHorizontal = true
+  } = options;
+
+  console.log('[card-v2] Rendering card:', { listType, context, isVertical, isHorizontal });
+
+  // Determine card type and classes
+  let cardType = 'v2-tab-card';
+  let className = 'card v2 v2-tab-card';
+
+  if (listType === 'search' || context === 'search') {
+    cardType = 'v2-search-card';
+    className = 'card v2 v2-search-card';
+  }
+
+  console.log('[card-v2] Card type selected:', cardType, 'className:', className);
+
+  // Create card element
+  const card = document.createElement('div');
+  card.className = className;
+  card.dataset.id = props.id;
+  card.dataset.listType = listType;
+  card.dataset.context = context;
+  card.dataset.mediaType = props.mediaType;
+
+  // Build card HTML
+  const posterUrl = props.poster || getDefaultPoster(props.mediaType);
+  const meta = formatMeta(props);
+  const rating = props.userRating || 0;
+  const progress = props.progress || '';
+
+  card.innerHTML = `
+    <div class="poster-wrap">
+      <img src="${posterUrl}" alt="${props.title}" loading="lazy" referrerpolicy="no-referrer">
+    </div>
+    <div class="card-content">
+      <h3 class="title">${props.title}</h3>
+      <div class="meta">${meta}</div>
+      <div class="overview">${props.overview || ''}</div>
+      <div class="where-to-watch">${props.whereToWatch || ''}</div>
+      <div class="user-rating">
+        <span class="rating-label">Your Rating:</span>
+        <div class="stars">${renderStars(rating)}</div>
+      </div>
+      <div class="progress">${progress}</div>
+      <div class="actions">
+        <button data-action="add" data-id="${props.id}" data-list="wishlist">Add to Wishlist</button>
+        <button data-action="add" data-id="${props.id}" data-list="watching">Start Watching</button>
+        <button data-action="add" data-id="${props.id}" data-list="watched">Mark Watched</button>
+        <button data-action="remove" data-id="${props.id}">Remove</button>
+      </div>
+    </div>
+  `;
+
+  return card;
+}
+
+// Format meta information
+function formatMeta(props) {
+  const parts = [];
+  
+  // Add genre (props.genre from toCardProps)
+  if (props.genre && props.genre.trim()) {
+    parts.push(props.genre);
+  }
+  
+  // Add SxxExx for TV shows (props.seasonEpisode from toCardProps)
+  if (props.seasonEpisode && props.seasonEpisode.trim()) {
+    parts.push(props.seasonEpisode);
+  }
+  
+  // Add runtime for movies (props.runtime from toCardProps)
+  if (props.runtime && props.runtime.toString().trim()) {
+    parts.push(`Runtime: ${props.runtime}m`);
+  }
+  
+  // Add next air date for TV shows (props.nextAirDate from toCardProps)
+  if (props.nextAirDate && props.nextAirDate.trim()) {
+    parts.push(`Next: ${props.nextAirDate}`);
+  }
+  
+  const result = parts.join(' • ');
+  console.log('[card-v2] formatMeta result:', result);
+  return result;
+}
+
+// Render star rating
+function renderStars(rating) {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+  
+  let stars = '';
+  for (let i = 0; i < fullStars; i++) {
+    stars += '★';
+  }
+  if (hasHalfStar) {
+    stars += '☆';
+  }
+  for (let i = 0; i < emptyStars; i++) {
+    stars += '☆';
+  }
+  return stars;
+}
+
+// Get default poster for missing images
+function getDefaultPoster(mediaType) {
+  const svg = `
+    <svg width="120" height="180" viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+      <rect width="120" height="180" fill="#a9b3c1"/>
+      <text x="60" y="90" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14">No Poster</text>
+    </svg>
+  `;
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
+}
+
+// Export functions
+window.renderCardV2 = renderCardV2;
+window.renderSearchCardV2 = renderCardV2;
+
+=== FILE: www/js/adapters/card-data-adapter.js ===
+/* Card Data Adapter - Centralized data transformation */
+
+// Transform raw TMDB data into card properties
+function toCardProps(raw) {
+  // Accept TMDB search result, detail, or our stored item
+  const id = String(raw.id ?? raw.tmdbId ?? raw.external_id ?? '');
+  const mediaType = raw.media_type || raw.mediaType || raw.type || (raw.first_air_date ? 'tv' : 'movie') || 'movie';
+  const title = raw.title || raw.name || raw.original_title || raw.original_name || 'Unknown';
+  const poster = resolvePosterUrl(raw.poster || raw.posterUrl || raw.poster_path || raw.posterPath || null);
+  const releaseDate = raw.release_date || raw.first_air_date || '';
+  const overview = raw.overview || '';
+  
+  // Normalize additional fields to remove "Unknown" values
+  // Extract genres - prefer first genre, but handle multiple
+  let genre = raw.genre || '';
+  if (!genre && raw.genres && Array.isArray(raw.genres)) {
+    genre = raw.genres.slice(0, 2).map(g => g.name).join(', ');
+  }
+  const seasonEpisode = raw.seasonEpisode || raw.sxxExx || '';
+  const nextAirDate = raw.next_episode_air_date || raw.nextAirDate || raw.next_air_date || '';
+  const runtime = raw.runtime || raw.episode_run_time || '';
+  const whereToWatch = raw.whereToWatch || raw.provider || '';
+  const curatorBlurb = raw.curatorBlurb || raw.description || '';
+  const userRating = raw.userRating || raw.rating || 0;
+  const progress = raw.progress || '';
+  const badges = raw.badges || [];
+  const tmdbId = raw.tmdbId || raw.id;
+
+  return { 
+    id, 
+    mediaType, 
+    title, 
+    poster, 
+    releaseDate, 
+    overview,
+    genre,
+    seasonEpisode,
+    nextAirDate,
+    runtime,
+    whereToWatch,
+    curatorBlurb,
+    userRating,
+    progress,
+    badges,
+    tmdbId,
+    __raw: raw 
+  };
+}
+
+// Resolve poster URL
+function resolvePosterUrl(posterPath) {
+  if (!posterPath) return null;
+  if (posterPath.startsWith('http')) return posterPath;
+  if (posterPath.startsWith('data:')) return posterPath;
+  return `https://image.tmdb.org/t/p/w200${posterPath}`;
+}
+
+// Export functions
+window.toCardProps = toCardProps;
+
+=== FILE: www/scripts/currently-watching-preview.js ===
+/* Currently Watching Preview - Renders preview cards for home page */
+
+// Create preview card using Cards V2 system
+async function createPreviewCard(item) {
+  console.log('🎬 createPreviewCard called with item:', item);
+
+  // Use Cards V2 if available, otherwise fallback to legacy
+  if (window.renderCurrentlyWatchingCardV2) {
+    console.log('🎬 Using Cards V2 for preview card');
+    
+    // Use toCardProps adapter to get all enhanced metadata
+    let snap;
+    if (window.toCardProps && typeof window.toCardProps === 'function') {
+      try {
+        snap = window.toCardProps(item);
+        console.log('🎬 Using toCardProps adapter for enhanced metadata:', snap);
+      } catch (error) {
+        console.warn('🎬 toCardProps failed, using fallback:', error);
+        // Fallback to minimal snapshot
+        snap = {
+          id: item.id || item.tmdb_id || item.tmdbId,
+          media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie'),
+          title: item.title || item.name || 'Unknown',
+          name: item.title || item.name || 'Unknown',
+          release_date: item.release_date || null,
+          first_air_date: item.first_air_date || null,
+          poster_path: item.poster_path || null,
+          poster: item.poster || null,
+          posterUrl: item.posterUrl || null,
+          genres: item.genres?.map(g => g.name) || [],
+          overview: item.overview || ''
+        };
+      }
+    } else {
+      // Fallback to minimal snapshot
+      snap = {
+        id: item.id || item.tmdb_id || item.tmdbId,
+        media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie'),
+        title: item.title || item.name || 'Unknown',
+        name: item.title || item.name || 'Unknown',
+        release_date: item.release_date || null,
+        first_air_date: item.first_air_date || null,
+        poster_path: item.poster_path || null,
+        poster: item.poster || null,
+        posterUrl: item.posterUrl || null,
+        genres: item.genres?.map(g => g.name) || [],
+        overview: item.overview || ''
+      };
+    }
+
+    // Create V2 card with preview variant and home context
+    const card = window.renderCurrentlyWatchingCardV2(snap, { variant: 'preview', context: 'home' });
+    
+    if (card) {
+      // Add preview-specific styling
+      card.classList.add('preview-card');
+      return card;
+    } else {
+      console.warn('🎬 V2 card creation failed for:', snap.title);
+      return null;
+    }
+  } else {
+    console.log('🎬 Falling back to legacy card for preview card');
+    // Fallback to legacy card rendering
+    const card = document.createElement('div');
+    card.className = 'card cw-card preview-card';
+    card.dataset.id = item.id;
+    card.dataset.listType = 'watching';
+    card.innerHTML = `
+      <div class="poster-wrap">
+        <img src="${getPosterUrl(item)}" alt="${item.title || item.name}" loading="lazy" referrerpolicy="no-referrer">
+      </div>
+      <div class="card-content">
+        <h3 class="title">${item.title || item.name}</h3>
+        <div class="meta">${item.release_date ? new Date(item.release_date).getFullYear() : ''}</div>
+      </div>
+    `;
+    return card;
+  }
+}
+
+// Get poster URL helper
+function getPosterUrl(item) {
+  if (item.posterUrl) return item.posterUrl;
+  if (item.poster) return item.poster;
+  if (item.poster_path) return `https://image.tmdb.org/t/p/w200${item.poster_path}`;
+  return null;
+}
+
+=== FILE: www/js/functions.js ===
+/* Core Functions - Utility functions including duplicate cleanup */
+
+// Cleanup duplicate cards function
+window.cleanupDuplicateCards = function cleanupDuplicateCards() {
+  try {
+    const NS = '[cleanup]';
+    const log = (...a) => console.log(NS, ...a);
+    log('Starting duplicate card cleanup...');
+    
+    // Get all cards - both legacy and V2
+    const allCards = document.querySelectorAll('.card, .cw-card, .media-card, [data-id]');
+    const cardMap = new Map();
+    let duplicatesRemoved = 0;
+    
+    allCards.forEach((card) => {
+      // Try to get unique identifier from various possible attributes
+      const itemId = card.dataset.itemId || card.dataset.id || card.getAttribute('data-id');
+      const listType = card.dataset.listType || card.dataset.list || 
+                      (card.closest('#currentlyWatchingPreview') ? 'watching' : 
+                       card.closest('#wishlistSection') ? 'wishlist' :
+                       card.closest('#watchedSection') ? 'watched' : 'unknown');
+      
+      if (itemId) {
+        const key = `${itemId}-${listType}`;
+        if (cardMap.has(key)) {
+          // This is a duplicate, remove it
+          card.remove();
+          duplicatesRemoved++;
+          log(`Removed duplicate card: ${key}`);
+        } else {
+          cardMap.set(key, card);
+        }
+      }
+    });
+    
+    log(`Cleanup complete. Removed ${duplicatesRemoved} duplicate cards.`);
+    return duplicatesRemoved;
+  } catch (e) {
+    console.warn('[cleanup] Failed:', e?.message || e);
+    return 0;
+  }
+};
+
+=== SUMMARY ===
+
+This report contains all CSS and JavaScript files that affect the "Currently Watching" section card layout:
+
+CSS FILES:
+- main.css: Core card styles and V2 system
+- cards.css: V2 card styling and layout rules
+- home-layout.css: Home page layout system and grid rules
+- your-shows.css: Your Shows section specific styling
+- mobile.css: Mobile responsive overrides
+- components.css: Base card styles and variants
+- community-layout.v2.css: Community section layout
+- tabs-layout.css: Tab navigation styling
+- mobile-hotfix.css: Critical mobile fixes
+
+JAVASCRIPT FILES:
+- card-v2.js: Main card rendering system
+- card-data-adapter.js: Data transformation utilities
+- currently-watching-preview.js: Preview card creation
+- functions.js: Utility functions including duplicate cleanup
+
+KEY LAYOUT RULES:
+1. Cards use flexbox layout with poster-wrap and card-content
+2. Actions use 2x2 grid layout on home page
+3. Rails use CSS Grid with column flow for horizontal scrolling
+4. Mobile responsive design with smaller card sizes
+5. RTL support for international users
+6. Dark mode support with CSS custom properties
+
+The report is now complete and ready for remote CSS/DOM analysis.
+

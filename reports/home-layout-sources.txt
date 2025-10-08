@@ -1,0 +1,6 @@
+=== CSS Rule Sources (Node.js Fallback) ===
+Generated: 2025-10-07T14:26:23.932Z
+Files scanned: 24
+Relevant rules found: 0
+
+=== Rules by File ===

@@ -191,3 +191,4 @@ console.log('Dev tools available:', typeof window.__DEV_TOOLS !== 'undefined');
 The Home dev verifiers now **load automatically on localhost** using **modern ES module syntax** while remaining **completely out of production**! 🎉
 
 
+

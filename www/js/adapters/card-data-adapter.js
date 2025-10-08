@@ -15,7 +15,19 @@
   function toCardProps(raw) {
     // Accept TMDB search result, detail, or our stored item
     const id = String(raw.id ?? raw.tmdbId ?? raw.external_id ?? '');
-    const mediaType = raw.media_type || raw.mediaType || raw.type || (raw.first_air_date ? 'tv' : 'movie') || 'movie';
+    // Determine media type - use item's media_type if available, otherwise determine from TMDB data
+    let mediaType = raw.media_type || raw.mediaType || raw.type;
+    if (!mediaType) {
+      // Check if it's a TV show by looking for TV-specific fields
+      if (raw.first_air_date && raw.number_of_episodes) {
+        mediaType = 'tv';
+      } else if (raw.release_date && !raw.first_air_date) {
+        mediaType = 'movie';
+      } else {
+        // Fallback: assume movie if uncertain
+        mediaType = 'movie';
+      }
+    }
     const title = raw.title || raw.name || raw.original_title || raw.original_name || 'Unknown';
     const poster = resolvePosterUrl(raw.poster || raw.posterUrl || raw.poster_path || raw.posterPath || null);
     const releaseDate = raw.release_date || raw.first_air_date || '';

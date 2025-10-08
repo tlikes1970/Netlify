@@ -255,6 +255,9 @@
     <script src="/js/renderers/card-v2-cw.js?v=28.113.0"></script>
     <script src="/js/renderers/card-v2-curated.js?v=28.113.0"></script>
 
+    <!-- App State and Events - Load before search controller -->
+    <script src="/scripts/app-state.js"></script>
+    
     <!-- Search module -->
     <script type="module" src="/js/search.js?v=28.150.0"></script>
     
@@ -390,8 +393,15 @@
     
     <!-- Curated data seeding -->
     <script src="/scripts/curated-seed.js"></script>
-    <script src="/scripts/curated-rows.js"></script>
+    <!-- <script src="/scripts/curated-rows.js"></script> --> <!-- Disabled in favor of custom system -->
     <script src="/scripts/tmdb-seed.js"></script>
+    
+    <!-- Custom genre selection system -->
+    <script src="/scripts/custom-genre-selector.js"></script>
+    <script src="/scripts/custom-curated-rows.js"></script>
+    
+    <!-- Development test script -->
+    <script src="/dev/test-custom-genre-system.js"></script>
     
     <!-- Home wiring system -->
     <script type="module" src="/js/home-wire-strict.js"></script>
@@ -1384,8 +1394,8 @@
             <!-- Curated rows -->
             <section id="curated-section" class="home-preview-row">
               <div class="preview-row-header">
-                <h3 class="preview-row-title" data-i18n="curated_sections">
-                  Target Curated Sections
+                <h3 class="preview-row-title" id="curatedSectionsTitle" data-i18n="curated_sections">
+                  Your Custom Rows
                 </h3>
               </div>
               <div class="preview-row-container">
@@ -1842,24 +1852,36 @@
                 </div>
 
                 <div class="settings-control-group">
-                  <label for="settingCuratedRows" class="settings-label" data-i18n="home_page_lists"
-                    >Home Page TV/Movie Lists</label
+                  <label for="settingCustomRowsCount" class="settings-label" data-i18n="custom_rows_count"
+                    >Custom Rows Count</label
                   >
                   <div class="settings-input-group">
                     <input
                       type="number"
-                      id="settingCuratedRows"
-                      name="curatedRows"
+                      id="settingCustomRowsCount"
+                      name="customRowsCount"
                       min="1"
                       max="3"
                       value="3"
                       class="settings-input settings-input-number"
                     />
                     <span class="settings-hint">(1-3)</span>
-                    <span id="curatedRowsStatus" class="settings-status">Auto-saves</span>
+                    <span id="customRowsStatus" class="settings-status">Auto-saves</span>
                   </div>
-                  <p class="settings-hint" data-i18n="number_of_curated_sections">
-                    Number of curated recommendation sections to show on the home page
+                  <p class="settings-hint" data-i18n="number_of_custom_sections">
+                    Number of personalized genre-based sections to show on the home page
+                  </p>
+                </div>
+
+                <div class="settings-control-group" id="customGenreSelection">
+                  <label class="settings-label" data-i18n="custom_genre_selection"
+                    >Custom Genre Selection</label
+                  >
+                  <div id="genreDropdownsContainer" class="genre-dropdowns-container">
+                    <!-- Dynamic genre dropdowns will be inserted here -->
+                  </div>
+                  <p class="settings-hint" data-i18n="custom_genre_hint">
+                    Select genres and subgenres for your personalized recommendation rows
                   </p>
                 </div>
 

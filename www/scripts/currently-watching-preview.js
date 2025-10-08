@@ -42,6 +42,8 @@
   });
   if (!window.FLAGS?.homeRowCurrentlyWatching) {
     console.log('🚫 Currently Watching Preview disabled by feature flag');
+    console.log('🎬 DEBUG: FLAGS object:', window.FLAGS);
+    console.log('🎬 DEBUG: homeRowCurrentlyWatching value:', window.FLAGS?.homeRowCurrentlyWatching);
     return;
   }
 
@@ -289,6 +291,7 @@
    */
   async function renderCurrentlyWatchingPreview() {
     console.log('🎬 renderCurrentlyWatchingPreview called');
+    console.log('🎬 DEBUG: Function called at', new Date().toISOString());
 
     // Prevent duplicate renders
     if (window.render_currently_watching_preview) {
@@ -405,7 +408,22 @@
           // Fallback to minimal snapshot
           snap = {
             id: item.id || item.tmdb_id || item.tmdbId,
-            media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie'),
+            media_type: (() => {
+              // Determine media type - use item's media_type if available, otherwise determine from TMDB data
+              let mediaType = item.media_type;
+              if (!mediaType) {
+                // Check if it's a TV show by looking for TV-specific fields
+                if (item.first_air_date && item.number_of_episodes) {
+                  mediaType = 'tv';
+                } else if (item.release_date && !item.first_air_date) {
+                  mediaType = 'movie';
+                } else {
+                  // Fallback: assume movie if uncertain
+                  mediaType = 'movie';
+                }
+              }
+              return mediaType;
+            })(),
             title: item.title || item.name || 'Unknown',
             name: item.title || item.name || 'Unknown',
             release_date: item.release_date || null,

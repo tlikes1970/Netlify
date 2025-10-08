@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Alignment Test</title>
+    <style>
+        /* Simulate the problematic CSS */
+        .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        
+        /* Our fix */
+        .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .card.v2 .actions,
+        .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .cw-card.v2 .actions,
+        .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .v2-home-cw .actions {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 8px !important;
+            margin-top: 6px !important;
+        }
+        
+        .action-grid-2x2 {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 8px !important;
+            width: 100% !important;
+        }
+        
+        .action-row {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 8px !important;
+        }
+        
+        .btn {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            background: #f0f0f0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .test-container {
+            max-width: 300px;
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Button Alignment Test</h1>
+    
+    <div class="test-container">
+        <h3>Legacy Layout (should be left-justified)</h3>
+        <div class="actions">
+            <button class="btn">Want to Watch</button>
+            <button class="btn">Watched</button>
+            <button class="btn">Not Interested</button>
+            <button class="btn">Delete</button>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h3>V2 Cards Layout (should be 2x2 grid)</h3>
+        <div class="card v2">
+            <div class="actions">
+                <div class="action-grid-2x2">
+                    <div class="action-row">
+                        <button class="btn">Want to Watch</button>
+                        <button class="btn">Watched</button>
+                    </div>
+                    <div class="action-row">
+                        <button class="btn">Not Interested</button>
+                        <button class="btn">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h3>CW Card Layout (should be 2x2 grid)</h3>
+        <div class="cw-card v2">
+            <div class="actions">
+                <div class="action-grid-2x2">
+                    <div class="action-row">
+                        <button class="btn">Want to Watch</button>
+                        <button class="btn">Watched</button>
+                    </div>
+                    <div class="action-row">
+                        <button class="btn">Not Interested</button>
+                        <button class="btn">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+

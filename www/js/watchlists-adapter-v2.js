@@ -193,7 +193,7 @@
         return this._getEmptyCache();
       }
 
-      const normalizeList = (list, listName) => {
+      const normalizeList = (list) => {
         if (Array.isArray(list)) {
           return list
             .map(item => {
@@ -208,18 +208,18 @@
       };
 
       const watchingIds = [
-        ...normalizeList(watchlists.movies?.watching || [], 'movies.watching'),
-        ...normalizeList(watchlists.tv?.watching || [], 'tv.watching')
+        ...normalizeList(watchlists.movies?.watching || []),
+        ...normalizeList(watchlists.tv?.watching || [])
       ];
       
       const wishlistIds = [
-        ...normalizeList(watchlists.movies?.wishlist || [], 'movies.wishlist'),
-        ...normalizeList(watchlists.tv?.wishlist || [], 'tv.wishlist')
+        ...normalizeList(watchlists.movies?.wishlist || []),
+        ...normalizeList(watchlists.tv?.wishlist || [])
       ];
       
       const watchedIds = [
-        ...normalizeList(watchlists.movies?.watched || [], 'movies.watched'),
-        ...normalizeList(watchlists.tv?.watched || [], 'tv.watched')
+        ...normalizeList(watchlists.movies?.watched || []),
+        ...normalizeList(watchlists.tv?.watched || [])
       ];
 
       return {
@@ -266,7 +266,6 @@
 
         const listSet = new Set(this._cache[listKey]);
         if (listSet.has(id)) {
-          log('Item already exists in', listName);
           return false;
         }
 
@@ -277,8 +276,6 @@
         if (itemData) {
           this._storeItemData(id, itemData);
         }
-        
-        log('Added item:', id, 'to', listName, 'new count:', this._cache[listKey].length);
         
         // Update appData for backward compatibility
         this._updateAppData();
@@ -519,7 +516,22 @@
           return {
             ...item,
             id: item.id || item.tmdb_id || item.tmdbId || id,
-            media_type: item.media_type || (item.first_air_date ? 'tv' : 'movie')
+            media_type: (() => {
+              // Determine media type - use item's media_type if available, otherwise determine from TMDB data
+              let mediaType = item.media_type;
+              if (!mediaType) {
+                // Check if it's a TV show by looking for TV-specific fields
+                if (item.first_air_date && item.number_of_episodes) {
+                  mediaType = 'tv';
+                } else if (item.release_date && !item.first_air_date) {
+                  mediaType = 'movie';
+                } else {
+                  // Fallback: assume movie if uncertain
+                  mediaType = 'movie';
+                }
+              }
+              return mediaType;
+            })()
           };
         }
         
@@ -545,7 +557,22 @@
         this._cache.itemData[id] = {
           ...itemData,
           id: Number(id),
-          media_type: itemData.media_type || (itemData.first_air_date ? 'tv' : 'movie')
+          media_type: (() => {
+            // Determine media type - use item's media_type if available, otherwise determine from TMDB data
+            let mediaType = itemData.media_type;
+            if (!mediaType) {
+              // Check if it's a TV show by looking for TV-specific fields
+              if (itemData.first_air_date && itemData.number_of_episodes) {
+                mediaType = 'tv';
+              } else if (itemData.release_date && !itemData.first_air_date) {
+                mediaType = 'movie';
+              } else {
+                // Fallback: assume movie if uncertain
+                mediaType = 'movie';
+              }
+            }
+            return mediaType;
+          })()
         };
         
         log('Stored item data for ID', id, ':', itemData.title || itemData.name || 'Unknown');

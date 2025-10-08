@@ -224,7 +224,7 @@
     /**
      * Check if item exists in list
      */
-    async hasItem(itemId, listName) {
+    async hasItem(itemId, listName, mediaType = null) {
       try {
         await this._ensureInitialized();
         
@@ -235,7 +235,10 @@
 
         const listKey = listName + 'Ids';
         const ids = cache[listKey] || [];
-        return ids.includes(String(itemId));
+        const itemIdStr = String(itemId);
+        const exists = ids.includes(itemIdStr);
+        
+        return exists;
       } catch (error) {
         err('Has item check failed:', error.message);
         return false;
