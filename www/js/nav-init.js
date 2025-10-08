@@ -53,6 +53,17 @@ export function initTabs() {
     hasPanel: panels.has(t.getAttribute('aria-controls'))
   })));
   
+  // Debug: Check if settings tab exists in DOM
+  const settingsTab = document.getElementById('settingsTab');
+  console.log('[nav-init] Settings tab in DOM:', {
+    exists: !!settingsTab,
+    role: settingsTab?.getAttribute('role'),
+    ariaDisabled: settingsTab?.getAttribute('aria-disabled'),
+    ariaControls: settingsTab?.getAttribute('aria-controls'),
+    display: settingsTab?.style.display,
+    computedDisplay: settingsTab ? getComputedStyle(settingsTab).display : 'N/A'
+  });
+  
   const tabs = allTabs.filter(t => panels.has(t.getAttribute('aria-controls')));
   
   // Debug: Log filtered tabs
@@ -66,6 +77,27 @@ export function initTabs() {
   // Cache frequently accessed elements for performance
   const searchContainer = document.querySelector('.top-search');
   const fabDock = document.querySelector('.fab-dock');
+  
+  // Function to re-run tab discovery after authentication
+  function refreshTabDiscovery() {
+    console.log('[nav-init] Refreshing tab discovery after authentication...');
+    const newTabs = [...bar.querySelectorAll('[role="tab"]:not([aria-disabled="true"])')].filter(t => panels.has(t.getAttribute('aria-controls')));
+    console.log('[nav-init] New tabs found after auth:', newTabs.map(t => ({
+      id: t.id,
+      ariaControls: t.getAttribute('aria-controls'),
+      ariaDisabled: t.getAttribute('aria-disabled'),
+      ariaSelected: t.getAttribute('aria-selected')
+    })));
+    
+    // Update the tabs array
+    tabs.length = 0;
+    tabs.push(...newTabs);
+    
+    console.log('[nav-init] Tab discovery refreshed. Total tabs:', tabs.length);
+  }
+  
+  // Expose refresh function globally
+  window.refreshTabDiscovery = refreshTabDiscovery;
   
   // Ensure each tab has a visible text label
   tabs.forEach(t => {

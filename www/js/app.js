@@ -114,6 +114,12 @@ window.__useLegacyTabs = false;
           el.setAttribute('disabled', 'true');
         }
       });
+      
+      // Refresh tab discovery after authentication state changes
+      if (window.refreshTabDiscovery) {
+        console.log('[app] Refreshing tab discovery after auth state change...');
+        window.refreshTabDiscovery();
+      }
     },
   };
 
