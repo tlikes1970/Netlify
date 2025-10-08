@@ -68,7 +68,10 @@ export function initTabs() {
     display: settingsTab?.style.display,
     computedDisplay: settingsTab ? getComputedStyle(settingsTab).display : 'N/A',
     parentElement: settingsTab?.parentElement?.tagName,
-    isConnected: settingsTab?.isConnected
+    isConnected: settingsTab?.isConnected,
+    isInBar: bar.contains(settingsTab),
+    barElement: bar.tagName,
+    barId: bar.id
   });
   
   // Debug: Check all tabs with role="tab" in the navigation bar
