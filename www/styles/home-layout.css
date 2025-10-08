@@ -593,7 +593,7 @@ main#panels {
   max-width: var(--rail-col-w-nextup);
 }
 
-#homeSection .card.v2-home-curated {
+#homeSection .curated-card.v2-home-curated {
   width: var(--rail-col-w-curated);
   min-width: var(--rail-col-w-curated);
   max-width: var(--rail-col-w-curated);
