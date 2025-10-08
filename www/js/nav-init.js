@@ -45,7 +45,11 @@ export function initTabs() {
 
   const panels = new Map(panelIds.map(id => [id, document.getElementById(id)]));
   // Include all tabs, even if they're hidden (for auth-required tabs)
-  const allTabs = [...bar.querySelectorAll('[role="tab"]')].filter(t => {
+  // Also include tabs outside the navigation bar (like FABs)
+  const allTabs = [
+    ...bar.querySelectorAll('[role="tab"]'),
+    ...document.querySelectorAll('[role="tab"]:not(#navigation [role="tab"])')
+  ].filter(t => {
     const isDisabled = t.getAttribute('aria-disabled') === 'true';
     const hasPanel = panels.has(t.getAttribute('aria-controls'));
     return !isDisabled && hasPanel;
@@ -124,7 +128,10 @@ export function initTabs() {
       ariaControls: t.getAttribute('aria-controls')
     })));
     
-    const newTabs = [...bar.querySelectorAll('[role="tab"]')].filter(t => {
+    const newTabs = [
+      ...bar.querySelectorAll('[role="tab"]'),
+      ...document.querySelectorAll('[role="tab"]:not(#navigation [role="tab"])')
+    ].filter(t => {
       const isDisabled = t.getAttribute('aria-disabled') === 'true';
       const hasPanel = panels.has(t.getAttribute('aria-controls'));
       return !isDisabled && hasPanel;
