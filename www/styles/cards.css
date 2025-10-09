@@ -1297,3 +1297,65 @@ html body .card.v2.v2-search-card.card.card.card {
   width: 100%;
   min-height: 36px;
 }
+
+/* === HOME RAIL CARD LAYOUTS === */
+/* Keep these specific so we don't smash tab/search cards */
+
+/* CW: poster-led, actions pinned to bottom with tight 2×2 */
+.card.v2.v2-home-cw.preview-card {
+  display: flex;
+  flex-direction: column;
+  width: var(--cw-col);
+  min-width: var(--cw-col);
+  padding: 12px;
+}
+
+.card.v2.v2-home-cw.preview-card .card-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 6px;
+  padding: 0;
+}
+
+.card.v2.v2-home-cw.preview-card .actions {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.card.v2.v2-home-cw.preview-card .actions > * {
+  min-height: 34px;
+  font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%;
+}
+
+/* Curated: single CTA, full width - maximum specificity without !important */
+body.tab-home #curated-section .curated-card.v2,
+body.tab-home #curated-section .curated-card.v2.preview-card,
+body.tab-home #curated-section .card.v2.v2-home-curated,
+body.tab-home #curated-section .card.v2.preview-card {
+  display: flex;
+  flex-direction: column;
+  width: var(--curated-col);
+  min-width: var(--curated-col);
+  padding: 12px;
+}
+body.tab-home #curated-section .curated-card.v2 .actions,
+body.tab-home #curated-section .curated-card.v2.preview-card .actions,
+body.tab-home #curated-section .card.v2.v2-home-curated .actions,
+body.tab-home #curated-section .card.v2.preview-card .actions {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+/* Limit flex-row actions to tab/search contexts, not home rails */
+.card.v2.v2-tab-card .actions,
+.card.v2.v2-search-card .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

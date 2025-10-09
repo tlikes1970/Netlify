@@ -23,7 +23,6 @@
           wk = 7 * 864e5;
         return t >= now - 864e5 && t <= now + wk;
       }),
-    discover: (d) => d.discover || [], // optional feed you already populate
     curated: (d) => {
       // Load curated data from localStorage keys
       const curatedData = [];

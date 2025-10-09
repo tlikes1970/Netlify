@@ -603,6 +603,113 @@
     return card;
   };
 
+  // Curated card renderer for home page
+  // Contract: returns an <article.card.v2.v2-home-curated.curated-card> element
+  // with poster-wrap, body, and actions present, so the curated CSS actually matches.
+
+  window.renderCuratedCardV2 = function renderCuratedCardV2(item) {
+    console.log('🎯 renderCuratedCardV2: VERSION 28.500.0 - Function called with:', item.title);
+    
+    // Normalize inbound data without guessing types
+    const id =
+      item.id ?? item.tmdb_id ?? item.tmdbId ?? item.media_id ?? item.mediaId;
+    const mediaType = item.media_type === 'tv' || item.media_type === 'movie'
+      ? item.media_type
+      : ''; // do NOT guess; empty string if unknown
+
+    const title = item.title || item.name || 'Unknown';
+    const posterPath = item.poster_path || item.posterUrl || '';
+    const releaseDate = item.release_date || item.first_air_date || '';
+    const poster =
+      posterPath
+        ? (posterPath.startsWith('http')
+            ? posterPath
+            : `https://image.tmdb.org/t/p/w342${posterPath}`)
+        : (typeof PLACEHOLDER_SVG !== 'undefined' ? PLACEHOLDER_SVG : '');
+
+    const props = {
+      id,
+      mediaType, // downstream must respect this
+      title,
+      poster,
+      releaseDate,
+      genre: item.genre || '',
+      whereToWatch: item.whereToWatch || '',
+      curatorBlurb: item.curatorBlurb || '',
+      // anything else renderCardV2 expects...
+    };
+
+    // Most codebases have renderCardV2(props, opts) -> HTMLElement
+    // If yours is renderCardV2(container, props, opts), fine — adjust accordingly.
+    const el = typeof renderCardV2 === 'function'
+      ? (renderCardV2.length >= 2
+          ? renderCardV2(props, { listType: 'curated', context: 'home' })
+          : renderCardV2(props))
+      : document.createElement('div');
+
+    // Guard: if renderCardV2 returned a text node or nothing, make a shell
+    const card = el instanceof HTMLElement ? el : document.createElement('article');
+
+    // Ensure class contract so your CSS actually applies
+    // Clear existing classes and set the correct ones
+    console.log('🎯 renderCuratedCardV2: VERSION 28.500.0 - Setting className to: card v2 v2-home-curated curated-card');
+    card.className = 'card v2 v2-home-curated curated-card';
+    console.log('🎯 renderCuratedCardV2: VERSION 28.500.0 - Final className:', card.className);
+    if (!card.hasAttribute('data-id') && id) card.dataset.id = String(id);
+    if (!card.hasAttribute('data-media-type')) card.dataset.mediaType = mediaType;
+
+    // Normalize poster markup for your CSS selectors
+    // Expecting .poster-wrap > img
+    let posterWrap = card.querySelector('.poster-wrap');
+    if (!posterWrap) {
+      posterWrap = document.createElement('div');
+      posterWrap.className = 'poster-wrap';
+      const img = document.createElement('img');
+      img.alt = `${title} poster`;
+      img.loading = 'lazy';
+      img.src = poster;
+      posterWrap.appendChild(img);
+
+      // If card has a known poster anchor/container, use it; else prepend
+      const anchor = card.querySelector('.unified-card-poster, .unified-card-poster-container, a, header') || card;
+      anchor.prepend(posterWrap);
+    } else {
+      // Make sure inner <img> exists and is wired
+      const img = posterWrap.querySelector('img') || document.createElement('img');
+      img.alt = `${title} poster`;
+      img.loading = 'lazy';
+      img.src = poster;
+      if (!img.parentElement) posterWrap.appendChild(img);
+    }
+
+    // Normalize actions container to avoid the old .actions cascade lottery
+    const actions =
+      card.querySelector('.ccv2-actions') ||
+      card.querySelector('.actions') ||
+      (() => {
+        const a = document.createElement('div');
+        a.className = 'ccv2-actions';
+        card.appendChild(a);
+        return a;
+      })();
+
+    // If we found legacy .actions, namespace it so curated CSS can target it safely
+    actions.classList.add('ccv2-actions');
+
+    // Optional: cap actions to 4 cells visually by adding spacers
+    const btns = [...actions.querySelectorAll('button,[role="button"],a.button')];
+    if (btns.length < 4) {
+      for (let i = btns.length; i < 4; i++) {
+        const s = document.createElement('span');
+        s.className = 'ccv2-spacer';
+        s.setAttribute('aria-hidden', 'true');
+        actions.appendChild(s);
+      }
+    }
+
+    return card;
+  };
+
   // Expose globally
   window.renderCardV2 = renderCardV2;
   window.renderSearchCardV2 = renderSearchCardV2;

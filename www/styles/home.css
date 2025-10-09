@@ -138,9 +138,6 @@ main#panels,
   display: block;
 }
 
-/* H1: Ensure no horizontal scroll on page container */
-html, body { overflow-x: hidden; } /* keeps layout mishaps invisible; real fixes above */
-
 /* H1.1: home wrapper sizing */
 #homeSection.home-content:not([hidden]) {
   display: block;              /* ensure it participates in normal flow */

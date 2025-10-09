@@ -9,14 +9,6 @@
       "limit": 30
     },
     {
-      "key": "personalized",
-      "title": "🎨 🎨 Personalized Recommendations",
-      "headingSelector": "#personalized-section .preview-row-title",
-      "containerSelector": "#personalized-content",
-      "picker": "discover",
-      "limit": 20
-    },
-    {
       "key": "curated",
       "title": "🎯 Curated Sections",
       "headingSelector": "#curated-section .preview-row-title",

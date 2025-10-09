@@ -377,7 +377,6 @@
   /* Optimize for mobile scrolling */
   body {
     padding: 10px;
-    overflow-x: hidden;
   }
 
   /* Ensure proper spacing for mobile */

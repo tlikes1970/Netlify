@@ -3,6 +3,8 @@
    Expects items with { id, title, posterPath }. Map your data if needed.
 */
 
+console.log('🚨 CURATED-ROWS.JS LOADED - SCRIPT IS RUNNING!');
+
 /**
  * Load dynamic content for a curated section based on user's genre preferences
  */
@@ -119,8 +121,8 @@ async function loadDynamicContent(section, sectionIndex) {
       })),
     ];
 
-    // Limit to 12 items per section
-    const limitedItems = allItems.slice(0, 12);
+    // Limit to 24 items per section
+    const limitedItems = allItems.slice(0, 24);
 
     console.log(`🎯 Dynamic content loaded: ${limitedItems.length} items for ${section.title}`);
     
@@ -210,36 +212,39 @@ async function initializeCurated() {
   // Clear existing content
   mount.innerHTML = '';
 
+  // Find the preview-row-container (the actual scroll container)
+  const previewContainer = mount.closest('.preview-row-container');
+  if (!previewContainer) {
+    console.error('🎯 No preview-row-container found!');
+    return;
+  }
+  
+  console.log('🎯 Found preview-row-container:', previewContainer);
+
+  // Make the container visible and set it up for vertical layout
+  mount.style.display = 'block';
+  
+  // Create a vertical container for all genre rows
+  const verticalContainer = document.createElement('div');
+  verticalContainer.style.display = 'flex';
+  verticalContainer.style.flexDirection = 'column';
+  verticalContainer.style.width = '100%';
+  verticalContainer.style.minHeight = '600px'; // Ensure it has height
+  verticalContainer.style.gap = '32px';
+  verticalContainer.style.padding = '16px';
+  
+  // Clear the preview container and add our vertical container
+  previewContainer.innerHTML = '';
+  previewContainer.style.height = 'auto'; // Allow it to grow
+  previewContainer.style.minHeight = '600px'; // Ensure minimum height
+  previewContainer.style.overflow = 'visible'; // Override the hidden overflow
+  previewContainer.appendChild(verticalContainer);
+  
+  console.log('🎯 Preview container setup complete');
+
   // Load dynamic content for each section
   for (let index = 0; index < limitedSections.length; index++) {
     const section = limitedSections[index];
-    // Create horizontal row container
-    const rowEl = document.createElement('div');
-    rowEl.className = 'curated-row';
-    rowEl.setAttribute('data-section', index);
-
-    // Create row header
-    const headerEl = document.createElement('div');
-    headerEl.className = 'curated-row-header';
-    headerEl.innerHTML = `<h3 class="curated-row-title">${section.title}</h3>`;
-
-    // Create horizontal scroll container
-    const scrollEl = document.createElement('div');
-    scrollEl.className = 'curated-row-scroll';
-    scrollEl.setAttribute('role', 'region');
-    scrollEl.setAttribute('aria-label', `${section.title} horizontal scroll`);
-
-    // Create items container inside scroll
-    const itemsContainer = document.createElement('div');
-    itemsContainer.className = 'curated-items-container';
-
-    scrollEl.appendChild(itemsContainer);
-    rowEl.appendChild(headerEl);
-    rowEl.appendChild(scrollEl);
-    mount.appendChild(rowEl);
-
-    // Make the container visible
-    mount.style.display = 'block';
 
     // Load dynamic content for this section
     try {
@@ -248,49 +253,130 @@ async function initializeCurated() {
       if (items && items.length > 0) {
         console.log(`🎯 Loaded ${items.length} dynamic items for section: ${section.title}`);
 
-        for (const item of items) {
+        // Create a separate horizontal row for this genre
+        const genreRow = document.createElement('div');
+        genreRow.className = 'curated-genre-row';
+        genreRow.style.width = '100%';
+        genreRow.style.minHeight = '300px'; // Ensure each row has height
+        
+        // Create genre header (title to the left and above)
+        const genreHeader = document.createElement('div');
+        genreHeader.style.marginBottom = '16px';
+        genreHeader.style.paddingLeft = '16px';
+        
+        const genreTitle = document.createElement('h3');
+        genreTitle.textContent = section.title;
+        genreTitle.style.color = '#ffffff';
+        genreTitle.style.fontSize = '20px';
+        genreTitle.style.fontWeight = '600';
+        genreTitle.style.margin = '0';
+        genreTitle.style.padding = '0';
+        
+        genreHeader.appendChild(genreTitle);
+        
+            // Create horizontal scrollable cards container
+            const cardsContainer = document.createElement('div');
+            cardsContainer.style.display = 'flex';
+            cardsContainer.style.gap = '12px';
+            cardsContainer.style.overflowX = 'auto';
+            cardsContainer.style.overflowY = 'hidden';
+            cardsContainer.style.paddingBottom = '8px';
+            cardsContainer.style.scrollSnapType = 'x mandatory';
+            cardsContainer.style.scrollbarWidth = 'thin';
+            // Use responsive width to expand with viewport
+            cardsContainer.style.width = '100%';
+            cardsContainer.style.minWidth = '100%';
+            cardsContainer.style.maxWidth = '100%';
+            cardsContainer.style.paddingLeft = '16px';
+            cardsContainer.style.paddingRight = '16px';
+            cardsContainer.style.boxSizing = 'border-box';
+        
+        // Add cards to this genre's container (limit to 24 cards per row)
+        const limitedItems = items.slice(0, 24);
+        for (const item of limitedItems) {
           try {
-            console.log(`🎯 Creating card for item: ${item.title}`, item);
+            console.log(`🎯 Creating SIMPLE card for item: ${item.title}`);
             
-            // Use Cards V2 system if available
-            let card;
-            if (window.renderCuratedCardV2) {
-              console.log('🎯 Using renderCuratedCardV2');
-              card = window.renderCuratedCardV2(item);
-            } else if (window.renderSearchCardV2) {
-              console.log('🎯 Using renderSearchCardV2');
-              card = window.renderSearchCardV2(item);
-            } else if (USE_CARD && window.Card && window.createCardData) {
-              console.log('🎯 Using old Card component');
-              // Fallback to old Card component
-              const cardData = window.createCardData(item, 'tmdb', 'curated');
-              card = window.Card({
-                variant: 'unified',
-                ...cardData,
-              });
-            } else {
-              console.log('🎯 Using simple fallback card');
-              // Fallback to simple item display with click handler
-              const itemEl = document.createElement('div');
-              itemEl.className = 'unified-card';
-              itemEl.setAttribute('tabindex', '0');
-              itemEl.setAttribute('role', 'button');
-              itemEl.setAttribute('aria-label', `View details for ${item.title}`);
-              itemEl.innerHTML = `<div class="card-title">${item.title}</div>`;
-              card = itemEl;
-            }
+              // Create a simple, working card directly
+              const card = document.createElement('div');
+              card.className = 'card v2 v2-home-curated curated-card';
+              card.style.width = '200px';
+              card.style.minWidth = '200px';
+              card.style.maxWidth = '200px';
+              card.style.display = 'flex';
+              card.style.flexDirection = 'column';
+              card.style.alignItems = 'center';
+              card.style.background = '#ffffff';
+              card.style.border = '1px solid #e5e7eb';
+              card.style.borderRadius = '14px';
+              card.style.padding = '12px';
+              card.style.boxShadow = '0 4px 12px rgba(0,0,0,.1)';
+              card.style.flexShrink = '0';
             
-            console.log(`🎯 Card created for ${item.title}:`, card);
-            if (card) {
-              itemsContainer.appendChild(card);
-              console.log(`🎯 Card appended for ${item.title}`);
-            } else {
-              console.warn(`🎯 No card created for ${item.title}`);
-            }
+            // Create poster
+            const posterWrap = document.createElement('div');
+            posterWrap.style.width = '100%';
+            posterWrap.style.aspectRatio = '2/3';
+            posterWrap.style.overflow = 'hidden';
+            posterWrap.style.borderRadius = '10px';
+            posterWrap.style.marginBottom = '8px';
+            
+            const img = document.createElement('img');
+            img.src = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '/assets/img/poster-placeholder.png';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.display = 'block';
+            posterWrap.appendChild(img);
+            
+                // Create title
+                const title = document.createElement('div');
+                const titleText = item.title || item.name || item.original_title || item.original_name || 'Unknown Title';
+                title.textContent = titleText;
+                title.style.color = '#1f2937';
+                title.style.fontSize = '14px';
+                title.style.fontWeight = '600';
+                title.style.textAlign = 'center';
+                title.style.marginBottom = '8px';
+                title.style.lineHeight = '1.2';
+                
+                console.log(`🎯 Card title set to: "${titleText}" for item:`, item);
+            
+            // Create button
+            const button = document.createElement('button');
+            button.textContent = 'Want to Watch';
+            button.style.width = '100%';
+            button.style.padding = '8px 12px';
+            button.style.background = '#ff4c8d';
+            button.style.color = 'white';
+            button.style.border = 'none';
+            button.style.borderRadius = '8px';
+            button.style.fontSize = '12px';
+            button.style.fontWeight = '500';
+            button.style.cursor = 'pointer';
+            
+            // Assemble card
+            card.appendChild(posterWrap);
+            card.appendChild(title);
+            card.appendChild(button);
+            
+            // Add card to this genre's container
+            cardsContainer.appendChild(card);
+            console.log(`🎯 SIMPLE card added to ${section.title} row for ${item.title}`);
+            
           } catch (error) {
-            console.error('🎯 Error creating card for item:', item.title, error);
+            console.error('🎯 Error creating simple card for item:', item.title, error);
           }
         }
+        
+        // Assemble the genre row
+        genreRow.appendChild(genreHeader);
+        genreRow.appendChild(cardsContainer);
+        
+        // Append the entire genre row to the vertical container
+        verticalContainer.appendChild(genreRow);
+        console.log(`🎯 Genre row appended to vertical container for ${section.title}`);
+        
       } else {
         console.log(`🎯 No dynamic content loaded for section: ${section.title}`);
       }
@@ -318,6 +404,8 @@ async function initializeCurated() {
 
 // Initialize curated sections
 async function initCuratedSections() {
+  console.log('🚨 initCuratedSections called!');
+  try {
   console.log('🎯 initCuratedSections called');
   console.log('🎯 Feature flag check:', window.FLAGS?.homeRowCurated);
   
@@ -339,6 +427,9 @@ async function initCuratedSections() {
   }
 
   await initializeCurated();
+  } catch (error) {
+    console.error('🚨 Error in initCuratedSections:', error);
+  }
 }
 
 // Listen for curated:rerender event to update when settings change
@@ -360,9 +451,17 @@ window.refreshCuratedRows = async () => {
 };
 
 // Initialize curated sections when DOM is ready
+console.log('🚨 About to check DOM ready state:', document.readyState);
 if (document.readyState === 'loading') {
+  console.log('🚨 DOM still loading, adding DOMContentLoaded listener');
   document.addEventListener('DOMContentLoaded', initCuratedSections);
 } else {
+  console.log('🚨 DOM already ready, calling initCuratedSections in 100ms');
   // DOM is already ready, initialize immediately
-  setTimeout(initCuratedSections, 100);
+  setTimeout(() => {
+    console.log('🚨 Calling initCuratedSections now...');
+    initCuratedSections().catch(error => {
+      console.error('🚨 Error in initCuratedSections:', error);
+    });
+  }, 100);
 }

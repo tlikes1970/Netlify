@@ -1,0 +1,168 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Calibri;}{\f1 Courier New;}}
+\fs24
+\b Flicklet: Clean Rails + Tabs (with Holiday+) — Build \& Migration Plan\b0\par
+\par
+\ul Tabs (final set)\ulnone\par
+1) Main (Home)\par
+2) Currently Watching\par
+3) Want to Watch\par
+4) Watched\par
+5) Discover\par
+6) Holiday (new; label shown as \"Holiday+\")\par
+7) Settings (hidden)\par
+\par
+\ul Phase 1 — Build (UI only; sandboxed, no legacy deps)\ulnone\par
+\par
+\b Prompt 1A — Build clean Home rails (Your Shows + For You + Holiday+ row built in)\b0\par
+{\f1\fs20
+(() => {\par
+  const $=(s,r=document)=>r.querySelector(s); const make=(t,a={})=>Object.assign(document.createElement(t),a);\par
+  // reset\par
+  $('#ys-clean')?.remove(); $('#fy-clean')?.remove(); $('#clean-spec-style')?.remove();\par
+  // scoped CSS\par
+  const css = make('style',{id:'clean-spec-style'});\par
+  css.textContent = `\par
+    .clean-group{margin:32px 0}\par
+    .clean-group .rail{display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;padding:0 16px 8px;width:100%;box-sizing:border-box;scroll-snap-type:x mandatory}\par
+    .clean-group .rail>*{scroll-snap-align:start;flex:0 0 auto}\par
+    .cw-card{width:200px;box-sizing:border-box;border-radius:14px;background:var(--surface,#171a21);border:1px solid var(--border,#242a33);color:var(--fg,#e6eaf0);display:flex;flex-direction:column;align-items:center;padding:12px;gap:8px}\par
+    .cw-card .poster-wrap{width:100%;aspect-ratio:2/3;overflow:hidden;border-radius:10px}\par
+    .cw-card .poster-wrap img{width:100%;height:100%;object-fit:cover;display:block}\par
+    .cw-card .title{font-weight:700;font-size:14px;text-align:center}\par
+    .cw-card .meta{font-size:12px;color:var(--muted,#a9b3c1);text-align:center}\par
+    .cw-card .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-top:8px}\par
+    .cw-card .actions button{min-height:44px;width:100%;border:none;border-radius:8px;background:#2b63ff;color:#fff;font-size:13px}\par
+    .up-card{width:220px;box-sizing:border-box;border-radius:14px;background:var(--surface,#171a21);border:1px solid var(--border,#242a33);color:var(--fg,#e6eaf0);display:flex;flex-direction:column;align-items:center;padding:12px;gap:6px}\par
+    .up-card .poster-wrap{width:100%;aspect-ratio:2/3;overflow:hidden;border-radius:10px}\par
+    .up-card .poster-wrap img{width:100%;height:100%;object-fit:cover;display:block}\par
+    .up-card .title{font-weight:700;font-size:14px;text-align:center}\par
+    .up-card .meta{font-size:12px;color:var(--muted,#a9b3c1);text-align:center}\par
+    .up-card .next{font-size:12px;color:#21b66f;text-align:center}\par
+    .fy-card{width:220px;box-sizing:border-box;border-radius:14px;background:var(--surface,#171a21);border:1px solid var(--border,#242a33);color:var(--fg,#e6eaf0);display:flex;flex-direction:column;align-items:center;padding:12px;gap:6px}\par
+    .fy-card .poster-wrap{width:100%;aspect-ratio:2/3;overflow:hidden;border-radius:10px}\par
+    .fy-card .poster-wrap img{width:100%;height:100%;object-fit:cover;display:block}\par
+    .fy-card .poster-wrap a{display:block;width:100%;height:100%}\par
+    .fy-card .title{font-weight:700;font-size:14px;text-align:center}\par
+    .fy-card .meta{font-size:12px;color:var(--muted,#a9b3c1);text-align:center}\par
+    .fy-card .where{font-size:12px;color:#6ca4ff;text-align:center}\par
+    .fy-card .blurb{font-size:12px;line-height:1.3;color:#ccc;text-align:center;max-height:3.9em;overflow:hidden}\par
+    .fy-card .actions{display:grid;grid-template-columns:1fr;gap:8px;width:100%;margin-top:8px}\par
+    .fy-card .actions button{min-height:40px;width:100%;border:none;border-radius:8px;background:#2b63ff;color:#fff;font-size:13px}\par
+  `; document.head.appendChild(css);\par
+  const buildCard=(cls,title,poster,meta,extra)=>{const c=make('div',{className:cls});const pw=make('div',{className:'poster-wrap'});const img=make('img',{src:poster||'/assets/img/poster-placeholder.png'});pw.appendChild(img);c.appendChild(pw);c.appendChild(make('div',{className:'title',textContent:title}));if(meta)c.appendChild(make('div',{className:'meta',textContent:meta}));if(extra)c.appendChild(extra);return c;};\par
+  const home=$('#homeSection')||document.body;\par
+  // Your Shows\par
+  const ys=make('div',{id:'ys-clean',className:'clean-group'});\par
+  ys.innerHTML='<div class=\"group-header\"><h2 class=\"group-title\">Your Shows</h2></div><div class=\"group-divider\"></div>';\par
+  const cwSec=make('section',{className:'home-preview-row'}); cwSec.appendChild(make('h3',{textContent:'Currently Watching',style:'padding:0 16px;margin:0 0 8px;font-size:20px;font-weight:600;'}));\par
+  const cwRail=make('div',{className:'rail'}); for(let i=0;i<12;i++){const card=buildCard('cw-card','Title '+(i+1),null,'S1 • E'+(i+1));const acts=make('div',{className:'actions'});['Want to Watch','Watched','Not Interested','Delete'].forEach(t=>acts.appendChild(make('button',{textContent:t})));card.appendChild(acts);cwRail.appendChild(card);} cwSec.appendChild(cwRail);\par
+  const upSec=make('section',{className:'home-preview-row'}); upSec.appendChild(make('h3',{textContent:'Next Up',style:'padding:0 16px;margin:0 0 8px;font-size:20px;font-weight:600;'}));\par
+  const upRail=make('div',{className:'rail'}); for(let i=0;i<12;i++){const nextLine=make('div',{className:'next',textContent:'Up next: S1E'+(i+2)+' 2025-11-01'});const card=buildCard('up-card','Upcoming '+(i+1),null,'S1 • E'+(i+2),nextLine);upRail.appendChild(card);} upSec.appendChild(upRail);\par
+  ys.appendChild(cwSec); ys.appendChild(upSec); home.prepend(ys);\par
+  // For You (+ Holiday+)\par
+  const fy=make('div',{id:'fy-clean',className:'clean-group'});\par
+  fy.innerHTML='<div class=\"group-header\"><h2 class=\"group-title\">For You</h2></div><div class=\"group-divider\"></div>';\par
+  const rows=[['Drama','Netflix'],['Comedy','Hulu'],['Horror','Shudder'],['Holiday+','Disney+']];\par
+  rows.forEach(([title,prov],idx)=>{const sec=make('section',{className:'home-preview-row'});sec.appendChild(make('h3',{textContent:title,style:'padding:0 16px;margin:0 0 8px;font-size:20px;font-weight:600;'}));const rail=make('div',{className:'rail',id:'fy-rail-'+idx});for(let i=0;i<12;i++){const card=buildCard('fy-card',`${title} Show ${i+1}`,null,`${title} • 2025`);card.appendChild(make('div',{className:'where',textContent:'Where to Watch: '+prov}));card.appendChild(make('div',{className:'blurb',textContent:'Short description text that will truncate neatly to fit the card height.'}));const acts=make('div',{className:'actions'});acts.appendChild(make('button',{textContent:'Want to Watch'}));card.appendChild(acts);rail.appendChild(card);}sec.appendChild(rail);fy.appendChild(sec);});\par
+  ys.after(fy);\par
+  console.log('Build OK (Home + Holiday+)');\par
+})();\par
+}\par
+\par
+\b Prompt 1B — Build the tab bar (shows the new \"Holiday\" tab; Settings is hidden)\b0\par
+{\f1\fs20
+(() => {\par
+  const $=(s,r=document)=>r.querySelector(s);\par
+  $('#tabbar-clean')?.remove();\par
+  const bar=document.createElement('nav'); bar.id='tabbar-clean';\par
+  bar.style.cssText='display:flex;gap:8px;align-items:center;padding:8px 16px;border-bottom:1px solid var(--border,#242a33)';\par
+  const tabs=['Main','Currently Watching','Want to Watch','Watched','Discover','Holiday+'];\par
+  tabs.forEach((t,i)=>{const b=document.createElement('button');b.textContent=t;b.dataset.tab=t.toLowerCase();b.style.cssText='padding:8px 12px;border-radius:8px;border:1px solid var(--border,#242a33);background:var(--surface,#171a21);color:var(--fg,#e6eaf0);cursor:pointer';b.onclick=()=>{console.log('Switch to tab:',t);};bar.appendChild(b);});\par
+  const home=$('#homeSection')||document.body; home.prepend(bar);\par
+  console.log('Tab bar (clean) added');\par
+})();\par
+}\par
+\par
+\ul Phase 1 QA — reply PASS/FAIL\ulnone\par
+- 2 rails under Your Shows, 12 cards each.\par
+- 4 rails under For You (Drama, Comedy, Horror, Holiday+), 12 cards each.\par
+- CW actions are 2x2, min-height 44 px.\par
+- Rails snap; last card aligns with viewport edge.\par
+- Tab bar shows: Main, Currently Watching, Want to Watch, Watched, Discover, Holiday+ (Settings is hidden).\par
+\par
+\ul Phase 2 — Data wiring stubs (with Holiday+)\ulnone\par
+\par
+\b Prompt 2A — Attach stubs + settings (genre prefs incl. Holiday+)\b0\par
+{\f1\fs20
+(() => {\par
+  window.cleanStore = {\par
+    progressById: {},\par
+    upNext: [],\par
+    genrePrefs: [\par
+      { mainGenreId:18, subGenreId:null, mediaType:'tv', label:'Drama' },\par
+      { mainGenreId:35, subGenreId:null, mediaType:'tv', label:'Comedy' },\par
+      { mainGenreId:27, subGenreId:null, mediaType:'tv', label:'Horror' },\par
+      { mainGenreId:'holiday+', subGenreId:null, mediaType:'tv', label:'Holiday+' },\par
+    ],\par
+    discoveryTopGenres: [{id:18,label:'Drama'},{id:35,label:'Comedy'},{id:27,label:'Horror'}],\par
+  };\par
+  window.cleanAPI = {\par
+    getCurrentlyWatching: async () => [...Array(12)].map((_,i)=>({ id:i+1, title:'Show '+(i+1), season:1, episode:i+1, posterUrl:'/assets/img/poster-placeholder.png'})),\par
+    getUpNext: async () => [...Array(12)].map((_,i)=>({ titleId:i+1, season:1, episode:i+2, airDateUtc: new Date(Date.now()+ i*864e5).toISOString(), seasonType: (i%5===0?'next': i%11===0?'ended':'same') })),\par
+    discoverByGenre: async (genreId, subGenreId, mediaType, limit=24) => [...Array(limit)].map((_,i)=>({ id:String(genreId).slice(0,3)*100+i, title:`${genreId=== 'holiday+' ? 'Holiday' : 'G'} Title ${i+1}`, year:2025, posterUrl:'/assets/img/poster-placeholder.png', overview:'Overview text.' }))\par
+  };\par
+  console.log('Stubs + Holiday+ ready');\par
+})();\par
+}\par
+\par
+\b Prompt 2B — Up Next copy rules (same season / next season / ended)\b0\par
+{\f1\fs20
+(() => {\par
+  const fmt = (iso) => {try{const d=new Date(iso);return d.toISOString().slice(0,10);}catch{return 'TBA';}};\par
+  document.querySelectorAll('#ys-clean .up-card .next').forEach((el,i)=>{\par
+    const item=(window.cleanStore.upNext && window.cleanStore.upNext[i])||{seasonType:'same',season:1,episode:i+2,airDateUtc:null};\par
+    el.textContent = item.seasonType==='ended' ? `Series complete ${fmt(item.airDateUtc)}`\par
+      : item.seasonType==='next' ? 'Up next: next season'\par
+      : `Up next: S${item.season}E${item.episode} ${fmt(item.airDateUtc)}`;\par
+  });\par
+  console.log('Up Next copy applied');\par
+})();\par
+}\par
+\par
+\b Prompt 2C — Apply settings to For You titles (including Holiday+)\b0\par
+{\f1\fs20
+(() => {\par
+  const labels = (prefs) => prefs.map(p=>p.label||p.mainGenreId).slice(0,4);\par
+  const prefs = window.cleanStore.genrePrefs || [];\par
+  const names = labels(prefs);\par
+  [...document.querySelectorAll('#fy-clean h3')].forEach((h,idx)=>{ if(names[idx]) h.textContent = names[idx]; });\par
+  console.log('For You titles bound to settings (incl. Holiday+)');\par
+})();\par
+}\par
+\par
+\ul Phase 2 QA — reply PASS/FAIL\ulnone\par
+- Up Next lines are correct per rule.\par
+- For You row titles reflect settings: Drama, Comedy, Horror, Holiday+.\par
+\par
+\ul Phase 3 — Coexist safely (hide legacy)\ulnone\par
+\par
+\b Prompt 3 — Visually hide legacy rails (non-destructive)\b0\par
+{\f1\fs20
+(() => { ['#group-1-your-shows','#curated-section'].forEach(sel=>document.querySelectorAll(sel).forEach(n=>n.style.display='none')); console.log('Legacy hidden'); })();\par
+}\par
+\par
+\ul Phase 3 QA — reply PASS/FAIL\ulnone\par
+Only the clean containers and the clean tab bar are visible.\par
+\par
+\ul Phase 4 — Cleanup (single PR after PASS)\ulnone\par
+- Remove JS: legacy curated/your-shows DOM mutators; feature flags tied to old sections.\par
+- Remove CSS: parent-rail grids, width:max-content rails, container-level snaps.\par
+- Remove HTML emitters for legacy sections; rename \#ys-clean/\#fy-clean to canonical IDs.\par
+- Keep Holiday+ in settings and in For You; wire the dedicated Holiday tab to reuse the same data pipeline.\par
+\par
+\ul Notes on Tabs (5–6 live tabs + hidden Settings)\ulnone\par
+- Use a clean Tab component (no absolute positioning). States: default/hover/selected/disabled. Keyboard accessible.\par
+- Tab content mounts per-tab route: \par
+  Main → Home rails; CW → CW rail only; Want to Watch → watchlist feed; Watched → history; Discover → genre/search; Holiday+ → same curated pipeline with holiday filter; Settings remains route-only.\par
+}\n

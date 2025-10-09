@@ -229,6 +229,33 @@
       // Show the section
       previewSection.style.display = 'block';
       scrollContainer.innerHTML = '';
+      
+      // Debug: Check actual container widths
+      const previewContainer = previewSection.querySelector('.preview-row-container');
+      
+      console.log('🎬 DEBUGGING CONTAINER WIDTHS:');
+      console.log('🎬 Main container width:', document.querySelector('.main-container')?.offsetWidth);
+      console.log('🎬 Your Shows group width:', document.querySelector('#group-1-your-shows')?.offsetWidth);
+      console.log('🎬 Preview container width:', previewContainer?.offsetWidth);
+      console.log('🎬 Scroll container width:', scrollContainer?.offsetWidth);
+      console.log('🎬 Available viewport width:', window.innerWidth);
+      
+      // Ensure container stays within parent bounds
+      if (previewContainer) {
+        previewContainer.style.overflow = 'hidden';
+        console.log('🎬 Set overflow hidden for currently watching container');
+      }
+      
+      // Override the CSS Grid width constraint - use responsive width
+      if (scrollContainer) {
+        // Use 100% width to be responsive to viewport changes
+        scrollContainer.style.width = '100%';
+        scrollContainer.style.minWidth = '100%';
+        scrollContainer.style.maxWidth = '100%';
+        scrollContainer.style.overflowX = 'auto';
+        scrollContainer.style.overflowY = 'hidden';
+        console.log('🎬 Set scroll container to responsive 100% width');
+      }
 
       // Limit items to prevent performance issues
       const limit = getCurrentlyWatchingLimit();
@@ -242,16 +269,74 @@
       const transformedItems = limitedItems.map(item => window.toCardProps ? window.toCardProps(item) : item);
       console.log('🎬 Transformed items using toCardProps:', transformedItems);
 
-      // Render each item
+      // Render each item with simple cards (like curated section)
       for (const item of transformedItems) {
         try {
-          const card = await createPreviewCard(item);
-          if (card) {
-            scrollContainer.appendChild(card);
-          }
-          // If card is null (no poster), it's already logged in createPreviewCard
+          // Create a simple, working card directly (same approach as curated)
+          const card = document.createElement('div');
+          card.className = 'card v2 v2-home-cw preview-card';
+          card.style.width = '200px';
+          card.style.minWidth = '200px';
+          card.style.maxWidth = '200px';
+          card.style.display = 'flex';
+          card.style.flexDirection = 'column';
+          card.style.alignItems = 'center';
+          card.style.background = '#ffffff';
+          card.style.border = '1px solid #e5e7eb';
+          card.style.borderRadius = '14px';
+          card.style.padding = '12px';
+          card.style.boxShadow = '0 4px 12px rgba(0,0,0,.1)';
+          card.style.flexShrink = '0';
+          
+          // Create poster
+          const posterWrap = document.createElement('div');
+          posterWrap.style.width = '100%';
+          posterWrap.style.aspectRatio = '2/3';
+          posterWrap.style.borderRadius = '8px';
+          posterWrap.style.overflow = 'hidden';
+          posterWrap.style.marginBottom = '8px';
+          
+          const img = document.createElement('img');
+          img.src = item.posterUrl || item.poster || item.poster_path || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04NSAxMjBIMTE1VjE4MEg4NVYxMjBaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik05NSAxMzBIMTA1VjE3MEg5NVYxMzBaIiBmaWxsPSIjNjM3MzgzIi8+Cjwvc3ZnPgo=';
+          img.alt = item.title || item.name || 'Poster';
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'cover';
+          img.style.display = 'block';
+          posterWrap.appendChild(img);
+          
+          // Create title
+          const title = document.createElement('div');
+          const titleText = item.title || item.name || 'Unknown Title';
+          title.textContent = titleText;
+          title.style.color = '#1f2937';
+          title.style.fontSize = '14px';
+          title.style.fontWeight = '600';
+          title.style.textAlign = 'center';
+          title.style.marginBottom = '8px';
+          title.style.lineHeight = '1.2';
+          
+          // Create button
+          const button = document.createElement('button');
+          button.textContent = 'Want to Watch';
+          button.style.width = '100%';
+          button.style.padding = '8px 12px';
+          button.style.backgroundColor = '#3b82f6';
+          button.style.color = 'white';
+          button.style.border = 'none';
+          button.style.borderRadius = '6px';
+          button.style.fontSize = '12px';
+          button.style.fontWeight = '500';
+          button.style.cursor = 'pointer';
+          
+          card.appendChild(posterWrap);
+          card.appendChild(title);
+          card.appendChild(button);
+          
+          scrollContainer.appendChild(card);
+          console.log(`🎬 Created simple card for: ${titleText}`);
         } catch (error) {
-          console.error('❌ Failed to create preview card for item:', error);
+          console.error('❌ Failed to create simple card for item:', error);
         }
       }
 

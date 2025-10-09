@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flicklet v28.147.0 - TV & Movie Tracker</title>
+    <title>Flicklet v28.148.0 - TV & Movie Tracker</title>
     <meta name="description" content="Search, track, and rate shows & films fast." />
     <meta name="build" content="latest" />
     
@@ -215,6 +215,9 @@
     <!-- Home Layout System - Token-driven, container query, RTL-safe -->
     <link rel="stylesheet" href="/styles/home-layout.css" />
     
+    <!-- Rails System - Canonical rail scrolling and layout -->
+    <link rel="stylesheet" href="/styles/rails.css" />
+    
     <!-- Community V2 Layout - Scoped CSS containment -->
     <link rel="stylesheet" href="/styles/community-layout.v2.css" />
     
@@ -251,7 +254,7 @@
     <script src="/js/adapters/card-data-adapter.js?v=28.141.0"></script>
     <script src="/js/actions/card-actions.js?v=28.113.0"></script>
     <script src="/js/cards-v2-config.js?v=28.113.0"></script>
-    <script src="/js/renderers/card-v2.js?v=28.151.0"></script>
+    <script src="/js/renderers/card-v2.js?v=28.500.0"></script>
     <script src="/js/renderers/card-v2-cw.js?v=28.113.0"></script>
     <script src="/js/renderers/card-v2-curated.js?v=28.113.0"></script>
 
@@ -297,6 +300,9 @@
       import { initTabs } from './js/nav-init.js';
       initTabs();
     </script>
+    
+    <!-- Feedback layout fix -->
+    <script src="/scripts/feedback-layout-fix.js"></script>
     
     <!-- Force Light Theme - Fix Color Readability -->
     <script>
@@ -400,7 +406,6 @@
     
     <!-- Home wiring system -->
     <script type="module" src="/js/home-wire-strict.js"></script>
-    <script type="module" src="/scripts/theaters-near-me.js" defer></script>
     
     <!-- Test script for adding currently airing shows - Defer test scripts -->
     <script type="module" src="/test-add-airing-shows.js" defer></script>
@@ -1368,22 +1373,6 @@
               <h2 class="group-title" data-i18n="for_you">For You</h2>
             </div>
 
-            <!-- Personalized genre rows -->
-            <section id="personalized-section" class="home-preview-row" style="display: none">
-              <div class="preview-row-header">
-                <h3 class="preview-row-title">
-                  Art
-                  <span data-i18n="personalized_recommendations">Personalized Recommendations</span>
-                </h3>
-                <p class="section-subtitle" data-i18n="based_on_watching_history">
-                  Based on your watching history and preferences
-                </p>
-              </div>
-              <div class="preview-row-container">
-                <div class="section-content" id="personalized-content"></div>
-              </div>
-            </section>
-
             <div class="group-divider"></div>
 
             <!-- Curated rows -->
@@ -1399,58 +1388,6 @@
             </section>
           </div>
 
-          <!-- Group 4 - In Theaters Near You -->
-          <div id="group-4-theaters" class="home-group">
-            <div class="group-header">
-              <h2 class="group-title" data-i18n="in_theaters">In Theaters</h2>
-            </div>
-
-            <section id="theaters-section" class="home-preview-row">
-              <div class="preview-row-header">
-                <h3 class="preview-row-title">
-                  Movie <span data-i18n="in_theaters_near_you">In Theaters Near You</span>
-                </h3>
-                <p class="section-subtitle" data-i18n="current_theatrical_releases">
-                  Current theatrical releases
-                </p>
-              </div>
-              <div class="preview-row-container">
-                <div class="section-content" id="theaters-content">
-                  <div class="theaters-container">
-                    <div class="theaters-header">
-                      <h3>Movie Now Playing</h3>
-                      <button class="btn secondary" id="refreshTheatersBtn">🔄 Refresh</button>
-                    </div>
-                    <div class="theaters-list" id="theatersList">
-                      <div class="loading">Loading movies...</div>
-                    </div>
-                  </div>
-
-                  <div class="theaters-info">
-                    <div class="theaters-meta">
-                      <h3>Find Showtimes</h3>
-                      <p>Click "Find Showtimes" to see showtimes at theaters near you</p>
-                      <div class="location-info">
-                        <span id="userLocation">📍 Getting your location...</span>
-                      </div>
-                    </div>
-                    <div class="theaters-cta">
-                      <button class="btn btn-primary" id="findShowtimesBtn">
-                        🎫 Find Showtimes
-                      </button>
-                      <button class="btn secondary" id="refreshLocationBtn">
-                        📍 Update Location
-                      </button>
-                    </div>
-                    <div class="theaters-badges">
-                      <span class="badge">Now Playing</span>
-                      <span class="badge" id="movieCount">Loading...</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
 
           <!-- Group 5 - Feedback -->
           <div id="group-5-feedback" class="home-group">

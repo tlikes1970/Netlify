@@ -693,7 +693,8 @@
         const listType = card.dataset.listType || card.dataset.list || 
                         (card.closest('#currentlyWatchingPreview') ? 'watching' : 
                          card.closest('#wishlistSection') ? 'wishlist' :
-                         card.closest('#watchedSection') ? 'watched' : 'unknown');
+                         card.closest('#watchedSection') ? 'watched' :
+                         card.closest('#curated-section') ? 'curated' : 'unknown');
         
         if (itemId) {
           const key = `${itemId}-${listType}`;

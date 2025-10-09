@@ -7,7 +7,7 @@
 /* === DESIGN TOKENS === */
 :root {
   /* Frame gutters */
-  --home-gutter: 32px;
+  --home-gutter: 16px;
   --home-frame-gutter: 32px;
   
   /* Rail sizing */
@@ -37,8 +37,7 @@ main#panels,
 #group-1-your-shows.home-group,
 #group-2-community.home-group,
 #group-3-for-you.home-group,
-#group-4-theaters.home-group,
-#group-5-feedback.home-group {
+#group-4-theaters.home-group {
   box-sizing: border-box;
   width: 100%;
   max-width: none;
@@ -63,8 +62,7 @@ main#panels,
 :is(#group-1-your-shows,
     #group-2-community,
     #group-3-for-you,
-    #group-4-theaters,
-    #group-5-feedback)
+    #group-4-theaters)
   :is(.preview-row-container, .preview-row-scroll, .row-inner, #currentlyWatchingScroll) {
   
   display: grid;
@@ -77,6 +75,7 @@ main#panels,
   overflow-y: hidden;
   scroll-snap-type: inline mandatory;
 }
+
 
 /* === DEEP RAIL GRID RULES === */
 /* Cover both variants we saw: #currentlyWatchingScroll and .preview-row-scroll */
@@ -101,12 +100,11 @@ main#panels,
 @media (max-width: var(--bp-md)) {
   :is(#group-1-your-shows,
       #group-2-community,
-      #group-3-for-you,
-      #group-4-theaters,
-      #group-5-feedback)
+      #group-3-for-you)
     :is(.preview-row-container, .preview-row-scroll, .row-inner, #currentlyWatchingScroll) {
     grid-auto-columns: var(--rail-col-w-sm);
   }
+  
 }
 
 /* === CARD SNAP TARGETS === */
@@ -411,9 +409,6 @@ main#panels,
 }
 
 /* Ensure no horizontal scroll on page container */
-html, body { 
-  overflow-x: hidden; /* keeps layout mishaps invisible; real fixes above */
-}
 
 /* Home wrapper sizing */
 #homeSection.home-content:not([hidden]) {

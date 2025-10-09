@@ -227,34 +227,100 @@ async function renderNextUpRow() {
   // Show section and populate
   section.style.display = 'block';
   inner.innerHTML = '';
+  
+  // Fix overflow issue - same as curated and currently watching sections
+  const previewContainer = section.querySelector('.preview-row-container');
+  if (previewContainer) {
+    previewContainer.style.overflow = 'visible';
+    console.log('📺 Fixed overflow for up-next container');
+  }
+  
+  // Override the CSS Grid width constraint - use responsive width
+  if (inner) {
+    // Use 100% width to be responsive to viewport changes
+    inner.style.width = '100%';
+    inner.style.minWidth = '100%';
+    inner.style.maxWidth = '100%';
+    console.log('📺 Set up-next inner container to responsive 100% width');
+  }
 
-  // Use V2 renderer directly
+  // Create simple cards directly (same approach as curated and currently watching)
   for (const { item, show, air } of nextUp) {
-    // Use V2 renderer if available
-    if (window.renderCardV2) {
-      const container = document.createElement('div');
-      const props = {
-        id: show.id,
-        mediaType: show.media_type || 'tv',
-        title: show.title || show.name || 'Unknown',
-        poster: getPosterSrc(item),
-        releaseDate: show.release_date || show.first_air_date || '',
-        genre: (show.genres && show.genres[0]?.name) || '',
-        seasonEpisode: air.epNumber || '',
-        nextAirDate: air.date || air.label || ''
-      };
+    try {
+          // Create a simple, working card directly
+          const card = document.createElement('div');
+          card.className = 'card v2 v2-home-nextup preview-card';
+          card.style.width = '200px';
+          card.style.minWidth = '200px';
+          card.style.maxWidth = '200px';
+          card.style.display = 'flex';
+          card.style.flexDirection = 'column';
+          card.style.alignItems = 'center';
+          card.style.background = '#ffffff';
+          card.style.border = '1px solid #e5e7eb';
+          card.style.borderRadius = '14px';
+          card.style.padding = '12px';
+          card.style.boxShadow = '0 4px 12px rgba(0,0,0,.1)';
+          card.style.flexShrink = '0';
       
-      const card = window.renderCardV2(container, props, {
-        listType: 'next-up',
-        context: 'home'
-      });
+      // Create poster
+      const posterWrap = document.createElement('div');
+      posterWrap.style.width = '100%';
+      posterWrap.style.aspectRatio = '2/3';
+      posterWrap.style.borderRadius = '8px';
+      posterWrap.style.overflow = 'hidden';
+      posterWrap.style.marginBottom = '8px';
       
-      if (card) {
-        card.classList.add('nu-card', 'preview-card');
-        inner.appendChild(card);
-      }
-    } else {
-      console.warn('📺 V2 renderer not available for Next Up cards');
+      const img = document.createElement('img');
+      img.src = getPosterSrc(item) || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04NSAxMjBIMTE1VjE4MEg4NVYxMjBaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik05NSAxMzBIMTA1VjE3MEg5NVYxMzBaIiBmaWxsPSIjNjM3MzgzIi8+Cjwvc3ZnPgo=';
+      img.alt = show.title || show.name || 'Poster';
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'cover';
+      img.style.display = 'block';
+      posterWrap.appendChild(img);
+      
+      // Create title
+      const title = document.createElement('div');
+      const titleText = show.title || show.name || 'Unknown Title';
+      title.textContent = titleText;
+      title.style.color = '#1f2937';
+      title.style.fontSize = '14px';
+      title.style.fontWeight = '600';
+      title.style.textAlign = 'center';
+      title.style.marginBottom = '4px';
+      title.style.lineHeight = '1.2';
+      
+      // Create episode info
+      const episodeInfo = document.createElement('div');
+      episodeInfo.textContent = air.epNumber || air.label || 'Next Episode';
+      episodeInfo.style.color = '#6b7280';
+      episodeInfo.style.fontSize = '12px';
+      episodeInfo.style.textAlign = 'center';
+      episodeInfo.style.marginBottom = '8px';
+      
+      // Create button
+      const button = document.createElement('button');
+      button.textContent = 'Mark Watched';
+      button.style.width = '100%';
+      button.style.padding = '8px 12px';
+      button.style.backgroundColor = '#10b981';
+      button.style.color = 'white';
+      button.style.border = 'none';
+      button.style.borderRadius = '6px';
+      button.style.fontSize = '12px';
+      button.style.fontWeight = '500';
+      button.style.cursor = 'pointer';
+      
+      card.appendChild(posterWrap);
+      card.appendChild(title);
+      card.appendChild(episodeInfo);
+      card.appendChild(button);
+      
+      inner.appendChild(card);
+      console.log(`📺 Created simple next-up card for: ${titleText}`);
+    } catch (error) {
+      console.error('❌ Failed to create simple next-up card:', error);
     }
   }
 }
