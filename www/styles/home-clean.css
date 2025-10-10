@@ -1,0 +1,468 @@
+/* Home Clean Component - Tokenized Styles */
+/* Phase 5: Full Cutover Build - Inherit Global Theme Tokens */
+
+/* Design Tokens - Use Global Theme Variables */
+:root {
+    /* Card Dimensions */
+    --card-cw-w: 200px;
+    --card-cw-h: 300px;
+    --card-nextup-w: 200px;
+    --card-nextup-h: 300px;
+    --card-foryou-w: 220px;
+    --card-foryou-h: 330px;
+    
+    /* Spacing */
+    --card-gap: 16px;
+    --rail-margin: 24px;
+    --section-margin: 20px;
+    --content-padding: 20px;
+    
+    /* Typography */
+    --font-size-title: 16px;
+    --font-size-meta: 14px;
+    --font-size-blurb: 13px;
+    --font-weight-bold: 600;
+    
+    /* Shadows */
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.4);
+    
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+}
+
+/* Main Container */
+.home-clean-container {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--fg-default, #1f2937);
+    padding: var(--content-padding);
+    max-width: 1200px;
+    margin: 0 auto;
+    background: var(--bg-page, #ffffff);
+}
+
+/* Section Headers */
+.home-clean-container .section-header {
+    font-size: 18px;
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--card-gap);
+    color: var(--fg-default, #1f2937);
+    margin-top: var(--section-margin);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.home-clean-container .section-header:first-child {
+    margin-top: 0;
+}
+
+.home-clean-container .section-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--fg-default, #1f2937);
+}
+
+/* Holiday Chip */
+.home-clean-container .holiday-chip {
+    background: var(--accent, #ff4c8d);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: var(--transition-fast);
+}
+
+.home-clean-container .holiday-chip:hover {
+    transform: scale(1.05);
+    background: var(--accent-hover, #e63e7a);
+}
+
+.home-clean-container .holiday-chip::before {
+    content: "+";
+    font-size: 10px;
+}
+
+/* Rail Containers */
+.home-clean-container .rail {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    margin-bottom: var(--rail-margin);
+    padding-bottom: 8px;
+}
+
+.home-clean-container .rail::-webkit-scrollbar {
+    height: 6px;
+}
+
+.home-clean-container .rail::-webkit-scrollbar-track {
+    background: var(--fg-muted, #6b7280);
+    border-radius: 3px;
+}
+
+.home-clean-container .rail::-webkit-scrollbar-thumb {
+    background: var(--fg-subtle, #9ca3af);
+    border-radius: 3px;
+}
+
+.home-clean-container .rail::-webkit-scrollbar-thumb:hover {
+    background: var(--fg-default, #1f2937);
+}
+
+/* Card Containers */
+.home-clean-container .card-container {
+    display: flex;
+    gap: var(--card-gap);
+    padding: 0 4px;
+}
+
+/* Base Card Styles */
+.home-clean-container .card {
+    flex-shrink: 0;
+    background: var(--bg-elevated, #f7f7f9);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    scroll-snap-align: start;
+}
+
+.home-clean-container .card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* Card Type Specific Dimensions */
+.home-clean-container .card-cw {
+    width: var(--card-cw-w);
+    height: var(--card-cw-h);
+}
+
+.home-clean-container .card-nextup {
+    width: var(--card-nextup-w);
+    height: var(--card-nextup-h);
+}
+
+.home-clean-container .card-foryou {
+    width: var(--card-foryou-w);
+    height: var(--card-foryou-h);
+}
+
+/* Poster Container */
+.home-clean-container .poster-container {
+    position: relative;
+    width: 100%;
+    height: 60%;
+    overflow: hidden;
+}
+
+.home-clean-container .poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-normal);
+}
+
+.home-clean-container .card:hover .poster {
+    transform: scale(1.05);
+}
+
+/* Poster Fallback */
+.home-clean-container .poster-fallback {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-elevated, #f7f7f9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.home-clean-container .poster-fallback-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Card Content */
+.home-clean-container .card-content {
+    padding: 12px;
+    height: 40%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.home-clean-container .title {
+    font-size: var(--font-size-title);
+    font-weight: var(--font-weight-bold);
+    color: var(--fg-default, #1f2937);
+    margin-bottom: 4px;
+    line-height: 1.2;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.home-clean-container .meta {
+    font-size: var(--font-size-meta);
+    color: var(--fg-muted, #6b7280);
+    margin-bottom: 6px;
+}
+
+.home-clean-container .blurb {
+    font-size: var(--font-size-blurb);
+    color: var(--fg-muted, #6b7280);
+    line-height: 1.3;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    flex-grow: 1;
+}
+
+/* Actions */
+.home-clean-container .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.home-clean-container .action-btn,
+.home-clean-container .cta-btn {
+    background: var(--accent, #ff4c8d);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.home-clean-container .action-btn:hover,
+.home-clean-container .cta-btn:hover {
+    background: #e6397a;
+}
+
+.home-clean-container .action-btn:active,
+.home-clean-container .cta-btn:active {
+    transform: translateY(1px);
+}
+
+/* Holiday Chip */
+.home-clean-container .holiday-chip {
+    background: var(--bg-elevated, #f7f7f9);
+    color: var(--fg-muted, #6b7280);
+    border: 1px solid var(--fg-muted, #6b7280);
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.home-clean-container .holiday-chip:hover {
+    background: var(--bg-elevated, #f7f7f9);
+    color: var(--fg-default, #1f2937);
+}
+
+.home-clean-container .holiday-chip.assigned {
+    background: var(--accent, #ff4c8d);
+    color: white;
+    border-color: var(--accent, #ff4c8d);
+}
+
+/* Holiday Modal Styles */
+.holiday-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    backdrop-filter: blur(4px);
+}
+
+.holiday-modal .modal-content {
+    background: var(--bg-elevated, #f7f7f9);
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.holiday-modal .modal-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--fg-muted, #6b7280);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.holiday-modal .modal-header h3 {
+    margin: 0;
+    color: var(--fg-default, #1f2937);
+    font-size: 18px;
+}
+
+.holiday-modal .modal-close {
+    background: none;
+    border: none;
+    color: var(--fg-muted, #6b7280);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.holiday-modal .modal-close:hover {
+    color: var(--fg-default, #1f2937);
+}
+
+.holiday-modal .modal-body {
+    padding: 20px;
+}
+
+.holiday-modal .card-title {
+    margin-bottom: 20px;
+    color: var(--fg-default, #1f2937);
+    font-weight: var(--font-weight-bold);
+}
+
+.holiday-modal .holiday-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+}
+
+.holiday-modal .holiday-option {
+    background: var(--bg-elevated, #f7f7f9);
+    color: var(--fg-default, #1f2937);
+    border: 1px solid var(--fg-muted, #6b7280);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.holiday-modal .holiday-option:hover {
+    background: var(--accent, #ff4c8d);
+    color: white;
+    border-color: var(--accent, #ff4c8d);
+}
+
+.holiday-modal .modal-footer {
+    padding: 20px;
+    border-top: 1px solid var(--fg-muted, #6b7280);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.holiday-modal .btn-cancel {
+    background: var(--bg-elevated, #f7f7f9);
+    color: var(--fg-default, #1f2937);
+    border: 1px solid var(--fg-muted, #6b7280);
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.holiday-modal .btn-cancel:hover {
+    background: var(--bg-elevated, #f7f7f9);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    :root {
+        --card-cw-w: 160px;
+        --card-cw-h: 240px;
+        --card-nextup-w: 160px;
+        --card-nextup-h: 240px;
+        --card-foryou-w: 180px;
+        --card-foryou-h: 270px;
+        --card-gap: 12px;
+        --content-padding: 16px;
+    }
+    
+    .home-clean-container .card-content {
+        padding: 8px;
+    }
+    
+    .home-clean-container .title {
+        font-size: 14px;
+    }
+    
+    .home-clean-container .meta {
+        font-size: 12px;
+    }
+    
+    .home-clean-container .blurb {
+        font-size: 11px;
+    }
+    
+    .home-clean-container .action-btn,
+    .home-clean-container .cta-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+    
+    .holiday-modal .holiday-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --card-cw-w: 140px;
+        --card-cw-h: 210px;
+        --card-nextup-w: 140px;
+        --card-nextup-h: 210px;
+        --card-foryou-w: 160px;
+        --card-foryou-h: 240px;
+        --card-gap: 8px;
+        --content-padding: 12px;
+    }
+    
+    .home-clean-container .actions {
+        gap: 4px;
+    }
+    
+    .home-clean-container .action-btn,
+    .home-clean-container .cta-btn {
+        padding: 3px 6px;
+        font-size: 10px;
+    }
+    
+    .home-clean-container .holiday-chip {
+        padding: 3px 6px;
+        font-size: 10px;
+    }
+}

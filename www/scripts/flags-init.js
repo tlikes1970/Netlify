@@ -42,3 +42,8 @@ if (typeof window.FLAGS.community_stats_teaser === 'undefined') {
 if (typeof window.FLAGS.skeletonsEnabled === 'undefined') {
   window.FLAGS.skeletonsEnabled = true;
 }
+
+// Home Clean Component - Phase 2 Integration
+if (typeof window.FLAGS.homeClean === 'undefined') {
+  window.FLAGS.homeClean = true; // Default enabled for Phase 2
+}

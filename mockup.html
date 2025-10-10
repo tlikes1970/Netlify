@@ -1,0 +1,1078 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Flicklet – Clean Rails Mockup (Phase 1)</title>
+<style>
+/* Reset and Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0a0a0a;
+  color: #ffffff;
+  line-height: 1.4;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Toolbar */
+.toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.toolbar button {
+  background: #ff4c8d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.toolbar button:hover {
+  background: #e63e7a;
+}
+
+.toolbar button:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+/* App Container */
+#app {
+  margin-top: 60px;
+  padding: 20px;
+  min-height: calc(100vh - 60px);
+  padding-bottom: 40px;
+}
+
+/* Clean Root Container */
+#clean-root {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Section Headers */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.holiday-chip {
+  background: linear-gradient(135deg, #ff6b6b, #ffa500);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.2s;
+}
+
+.holiday-chip:hover {
+  transform: scale(1.05);
+}
+
+.holiday-chip::before {
+  content: "🎄";
+  font-size: 14px;
+}
+
+/* Rails Container */
+.rails-container {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding-bottom: 20px;
+}
+
+/* Individual Rail */
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: auto;
+}
+
+.rail-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #cccccc;
+  padding: 0 4px;
+}
+
+.rail-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 8px 4px 20px 4px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.rail-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Card Base Styles */
+.card {
+  flex-shrink: 0;
+  background: #1a1a1a;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  scroll-snap-align: start;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Currently Watching Cards (200px wide, 2x2 action grid) */
+.card-cw {
+  width: 200px;
+  height: 456px; /* 300px poster + 48px content + 96px actions + 12px padding */
+  position: relative;
+}
+
+.card-cw .poster {
+  width: 100%;
+  height: 300px; /* 2:3 aspect ratio: 200 * 1.5 = 300px */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  position: relative;
+}
+
+.card-cw .holiday-chip {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #4facfe;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  transition: transform 0.2s;
+  z-index: 10;
+}
+
+.card-cw .holiday-chip:hover {
+  transform: scale(1.05);
+  background: #3d8bfe;
+}
+
+.card-cw .holiday-chip::before {
+  content: "+";
+  font-size: 10px;
+}
+
+.card-cw .content {
+  padding: 12px;
+  height: 156px; /* 48px title/meta + 96px actions + 12px padding */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-cw .title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.card-cw .meta {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 12px;
+}
+
+.card-cw .actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+}
+
+.card-cw .action-btn {
+  background: #333;
+  color: #ccc;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-cw .action-btn:hover {
+  background: #555;
+}
+
+.card-cw .action-btn.primary {
+  background: #ff4c8d;
+  color: white;
+}
+
+.card-cw .action-btn.primary:hover {
+  background: #e63e7a;
+}
+
+/* Up Next Cards (220px wide, static info) */
+.card-upnext {
+  width: 220px;
+  height: 406px; /* 330px poster + 64px content + 12px padding */
+}
+
+.card-upnext .poster {
+  width: 100%;
+  height: 330px; /* 2:3 aspect ratio: 220 * 1.5 = 330px */
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.card-upnext .content {
+  padding: 12px;
+  height: 76px; /* 64px content + 12px padding */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-upnext .title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.card-upnext .meta {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.card-upnext .episode-info {
+  font-size: 12px;
+  color: #aaa;
+  background: #2a2a2a;
+  padding: 8px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.card-upnext .next-air {
+  font-size: 11px;
+  color: #ff4c8d;
+  font-weight: 600;
+}
+
+/* For You Cards (220px wide, poster + title + meta + Where to Watch + blurb + CTA) */
+.card-foryou {
+  width: 220px;
+  height: 430px; /* 330px poster + 100px content + 12px padding */
+  position: relative;
+}
+
+.card-foryou .poster {
+  width: 100%;
+  height: 330px; /* 2:3 aspect ratio: 220 * 1.5 = 330px */
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  position: relative;
+}
+
+.card-foryou .holiday-chip {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #4facfe;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  transition: transform 0.2s;
+  z-index: 10;
+}
+
+.card-foryou .holiday-chip:hover {
+  transform: scale(1.05);
+  background: #3d8bfe;
+}
+
+.card-foryou .holiday-chip::before {
+  content: "+";
+  font-size: 10px;
+}
+
+.card-foryou .content {
+  padding: 12px;
+  height: 100px; /* 100px content + 12px padding */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-foryou .title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.card-foryou .meta {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.card-foryou .where-to-watch {
+  font-size: 12px;
+  color: #4facfe;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.card-foryou .blurb {
+  font-size: 12px;
+  color: #ccc;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-foryou .cta-btn {
+  background: #ff4c8d;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-foryou .cta-btn:hover {
+  background: #e63e7a;
+}
+
+/* Holiday Badge */
+.holiday-badge {
+  background: linear-gradient(135deg, #ff6b6b, #ffa500);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 8px;
+  display: inline-block;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.modal-close:hover {
+  background: #333;
+}
+
+.holiday-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.holiday-option {
+  background: #2a2a2a;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.holiday-option:hover {
+  border-color: #ff4c8d;
+  background: #333;
+}
+
+.holiday-option.selected {
+  border-color: #ff4c8d;
+  background: rgba(255, 76, 141, 0.1);
+}
+
+.holiday-option .emoji {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.holiday-option .name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.modal-btn.cancel {
+  background: #333;
+  color: #ccc;
+  border: none;
+}
+
+.modal-btn.cancel:hover {
+  background: #555;
+}
+
+.modal-btn.assign {
+  background: #ff4c8d;
+  color: white;
+  border: none;
+}
+
+.modal-btn.assign:hover {
+  background: #e63e7a;
+}
+
+.modal-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .toolbar {
+    padding: 8px 12px;
+  }
+  
+  .toolbar button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  #app {
+    margin-top: 50px;
+    padding: 16px;
+  }
+  
+  .section-title {
+    font-size: 20px;
+  }
+  
+  .card-cw {
+    width: 180px;
+    height: 410px; /* Scaled down proportionally */
+  }
+  
+  .card-cw .poster {
+    height: 270px; /* 180 * 1.5 = 270px */
+  }
+  
+  .card-upnext {
+    width: 200px;
+    height: 370px; /* Scaled down proportionally */
+  }
+  
+  .card-upnext .poster {
+    height: 300px; /* 200 * 1.5 = 300px */
+  }
+  
+  .card-foryou {
+    width: 200px;
+    height: 390px; /* Scaled down proportionally */
+  }
+  
+  .card-foryou .poster {
+    height: 300px; /* 200 * 1.5 = 300px */
+  }
+  
+  .holiday-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Utility Classes */
+.hidden {
+  display: none !important;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button onclick="cleanMount('top')">Mount Top</button>
+    <button onclick="cleanMount('bottom')">Mount Bottom</button>
+    <button onclick="cleanDestroy()">Destroy</button>
+    <button onclick="cleanReport()">Report</button>
+  </div>
+
+  <!-- App Container -->
+  <div id="app">
+    <div id="clean-root"></div>
+  </div>
+
+  <!-- Holiday Modal -->
+  <div id="holiday-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">🎄 Choose Holiday Theme</h3>
+        <button class="modal-close" onclick="closeHolidayModal()">&times;</button>
+      </div>
+      <div class="holiday-options" id="holiday-options">
+        <div class="holiday-option" data-holiday="christmas">
+          <div class="emoji">🎄</div>
+          <div class="name">Christmas</div>
+        </div>
+        <div class="holiday-option" data-holiday="halloween">
+          <div class="emoji">🎃</div>
+          <div class="name">Halloween</div>
+        </div>
+        <div class="holiday-option" data-holiday="valentine">
+          <div class="emoji">💕</div>
+          <div class="name">Valentine's</div>
+        </div>
+        <div class="holiday-option" data-holiday="easter">
+          <div class="emoji">🐰</div>
+          <div class="name">Easter</div>
+        </div>
+        <div class="holiday-option" data-holiday="thanksgiving">
+          <div class="emoji">🦃</div>
+          <div class="name">Thanksgiving</div>
+        </div>
+        <div class="holiday-option" data-holiday="newyear">
+          <div class="emoji">🎊</div>
+          <div class="name">New Year</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn cancel" onclick="closeHolidayModal()">Cancel</button>
+        <button class="modal-btn assign" id="assign-btn" onclick="assignHoliday()" disabled>Assign</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global state
+    let selectedHoliday = null;
+    let currentTarget = null;
+
+    // Sample data
+    const sampleData = {
+      currentlyWatching: [
+        { id: 1, title: "Stranger Things", meta: "S4 • Sci-Fi", poster: "ST" },
+        { id: 2, title: "The Mandalorian", meta: "S3 • Action", poster: "M" },
+        { id: 3, title: "Wednesday", meta: "S1 • Comedy", poster: "W" },
+        { id: 4, title: "House of the Dragon", meta: "S1 • Fantasy", poster: "H" },
+        { id: 5, title: "The Last of Us", meta: "S1 • Drama", poster: "L" },
+        { id: 6, title: "Euphoria", meta: "S2 • Drama", poster: "E" },
+        { id: 7, title: "The Bear", meta: "S2 • Comedy", poster: "B" },
+        { id: 8, title: "Yellowstone", meta: "S5 • Western", poster: "Y" },
+        { id: 9, title: "Succession", meta: "S4 • Drama", poster: "S" },
+        { id: 10, title: "Ted Lasso", meta: "S3 • Comedy", poster: "T" },
+        { id: 11, title: "Ozark", meta: "S4 • Thriller", poster: "O" },
+        { id: 12, title: "The Crown", meta: "S5 • Drama", poster: "C" }
+      ],
+      upNext: [
+        { id: 1, title: "Breaking Bad", meta: "S5 • Crime", poster: "BB", episode: "S5E16: Felina", nextAir: "Next: Tomorrow" },
+        { id: 2, title: "Better Call Saul", meta: "S6 • Crime", poster: "BCS", episode: "S6E13: Saul Gone", nextAir: "Next: Friday" },
+        { id: 3, title: "The Office", meta: "S9 • Comedy", poster: "O", episode: "S9E23: Finale", nextAir: "Next: Sunday" },
+        { id: 4, title: "Friends", meta: "S10 • Comedy", poster: "F", episode: "S10E17: The Last One", nextAir: "Next: Monday" },
+        { id: 5, title: "Game of Thrones", meta: "S8 • Fantasy", poster: "GOT", episode: "S8E6: The Iron Throne", nextAir: "Next: Wednesday" },
+        { id: 6, title: "The Sopranos", meta: "S6 • Crime", poster: "S", episode: "S6E21: Made in America", nextAir: "Next: Thursday" },
+        { id: 7, title: "Mad Men", meta: "S7 • Drama", poster: "MM", episode: "S7E14: Person to Person", nextAir: "Next: Tuesday" },
+        { id: 8, title: "The Wire", meta: "S5 • Crime", poster: "W", episode: "S5E10: -30-", nextAir: "Next: Saturday" },
+        { id: 9, title: "Lost", meta: "S6 • Mystery", poster: "L", episode: "S6E17: The End", nextAir: "Next: Friday" },
+        { id: 10, title: "24", meta: "S8 • Action", poster: "24", episode: "S8E24: Day 8: 4:00 PM-5:00 PM", nextAir: "Next: Sunday" },
+        { id: 11, title: "Prison Break", meta: "S5 • Thriller", poster: "PB", episode: "S5E9: Behind the Eyes", nextAir: "Next: Monday" },
+        { id: 12, title: "Dexter", meta: "S8 • Crime", poster: "D", episode: "S8E12: Remember the Monsters?", nextAir: "Next: Wednesday" }
+      ],
+      forYou: {
+        drama: [
+          { id: 1, title: "The Queen's Gambit", meta: "2020 • Drama", poster: "QG", whereToWatch: "Netflix", blurb: "A young chess prodigy struggles with addiction while pursuing her dream of becoming a world champion." },
+          { id: 2, title: "Bridgerton", meta: "2020 • Romance", poster: "B", whereToWatch: "Netflix", blurb: "Period drama following the Bridgerton family in Regency-era London." },
+          { id: 3, title: "The Crown", meta: "2016 • Historical", poster: "C", whereToWatch: "Netflix", blurb: "Chronicles the life of Queen Elizabeth II and the events that shaped the second half of the 20th century." },
+          { id: 4, title: "Ozark", meta: "2017 • Thriller", poster: "O", whereToWatch: "Netflix", blurb: "A financial advisor drags his family from Chicago to the Missouri Ozarks to launder money." },
+          { id: 5, title: "Succession", meta: "2018 • Satire", poster: "S", whereToWatch: "HBO Max", blurb: "Follows the dysfunctional Roy family as they fight for control of their media empire." },
+          { id: 6, title: "Euphoria", meta: "2019 • Teen Drama", poster: "E", whereToWatch: "HBO Max", blurb: "Follows a group of high school students as they navigate love, friendship, and addiction." },
+          { id: 7, title: "The Handmaid's Tale", meta: "2017 • Dystopian", poster: "HT", whereToWatch: "Hulu", blurb: "Set in a dystopian future where women are subjugated and used for reproduction." },
+          { id: 8, title: "This Is Us", meta: "2016 • Family Drama", poster: "TIU", whereToWatch: "Hulu", blurb: "Follows the lives of the Pearson family across different time periods." },
+          { id: 9, title: "The Morning Show", meta: "2019 • Drama", poster: "TMS", whereToWatch: "Apple TV+", blurb: "Behind-the-scenes look at a morning news program and its anchors." },
+          { id: 10, title: "Yellowstone", meta: "2018 • Western", poster: "Y", whereToWatch: "Paramount+", blurb: "Follows the Dutton family who controls the largest contiguous ranch in the United States." },
+          { id: 11, title: "The Last of Us", meta: "2023 • Post-Apocalyptic", poster: "LOU", whereToWatch: "HBO Max", blurb: "Set 20 years after a fungal infection devastates civilization." },
+          { id: 12, title: "House of the Dragon", meta: "2022 • Fantasy", poster: "HOTD", whereToWatch: "HBO Max", blurb: "Prequel to Game of Thrones, focusing on House Targaryen 200 years before the original series." }
+        ],
+        comedy: [
+          { id: 1, title: "Ted Lasso", meta: "2020 • Comedy", poster: "TL", whereToWatch: "Apple TV+", blurb: "An American football coach is hired to manage a British soccer team despite having no experience." },
+          { id: 2, title: "The Bear", meta: "2022 • Comedy-Drama", poster: "TB", whereToWatch: "Hulu", blurb: "A young chef returns to Chicago to run his family's Italian beef sandwich shop." },
+          { id: 3, title: "Wednesday", meta: "2022 • Dark Comedy", poster: "W", whereToWatch: "Netflix", blurb: "Follows Wednesday Addams as she navigates Nevermore Academy and solves a murder mystery." },
+          { id: 4, title: "Schitt's Creek", meta: "2015 • Comedy", poster: "SC", whereToWatch: "Hulu", blurb: "A wealthy family loses their fortune and is forced to relocate to a small town they once bought as a joke." },
+          { id: 5, title: "The Office", meta: "2005 • Mockumentary", poster: "TO", whereToWatch: "Peacock", blurb: "A mockumentary about the everyday lives of office employees at Dunder Mifflin." },
+          { id: 6, title: "Parks and Recreation", meta: "2009 • Comedy", poster: "PR", whereToWatch: "Peacock", blurb: "Follows the employees of the Parks and Recreation Department in Pawnee, Indiana." },
+          { id: 7, title: "Brooklyn Nine-Nine", meta: "2013 • Comedy", poster: "B99", whereToWatch: "Peacock", blurb: "Follows the detectives of the 99th precinct of the NYPD." },
+          { id: 8, title: "The Good Place", meta: "2016 • Comedy", poster: "TGP", whereToWatch: "Netflix", blurb: "A woman finds herself in the afterlife and tries to become a better person." },
+          { id: 9, title: "Arrested Development", meta: "2003 • Comedy", poster: "AD", whereToWatch: "Netflix", blurb: "The formerly wealthy Bluth family tries to maintain their lifestyle after their patriarch is arrested." },
+          { id: 10, title: "Community", meta: "2009 • Comedy", poster: "C", whereToWatch: "Hulu", blurb: "A lawyer is forced to enroll in community college and forms a study group with his classmates." },
+          { id: 11, title: "It's Always Sunny in Philadelphia", meta: "2005 • Comedy", poster: "IASIP", whereToWatch: "Hulu", blurb: "Follows the misadventures of five friends who run an Irish bar in Philadelphia." },
+          { id: 12, title: "Curb Your Enthusiasm", meta: "2000 • Comedy", poster: "CYE", whereToWatch: "HBO Max", blurb: "Follows Larry David as he navigates life in Los Angeles after the success of Seinfeld." }
+        ],
+        horror: [
+          { id: 1, title: "The Haunting of Hill House", meta: "2018 • Horror", poster: "HH", whereToWatch: "Netflix", blurb: "A family confronts the haunting memories of their old home and the events that drove them from it." },
+          { id: 2, title: "Stranger Things", meta: "2016 • Sci-Fi Horror", poster: "ST", whereToWatch: "Netflix", blurb: "In 1980s Indiana, a group of young friends witness supernatural forces and secret government exploits." },
+          { id: 3, title: "The Walking Dead", meta: "2010 • Horror", poster: "TWD", whereToWatch: "AMC+", blurb: "Follows a group of survivors in a world overrun by zombies." },
+          { id: 4, title: "American Horror Story", meta: "2011 • Horror", poster: "AHS", whereToWatch: "Hulu", blurb: "An anthology series featuring different horror stories each season." },
+          { id: 5, title: "The Exorcist", meta: "2016 • Horror", poster: "TE", whereToWatch: "Hulu", blurb: "A family is torn apart by demonic possession and seeks help from two priests." },
+          { id: 6, title: "Penny Dreadful", meta: "2014 • Gothic Horror", poster: "PD", whereToWatch: "Showtime", blurb: "Set in Victorian London, follows various characters from classic horror literature." },
+          { id: 7, title: "The Terror", meta: "2018 • Horror", poster: "TT", whereToWatch: "AMC+", blurb: "Based on Dan Simmons' novel about a doomed Arctic expedition." },
+          { id: 8, title: "Castle Rock", meta: "2018 • Horror", poster: "CR", whereToWatch: "Hulu", blurb: "Set in the Stephen King multiverse, explores the mysteries of Castle Rock." },
+          { id: 9, title: "The Outsider", meta: "2020 • Horror", poster: "TO", whereToWatch: "HBO Max", blurb: "Based on Stephen King's novel about a detective investigating a brutal murder." },
+          { id: 10, title: "Lovecraft Country", meta: "2020 • Horror", poster: "LC", whereToWatch: "HBO Max", blurb: "Set in 1950s America, follows a young man's journey to find his missing father." },
+          { id: 11, title: "Midnight Mass", meta: "2021 • Horror", poster: "MM", whereToWatch: "Netflix", blurb: "A man returns to his hometown and discovers mysterious events occurring at the local church." },
+          { id: 12, title: "The Midnight Club", meta: "2022 • Horror", poster: "TMC", whereToWatch: "Netflix", blurb: "Follows terminally ill teenagers who meet at midnight to tell scary stories." }
+        ]
+      }
+    };
+
+    // Helper Functions
+    function cleanMount(position) {
+      const cleanRoot = document.getElementById('clean-root');
+      if (!cleanRoot) return;
+
+      // Clear existing content
+      cleanRoot.innerHTML = '';
+
+      // Create the mockup content
+      const content = createMockupContent();
+      
+      if (position === 'top') {
+        cleanRoot.insertBefore(content, cleanRoot.firstChild);
+      } else {
+        cleanRoot.appendChild(content);
+      }
+
+      // Add fade-in animation
+      content.classList.add('fade-in');
+      
+      console.log(`✅ Mockup mounted at ${position}`);
+    }
+
+    function cleanDestroy() {
+      const cleanRoot = document.getElementById('clean-root');
+      if (!cleanRoot) return;
+
+      cleanRoot.innerHTML = '';
+      console.log('🗑️ Mockup destroyed');
+    }
+
+    function cleanReport() {
+      const rails = document.querySelectorAll('.rail-scroll');
+      console.log('📊 Rail Report:');
+      
+      rails.forEach((rail, index) => {
+        const cards = rail.querySelectorAll('.card');
+        const railTitle = rail.previousElementSibling?.textContent || `Rail ${index + 1}`;
+        console.log(`  ${railTitle}: ${cards.length} cards`);
+      });
+    }
+
+    function createMockupContent() {
+      const container = document.createElement('div');
+      container.className = 'rails-container';
+
+      // Your Shows Section
+      const yourShowsSection = createYourShowsSection();
+      container.appendChild(yourShowsSection);
+
+      // For You Section
+      const forYouSection = createForYouSection();
+      container.appendChild(forYouSection);
+
+      return container;
+    }
+
+    function createYourShowsSection() {
+      const section = document.createElement('div');
+      section.className = 'section';
+
+      // Section Header
+      const header = document.createElement('div');
+      header.className = 'section-header';
+      header.innerHTML = `
+        <h2 class="section-title">Your Shows</h2>
+        <button class="holiday-chip" onclick="openHolidayModal(this)">Holiday +</button>
+      `;
+      section.appendChild(header);
+
+      // Currently Watching Rail
+      const cwRail = createRail('Currently Watching', 'cw', sampleData.currentlyWatching);
+      section.appendChild(cwRail);
+
+      // Up Next Rail
+      const upNextRail = createRail('Up Next', 'upnext', sampleData.upNext);
+      section.appendChild(upNextRail);
+
+      return section;
+    }
+
+    function createForYouSection() {
+      const section = document.createElement('div');
+      section.className = 'section';
+
+      // Section Header
+      const header = document.createElement('div');
+      header.className = 'section-header';
+      header.innerHTML = `
+        <h2 class="section-title">For You</h2>
+        <button class="holiday-chip" onclick="openHolidayModal(this)">Holiday +</button>
+      `;
+      section.appendChild(header);
+
+      // Drama Rail
+      const dramaRail = createRail('Drama', 'foryou', sampleData.forYou.drama);
+      section.appendChild(dramaRail);
+
+      // Comedy Rail
+      const comedyRail = createRail('Comedy', 'foryou', sampleData.forYou.comedy);
+      section.appendChild(comedyRail);
+
+      // Horror Rail
+      const horrorRail = createRail('Horror', 'foryou', sampleData.forYou.horror);
+      section.appendChild(horrorRail);
+
+      return section;
+    }
+
+    function createRail(title, type, data) {
+      const rail = document.createElement('div');
+      rail.className = 'rail';
+
+      // Rail Title
+      const railTitle = document.createElement('h3');
+      railTitle.className = 'rail-title';
+      railTitle.textContent = title;
+      rail.appendChild(railTitle);
+
+      // Rail Scroll Container
+      const scrollContainer = document.createElement('div');
+      scrollContainer.className = 'rail-scroll';
+
+      // Create cards
+      data.forEach(item => {
+        const card = createCard(item, type);
+        scrollContainer.appendChild(card);
+      });
+
+      rail.appendChild(scrollContainer);
+      return rail;
+    }
+
+    function createCard(item, type) {
+      const card = document.createElement('div');
+      card.className = `card card-${type}`;
+      card.dataset.cardId = item.id;
+
+      switch (type) {
+        case 'cw':
+          card.innerHTML = `
+            <div class="poster">
+              ${item.poster}
+              <button class="holiday-chip" onclick="openCardHolidayModal(this)" title="Add Holiday Theme">Holiday +</button>
+            </div>
+            <div class="content">
+              <div class="title">${item.title}</div>
+              <div class="meta">${item.meta}</div>
+              <div class="actions">
+                <button class="action-btn primary">Want to Watch</button>
+                <button class="action-btn">Watched</button>
+                <button class="action-btn">Not Interested</button>
+                <button class="action-btn">Delete</button>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 'upnext':
+          card.innerHTML = `
+            <div class="poster">${item.poster}</div>
+            <div class="content">
+              <div class="title">${item.title}</div>
+              <div class="meta">${item.meta}</div>
+              <div class="episode-info">${item.episode}</div>
+              <div class="next-air">${item.nextAir}</div>
+            </div>
+          `;
+          break;
+
+        case 'foryou':
+          card.innerHTML = `
+            <div class="poster">
+              ${item.poster}
+              <button class="holiday-chip" onclick="openCardHolidayModal(this)" title="Add Holiday Theme">Holiday +</button>
+            </div>
+            <div class="content">
+              <div class="title">${item.title}</div>
+              <div class="meta">${item.meta}</div>
+              <div class="where-to-watch">${item.whereToWatch}</div>
+              <div class="blurb">${item.blurb}</div>
+              <button class="cta-btn">Add to Watchlist</button>
+            </div>
+          `;
+          break;
+      }
+
+      return card;
+    }
+
+    // Holiday Modal Functions
+    function openHolidayModal(target) {
+      currentTarget = target;
+      const modal = document.getElementById('holiday-modal');
+      modal.classList.remove('hidden');
+      
+      // Reset selection
+      selectedHoliday = null;
+      updateHolidaySelection();
+    }
+
+    function openCardHolidayModal(chipButton) {
+      currentTarget = chipButton.closest('.card');
+      const modal = document.getElementById('holiday-modal');
+      modal.classList.remove('hidden');
+      
+      // Reset selection
+      selectedHoliday = null;
+      updateHolidaySelection();
+    }
+
+    function closeHolidayModal() {
+      const modal = document.getElementById('holiday-modal');
+      modal.classList.add('hidden');
+      currentTarget = null;
+      selectedHoliday = null;
+    }
+
+    function updateHolidaySelection() {
+      const options = document.querySelectorAll('.holiday-option');
+      const assignBtn = document.getElementById('assign-btn');
+      
+      options.forEach(option => {
+        option.classList.remove('selected');
+        option.addEventListener('click', () => {
+          options.forEach(opt => opt.classList.remove('selected'));
+          option.classList.add('selected');
+          selectedHoliday = option.dataset.holiday;
+          assignBtn.disabled = false;
+        });
+      });
+      
+      assignBtn.disabled = !selectedHoliday;
+    }
+
+    function assignHoliday() {
+      if (!selectedHoliday || !currentTarget) return;
+
+      // Check if it's a card or section header
+      if (currentTarget.classList.contains('card')) {
+        // Add holiday badge to the card title
+        const titleElement = currentTarget.querySelector('.title');
+        if (titleElement && !titleElement.querySelector('.holiday-badge')) {
+          const badge = document.createElement('span');
+          badge.className = 'holiday-badge';
+          badge.textContent = `Holiday: ${selectedHoliday.charAt(0).toUpperCase() + selectedHoliday.slice(1)}`;
+          titleElement.appendChild(badge);
+        }
+        
+        // Store assignment in memory
+        const cardId = currentTarget.dataset.cardId;
+        if (!window.holidayAssignments) {
+          window.holidayAssignments = new Map();
+        }
+        window.holidayAssignments.set(cardId, selectedHoliday);
+        
+        console.log(`🎄 Holiday "${selectedHoliday}" assigned to card ${cardId}`);
+      } else {
+        // Add holiday badge to the section title (original behavior)
+        const sectionTitle = currentTarget.previousElementSibling;
+        if (sectionTitle && !sectionTitle.querySelector('.holiday-badge')) {
+          const badge = document.createElement('span');
+          badge.className = 'holiday-badge';
+          badge.textContent = selectedHoliday.charAt(0).toUpperCase() + selectedHoliday.slice(1);
+          sectionTitle.appendChild(badge);
+        }
+        
+        console.log(`🎄 Holiday "${selectedHoliday}" assigned to section`);
+      }
+
+      closeHolidayModal();
+    }
+
+    // Auto-mount on load
+    document.addEventListener('DOMContentLoaded', () => {
+      cleanMount('top');
+    });
+
+    // Close modal on overlay click
+    document.getElementById('holiday-modal').addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) {
+        closeHolidayModal();
+      }
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('holiday-modal');
+        if (!modal.classList.contains('hidden')) {
+          closeHolidayModal();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

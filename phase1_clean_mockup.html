@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 1 Clean Mockup - Holiday+</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        /* Sticky toolbar */
+        .toolbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: #2a2a2a;
+            border-bottom: 1px solid #444;
+            padding: 8px 16px;
+            display: flex;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .toolbar button {
+            padding: 6px 12px;
+            border: 1px solid #555;
+            background: #3a3a3a;
+            color: #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .toolbar button:hover {
+            background: #4a4a4a;
+        }
+
+        /* Main container */
+        #clean-root {
+            margin-top: 50px;
+            padding: 20px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Section headers */
+        .section-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            color: #e0e0e0;
+        }
+
+        /* Rail containers */
+        .rail {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-snap-type: x mandatory;
+            margin-bottom: 24px;
+            padding-bottom: 8px;
+        }
+
+        .rail::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .rail::-webkit-scrollbar-track {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        .rail::-webkit-scrollbar-thumb {
+            background: #666;
+            border-radius: 3px;
+        }
+
+        .rail::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+
+        /* Card containers */
+        .card-container {
+            display: flex;
+            gap: 12px;
+            padding-right: 20px;
+            align-items: stretch;
+        }
+
+        .card {
+            flex: 0 0 auto;
+            scroll-snap-align: start;
+            background: #2a2a2a;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Card variants */
+        .card.cw {
+            width: 200px;
+        }
+
+        .card.up-next {
+            width: 220px;
+        }
+
+        .card.for-you {
+            width: 220px;
+        }
+
+        /* Poster area */
+        .poster {
+            width: 100%;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 12px;
+            position: relative;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .card.cw .poster {
+            height: 300px; /* 2:3 aspect ratio from 200px width */
+        }
+
+        .card.up-next .poster,
+        .card.for-you .poster {
+            height: 330px; /* 2:3 aspect ratio from 220px width */
+        }
+
+        /* Holiday+ chip */
+        .holiday-chip {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .holiday-chip:hover {
+            background: #1d4ed8;
+        }
+
+        /* Content area */
+        .content {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            line-height: 1.2;
+            color: #e0e0e0;
+            text-align: center;
+        }
+
+        .meta {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .holiday-badge {
+            font-size: 11px;
+            color: #2563eb;
+            font-weight: bold;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        /* Currently Watching specific */
+        .cw .content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .action-btn {
+            min-height: 44px;
+            border: none;
+            background: #2563eb;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8px 4px;
+            font-weight: 500;
+        }
+
+        .action-btn:hover {
+            background: #1d4ed8;
+        }
+
+        /* Up Next specific */
+        .up-next-line {
+            font-size: 12px;
+            color: #2563eb;
+            font-weight: bold;
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        /* For You specific */
+        .where-to-watch {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        .blurb {
+            font-size: 11px;
+            color: #aaa;
+            line-height: 1.3;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .cta-btn {
+            width: 100%;
+            min-height: 40px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .cta-btn:hover {
+            background: #1d4ed8;
+        }
+
+        /* Holiday modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            border: 1px solid #444;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            text-align: center;
+            color: #e0e0e0;
+        }
+
+        .holiday-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .holiday-option {
+            padding: 12px;
+            border: 2px solid #555;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 14px;
+            background: #3a3a3a;
+            color: #e0e0e0;
+        }
+
+        .holiday-option:hover {
+            border-color: #2563eb;
+            background: #4a4a4a;
+        }
+
+        .holiday-option.selected {
+            border-color: #2563eb;
+            background: #1e3a8a;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: 1px solid #555;
+            background: #3a3a3a;
+            color: #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .modal-btn.primary {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .modal-btn:hover {
+            background: #4a4a4a;
+        }
+
+        .modal-btn.primary:hover {
+            background: #1d4ed8;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #clean-root {
+                padding: 16px;
+            }
+            
+            .toolbar {
+                padding: 6px 12px;
+            }
+            
+            .toolbar button {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sticky Toolbar -->
+    <div class="toolbar">
+        <button onclick="cleanMount('top')">Mount Top</button>
+        <button onclick="cleanMount('bottom')">Mount Bottom</button>
+        <button onclick="cleanDestroy()">Destroy</button>
+        <button onclick="cleanReport()">Report</button>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app">
+        <h1 style="color: #e0e0e0;">Flicklet TV Tracker</h1>
+        <p style="color: #888;">This is the main app content. The clean mockup will be mounted here.</p>
+    </div>
+
+    <!-- Clean Mockup Root -->
+    <div id="clean-root" style="display: none;">
+        <!-- Your Shows Section -->
+        <div class="section-header">Your Shows</div>
+        
+        <!-- Currently Watching Rail -->
+        <div class="rail" id="cw-rail">
+            <div class="card-container">
+                <!-- Cards will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Next Up Rail -->
+        <div class="rail" id="up-next-rail">
+            <div class="card-container">
+                <!-- Cards will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- For You Section -->
+        <div class="section-header">For You</div>
+        
+        <!-- Drama Rail -->
+        <div class="rail" id="drama-rail">
+            <div class="card-container">
+                <!-- Cards will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Comedy Rail -->
+        <div class="rail" id="comedy-rail">
+            <div class="card-container">
+                <!-- Cards will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Horror Rail -->
+        <div class="rail" id="horror-rail">
+            <div class="card-container">
+                <!-- Cards will be generated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Holiday Modal -->
+    <div class="modal-overlay" id="holiday-modal">
+        <div class="modal" role="dialog" aria-modal="true">
+            <div class="modal-header">🎄 Assign Holiday Theme</div>
+            <div class="holiday-options">
+                <div class="holiday-option" data-holiday="Halloween">🎃 Halloween</div>
+                <div class="holiday-option" data-holiday="Thanksgiving">🦃 Thanksgiving</div>
+                <div class="holiday-option" data-holiday="Christmas">🎄 Christmas</div>
+                <div class="holiday-option" data-holiday="New Year">🎊 New Year</div>
+                <div class="holiday-option" data-holiday="Valentine's">💝 Valentine's</div>
+                <div class="holiday-option" data-holiday="Easter">🐰 Easter</div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn" onclick="closeHolidayModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="assignHoliday()">Assign</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let holidayAssignments = new Map();
+        let currentCardId = null;
+
+        // Generate poster SVG data URI
+        function generatePosterSVG(text, width, height) {
+            const svg = `
+                <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100%" height="100%" fill="#e0e0e0"/>
+                    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" 
+                          font-family="Arial, sans-serif" font-size="14" fill="#666">
+                        ${text}
+                    </text>
+                </svg>
+            `;
+            return `data:image/svg+xml;base64,${btoa(svg)}`;
+        }
+
+        // Generate dummy data
+        function generateDummyData(type, count) {
+            const data = [];
+            for (let i = 1; i <= count; i++) {
+                data.push({
+                    id: `${type}-${i}`,
+                    title: `Title ${i}`,
+                    meta: `S${Math.floor(Math.random() * 3) + 1} • E${Math.floor(Math.random() * 10) + 1}`,
+                    poster: generatePosterSVG(`Poster ${i}`, 200, 300)
+                });
+            }
+            return data;
+        }
+
+        // Create Currently Watching card
+        function createCWCard(item) {
+            const card = document.createElement('div');
+            card.className = 'card cw';
+            card.dataset.id = item.id;
+            
+            const holidayBadge = holidayAssignments.has(item.id) 
+                ? `<div class="holiday-badge">Holiday: ${holidayAssignments.get(item.id)}</div>` 
+                : '';
+
+            card.innerHTML = `
+                <div class="poster" style="background-image: url('${item.poster}'); background-size: cover; background-position: center;">
+                    <button class="holiday-chip" onclick="openHolidayModal('${item.id}')">Holiday +</button>
+                </div>
+                <div class="content">
+                    <div class="title">${item.title}</div>
+                    <div class="meta">${item.meta}</div>
+                    ${holidayBadge}
+                    <div class="actions-grid">
+                        <button class="action-btn">Want to Watch</button>
+                        <button class="action-btn">Watched</button>
+                        <button class="action-btn">Not Interested</button>
+                        <button class="action-btn">Delete</button>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Create Up Next card
+        function createUpNextCard(item) {
+            const card = document.createElement('div');
+            card.className = 'card up-next';
+            card.dataset.id = item.id;
+            
+            card.innerHTML = `
+                <div class="poster" style="background-image: url('${item.poster}'); background-size: cover; background-position: center;"></div>
+                <div class="content">
+                    <div class="title">${item.title}</div>
+                    <div class="meta">${item.meta}</div>
+                    <div class="up-next-line">Up next: Episode ${Math.floor(Math.random() * 10) + 1}</div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Create For You card
+        function createForYouCard(item, genre) {
+            const card = document.createElement('div');
+            card.className = 'card for-you';
+            card.dataset.id = item.id;
+            
+            const holidayBadge = holidayAssignments.has(item.id) 
+                ? `<div class="holiday-badge">Holiday: ${holidayAssignments.get(item.id)}</div>` 
+                : '';
+
+            const blurbs = [
+                "A gripping tale of mystery and intrigue that will keep you on the edge of your seat.",
+                "Heartwarming story about friendship and family that touches the soul.",
+                "Intense psychological thriller with unexpected twists and turns.",
+                "Comedy gold with witty dialogue and memorable characters.",
+                "Epic adventure spanning multiple worlds and dimensions."
+            ];
+            
+            // Use consistent blurb for perfect alignment
+            const blurb = "A gripping tale of mystery and intrigue that will keep you on the edge of your seat.";
+
+            card.innerHTML = `
+                <div class="poster" style="background-image: url('${item.poster}'); background-size: cover; background-position: center;">
+                    <button class="holiday-chip" onclick="openHolidayModal('${item.id}')">Holiday +</button>
+                </div>
+                <div class="content">
+                    <div class="title">${item.title}</div>
+                    <div class="meta">${genre} • ${Math.floor(Math.random() * 5) + 1} seasons</div>
+                    ${holidayBadge}
+                    <div class="where-to-watch">Where to Watch: Netflix, Hulu</div>
+                    <div class="blurb">${blurb}</div>
+                    <button class="cta-btn">Want to Watch</button>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Render rail
+        function renderRail(railId, data, type, genre = null) {
+            const rail = document.getElementById(railId);
+            const container = rail.querySelector('.card-container');
+            container.innerHTML = '';
+
+            data.slice(0, 12).forEach(item => {
+                let card;
+                switch (type) {
+                    case 'cw':
+                        card = createCWCard(item);
+                        break;
+                    case 'up-next':
+                        card = createUpNextCard(item);
+                        break;
+                    case 'for-you':
+                        card = createForYouCard(item, genre);
+                        break;
+                }
+                container.appendChild(card);
+            });
+        }
+
+        // Initialize all rails
+        function initializeRails() {
+            const cwData = generateDummyData('Currently Watching', 12);
+            const upNextData = generateDummyData('Next Up', 12);
+            const dramaData = generateDummyData('Drama Show', 12);
+            const comedyData = generateDummyData('Comedy Show', 12);
+            const horrorData = generateDummyData('Horror Show', 12);
+
+            renderRail('cw-rail', cwData, 'cw');
+            renderRail('up-next-rail', upNextData, 'up-next');
+            renderRail('drama-rail', dramaData, 'for-you', 'Drama');
+            renderRail('comedy-rail', comedyData, 'for-you', 'Comedy');
+            renderRail('horror-rail', horrorData, 'for-you', 'Horror');
+        }
+
+        // Holiday modal functions
+        function openHolidayModal(cardId) {
+            currentCardId = cardId;
+            const modal = document.getElementById('holiday-modal');
+            modal.classList.add('active');
+            
+            // Clear previous selection
+            modal.querySelectorAll('.holiday-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Focus trap
+            modal.focus();
+        }
+
+        function closeHolidayModal() {
+            const modal = document.getElementById('holiday-modal');
+            modal.classList.remove('active');
+            currentCardId = null;
+        }
+
+        function assignHoliday() {
+            const selectedOption = document.querySelector('.holiday-option.selected');
+            if (!selectedOption || !currentCardId) return;
+
+            const holiday = selectedOption.dataset.holiday;
+            holidayAssignments.set(currentCardId, holiday);
+            
+            // Update the card display
+            updateCardHolidayBadge(currentCardId, holiday);
+            closeHolidayModal();
+        }
+
+        function updateCardHolidayBadge(cardId, holiday) {
+            const card = document.querySelector(`[data-id="${cardId}"]`);
+            if (!card) return;
+
+            let content = card.querySelector('.content');
+            let existingBadge = content.querySelector('.holiday-badge');
+            
+            if (existingBadge) {
+                existingBadge.textContent = `Holiday: ${holiday}`;
+            } else {
+                const badge = document.createElement('div');
+                badge.className = 'holiday-badge';
+                badge.textContent = `Holiday: ${holiday}`;
+                content.insertBefore(badge, content.querySelector('.meta').nextSibling);
+            }
+        }
+
+        // Public helper functions
+        function cleanMount(position) {
+            const cleanRoot = document.getElementById('clean-root');
+            const app = document.getElementById('app');
+            
+            cleanRoot.style.display = 'block';
+            
+            if (position === 'top') {
+                app.insertBefore(cleanRoot, app.firstChild);
+            } else {
+                app.appendChild(cleanRoot);
+            }
+            
+            initializeRails();
+        }
+
+        function cleanDestroy() {
+            const cleanRoot = document.getElementById('clean-root');
+            const modal = document.getElementById('holiday-modal');
+            
+            cleanRoot.style.display = 'none';
+            modal.classList.remove('active');
+            
+            // Clear holiday assignments
+            holidayAssignments.clear();
+            currentCardId = null;
+        }
+
+        function cleanReport() {
+            const rails = [
+                { id: 'cw-rail', name: 'Currently Watching' },
+                { id: 'up-next-rail', name: 'Next Up' },
+                { id: 'drama-rail', name: 'Drama' },
+                { id: 'comedy-rail', name: 'Comedy' },
+                { id: 'horror-rail', name: 'Horror' }
+            ];
+
+            const report = rails.map(rail => {
+                const element = document.getElementById(rail.id);
+                const container = element.querySelector('.card-container');
+                const cards = container.children;
+                
+                return {
+                    id: rail.id,
+                    name: rail.name,
+                    cards: cards.length,
+                    snap: element.style.scrollSnapType || 'x mandatory',
+                    width: element.offsetWidth,
+                    lastRight_minus_viewportRight: container.scrollWidth - element.offsetWidth
+                };
+            });
+
+            console.log('Rail Report:', report);
+            alert(`Rail Report:\n${report.map(r => 
+                `${r.name}: ${r.cards} cards, width: ${r.width}px, scroll: ${r.lastRight_minus_viewportRight}px`
+            ).join('\n')}`);
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Holiday option selection
+            document.querySelectorAll('.holiday-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.holiday-option').forEach(opt => 
+                        opt.classList.remove('selected')
+                    );
+                    this.classList.add('selected');
+                });
+            });
+
+            // Modal backdrop click
+            document.getElementById('holiday-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeHolidayModal();
+                }
+            });
+
+            // ESC key to close modal
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeHolidayModal();
+                }
+            });
+
+            // Auto-mount on load
+            cleanMount('top');
+        });
+    </script>
+</body>
+</html>

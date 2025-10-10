@@ -216,7 +216,6 @@
     <link rel="stylesheet" href="/styles/home-layout.css" />
     
     <!-- Rails System - Canonical rail scrolling and layout -->
-    <link rel="stylesheet" href="/styles/rails.css" />
     
     <!-- Community V2 Layout - Scoped CSS containment -->
     <link rel="stylesheet" href="/styles/community-layout.v2.css" />
@@ -240,7 +239,7 @@
     <script>
       if (location.hostname === 'localhost') {
         const s = document.createElement('script');
-        s.src = '/dev/verify-home.js';
+        // s.src = '/dev/verify-home.js'; // File removed
         document.head.appendChild(s);
       }
     </script>
@@ -394,12 +393,9 @@
     <script type="module" src="/js/app-init-marquee.js" defer></script>
 
     <!-- Home page features - Defer non-critical features -->
-    <script type="module" src="/scripts/currently-watching-preview.js?v=28.152.0" defer></script>
-    <script type="module" src="/scripts/next-up-this-week.js" defer></script>
     
     <!-- Curated data seeding -->
     <script src="/scripts/curated-seed.js"></script>
-    <script src="/scripts/curated-rows.js"></script>
     <script src="/scripts/custom-genre-selector.js"></script>
     <script src="/scripts/curated-genre-settings.js"></script>
     <script src="/scripts/tmdb-seed.js"></script>
@@ -407,11 +403,20 @@
     <!-- Home wiring system -->
     <script type="module" src="/js/home-wire-strict.js"></script>
     
+    <!-- Home Clean Component Integration - Phase 2 -->
+    <script src="/scripts/home-clean-integration.js"></script>
+    
+    <!-- Home Layout Toggle - Phase 3 -->
+    
+    <!-- Home Clean QA Testing - Phase 4 -->
+    <script src="/tests/home-clean.spec.js"></script>
+    
+    <!-- Home Clean Performance Optimizations - Phase 4 -->
+    <script src="/scripts/home-clean-performance.js"></script>
+    
     <!-- Test script for adding currently airing shows - Defer test scripts -->
-    <script type="module" src="/test-add-airing-shows.js" defer></script>
     
     <!-- Mock Currently Watching Data Generator - Defer test scripts -->
-    <script type="module" src="/test-mock-currently-watching.js" defer></script>
 
     <!-- New unified card components (for dedicated game pages) - Defer components -->
     <script type="module" src="/scripts/components/BasePosterCard.js" defer></script>
@@ -1177,56 +1182,12 @@
               <h2 class="group-title" data-i18n="your_shows">Your Shows</h2>
             </div>
 
-            <!-- Currently Watching (row): always present -->
-            <section
-              id="currentlyWatchingPreview"
-              class="home-preview-row"
-              aria-label="Currently Watching Preview"
-            >
-              <div class="preview-row-header">
-                <h3 class="preview-row-title" data-i18n="currently_watching_section">
-                  Currently Watching
-                </h3>
-              </div>
-              <div class="preview-row-container cw-row">
-                <div class="preview-row-scroll row-inner" id="currentlyWatchingScroll">
-                  <!-- Cards will be populated by JavaScript -->
-                  <div class="placeholder-message" id="cw-placeholder" style="display: none">
-                    Add something to your Currently Watching list and it'll show up here.
-                  </div>
-                </div>
-              </div>
-            </section>
+            <!-- Currently Watching (row): LEGACY REMOVED - Now handled by Phase 4 -->
 
             <!-- Group divider -->
             <div class="group-divider"></div>
 
-            <!-- Up Next -->
-            <section
-              id="up-next-row"
-              class="home-preview-row"
-              data-feature="homeRowNextUp"
-              style="display: block"
-            >
-              <div class="preview-row-header">
-                <h3 class="preview-row-title" data-i18n="up_next">
-                  Up Next
-                </h3>
-              </div>
-              <div class="preview-row-container">
-                <div class="up-next-scroll row-inner preview-row-scroll">
-                  <!-- tiles injected here -->
-                  <div
-                    class="placeholder-message"
-                    id="upnext-placeholder"
-                    style="display: none"
-                    data-i18n="no_upcoming_episodes"
-                  >
-                    No upcoming episodes.
-                  </div>
-                </div>
-              </div>
-            </section>
+            <!-- Up Next: LEGACY REMOVED - Now handled by Phase 4 -->
           </div>
 
           <!-- Group 2 - Community -->
@@ -1375,17 +1336,7 @@
 
             <div class="group-divider"></div>
 
-            <!-- Curated rows -->
-            <section id="curated-section" class="home-preview-row">
-              <div class="preview-row-header">
-                <h3 class="preview-row-title" data-i18n="curated_sections">
-                  Target Curated Sections
-                </h3>
-              </div>
-              <div class="preview-row-container">
-                <div id="curatedSections" class="home-section"></div>
-              </div>
-            </section>
+            <!-- Curated rows: LEGACY REMOVED - Now handled by Phase 4 -->
           </div>
 
 
