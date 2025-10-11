@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "source": "migration-pack",
+    "version": 1
+  },
+  "color": {
+    "bg": {
+      "base": "#0B0B0F"
+    },
+    "text": {
+      "primary": "#FFFFFF",
+      "secondary": "#B6B6C2"
+    },
+    "accent": {
+      "primary": "#FF3D71"
+    }
+  },
+  "space": {
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "xxl": 32
+  },
+  "radius": {
+    "sm": 6,
+    "md": 12,
+    "lg": 16
+  },
+  "sizes": {
+    "cardMin": 154,
+    "posterAR": "2/3"
+  },
+  "z": {
+    "search": 1000,
+    "modal": 1100
+  }
+}

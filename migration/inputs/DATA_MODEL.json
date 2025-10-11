@@ -1,0 +1,622 @@
+[
+  {
+    "file": "archive\\scripts\\inline-script-02.js",
+    "pattern": "settings = { ...(appData.settings || {}",
+    "type": "app_data"
+  },
+  {
+    "file": "archive\\scripts\\inline-script-02.js",
+    "pattern": "tv = { watching: [], wishlist: [], watched: [] }",
+    "type": "media_lists"
+  },
+  {
+    "file": "archive\\scripts\\inline-script-02.js",
+    "pattern": "movies = { watching: [], wishlist: [], watched: [] }",
+    "type": "media_lists"
+  },
+  {
+    "file": "archive\\scripts\\inline-script-02.js",
+    "pattern": "watching: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "archive\\scripts\\inline-script-02.js",
+    "pattern": "wishlist: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "archive\\scripts\\inline-script-02.js",
+    "pattern": "watched: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\actions.js",
+    "pattern": "tv = {}",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\actions.js",
+    "pattern": "movies = {}",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\app.js",
+    "pattern": "settings = { ...(window.appData.settings || {}",
+    "type": "app_data"
+  },
+  {
+    "file": "js\\app.js",
+    "pattern": "settings = {\n                ...(window.appData.settings || {}",
+    "type": "app_data"
+  },
+  {
+    "file": "js\\app.js",
+    "pattern": "settings = {\n          pro: false, // Default to false - only true if user account has Pro\n          isPro: false, // Alias for pro\n          episodeTracking: false,\n          username: '',\n          displayName: '',\n          lang: 'en',\n          theme: 'light',\n        }",
+    "type": "settings"
+  },
+  {
+    "file": "js\\app.js",
+    "pattern": "appData = { ...(window.appData || {}",
+    "type": "app_data"
+  },
+  {
+    "file": "js\\app.js",
+    "pattern": "appData = { settings: {}",
+    "type": "app_data"
+  },
+  {
+    "file": "js\\app.js",
+    "pattern": "settings = {}",
+    "type": "settings"
+  },
+  {
+    "file": "js\\app.js",
+    "pattern": "tv = { watching: [], wishlist: [], watched: [] }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\app.js",
+    "pattern": "movies = { watching: [], wishlist: [], watched: [] }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\app.js",
+    "pattern": "watching: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\app.js",
+    "pattern": "wishlist: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\app.js",
+    "pattern": "watched: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\app.js",
+    "pattern": "watching = [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\app.js",
+    "pattern": "wishlist = [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\app.js",
+    "pattern": "watched = [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\auth-manager.js",
+    "pattern": "settings = { ...window.appData.settings, ...userData.settings }",
+    "type": "app_data"
+  },
+  {
+    "file": "js\\auth-manager.js",
+    "pattern": "tv = { watching: [], wishlist: [], watched: [] }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\auth-manager.js",
+    "pattern": "movies = { watching: [], wishlist: [], watched: [] }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\auth-manager.js",
+    "pattern": "watching: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\auth-manager.js",
+    "pattern": "wishlist: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\auth-manager.js",
+    "pattern": "watched: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\data-api.js",
+    "pattern": "watching: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\data-api.js",
+    "pattern": "wishlist: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\data-api.js",
+    "pattern": "watched: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\data-init.js",
+    "pattern": "settings: {\r\n        pro: false, // Default to false - only true if user account has Pro\r\n        isPro: false, // Alias for pro\r\n        episodeTracking: false,\r\n        theme: 'light',\r\n        lang: 'en',\r\n      }",
+    "type": "settings"
+  },
+  {
+    "file": "js\\data-init.js",
+    "pattern": "settings: {\r\n          pro: false, // Default to false - only true if user account has Pro\r\n          isPro: false, // Alias for pro\r\n          episodeTracking: false,\r\n          theme: 'light',\r\n          lang: 'en',\r\n        }",
+    "type": "settings"
+  },
+  {
+    "file": "js\\data-init.js",
+    "pattern": "settings = { ...(local.settings || {}",
+    "type": "settings"
+  },
+  {
+    "file": "js\\data-init.js",
+    "pattern": "tv: { watching: [], wishlist: [], watched: [] }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\data-init.js",
+    "pattern": "movies: { watching: [], wishlist: [], watched: [] }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\data-init.js",
+    "pattern": "tv = {\r\n              watching: watchlists.tv?.watching || [],\r\n              wishlist: watchlists.tv?.wishlist || [],\r\n              watched: watchlists.tv?.watched || [],\r\n            }",
+    "type": "watchlists"
+  },
+  {
+    "file": "js\\data-init.js",
+    "pattern": "movies = {\r\n              watching: watchlists.movies?.watching || [],\r\n              wishlist: watchlists.movies?.wishlist || [],\r\n              watched: watchlists.movies?.watched || [],\r\n            }",
+    "type": "watchlists"
+  },
+  {
+    "file": "js\\data-init.js",
+    "pattern": "watching: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\data-init.js",
+    "pattern": "wishlist: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\data-init.js",
+    "pattern": "watched: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\data-migration.js",
+    "pattern": "watchlists: { movies: { watching: [], wishlist: [], watched: [] }",
+    "type": "watchlists"
+  },
+  {
+    "file": "js\\data-migration.js",
+    "pattern": "watchlists = {\r\n      movies: {\r\n        watching: Array.isArray(appData.movies?.watching) ? appData.movies.watching : [],\r\n        wishlist: Array.isArray(appData.movies?.wishlist) ? appData.movies.wishlist : [],\r\n        watched: Array.isArray(appData.movies?.watched) ? appData.movies.watched : []\r\n      }",
+    "type": "app_data"
+  },
+  {
+    "file": "js\\data-migration.js",
+    "pattern": "movies: { watching: [], wishlist: [], watched: [] }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\data-migration.js",
+    "pattern": "tv: { ... }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\data-migration.js",
+    "pattern": "movies: {\r\n        watching: Array.isArray(appData.movies?.watching) ? appData.movies.watching : [],\r\n        wishlist: Array.isArray(appData.movies?.wishlist) ? appData.movies.wishlist : [],\r\n        watched: Array.isArray(appData.movies?.watched) ? appData.movies.watched : []\r\n      }",
+    "type": "app_data"
+  },
+  {
+    "file": "js\\data-migration.js",
+    "pattern": "tv: {\r\n        watching: Array.isArray(appData.tv?.watching) ? appData.tv.watching : [],\r\n        wishlist: Array.isArray(appData.tv?.wishlist) ? appData.tv.wishlist : [],\r\n        watched: Array.isArray(appData.tv?.watched) ? appData.tv.watched : []\r\n      }",
+    "type": "app_data"
+  },
+  {
+    "file": "js\\data-migration.js",
+    "pattern": "movies: {\r\n        watching: migrated.watchlists.movies.watching.length,\r\n        wishlist: migrated.watchlists.movies.wishlist.length,\r\n        watched: migrated.watchlists.movies.watched.length\r\n      }",
+    "type": "watchlists"
+  },
+  {
+    "file": "js\\data-migration.js",
+    "pattern": "tv: {\r\n        watching: migrated.watchlists.tv.watching.length,\r\n        wishlist: migrated.watchlists.tv.wishlist.length,\r\n        watched: migrated.watchlists.tv.watched.length\r\n      }",
+    "type": "watchlists"
+  },
+  {
+    "file": "js\\data-migration.js",
+    "pattern": "watching: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\data-migration.js",
+    "pattern": "wishlist: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\data-migration.js",
+    "pattern": "watched: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\data-migration.js",
+    "pattern": "watching : [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\data-migration.js",
+    "pattern": "wishlist : [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\data-migration.js",
+    "pattern": "watched : [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\data-optimizer.js",
+    "pattern": "tv: {\r\n        watching: (data.tv?.watching || []).map((item) => optimizeItem(item, 'watching')),\r\n        wishlist: (data.tv?.wishlist || []).map((item) => optimizeItem(item, 'wishlist')),\r\n        watched: (data.tv?.watched || []).map((item) => optimizeItem(item, 'watched')),\r\n      }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\data-optimizer.js",
+    "pattern": "movies: {\r\n        watching: (data.movies?.watching || []).map((item) => optimizeItem(item, 'watching')),\r\n        wishlist: (data.movies?.wishlist || []).map((item) => optimizeItem(item, 'wishlist')),\r\n        watched: (data.movies?.watched || []).map((item) => optimizeItem(item, 'watched')),\r\n      }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\demo-settings.js",
+    "pattern": "watching: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\demo-settings.js",
+    "pattern": "wishlist: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\demo-settings.js",
+    "pattern": "watched: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\emergency-functions.js",
+    "pattern": "appData = { ...window.appData, ...userData }",
+    "type": "app_data"
+  },
+  {
+    "file": "js\\emergency-functions.js",
+    "pattern": "appData = { tv: {}",
+    "type": "app_data"
+  },
+  {
+    "file": "js\\emergency-functions.js",
+    "pattern": "tv: {}",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\emergency-functions.js",
+    "pattern": "movies: {}",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\firebase-cleanup.js",
+    "pattern": "watchlists: {\r\n          tv: {\r\n            watching: (currentData.watchlists?.tv?.watching || []).map((item) =>\r\n              cleanItem(item, 'watching'),\r\n            ),\r\n            wishlist: (currentData.watchlists?.tv?.wishlist || []).map((item) =>\r\n              cleanItem(item, 'wishlist'),\r\n            ),\r\n            watched: (currentData.watchlists?.tv?.watched || []).map((item) =>\r\n              cleanItem(item, 'watched'),\r\n            ),\r\n          }",
+    "type": "watchlists"
+  },
+  {
+    "file": "js\\firebase-cleanup.js",
+    "pattern": "tv: {\r\n            watching: (currentData.watchlists?.tv?.watching || []).map((item) =>\r\n              cleanItem(item, 'watching'),\r\n            ),\r\n            wishlist: (currentData.watchlists?.tv?.wishlist || []).map((item) =>\r\n              cleanItem(item, 'wishlist'),\r\n            ),\r\n            watched: (currentData.watchlists?.tv?.watched || []).map((item) =>\r\n              cleanItem(item, 'watched'),\r\n            ),\r\n          }",
+    "type": "watchlists"
+  },
+  {
+    "file": "js\\firebase-cleanup.js",
+    "pattern": "movies: {\r\n            watching: (currentData.watchlists?.movies?.watching || []).map((item) =>\r\n              cleanItem(item, 'watching'),\r\n            ),\r\n            wishlist: (currentData.watchlists?.movies?.wishlist || []).map((item) =>\r\n              cleanItem(item, 'wishlist'),\r\n            ),\r\n            watched: (currentData.watchlists?.movies?.watched || []).map((item) =>\r\n              cleanItem(item, 'watched'),\r\n            ),\r\n          }",
+    "type": "watchlists"
+  },
+  {
+    "file": "js\\firebase-migration.js",
+    "pattern": "settings: {}",
+    "type": "settings"
+  },
+  {
+    "file": "js\\firebase-migration.js",
+    "pattern": "tv: { watching: [], wishlist: [], watched: [] }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\firebase-migration.js",
+    "pattern": "movies: { watching: [], wishlist: [], watched: [] }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\firebase-migration.js",
+    "pattern": "watching: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\firebase-migration.js",
+    "pattern": "wishlist: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\firebase-migration.js",
+    "pattern": "watched: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\functions.js",
+    "pattern": "appData = { tv: {}",
+    "type": "app_data"
+  },
+  {
+    "file": "js\\functions.js",
+    "pattern": "tv: {}",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\functions.js",
+    "pattern": "movies: {}",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\functions.js",
+    "pattern": "tv: { watching: [], wishlist: [], watched: [] }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\functions.js",
+    "pattern": "movies: { watching: [], wishlist: [], watched: [] }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\functions.js",
+    "pattern": "tv: {\n              watching: tvWatching,\n              wishlist: tvWishlist,\n              watched: tvWatched,\n            }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\functions.js",
+    "pattern": "movies: {\n              watching: moviesWatching,\n              wishlist: moviesWishlist,\n              watched: moviesWatched,\n            }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\functions.js",
+    "pattern": "watching : [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\functions.js",
+    "pattern": "wishlist : [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\functions.js",
+    "pattern": "watched : [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\functions.js",
+    "pattern": "watching: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\functions.js",
+    "pattern": "wishlist: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\functions.js",
+    "pattern": "watched: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\home-wire-strict.js",
+    "pattern": "tv: {}",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\home-wire-strict.js",
+    "pattern": "movies: {}",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\home-wire-strict.js",
+    "pattern": "tv: {\n              watching: watchingItems.filter(item => item.media_type === 'tv'),\n              wishlist: wishlistItems.filter(item => item.media_type === 'tv'),\n              watched: watchedItems.filter(item => item.media_type === 'tv')\n            }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\home-wire-strict.js",
+    "pattern": "movies: {\n              watching: watchingItems.filter(item => item.media_type === 'movie'),\n              wishlist: wishlistItems.filter(item => item.media_type === 'movie'),\n              watched: watchedItems.filter(item => item.media_type === 'movie')\n            }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\settings-manager.js",
+    "pattern": "settings = { ...DEFAULT_SETTINGS, ...(data.settings || {}",
+    "type": "settings"
+  },
+  {
+    "file": "js\\settings-manager.js",
+    "pattern": "settings = { ...DEFAULT_SETTINGS }",
+    "type": "settings"
+  },
+  {
+    "file": "js\\settings-manager.js",
+    "pattern": "settings: { ...this._settings }",
+    "type": "settings"
+  },
+  {
+    "file": "js\\utils.js",
+    "pattern": "appData = {\r\n  settings: {\r\n    displayName: '',\r\n    lang: 'en',\r\n    theme: 'light',\r\n    pro: false,\r\n    notif: {}",
+    "type": "app_data"
+  },
+  {
+    "file": "js\\utils.js",
+    "pattern": "settings: { displayName: '', lang: 'en', theme: 'light', pro: false, notif: {}",
+    "type": "settings"
+  },
+  {
+    "file": "js\\utils.js",
+    "pattern": "settings = {}",
+    "type": "settings"
+  },
+  {
+    "file": "js\\utils.js",
+    "pattern": "tv: {\r\n    watching: [],\r\n    wishlist: [],\r\n    watched: [],\r\n  }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\utils.js",
+    "pattern": "movies: {\r\n    watching: [],\r\n    wishlist: [],\r\n    watched: [],\r\n  }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\utils.js",
+    "pattern": "tv: { watching: [], wishlist: [], watched: [] }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\utils.js",
+    "pattern": "movies: { watching: [], wishlist: [], watched: [] }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\utils.js",
+    "pattern": "tv = {}",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\utils.js",
+    "pattern": "movies = {}",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\utils.js",
+    "pattern": "watching: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\utils.js",
+    "pattern": "wishlist: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\utils.js",
+    "pattern": "watched: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\watchlists-adapter-v2.js",
+    "pattern": "appData = { watchlists: { movies: {}",
+    "type": "app_data"
+  },
+  {
+    "file": "js\\watchlists-adapter-v2.js",
+    "pattern": "watchlists = { movies: {}",
+    "type": "watchlists"
+  },
+  {
+    "file": "js\\watchlists-adapter-v2.js",
+    "pattern": "movies: {}",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\watchlists-adapter-v2.js",
+    "pattern": "tv: {}",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\watchlists-adapter-v2.js",
+    "pattern": "movies = {\n        watching: this._getItemsForList('watching', 'movie'),\n        wishlist: this._getItemsForList('wishlist', 'movie'),\n        watched: this._getItemsForList('watched', 'movie')\n      }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\watchlists-adapter-v2.js",
+    "pattern": "tv = {\n        watching: this._getItemsForList('watching', 'tv'),\n        wishlist: this._getItemsForList('wishlist', 'tv'),\n        watched: this._getItemsForList('watched', 'tv')\n      }",
+    "type": "media_lists"
+  },
+  {
+    "file": "js\\watchlists-adapter-v2.js",
+    "pattern": "watching : [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\watchlists-adapter-v2.js",
+    "pattern": "wishlist : [",
+    "type": "list_structure"
+  },
+  {
+    "file": "js\\watchlists-adapter-v2.js",
+    "pattern": "watched : [",
+    "type": "list_structure"
+  },
+  {
+    "file": "scripts\\add-test-cards-firebase.js",
+    "pattern": "tv = {}",
+    "type": "media_lists"
+  },
+  {
+    "file": "scripts\\add-test-cards-manual.js",
+    "pattern": "tv = {}",
+    "type": "media_lists"
+  },
+  {
+    "file": "scripts\\add-test-cards-manual.js",
+    "pattern": "watching = [",
+    "type": "list_structure"
+  },
+  {
+    "file": "scripts\\add-test-cards.js",
+    "pattern": "watching = [",
+    "type": "list_structure"
+  },
+  {
+    "file": "scripts\\test-data-restorer.js",
+    "pattern": "settings: {\n            theme: \"light\",\n            lang: \"en\",\n            username: \"TestUser\",\n            displayName: \"Test User\"\n        }",
+    "type": "settings"
+  },
+  {
+    "file": "scripts\\test-data-restorer.js",
+    "pattern": "movies: {\n            watching: [],\n            wishlist: [],\n            watched: []\n        }",
+    "type": "media_lists"
+  },
+  {
+    "file": "scripts\\test-data-restorer.js",
+    "pattern": "tv: {\n            watching: [\n                {\n                    id: 1399,\n                    title: \"Game of Thrones\",\n                    meta: \"Drama • 2011-2019\",\n                    blurb: \"Nine noble families fight for control over the mythical lands of Westeros.\",\n                    poster: \"https://image.tmdb.org/t/p/w500/u3bZgnGQ9T01sWNhyveQz0wH0Hl.jpg\",\n                    media_type: \"tv\"\n                }",
+    "type": "media_lists"
+  },
+  {
+    "file": "scripts\\test-data-restorer.js",
+    "pattern": "watching: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "scripts\\test-data-restorer.js",
+    "pattern": "wishlist: [",
+    "type": "list_structure"
+  },
+  {
+    "file": "scripts\\test-data-restorer.js",
+    "pattern": "watched: [",
+    "type": "list_structure"
+  }
+]

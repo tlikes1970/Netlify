@@ -1,0 +1,11 @@
+{
+  "defaults": {
+    "community_player": false,
+    "community_games_enabled": false,
+    "homeRowSpotlight": false,
+    "flicklet_episodeTracking_enabled": false
+  },
+  "discovered": [
+    "flicklet:episodeTracking:enabled"
+  ]
+}
