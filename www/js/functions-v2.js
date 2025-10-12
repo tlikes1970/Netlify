@@ -116,6 +116,11 @@
         // Update UI
         updateUIAfterDataChange();
         
+        // FIXED: Dispatch custom event to trigger HomeClean refresh
+        window.dispatchEvent(new CustomEvent('app:data:ready', {
+          detail: { status: list, source: 'addToListFromCacheV2' }
+        }));
+        
         return true;
       } else {
         throw new Error('Failed to add item to list');
@@ -179,6 +184,11 @@
         
         // Update UI
         updateUIAfterDataChange();
+        
+        // FIXED: Dispatch custom event to trigger HomeClean refresh
+        window.dispatchEvent(new CustomEvent('app:data:ready', {
+          detail: { status: dest, source: 'moveItemV2' }
+        }));
         
         return true;
       } else {

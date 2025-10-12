@@ -3,6 +3,10 @@
    This build removes duplicate init paths and normalizes tab/UI/render behavior.
 */
 
+// FIXED: Disable legacy home rendering functions to prevent content wipe
+window.loadHomeContent = () => { console.log('[FIX] Legacy disabled'); };
+window.renderHomeRails = () => { console.log('[FIX] Legacy disabled'); };
+
 // Card action handlers will be loaded via global functions
 
 // Fallback for FlickletDebug if not loaded
@@ -1502,19 +1506,19 @@ window.__useLegacyTabs = false;
         window.__currentAuthModal = wrap;
       }
       wrap.style.cssText = `
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        background: rgba(0, 0, 0, 0.5) !important;
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        z-index: 99999 !important;
-        pointer-events: auto !important;
-        visibility: visible !important;
-        opacity: 1 !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 99999;
+        pointer-events: auto;
+        visibility: visible;
+        opacity: 1;
       `;
 
       // Don't add default close button for username modals
@@ -1523,13 +1527,13 @@ window.__useLegacyTabs = false;
       wrap.innerHTML = `
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" data-testid="${testId}" data-modal-body tabindex="-1" style="position:relative; z-index:100000; pointer-events: auto !important;">
           <h3 id="modal-title">${title}</h3>
-          <div class="modal-body" style="pointer-events: auto !important;">${html}</div>
-          <div data-auth-msg aria-live="polite" style="min-height:1em; margin:8px 0; color:var(--color-error,#b00020); pointer-events: auto !important;"></div>
+          <div class="modal-body" style="pointer-events: auto;">${html}</div>
+          <div data-auth-msg aria-live="polite" style="min-height:1em; margin:8px 0; color:var(--color-error,#b00020); pointer-events: auto;"></div>
           ${
             showDefaultClose
               ? `
-          <div class="modal-actions" data-modal-actions style="pointer-events: auto !important;">
-            <button class="btn secondary" data-testid="modal-close" type="button" style="width: 120px !important; flex: 0 0 120px !important; font-size: 14px !important; padding: 12px 18px !important; height: 44px !important; min-height: 44px !important; pointer-events: auto !important;">Close</button>
+          <div class="modal-actions" data-modal-actions style="pointer-events: auto;">
+            <button class="btn secondary" data-testid="modal-close" type="button" style="width: 120px; flex: 0 0 120px; font-size: 14px; padding: 12px 18px; height: 44px; min-height: 44px; pointer-events: auto;">Close</button>
           </div>
           `
               : ''

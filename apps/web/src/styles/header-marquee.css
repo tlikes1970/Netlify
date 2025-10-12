@@ -1,0 +1,27 @@
+@keyframes flicklet-scroll-x {
+  from { transform: translate3d(100%, 0, 0); }
+  to   { transform: translate3d(-100%, 0, 0); }
+}
+
+.f-marquee-rail {
+  /* fade edges so text enters/exits gracefully */
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  position: relative;
+  z-index: 90;
+  overflow: hidden;
+}
+
+.f-marquee-scroll {
+  animation: flicklet-scroll-x var(--marquee-duration, 30s) linear infinite;
+  will-change: transform;
+}
+
+/* Pause on hover when enabled via data attribute */
+.f-marquee-rail[data-pause-on-hover="true"]:hover .f-marquee-scroll {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .f-marquee-scroll { animation: none; }
+}

@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSettings, settingsManager, PersonalityLevel, Theme, getPersonalityText } from '../lib/settings';
 import { useTranslations, useLanguage, changeLanguage } from '../lib/language';
+import { useCustomLists, customListManager } from '../lib/customLists';
+import { useUsername } from '../hooks/useUsername';
+import PersonalityExamples from './PersonalityExamples';
+import PersonalityTest from './PersonalityTest';
 import type { Language } from '../lib/language.types';
 
-type SettingsTab = 'general' | 'notifications' | 'layout' | 'data' | 'pro' | 'about';
+type SettingsTab = 'general' | 'notifications' | 'layout' | 'data' | 'pro' | 'about' | 'test';
 
 export default function SettingsPage({ onClose }: { onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
@@ -18,10 +22,11 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
     { id: 'data' as const, label: translations.data },
     { id: 'pro' as const, label: translations.pro },
     { id: 'about' as const, label: translations.about },
+    { id: 'test' as const, label: 'Personality Test' },
   ];
 
   return (
-    <div className="fixed inset-0 z-[9999] backdrop-blur-sm flex items-start justify-center pt-24 p-4" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
+    <div className="fixed inset-0 z-[99999] backdrop-blur-sm flex items-start justify-center pt-24 p-4" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
       <div className="rounded-xl w-full max-w-4xl h-[80vh] flex overflow-hidden" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', border: '1px solid' }}>
         {/* Left sidebar - Tabs */}
         <div className="w-48 p-4" style={{ backgroundColor: 'var(--btn)', borderRightColor: 'var(--line)', borderRight: '1px solid' }}>
@@ -70,15 +75,16 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
           </nav>
         </div>
 
-        {/* Right content area */}
-        <div className="flex-1 p-6 overflow-y-auto">
+                {/* Right content area */}
+                <div className="flex-1 p-6 overflow-y-auto">
                   {activeTab === 'general' && <GeneralTab settings={settings} translations={translations} currentLanguage={currentLanguage} />}
-          {activeTab === 'notifications' && <NotificationsTab settings={settings} />}
-          {activeTab === 'layout' && <LayoutTab settings={settings} />}
-          {activeTab === 'data' && <DataTab settings={settings} />}
-          {activeTab === 'pro' && <ProTab settings={settings} />}
-          {activeTab === 'about' && <AboutTab />}
-        </div>
+                  {activeTab === 'notifications' && <NotificationsTab settings={settings} />}
+                  {activeTab === 'layout' && <LayoutTab settings={settings} />}
+                  {activeTab === 'data' && <DataTab settings={settings} />}
+                  {activeTab === 'pro' && <ProTab settings={settings} />}
+                  {activeTab === 'about' && <AboutTab />}
+                  {activeTab === 'test' && <PersonalityTest personalityLevel={settings.personalityLevel} />}
+                </div>
       </div>
     </div>
   );
@@ -86,24 +92,35 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
 
 // General Tab Component
 function GeneralTab({ settings, translations, currentLanguage }: { settings: any; translations: any; currentLanguage: Language }) {
-  const [displayName, setDisplayName] = useState(settings.displayName);
+  const { username, updateUsername } = useUsername();
+  const [displayName, setDisplayName] = useState(username);
   const [showWarning, setShowWarning] = useState(false);
+
+  // Update local state when username changes
+  useEffect(() => {
+    setDisplayName(username);
+  }, [username]);
 
   const handleDisplayNameChange = (newName: string) => {
     setDisplayName(newName);
-    if (newName !== settings.displayName) {
+    if (newName !== username) {
       setShowWarning(true);
     } else {
       setShowWarning(false);
     }
   };
 
-  const saveDisplayName = () => {
+  const saveDisplayName = async () => {
     if (showWarning) {
-      const confirmed = window.confirm('Are you sure you want to change your display name? This will update your profile.');
+      const confirmed = window.confirm('Are you sure you want to change your username? This will update your profile.');
       if (confirmed) {
-        settingsManager.updateDisplayName(displayName);
-        setShowWarning(false);
+        try {
+          await updateUsername(displayName);
+          setShowWarning(false);
+        } catch (error) {
+          console.error('Failed to update username:', error);
+          alert('Failed to update username. Please try again.');
+        }
       }
     }
   };
@@ -144,7 +161,7 @@ function GeneralTab({ settings, translations, currentLanguage }: { settings: any
       {/* Display Name */}
       <div>
         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text)' }}>
-          {translations.displayName}
+          {translations.username}
         </label>
         <div className="flex gap-2">
           <input
@@ -158,7 +175,7 @@ function GeneralTab({ settings, translations, currentLanguage }: { settings: any
               color: 'var(--text)',
               border: '1px solid'
             }}
-            placeholder={translations.displayName}
+            placeholder={translations.username}
           />
           {showWarning && (
             <button
@@ -213,13 +230,13 @@ function GeneralTab({ settings, translations, currentLanguage }: { settings: any
       {/* Personality Level */}
       <div>
         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text)' }}>
-          Personality Level
+          {translations.personalityLevel}
         </label>
         <div className="space-y-2">
           {[
-            { level: 1 as PersonalityLevel, label: 'Regular', description: 'Friendly and helpful' },
-            { level: 2 as PersonalityLevel, label: 'Semi-sarcastic', description: 'A bit cheeky' },
-            { level: 3 as PersonalityLevel, label: 'Severely sarcastic', description: 'Maximum sass' },
+            { level: 1 as PersonalityLevel, label: translations.regular, description: translations.friendlyAndHelpful },
+            { level: 2 as PersonalityLevel, label: translations.semiSarcastic, description: translations.aBitCheeky },
+            { level: 3 as PersonalityLevel, label: translations.severelySarcastic, description: translations.maximumSass },
           ].map(({ level, label, description }) => (
             <label key={level} className="flex items-center space-x-3 cursor-pointer">
               <input
@@ -239,8 +256,13 @@ function GeneralTab({ settings, translations, currentLanguage }: { settings: any
         </div>
         <div className="mt-2 p-3 rounded-lg" style={{ backgroundColor: 'var(--card)' }}>
           <p className="text-sm" style={{ color: 'var(--text)' }}>
-            Preview: {getPersonalityText('welcome', settings.personalityLevel)}
+            {translations.preview}: {getPersonalityText('welcome', settings.personalityLevel)}
           </p>
+        </div>
+        
+        {/* Personality Examples */}
+        <div className="mt-4">
+          <PersonalityExamples personalityLevel={settings.personalityLevel} />
         </div>
       </div>
 
@@ -272,19 +294,92 @@ function NotificationsTab({ settings }: { settings: any }) {
 }
 
 function LayoutTab({ settings }: { settings: any }) {
+  const translations = useTranslations();
+  const userLists = useCustomLists();
+  const [editingListId, setEditingListId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+
+  const handleCreateList = () => {
+    const name = prompt(translations.enterListName || 'Enter list name:');
+    if (!name?.trim()) return;
+
+    try {
+      customListManager.createList(name.trim());
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to create list');
+    }
+  };
+
+  const handleEditList = (listId: string) => {
+    const list = customListManager.getListById(listId);
+    if (!list) return;
+
+    setEditingListId(listId);
+    setEditName(list.name);
+    setEditDescription(list.description || '');
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingListId || !editName.trim()) return;
+
+    try {
+      customListManager.updateList(editingListId, {
+        name: editName.trim(),
+        description: editDescription.trim() || undefined,
+      });
+      setEditingListId(null);
+      setEditName('');
+      setEditDescription('');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to update list');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingListId(null);
+    setEditName('');
+    setEditDescription('');
+  };
+
+  const handleDeleteList = (listId: string) => {
+    const list = customListManager.getListById(listId);
+    if (!list) return;
+
+    const confirmed = window.confirm(
+      `${translations.confirmDeleteList || 'Are you sure you want to delete'} "${list.name}"? ${translations.thisActionCannotBeUndone || 'This action cannot be undone.'}`
+    );
+    
+    if (confirmed) {
+      try {
+        customListManager.deleteList(listId);
+      } catch (error) {
+        alert(error instanceof Error ? error.message : 'Failed to delete list');
+      }
+    }
+  };
+
+  const handleSetDefault = (listId: string) => {
+    try {
+      customListManager.setSelectedList(listId);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to set default list');
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>Layout</h3>
+      <h3 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{translations.layout}</h3>
       
       {/* Theme Preference */}
       <div>
         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text)' }}>
-          Theme Preference
+          {translations.themePreference}
         </label>
         <div className="space-y-2">
           {[
-            { theme: 'dark' as const, label: 'Dark', description: 'Dark background with light text' },
-            { theme: 'light' as const, label: 'Light', description: 'Light background with dark text' },
+            { theme: 'dark' as const, label: translations.dark, description: translations.darkThemeDescription },
+            { theme: 'light' as const, label: translations.light, description: translations.lightThemeDescription },
           ].map(({ theme, label, description }) => (
             <label key={theme} className="flex items-center space-x-3 cursor-pointer">
               <input
@@ -304,9 +399,150 @@ function LayoutTab({ settings }: { settings: any }) {
         </div>
       </div>
 
+      {/* My Lists Management */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-lg font-medium" style={{ color: 'var(--text)' }}>
+            {translations.myLists || 'My Lists'}
+          </h4>
+          {userLists.customLists.length < userLists.maxLists && (
+            <button
+              onClick={handleCreateList}
+              className="px-3 py-1.5 rounded-lg text-sm transition-colors"
+              style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+            >
+              {translations.createNewList || 'Create New List'}
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          {userLists.customLists.map(list => (
+            <div
+              key={list.id}
+              className="p-4 rounded-lg"
+              style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', border: '1px solid' }}
+            >
+              {editingListId === list.id ? (
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ 
+                      backgroundColor: 'var(--btn)', 
+                      borderColor: 'var(--line)', 
+                      color: 'var(--text)',
+                      border: '1px solid'
+                    }}
+                    placeholder={translations.listName || 'List name'}
+                  />
+                  <input
+                    type="text"
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ 
+                      backgroundColor: 'var(--btn)', 
+                      borderColor: 'var(--line)', 
+                      color: 'var(--text)',
+                      border: '1px solid'
+                    }}
+                    placeholder={translations.listDescription || 'List description (optional)'}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveEdit}
+                      className="px-3 py-1.5 rounded-lg text-sm transition-colors"
+                      style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+                    >
+                      {translations.save || 'Save'}
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="px-3 py-1.5 rounded-lg text-sm transition-colors"
+                      style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+                    >
+                      {translations.cancel || 'Cancel'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h5 className="font-medium" style={{ color: 'var(--text)' }}>{list.name}</h5>
+                      {list.isDefault && (
+                        <span className="px-2 py-0.5 rounded text-xs" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>
+                          {translations.default || 'Default'}
+                        </span>
+                      )}
+                    </div>
+                    {list.description && (
+                      <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>{list.description}</p>
+                    )}
+                    <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
+                      {list.itemCount} {translations.items || 'items'}
+                    </p>
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handleEditList(list.id)}
+                      className="px-2 py-1 rounded text-xs transition-colors"
+                      style={{ backgroundColor: 'var(--btn)', color: 'var(--text)' }}
+                      title={translations.edit || 'Edit'}
+                    >
+                      ✏️
+                    </button>
+                    {!list.isDefault && (
+                      <button
+                        onClick={() => handleSetDefault(list.id)}
+                        className="px-2 py-1 rounded text-xs transition-colors"
+                        style={{ backgroundColor: 'var(--btn)', color: 'var(--text)' }}
+                        title={translations.setAsDefault || 'Set as Default'}
+                      >
+                        ⭐
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteList(list.id)}
+                      className="px-2 py-1 rounded text-xs transition-colors"
+                      style={{ backgroundColor: 'var(--btn)', color: 'var(--text)' }}
+                      title={translations.delete || 'Delete'}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {userLists.customLists.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
+                {translations.noListsCreated || 'No lists created yet'}
+              </p>
+              <button
+                onClick={handleCreateList}
+                className="px-4 py-2 rounded-lg transition-colors"
+                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+              >
+                {translations.createYourFirstList || 'Create Your First List'}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-3 text-xs" style={{ color: 'var(--muted)' }}>
+          {translations.listsUsed || 'Lists used'}: {userLists.customLists.length}/{userLists.maxLists}
+        </div>
+      </div>
+
       {/* Other Layout Settings */}
       <div>
-        <h4 className="text-lg font-medium mb-3" style={{ color: 'var(--text)' }}>Basic Customization</h4>
+        <h4 className="text-lg font-medium mb-3" style={{ color: 'var(--text)' }}>{translations.basicCustomization}</h4>
         <div className="space-y-3">
           <label className="flex items-center space-x-3 cursor-pointer">
             <input
@@ -317,7 +553,7 @@ function LayoutTab({ settings }: { settings: any }) {
               })}
               className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 rounded focus:ring-blue-500"
             />
-            <span style={{ color: 'var(--text)' }}>Condensed View</span>
+            <span style={{ color: 'var(--text)' }}>{translations.condensedView}</span>
           </label>
           
           <label className="flex items-center space-x-3 cursor-pointer">
@@ -327,7 +563,7 @@ function LayoutTab({ settings }: { settings: any }) {
               onChange={() => settingsManager.toggleEpisodeTracking()}
               className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 rounded focus:ring-blue-500"
             />
-            <span style={{ color: 'var(--text)' }}>Enable Episode Tracking</span>
+            <span style={{ color: 'var(--text)' }}>{translations.enableEpisodeTracking}</span>
           </label>
         </div>
       </div>
@@ -335,8 +571,8 @@ function LayoutTab({ settings }: { settings: any }) {
       {/* Pro Features */}
       {settings.pro.isPro && (
         <div>
-          <h4 className="text-lg font-medium mb-3" style={{ color: 'var(--text)' }}>Pro Features</h4>
-          <p style={{ color: 'var(--muted)' }}>Theme packs coming soon...</p>
+          <h4 className="text-lg font-medium mb-3" style={{ color: 'var(--text)' }}>{translations.proFeatures}</h4>
+          <p style={{ color: 'var(--muted)' }}>{translations.themePacksComingSoon}</p>
         </div>
       )}
     </div>

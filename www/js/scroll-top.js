@@ -28,16 +28,7 @@
     const maxScrollY = Math.max(windowScrollY, documentScrollY);
     
     const shouldShow = maxScrollY > scrollThreshold;
-    console.log('Scroll event triggered!', { 
-      windowScrollY, 
-      documentScrollY, 
-      maxScrollY, 
-      scrollThreshold, 
-      shouldShow 
-    });
     btn.classList.toggle('is-visible', shouldShow);
-    console.log('Button classes after toggle:', btn.className);
-    console.log('Button has is-visible class:', btn.classList.contains('is-visible'));
   };
 
   // Always use scroll detection for simplicity
@@ -45,15 +36,6 @@
   document.addEventListener('scroll', showOnScroll, { passive: true });
   document.documentElement.addEventListener('scroll', showOnScroll, { passive: true });
   document.body.addEventListener('scroll', showOnScroll, { passive: true });
-  console.log('Scroll event listeners attached to window, document, documentElement, and body');
-  
-  // Test if scroll events work at all
-  let testScrollCount = 0;
-  const testScroll = () => {
-    testScrollCount++;
-    console.log(`Test scroll event #${testScrollCount} - scrollY: ${window.scrollY}`);
-  };
-  window.addEventListener('scroll', testScroll, { passive: true });
   
   // Initial check
   showOnScroll();

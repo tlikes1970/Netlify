@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flicklet: Clean Card Crucible</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --surface: #171a21; --border: #242a33; --fg: #e6eaf0; --muted: #a9b3c1;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { 
+            background: #0b0f15; color: var(--fg); 
+            font: 14px/1.35 system-ui, Segoe UI, Roboto, Arial; 
+            overflow-x: hidden; 
+        }
+        
+        #app { padding: 12px 0 48px; }
+        
+        /* Groups & Headers */
+        .clean-group { margin: 32px 0; }
+        .group-header h2 { 
+            margin: 0 16px 8px; font: 600 22px/1.2 system-ui, Segoe UI, Roboto; color: var(--fg); 
+        }
+        .group-divider { height: 1px; background: var(--border); margin: 8px 0 16px; }
+        h3 { padding: 0 16px; margin: 0 8px 8px; font: 600 18px/1.2 system-ui, Segoe UI, Roboto; color: var(--fg); }
+        
+        /* Rails */
+        .rail {
+            display: flex; gap: 12px; overflow-x: auto; overflow-y: hidden;
+            padding: 0 16px 8px; width: 100%; box-sizing: border-box;
+            scroll-snap-type: x mandatory; scrollbar-gutter: stable both-edges;
+            scrollbar-width: none; /* Firefox */
+        }
+        .rail::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+        .rail > * { scroll-snap-align: start; flex: 0 0 auto; }
+        
+        /* Cards: Base */
+        .card {
+            position: relative; border-radius: 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--fg);
+            box-shadow: 0 6px 24px rgba(0,0,0,.2);
+            display: flex; flex-direction: column; align-items: center;
+            box-sizing: border-box;
+            transition: all 0.3s ease; cursor: pointer;
+        }
+        .card:hover { transform: scale(1.02); box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+        .poster-wrap { width: 100%; aspect-ratio: 2/3; overflow: hidden; border-radius: 10px; background: #111827; }
+        .poster-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .title { font: 700 14px/1.25 system-ui, Segoe UI, Roboto; text-align: center; margin: 8px 0 0; }
+        .meta { font: 12px/1.25 system-ui, Segoe UI, Roboto; color: var(--muted); text-align: center; margin: 4px 0 8px; }
+        
+        /* CW Cards: 200px, 2x2 Actions */
+        .cw-card { width: 200px; padding: 12px; gap: 8px; }
+        .cw-actions {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 8px;
+        }
+        .cw-actions button {
+            min-height: 44px; width: 100%; border-radius: 8px; border: 1px solid #2a3340;
+            background: #2b63ff; color: #fff; font: 500 13px/1 system-ui, Segoe UI, Roboto; cursor: pointer;
+            transition: background 0.3s;
+        }
+        .cw-actions button:hover { background: #1e4cd8; }
+        
+        /* Up Next: 220px, Read-Only */
+        .up-card { width: 220px; padding: 12px; gap: 6px; }
+        .up-next-line { font: 12px/1.25 system-ui, Segoe UI, Roboto; color: #21b66f; text-align: center; }
+        
+        /* For You: 220px, Single CTA */
+        .fy-card { width: 220px; padding: 12px; gap: 6px; }
+        .where { font: 12px/1.25 system-ui, Segoe UI, Roboto; color: #6ca4ff; text-align: center; }
+        .blurb { 
+            font: 12px/1.3 system-ui, Segoe UI, Roboto; color: #cfd6df;
+            text-align: center; max-height: 3.9em; overflow: hidden; 
+        }
+        .fy-actions { display: grid; grid-template-columns: 1fr; gap: 8px; width: 100%; margin-top: 8px; }
+        .fy-actions button { 
+            min-height: 40px; width: 100%; border-radius: 8px; border: 1px solid #2a3340;
+            background: #2b63ff; color: #fff; font: 500 13px/1 system-ui, Segoe UI, Roboto; cursor: pointer;
+            transition: background 0.3s;
+        }
+        .fy-actions button:hover { background: #1e4cd8; }
+        
+        /* Holiday+ Affordance */
+        .holiday-chip {
+            position: absolute; top: 8px; right: 8px; z-index: 2;
+            padding: 4px 8px; border-radius: 999px; border: 1px solid #3a4250;
+            background: rgba(43,99,255,.12); color: #9db4ff;
+            font: 600 11px/1 system-ui, Segoe UI, Roboto; cursor: pointer;
+        }
+        .holiday-chip:hover { background: rgba(43,99,255,.2); }
+        .holiday-badge {
+            margin-top: 6px; padding: 2px 6px; border-radius: 999px;
+            border: 1px solid #2b3a55; color: #9db4ff; font: 600 11px/1 system-ui, Segoe UI, Roboto;
+        }
+        
+        /* Community: Split (Adapted Clean) */
+        .community-split { display: flex; gap: 1rem; height: 300px; margin: 16px; }
+        .now-playing { 
+            flex: 1; background: #000; border-radius: 14px; position: relative; overflow: hidden; 
+            display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.2rem; 
+        }
+        .now-playing video { width: 100%; height: 100%; object-fit: cover; }
+        .games-column { 
+            flex: 1; display: flex; flex-direction: column; gap: 0.5rem; 
+        }
+        .game-card { 
+            flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            cursor: pointer; transition: all 0.3s; font: 14px system-ui, Segoe UI, Roboto; 
+        }
+        .game-card:hover { transform: scale(1.02); box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+        .game-card h3 { margin: 0; color: var(--fg); }
+        
+        /* In Theaters: Venue Vortex */
+        .theater-info { 
+            background: var(--surface); border: 1px solid var(--border); 
+            border-radius: 14px; padding: 1rem; margin: 16px; text-align: center; 
+            color: var(--fg); box-shadow: 0 6px 24px rgba(0,0,0,.2); 
+        }
+        
+        /* Feedback: Clean Form */
+        .feedback-form { 
+            background: var(--surface); border: 1px solid var(--border); 
+            border-radius: 14px; padding: 2rem; text-align: center; margin: 16px;
+            box-shadow: 0 6px 24px rgba(0,0,0,.2); 
+        }
+        .feedback-form textarea { 
+            width: 100%; height: 100px; background: #000; color: var(--fg); 
+            border: 1px solid var(--border); border-radius: 8px; padding: 1rem; 
+            resize: vertical; margin-bottom: 1rem; font: 14px system-ui, Segoe UI, Roboto; 
+        }
+        .feedback-form button { 
+            background: #2b63ff; color: #fff; border: none; padding: 0.5rem 2rem; 
+            border-radius: 8px; cursor: pointer; font: 500 13px/1 system-ui, Segoe UI, Roboto;
+            transition: background 0.3s;
+        }
+        .feedback-form button:hover { background: #1e4cd8; }
+        
+        /* Modal */
+        #clean-holiday-modal {
+            position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+            background: rgba(0,0,0,.45); z-index: 1000;
+        }
+        #clean-holiday-modal .sheet {
+            width: min(420px, 92vw); background: #0f131a; border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+            box-shadow: 0 18px 60px rgba(0,0,0,.5);
+        }
+        #clean-holiday-modal h4 { margin: 0 0 8px; font: 700 16px/1.2 system-ui, Segoe UI, Roboto; color: var(--fg); }
+        #clean-holiday-modal .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+        #clean-holiday-modal .grid button {
+            padding: 10px 12px; border-radius: 8px; border: 1px solid #2b3a55; background: #151b24; color: #cfd6df;
+            font: 500 13px/1 system-ui, Segoe UI, Roboto; cursor: pointer; transition: background 0.3s;
+        }
+        #clean-holiday-modal .grid button:hover { background: #1b2230; }
+        #clean-holiday-modal .grid button[style*="outline"] { outline: 2px solid #2b63ff; }
+        #clean-holiday-modal .footer { display: flex; gap: 8px; justify-content: flex-end; }
+        #clean-holiday-modal .footer button {
+            padding: 10px 12px; border-radius: 8px; border: 1px solid #2b3a55; background: #1b2230; color: var(--fg);
+            font: 600 13px/1 system-ui, Segoe UI, Roboto; cursor: pointer; transition: background 0.3s;
+        }
+        #clean-holiday-modal .footer .primary { background: #2b63ff; border-color: #2b63ff; color: #fff; }
+        #clean-holiday-modal .footer button:hover { background: #151b24; }
+        #clean-holiday-modal .footer .primary:hover { background: #1e4cd8; }
+        
+        @media (max-width: 768px) { 
+            .community-split { flex-direction: column; height: auto; }
+            .games-column { flex-direction: row; }
+            .rail { padding: 0 8px 8px; }
+            .cw-card, .up-card, .fy-card { width: 180px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <!-- Holiday Modal -->
+    <div id="clean-holiday-modal">
+        <div class="sheet">
+            <h4>Select a holiday</h4>
+            <div class="grid"></div>
+            <div class="footer">
+                <button class="cancel">Cancel</button>
+                <button class="primary apply">Assign</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inline SVG Poster
+        const imgSrc = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="400" height="600">
+                <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f2937"/><stop offset="1" stop-color="#0f172a"/></linearGradient></defs>
+                <rect width="100%" height="100%" fill="url(#g)"/>
+                <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#9ca3af" font-family="Segoe UI, Roboto, Arial" font-size="24">Poster</text>
+            </svg>
+        `);
+
+        // Modal Setup
+        const holidays = ['Halloween', 'Thanksgiving', 'Christmas', 'New Year', 'Valentine\'s', 'Easter'];
+        const modal = document.getElementById('clean-holiday-modal');
+        let modalCtx = { card: null, selected: null };
+        const grid = modal.querySelector('.grid');
+        holidays.forEach(h => {
+            const b = document.createElement('button');
+            b.textContent = h;
+            b.onclick = () => {
+                modalCtx.selected = h;
+                [...grid.children].forEach(x => x.style.outline = 'none');
+                b.style.outline = '2px solid #2b63ff';
+            };
+            grid.appendChild(b);
+        });
+        modal.querySelector('.cancel').onclick = () => { modal.style.display = 'none'; modalCtx = { card: null, selected: null }; };
+        modal.querySelector('.apply').onclick = () => {
+            if (!modalCtx.card || !modalCtx.selected) { modal.style.display = 'none'; return; }
+            const tag = modalCtx.card.querySelector('.holiday-badge') || Object.assign(document.createElement('div'), { className: 'holiday-badge' });
+            tag.textContent = `Holiday: ${modalCtx.selected}`;
+            if (!tag.parentElement) {
+                const title = modalCtx.card.querySelector('.title');
+                (title?.parentElement || modalCtx.card).insertBefore(tag, (title?.nextSibling) || null);
+            }
+            window.cleanHolidayAssignments = window.cleanHolidayAssignments || new Map();
+            const id = modalCtx.card.getAttribute('data-id') || modalCtx.card.querySelector('.title')?.textContent || String(Math.random());
+            modalCtx.card.setAttribute('data-id', id);
+            window.cleanHolidayAssignments.set(id, modalCtx.selected);
+            modal.style.display = 'none';
+            modalCtx = { card: null, selected: null };
+        };
+        modal.addEventListener('click', e => { if (e.target === modal) modal.querySelector('.cancel').click(); });
+        window.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.style.display === 'flex') modal.querySelector('.cancel').click(); });
+
+        const make = (t, attrs = {}) => Object.assign(document.createElement(t), attrs);
+
+        const buildPoster = () => {
+            const wrap = make('div', { className: 'poster-wrap' });
+            const img = make('img', { src: imgSrc, alt: '' });
+            wrap.appendChild(img);
+            return wrap;
+        };
+
+        const buildCWCard = (i) => {
+            const card = make('div', { className: 'card cw-card' });
+            const holidayBtn = make('button', { 
+                className: 'holiday-chip', 
+                textContent: 'Holiday +', 
+                type: 'button', 
+                title: 'Add to Holiday' 
+            });
+            holidayBtn.onclick = () => { modalCtx = { card, selected: null }; modal.style.display = 'flex'; };
+            card.appendChild(holidayBtn);
+            card.appendChild(buildPoster());
+            card.appendChild(make('div', { className: 'title', textContent: `The Expanse S4` }));
+            card.appendChild(make('div', { className: 'meta', textContent: `S4 • E${i}` }));
+            const acts = make('div', { className: 'cw-actions' });
+            ['Want to Watch', 'Watched', 'Not Interested', 'Delete'].forEach(t => 
+                acts.appendChild(make('button', { textContent: t }))
+            );
+            card.appendChild(acts);
+            return card;
+        };
+
+        const buildUpNextCard = (i) => {
+            const card = make('div', { className: 'card up-card' });
+            card.appendChild(buildPoster());
+            card.appendChild(make('div', { className: 'title', textContent: `Dune: Prophecy` }));
+            card.appendChild(make('div', { className: 'meta', textContent: `S1 • E${i}` }));
+            card.appendChild(make('div', { className: 'up-next-line', textContent: `Up next: S1E${i} 2025-11-01` }));
+            return card;
+        };
+
+        const buildForYouCard = (rowName, i) => {
+            const card = make('div', { className: 'card fy-card' });
+            const holidayBtn = make('button', { 
+                className: 'holiday-chip', 
+                textContent: 'Holiday +', 
+                type: 'button', 
+                title: 'Add to Holiday' 
+            });
+            holidayBtn.onclick = () => { modalCtx = { card, selected: null }; modal.style.display = 'flex'; };
+            card.appendChild(holidayBtn);
+            card.appendChild(buildPoster());
+            card.appendChild(make('div', { className: 'title', textContent: `${rowName} Show ${i}` }));
+            card.appendChild(make('div', { className: 'meta', textContent: `${rowName} • 2025` }));
+            card.appendChild(make('div', { className: 'where', textContent: `Where to Watch: N/A` }));
+            card.appendChild(make('div', { className: 'blurb', textContent: `Short blurb that truncates neatly to fit the card height without overflow. Oct 10, 2025 vibes.` }));
+            const acts = make('div', { className: 'fy-actions' });
+            acts.appendChild(make('button', { textContent: 'Want to Watch' }));
+            card.appendChild(acts);
+            return card;
+        };
+
+        const buildTheaterCard = (i) => {
+            const card = make('div', { className: 'card', style: 'width: 220px; padding: 12px; gap: 6px;' });
+            card.appendChild(buildPoster());
+            card.appendChild(make('div', { className: 'title', textContent: `TRON: Ares` }));
+            card.appendChild(make('div', { className: 'meta', textContent: `Now Playing • Oct 10, 2025` }));
+            return card;
+        };
+
+        const buildGameCard = (name) => {
+            const card = make('div', { className: 'game-card' });
+            card.appendChild(make('h3', { textContent: name }));
+            card.appendChild(make('div', { textContent: `Cinematic ${name.toLowerCase()}` }));
+            card.onclick = () => openModal(name.toLowerCase());
+            return card;
+        };
+
+        // Build & Mount Root
+        const buildRoot = () => {
+            const root = make('div', { id: 'clean-root' });
+
+            // Your Shows
+            const ys = make('div', { className: 'clean-group', id: 'ys-clean' });
+            ys.innerHTML = `<div class="group-header"><h2>Your Shows</h2></div><div class="group-divider"></div>`;
+
+            const cwSec = make('section', { className: 'home-preview-row' });
+            cwSec.appendChild(make('h3', { textContent: 'Currently Watching' }));
+            const cwRail = make('div', { className: 'rail', id: 'cw-rail-clean' });
+            for (let i = 1; i <= 12; i++) cwRail.appendChild(buildCWCard(i));
+            cwSec.appendChild(cwRail);
+
+            const upSec = make('section', { className: 'home-preview-row' });
+            upSec.appendChild(make('h3', { textContent: 'Up Next' }));
+            const upRail = make('div', { className: 'rail', id: 'up-rail-clean' });
+            for (let i = 1; i <= 12; i++) upRail.appendChild(buildUpNextCard(i));
+            upSec.appendChild(upRail);
+
+            ys.appendChild(cwSec); ys.appendChild(upSec);
+
+            // Community
+            const comm = make('div', { className: 'clean-group' });
+            comm.innerHTML = `<div class="group-header"><h2>Community</h2></div><div class="group-divider"></div>`;
+            const split = make('div', { className: 'community-split' });
+            const player = make('div', { className: 'now-playing' });
+            const vid = make('video', { controls: true, loop: true, muted: true });
+            vid.innerHTML = '<source src="community-stream.mp4" type="video/mp4">Now Playing: Collective Chaos';
+            player.appendChild(vid);
+            split.appendChild(player);
+            const gamesCol = make('div', { className: 'games-column' });
+            gamesCol.appendChild(buildGameCard('Flickword'));
+            gamesCol.appendChild(buildGameCard('Trivia'));
+            split.appendChild(gamesCol);
+            comm.appendChild(split);
+
+            // For You
+            const fy = make('div', { className: 'clean-group', id: 'fy-clean' });
+            fy.innerHTML = `<div class="group-header"><h2>For You</h2></div><div class="group-divider"></div>`;
+            ['Drama', 'Comedy', 'Horror'].forEach((name, ri) => {
+                const sec = make('section', { className: 'home-preview-row' });
+                sec.appendChild(make('h3', { textContent: name }));
+                const rail = make('div', { className: 'rail', id: `fy-rail-${ri}` });
+                for (let i = 1; i <= 12; i++) rail.appendChild(buildForYouCard(name, i));
+                sec.appendChild(rail); fy.appendChild(sec);
+            });
+
+            // In Theaters
+            const theaters = make('div', { className: 'clean-group' });
+            theaters.innerHTML = `<div class="group-header"><h2>In Theaters Near You</h2></div><div class="group-divider"></div>`;
+            const theaterInfo = make('div', { className: 'theater-info' });
+            theaterInfo.innerHTML = `
+                <h3>AMC Empire 25</h3>
+                <p>234 West 42nd Street<br>New York, NY 10036<br>2.3mi Away • (212) 398-2595</p>
+            `;
+            theaters.appendChild(theaterInfo);
+            const theaterRail = make('div', { className: 'rail' });
+            for (let i = 1; i <= 12; i++) theaterRail.appendChild(buildTheaterCard(i));
+            theaters.appendChild(theaterRail);
+
+            // Feedback
+            const feedback = make('div', { className: 'clean-group' });
+            feedback.innerHTML = `<div class="group-header"><h2>Feedback</h2></div><div class="group-divider"></div>`;
+            const form = make('form', { className: 'feedback-form' });
+            form.innerHTML = `
+                <textarea placeholder="Scream into the void... What devours your soul about Flicklet?"></textarea>
+                <button type="submit">Unleash the Echo</button>
+            `;
+            feedback.appendChild(form);
+
+            root.appendChild(ys); root.appendChild(comm); root.appendChild(fy); root.appendChild(theaters); root.appendChild(feedback);
+            return root;
+        };
+
+        // Modals for Games (Simple placeholders)
+        function openModal(id) {
+            const modal = make('div', { className: 'modal', style: 'position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;' });
+            const content = make('div', { style: 'background:#1a1a2e;margin:5% auto;padding:2rem;border-radius:12px;width:80%;max-width:600px;position:relative;text-align:center;' });
+            content.innerHTML = `<span class="close" style="color:#00ff88;float:right;font-size:2rem;cursor:pointer;" onclick="this.parentElement.parentElement.remove()">&times;</span><h2>${id.charAt(0).toUpperCase() + id.slice(1)} Frenzy</h2><iframe src="your-${id}-game.html" width="100%" height="400px" frameborder="0"></iframe>`;
+            content.querySelector('.close').onclick = () => modal.remove();
+            content.onclick = e => e.stopPropagation();
+            modal.onclick = () => modal.remove();
+            content.appendChild(content);
+            document.body.appendChild(modal);
+        }
+
+        // Mount
+        document.getElementById('app').appendChild(buildRoot());
+
+        // Firebase Tease
+        // if (auth.currentUser) { loadUserShows(); } else { loadGuest(); }
+    </script>
+</body>
+</html>

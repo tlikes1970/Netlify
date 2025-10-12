@@ -2,10 +2,12 @@ import React, { useMemo } from 'react';
 import CardV2 from '../cards/CardV2';
 import { useLibrary } from '../../lib/storage';
 import { useTranslations } from '../../lib/language';
+import { useSettings, getPersonalityText } from '../../lib/settings';
 
 export default function HomeUpNextRail() {
   const watching = useLibrary('watching');
   const translations = useTranslations();
+  const settings = useSettings();
   
   const items = useMemo(() => watching
     .filter(i => i.mediaType === 'tv' && !!i.nextAirDate)
@@ -24,7 +26,7 @@ export default function HomeUpNextRail() {
         </div>
       ) : (
         <div className="mt-2 text-sm text-neutral-400">
-          {translations.noUpcomingEpisodes} {translations.addTvShowsToWatchingList}
+          {getPersonalityText('emptyUpNext', settings.personalityLevel)} {translations.addTvShowsToWatchingList}
         </div>
       )}
     </section>

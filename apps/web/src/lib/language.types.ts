@@ -60,6 +60,45 @@ export interface LanguageStrings {
   proFeatures: string;
   themePacksComingSoon: string;
   
+  // My Lists
+  myLists: string;
+  enterListName: string;
+  addToList: string;
+  selectListFor: string;
+  items: string;
+  noListsYet: string;
+  createFirstList: string;
+  createNewList: string;
+  listName: string;
+  listDescription: string;
+  default: string;
+  edit: string;
+  setAsDefault: string;
+  delete: string;
+  noListsCreated: string;
+  createYourFirstList: string;
+  listsUsed: string;
+  confirmDeleteList: string;
+  thisActionCannotBeUndone: string;
+  save: string;
+  cancel: string;
+  darkThemeDescription: string;
+  lightThemeDescription: string;
+  
+  // Additional My Lists
+  enterNewName: string;
+  rename: string;
+  addItemsFromSearchOrDiscovery: string;
+  createListsToOrganize: string;
+  maxListsReached: string;
+  upgradeForMoreLists: string;
+  upgradeToPro: string;
+  proUpgradeComingSoon: string;
+  itemAlreadyExists: string;
+  alreadyInList: string;
+  confirmMoveToList: string;
+  moveToList: string;
+  
   // Notifications
   notificationTypes: string;
   upcomingEpisodeAlerts: string;
@@ -102,15 +141,31 @@ export interface LanguageStrings {
   aboutUniqueForYou: string;
   aboutTheCreators: string;
   aboutTheApp: string;
-  feedback: string;
   shareYourThoughts: string;
   feedbackQuotesForMarquee: string;
   clipsForHomePagePlayer: string;
   venting: string;
   
+  // Authentication
+  signIn: string;
+  signOut: string;
+  signInHere: string;
+  clickToSignOut: string;
+  clickToSignIn: string;
+  signedInAs: string;
+  signInWithGoogle: string;
+  signInWithApple: string;
+  signInWithEmail: string;
+  signInDescription: string;
+  welcomeToFlicklet: string;
+  whatShouldWeCallYou: string;
+  username: string;
+  usernameRequired: string;
+  usernameDescription: string;
+  saving: string;
+  skip: string;
+
   // Common
-  save: string;
-  cancel: string;
   close: string;
   confirm: string;
   areYouSure: string;
@@ -120,8 +175,6 @@ export interface LanguageStrings {
   // Home Rails
   yourShows: string;
   upNext: string;
-  community: string;
-  forYou: string;
   inTheatersNearYou: string;
   
   // Placeholders
@@ -192,12 +245,17 @@ export interface LanguageStrings {
   searchPlaceholder: string;
   allGenres: string;
   action: string;
-  comedy: string;
-  drama: string;
-  horror: string;
   search: string;
   clear: string;
   
   // Marquee Controls
   showMarquee: string;
   hideMarquee: string;
+  
+  // Marquee Messages
+  marqueeMessage1: string;
+  marqueeMessage2: string;
+  marqueeMessage3: string;
+  marqueeMessage4: string;
+  marqueeMessage5: string;
+}

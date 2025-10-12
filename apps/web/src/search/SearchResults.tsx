@@ -3,14 +3,18 @@ import CardV2 from '../components/cards/CardV2';
 import type { MediaItem } from '../components/cards/card.types';
 import { searchMulti } from './api';
 import { emit } from '../lib/events';
-import { Library } from '../lib/storage';
+import { addToListWithConfirmation } from '../lib/storage';
 import { fetchNextAirDate } from '../tmdb/tv';
 import { useTranslations } from '../lib/language';
+import { useSettings, getPersonalityText } from '../lib/settings';
+import MyListToggle from '../components/MyListToggle';
 
 export default function SearchResults({ query, genre }: { query: string; genre?: string | null }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<MediaItem[]>([]);
+  const translations = useTranslations();
+  const settings = useSettings();
 
   useEffect(() => {
     let cancelled = false;
@@ -23,15 +27,15 @@ export default function SearchResults({ query, genre }: { query: string; genre?:
       if (!cancelled) setError(err.message || translations.searchFailed);
     }).finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
-  }, [query, genre]);
+  }, [query, genre, translations.searchFailed]);
 
   if (!query) return null;
 
   return (
     <section className="mx-auto w-full max-w-7xl px-3 sm:px-4 py-3" aria-labelledby="search-results-heading">
       <h2 id="search-results-heading" className="text-base font-semibold mb-6">Search results for "{query}"</h2>
-      {loading && <p className="mt-2 text-sm text-muted-foreground">Loading…</p>}
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {loading && <p className="mt-2 text-sm text-muted-foreground">{getPersonalityText('searchLoading', settings.personalityLevel)}</p>}
+      {error && <p className="mt-2 text-sm text-red-600">{getPersonalityText('errorGeneric', settings.personalityLevel)}</p>}
 
       <div className="space-y-6">
         {items.map(item => (
@@ -40,7 +44,7 @@ export default function SearchResults({ query, genre }: { query: string; genre?:
       </div>
 
       {!loading && !error && items.length === 0 && (
-        <p className="mt-3 text-sm text-muted-foreground">No results. Try another search.</p>
+        <p className="mt-3 text-sm text-muted-foreground">{getPersonalityText('searchEmpty', settings.personalityLevel)}</p>
       )}
     </section>
   );
@@ -49,6 +53,7 @@ export default function SearchResults({ query, genre }: { query: string; genre?:
 function SearchResultCard({ item }: { item: MediaItem }) {
   const translations = useTranslations();
   const { title, year, posterUrl, voteAverage, mediaType, synopsis } = item;
+  const [pressedButtons, setPressedButtons] = React.useState<Set<string>>(new Set());
   
   // Mock data for demo - in real implementation, this would come from TMDB
   const runtime = mediaType === 'movie' ? '120m' : '45m';
@@ -57,25 +62,83 @@ function SearchResultCard({ item }: { item: MediaItem }) {
   const badges = ['NEW', 'TRENDING'];
   
   const handleAction = async (action: string) => {
-    switch (action) {
-      case 'want':
-        Library.upsert(item, 'wishlist');
-        emit('card:want', { id: item.id, mediaType: item.mediaType as any });
-        break;
-      case 'currently-watching':
-        // Fetch next air date for TV shows
-        let nextAirDate: string | null = null;
-        if (mediaType === 'tv') {
-          nextAirDate = await fetchNextAirDate(Number(item.id));
-        }
-        Library.upsert({ ...item, nextAirDate }, 'watching');
-        break;
-      case 'holiday':
-        emit('card:holidayAdd', { id: item.id, mediaType: item.mediaType as any });
-        break;
-      default:
-        console.log(`${action} clicked for ${title}`);
+    const buttonKey = `${action}-${item.id}`;
+    
+    // Add pressed state
+    setPressedButtons(prev => new Set(prev).add(buttonKey));
+    
+    try {
+      switch (action) {
+        case 'want':
+          addToListWithConfirmation(item, 'wishlist', () => {
+            emit('card:want', { id: item.id, mediaType: item.mediaType as any });
+          });
+          break;
+        case 'currently-watching':
+          // Fetch next air date for TV shows
+          let nextAirDate: string | null = null;
+          if (mediaType === 'tv') {
+            nextAirDate = await fetchNextAirDate(Number(item.id));
+          }
+          addToListWithConfirmation({ ...item, nextAirDate }, 'watching');
+          break;
+        case 'watched':
+          addToListWithConfirmation(item, 'watched', () => {
+            emit('card:watched', { id: item.id, mediaType: item.mediaType as any });
+          });
+          break;
+        case 'not-interested':
+          addToListWithConfirmation(item, 'not', () => {
+            emit('card:notInterested', { id: item.id, mediaType: item.mediaType as any });
+          });
+          break;
+        case 'holiday':
+          emit('card:holidayAdd', { id: item.id, mediaType: item.mediaType as any });
+          break;
+        default:
+          console.log(`${action} clicked for ${title}`);
+      }
+    } finally {
+      // Remove pressed state after action completes
+      setTimeout(() => {
+        setPressedButtons(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(buttonKey);
+          return newSet;
+        });
+      }, 300);
     }
+  };
+
+  const createButton = (action: string, label: string, isSpecial = false) => {
+    const buttonKey = `${action}-${item.id}`;
+    const isPressed = pressedButtons.has(buttonKey);
+    const isLoading = action === 'currently-watching' && pressedButtons.has(buttonKey);
+    
+    return (
+      <button 
+        onClick={() => handleAction(action)}
+        className={`px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 ${
+          isPressed ? 'scale-95 opacity-80' : 'hover:scale-105 hover:opacity-90'
+        } ${isLoading ? 'cursor-wait' : 'cursor-pointer'}`}
+        style={{ 
+          backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)', 
+          color: isSpecial ? 'white' : 'var(--text)', 
+          borderColor: 'var(--line)', 
+          border: '1px solid' 
+        }}
+        disabled={isPressed}
+      >
+        {isLoading ? (
+          <div className="flex items-center justify-center">
+            <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin mr-1"></div>
+            <span className="text-[10px]">...</span>
+          </div>
+        ) : (
+          label
+        )}
+      </button>
+    );
   };
 
   return (
@@ -138,45 +201,17 @@ function SearchResultCard({ item }: { item: MediaItem }) {
         {/* Actions */}
         <div className="mt-auto flex flex-wrap gap-2 justify-between items-center">
           <div className="flex flex-wrap gap-2 p-2 rounded-lg" style={{ borderColor: 'var(--line)', border: '1px dashed' }}>
-            <button 
-              onClick={() => handleAction('want')}
-              className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors"
-              style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-            >
-              {translations.wantToWatchAction}
-            </button>
-            <button 
-              onClick={() => handleAction('currently-watching')}
-              className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors"
-              style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-            >
-              {translations.currentlyWatchingAction}
-            </button>
-            <button 
-              className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors"
-              style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-            >
-              {translations.watchedAction}
-            </button>
-            <button 
-              className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors"
-              style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-            >
-              {translations.notInterestedAction}
-            </button>
+            {createButton('want', translations.wantToWatchAction)}
+            {createButton('currently-watching', translations.currentlyWatchingAction)}
+            {createButton('watched', translations.watchedAction)}
+            {createButton('not-interested', translations.notInterestedAction)}
             <button 
               className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors"
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
               {translations.reviewNotesAction}
             </button>
-            <button 
-              onClick={() => handleAction('holiday')}
-              className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors"
-              style={{ backgroundColor: 'var(--btn)', color: 'white', borderColor: 'var(--line)', border: '1px solid' }}
-            >
-              {translations.holidayAddAction}
-            </button>
+            <MyListToggle item={item} />
           </div>
           
           <div className="flex gap-2">

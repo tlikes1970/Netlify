@@ -27,6 +27,8 @@
   display: flex;
   width: 100%;
   padding: 0;
+  overflow: hidden; /* Prevent content from overflowing */
+  contain: layout; /* CSS containment for better performance */
 }
 #community-player .c-card {
   height: 100%;
@@ -40,6 +42,8 @@
   background: #fff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   outline: none;
+  contain: layout; /* CSS containment */
+  position: relative; /* Establish positioning context */
 }
 #community-player .c-card:focus {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
@@ -62,6 +66,33 @@
   width: 100%;
   aspect-ratio: 2 / 3;
   object-fit: cover;
+}
+
+/* YouTube iframe containment - prevent overflow */
+#community-player .c-card .media-container {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+#community-player .c-card .media-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 8px;
+  z-index: 1;
+}
+
+/* Ensure media container doesn't overflow */
+#community-player .c-card .media {
+  overflow: hidden;
+  border-radius: 8px;
 }
 #community-player .c-card .body {
   padding: 12px;
@@ -143,13 +174,72 @@
   border-radius: 9999px;
 }
 
-/* Consistent card styling */
-.home-group .card,
+/* Community player card styling - keep white background */
 #community-player .c-card {
-  background: var(--card, #fff);
+  background: #ffffff !important;
   border: 1px solid var(--border, #e5e7eb);
   border-radius: 12px;
   box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.06));
+  color: #1f2937 !important;
+}
+
+/* Regular home cards - transparent background */
+.home-group .card {
+  background: transparent !important;
+  border: none;
+  box-shadow: none;
+}
+
+/* Force light backgrounds for community sections */
+#group-2-community,
+#group-2-community .community-content,
+#group-2-community .community-left,
+#group-2-community .community-right,
+#group-2-community .community-player,
+#group-2-community #community-player {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+/* Override any dark mode styles for community sections */
+.dark-mode #group-2-community,
+.dark-mode #group-2-community .community-content,
+.dark-mode #group-2-community .community-left,
+.dark-mode #group-2-community .community-right,
+.dark-mode #group-2-community .community-player,
+.dark-mode #group-2-community #community-player {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+/* Fix section backgrounds only (not cards) */
+.home-group,
+.home-group .section,
+.home-group .preview-row-container {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+/* Keep cards with their proper backgrounds */
+.home-group .rail,
+.home-group .card {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/* Override dark mode for sections only */
+.dark-mode .home-group,
+.dark-mode .home-group .section,
+.dark-mode .home-group .preview-row-container {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+/* Keep cards transparent in dark mode too */
+.dark-mode .home-group .rail,
+.dark-mode .home-group .card {
+  background: transparent !important;
+  color: inherit !important;
 }
 
 /* Mobile responsive */

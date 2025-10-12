@@ -68,13 +68,13 @@ function fixFeedbackLayout() {
 
   // Debug: Check widths of all parent containers
   const feedbackCard = feedbackSection.querySelector('.feedback-card');
-  const feedbackContent = feedbackSection.querySelector('.feedback-content');
-  const previewContainer = feedbackSection.querySelector('.preview-row-container');
+  const feedbackSectionContent = feedbackSection.querySelector('.feedback-content');
+  const previewContainerDebug = feedbackSection.querySelector('.preview-row-container');
   
   console.log('🔧 Container width measurements:');
   console.log('🔧 feedbackSection width:', feedbackSection.offsetWidth);
-  console.log('🔧 preview-row-container width:', previewContainer?.offsetWidth);
-  console.log('🔧 feedback-content width:', feedbackContent?.offsetWidth);
+  console.log('🔧 preview-row-container width:', previewContainerDebug?.offsetWidth);
+  console.log('🔧 feedback-content width:', feedbackSectionContent?.offsetWidth);
   console.log('🔧 feedback-card width (before):', feedbackCard?.offsetWidth);
   
   // Fix the feedback card container to full width with aggressive overrides

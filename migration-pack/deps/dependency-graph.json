@@ -1,0 +1,382 @@
+[
+  {
+    "file": "features\\flickword-v2.html",
+    "dependency": "/js/iframe-auth-helper.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/main-advanced.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/firebase-config.js?v=v28.95",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/firebase-init.js?v=v28.95",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/tmdb-config.js?v=28.147.0",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/tmdb.js?v=28.147.0",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/modal-utility.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/rtl-scroll-helper.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/verify-home-frames.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/verify-panel-gutters.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/verify-rail-normalization.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/settings-manager.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/adapters/card-data-adapter.js?v=28.141.0",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/actions/card-actions.js?v=28.113.0",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/cards-v2-config.js?v=28.113.0",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/renderers/card-v2.js?v=28.500.0",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/renderers/card-v2-cw.js?v=28.113.0",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/renderers/card-v2-curated.js?v=28.113.0",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/search.js?v=28.150.0",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/app-state.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/search-controller.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/data-migration.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/watchlists-adapter-v2.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/unified-data-loader.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/data-operations.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/notification-system.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/ui-integration.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/data-init.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/firebase-migration.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/data-optimizer.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/firebase-cleanup.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/auth-manager.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/flags.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/utils.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/i18n.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/language-manager.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/marquee.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/functions.js?v=28.150.0",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/functions-v2.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/app.js?v=28.149.0",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/feedback-layout-fix.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/modules/trivia-modal.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/layout/search-sticky.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/tmdb-images.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/actions.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/demo-settings.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/theme-manager.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/settings-modal.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/app-init-marquee.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/curated-seed.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/custom-genre-selector.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/curated-genre-settings.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/tmdb-seed.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/components/home-clean/CardCW.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/components/home-clean/CardNextUp.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/components/home-clean/CardForYou.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/components/home-clean/HolidayModal.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/components/home-clean/index.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/home-clean-integration.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/manual-home-clean-test.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/visual-card-test.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/add-test-cards-firebase.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/tests/home-clean.spec.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/home-clean-performance.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/components/BasePosterCard.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/components/StatsCard.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/components/FlickWordTab.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/components/TriviaTab.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/community-player.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/scroll-top.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/js/settings-pro-gate.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/home-rails-fix.js",
+    "type": "script"
+  },
+  {
+    "file": "index.html",
+    "dependency": "/scripts/test-data-restorer.js",
+    "type": "script"
+  }
+]

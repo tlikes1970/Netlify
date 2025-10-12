@@ -38,7 +38,7 @@
 
   /* === UNIFIED CARD SIZING === */
   /* Single source of truth for all card dimensions */
-  --card-w: 180px;                               /* Standard card width */
+  --card-w: 154px;                               /* Standard card width */
   --card-h: 270px;                               /* Standard card height (3:2 aspect ratio) */
   --card-w-mobile: 140px;                        /* Mobile card width */
   --card-h-mobile: 210px;                        /* Mobile card height */

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { CardContext, CardActionHandlers, MediaItem } from './card.types';
 import { useTranslations } from '../../lib/language';
+import MyListToggle from '../MyListToggle';
 
 export type CardV2Props = {
   item: MediaItem;
@@ -22,7 +23,7 @@ export default function CardV2({ item, context, actions, compact, showRating = t
   const rating = typeof voteAverage === 'number' ? Math.round(voteAverage * 10) / 10 : undefined;
   const translations = useTranslations();
 
-  const showHolidayBtn = context === 'tab-foryou' || context === 'search' || context === 'home' || context === 'holiday';
+  const showMyListBtn = context === 'tab-foryou' || context === 'search' || context === 'home' || context === 'tab-watching' || context === 'holiday';
 
   return (
     <article className="curated-card v2 group w-[154px] select-none" data-testid="cardv2" aria-label={title}>
@@ -53,18 +54,9 @@ export default function CardV2({ item, context, actions, compact, showRating = t
             </div>
           )}
 
-          {/* Holiday + */}
-          {showHolidayBtn && actions?.onHolidayAdd && (
-            <button
-              type="button"
-              onClick={() => actions.onHolidayAdd?.(item)}
-              className="absolute right-1.5 top-1.5 rounded-full border bg-background/80 px-2 py-0.5 text-[11px] leading-none backdrop-blur transition hover:bg-accent hover:text-accent-foreground"
-              style={{ color: 'white' }}
-              aria-label="Add to Holiday list"
-              data-testid="cardv2-holiday"
-            >
-              {translations.holidayAddAction}
-            </button>
+          {/* My List + */}
+          {showMyListBtn && (
+            <MyListToggle item={item} />
           )}
         </div>
 
@@ -95,22 +87,71 @@ export default function CardV2({ item, context, actions, compact, showRating = t
 
 function CardActions({ context, item, actions }: { context: CardContext; item: MediaItem; actions?: CardActionHandlers }) {
   const translations = useTranslations();
+  const [pressedButtons, setPressedButtons] = React.useState<Set<string>>(new Set());
+  const [loadingButtons, setLoadingButtons] = React.useState<Set<string>>(new Set());
   
-  const btn = (label: string, onClick?: () => void, testId?: string) => (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-lg border px-2 py-1 text-[11px] leading-none transition-colors"
-      style={{ 
-        backgroundColor: 'var(--btn)', 
-        borderColor: 'var(--line)', 
-        color: 'var(--text)' 
-      }}
-      data-testid={testId}
-    >
-      {label}
-    </button>
-  );
+  const btn = (label: string, onClick?: () => void, testId?: string, isLoading = false) => {
+    const buttonKey = `${testId}-${item.id}`;
+    const isPressed = pressedButtons.has(buttonKey);
+    const isLoadingState = loadingButtons.has(buttonKey) || isLoading;
+    
+    const handleClick = async () => {
+      if (!onClick || isLoadingState) return;
+      
+      // Add pressed state
+      setPressedButtons(prev => new Set(prev).add(buttonKey));
+      
+      // Add loading state for async operations
+      if (testId === 'act-watched' || testId === 'act-want') {
+        setLoadingButtons(prev => new Set(prev).add(buttonKey));
+      }
+      
+      try {
+        // Call the action
+        await onClick();
+      } finally {
+        // Remove pressed state after animation
+        setTimeout(() => {
+          setPressedButtons(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(buttonKey);
+            return newSet;
+          });
+          setLoadingButtons(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(buttonKey);
+            return newSet;
+          });
+        }, 200);
+      }
+    };
+
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        className={`rounded-lg border px-2 py-1 text-[11px] leading-none transition-all duration-200 ${
+          isPressed ? 'scale-95 opacity-80' : 'hover:scale-105 hover:opacity-90'
+        } ${isLoadingState ? 'cursor-wait' : 'cursor-pointer'}`}
+        style={{ 
+          backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)', 
+          borderColor: 'var(--line)', 
+          color: 'var(--text)' 
+        }}
+        data-testid={testId}
+        disabled={isPressed || isLoadingState}
+      >
+        {isLoadingState ? (
+          <div className="flex items-center justify-center">
+            <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin mr-1"></div>
+            <span className="text-[10px]">...</span>
+          </div>
+        ) : (
+          label
+        )}
+      </button>
+    );
+  };
 
   // Map the context to a set of buttons, min 1, max 4 as per spec
   if (context === 'tab-watching') {

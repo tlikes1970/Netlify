@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ensures sticky offset respects notches / iOS safe areas */
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+/* Dark theme (default) */
+:root {
+  color-scheme: dark;
+  
+  /* Dark theme design tokens */
+  --bg: #0f1115;
+  --card: #171a21;
+  --muted: #a9b3c1;
+  --text: #e6eaf0;
+  --line: #242a33;
+  --accent: #4da3ff;
+  --btn: #232a34;
+  --btn2: #1c222b;
+  --shadow: 0 6px 24px rgba(0,0,0,.35);
+}
+
+/* Light theme */
+[data-theme="light"] {
+  color-scheme: light;
+  
+  /* Light theme design tokens */
+  --bg: #ffffff;
+  --card: #f8fafc;
+  --muted: #64748b;
+  --text: #1e293b;
+  --line: #e2e8f0;
+  --accent: #3b82f6;
+  --btn: #f1f5f9;
+  --btn2: #e2e8f0;
+  --shadow: 0 6px 24px rgba(0,0,0,.1);
+}
+
+html, body, #root { 
+  height: 100%; 
+  background: var(--bg);
+  color: var(--text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.poster-2x3 { aspect-ratio: 2 / 3; }
+[data-cards]::-webkit-scrollbar { height: 8px; }
+[data-cards]::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 9999px; }
+
+/* Subtle focus ring for buttons */
+button:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset: 2px; }
+
+/* Rounded, consistent action buttons */
+.btn { @apply px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs text-neutral-100; }
+
+/* Inputs baseline */
+input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset: 2px; }

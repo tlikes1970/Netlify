@@ -1,0 +1,324 @@
+[
+  {
+    "key": "trivia:stats",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "archive\\js\\inline-script-10.js",
+    "context": "rage.getItem('trivia:stats') || '{}');\r\n        const next = { ...prev, ...data.payload };\r\n        localStorage.setItem('trivia:stats', JSON.stringify(next));\r\n      } catch {}\r\n\r\n      try {\r\n      "
+  },
+  {
+    "key": "flicklet:episodeTracking:enabled",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "scripts\\settings-tie-ins.js",
+    "context": ";\r\n    console.log('📺 Setting episode tracking to:', enabled);\r\n\r\n    // Save to localStorage\r\n    localStorage.setItem('flicklet:episodeTracking:enabled', String(enabled));\r\n\r\n    // Update appData\r"
+  },
+  {
+    "key": "pref_homeListsCount",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "archive\\js\\inline-script-15.js",
+    "context": " Math.min(3, Number(input.value) || 3));\n      console.log('🔧 Setting curated rows to:', n);\n      localStorage.setItem('pref_homeListsCount', String(n));\n      document.dispatchEvent(new CustomEvent"
+  },
+  {
+    "key": "flicklet:curated:rows",
+    "operation": "read",
+    "storage": "localStorage",
+    "file": "scripts\\curated-lists.js",
+    "context": "tings getter for: Settings → Layout → \"Home Page TV/Movie Lists\"\r\n    try {\r\n      const n = Number(localStorage.getItem('flicklet:curated:rows'));\r\n      if ([1, 2, 3].includes(n)) return n;\r\n      r"
+  },
+  {
+    "key": "flicklet:currentlyWatching:limit",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "archive\\js\\inline-script-16.js",
+    "context": "mber(input.value) || 12));\r\n      console.log('🔧 Setting currently watching limit to:', n);\r\n      localStorage.setItem('flicklet:currentlyWatching:limit', String(n));\r\n\r\n      // Trigger currently w"
+  },
+  {
+    "key": "flickword:stats",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "scripts\\modules\\flickword-modal.js",
+    "context": "    flickword: flickwordStats,\r\n      };\r\n\r\n      // Save updated stats back to localStorage\r\n      localStorage.setItem('flickword:stats', JSON.stringify(newStats));\r\n      localStorage.setItem('flic"
+  },
+  {
+    "key": "flicklet_performance",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "archive\\js\\performance-monitor.js",
+    "context": "N.parse(localStorage.getItem('flicklet_performance') || '{}');\r\n      stored[name] = metric;\r\n      localStorage.setItem('flicklet_performance', JSON.stringify(stored));\r\n    } catch (error) {\r\n      "
+  },
+  {
+    "key": "flicklet-data",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "scripts\\test-data-restorer.js",
+    "context": ": \"TestUser\",\n            displayName: \"Test User\"\n        }\n    };\n    \n    // Store test data\n    localStorage.setItem('flicklet-data', JSON.stringify(testAppData));\n    console.log('💾 [TEST DATA] "
+  },
+  {
+    "key": "tvMovieTrackerData",
+    "operation": "read",
+    "storage": "localStorage",
+    "file": "scripts\\series-org.js",
+    "context": "a title/backdrop if available\r\n    let title = hintTitle || 'Series';\r\n    try {\r\n      const raw = localStorage.getItem('tvMovieTrackerData');\r\n      if (raw) {\r\n        const data = JSON.parse(raw);"
+  },
+  {
+    "key": "flicklet-theme",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "js\\utils.js",
+    "context": "ocument.body.classList.toggle('dark-mode');\r\n  appData.settings.theme = next ? 'dark' : 'light';\r\n  localStorage.setItem('flicklet-theme', appData.settings.theme);\r\n\r\n  // Update the theme icon\r\n  con"
+  },
+  {
+    "key": "holidayAssignments",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "components\\home-clean\\HomeClean.js",
+    "context": "localStorage.getItem('holidayAssignments') || '{}');\n        assignments[cardId] = holiday;\n        localStorage.setItem('holidayAssignments', JSON.stringify(assignments));\n        \n        // Update "
+  },
+  {
+    "key": "flicklet:trivia:v1:streak",
+    "operation": "read",
+    "storage": "localStorage",
+    "file": "scripts\\components\\TriviaTab.js",
+    "context": "   const dailyCount = parseInt(localStorage.getItem(dailyKey) || '0');\r\n    const streak = parseInt(localStorage.getItem('flicklet:trivia:v1:streak') || '0');\r\n\r\n    return `\r\n      <div class=\"stats-"
+  },
+  {
+    "key": "flicklet:trivia:v1:best",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "features\\trivia-safe.js",
+    "context": "patibility\r\n    localStorage.setItem('flicklet:trivia:v1:streak', String(triviaStats.streak));\r\n    localStorage.setItem('flicklet:trivia:v1:best', String(triviaStats.maxStreak));\r\n\r\n    // Increment "
+  },
+  {
+    "key": "firstSignInPromptShown",
+    "operation": "write",
+    "storage": "sessionStorage",
+    "file": "js\\app.js",
+    "context": "rompt() {\n          if (sessionStorage.getItem('firstSignInPromptShown') === '1') return;\n          sessionStorage.setItem('firstSignInPromptShown', '1');\n\n          const wrap = document.createElemen"
+  },
+  {
+    "key": "auth:redirectPending",
+    "operation": "write",
+    "storage": "sessionStorage",
+    "file": "js\\auth-manager.js",
+    "context": "rovider = 'unknown') {\r\n      const flagData = JSON.stringify({ ts: Date.now(), provider });\r\n      sessionStorage.setItem('auth:redirectPending', flagData);\r\n    },\r\n\r\n    /**\r\n     * Check if redire"
+  },
+  {
+    "key": "flicklet-app-data",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "js\\emergency-functions.js",
+    "context": "warn('⚠️ No appData to save');\n          return;\n        }\n\n        // Save to localStorage\n        localStorage.setItem('flicklet-app-data', JSON.stringify(window.appData));\n        FlickletDebug.inf"
+  },
+  {
+    "key": "flicklet-backup-pre-cleanup",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "js\\firebase-cleanup.js",
+    "context": "       backup_reason: 'pre_cleanup',\r\n        };\r\n\r\n        // Save backup to localStorage\r\n        localStorage.setItem('flicklet-backup-pre-cleanup', JSON.stringify(backup));\r\n        console.log('✅"
+  },
+  {
+    "key": "flicklet-migration-status",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "js\\firebase-migration.js",
+    "context": "nStatus.hasMigrated = true;\r\n      migrationStatus.lastMigration = new Date().toISOString();\r\n      localStorage.setItem('flicklet-migration-status', JSON.stringify(migrationStatus));\r\n\r\n      console"
+  },
+  {
+    "key": "forceMobileV1",
+    "operation": "read",
+    "storage": "localStorage",
+    "file": "js\\functions.js",
+    "context": "og('🔧 Mobile polish gate initialized...');\n      const MOBILE_BP = 640; // px\n      const forced = localStorage.getItem('forceMobileV1') === '1';\n      function applyMobileFlag() {\n        try {\n    "
+  },
+  {
+    "key": "flicklet-not-interested",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "js\\functions.js",
+    "context": "(\n        (notItem) => !(notItem.id === itemId && notItem.media_type === mediaType),\n      );\n      localStorage.setItem('flicklet-not-interested', JSON.stringify(filtered));\n    } catch (error) {\n   "
+  },
+  {
+    "key": "flicklet-notes-${itemId}",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "js\\modals\\notes-modal.js",
+    "context": "xt\r\n   */\r\n  function saveItemNotes(itemId, notes) {\r\n    try {\r\n      if (notes.trim()) {\r\n        localStorage.setItem(`flicklet-notes-${itemId}`, notes);\r\n      } else {\r\n        localStorage.remov"
+  },
+  {
+    "key": "flicklet_notif_master",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "js\\functions.js",
+    "context": "klet_notif_master') !== 'false';\n        masterToggle.addEventListener('change', (e) => {\n          localStorage.setItem('flicklet_notif_master', e.target.checked);\n          showNotification?.(\n     "
+  },
+  {
+    "key": "flicklet_last_notif",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "js\\functions.js",
+    "context": "ing soon!`,\n            'success',\n          );\n        }\n        // Update last check time\n        localStorage.setItem('flicklet_last_notif', now.toISOString());\n      }\n      // Run check on load\n "
+  },
+  {
+    "key": "flicklet_notif_lead",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "js\\functions.js",
+    "context": " // Save preferences on change\n        leadHoursInput.addEventListener('change', (e) => {\n          localStorage.setItem('flicklet_notif_lead', e.target.value);\n        });\n        notifScopeSelect.ad"
+  },
+  {
+    "key": "flicklet_notif_scope",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "js\\functions.js",
+    "context": "e.target.value);\n        });\n        notifScopeSelect.addEventListener('change', (e) => {\n          localStorage.setItem('flicklet_notif_scope', e.target.value);\n        });\n        // Visual feedback"
+  },
+  {
+    "key": "flicklet_lists",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "js\\functions.js",
+    "context": "yData));\n          }\n          // Legacy format support (for old exports)\n          if (json.lists) localStorage.setItem('flicklet_lists', JSON.stringify(json.lists));\n          if (json.notes) localS"
+  },
+  {
+    "key": "flicklet_notes",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "js\\functions.js",
+    "context": "ists) localStorage.setItem('flicklet_lists', JSON.stringify(json.lists));\n          if (json.notes) localStorage.setItem('flicklet_notes', JSON.stringify(json.notes));\n          if (json.prefs) localS"
+  },
+  {
+    "key": "flicklet_prefs",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "js\\functions.js",
+    "context": "otes) localStorage.setItem('flicklet_notes', JSON.stringify(json.notes));\n          if (json.prefs) localStorage.setItem('flicklet_prefs', JSON.stringify(json.prefs));\n          window.showToast?.('Im"
+  },
+  {
+    "key": "curated:trending",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "scripts\\tmdb-seed.js",
+    "context": "ite if we have data (always overwrite if we have fresh data)\r\n      if (trending.length) {\r\n        localStorage.setItem('curated:trending', JSON.stringify(trending));\r\n        console.log('🌱 Seeder:"
+  },
+  {
+    "key": "curated:staff",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "scripts\\tmdb-seed.js",
+    "context": "der: Saved trending data:', trending.length, 'items');\r\n      }\r\n      if (staff.length) {\r\n        localStorage.setItem('curated:staff', JSON.stringify(staff));\r\n        console.log('🌱 Seeder: Saved"
+  },
+  {
+    "key": "curated:new",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "scripts\\tmdb-seed.js",
+    "context": "🌱 Seeder: Saved staff data:', staff.length, 'items');\r\n      }\r\n      if (fresh.length) {\r\n        localStorage.setItem('curated:new', JSON.stringify(fresh));\r\n        console.log('🌱 Seeder: Saved n"
+  },
+  {
+    "key": "flicklet-language",
+    "operation": "read",
+    "storage": "localStorage",
+    "file": "scripts\\tmdb.js",
+    "context": "r.getCurrentLanguage();\n    }\n\n    // Try direct localStorage access\n    try {\n      const stored = localStorage.getItem('flicklet-language');\n      if (stored) return stored;\n    } catch (error) {\n  "
+  },
+  {
+    "key": "flicklet:pro.enabled",
+    "operation": "read",
+    "storage": "localStorage",
+    "file": "js\\settings-pro-gate.js",
+    "context": "bled;\r\n    }\r\n    // Fallback to storage if your app mirrors it there\r\n    try {\r\n      const raw = localStorage.getItem('flicklet:pro.enabled');\r\n      return raw ? JSON.parse(raw) === true : false;\r"
+  },
+  {
+    "key": "flicklet_analytics",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "scripts\\analytics.js",
+    "context": " > 100) {\r\n            analyticsLog.splice(0, analyticsLog.length - 100);\r\n          }\r\n\r\n          localStorage.setItem('flicklet_analytics', JSON.stringify(analyticsLog));\r\n        }\r\n\r\n        // F"
+  },
+  {
+    "key": "flicklet_stats",
+    "operation": "read",
+    "storage": "localStorage",
+    "file": "scripts\\community\\games.js",
+    "context": "-PII); keeps it snappy\r\n  function getLightweightStats() {\r\n    try {\r\n      const raw = JSON.parse(localStorage.getItem('flicklet_stats') || '{}');\r\n      return {\r\n        streak: raw.streak || 0,\r\n"
+  },
+  {
+    "key": "flickword-stats",
+    "operation": "read",
+    "storage": "localStorage",
+    "file": "scripts\\modules\\flickword-modal.js",
+    "context": "\r\n      const rawStats = JSON.parse(\r\n        localStorage.getItem('flickword:stats') ||\r\n          localStorage.getItem('flickword-stats') ||\r\n          localStorage.getItem('flicklet-data') ||\r\n    "
+  },
+  {
+    "key": "curated:${kind}",
+    "operation": "read",
+    "storage": "localStorage",
+    "file": "scripts\\curated-lists.js",
+    "context": "urce(kind) {\r\n    console.log(`🎬 loadSource called for: ${kind}`);\r\n\r\n    try {\r\n      const raw = localStorage.getItem(`curated:${kind}`);\r\n      if (raw) {\r\n        const parsed = JSON.parse(raw);\r"
+  },
+  {
+    "key": "my_rows",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "scripts\\data\\user-settings.js",
+    "context": "always store exactly 2 slots\r\n      const normalized = [rows[0] || null, rows[1] || null];\r\n\r\n      localStorage.setItem('my_rows', JSON.stringify(normalized));\r\n      console.log('✅ My rows saved:', "
+  },
+  {
+    "key": "flicklet:pro",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "scripts\\settings-tie-ins.js",
+    "context": " || false;\r\n    if (isPro) {\r\n      localStorage.setItem('flicklet:pro', '1');\r\n    } else {\r\n      localStorage.setItem('flicklet:pro', '0');\r\n    }\r\n\r\n    // Notification settings persistence\r\n    c"
+  },
+  {
+    "key": "flickword:word:${today}",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "scripts\\flickword.js",
+    "context": "(new Date() - start) / (1000 * 60 * 60 * 24));\r\n    const word = WORDS[days % WORDS.length];\r\n\r\n    localStorage.setItem(`flickword:word:${today}`, word);\r\n    return word.toUpperCase();\r\n  }\r\n\r\n  // "
+  },
+  {
+    "key": "flickword:streak",
+    "operation": "read",
+    "storage": "localStorage",
+    "file": "scripts\\flickword.js",
+    "context": " const streakEl = el.querySelector('.fw-streak');\r\n    if (streakEl) {\r\n      const streak = Number(localStorage.getItem('flickword:streak') || 0);\r\n      streakEl.textContent = `Streak: ${streak}`;\r\n"
+  },
+  {
+    "key": "community-enabled",
+    "operation": "read",
+    "storage": "localStorage",
+    "file": "scripts\\home-rails-fix.js",
+    "context": " }\n            \n            // Check localStorage override\n            const localStorageOverride = localStorage.getItem('community-enabled');\n            if (localStorageOverride === 'false') {\n     "
+  },
+  {
+    "key": "flicklet:notifications:mode",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "scripts\\notifications-test.js",
+    "context": "\n\r\n  // Set notification mode\r\n  function setNotificationMode(mode) {\r\n    currentMode = mode;\r\n    localStorage.setItem('flicklet:notifications:mode', mode);\r\n    updateModeIndicator();\r\n    console."
+  },
+  {
+    "key": "flicklet:quote:deck",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "scripts\\quotes-enhanced.js",
+    "context": "ENHANCED_QUOTES[0];\r\n\r\n    // Save remaining deck\r\n    try {\r\n      if (deck.length > 0) {\r\n        localStorage.setItem('flicklet:quote:deck', JSON.stringify(deck));\r\n      } else {\r\n        localSto"
+  },
+  {
+    "key": "flicklet:notif:${key}",
+    "operation": "write",
+    "storage": "localStorage",
+    "file": "scripts\\settings-tie-ins.js",
+    "context": "pData?.settings?.notif || {};\r\n    Object.entries(notifSettings).forEach(([key, value]) => {\r\n      localStorage.setItem(`flicklet:notif:${key}`, String(value));\r\n    });\r\n\r\n    console.log('💾 Settin"
+  },
+  {
+    "key": "flicklet:spotlight:v1",
+    "operation": "read",
+    "storage": "localStorage",
+    "file": "scripts\\spotlight.js",
+    "context": "--\r\n  function loadSpotlight() {\r\n    // 1) explicit single item wins\r\n    try {\r\n      const raw = localStorage.getItem('flicklet:spotlight:v1');\r\n      if (raw) {\r\n        const one = JSON.parse(raw"
+  }
+]

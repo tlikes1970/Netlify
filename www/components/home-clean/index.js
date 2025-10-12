@@ -45,6 +45,7 @@ async function mountHomeClean(rootElement) {
             
             // Expose global functions
             window.refreshHomeClean = () => window.homeCleanState.instance.refresh();
+            window.homeCleanInstance = window.homeCleanState.instance; // Global access
             window.toggleMockMode = toggleMockMode;
             
             return true;
@@ -113,16 +114,32 @@ async function loadComponentFiles() {
  */
 function loadScript(src) {
     return new Promise((resolve, reject) => {
-        // Check if already loaded
-        if (document.querySelector(`script[src="${src}"]`)) {
+        // Check if already loaded by looking for the script in the DOM
+        const existingScript = document.querySelector(`script[src="${src}"]`);
+        if (existingScript) {
+            console.log(`[HomeClean] Script ${src} already loaded, skipping`);
             resolve();
             return;
         }
         
+        // Check if the component is already available globally
+        if (src.includes('HomeClean.js') && window.HomeClean) {
+            console.log(`[HomeClean] HomeClean component already available, skipping load`);
+            resolve();
+            return;
+        }
+        
+        console.log(`[HomeClean] Loading script: ${src}`);
         const script = document.createElement('script');
         script.src = src;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error(`Failed to load ${src}`));
+        script.onload = () => {
+            console.log(`[HomeClean] Successfully loaded: ${src}`);
+            resolve();
+        };
+        script.onerror = () => {
+            console.error(`[HomeClean] Failed to load: ${src}`);
+            reject(new Error(`Failed to load ${src}`));
+        };
         document.head.appendChild(script);
     });
 }

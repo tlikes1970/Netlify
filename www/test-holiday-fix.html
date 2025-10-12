@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holiday Chip Fix Test</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .pass { background: #d4edda; color: #155724; }
+        .fail { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Holiday Chip Fix Test</h1>
+    <div id="test-results"></div>
+
+    <script>
+        function addTestResult(message, type = 'info') {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+        }
+
+        function runTests() {
+            addTestResult('🧪 Running Holiday Chip Fix Tests...', 'info');
+
+            // Test 1: Check if legacy functions are disabled
+            if (typeof window.loadHomeContent === 'function') {
+                const originalConsoleLog = console.log;
+                let logCalled = false;
+                console.log = (msg) => {
+                    if (msg.includes('[FIX] Legacy disabled')) {
+                        logCalled = true;
+                    }
+                    originalConsoleLog(msg);
+                };
+                
+                window.loadHomeContent();
+                console.log = originalConsoleLog;
+                
+                if (logCalled) {
+                    addTestResult('✅ Test 1 PASS: Legacy loadHomeContent disabled', 'pass');
+                } else {
+                    addTestResult('❌ Test 1 FAIL: Legacy loadHomeContent not disabled', 'fail');
+                }
+            } else {
+                addTestResult('❌ Test 1 FAIL: loadHomeContent function not found', 'fail');
+            }
+
+            // Test 2: Check if renderHomeRails is disabled
+            if (typeof window.renderHomeRails === 'function') {
+                const originalConsoleLog = console.log;
+                let logCalled = false;
+                console.log = (msg) => {
+                    if (msg.includes('[FIX] Legacy disabled')) {
+                        logCalled = true;
+                    }
+                    originalConsoleLog(msg);
+                };
+                
+                window.renderHomeRails();
+                console.log = originalConsoleLog;
+                
+                if (logCalled) {
+                    addTestResult('✅ Test 2 PASS: Legacy renderHomeRails disabled', 'pass');
+                } else {
+                    addTestResult('❌ Test 2 FAIL: Legacy renderHomeRails not disabled', 'fail');
+                }
+            } else {
+                addTestResult('❌ Test 2 FAIL: renderHomeRails function not found', 'fail');
+            }
+
+            // Test 3: Check if HomeClean flags are set
+            if (window.FLAGS && window.FLAGS.homeClean === true) {
+                addTestResult('✅ Test 3 PASS: HomeClean flag enabled', 'pass');
+            } else {
+                addTestResult('❌ Test 3 FAIL: HomeClean flag not enabled', 'fail');
+            }
+
+            if (window.FLAGS && window.FLAGS.legacyHome === false) {
+                addTestResult('✅ Test 4 PASS: Legacy home flag disabled', 'pass');
+            } else {
+                addTestResult('❌ Test 4 FAIL: Legacy home flag not disabled', 'fail');
+            }
+
+            // Test 5: Check if HomeClean component exists
+            if (typeof window.HomeClean === 'function') {
+                addTestResult('✅ Test 5 PASS: HomeClean component loaded', 'pass');
+            } else {
+                addTestResult('❌ Test 5 FAIL: HomeClean component not loaded', 'fail');
+            }
+
+            addTestResult('🎉 Test suite completed!', 'info');
+        }
+
+        // Run tests when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', runTests);
+        } else {
+            runTests();
+        }
+    </script>
+</body>
+</html>
+

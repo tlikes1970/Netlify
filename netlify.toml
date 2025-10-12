@@ -1,29 +1,9 @@
-# netlify.toml (repo root)
-
-[build]
-  # You said “no Vite, just serve my files.” So point to the real folder.
-  publish = "www"
-  functions = "netlify/functions"
-
 [functions]
-  node_bundler = "esbuild"
+directory = "netlify/functions"
 
 [dev]
-  framework = "#static"     # stop auto-detect (no Vite)
-  publish   = "www"
-  port      = 8888
-  functions = "netlify/functions"
-
-# SPA fallback so /settings, /watching, etc. don't 404 on reload
-# Temporarily disabled to fix JavaScript loading
-# [[redirects]]
-#   from = "/*"
-#   to   = "/index.html"
-#   status = 200
-
-# API to functions passthrough (keep yours)
-[[redirects]]
-  from = "/api/*"
-  to   = "/.netlify/functions/:splat"
-  status = 200
+# Run the Vite app inside apps/web
+command = "npm run dev --prefix apps/web"
+targetPort = 5173
+publish = "apps/web"
 

@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { APP_VERSION } from "../version";
 import { useTranslations } from "../lib/language";
+import AccountButton from "./AccountButton";
+import SnarkDisplay from "./SnarkDisplay";
+import UsernamePromptModal from "./UsernamePromptModal";
+import { useUsername } from "../hooks/useUsername";
 
 export type FlickletHeaderProps = {
   appName?: string;
-  username?: string;
-  isAuthed?: boolean;
-  onLogin?: () => void;
-  onLogout?: () => void;
   showMarquee?: boolean;
   messages?: string[];
   marqueeSpeedSec?: number;  // duration for one full traverse
@@ -19,10 +19,6 @@ export type FlickletHeaderProps = {
 
 export default function FlickletHeader({
   appName = "Flicklet",
-  username = "Guest",
-  isAuthed = false,
-  onLogin,
-  onLogout,
   showMarquee = false,
   messages,
   marqueeSpeedSec = 30,
@@ -32,6 +28,8 @@ export default function FlickletHeader({
   onClear,
 }: FlickletHeaderProps) {
   const translations = useTranslations();
+  const { username, needsUsernamePrompt } = useUsername();
+  const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
   
   // Use provided messages or default translated messages
   const defaultMessages = [
@@ -63,6 +61,21 @@ export default function FlickletHeader({
     try { window.localStorage.removeItem('flicklet.marqueeHidden'); } catch {}
   };
 
+  // Check if username prompt is needed
+  useEffect(() => {
+    console.log('🔍 Checking username prompt:', { 
+      needsPrompt: needsUsernamePrompt(), 
+      username, 
+      showModal: showUsernamePrompt 
+    });
+    
+    if (needsUsernamePrompt()) {
+      setShowUsernamePrompt(true);
+    } else {
+      setShowUsernamePrompt(false);
+    }
+  }, [username]); // Remove needsUsernamePrompt from dependencies
+
   return (
     <>
       {/* Main header (not sticky) */}
@@ -71,7 +84,7 @@ export default function FlickletHeader({
           <div className="grid grid-cols-3 items-center gap-2 py-2 sm:py-3">
             {/* Left: username + snark */}
             <div className="min-w-0 text-left">
-              <UserChip username={username} />
+              <SnarkDisplay />
             </div>
             {/* Center: title */}
             <div className="text-center">
@@ -98,21 +111,7 @@ export default function FlickletHeader({
                   {translations.showMarquee}
                 </button>
               )}
-              {isAuthed ? (
-                <button
-                  onClick={onLogout}
-                  className="rounded-2xl px-3 py-1.5 text-sm font-medium shadow-sm ring-1 ring-border transition hover:bg-accent hover:text-accent-foreground"
-                >
-                  {translations.logOut}
-                </button>
-              ) : (
-                <button
-                  onClick={onLogin}
-                  className="rounded-2xl px-3 py-1.5 text-sm font-medium shadow-sm ring-1 ring-border transition hover:bg-accent hover:text-accent-foreground"
-                >
-                  {translations.logIn}
-                </button>
-              )}
+              <AccountButton />
             </div>
           </div>
         </div>
@@ -135,6 +134,12 @@ export default function FlickletHeader({
           onClose={hideMarquee}
         />
       )}
+
+      {/* Username prompt modal */}
+      <UsernamePromptModal 
+        isOpen={showUsernamePrompt} 
+        onClose={() => setShowUsernamePrompt(false)} 
+      />
     </>
   );
 }

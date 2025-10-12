@@ -31,8 +31,8 @@
 .card.v2.v2-home-cw,
 .card.v2.v2-home-nextup,
 .card.v2.v2-home-curated {
-  display: flex !important;
-  flex-direction: column !important;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   padding: 12px;
   /* Width/min-width/max-width removed - controlled by home-layout.css */
@@ -47,8 +47,8 @@ html body .card.v2.v2-tab-card,
 html body .card.v2.v2-tab-card.card,
 html body .card.v2.v2-tab-card.card.card,
 html body .card.v2.v2-tab-card.card.card.card {
-  display: flex !important;
-  flex-direction: row !important;
+  display: flex;
+  flex-direction: row;
   padding: 20px;
   gap: 20px;
   min-height: 180px;
@@ -64,8 +64,8 @@ html body .card.v2.v2-search-card,
 html body .card.v2.v2-search-card.card,
 html body .card.v2.v2-search-card.card.card,
 html body .card.v2.v2-search-card.card.card.card {
-  display: flex !important;
-  flex-direction: row !important;
+  display: flex;
+  flex-direction: row;
   padding: 14px 16px;
   gap: 16px;
 }
@@ -73,24 +73,24 @@ html body .card.v2.v2-search-card.card.card.card {
 /* CRITICAL OVERRIDE - Force horizontal layout for all V2 tab/search cards */
 .card.v2.v2-tab-card,
 .card.v2.v2-search-card {
-  display: flex !important;
-  flex-direction: row !important;
+  display: flex;
+  flex-direction: row;
 }
 
 /* Additional override for any remaining conflicts */
 .card.v2[class*="v2-tab"],
 .card.v2[class*="v2-search"] {
-  display: flex !important;
-  flex-direction: row !important;
+  display: flex;
+  flex-direction: row;
 }
 
 /* CRITICAL: Force list containers to stack V2 cards vertically */
 .list-container:has(.card.v2) {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 16px !important;
-  overflow-x: visible !important;
-  overflow-y: visible !important;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-x: visible;
+  overflow-y: visible;
 }
 
 /* Card Content Area - Professional Layout */
@@ -126,16 +126,16 @@ html body .card.v2.v2-search-card.card.card.card {
 
 /* Tab card poster sizing - force horizontal layout */
 .card.v2.v2-tab-card .poster-wrap {
-  flex: 0 0 160px !important;
-  width: 160px !important;
-  height: 240px !important;
+  flex: 0 0 160px;
+  width: 160px;
+  height: 240px;
 }
 
 /* Search card poster sizing - force horizontal layout */
 .card.v2.v2-search-card .poster-wrap {
-  flex: 0 0 120px !important;
-  width: 120px !important;
-  height: 180px !important;
+  flex: 0 0 120px;
+  width: 120px;
+  height: 180px;
 }
 
 
@@ -240,9 +240,9 @@ html body .card.v2.v2-search-card.card.card.card {
 /* Tab and search card actions - organized layout */
 .card.v2.v2-tab-card .actions,
 .card.v2.v2-search-card .actions {
-  align-items: flex-start !important;
-  justify-content: flex-start !important;
-  text-align: left !important;
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -286,9 +286,9 @@ html body .card.v2.v2-search-card.card.card.card {
 /* Tab and search card content - left-aligned */
 .card.v2.v2-tab-card .card-content,
 .card.v2.v2-search-card .card-content {
-  text-align: left !important;
-  justify-content: flex-start !important;
-  align-items: flex-start !important;
+  text-align: left;
+  justify-content: flex-start;
+  align-items: flex-start;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -320,15 +320,15 @@ html body .card.v2.v2-search-card.card.card.card {
 /* Tab and search card free actions - left-aligned */
 .card.v2.v2-tab-card .free-actions,
 .card.v2.v2-search-card .free-actions {
-  justify-content: flex-start !important;
-  align-items: flex-start !important;
+  justify-content: flex-start;
+  align-items: flex-start;
 }
 
 /* Tab and search card pro actions - left-aligned */
 .card.v2.v2-tab-card .pro-actions,
 .card.v2.v2-search-card .pro-actions {
-  justify-content: flex-start !important;
-  align-items: flex-start !important;
+  justify-content: flex-start;
+  align-items: flex-start;
 }
 
 /* Free Actions - horizontal layout with wrapping */
@@ -355,38 +355,38 @@ html body .card.v2.v2-search-card.card.card.card {
 .card.v2 .action-grid-2x2,
 .cw-card.v2 .action-grid-2x2,
 .v2-home-cw .action-grid-2x2 {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 8px !important;
-  width: 100% !important;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
 }
 
 /* Override for home page - flatten wrapper to make buttons direct children */
 #homeSection .card.v2 .action-grid-2x2,
 #homeSection .cw-card.v2 .action-grid-2x2,
 #homeSection .v2-home-cw .action-grid-2x2 {
-  display: contents !important;
+  display: contents;
 }
 
 /* Also flatten action-row wrappers */
 #homeSection .card.v2 .action-row,
 #homeSection .cw-card.v2 .action-row,
 #homeSection .v2-home-cw .action-row {
-  display: contents !important;
+  display: contents;
 }
 
 /* Override any conflicting action-row rules with higher specificity */
 #homeSection .card.v2 .action-grid-2x2 .action-row,
 #homeSection .cw-card.v2 .action-grid-2x2 .action-row,
 #homeSection .v2-home-cw .action-grid-2x2 .action-row {
-  display: contents !important;
+  display: contents;
 }
 
 /* Override main.css conflicting rules with even higher specificity */
 #homeSection .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .card.v2 .action-grid-2x2 .action-row,
 #homeSection .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .cw-card.v2 .action-grid-2x2 .action-row,
 #homeSection .cw-row #currentlyWatchingScroll.preview-row-scroll.row-inner .v2-home-cw .action-grid-2x2 .action-row {
-  display: contents !important;
+  display: contents;
 }
 
 /* NUCLEAR OPTION: Override ALL action-row rules with maximum specificity */
@@ -396,17 +396,17 @@ html body .card.v2.v2-search-card.card.card.card {
 #homeSection .card.v2 .actions .action-grid-2x2 .action-row,
 #homeSection .cw-card.v2 .actions .action-grid-2x2 .action-row,
 #homeSection .v2-home-cw .actions .action-grid-2x2 .action-row {
-  display: contents !important;
-  grid-template-columns: none !important;
-  gap: 0 !important;
+  display: contents;
+  grid-template-columns: none;
+  gap: 0;
 }
 
 .card.v2 .action-row,
 .cw-card.v2 .action-row,
 .v2-home-cw .action-row {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 8px !important;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 /* Action buttons */
@@ -610,11 +610,11 @@ html body .card.v2.v2-search-card.card.card.card {
 
 /* Override for home page - force 2x2 grid layout */
 #homeSection .v2-home-cw .actions {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   grid-auto-rows: minmax(36px, auto);
-  gap: 8px !important;
-  flex-wrap: unset !important;
+  gap: 8px;
+  flex-wrap: unset;
 }
 
 .search-card.v2 .actions button,
@@ -714,8 +714,8 @@ html body .card.v2.v2-search-card.card.card.card {
 
 /* Poster */
 .poster {
-  width: 180px;                 /* fixed poster rail */
-  flex: 0 0 180px;
+  width: var(--card-w, 154px);                 /* fixed poster rail */
+  flex: 0 0 var(--card-w, 154px);
   aspect-ratio: 2/3;
   border-radius: 10px;
   object-fit: cover;
@@ -1145,9 +1145,9 @@ html body .card.v2.v2-search-card.card.card.card {
 .card.v2 .action-row,
 .cw-card.v2 .action-row,
 .v2-home-cw .action-row {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 8px !important;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 /* Pro actions styling */

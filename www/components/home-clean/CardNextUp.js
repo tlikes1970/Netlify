@@ -14,80 +14,104 @@ class CardNextUp {
      */
     render() {
         const card = document.createElement('div');
-        card.className = 'card card-nextup';
+        card.className = 'card up-card';  // FIXED: Use 'up-card' class, no actions/chip
         card.dataset.id = this.data.id;
         
-        // Generate poster
-        const poster = this.generatePoster();
+        // Generate poster (no chip)
+        const posterContainer = this.generatePosterContainer();
         
-        // Generate actions
-        const actions = this.generateActions();
+        // Generate content (title, meta, up-next line)
+        const content = this.generateContent();
         
-        card.innerHTML = `
-            <div class="poster-container">
-                ${poster}
-            </div>
-            <div class="card-content">
-                <div class="title">${this.data.title}</div>
-                <div class="meta">${this.data.meta || ''}</div>
-                <div class="blurb">${this.data.blurb || ''}</div>
-                <div class="actions">
-                    ${actions}
-                </div>
-            </div>
-        `;
+        card.appendChild(posterContainer);
+        card.appendChild(content);
         
         this.element = card;
         return card;
     }
 
     /**
-     * Generate poster element
+     * Generate poster container (no chip for read-only)
      */
-    generatePoster() {
-        if (this.data.poster && this.data.poster !== 'null') {
-            return `
-                <img 
-                    src="${this.data.poster}" 
-                    alt="${this.data.title}"
-                    class="poster"
-                    loading="lazy"
-                    onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                />
-                <div class="poster-fallback" style="display:none;">
-                    ${this.generatePosterSVG(this.data.title)}
-                </div>
-            `;
-        } else {
-            return `
-                <div class="poster-fallback">
-                    ${this.generatePosterSVG(this.data.title)}
-                </div>
-            `;
-        }
+    generatePosterContainer() {
+        const container = document.createElement('div');
+        container.className = 'poster-container';
+        
+        const poster = this.generatePoster();
+        container.appendChild(poster);
+        
+        return container;
     }
 
     /**
-     * Generate action buttons for Next Up cards
+     * Generate poster element
      */
-    generateActions() {
-        return `
-            <button class="action-btn" data-action="want" data-id="${this.data.id}">
-                Want to Watch
-            </button>
-            <button class="action-btn" data-action="watched" data-id="${this.data.id}">
-                Watched
-            </button>
-            <button class="action-btn" data-action="dismiss" data-id="${this.data.id}">
-                Not Interested
-            </button>
-            <button class="action-btn" data-action="delete" data-id="${this.data.id}">
-                Delete
-            </button>
-            <div class="holiday-chip" data-id="${this.data.id}">
-                Holiday +
-            </div>
-        `;
+    generatePoster() {
+        const posterDiv = document.createElement('div');
+        posterDiv.className = 'poster-wrap';
+        
+        if (this.data.poster && this.data.poster !== 'null') {
+            const img = document.createElement('img');
+            img.src = this.data.poster;
+            img.alt = this.data.title;
+            img.className = 'poster';
+            img.loading = 'lazy';
+            img.style.width = '100%';
+            img.style.aspectRatio = '2/3';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '10px';
+            img.onerror = () => {
+                img.style.display = 'none';
+                const fallback = posterDiv.querySelector('.poster-fallback');
+                if (fallback) {
+                    fallback.style.display = 'flex';
+                    fallback.style.alignItems = 'center';
+                    fallback.style.justifyContent = 'center';
+                    fallback.style.background = '#f3f4f6';
+                }
+            };
+            posterDiv.appendChild(img);
+        }
+        
+        // Always append fallback
+        const fallback = document.createElement('div');
+        fallback.className = 'poster-fallback';
+        fallback.style.display = 'flex';
+        fallback.style.alignItems = 'center';
+        fallback.style.justifyContent = 'center';
+        fallback.style.background = '#f3f4f6';
+        fallback.innerHTML = this.generatePosterSVG(this.data.title);
+        posterDiv.appendChild(fallback);
+        
+        return posterDiv;
+    }
+
+    /**
+     * Generate card content (title, meta, up-next line - no blurb/actions)
+     */
+    generateContent() {
+        const content = document.createElement('div');
+        content.className = 'card-content';
+        content.style.padding = '12px';  // FIXED: Explicit padding for consistency
+        content.style.gap = '6px';
+        
+        const title = document.createElement('div');
+        title.className = 'title';
+        title.textContent = this.data.title;
+        
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.textContent = this.data.meta || '';
+        
+        const upNext = document.createElement('div');
+        upNext.className = 'up-next-line';  // FIXED: Dedicated class for green line
+        upNext.textContent = this.data.upNextLine || `Up next: S1E1 Oct 10, 2025`;  // Date stub
+        
+        content.appendChild(title);
+        content.appendChild(meta);
+        content.appendChild(upNext);
+        
+        return content;
     }
 
     /**
@@ -95,10 +119,10 @@ class CardNextUp {
      */
     generatePosterSVG(title) {
         const svg = `
-            <svg width="200" height="300" xmlns="http://www.w3.org/2000/svg">
-                <rect width="100%" height="100%" fill="#1a1a1a"/>
+            <svg width="220" height="330" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100%" height="100%" fill="#f3f4f6"/>
                 <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" 
-                      font-family="Arial, sans-serif" font-size="14" fill="#888">
+                      font-family="system-ui, Segoe UI, Roboto" font-size="14" fill="#6b7280">
                     ${title}
                 </text>
             </svg>
@@ -112,7 +136,9 @@ class CardNextUp {
     updateData(newData) {
         this.data = { ...this.data, ...newData };
         if (this.element) {
-            this.render();
+            const newCard = this.render();
+            this.element.parentNode.replaceChild(newCard, this.element);
+            this.element = newCard;
         }
     }
 

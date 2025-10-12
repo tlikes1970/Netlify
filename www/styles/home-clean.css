@@ -1,468 +1,878 @@
-/* Home Clean Component - Tokenized Styles */
-/* Phase 5: Full Cutover Build - Inherit Global Theme Tokens */
+/* Flicklet Home Clean - Light Mode Mockup Styles */
+/* Force light theme variables for mockup purity */
 
-/* Design Tokens - Use Global Theme Variables */
-:root {
-    /* Card Dimensions */
-    --card-cw-w: 200px;
-    --card-cw-h: 300px;
-    --card-nextup-w: 200px;
-    --card-nextup-h: 300px;
-    --card-foryou-w: 220px;
-    --card-foryou-h: 330px;
-    
-    /* Spacing */
-    --card-gap: 16px;
-    --rail-margin: 24px;
-    --section-margin: 20px;
-    --content-padding: 20px;
-    
-    /* Typography */
-    --font-size-title: 16px;
-    --font-size-meta: 14px;
-    --font-size-blurb: 13px;
-    --font-weight-bold: 600;
-    
-    /* Shadows */
-    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.4);
-    
-    /* Transitions */
-    --transition-fast: 0.2s ease;
-    --transition-normal: 0.3s ease;
+#clean-root {
+    /* Force light theme variables */
+    --surface: #f9fafb;
+    --border: #e5e7eb;
+    --fg: #111827;
+    --muted: #6b7280;
+    --bg: #ffffff;
+    --accent: #2b63ff;
+    --accent-hover: #1e4cd8;
 }
 
-/* Main Container */
-.home-clean-container {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: var(--fg-default, #1f2937);
-    padding: var(--content-padding);
-    max-width: 1200px;
-    margin: 0 auto;
-    background: var(--bg-page, #ffffff);
+/* Clean Group Structure - Match Mockup Exactly */
+#clean-root .clean-group {
+    margin: 24px 16px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.2);
 }
 
-/* Section Headers */
-.home-clean-container .section-header {
-    font-size: 18px;
-    font-weight: var(--font-weight-bold);
-    margin-bottom: var(--card-gap);
-    color: var(--fg-default, #1f2937);
-    margin-top: var(--section-margin);
+#clean-root .group-header h2.group-title {
+    margin: 0 0 8px 0;
+    font: 600 22px/1.2 system-ui, Segoe UI, Roboto;
+    color: var(--fg);
+}
+
+#clean-root .group-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0 16px;
+}
+
+#clean-root .home-preview-row {
+    margin: 12px 0;
+    padding: 12px;
+    background: rgba(0,0,0,0.05); /* Light tint */
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+#clean-root .home-preview-row h3 {
+    margin: 0 0 12px 0;
+    font: 600 18px/1.2 system-ui, Segoe UI, Roboto;
+    color: var(--fg);
+}
+
+/* Rails - Exact Mockup Specs */
+#clean-root .rail {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.home-clean-container .section-header:first-child {
-    margin-top: 0;
-}
-
-.home-clean-container .section-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--fg-default, #1f2937);
-}
-
-/* Holiday Chip */
-.home-clean-container .holiday-chip {
-    background: var(--accent, #ff4c8d);
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    transition: var(--transition-fast);
-}
-
-.home-clean-container .holiday-chip:hover {
-    transform: scale(1.05);
-    background: var(--accent-hover, #e63e7a);
-}
-
-.home-clean-container .holiday-chip::before {
-    content: "+";
-    font-size: 10px;
-}
-
-/* Rail Containers */
-.home-clean-container .rail {
-    width: 100%;
+    gap: 12px;
     overflow-x: auto;
     overflow-y: hidden;
+    padding: 0 16px 8px;
+    width: 100%;
+    box-sizing: border-box;
     scroll-snap-type: x mandatory;
-    margin-bottom: var(--rail-margin);
-    padding-bottom: 8px;
+    scrollbar-gutter: stable both-edges;
+    scrollbar-width: none; /* Firefox */
 }
 
-.home-clean-container .rail::-webkit-scrollbar {
-    height: 6px;
+#clean-root .rail::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
 }
 
-.home-clean-container .rail::-webkit-scrollbar-track {
-    background: var(--fg-muted, #6b7280);
-    border-radius: 3px;
-}
-
-.home-clean-container .rail::-webkit-scrollbar-thumb {
-    background: var(--fg-subtle, #9ca3af);
-    border-radius: 3px;
-}
-
-.home-clean-container .rail::-webkit-scrollbar-thumb:hover {
-    background: var(--fg-default, #1f2937);
-}
-
-/* Card Containers */
-.home-clean-container .card-container {
-    display: flex;
-    gap: var(--card-gap);
-    padding: 0 4px;
-}
-
-/* Base Card Styles */
-.home-clean-container .card {
-    flex-shrink: 0;
-    background: var(--bg-elevated, #f7f7f9);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: var(--shadow-card);
-    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+#clean-root .rail > * {
     scroll-snap-align: start;
+    flex: 0 0 auto;
 }
 
-.home-clean-container .card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-hover);
-}
-
-/* Card Type Specific Dimensions */
-.home-clean-container .card-cw {
-    width: var(--card-cw-w);
-    height: var(--card-cw-h);
-}
-
-.home-clean-container .card-nextup {
-    width: var(--card-nextup-w);
-    height: var(--card-nextup-h);
-}
-
-.home-clean-container .card-foryou {
-    width: var(--card-foryou-w);
-    height: var(--card-foryou-h);
-}
-
-/* Poster Container */
-.home-clean-container .poster-container {
+/* Cards: Base Structure */
+#clean-root .card {
     position: relative;
-    width: 100%;
-    height: 60%;
-    overflow: hidden;
-}
-
-.home-clean-container .poster {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform var(--transition-normal);
-}
-
-.home-clean-container .card:hover .poster {
-    transform: scale(1.05);
-}
-
-/* Poster Fallback */
-.home-clean-container .poster-fallback {
-    width: 100%;
-    height: 100%;
-    background: var(--bg-elevated, #f7f7f9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.home-clean-container .poster-fallback-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* Card Content */
-.home-clean-container .card-content {
-    padding: 12px;
-    height: 40%;
+    border-radius: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--fg);
+    box-shadow: 0 6px 24px rgba(0,0,0,.2);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
 
-.home-clean-container .title {
-    font-size: var(--font-size-title);
-    font-weight: var(--font-weight-bold);
-    color: var(--fg-default, #1f2937);
-    margin-bottom: 4px;
-    line-height: 1.2;
+#clean-root .card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 30px rgba(0,0,0,.3);
+}
+
+#clean-root .poster-wrap {
+    width: 100%;
+    aspect-ratio: 2/3;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    border-radius: 10px;
+    background: #f3f4f6; /* Light gray fallback */
 }
 
-.home-clean-container .meta {
-    font-size: var(--font-size-meta);
-    color: var(--fg-muted, #6b7280);
-    margin-bottom: 6px;
+#clean-root .poster-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
-.home-clean-container .blurb {
-    font-size: var(--font-size-blurb);
-    color: var(--fg-muted, #6b7280);
-    line-height: 1.3;
+#clean-root .title {
+    font: 700 14px/1.25 system-ui, Segoe UI, Roboto;
+    text-align: center;
+    margin: 8px 0 0;
+    color: var(--fg);
+}
+
+#clean-root .meta {
+    font: 12px/1.25 system-ui, Segoe UI, Roboto;
+    color: var(--muted);
+    text-align: center;
+    margin: 4px 0 8px;
+}
+
+/* CW Cards: 200px, 2x2 Actions */
+#clean-root .cw-card {
+    width: 200px;
+    padding: 12px;
+    gap: 8px;
+}
+
+#clean-root .cw-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    margin-top: 8px;
+}
+
+#clean-root .cw-actions button {
+    min-height: 44px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #2a3340;
+    background: var(--accent);
+    color: #fff;
+    font: 500 13px/1 system-ui, Segoe UI, Roboto;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+#clean-root .cw-actions button:hover {
+    background: var(--accent-hover);
+}
+
+/* DUPLICATE REMOVED - Using stronger definition below */
+
+/* DUPLICATE REMOVED - Using stronger definition below */
+
+/* Up Next: 200px, Read-Only */
+#clean-root .up-card {
+    width: 200px;
+    padding: 12px;
+    gap: 6px;
+}
+
+#clean-root .up-next-line {
+    font: 12px/1.25 system-ui, Segoe UI, Roboto;
+    color: #10b981;
+    text-align: center;
+}
+
+/* For You: 200px, Single CTA */
+#clean-root .fy-card {
+    width: 200px;
+    padding: 12px;
+    gap: 6px;
+}
+
+#clean-root .where {
+    font: 12px/1.25 system-ui, Segoe UI, Roboto;
+    color: #3b82f6;
+    text-align: center;
+}
+
+#clean-root .blurb {
+    font: 12px/1.3 system-ui, Segoe UI, Roboto;
+    color: var(--muted);
+    text-align: center;
+    max-height: 3.9em;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
-    flex-grow: 1;
 }
 
-/* Actions */
-.home-clean-container .actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+#clean-root .fy-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    width: 100%;
     margin-top: 8px;
 }
 
-.home-clean-container .action-btn,
-.home-clean-container .cta-btn {
-    background: var(--accent, #ff4c8d);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: 500;
+#clean-root .fy-actions button {
+    min-height: 40px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #2a3340;
+    background: var(--accent);
+    color: #fff;
+    font: 500 13px/1 system-ui, Segoe UI, Roboto;
     cursor: pointer;
-    transition: background-color var(--transition-fast);
-    flex-shrink: 0;
+    transition: background 0.3s;
 }
 
-.home-clean-container .action-btn:hover,
-.home-clean-container .cta-btn:hover {
-    background: #e6397a;
+#clean-root .fy-actions button:hover {
+    background: var(--accent-hover);
 }
 
-.home-clean-container .action-btn:active,
-.home-clean-container .cta-btn:active {
-    transform: translateY(1px);
+/* Holiday Chip - Absolute Position */
+/* DUPLICATE REMOVED - Using stronger definition below */
+
+/* DUPLICATE REMOVED - Using stronger definition below */
+
+/* Community Section Layout - Exact Specs */
+#clean-root #community-container .community-split {
+    display: flex;
+    gap: 1rem;
+    height: 200px;
+    margin: 16px 0;
 }
 
-/* Holiday Chip */
-.home-clean-container .holiday-chip {
-    background: var(--bg-elevated, #f7f7f9);
-    color: var(--fg-muted, #6b7280);
-    border: 1px solid var(--fg-muted, #6b7280);
-    border-radius: 4px;
-    padding: 6px 12px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    flex-shrink: 0;
+#clean-root #community-container .now-playing {
+    flex: 1;
+    background: #000;
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1rem;
+    border: 1px solid var(--border);
 }
 
-.home-clean-container .holiday-chip:hover {
-    background: var(--bg-elevated, #f7f7f9);
-    color: var(--fg-default, #1f2937);
-}
-
-.home-clean-container .holiday-chip.assigned {
-    background: var(--accent, #ff4c8d);
-    color: white;
-    border-color: var(--accent, #ff4c8d);
-}
-
-/* Holiday Modal Styles */
-.holiday-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
+#clean-root #community-container .now-playing video {
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    object-fit: cover;
+}
+
+#clean-root #community-container .games-column {
+    flex: 1;
     display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+#clean-root #community-container .game-card {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 99999;
-    backdrop-filter: blur(4px);
+    cursor: pointer;
+    transition: all 0.3s;
+    font: 12px system-ui, Segoe UI, Roboto;
+    padding: 8px;
 }
 
-.holiday-modal .modal-content {
-    background: var(--bg-elevated, #f7f7f9);
-    border-radius: 12px;
-    max-width: 500px;
-    width: 90%;
-    max-height: 80vh;
-    overflow: hidden;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+#clean-root #community-container .game-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 30px rgba(0,0,0,.3);
 }
 
-.holiday-modal .modal-header {
-    padding: 20px;
-    border-bottom: 1px solid var(--fg-muted, #6b7280);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.holiday-modal .modal-header h3 {
+#clean-root #community-container .game-card h3 {
     margin: 0;
-    color: var(--fg-default, #1f2937);
-    font-size: 18px;
+    color: var(--fg);
+    font-size: 14px;
 }
 
-.holiday-modal .modal-close {
-    background: none;
-    border: none;
-    color: var(--fg-muted, #6b7280);
-    font-size: 24px;
-    cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
+/* Video Placeholder */
+#clean-root .video-placeholder {
+    background: #000;
+    height: 200px;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #fff;
+    font-size: 16px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
 }
 
-.holiday-modal .modal-close:hover {
-    color: var(--fg-default, #1f2937);
-}
-
-.holiday-modal .modal-body {
-    padding: 20px;
-}
-
-.holiday-modal .card-title {
-    margin-bottom: 20px;
-    color: var(--fg-default, #1f2937);
-    font-weight: var(--font-weight-bold);
-}
-
-.holiday-modal .holiday-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 12px;
-}
-
-.holiday-modal .holiday-option {
-    background: var(--bg-elevated, #f7f7f9);
-    color: var(--fg-default, #1f2937);
-    border: 1px solid var(--fg-muted, #6b7280);
-    border-radius: 6px;
-    padding: 12px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.holiday-modal .holiday-option:hover {
-    background: var(--accent, #ff4c8d);
-    color: white;
-    border-color: var(--accent, #ff4c8d);
-}
-
-.holiday-modal .modal-footer {
-    padding: 20px;
-    border-top: 1px solid var(--fg-muted, #6b7280);
+/* Community section layout constraints */
+#clean-root .community-split {
     display: flex;
-    justify-content: flex-end;
+    gap: 1rem;
+    height: 200px;
+    margin: 16px 0;
 }
-
-.holiday-modal .btn-cancel {
-    background: var(--bg-elevated, #f7f7f9);
-    color: var(--fg-default, #1f2937);
-    border: 1px solid var(--fg-muted, #6b7280);
-    border-radius: 6px;
-    padding: 10px 20px;
-    font-size: 14px;
+#clean-root .now-playing {
+    flex: 1;
+    background: #000;
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1rem;
+}
+#clean-root .now-playing video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+#clean-root .games-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+#clean-root .game-card {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all 0.3s;
+    font: 12px system-ui, Segoe UI, Roboto;
+    padding: 8px;
+}
+#clean-root .game-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 30px rgba(0,0,0,.3);
+}
+#clean-root .game-card h3 {
+    margin: 0;
+    color: var(--fg);
+    font-size: 14px;
 }
 
-.holiday-modal .btn-cancel:hover {
-    background: var(--bg-elevated, #f7f7f9);
+/* Card Actions and Chips Visibility */
+#clean-root .card-content { 
+    padding: 12px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+    width: 100%; 
+    box-sizing: border-box; 
+    min-width: 200px;
+}
+#clean-root .cw-actions, #clean-root .fy-actions { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 8px; 
+    width: 100%; 
+    margin-top: 8px; 
+    padding: 0 0 12px 0; 
+}
+#clean-root .fy-actions { 
+    grid-template-columns: 1fr; 
+}
+#clean-root .action-btn, #clean-root .cta-btn { 
+    min-height: 44px; 
+    width: 100%; 
+    border-radius: 8px; 
+    border: 1px solid #e5e7eb; 
+    background: #2b63ff; 
+    color: #fff; 
+    font: 500 13px/1 system-ui; 
+    cursor: pointer; 
+    transition: background 0.3s; 
+    display: block; 
+}
+#clean-root .action-btn:hover, #clean-root .cta-btn:hover { 
+    background: #1e4cd8; 
+}
+#clean-root .poster-container { 
+    position: relative; 
+    width: 100%; 
+    overflow: visible;
+}
+#clean-root .holiday-chip { 
+    position: absolute; 
+    top: 8px; 
+    right: 8px; 
+    z-index: 999; 
+    padding: 4px 8px; 
+    border-radius: 999px; 
+    border: 1px solid #e5e7eb; 
+    background: rgba(43,99,255,0.12); 
+    color: #93c5fd; 
+    font: 600 11px/1 system-ui; 
+    cursor: pointer; 
+    transition: background 0.3s; 
+    display: block; 
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+}
+#clean-root .holiday-chip:hover { 
+    background: rgba(43,99,255,0.2); 
+}
+#clean-root .poster-wrap { 
+    width: 100%; 
+    aspect-ratio: 2/3; 
+    overflow: hidden; 
+    border-radius: 10px; 
+    background: #f3f4f6; 
+    min-width: 200px;
+    min-height: 420px;
+}
+#clean-root .poster-fallback { 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    width: 100%; 
+    height: 100%; 
+    background: #f3f4f6; 
+}
+#clean-root .poster-fallback-img { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
 }
 
-/* Responsive Design */
+/* Card Sizing */
+#clean-root .card {
+    min-width: 200px;
+    width: 200px;
+    flex-shrink: 0;
+}
+#clean-root .card.cw-card,
+#clean-root .card.fy-card,
+#clean-root .card.up-card {
+    min-width: 200px;
+    width: 200px;
+    flex-shrink: 0;
+}
+
+/* Community Height Fix */
+#clean-root .community-split { 
+    display: flex; 
+    gap: 1rem; 
+    height: 200px; 
+    margin: 16px 0; 
+}
+#clean-root .now-playing { 
+    flex: 1; 
+    background: #000; 
+    border-radius: 14px; 
+    position: relative; 
+    overflow: hidden; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: #fff; 
+    font-size: 1rem; 
+}
+#clean-root .now-playing video { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+}
+#clean-root .games-column { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 0.5rem; 
+}
+#clean-root .game-card { 
+    flex: 1; 
+    background: #f9fafb; 
+    border: 1px solid #e5e7eb; 
+    border-radius: 14px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    cursor: pointer; 
+    transition: all 0.3s; 
+    font: 12px system-ui; 
+    padding: 8px; 
+}
+#clean-root .game-card h3 { 
+    margin: 0; 
+    color: #111827; 
+    font-size: 14px; 
+}
+
+/* Theater Info */
+#clean-root .theater-info {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem;
+    margin: 16px;
+    text-align: center;
+    color: var(--fg);
+    box-shadow: 0 6px 24px rgba(0,0,0,.2);
+    font: 14px/1.4 system-ui, Segoe UI, Roboto;
+}
+
+/* Mobile Responsive - Exact Specs */
 @media (max-width: 768px) {
-    :root {
-        --card-cw-w: 160px;
-        --card-cw-h: 240px;
-        --card-nextup-w: 160px;
-        --card-nextup-h: 240px;
-        --card-foryou-w: 180px;
-        --card-foryou-h: 270px;
-        --card-gap: 12px;
-        --content-padding: 16px;
+    #clean-root .rail {
+        padding: 0 8px 8px;
     }
     
-    .home-clean-container .card-content {
-        padding: 8px;
+    #clean-root .cw-card,
+    #clean-root .up-card,
+    #clean-root .fy-card {
+        width: 200px;
     }
     
-    .home-clean-container .title {
-        font-size: 14px;
+    #clean-root #community-container .community-split {
+        flex-direction: column;
+        height: auto;
     }
     
-    .home-clean-container .meta {
+    #clean-root #community-container .games-column {
+        flex-direction: row;
+    }
+}
+
+/* Neutralizers - Prevent Layout Conflicts */
+#clean-root .section, 
+#clean-root .home-clean-container {
+    display: contents;
+}
+
+#homeSection.tab-section.home-content {
+    position: static;
+    z-index: auto;
+    transform: none;
+}
+
+#clean-root .card .description {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Light Theme Override - Force All Elements */
+#clean-root * {
+    color: var(--fg);
+}
+
+#clean-root .clean-group {
+    background: var(--surface);
+    border-color: var(--border);
+}
+
+#clean-root .home-preview-row {
+    background: rgba(0,0,0,0.05);
+    border-color: var(--border);
+}
+
+#clean-root .card {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--fg);
+}
+
+#clean-root .poster-wrap {
+    background: #f3f4f6;
+}
+
+#clean-root .theater-info {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--fg);
+}
+
+#clean-root .game-card {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--fg);
+}
+
+#clean-root .game-card h3 {
+    color: var(--fg);
+}
+
+/* Ensure proper contrast for accessibility */
+#clean-root .title,
+#clean-root .group-title,
+#clean-root .home-preview-row h3 {
+    color: var(--fg);
+}
+
+#clean-root .meta,
+#clean-root .blurb {
+    color: var(--muted);
+}
+
+/* CardCW Component Styles */
+#clean-root .card-cw .poster-container {
+    width: 100%;
+    aspect-ratio: 2/3;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #f3f4f6;
+    position: relative;
+}
+
+#clean-root .card-cw .poster-container .poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+#clean-root .card-cw .poster-container .poster-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+}
+
+#clean-root .card-cw .poster-container .poster-fallback-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#clean-root .card-cw .card-content {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#clean-root .card-cw .card-content .title {
+    font: 700 14px/1.25 system-ui, Segoe UI, Roboto;
+    color: var(--fg);
+    text-align: center;
+}
+
+#clean-root .card-cw .card-content .meta {
+    font: 12px/1.25 system-ui, Segoe UI, Roboto;
+    color: var(--muted);
+    text-align: center;
+}
+
+#clean-root .card-cw .card-content .blurb {
+    font: 12px/1.3 system-ui, Segoe UI, Roboto;
+    color: var(--muted);
+    text-align: center;
+    max-height: 3.9em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+#clean-root .card-cw .card-content .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+#clean-root .card-cw .card-content .action-btn {
+    min-height: 44px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #2a3340;
+    background: var(--accent);
+    color: #fff;
+    font: 500 13px/1 system-ui, Segoe UI, Roboto;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+#clean-root .card-cw .card-content .action-btn:hover {
+    background: var(--accent-hover);
+}
+
+#clean-root .card-cw .holiday-chip {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid #3a4250;
+    background: rgba(43,99,255,.12);
+    color: #93c5fd;
+    font: 600 11px/1 system-ui, Segoe UI, Roboto;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+#clean-root .card-cw .holiday-chip:hover {
+    background: rgba(43,99,255,.2);
+}
+
+/* Debug: Add visual indicators for light mode */
+#clean-root::before {
+    content: '[LIGHT MODE ACTIVE]';
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: #10b981;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    z-index: 9999;
+    opacity: 0.8;
+}
+/* FIXED: Poster Container for Relative Positioning */
+#clean-root .poster-container {
+    position: relative;  /* Enables absolute chip */
+    width: 100%;
+    aspect-ratio: 2/3;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #f3f4f6;
+}
+
+/* FIXED: Up Next Specifics */
+#clean-root .up-card {
+    width: 200px;
+    padding: 0;  /* Padding handled in .card-content */
+}
+
+#clean-root .up-next-line {
+    font: 12px/1.25 system-ui, Segoe UI, Roboto;
+    color: #10b981;  /* Green for queue feel */
+    text-align: center;
+    margin-top: 4px;
+}
+
+/* FIXED: FY Specifics */
+#clean-root .fy-card {
+    width: 200px;
+    padding: 0;
+}
+
+#clean-root .where {
+    font: 12px/1.25 system-ui, Segoe UI, Roboto;
+    color: #3b82f6;  /* Blue tag */
+    text-align: center;
+    margin: 4px 0;
+}
+
+#clean-root .fy-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    width: 100%;
+    margin-top: 8px;
+    padding: 0 12px 12px;  /* Bottom padding for button */
+}
+/* FIXED: Blurb Clamp Uniform */
+#clean-root .blurb {
+    font: 12px/1.3 system-ui, Segoe UI, Roboto;
+    color: var(--muted);
+    text-align: center;
+    max-height: 3.9em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+/* FIXED: Mobile Grid Tweaks */
+@media (max-width: 768px) {
+    #clean-root .cw-actions,
+    #clean-root .fy-actions {
+        gap: 6px;  /* Tighter for small screens */
+    }
+    
+    #clean-root .action-btn {
+        min-height: 36px;  /* Shorter buttons on mobile */
         font-size: 12px;
     }
     
-    .home-clean-container .blurb {
-        font-size: 11px;
-    }
-    
-    .home-clean-container .action-btn,
-    .home-clean-container .cta-btn {
-        padding: 4px 8px;
-        font-size: 11px;
-    }
-    
-    .holiday-modal .holiday-grid {
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-        gap: 8px;
+    #clean-root .holiday-chip {
+        padding: 3px 6px;
+        font-size: 10px;
     }
 }
 
-@media (max-width: 480px) {
-    :root {
-        --card-cw-w: 140px;
-        --card-cw-h: 210px;
-        --card-nextup-w: 140px;
-        --card-nextup-h: 210px;
-        --card-foryou-w: 160px;
-        --card-foryou-h: 240px;
-        --card-gap: 8px;
-        --content-padding: 12px;
-    }
-    
-    .home-clean-container .actions {
-        gap: 4px;
-    }
-    
-    .home-clean-container .action-btn,
-    .home-clean-container .cta-btn {
-        padding: 3px 6px;
-        font-size: 10px;
-    }
-    
-    .home-clean-container .holiday-chip {
-        padding: 3px 6px;
-        font-size: 10px;
-    }
+/* FIXED: Button Visibility Overrides (overrides main.css) */
+#clean-root .action-btn, #clean-root .cta-btn {
+    display: block;
+    visibility: visible;
+    opacity: 1;
+    min-height: 44px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #2b63ff;
+    color: #fff;
+    font: 500 13px/1 system-ui;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+#clean-root .cw-actions, #clean-root .fy-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    margin-top: 8px;
+    padding: 0 12px 12px;
+}
+
+#clean-root .fy-actions { 
+    grid-template-columns: 1fr; 
+}
+
+/* ULTRA-SPECIFIC Button Visibility Rules - Override any conflicting styles */
+#clean-root .card .fy-actions .action-btn,
+#clean-root .card .cw-actions .action-btn,
+#clean-root .fy-card .fy-actions .action-btn,
+#clean-root .cw-card .cw-actions .action-btn {
+    display: block;
+    visibility: visible;
+    opacity: 1;
+    min-height: 44px;
+    width: 100%;
+    border-radius: 8px;
+    background: var(--accent, #ff4c8d);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+#clean-root .card .fy-actions,
+#clean-root .card .cw-actions,
+#clean-root .fy-card .fy-actions,
+#clean-root .cw-card .cw-actions {
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 0 12px 12px;
+    visibility: visible;
+    opacity: 1;
+}
+
+#clean-root .fy-card .fy-actions {
+    grid-template-columns: 1fr;
+}
+
+#clean-root .cw-card .cw-actions {
+    grid-template-columns: 1fr 1fr;
+}
+
+#clean-root .card .fy-actions .action-btn:hover,
+#clean-root .card .cw-actions .action-btn:hover,
+#clean-root .fy-card .fy-actions .action-btn:hover,
+#clean-root .cw-card .cw-actions .action-btn:hover {
+    background: var(--accent-hover, #e63e7a);
 }

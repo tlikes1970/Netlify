@@ -86,15 +86,15 @@
     <!-- Minimal performance guard to prevent overlays -->
     <style id="perf-guards-minimal">
       .search-help {
-        position: static !important;
-        min-height: 0 !important;
-        padding: 0 !important;
-        background: none !important;
-        z-index: auto !important;
+        position: static;
+        min-height: 0;
+        padding: 0;
+        background: none;
+        z-index: auto;
       }
       .search-help,
       .search-help * {
-        pointer-events: none !important;
+        pointer-events: none;
       }
       .curated-row:first-of-type {
         content-visibility: auto;
@@ -107,18 +107,7 @@
     </style>
 
     <!-- Non-critical CSS - Load asynchronously -->
-    <link
-      rel="preload"
-      href="/styles/inline-style-01.css?v=v17.9"
-      as="style"
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
-    <link
-      rel="preload"
-      href="/styles/inline-style-02.css"
-      as="style"
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
+    <!-- Inline styles consolidated into main CSS files -->
     <link
       rel="preload"
       href="/styles/components.css?v=v17.9"
@@ -138,6 +127,8 @@
       onload="this.onload=null;this.rel='stylesheet'"
     />
     <link rel="stylesheet" href="/styles/your-shows.css"> <!-- Unified Your Shows CSS -->
+    <link rel="stylesheet" href="/styles/home-clean.css"> <!-- HomeClean Component CSS -->
+    <link rel="stylesheet" href="/styles/home-rails-fix.css"> <!-- Home Rails Fix CSS -->
     <link
       rel="preload"
       href="/styles/consolidated-layout.css?v=v17.9"
@@ -167,8 +158,7 @@
     <!-- Fallback for browsers without preload support -->
     <noscript>
       <link rel="stylesheet" href="/styles/spacing-system.css" />
-      <link rel="stylesheet" href="/styles/inline-style-01.css?v=v17.9" />
-      <link rel="stylesheet" href="/styles/inline-style-02.css" />
+      <!-- Inline styles consolidated into main CSS files -->
       <link rel="stylesheet" href="/styles/components.css?v=v17.9" />
       <link rel="stylesheet" href="/styles/mobile.css?v=v17.9" />
       <link rel="stylesheet" href="/styles/main.css?v=v17.9" />
@@ -282,7 +272,7 @@
     <script type="module" src="/js/data-optimizer.js"></script>
     <script type="module" src="/js/firebase-cleanup.js"></script>
     <script type="module" src="/js/auth-manager.js"></script>
-    <script type="module" src="/scripts/inline-script-02.js"></script>
+    <!-- Core app functionality integrated into app.js -->
 
     <!-- Feature flags and guards -->
     <script type="module" src="/js/flags.js"></script>
@@ -292,7 +282,7 @@
     <script type="module" src="/js/i18n.js"></script>
     <script type="module" src="/js/language-manager.js"></script>
     <script type="module" src="/js/marquee.js"></script>
-    <script type="module" src="/js/functions.js?v=28.150.0"></script>
+    <!-- <script type="module" src="/js/functions.js?v=28.150.0"></script> -->
     <script type="module" src="/js/functions-v2.js"></script>
     <script type="module" src="/js/app.js?v=28.149.0"></script>
     <script type="module">
@@ -369,7 +359,7 @@
         }
       }, 1000);
     </script>
-    <script type="module" src="/js/inline-script-10.js"></script>
+    <script type="module" src="/scripts/modules/trivia-modal.js"></script>
 
     <!-- Layout helpers - Defer non-critical layout features -->
     <script type="module" src="/js/layout/search-sticky.js" defer></script>
@@ -401,10 +391,26 @@
     <script src="/scripts/tmdb-seed.js"></script>
     
     <!-- Home wiring system -->
-    <script type="module" src="/js/home-wire-strict.js"></script>
+    <!-- home-wire-strict.js removed - replaced by HomeClean component -->
     
-    <!-- Home Clean Component Integration - Phase 2 -->
+    <!-- Home Clean Component Files - Load before integration -->
+    <script src="/components/home-clean/CardCW.js"></script>
+    <script src="/components/home-clean/CardNextUp.js"></script>
+    <script src="/components/home-clean/CardForYou.js"></script>
+    <script src="/components/home-clean/HolidayModal.js"></script>
+    <script src="/components/home-clean/index.js"></script>
+    
+    <!-- Home Clean Component Integration -->
     <script src="/scripts/home-clean-integration.js"></script>
+    
+    <!-- Manual Home Clean Test - Debug what's happening -->
+    <script src="/scripts/manual-home-clean-test.js"></script>
+    
+    <!-- Visual Card Test - See if CSS fixes are working -->
+    <script src="/scripts/visual-card-test.js"></script>
+    
+    <!-- Button Visibility Test - Check why buttons aren't showing -->
+    <script src="/scripts/add-test-cards-firebase.js"></script>
     
     <!-- Home Layout Toggle - Phase 3 -->
     
@@ -935,26 +941,26 @@
     <!-- Fix tab badge visibility and header centering -->
     <style>
       .tab-badge {
-        display: inline-block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        background: #e91e63 !important;
-        color: white !important;
-        border-radius: 10px !important;
-        padding: 2px 6px !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        margin-left: 6px !important;
-        min-width: 16px !important;
-        text-align: center !important;
-        line-height: 1.2 !important;
-        position: relative !important;
-        z-index: 1 !important;
+        display: inline-block;
+        visibility: visible;
+        opacity: 1;
+        background: #e91e63;
+        color: white;
+        border-radius: 10px;
+        padding: 2px 6px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 6px;
+        min-width: 16px;
+        text-align: center;
+        line-height: 1.2;
+        position: relative;
+        z-index: 1;
       }
       .tab .tab-badge {
-        display: inline-block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
+        display: inline-block;
+        visibility: visible;
+        opacity: 1;
       }
       .tab-badge[style*='display: none'] {
         display: inline-block !important;
@@ -966,7 +972,7 @@
         opacity: 1 !important;
       }
       #currentlyWatchingPreview {
-        display: block !important;
+        display: block;
         order: -1;
       }
       #group-1-your-shows {
@@ -977,28 +983,31 @@
         order: -1;
       }
       .header-center {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        text-align: center !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
       }
       .header-center .brand {
-        margin: 0 !important;
-        font-size: 2rem !important;
-        font-weight: 700 !important;
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
       }
       .header-center .tagline {
-        margin: 0 !important;
-        font-size: 0.9rem !important;
-        opacity: 0.8 !important;
+        margin: 0;
+        font-size: 0.9rem;
+        opacity: 0.8;
       }
       .header-center .version-display {
-        font-size: 0.8rem !important;
-        opacity: 0.7 !important;
-        margin-bottom: 4px !important;
+        font-size: 0.8rem;
+        opacity: 0.7;
+        margin-bottom: 4px;
       }
     </style>
+
+    <!-- Home Rails Fix - CSS Patch -->
+    <link rel="stylesheet" href="/styles/home-rails-fix.css" />
 
     <!-- Guarded init and assorted comments omitted for brevity (kept structure) -->
   </head>
@@ -2691,6 +2700,53 @@
         
         console.log('✅ Light theme forced successfully');
       });
+    </script>
+    
+    <!-- Home Rails Fix - JS Patch -->
+    <script src="/scripts/home-rails-fix.js"></script>
+    
+    <!-- Test Data Restorer - For development/testing -->
+    <!-- <script src="/scripts/test-data-restorer.js"></script> -->
+    
+    <!-- Light Theme Override for Mockup Purity -->
+    <script>
+      // Force light theme variables for mockup layout
+      console.log('[LIGHT LAYOUT] Mockup vars injected');
+      
+      // Override CSS custom properties for light mode
+      const style = document.createElement('style');
+      style.textContent = `
+        :root {
+          --surface: #f9fafb;
+          --border: #e5e7eb;
+          --fg: #111827;
+          --muted: #6b7280;
+          --bg: #ffffff;
+          --accent: #2b63ff;
+          --accent-hover: #1e4cd8;
+        }
+        
+        body {
+          background: #ffffff;
+          color: #1f2937;
+        }
+        
+        #clean-root {
+          --surface: #f9fafb;
+          --border: #e5e7eb;
+          --fg: #111827;
+          --muted: #6b7280 !important;
+        }
+      `;
+      document.head.appendChild(style);
+      
+      // Force light theme attributes
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.body.setAttribute('data-theme', 'light');
+      document.body.classList.remove('dark-mode', 'mardi');
+      document.body.classList.add('light-mode');
+      
+      console.log('[LIGHT LAYOUT] Theme override applied');
     </script>
   </body>
 </html>

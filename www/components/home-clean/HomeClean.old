@@ -1,0 +1,730 @@
+/**
+ * HomeClean Component - Main Container
+ * Phase 4: Modular Component Architecture
+ */
+
+class HomeClean {
+    constructor() {
+        this.container = null;
+        this.cards = new Map();
+        this.holidayModal = null;
+        this.eventListeners = new Map();
+    }
+
+    /**
+     * Initialize the HomeClean component
+     */
+    async init(rootElement) {
+        try {
+            console.log('[HomeClean] Initializing component...');
+            
+            // Preserve existing content BEFORE creating new container
+            const preservedContent = this.preserveExistingContent(rootElement);
+            
+            // Create main container
+            this.container = this.createContainer();
+            
+            // Mount to root element - replace existing content
+            if (rootElement) {
+                // Clear existing content completely
+                rootElement.innerHTML = '';
+                
+                // Append our new container
+                rootElement.appendChild(this.container);
+                
+                // Restore preserved content to our new container
+                this.restorePreservedContent(preservedContent);
+                
+                console.log('[HomeClean] Content replaced successfully');
+            } else {
+                console.error('[HomeClean] No root element provided');
+                return false;
+            }
+
+            // Initialize holiday modal
+            this.holidayModal = new window.HolidayModal();
+            
+            // Render all rails
+            await this.renderAllRails();
+            
+            // Setup event listeners
+            this.setupEventListeners();
+            
+            console.log('[HomeClean] Component initialized successfully');
+            return true;
+
+        } catch (error) {
+            console.error('[HomeClean] Initialization failed:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Preserve existing content from homeSection
+     */
+    preserveExistingContent(rootElement) {
+        // Find and preserve community and feedback sections BEFORE clearing
+        const communitySection = rootElement.querySelector('#group-2-community');
+        const feedbackSection = rootElement.querySelector('#group-5-feedback');
+        
+        // Store the preserved content
+        const preservedContent = {
+            community: communitySection ? communitySection.cloneNode(true) : null,
+            feedback: feedbackSection ? feedbackSection.cloneNode(true) : null
+        };
+        
+        if (preservedContent.community) {
+            console.log('[HomeClean] Preserved community section');
+        }
+        
+        if (preservedContent.feedback) {
+            console.log('[HomeClean] Preserved feedback section');
+        }
+        
+        return preservedContent;
+    }
+    
+    restorePreservedContent(preservedContent) {
+        // Restore community content
+        if (preservedContent.community) {
+            const communityContainer = this.container.querySelector('#community-container');
+            if (communityContainer) {
+                communityContainer.innerHTML = preservedContent.community.innerHTML;
+                console.log('[HomeClean] Restored community content');
+            }
+        }
+        
+        // Restore feedback content
+        if (preservedContent.feedback) {
+            const feedbackContainer = this.container.querySelector('#feedback-container');
+            if (feedbackContainer) {
+                feedbackContainer.innerHTML = preservedContent.feedback.innerHTML;
+                console.log('[HomeClean] Restored feedback content');
+            }
+        }
+    }
+
+    /**
+     * Create the main container element with exact mockup structure
+     */
+    createContainer() {
+        const container = document.createElement('div');
+        container.id = 'clean-root';
+        container.className = 'home-clean-container';
+        
+        // Create containers in exact mockup order with proper structure
+        container.innerHTML = `
+            <!-- 1. Your Shows Container (2 rails: CW + Next Up) -->
+            <div class="clean-group" id="your-shows-container">
+                <div class="group-header">
+                    <h2 class="group-title">Your Shows</h2>
+                </div>
+                <div class="group-divider"></div>
+                
+                <!-- Currently Watching Subsection -->
+                <div class="home-preview-row">
+                    <h3>Currently Watching</h3>
+                    <div class="rail" id="cw-rail"></div>
+                </div>
+
+                <!-- Next Up Subsection -->
+                <div class="home-preview-row">
+                    <h3>Up Next</h3>
+                    <div class="rail" id="up-next-rail"></div>
+                </div>
+            </div>
+
+            <!-- 2. Community Container (video + games) - Preserve existing structure -->
+            <div class="clean-group" id="community-container">
+                <div class="group-header">
+                    <h2 class="group-title">Community</h2>
+                </div>
+                <div class="group-divider"></div>
+                
+                <!-- Community Split Layout -->
+                <div class="community-split">
+                    <div class="now-playing">
+                        <video controls loop muted>
+                            <source src="community-stream.mp4" type="video/mp4">
+                            Now Playing: Collective Chaos
+                        </video>
+                    </div>
+                    <div class="games-column">
+                        <div class="game-card">
+                            <h3>Flickword</h3>
+                            <div>Cinematic flickword</div>
+                        </div>
+                        <div class="game-card">
+                            <h3>Trivia</h3>
+                            <div>Cinematic trivia</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. For You Container (3 genre rails) -->
+            <div class="clean-group" id="for-you-container">
+                <div class="group-header">
+                    <h2 class="group-title">For You</h2>
+                </div>
+                <div class="group-divider"></div>
+                
+                <!-- Drama Subsection -->
+                <div class="home-preview-row">
+                    <h3>Drama</h3>
+                    <div class="rail" id="drama-rail"></div>
+                </div>
+
+                <!-- Comedy Subsection -->
+                <div class="home-preview-row">
+                    <h3>Comedy</h3>
+                    <div class="rail" id="comedy-rail"></div>
+                </div>
+
+                <!-- Horror Subsection -->
+                <div class="home-preview-row">
+                    <h3>Horror</h3>
+                    <div class="rail" id="horror-rail"></div>
+                </div>
+            </div>
+
+            <!-- 4. In Theaters Container (TMDB now_playing) -->
+            <div class="clean-group" id="in-theaters-container">
+                <div class="group-header">
+                    <h2 class="group-title">In Theaters Near You</h2>
+                </div>
+                <div class="group-divider"></div>
+                
+                <!-- Theater Info -->
+                <div class="theater-info">
+                    AMC Empire<br>
+                    25234 West 42nd St<br>
+                    NY,NY 10036<br>
+                    2.3mi Away • (212)398-2595
+                </div>
+                
+                <!-- In Theaters Rail -->
+                <div class="rail" id="in-theaters-rail"></div>
+            </div>
+
+            <!-- 5. Feedback Container (form) - Preserve existing structure -->
+            <div class="clean-group" id="feedback-container">
+                <div class="group-header">
+                    <h2 class="group-title">Feedback</h2>
+                </div>
+                <div class="group-divider"></div>
+                <!-- Feedback content will be preserved from existing structure -->
+            </div>
+        `;
+        
+        return container;
+    }
+
+    /**
+     * Render all rails with real data from WatchlistsAdapterV2
+     */
+    async renderAllRails() {
+        try {
+            console.log('[HomeClean] Rendering all rails with real data...');
+            
+            // Disable mock mode to use real data
+            window.FLAGS = window.FLAGS || {};
+            window.FLAGS.mockMode = false;
+            
+            // Get real currently watching data
+            const cwData = await this.getRealCurrentlyWatching();
+            console.log('[HomeClean] Real CW Data:', cwData.length, 'items');
+            this.renderRail('cw-rail', cwData, 'cw');
+            
+            // For other rails, still use mock data for now
+            const mockData = this.generateMockData();
+            
+            // Render Next Up
+            console.log('[HomeClean] Rendering Next Up rail with', mockData.nextUp.length, 'cards');
+            this.renderRail('up-next-rail', mockData.nextUp, 'nextup');
+            
+            // Render For You rails
+            const genres = ['drama', 'comedy', 'horror'];
+            genres.forEach(genre => {
+                console.log(`[HomeClean] Rendering ${genre} rail with`, mockData[genre].length, 'cards');
+                this.renderRail(`${genre}-rail`, mockData[genre], 'foryou');
+            });
+            
+            // Render In Theaters
+            console.log('[HomeClean] Rendering In Theaters rail with', mockData.inTheaters.length, 'cards');
+            this.renderRail('in-theaters-rail', mockData.inTheaters, 'foryou');
+            
+            console.log('[HomeClean] All rails rendered successfully');
+            
+        } catch (error) {
+            console.error('[HomeClean] Failed to render rails:', error);
+        }
+    }
+
+    /**
+     * Get real currently watching data from WatchlistsAdapterV2
+     */
+    async getRealCurrentlyWatching() {
+        try {
+            console.log('[HomeClean] Getting real currently watching data...');
+            
+            // Use WatchlistsAdapterV2 as the canonical data source
+            if (window.WatchlistsAdapterV2 && typeof window.WatchlistsAdapterV2.load === 'function') {
+                const uid = window.firebaseAuth?.currentUser?.uid || null;
+                const adapterData = await window.WatchlistsAdapterV2.load(uid);
+                
+                if (adapterData && adapterData.watchingIds && adapterData.watchingIds.length > 0) {
+                    console.log('[HomeClean] Found', adapterData.watchingIds.length, 'watching IDs');
+                    
+                    // Get full item data for each ID
+                    const items = [];
+                    for (const id of adapterData.watchingIds) {
+                        try {
+                            const itemData = window.WatchlistsAdapterV2.getItemData(id);
+                            if (itemData) {
+                                // Transform to CardCW format
+                                const cardData = this.transformToCardCWFormat(itemData);
+                                items.push(cardData);
+                            }
+                        } catch (error) {
+                            console.warn('[HomeClean] Failed to get item data for ID:', id, error);
+                        }
+                    }
+                    
+                    console.log('[HomeClean] Successfully loaded', items.length, 'real CW items');
+                    return items;
+                }
+            }
+            
+            // Fallback to appData if adapter not available
+            if (window.appData) {
+                console.log('[HomeClean] Falling back to appData...');
+                const tvWatching = window.appData.tv?.watching || [];
+                const movieWatching = window.appData.movies?.watching || [];
+                const allWatching = [...tvWatching, ...movieWatching];
+                
+                const items = allWatching.map(item => this.transformToCardCWFormat(item));
+                console.log('[HomeClean] Loaded', items.length, 'items from appData');
+                return items;
+            }
+            
+            console.warn('[HomeClean] No data source available, returning empty array');
+            return [];
+            
+        } catch (error) {
+            console.error('[HomeClean] Error getting real CW data:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Transform item data to CardCW format
+     */
+    transformToCardCWFormat(item) {
+        const isTV = item.media_type === 'tv' || item.first_air_date || item.number_of_seasons;
+        const title = item.title || item.name || 'Unknown Title';
+        const id = item.id || item.tmdb_id || item.tmdbId;
+        
+        // Get poster URL
+        let poster = '/assets/img/poster-placeholder.png';
+        if (item.poster_path) {
+            poster = `https://image.tmdb.org/t/p/w200${item.poster_path}`;
+        }
+        
+        // Create meta information
+        let meta = '';
+        if (isTV) {
+            const season = item.season || 1;
+            const episode = item.episode || 1;
+            meta = `S${season} E${episode}`;
+        } else {
+            const year = item.release_date ? new Date(item.release_date).getFullYear() : '2025';
+            meta = `${year} • Movie`;
+        }
+        
+        // Create blurb
+        const blurb = item.overview || 'No description available';
+        
+        return {
+            id: String(id),
+            title: title,
+            meta: meta,
+            poster: poster,
+            blurb: blurb,
+            mediaType: isTV ? 'tv' : 'movie',
+            originalItem: item // Keep reference to original data
+        };
+    }
+
+    /**
+     * Generate mock data for all rails
+     */
+    generateMockData() {
+        const mockData = {
+            cw: [],
+            nextUp: [],
+            drama: [],
+            comedy: [],
+            horror: [],
+            inTheaters: []
+        };
+
+        // Generate 12 cards for each rail
+        for (let i = 1; i <= 12; i++) {
+            // Currently Watching
+            mockData.cw.push({
+                id: `cw-${i}`,
+                title: `Currently Watching ${i}`,
+                meta: `S1 E${i}`,
+                posterUrl: '/assets/img/poster-placeholder.png',
+                blurb: 'Short blurb about this show...',
+                holiday: i % 3 === 0 ? 'Christmas' : null
+            });
+
+            // Next Up
+            mockData.nextUp.push({
+                id: `nextup-${i}`,
+                title: `Next Up ${i}`,
+                meta: `S1 E${i + 1}`,
+                posterUrl: '/assets/img/poster-placeholder.png',
+                nextEpisode: `Episode ${i + 1} airs Oct 10, 2025`
+            });
+
+            // Drama
+            mockData.drama.push({
+                id: `drama-${i}`,
+                title: `Drama Show ${i}`,
+                meta: `2025 • Drama`,
+                posterUrl: '/assets/img/poster-placeholder.png',
+                blurb: 'A compelling drama about...',
+                where: 'Netflix',
+                holiday: i % 4 === 0 ? 'Halloween' : null
+            });
+
+            // Comedy
+            mockData.comedy.push({
+                id: `comedy-${i}`,
+                title: `Comedy Show ${i}`,
+                meta: `2025 • Comedy`,
+                posterUrl: '/assets/img/poster-placeholder.png',
+                blurb: 'A hilarious comedy that will...',
+                where: 'Hulu',
+                holiday: i % 5 === 0 ? 'Thanksgiving' : null
+            });
+
+            // Horror
+            mockData.horror.push({
+                id: `horror-${i}`,
+                title: `Horror Show ${i}`,
+                meta: `2025 • Horror`,
+                posterUrl: '/assets/img/poster-placeholder.png',
+                blurb: 'A spine-chilling horror that...',
+                where: 'Prime Video',
+                holiday: i % 2 === 0 ? 'Halloween' : null
+            });
+
+            // In Theaters
+            mockData.inTheaters.push({
+                id: `theater-${i}`,
+                title: `Theater Movie ${i}`,
+                meta: `2025 • Action`,
+                posterUrl: '/assets/img/poster-placeholder.png',
+                blurb: 'Now playing in theaters near you...',
+                where: 'AMC Empire'
+            });
+        }
+
+        return mockData;
+    }
+
+    /**
+     * Render a specific rail with cards
+     */
+    renderRail(railId, data, cardType) {
+        const rail = this.container.querySelector(`#${railId}`);
+        if (!rail) {
+            console.warn(`[HomeClean] Rail ${railId} not found`);
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            console.log(`[HomeClean] No data for ${railId}`);
+            rail.replaceChildren();
+            return;
+        }
+
+        console.log(`[HomeClean] Rendering ${data.length} ${cardType} cards in ${railId}`);
+
+        // Create cards and render directly into rail
+        const cards = data.map((item, index) => {
+            try {
+                const card = this.createCard(item, cardType, index);
+                return card;
+            } catch (error) {
+                console.error(`[HomeClean] Failed to create card ${index} for ${railId}:`, error);
+                return null;
+            }
+        }).filter(card => card !== null);
+
+        // Replace rail children with new cards
+        rail.replaceChildren(...cards);
+
+        console.log(`[HomeClean] Rendered ${cards.length} ${cardType} cards in ${railId}`);
+    }
+
+    /**
+     * Create a card element based on type using existing components
+     */
+    createCard(item, cardType, index) {
+    try {
+        let card;
+        
+        switch (cardType) {
+            case 'cw':
+                card = new window.CardCW(item);
+                break;
+            case 'nextup':
+                card = new window.CardNextUp(item);
+                break;
+            case 'foryou':
+                card = new window.CardForYou(item);
+                break;
+            default:
+                console.warn(`[HomeClean] Unknown card type: ${cardType}`);
+                return document.createElement('div');
+        }
+
+        if (!card) {
+            console.warn(`[HomeClean] Failed to create card instance for ${cardType}`);
+            return document.createElement('div');
+        }
+
+        const cardElement = card.render();
+        if (!cardElement) {  // FIXED: Explicit null-check post-render to catch empty DOM
+            console.warn(`[HomeClean] Failed to render card element for ${cardType}`);
+            return document.createElement('div');
+        }
+        
+        cardElement.dataset.cardIndex = index;
+        cardElement.dataset.cardType = cardType;
+        
+        // FIXED: Optional – Add ARIA for accessibility (bonus polish)
+        cardElement.setAttribute('role', 'button');
+        cardElement.setAttribute('tabindex', '0');
+        
+        // Store card reference
+        this.cards.set(`${cardType}-${index}`, card);
+        
+        return cardElement;
+        
+    } catch (error) {
+        console.error(`[HomeClean] Error creating card for ${cardType}:`, error);
+        return document.createElement('div');
+    }
+}
+    }
+
+    /**
+     * Setup event listeners for the component
+     */
+    setupEventListeners() {
+        // Handle action button clicks
+        this.container.addEventListener('click', (e) => {
+            const button = e.target.closest('[data-action]');
+            if (!button) return;
+
+            const action = button.dataset.action;
+            const cardId = button.dataset.id;
+            const card = button.closest('.card');
+            const title = card?.querySelector('.title')?.textContent || 'Unknown';
+
+            this.handleActionClick(action, cardId, title, card);
+        });
+
+        // Handle holiday button clicks
+        this.container.addEventListener('click', (e) => {
+            const holidayBtn = e.target.closest('.holiday-chip');
+            if (!holidayBtn) return;
+
+            const card = holidayBtn.closest('.card');
+            const cardId = card?.dataset.id || 'unknown';
+            const title = card?.querySelector('.title')?.textContent || 'Unknown';
+
+            this.openHolidayModal(cardId, title);
+        });
+    }
+
+    /**
+     * Handle action button clicks
+     */
+    handleActionClick(action, cardId, title, cardElement) {
+        console.log(`[HomeClean] Action clicked: ${action} for ${title}`);
+        
+        // Track analytics
+        this.trackAction(action, cardId, title);
+        
+        // Execute action based on type
+        switch (action) {
+            case 'want':
+                this.moveToWishlist(cardId, title);
+                break;
+            case 'watched':
+                this.markAsWatched(cardId, title);
+                break;
+            case 'dismiss':
+                this.dismissItem(cardId, title);
+                break;
+            case 'delete':
+                this.deleteItem(cardId, title);
+                break;
+            default:
+                console.warn(`[HomeClean] Unknown action: ${action}`);
+        }
+    }
+
+    /**
+     * Open holiday modal for a card
+     */
+    openHolidayModal(cardId, title) {
+        if (this.holidayModal) {
+            this.holidayModal.open({
+                cardId,
+                title,
+                onAssign: (holiday) => {
+                    this.assignHoliday(cardId, holiday);
+                }
+            });
+        }
+    }
+
+    /**
+     * Assign holiday to a card
+     */
+    assignHoliday(cardId, holiday) {
+        console.log(`[HomeClean] Assigning holiday ${holiday} to card ${cardId}`);
+        
+        // Store assignment
+        const assignments = JSON.parse(localStorage.getItem('holidayAssignments') || '{}');
+        assignments[cardId] = holiday;
+        localStorage.setItem('holidayAssignments', JSON.stringify(assignments));
+        
+        // Update UI
+        this.updateCardHoliday(cardId, holiday);
+    }
+
+    /**
+     * Update card holiday display
+     */
+    updateCardHoliday(cardId, holiday) {
+        const card = this.container.querySelector(`[data-id="${cardId}"]`);
+        if (card) {
+            const holidayChip = card.querySelector('.holiday-chip');
+            if (holidayChip) {
+                holidayChip.textContent = holiday;
+                holidayChip.classList.add('assigned');
+            }
+        }
+    }
+
+    /**
+     * Action handlers - delegate to existing functions
+     */
+    moveToWishlist(cardId, title) {
+        console.log(`[HomeClean] Moving ${title} to wishlist`);
+        if (window.moveItemV2) {
+            window.moveItemV2(cardId, 'wishlist');
+        } else if (window.moveItem) {
+            window.moveItem(cardId, 'wishlist');
+        } else {
+            console.warn('[HomeClean] No moveItem function available');
+        }
+    }
+
+    markAsWatched(cardId, title) {
+        console.log(`[HomeClean] Marking ${title} as watched`);
+        if (window.moveItemV2) {
+            window.moveItemV2(cardId, 'watched');
+        } else if (window.moveItem) {
+            window.moveItem(cardId, 'watched');
+        } else {
+            console.warn('[HomeClean] No moveItem function available');
+        }
+    }
+
+    dismissItem(cardId, title) {
+        console.log(`[HomeClean] Dismissing ${title}`);
+        if (window.removeItemFromCurrentListV2) {
+            window.removeItemFromCurrentListV2(cardId);
+        } else if (window.removeItemFromCurrentList) {
+            window.removeItemFromCurrentList(cardId);
+        } else {
+            console.warn('[HomeClean] No removeItem function available');
+        }
+    }
+
+    deleteItem(cardId, title) {
+        console.log(`[HomeClean] Deleting ${title}`);
+        if (window.removeItemFromCurrentListV2) {
+            window.removeItemFromCurrentListV2(cardId);
+        } else if (window.removeItemFromCurrentList) {
+            window.removeItemFromCurrentList(cardId);
+        } else {
+            console.warn('[HomeClean] No removeItem function available');
+        }
+    }
+
+    /**
+     * Track analytics
+     */
+    trackAction(action, cardId, title) {
+        if (window.gtag) {
+            window.gtag('event', 'home_clean_action', {
+                action_type: action,
+                card_id: cardId,
+                card_title: title
+            });
+        }
+    }
+
+    /**
+     * Refresh the component
+     */
+    async refresh() {
+        console.log('[HomeClean] Refreshing component...');
+        await this.renderAllRails();
+    }
+
+    /**
+     * Destroy the component
+     */
+    destroy() {
+        console.log('[HomeClean] Destroying component...');
+        
+        // Remove event listeners
+        this.eventListeners.forEach((listener, element) => {
+            element.removeEventListener(listener.event, listener.handler);
+        });
+        this.eventListeners.clear();
+        
+        // Destroy holiday modal
+        if (this.holidayModal) {
+            this.holidayModal.destroy();
+            this.holidayModal = null;
+        }
+        
+        // Clear cards
+        this.cards.clear();
+        
+        // Remove container
+        if (this.container && this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
+        }
+        
+        this.container = null;
+    }
+}
+
+// Export for global access
+window.HomeClean = HomeClean;
+
+

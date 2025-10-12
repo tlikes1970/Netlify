@@ -1,15 +1,18 @@
-type TabId = 'watching'|'want'|'watched'|'holidays'|'discovery';
+import { useTranslations } from '../lib/language';
+
+type TabId = 'watching'|'want'|'watched'|'mylists'|'discovery';
 export type TabsProps = { current: 'home' | TabId; onChange: (next: 'home' | TabId) => void; };
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'watching', label: 'Currently Watching' },
-  { id: 'want',     label: 'Want to Watch' },
-  { id: 'watched',  label: 'Watched' },
-  { id: 'holidays', label: 'Holidays' },
-  { id: 'discovery',label: 'Discovery' }
-];
-
 export default function Tabs({ current, onChange }: TabsProps) {
+  const translations = useTranslations();
+  
+  const TABS: { id: TabId; label: string }[] = [
+    { id: 'watching', label: translations.currentlyWatching },
+    { id: 'want',     label: translations.wantToWatch },
+    { id: 'watched',  label: translations.watched },
+    { id: 'mylists',  label: translations.myLists || 'My Lists' },
+    { id: 'discovery',label: translations.discovery }
+  ];
   return (
     <div className="w-full">
       <div className="max-w-screen-2xl mx-auto px-4 py-3">
@@ -23,7 +26,7 @@ export default function Tabs({ current, onChange }: TabsProps) {
                 backgroundColor: current === 'home' ? 'var(--card)' : 'var(--btn)',
                 color: 'var(--text)'
               }}
-            >Home</button>
+            >{translations.home}</button>
             <div role="tablist" aria-label="Lists" className="flex gap-2">
               {TABS.map(t => (
                 <button

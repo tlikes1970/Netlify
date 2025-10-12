@@ -106,6 +106,9 @@
               this._cache = result;
               this._lastUid = uid;
               
+              // Update appData for backward compatibility
+              this._updateAppData();
+              
               // Emit hydration event
               document.dispatchEvent(new CustomEvent('watchlists:hydrated', {
                 detail: { uid, cache: result }
@@ -124,6 +127,9 @@
               const result = this._normalizeWatchlists(oldStructure);
               this._cache = result;
               this._lastUid = uid;
+              
+              // Update appData for backward compatibility
+              this._updateAppData();
               
               // Emit hydration event
               document.dispatchEvent(new CustomEvent('watchlists:hydrated', {
@@ -157,6 +163,9 @@
         wishlist: result.wishlistIds.length,
         watched: result.watchedIds.length
       });
+      
+      // Update appData for backward compatibility
+      this._updateAppData();
       
       // Emit hydration event
       document.dispatchEvent(new CustomEvent('watchlists:hydrated', {
@@ -451,6 +460,23 @@
       // Update old structure for backward compatibility
       window.appData.movies = window.appData.watchlists.movies;
       window.appData.tv = window.appData.watchlists.tv;
+
+      // FIXED: Dispatch events to notify HomeClean and tab counts of data changes
+      try {
+        // Dispatch app:data:ready event for HomeClean
+        document.dispatchEvent(new CustomEvent('app:data:ready', {
+          detail: { source: 'watchlists-adapter-v2', action: 'appData-updated' }
+        }));
+        
+        // Dispatch cards:changed event for tab counts
+        document.dispatchEvent(new CustomEvent('cards:changed', {
+          detail: { source: 'watchlists-adapter-v2', action: 'appData-updated' }
+        }));
+        
+        log('Dispatched data change events after appData update');
+      } catch (error) {
+        warn('Failed to dispatch data change events:', error.message);
+      }
     },
 
     /**

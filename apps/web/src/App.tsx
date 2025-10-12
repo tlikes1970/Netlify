@@ -1,10 +1,8 @@
 import Tabs from '@/components/Tabs';
 import ListPage from '@/pages/ListPage';
-import HolidaysPage from '@/pages/HolidaysPage';
+import MyListsPage from '@/pages/MyListsPage';
 import DiscoveryPage from '@/pages/DiscoveryPage';
 import FlickletHeader from '@/components/FlickletHeader';
-import SearchBar from '@/components/SearchBar';
-import MarqueeBar from '@/components/MarqueeBar';
 import Rail from '@/components/Rail';
 import Section from '@/components/Section';
 import CommunityPanel from '@/components/CommunityPanel';
@@ -15,17 +13,18 @@ import HomeYourShowsRail from '@/components/rails/HomeYourShowsRail';
 import HomeUpNextRail from '@/components/rails/HomeUpNextRail';
 import SettingsPage from '@/components/SettingsPage';
 import { SettingsFAB, ThemeToggleFAB } from '@/components/FABs';
-import { HOME_RAILS } from '@/config/structure';
-import { useEffect, useMemo, useState } from 'react';
-import { useFlag } from './lib/flags';
+import { useEffect, useState } from 'react';
 import { Library } from '@/lib/storage';
-import { mountActionBridge } from '@/state/actions';
+import { mountActionBridge, setToastCallback } from '@/state/actions';
 import { useSettings, settingsManager } from '@/lib/settings';
 import { useForYou, useInTheaters } from '@/hooks/useTmdb';
-import { useFeatured } from '@/hooks/useFeatured';
 import { useTranslations } from '@/lib/language';
+import { getPersonalityText } from '@/lib/settings';
+import Toast, { useToast } from '@/components/Toast';
+import PersonalityErrorBoundary from '@/components/PersonalityErrorBoundary';
+import { useAuth } from '@/hooks/useAuth';
 
-type View = 'home'|'watching'|'want'|'watched'|'holidays'|'discovery';
+type View = 'home'|'watching'|'want'|'watched'|'mylists'|'discovery';
 
 export default function App() {
   const [view, setView] = useState<View>('home');
@@ -35,31 +34,22 @@ export default function App() {
   const settings = useSettings();
   const [showSettings, setShowSettings] = useState(false);
   const translations = useTranslations();
+  
+  // Toast system
+  const { toasts, addToast, removeToast } = useToast();
 
-  // User/auth state
-  const [user, setUser] = useState<{ name: string; loggedIn: boolean }>(() => {
-    try { return JSON.parse(localStorage.getItem('flicklet:v2:user') || '') || { name: 'Guest', loggedIn: false }; } catch { return { name: 'Guest', loggedIn: false }; }
-  });
-  const toggleLogin = () => {
-    setUser(u => {
-      const next = u.loggedIn ? { name: 'Guest', loggedIn: false } : { name: 'User', loggedIn: true };
-      localStorage.setItem('flicklet:v2:user', JSON.stringify(next));
-      return next;
-    });
-  };
+  // Auth state
+  const { user } = useAuth();
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchGenre, setSearchGenre] = useState<string | null>(null);
   const searchActive = !!searchQuery.trim();
-  const doSearch = () => setView('discovery');
-  const clearSearch = () => { setSearchQuery(''); setSearchGenre(null); }
 
   // Lists - using new Library system
   const watching = Library.getByList('watching');
   const wishlist = Library.getByList('wishlist');
   const watched = Library.getByList('watched');
-  const notInterested = Library.getByList('not');
 
   // Data rails
   const forYou = useForYou();
@@ -67,9 +57,12 @@ export default function App() {
 
   // Initialize action bridge
   useEffect(() => {
+    // Set up toast callback for personality-based feedback
+    setToastCallback(addToast);
+    
     const cleanup = mountActionBridge();
     return cleanup;
-  }, []);
+  }, [addToast]);
 
   function itemsFor(id: string) {
     switch (id) {
@@ -88,10 +81,6 @@ export default function App() {
       <main className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
         <FlickletHeader
           appName="Flicklet"
-          username={user.name}
-          isAuthed={user.loggedIn}
-          onLogin={toggleLogin}
-          onLogout={toggleLogin}
           showMarquee={false}
           onSearch={(q, g) => { setSearchQuery(q); setSearchGenre(g ?? null); }}
           onClear={() => { setSearchQuery(''); setSearchGenre(null); }}
@@ -104,7 +93,7 @@ export default function App() {
             {view === 'watching'  && <ListPage title="Currently Watching" items={watching} mode="watching" />}
             {view === 'want'      && <ListPage title="Want to Watch"     items={wishlist}     mode="catalog"  />}
             {view === 'watched'   && <ListPage title="Watched"           items={watched}  mode="watching" />}
-            {view === 'holidays'  && <HolidaysPage />}
+                    {view === 'mylists'  && <MyListsPage />}
             {view === 'discovery' && <DiscoveryPage query={searchQuery} genreId={searchGenre} />}
           </>
         )}
@@ -113,78 +102,87 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+    <PersonalityErrorBoundary>
+      <main className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
         <FlickletHeader
           appName="Flicklet"
-          username={user.name}
-          isAuthed={user.loggedIn}
-          onLogin={toggleLogin}
-          onLogout={toggleLogin}
           showMarquee={isHome && !searchActive}
           onSearch={(q, g) => { setSearchQuery(q); setSearchGenre(g ?? null); }}
           onClear={() => { setSearchQuery(''); setSearchGenre(null); }}
-                messages={[
-                  translations.marqueeMessage1,
-                  translations.marqueeMessage2,
-                  translations.marqueeMessage3,
-                  translations.marqueeMessage4,
-                  translations.marqueeMessage5,
-                ]}
+          messages={[
+            getPersonalityText('marquee1', settings.personalityLevel),
+            getPersonalityText('marquee2', settings.personalityLevel),
+            getPersonalityText('marquee3', settings.personalityLevel),
+            getPersonalityText('marquee4', settings.personalityLevel),
+            getPersonalityText('marquee5', settings.personalityLevel),
+          ]}
           marqueeSpeedSec={30}
           changeEveryMs={20000}
         />
-      {searchActive ? (
-        <SearchResults query={searchQuery} genre={searchGenre} />
-      ) : (
-        <>
-          <Tabs current={view} onChange={setView} />
+        {searchActive ? (
+          <SearchResults query={searchQuery} genre={searchGenre} />
+        ) : (
+          <>
+            <Tabs current={view} onChange={setView} />
 
-          {/* Your Shows - using new rail components */}
-          <HomeYourShowsRail />
-          <HomeUpNextRail />
+            {/* Your Shows - using new rail components */}
+            <HomeYourShowsRail />
+            <HomeUpNextRail />
 
-          {/* Community container, always visible */}
-          <Section title={translations.community}>
-            <CommunityPanel />
-          </Section>
+            {/* Community container, always visible */}
+            <Section title={translations.community}>
+              <CommunityPanel />
+            </Section>
 
-          {/* For you container with three rails */}
-          <Section title={translations.forYou}>
-            <div className="space-y-4">
-              <Rail id="for-you-drama"  title={translations.drama}  items={itemsFor('for-you-drama')}  skeletonCount={12} />
-              <Rail id="for-you-comedy" title={translations.comedy} items={itemsFor('for-you-comedy')} skeletonCount={12} />
-              <Rail id="for-you-horror" title={translations.horror} items={itemsFor('for-you-horror')} skeletonCount={12} />
-            </div>
-          </Section>
+            {/* For you container with three rails */}
+            <Section title={translations.forYou}>
+              <div className="space-y-4">
+                <Rail id="for-you-drama"  title={translations.drama}  items={itemsFor('for-you-drama')}  skeletonCount={12} />
+                <Rail id="for-you-comedy" title={translations.comedy} items={itemsFor('for-you-comedy')} skeletonCount={12} />
+                <Rail id="for-you-horror" title={translations.horror} items={itemsFor('for-you-horror')} skeletonCount={12} />
+              </div>
+            </Section>
 
-          {/* In theaters container with address/info header */}
-          <Section title={translations.inTheatersNearYou}>
-            <TheaterInfo />
-            <Rail id="in-theaters" title={translations.nowPlaying} items={itemsFor('in-theaters')} skeletonCount={12} />
-          </Section>
+            {/* In theaters container with address/info header */}
+            <Section title={translations.inTheatersNearYou}>
+              <TheaterInfo />
+              <Rail id="in-theaters" title={translations.nowPlaying} items={itemsFor('in-theaters')} skeletonCount={12} />
+            </Section>
 
-          {/* Feedback container */}
-          <Section title={translations.feedback}>
-            <FeedbackPanel />
-          </Section>
-        </>
-      )}
+            {/* Feedback container */}
+            <Section title={translations.feedback}>
+              <FeedbackPanel />
+            </Section>
+          </>
+        )}
 
-      {/* FAB Components - Only show on home page */}
-      {view === 'home' && (
-        <>
-          <SettingsFAB onClick={() => setShowSettings(true)} />
-          <ThemeToggleFAB 
-            theme={settings.layout.theme} 
-            onToggle={() => settingsManager.updateTheme(settings.layout.theme === 'dark' ? 'light' : 'dark')} 
+        {/* FAB Components - Only show on home page */}
+        {view === 'home' && (
+          <>
+            <SettingsFAB onClick={() => setShowSettings(true)} />
+            <ThemeToggleFAB 
+              theme={settings.layout.theme} 
+              onToggle={() => settingsManager.updateTheme(settings.layout.theme === 'dark' ? 'light' : 'dark')} 
+            />
+          </>
+        )}
+
+        {/* Settings Modal */}
+        {showSettings && (
+          <SettingsPage onClose={() => setShowSettings(false)} />
+        )}
+
+        {/* Toast Notifications */}
+        {toasts.map(toast => (
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            personalityLevel={settings.personalityLevel}
+            onClose={() => removeToast(toast.id)}
           />
-        </>
-      )}
-
-      {/* Settings Modal */}
-      {showSettings && (
-        <SettingsPage onClose={() => setShowSettings(false)} />
-      )}
-    </main>
+        ))}
+      </main>
+    </PersonalityErrorBoundary>
   );
 }

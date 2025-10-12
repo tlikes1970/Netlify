@@ -3843,19 +3843,19 @@ body.mardi {
 #homeSection .card.v2 .action-grid-2x2 .action-row,
 #homeSection .cw-card.v2 .action-grid-2x2 .action-row,
 #homeSection .v2-home-cw .action-grid-2x2 .action-row {
-  display: contents !important;
-  grid-template-columns: none !important;
-  gap: 0 !important;
+display: contents;
+grid-template-columns: none;
+gap: 0;
 }
 
 /* Fix button sizing - make them larger and more readable */
 #homeSection .card.v2 .actions .btn,
 #homeSection .cw-card.v2 .actions .btn,
 #homeSection .v2-home-cw .actions .btn {
-  min-height: 44px !important;
-  padding: 8px 12px !important;
-  font-size: 12px !important;
-  line-height: 1.2 !important;
+min-height: 44px;
+padding: 8px 12px;
+font-size: 12px;
+line-height: 1.2;
 }
 
 /* NUCLEAR OPTION: Override ALL button sizing with maximum specificity */
@@ -3864,16 +3864,16 @@ body.mardi {
 #homeSection .action-grid-2x2 .btn,
 #homeSection .action-row .btn {
   min-height: 44px !important;
-  height: auto !important;
-  padding: 8px 12px !important;
-  font-size: 12px !important;
-  line-height: 1.2 !important;
+height: auto;
+padding: 8px 12px;
+font-size: 12px;
+line-height: 1.2;
 }
 
 /* Fix card spacing - ensure even spacing between cards */
 #homeSection .preview-row-scroll.row-inner,
 #homeSection #currentlyWatchingScroll {
-  gap: 16px !important;
+  gap: 16px;
 }
 
 /* --- GAME TEASER COLUMN LAYOUT --- */
@@ -4747,8 +4747,8 @@ body {
 #navigation,
 .tab-container,
 nav[role="tablist"] {
-  display: flex !important;
-  visibility: visible !important;
+display: flex;
+visibility: visible;
 }
 
 /* Ensure home section is visible by default - but allow tab switching */
@@ -4770,8 +4770,8 @@ body.tab-wishlist #homeSection,
 body.tab-watched #homeSection,
 body.tab-discover #homeSection,
 body.tab-settings #homeSection {
-  display: none !important;
-  visibility: hidden !important;
+display: none;
+visibility: hidden;
 }
 
 .has-search .top-search,

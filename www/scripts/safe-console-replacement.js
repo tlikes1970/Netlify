@@ -10,8 +10,6 @@
   const filesToProcess = [
     'www/js/app.js',
     'www/js/functions.js',
-    'www/scripts/inline-script-02.js',
-    'www/scripts/inline-script-03.js',
     'www/scripts/curated-rows.js',
     'www/scripts/community-spotlight.js',
   ];

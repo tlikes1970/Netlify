@@ -1,0 +1,91 @@
+[
+  {
+    "endpoint": "${typeHint}/${id}",
+    "file": "js\\functions.js",
+    "method": "GET",
+    "params": [
+      "typeHint",
+      "id"
+    ]
+  },
+  {
+    "endpoint": "movie/${id}",
+    "file": "js\\functions.js",
+    "method": "GET",
+    "params": [
+      "id"
+    ]
+  },
+  {
+    "endpoint": "tv/${id}",
+    "file": "js\\functions.js",
+    "method": "GET",
+    "params": [
+      "id"
+    ]
+  },
+  {
+    "endpoint": "tv/${showId}/season/${seasonNumber}",
+    "file": "js\\modals\\episode-guide-modal.js",
+    "method": "GET",
+    "params": [
+      "showId",
+      "seasonNumber"
+    ]
+  },
+  {
+    "endpoint": "genre/movie/list",
+    "file": "scripts\\api\\content.js",
+    "method": "GET",
+    "params": []
+  },
+  {
+    "endpoint": "genre/tv/list",
+    "file": "scripts\\api\\content.js",
+    "method": "GET",
+    "params": []
+  },
+  {
+    "endpoint": "genre/${mediaType}/list",
+    "file": "scripts\\custom-genre-selector.js",
+    "method": "GET",
+    "params": [
+      "mediaType"
+    ]
+  },
+  {
+    "endpoint": "trending/tv/week?api_key=${API_KEY}&language=${lang}",
+    "file": "scripts\\tmdb-seed.js",
+    "method": "GET",
+    "params": [
+      "API_KEY",
+      "lang"
+    ]
+  },
+  {
+    "endpoint": "trending/movie/week?api_key=${API_KEY}&language=${lang}",
+    "file": "scripts\\tmdb-seed.js",
+    "method": "GET",
+    "params": [
+      "API_KEY",
+      "lang"
+    ]
+  },
+  {
+    "endpoint": "genre/${mediaType}/list",
+    "file": "scripts\\tmdb.js",
+    "method": "GET",
+    "params": [
+      "mediaType"
+    ]
+  },
+  {
+    "endpoint": "${mediaType}/${id}",
+    "file": "scripts\\tmdb.js",
+    "method": "GET",
+    "params": [
+      "mediaType",
+      "id"
+    ]
+  }
+]
