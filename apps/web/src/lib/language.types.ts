@@ -176,4 +176,28 @@ export interface LanguageStrings {
   language: string;
   english: string;
   spanish: string;
-}
+  
+  // Home Page Sections
+  community: string;
+  forYou: string;
+  feedback: string;
+  
+  // Rail Titles
+  drama: string;
+  comedy: string;
+  horror: string;
+  nowPlaying: string;
+  
+  // Search
+  searchPlaceholder: string;
+  allGenres: string;
+  action: string;
+  comedy: string;
+  drama: string;
+  horror: string;
+  search: string;
+  clear: string;
+  
+  // Marquee Controls
+  showMarquee: string;
+  hideMarquee: string;

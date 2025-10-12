@@ -177,6 +177,38 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     language: 'Language',
     english: 'English',
     spanish: 'Español',
+    
+    // Home Page Sections
+    community: 'Community',
+    forYou: 'For you',
+    feedback: 'Feedback',
+    
+    // Rail Titles
+    drama: 'Drama',
+    comedy: 'Comedy',
+    horror: 'Horror',
+    nowPlaying: 'Now Playing',
+    
+    // Search
+    searchPlaceholder: 'Search movies, shows, people…',
+    allGenres: 'All genres',
+    action: 'Action',
+    comedy: 'Comedy',
+    drama: 'Drama',
+    horror: 'Horror',
+    search: 'Search',
+    clear: 'Clear',
+    
+    // Marquee Controls
+    showMarquee: 'Show marquee',
+    hideMarquee: 'Hide',
+    
+    // Marquee Messages
+    marqueeMessage1: 'I\'m sorry, Dave. I\'m afraid I can\'t do that.',
+    marqueeMessage2: 'Roads? Where we\'re going, we don\'t need roads.',
+    marqueeMessage3: 'Houston, we have a problem.',
+    marqueeMessage4: 'May the odds be ever in your favor.',
+    marqueeMessage5: 'You talking to me?',
   },
   
   es: {
@@ -355,6 +387,38 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     language: 'Idioma',
     english: 'English',
     spanish: 'Español',
+    
+    // Home Page Sections
+    community: 'Comunidad',
+    forYou: 'Para ti',
+    feedback: 'Comentarios',
+    
+    // Rail Titles
+    drama: 'Drama',
+    comedy: 'Comedia',
+    horror: 'Terror',
+    nowPlaying: 'En Cartelera',
+    
+    // Search
+    searchPlaceholder: 'Buscar películas, programas, personas…',
+    allGenres: 'Todos los géneros',
+    action: 'Acción',
+    comedy: 'Comedia',
+    drama: 'Drama',
+    horror: 'Terror',
+    search: 'Buscar',
+    clear: 'Limpiar',
+    
+    // Marquee Controls
+    showMarquee: 'Mostrar marquesina',
+    hideMarquee: 'Ocultar',
+    
+    // Marquee Messages
+    marqueeMessage1: 'Lo siento, Dave. Me temo que no puedo hacer eso.',
+    marqueeMessage2: '¿Carreteras? A donde vamos, no necesitamos carreteras.',
+    marqueeMessage3: 'Houston, tenemos un problema.',
+    marqueeMessage4: 'Que las probabilidades estén siempre a tu favor.',
+    marqueeMessage5: '¿Me estás hablando a mí?',
   },
 };
 
