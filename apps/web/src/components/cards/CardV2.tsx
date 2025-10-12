@@ -1,5 +1,6 @@
 import React from 'react';
 import type { CardContext, CardActionHandlers, MediaItem } from './card.types';
+import { useTranslations } from '../../lib/language';
 
 export type CardV2Props = {
   item: MediaItem;
@@ -19,6 +20,7 @@ export type CardV2Props = {
 export default function CardV2({ item, context, actions, compact, showRating = true }: CardV2Props) {
   const { title, year, posterUrl, voteAverage } = item;
   const rating = typeof voteAverage === 'number' ? Math.round(voteAverage * 10) / 10 : undefined;
+  const translations = useTranslations();
 
   const showHolidayBtn = context === 'tab-foryou' || context === 'search' || context === 'home' || context === 'holiday';
 
@@ -47,7 +49,7 @@ export default function CardV2({ item, context, actions, compact, showRating = t
               className="flex h-full w-full items-center justify-center text-xs"
               style={{ color: 'var(--muted)' }}
             >
-              No poster
+              {translations.noPoster}
             </div>
           )}
 
@@ -61,7 +63,7 @@ export default function CardV2({ item, context, actions, compact, showRating = t
               aria-label="Add to Holiday list"
               data-testid="cardv2-holiday"
             >
-              Holiday +
+              {translations.holidayAddAction}
             </button>
           )}
         </div>
@@ -92,6 +94,8 @@ export default function CardV2({ item, context, actions, compact, showRating = t
 }
 
 function CardActions({ context, item, actions }: { context: CardContext; item: MediaItem; actions?: CardActionHandlers }) {
+  const translations = useTranslations();
+  
   const btn = (label: string, onClick?: () => void, testId?: string) => (
     <button
       type="button"
@@ -112,10 +116,10 @@ function CardActions({ context, item, actions }: { context: CardContext; item: M
   if (context === 'tab-watching') {
     return (
       <div className="actions grid grid-cols-2 gap-1 p-2" data-testid="cardv2-actions">
-        {btn('Want to Watch', () => actions?.onWant?.(item), 'act-want')}
-        {btn('Watched', () => actions?.onWatched?.(item), 'act-watched')}
-        {btn('Not Interested', () => actions?.onNotInterested?.(item), 'act-not')}
-        {btn('Delete', () => actions?.onDelete?.(item), 'act-delete')}
+        {btn(translations.wantToWatchAction, () => actions?.onWant?.(item), 'act-want')}
+        {btn(translations.watchedAction, () => actions?.onWatched?.(item), 'act-watched')}
+        {btn(translations.notInterestedAction, () => actions?.onNotInterested?.(item), 'act-not')}
+        {btn(translations.deleteAction, () => actions?.onDelete?.(item), 'act-delete')}
       </div>
     );
   }
@@ -123,7 +127,7 @@ function CardActions({ context, item, actions }: { context: CardContext; item: M
   if (context === 'tab-foryou' || context === 'search' || context === 'home') {
     return (
       <div className="actions grid grid-cols-1 gap-1 p-2" data-testid="cardv2-actions">
-        {btn('Want to Watch', () => actions?.onWant?.(item), 'act-want')}
+        {btn(translations.wantToWatchAction, () => actions?.onWant?.(item), 'act-want')}
       </div>
     );
   }
@@ -131,8 +135,8 @@ function CardActions({ context, item, actions }: { context: CardContext; item: M
   if (context === 'holiday') {
     return (
       <div className="actions grid grid-cols-2 gap-1 p-2" data-testid="cardv2-actions">
-        {btn('Watched', () => actions?.onWatched?.(item), 'act-watched')}
-        {btn('Remove', () => actions?.onDelete?.(item), 'act-delete')}
+        {btn(translations.watchedAction, () => actions?.onWatched?.(item), 'act-watched')}
+        {btn(translations.removeAction, () => actions?.onDelete?.(item), 'act-delete')}
       </div>
     );
   }
