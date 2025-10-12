@@ -1,0 +1,47 @@
+type TabId = 'watching'|'want'|'watched'|'holidays'|'discovery';
+export type TabsProps = { current: 'home' | TabId; onChange: (next: 'home' | TabId) => void; };
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'watching', label: 'Currently Watching' },
+  { id: 'want',     label: 'Want to Watch' },
+  { id: 'watched',  label: 'Watched' },
+  { id: 'holidays', label: 'Holidays' },
+  { id: 'discovery',label: 'Discovery' }
+];
+
+export default function Tabs({ current, onChange }: TabsProps) {
+  return (
+    <div className="w-full">
+      <div className="max-w-screen-2xl mx-auto px-4 py-3">
+        <nav aria-label="Primary">
+          <div className="flex items-center gap-3">
+            <button
+              aria-current={current === 'home' ? 'page' : undefined}
+              onClick={() => onChange('home')}
+              className="px-3 py-1 rounded text-sm transition-colors"
+              style={{
+                backgroundColor: current === 'home' ? 'var(--card)' : 'var(--btn)',
+                color: 'var(--text)'
+              }}
+            >Home</button>
+            <div role="tablist" aria-label="Lists" className="flex gap-2">
+              {TABS.map(t => (
+                <button
+                  key={t.id}
+                  role="tab"
+                  aria-selected={current === t.id}
+                  onClick={() => onChange(t.id)}
+                  className="px-3 py-1 rounded text-sm transition-colors"
+                  style={{
+                    backgroundColor: current === t.id ? 'var(--card)' : 'var(--btn)',
+                    color: 'var(--text)'
+                  }}
+                >{t.label}</button>
+              ))}
+            </div>
+          </div>
+        </nav>
+      </div>
+    </div>
+  );
+}
