@@ -5,6 +5,7 @@ import { searchMulti } from './api';
 import { emit } from '../lib/events';
 import { Library } from '../lib/storage';
 import { fetchNextAirDate } from '../tmdb/tv';
+import { useTranslations } from '../lib/language';
 
 export default function SearchResults({ query, genre }: { query: string; genre?: string | null }) {
   const [loading, setLoading] = useState(false);
@@ -19,7 +20,7 @@ export default function SearchResults({ query, genre }: { query: string; genre?:
     searchMulti(query, 1, genre).then(res => {
       if (!cancelled) setItems(res);
     }).catch(err => {
-      if (!cancelled) setError(err.message || 'Search failed');
+      if (!cancelled) setError(err.message || translations.searchFailed);
     }).finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
   }, [query, genre]);
@@ -46,6 +47,7 @@ export default function SearchResults({ query, genre }: { query: string; genre?:
 }
 
 function SearchResultCard({ item }: { item: MediaItem }) {
+  const translations = useTranslations();
   const { title, year, posterUrl, voteAverage, mediaType, synopsis } = item;
   
   // Mock data for demo - in real implementation, this would come from TMDB
@@ -84,7 +86,7 @@ function SearchResultCard({ item }: { item: MediaItem }) {
         target="_blank" 
         rel="noopener noreferrer"
         className="flex-shrink-0 w-30 aspect-[2/3] bg-muted cursor-pointer"
-        title="Opens in TMDB"
+        title={translations.opensInTmdb}
       >
         {posterUrl ? (
           <img
@@ -111,7 +113,7 @@ function SearchResultCard({ item }: { item: MediaItem }) {
         
         {/* Synopsis */}
         <div className="text-muted-foreground text-sm mb-2 max-h-12 overflow-hidden">
-          {synopsis || "No synopsis available."}
+          {synopsis || translations.noSynopsisAvailable}
         </div>
         
         {/* Badges */}
@@ -141,39 +143,39 @@ function SearchResultCard({ item }: { item: MediaItem }) {
               className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors"
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              Want to Watch
+              {translations.wantToWatchAction}
             </button>
             <button 
               onClick={() => handleAction('currently-watching')}
               className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors"
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              Currently Watching
+              {translations.currentlyWatchingAction}
             </button>
             <button 
               className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors"
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              Watched
+              {translations.watchedAction}
             </button>
             <button 
               className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors"
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              Not Interested
+              {translations.notInterestedAction}
             </button>
             <button 
               className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors"
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              Review/Notes
+              {translations.reviewNotesAction}
             </button>
             <button 
               onClick={() => handleAction('holiday')}
               className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors"
               style={{ backgroundColor: 'var(--btn)', color: 'white', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              Holiday +
+              {translations.holidayAddAction}
             </button>
           </div>
           
@@ -182,13 +184,13 @@ function SearchResultCard({ item }: { item: MediaItem }) {
               className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors"
               style={{ backgroundColor: 'var(--btn2)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              Similar To
+              {translations.similarToAction}
             </button>
             <button 
               className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors"
               style={{ backgroundColor: 'var(--btn2)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              Refine Search
+              {translations.refineSearchAction}
             </button>
           </div>
         </div>
