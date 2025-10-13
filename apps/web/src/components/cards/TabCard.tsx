@@ -21,8 +21,6 @@ export default function TabCard({ item, actions, tabType = 'watching' }: TabCard
   const rating = typeof voteAverage === 'number' ? Math.round(voteAverage * 10) / 10 : undefined;
   const translations = useTranslations();
 
-  console.log(`🔍 TabCard rendering:`, { title, tabType, posterUrl: !!posterUrl });
-
   const handleRatingChange = (rating: number) => {
     if (actions?.onRatingChange) {
       actions.onRatingChange(item, rating);
@@ -176,12 +174,6 @@ export default function TabCard({ item, actions, tabType = 'watching' }: TabCard
       className="tab-card group relative flex bg-card border border-line rounded-2xl overflow-hidden shadow-lg mb-8" 
       data-testid="tab-card" 
       aria-label={title}
-      style={{ 
-        minHeight: '200px',
-        backgroundColor: 'var(--card)',
-        borderColor: 'var(--line)',
-        border: '2px solid red' // Debug: Make cards visible with red border
-      }}
     >
       {/* Poster (160px wide, 2:3 aspect ratio) */}
       <div 
