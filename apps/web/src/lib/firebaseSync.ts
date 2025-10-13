@@ -92,6 +92,7 @@ export class FirebaseSyncManager {
         wishlist: [],
         watched: [],
       },
+      customLists: [], // Add custom list definitions
     };
 
     // Get Library data from localStorage to avoid circular import
@@ -113,6 +114,18 @@ export class FirebaseSyncManager {
           }
         }
       });
+      
+      // Add custom list definitions
+      const customListsData = localStorage.getItem('flicklet.customLists.v2');
+      if (customListsData) {
+        try {
+          const customLists = JSON.parse(customListsData);
+          watchlists.customLists = customLists.customLists || [];
+        } catch (error) {
+          console.warn('Failed to parse custom lists data:', error);
+        }
+      }
+      
     } catch (error) {
       console.warn('Failed to read Library data from localStorage:', error);
     }
@@ -321,6 +334,24 @@ export class FirebaseSyncManager {
     
     // Save cleaned data back to localStorage
     localStorage.setItem('flicklet.library.v2', JSON.stringify(cleanedData));
+    
+    // Restore custom lists if they exist in cloud data
+    if (cloudWatchlists.customLists && Array.isArray(cloudWatchlists.customLists)) {
+      try {
+        const existingCustomLists = JSON.parse(localStorage.getItem('flicklet.customLists.v2') || '{}');
+        const mergedCustomLists = {
+          ...existingCustomLists,
+          customLists: cloudWatchlists.customLists
+        };
+        localStorage.setItem('flicklet.customLists.v2', JSON.stringify(mergedCustomLists));
+        console.log('📋 Restored custom lists from cloud:', cloudWatchlists.customLists.length);
+        
+        // Trigger custom lists update event
+        window.dispatchEvent(new CustomEvent('customLists:updated'));
+      } catch (error) {
+        console.warn('Failed to restore custom lists:', error);
+      }
+    }
     
     // Trigger Library update event
     window.dispatchEvent(new CustomEvent('library:updated'));

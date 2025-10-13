@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTranslations } from '../../lib/language';
+import { useTranslations } from '@/lib/language';
 
 export type GenreDropdownProps = {
   selectedGenres: string[];

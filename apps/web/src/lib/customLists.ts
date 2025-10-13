@@ -15,6 +15,12 @@ class CustomListManager {
 
   constructor() {
     this.userLists = this.loadUserLists();
+    
+    // Listen for Firebase sync updates
+    window.addEventListener('customLists:updated', () => {
+      this.userLists = this.loadUserLists();
+      this.emitChange();
+    });
   }
 
   private loadUserLists(): UserLists {
