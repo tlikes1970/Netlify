@@ -171,7 +171,7 @@ export default function TabCard({ item, actions, tabType = 'watching' }: TabCard
 
   return (
     <article 
-      className="tab-card group relative flex bg-card border border-line rounded-2xl overflow-hidden shadow-lg hover:transform hover:-translate-y-0.5 transition-transform mb-8" 
+      className="tab-card group relative flex bg-card border border-line rounded-2xl overflow-hidden shadow-lg mb-8" 
       data-testid="tab-card" 
       aria-label={title}
     >

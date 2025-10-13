@@ -72,9 +72,19 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
 
   return (
             <div className="fixed inset-0 backdrop-blur-sm flex items-start justify-center pt-48 p-4" 
-                 style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: '999999 !important' }}>
+                 style={{ 
+                   backgroundColor: 'rgba(0,0,0,0.8)', 
+                   zIndex: '2147483647 !important',
+                   position: 'fixed !important'
+                 }}>
       <div className="rounded-xl w-full max-w-md p-6" 
-           style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', border: '1px solid', zIndex: '1000000 !important' }}>
+           style={{ 
+             backgroundColor: 'var(--card)', 
+             borderColor: 'var(--line)', 
+             border: '1px solid', 
+             zIndex: '2147483647 !important',
+             position: 'relative !important'
+           }}>
         
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>
@@ -201,9 +211,19 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
         {/* Confirmation Dialog */}
         {showConfirmation && (
                   <div className="fixed inset-0 backdrop-blur-sm flex items-start justify-center pt-48 p-4" 
-                       style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: '999999 !important' }}>
+                       style={{ 
+                         backgroundColor: 'rgba(0,0,0,0.8)', 
+                         zIndex: '2147483647 !important',
+                         position: 'fixed !important'
+                       }}>
             <div className="rounded-xl w-full max-w-md p-6" 
-                 style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', border: '1px solid', zIndex: '1000000 !important' }}>
+                 style={{ 
+                   backgroundColor: 'var(--card)', 
+                   borderColor: 'var(--line)', 
+                   border: '1px solid', 
+                   zIndex: '2147483647 !important',
+                   position: 'relative !important'
+                 }}>
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
                 {translations.itemAlreadyExists || 'Item Already Exists'}
               </h3>
