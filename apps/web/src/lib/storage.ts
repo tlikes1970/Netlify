@@ -2,9 +2,38 @@ import React from 'react';
 import type { MediaItem, MediaType } from '../components/cards/card.types';
 import type { ListName } from '../state/library.types';
 import { customListManager } from './customLists';
+import { authManager } from './auth';
 
 const KEY = 'flicklet.library.v2';
 const OLD_KEY = 'flicklet:v2:saved';
+
+// Helper function to get current Firebase user
+function getCurrentFirebaseUser() {
+  try {
+    // Use the imported auth manager
+    const currentUser = authManager.getCurrentUser();
+    if (currentUser) {
+      return currentUser;
+    }
+    
+    // Fallback to window auth manager (for compatibility)
+    const windowAuthManager = (window as any).authManager;
+    if (windowAuthManager?.getCurrentUser) {
+      return windowAuthManager.getCurrentUser();
+    }
+    
+    // Fallback to Firebase auth directly
+    const firebaseAuth = (window as any).firebase?.auth();
+    if (firebaseAuth?.currentUser) {
+      return firebaseAuth.currentUser;
+    }
+    
+    return null;
+  } catch (error) {
+    console.warn('Error getting current user:', error);
+    return null;
+  }
+}
 
 export interface LibraryEntry extends MediaItem {
   list: ListName;
@@ -57,6 +86,20 @@ const state: State = (() => {
 })();
 
 const subs = new Set<() => void>();
+
+// Listen for library cleared events (when user signs out)
+window.addEventListener('library:cleared', () => {
+  // Clear the state object
+  Object.keys(state).forEach(key => delete state[key]);
+  
+  // Clear localStorage
+  localStorage.removeItem(KEY);
+  
+  // Notify all subscribers
+  emit();
+  
+  console.log('🧹 Library state cleared for privacy');
+});
 
 function k(id: string | number, mediaType: MediaType) { return `${mediaType}:${id}`; }
 
@@ -141,6 +184,18 @@ export const Library = {
     }
     
     save(state); emit();
+    
+    // Trigger Firebase sync via event (avoids circular import)
+    const currentUser = getCurrentFirebaseUser();
+    console.log('🔄 Library upsert - currentUser:', currentUser?.uid || 'none');
+    if (currentUser) {
+      console.log('📡 Dispatching library:changed event for Firebase sync');
+      window.dispatchEvent(new CustomEvent('library:changed', { 
+        detail: { uid: currentUser.uid, operation: 'upsert' } 
+      }));
+    } else {
+      console.log('⚠️ No current user found, skipping Firebase sync');
+    }
   },
   move(id: string | number, mediaType: MediaType, list: ListName) {
     const key = k(id, mediaType);
@@ -163,6 +218,14 @@ export const Library = {
     }
     
     save(state); emit();
+    
+    // Trigger Firebase sync via event (avoids circular import)
+    const currentUser = getCurrentFirebaseUser();
+    if (currentUser) {
+      window.dispatchEvent(new CustomEvent('library:changed', { 
+        detail: { uid: currentUser.uid, operation: 'move' } 
+      }));
+    }
   },
   remove(id: string | number, mediaType: MediaType) {
     const key = k(id, mediaType);
@@ -176,6 +239,14 @@ export const Library = {
       delete state[key]; 
       save(state); 
       emit();
+      
+      // Trigger Firebase sync via event (avoids circular import)
+      const currentUser = getCurrentFirebaseUser();
+      if (currentUser) {
+        window.dispatchEvent(new CustomEvent('library:changed', { 
+          detail: { uid: currentUser.uid, operation: 'remove' } 
+        }));
+      }
     }
   },
   getByList(list: ListName): LibraryEntry[] {
@@ -191,14 +262,43 @@ export const Library = {
   getEntry(id: string | number, mediaType: MediaType): LibraryEntry | null {
     return state[k(id, mediaType)] || null;
   },
+  updateRating(id: string | number, mediaType: MediaType, rating: number) {
+    const key = k(id, mediaType);
+    const entry = state[key];
+    if (entry) {
+      state[key] = { ...entry, userRating: rating };
+      save(state);
+      emit();
+      
+      // Trigger Firebase sync via event
+      const currentUser = getCurrentFirebaseUser();
+      if (currentUser) {
+        window.dispatchEvent(new CustomEvent('library:changed', { 
+          detail: { uid: currentUser.uid, operation: 'rating' } 
+        }));
+      }
+    }
+  },
   subscribe(fn: () => void) { subs.add(fn); return () => subs.delete(fn); },
 };
 
 export function useLibrary(list: ListName) {
   const [items, setItems] = React.useState(() => Library.getByList(list));
   React.useEffect(() => {
-    setItems(Library.getByList(list));
-    const unsub = Library.subscribe(() => setItems(Library.getByList(list)));
+    const newItems = Library.getByList(list);
+    console.log(`🔍 useLibrary(${list}) updated:`, newItems.map(item => ({
+      title: item.title,
+      nextAirDate: item.nextAirDate
+    })));
+    setItems(newItems);
+    const unsub = Library.subscribe(() => {
+      const updatedItems = Library.getByList(list);
+      console.log(`🔔 Library.subscribe(${list}) triggered:`, updatedItems.map(item => ({
+        title: item.title,
+        nextAirDate: item.nextAirDate
+      })));
+      setItems(updatedItems);
+    });
     return unsub;
   }, [list]);
   return items;

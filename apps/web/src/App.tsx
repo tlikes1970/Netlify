@@ -13,8 +13,9 @@ import HomeYourShowsRail from '@/components/rails/HomeYourShowsRail';
 import HomeUpNextRail from '@/components/rails/HomeUpNextRail';
 import SettingsPage from '@/components/SettingsPage';
 import { SettingsFAB, ThemeToggleFAB } from '@/components/FABs';
+import GenreDropdown from '@/components/GenreDropdown';
 import { useEffect, useState } from 'react';
-import { Library } from '@/lib/storage';
+import { Library, useLibrary } from '@/lib/storage';
 import { mountActionBridge, setToastCallback } from '@/state/actions';
 import { useSettings, settingsManager } from '@/lib/settings';
 import { useForYou, useInTheaters } from '@/hooks/useTmdb';
@@ -46,10 +47,13 @@ export default function App() {
   const [searchGenre, setSearchGenre] = useState<string | null>(null);
   const searchActive = !!searchQuery.trim();
 
-  // Lists - using new Library system
-  const watching = Library.getByList('watching');
-  const wishlist = Library.getByList('wishlist');
-  const watched = Library.getByList('watched');
+  // Genre preferences for For You section
+  const [selectedGenres, setSelectedGenres] = useState<string[]>(['drama', 'comedy', 'horror']);
+
+  // Lists - using new Library system with reactive updates
+  const watching = useLibrary('watching');
+  const wishlist = useLibrary('wishlist');
+  const watched = useLibrary('watched');
 
   // Data rails
   const forYou = useForYou();
@@ -91,8 +95,8 @@ export default function App() {
           <>
             <Tabs current={view} onChange={setView} />
             {view === 'watching'  && <ListPage title="Currently Watching" items={watching} mode="watching" />}
-            {view === 'want'      && <ListPage title="Want to Watch"     items={wishlist}     mode="catalog"  />}
-            {view === 'watched'   && <ListPage title="Watched"           items={watched}  mode="watching" />}
+            {view === 'want'      && <ListPage title="Want to Watch"     items={wishlist}     mode="want"  />}
+            {view === 'watched'   && <ListPage title="Watched"           items={watched}  mode="watched" />}
                     {view === 'mylists'  && <MyListsPage />}
             {view === 'discovery' && <DiscoveryPage query={searchQuery} genreId={searchGenre} />}
           </>
@@ -134,12 +138,25 @@ export default function App() {
               <CommunityPanel />
             </Section>
 
-            {/* For you container with three rails */}
+            {/* For you container with genre dropdown and rails */}
             <Section title={translations.forYou}>
+              <div className="mb-4">
+                <GenreDropdown
+                  selectedGenres={selectedGenres}
+                  onGenresChange={setSelectedGenres}
+                  className="max-w-md"
+                />
+              </div>
               <div className="space-y-4">
-                <Rail id="for-you-drama"  title={translations.drama}  items={itemsFor('for-you-drama')}  skeletonCount={12} />
-                <Rail id="for-you-comedy" title={translations.comedy} items={itemsFor('for-you-comedy')} skeletonCount={12} />
-                <Rail id="for-you-horror" title={translations.horror} items={itemsFor('for-you-horror')} skeletonCount={12} />
+                {selectedGenres.map(genre => (
+                  <Rail 
+                    key={`for-you-${genre}`}
+                    id={`for-you-${genre}`}  
+                    title={genre.charAt(0).toUpperCase() + genre.slice(1)}  
+                    items={itemsFor('for-you-drama')}  // TODO: Filter by genre
+                    skeletonCount={12} 
+                  />
+                ))}
               </div>
             </Section>
 

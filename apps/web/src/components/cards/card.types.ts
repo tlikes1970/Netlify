@@ -6,7 +6,8 @@ export interface MediaItem {
   title: string;         // movie title or TV name
   year?: string;         // release year
   posterUrl?: string;    // 2:3 image url; can be undefined
-  voteAverage?: number;  // 0..10
+  voteAverage?: number;  // 0..10 (TMDB rating)
+  userRating?: number;   // 0..5 (user's personal rating)
   runtimeMins?: number;  // optional
   synopsis?: string;     // plot overview from TMDB
   nextAirDate?: string | null; // ISO date for TV next episode (watching only)
@@ -26,4 +27,5 @@ export interface CardActionHandlers {
   onDelete?: (item: MediaItem) => void;
   onOpen?: (item: MediaItem) => void;        // open details
   onHolidayAdd?: (item: MediaItem) => void;   // open list picker
+  onRatingChange?: (item: MediaItem, rating: number) => void; // user rating change
 }
