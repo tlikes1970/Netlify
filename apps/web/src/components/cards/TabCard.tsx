@@ -21,6 +21,8 @@ export default function TabCard({ item, actions, tabType = 'watching' }: TabCard
   const rating = typeof voteAverage === 'number' ? Math.round(voteAverage * 10) / 10 : undefined;
   const translations = useTranslations();
 
+  console.log(`🔍 TabCard rendering:`, { title, tabType, posterUrl: !!posterUrl });
+
   const handleRatingChange = (rating: number) => {
     if (actions?.onRatingChange) {
       actions.onRatingChange(item, rating);

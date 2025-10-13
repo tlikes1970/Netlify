@@ -54,6 +54,8 @@ export default function ListPage({ title, items, mode = 'watching' }: {
     },
   };
 
+  console.log(`🔍 ListPage(${title}) rendering:`, { itemsCount: items.length, items: items.slice(0, 2) });
+
   return (
     <section className="px-4 py-4">
       <h1 className="mb-3 text-base font-semibold" style={{ color: 'var(--text)' }}>{title}</h1>
