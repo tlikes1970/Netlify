@@ -2,6 +2,7 @@ import React from 'react';
 import type { CardActionHandlers, MediaItem } from './card.types';
 import { useTranslations } from '../../lib/language';
 import StarRating from './StarRating';
+import MyListToggle from '../MyListToggle';
 
 export type TabCardProps = {
   item: MediaItem;
@@ -176,7 +177,7 @@ export default function TabCard({ item, actions, tabType = 'watching' }: TabCard
     >
       {/* Poster (160px wide, 2:3 aspect ratio) */}
       <div 
-        className="poster flex-shrink-0 w-40 aspect-[2/3] bg-muted rounded-l-2xl" 
+        className="poster flex-shrink-0 w-40 aspect-[2/3] bg-muted rounded-l-2xl relative" 
         role="img" 
         aria-label={title}
       >
@@ -195,6 +196,9 @@ export default function TabCard({ item, actions, tabType = 'watching' }: TabCard
             {translations.noPoster}
           </div>
         )}
+        
+        {/* My List + button */}
+        <MyListToggle item={item} />
       </div>
 
       {/* Content */}
