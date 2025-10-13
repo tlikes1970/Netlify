@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { customListManager, useCustomLists } from '../lib/customLists';
 import { Library, getListDisplayName } from '../lib/storage';
 import { emit } from '../lib/events';
@@ -70,13 +71,13 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
     }
   };
 
-  return (
-            <div className="fixed inset-0 backdrop-blur-sm flex items-start justify-center pt-48 p-4" 
-                 style={{ 
-                   backgroundColor: 'rgba(0,0,0,0.8)', 
-                   zIndex: '2147483647 !important',
-                   position: 'fixed !important'
-                 }}>
+  return createPortal(
+    <div className="fixed inset-0 backdrop-blur-sm flex items-start justify-center pt-48 p-4" 
+         style={{ 
+           backgroundColor: 'rgba(0,0,0,0.8)', 
+           zIndex: '2147483647 !important',
+           position: 'fixed !important'
+         }}>
       <div className="rounded-xl w-full max-w-md p-6" 
            style={{ 
              backgroundColor: 'var(--card)', 
@@ -253,6 +254,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
