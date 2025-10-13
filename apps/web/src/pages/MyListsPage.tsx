@@ -80,6 +80,16 @@ export default function MyListsPage() {
     }
   };
 
+  const handleResetCounts = () => {
+    const confirmed = window.confirm(
+      'Are you sure you want to reset all custom list counts to zero? This will not delete the lists themselves, just reset their item counts.'
+    );
+    
+    if (confirmed) {
+      customListManager.resetAllCounts();
+    }
+  };
+
   // Action handlers for cards
   const actions = {
     onWant: (item: any) => {
@@ -111,15 +121,27 @@ export default function MyListsPage() {
           {translations.myLists || 'My Lists'}
         </h1>
         
-        {userLists.customLists.length < userLists.maxLists && (
-          <button
-            onClick={handleCreateList}
-            className="px-4 py-2 rounded-lg transition-colors"
-            style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-          >
-            {translations.createNewList || 'Create New List'}
-          </button>
-        )}
+        <div className="flex gap-2">
+          {userLists.customLists.length > 0 && (
+            <button
+              onClick={handleResetCounts}
+              className="px-3 py-2 rounded-lg transition-colors text-sm"
+              style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', border: '1px solid var(--line)' }}
+            >
+              Reset Counts
+            </button>
+          )}
+          
+          {userLists.customLists.length < userLists.maxLists && (
+            <button
+              onClick={handleCreateList}
+              className="px-4 py-2 rounded-lg transition-colors"
+              style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+            >
+              {translations.createNewList || 'Create New List'}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* List Selector */}

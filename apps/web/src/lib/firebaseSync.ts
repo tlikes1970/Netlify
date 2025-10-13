@@ -93,6 +93,7 @@ export class FirebaseSyncManager {
         watched: [],
       },
       customLists: [], // Add custom list definitions
+      customItems: {}, // FIXED: Store custom list items separately
     };
 
     // Get Library data from localStorage to avoid circular import
@@ -102,15 +103,24 @@ export class FirebaseSyncManager {
       // Group by media type and list
       Object.values(libraryData).forEach((item: any) => {
         const prunedItem = this.pruneItem(item);
-        const listKey = item.list.replace('custom:', ''); // Handle custom lists
         
-        if (item.mediaType === 'movie') {
-          if (watchlists.movies[listKey as keyof typeof watchlists.movies]) {
-            watchlists.movies[listKey as keyof typeof watchlists.movies].push(prunedItem);
+        if (item.list.startsWith('custom:')) {
+          // FIXED: Store custom list items in separate structure
+          const customListId = item.list.replace('custom:', '');
+          if (!watchlists.customItems[customListId]) {
+            watchlists.customItems[customListId] = [];
           }
-        } else if (item.mediaType === 'tv') {
-          if (watchlists.tv[listKey as keyof typeof watchlists.tv]) {
-            watchlists.tv[listKey as keyof typeof watchlists.tv].push(prunedItem);
+          watchlists.customItems[customListId].push(prunedItem);
+        } else {
+          // Standard lists (watching, wishlist, watched)
+          if (item.mediaType === 'movie') {
+            if (watchlists.movies[item.list as keyof typeof watchlists.movies]) {
+              watchlists.movies[item.list as keyof typeof watchlists.movies].push(prunedItem);
+            }
+          } else if (item.mediaType === 'tv') {
+            if (watchlists.tv[item.list as keyof typeof watchlists.tv]) {
+              watchlists.tv[item.list as keyof typeof watchlists.tv].push(prunedItem);
+            }
           }
         }
       });
@@ -325,6 +335,41 @@ export class FirebaseSyncManager {
             console.log('➕ Added TV show:', cloudItem.title);
           } else {
             console.log('⏭️ Skipping duplicate TV show:', cloudItem.title);
+          }
+        }
+      }
+    }
+    
+    // FIXED: Merge custom list items
+    if (cloudWatchlists.customItems && typeof cloudWatchlists.customItems === 'object') {
+      for (const [customListId, items] of Object.entries(cloudWatchlists.customItems)) {
+        if (Array.isArray(items)) {
+          for (const cloudItem of items) {
+            const key = `${cloudItem.media_type}:${cloudItem.id}`;
+            const itemId = `${cloudItem.media_type}:${cloudItem.id}`;
+            
+            // Only add if not already in Library
+            if (!existingIds.has(itemId)) {
+              const localItem = {
+                id: String(cloudItem.id),
+                mediaType: cloudItem.media_type,
+                title: cloudItem.title || cloudItem.name,
+                year: cloudItem.release_date || cloudItem.first_air_date,
+                posterUrl: cloudItem.poster_path,
+                voteAverage: cloudItem.vote_average,
+                userRating: cloudItem.user_rating || undefined,
+                synopsis: '', // Not stored in cloud
+                nextAirDate: cloudItem.next_air_date,
+                list: `custom:${customListId}`,
+                addedAt: Date.now(),
+              };
+              
+              cleanedData[key] = localItem;
+              existingIds.add(itemId);
+              console.log(`➕ Added custom list item: ${cloudItem.title || cloudItem.name} to ${customListId}`);
+            } else {
+              console.log(`⏭️ Skipping duplicate custom item: ${cloudItem.title || cloudItem.name}`);
+            }
           }
         }
       }

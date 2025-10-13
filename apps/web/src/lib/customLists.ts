@@ -29,6 +29,11 @@ class CustomListManager {
       this.emitChange();
       console.log('🧹 Custom lists cleared for privacy');
     });
+    
+    // Listen for library updates to sync counts
+    window.addEventListener('library:updated', () => {
+      this.syncCountsFromLibrary();
+    });
   }
 
   private loadUserLists(): UserLists {
@@ -150,6 +155,46 @@ class CustomListManager {
     if (list) {
       list.itemCount = Math.max(0, list.itemCount + delta);
       this.saveUserLists();
+    }
+  }
+
+  // Reset all custom list counts to zero
+  resetAllCounts(): void {
+    this.userLists.customLists.forEach(list => {
+      list.itemCount = 0;
+    });
+    this.saveUserLists();
+    this.emitChange();
+    console.log('🔄 Reset all custom list counts to zero');
+  }
+
+  // Sync counts from Library data
+  private syncCountsFromLibrary(): void {
+    try {
+      // Get Library data from localStorage
+      const libraryData = JSON.parse(localStorage.getItem('flicklet.library.v2') || '{}');
+      
+      // Reset all counts first
+      this.userLists.customLists.forEach(list => {
+        list.itemCount = 0;
+      });
+      
+      // Count items in each custom list
+      Object.values(libraryData).forEach((item: any) => {
+        if (item.list && item.list.startsWith('custom:')) {
+          const listId = item.list.replace('custom:', '');
+          const list = this.userLists.customLists.find(l => l.id === listId);
+          if (list) {
+            list.itemCount++;
+          }
+        }
+      });
+      
+      this.saveUserLists();
+      this.emitChange();
+      console.log('🔄 Synced custom list counts from Library');
+    } catch (error) {
+      console.error('Failed to sync counts from Library:', error);
     }
   }
 
