@@ -279,6 +279,19 @@ export const Library = {
       }
     }
   },
+
+  // Reload Library state from localStorage (used after Firebase merge)
+  reloadFromStorage() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(KEY) || '{}');
+      Object.keys(state).forEach(key => delete state[key]);
+      Object.assign(state, stored);
+      emit();
+      console.log('🔄 Library state reloaded from localStorage');
+    } catch (error) {
+      console.error('❌ Failed to reload Library from localStorage:', error);
+    }
+  },
   subscribe(fn: () => void) { subs.add(fn); return () => subs.delete(fn); },
 };
 

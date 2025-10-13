@@ -353,6 +353,10 @@ export class FirebaseSyncManager {
       }
     }
     
+    // Reload Library state from localStorage to ensure UI updates
+    const { Library } = await import('./storage');
+    Library.reloadFromStorage();
+    
     // Trigger Library update event
     window.dispatchEvent(new CustomEvent('library:updated'));
   }

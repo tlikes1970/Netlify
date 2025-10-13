@@ -21,6 +21,14 @@ class CustomListManager {
       this.userLists = this.loadUserLists();
       this.emitChange();
     });
+    
+    // Listen for library cleared events (when user signs out)
+    window.addEventListener('library:cleared', () => {
+      this.userLists = DEFAULT_USER_LISTS;
+      this.saveUserLists();
+      this.emitChange();
+      console.log('🧹 Custom lists cleared for privacy');
+    });
   }
 
   private loadUserLists(): UserLists {
