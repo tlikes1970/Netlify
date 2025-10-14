@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { MOBILE_NAV_HEIGHT, useViewportOffset } from './MobileTabs';
 
 // Settings FAB (COG icon) - Bottom left
 export function SettingsFAB({ onClick }: { onClick: () => void }) {
   const [isPressed, setIsPressed] = useState(false);
+  const { viewportOffset } = useViewportOffset();
+  
+  // Cap viewportOffset at 0 if <50px to avoid toolbar micro-shifts
+  const effectiveOffset = useMemo(() => Math.max(0, viewportOffset - 50), [viewportOffset]);
 
   const handleClick = () => {
     setIsPressed(true);
@@ -10,16 +15,20 @@ export function SettingsFAB({ onClick }: { onClick: () => void }) {
     setTimeout(() => setIsPressed(false), 200);
   };
 
+  console.log('🔧 SettingsFAB rendered');
+
   return (
     <button
       onClick={handleClick}
-      className={`fixed bottom-4 left-4 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ${
-        isPressed ? 'scale-95 opacity-80' : 'hover:scale-105 hover:opacity-90'
+      className={`fixed bottom-4 left-4 lg:bottom-4 lg:left-4 z-[9999] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-150 ease-out ${
+        isPressed ? 'scale-95 active:shadow-inner' : 'hover:scale-105 hover:shadow-md'
       }`}
-      style={{ 
-        backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)', 
-        borderColor: 'var(--line)', 
-        color: 'var(--text)' 
+      style={{
+        backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)',
+        borderColor: 'var(--line)',
+        color: 'var(--text)',
+        bottom: `calc(${MOBILE_NAV_HEIGHT}px + ${effectiveOffset}px + 16px)`, // Position above mobile nav + keyboard offset
+        left: '16px'
       }}
       aria-label="Open Settings"
       title="Settings"
@@ -52,6 +61,10 @@ export function SettingsFAB({ onClick }: { onClick: () => void }) {
 // Theme Toggle FAB (Moon/Sun icon) - Bottom right
 export function ThemeToggleFAB({ theme, onToggle }: { theme: 'light' | 'dark'; onToggle: () => void }) {
   const [isPressed, setIsPressed] = useState(false);
+  const { viewportOffset } = useViewportOffset();
+  
+  // Cap viewportOffset at 0 if <50px to avoid toolbar micro-shifts
+  const effectiveOffset = useMemo(() => Math.max(0, viewportOffset - 50), [viewportOffset]);
 
   const handleClick = () => {
     setIsPressed(true);
@@ -59,16 +72,20 @@ export function ThemeToggleFAB({ theme, onToggle }: { theme: 'light' | 'dark'; o
     setTimeout(() => setIsPressed(false), 200);
   };
 
+  console.log('🌙 ThemeToggleFAB rendered');
+
   return (
     <button
       onClick={handleClick}
-      className={`fixed bottom-4 right-4 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ${
-        isPressed ? 'scale-95 opacity-80' : 'hover:scale-105 hover:opacity-90'
+      className={`fixed bottom-4 right-4 lg:bottom-4 lg:right-4 z-[9999] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-150 ease-out ${
+        isPressed ? 'scale-95 active:shadow-inner' : 'hover:scale-105 hover:shadow-md'
       }`}
-      style={{ 
-        backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)', 
-        borderColor: 'var(--line)', 
-        color: 'var(--text)' 
+      style={{
+        backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)',
+        borderColor: 'var(--line)',
+        color: 'var(--text)',
+        bottom: `calc(${MOBILE_NAV_HEIGHT}px + ${effectiveOffset}px + 16px)`, // Position above mobile nav + keyboard offset
+        right: '16px'
       }}
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}

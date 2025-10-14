@@ -1,5 +1,5 @@
 import Tabs from '@/components/Tabs';
-import MobileTabs from '@/components/MobileTabs';
+import MobileTabs, { useViewportOffset } from '@/components/MobileTabs';
 import ListPage from '@/pages/ListPage';
 import MyListsPage from '@/pages/MyListsPage';
 import DiscoveryPage from '@/pages/DiscoveryPage';
@@ -39,6 +39,9 @@ export default function App() {
   const settings = useSettings();
   const [showSettings, setShowSettings] = useState(false);
   const translations = useTranslations();
+  
+  // Viewport offset for iOS Safari keyboard handling
+  const { viewportOffset } = useViewportOffset();
   
   // Notes and Tags modal state
   const [notesModalItem, setNotesModalItem] = useState<any>(null);
@@ -142,7 +145,7 @@ export default function App() {
 
   if (view !== 'home') {
     return (
-      <main className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+      <main className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)', minHeight: '100lvh' }}>
         <FlickletHeader
           appName="Flicklet"
           showMarquee={false}
@@ -154,17 +157,21 @@ export default function App() {
         ) : (
           <>
             {/* Desktop Tabs */}
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
               <Tabs current={view} onChange={setView} />
             </div>
             
             {/* Mobile Tabs */}
-            <div className="block md:hidden">
+            <div className="block lg:hidden">
               <MobileTabs current={view} onChange={setView} />
             </div>
             
             {/* Add bottom padding for mobile tabs */}
-            <div className="pb-20 md:pb-0">
+            <div className="pb-20 lg:pb-0" style={{ 
+              paddingBottom: viewportOffset > 0 && window.visualViewport?.offsetTop === 0 
+                ? `${80 + viewportOffset}px` 
+                : undefined 
+            }}>
               {view === 'watching'  && <ListPage title="Currently Watching" items={watching} mode="watching" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
               {view === 'want'      && <ListPage title="Want to Watch"     items={wishlist}     mode="want" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
               {view === 'watched'   && <ListPage title="Watched"           items={watched}  mode="watched" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
@@ -201,7 +208,7 @@ export default function App() {
 
   return (
     <PersonalityErrorBoundary>
-      <main className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+      <main className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)', minHeight: '100lvh' }}>
         <FlickletHeader
           appName="Flicklet"
           showMarquee={isHome && !searchActive}
@@ -219,7 +226,7 @@ export default function App() {
         />
         
         {/* Desktop Tabs - always visible */}
-        <div className="hidden md:block">
+        <div className="hidden lg:block">
           <Tabs current={view} onChange={(tab) => { 
             setView(tab); 
             if (searchActive) { 
@@ -230,7 +237,7 @@ export default function App() {
         </div>
         
         {/* Mobile Tabs - always visible */}
-        <div className="block md:hidden">
+        <div className="block lg:hidden">
           <MobileTabs current={view} onChange={(tab) => { 
             setView(tab); 
             if (searchActive) { 
@@ -245,7 +252,11 @@ export default function App() {
         ) : (
           <>
             {view === 'home' && (
-              <div className="pb-20 md:pb-0">
+              <div className="pb-20 lg:pb-0" style={{ 
+                paddingBottom: viewportOffset > 0 && window.visualViewport?.offsetTop === 0 
+                  ? `${80 + viewportOffset}px` 
+                  : undefined 
+              }}>
                 {/* Your Shows container with both rails */}
                 <Section title={translations.yourShows}>
                   <div className="space-y-4">
