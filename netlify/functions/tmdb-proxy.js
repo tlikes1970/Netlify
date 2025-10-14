@@ -1,11 +1,11 @@
 exports.handler = async (event) => {
   try {
-    const TMDB_KEY = (process.env.TMDB_KEY || '').trim();
-    if (!TMDB_KEY) {
+    const TMDB_TOKEN = (process.env.TMDB_TOKEN || '').trim();
+    if (!TMDB_TOKEN) {
       return {
         statusCode: 500,
         headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' },
-        body: JSON.stringify({ error: 'Missing TMDB_KEY on server' })
+        body: JSON.stringify({ error: 'Missing TMDB_TOKEN on server' })
       };
     }
 
@@ -14,10 +14,15 @@ exports.handler = async (event) => {
     const path = rawPath.startsWith('/') ? rawPath : '/' + rawPath;
 
     const { path: _omit, ...rest } = qs;
-    const params = new URLSearchParams({ api_key: TMDB_KEY, language: 'en-US', ...rest });
+    const params = new URLSearchParams({ language: 'en-US', ...rest });
 
     const url = `https://api.themoviedb.org/3${path}?${params.toString()}`;
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${TMDB_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
     const text = await res.text();
 
     return {
