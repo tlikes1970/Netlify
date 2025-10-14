@@ -290,6 +290,9 @@
       initTabs();
     </script>
     
+    <!-- Mobile Navigation -->
+    <script src="/js/mobile-navigation.js"></script>
+    
     <!-- Feedback layout fix -->
     <script src="/scripts/feedback-layout-fix.js"></script>
     
@@ -1167,6 +1170,78 @@
           aria-label="Discover tab - find new shows and movies"
         >
           <span class="tab-label" data-i18n="discover">Discover</span>
+        </button>
+      </nav>
+
+      <!-- Mobile Bottom Navigation Bar -->
+      <nav id="bottomNavigation" class="bottom-nav" role="tablist" aria-label="Mobile Navigation" hidden>
+        <button
+          id="bottomHomeTab"
+          class="bottom-tab is-active"
+          role="tab"
+          aria-controls="homeSection"
+          aria-selected="true"
+          tabindex="0"
+          title="Home"
+          aria-label="Home tab"
+        >
+          <span class="bottom-tab-icon">🏠</span>
+          <span class="bottom-tab-label" data-i18n="home">Home</span>
+        </button>
+        <button
+          id="bottomWatchingTab"
+          class="bottom-tab"
+          role="tab"
+          aria-controls="watchingSection"
+          aria-selected="false"
+          tabindex="-1"
+          title="Currently Watching"
+          aria-label="Watching tab"
+        >
+          <span class="bottom-tab-icon">▶️</span>
+          <span class="bottom-tab-label" data-i18n="currently_watching">Watching</span>
+          <span class="bottom-tab-badge" id="bottomWatchingBadge" data-count-for="#watchingList">0</span>
+        </button>
+        <button
+          id="bottomWishlistTab"
+          class="bottom-tab"
+          role="tab"
+          aria-controls="wishlistSection"
+          aria-selected="false"
+          tabindex="-1"
+          title="Want to Watch"
+          aria-label="Wishlist tab"
+        >
+          <span class="bottom-tab-icon">❤️</span>
+          <span class="bottom-tab-label" data-i18n="want_to_watch">Wishlist</span>
+          <span class="bottom-tab-badge" id="bottomWishlistBadge" data-count-for="#wishlistList">0</span>
+        </button>
+        <button
+          id="bottomWatchedTab"
+          class="bottom-tab"
+          role="tab"
+          aria-controls="watchedSection"
+          aria-selected="false"
+          tabindex="-1"
+          title="Already Watched"
+          aria-label="Watched tab"
+        >
+          <span class="bottom-tab-icon">✅</span>
+          <span class="bottom-tab-label" data-i18n="already_watched">Watched</span>
+          <span class="bottom-tab-badge" id="bottomWatchedBadge" data-count-for="#watchedList">0</span>
+        </button>
+        <button
+          id="bottomDiscoverTab"
+          class="bottom-tab"
+          role="tab"
+          aria-controls="discoverSection"
+          aria-selected="false"
+          tabindex="-1"
+          title="Discover"
+          aria-label="Discover tab"
+        >
+          <span class="bottom-tab-icon">🔍</span>
+          <span class="bottom-tab-label" data-i18n="discover">Discover</span>
         </button>
       </nav>
 
