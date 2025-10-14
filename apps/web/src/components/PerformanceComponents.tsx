@@ -120,15 +120,18 @@ export function PerformanceMetrics({
   isOnline,
   cacheStatus
 }: PerformanceMetricsProps) {
-  if (process.env.NODE_ENV !== 'development') return null;
-
-  return (
-    <div className="fixed bottom-20 right-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded-lg z-50">
-      <div>📊 Performance Metrics</div>
-      <div>Cache: {cacheSize} items</div>
-      <div>Visible: {visibleItems}/{totalItems}</div>
-      <div>Status: {isOnline ? '🟢 Online' : '🔴 Offline'}</div>
-      <div>Cache: {cacheStatus}</div>
-    </div>
-  );
+  // Only show in development mode
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return (
+      <div className="fixed bottom-20 right-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded-lg z-50">
+        <div>📊 Performance Metrics</div>
+        <div>Cache: {cacheSize} items</div>
+        <div>Visible: {visibleItems}/{totalItems}</div>
+        <div>Status: {isOnline ? '🟢 Online' : '🔴 Offline'}</div>
+        <div>Cache: {cacheStatus}</div>
+      </div>
+    );
+  }
+  
+  return null;
 }

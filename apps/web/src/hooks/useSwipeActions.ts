@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import type { MediaItem, CardActionHandlers } from './card.types';
+import type { MediaItem, CardActionHandlers } from '../components/cards/card.types';
 import { useIsDesktop } from './useDeviceDetection';
 
 export interface SwipeAction {

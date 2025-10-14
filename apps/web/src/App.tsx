@@ -56,14 +56,14 @@ export default function App() {
   const { user } = useAuth();
 
   // Service Worker for offline caching
-  const { isRegistered: swRegistered, isOnline } = useServiceWorker();
+  const { isOnline } = useServiceWorker();
 
   // Refresh function for pull-to-refresh
   const handleRefresh = async () => {
     console.log('🔄 Pull-to-refresh triggered');
     
     // Force refresh of library data
-    Library.refresh();
+    // Library.refresh(); // Commented out - method doesn't exist
     
     // Trigger custom refresh events for components that need it
     window.dispatchEvent(new CustomEvent('force-refresh'));
@@ -195,7 +195,7 @@ export default function App() {
               {view === 'want'      && <ListPage title="Want to Watch"     items={wishlist}     mode="want" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
               {view === 'watched'   && <ListPage title="Watched"           items={watched}  mode="watched" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
               {view === 'mylists'  && <MyListsPage />}
-              {view === 'discovery' && <DiscoveryPage query={searchQuery} genreId={searchGenre} />}
+              {view === 'discovery' && <DiscoveryPage query={searchQuery} genreId={searchGenre ? parseInt(searchGenre) : null} />}
             </div>
           </>
         )}
@@ -302,12 +302,12 @@ export default function App() {
                 {/* For you container with dynamic rails based on settings */}
                 <Section title={translations.forYou}>
                   <div className="space-y-4">
-                    {forYouContent.map((contentQuery, index) => (
+                    {forYouContent.map((contentQuery) => (
                       <Rail 
                         key={`for-you-${contentQuery.rowId}`}
                         id={`for-you-${contentQuery.rowId}`}  
                         title={contentQuery.title}
-                        items={contentQuery.data ?? []}
+                        items={Array.isArray(contentQuery.data) ? contentQuery.data : []}
                         skeletonCount={12} 
                       />
                     ))}
@@ -317,7 +317,7 @@ export default function App() {
                 {/* In theaters container with address/info header */}
                 <Section title={translations.inTheatersNearYou}>
                   <TheaterInfo />
-                  <Rail id="in-theaters" title={translations.nowPlaying} items={itemsFor('in-theaters')} skeletonCount={12} />
+                  <Rail id="in-theaters" title={translations.nowPlaying} items={Array.isArray(itemsFor('in-theaters')) ? itemsFor('in-theaters') : []} skeletonCount={12} />
                 </Section>
 
                 {/* Feedback container */}
@@ -327,29 +327,7 @@ export default function App() {
               </div>
             )}
 
-            {view === 'watching' && (
-              <ListPage 
-                title={translations.currentlyWatching} 
-                items={watching} 
-                mode="watching"
-              />
-            )}
-            {view === 'want' && (
-              <ListPage 
-                title={translations.wantToWatch} 
-                items={wishlist} 
-                mode="want"
-              />
-            )}
-            {view === 'watched' && (
-              <ListPage 
-                title={translations.alreadyWatched} 
-                items={watched} 
-                mode="watched"
-              />
-            )}
-            {view === 'mylists' && <MyListsPage />}
-            {view === 'discovery' && <DiscoveryPage />}
+            {/* These views are handled in the main home view above */}
             </>
           </PullToRefreshWrapper>
         )}

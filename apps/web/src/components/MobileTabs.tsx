@@ -58,7 +58,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
     }
     
     let prevOffsetTop = 0;
-    let throttleTimeout: NodeJS.Timeout | null = null;
+    let throttleTimeout: number | null = null;
     
     const handleViewportChange = () => {
       // Throttle to prevent rapid fires from iOS toolbar animations
@@ -69,7 +69,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
         
         const visualHeight = window.visualViewport.height;
         const screenHeight = window.innerHeight;
-        const currentOffsetTop = window.visualViewport.offsetTop;
+        const currentOffsetTop = window.visualViewport ? window.visualViewport.offsetTop : 0;
         
         // Calculate delta to detect toolbar changes vs keyboard
         const offsetTopDelta = Math.abs(currentOffsetTop - prevOffsetTop);
@@ -101,12 +101,12 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
     };
     
     // Scroll reset listener for aggressive repaint forcing
-    let scrollResetTimeout: NodeJS.Timeout | null = null;
+    let scrollResetTimeout: number | null = null;
     const handleScrollReset = () => {
       if (scrollResetTimeout) clearTimeout(scrollResetTimeout);
       scrollResetTimeout = setTimeout(() => {
         // Reset nav position on scroll end if toolbar is stable
-        if (Math.abs(window.visualViewport.offsetTop) < 50) {
+        if (window.visualViewport && Math.abs(window.visualViewport.offsetTop) < 50) {
           const navElement = document.querySelector('.mobile-nav') as HTMLElement;
           if (navElement) {
             navElement.style.bottom = '0px';

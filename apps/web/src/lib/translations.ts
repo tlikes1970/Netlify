@@ -7,6 +7,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     currentlyWatching: 'Currently Watching',
     wantToWatch: 'Want to Watch',
     watched: 'Watched',
+    alreadyWatched: 'Already Watched',
     holidays: 'Holidays',
     discovery: 'Discovery',
     
@@ -203,7 +204,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     shareListsWithFriends: 'Share lists with friends',
     
     // Theater Info
-    inTheatersNearYou: 'In Theaters Near You',
     yourLocalTheater: 'Your Local Theater',
     
     // Header
@@ -238,11 +238,52 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     forYou: 'For you',
     feedback: 'Feedback',
     
+    // Games
+    flickword: 'FlickWord',
+    flickword_tagline: 'Wordle-style daily word play',
+    daily_trivia: 'Daily Trivia',
+    daily_trivia_tagline: 'Fresh question, new bragging rights',
+    play_now: 'Play Now',
+    close_game: 'Close Game',
+    games: 'Games',
+    won: 'Won',
+    lost: 'Lost',
+    streak: 'Streak',
+    best: 'Best',
+    win_percent: 'Win %',
+    played: 'Played',
+    accuracy: 'Accuracy',
+    
+    // Theater
+    detectingLocation: 'Detecting your location...',
+    locationUnavailable: 'Location unavailable',
+    enableLocation: 'Enable location',
+    hideShowtimes: 'Hide',
+    findShowtimes: 'Find',
+    loadingTheaters: 'Loading theaters...',
+    noTheatersFound: 'No theaters found nearby. Try expanding your search radius.',
+    kmAway: 'km away',
+    hideTimes: 'Hide',
+    showTimes: 'Show',
+    todaysShowtimes: 'Today\'s Showtimes:',
+    
     // Rail Titles
     drama: 'Drama',
     comedy: 'Comedy',
     horror: 'Horror',
     nowPlaying: 'Now Playing',
+    
+    // Personality
+    hasExquisiteTaste: 'Has exquisite taste',
+    definitelyNotProcrastinating: 'Definitely not procrastinating',
+    breaksForPopcornOnly: 'Breaks for popcorn only',
+    curatesChaosLikeAPro: 'Curates chaos like a pro',
+    
+    // Community Player
+    community_player_placeholder: 'Community content coming soon',
+    
+    // Data Management
+    dataManagementComingSoon: 'Data management features coming soon',
     
     // Search
     searchPlaceholder: 'Search movies, shows, people…',
@@ -263,7 +304,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     marqueeMessage5: 'I\'ll be back.',
     
     // Theater & Location
-    inTheatersNearYou: 'In Theaters Near You',
     detectingLocation: 'Detecting your location...',
     locationUnavailable: 'Location unavailable',
     enableLocation: 'Enable location',
@@ -479,7 +519,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     shareListsWithFriends: 'Compartir listas con amigos',
     
     // Theater Info
-    inTheatersNearYou: 'En Cines Cerca de Ti',
     yourLocalTheater: 'Tu Cine Local',
     
     // Header
@@ -514,6 +553,47 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     forYou: 'Para ti',
     feedback: 'Comentarios',
     
+    // Games
+    flickword: 'FlickWord',
+    flickword_tagline: 'Juego de palabras diario estilo Wordle',
+    daily_trivia: 'Trivia Diaria',
+    daily_trivia_tagline: 'Pregunta fresca, nuevos derechos de presumir',
+    play_now: 'Jugar Ahora',
+    close_game: 'Cerrar Juego',
+    games: 'Juegos',
+    won: 'Ganados',
+    lost: 'Perdidos',
+    streak: 'Racha',
+    best: 'Mejor',
+    win_percent: '% Ganados',
+    played: 'Jugados',
+    accuracy: 'Precisión',
+    
+    // Theater
+    detectingLocation: 'Detectando tu ubicación...',
+    locationUnavailable: 'Ubicación no disponible',
+    enableLocation: 'Habilitar ubicación',
+    hideShowtimes: 'Ocultar',
+    findShowtimes: 'Buscar',
+    loadingTheaters: 'Cargando cines...',
+    noTheatersFound: 'No se encontraron cines cerca. Intenta expandir tu radio de búsqueda.',
+    kmAway: 'km de distancia',
+    hideTimes: 'Ocultar',
+    showTimes: 'Mostrar',
+    todaysShowtimes: 'Horarios de Hoy:',
+    
+    // Personality
+    hasExquisiteTaste: 'Tiene gusto exquisito',
+    definitelyNotProcrastinating: 'Definitivamente no procrastinando',
+    breaksForPopcornOnly: 'Descansos solo para palomitas',
+    curatesChaosLikeAPro: 'Curaduría del caos como profesional',
+    
+    // Community Player
+    community_player_placeholder: 'Contenido comunitario próximamente',
+    
+    // Data Management
+    dataManagementComingSoon: 'Funciones de gestión de datos próximamente',
+    
     // Rail Titles
     drama: 'Drama',
     comedy: 'Comedia',
@@ -539,7 +619,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     marqueeMessage5: 'Volveré.',
     
     // Theater & Location
-    inTheatersNearYou: 'En Cines Cerca de Ti',
     detectingLocation: 'Detectando tu ubicación...',
     locationUnavailable: 'Ubicación no disponible',
     enableLocation: 'Habilitar ubicación',

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { MediaItem, CardActionHandlers } from './card.types';
+import type { MediaItem, CardActionHandlers } from '../components/cards/card.types';
 import { useSwipeActions } from '../hooks/useSwipeActions';
 import { useIsDesktop } from '../hooks/useDeviceDetection';
 
