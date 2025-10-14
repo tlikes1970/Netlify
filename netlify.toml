@@ -1,5 +1,5 @@
 [functions]
-directory = "apps/web/netlify/functions"
+directory = "netlify/functions"
 
 [build]
 # Build the React app from apps/web directory
