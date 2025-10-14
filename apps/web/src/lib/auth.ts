@@ -15,6 +15,7 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { auth, db, googleProvider, appleProvider } from './firebase';
+import { firebaseSyncManager } from './firebaseSync';
 import type { AuthUser, UserDocument, UserSettings, AuthProvider } from './auth.types';
 
 class AuthManager {
@@ -38,12 +39,16 @@ class AuthManager {
       console.log('🔐 Auth state changed:', { 
         hasUser: !!authUser, 
         uid: authUser?.uid,
-        email: authUser?.email 
+        email: authUser?.email
       });
       
       if (authUser) {
         // Create/update user document in Firestore
         await this.ensureUserDocument(authUser);
+        
+        // Initialize Firebase sync and load cloud data
+        firebaseSyncManager.init();
+        await firebaseSyncManager.loadFromFirebase(authUser.uid);
       }
       
       // Notify all listeners
@@ -167,7 +172,33 @@ class AuthManager {
   }
 
   async signOut(): Promise<void> {
+    // Clear local data for privacy
+    this.clearLocalData();
+    
+    // Sign out from Firebase
     await firebaseSignOut(auth);
+  }
+
+  private clearLocalData(): void {
+    try {
+      // Clear all Flicklet data from localStorage
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('flicklet.')) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      // Dispatch event to clear Library state
+      window.dispatchEvent(new CustomEvent('library:cleared'));
+      
+      console.log('🧹 Cleared local data on sign-out for privacy');
+    } catch (error) {
+      console.error('❌ Failed to clear local data:', error);
+    }
   }
 
   async getUserSettings(uid: string): Promise<UserSettings | null> {

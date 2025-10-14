@@ -37,10 +37,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[99999] backdrop-blur-sm flex items-start justify-center pt-48 p-4" 
-         style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 99999 }}>
+    <div className="fixed inset-0 backdrop-blur-sm flex items-start justify-center pt-48 p-4" 
+         style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: '999999 !important' }}>
       <div className="rounded-xl w-full max-w-md p-6" 
-           style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', border: '1px solid', zIndex: 100000 }}>
+           style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', border: '1px solid', zIndex: '1000000 !important' }}>
         
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>

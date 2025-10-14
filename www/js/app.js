@@ -1022,6 +1022,16 @@ window.__useLegacyTabs = false;
           window.appData = { ...(window.appData || {}), ...cloud };
           window.saveAppData('flicklet-data', window.appData);
           window.__cloudHydrated = true;
+          
+          // FIXED: Invalidate WatchlistsAdapterV2 cache after cloud load
+          if (window.WatchlistsAdapterV2) {
+            console.log('[CloudLoad] Invalidating WatchlistsAdapterV2 cache after cloud load');
+            window.WatchlistsAdapterV2._cache = null;
+            window.WatchlistsAdapterV2._lastUid = null;
+            // Re-initialize the adapter with the new data
+            await window.WatchlistsAdapterV2.init(true);
+          }
+          
           console.info(
             '[CloudLoad] Hydrated from Firestore. Bytes:',
             window.computeBytes(JSON.stringify(window.appData)),

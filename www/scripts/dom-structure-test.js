@@ -64,3 +64,4 @@
     // Run the DOM analysis after a short delay to ensure rendering is complete
     setTimeout(analyzeDOMStructure, 2000);
 })();
+

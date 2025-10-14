@@ -9,6 +9,9 @@
   
   /* Aspect ratio helpers */
   --aspect-poster: 2 / 3;
+  
+  /* Pro features */
+  --pro: #f0b90b;
 }
 
 /* Poster aspect ratio utility */

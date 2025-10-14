@@ -1,5 +1,118 @@
 /* ========= MOBILE HOTFIX: layout, overflow, search, cards ========= */
 
+/* === MOBILE BOTTOM NAVIGATION BAR (HIGH PRIORITY) === */
+.bottom-nav {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  display: flex !important;
+  background: var(--bg, #ffffff) !important;
+  border-top: 1px solid var(--border, #e5e7eb) !important;
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom)) !important;
+  z-index: 1000 !important;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.bottom-tab {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 8px 4px !important;
+  background: none !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  min-height: 60px !important;
+  position: relative !important;
+  color: var(--text-secondary, #666) !important;
+  transform: scale(1) !important;
+}
+
+.bottom-tab.is-active {
+  color: var(--primary, #3b82f6) !important;
+  background: rgba(var(--primary-rgb, 59, 130, 246), 0.15) !important;
+  transform: scale(1.1) !important;
+}
+
+.bottom-tab.is-active::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 24px !important;
+  height: 3px !important;
+  background: var(--primary, #3b82f6) !important;
+  border-radius: 0 0 3px 3px !important;
+}
+
+.bottom-tab-icon {
+  font-size: 20px !important;
+  margin-bottom: 2px !important;
+  line-height: 1 !important;
+}
+
+.bottom-tab-label {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+}
+
+.bottom-tab-badge {
+  position: absolute !important;
+  top: 6px !important;
+  right: 8px !important;
+  background: var(--primary, #3b82f6) !important;
+  color: white !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  padding: 2px 6px !important;
+  border-radius: 10px !important;
+  min-width: 16px !important;
+  height: 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+}
+
+.bottom-tab-badge:empty {
+  display: none !important;
+}
+
+/* Force bottom nav visibility on mobile */
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: flex !important;
+  }
+  
+  #navigation {
+    display: none !important;
+  }
+  
+  .main-container,
+  .panels {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* Hide bottom nav on desktop */
+@media (min-width: 769px) {
+  .bottom-nav {
+    display: none !important;
+  }
+}
+
 /* Safe areas and base layout */
 :root {
   --safe-top: env(safe-area-inset-top);

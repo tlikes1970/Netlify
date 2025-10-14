@@ -227,6 +227,50 @@ export const Library = {
       }));
     }
   },
+  reorder(list: ListName, fromIndex: number, toIndex: number) {
+    const items = Library.getByList(list);
+    if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length) {
+      console.warn('🔄 Invalid reorder indices:', { fromIndex, toIndex, listLength: items.length });
+      return;
+    }
+    
+    if (fromIndex === toIndex) return;
+    
+    // Create a copy of the items array
+    const reorderedItems = [...items];
+    
+    // Remove item from fromIndex
+    const [movedItem] = reorderedItems.splice(fromIndex, 1);
+    
+    // Insert item at toIndex
+    reorderedItems.splice(toIndex, 0, movedItem);
+    
+    // Update the order by modifying the addedAt timestamps
+    // This ensures the items maintain their new order
+    const now = Date.now();
+    reorderedItems.forEach((item, index) => {
+      const key = k(item.id, item.mediaType);
+      if (state[key]) {
+        // Use a small offset to maintain order
+        state[key] = { 
+          ...state[key], 
+          addedAt: now + index 
+        };
+      }
+    });
+    
+    save(state); emit();
+    
+    console.log(`🔄 Reordered ${list} list: moved item from ${fromIndex} to ${toIndex}`);
+    
+    // Trigger Firebase sync via event
+    const currentUser = getCurrentFirebaseUser();
+    if (currentUser) {
+      window.dispatchEvent(new CustomEvent('library:changed', { 
+        detail: { uid: currentUser.uid, operation: 'reorder' } 
+      }));
+    }
+  },
   remove(id: string | number, mediaType: MediaType) {
     const key = k(id, mediaType);
     const entry = state[key];
@@ -249,6 +293,29 @@ export const Library = {
       }
     }
   },
+
+  updateNotesAndTags(id: string | number, mediaType: MediaType, notes: string, tags: string[]) {
+    const key = k(id, mediaType);
+    if (state[key]) {
+      state[key] = {
+        ...state[key],
+        userNotes: notes,
+        tags: tags
+      };
+      save(state); emit();
+      
+      console.log(`📝 Updated notes and tags for ${id}:`, { notes, tags });
+      
+      // Trigger Firebase sync via event
+      const currentUser = getCurrentFirebaseUser();
+      if (currentUser) {
+        window.dispatchEvent(new CustomEvent('library:changed', { 
+          detail: { uid: currentUser.uid, operation: 'updateNotesAndTags' } 
+        }));
+      }
+    }
+  },
+
   getByList(list: ListName): LibraryEntry[] {
     return Object.values(state).filter(x => x.list === list).sort((a,b) => a.addedAt - b.addedAt);
   },

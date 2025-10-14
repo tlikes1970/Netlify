@@ -27,11 +27,11 @@
     /**
      * Initialize the adapter with proper data migration
      */
-    async init() {
+    async init(forceReload = false) {
       log('Initializing WatchlistsAdapter v2...');
       
-      // Migrate existing data to Firebase structure
-      if (window.DataMigration && window.appData) {
+      // Migrate existing data to Firebase structure (only if not force reloading)
+      if (!forceReload && window.DataMigration && window.appData) {
         const migration = window.DataMigration.performMigration(window.appData);
         if (migration.success) {
           window.appData = migration.data;
@@ -523,7 +523,10 @@
           tvWatched: tv.watched?.length || 0,
           moviesWatching: movies.watching?.length || 0,
           moviesWishlist: movies.wishlist?.length || 0,
-          moviesWatched: movies.watched?.length || 0
+          moviesWatched: movies.watched?.length || 0,
+          hasWatchlists: !!appData.watchlists,
+          watchlistsMovies: appData.watchlists?.movies ? Object.keys(appData.watchlists.movies) : 'none',
+          watchlistsTv: appData.watchlists?.tv ? Object.keys(appData.watchlists.tv) : 'none'
         });
         
         // Search through all lists to find the item
@@ -535,6 +538,21 @@
           ...(Array.isArray(movies.wishlist) ? movies.wishlist : []),
           ...(Array.isArray(movies.watched) ? movies.watched : []),
         ];
+        
+        // Also search in watchlists structure if available
+        if (appData.watchlists) {
+          const watchlistsMovies = appData.watchlists.movies || {};
+          const watchlistsTv = appData.watchlists.tv || {};
+          
+          allLists.push(
+            ...(Array.isArray(watchlistsMovies.watching) ? watchlistsMovies.watching : []),
+            ...(Array.isArray(watchlistsMovies.wishlist) ? watchlistsMovies.wishlist : []),
+            ...(Array.isArray(watchlistsMovies.watched) ? watchlistsMovies.watched : []),
+            ...(Array.isArray(watchlistsTv.watching) ? watchlistsTv.watching : []),
+            ...(Array.isArray(watchlistsTv.wishlist) ? watchlistsTv.wishlist : []),
+            ...(Array.isArray(watchlistsTv.watched) ? watchlistsTv.watched : [])
+          );
+        }
         
         const item = allLists.find((item) => 
           String(item.id || item.tmdb_id || item.tmdbId) === idStr

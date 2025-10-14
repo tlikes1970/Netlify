@@ -72,7 +72,8 @@ export class FirebaseSyncManager {
       vote_average: typeof item.voteAverage === 'number' ? item.voteAverage : null,
       user_rating: typeof item.userRating === 'number' ? item.userRating : null, // V2 addition
       added_date: item.addedAt ? new Date(item.addedAt).toISOString() : null,
-      user_notes: null, // V2 doesn't have user notes yet
+      user_notes: item.userNotes || null, // V2 addition for user notes
+      user_tags: item.tags || [], // V2 addition for user tags
       next_air_date: item.nextAirDate || null, // V2 addition for TV shows
     };
   }

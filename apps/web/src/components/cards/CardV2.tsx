@@ -1,7 +1,9 @@
 import React from 'react';
 import type { CardContext, CardActionHandlers, MediaItem } from './card.types';
 import { useTranslations } from '../../lib/language';
+import SwipeableCard from '../SwipeableCard';
 import MyListToggle from '../MyListToggle';
+import { OptimizedImage } from '../OptimizedImage';
 
 export type CardV2Props = {
   item: MediaItem;
@@ -10,6 +12,7 @@ export type CardV2Props = {
   // optional presentation flags
   compact?: boolean;          // smaller text; still 2:3 poster
   showRating?: boolean;       // default true where voteAverage exists
+  disableSwipe?: boolean;     // disable swipe actions for horizontal scrolling contexts
 };
 
 /**
@@ -18,7 +21,7 @@ export type CardV2Props = {
  * - context-specific action bar
  * - optional Holiday + chip top-right (where relevant)
  */
-export default function CardV2({ item, context, actions, compact, showRating = true }: CardV2Props) {
+export default function CardV2({ item, context, actions, compact, showRating = true, disableSwipe = false }: CardV2Props) {
   const { title, year, posterUrl, voteAverage } = item;
   const rating = typeof voteAverage === 'number' ? Math.round(voteAverage * 10) / 10 : undefined;
   const translations = useTranslations();
@@ -26,7 +29,13 @@ export default function CardV2({ item, context, actions, compact, showRating = t
   const showMyListBtn = context === 'tab-foryou' || context === 'search' || context === 'home' || context === 'tab-watching' || context === 'holiday';
 
   return (
-    <article className="curated-card v2 group w-[154px] select-none" data-testid="cardv2" aria-label={title}>
+    <SwipeableCard
+      item={item}
+      actions={actions}
+      context={context}
+      disableSwipe={disableSwipe}
+    >
+      <article className="curated-card v2 group w-[120px] sm:w-[154px] select-none" data-testid="cardv2" aria-label={title}>
       <div 
         className="relative rounded-xl border shadow-sm overflow-hidden"
         style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)' }}
@@ -39,10 +48,11 @@ export default function CardV2({ item, context, actions, compact, showRating = t
           style={{ backgroundColor: 'var(--muted)' }}
         >
           {posterUrl ? (
-            <img
+            <OptimizedImage
               src={posterUrl}
               alt={title}
-              className="h-full w-full object-cover"
+              context="poster"
+              className="h-full w-full"
               loading="lazy"
             />
           ) : (
@@ -62,19 +72,43 @@ export default function CardV2({ item, context, actions, compact, showRating = t
 
         {/* Meta */}
         <div className="p-2">
-          <h3 
-            className={["truncate", compact ? "text-[13px]" : "text-sm", "font-medium"].join(' ')} 
-            title={title}
-            style={{ color: 'var(--text)' }}
-          >
-            {title}
-          </h3>
+          <div className="flex items-center gap-1">
+            <h3 
+              className={["truncate", compact ? "text-[13px]" : "text-sm", "font-medium"].join(' ')} 
+              title={title}
+              style={{ color: 'var(--text)' }}
+            >
+              {title}
+            </h3>
+            
+            {/* Notes and Tags Indicators */}
+            <div className="flex gap-0.5 flex-shrink-0">
+              {item.userNotes && item.userNotes.trim() && (
+                <span 
+                  className="text-[10px] cursor-pointer hover:scale-110 transition-transform"
+                  title={`Notes: ${item.userNotes.substring(0, 50)}${item.userNotes.length > 50 ? '...' : ''}`}
+                  onClick={() => actions?.onNotesEdit?.(item)}
+                >
+                  📝
+                </span>
+              )}
+              {item.tags && item.tags.length > 0 && (
+                <span 
+                  className="text-[10px] cursor-pointer hover:scale-110 transition-transform"
+                  title={`Tags: ${item.tags.join(', ')}`}
+                  onClick={() => actions?.onNotesEdit?.(item)}
+                >
+                  🏷️
+                </span>
+              )}
+            </div>
+          </div>
           <div 
             className="mt-0.5 flex items-center justify-between text-[11px]"
             style={{ color: 'var(--muted)' }}
           >
-            <span>{year || ''}</span>
-            {showRating && rating ? <span aria-label="rating">{rating}</span> : <span />}
+            <span>{year || 'TBA'}</span>
+            {showRating && <span aria-label="rating">{rating || '—'}</span>}
           </div>
         </div>
 
@@ -82,6 +116,7 @@ export default function CardV2({ item, context, actions, compact, showRating = t
         <CardActions context={context} item={item} actions={actions} />
       </div>
     </article>
+    </SwipeableCard>
   );
 }
 
@@ -130,8 +165,8 @@ function CardActions({ context, item, actions }: { context: CardContext; item: M
       <button
         type="button"
         onClick={handleClick}
-        className={`rounded-lg border px-2 py-1 text-[11px] leading-none transition-all duration-200 ${
-          isPressed ? 'scale-95 opacity-80' : 'hover:scale-105 hover:opacity-90'
+        className={`rounded-lg border px-2 py-1 text-[11px] leading-none transition-all duration-150 ease-out ${
+          isPressed ? 'scale-95 active:shadow-inner' : 'hover:scale-105 hover:shadow-md'
         } ${isLoadingState ? 'cursor-wait' : 'cursor-pointer'}`}
         style={{ 
           backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)', 

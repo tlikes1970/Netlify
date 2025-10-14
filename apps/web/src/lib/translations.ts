@@ -261,6 +261,20 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     marqueeMessage3: 'Houston, we have a problem.',
     marqueeMessage4: 'May the odds be ever in your favor.',
     marqueeMessage5: 'I\'ll be back.',
+    
+    // Theater & Location
+    inTheatersNearYou: 'In Theaters Near You',
+    detectingLocation: 'Detecting your location...',
+    locationUnavailable: 'Location unavailable',
+    enableLocation: 'Enable location',
+    findShowtimes: 'Find Showtimes',
+    hideShowtimes: 'Hide Showtimes',
+    loadingTheaters: 'Loading theaters...',
+    noTheatersFound: 'No theaters found nearby. Try expanding your search radius.',
+    showTimes: 'Show Times',
+    hideTimes: 'Hide Times',
+    todaysShowtimes: 'Today\'s Showtimes:',
+    kmAway: 'km away',
   },
   
   es: {
@@ -523,6 +537,20 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     marqueeMessage3: 'Houston, tenemos un problema.',
     marqueeMessage4: 'Que la suerte esté siempre de tu lado.',
     marqueeMessage5: 'Volveré.',
+    
+    // Theater & Location
+    inTheatersNearYou: 'En Cines Cerca de Ti',
+    detectingLocation: 'Detectando tu ubicación...',
+    locationUnavailable: 'Ubicación no disponible',
+    enableLocation: 'Habilitar ubicación',
+    findShowtimes: 'Encontrar Horarios',
+    hideShowtimes: 'Ocultar Horarios',
+    loadingTheaters: 'Cargando cines...',
+    noTheatersFound: 'No se encontraron cines cerca. Intenta expandir el radio de búsqueda.',
+    showTimes: 'Mostrar Horarios',
+    hideTimes: 'Ocultar Horarios',
+    todaysShowtimes: 'Horarios de Hoy:',
+    kmAway: 'km de distancia',
   },
 };
 

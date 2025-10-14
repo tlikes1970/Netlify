@@ -163,12 +163,12 @@
 /* Show bottom nav on mobile, hide top nav */
 @media (max-width: 768px) {
   .bottom-nav {
-    display: flex;
+    display: flex !important;
   }
   
   /* Hide top navigation on mobile */
   #navigation {
-    display: none;
+    display: none !important;
   }
   
   /* Add bottom padding to main content to prevent overlap */

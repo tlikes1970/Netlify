@@ -1,6 +1,7 @@
 import CardV2 from './cards/CardV2';
 import type { MediaItem } from './cards/card.types';
 import { Library } from '@/lib/storage';
+import { useRailImagePreload } from '../hooks/useImagePreload';
 
 type Item = { id: string; kind?: 'movie'|'tv'; title?: string; poster?: string };
 
@@ -24,6 +25,9 @@ export default function Rail({ id, title, enabled = true, skeletonCount = 0, ite
   };
 
   const context = getContext(id);
+
+  // Preload images for better performance
+  useRailImagePreload(list.map(item => ({ posterUrl: item.poster })));
 
   // Action handlers using new Library system
   const actions = {
@@ -96,6 +100,7 @@ export default function Rail({ id, title, enabled = true, skeletonCount = 0, ite
                 item={mediaItem}
                 context={context}
                 actions={actions}
+                disableSwipe={true}
               />
             </div>
           );

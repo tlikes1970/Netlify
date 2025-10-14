@@ -2,16 +2,82 @@ import TabCard from '@/components/cards/TabCard';
 import type { MediaItem } from '@/components/cards/card.types';
 import { Library, LibraryEntry } from '@/lib/storage';
 import { useSettings, getPersonalityText } from '@/lib/settings';
+import { useDragAndDrop } from '@/hooks/useDragAndDrop';
+import { useState, useMemo } from 'react';
 
-export default function ListPage({ title, items, mode = 'watching' }: {
+export default function ListPage({ title, items, mode = 'watching', onNotesEdit, onTagsEdit }: {
   title: string;
   items: LibraryEntry[];
   mode?: 'watching'|'want'|'watched'|'discovery';
+  onNotesEdit?: (item: MediaItem) => void;
+  onTagsEdit?: (item: MediaItem) => void;
 }) {
   const settings = useSettings();
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [sortByTag, setSortByTag] = useState<boolean>(false);
   
   // Map mode to CardV2 context
   const context = mode === 'watching' ? 'tab-watching' : 'tab-foryou';
+
+  // Get all unique tags from items
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    items.forEach(item => {
+      if (item.tags) {
+        item.tags.forEach(tag => tagSet.add(tag));
+      }
+    });
+    return Array.from(tagSet).sort();
+  }, [items]);
+
+  // Filter and sort items
+  const processedItems = useMemo(() => {
+    let result = items;
+    
+    // Filter by selected tag
+    if (selectedTag) {
+      result = result.filter(item => item.tags && item.tags.includes(selectedTag));
+    }
+    
+    // Sort by tag if enabled
+    if (sortByTag) {
+      result = [...result].sort((a, b) => {
+        const aHasTags = a.tags && a.tags.length > 0;
+        const bHasTags = b.tags && b.tags.length > 0;
+        
+        // Items with tags come first
+        if (aHasTags && !bHasTags) return -1;
+        if (!aHasTags && bHasTags) return 1;
+        
+        // If both have tags, sort alphabetically by first tag
+        if (aHasTags && bHasTags) {
+          const aFirstTag = a.tags![0].toLowerCase();
+          const bFirstTag = b.tags![0].toLowerCase();
+          return aFirstTag.localeCompare(bFirstTag);
+        }
+        
+        // If neither has tags, maintain original order
+        return 0;
+      });
+    }
+    
+    return result;
+  }, [items, selectedTag, sortByTag]);
+
+  // Drag and drop functionality
+  const handleReorder = (fromIndex: number, toIndex: number) => {
+    console.log(`🔄 Reordering item from index ${fromIndex} to ${toIndex} in ${mode} list`);
+    Library.reorder(mode, fromIndex, toIndex);
+  };
+
+  const {
+    dragState,
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+  } = useDragAndDrop(processedItems, handleReorder);
 
   // Get appropriate empty state text based on title
   const getEmptyText = () => {
@@ -52,14 +118,74 @@ export default function ListPage({ title, items, mode = 'watching' }: {
         Library.updateRating(item.id, item.mediaType, rating);
       }
     },
+    onNotesEdit: onNotesEdit,
+    onTagsEdit: onTagsEdit,
   };
 
   return (
     <section className="px-4 py-4">
-      <h1 className="mb-3 text-base font-semibold" style={{ color: 'var(--text)' }}>{title}</h1>
-      {items.length > 0 ? (
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <h1 className="text-base font-semibold" style={{ color: 'var(--text)' }}>{title}</h1>
+          {sortByTag && (
+            <span 
+              className="px-2 py-1 rounded-full text-xs font-medium"
+              style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+            >
+              🏷️ Sorted by Tag
+            </span>
+          )}
+        </div>
+        
+        {/* Tag Controls */}
+        {allTags.length > 0 && (
+          <div className="flex items-center gap-3">
+            {/* Sort by Tag Toggle */}
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={sortByTag}
+                onChange={(e) => setSortByTag(e.target.checked)}
+                className="rounded"
+              />
+              <span className="text-sm" style={{ color: 'var(--muted)' }}>Sort by tag</span>
+            </label>
+            
+            {/* Tag Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm" style={{ color: 'var(--muted)' }}>Filter by tag:</span>
+              <select
+                value={selectedTag || ''}
+                onChange={(e) => setSelectedTag(e.target.value || null)}
+                className="px-2 py-1 rounded text-sm border"
+                style={{ 
+                  backgroundColor: 'var(--input-bg)', 
+                  borderColor: 'var(--line)', 
+                  color: 'var(--text)' 
+                }}
+              >
+                <option value="">All items</option>
+                {allTags.map(tag => (
+                  <option key={tag} value={tag}>{tag}</option>
+                ))}
+              </select>
+              {(selectedTag || sortByTag) && (
+                <button
+                  onClick={() => { setSelectedTag(null); setSortByTag(false); }}
+                  className="text-xs px-2 py-1 rounded"
+                  style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {processedItems.length > 0 ? (
         <div className="space-y-0">
-          {items.map(item => {
+          {processedItems.map((item, index) => {
             // LibraryEntry already has all MediaItem properties
             const mediaItem: MediaItem = {
               id: item.id,
@@ -71,6 +197,8 @@ export default function ListPage({ title, items, mode = 'watching' }: {
               userRating: item.userRating,
               synopsis: item.synopsis,
               nextAirDate: item.nextAirDate,
+              userNotes: item.userNotes, // Pass notes
+              tags: item.tags,           // Pass tags
             };
 
             return (
@@ -79,14 +207,35 @@ export default function ListPage({ title, items, mode = 'watching' }: {
                 item={mediaItem}
                 actions={actions}
                 tabType={mode}
+                index={index}
+                dragState={dragState}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
               />
             );
           })}
         </div>
       ) : (
         <div className="text-center py-8" style={{ color: 'var(--muted)' }}>
-          <p className="text-sm">{getEmptyText()}</p>
-          <p className="text-xs mt-2">Add some shows to get started!</p>
+          <p className="text-sm">
+            {selectedTag 
+              ? `No items found with tag "${selectedTag}"`
+              : sortByTag
+              ? 'No items with tags found'
+              : getEmptyText()
+            }
+          </p>
+          <p className="text-xs mt-2">
+            {selectedTag 
+              ? 'Try selecting a different tag or clear the filter'
+              : sortByTag
+              ? 'Add tags to items to see them when sorting by tag'
+              : 'Add some shows to get started!'
+            }
+          </p>
         </div>
       )}
     </section>

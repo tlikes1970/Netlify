@@ -5,6 +5,9 @@ import AccountButton from "./AccountButton";
 import SnarkDisplay from "./SnarkDisplay";
 import UsernamePromptModal from "./UsernamePromptModal";
 import { useUsername } from "../hooks/useUsername";
+import FilterChips from "./FilterChips";
+import SearchSuggestions, { addSearchToHistory } from "./SearchSuggestions";
+import VoiceSearch from "./VoiceSearch";
 
 export type FlickletHeaderProps = {
   appName?: string;
@@ -178,27 +181,177 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | 
   const translations = useTranslations();
   const [q, setQ] = React.useState('');
   const [g, setG] = React.useState<string | null>(null);
-  const submit = () => onSearch?.(q.trim(), g);
-  const clear = () => { setQ(''); setG(null); onClear?.(); };
+  const [searchMode, setSearchMode] = React.useState<'title' | 'tag'>('title');
+  const [showSuggestions, setShowSuggestions] = React.useState(false);
+  const [isFocused, setIsFocused] = React.useState(false);
+  const searchContainerRef = React.useRef<HTMLDivElement>(null);
+  
+  const submit = () => {
+    if (searchMode === 'tag') {
+      // For tag search, we'll use a special prefix to indicate it's a tag search
+      onSearch?.(`tag:${q.trim()}`, g);
+    } else {
+      onSearch?.(q.trim(), g);
+    }
+    
+    // Add to search history
+    if (q.trim()) {
+      addSearchToHistory(q.trim());
+    }
+    
+    setShowSuggestions(false);
+  };
+  
+  const clear = () => { 
+    setQ(''); 
+    setG(null); 
+    setSearchMode('title'); 
+    setShowSuggestions(false);
+    onClear?.(); 
+  };
+  
+  const handleSuggestionClick = (suggestion: string) => {
+    setQ(suggestion);
+    setShowSuggestions(false);
+    // Auto-submit the suggestion
+    setTimeout(() => {
+      if (searchMode === 'tag') {
+        onSearch?.(`tag:${suggestion.trim()}`, g);
+      } else {
+        onSearch?.(suggestion.trim(), g);
+      }
+      addSearchToHistory(suggestion.trim());
+    }, 100);
+  };
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQ(e.target.value);
+    setShowSuggestions(e.target.value.length > 0 && isFocused);
+  };
+  
+  const handleInputFocus = () => {
+    setIsFocused(true);
+    setShowSuggestions(q.length > 0);
+  };
+  
+  const handleInputBlur = () => {
+    // Delay hiding suggestions to allow clicking on them
+    setTimeout(() => {
+      setIsFocused(false);
+      setShowSuggestions(false);
+    }, 150);
+  };
+  
+  // Close suggestions when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+  
   return (
-    <div id="search-container" className="flex items-center gap-2 rounded-xl border bg-background p-2" data-testid="search-row">
-      <input
-        type="text"
-        placeholder={translations.searchPlaceholder}
-        value={q}
-        onChange={e => setQ(e.target.value)}
-        onKeyDown={e => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') clear(); }}
-        className="flex-1 rounded-lg border px-3 py-2 text-sm outline-none ring-0 focus:border-primary"
-      />
-      <select className="rounded-lg border px-2 py-2 text-sm" value={g ?? translations.allGenres} onChange={e => setG(e.target.value === translations.allGenres ? null : e.target.value)}>
-        <option>{translations.allGenres}</option>
-        <option value="28">{translations.action}</option>
-        <option value="35">{translations.comedy}</option>
-        <option value="18">{translations.drama}</option>
-        <option value="27">{translations.horror}</option>
-      </select>
-      <button className="rounded-lg border px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground" onClick={submit}>{translations.search}</button>
-      <button className="rounded-lg border px-3 py-2 text-sm hover:bg-muted" onClick={clear}>{translations.clear}</button>
+    <div 
+      ref={searchContainerRef}
+      id="search-container" 
+      className="relative flex flex-col gap-3 rounded-2xl border bg-background p-4" 
+      data-testid="search-row"
+    >
+      {/* Search Input - Takes up most of the space */}
+      <div className="relative flex-1 min-w-0">
+        <div className="relative flex items-center">
+          <input
+            type="text"
+            placeholder={searchMode === 'tag' ? 'Search by tag...' : translations.searchPlaceholder}
+            value={q}
+            onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
+            onKeyDown={e => { 
+              if (e.key === 'Enter') submit(); 
+              if (e.key === 'Escape') clear(); 
+            }}
+            className="w-full rounded-xl border px-4 py-3 pr-12 text-sm outline-none ring-0 focus:border-primary"
+            spellCheck="true"
+          />
+          
+          {/* Voice Search Button */}
+          <div className="absolute right-2">
+            <VoiceSearch
+              onVoiceResult={(text) => {
+                setQ(text);
+                setShowSuggestions(false);
+                // Auto-submit the voice result
+                setTimeout(() => {
+                  if (searchMode === 'tag') {
+                    onSearch?.(`tag:${text.trim()}`, g);
+                  } else {
+                    onSearch?.(text.trim(), g);
+                  }
+                  addSearchToHistory(text.trim());
+                }, 100);
+              }}
+              onError={(error) => {
+                console.warn('Voice search error:', error);
+              }}
+            />
+          </div>
+        </div>
+        
+        {/* Search Suggestions Dropdown */}
+        <SearchSuggestions
+          query={q}
+          onSuggestionClick={handleSuggestionClick}
+          onClose={() => setShowSuggestions(false)}
+          isVisible={showSuggestions}
+        />
+      </div>
+      
+      {/* Controls Row - Horizontal on all screen sizes */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* Search Mode Toggle - Compact */}
+        <div className="flex rounded-lg border overflow-hidden flex-shrink-0">
+          <button
+            onClick={() => setSearchMode('title')}
+            className={`px-2 py-2 text-xs font-medium transition-colors ${
+              searchMode === 'title' 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-background text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            Title
+          </button>
+          <button
+            onClick={() => setSearchMode('tag')}
+            className={`px-2 py-2 text-xs font-medium transition-colors ${
+              searchMode === 'tag' 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-background text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            Tag
+          </button>
+        </div>
+        
+        {/* Genre Filter Chips - Compact */}
+        <div className="flex-shrink-0 min-w-[140px] flex-1 max-w-[200px]">
+          <FilterChips 
+            selectedGenre={g}
+            onGenreChange={setG}
+            className="w-full"
+          />
+        </div>
+        
+        {/* Action Buttons - Compact */}
+        <div className="flex gap-2 flex-shrink-0">
+          <button className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md" onClick={submit}>{translations.search}</button>
+          <button className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-muted transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md" onClick={clear}>{translations.clear}</button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -258,8 +411,8 @@ function MarqueeBar({
             aria-live="polite"
             data-testid="marquee-scroller"
           >
-            <span className="pr-12 align-middle text-xs sm:text-sm">{msg}</span>
-            <span className="pr-12 align-middle text-xs sm:text-sm" aria-hidden>{msg}</span>
+            <span className="pr-12 align-middle text-sm sm:text-base md:text-lg">{msg}</span>
+            <span className="pr-12 align-middle text-sm sm:text-base md:text-lg" aria-hidden>{msg}</span>
           </div>
         </div>
       </div>

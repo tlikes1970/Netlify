@@ -37,6 +37,8 @@
    */
   function initMobileNavigation() {
     console.log('📱 Initializing mobile navigation...');
+    console.log('📱 Screen width:', window.innerWidth);
+    console.log('📱 Bottom nav element:', document.getElementById('bottomNavigation'));
 
     // Show/hide bottom nav based on screen size
     updateNavigationVisibility();

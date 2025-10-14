@@ -11,6 +11,8 @@ export interface MediaItem {
   runtimeMins?: number;  // optional
   synopsis?: string;     // plot overview from TMDB
   nextAirDate?: string | null; // ISO date for TV next episode (watching only)
+  userNotes?: string;    // user's personal notes/review
+  tags?: string[];       // user-defined tags
 }
 
 export type CardContext =
@@ -28,4 +30,6 @@ export interface CardActionHandlers {
   onOpen?: (item: MediaItem) => void;        // open details
   onHolidayAdd?: (item: MediaItem) => void;   // open list picker
   onRatingChange?: (item: MediaItem, rating: number) => void; // user rating change
+  onNotesEdit?: (item: MediaItem) => void;    // open notes editor
+  onTagsEdit?: (item: MediaItem) => void;     // open tags editor
 }

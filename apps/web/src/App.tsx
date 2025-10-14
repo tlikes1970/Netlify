@@ -15,8 +15,10 @@ import HomeUpNextRail from '@/components/rails/HomeUpNextRail';
 import SettingsPage from '@/components/SettingsPage';
 import { SettingsFAB, ThemeToggleFAB } from '@/components/FABs';
 import NotesAndTagsModal from '@/components/modals/NotesAndTagsModal';
+import PullToRefreshWrapper from '@/components/PullToRefreshWrapper';
 import { useForYouRows } from '@/hooks/useForYouRows';
 import { useForYouContent } from '@/hooks/useGenreContent';
+import { useServiceWorker } from '@/hooks/useServiceWorker';
 import { useEffect, useState } from 'react';
 import { Library, useLibrary } from '@/lib/storage';
 import { mountActionBridge, setToastCallback } from '@/state/actions';
@@ -52,6 +54,23 @@ export default function App() {
 
   // Auth state
   const { user } = useAuth();
+
+  // Service Worker for offline caching
+  const { isRegistered: swRegistered, isOnline } = useServiceWorker();
+
+  // Refresh function for pull-to-refresh
+  const handleRefresh = async () => {
+    console.log('🔄 Pull-to-refresh triggered');
+    
+    // Force refresh of library data
+    Library.refresh();
+    
+    // Trigger custom refresh events for components that need it
+    window.dispatchEvent(new CustomEvent('force-refresh'));
+    
+    // Small delay to show the refresh animation
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  };
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -181,6 +200,13 @@ export default function App() {
           </>
         )}
 
+        {/* Offline Indicator */}
+        {!isOnline && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-yellow-500 text-black px-4 py-2 rounded-lg shadow-lg text-sm font-medium">
+            📱 You're offline - viewing cached content
+          </div>
+        )}
+
         {/* FAB Components - Available on all tabs */}
         <SettingsFAB onClick={() => setShowSettings(true)} />
         <ThemeToggleFAB 
@@ -248,10 +274,13 @@ export default function App() {
         </div>
         
         {searchActive ? (
-          <SearchResults query={searchQuery} genre={searchGenre} />
+          <PullToRefreshWrapper onRefresh={handleRefresh}>
+            <SearchResults query={searchQuery} genre={searchGenre} />
+          </PullToRefreshWrapper>
         ) : (
-          <>
-            {view === 'home' && (
+          <PullToRefreshWrapper onRefresh={handleRefresh}>
+            <>
+              {view === 'home' && (
               <div className="pb-20 lg:pb-0" style={{ 
                 paddingBottom: viewportOffset > 0 && window.visualViewport?.offsetTop === 0 
                   ? `${80 + viewportOffset}px` 
@@ -321,7 +350,8 @@ export default function App() {
             )}
             {view === 'mylists' && <MyListsPage />}
             {view === 'discovery' && <DiscoveryPage />}
-          </>
+            </>
+          </PullToRefreshWrapper>
         )}
 
         {/* FAB Components - Available on all tabs */}

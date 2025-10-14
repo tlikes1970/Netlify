@@ -5,9 +5,20 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Flicklet V2</title>
+    
+    <!-- TMDB API Key for local development -->
+    <meta name="tmdb-api-key" content="b7247bb415b50f25b5e35e2566430b96" />
   </head>
   <body>
     <div id="root"></div>
+    
+    <!-- Hidden form for Netlify Forms detection -->
+    <form name="feedback" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="message" />
+      <input type="text" name="theme" />
+      <input type="text" name="timestamp" />
+    </form>
+    
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -161,3 +161,4 @@ ${(Array.isArray(endpoints) ? endpoints : []).map(e => '- ' + String(e)).join('\
 }
 
 main().catch(err => { console.error('❌ build-inputs-from-pack failed:', err.message); process.exit(1); });
+

@@ -62,3 +62,4 @@
     // Wait for app to load
     setTimeout(addTestCards, 2000);
 })();
+
