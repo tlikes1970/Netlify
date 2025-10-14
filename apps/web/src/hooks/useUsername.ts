@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { authManager } from '../lib/auth';
-import type { UserSettings } from '../lib/auth.types';
+// import type { UserSettings } from '../lib/auth.types'; // Unused
 
 // Create a simple state manager for username
 class UsernameStateManager {

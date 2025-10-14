@@ -37,8 +37,8 @@ export function analyzeUserPreferences(
   }
 
   // Analyze genres from user's content
-  const genreCounts: Record<number, number> = {};
-  const genreRatings: Record<number, number[]> = {};
+  // const genreCounts: Record<number, number> = {}; // Unused
+  // const genreRatings: Record<number, number[]> = {}; // Unused
   const mediaTypeCounts = { movie: 0, tv: 0 };
   const userRatings: number[] = [];
 

@@ -48,7 +48,7 @@ export type VoiceSearchProps = {
 };
 
 export default function VoiceSearch({ onVoiceResult, onError, className = '' }: VoiceSearchProps) {
-  const translations = useTranslations();
+  // const translations = useTranslations(); // Unused
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +67,7 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
       recognitionRef.current.lang = 'en-US';
-      recognitionRef.current.maxAlternatives = 1;
+      // recognitionRef.current.maxAlternatives = 1; // Not supported in all browsers
       
       // Handle successful recognition
       recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from '@/lib/language';
 
 interface TriviaStats {
@@ -50,7 +50,7 @@ const TriviaStats: React.FC = () => {
   }, []);
 
   const accuracy = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
-  const winRate = stats.games > 0 ? Math.round((stats.wins / stats.games) * 100) : 0;
+  // const winRate = stats.games > 0 ? Math.round((stats.wins / stats.games) * 100) : 0; // Unused
 
   return (
     <div className="trivia-stats">

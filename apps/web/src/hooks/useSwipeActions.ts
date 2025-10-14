@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import type { MediaItem, CardActionHandlers } from '../components/cards/card.types';
 import { useIsDesktop } from './useDeviceDetection';
 
@@ -52,7 +52,7 @@ export function useSwipeActions({
 
   // Define swipe actions based on context
   const getSwipeActions = useCallback((): SwipeAction[] => {
-    const baseActions: SwipeAction[] = [];
+    // const baseActions: SwipeAction[] = []; // Unused
 
     switch (context) {
       case 'tab-watching':

@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchGenreContent, CardData } from '@/lib/tmdb';
-import { useSettings, getPersonalityText } from '@/lib/settings';
+// import { useSettings, getPersonalityText } from '@/lib/settings'; // Unused
 import { ForYouRow } from '@/components/GenreRowConfig';
 
 export function useGenreContent(mainGenre: string, subGenre: string) {
-  const settings = useSettings();
+  // const settings = useSettings(); // Unused
   
   return useQuery<CardData[]>({ 
     queryKey: ['tmdb', 'genre', mainGenre, subGenre], 

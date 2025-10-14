@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { trendingForYou, nowPlayingMovies, CardData } from '@/lib/tmdb';
-import { useSettings, getPersonalityText } from '@/lib/settings';
+// import { useSettings, getPersonalityText } from '@/lib/settings'; // Unused
 
 export function useForYou() {
-  const settings = useSettings();
+  // const settings = useSettings(); // Unused
   
   return useQuery<CardData[]>({ 
     queryKey: ['tmdb','for-you'], 
@@ -18,7 +18,7 @@ export function useForYou() {
 }
 
 export function useInTheaters() {
-  const settings = useSettings();
+  // const settings = useSettings(); // Unused
   
   return useQuery<CardData[]>({ 
     queryKey: ['tmdb','in-theaters'], 

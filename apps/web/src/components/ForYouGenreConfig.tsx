@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import GenreRowConfig, { ForYouRow } from './GenreRowConfig';
 
 // For You Genre Configuration Component
@@ -55,7 +55,7 @@ export default function ForYouGenreConfig() {
 
   return (
     <div className="space-y-4">
-      {forYouRows.map((row, index) => (
+      {forYouRows.map((row) => (
         <GenreRowConfig
           key={row.id}
           row={row}

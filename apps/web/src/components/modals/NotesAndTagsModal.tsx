@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { MediaItem } from '../cards/card.types';
 import { useTranslations } from '../../lib/language';
 
@@ -13,7 +13,7 @@ export default function NotesAndTagsModal({ item, isOpen, onClose, onSave }: Not
   const [notes, setNotes] = useState(item.userNotes || '');
   const [tags, setTags] = useState<string[]>(item.tags || []);
   const [newTag, setNewTag] = useState('');
-  const translations = useTranslations();
+  // const translations = useTranslations(); // Unused
 
   // Reset form when item changes
   useEffect(() => {

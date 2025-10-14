@@ -1,4 +1,5 @@
-import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+// import { updateDoc } from 'firebase/firestore'; // Unused
 // import { db } from '../firebase'; // Temporarily disabled due to import resolution issue
 import type { LibraryEntry } from './storage';
 
@@ -51,7 +52,7 @@ export class FirebaseSyncManager {
     
     // Listen for Library changes
     window.addEventListener('library:changed', (event: Event) => {
-      const { uid, operation } = event.detail;
+      const { uid, operation } = (event as CustomEvent).detail;
       console.log('📡 FirebaseSyncManager received library:changed event:', { uid, operation });
       this.syncToFirebase(uid);
     });

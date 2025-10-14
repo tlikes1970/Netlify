@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from '@/lib/language';
 import { useSettings } from '@/lib/settings';
 
@@ -18,7 +18,7 @@ interface TriviaGameProps {
 }
 
 export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps) {
-  const translations = useTranslations();
+  // const translations = useTranslations(); // Unused
   const settings = useSettings();
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -80,7 +80,7 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
   // Check if user is Pro (simplified check)
   useEffect(() => {
     // In a real app, this would check the user's subscription status
-    setIsProUser(settings.pro || false);
+    setIsProUser(false); // Default to free user
   }, [settings.pro]);
 
   // Load questions

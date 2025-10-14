@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { getPersonalityText } from '../lib/settings';
+import { useState, useEffect } from 'react';
 import type { PersonalityLevel } from '../lib/settings';
 
 interface ToastProps {
@@ -9,7 +8,7 @@ interface ToastProps {
   onClose: () => void;
 }
 
-export default function Toast({ message, type, personalityLevel, onClose }: ToastProps) {
+export default function Toast({ message, type, onClose }: ToastProps) {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {

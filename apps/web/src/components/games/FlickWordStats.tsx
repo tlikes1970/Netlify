@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from '@/lib/language';
 
 interface FlickWordStats {
@@ -54,7 +54,7 @@ export default function FlickWordStats({ onGameComplete }: FlickWordStatsProps) 
   // Update stats when game completes
   useEffect(() => {
     if (onGameComplete) {
-      const handleGameComplete = (won: boolean, guesses: number) => {
+      const handleGameComplete = (won: boolean) => {
         setStats(prevStats => {
           const newStats = {
             games: prevStats.games + 1,

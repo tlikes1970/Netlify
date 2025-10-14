@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CustomList, UserLists, ListName } from '../state/library.types';
 
 const CUSTOM_LISTS_KEY = 'flicklet.customLists.v2';

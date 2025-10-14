@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import type { MediaItem } from './card.types';
 import { useTranslations } from '../../lib/language';
 import { OptimizedImage } from '../OptimizedImage';

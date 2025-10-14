@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import ListSelectorModal from './ListSelectorModal';
 import type { MediaItem } from './cards/card.types';
 

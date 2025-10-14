@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
 import { useUsername } from '../hooks/useUsername';
 import { useSettings, getPersonalityText } from '../lib/settings';
 

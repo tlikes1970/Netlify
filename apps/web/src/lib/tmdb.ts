@@ -1,6 +1,6 @@
 import { getOptimalImageSize } from '../hooks/useImageOptimization';
 
-const BASE = 'https://api.themoviedb.org/3';
+// const BASE = 'https://api.themoviedb.org/3'; // Unused
 
 // Optimized image URL generation
 const img = (p?: string|null, context: 'poster' | 'backdrop' = 'poster') => {
@@ -329,7 +329,7 @@ async function generateRealisticTheaters(latitude: number, longitude: number, ra
     
     if (movies.length === 0) {
       console.warn('No current movies found, using fallback theater generation');
-      return generateFallbackTheaters(latitude, longitude, radius);
+      return generateFallbackTheaters();
     }
     
     // Generate realistic theaters based on common patterns
@@ -351,7 +351,7 @@ async function generateRealisticTheaters(latitude: number, longitude: number, ra
       const phone = generateTheaterPhone();
       
       // Generate showtimes based on current movies
-      const showtimes = await generateMovieBasedShowtimes(movies);
+      const showtimes = await generateMovieBasedShowtimes();
       
       const theater = {
         id: `tmdb_theater_${i}`,
@@ -374,7 +374,7 @@ async function generateRealisticTheaters(latitude: number, longitude: number, ra
     
   } catch (error) {
     console.error('Failed to generate realistic theaters:', error);
-    return generateFallbackTheaters(latitude, longitude, radius);
+    return generateFallbackTheaters();
   }
 }
 
@@ -446,7 +446,7 @@ function generateRealisticDistance(radius: number, index: number): number {
   return Math.round(Math.min(distance, radius) * 10) / 10; // Round to 1 decimal, cap at radius
 }
 
-async function generateMovieBasedShowtimes(movies: any[]): Promise<Showtime[]> {
+async function generateMovieBasedShowtimes(): Promise<Showtime[]> {
   try {
     const showtimes: Showtime[] = [];
     
@@ -531,7 +531,7 @@ function generateTheaterPhone(): string {
   return `(${areaCode}) ${exchange}-${number}`;
 }
 
-function generateFallbackTheaters(latitude: number, longitude: number, radius: number): Theater[] {
+function generateFallbackTheaters(): Theater[] {
   // Fallback theaters if TMDB data fails
   return [
     {
@@ -592,7 +592,7 @@ async function generateMovieBasedShowtimesFromTMDB(movieId: string): Promise<Sho
     }
     
     // Generate realistic showtimes based on movie properties
-    const runtime = movie.runtime || 120; // Default 2 hours
+    // const runtime = movie.runtime || 120; // Default 2 hours - Unused
     const popularity = movie.popularity || 5;
     const voteAverage = movie.vote_average || 6;
     

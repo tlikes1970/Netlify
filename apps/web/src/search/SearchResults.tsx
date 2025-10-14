@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import CardV2 from '../components/cards/CardV2';
+// import CardV2 from '../components/cards/CardV2'; // Unused
 import type { MediaItem } from '../components/cards/card.types';
 import { searchMulti } from './api';
 import { emit } from '../lib/events';
-import { addToListWithConfirmation, Library } from '../lib/storage';
+import { addToListWithConfirmation } from '../lib/storage';
 import { fetchNextAirDate } from '../tmdb/tv';
 import { useTranslations } from '../lib/language';
 import { useSettings, getPersonalityText } from '../lib/settings';
@@ -14,7 +14,7 @@ import { VirtualScrollContainer, LoadingStates, InfiniteScrollSentinel, Performa
 
 export default function SearchResults({ query, genre }: { query: string; genre?: string | null }) {
   const [initialItems, setInitialItems] = useState<MediaItem[]>([]);
-  const translations = useTranslations();
+  // const translations = useTranslations(); // Unused
   const settings = useSettings();
   
   // Enhanced offline cache
@@ -132,7 +132,7 @@ export default function SearchResults({ query, genre }: { query: string; genre?:
 
 function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () => void }) {
   const translations = useTranslations();
-  const { title, year, posterUrl, voteAverage, mediaType, synopsis } = item;
+  const { title, year, posterUrl, mediaType, synopsis } = item;
   const [pressedButtons, setPressedButtons] = React.useState<Set<string>>(new Set());
   
   // Mock data for demo - in real implementation, this would come from TMDB
@@ -166,14 +166,7 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
       37: 'western',
       // TV
       10759: 'action & adventure',
-      16: 'animation',
-      35: 'comedy',
-      80: 'crime',
-      99: 'documentary',
-      18: 'drama',
-      10751: 'family',
       10762: 'kids',
-      9648: 'mystery',
       10763: 'news',
       10764: 'reality',
       10765: 'sci-fi & fantasy',
@@ -188,7 +181,7 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
     console.log('🔍 Similar To clicked for:', item.title);
     
     // Genre-focused similarity search with human-readable names
-    const genres = item.genre_ids || [];
+    const genres = (item as any).genre_ids || [];
     const primaryGenre = genres[0];
     const secondaryGenre = genres[1];
     const rating = item.voteAverage || 0;
@@ -258,7 +251,7 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
     // Smart filtering based on item properties
     const year = item.year || '';
     const rating = item.voteAverage || 0;
-    const genre = item.genre_ids?.[0] || '';
+    const genre = (item as any).genre_ids?.[0] || '';
     
     // Create specific search criteria
     const filters = [];
@@ -301,7 +294,7 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
       detail: { 
         originalItem: item, 
         query: refinedQuery,
-        genre: item.genre_ids?.[0] || null,
+        genre: (item as any).genre_ids?.[0] || null,
         refinementFilters: {
           year,
           rating,

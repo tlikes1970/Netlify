@@ -68,7 +68,7 @@ export function usePerformanceOptimization<T extends MediaItem>(
 
   // State management
   const [allItems, setAllItems] = useState<T[]>(items);
-  const [currentPage, setCurrentPage] = useState(1);
+  // const [currentPage, setCurrentPage] = useState(1); // Unused
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -151,7 +151,7 @@ export function usePerformanceOptimization<T extends MediaItem>(
           addToCache(newItems);
           return combined;
         });
-        setCurrentPage(prev => prev + 1);
+        // setCurrentPage(prev => prev + 1); // Unused
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load more items');

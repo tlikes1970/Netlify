@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { APP_VERSION } from "../version";
 import { useTranslations } from "../lib/language";
 import AccountButton from "./AccountButton";
@@ -35,15 +35,15 @@ export default function FlickletHeader({
   const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
   
   // Use provided messages or default translated messages
-  const defaultMessages = [
-    translations.marqueeMessage1,
-    translations.marqueeMessage2,
-    translations.marqueeMessage3,
-    translations.marqueeMessage4,
-    translations.marqueeMessage5,
-  ];
+  // const defaultMessages = [ // Unused
+  //   translations.marqueeMessage1,
+  //   translations.marqueeMessage2,
+  //   translations.marqueeMessage3,
+  //   translations.marqueeMessage4,
+  //   translations.marqueeMessage5,
+  // ];
   
-  const marqueeMessages = messages || defaultMessages;
+  // const marqueeMessages = messages || defaultMessages; // Unused
   // Persisted marquee visibility
   const [marqueeHidden, setMarqueeHidden] = useState<boolean>(false);
 
@@ -130,7 +130,7 @@ export default function FlickletHeader({
       {/* Marquee (Home only) */}
       {showMarquee && !marqueeHidden && (
         <MarqueeBar
-          messages={messages}
+          messages={messages || []}
           speedSec={marqueeSpeedSec}
           changeEveryMs={changeEveryMs}
           pauseOnHover={pauseOnHover}
@@ -159,23 +159,23 @@ function AppTitle({ text }: { text: string }) {
   );
 }
 
-function UserChip({ username }: { username: string }) {
-  const translations = useTranslations();
-  const snark = useMemo(() => oneOf([
-    translations.hasExquisiteTaste,
-    translations.definitelyNotProcrastinating,
-    translations.breaksForPopcornOnly,
-    translations.curatesChaosLikeAPro,
-  ]), [translations]);
+// function UserChip({ username }: { username: string }) { // Unused component
+//   const translations = useTranslations();
+//   const snark = useMemo(() => oneOf([
+//     translations.hasExquisiteTaste,
+//     translations.definitelyNotProcrastinating,
+//     translations.breaksForPopcornOnly,
+//     translations.curatesChaosLikeAPro,
+//   ]), [translations]);
 
-  return (
-    <div className="max-w-full truncate text-sm text-muted-foreground" data-testid="user-chip">
-      <span className="font-semibold text-foreground">{username}</span>{" "}
-      <span className="hidden sm:inline">•</span>{" "}
-      <span className="truncate align-middle">{snark}</span>
-    </div>
-  );
-}
+//   return (
+//     <div className="max-w-full truncate text-sm text-muted-foreground" data-testid="user-chip">
+//       <span className="font-semibold text-foreground">{username}</span>{" "}
+//       <span className="hidden sm:inline">•</span>{" "}
+//       <span className="truncate align-middle">{snark}</span>
+//     </div>
+//   );
+// }
 
 function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | null) => void; onClear?: () => void }) {
   const translations = useTranslations();
@@ -420,4 +420,4 @@ function MarqueeBar({
   );
 }
 
-function oneOf<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)] }
+// function oneOf<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)] } // Unused

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslations } from '../lib/language';
 import { useLocation, useTheaters } from '../hooks/useLocation';
 import { Theater } from '../lib/tmdb';

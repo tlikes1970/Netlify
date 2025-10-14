@@ -29,7 +29,7 @@ import { getPersonalityText } from '@/lib/settings';
 import Toast, { useToast } from '@/components/Toast';
 import PersonalityErrorBoundary from '@/components/PersonalityErrorBoundary';
 import '@/styles/flickword.css';
-import { useAuth } from '@/hooks/useAuth';
+// import { useAuth } from '@/hooks/useAuth'; // Unused
 
 type View = 'home'|'watching'|'want'|'watched'|'mylists'|'discovery';
 
@@ -317,7 +317,7 @@ export default function App() {
                 {/* In theaters container with address/info header */}
                 <Section title={translations.inTheatersNearYou}>
                   <TheaterInfo />
-                  <Rail id="in-theaters" title={translations.nowPlaying} items={Array.isArray(itemsFor('in-theaters')) ? itemsFor('in-theaters') : []} skeletonCount={12} />
+                  <Rail id="in-theaters" title={translations.nowPlaying} items={Array.isArray(itemsFor('in-theaters')) ? itemsFor('in-theaters')!.map(item => ({ ...item, id: String(item.id) })) : []} skeletonCount={12} />
                 </Section>
 
                 {/* Feedback container */}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import UpNextCard from '../cards/UpNextCard';
 import { useLibrary } from '../../lib/storage';
 import { useTranslations } from '../../lib/language';

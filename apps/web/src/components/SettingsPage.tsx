@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useSettings, settingsManager, PersonalityLevel, Theme, getPersonalityText } from '../lib/settings';
+import { useState, useEffect } from 'react';
+import { useSettings, settingsManager, PersonalityLevel, getPersonalityText } from '../lib/settings';
 import { useTranslations, useLanguage, changeLanguage } from '../lib/language';
 import { useCustomLists, customListManager } from '../lib/customLists';
 import { useUsername } from '../hooks/useUsername';
@@ -82,12 +82,12 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
                 {/* Right content area */}
                 <div className="flex-1 p-6 overflow-y-auto">
                   {activeTab === 'general' && <GeneralTab settings={settings} translations={translations} currentLanguage={currentLanguage} />}
-                  {activeTab === 'notifications' && <NotificationsTab settings={settings} />}
+                  {activeTab === 'notifications' && <NotificationsTab />}
                   {activeTab === 'layout' && <LayoutTab settings={settings} />}
-                  {activeTab === 'data' && <DataTab settings={settings} />}
-                  {activeTab === 'social' && <SocialTab settings={settings} />}
-                  {activeTab === 'community' && <CommunityTab settings={settings} />}
-                  {activeTab === 'pro' && <ProTab settings={settings} />}
+                  {activeTab === 'data' && <DataTab />}
+                  {activeTab === 'social' && <SocialTab />}
+                  {activeTab === 'community' && <CommunityTab />}
+                  {activeTab === 'pro' && <ProTab />}
                   {activeTab === 'about' && <AboutTab />}
                   {activeTab === 'test' && <PersonalityTest personalityLevel={settings.personalityLevel} />}
                 </div>
@@ -290,7 +290,7 @@ function GeneralTab({ settings, translations, currentLanguage }: { settings: any
 }
 
 // Placeholder tabs
-function NotificationsTab({ settings }: { settings: any }) {
+function NotificationsTab() {
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold text-white">Notifications</h3>
@@ -597,7 +597,7 @@ function LayoutTab({ settings }: { settings: any }) {
   );
 }
 
-function DataTab({ settings }: { settings: any }) {
+function DataTab() {
   const translations = useTranslations();
   
   const handleAddTestData = () => {
@@ -673,7 +673,7 @@ function DataTab({ settings }: { settings: any }) {
   );
 }
 
-function ProTab({ settings }: { settings: any }) {
+function ProTab() {
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold text-white">Pro</h3>
@@ -752,8 +752,8 @@ function AboutTab() {
 }
 
 // Social Features Tab
-function SocialTab({ settings }: { settings: any }) {
-  const translations = useTranslations();
+function SocialTab() {
+  // const translations = useTranslations(); // Unused
   
   return (
     <div className="space-y-6">
@@ -813,8 +813,8 @@ function SocialTab({ settings }: { settings: any }) {
 }
 
 // Community Stats Tab
-function CommunityTab({ settings }: { settings: any }) {
-  const translations = useTranslations();
+function CommunityTab() {
+  // const translations = useTranslations(); // Unused
   
   // Mock stats - in a real app, these would come from the backend
   const userStats = {

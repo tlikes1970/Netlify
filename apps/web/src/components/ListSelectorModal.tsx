@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { customListManager, useCustomLists } from '../lib/customLists';
 import { Library, getListDisplayName } from '../lib/storage';
@@ -76,7 +76,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
          style={{ 
            backgroundColor: 'rgba(0,0,0,0.8)', 
            zIndex: '2147483647 !important',
-           position: 'fixed !important'
+           position: 'fixed' as const
          }}>
       <div className="rounded-xl w-full max-w-md p-6" 
            style={{ 
@@ -84,7 +84,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
              borderColor: 'var(--line)', 
              border: '1px solid', 
              zIndex: '2147483647 !important',
-             position: 'relative !important'
+             position: 'relative' as const
            }}>
         
         <div className="flex items-center justify-between mb-4">
@@ -215,7 +215,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
                        style={{ 
                          backgroundColor: 'rgba(0,0,0,0.8)', 
                          zIndex: '2147483647 !important',
-                         position: 'fixed !important'
+                         position: 'fixed' as const
                        }}>
             <div className="rounded-xl w-full max-w-md p-6" 
                  style={{ 
@@ -223,7 +223,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
                    borderColor: 'var(--line)', 
                    border: '1px solid', 
                    zIndex: '2147483647 !important',
-                   position: 'relative !important'
+                   position: 'relative' as const
                  }}>
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
                 {translations.itemAlreadyExists || 'Item Already Exists'}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from '@/lib/language';
 
 // YouTube API types
@@ -14,11 +14,11 @@ interface YouTubePlayerProps {
   videoId?: string;
 }
 
-export default function YouTubePlayer({ playlistId, videoId }: YouTubePlayerProps) {
+export default function YouTubePlayer({ playlistId }: YouTubePlayerProps) {
   const translations = useTranslations();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentVideo, setCurrentVideo] = useState<string | null>(null);
+  // const [currentVideo, setCurrentVideo] = useState<string | null>(null); // Unused
   const playerRef = useRef<HTMLDivElement>(null);
   const youtubePlayerRef = useRef<any>(null);
 
@@ -87,7 +87,7 @@ export default function YouTubePlayer({ playlistId, videoId }: YouTubePlayerProp
             origin: window.location.origin,
           },
           events: {
-            onReady: (event: any) => {
+            onReady: () => {
               console.log('🎬 YouTube player ready');
               setIsLoading(false);
               setError(null);

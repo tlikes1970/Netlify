@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslations } from '@/lib/language';
 
 export type GenreDropdownProps = {
@@ -15,7 +15,7 @@ export type GenreDropdownProps = {
  */
 export default function GenreDropdown({ selectedGenres, onGenresChange, className = '' }: GenreDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const translations = useTranslations();
+  // const translations = useTranslations(); // Unused
   
   const genres = [
     { id: 'action', name: 'Action' },

@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useTranslations } from '../lib/language';
-import { useSettings } from '../lib/settings';
+// import { useSettings } from '../lib/settings'; // Unused
 import { useToast } from '../components/Toast';
 
 export default function FeedbackPanel() {
   const translations = useTranslations();
-  const settings = useSettings();
+  // const settings = useSettings(); // Unused
   const { addToast } = useToast();
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -14,7 +14,7 @@ export default function FeedbackPanel() {
     e.preventDefault();
     
     if (!feedback.trim()) {
-      addToast('Please enter some feedback before submitting.', 'warning');
+      addToast('Please enter some feedback before submitting.', 'error');
       return;
     }
     
@@ -36,13 +36,13 @@ export default function FeedbackPanel() {
       const formData = new FormData();
       formData.append('form-name', 'feedback');
       formData.append('message', feedback.trim());
-      formData.append('theme', settings.theme || 'light');
+      formData.append('theme', 'light'); // Default theme
       formData.append('timestamp', new Date().toISOString());
       
       console.log('📤 Form data:', {
         'form-name': 'feedback',
         message: feedback.trim(),
-        theme: settings.theme || 'light',
+        theme: 'light', // Default theme
         timestamp: new Date().toISOString()
       });
       
@@ -91,7 +91,7 @@ export default function FeedbackPanel() {
           onSubmit={handleSubmit}
         >
           <input type="hidden" name="form-name" value="feedback" />
-          <input type="hidden" name="theme" value={settings.theme || 'light'} />
+          <input type="hidden" name="theme" value="light" />
           
           {/* Honeypot field for bot protection */}
           <div style={{ display: 'none' }}>

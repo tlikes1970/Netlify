@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 export type StarRatingProps = {
   value: number; // 0-5 stars

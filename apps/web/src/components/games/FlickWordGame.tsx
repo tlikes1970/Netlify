@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from '@/lib/language';
 
 // Game configuration
@@ -27,7 +27,7 @@ interface FlickWordGameProps {
 }
 
 export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGameProps) {
-  const translations = useTranslations();
+  // const translations = useTranslations(); // Unused
   const [game, setGame] = useState<GameState>({
     target: '',
     guesses: [],
@@ -91,7 +91,7 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
     for (let i = 0; i < 5; i++) {
       if (guess[i] === pool[i]) {
         result[i] = 'correct';
-        pool[i] = null;
+        pool[i] = '';
       }
     }
 
@@ -101,7 +101,7 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
       const idx = pool.indexOf(guess[i]);
       if (idx !== -1) {
         result[i] = 'present';
-        pool[idx] = null;
+        pool[idx] = '';
       }
     }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from '../lib/language';
 
 export type SearchSuggestionsProps = {
@@ -80,7 +80,7 @@ export default function SearchSuggestions({
   isVisible, 
   className = '' 
 }: SearchSuggestionsProps) {
-  const translations = useTranslations();
+  // const translations = useTranslations(); // Unused
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);

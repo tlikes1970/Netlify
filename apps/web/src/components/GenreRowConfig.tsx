@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from '@/lib/language';
 
 export interface GenreConfig {
@@ -146,7 +146,7 @@ const AVAILABLE_GENRES: GenreConfig[] = [
 ];
 
 export default function GenreRowConfig({ row, onUpdate, onRemove, canRemove }: GenreRowConfigProps) {
-  const translations = useTranslations();
+  // const translations = useTranslations(); // Unused
   
   const selectedGenre = AVAILABLE_GENRES.find(g => g.id === row.mainGenre);
   const availableSubgenres = selectedGenre?.subgenres || [];
