@@ -1,44 +1,46 @@
 exports.handler = async (event) => {
+  const url = new URL(event.rawUrl);
+  const path = url.searchParams.get('path') || '';
+  if (!path) {
+    return json(400, { error: 'Missing path' });
+  }
+
+  const TMDB_TOKEN = (process.env.TMDB_TOKEN || '').trim(); // v4
+  const TMDB_KEY   = (process.env.TMDB_KEY   || '').trim(); // v3
+  if (!TMDB_TOKEN && !TMDB_KEY) {
+    return json(500, { error: 'Missing TMDB_TOKEN or TMDB_KEY on server' });
+  }
+
+  // Rebuild query string minus "path"
+  url.searchParams.delete('path');
+  const qs = url.searchParams.toString();
+  const base = 'https://api.themoviedb.org/3';
+  const target = `${base}${path.startsWith('/') ? '' : '/'}${path}${qs ? `?${qs}` : ''}`;
+
+  const headers = { 'Content-Type': 'application/json;charset=utf-8' };
+  if (TMDB_TOKEN) headers.Authorization = `Bearer ${TMDB_TOKEN}`;
+
+  // If only v3 key available, append it as api_key
+  const fetchUrl = TMDB_TOKEN ? target : `${target}${qs ? '&' : '?'}api_key=${encodeURIComponent(TMDB_KEY)}`;
+
   try {
-    const TMDB_TOKEN = (process.env.TMDB_TOKEN || '').trim();
-    if (!TMDB_TOKEN) {
-      return {
-        statusCode: 500,
-        headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' },
-        body: JSON.stringify({ error: 'Missing TMDB_TOKEN on server' })
-      };
-    }
-
-    const qs = event.queryStringParameters || {};
-    const rawPath = String(qs.path || '').trim();
-    const path = rawPath.startsWith('/') ? rawPath : '/' + rawPath;
-
-    const { path: _omit, ...rest } = qs;
-    const params = new URLSearchParams({ language: 'en-US', ...rest });
-
-    const url = `https://api.themoviedb.org/3${path}?${params.toString()}`;
-    const res = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${TMDB_TOKEN}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    const text = await res.text();
-
+    const res = await fetch(fetchUrl, { headers });
+    const body = await res.text();
     return {
       statusCode: res.status,
-      headers: {
-        'content-type': 'application/json',
-        'access-control-allow-origin': '*',
-        'cache-control': res.ok ? 'public, max-age=300' : 'no-store'
-      },
-      body: text
-    };
-  } catch (e) {
-    return {
-      statusCode: 500,
       headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' },
-      body: JSON.stringify({ error: String(e && e.message || e) })
+      body
     };
+  } catch (err) {
+    console.error('tmdb-proxy error', { msg: err.message });
+    return json(502, { error: 'Upstream fetch failed' });
   }
 };
+
+function json(statusCode, obj) {
+  return {
+    statusCode,
+    headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' },
+    body: JSON.stringify(obj)
+  };
+}
