@@ -1,6 +1,6 @@
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 // import { db } from '../firebase'; // Temporarily disabled due to import resolution issue
-import type { MediaItem, LibraryEntry } from './storage';
+import type { LibraryEntry } from './storage';
 
 /**
  * Firebase Sync Manager for V2
@@ -12,7 +12,7 @@ export class FirebaseSyncManager {
   private static instance: FirebaseSyncManager;
   private isInitialized = false;
   private syncInProgress = false;
-  private syncTimeout: NodeJS.Timeout | null = null;
+  private syncTimeout: number | null = null;
 
   static getInstance(): FirebaseSyncManager {
     if (!FirebaseSyncManager.instance) {
@@ -50,7 +50,7 @@ export class FirebaseSyncManager {
     this.isInitialized = true;
     
     // Listen for Library changes
-    window.addEventListener('library:changed', (event: CustomEvent) => {
+    window.addEventListener('library:changed', (event: Event) => {
       const { uid, operation } = event.detail;
       console.log('📡 FirebaseSyncManager received library:changed event:', { uid, operation });
       this.syncToFirebase(uid);

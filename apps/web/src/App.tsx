@@ -53,7 +53,7 @@ export default function App() {
   const { toasts, addToast, removeToast } = useToast();
 
   // Auth state
-  const { user } = useAuth();
+  // const { user } = useAuth(); // Commented out - user not used
 
   // Service Worker for offline caching
   const { isOnline } = useServiceWorker();

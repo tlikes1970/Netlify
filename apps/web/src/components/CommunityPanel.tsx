@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslations } from '@/lib/language';
 import FlickWordModal from './games/FlickWordModal';
 import FlickWordStats from './games/FlickWordStats';

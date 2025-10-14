@@ -67,7 +67,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
       throttleTimeout = setTimeout(() => {
         throttleTimeout = null;
         
-        const visualHeight = window.visualViewport.height;
+        const visualHeight = window.visualViewport?.height || window.innerHeight;
         const screenHeight = window.innerHeight;
         const currentOffsetTop = window.visualViewport ? window.visualViewport.offsetTop : 0;
         
@@ -143,7 +143,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
   const watchingCount = watchingItems.length;
   const wantCount = wantItems.length;
   const watchedCount = watchedItems.length;
-  const myListsCount = customLists.length;
+  const myListsCount = Array.isArray(customLists) ? customLists.length : 0;
   
   const TABS: { id: TabId; label: string; count: number; icon: string }[] = [
     { id: 'watching', label: 'Watching', count: watchingCount, icon: '▶️' },

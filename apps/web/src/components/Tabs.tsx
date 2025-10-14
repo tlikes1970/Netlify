@@ -17,7 +17,7 @@ export default function Tabs({ current, onChange }: TabsProps) {
   const watchingCount = watchingItems.length;
   const wantCount = wantItems.length;
   const watchedCount = watchedItems.length;
-  const myListsCount = customLists.length;
+  const myListsCount = Array.isArray(customLists) ? customLists.length : 0;
   
   const TABS: { id: TabId; label: string; count: number }[] = [
     { id: 'watching', label: translations.currentlyWatching, count: watchingCount },

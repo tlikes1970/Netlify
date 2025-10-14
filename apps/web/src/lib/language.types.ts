@@ -6,6 +6,7 @@ export interface LanguageStrings {
   currentlyWatching: string;
   wantToWatch: string;
   watched: string;
+  alreadyWatched: string;
   holidays: string;
   discovery: string;
   
@@ -200,7 +201,6 @@ export interface LanguageStrings {
   shareListsWithFriends: string;
   
   // Theater Info
-  inTheatersNearYou: string;
   yourLocalTheater: string;
   
   // Header
@@ -234,6 +234,47 @@ export interface LanguageStrings {
   community: string;
   forYou: string;
   feedback: string;
+  
+  // Games
+  flickword: string;
+  flickword_tagline: string;
+  daily_trivia: string;
+  daily_trivia_tagline: string;
+  play_now: string;
+  close_game: string;
+  games: string;
+  won: string;
+  lost: string;
+  streak: string;
+  best: string;
+  win_percent: string;
+  played: string;
+  accuracy: string;
+  
+  // Theater
+  detectingLocation: string;
+  locationUnavailable: string;
+  enableLocation: string;
+  hideShowtimes: string;
+  findShowtimes: string;
+  loadingTheaters: string;
+  noTheatersFound: string;
+  kmAway: string;
+  hideTimes: string;
+  showTimes: string;
+  todaysShowtimes: string;
+  
+  // Personality
+  hasExquisiteTaste: string;
+  definitelyNotProcrastinating: string;
+  breaksForPopcornOnly: string;
+  curatesChaosLikeAPro: string;
+  
+  // Community Player
+  community_player_placeholder: string;
+  
+  // Data Management
+  dataManagementComingSoon: string;
   
   // Rail Titles
   drama: string;

@@ -13,9 +13,7 @@ export function useForYou() {
       console.error('TMDB For You error:', error);
       return failureCount < 3;
     },
-    onError: (error) => {
-      console.error('TMDB For You failed:', getPersonalityText('errorGeneric', settings.personalityLevel), error);
-    }
+    // onError removed - not supported in newer React Query versions
   });
 }
 
@@ -30,8 +28,6 @@ export function useInTheaters() {
       console.error('TMDB In Theaters error:', error);
       return failureCount < 3;
     },
-    onError: (error) => {
-      console.error('TMDB In Theaters failed:', getPersonalityText('errorGeneric', settings.personalityLevel), error);
-    }
+    // onError removed - not supported in newer React Query versions
   });
 }

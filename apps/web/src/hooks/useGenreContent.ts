@@ -15,9 +15,7 @@ export function useGenreContent(mainGenre: string, subGenre: string) {
       console.error(`TMDB ${mainGenre}/${subGenre} error:`, error);
       return failureCount < 2;
     },
-    onError: (error) => {
-      console.error(`TMDB ${mainGenre}/${subGenre} failed:`, getPersonalityText('errorGeneric', settings.personalityLevel), error);
-    }
+    // onError removed - not supported in newer React Query versions
   });
 }
 

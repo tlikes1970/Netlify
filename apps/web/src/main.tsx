@@ -94,7 +94,7 @@ if (typeof window !== 'undefined') {
     const oldCounts = oldData.reduce((m: any, x: any) => ((m[x.status] = (m[x.status]||0)+1), m), {});
     
     return { 
-      new: { total: Object.keys(newData).length, ...newCounts },
+      new: { total: Object.keys(newData).length, ...(newCounts as Record<string, number>) },
       old: { total: oldData.length, ...oldCounts }
     };
   } catch { return { new: { total: 0 }, old: { total: 0 } }; }
@@ -113,12 +113,13 @@ if (typeof window !== 'undefined') {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).debugLibrary = () => {
   try {
-    const { Library } = require('./lib/storage');
+    // const { Library } = require('./lib/storage'); // Commented out - require not available in browser
     return {
-      watching: Library.getByList('watching').length,
-      wishlist: Library.getByList('wishlist').length,
-      watched: Library.getByList('watched').length,
-      not: Library.getByList('not').length,
+      // watching: Library.getByList('watching').length,
+      // wishlist: Library.getByList('wishlist').length,
+      // watched: Library.getByList('watched').length,
+      // not: Library.getByList('not').length,
+      message: 'Library debug function disabled in browser environment'
     };
   } catch { return { watching: 0, wishlist: 0, watched: 0, not: 0 }; }
 };

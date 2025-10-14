@@ -168,8 +168,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     skip: 'Skip',
 
     // Common
-    save: 'Save',
-    cancel: 'Cancel',
     close: 'Close',
     confirm: 'Confirm',
     areYouSure: 'Are you sure?',
@@ -304,17 +302,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     marqueeMessage5: 'I\'ll be back.',
     
     // Theater & Location
-    detectingLocation: 'Detecting your location...',
-    locationUnavailable: 'Location unavailable',
-    enableLocation: 'Enable location',
-    findShowtimes: 'Find Showtimes',
-    hideShowtimes: 'Hide Showtimes',
-    loadingTheaters: 'Loading theaters...',
-    noTheatersFound: 'No theaters found nearby. Try expanding your search radius.',
-    showTimes: 'Show Times',
-    hideTimes: 'Hide Times',
-    todaysShowtimes: 'Today\'s Showtimes:',
-    kmAway: 'km away',
   },
   
   es: {
@@ -323,6 +310,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     currentlyWatching: 'Viendo Ahora',
     wantToWatch: 'Quiero Ver',
     watched: 'Visto',
+    alreadyWatched: 'Ya Visto',
     holidays: 'Fiestas',
     discovery: 'Descubrir',
     
@@ -483,8 +471,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     skip: 'Omitir',
 
     // Common
-    save: 'Guardar',
-    cancel: 'Cancelar',
     close: 'Cerrar',
     confirm: 'Confirmar',
     areYouSure: '¿Estás seguro?',
@@ -619,17 +605,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     marqueeMessage5: 'Volveré.',
     
     // Theater & Location
-    detectingLocation: 'Detectando tu ubicación...',
-    locationUnavailable: 'Ubicación no disponible',
-    enableLocation: 'Habilitar ubicación',
-    findShowtimes: 'Encontrar Horarios',
-    hideShowtimes: 'Ocultar Horarios',
-    loadingTheaters: 'Cargando cines...',
-    noTheatersFound: 'No se encontraron cines cerca. Intenta expandir el radio de búsqueda.',
-    showTimes: 'Mostrar Horarios',
-    hideTimes: 'Ocultar Horarios',
-    todaysShowtimes: 'Horarios de Hoy:',
-    kmAway: 'km de distancia',
   },
 };
 
