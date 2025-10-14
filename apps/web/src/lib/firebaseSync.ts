@@ -109,19 +109,19 @@ export class FirebaseSyncManager {
         if (item.list.startsWith('custom:')) {
           // FIXED: Store custom list items in separate structure
           const customListId = item.list.replace('custom:', '');
-          if (!watchlists.customItems[customListId]) {
-            watchlists.customItems[customListId] = [];
+          if (!(watchlists as any).customItems[customListId]) {
+            (watchlists as any).customItems[customListId] = [];
           }
-          watchlists.customItems[customListId].push(prunedItem);
+          (watchlists as any).customItems[customListId].push(prunedItem);
         } else {
           // Standard lists (watching, wishlist, watched)
           if (item.mediaType === 'movie') {
             if (watchlists.movies[item.list as keyof typeof watchlists.movies]) {
-              watchlists.movies[item.list as keyof typeof watchlists.movies].push(prunedItem);
+              (watchlists.movies[item.list as keyof typeof watchlists.movies] as any).push(prunedItem);
             }
           } else if (item.mediaType === 'tv') {
             if (watchlists.tv[item.list as keyof typeof watchlists.tv]) {
-              watchlists.tv[item.list as keyof typeof watchlists.tv].push(prunedItem);
+              (watchlists.tv[item.list as keyof typeof watchlists.tv] as any).push(prunedItem);
             }
           }
         }

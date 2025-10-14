@@ -379,7 +379,9 @@ export function useLibrary(list: ListName) {
       })));
       setItems(updatedItems);
     });
-    return unsub;
+    return () => {
+      unsub();
+    };
   }, [list]);
   return items;
 }

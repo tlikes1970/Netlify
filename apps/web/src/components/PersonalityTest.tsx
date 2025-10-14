@@ -1,4 +1,4 @@
-import { useState } from 'react';
+// import { useState } from 'react'; // Unused
 import { PersonalityLevel, getPersonalityText } from '../lib/settings';
 
 interface PersonalityTestProps {

@@ -47,7 +47,9 @@ export function useUsername() {
     const unsubscribe = usernameStateManager.subscribe(() => {
       setState(usernameStateManager.getState());
     });
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const { username, usernamePrompted, loading } = state;

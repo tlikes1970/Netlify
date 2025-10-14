@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MediaItem } from '../cards/card.types';
-import { useTranslations } from '../../lib/language';
+// import { useTranslations } from '../../lib/language'; // Unused
 
 interface NotesAndTagsModalProps {
   item: MediaItem;

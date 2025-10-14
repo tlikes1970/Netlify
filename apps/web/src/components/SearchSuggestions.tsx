@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useTranslations } from '../lib/language';
+// import { useTranslations } from '../lib/language'; // Unused
 
 export type SearchSuggestionsProps = {
   query: string;

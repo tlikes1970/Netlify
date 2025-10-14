@@ -1,4 +1,5 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
+// import { useEffect } from 'react'; // Unused
 import { useSearch } from '@/hooks/useSearch';
 import { useSmartDiscovery } from '@/hooks/useSmartDiscovery';
 import CardV2 from '@/components/cards/CardV2';

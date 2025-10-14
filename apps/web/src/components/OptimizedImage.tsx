@@ -1,4 +1,4 @@
-import { useState } from 'react';
+// import { useState } from 'react'; // Unused
 import { getOptimalImageSize } from '../hooks/useImageOptimization';
 
 // Optimized Image Component

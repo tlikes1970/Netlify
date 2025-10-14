@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useTranslations } from '../lib/language';
+// import { useTranslations } from '../lib/language'; // Unused
 
 // Speech Recognition API types
 declare global {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useTranslations } from '@/lib/language';
+// import { useTranslations } from '@/lib/language'; // Unused
 
 // Game configuration
 const WORDS = [

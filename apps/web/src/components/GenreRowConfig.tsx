@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useTranslations } from '@/lib/language';
+// import { useState, useEffect } from 'react'; // Unused
+// import { useTranslations } from '@/lib/language'; // Unused
 
 export interface GenreConfig {
   id: string;

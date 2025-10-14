@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useTranslations } from '@/lib/language';
+// import { useTranslations } from '@/lib/language'; // Unused
 
 export type GenreDropdownProps = {
   selectedGenres: string[];

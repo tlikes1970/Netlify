@@ -17,7 +17,7 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
   const [sortByTag, setSortByTag] = useState<boolean>(false);
   
   // Map mode to CardV2 context
-  const context = mode === 'watching' ? 'tab-watching' : 'tab-foryou';
+  // const context = mode === 'watching' ? 'tab-watching' : 'tab-foryou'; // Unused
 
   // Get all unique tags from items
   const allTags = useMemo(() => {
@@ -67,7 +67,9 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
   // Drag and drop functionality
   const handleReorder = (fromIndex: number, toIndex: number) => {
     console.log(`🔄 Reordering item from index ${fromIndex} to ${toIndex} in ${mode} list`);
-    Library.reorder(mode, fromIndex, toIndex);
+    if (mode !== 'discovery') {
+      Library.reorder(mode as any, fromIndex, toIndex);
+    }
   };
 
   const {
@@ -77,7 +79,7 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
     handleDragOver,
     handleDragLeave,
     handleDrop,
-  } = useDragAndDrop(processedItems, handleReorder);
+  } = useDragAndDrop(processedItems.map(item => ({ ...item, id: String(item.id) })), handleReorder);
 
   // Get appropriate empty state text based on title
   const getEmptyText = () => {

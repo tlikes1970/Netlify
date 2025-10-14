@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+// import { useEffect, useState } from 'react'; // Unused
 import { useUsername } from '../hooks/useUsername';
 import { useSettings, getPersonalityText } from '../lib/settings';
 
