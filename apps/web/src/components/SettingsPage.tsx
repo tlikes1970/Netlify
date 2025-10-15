@@ -3,16 +3,18 @@ import { useSettings, settingsManager, PersonalityLevel, getPersonalityText } fr
 import { useTranslations, useLanguage, changeLanguage } from '../lib/language';
 import { useCustomLists, customListManager } from '../lib/customLists';
 import { useUsername } from '../hooks/useUsername';
-import { addTestData, clearTestData, populateNextAirDates } from '../lib/testData';
+import { useLibrary } from '../lib/storage';
 import PersonalityExamples from './PersonalityExamples';
 import PersonalityTest from './PersonalityTest';
 import ForYouGenreConfig from './ForYouGenreConfig';
 import type { Language } from '../lib/language.types';
+import type { ListName } from '../state/library.types';
 
 type SettingsTab = 'general' | 'notifications' | 'layout' | 'data' | 'pro' | 'about' | 'test' | 'social' | 'community';
 
 export default function SettingsPage({ onClose }: { onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
+  const [showSharingModal, setShowSharingModal] = useState(false);
   const settings = useSettings();
   const translations = useTranslations();
   const currentLanguage = useLanguage();
@@ -84,7 +86,7 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
                   {activeTab === 'general' && <GeneralTab settings={settings} translations={translations} currentLanguage={currentLanguage} />}
                   {activeTab === 'notifications' && <NotificationsTab />}
                   {activeTab === 'layout' && <LayoutTab settings={settings} />}
-                  {activeTab === 'data' && <DataTab />}
+                  {activeTab === 'data' && <DataTab setShowSharingModal={setShowSharingModal} />}
                   {activeTab === 'social' && <SocialTab />}
                   {activeTab === 'community' && <CommunityTab />}
                   {activeTab === 'pro' && <ProTab />}
@@ -92,6 +94,11 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
                   {activeTab === 'test' && <PersonalityTest personalityLevel={settings.personalityLevel} />}
                 </div>
       </div>
+      
+      {/* Sharing Modal */}
+      {showSharingModal && (
+        <SharingModal onClose={() => setShowSharingModal(false)} />
+      )}
     </div>
   );
 }
@@ -228,6 +235,10 @@ function GeneralTab({ settings, translations, currentLanguage }: { settings: any
         <button 
           className="px-4 py-2 rounded-lg transition-colors"
           style={{ backgroundColor: 'var(--btn)', color: 'var(--text)' }}
+          onClick={() => {
+            // Navigate to the not interested tab
+            window.dispatchEvent(new CustomEvent('navigate', { detail: { view: 'not' } }));
+          }}
         >
           Manage Not Interested List
         </button>
@@ -597,77 +608,224 @@ function LayoutTab({ settings }: { settings: any }) {
   );
 }
 
-function DataTab() {
+function DataTab({ setShowSharingModal }: { setShowSharingModal: (show: boolean) => void }) {
   const translations = useTranslations();
   
-  const handleAddTestData = () => {
-    addTestData();
-    alert('Test data added! Check your tabs to see the sample movies and TV shows.');
-  };
-  
-  const handleClearTestData = () => {
-    if (window.confirm('Are you sure you want to clear all test data? This cannot be undone.')) {
-      clearTestData();
-      alert('Test data cleared!');
-    }
-  };
-  
-  const handlePopulateNextAirDates = async () => {
+  const handleBackup = async () => {
     try {
-      await populateNextAirDates();
-      alert('Next air dates populated! Check the "Up Next" section on the home page.');
+      // Get all user data from localStorage
+      const userData = {
+        watchlists: {
+          movies: {
+            watching: JSON.parse(localStorage.getItem('flicklet-movies-watching') || '[]'),
+            wishlist: JSON.parse(localStorage.getItem('flicklet-movies-wishlist') || '[]'),
+            watched: JSON.parse(localStorage.getItem('flicklet-movies-watched') || '[]')
+          },
+          tv: {
+            watching: JSON.parse(localStorage.getItem('flicklet-tv-watching') || '[]'),
+            wishlist: JSON.parse(localStorage.getItem('flicklet-tv-wishlist') || '[]'),
+            watched: JSON.parse(localStorage.getItem('flicklet-tv-watched') || '[]')
+          }
+        },
+        settings: JSON.parse(localStorage.getItem('flicklet-settings') || '{}'),
+        user: JSON.parse(localStorage.getItem('flicklet-user') || '{}'),
+        timestamp: new Date().toISOString(),
+        version: '1.0'
+      };
+
+      // Create downloadable file
+      const dataStr = JSON.stringify(userData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `flicklet-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      alert('✅ Backup downloaded successfully!');
     } catch (error) {
-      alert('Failed to populate next air dates. Check the console for details.');
-      console.error('Error populating next air dates:', error);
+      console.error('Backup failed:', error);
+      alert('❌ Backup failed. Please try again.');
     }
   };
 
+  const handleRestore = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const userData = JSON.parse(text);
+        
+        // Validate backup format
+        if (!userData.watchlists || !userData.timestamp) {
+          throw new Error('Invalid backup file format');
+        }
+
+        // Confirm restore
+        const confirmed = confirm(
+          `⚠️ This will replace ALL your current data with the backup from ${new Date(userData.timestamp).toLocaleDateString()}.\n\nThis action cannot be undone. Continue?`
+        );
+        
+        if (!confirmed) return;
+
+        // Restore data
+        if (userData.watchlists.movies) {
+          localStorage.setItem('flicklet-movies-watching', JSON.stringify(userData.watchlists.movies.watching || []));
+          localStorage.setItem('flicklet-movies-wishlist', JSON.stringify(userData.watchlists.movies.wishlist || []));
+          localStorage.setItem('flicklet-movies-watched', JSON.stringify(userData.watchlists.movies.watched || []));
+        }
+        
+        if (userData.watchlists.tv) {
+          localStorage.setItem('flicklet-tv-watching', JSON.stringify(userData.watchlists.tv.watching || []));
+          localStorage.setItem('flicklet-tv-wishlist', JSON.stringify(userData.watchlists.tv.wishlist || []));
+          localStorage.setItem('flicklet-tv-watched', JSON.stringify(userData.watchlists.tv.watched || []));
+        }
+        
+        if (userData.settings) {
+          localStorage.setItem('flicklet-settings', JSON.stringify(userData.settings));
+        }
+        
+        if (userData.user) {
+          localStorage.setItem('flicklet-user', JSON.stringify(userData.user));
+        }
+
+        alert('✅ Data restored successfully! Please refresh the page to see changes.');
+        
+        // Trigger page refresh after a short delay
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        
+      } catch (error) {
+        console.error('Restore failed:', error);
+        alert('❌ Restore failed. Please check the backup file and try again.');
+      }
+    };
+    input.click();
+  };
+
+  const handleSystemWipe = () => {
+    const confirmed = confirm(
+      '🚨 NUCLEAR OPTION: This will permanently delete ALL your data including:\n\n' +
+      '• All watchlists (movies & TV)\n' +
+      '• All settings\n' +
+      '• All user preferences\n' +
+      '• Everything stored locally\n\n' +
+      'This action CANNOT be undone. Are you absolutely sure?'
+    );
+    
+    if (!confirmed) return;
+    
+    const doubleConfirmed = confirm(
+      '⚠️ FINAL WARNING: This will completely wipe your Flicklet data.\n\n' +
+      'Type "DELETE" in the next prompt to confirm.'
+    );
+    
+    if (!doubleConfirmed) return;
+    
+    const finalCheck = prompt('Type "DELETE" to confirm system wipe:');
+    if (finalCheck !== 'DELETE') {
+      alert('❌ System wipe cancelled.');
+      return;
+    }
+
+    try {
+      // Clear all Flicklet data
+      const keys = Object.keys(localStorage).filter(key => key.startsWith('flicklet-'));
+      keys.forEach(key => localStorage.removeItem(key));
+      
+      alert('💥 System wiped successfully! The page will refresh.');
+      
+      // Refresh page
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      
+    } catch (error) {
+      console.error('System wipe failed:', error);
+      alert('❌ System wipe failed. Please try again.');
+    }
+  };
+  
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{translations.data}</h3>
+      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{translations.data}</h3>
       
-      {/* Development Tools */}
+      {/* Share with Friends */}
       <div>
-        <h4 className="text-lg font-medium mb-3" style={{ color: 'var(--text)' }}>Development Tools</h4>
+        <h4 className="text-lg font-medium mb-3 text-gray-800 dark:text-gray-200">📤 Share with Friends</h4>
         <div className="space-y-3">
-          <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--btn)', borderColor: 'var(--line)', border: '1px solid' }}>
-            <h5 className="font-medium mb-2" style={{ color: 'var(--text)' }}>Test Data</h5>
-            <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
-              Add sample movies and TV shows to test the app functionality.
+          <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+            <h5 className="font-medium mb-2 text-gray-900 dark:text-gray-100">Create Shareable List</h5>
+            <p className="text-sm mb-3 text-gray-600 dark:text-gray-400">
+              Create a shareable list of your shows and movies to send to friends
             </p>
-            <div className="flex gap-2">
-              <button
-                onClick={handleAddTestData}
-                className="px-3 py-2 rounded-lg text-sm transition-colors"
-                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-              >
-                Add Test Data
-              </button>
-              <button
-                onClick={handleClearTestData}
-                className="px-3 py-2 rounded-lg text-sm transition-colors"
-                style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-              >
-                Clear Test Data
-              </button>
-              <button
-                onClick={handlePopulateNextAirDates}
-                className="px-3 py-2 rounded-lg text-sm transition-colors"
-                style={{ backgroundColor: 'var(--pro)', color: 'white' }}
-              >
-                Populate Next Air Dates
-              </button>
-            </div>
+            <button
+              onClick={() => setShowSharingModal(true)}
+              className="px-3 py-2 rounded-lg text-sm transition-colors bg-pink-500 hover:bg-pink-600 text-white"
+            >
+              📤 Share with Friends
+            </button>
           </div>
         </div>
       </div>
-      
+
       {/* Data Management */}
       <div>
-        <h4 className="text-lg font-medium mb-3" style={{ color: 'var(--text)' }}>Data Management</h4>
-        <p className="text-sm" style={{ color: 'var(--muted)' }}>
-          {translations.dataManagementComingSoon || 'Data management features coming soon...'}
-        </p>
+        <h4 className="text-lg font-medium mb-3 text-gray-800 dark:text-gray-200">💾 Data Management</h4>
+        <div className="space-y-3">
+          
+          {/* Backup */}
+          <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+            <h5 className="font-medium mb-2 text-gray-900 dark:text-gray-100">💾 Backup Data</h5>
+            <p className="text-sm mb-3 text-gray-600 dark:text-gray-400">
+              Download a complete backup of all your watchlists and settings
+            </p>
+            <button
+              onClick={handleBackup}
+              className="px-3 py-2 rounded-lg text-sm transition-colors bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              💾 Download Backup
+            </button>
+          </div>
+
+          {/* Restore */}
+          <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+            <h5 className="font-medium mb-2 text-gray-900 dark:text-gray-100">📥 Restore Data</h5>
+            <p className="text-sm mb-3 text-gray-600 dark:text-gray-400">
+              Upload a backup file to restore your watchlists and settings
+            </p>
+            <button
+              onClick={handleRestore}
+              className="px-3 py-2 rounded-lg text-sm transition-colors bg-green-500 hover:bg-green-600 text-white"
+            >
+              📥 Restore from Backup
+            </button>
+          </div>
+
+          {/* System Wipe */}
+          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+            <h5 className="font-medium mb-2 text-red-900 dark:text-red-100">🚨 System Wipe</h5>
+            <p className="text-sm mb-3 text-red-700 dark:text-red-300">
+              Permanently delete ALL your data. This action cannot be undone.
+            </p>
+            <button
+              onClick={handleSystemWipe}
+              className="px-3 py-2 rounded-lg text-sm transition-colors bg-red-500 hover:bg-red-600 text-white"
+            >
+              🚨 Nuclear Option
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -978,15 +1136,352 @@ function CommunityTab() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* Leaderboards Coming Soon */}
-      <div className="p-6 rounded-lg" style={{ backgroundColor: 'var(--btn)', borderColor: 'var(--line)', border: '1px solid' }}>
-        <div className="text-center">
-          <div className="text-4xl mb-4">🏆</div>
-          <h4 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>Leaderboards Coming Soon!</h4>
-          <p className="text-sm" style={{ color: 'var(--muted)' }}>
-            Compete with friends and the community in weekly challenges and leaderboards.
-          </p>
+// Sharing Modal Component
+function SharingModal({ onClose }: { onClose: () => void }) {
+  const { username } = useUsername();
+  const watchingItems = useLibrary('watching');
+  const wishlistItems = useLibrary('wishlist');
+  const watchedItems = useLibrary('watched');
+  
+  const [selectedTabs, setSelectedTabs] = useState({
+    watching: true,
+    wishlist: true,
+    watched: true
+  });
+  
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [contentOptions, setContentOptions] = useState({
+    includeMovies: true,
+    includeTV: true,
+    includeRatings: true,
+    includeDescriptions: false
+  });
+  
+  const [showResult, setShowResult] = useState(false);
+  const [shareableText, setShareableText] = useState('');
+
+  // Get all items from selected tabs
+  const getAllItems = () => {
+    const items = [];
+    if (selectedTabs.watching) items.push(...watchingItems);
+    if (selectedTabs.wishlist) items.push(...wishlistItems);
+    if (selectedTabs.watched) items.push(...watchedItems);
+    return items;
+  };
+
+  // Filter items based on content options
+  const getFilteredItems = () => {
+    let items = getAllItems();
+    
+    if (!contentOptions.includeMovies && !contentOptions.includeTV) {
+      return [];
+    }
+    
+    if (!contentOptions.includeMovies) {
+      items = items.filter(item => item.mediaType !== 'movie');
+    }
+    
+    if (!contentOptions.includeTV) {
+      items = items.filter(item => item.mediaType !== 'tv');
+    }
+    
+    return items;
+  };
+
+  // Get items to include in share
+  const getItemsToShare = () => {
+    const filteredItems = getFilteredItems();
+    
+    if (selectedItems.size === 0) {
+      return filteredItems; // If nothing selected individually, include all filtered items
+    }
+    
+    return filteredItems.filter(item => selectedItems.has(item.id.toString()));
+  };
+
+  const handleTabToggle = (tab: keyof typeof selectedTabs) => {
+    setSelectedTabs(prev => ({ ...prev, [tab]: !prev[tab] }));
+  };
+
+  const handleOptionToggle = (option: keyof typeof contentOptions) => {
+    setContentOptions(prev => ({ ...prev, [option]: !prev[option] }));
+  };
+
+  const handleItemToggle = (itemId: string) => {
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    const allItemIds = getFilteredItems().map(item => item.id.toString());
+    setSelectedItems(new Set(allItemIds));
+  };
+
+  const handleSelectNone = () => {
+    setSelectedItems(new Set());
+  };
+
+  const generateShareableText = () => {
+    const userName = username || 'Flicklet User';
+    const itemsToShare = getItemsToShare();
+    
+    let text = `🎬 Flicklet - ${userName}'s Watchlist\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    
+    if (selectedTabs.watching && itemsToShare.some(item => watchingItems.some(w => w.id === item.id))) {
+      text += `▶️ Currently Watching\n`;
+      text += `${'─'.repeat(30)}\n`;
+      const watchingItemsToShare = itemsToShare.filter(item => watchingItems.some(w => w.id === item.id));
+      watchingItemsToShare.forEach(item => {
+        const icon = item.mediaType === 'movie' ? '🎬' : '📺';
+        const rating = contentOptions.includeRatings && item.voteAverage ? ` ⭐ ${item.voteAverage.toFixed(1)}` : '';
+        text += `${icon} ${item.title}${rating}\n`;
+      });
+      text += '\n';
+    }
+    
+    if (selectedTabs.wishlist && itemsToShare.some(item => wishlistItems.some(w => w.id === item.id))) {
+      text += `❤️ Want to Watch\n`;
+      text += `${'─'.repeat(30)}\n`;
+      const wishlistItemsToShare = itemsToShare.filter(item => wishlistItems.some(w => w.id === item.id));
+      wishlistItemsToShare.forEach(item => {
+        const icon = item.mediaType === 'movie' ? '🎬' : '📺';
+        const rating = contentOptions.includeRatings && item.voteAverage ? ` ⭐ ${item.voteAverage.toFixed(1)}` : '';
+        text += `${icon} ${item.title}${rating}\n`;
+      });
+      text += '\n';
+    }
+    
+    if (selectedTabs.watched && itemsToShare.some(item => watchedItems.some(w => w.id === item.id))) {
+      text += `✅ Already Watched\n`;
+      text += `${'─'.repeat(30)}\n`;
+      const watchedItemsToShare = itemsToShare.filter(item => watchedItems.some(w => w.id === item.id));
+      watchedItemsToShare.forEach(item => {
+        const icon = item.mediaType === 'movie' ? '🎬' : '📺';
+        const rating = contentOptions.includeRatings && item.voteAverage ? ` ⭐ ${item.voteAverage.toFixed(1)}` : '';
+        text += `${icon} ${item.title}${rating}\n`;
+      });
+      text += '\n';
+    }
+    
+    text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    text += `📱 Track your shows and movies with Flicklet!\n`;
+    text += `🔗 https://flicklet.app\n`;
+    
+    return text;
+  };
+
+  const handleGenerate = () => {
+    const text = generateShareableText();
+    setShareableText(text);
+    setShowResult(true);
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(shareableText);
+      alert('Copied to clipboard!');
+    } catch (error) {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = shareableText;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      alert('Copied to clipboard!');
+    }
+  };
+
+  const filteredItems = getFilteredItems();
+
+  if (showResult) {
+    return (
+      <div className="fixed inset-0 z-[99999] backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">📋 Your Shareable List</h3>
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Copy the text below and share it with your friends! They can see what you're watching and get recommendations.
+              </p>
+            </div>
+            
+            <textarea
+              value={shareableText}
+              readOnly
+              className="w-full h-64 p-3 border rounded-lg font-mono text-sm bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
+            />
+            
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 rounded-lg text-sm transition-colors"
+                style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+              >
+                Close
+              </button>
+              <button
+                onClick={handleCopy}
+                className="px-4 py-2 rounded-lg text-sm transition-colors"
+                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+              >
+                📋 Copy to Clipboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-[99999] backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">📤 Share Your Lists</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              ✕
+            </button>
+          </div>
+          
+          <div className="space-y-6 max-h-[70vh] overflow-y-auto">
+            {/* Tab Selection */}
+            <div>
+              <h4 className="text-lg font-medium mb-3 text-gray-800 dark:text-gray-200">📋 Select Lists to Share</h4>
+              <div className="space-y-2">
+                {[
+                  { key: 'watching', label: '▶️ Currently Watching', items: watchingItems },
+                  { key: 'wishlist', label: '❤️ Want to Watch', items: wishlistItems },
+                  { key: 'watched', label: '✅ Already Watched', items: watchedItems }
+                ].map(({ key, label, items }) => (
+                  <label key={key} className="flex items-center justify-between p-3 rounded-lg cursor-pointer" style={{ backgroundColor: 'var(--btn)', borderColor: 'var(--line)', border: '1px solid' }}>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedTabs[key as keyof typeof selectedTabs]}
+                        onChange={() => handleTabToggle(key as keyof typeof selectedTabs)}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-gray-900 dark:text-gray-100">{label}</span>
+                    </div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{items.length} items</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            
+            {/* Content Options */}
+            <div>
+              <h4 className="text-lg font-medium mb-3 text-gray-800 dark:text-gray-200">🎯 Content Options</h4>
+              <div className="space-y-2">
+                {[
+                  { key: 'includeMovies', label: '🎬 Include Movies' },
+                  { key: 'includeTV', label: '📺 Include TV Shows' },
+                  { key: 'includeRatings', label: '⭐ Include Ratings' },
+                  { key: 'includeDescriptions', label: '📝 Include Descriptions' }
+                ].map(({ key, label }) => (
+                  <label key={key} className="flex items-center gap-3 p-3 rounded-lg cursor-pointer" style={{ backgroundColor: 'var(--btn)', borderColor: 'var(--line)', border: '1px solid' }}>
+                    <input
+                      type="checkbox"
+                      checked={contentOptions[key as keyof typeof contentOptions]}
+                      onChange={() => handleOptionToggle(key as keyof typeof contentOptions)}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-gray-900 dark:text-gray-100">{label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Item Selection */}
+            {filteredItems.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200">🎬 Select Items to Share</h4>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSelectAll}
+                      className="px-3 py-1 rounded text-sm transition-colors"
+                      style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+                    >
+                      Select All
+                    </button>
+                    <button
+                      onClick={handleSelectNone}
+                      className="px-3 py-1 rounded text-sm transition-colors"
+                      style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+                    >
+                      Select None
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="max-h-48 overflow-y-auto space-y-2">
+                  {filteredItems.map((item) => (
+                    <label key={item.id} className="flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.has(item.id.toString())}
+                        onChange={() => handleItemToggle(item.id.toString())}
+                        className="w-4 h-4"
+                      />
+                      <span className="flex-1 text-sm text-gray-900 dark:text-gray-100">
+                        {item.mediaType === 'movie' ? '🎬' : '📺'} {item.title}
+                        {contentOptions.includeRatings && item.voteAverage && (
+                          <span className="ml-2 text-xs text-gray-600 dark:text-gray-400">
+                            ⭐ {item.voteAverage.toFixed(1)}
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Actions */}
+            <div className="flex gap-2 pt-4 border-t" style={{ borderColor: 'var(--line)' }}>
+              <button
+                onClick={onClose}
+                className="px-4 py-2 rounded-lg text-sm transition-colors"
+                style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleGenerate}
+                className="px-4 py-2 rounded-lg text-sm transition-colors"
+                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+              >
+                📋 Generate Shareable List
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

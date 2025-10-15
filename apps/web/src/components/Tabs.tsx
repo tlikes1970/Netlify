@@ -2,7 +2,7 @@ import { useTranslations } from '../lib/language';
 import { useLibrary } from '../lib/storage';
 import { useCustomLists } from '../lib/customLists';
 
-type TabId = 'watching'|'want'|'watched'|'mylists'|'discovery';
+type TabId = 'watching'|'want'|'watched'|'not'|'mylists'|'discovery';
 export type TabsProps = { current: 'home' | TabId; onChange: (next: 'home' | TabId) => void; };
 
 export default function Tabs({ current, onChange }: TabsProps) {
@@ -13,16 +13,19 @@ export default function Tabs({ current, onChange }: TabsProps) {
   const watchingItems = useLibrary('watching');
   const wantItems = useLibrary('wishlist');
   const watchedItems = useLibrary('watched');
+  const notItems = useLibrary('not');
   
   const watchingCount = watchingItems.length;
   const wantCount = wantItems.length;
   const watchedCount = watchedItems.length;
+  const notCount = notItems.length;
   const myListsCount = Array.isArray(customLists) ? customLists.length : 0;
   
   const TABS: { id: TabId; label: string; count: number }[] = [
     { id: 'watching', label: translations.currentlyWatching, count: watchingCount },
     { id: 'want',     label: translations.wantToWatch, count: wantCount },
     { id: 'watched',  label: translations.watched, count: watchedCount },
+    { id: 'not',      label: translations.notInterested || 'Not Interested', count: notCount },
     { id: 'mylists',  label: translations.myLists || 'My Lists', count: myListsCount },
     { id: 'discovery',label: translations.discovery, count: 0 } // Discovery doesn't have a count
   ];

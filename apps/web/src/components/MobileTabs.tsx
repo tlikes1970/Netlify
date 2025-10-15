@@ -3,7 +3,7 @@ import { useLibrary } from '../lib/storage';
 import { useCustomLists } from '../lib/customLists';
 import { useEffect, useState, createContext, useContext } from 'react';
 
-type TabId = 'watching'|'want'|'watched'|'mylists'|'discovery';
+type TabId = 'watching'|'want'|'watched'|'not'|'mylists'|'discovery';
 export type MobileTabsProps = { current: 'home' | TabId; onChange: (next: 'home' | TabId) => void; };
 
 // Single source of truth for mobile nav height
@@ -139,16 +139,19 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
   const watchingItems = useLibrary('watching');
   const wantItems = useLibrary('wishlist');
   const watchedItems = useLibrary('watched');
+  const notItems = useLibrary('not');
   
   const watchingCount = watchingItems.length;
   const wantCount = wantItems.length;
   const watchedCount = watchedItems.length;
+  const notCount = notItems.length;
   const myListsCount = Array.isArray(customLists) ? customLists.length : 0;
   
   const TABS: { id: TabId; label: string; count: number; icon: string }[] = [
     { id: 'watching', label: 'Watching', count: watchingCount, icon: '▶️' },
     { id: 'want',     label: 'Wishlist', count: wantCount, icon: '❤️' },
     { id: 'watched',  label: 'Watched', count: watchedCount, icon: '✅' },
+    { id: 'not',      label: 'Not Interested', count: notCount, icon: '❌' },
     { id: 'mylists',  label: 'Lists', count: myListsCount, icon: '📋' },
     { id: 'discovery',label: 'Discover', count: 0, icon: '🔍' }
   ];

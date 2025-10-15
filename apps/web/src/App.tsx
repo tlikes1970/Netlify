@@ -86,6 +86,7 @@ export default function App() {
   const watching = useLibrary('watching');
   const wishlist = useLibrary('wishlist');
   const watched = useLibrary('watched');
+  const notInterested = useLibrary('not');
 
   // Data rails
   const theaters = useInTheaters();
@@ -98,6 +99,22 @@ export default function App() {
     const cleanup = mountActionBridge();
     return cleanup;
   }, [addToast]);
+
+  // Handle navigation events from settings
+  useEffect(() => {
+    const handleNavigate = (event: CustomEvent) => {
+      const { view: targetView } = event.detail;
+      if (targetView && targetView !== 'home') {
+        setView(targetView as any);
+        setShowSettings(false); // Close settings when navigating
+      }
+    };
+
+    document.addEventListener('navigate', handleNavigate as EventListener);
+    return () => {
+      document.removeEventListener('navigate', handleNavigate as EventListener);
+    };
+  }, []);
 
       // Handle search events from search cards
       useEffect(() => {
@@ -195,6 +212,7 @@ export default function App() {
               {view === 'watching'  && <ListPage title="Currently Watching" items={watching} mode="watching" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
               {view === 'want'      && <ListPage title="Want to Watch"     items={wishlist}     mode="want" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
               {view === 'watched'   && <ListPage title="Watched"           items={watched}  mode="watched" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
+              {view === 'not'       && <ListPage title="Not Interested"    items={notInterested} mode="not" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
               {view === 'mylists'  && <MyListsPage />}
               {view === 'discovery' && <DiscoveryPage query={searchQuery} genreId={searchGenre ? parseInt(searchGenre) : null} />}
             </div>
