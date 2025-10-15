@@ -12,7 +12,7 @@ export default function CommunityPanel() {
   const [triviaModalOpen, setTriviaModalOpen] = useState(false);
 
   return (
-    <>
+    <div className="relative">
       <div data-rail="community" className="grid md:grid-cols-3 gap-4 items-stretch">
         {/* Left: Player (spans 1 column) */}
         <div className="md:col-span-1">
@@ -98,17 +98,17 @@ export default function CommunityPanel() {
         </div>
       </div>
 
-      {/* FlickWord Modal */}
+      {/* FlickWord Modal - Now rendered via Portal */}
       <FlickWordModal
         isOpen={flickWordModalOpen}
         onClose={() => setFlickWordModalOpen(false)}
       />
 
-      {/* Trivia Modal */}
+      {/* Trivia Modal - Now rendered via Portal */}
       <TriviaModal
         isOpen={triviaModalOpen}
         onClose={() => setTriviaModalOpen(false)}
       />
-    </>
+    </div>
   );
 }
