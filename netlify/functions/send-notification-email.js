@@ -4,6 +4,17 @@
 const nodemailer = require('nodemailer');
 
 exports.handler = async (event, context) => {
+  console.log('📧 Email function called:', {
+    method: event.httpMethod,
+    hasBody: !!event.body,
+    envVars: {
+      hasSMTP_HOST: !!process.env.SMTP_HOST,
+      hasSMTP_USER: !!process.env.SMTP_USER,
+      hasSMTP_PASS: !!process.env.SMTP_PASS,
+      hasFROM_EMAIL: !!process.env.FROM_EMAIL,
+    }
+  });
+
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
@@ -31,6 +42,14 @@ exports.handler = async (event, context) => {
     }
 
     // Create email transporter
+    console.log('📧 Creating transporter with config:', {
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      user: process.env.SMTP_USER,
+      hasPass: !!process.env.SMTP_PASS,
+    });
+
     const transporter = nodemailer.createTransporter({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT || 587,
@@ -40,6 +59,11 @@ exports.handler = async (event, context) => {
         pass: process.env.SMTP_PASS,
       },
     });
+
+    // Verify transporter configuration
+    console.log('📧 Verifying transporter...');
+    await transporter.verify();
+    console.log('📧 Transporter verified successfully');
 
     // Format air date
     const airDateFormatted = new Date(airDate).toLocaleDateString('en-US', {
@@ -113,6 +137,7 @@ To unsubscribe, update your notification settings in the Flicklet app.
     `;
 
     // Send email
+    console.log('📧 Sending email to:', email);
     const info = await transporter.sendMail({
       from: `"Flicklet" <${process.env.FROM_EMAIL || 'notifications@flicklet.app'}>`,
       to: email,
@@ -121,7 +146,12 @@ To unsubscribe, update your notification settings in the Flicklet app.
       html: emailHtml,
     });
 
-    console.log('Email sent successfully:', info.messageId);
+    console.log('📧 Email sent successfully:', {
+      messageId: info.messageId,
+      response: info.response,
+      accepted: info.accepted,
+      rejected: info.rejected,
+    });
 
     return {
       statusCode: 200,
@@ -143,3 +173,5 @@ To unsubscribe, update your notification settings in the Flicklet app.
     };
   }
 };
+
+
