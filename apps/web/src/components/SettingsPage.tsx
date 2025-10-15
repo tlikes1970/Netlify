@@ -4,20 +4,34 @@ import { useTranslations, useLanguage, changeLanguage } from '../lib/language';
 import { useCustomLists, customListManager } from '../lib/customLists';
 import { useUsername } from '../hooks/useUsername';
 import { useLibrary } from '../lib/storage';
+import { lockScroll, unlockScroll } from '../utils/scrollLock';
 import PersonalityExamples from './PersonalityExamples';
-import PersonalityTest from './PersonalityTest';
 import ForYouGenreConfig from './ForYouGenreConfig';
+import NotInterestedModal from './modals/NotInterestedModal';
+import { NotificationSettings } from './modals/NotificationSettings';
+import { NotificationCenter } from './modals/NotificationCenter';
 import type { Language } from '../lib/language.types';
 import type { ListName } from '../state/library.types';
 
-type SettingsTab = 'general' | 'notifications' | 'layout' | 'data' | 'pro' | 'about' | 'test' | 'social' | 'community';
+type SettingsTab = 'general' | 'notifications' | 'layout' | 'data' | 'pro' | 'about' | 'social' | 'community';
 
 export default function SettingsPage({ onClose }: { onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [showSharingModal, setShowSharingModal] = useState(false);
+  const [showNotInterestedModal, setShowNotInterestedModal] = useState(false);
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+  const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const settings = useSettings();
   const translations = useTranslations();
   const currentLanguage = useLanguage();
+
+  // Lock scroll when settings modal is open
+  useEffect(() => {
+    lockScroll();
+    return () => {
+      unlockScroll();
+    };
+  }, []);
 
   const tabs = [
     { id: 'general' as const, label: translations.general },
@@ -28,7 +42,6 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
     { id: 'community' as const, label: '🏆 Community' },
     { id: 'pro' as const, label: translations.pro },
     { id: 'about' as const, label: translations.about },
-    { id: 'test' as const, label: 'Personality Test' },
   ];
 
   return (
@@ -83,15 +96,17 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
 
                 {/* Right content area */}
                 <div className="flex-1 p-6 overflow-y-auto">
-                  {activeTab === 'general' && <GeneralTab settings={settings} translations={translations} currentLanguage={currentLanguage} />}
-                  {activeTab === 'notifications' && <NotificationsTab />}
+                  {activeTab === 'general' && <GeneralTab settings={settings} translations={translations} currentLanguage={currentLanguage} onShowNotInterestedModal={() => setShowNotInterestedModal(true)} />}
+                  {activeTab === 'notifications' && <NotificationsTab 
+                    onOpenSettings={() => setShowNotificationSettings(true)}
+                    onOpenCenter={() => setShowNotificationCenter(true)}
+                  />}
                   {activeTab === 'layout' && <LayoutTab settings={settings} />}
                   {activeTab === 'data' && <DataTab setShowSharingModal={setShowSharingModal} />}
                   {activeTab === 'social' && <SocialTab />}
                   {activeTab === 'community' && <CommunityTab />}
                   {activeTab === 'pro' && <ProTab />}
                   {activeTab === 'about' && <AboutTab />}
-                  {activeTab === 'test' && <PersonalityTest personalityLevel={settings.personalityLevel} />}
                 </div>
       </div>
       
@@ -99,12 +114,48 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
       {showSharingModal && (
         <SharingModal onClose={() => setShowSharingModal(false)} />
       )}
+      
+      {/* Not Interested Modal */}
+      <NotInterestedModal 
+        isOpen={showNotInterestedModal} 
+        onClose={() => setShowNotInterestedModal(false)} 
+      />
+      
+      {/* Notification Settings Modal */}
+      {showNotificationSettings && (
+        <NotificationSettings onClose={() => setShowNotificationSettings(false)} />
+      )}
+      
+      {/* Notification Center Modal */}
+      {showNotificationCenter && (
+        <NotificationCenter onClose={() => setShowNotificationCenter(false)} />
+      )}
     </div>
   );
 }
 
 // General Tab Component
-function GeneralTab({ settings, translations, currentLanguage }: { settings: any; translations: any; currentLanguage: Language }) {
+function GeneralTab({ settings, translations, currentLanguage, onShowNotInterestedModal }: { settings: any; translations: any; currentLanguage: Language; onShowNotInterestedModal: () => void }) {
+  // Get reactive library data for stats
+  const watchingItems = useLibrary('watching');
+  const wishlistItems = useLibrary('wishlist');
+  const watchedItems = useLibrary('watched');
+  const notItems = useLibrary('not');
+
+  // Calculate stats by media type
+  const tvStats = {
+    watching: watchingItems.filter(item => item.mediaType === 'tv').length,
+    wishlist: wishlistItems.filter(item => item.mediaType === 'tv').length,
+    watched: watchedItems.filter(item => item.mediaType === 'tv').length,
+    not: notItems.filter(item => item.mediaType === 'tv').length
+  };
+
+  const movieStats = {
+    watching: watchingItems.filter(item => item.mediaType === 'movie').length,
+    wishlist: wishlistItems.filter(item => item.mediaType === 'movie').length,
+    watched: watchedItems.filter(item => item.mediaType === 'movie').length,
+    not: notItems.filter(item => item.mediaType === 'movie').length
+  };
   const { username, updateUsername } = useUsername();
   const [displayName, setDisplayName] = useState(username);
   const [showWarning, setShowWarning] = useState(false);
@@ -213,17 +264,19 @@ function GeneralTab({ settings, translations, currentLanguage }: { settings: any
           <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--card)' }}>
             <h5 className="text-sm font-medium mb-2" style={{ color: 'var(--text)' }}>TV Shows</h5>
             <div className="space-y-1 text-sm" style={{ color: 'var(--muted)' }}>
-              <div>Currently Watching: 0</div>
-              <div>Want to Watch: 0</div>
-              <div>Watched: 0</div>
+              <div>Currently Watching: {tvStats.watching}</div>
+              <div>Want to Watch: {tvStats.wishlist}</div>
+              <div>Watched: {tvStats.watched}</div>
+              <div>Not Interested: {tvStats.not}</div>
             </div>
           </div>
           <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--card)' }}>
             <h5 className="text-sm font-medium mb-2" style={{ color: 'var(--text)' }}>Movies</h5>
             <div className="space-y-1 text-sm" style={{ color: 'var(--muted)' }}>
-              <div>Currently Watching: 0</div>
-              <div>Want to Watch: 0</div>
-              <div>Watched: 0</div>
+              <div>Currently Watching: {movieStats.watching}</div>
+              <div>Want to Watch: {movieStats.wishlist}</div>
+              <div>Watched: {movieStats.watched}</div>
+              <div>Not Interested: {movieStats.not}</div>
             </div>
           </div>
         </div>
@@ -235,10 +288,7 @@ function GeneralTab({ settings, translations, currentLanguage }: { settings: any
         <button 
           className="px-4 py-2 rounded-lg transition-colors"
           style={{ backgroundColor: 'var(--btn)', color: 'var(--text)' }}
-          onClick={() => {
-            // Navigate to the not interested tab
-            window.dispatchEvent(new CustomEvent('navigate', { detail: { view: 'not' } }));
-          }}
+          onClick={onShowNotInterestedModal}
         >
           Manage Not Interested List
         </button>
@@ -301,11 +351,107 @@ function GeneralTab({ settings, translations, currentLanguage }: { settings: any
 }
 
 // Placeholder tabs
-function NotificationsTab() {
+// Notifications Tab Component
+function NotificationsTab({ onOpenSettings, onOpenCenter }: { onOpenSettings: () => void; onOpenCenter: () => void }) {
+  const settings = useSettings();
+  const translations = useTranslations();
+  
+  // Check if user is Pro (simplified check)
+  const isProUser = settings.pro || false;
+
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold text-white">Notifications</h3>
-      <p className="text-neutral-400">Notification settings coming soon...</p>
+      <div>
+        <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text)' }}>🔔 Notifications</h3>
+        <p className="text-sm" style={{ color: 'var(--muted)' }}>
+          Manage your notification preferences and view notification history.
+        </p>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <button
+          onClick={onOpenSettings}
+          className="p-4 rounded-lg border transition-colors hover:opacity-80"
+          style={{ 
+            backgroundColor: 'var(--card)', 
+            borderColor: 'var(--line)', 
+            color: 'var(--text)' 
+          }}
+        >
+          <div className="flex items-center space-x-3">
+            <div className="text-2xl">⚙️</div>
+            <div className="text-left">
+              <div className="font-medium">Notification Settings</div>
+              <div className="text-sm" style={{ color: 'var(--muted)' }}>
+                Configure timing and methods
+              </div>
+            </div>
+          </div>
+        </button>
+
+        <button
+          onClick={onOpenCenter}
+          className="p-4 rounded-lg border transition-colors hover:opacity-80"
+          style={{ 
+            backgroundColor: 'var(--card)', 
+            borderColor: 'var(--line)', 
+            color: 'var(--text)' 
+          }}
+        >
+          <div className="flex items-center space-x-3">
+            <div className="text-2xl">📋</div>
+            <div className="text-left">
+              <div className="font-medium">Notification Center</div>
+              <div className="text-sm" style={{ color: 'var(--muted)' }}>
+                View notification history
+              </div>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* Current Settings Summary */}
+      <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', border: '1px solid' }}>
+        <h4 className="text-lg font-medium mb-3" style={{ color: 'var(--text)' }}>Current Settings</h4>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span style={{ color: 'var(--muted)' }}>Episode Reminders:</span>
+            <span style={{ color: 'var(--text)' }}>Enabled</span>
+          </div>
+          <div className="flex justify-between">
+            <span style={{ color: 'var(--muted)' }}>Timing:</span>
+            <span style={{ color: 'var(--text)' }}>
+              {isProUser ? 'Custom (Pro)' : '24 hours before'}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span style={{ color: 'var(--muted)' }}>Methods:</span>
+            <span style={{ color: 'var(--text)' }}>
+              In-app, Push{isProUser ? ', Email' : ''}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Pro Features Banner */}
+      {!isProUser && (
+        <div className="p-4 rounded-lg border" style={{ backgroundColor: 'var(--btn)', borderColor: 'var(--accent)' }}>
+          <div className="flex items-center gap-3">
+            <div className="text-2xl">💎</div>
+            <div className="flex-1">
+              <h4 className="font-semibold">Upgrade to Pro</h4>
+              <p className="text-sm" style={{ color: 'var(--muted)' }}>
+                Get precise timing control, email notifications, and advanced features
+              </p>
+            </div>
+            <span className="px-3 py-1 text-sm font-semibold rounded-full" 
+                  style={{ backgroundColor: 'var(--accent)', color: 'white' }}>
+              PRO
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -561,27 +707,40 @@ function LayoutTab({ settings }: { settings: any }) {
       <div>
         <h4 className="text-lg font-medium mb-3" style={{ color: 'var(--text)' }}>{translations.basicCustomization}</h4>
         <div className="space-y-3">
-          <label className="flex items-center space-x-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={settings.layout.condensedView}
-              onChange={(e) => settingsManager.updateSettings({
-                layout: { ...settings.layout, condensedView: e.target.checked }
-              })}
-              className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 rounded focus:ring-blue-500"
-            />
-            <span style={{ color: 'var(--text)' }}>{translations.condensedView}</span>
-          </label>
+          <div className="space-y-1">
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={settings.layout.condensedView}
+                onChange={(e) => settingsManager.updateSettings({
+                  layout: { ...settings.layout, condensedView: e.target.checked }
+                })}
+                className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 rounded focus:ring-blue-500"
+              />
+              <span style={{ color: 'var(--text)' }}>{translations.condensedView}</span>
+            </label>
+            <p className="text-xs ml-7" style={{ color: 'var(--muted)' }}>
+              Show more items per screen with smaller cards and shorter button labels. Hides episode tracking and detailed features.
+            </p>
+          </div>
           
-          <label className="flex items-center space-x-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={settings.layout.episodeTracking}
-              onChange={() => settingsManager.toggleEpisodeTracking()}
-              className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 rounded focus:ring-blue-500"
-            />
-            <span style={{ color: 'var(--text)' }}>{translations.enableEpisodeTracking}</span>
-          </label>
+          <div className="space-y-1">
+            <label className={`flex items-center space-x-3 ${settings.layout.condensedView ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+              <input
+                type="checkbox"
+                checked={settings.layout.episodeTracking}
+                onChange={() => settingsManager.toggleEpisodeTracking()}
+                disabled={settings.layout.condensedView}
+                className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 rounded focus:ring-blue-500"
+              />
+              <span style={{ color: 'var(--text)' }}>{translations.enableEpisodeTracking}</span>
+            </label>
+            {settings.layout.condensedView && (
+              <p className="text-xs ml-7" style={{ color: 'var(--muted)' }}>
+                Episode tracking is disabled in condensed view
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -832,10 +991,186 @@ function DataTab({ setShowSharingModal }: { setShowSharingModal: (show: boolean)
 }
 
 function ProTab() {
+  const settings = useSettings();
+  const translations = useTranslations();
+  
+  // Check if user is Pro
+  const isProUser = settings.pro || false;
+  
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold text-white">Pro</h3>
-      <p className="text-neutral-400">Pro features coming soon...</p>
+      {/* Pro Status */}
+      <div className="text-center p-6 rounded-lg" style={{ backgroundColor: 'var(--btn)' }}>
+        <div className="text-4xl mb-3">💎</div>
+        <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text)' }}>
+          {isProUser ? 'You are a Pro User!' : 'Upgrade to Flicklet Pro'}
+        </h3>
+        <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
+          {isProUser 
+            ? 'Thank you for supporting Flicklet! Enjoy all Pro features.'
+            : 'Unlock advanced features and premium content to enhance your TV and movie tracking experience.'
+          }
+        </p>
+        {!isProUser && (
+          <button className="px-6 py-3 rounded-lg font-medium transition-colors" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>
+            Upgrade to Pro
+          </button>
+        )}
+      </div>
+
+      {/* Planned Pro Features */}
+      <div>
+        <h4 className="text-lg font-medium mb-4" style={{ color: 'var(--text)' }}>Planned Pro Features</h4>
+        
+        <div className="space-y-4">
+          {/* Existing Pro Features on Cards */}
+          <div className="p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--line)' }}>
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">🎬</div>
+              <div className="flex-1">
+                <h5 className="font-medium mb-1" style={{ color: 'var(--text)' }}>Bloopers & Behind-the-Scenes</h5>
+                <p className="text-sm mb-2" style={{ color: 'var(--muted)' }}>
+                  Access to bloopers, extras, and behind-the-scenes content on movie and TV show cards
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 text-xs rounded-full" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>PRO</span>
+                  <span className="text-xs" style={{ color: 'var(--muted)' }}>Available Now</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--line)' }}>
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">🔔</div>
+              <div className="flex-1">
+                <h5 className="font-medium mb-1" style={{ color: 'var(--text)' }}>Remind Me</h5>
+                <p className="text-sm mb-2" style={{ color: 'var(--muted)' }}>
+                  Set custom reminders for shows and movies you want to watch later
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 text-xs rounded-full" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>PRO</span>
+                  <span className="text-xs" style={{ color: 'var(--muted)' }}>Available Now</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Smart Notifications */}
+          <div className="p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--line)' }}>
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">🔔</div>
+              <div className="flex-1">
+                <h5 className="font-medium mb-1" style={{ color: 'var(--text)' }}>Smart Notifications</h5>
+                <p className="text-sm mb-2" style={{ color: 'var(--muted)' }}>
+                  Customizable episode notifications with advanced scheduling and timing options
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 text-xs rounded-full" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>PRO</span>
+                  <span className="text-xs" style={{ color: 'var(--muted)' }}>Coming Soon</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Advanced Analytics */}
+          <div className="p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--line)' }}>
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">📊</div>
+              <div className="flex-1">
+                <h5 className="font-medium mb-1" style={{ color: 'var(--text)' }}>Advanced Analytics</h5>
+                <p className="text-sm mb-2" style={{ color: 'var(--muted)' }}>
+                  Detailed watching statistics and viewing journey insights
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 text-xs rounded-full" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>PRO</span>
+                  <span className="text-xs" style={{ color: 'var(--muted)' }}>Coming Soon</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Premium Themes */}
+          <div className="p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--line)' }}>
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">🎨</div>
+              <div className="flex-1">
+                <h5 className="font-medium mb-1" style={{ color: 'var(--text)' }}>Premium Themes</h5>
+                <p className="text-sm mb-2" style={{ color: 'var(--muted)' }}>
+                  Access to premium theme packs and advanced customization options
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 text-xs rounded-full" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>PRO</span>
+                  <span className="text-xs" style={{ color: 'var(--muted)' }}>Coming Soon</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Extra Trivia Content */}
+          <div className="p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--line)' }}>
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">🧠</div>
+              <div className="flex-1">
+                <h5 className="font-medium mb-1" style={{ color: 'var(--text)' }}>Extra Trivia Content</h5>
+                <p className="text-sm mb-2" style={{ color: 'var(--muted)' }}>
+                  Access to additional trivia questions and behind-the-scenes content
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 text-xs rounded-full" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>PRO</span>
+                  <span className="text-xs" style={{ color: 'var(--muted)' }}>Coming Soon</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CSV Export */}
+          <div className="p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--line)' }}>
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">📊</div>
+              <div className="flex-1">
+                <h5 className="font-medium mb-1" style={{ color: 'var(--text)' }}>CSV Export</h5>
+                <p className="text-sm mb-2" style={{ color: 'var(--muted)' }}>
+                  Export your lists to CSV format for use in spreadsheets
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 text-xs rounded-full" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>PRO</span>
+                  <span className="text-xs" style={{ color: 'var(--muted)' }}>Coming Soon</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Priority Support */}
+          <div className="p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--line)' }}>
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">🚀</div>
+              <div className="flex-1">
+                <h5 className="font-medium mb-1" style={{ color: 'var(--text)' }}>Priority Support</h5>
+                <p className="text-sm mb-2" style={{ color: 'var(--muted)' }}>
+                  Faster help when you need it with priority customer support
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 text-xs rounded-full" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>PRO</span>
+                  <span className="text-xs" style={{ color: 'var(--muted)' }}>Coming Soon</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Coming Soon */}
+      <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--btn)' }}>
+        <h5 className="font-medium mb-2" style={{ color: 'var(--text)' }}>🚀 What's Coming Next</h5>
+        <ul className="text-sm space-y-1" style={{ color: 'var(--muted)' }}>
+          <li>• Social Features: Friend connections and shared lists</li>
+          <li>• Advanced Recommendations: AI-powered suggestions</li>
+          <li>• Community Content: User-submitted videos and reviews</li>
+          <li>• Mobile App: Native iOS and Android apps</li>
+          <li>• Offline Mode: Full functionality without internet</li>
+        </ul>
+      </div>
     </div>
   );
 }

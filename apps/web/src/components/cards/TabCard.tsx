@@ -1,6 +1,7 @@
 import React from 'react';
 import type { CardActionHandlers, MediaItem } from './card.types';
 import { useTranslations } from '../../lib/language';
+import { useSettings } from '../../lib/settings';
 import StarRating from './StarRating';
 import MyListToggle from '../MyListToggle';
 import SwipeableCard from '../SwipeableCard';
@@ -44,6 +45,7 @@ export default function TabCard({
   const { title, year, posterUrl, voteAverage, userRating, synopsis, mediaType } = item;
   const rating = typeof voteAverage === 'number' ? Math.round(voteAverage * 10) / 10 : undefined;
   const translations = useTranslations();
+  const settings = useSettings();
 
   const handleRatingChange = (rating: number) => {
     if (actions?.onRatingChange) {
@@ -76,38 +78,52 @@ export default function TabCard({
   };
 
   const getTabSpecificActions = () => {
+    
     switch (tabType) {
       case 'watching':
         return (
           <>
             <button
               onClick={() => actions?.onWant?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className={buttonClass}
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              {translations.wantToWatchAction}
+              {isCondensed ? 'Want' : translations.wantToWatchAction}
             </button>
             <button
               onClick={() => actions?.onWatched?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className={buttonClass}
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              {translations.watchedAction}
+              {isCondensed ? 'Watched' : translations.watchedAction}
             </button>
             <button
               onClick={() => actions?.onNotInterested?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className={buttonClass}
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              {translations.notInterestedAction}
+              {isCondensed ? 'Not' : translations.notInterestedAction}
             </button>
-            <button
-              onClick={() => actions?.onNotesEdit?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
-              style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-            >
-              📝 Notes & Tags
-            </button>
+            {!isCondensed && (
+              <button
+                onClick={() => actions?.onNotesEdit?.(item)}
+                className={buttonClass}
+                style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+              >
+                📝 Notes & Tags
+              </button>
+            )}
+            {/* Notification toggle for TV shows */}
+            {mediaType === 'tv' && (
+              <button
+                onClick={() => actions?.onNotificationToggle?.(item)}
+                className={buttonClass}
+                style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+                title="Toggle episode notifications"
+              >
+                🔔 Notifications
+              </button>
+            )}
           </>
         );
       case 'want':
@@ -115,32 +131,45 @@ export default function TabCard({
           <>
             <button
               onClick={() => actions?.onWatched?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className={buttonClass}
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              {translations.currentlyWatchingAction}
+              {isCondensed ? 'Watching' : translations.currentlyWatchingAction}
             </button>
             <button
               onClick={() => actions?.onWatched?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className={buttonClass}
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              {translations.watchedAction}
+              {isCondensed ? 'Watched' : translations.watchedAction}
             </button>
             <button
               onClick={() => actions?.onNotInterested?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className={buttonClass}
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              {translations.notInterestedAction}
+              {isCondensed ? 'Not' : translations.notInterestedAction}
             </button>
-            <button
-              onClick={() => actions?.onNotesEdit?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
-              style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-            >
-              📝 Notes & Tags
-            </button>
+            {!isCondensed && (
+              <button
+                onClick={() => actions?.onNotesEdit?.(item)}
+                className={buttonClass}
+                style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+              >
+                📝 Notes & Tags
+              </button>
+            )}
+            {/* Notification toggle for TV shows */}
+            {mediaType === 'tv' && (
+              <button
+                onClick={() => actions?.onNotificationToggle?.(item)}
+                className={buttonClass}
+                style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+                title="Toggle episode notifications"
+              >
+                🔔 Notifications
+              </button>
+            )}
           </>
         );
       case 'watched':
@@ -148,32 +177,45 @@ export default function TabCard({
           <>
             <button
               onClick={() => actions?.onWant?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className={buttonClass}
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              {translations.wantToWatchAction}
+              {isCondensed ? 'Want' : translations.wantToWatchAction}
             </button>
             <button
               onClick={() => actions?.onWant?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className={buttonClass}
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              {translations.currentlyWatchingAction}
+              {isCondensed ? 'Watching' : translations.currentlyWatchingAction}
             </button>
             <button
               onClick={() => actions?.onNotInterested?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className={buttonClass}
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              {translations.notInterestedAction}
+              {isCondensed ? 'Not' : translations.notInterestedAction}
             </button>
-            <button
-              onClick={() => actions?.onNotesEdit?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
-              style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-            >
-              📝 Notes & Tags
-            </button>
+            {!isCondensed && (
+              <button
+                onClick={() => actions?.onNotesEdit?.(item)}
+                className={buttonClass}
+                style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+              >
+                📝 Notes & Tags
+              </button>
+            )}
+            {/* Notification toggle for TV shows */}
+            {mediaType === 'tv' && (
+              <button
+                onClick={() => actions?.onNotificationToggle?.(item)}
+                className={buttonClass}
+                style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+                title="Toggle episode notifications"
+              >
+                🔔 Notifications
+              </button>
+            )}
           </>
         );
       case 'discovery':
@@ -181,31 +223,31 @@ export default function TabCard({
           <>
             <button
               onClick={() => actions?.onWant?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className={buttonClass}
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              {translations.wantToWatchAction}
+              {isCondensed ? 'Want' : translations.wantToWatchAction}
             </button>
             <button
               onClick={() => actions?.onWant?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className={buttonClass}
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              {translations.currentlyWatchingAction}
+              {isCondensed ? 'Watching' : translations.currentlyWatchingAction}
             </button>
             <button
               onClick={() => actions?.onWatched?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className={buttonClass}
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              {translations.watchedAction}
+              {isCondensed ? 'Watched' : translations.watchedAction}
             </button>
             <button
               onClick={() => actions?.onNotInterested?.(item)}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className={buttonClass}
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
-              {translations.notInterestedAction}
+              {isCondensed ? 'Not' : translations.notInterestedAction}
             </button>
           </>
         );
@@ -230,12 +272,19 @@ export default function TabCard({
     }
   };
 
+  const isCondensed = settings.layout.condensedView;
+
+  // Define buttonClass at component level so it can be used throughout
+  const buttonClass = isCondensed 
+    ? "px-1.5 py-1 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+    : "px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md";
+
   return (
     <SwipeableCard
       item={item}
       actions={actions}
       context={getSwipeContext()}
-      className="mb-8"
+      className={isCondensed ? "mb-4" : "mb-8"}
     >
       <article 
         className={`tab-card group relative flex rounded-2xl overflow-hidden shadow-lg transition-all duration-200 hover:shadow-xl ${
@@ -247,7 +296,7 @@ export default function TabCard({
           backgroundColor: 'var(--card)',
           borderColor: isDropTarget ? 'var(--accent)' : 'var(--line)',
           border: '1px solid',
-          minHeight: '200px',
+          minHeight: isCondensed ? '120px' : '200px',
           transform: isBeingDragged ? 'rotate(2deg)' : 'none',
           transition: 'all 0.2s ease-in-out'
         }}
@@ -258,9 +307,11 @@ export default function TabCard({
         onDragLeave={onDragLeave}
         onDrop={onDrop}
       >
-      {/* Poster (160px wide, 2:3 aspect ratio) */}
+      {/* Poster (smaller in condensed view) */}
       <div 
-        className="poster flex-shrink-0 w-40 aspect-[2/3] bg-muted rounded-l-2xl relative" 
+        className={`poster flex-shrink-0 bg-muted rounded-l-2xl relative ${
+          isCondensed ? 'w-20 aspect-[2/3]' : 'w-40 aspect-[2/3]'
+        }`}
         role="img" 
         aria-label={title}
       >
@@ -286,7 +337,9 @@ export default function TabCard({
       </div>
 
       {/* Content */}
-      <div className="content flex-1 p-4 flex flex-col relative">
+      <div className={`content flex-1 flex flex-col relative ${
+        isCondensed ? 'p-2' : 'p-4'
+      }`}>
         {/* Delete button */}
         <button
           onClick={() => actions?.onDelete?.(item)}
@@ -298,7 +351,9 @@ export default function TabCard({
 
         {/* Title */}
         <div className="flex items-center gap-2 mb-1">
-          <h3 className="title font-bold text-base" style={{ color: 'var(--text)' }}>
+          <h3 className={`title font-bold ${
+            isCondensed ? 'text-sm' : 'text-base'
+          }`} style={{ color: 'var(--text)' }}>
             {title}
           </h3>
           
@@ -330,28 +385,34 @@ export default function TabCard({
           {getMetaText()}
         </div>
 
-        {/* Where to Watch */}
-        <div className="where text-xs mb-2" style={{ color: 'var(--accent)' }}>
-          {getWhereToWatch()}
-        </div>
+        {/* Where to Watch - hidden in condensed view */}
+        {!isCondensed && (
+          <div className="where text-xs mb-2" style={{ color: 'var(--accent)' }}>
+            {getWhereToWatch()}
+          </div>
+        )}
 
-        {/* Badges */}
-        <div className="badges flex gap-1.5 flex-wrap mb-2">
-          {getBadges().map((badge, index) => (
-            <span
-              key={index}
-              className="badge border border-line rounded px-1.5 py-0.5 text-xs"
-              style={{ color: 'var(--muted)', borderColor: 'var(--line)' }}
-            >
-              {badge}
-            </span>
-          ))}
-        </div>
+        {/* Badges - hidden in condensed view */}
+        {!isCondensed && (
+          <div className="badges flex gap-1.5 flex-wrap mb-2">
+            {getBadges().map((badge, index) => (
+              <span
+                key={index}
+                className="badge border border-line rounded px-1.5 py-0.5 text-xs"
+                style={{ color: 'var(--muted)', borderColor: 'var(--line)' }}
+              >
+                {badge}
+              </span>
+            ))}
+          </div>
+        )}
 
-        {/* Rating */}
-        <div className="rating flex items-center gap-1 mb-2">
-          <span className="text-xl" style={{ color: 'var(--accent)' }}>★</span>
-          <span className="text-sm" style={{ color: 'var(--muted)' }}>
+        {/* Rating - compact in condensed view */}
+        <div className={`rating flex items-center gap-1 ${
+          isCondensed ? 'mb-1' : 'mb-2'
+        }`}>
+          <span className={isCondensed ? 'text-sm' : 'text-xl'} style={{ color: 'var(--accent)' }}>★</span>
+          <span className={isCondensed ? 'text-xs' : 'text-sm'} style={{ color: 'var(--muted)' }}>
             {rating ? `${rating}/10` : 'No rating'}
           </span>
         </div>
@@ -372,8 +433,8 @@ export default function TabCard({
           </div>
         )}
 
-        {/* Overview */}
-        {synopsis && (
+        {/* Overview - hidden in condensed view */}
+        {!isCondensed && synopsis && (
           <div 
             className="overview text-sm mb-3 max-h-16 overflow-hidden"
             style={{ color: 'var(--muted)' }}
@@ -386,7 +447,9 @@ export default function TabCard({
         <div className="actions mt-auto">
           {/* Free Actions */}
           <div 
-            className="free-actions flex flex-wrap gap-2 p-2 rounded-lg border border-dashed mb-3"
+            className={`free-actions flex flex-wrap gap-2 rounded-lg border border-dashed ${
+              isCondensed ? 'p-1 mb-2' : 'p-2 mb-3'
+            }`}
             style={{ borderColor: 'var(--line)' }}
           >
             {/* Tab-specific primary actions */}
@@ -394,33 +457,35 @@ export default function TabCard({
             
             
             {/* Episode tracking (conditional) */}
-            {mediaType === 'tv' && (
+            {mediaType === 'tv' && !isCondensed && (
               <button
-                className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+                onClick={() => actions?.onEpisodeTracking?.(item)}
+                className={buttonClass}
                 style={{ 
                   backgroundColor: 'var(--btn)', 
-                  color: 'var(--muted)', 
+                  color: settings.layout.episodeTracking ? 'var(--text)' : 'var(--muted)', 
                   borderColor: 'var(--line)', 
                   border: '1px solid',
-                  opacity: 0.6
+                  opacity: settings.layout.episodeTracking ? 1 : 0.6
                 }}
-                disabled
-                title="Enable episode tracking in settings"
+                disabled={!settings.layout.episodeTracking}
+                title={settings.layout.episodeTracking ? "Track episode progress" : "Enable episode tracking in settings"}
               >
                 Episode Progress
               </button>
             )}
           </div>
 
-          {/* Pro Actions */}
-          <div 
-            className="pro-actions flex flex-wrap gap-2 p-2 rounded-lg border border-dashed"
-            style={{ 
-              borderColor: 'var(--pro)', 
-              backgroundColor: 'rgba(240, 185, 11, 0.1)',
-              opacity: 0.7
-            }}
-          >
+          {/* Pro Actions - hidden in condensed view */}
+          {!isCondensed && (
+            <div 
+              className="pro-actions flex flex-wrap gap-2 p-2 rounded-lg border border-dashed"
+              style={{ 
+                borderColor: 'var(--pro)', 
+                backgroundColor: 'rgba(240, 185, 11, 0.1)',
+                opacity: 0.7
+              }}
+            >
             <span className="text-xs font-medium" style={{ color: 'var(--pro)', marginRight: '8px' }}>
               PRO:
             </span>
@@ -466,7 +531,8 @@ export default function TabCard({
             >
               Remind Me
             </button>
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Drag handle */}

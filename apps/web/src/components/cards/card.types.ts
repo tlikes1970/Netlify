@@ -32,4 +32,6 @@ export interface CardActionHandlers {
   onRatingChange?: (item: MediaItem, rating: number) => void; // user rating change
   onNotesEdit?: (item: MediaItem) => void;    // open notes editor
   onTagsEdit?: (item: MediaItem) => void;     // open tags editor
+  onEpisodeTracking?: (item: MediaItem) => void; // open episode tracking modal
+  onNotificationToggle?: (item: MediaItem) => void; // toggle notifications for show
 }

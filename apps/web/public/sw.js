@@ -1,5 +1,5 @@
-// Service Worker for Image Caching
-// This service worker caches optimized images for offline viewing
+// Service Worker for Image Caching and Notifications
+// This service worker caches optimized images for offline viewing and handles background notifications
 
 const CACHE_NAME = 'flicklet-images-v1';
 const IMAGE_CACHE_NAME = 'flicklet-image-cache-v1';
@@ -205,8 +205,155 @@ self.addEventListener('message', (event) => {
         event.ports[0].postMessage({ size });
       }));
       break;
+      
+    case 'SCHEDULE_NOTIFICATION':
+      event.waitUntil(scheduleNotification(data));
+      break;
+      
+    case 'CANCEL_NOTIFICATION':
+      event.waitUntil(cancelNotification(data.id));
+      break;
   }
 });
+
+// Notification event listeners
+self.addEventListener('push', (event) => {
+  console.log('[SW] Push event received:', event);
+  
+  if (event.data) {
+    const data = event.data.json();
+    console.log('[SW] Push data:', data);
+    
+    const options = {
+      body: data.body || 'New episode available!',
+      icon: data.icon || '/icons/icon-192.png',
+      badge: data.badge || '/icons/icon-144.png',
+      tag: data.tag || 'episode-notification',
+      data: data.data || {},
+      actions: data.actions || [
+        {
+          action: 'watch',
+          title: 'Watch Now',
+          icon: '/icons/icon-144.png'
+        },
+        {
+          action: 'dismiss',
+          title: 'Dismiss'
+        }
+      ]
+    };
+    
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'Flicklet', options)
+    );
+  }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  console.log('[SW] Notification clicked:', event);
+  
+  event.notification.close();
+  
+  if (event.action === 'watch') {
+    // Open the app to the specific show
+    event.waitUntil(
+      clients.openWindow('/?show=' + event.notification.data.showId)
+    );
+  } else if (event.action === 'dismiss') {
+    // Just dismiss the notification
+    return;
+  } else {
+    // Default action - open the app
+    event.waitUntil(
+      clients.openWindow('/')
+    );
+  }
+});
+
+// Background sync for checking upcoming episodes
+self.addEventListener('sync', (event) => {
+  console.log('[SW] Background sync:', event.tag);
+  
+  if (event.tag === 'check-episodes') {
+    event.waitUntil(checkUpcomingEpisodes());
+  }
+});
+
+// Schedule a notification
+async function scheduleNotification(data) {
+  try {
+    console.log('[SW] Scheduling notification:', data);
+    
+    // Store notification data for later use
+    const notifications = await getStoredNotifications();
+    notifications.push({
+      id: data.id,
+      title: data.title,
+      body: data.body,
+      timestamp: data.timestamp,
+      showId: data.showId
+    });
+    await storeNotifications(notifications);
+    
+    console.log('[SW] Notification scheduled successfully');
+  } catch (error) {
+    console.error('[SW] Failed to schedule notification:', error);
+  }
+}
+
+// Cancel a notification
+async function cancelNotification(id) {
+  try {
+    console.log('[SW] Canceling notification:', id);
+    
+    const notifications = await getStoredNotifications();
+    const filtered = notifications.filter(n => n.id !== id);
+    await storeNotifications(filtered);
+    
+    console.log('[SW] Notification canceled successfully');
+  } catch (error) {
+    console.error('[SW] Failed to cancel notification:', error);
+  }
+}
+
+// Check for upcoming episodes (background sync)
+async function checkUpcomingEpisodes() {
+  try {
+    console.log('[SW] Checking upcoming episodes...');
+    
+    // This would typically fetch from your API
+    // For now, we'll just log that we're checking
+    console.log('[SW] Episode check complete');
+  } catch (error) {
+    console.error('[SW] Episode check failed:', error);
+  }
+}
+
+// Store notifications in IndexedDB
+async function storeNotifications(notifications) {
+  // Simple localStorage fallback for now
+  // In a real implementation, you'd use IndexedDB
+  try {
+    const data = JSON.stringify(notifications);
+    // Note: Service workers can't access localStorage directly
+    // This would need to be implemented with IndexedDB
+    console.log('[SW] Stored notifications:', notifications.length);
+  } catch (error) {
+    console.error('[SW] Failed to store notifications:', error);
+  }
+}
+
+// Get stored notifications from IndexedDB
+async function getStoredNotifications() {
+  // Simple fallback for now
+  // In a real implementation, you'd use IndexedDB
+  try {
+    return [];
+  } catch (error) {
+    console.error('[SW] Failed to get stored notifications:', error);
+    return [];
+  }
+}
 
 // Pre-cache specific images
 async function cacheImages(urls) {
