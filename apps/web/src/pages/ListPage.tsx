@@ -5,6 +5,7 @@ import { useSettings, getPersonalityText } from '@/lib/settings';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import ScrollToTopArrow from '@/components/ScrollToTopArrow';
 import { EpisodeTrackingModal } from '@/components/modals/EpisodeTrackingModal';
+import { NotificationToggleModal } from '@/components/modals/NotificationToggleModal';
 import { useState, useMemo } from 'react';
 
 export default function ListPage({ title, items, mode = 'watching', onNotesEdit, onTagsEdit }: {
@@ -19,6 +20,8 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
   const [sortByTag, setSortByTag] = useState<boolean>(false);
   const [episodeModalOpen, setEpisodeModalOpen] = useState(false);
   const [selectedShow, setSelectedShow] = useState<MediaItem | null>(null);
+  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
+  const [selectedNotificationShow, setSelectedNotificationShow] = useState<MediaItem | null>(null);
   
   // Map mode to CardV2 context
   // const context = mode === 'watching' ? 'tab-watching' : 'tab-foryou'; // Unused
@@ -136,10 +139,8 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
     },
     onNotificationToggle: (item: MediaItem) => {
       if (item.mediaType === 'tv') {
-        // Toggle notification settings for this show
-        console.log('Toggle notifications for:', item.title);
-        // TODO: Implement notification toggle logic
-        // This would typically update the notification settings for this specific show
+        setSelectedNotificationShow(item);
+        setNotificationModalOpen(true);
       }
     },
   };
@@ -278,6 +279,18 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
             number_of_seasons: 5, // Mock data - in real implementation, this would come from TMDB
             number_of_episodes: 40 // Mock data - in real implementation, this would come from TMDB
           }}
+        />
+      )}
+
+      {/* Notification Toggle Modal */}
+      {selectedNotificationShow && (
+        <NotificationToggleModal
+          isOpen={notificationModalOpen}
+          onClose={() => {
+            setNotificationModalOpen(false);
+            setSelectedNotificationShow(null);
+          }}
+          show={selectedNotificationShow}
         />
       )}
     </section>

@@ -205,6 +205,8 @@ class NotificationManager {
   async sendEmailNotification(episode: UpcomingEpisode, userEmail: string): Promise<void> {
     if (!this.settings.methods.email) return;
 
+    console.log('🔔 Attempting to send email notification:', { episode, userEmail });
+
     try {
       const response = await fetch('/.netlify/functions/send-notification-email', {
         method: 'POST',
@@ -221,11 +223,18 @@ class NotificationManager {
         }),
       });
 
+      console.log('🔔 Email notification response:', response.status, response.statusText);
+
       if (!response.ok) {
-        throw new Error('Failed to send email notification');
+        const errorText = await response.text();
+        console.error('🔔 Email notification failed:', errorText);
+        throw new Error(`Failed to send email notification: ${response.status} ${response.statusText}`);
       }
+
+      const result = await response.json();
+      console.log('🔔 Email notification sent successfully:', result);
     } catch (error) {
-      console.error('Email notification failed:', error);
+      console.error('🔔 Email notification failed:', error);
       throw error;
     }
   }
@@ -285,6 +294,28 @@ class NotificationManager {
     }
   }
 
+  // Test function to send a test notification
+  async sendTestNotification(userEmail: string): Promise<void> {
+    console.log('🧪 Sending test notification to:', userEmail);
+    
+    const testEpisode: UpcomingEpisode = {
+      showId: 999999,
+      showName: 'Test Show',
+      seasonNumber: 1,
+      episodeNumber: 1,
+      episodeTitle: 'Test Episode',
+      airDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+    };
+
+    try {
+      await this.sendEmailNotification(testEpisode, userEmail);
+      console.log('🧪 Test notification sent successfully');
+    } catch (error) {
+      console.error('🧪 Test notification failed:', error);
+      throw error;
+    }
+  }
+
   // Utility methods
   getSettings(): NotificationSettings {
     return this.settings;
@@ -319,3 +350,5 @@ class NotificationManager {
 
 // Export singleton instance
 export const notificationManager = new NotificationManager();
+
+
