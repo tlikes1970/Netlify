@@ -20,15 +20,17 @@ export function SettingsFAB({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={handleClick}
-      className={`fixed bottom-4 left-4 lg:bottom-4 lg:left-4 z-[9999] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-150 ease-out ${
+      className={`fixed bottom-4 left-4 lg:bottom-8 lg:left-8 z-[9999] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-150 ease-out ${
         isPressed ? 'scale-95 active:shadow-inner' : 'hover:scale-105 hover:shadow-md'
       }`}
       style={{
         backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)',
         borderColor: 'var(--line)',
         color: 'var(--text)',
-        bottom: `calc(${MOBILE_NAV_HEIGHT}px + ${effectiveOffset}px + 16px)`, // Position above mobile nav + keyboard offset
-        left: '16px'
+        // Mobile: position above mobile nav + keyboard offset
+        // Desktop: fixed position from bottom (handled by CSS classes)
+        bottom: `calc(${MOBILE_NAV_HEIGHT}px + ${effectiveOffset}px + 16px)`, // Mobile positioning
+        left: '16px' // Mobile positioning
       }}
       aria-label="Open Settings"
       title="Settings"
@@ -77,15 +79,17 @@ export function ThemeToggleFAB({ theme, onToggle }: { theme: 'light' | 'dark'; o
   return (
     <button
       onClick={handleClick}
-      className={`fixed bottom-4 right-4 lg:bottom-4 lg:right-4 z-[9999] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-150 ease-out ${
+      className={`fixed bottom-4 right-4 lg:bottom-8 lg:right-8 z-[9999] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-150 ease-out ${
         isPressed ? 'scale-95 active:shadow-inner' : 'hover:scale-105 hover:shadow-md'
       }`}
       style={{
         backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)',
         borderColor: 'var(--line)',
         color: 'var(--text)',
-        bottom: `calc(${MOBILE_NAV_HEIGHT}px + ${effectiveOffset}px + 16px)`, // Position above mobile nav + keyboard offset
-        right: '16px'
+        // Mobile: position above mobile nav + keyboard offset
+        // Desktop: fixed position from bottom (handled by CSS classes)
+        bottom: `calc(${MOBILE_NAV_HEIGHT}px + ${effectiveOffset}px + 16px)`, // Mobile positioning
+        right: '16px' // Mobile positioning
       }}
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
