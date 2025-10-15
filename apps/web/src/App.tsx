@@ -14,6 +14,7 @@ import HomeYourShowsRail from '@/components/rails/HomeYourShowsRail';
 import HomeUpNextRail from '@/components/rails/HomeUpNextRail';
 import SettingsPage from '@/components/SettingsPage';
 import { SettingsFAB, ThemeToggleFAB } from '@/components/FABs';
+import ScrollToTopArrow from '@/components/ScrollToTopArrow';
 import NotesAndTagsModal from '@/components/modals/NotesAndTagsModal';
 import PullToRefreshWrapper from '@/components/PullToRefreshWrapper';
 import { useForYouRows } from '@/hooks/useForYouRows';
@@ -324,6 +325,9 @@ export default function App() {
                 <Section title={translations.feedback}>
                   <FeedbackPanel />
                 </Section>
+
+                {/* Scroll to top arrow - appears when scrolled down */}
+                <ScrollToTopArrow threshold={400} />
               </div>
             )}
 

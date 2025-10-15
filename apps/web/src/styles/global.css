@@ -215,17 +215,15 @@ input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset:
   flex: 1;
 }
 
-/* FAB positioning fixes for desktop */
-@media (min-width: 1024px) {
-  /* Override inline styles for desktop FAB positioning */
-  .fixed.bottom-4.left-4.lg\\:bottom-8.lg\\:left-8 {
-    bottom: 32px !important;
-    left: 32px !important;
+/* Scroll to top arrow animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-  
-  .fixed.bottom-4.right-4.lg\\:bottom-8.lg\\:right-8 {
-    bottom: 32px !important;
-    right: 32px !important;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

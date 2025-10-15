@@ -3,6 +3,7 @@ import type { MediaItem } from '@/components/cards/card.types';
 import { Library, LibraryEntry } from '@/lib/storage';
 import { useSettings, getPersonalityText } from '@/lib/settings';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
+import ScrollToTopArrow from '@/components/ScrollToTopArrow';
 import { useState, useMemo } from 'react';
 
 export default function ListPage({ title, items, mode = 'watching', onNotesEdit, onTagsEdit }: {
@@ -240,6 +241,9 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
           </p>
         </div>
       )}
+
+      {/* Scroll to top arrow - appears when scrolled down */}
+      <ScrollToTopArrow threshold={300} />
     </section>
   );
 }
