@@ -27,10 +27,11 @@ export function SettingsFAB({ onClick }: { onClick: () => void }) {
         backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)',
         borderColor: 'var(--line)',
         color: 'var(--text)',
-        // Mobile: position above mobile nav + keyboard offset
-        // Desktop: fixed position from bottom (handled by CSS classes)
-        bottom: `calc(${MOBILE_NAV_HEIGHT}px + ${effectiveOffset}px + 16px)`, // Mobile positioning
-        left: '16px' // Mobile positioning
+        // Only apply mobile positioning on mobile screens
+        ...(window.innerWidth < 1024 && {
+          bottom: `calc(${MOBILE_NAV_HEIGHT}px + ${effectiveOffset}px + 16px)`,
+          left: '16px'
+        })
       }}
       aria-label="Open Settings"
       title="Settings"
@@ -86,10 +87,11 @@ export function ThemeToggleFAB({ theme, onToggle }: { theme: 'light' | 'dark'; o
         backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)',
         borderColor: 'var(--line)',
         color: 'var(--text)',
-        // Mobile: position above mobile nav + keyboard offset
-        // Desktop: fixed position from bottom (handled by CSS classes)
-        bottom: `calc(${MOBILE_NAV_HEIGHT}px + ${effectiveOffset}px + 16px)`, // Mobile positioning
-        right: '16px' // Mobile positioning
+        // Only apply mobile positioning on mobile screens
+        ...(window.innerWidth < 1024 && {
+          bottom: `calc(${MOBILE_NAV_HEIGHT}px + ${effectiveOffset}px + 16px)`,
+          right: '16px'
+        })
       }}
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
