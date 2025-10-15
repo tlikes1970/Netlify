@@ -76,6 +76,7 @@ export default function App() {
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchGenre, setSearchGenre] = useState<string | null>(null);
+  const [searchType, setSearchType] = useState<'all' | 'movies-tv' | 'people'>('all');
   const searchActive = !!searchQuery.trim();
 
   // For You configuration from settings
@@ -86,7 +87,6 @@ export default function App() {
   const watching = useLibrary('watching');
   const wishlist = useLibrary('wishlist');
   const watched = useLibrary('watched');
-  const notInterested = useLibrary('not');
 
   // Data rails
   const theaters = useInTheaters();
@@ -99,22 +99,6 @@ export default function App() {
     const cleanup = mountActionBridge();
     return cleanup;
   }, [addToast]);
-
-  // Handle navigation events from settings
-  useEffect(() => {
-    const handleNavigate = (event: CustomEvent) => {
-      const { view: targetView } = event.detail;
-      if (targetView && targetView !== 'home') {
-        setView(targetView as any);
-        setShowSettings(false); // Close settings when navigating
-      }
-    };
-
-    document.addEventListener('navigate', handleNavigate as EventListener);
-    return () => {
-      document.removeEventListener('navigate', handleNavigate as EventListener);
-    };
-  }, []);
 
       // Handle search events from search cards
       useEffect(() => {
@@ -187,10 +171,10 @@ export default function App() {
           appName="Flicklet"
           showMarquee={false}
           onSearch={(q, g) => { setSearchQuery(q); setSearchGenre(g ?? null); }}
-          onClear={() => { setSearchQuery(''); setSearchGenre(null); }}
+          onClear={() => { setSearchQuery(''); setSearchGenre(null); setSearchType('all'); }}
         />
         {searchActive ? (
-          <SearchResults query={searchQuery} genre={searchGenre} />
+          <SearchResults query={searchQuery} genre={searchGenre} searchType={searchType} />
         ) : (
           <>
             {/* Desktop Tabs */}
@@ -209,10 +193,40 @@ export default function App() {
                 ? `${80 + viewportOffset}px` 
                 : undefined 
             }}>
+              {(view as View) === 'home' && (
+                <div className="min-h-screen">
+                  {/* Home Page Content */}
+                  <div className="px-4 py-6">
+                    <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--text)' }}>
+                      Welcome to Flicklet
+                    </h1>
+                    <div className="grid gap-6">
+                      {/* Your Shows Rail */}
+                      <HomeYourShowsRail />
+                      
+                      {/* Up Next Rail */}
+                      <HomeUpNextRail />
+                      
+                      {/* For You Content */}
+                      {forYouContent.map((row, index) => (
+                        <Rail key={index} id={row.rowId} {...row} />
+                      ))}
+                      
+                      {/* Community Panel */}
+                      <CommunityPanel />
+                      
+                      {/* Theater Info */}
+                      <TheaterInfo />
+                      
+                      {/* Feedback Panel */}
+                      <FeedbackPanel />
+                    </div>
+                  </div>
+                </div>
+              )}
               {view === 'watching'  && <ListPage title="Currently Watching" items={watching} mode="watching" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
               {view === 'want'      && <ListPage title="Want to Watch"     items={wishlist}     mode="want" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
               {view === 'watched'   && <ListPage title="Watched"           items={watched}  mode="watched" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
-              {view === 'not'       && <ListPage title="Not Interested"    items={notInterested} mode="not" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
               {view === 'mylists'  && <MyListsPage />}
               {view === 'discovery' && <DiscoveryPage query={searchQuery} genreId={searchGenre ? parseInt(searchGenre) : null} />}
             </div>
@@ -294,7 +308,7 @@ export default function App() {
         
         {searchActive ? (
           <PullToRefreshWrapper onRefresh={handleRefresh}>
-            <SearchResults query={searchQuery} genre={searchGenre} />
+            <SearchResults query={searchQuery} genre={searchGenre} searchType={searchType} />
           </PullToRefreshWrapper>
         ) : (
           <PullToRefreshWrapper onRefresh={handleRefresh}>

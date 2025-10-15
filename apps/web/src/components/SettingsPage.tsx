@@ -11,7 +11,6 @@ import NotInterestedModal from './modals/NotInterestedModal';
 import { NotificationSettings } from './modals/NotificationSettings';
 import { NotificationCenter } from './modals/NotificationCenter';
 import type { Language } from '../lib/language.types';
-import type { ListName } from '../state/library.types';
 
 type SettingsTab = 'general' | 'notifications' | 'layout' | 'data' | 'pro' | 'about' | 'social' | 'community';
 
@@ -123,12 +122,12 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
       
       {/* Notification Settings Modal */}
       {showNotificationSettings && (
-        <NotificationSettings onClose={() => setShowNotificationSettings(false)} />
+        <NotificationSettings isOpen={showNotificationSettings} onClose={() => setShowNotificationSettings(false)} />
       )}
       
       {/* Notification Center Modal */}
       {showNotificationCenter && (
-        <NotificationCenter onClose={() => setShowNotificationCenter(false)} />
+        <NotificationCenter isOpen={showNotificationCenter} onClose={() => setShowNotificationCenter(false)} />
       )}
     </div>
   );
@@ -354,7 +353,6 @@ function GeneralTab({ settings, translations, currentLanguage, onShowNotInterest
 // Notifications Tab Component
 function NotificationsTab({ onOpenSettings, onOpenCenter }: { onOpenSettings: () => void; onOpenCenter: () => void }) {
   const settings = useSettings();
-  const translations = useTranslations();
   
   // Check if user is Pro (simplified check)
   const isProUser = settings.pro || false;
@@ -992,7 +990,6 @@ function DataTab({ setShowSharingModal }: { setShowSharingModal: (show: boolean)
 
 function ProTab() {
   const settings = useSettings();
-  const translations = useTranslations();
   
   // Check if user is Pro
   const isProUser = settings.pro || false;

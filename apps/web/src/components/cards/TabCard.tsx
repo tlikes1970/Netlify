@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { CardActionHandlers, MediaItem } from './card.types';
 import { useTranslations } from '../../lib/language';
 import { useSettings } from '../../lib/settings';
@@ -46,6 +46,9 @@ export default function TabCard({
   const rating = typeof voteAverage === 'number' ? Math.round(voteAverage * 10) / 10 : undefined;
   const translations = useTranslations();
   const settings = useSettings();
+  
+  // Mobile ellipsis state
+  const [showAllActions, setShowAllActions] = useState(false);
 
   const handleRatingChange = (rating: number) => {
     if (actions?.onRatingChange) {
@@ -75,6 +78,133 @@ export default function TabCard({
       badges.push('MOVIE');
     }
     return badges;
+  };
+
+  // Get mobile-specific actions (only primary actions)
+  const getMobileActions = () => {
+    switch (tabType) {
+      case 'watching':
+        return [
+          { key: 'want', label: isCondensed ? 'Want' : translations.wantToWatchAction, action: () => actions?.onWant?.(item) },
+          { key: 'watched', label: isCondensed ? 'Watched' : translations.watchedAction, action: () => actions?.onWatched?.(item) }
+        ];
+      case 'want':
+        return [
+          { key: 'watching', label: isCondensed ? 'Watching' : translations.currentlyWatchingAction, action: () => actions?.onWatched?.(item) },
+          { key: 'watched', label: isCondensed ? 'Watched' : translations.watchedAction, action: () => actions?.onWatched?.(item) }
+        ];
+      case 'watched':
+        return [
+          { key: 'want', label: isCondensed ? 'Want' : translations.wantToWatchAction, action: () => actions?.onWant?.(item) },
+          { key: 'watching', label: isCondensed ? 'Watching' : translations.currentlyWatchingAction, action: () => actions?.onWant?.(item) }
+        ];
+      case 'discovery':
+        return [
+          { key: 'want', label: isCondensed ? 'Want' : translations.wantToWatchAction, action: () => actions?.onWant?.(item) },
+          { key: 'watching', label: isCondensed ? 'Watching' : translations.currentlyWatchingAction, action: () => actions?.onWant?.(item) }
+        ];
+      default:
+        return [];
+    }
+  };
+
+  // Get all actions for desktop/expanded view
+  const getAllActions = (): Array<{ key: string; label: string; action: () => void; disabled?: boolean }> => {
+    const mobileActions = getMobileActions();
+    const additionalActions: Array<{ key: string; label: string; action: () => void; disabled?: boolean }> = [];
+    
+    // Add notification toggle for TV shows
+    if (mediaType === 'tv') {
+      additionalActions.push({
+        key: 'notifications',
+        label: '🔔 Notifications',
+        action: () => actions?.onNotificationToggle?.(item)
+      });
+    }
+    
+    // Add notes edit if not condensed
+    if (!isCondensed) {
+      additionalActions.push({
+        key: 'notes',
+        label: '📝 Notes & Tags',
+        action: () => actions?.onNotesEdit?.(item)
+      });
+    }
+    
+    // Add episode tracking for TV shows if not condensed
+    if (mediaType === 'tv' && !isCondensed) {
+      additionalActions.push({
+        key: 'episodes',
+        label: 'Episode Progress',
+        action: () => actions?.onEpisodeTracking?.(item),
+        disabled: !settings.layout.episodeTracking
+      });
+    }
+    
+    return [...mobileActions, ...additionalActions];
+  };
+
+  // Render mobile actions with ellipsis overflow
+  const renderMobileActions = () => {
+    const allActions = getAllActions();
+    const mobileActions = getMobileActions();
+    const hasMoreActions = allActions.length > mobileActions.length;
+    
+    return (
+      <div className="flex flex-wrap gap-1">
+        {/* Primary mobile actions */}
+        {mobileActions.map((action) => (
+          <button
+            key={action.key}
+            onClick={action.action}
+            className={buttonClass}
+            style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+          >
+            {action.label}
+          </button>
+        ))}
+        
+        {/* Ellipsis button for additional actions */}
+        {hasMoreActions && (
+          <button
+            onClick={() => setShowAllActions(!showAllActions)}
+            className={buttonClass}
+            style={{ backgroundColor: 'var(--btn)', color: 'var(--muted)', borderColor: 'var(--line)', border: '1px solid' }}
+            title="More actions"
+          >
+            ⋯
+          </button>
+        )}
+        
+        {/* Additional actions dropdown */}
+        {showAllActions && hasMoreActions && (
+          <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-10 p-2">
+            <div className="flex flex-wrap gap-1">
+              {allActions.slice(mobileActions.length).map((action) => (
+                <button
+                  key={action.key}
+                  onClick={() => {
+                    action.action();
+                    setShowAllActions(false);
+                  }}
+                  disabled={action.disabled || false}
+                  className={buttonClass}
+                  style={{ 
+                    backgroundColor: 'var(--btn)', 
+                    color: (action.disabled || false) ? 'var(--muted)' : 'var(--text)', 
+                    borderColor: 'var(--line)', 
+                    border: '1px solid',
+                    opacity: (action.disabled || false) ? 0.6 : 1
+                  }}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const getTabSpecificActions = () => {
@@ -444,8 +574,22 @@ export default function TabCard({
         )}
 
         {/* Actions */}
-        <div className="actions mt-auto">
-          {/* Free Actions */}
+        <div className="actions mt-auto relative">
+          {/* Mobile Actions (with ellipsis) */}
+          <div className="md:hidden">
+            <div 
+              className={`mobile-actions flex flex-wrap gap-1 rounded-lg border border-dashed ${
+                isCondensed ? 'p-1 mb-2' : 'p-2 mb-3'
+              }`}
+              style={{ borderColor: 'var(--line)' }}
+            >
+              {renderMobileActions()}
+            </div>
+          </div>
+          
+          {/* Desktop Actions (full actions) */}
+          <div className="hidden md:block">
+            {/* Free Actions */}
           <div 
             className={`free-actions flex flex-wrap gap-2 rounded-lg border border-dashed ${
               isCondensed ? 'p-1 mb-2' : 'p-2 mb-3'
@@ -474,9 +618,9 @@ export default function TabCard({
                 Episode Progress
               </button>
             )}
-          </div>
+            </div>
 
-          {/* Pro Actions - hidden in condensed view */}
+            {/* Pro Actions - hidden in condensed view */}
           {!isCondensed && (
             <div 
               className="pro-actions flex flex-wrap gap-2 p-2 rounded-lg border border-dashed"
@@ -533,6 +677,7 @@ export default function TabCard({
             </button>
             </div>
           )}
+          </div>
         </div>
 
         {/* Drag handle */}

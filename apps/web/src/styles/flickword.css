@@ -1,14 +1,63 @@
-/* FlickWord Game Styles */
+/* Loading Screen */
+.fw-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.fw-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border);
+  border-top: 4px solid var(--accent);
+  border-radius: 50%;
+  animation: fw-spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes fw-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.fw-loading p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Word Info */
+.fw-word-info {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  text-align: center;
+}
+
+.fw-word-info p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.fw-word-info strong {
+  color: var(--accent);
+}
 .flickword-game {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   margin: 0 auto;
-  padding: 12px;
+  padding: 12px 12px 30px 12px;
   background: transparent;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Header */
@@ -91,14 +140,17 @@
   max-width: 400px;
   margin: 0 auto;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .fw-kb-row {
   display: flex;
   gap: 4px;
   justify-content: center;
-  margin: 4px 0;
-  flex-wrap: wrap;
+  margin: 0;
+  flex-wrap: nowrap;
 }
 
 .fw-key {
@@ -119,6 +171,8 @@
   user-select: none;
   touch-action: manipulation;
   color: var(--text-color, #1f2937);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .fw-key:hover {
@@ -161,7 +215,7 @@
   display: flex;
   gap: 8px;
   justify-content: center;
-  margin-top: 16px;
+  margin: 16px 0 8px 0;
   flex-shrink: 0;
 }
 

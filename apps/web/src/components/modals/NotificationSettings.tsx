@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { notificationManager } from '../../lib/notifications';
 import { useSettings } from '../../lib/settings';
-import { useTranslations } from '../../lib/language';
 
 interface NotificationSettingsProps {
+  isOpen: boolean;
   onClose: () => void;
 }
 
-export function NotificationSettings({ onClose }: NotificationSettingsProps) {
+export function NotificationSettings({ isOpen, onClose }: NotificationSettingsProps) {
+  if (!isOpen) return null;
   const [settings, setSettings] = useState(notificationManager.getSettings());
   const [pushPermission, setPushPermission] = useState<NotificationPermission>('default');
   const [isProUser, setIsProUser] = useState(false);
   const settingsManager = useSettings();
-  const translations = useTranslations();
 
   useEffect(() => {
     // Check push notification permission
@@ -21,7 +21,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     }
 
     // Check if user is Pro (implement based on your auth system)
-    setIsProUser(settingsManager.pro || false);
+    setIsProUser(Boolean(settingsManager.pro));
   }, [settingsManager.pro]);
 
   const handleSettingChange = (key: string, value: any) => {
@@ -264,3 +264,5 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     </div>
   );
 }
+
+

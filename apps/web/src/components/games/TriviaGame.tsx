@@ -196,6 +196,20 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
+  // Safety check - don't render if no questions or current question is undefined
+  if (!questions.length || !currentQuestion) {
+    return (
+      <div className="trivia-game">
+        <div className="trivia-header">
+          <h3>🧠 Daily Trivia</h3>
+        </div>
+        <div className="trivia-content">
+          <p>Loading questions...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="trivia-game">
       {/* Header */}

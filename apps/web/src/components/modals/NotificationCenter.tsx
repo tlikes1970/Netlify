@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { notificationManager, NotificationLogEntry } from '../../lib/notifications';
-import { useTranslations } from '../../lib/language';
 
 interface NotificationCenterProps {
   isOpen: boolean;
@@ -10,7 +9,6 @@ interface NotificationCenterProps {
 export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
   const [logEntries, setLogEntries] = useState<NotificationLogEntry[]>([]);
   const [filter, setFilter] = useState<'all' | 'sent' | 'failed' | 'read'>('all');
-  const translations = useTranslations();
 
   useEffect(() => {
     if (isOpen) {
@@ -215,3 +213,5 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
     </div>
   );
 }
+
+

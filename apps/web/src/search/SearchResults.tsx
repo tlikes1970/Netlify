@@ -12,7 +12,7 @@ import { OptimizedImage } from '../components/OptimizedImage';
 import { usePerformanceOptimization, useEnhancedOfflineCache } from '../hooks/usePerformanceOptimization';
 import { VirtualScrollContainer, LoadingStates, InfiniteScrollSentinel, PerformanceMetrics } from '../components/PerformanceComponents';
 
-export default function SearchResults({ query, genre }: { query: string; genre?: string | null }) {
+export default function SearchResults({ query, genre, searchType = 'all' }: { query: string; genre?: string | null; searchType?: 'all' | 'movies-tv' | 'people' }) {
   const [initialItems, setInitialItems] = useState<MediaItem[]>([]);
   // const translations = useTranslations(); // Unused
   const settings = useSettings();
@@ -23,7 +23,7 @@ export default function SearchResults({ query, genre }: { query: string; genre?:
   // Reset pagination when query changes
   useEffect(() => {
     setInitialItems([]);
-  }, [query, genre]);
+  }, [query, genre, searchType]);
 
   // Load more function for infinite scroll
   const loadMoreItems = async (): Promise<MediaItem[]> => {
@@ -33,7 +33,7 @@ export default function SearchResults({ query, genre }: { query: string; genre?:
     }
 
     try {
-      const results = await searchMulti(query, Math.floor(initialItems.length / 20) + 1, genre);
+      const results = await searchMulti(query, Math.floor(initialItems.length / 20) + 1, genre, searchType);
       return results;
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Search failed');
@@ -134,6 +134,11 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
   const translations = useTranslations();
   const { title, year, posterUrl, mediaType, synopsis } = item;
   const [pressedButtons, setPressedButtons] = React.useState<Set<string>>(new Set());
+  
+  // Handle person results differently
+  if (mediaType === 'person') {
+    return <PersonCard item={item} />;
+  }
   
   // Mock data for demo - in real implementation, this would come from TMDB
   const runtime = mediaType === 'movie' ? '120m' : '45m';
@@ -495,6 +500,129 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
             >
               {translations.refineSearchAction || 'Refine Search'}
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PersonCard({ item }: { item: MediaItem }) {
+  const { title, posterUrl } = item;
+  const [pressedButtons, setPressedButtons] = React.useState<Set<string>>(new Set());
+  
+  // Get known for works from the item
+  const knownFor = (item as any).known_for || [];
+  const knownForText = knownFor.length > 0 
+    ? knownFor.map((work: any) => work.title || work.name).join(', ')
+    : 'Actor/Actress';
+  
+  const handleAction = async (action: string) => {
+    console.log('🎬 Person action called with:', action, 'for person:', item.title);
+    const buttonKey = `${action}-${item.id}`;
+    
+    // Add pressed state
+    setPressedButtons(prev => new Set(prev).add(buttonKey));
+    
+    try {
+      switch (action) {
+        case 'view-profile':
+          // Open TMDB person page
+          window.open(`https://www.themoviedb.org/person/${item.id}`, '_blank');
+          break;
+        case 'search-works':
+          // Search for their works
+          const event = new CustomEvent('search:person-works', { 
+            detail: { 
+              personName: item.title,
+              personId: item.id
+            }
+          });
+          document.dispatchEvent(event);
+          break;
+        default:
+          console.log(`${action} clicked for ${title}`);
+      }
+    } finally {
+      // Remove pressed state after action completes
+      setTimeout(() => {
+        setPressedButtons(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(buttonKey);
+          return newSet;
+        });
+      }, 300);
+    }
+  };
+
+  const createButton = (action: string, label: string, isSpecial = false) => {
+    const buttonKey = `${action}-${item.id}`;
+    const isPressed = pressedButtons.has(buttonKey);
+    
+    return (
+      <button 
+        onClick={() => handleAction(action)}
+        className={`px-2.5 py-1.5 rounded-lg text-xs transition-all duration-150 ease-out ${
+          isPressed ? 'scale-95 active:shadow-inner' : 'hover:scale-105 hover:shadow-md'
+        } cursor-pointer`}
+        style={{ 
+          backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)', 
+          color: isSpecial ? 'white' : 'var(--text)', 
+          borderColor: 'var(--line)', 
+          border: '1px solid' 
+        }}
+        disabled={isPressed}
+      >
+        {label}
+      </button>
+    );
+  };
+
+  return (
+    <div className="relative flex bg-card border border-line rounded-xl overflow-hidden shadow-lg hover:transform hover:-translate-y-0.5 transition-transform">
+      {/* Profile Photo */}
+      <a 
+        href={`https://www.themoviedb.org/person/${item.id}`} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="flex-shrink-0 w-24 h-36 bg-muted cursor-pointer"
+        title="View profile on TMDB"
+      >
+        {posterUrl ? (
+          <OptimizedImage
+            src={posterUrl}
+            alt={title}
+            context="poster"
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full bg-neutral-800 flex items-center justify-center text-sm text-muted-foreground">
+            No photo
+          </div>
+        )}
+      </a>
+
+      {/* Content */}
+      <div className="flex-1 p-4 flex flex-col relative">
+        {/* Name */}
+        <div className="font-bold text-lg mb-1">{title}</div>
+        
+        {/* Known For */}
+        <div className="text-muted-foreground text-sm mb-2">
+          Known for: {knownForText}
+        </div>
+        
+        {/* Popularity */}
+        <div className="text-accent text-sm mb-2">
+          Popularity: {item.voteAverage ? Math.round(item.voteAverage) : 'N/A'}
+        </div>
+        
+        {/* Actions */}
+        <div className="mt-auto flex flex-wrap gap-2 justify-between items-center">
+          <div className="flex flex-wrap gap-2 p-2 rounded-lg" style={{ borderColor: 'var(--line)', border: '1px dashed' }}>
+            {createButton('view-profile', 'View Profile')}
+            {createButton('search-works', 'Search Works')}
           </div>
         </div>
       </div>

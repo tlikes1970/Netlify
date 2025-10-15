@@ -11,7 +11,7 @@ import { useState, useMemo } from 'react';
 export default function ListPage({ title, items, mode = 'watching', onNotesEdit, onTagsEdit }: {
   title: string;
   items: LibraryEntry[];
-  mode?: 'watching'|'want'|'watched'|'not'|'discovery';
+  mode?: 'watching'|'want'|'watched'|'discovery';
   onNotesEdit?: (item: MediaItem) => void;
   onTagsEdit?: (item: MediaItem) => void;
 }) {
@@ -97,7 +97,7 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
     } else if (title.toLowerCase().includes('watched')) {
       return getPersonalityText('emptyWatched', settings.personalityLevel);
     } else if (title.toLowerCase().includes('not interested')) {
-      return getPersonalityText('emptyNotInterested', settings.personalityLevel) || "No items marked as not interested yet.";
+      return getPersonalityText('empty', settings.personalityLevel) || "No items marked as not interested yet.";
     }
     return getPersonalityText('empty', settings.personalityLevel);
   };

@@ -1,12 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getTodaysWord, validateWord } from '../../lib/dailyWordApi';
 // import { useTranslations } from '@/lib/language'; // Unused
 
 // Game configuration
-const WORDS = [
-  'bliss', 'crane', 'flick', 'gravy', 'masks', 'toast', 'crown', 'spine', 'tiger', 'pride',
-  'happy', 'smile', 'peace', 'light', 'dream', 'magic', 'story', 'music', 'dance', 'heart'
-];
-
 const KEYBOARD_ROWS = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
 
 // Types
@@ -19,6 +15,11 @@ type GameState = {
   done: boolean;
   status: Record<string, TileStatus>;
   lastResults: TileStatus[][];
+  wordInfo?: {
+    definition?: string;
+    difficulty?: string;
+  };
+  showHint: boolean;
 };
 
 interface FlickWordGameProps {
@@ -35,49 +36,55 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
     maxGuesses: 6,
     done: false,
     status: {},
-    lastResults: []
+    lastResults: [],
+    showHint: false
   });
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Get today's word
-  const getTodayWord = useCallback(async (): Promise<string> => {
-    const today = new Date().toISOString().slice(0, 10);
-    const cached = localStorage.getItem(`flickword:word:${today}`);
-
-    if (cached) {
-      return cached.toUpperCase();
-    }
-
+  // Get today's word from API
+  const loadTodaysWord = useCallback(async () => {
     try {
-      // Try to get a random word from API
-      const response = await fetch('https://api.datamuse.com/words?sp=?????&max=1');
-      const data = await response.json();
+      setIsLoading(true);
       
-      if (Array.isArray(data) && data[0]?.word && /^[a-z]{5}$/.test(data[0].word)) {
-        localStorage.setItem(`flickword:word:${today}`, data[0].word);
-        return data[0].word.toUpperCase();
-      }
+      const wordData = await getTodaysWord();
+      
+      setGame(prev => ({
+        ...prev,
+        target: wordData.word.toUpperCase(),
+        wordInfo: {
+          definition: wordData.definition,
+          difficulty: wordData.difficulty
+        },
+        showHint: false
+      }));
+      
     } catch (error) {
-      console.warn('Failed to fetch word from API, using fallback');
+      console.error('Failed to load today\'s word:', error);
+      // Fallback to a static word if API fails
+      const fallbackWord = 'FLICK';
+      setGame(prev => ({
+        ...prev,
+        target: fallbackWord,
+        wordInfo: {
+          definition: 'A quick, sharp movement',
+          difficulty: 'easy'
+        },
+        showHint: false
+      }));
+    } finally {
+      setIsLoading(false);
     }
-
-    // Fallback to predefined words
-    const start = new Date('2023-01-01T00:00:00');
-    const days = Math.floor((new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    const word = WORDS[days % WORDS.length];
-    
-    localStorage.setItem(`flickword:word:${today}`, word);
-    return word.toUpperCase();
   }, []);
 
   // Validate word
   const isValidWord = useCallback(async (word: string): Promise<boolean> => {
     try {
-      const response = await fetch(
-        `https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`
-      );
-      return response.ok;
+      const isValid = await validateWord(word.toLowerCase());
+      console.log(`🔍 Word validation for "${word}": ${isValid ? 'valid' : 'invalid'}`);
+      return isValid;
     } catch (error) {
+      console.warn('Word validation failed:', error);
       return false;
     }
   }, []);
@@ -115,18 +122,9 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
   }, []);
 
   // Initialize game
-  const initializeGame = useCallback(async () => {
-    const target = await getTodayWord();
-    setGame({
-      target,
-      guesses: [],
-      current: '',
-      maxGuesses: 6,
-      done: false,
-      status: {},
-      lastResults: []
-    });
-  }, [getTodayWord]);
+  const initializeGame = useCallback(() => {
+    loadTodaysWord();
+  }, [loadTodaysWord]);
 
   // Handle key input
   const handleKeyInput = useCallback((letter: string) => {
@@ -199,7 +197,7 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
   // Keyboard event handling
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (game.done) return;
+      if (game.done || isLoading) return;
 
       if (e.key === 'Backspace') {
         e.preventDefault();
@@ -215,7 +213,7 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [game.done, handleBackspace, handleSubmit, handleKeyInput]);
+  }, [game.done, isLoading, handleBackspace, handleSubmit, handleKeyInput]);
 
   // Initialize game on mount
   useEffect(() => {
@@ -329,6 +327,23 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
     return rows;
   };
 
+  if (isLoading) {
+    return (
+      <div className="flickword-game">
+        <div className="fw-header">
+          <h3>🎯 FlickWord</h3>
+          <div className="fw-stats">
+            <span className="fw-streak">Loading...</span>
+          </div>
+        </div>
+        <div className="fw-loading">
+          <div className="fw-spinner"></div>
+          <p>Loading today's word...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flickword-game">
       {/* Header */}
@@ -344,6 +359,13 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
       {notification && (
         <div className={`fw-notification ${notification.type}`}>
           {notification.message}
+        </div>
+      )}
+
+      {/* Word Info (if available) - Hidden by default */}
+      {game.wordInfo?.definition && game.showHint && (
+        <div className="fw-word-info">
+          <p><strong>Hint:</strong> {game.wordInfo.definition}</p>
         </div>
       )}
 
@@ -364,11 +386,13 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
         </button>
         <button className="fw-btn fw-hint" onClick={() => {
           if (!game.done) {
-            const hint = game.target[0] + '____';
-            showNotification(`Hint: ${hint}`, 'info');
+            setGame(prev => ({
+              ...prev,
+              showHint: !prev.showHint
+            }));
           }
         }}>
-          Hint
+          {game.showHint ? 'Hide Hint' : 'Hint'}
         </button>
         {onClose && (
           <button className="fw-btn fw-close" onClick={onClose}>

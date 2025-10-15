@@ -4,8 +4,8 @@ import App from './App';
 import { FlagsProvider } from './lib/flags';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/query';
-import { debugTmdbSource } from '@/lib/tmdb';
-import { HOME_RAILS, TABS } from '@/config/structure';
+import { debugTmdbSource } from './lib/tmdb';
+import { HOME_RAILS, TABS } from './config/structure';
 import './styles/global.css';
 import './styles/header-marquee.css';
 

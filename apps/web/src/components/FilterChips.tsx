@@ -9,25 +9,25 @@ export type FilterChipsProps = {
 
 // Popular genres for search filtering - using TMDB genre IDs
 const POPULAR_GENRES = [
-  { id: null, name: 'All Genres', icon: '🎬' },
-  { id: '28', name: 'Action', icon: '💥' },
-  { id: '35', name: 'Comedy', icon: '😂' },
-  { id: '18', name: 'Drama', icon: '🎭' },
-  { id: '27', name: 'Horror', icon: '👻' },
-  { id: '10749', name: 'Romance', icon: '💕' },
-  { id: '878', name: 'Sci-Fi', icon: '🚀' },
-  { id: '14', name: 'Fantasy', icon: '🧙' },
-  { id: '53', name: 'Thriller', icon: '🔪' },
-  { id: '16', name: 'Animation', icon: '🎨' },
-  { id: '99', name: 'Documentary', icon: '📹' },
-  { id: '80', name: 'Crime', icon: '🔍' },
-  { id: '12', name: 'Adventure', icon: '🗺️' },
-  { id: '10751', name: 'Family', icon: '👨‍👩‍👧‍👦' },
-  { id: '36', name: 'History', icon: '📜' },
-  { id: '10402', name: 'Music', icon: '🎵' },
-  { id: '9648', name: 'Mystery', icon: '🕵️' },
-  { id: '10752', name: 'War', icon: '⚔️' },
-  { id: '37', name: 'Western', icon: '🤠' }
+  { id: null, name: 'All Genres' },
+  { id: '28', name: 'Action' },
+  { id: '35', name: 'Comedy' },
+  { id: '18', name: 'Drama' },
+  { id: '27', name: 'Horror' },
+  { id: '10749', name: 'Romance' },
+  { id: '878', name: 'Sci-Fi' },
+  { id: '14', name: 'Fantasy' },
+  { id: '53', name: 'Thriller' },
+  { id: '16', name: 'Animation' },
+  { id: '99', name: 'Documentary' },
+  { id: '80', name: 'Crime' },
+  { id: '12', name: 'Adventure' },
+  { id: '10751', name: 'Family' },
+  { id: '36', name: 'History' },
+  { id: '10402', name: 'Music' },
+  { id: '9648', name: 'Mystery' },
+  { id: '10752', name: 'War' },
+  { id: '37', name: 'Western' }
 ];
 
 export default function FilterChips({ selectedGenre, onGenreChange, className = '' }: FilterChipsProps) {
@@ -37,7 +37,6 @@ export default function FilterChips({ selectedGenre, onGenreChange, className = 
   
   // Get the selected genre name for display
   const selectedGenreName = POPULAR_GENRES.find(g => g.id === selectedGenre)?.name || translations.allGenres;
-  const selectedGenreIcon = POPULAR_GENRES.find(g => g.id === selectedGenre)?.icon || '🎬';
   
   const handleGenreClick = (genreId: string | null) => {
     onGenreChange(genreId);
@@ -75,10 +74,7 @@ export default function FilterChips({ selectedGenre, onGenreChange, className = 
           borderColor: 'var(--line)'
         }}
       >
-        <div className="flex items-center gap-1 min-w-0">
-          <span className="text-xs">{selectedGenreIcon}</span>
-          <span className="truncate text-xs">{selectedGenreName}</span>
-        </div>
+        <span className="truncate text-xs">{selectedGenreName}</span>
         <span className={`text-xs transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}>
           ▼
         </span>
@@ -108,36 +104,29 @@ export default function FilterChips({ selectedGenre, onGenreChange, className = 
               maxWidth: '400px'
             }}
           >
-          <div className="p-3">
-            <div className="text-xs font-medium mb-3" style={{ color: 'var(--muted)' }}>
-              Choose a genre:
-            </div>
-            
-            {/* Filter Chips Grid */}
-            <div className="grid grid-cols-2 gap-2">
-              {POPULAR_GENRES.map(genre => (
-                <button
-                  key={genre.id || 'all'}
-                  onClick={() => handleGenreClick(genre.id)}
-                  className={`
-                    inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
-                    transition-all duration-200 ease-out
-                    hover:scale-105 active:scale-95
-                    ${selectedGenre === genre.id
-                      ? 'bg-accent text-accent-foreground shadow-md'
-                      : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                    }
-                  `}
-                  style={{
-                    backgroundColor: selectedGenre === genre.id ? 'var(--accent)' : 'var(--muted)',
-                    color: selectedGenre === genre.id ? 'var(--accent-foreground)' : 'var(--muted-foreground)'
-                  }}
-                >
-                  <span className="text-base">{genre.icon}</span>
-                  <span>{genre.name}</span>
-                </button>
-              ))}
-            </div>
+          <div className="py-2">
+            {/* Simple List */}
+            {POPULAR_GENRES.map(genre => (
+              <button
+                key={genre.id || 'all'}
+                onClick={() => handleGenreClick(genre.id)}
+                className={`
+                  w-full text-left px-4 py-2 text-sm
+                  transition-colors duration-200
+                  hover:bg-muted
+                  ${selectedGenre === genre.id
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-foreground'
+                  }
+                `}
+                style={{
+                  backgroundColor: selectedGenre === genre.id ? 'var(--accent)' : 'transparent',
+                  color: selectedGenre === genre.id ? 'var(--accent-foreground)' : 'var(--foreground)'
+                }}
+              >
+                {genre.name}
+              </button>
+            ))}
           </div>
           </div>
         </>

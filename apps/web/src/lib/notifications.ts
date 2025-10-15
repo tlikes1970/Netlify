@@ -328,7 +328,7 @@ class NotificationManager {
   }
 
   getAvailableTimingOptions(): Array<{ value: string; label: string; proOnly?: boolean }> {
-    const options = [
+    const options: Array<{ value: string; label: string; proOnly?: boolean }> = [
       { value: '24-hours-before', label: '24 hours before' },
       { value: '7-days-before', label: '7 days before' },
     ];

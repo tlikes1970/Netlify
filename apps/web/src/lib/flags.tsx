@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo } from 'react';
-import flagsData from '#inputs/FEATURE_FLAGS.json';
+import flagsData from './FEATURE_FLAGS.json';
 
 type Flags = Record<string, boolean>;
 

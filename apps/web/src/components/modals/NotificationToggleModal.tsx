@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { notificationManager } from '@/lib/notifications';
 import type { MediaItem } from '@/components/cards/card.types';
@@ -10,13 +10,13 @@ interface NotificationToggleModalProps {
 }
 
 export function NotificationToggleModal({ isOpen, onClose, show }: NotificationToggleModalProps) {
-  const [showSettings, setShowSettings] = useState(notificationManager.getShowSettings(show.id));
+  const [showSettings, setShowSettings] = useState(notificationManager.getShowSettings(Number(show.id)));
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     if (isOpen) {
-      setShowSettings(notificationManager.getShowSettings(show.id));
+      setShowSettings(notificationManager.getShowSettings(Number(show.id)));
       setMessage(null);
     }
   }, [isOpen, show.id]);
@@ -31,7 +31,7 @@ export function NotificationToggleModal({ isOpen, onClose, show }: NotificationT
         enabled: !showSettings.enabled
       };
 
-      notificationManager.updateShowSettings(show.id, newSettings);
+      notificationManager.updateShowSettings(Number(show.id), newSettings);
       setShowSettings(newSettings);
 
       setMessage({
@@ -86,6 +86,19 @@ export function NotificationToggleModal({ isOpen, onClose, show }: NotificationT
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleMethodToggle = (method: 'inApp' | 'push' | 'email') => {
+    const newSettings = {
+      ...showSettings,
+      methods: {
+        ...showSettings.methods,
+        [method]: !showSettings.methods?.[method]
+      }
+    };
+
+    notificationManager.updateShowSettings(Number(show.id), newSettings);
+    setShowSettings(newSettings);
   };
 
   if (!isOpen) return null;

@@ -8,6 +8,7 @@ import { useUsername } from "../hooks/useUsername";
 import FilterChips from "./FilterChips";
 import SearchSuggestions, { addSearchToHistory } from "./SearchSuggestions";
 import VoiceSearch from "./VoiceSearch";
+import { fetchMarqueeContent, preloadMarqueeContent } from "../lib/marqueeApi";
 
 export type FlickletHeaderProps = {
   appName?: string;
@@ -83,8 +84,8 @@ export default function FlickletHeader({
     <>
       {/* Main header (not sticky) */}
       <header className="border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto w-full max-w-7xl px-3 sm:px-4">
-          <div className="grid grid-cols-3 items-center gap-2 py-2 sm:py-3">
+        <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-6">
+          <div className="grid grid-cols-3 items-center gap-4 py-4 sm:py-6">
             {/* Left: username + snark */}
             <div className="min-w-0 text-left">
               <SnarkDisplay />
@@ -122,8 +123,10 @@ export default function FlickletHeader({
 
       {/* Sticky search bar */}
       <div className="sticky top-[var(--safe-top,0px)] z-[1000] border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto w-full max-w-7xl px-3 sm:px-4 py-2">
-          <SearchRow onSearch={onSearch} onClear={onClear} />
+        <div className="mx-auto w-full max-w-screen-2xl px-3 sm:px-4 py-2">
+          <div className="relative flex items-center gap-3 rounded-2xl border bg-background p-3 sm:p-4" data-testid="search-row">
+            <SearchRow onSearch={onSearch} onClear={onClear} />
+          </div>
         </div>
       </div>
 
@@ -177,11 +180,12 @@ function AppTitle({ text }: { text: string }) {
 //   );
 // }
 
-function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | null) => void; onClear?: () => void }) {
+function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | null, searchType?: string) => void; onClear?: () => void }) {
   const translations = useTranslations();
   const [q, setQ] = React.useState('');
   const [g, setG] = React.useState<string | null>(null);
   const [searchMode, setSearchMode] = React.useState<'title' | 'tag'>('title');
+  const [searchType, setSearchType] = React.useState<'all' | 'movies-tv' | 'people'>('all');
   const [showSuggestions, setShowSuggestions] = React.useState(false);
   const [isFocused, setIsFocused] = React.useState(false);
   const searchContainerRef = React.useRef<HTMLDivElement>(null);
@@ -189,9 +193,9 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | 
   const submit = () => {
     if (searchMode === 'tag') {
       // For tag search, we'll use a special prefix to indicate it's a tag search
-      onSearch?.(`tag:${q.trim()}`, g);
+      onSearch?.(`tag:${q.trim()}`, g, searchType);
     } else {
-      onSearch?.(q.trim(), g);
+      onSearch?.(q.trim(), g, searchType);
     }
     
     // Add to search history
@@ -206,6 +210,7 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | 
     setQ(''); 
     setG(null); 
     setSearchMode('title'); 
+    setSearchType('all');
     setShowSuggestions(false);
     onClear?.(); 
   };
@@ -216,9 +221,9 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | 
     // Auto-submit the suggestion
     setTimeout(() => {
       if (searchMode === 'tag') {
-        onSearch?.(`tag:${suggestion.trim()}`, g);
+        onSearch?.(`tag:${suggestion.trim()}`, g, searchType);
       } else {
-        onSearch?.(suggestion.trim(), g);
+        onSearch?.(suggestion.trim(), g, searchType);
       }
       addSearchToHistory(suggestion.trim());
     }, 100);
@@ -255,104 +260,136 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | 
   }, []);
   
   return (
-    <div 
-      ref={searchContainerRef}
-      id="search-container" 
-      className="relative flex flex-col gap-3 rounded-2xl border bg-background p-4" 
-      data-testid="search-row"
-    >
-      {/* Search Input - Takes up most of the space */}
-      <div className="relative flex-1 min-w-0">
-        <div className="relative flex items-center">
-          <input
-            type="text"
-            placeholder={searchMode === 'tag' ? 'Search by tag...' : translations.searchPlaceholder}
-            value={q}
-            onChange={handleInputChange}
-            onFocus={handleInputFocus}
-            onBlur={handleInputBlur}
-            onKeyDown={e => { 
-              if (e.key === 'Enter') submit(); 
-              if (e.key === 'Escape') clear(); 
-            }}
-            className="w-full rounded-xl border px-4 py-3 pr-12 text-sm outline-none ring-0 focus:border-primary"
-            spellCheck="true"
-          />
+    <>
+      {/* Search Input and Controls - All in one horizontal line */}
+      <div className="flex items-center gap-3 w-full">
+        {/* Search Input - Takes up most of the space */}
+        <div className="relative flex-1 min-w-0">
+          <div className="relative flex items-center">
+            <input
+              type="text"
+              placeholder={searchMode === 'tag' ? 'Search by tag...' : translations.searchPlaceholder}
+              value={q}
+              onChange={handleInputChange}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
+              onKeyDown={e => { 
+                if (e.key === 'Enter') submit(); 
+                if (e.key === 'Escape') clear(); 
+              }}
+              className="w-full rounded-xl border px-4 py-3 pr-12 text-sm outline-none ring-0 focus:border-primary"
+              spellCheck="true"
+            />
+            
+            {/* Voice Search Button */}
+            <div className="absolute right-2">
+              <VoiceSearch
+                onVoiceResult={(text) => {
+                  setQ(text);
+                  setShowSuggestions(false);
+                  // Auto-submit the voice result
+                  setTimeout(() => {
+                    if (searchMode === 'tag') {
+                      onSearch?.(`tag:${text.trim()}`, g);
+                    } else {
+                      onSearch?.(text.trim(), g);
+                    }
+                    addSearchToHistory(text.trim());
+                  }, 100);
+                }}
+                onError={(error) => {
+                  console.warn('Voice search error:', error);
+                }}
+              />
+            </div>
+          </div>
           
-          {/* Voice Search Button */}
-          <div className="absolute right-2">
-            <VoiceSearch
-              onVoiceResult={(text) => {
-                setQ(text);
-                setShowSuggestions(false);
-                // Auto-submit the voice result
-                setTimeout(() => {
-                  if (searchMode === 'tag') {
-                    onSearch?.(`tag:${text.trim()}`, g);
-                  } else {
-                    onSearch?.(text.trim(), g);
-                  }
-                  addSearchToHistory(text.trim());
-                }, 100);
-              }}
-              onError={(error) => {
-                console.warn('Voice search error:', error);
-              }}
+          {/* Search Suggestions Dropdown */}
+          <SearchSuggestions
+            query={q}
+            onSuggestionClick={handleSuggestionClick}
+            onClose={() => setShowSuggestions(false)}
+            isVisible={showSuggestions}
+          />
+        </div>
+        
+        {/* Controls - All in a horizontal line */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Search Mode Toggle */}
+          <div className="flex rounded-lg border overflow-hidden">
+            <button
+              onClick={() => setSearchMode('title')}
+              className={`px-3 py-2 text-xs font-medium transition-colors ${
+                searchMode === 'title' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-background text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              Title
+            </button>
+            <button
+              onClick={() => setSearchMode('tag')}
+              className={`px-3 py-2 text-xs font-medium transition-colors ${
+                searchMode === 'tag' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-background text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              Tag
+            </button>
+          </div>
+          
+          {/* Search Type Toggle */}
+          <div className="flex rounded-lg border overflow-hidden">
+            <button
+              onClick={() => setSearchType('all')}
+              className={`px-3 py-2 text-xs font-medium transition-colors ${
+                searchType === 'all' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-background text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setSearchType('movies-tv')}
+              className={`px-3 py-2 text-xs font-medium transition-colors ${
+                searchType === 'movies-tv' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-background text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              Movies/TV
+            </button>
+            <button
+              onClick={() => setSearchType('people')}
+              className={`px-3 py-2 text-xs font-medium transition-colors ${
+                searchType === 'people' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-background text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              People
+            </button>
+          </div>
+          
+          {/* Genre Filter Chips */}
+          <div className="w-32">
+            <FilterChips 
+              selectedGenre={g}
+              onGenreChange={setG}
+              className="w-full"
             />
           </div>
-        </div>
-        
-        {/* Search Suggestions Dropdown */}
-        <SearchSuggestions
-          query={q}
-          onSuggestionClick={handleSuggestionClick}
-          onClose={() => setShowSuggestions(false)}
-          isVisible={showSuggestions}
-        />
-      </div>
-      
-      {/* Controls Row - Horizontal on all screen sizes */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {/* Search Mode Toggle - Compact */}
-        <div className="flex rounded-lg border overflow-hidden flex-shrink-0">
-          <button
-            onClick={() => setSearchMode('title')}
-            className={`px-2 py-2 text-xs font-medium transition-colors ${
-              searchMode === 'title' 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-background text-muted-foreground hover:bg-muted'
-            }`}
-          >
-            Title
-          </button>
-          <button
-            onClick={() => setSearchMode('tag')}
-            className={`px-2 py-2 text-xs font-medium transition-colors ${
-              searchMode === 'tag' 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-background text-muted-foreground hover:bg-muted'
-            }`}
-          >
-            Tag
-          </button>
-        </div>
-        
-        {/* Genre Filter Chips - Compact */}
-        <div className="flex-shrink-0 min-w-[140px] flex-1 max-w-[200px]">
-          <FilterChips 
-            selectedGenre={g}
-            onGenreChange={setG}
-            className="w-full"
-          />
-        </div>
-        
-        {/* Action Buttons - Compact */}
-        <div className="flex gap-2 flex-shrink-0">
-          <button className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md" onClick={submit}>{translations.search}</button>
-          <button className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-muted transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md" onClick={clear}>{translations.clear}</button>
+          
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <button className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md" onClick={submit}>{translations.search}</button>
+            <button className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-muted transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md" onClick={clear}>{translations.clear}</button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -371,18 +408,44 @@ function MarqueeBar({
 }) {
   const translations = useTranslations();
   const [idx, setIdx] = useState(0);
+  const [apiMessages, setApiMessages] = useState<string[]>([]);
   const keyRef = useRef(0);
 
+  // Load API content when component mounts
   useEffect(() => {
-    if (!messages?.length) return;
+    const loadApiContent = async () => {
+      try {
+        const content = await fetchMarqueeContent();
+        const texts = content.map(item => item.text);
+        setApiMessages(texts);
+      } catch (error) {
+        console.warn('Failed to load marquee content from API:', error);
+        // Fallback to provided messages
+        setApiMessages(messages);
+      }
+    };
+
+    loadApiContent();
+  }, [messages]);
+
+  // Preload content for better performance
+  useEffect(() => {
+    preloadMarqueeContent();
+  }, []);
+
+  useEffect(() => {
+    const currentMessages = apiMessages.length > 0 ? apiMessages : messages;
+    if (!currentMessages?.length) return;
+    
     const t = setInterval(() => {
-      setIdx(i => (i + 1) % messages.length);
+      setIdx(i => (i + 1) % currentMessages.length);
       keyRef.current += 1; // restart CSS animation
     }, Math.max(4000, changeEveryMs));
     return () => clearInterval(t);
-  }, [messages, changeEveryMs]);
+  }, [apiMessages, messages, changeEveryMs]);
 
-  const msg = messages[idx] || "";
+  const currentMessages = apiMessages.length > 0 ? apiMessages : messages;
+  const msg = currentMessages[idx] || "";
 
   return (
     <div
@@ -390,7 +453,7 @@ function MarqueeBar({
       data-testid="marquee-rail"
       data-pause-on-hover={pauseOnHover ? 'true' : 'false'}
     >
-      <div className="mx-auto w-full max-w-7xl px-3 sm:px-4">
+      <div className="mx-auto w-full max-w-screen-2xl px-3 sm:px-4">
         <div className="relative h-9 sm:h-10 overflow-hidden">
           {/* Close / Hide control */}
           {onClose && (
@@ -411,8 +474,8 @@ function MarqueeBar({
             aria-live="polite"
             data-testid="marquee-scroller"
           >
-            <span className="pr-12 align-middle text-sm sm:text-base md:text-lg">{msg}</span>
-            <span className="pr-12 align-middle text-sm sm:text-base md:text-lg" aria-hidden>{msg}</span>
+            <span className="pr-[100vw] align-middle text-sm sm:text-base md:text-lg">{msg}</span>
+            <span className="pr-[100vw] align-middle text-sm sm:text-base md:text-lg" aria-hidden>{msg}</span>
           </div>
         </div>
       </div>
