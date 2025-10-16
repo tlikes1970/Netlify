@@ -23,6 +23,7 @@ exports.handler = async (event) => {
   }
 
   const key = (process.env.SENDGRID_API_KEY || '').trim();
+  console.log('sgKeyLast6:', key ? key.slice(-6) : 'none');
   const from = (process.env.EMAIL_FROM || '').trim();
   const replyTo = (process.env.EMAIL_REPLY_TO || '').trim();
 
