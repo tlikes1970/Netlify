@@ -208,24 +208,30 @@ class NotificationManager {
     console.log('🔔 Attempting to send email notification:', { episode, userEmail });
 
     try {
-      const response = await fetch('/.netlify/functions/send-notification-email', {
+      const response = await fetch('/.netlify/functions/send-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: userEmail,
-          showName: episode.showName,
-          episodeTitle: episode.episodeTitle,
-          seasonNumber: episode.seasonNumber,
-          episodeNumber: episode.episodeNumber,
-          airDate: episode.airDate,
+          to: userEmail,
+          templateId: 'd-22144b9bf8d74fe0bec75f0a430ede9a',
+          dynamicTemplateData: {
+            userName: 'Flicklet User', // TODO: Get actual user name
+            message: `New episode of ${episode.showName} is airing!`,
+            showName: episode.showName,
+            episodeTitle: episode.episodeTitle,
+            seasonNumber: episode.seasonNumber,
+            episodeNumber: episode.episodeNumber,
+            airDate: episode.airDate,
+          },
+          subject: `🎬 New Episode: ${episode.showName} S${episode.seasonNumber}E${episode.episodeNumber}`,
         }),
       });
 
       console.log('🔔 Email notification response:', response.status, response.statusText);
 
-      if (!response.ok) {
+      if (response.status !== 202) {
         const errorText = await response.text();
         console.error('🔔 Email notification failed:', errorText);
         throw new Error(`Failed to send email notification: ${response.status} ${response.statusText}`);
@@ -298,17 +304,28 @@ class NotificationManager {
   async sendTestNotification(userEmail: string): Promise<void> {
     console.log('🧪 Sending test notification to:', userEmail);
     
-    const testEpisode: UpcomingEpisode = {
-      showId: 999999,
-      showName: 'Test Show',
-      seasonNumber: 1,
-      episodeNumber: 1,
-      episodeTitle: 'Test Episode',
-      airDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
-    };
-
     try {
-      await this.sendEmailNotification(testEpisode, userEmail);
+      const response = await fetch('/.netlify/functions/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: userEmail,
+          templateId: 'd-22144b9bf8d74fe0bec75f0a430ede9a',
+          dynamicTemplateData: {
+            userName: 'Flicklet User',
+            message: 'This is a test notification email.',
+          },
+          subject: 'Flicklet Test Email',
+        }),
+      });
+
+      if (response.status !== 202) {
+        const errorText = await response.text();
+        throw new Error(`Test email failed: ${response.status} ${response.statusText}`);
+      }
+
       console.log('🧪 Test notification sent successfully');
     } catch (error) {
       console.error('🧪 Test notification failed:', error);
