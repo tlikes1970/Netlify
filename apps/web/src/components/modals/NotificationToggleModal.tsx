@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { notificationManager } from '@/lib/notifications';
+import { sendTestEmail } from '@/api/notifications';
 import type { MediaItem } from '@/components/cards/card.types';
 
 interface NotificationToggleModalProps {
@@ -13,13 +14,39 @@ export function NotificationToggleModal({ isOpen, onClose, show }: NotificationT
   const [showSettings, setShowSettings] = useState(notificationManager.getShowSettings(Number(show.id)));
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [cooldownEndsAt, setCooldownEndsAt] = useState<number | null>(null);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
 
   useEffect(() => {
     if (isOpen) {
       setShowSettings(notificationManager.getShowSettings(Number(show.id)));
       setMessage(null);
+      setCooldownEndsAt(null);
+      setCooldownSeconds(0);
     }
   }, [isOpen, show.id]);
+
+  // Cooldown timer effect
+  useEffect(() => {
+    if (!cooldownEndsAt) return;
+
+    const updateCooldown = () => {
+      const now = Date.now();
+      const remaining = Math.ceil((cooldownEndsAt - now) / 1000);
+      
+      if (remaining <= 0) {
+        setCooldownEndsAt(null);
+        setCooldownSeconds(0);
+      } else {
+        setCooldownSeconds(remaining);
+      }
+    };
+
+    const interval = setInterval(updateCooldown, 1000);
+    updateCooldown(); // Initial update
+
+    return () => clearInterval(interval);
+  }, [cooldownEndsAt]);
 
   const handleToggle = async () => {
     setIsLoading(true);
@@ -58,7 +85,7 @@ export function NotificationToggleModal({ isOpen, onClose, show }: NotificationT
     setMessage(null);
 
     try {
-      // Get user email from auth or prompt
+      // Get user email from prompt
       const userEmail = prompt('Enter your email address for testing:');
       if (!userEmail) {
         setMessage({
@@ -68,11 +95,26 @@ export function NotificationToggleModal({ isOpen, onClose, show }: NotificationT
         return;
       }
 
-      await notificationManager.sendTestNotification(userEmail);
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(userEmail)) {
+        setMessage({
+          type: 'error',
+          text: 'Please enter a valid email address'
+        });
+        return;
+      }
+
+      // Call the Netlify function
+      await sendTestEmail(userEmail);
+      
       setMessage({
         type: 'success',
         text: 'Test email sent successfully! Check your inbox.'
       });
+
+      // Start 30-second cooldown
+      setCooldownEndsAt(Date.now() + 30000);
 
       // Clear message after 5 seconds
       setTimeout(() => setMessage(null), 5000);
@@ -246,10 +288,15 @@ export function NotificationToggleModal({ isOpen, onClose, show }: NotificationT
           <div className="mt-4 pt-4 border-t">
             <button
               onClick={handleTestEmail}
-              disabled={isLoading}
+              disabled={isLoading || cooldownEndsAt !== null}
               className="w-full px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
             >
-              {isLoading ? 'Sending...' : '🧪 Send Test Email'}
+              {isLoading 
+                ? 'Sending...' 
+                : cooldownEndsAt 
+                  ? `Test again in ${cooldownSeconds}s`
+                  : '🧪 Send Test Email'
+              }
             </button>
             <p className="text-xs mt-2 text-center" style={{ color: 'var(--muted)' }}>
               Test the email notification system
