@@ -1,0 +1,15 @@
+file,line,selector,has_important,declaration_snippet
+www/styles/components.css,1196,.tab-card .poster,true,width: 60px !important; /* Force smaller poster */
+www/styles/components.css,1197,.tab-card .poster,true,height: 90px !important; /* Force smaller poster */
+www/styles/components.css,1202,.tab-card .content,true,padding: 6px 8px !important; /* Reduced content padding */
+www/styles/components.css,1207,.tab-card .title,true,font-size: 13px !important; /* Smaller title */
+www/styles/components.css,1213,.tab-card .meta,true,font-size: 10px !important; /* Smaller meta text */
+www/styles/components.css,1218,.tab-card .rating,true,font-size: 10px !important; /* Smaller rating */
+www/styles/components.css,1236,.tab-card .mobile-actions .btn,true,font-size: 10px !important;
+www/styles/components.css,1237,.tab-card .mobile-actions .btn,true,padding: 4px 6px !important;
+www/styles/components.css,1238,.tab-card .mobile-actions .btn,true,min-height: 24px !important;
+www/styles/components.css,1257,.tab-card .mobile-actions .absolute .btn,true,font-size: 10px !important;
+www/styles/components.css,1258,.tab-card .mobile-actions .absolute .btn,true,padding: 3px 5px !important;
+www/styles/components.css,1259,.tab-card .mobile-actions .absolute .btn,true,min-height: 22px !important;
+www/styles/components.css,1265,.tab-card .hidden.md\\:block,true,display: none !important;
+www/styles/components.css,1270,.tab-card .md\\:hidden,true,display: block !important;

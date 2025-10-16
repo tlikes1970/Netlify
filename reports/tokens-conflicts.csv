@@ -1,0 +1,11 @@
+var,value_in_design_tokens,value_in_tokens,file_a,line_a,file_b,line_b
+--color-primary,#ff4c8d,#ff4c8d,www/styles/design-tokens.css,13,www/styles/tokens.css,6
+--color-secondary,#1f2937,#1f2937,www/styles/design-tokens.css,28,www/styles/tokens.css,7
+--color-background,#ffffff,#ffffff,www/styles/design-tokens.css,11,www/styles/tokens.css,8
+--color-text,#1f2937,#1f2937,www/styles/design-tokens.css,28,www/styles/tokens.css,9
+--color-muted,#374151,#374151,www/styles/design-tokens.css,30,www/styles/tokens.css,10
+--space-xs,4px,4px,www/styles/design-tokens.css,41,www/styles/tokens.css,13
+--space-sm,4px,8px,www/styles/design-tokens.css,42,www/styles/tokens.css,14
+--space-md,8px,16px,www/styles/design-tokens.css,43,www/styles/tokens.css,15
+--space-lg,16px,24px,www/styles/design-tokens.css,44,www/styles/tokens.css,16
+--space-xl,24px,32px,www/styles/design-tokens.css,45,www/styles/tokens.css,17
