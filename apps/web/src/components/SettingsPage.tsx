@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useSettings, settingsManager, PersonalityLevel, getPersonalityText } from '../lib/settings';
 import { useTranslations, useLanguage, changeLanguage } from '../lib/language';
 import { useCustomLists, customListManager } from '../lib/customLists';
@@ -8,9 +8,11 @@ import { lockScroll, unlockScroll } from '../utils/scrollLock';
 import PersonalityExamples from './PersonalityExamples';
 import ForYouGenreConfig from './ForYouGenreConfig';
 import NotInterestedModal from './modals/NotInterestedModal';
-import { NotificationSettings } from './modals/NotificationSettings';
-import { NotificationCenter } from './modals/NotificationCenter';
 import type { Language } from '../lib/language.types';
+
+// Lazy load heavy notification modals
+const NotificationSettings = lazy(() => import('./modals/NotificationSettings').then(m => ({ default: m.NotificationSettings })));
+const NotificationCenter = lazy(() => import('./modals/NotificationCenter').then(m => ({ default: m.NotificationCenter })));
 
 type SettingsTab = 'general' | 'notifications' | 'layout' | 'data' | 'pro' | 'about' | 'social' | 'community';
 
@@ -122,12 +124,16 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
       
       {/* Notification Settings Modal */}
       {showNotificationSettings && (
-        <NotificationSettings isOpen={showNotificationSettings} onClose={() => setShowNotificationSettings(false)} />
+        <Suspense fallback={<div className="loading-spinner">Loading notification settings...</div>}>
+          <NotificationSettings isOpen={showNotificationSettings} onClose={() => setShowNotificationSettings(false)} />
+        </Suspense>
       )}
       
       {/* Notification Center Modal */}
       {showNotificationCenter && (
-        <NotificationCenter isOpen={showNotificationCenter} onClose={() => setShowNotificationCenter(false)} />
+        <Suspense fallback={<div className="loading-spinner">Loading notification center...</div>}>
+          <NotificationCenter isOpen={showNotificationCenter} onClose={() => setShowNotificationCenter(false)} />
+        </Suspense>
       )}
     </div>
   );

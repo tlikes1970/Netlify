@@ -1,8 +1,5 @@
 import Tabs from '@/components/Tabs';
 import MobileTabs, { useViewportOffset } from '@/components/MobileTabs';
-import ListPage from '@/pages/ListPage';
-import MyListsPage from '@/pages/MyListsPage';
-import DiscoveryPage from '@/pages/DiscoveryPage';
 import FlickletHeader from '@/components/FlickletHeader';
 import Rail from '@/components/Rail';
 import Section from '@/components/Section';
@@ -12,10 +9,16 @@ import FeedbackPanel from '@/components/FeedbackPanel';
 import SearchResults from '@/search/SearchResults';
 import HomeYourShowsRail from '@/components/rails/HomeYourShowsRail';
 import HomeUpNextRail from '@/components/rails/HomeUpNextRail';
-import SettingsPage from '@/components/SettingsPage';
 import { SettingsFAB, ThemeToggleFAB } from '@/components/FABs';
 import ScrollToTopArrow from '@/components/ScrollToTopArrow';
-import NotesAndTagsModal from '@/components/modals/NotesAndTagsModal';
+import { lazy, Suspense } from 'react';
+
+// Lazy load heavy components
+const SettingsPage = lazy(() => import('@/components/SettingsPage'));
+const NotesAndTagsModal = lazy(() => import('@/components/modals/NotesAndTagsModal'));
+const ListPage = lazy(() => import('@/pages/ListPage'));
+const MyListsPage = lazy(() => import('@/pages/MyListsPage'));
+const DiscoveryPage = lazy(() => import('@/pages/DiscoveryPage'));
 import PullToRefreshWrapper from '@/components/PullToRefreshWrapper';
 import { useForYouRows } from '@/hooks/useForYouRows';
 import { useForYouContent } from '@/hooks/useGenreContent';
@@ -224,11 +227,31 @@ export default function App() {
                   </div>
                 </div>
               )}
-              {view === 'watching'  && <ListPage title="Currently Watching" items={watching} mode="watching" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
-              {view === 'want'      && <ListPage title="Want to Watch"     items={wishlist}     mode="want" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
-              {view === 'watched'   && <ListPage title="Watched"           items={watched}  mode="watched" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />}
-              {view === 'mylists'  && <MyListsPage />}
-              {view === 'discovery' && <DiscoveryPage query={searchQuery} genreId={searchGenre ? parseInt(searchGenre) : null} />}
+              {view === 'watching'  && (
+                <Suspense fallback={<div className="loading-spinner">Loading watching list...</div>}>
+                  <ListPage title="Currently Watching" items={watching} mode="watching" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />
+                </Suspense>
+              )}
+              {view === 'want'      && (
+                <Suspense fallback={<div className="loading-spinner">Loading wishlist...</div>}>
+                  <ListPage title="Want to Watch" items={wishlist} mode="want" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />
+                </Suspense>
+              )}
+              {view === 'watched'   && (
+                <Suspense fallback={<div className="loading-spinner">Loading watched list...</div>}>
+                  <ListPage title="Watched" items={watched} mode="watched" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />
+                </Suspense>
+              )}
+              {view === 'mylists'  && (
+                <Suspense fallback={<div className="loading-spinner">Loading my lists...</div>}>
+                  <MyListsPage />
+                </Suspense>
+              )}
+              {view === 'discovery' && (
+                <Suspense fallback={<div className="loading-spinner">Loading discovery...</div>}>
+                  <DiscoveryPage query={searchQuery} genreId={searchGenre ? parseInt(searchGenre) : null} />
+                </Suspense>
+              )}
             </div>
           </>
         )}
@@ -249,17 +272,21 @@ export default function App() {
 
         {/* Settings Modal */}
         {showSettings && (
-          <SettingsPage onClose={() => setShowSettings(false)} />
+          <Suspense fallback={<div className="loading-spinner">Loading settings...</div>}>
+            <SettingsPage onClose={() => setShowSettings(false)} />
+          </Suspense>
         )}
 
         {/* Notes and Tags Modal */}
         {showNotesModal && notesModalItem && (
-          <NotesAndTagsModal
-            item={notesModalItem}
-            isOpen={showNotesModal}
-            onClose={() => setShowNotesModal(false)}
-            onSave={handleSaveNotesAndTags}
-          />
+          <Suspense fallback={<div className="loading-spinner">Loading notes...</div>}>
+            <NotesAndTagsModal
+              item={notesModalItem}
+              isOpen={showNotesModal}
+              onClose={() => setShowNotesModal(false)}
+              onSave={handleSaveNotesAndTags}
+            />
+          </Suspense>
         )}
       </main>
     );
@@ -377,17 +404,21 @@ export default function App() {
 
         {/* Settings Modal */}
         {showSettings && (
-          <SettingsPage onClose={() => setShowSettings(false)} />
+          <Suspense fallback={<div className="loading-spinner">Loading settings...</div>}>
+            <SettingsPage onClose={() => setShowSettings(false)} />
+          </Suspense>
         )}
 
         {/* Notes and Tags Modal */}
         {showNotesModal && notesModalItem && (
-          <NotesAndTagsModal
-            item={notesModalItem}
-            isOpen={showNotesModal}
-            onClose={() => setShowNotesModal(false)}
-            onSave={handleSaveNotesAndTags}
-          />
+          <Suspense fallback={<div className="loading-spinner">Loading notes...</div>}>
+            <NotesAndTagsModal
+              item={notesModalItem}
+              isOpen={showNotesModal}
+              onClose={() => setShowNotesModal(false)}
+              onSave={handleSaveNotesAndTags}
+            />
+          </Suspense>
         )}
 
         {/* Toast Notifications */}

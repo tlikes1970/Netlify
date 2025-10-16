@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { useTranslations } from '@/lib/language';
-import FlickWordModal from './games/FlickWordModal';
 import FlickWordStats from './games/FlickWordStats';
-import TriviaModal from './games/TriviaModal';
 import TriviaStats from './games/TriviaStats';
 import CommunityPlayer from './CommunityPlayer';
+
+// Lazy load game modals
+const FlickWordModal = lazy(() => import('./games/FlickWordModal'));
+const TriviaModal = lazy(() => import('./games/TriviaModal'));
 
 export default function CommunityPanel() {
   const translations = useTranslations();
@@ -99,16 +101,20 @@ export default function CommunityPanel() {
       </div>
 
       {/* FlickWord Modal - Now rendered via Portal */}
-      <FlickWordModal
-        isOpen={flickWordModalOpen}
-        onClose={() => setFlickWordModalOpen(false)}
-      />
+      <Suspense fallback={<div className="loading-spinner">Loading FlickWord...</div>}>
+        <FlickWordModal
+          isOpen={flickWordModalOpen}
+          onClose={() => setFlickWordModalOpen(false)}
+        />
+      </Suspense>
 
       {/* Trivia Modal - Now rendered via Portal */}
-      <TriviaModal
-        isOpen={triviaModalOpen}
-        onClose={() => setTriviaModalOpen(false)}
-      />
+      <Suspense fallback={<div className="loading-spinner">Loading Trivia...</div>}>
+        <TriviaModal
+          isOpen={triviaModalOpen}
+          onClose={() => setTriviaModalOpen(false)}
+        />
+      </Suspense>
     </div>
   );
 }
