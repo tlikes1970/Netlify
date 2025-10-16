@@ -1,10 +1,14 @@
 /**
  * Process: Trivia Modal Module
- * Purpose: Trivia modal functionality
+ * Purpose: Trivia modal functionality with draggable/resizable support
  * Data Source: DOM elements
  * Update Path: Update modal selectors if needed
- * Dependencies: DOM API
+ * Dependencies: DOM API, DraggableModal
  */
+
+import { DraggableModal } from './draggable-modal.js';
+
+let triviaDraggableModal = null;
 
 export function initializeTriviaModal() {
   // Trivia Modal Functions
@@ -14,10 +18,18 @@ export function initializeTriviaModal() {
     const gameContainer = document.getElementById('dailytrivia-game');
 
     if (modal && gameContainer) {
-      // Show modal
-      modal.setAttribute('aria-hidden', 'false');
-      modal.style.display = 'flex';
-      modal.classList.add('show');
+      // Initialize draggable modal if not already done
+      if (!triviaDraggableModal) {
+        triviaDraggableModal = new DraggableModal('modal-trivia', {
+          minWidth: 400,
+          minHeight: 500,
+          maxWidth: window.innerWidth * 0.95,
+          maxHeight: window.innerHeight * 0.95
+        });
+      }
+
+      // Show modal using draggable modal
+      triviaDraggableModal.openModal();
 
       // Mount the Trivia game
       if (window.DailyTriviaBridge && typeof window.DailyTriviaBridge.mount === 'function') {
@@ -48,9 +60,10 @@ export function initializeTriviaModal() {
     const modal = document.getElementById('modal-trivia');
 
     if (modal) {
-      modal.setAttribute('aria-hidden', 'true');
-      modal.style.display = 'none';
-      modal.classList.remove('show');
+      // Close modal using draggable modal
+      if (triviaDraggableModal) {
+        triviaDraggableModal.closeModal();
+      }
 
       // Unmount the Trivia game
       if (window.DailyTriviaBridge && typeof window.DailyTriviaBridge.unmount === 'function') {

@@ -40,8 +40,8 @@
   /* Single source of truth for all card dimensions */
   --card-w: 154px;                               /* Standard card width */
   --card-h: 270px;                               /* Standard card height (3:2 aspect ratio) */
-  --card-w-mobile: 140px;                        /* Mobile card width */
-  --card-h-mobile: 210px;                        /* Mobile card height */
+  --card-w-mobile: 100px;                        /* Mobile card width - reduced from 140px */
+  --card-h-mobile: 150px;                        /* Mobile card height - reduced from 210px */
   --card-w-desktop: 200px;                       /* Desktop card width */
   --card-h-desktop: 300px;                       /* Desktop card height */
   --card-w-large: 220px;                         /* Large screen card width */
@@ -51,8 +51,8 @@
   /* Unified poster dimensions for all contexts */
   --poster-w: 120px;                             /* Standard poster width (2:3 aspect ratio) */
   --poster-h: 180px;                             /* Standard poster height */
-  --poster-w-mobile: 80px;                       /* Mobile poster width */
-  --poster-h-mobile: 120px;                      /* Mobile poster height */
+  --poster-w-mobile: 60px;                       /* Mobile poster width - reduced from 80px */
+  --poster-h-mobile: 90px;                       /* Mobile poster height - reduced from 120px */
   --poster-w-desktop: 140px;                     /* Desktop poster width */
   --poster-h-desktop: 210px;                     /* Desktop poster height */
 

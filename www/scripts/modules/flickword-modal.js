@@ -1,10 +1,14 @@
 /**
  * Process: FlickWord Modal Module
- * Purpose: FlickWord modal functionality
+ * Purpose: FlickWord modal functionality with draggable/resizable support
  * Data Source: DOM elements
  * Update Path: Update modal selectors if needed
- * Dependencies: DOM API
+ * Dependencies: DOM API, DraggableModal
  */
+
+import { DraggableModal } from './draggable-modal.js';
+
+let flickWordDraggableModal = null;
 
 export function initializeFlickWordModal() {
   // FlickWord Modal Functions
@@ -14,13 +18,21 @@ export function initializeFlickWordModal() {
     const frame = document.getElementById('flickword-game-frame');
 
     if (modal && frame) {
+      // Initialize draggable modal if not already done
+      if (!flickWordDraggableModal) {
+        flickWordDraggableModal = new DraggableModal('modal-flickword', {
+          minWidth: 400,
+          minHeight: 500,
+          maxWidth: window.innerWidth * 0.95,
+          maxHeight: window.innerHeight * 0.95
+        });
+      }
+
       // Set iframe source
       frame.src = '/features/flickword-v2.html';
 
-      // Show modal
-      modal.setAttribute('aria-hidden', 'false');
-      modal.style.display = 'flex';
-      modal.classList.add('show');
+      // Show modal using draggable modal
+      flickWordDraggableModal.openModal();
 
       // Debug: Check close button
       const closeBtn = modal.querySelector('.gm-close');
@@ -48,9 +60,10 @@ export function initializeFlickWordModal() {
     const frame = document.getElementById('flickword-game-frame');
 
     if (modal) {
-      modal.setAttribute('aria-hidden', 'true');
-      modal.style.display = 'none';
-      modal.classList.remove('show');
+      // Close modal using draggable modal
+      if (flickWordDraggableModal) {
+        flickWordDraggableModal.closeModal();
+      }
 
       // Clear iframe source to stop any running processes
       if (frame) {

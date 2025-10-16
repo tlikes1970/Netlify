@@ -59,24 +59,24 @@
   --card-h: 270px;
   --home-card-width-desktop: 184px;
   --home-card-height-desktop: 276px;
-  --home-card-width-mobile: 64px;
-  --home-card-height-mobile: 96px;
+  --home-card-width-mobile: 60px;               /* Reduced from 64px */
+  --home-card-height-mobile: 90px;              /* Reduced from 96px */
   --tab-card-poster-width-desktop: 120px;
   --tab-card-poster-height-desktop: 180px;
-  --tab-card-poster-width-mobile: 80px;
-  --tab-card-poster-height-mobile: 120px;
+  --tab-card-poster-width-mobile: 60px;        /* Reduced from 80px */
+  --tab-card-poster-height-mobile: 90px;       /* Reduced from 120px */
 
   /* ===== POSTER SYSTEM ===== */
   --poster-w: 180px;
   --poster-h: 270px;
-  --poster-w-mobile: 64px;
-  --poster-h-mobile: 96px;
+  --poster-w-mobile: 60px;                      /* Reduced from 64px */
+  --poster-h-mobile: 90px;                      /* Reduced from 96px */
   --card-gap: 16px;
-  --card-gap-mobile: 12px;
+  --card-gap-mobile: 8px;                       /* Reduced from 12px */
   --card-pad-y: 12px;
-  --card-pad-y-mobile: 8px;
+  --card-pad-y-mobile: 6px;                      /* Reduced from 8px */
   --card-pad-x: 16px;
-  --card-pad-x-mobile: 12px;
+  --card-pad-x-mobile: 8px;                      /* Reduced from 12px */
 
   /* ===== TYPOGRAPHY SCALE ===== */
   --meta-title-size: 14px;

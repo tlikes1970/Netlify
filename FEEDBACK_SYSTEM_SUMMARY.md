@@ -39,3 +39,8 @@ The feedback system now uses **Netlify Forms** for automatic email notifications
 
 The feedback system is now **simpler, cleaner, and more reliable** than the previous custom implementation!
 
+
+
+
+
+

@@ -397,7 +397,6 @@
     width: var(--home-card-width-mobile);
     height: var(--home-card-height-mobile);
   }
-}
 
 /* Community Games Container */
 .community-games-container {
@@ -1184,7 +1183,93 @@
   display: inline-block;
 }
 
-/* === CARD COMPONENT STYLES === */
+/* === MOBILE CARD OPTIMIZATIONS === */
+/* Compact mobile layout for tab cards */
+@media (max-width: var(--bp-mobile-lg)) {
+  /* Mobile TabCard optimizations */
+  .tab-card {
+    min-height: 120px; /* Reduced from default */
+    padding: 8px; /* Reduced padding */
+  }
+  
+  .tab-card .poster {
+    width: 60px !important; /* Force smaller poster */
+    height: 90px !important; /* Force smaller poster */
+    flex-shrink: 0;
+  }
+  
+  .tab-card .content {
+    padding: 6px 8px !important; /* Reduced content padding */
+    min-width: 0; /* Allow text truncation */
+  }
+  
+  .tab-card .title {
+    font-size: 13px !important; /* Smaller title */
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+  
+  .tab-card .meta {
+    font-size: 10px !important; /* Smaller meta text */
+    margin-bottom: 2px;
+  }
+  
+  .tab-card .rating {
+    font-size: 10px !important; /* Smaller rating */
+    margin-bottom: 4px;
+  }
+  
+  .tab-card .overview {
+    display: none; /* Hide overview on mobile */
+  }
+  
+  .tab-card .badges {
+    display: none; /* Hide badges on mobile */
+  }
+  
+  .tab-card .where {
+    display: none; /* Hide where to watch on mobile */
+  }
+  
+  /* Mobile action buttons */
+  .tab-card .mobile-actions .btn {
+    font-size: 10px !important;
+    padding: 4px 6px !important;
+    min-height: 24px !important;
+    flex: 1;
+    min-width: 0;
+  }
+  
+  /* Mobile ellipsis dropdown */
+  .tab-card .mobile-actions .absolute {
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 50;
+    padding: 8px;
+  }
+  
+  .tab-card .mobile-actions .absolute .btn {
+    font-size: 10px !important;
+    padding: 3px 5px !important;
+    min-height: 22px !important;
+    margin: 1px;
+  }
+  
+  /* Hide desktop actions on mobile */
+  .tab-card .hidden.md\\:block {
+    display: none !important;
+  }
+  
+  /* Show mobile actions on mobile */
+  .tab-card .md\\:hidden {
+    display: block !important;
+  }
+}
 
 /* Base card styles */
 .card {
@@ -6962,16 +7047,16 @@ body:not(.home) .curated-card + .curated-card {
 
 /* Ensure theaters-section follows light theme even when it has home-preview-row class */
 #theaters-section.home-preview-row {
-  background: var(--color-surface) !important;
-  color: var(--color-text) !important;
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 /* Additional specificity to override any conflicting rules */
 #theaters-section.home-preview-row,
 section#theaters-section.home-preview-row {
-  background: var(--color-surface) !important;
-  background-color: var(--color-surface) !important;
-  color: var(--color-text) !important;
+  background: var(--color-surface);
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .theaters-container {
@@ -7393,8 +7478,8 @@ input:checked + .slider:hover {
       display: grid ;
       grid-template-columns: 1fr auto 1fr ;
       align-items: center ;
-      gap: 8px ;
-      padding: 8px 12px ;
+      gap: 12px ;
+      padding: 24px 28px ;
       min-height: auto ;
     }
 
@@ -8403,4 +8488,323 @@ button#btnSettings.fab-left.fab:hover {
   .unified-card-actions-grid {
     gap: 6px;
   }
+}
+
+/* ===== SHARING MODAL STYLES ===== */
+
+/* Wide modal dialog for sharing */
+.gm-dialog--wide {
+  max-width: 800px;
+  width: 90vw;
+}
+
+/* Sharing container */
+.sharing-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 0;
+}
+
+/* Sharing sections */
+.sharing-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sharing-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Sharing tabs and options */
+.sharing-tabs,
+.sharing-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Custom checkbox styling */
+.sharing-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--card, #f7f7f9);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.sharing-checkbox:hover {
+  background: var(--bg-elevated, #ffffff);
+  border-color: var(--primary, #2563eb);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sharing-checkbox input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  background: var(--bg, #ffffff);
+  border: 2px solid var(--border, #e5e7eb);
+  border-radius: 4px;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sharing-checkbox input[type="checkbox"]:checked + .checkmark {
+  background: var(--primary, #2563eb);
+  border-color: var(--primary, #2563eb);
+}
+
+.sharing-checkbox input[type="checkbox"]:checked + .checkmark::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.checkbox-label {
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+}
+
+.item-count {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #666);
+  background: var(--bg-elevated, #ffffff);
+  padding: 4px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border, #e5e7eb);
+}
+
+/* Preview section */
+.sharing-preview {
+  background: var(--bg-elevated, #ffffff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 200px;
+}
+
+.preview-header {
+  background: linear-gradient(135deg, var(--primary, #2563eb) 0%, var(--accent, #ff4c8d) 100%);
+  color: white;
+  padding: 16px 20px;
+  text-align: center;
+}
+
+.preview-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.brand-icon {
+  font-size: 1.5rem;
+}
+
+.brand-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.preview-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.preview-content {
+  padding: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.preview-placeholder {
+  color: var(--text-secondary, #666);
+  font-style: italic;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.preview-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+}
+
+.preview-item:last-child {
+  border-bottom: none;
+}
+
+.preview-item-icon {
+  font-size: 1.2rem;
+  width: 24px;
+  text-align: center;
+}
+
+.preview-item-title {
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+}
+
+.preview-item-rating {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #666);
+}
+
+.preview-section-title {
+  font-weight: 600;
+  color: var(--text);
+  margin: 16px 0 8px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+}
+
+.preview-section-title:first-child {
+  margin-top: 0;
+}
+
+/* Sharing actions */
+.sharing-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid var(--border, #e5e7eb);
+}
+
+/* Share result modal */
+.share-result-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.share-result-header {
+  text-align: center;
+}
+
+.share-result-description {
+  color: var(--text-secondary, #666);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.share-result-content {
+  position: relative;
+}
+
+.share-result-textarea {
+  width: 100%;
+  min-height: 300px;
+  padding: 16px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--bg-elevated, #ffffff);
+  color: var(--text);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.share-result-textarea:focus {
+  border-color: var(--primary, #2563eb);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.share-result-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .gm-dialog--wide {
+    width: 95vw;
+    max-width: none;
+  }
+  
+  .sharing-container {
+    gap: 20px;
+  }
+  
+  .sharing-checkbox {
+    padding: 10px 12px;
+  }
+  
+  .sharing-actions,
+  .share-result-actions {
+    flex-direction: column;
+  }
+  
+  .sharing-actions .btn,
+  .share-result-actions .btn {
+    width: 100%;
+  }
+}
+
+/* Dark mode support */
+.dark-mode .sharing-checkbox {
+  background: var(--card-dark, #2a2a2a);
+  border-color: var(--border-dark, #404040);
+}
+
+.dark-mode .sharing-checkbox:hover {
+  background: var(--bg-elevated-dark, #333333);
+  border-color: var(--primary, #2563eb);
+}
+
+.dark-mode .checkmark {
+  background: var(--bg-dark, #1a1a1a);
+  border-color: var(--border-dark, #404040);
+}
+
+.dark-mode .item-count {
+  background: var(--bg-elevated-dark, #333333);
+  border-color: var(--border-dark, #404040);
+  color: var(--text-secondary-dark, #999);
+}
+
+.dark-mode .sharing-preview {
+  background: var(--bg-elevated-dark, #333333);
+  border-color: var(--border-dark, #404040);
+}
+
+.dark-mode .share-result-textarea {
+  background: var(--bg-elevated-dark, #333333);
+  border-color: var(--border-dark, #404040);
+  color: var(--text-dark, #ffffff);
 }

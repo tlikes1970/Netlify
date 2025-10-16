@@ -7,9 +7,6 @@
 
 /* Design tokens moved to design-tokens.css */
 
-/* Per-rail width variables removed - now controlled by home-layout.css */
-/* These per-rail specials caused inconsistency and are replaced by centralized sizing */
-
 /* Notification System - Rules Compliant (v28.70+) */
 .notification {
   position: fixed;
@@ -60,7 +57,6 @@
 /* Quote Bar - Moved to card-system.css for standardization */
 
 /* Home Groups - MOVED to home-layout.css */
-/* Layout rules now handled by token-driven system */
 
 /* Placeholder Messages */
 .placeholder-message {
@@ -575,7 +571,6 @@ body {
 }
 
 /* Home preview row wrappers - MOVED to home-layout.css */
-/* Layout rules now handled by token-driven system */
 
 /* Tab state management - home-only elements */
 .home-only {
@@ -1148,8 +1143,9 @@ body.mardi {
 
 .header {
   border-bottom: none;
-  padding-bottom: 16px;
+  padding: 24px 0;
   margin-bottom: 12px;
+  height: 160px;
   animation: headerFadeIn 0.6s ease-out;
 }
 
@@ -1158,7 +1154,7 @@ body.mardi {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 20px 24px; /* Increased padding for more spacious header */
 }
 
 .header-center {
@@ -2839,13 +2835,17 @@ body.mardi {
 
 /* Desktop & tablet (≥641px) */
 @media (min-width: calc(var(--bp-mobile) + 1px)) {
+  .header {
+    height: 160px; /* Ensure desktop header height */
+    padding: 24px 0; /* Ensure desktop header padding */
+  }
   .header-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
     flex-wrap: nowrap;
-    padding: 8px 12px;
+    padding: 20px 24px; /* Increased padding for desktop */
   }
   .header-left {
     display: flex;
@@ -3829,15 +3829,6 @@ body.mardi {
 /* Collapsed section styling moved to home-layout.css */
 
 /* === HOME LAYOUT RULES MOVED TO home-layout.css === */
-/* 
- * CRITICAL: All home page layout rules are now in home-layout.css
- * This file should NOT contain home layout rules to prevent conflicts
- * 
- * If you need to modify home layout:
- * 1. Edit www/styles/home-layout.css
- * 2. Do NOT add home layout rules to this file
- * 3. Follow the CSS Architecture Guard rules
- */
 
 /* PERMANENT OVERRIDE: Force action-row elements to be contents for 2x2 grid */
 #homeSection .card.v2 .action-grid-2x2 .action-row,
@@ -3863,11 +3854,11 @@ line-height: 1.2;
 #homeSection .card-actions .btn,
 #homeSection .action-grid-2x2 .btn,
 #homeSection .action-row .btn {
-  min-height: 44px !important;
-height: auto;
-padding: 8px 12px;
-font-size: 12px;
-line-height: 1.2;
+  min-height: 44px;
+  height: auto;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.2;
 }
 
 /* Fix card spacing - ensure even spacing between cards */
@@ -4132,6 +4123,7 @@ line-height: 1.2;
   position: relative;
   pointer-events: auto;
   overflow: hidden; /* Prevent content from spilling out */
+  margin: auto; /* Center the modal */
 }
 .game-modal[aria-hidden='false'] .gm-dialog {
   transform: scale(1);
@@ -4243,6 +4235,75 @@ line-height: 1.2;
   .game-modal .gm-dialog {
     width: min(95vw, 800px);
     height: min(90vh, 700px);
+  }
+}
+
+/* Draggable Modal Styles */
+.gm-draggable {
+  cursor: default;
+  user-select: none;
+  transition: transform 0.2s ease-out;
+}
+
+.gm-draggable.gm-dragging {
+  cursor: grabbing;
+  transition: none;
+}
+
+.gm-draggable.gm-resizing {
+  cursor: nw-resize;
+  transition: none;
+}
+
+.gm-drag-handle {
+  cursor: grab;
+  user-select: none;
+}
+
+.gm-drag-handle:active {
+  cursor: grabbing;
+}
+
+.gm-resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  cursor: nw-resize;
+  background: linear-gradient(-45deg, 
+    transparent 30%, 
+    var(--border, #e5e7eb) 30%, 
+    var(--border, #e5e7eb) 40%, 
+    transparent 40%, 
+    transparent 60%, 
+    var(--border, #e5e7eb) 60%, 
+    var(--border, #e5e7eb) 70%, 
+    transparent 70%
+  );
+  border-radius: 0 0 16px 0;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.gm-resize-handle:hover {
+  opacity: 1;
+  background: linear-gradient(-45deg, 
+    transparent 30%, 
+    var(--accent, #ff4c8d) 30%, 
+    var(--accent, #ff4c8d) 40%, 
+    transparent 40%, 
+    transparent 60%, 
+    var(--accent, #ff4c8d) 60%, 
+    var(--accent, #ff4c8d) 70%, 
+    transparent 70%
+  );
+}
+
+/* Hide resize handle on mobile */
+@media (max-width: var(--bp-mobile)) {
+  .gm-resize-handle {
+    display: none;
   }
 }
 
@@ -4458,7 +4519,7 @@ body {
 /* Layout Shell - Option A: Co-located tabs and panels */
 :root {
   /* Use existing tokens if available; otherwise keep these fallbacks */
-  --header-h: 120px; /* match current measured header height */
+  --header-h: 160px; /* Updated to match increased header height */
   --tabs-h: 48px; /* update to your tab bar height */
 }
 
@@ -4484,19 +4545,19 @@ body {
   right: auto;
   z-index: auto; /* Let search bar be the sticky element */
   margin: 0; /* no collapsing gaps */
-  height: 120px; /* Increased height to accommodate all elements */
+  height: 160px; /* Increased height to accommodate all elements */
   background: var(--bg, #ffffff); /* Ensure solid background */
   border-bottom: none; /* Remove red border */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add shadow for separation */
   width: 100%;
-  padding: 16px 0; /* Add padding to prevent cut-off */
+  padding: 24px 0; /* Increased padding for better spacing */
 }
 
 /* Search sticks under header when visible */
 #appRoot > #search-container.top-search,
 #appRoot > .top-search {
   position: sticky;
-  top: var(--header-h, 120px); /* Stick below header */
+  top: var(--header-h, 160px); /* Stick below header */
   z-index: 1000; /* High z-index to stay above content */
   margin: 0;
   margin-top: 20px; /* Add space between header and search bar */
@@ -4504,6 +4565,12 @@ body {
   background: var(--bg, #ffffff); /* Ensure solid background */
   padding: 16px 0; /* Add padding to make it visible */
   border-bottom: 1px solid var(--border, #e5e7eb); /* Visual separation */
+  /* Match header width constraints */
+  max-width: var(--page-max, 1200px);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 32px;
+  padding-right: 32px;
 }
 
 /* Search row within search container - no need for sticky since container is sticky */
@@ -4522,7 +4589,7 @@ body {
 #appRoot > .tab-container,
 #appRoot > [role='tablist'] {
   position: sticky;
-  top: calc(var(--header-h, 120px) + 80px); /* Below header + search bar + margin */
+  top: calc(var(--header-h, 160px) + 80px); /* Below header + search bar + margin */
   z-index: 800; /* Below search bar but above content */
   margin: 0;
   margin-bottom: 20px; /* Consistent spacing between containers */

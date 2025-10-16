@@ -217,14 +217,14 @@ main#panels,
 
 /* H1.1: Header spacing - override main.css fixed positioning */
 #appRoot > header.header, header.header, .header {
-  padding-bottom: 20px;
+  padding: 24px 0;
   margin-bottom: 5px ; /* H1.1: Minimal space between header and search - force override */
   position: static ; /* H1.1: Make header scroll with page - force override */
   z-index: auto ; /* H1.1: Remove high z-index - force override */
   top: auto ; /* H1.1: Remove fixed positioning - force override */
   left: auto ; /* H1.1: Remove fixed positioning - force override */
   right: auto ; /* H1.1: Remove fixed positioning - force override */
-  height: auto ; /* H1.1: Remove fixed height - force override */
+  height: 160px ; /* H1.1: Set larger header height - force override */
   width: auto ; /* H1.1: Remove fixed width - force override */
   box-shadow: none ; /* H1.1: Remove fixed header shadow - force override */
   border-bottom: none; /* H1.1: Remove red border */

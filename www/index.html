@@ -34,6 +34,14 @@
     <!-- Base tag for root-relative URLs -->
     <base href="/" />
 
+    <!-- Performance: Preconnect to third-party services -->
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://api.themoviedb.org" crossorigin />
+    <link rel="preconnect" href="https://image.tmdb.org" crossorigin />
+    <link rel="dns-prefetch" href="https://www.gstatic.com" />
+    <link rel="dns-prefetch" href="https://api.themoviedb.org" />
+    <link rel="dns-prefetch" href="https://image.tmdb.org" />
+
     <!-- Icons for different platforms -->
     <link rel="icon" href="/icons/icon-512.png" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
@@ -152,8 +160,11 @@
     <link rel="stylesheet" href="/css/theme.css" />
 
     <!-- Module preload hints for lazy-loaded game modals -->
+    <link rel="modulepreload" href="/scripts/modules/draggable-modal.js" />
+    <link rel="modulepreload" href="/scripts/modules/daily-trivia-bridge.js" />
     <link rel="modulepreload" href="/scripts/modules/flickword-modal.js" />
     <link rel="modulepreload" href="/scripts/modules/trivia-modal.js" />
+    <link rel="modulepreload" href="/scripts/modules/sharing-modal.js" />
 
     <!-- Fallback for browsers without preload support -->
     <noscript>
@@ -362,7 +373,10 @@
         }
       }, 1000);
     </script>
+    <script type="module" src="/scripts/modules/daily-trivia-bridge.js"></script>
+    <script type="module" src="/scripts/modules/flickword-modal.js"></script>
     <script type="module" src="/scripts/modules/trivia-modal.js"></script>
+    <script type="module" src="/scripts/modules/sharing-modal.js"></script>
 
     <!-- Layout helpers - Defer non-critical layout features -->
     <script type="module" src="/js/layout/search-sticky.js" defer></script>
@@ -1987,11 +2001,25 @@
 
                 <div class="settings-control-group">
                   <button
+                    id="shareBtn"
+                    class="btn btn--primary"
+                    aria-label="Share with friends"
+                    onclick="openSharingModal()"
+                  >
+                    📤 <span data-i18n="share_with_friends">Share with Friends</span>
+                  </button>
+                  <p class="settings-hint" data-i18n="share_your_lists">
+                    Create a shareable list of your shows and movies to send to friends
+                  </p>
+                </div>
+
+                <div class="settings-control-group">
+                  <button
                     id="exportBtn"
                     class="btn btn--secondary"
                     aria-label="Export data to JSON"
                   >
-                    📤 <span data-i18n="export_json">Export JSON</span>
+                    💾 <span data-i18n="export_json">Export JSON</span>
                   </button>
                   <p class="settings-hint" data-i18n="download_a_complete_backup">
                     Download a complete backup of your lists and settings as a JSON file
@@ -2565,6 +2593,149 @@
         </header>
         <main class="gm-body">
           <div id="dailytrivia-game"></div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Sharing Modal -->
+    <div
+      class="game-modal"
+      id="modal-sharing"
+      aria-hidden="true"
+      role="dialog"
+      style="display: none"
+    >
+      <div class="gm-overlay" data-close></div>
+      <div class="gm-dialog gm-dialog--wide" role="document">
+        <header class="gm-header">
+          <h3 id="modal-sharing-title">📤 Share Your Lists</h3>
+          <button class="gm-close" type="button" aria-label="Close" data-close>&times;</button>
+        </header>
+        <main class="gm-body">
+          <div class="sharing-container">
+            <!-- Tab Selection -->
+            <div class="sharing-section">
+              <h4 class="sharing-section-title">📋 Select Lists to Share</h4>
+              <div class="sharing-tabs">
+                <label class="sharing-checkbox">
+                  <input type="checkbox" id="shareWatching" checked>
+                  <span class="checkmark"></span>
+                  <span class="checkbox-label">▶️ Currently Watching</span>
+                  <span class="item-count" id="watchingCount">0 items</span>
+                </label>
+                <label class="sharing-checkbox">
+                  <input type="checkbox" id="shareWishlist" checked>
+                  <span class="checkmark"></span>
+                  <span class="checkbox-label">❤️ Want to Watch</span>
+                  <span class="item-count" id="wishlistCount">0 items</span>
+                </label>
+                <label class="sharing-checkbox">
+                  <input type="checkbox" id="shareWatched" checked>
+                  <span class="checkmark"></span>
+                  <span class="checkbox-label">✅ Already Watched</span>
+                  <span class="item-count" id="watchedCount">0 items</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Content Filtering -->
+            <div class="sharing-section">
+              <h4 class="sharing-section-title">🎯 Content Options</h4>
+              <div class="sharing-options">
+                <label class="sharing-checkbox">
+                  <input type="checkbox" id="includeMovies" checked>
+                  <span class="checkmark"></span>
+                  <span class="checkbox-label">🎬 Include Movies</span>
+                </label>
+                <label class="sharing-checkbox">
+                  <input type="checkbox" id="includeTV" checked>
+                  <span class="checkmark"></span>
+                  <span class="checkbox-label">📺 Include TV Shows</span>
+                </label>
+                <label class="sharing-checkbox">
+                  <input type="checkbox" id="includeRatings" checked>
+                  <span class="checkmark"></span>
+                  <span class="checkbox-label">⭐ Include Ratings</span>
+                </label>
+                <label class="sharing-checkbox">
+                  <input type="checkbox" id="includeDescriptions">
+                  <span class="checkmark"></span>
+                  <span class="checkbox-label">📝 Include Descriptions</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Preview -->
+            <div class="sharing-section">
+              <h4 class="sharing-section-title">👀 Preview</h4>
+              <div class="sharing-preview">
+                <div class="preview-header">
+                  <div class="preview-brand">
+                    <span class="brand-icon">🎬</span>
+                    <span class="brand-name">Flicklet</span>
+                  </div>
+                  <div class="preview-subtitle">My Watchlist</div>
+                </div>
+                <div class="preview-content" id="sharingPreview">
+                  <div class="preview-placeholder">
+                    Select lists and options to see preview...
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="sharing-actions">
+              <button class="btn btn--secondary" id="sharingCancel" data-close>
+                Cancel
+              </button>
+              <button class="btn btn--primary" id="sharingGenerate">
+                📋 Generate Shareable List
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Generated Share Modal -->
+    <div
+      class="game-modal"
+      id="modal-share-result"
+      aria-hidden="true"
+      role="dialog"
+      style="display: none"
+    >
+      <div class="gm-overlay" data-close></div>
+      <div class="gm-dialog gm-dialog--wide" role="document">
+        <header class="gm-header">
+          <h3 id="modal-share-result-title">📋 Your Shareable List</h3>
+          <button class="gm-close" type="button" aria-label="Close" data-close>&times;</button>
+        </header>
+        <main class="gm-body">
+          <div class="share-result-container">
+            <div class="share-result-header">
+              <p class="share-result-description">
+                Copy the text below and share it with your friends! They can see what you're watching and get recommendations.
+              </p>
+            </div>
+            <div class="share-result-content">
+              <textarea 
+                id="shareResultText" 
+                class="share-result-textarea" 
+                readonly
+                placeholder="Your shareable list will appear here..."
+              ></textarea>
+            </div>
+            <div class="share-result-actions">
+              <button class="btn btn--secondary" id="shareResultClose" data-close>
+                Close
+              </button>
+              <button class="btn btn--primary" id="shareResultCopy">
+                📋 Copy to Clipboard
+              </button>
+            </div>
+          </div>
         </main>
       </div>
     </div>

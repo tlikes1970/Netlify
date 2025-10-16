@@ -156,19 +156,19 @@
 /* Hide bottom nav on desktop */
 @media (min-width: 769px) {
   .bottom-nav {
-    display: none !important;
+    display: none;
   }
 }
 
 /* Show bottom nav on mobile, hide top nav */
 @media (max-width: 768px) {
   .bottom-nav {
-    display: flex !important;
+    display: flex;
   }
   
   /* Hide top navigation on mobile */
   #navigation {
-    display: none !important;
+    display: none;
   }
   
   /* Add bottom padding to main content to prevent overlap */
@@ -258,7 +258,7 @@
   .header {
     flex-direction: column;
     gap: 8px;
-    padding-bottom: 12px;
+    padding: 24px 0;
     margin-bottom: 8px;
   }
 
