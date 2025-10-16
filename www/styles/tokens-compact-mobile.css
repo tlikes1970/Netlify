@@ -1,0 +1,74 @@
+/**
+ * Mobile Compact Tokens - Step 2
+ * Purpose: Inert compact token layer for mobile_compact_v1 migration
+ * Gate: html[data-density="compact"][data-compact-mobile-v1="true"]
+ * Status: NOT IMPORTED - Will be activated in Step 3
+ */
+
+html[data-density="compact"][data-compact-mobile-v1="true"] {
+  /* ===== COMPACT SPACING SYSTEM ===== */
+  /* Reduced spacing for mobile compact layout */
+  --space-1: 2px;    /* Ultra compact spacing */
+  --space-2: 4px;    /* Compact spacing */
+  --space-3: 6px;    /* Small compact spacing */
+  --space-4: 8px;    /* Medium compact spacing */
+  
+  /* ===== COMPACT BORDER RADIUS ===== */
+  --radius-compact: 4px;    /* Reduced border radius */
+  --radius-compact-sm: 2px; /* Small compact radius */
+  --radius-compact-lg: 6px; /* Large compact radius */
+  
+  /* ===== COMPACT CARD DIMENSIONS ===== */
+  /* Mobile compact card sizing */
+  --card-w-compact: 120px;   /* Compact card width */
+  --card-h-compact: 180px;   /* Compact card height */
+  --card-gap-compact: 4px;   /* Compact card gap */
+  --card-pad-compact: 6px;   /* Compact card padding */
+  
+  /* ===== COMPACT POSTER DIMENSIONS ===== */
+  /* Mobile compact poster sizing */
+  --poster-w-compact: 50px;  /* Compact poster width */
+  --poster-h-compact: 75px;  /* Compact poster height */
+  --poster-gap-compact: 4px; /* Compact poster gap */
+  
+  /* ===== COMPACT TYPOGRAPHY ===== */
+  /* Reduced font sizes for compact layout */
+  --font-size-compact-xs: 10px; /* Ultra compact text */
+  --font-size-compact-sm: 11px; /* Small compact text */
+  --font-size-compact-md: 12px; /* Medium compact text */
+  --font-size-compact-lg: 13px; /* Large compact text */
+  
+  /* ===== COMPACT LINE HEIGHTS ===== */
+  --line-height-compact: 1.1;    /* Compact line height */
+  --line-height-compact-sm: 1.05; /* Small compact line height */
+  --line-height-compact-lg: 1.15; /* Large compact line height */
+  
+  /* ===== COMPACT COMPONENT SPACING ===== */
+  /* Reduced spacing for compact components */
+  --component-gap-compact: 4px;   /* Compact component gap */
+  --component-pad-compact: 6px;   /* Compact component padding */
+  --component-margin-compact: 8px; /* Compact component margin */
+  
+  /* ===== COMPACT NAVIGATION ===== */
+  /* Reduced navigation spacing */
+  --nav-height-compact: 48px;     /* Compact nav height */
+  --nav-pad-compact: 4px;          /* Compact nav padding */
+  --nav-gap-compact: 2px;          /* Compact nav gap */
+  
+  /* ===== COMPACT BOTTOM NAVIGATION ===== */
+  /* Reduced bottom nav spacing */
+  --bottom-nav-height-compact: 56px; /* Compact bottom nav height */
+  --bottom-nav-pad-compact: 6px;     /* Compact bottom nav padding */
+  --bottom-nav-gap-compact: 2px;     /* Compact bottom nav gap */
+  
+  /* ===== COMPACT FAB SYSTEM ===== */
+  /* Reduced FAB spacing */
+  --fab-size-compact: 40px;        /* Compact FAB size */
+  --fab-gap-compact: 6px;           /* Compact FAB gap */
+  --fab-rail-height-compact: 60px;  /* Compact FAB rail height */
+  
+  /* ===== COMPACT SAFE AREAS ===== */
+  /* Compact safe area handling */
+  --safe-area-compact: 4px;        /* Compact safe area */
+  --safe-area-compact-bottom: max(4px, env(safe-area-inset-bottom)); /* Compact bottom safe area */
+}

@@ -1,0 +1,11 @@
+var,design_tokens_value,tokens_value,compact_alias,compact_value,notes
+--color-primary,#ff4c8d,#ff4c8d,--color-primary-compact,#ff4c8d,No conflict - same value
+--color-secondary,#1f2937,#1f2937,--color-secondary-compact,#1f2937,No conflict - same value
+--color-background,#ffffff,#ffffff,--color-background-compact,#ffffff,No conflict - same value
+--color-text,#1f2937,#1f2937,--color-text-compact,#1f2937,No conflict - same value
+--color-muted,#374151,#374151,--color-muted-compact,#374151,No conflict - same value
+--spacing-xs vs --space-xs,2px,4px,--space-1,2px,Design tokens uses --spacing-xs, tokens uses --space-xs
+--spacing-sm vs --space-sm,4px,8px,--space-2,4px,Design tokens uses --spacing-sm, tokens uses --space-sm
+--spacing-md vs --space-md,8px,16px,--space-3,6px,Design tokens uses --spacing-md, tokens uses --space-md
+--spacing-lg vs --space-lg,16px,24px,--space-4,8px,Design tokens uses --spacing-lg, tokens uses --space-lg
+--spacing-xl vs --space-xl,24px,32px,--space-xl-compact,16px,Design tokens uses --spacing-xl, tokens uses --space-xl

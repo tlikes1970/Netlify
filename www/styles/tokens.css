@@ -1,6 +1,11 @@
 /* Design Tokens - CSS Custom Properties */
 /* This file establishes design system variables */
 
+/* ⚠️ MOBILE COMPACT MIGRATION WARNING ⚠️
+ * Do not change values during Mobile Compact migration (Step 2).
+ * Conflicts are documented in /reports/tokens-alias-map.csv and will be resolved in Step 3.
+ */
+
 :root {
   /* Color Tokens */
   --color-primary: #ff4c8d;

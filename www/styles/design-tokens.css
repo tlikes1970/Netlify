@@ -4,6 +4,10 @@
  * Data Source: Consolidated from all existing :root blocks across the codebase
  * Update Path: Modify tokens here to update across entire application
  * Dependencies: All CSS files should consume these tokens
+ * 
+ * ⚠️ MOBILE COMPACT MIGRATION WARNING ⚠️
+ * Do not change values during Mobile Compact migration (Step 2).
+ * Conflicts are documented in /reports/tokens-alias-map.csv and will be resolved in Step 3.
  */
 
 :root {
