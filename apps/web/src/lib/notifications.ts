@@ -323,7 +323,7 @@ class NotificationManager {
 
       if (response.status !== 202) {
         const errorText = await response.text();
-        throw new Error(`Test email failed: ${response.status} ${response.statusText}`);
+        throw new Error(`Test email failed: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       console.log('🧪 Test notification sent successfully');
