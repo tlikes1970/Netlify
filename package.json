@@ -19,6 +19,7 @@
     "qa": "node qa/run.js",
     "qa:report": "node qa/run.js --report",
     "analyze:layout": "node scripts/dev/layoutForensics.js",
+    "analyze:bundle": "npm run build",
     "css:guard": "node scripts/css-architecture-guard.js",
     "grep:layout": "rg -n --hidden -S -i '\\.home-group|#group-(1|2|3|4|5)-|\\.home-preview-row|\\.section-content|\\.preview-row-(container|scroll)|\\.row-inner|#currentlyWatchingScroll|#curated-section|#curatedSections|\\.curated-row|\\.card(\\b|--)|\\.card-actions|\\.(actions)\\b' --glob '!node_modules'",
     "prepare": "husky install",
@@ -50,7 +51,8 @@
     "postcss-safe-parser": "^7.0.1",
     "source-map-explorer": "^2.5.3",
     "terser": "^5.44.0",
-    "vite": "^5.4.20"
+    "vite": "^5.4.20",
+    "webpack-bundle-analyzer": "^4.10.2"
   },
   "keywords": [
     "tv",
