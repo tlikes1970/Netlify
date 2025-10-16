@@ -67,3 +67,4 @@ export async function sendTestEmail(to: string): Promise<void> {
     throw new Error('Network error occurred while sending test email');
   }
 }
+

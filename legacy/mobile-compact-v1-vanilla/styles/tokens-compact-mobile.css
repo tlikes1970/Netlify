@@ -1,0 +1,27 @@
+/**
+ * Mobile Compact Tokens - Step 3 Fix
+ * Purpose: Correct compact token layer with proper variable names and values
+ * Gate: html[data-density="compact"][data-compact-mobile-v1="true"]
+ * Status: NOT IMPORTED - Will be activated in Step 3
+ */
+
+/* Mobile Compact V1 — inert unless both attributes are present */
+html[data-density="compact"][data-compact-mobile-v1="true"] {
+  /* spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+
+  /* radii */
+  --radius: 12px;
+
+  /* card dims */
+  --poster-w: 136px;
+  --poster-h: calc(var(--poster-w) * 1.5);
+
+  /* type scale */
+  --font-sm: 13px;
+  --font-md: 14.5px;
+  --font-lg: 16.5px;
+}

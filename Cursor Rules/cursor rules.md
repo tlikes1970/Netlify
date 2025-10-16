@@ -1,5 +1,22 @@
 # Flicklet TV Tracker - Cursor Rules
 
+## ACTIVE CODEBASE
+- Primary: React V2 app at apps/web
+- Dev server: http://localhost:8888
+- Source entry: apps/web/src/main.tsx or apps/web/index.html (Vite)
+- Flags module: apps/web/src/lib/flags.tsx
+- Styles/tokens live under apps/web/src/styles and tailwind config
+
+## HARD BLOCKS
+- Do NOT modify or create files under www/ (vanilla V1). Treat as legacy.
+- Do NOT add imports to www/index.html.
+- Do NOT place tests or reports under root that target www/.
+
+## ALLOWED PATHS FOR THIS PROJECT
+- apps/web/** for src, components, pages, styles, flags
+- tests/e2e/** for Playwright (target baseURL of the Vite dev server)
+- reports/** for audits tied to apps/web
+
 ## CRITICAL: Code Review Standards
 
 **NEVER make assumptions or pull conclusions from git history when asked to review code.**
