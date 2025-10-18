@@ -406,16 +406,6 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
         <button className="fw-btn fw-new-game" onClick={initializeGame}>
           New Game
         </button>
-        <button className="fw-btn fw-hint" onClick={() => {
-          if (!game.done) {
-            setGame(prev => ({
-              ...prev,
-              showHint: !prev.showHint
-            }));
-          }
-        }}>
-          {game.showHint ? 'Hide Hint' : 'Hint'}
-        </button>
         {onClose && (
           <button className="fw-btn fw-close" onClick={onClose}>
             Close

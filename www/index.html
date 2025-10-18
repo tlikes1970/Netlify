@@ -162,7 +162,6 @@
     <!-- Module preload hints for lazy-loaded game modals -->
     <link rel="modulepreload" href="/scripts/modules/draggable-modal.js" />
     <link rel="modulepreload" href="/scripts/modules/daily-trivia-bridge.js" />
-    <link rel="modulepreload" href="/scripts/modules/flickword-modal.js" />
     <link rel="modulepreload" href="/scripts/modules/trivia-modal.js" />
     <link rel="modulepreload" href="/scripts/modules/sharing-modal.js" />
 
@@ -378,7 +377,6 @@
       }, 1000);
     </script>
     <script type="module" src="/scripts/modules/daily-trivia-bridge.js"></script>
-    <script type="module" src="/scripts/modules/flickword-modal.js"></script>
     <script type="module" src="/scripts/modules/trivia-modal.js"></script>
     <script type="module" src="/scripts/modules/sharing-modal.js"></script>
 
@@ -448,7 +446,6 @@
     <!-- New unified card components (for dedicated game pages) - Defer components -->
     <script type="module" src="/scripts/components/BasePosterCard.js" defer></script>
     <script type="module" src="/scripts/components/StatsCard.js" defer></script>
-    <script type="module" src="/scripts/components/FlickWordTab.js" defer></script>
     <script type="module" src="/scripts/components/TriviaTab.js" defer></script>
 
     <!-- Initialize curated sections -->
@@ -2575,7 +2572,7 @@
         <main class="gm-body">
           <iframe
             id="flickword-game-frame"
-            src="/features/flickword-v2.html"
+            src="about:blank"
           ></iframe>
         </main>
       </div>

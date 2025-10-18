@@ -92,17 +92,17 @@
 .fw-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
+  gap: 0;
   justify-items: center;
   width: 100%;
-  max-width: 280px;
+  max-width: 320px;
   margin: 0 auto 16px;
   flex-shrink: 0;
 }
 
 .fw-tile {
-  width: 44px;
-  height: 44px;
+  width: 60px;
+  height: 60px;
   aspect-ratio: 1 / 1;
   border-radius: 8px;
   border: 2px solid #a7b7e9;
@@ -111,7 +111,7 @@
   display: grid;
   place-items: center;
   font-weight: 800;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   color: var(--text-color, #1f2937);
   transition: all 0.2s ease;
 }
@@ -137,34 +137,34 @@
 /* Keyboard */
 .fw-keyboard {
   width: 100%;
-  max-width: 400px;
+  max-width: 450px;
   margin: 0 auto;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .fw-kb-row {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   justify-content: center;
   margin: 0;
   flex-wrap: nowrap;
 }
 
 .fw-key {
-  padding: 6px 8px;
+  padding: 8px 10px;
   border-radius: 6px;
   border: 2px solid var(--border-color, #e5e7eb);
   background: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.15s ease;
-  min-width: 32px;
-  height: 40px;
+  min-width: 36px;
+  height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -242,12 +242,6 @@
   border-color: transparent;
 }
 
-.fw-btn.fw-hint {
-  background: linear-gradient(135deg, #f7c23c, #e6b800);
-  color: white;
-  border-color: transparent;
-}
-
 .fw-btn.fw-close {
   background: linear-gradient(135deg, #ef4444, #dc2626);
   color: white;
@@ -315,27 +309,27 @@
   }
   
   .fw-tile {
-    width: 36px;
-    height: 36px;
-    font-size: 1rem;
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
   }
   
   .fw-grid {
-    gap: 4px;
-    max-width: 240px;
+    gap: 0;
+    max-width: 280px;
     margin-bottom: 12px;
   }
   
   .fw-key {
-    min-width: 28px;
-    height: 32px;
-    padding: 4px 6px;
-    font-size: 0.75rem;
+    min-width: 32px;
+    height: 40px;
+    padding: 6px 8px;
+    font-size: 0.8rem;
   }
   
   .fw-kb-row {
-    gap: 3px;
-    margin: 3px 0;
+    gap: 2px;
+    margin: 2px 0;
   }
   
   .fw-actions {

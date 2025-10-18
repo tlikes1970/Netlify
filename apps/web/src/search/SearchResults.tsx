@@ -113,8 +113,17 @@ export default function SearchResults({
 
 function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () => void }) {
   const translations = useTranslations();
-  const { title, year, posterUrl, mediaType, synopsis } = item;
+  const { posterUrl, mediaType, synopsis } = item;
   const [pressedButtons, setPressedButtons] = React.useState<Set<string>>(new Set());
+  
+  // Safe title display helper
+  function displayTitle(item: { title?: any; year?: string | number }) {
+    const t = typeof item.title === 'string' ? item.title : String(item.title ?? '').trim();
+    const safe = t || 'Untitled';
+    return item.year ? `${safe} (${item.year})` : safe;
+  }
+  
+  const title = displayTitle(item);
   
   // Handle person results differently
   if (mediaType === 'person') {
@@ -127,172 +136,6 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
   const streamingService = 'Netflix';
   const badges = ['NEW', 'TRENDING'];
   
-  // Genre ID to name mapping
-  const getGenreName = (genreId: number): string => {
-    const genreMap: Record<number, string> = {
-      // Movies
-      28: 'action',
-      12: 'adventure', 
-      16: 'animation',
-      35: 'comedy',
-      80: 'crime',
-      99: 'documentary',
-      18: 'drama',
-      10751: 'family',
-      14: 'fantasy',
-      36: 'history',
-      27: 'horror',
-      10402: 'music',
-      9648: 'mystery',
-      10749: 'romance',
-      878: 'science fiction',
-      10770: 'tv movie',
-      53: 'thriller',
-      10752: 'war',
-      37: 'western',
-      // TV
-      10759: 'action & adventure',
-      10762: 'kids',
-      10763: 'news',
-      10764: 'reality',
-      10765: 'sci-fi & fantasy',
-      10766: 'soap',
-      10767: 'talk',
-      10768: 'war & politics'
-    };
-    return genreMap[genreId] || 'unknown';
-  };
-
-  const handleSimilarTo = (item: MediaItem) => {
-    console.log('🔍 Similar To clicked for:', item.title);
-    
-    // Genre-focused similarity search with human-readable names
-    const genres = (item as any).genre_ids || [];
-    const primaryGenre = genres[0];
-    const secondaryGenre = genres[1];
-    const rating = item.voteAverage || 0;
-    const ratingTier = rating >= 8 ? 'high rated' : rating >= 6 ? 'rated' : '';
-    
-    // Build natural language similarity query
-    const similarityFactors = [];
-    
-    // Primary genre (most important) - use human-readable name
-    if (primaryGenre) {
-      const primaryGenreName = getGenreName(primaryGenre);
-      similarityFactors.push(primaryGenreName);
-    }
-    
-    // Secondary genre for subgenre matching
-    if (secondaryGenre) {
-      const secondaryGenreName = getGenreName(secondaryGenre);
-      similarityFactors.push(secondaryGenreName);
-    }
-    
-    // Media type context
-    similarityFactors.push(item.mediaType === 'movie' ? 'movies' : 'tv shows');
-    
-    // Rating tier (less important than genre)
-    if (ratingTier) {
-      similarityFactors.push(ratingTier);
-    }
-    
-    const similarQuery = similarityFactors.join(' ');
-    console.log('📤 Dispatching search:similar event with query:', similarQuery);
-    console.log('🎯 Genre-focused similarity factors:', { 
-      genres, 
-      primaryGenre, 
-      secondaryGenre, 
-      primaryGenreName: primaryGenre ? getGenreName(primaryGenre) : null,
-      secondaryGenreName: secondaryGenre ? getGenreName(secondaryGenre) : null,
-      rating, 
-      ratingTier,
-      mediaType: item.mediaType 
-    });
-    
-    // Dispatch event with enhanced genre data
-    const event = new CustomEvent('search:similar', { 
-      detail: { 
-        originalItem: item, 
-        query: similarQuery,
-        genre: primaryGenre || null,
-        similarityFactors: {
-          genres,
-          primaryGenre,
-          secondaryGenre,
-          primaryGenreName: primaryGenre ? getGenreName(primaryGenre) : null,
-          secondaryGenreName: secondaryGenre ? getGenreName(secondaryGenre) : null,
-          rating,
-          ratingTier,
-          mediaType: item.mediaType,
-          genreCount: genres.length
-        }
-      }
-    });
-    document.dispatchEvent(event);
-  };
-
-  const handleRefineSearch = (item: MediaItem) => {
-    console.log('🎯 Refine Search clicked for:', item.title);
-    
-    // Smart filtering based on item properties
-    const year = item.year || '';
-    const rating = item.voteAverage || 0;
-    const genre = (item as any).genre_ids?.[0] || '';
-    
-    // Create specific search criteria
-    const filters = [];
-    
-    // Year-based filtering
-    if (year) {
-      const currentYear = new Date().getFullYear();
-      const itemYear = parseInt(year);
-      if (itemYear >= currentYear - 2) {
-        filters.push('recent');
-      } else if (itemYear >= currentYear - 10) {
-        filters.push('2010s 2020s');
-      } else {
-        filters.push('classic');
-      }
-    }
-    
-    // Rating-based filtering
-    if (rating >= 8) {
-      filters.push('critically acclaimed');
-    } else if (rating >= 6) {
-      filters.push('well rated');
-    }
-    
-    // Genre-based filtering - use human-readable name
-    if (genre) {
-      const genreName = getGenreName(genre);
-      filters.push(genreName);
-    }
-    
-    // Media type
-    filters.push(item.mediaType === 'movie' ? 'movies' : 'tv series');
-    
-    const refinedQuery = filters.join(' ');
-    console.log('📤 Dispatching search:refine event with query:', refinedQuery);
-    console.log('🎯 Refinement filters:', { year, rating, genre, genreName: genre ? getGenreName(genre) : null, filters });
-    
-    // Dispatch event with enhanced data
-    const event = new CustomEvent('search:refine', { 
-      detail: { 
-        originalItem: item, 
-        query: refinedQuery,
-        genre: (item as any).genre_ids?.[0] || null,
-        refinementFilters: {
-          year,
-          rating,
-          genre,
-          genreName: genre ? getGenreName(genre) : null,
-          mediaType: item.mediaType,
-          filters
-        }
-      }
-    });
-    document.dispatchEvent(event);
-  };
 
   const handleAction = async (action: string) => {
     console.log('🎬 handleAction called with:', action, 'for item:', item.title);
@@ -333,12 +176,6 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
           break;
         case 'holiday':
           emit('card:holidayAdd', { id: item.id, mediaType: item.mediaType as any });
-          break;
-        case 'similar-to':
-          handleSimilarTo(item);
-          break;
-        case 'refine-search':
-          handleRefineSearch(item);
           break;
         default:
           console.log(`${action} clicked for ${title}`);
@@ -414,7 +251,7 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
       {/* Content - proper spacing and sizing */}
       <div className="flex-1 p-4 flex flex-col relative">
         {/* Title */}
-        <div className="font-bold text-lg mb-1">{title} ({year})</div>
+        <div className="font-bold text-lg mb-1">{title}</div>
         
         {/* Meta */}
         <div className="text-muted-foreground text-sm mb-1">{genre} • Runtime: {runtime}</div>
@@ -456,32 +293,6 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
             <MyListToggle item={item} />
           </div>
           
-          <div className="flex gap-2">
-            <button 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('🖱️ Similar To button clicked');
-                handleAction('similar-to');
-              }}
-              className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors hover:bg-accent hover:text-accent-foreground"
-              style={{ backgroundColor: 'var(--btn2)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-            >
-              {translations.similarToAction || 'Similar To'}
-            </button>
-            <button 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('🖱️ Refine Search button clicked');
-                handleAction('refine-search');
-              }}
-              className="px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors hover:bg-accent hover:text-accent-foreground"
-              style={{ backgroundColor: 'var(--btn2)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-            >
-              {translations.refineSearchAction || 'Refine Search'}
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -489,8 +300,17 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
 }
 
 function PersonCard({ item }: { item: MediaItem }) {
-  const { title, posterUrl } = item;
+  const { posterUrl } = item;
   const [pressedButtons, setPressedButtons] = React.useState<Set<string>>(new Set());
+  
+  // Safe title display helper
+  function displayTitle(item: { title?: any; year?: string | number }) {
+    const t = typeof item.title === 'string' ? item.title : String(item.title ?? '').trim();
+    const safe = t || 'Untitled';
+    return item.year ? `${safe} (${item.year})` : safe;
+  }
+  
+  const title = displayTitle(item);
   
   // Get known for works from the item
   const knownFor = (item as any).known_for || [];

@@ -11,10 +11,10 @@ interface FlickWordStats {
 }
 
 interface FlickWordStatsProps {
-  onGameComplete?: (won: boolean, guesses: number) => void;
+  // No onGameComplete needed - stats are loaded from localStorage
 }
 
-export default function FlickWordStats({ onGameComplete }: FlickWordStatsProps) {
+export default function FlickWordStats({}: FlickWordStatsProps) {
   const translations = useTranslations();
   const [stats, setStats] = useState<FlickWordStats>({
     games: 0,
@@ -25,11 +25,15 @@ export default function FlickWordStats({ onGameComplete }: FlickWordStatsProps) 
     winRate: 0
   });
 
-  // Load stats from localStorage
+  // Refresh stats when component mounts or when stats might have changed
   useEffect(() => {
     const loadStats = () => {
       try {
-        const stored = localStorage.getItem('flickword:stats');
+        // Try multiple possible keys
+        const stored = localStorage.getItem('flickword:stats') || 
+                      localStorage.getItem('flicklet-data') ||
+                      localStorage.getItem('flicklet:stats');
+        
         if (stored) {
           const data = JSON.parse(stored);
           const flickwordStats = data.flickword || data;
@@ -49,51 +53,17 @@ export default function FlickWordStats({ onGameComplete }: FlickWordStatsProps) 
     };
 
     loadStats();
+    
+    // Listen for storage changes to refresh stats
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'flickword:stats' || e.key === 'flicklet-data') {
+        loadStats();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
-
-  // Update stats when game completes
-  useEffect(() => {
-    if (onGameComplete) {
-      const handleGameComplete = (won: boolean) => {
-        setStats(prevStats => {
-          const newStats = {
-            games: prevStats.games + 1,
-            wins: prevStats.wins + (won ? 1 : 0),
-            losses: prevStats.losses + (won ? 0 : 1),
-            streak: won ? prevStats.streak + 1 : prevStats.streak,
-            maxStreak: won ? Math.max(prevStats.maxStreak, prevStats.streak + 1) : prevStats.maxStreak,
-            winRate: 0 // Will be calculated below
-          };
-          
-          newStats.winRate = Math.round((newStats.wins / newStats.games) * 100);
-          
-          // Save to localStorage
-          try {
-            const existingData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
-            const updatedData = {
-              ...existingData,
-              flickword: {
-                games: newStats.games,
-                wins: newStats.wins,
-                losses: newStats.losses,
-                streak: newStats.streak,
-                maxStreak: newStats.maxStreak
-              }
-            };
-            localStorage.setItem('flicklet-data', JSON.stringify(updatedData));
-            localStorage.setItem('flickword:stats', JSON.stringify(updatedData));
-          } catch (error) {
-            console.error('Failed to save FlickWord stats:', error);
-          }
-          
-          return newStats;
-        });
-      };
-
-      // Store the handler for external access
-      (window as any).handleFlickWordGameComplete = handleGameComplete;
-    }
-  }, [onGameComplete]);
 
   return (
     <div className="flickword-stats">

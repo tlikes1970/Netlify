@@ -12,9 +12,7 @@ interface FlickWordModalProps {
 export default function FlickWordModal({ isOpen, onClose }: FlickWordModalProps) {
   const [showStats, setShowStats] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
-  const [modalSize, setModalSize] = useState({ width: 500, height: 600 });
   const modalRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const lastPositionRef = useRef({ x: 0, y: 0 });
@@ -59,38 +57,26 @@ export default function FlickWordModal({ isOpen, onClose }: FlickWordModalProps)
       const newY = lastPositionRef.current.y + deltaY;
       
       // Clamp to viewport bounds
-      const maxX = (window.innerWidth - modalSize.width) / 2;
-      const maxY = (window.innerHeight - modalSize.height) / 2;
+      const maxX = (window.innerWidth - 600) / 2;
+      const maxY = (window.innerHeight - 800) / 2;
       
       setModalPosition({
         x: Math.max(-maxX, Math.min(maxX, newX)),
         y: Math.max(-maxY, Math.min(maxY, newY))
       });
     }
-    
-    if (isResizing) {
-      const deltaX = e.clientX - dragStartRef.current.x;
-      const deltaY = e.clientY - dragStartRef.current.y;
-      
-      const newWidth = Math.max(300, Math.min(window.innerWidth - 40, modalSize.width + deltaX));
-      const newHeight = Math.max(400, Math.min(window.innerHeight - 40, modalSize.height + deltaY));
-      
-      setModalSize({ width: newWidth, height: newHeight });
-      dragStartRef.current = { x: e.clientX, y: e.clientY };
-    }
-  }, [isDragging, isResizing, modalSize]);
+  }, [isDragging]);
 
   const handleMouseUp = useCallback(() => {
     if (isDragging) {
       lastPositionRef.current = modalPosition;
     }
     setIsDragging(false);
-    setIsResizing(false);
   }, [isDragging, modalPosition]);
 
-  // Add global mouse event listeners only while dragging/resizing
+  // Add global mouse event listeners only while dragging
   useEffect(() => {
-    if (isDragging || isResizing) {
+    if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       return () => {
@@ -98,11 +84,36 @@ export default function FlickWordModal({ isOpen, onClose }: FlickWordModalProps)
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
+  }, [isDragging, handleMouseMove, handleMouseUp]);
 
   // Handle game completion
   const handleGameComplete = useCallback((won: boolean, guesses: number) => {
     console.log('🎯 FlickWord game completed:', { won, guesses });
+    
+    // Update stats directly
+    try {
+      const existingData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
+      const currentStats = existingData.flickword || { games: 0, wins: 0, losses: 0, streak: 0, maxStreak: 0 };
+      
+      const newStats = {
+        games: currentStats.games + 1,
+        wins: currentStats.wins + (won ? 1 : 0),
+        losses: currentStats.losses + (won ? 0 : 1),
+        streak: won ? currentStats.streak + 1 : 0, // Reset streak on loss
+        maxStreak: won ? Math.max(currentStats.maxStreak, currentStats.streak + 1) : currentStats.maxStreak
+      };
+      
+      const updatedData = {
+        ...existingData,
+        flickword: newStats
+      };
+      
+      localStorage.setItem('flicklet-data', JSON.stringify(updatedData));
+      localStorage.setItem('flickword:stats', JSON.stringify(newStats));
+      console.log('💾 FlickWord stats saved:', newStats);
+    } catch (error) {
+      console.error('Failed to save FlickWord stats:', error);
+    }
     
     // Update stats via the global handler
     if ((window as any).handleFlickWordGameComplete) {
@@ -120,7 +131,6 @@ export default function FlickWordModal({ isOpen, onClose }: FlickWordModalProps)
     if (isOpen) {
       setShowStats(false);
       setModalPosition({ x: 0, y: 0 });
-      setModalSize({ width: 500, height: 700 });
     }
   }, [isOpen]);
 
@@ -131,10 +141,8 @@ export default function FlickWordModal({ isOpen, onClose }: FlickWordModalProps)
     top: '50%',
     left: '50%',
     transform: `translate(calc(-50% + ${modalPosition.x}px), calc(-50% + ${modalPosition.y}px))`,
-    width: `${modalSize.width}px`,
-    height: 'auto',
-    minHeight: `${modalSize.height}px`,
-    maxHeight: '90vh',
+    width: '600px',
+    height: '800px',
     cursor: isDragging ? 'grabbing' : 'default',
     zIndex: 10000
   };
@@ -202,15 +210,6 @@ export default function FlickWordModal({ isOpen, onClose }: FlickWordModalProps)
               />
             )}
           </main>
-          {/* Resize handle */}
-          <div 
-            className="gm-resize-handle"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setIsResizing(true);
-              dragStartRef.current = { x: e.clientX, y: e.clientY };
-            }}
-          />
         </div>
       </div>
     </Portal>

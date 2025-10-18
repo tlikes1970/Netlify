@@ -20,8 +20,6 @@ export interface LanguageStrings {
   reviewNotesAction: string;
   addTagAction: string;
   holidayAddAction: string;
-  similarToAction: string;
-  refineSearchAction: string;
   
   // Settings
   settings: string;

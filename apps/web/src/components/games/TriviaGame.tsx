@@ -74,8 +74,124 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
       explanation: 'Star Wars: Episode IV - A New Hope was released in 1977.',
       category: 'History',
       difficulty: 'medium'
+    },
+    {
+      id: '6',
+      question: 'Which actor played Jack in "Titanic"?',
+      options: ['Brad Pitt', 'Leonardo DiCaprio', 'Matt Damon', 'Ryan Gosling'],
+      correctAnswer: 1,
+      explanation: 'Leonardo DiCaprio played Jack Dawson in Titanic (1997).',
+      category: 'Actors',
+      difficulty: 'easy'
+    },
+    {
+      id: '7',
+      question: 'What is the name of the main character in "The Matrix"?',
+      options: ['Neo', 'Morpheus', 'Trinity', 'Agent Smith'],
+      correctAnswer: 0,
+      explanation: 'Neo (played by Keanu Reeves) is the main character in The Matrix.',
+      category: 'Characters',
+      difficulty: 'easy'
+    },
+    {
+      id: '8',
+      question: 'Which movie features the quote "May the Force be with you"?',
+      options: ['Star Trek', 'Star Wars', 'Guardians of the Galaxy', 'Blade Runner'],
+      correctAnswer: 1,
+      explanation: 'This iconic quote is from the Star Wars franchise.',
+      category: 'Quotes',
+      difficulty: 'easy'
+    },
+    {
+      id: '9',
+      question: 'Who composed the music for "Jaws"?',
+      options: ['John Williams', 'Hans Zimmer', 'Danny Elfman', 'Alan Silvestri'],
+      correctAnswer: 0,
+      explanation: 'John Williams composed the iconic Jaws theme.',
+      category: 'Music',
+      difficulty: 'medium'
+    },
+    {
+      id: '10',
+      question: 'What is the highest-rated movie on IMDb?',
+      options: ['The Godfather', 'The Shawshank Redemption', 'The Dark Knight', 'Pulp Fiction'],
+      correctAnswer: 1,
+      explanation: 'The Shawshank Redemption currently holds the #1 spot on IMDb.',
+      category: 'Ratings',
+      difficulty: 'medium'
+    },
+    {
+      id: '11',
+      question: 'Which movie won Best Picture in 2020?',
+      options: ['1917', 'Joker', 'Parasite', 'Once Upon a Time in Hollywood'],
+      correctAnswer: 2,
+      explanation: 'Parasite became the first non-English language film to win Best Picture.',
+      category: 'Awards',
+      difficulty: 'medium'
+    },
+    {
+      id: '12',
+      question: 'What is the name of the dinosaur in "Jurassic Park"?',
+      options: ['Rex', 'T-Rex', 'Rexy', 'Tyrannosaurus'],
+      correctAnswer: 2,
+      explanation: 'The T-Rex in Jurassic Park is affectionately called "Rexy".',
+      category: 'Characters',
+      difficulty: 'easy'
+    },
+    {
+      id: '13',
+      question: 'Which director made "Inception"?',
+      options: ['Steven Spielberg', 'Christopher Nolan', 'Martin Scorsese', 'Quentin Tarantino'],
+      correctAnswer: 1,
+      explanation: 'Christopher Nolan directed Inception (2010).',
+      category: 'Directors',
+      difficulty: 'easy'
+    },
+    {
+      id: '14',
+      question: 'What year was "The Lion King" (animated) released?',
+      options: ['1992', '1994', '1996', '1998'],
+      correctAnswer: 1,
+      explanation: 'The animated Lion King was released in 1994.',
+      category: 'History',
+      difficulty: 'medium'
+    },
+    {
+      id: '15',
+      question: 'Which movie features the character Tony Stark?',
+      options: ['Batman', 'Iron Man', 'Superman', 'Spider-Man'],
+      correctAnswer: 1,
+      explanation: 'Tony Stark is the alter ego of Iron Man.',
+      category: 'Characters',
+      difficulty: 'easy'
     }
   ];
+
+  // Get today's date in YYYY-MM-DD format
+  const getTodayString = () => {
+    return new Date().toISOString().slice(0, 10);
+  };
+
+  // Get today's questions based on date (deterministic rotation)
+  const getTodaysQuestions = () => {
+    const today = getTodayString();
+    const dateSeed = today.split('-').join('');
+    const seedNumber = parseInt(dateSeed, 10);
+    
+    // Use a simpler rotation - cycle through questions every 3 days
+    const daysSinceEpoch = Math.floor(seedNumber / 10000); // Roughly days since 2000
+    const cycleDay = daysSinceEpoch % 3; // 0, 1, or 2
+    const questionsPerDay = 5;
+    
+    const todaysQuestions = [];
+    for (let i = 0; i < questionsPerDay; i++) {
+      const questionIndex = (cycleDay * questionsPerDay + i) % sampleQuestions.length;
+      todaysQuestions.push(sampleQuestions[questionIndex]);
+    }
+    
+    console.log('🎯 Today\'s trivia questions (cycle day', cycleDay, '):', todaysQuestions.map(q => q.id));
+    return todaysQuestions;
+  };
 
   // Check if user is Pro (simplified check)
   useEffect(() => {
@@ -86,20 +202,16 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
   // Load questions
   useEffect(() => {
     const loadQuestions = () => {
-      // Free users get first 10 questions, Pro users get up to 50
-      const maxQuestions = isProUser ? 50 : 10;
-      const availableQuestions = sampleQuestions.slice(0, maxQuestions);
-      
-      // Shuffle questions
-      const shuffled = [...availableQuestions].sort(() => Math.random() - 0.5);
-      setQuestions(shuffled);
+      // Get today's deterministic questions
+      const todaysQuestions = getTodaysQuestions();
+      setQuestions(todaysQuestions);
       setGameState('playing');
     };
 
     if (gameState === 'loading') {
       loadQuestions();
     }
-  }, [gameState, isProUser]);
+  }, [gameState]);
 
   const handleAnswerSelect = useCallback((answerIndex: number) => {
     if (selectedAnswer !== null) return; // Prevent multiple selections

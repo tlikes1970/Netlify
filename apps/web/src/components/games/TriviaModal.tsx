@@ -10,9 +10,7 @@ interface TriviaModalProps {
 
 export default function TriviaModal({ isOpen, onClose }: TriviaModalProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
-  const [modalSize, setModalSize] = useState({ width: 500, height: 600 });
   const modalRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const lastPositionRef = useRef({ x: 0, y: 0 });
@@ -57,38 +55,26 @@ export default function TriviaModal({ isOpen, onClose }: TriviaModalProps) {
       const newY = lastPositionRef.current.y + deltaY;
       
       // Clamp to viewport bounds
-      const maxX = (window.innerWidth - modalSize.width) / 2;
-      const maxY = (window.innerHeight - modalSize.height) / 2;
+      const maxX = (window.innerWidth - 500) / 2;
+      const maxY = (window.innerHeight - 750) / 2;
       
       setModalPosition({
         x: Math.max(-maxX, Math.min(maxX, newX)),
         y: Math.max(-maxY, Math.min(maxY, newY))
       });
     }
-    
-    if (isResizing) {
-      const deltaX = e.clientX - dragStartRef.current.x;
-      const deltaY = e.clientY - dragStartRef.current.y;
-      
-      const newWidth = Math.max(300, Math.min(window.innerWidth - 40, modalSize.width + deltaX));
-      const newHeight = Math.max(400, Math.min(window.innerHeight - 40, modalSize.height + deltaY));
-      
-      setModalSize({ width: newWidth, height: newHeight });
-      dragStartRef.current = { x: e.clientX, y: e.clientY };
-    }
-  }, [isDragging, isResizing, modalSize]);
+  }, [isDragging]);
 
   const handleMouseUp = useCallback(() => {
     if (isDragging) {
       lastPositionRef.current = modalPosition;
     }
     setIsDragging(false);
-    setIsResizing(false);
   }, [isDragging, modalPosition]);
 
-  // Add global mouse event listeners only while dragging/resizing
+  // Add global mouse event listeners only while dragging
   useEffect(() => {
-    if (isDragging || isResizing) {
+    if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       return () => {
@@ -96,13 +82,12 @@ export default function TriviaModal({ isOpen, onClose }: TriviaModalProps) {
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
+  }, [isDragging, handleMouseMove, handleMouseUp]);
 
   // Reset modal state when opening
   useEffect(() => {
     if (isOpen) {
       setModalPosition({ x: 0, y: 0 });
-      setModalSize({ width: 500, height: 700 });
     }
   }, [isOpen]);
 
@@ -113,10 +98,8 @@ export default function TriviaModal({ isOpen, onClose }: TriviaModalProps) {
     top: '50%',
     left: '50%',
     transform: `translate(calc(-50% + ${modalPosition.x}px), calc(-50% + ${modalPosition.y}px))`,
-    width: `${modalSize.width}px`,
-    height: 'auto',
-    minHeight: `${modalSize.height}px`,
-    maxHeight: '90vh',
+    width: '500px',
+    height: '750px',
     cursor: isDragging ? 'grabbing' : 'default',
     zIndex: 10000
   };
@@ -161,15 +144,6 @@ export default function TriviaModal({ isOpen, onClose }: TriviaModalProps) {
           <main className="gm-body">
             <TriviaGame onClose={onClose} />
           </main>
-          {/* Resize handle */}
-          <div 
-            className="gm-resize-handle"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setIsResizing(true);
-              dragStartRef.current = { x: e.clientX, y: e.clientY };
-            }}
-          />
         </div>
       </div>
     </Portal>

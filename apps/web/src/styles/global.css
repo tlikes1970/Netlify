@@ -133,7 +133,7 @@ input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset:
   width: min(90vw, 500px);
   max-width: 500px;
   max-height: 90vh;
-  overflow: visible;
+  overflow: hidden;
   animation: modalFadeIn 0.3s ease-out;
   user-select: none;
   display: flex;
@@ -155,21 +155,6 @@ input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset:
 
 .gm-drag-handle:active {
   cursor: grabbing;
-}
-
-.gm-resize-handle {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 20px;
-  height: 20px;
-  cursor: nw-resize;
-  background: linear-gradient(-45deg, transparent 30%, var(--border-color, #e5e7eb) 30%, var(--border-color, #e5e7eb) 40%, transparent 40%, transparent 60%, var(--border-color, #e5e7eb) 60%, var(--border-color, #e5e7eb) 70%, transparent 70%);
-  border-radius: 0 0 16px 0;
-}
-
-.gm-resize-handle:hover {
-  background: linear-gradient(-45deg, transparent 30%, var(--accent-color, #5a88ff) 30%, var(--accent-color, #5a88ff) 40%, transparent 40%, transparent 60%, var(--accent-color, #5a88ff) 60%, var(--accent-color, #5a88ff) 70%, transparent 70%);
 }
 
 @keyframes modalFadeIn {
@@ -215,10 +200,11 @@ input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset:
 
 .gm-body {
   padding: 16px;
-  overflow: visible;
+  overflow: auto;
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0;
 }
 
 /* Scroll to top arrow animation */

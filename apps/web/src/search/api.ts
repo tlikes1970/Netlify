@@ -1,8 +1,5 @@
-import type { MediaItem, MediaType } from '../components/cards/card.types';
+import type { MediaItem } from '../components/cards/card.types';
 
-const IMG = {
-  poster: 'https://image.tmdb.org/t/p/w342', // adjust if you prefer a different size
-};
 
 export type SearchResult = MediaItem;
 
@@ -57,41 +54,36 @@ function normalizeQuery(q: string): string {
 }
 
 export function mapTMDBToMediaItem(r: any): MediaItem {
-  const mediaType: MediaType = r.media_type;
-  
-  // Handle person results differently
+  const mediaType = r.media_type ?? (r.first_air_date ? 'tv' : r.release_date ? 'movie' : r.known_for ? 'person' : 'movie');
+
   if (mediaType === 'person') {
+    const name = typeof r.name === 'string' ? r.name : '';
     return {
       id: r.id,
-      mediaType: 'person' as any, // We'll need to extend MediaType to include 'person'
-      title: r.name,
+      mediaType: 'person' as any,
+      title: name,
       year: undefined,
       posterUrl: r.profile_path ? `https://image.tmdb.org/t/p/w342${r.profile_path}` : undefined,
-      voteAverage: r.popularity, // Use popularity for people
-      // @ts-ignore
+      voteAverage: r.popularity,
       known_for: r.known_for || [],
-      // @ts-ignore
-      synopsis: r.known_for?.map((item: any) => item.title || item.name).join(', ') || '',
+      synopsis: r.known_for?.map((it: any) => it.title || it.name).join(', ') || '',
     } as MediaItem;
   }
-  
-  // Handle movie/tv results
-  const title = mediaType === 'movie' ? r.title : r.name;
-  const date = mediaType === 'movie' ? r.release_date : r.first_air_date;
-  const year = date ? String(date).slice(0, 4) : undefined;
-  const posterUrl = r.poster_path ? `${IMG.poster}${r.poster_path}` : undefined;
+
+  const rawTitle = mediaType === 'movie' ? r.title : r.name;
+  const title = typeof rawTitle === 'string' ? rawTitle : String(rawTitle ?? '').trim();
+  const date  = mediaType === 'movie' ? r.release_date : r.first_air_date;
+  const year  = date ? String(date).slice(0, 4) : undefined;
+  const posterUrl = r.poster_path ? `https://image.tmdb.org/t/p/w342${r.poster_path}` : undefined;
+
   return {
     id: r.id,
     mediaType,
-    title,
+    title: title || 'Untitled',
     year,
     posterUrl,
     voteAverage: typeof r.vote_average === 'number' ? r.vote_average : undefined,
-    // Keep raw genre_ids for optional client filter; safe to ignore in CardV2
-    // @ts-ignore
     genre_ids: r.genre_ids,
-    // Add synopsis from TMDB
-    // @ts-ignore
     synopsis: r.overview || '',
   } as MediaItem;
 }

@@ -24,17 +24,25 @@ async function fetchTMDB(path: string, params: Record<string, any>, signal?: Abo
   return res.json();
 }
 
+// Normalize, but keep hyphens meaningful; don't drop the 'z-' in z-nation.
 function normalizeQuery(q: string): string {
   return q
-    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')   // strip diacritics
     .replace(/[''']/g, "'").replace(/["""]/g, '"')
-    .replace(/[–—]/g, '-')
-    .replace(/\s+/g, ' ')
     .trim();
 }
 
+// Generate canonical variants so both "z nation" and "z-nation" anchor.
+function canonicalForms(q: string) {
+  const base   = normalizeQuery(q);
+  const hyphen = base.replace(/[–—]/g, '-');
+  const spaced = hyphen.replace(/[-]+/g, ' ');      // "z nation"
+  const tight  = hyphen.replace(/[-\s]+/g, '');     // "znation"
+  return Array.from(new Set([base, hyphen, spaced, tight].map(s => s.toLowerCase())));
+}
+
 function tokenize(s: string): string[] {
-  return normalizeQuery(s).toLowerCase().split(/[^a-z0-9']+/).filter(Boolean);
+  return s.toLowerCase().split(/[^a-z0-9']+/).filter(Boolean);
 }
 function jaccard(a: Set<string>, b: Set<string>) {
   const i = new Set([...a].filter(x => b.has(x))).size;
@@ -42,20 +50,24 @@ function jaccard(a: Set<string>, b: Set<string>) {
   return i / u;
 }
 
-function titleScore(query: string, title: string): number {
-  const q = normalizeQuery(query).toLowerCase();
-  const t = normalizeQuery(title).toLowerCase();
+// Stronger title scoring that respects canonical forms and penalizes false "nation" hits.
+function titleScore(queryRaw: string, titleRaw: string): number {
+  const forms = canonicalForms(queryRaw);
+  const t = normalizeQuery(titleRaw).toLowerCase();
 
-  if (t === q) return 1.0;
-  if (t.includes(q)) return 0.85;
-  if (q.includes(t)) return 0.8;
+  // Exact or contains on any canonical form get big boosts
+  for (const f of forms) {
+    if (t === f) return 1.0;
+    if (t.includes(f)) return 0.9;
+  }
 
-  const qTokens = new Set(tokenize(q));
+  // Token similarity using the spaced form to preserve "z nation" tokens
+  const qTokens = new Set(tokenize(forms[1] || queryRaw));
   const tTokens = new Set(tokenize(t));
   let score = jaccard(qTokens, tTokens);
 
-  // Penalize 'nation(s)' false-positives specifically for "z-nation" style queries.
-  if (/^z[-\s]?nation$/i.test(q) && /nation/.test(t) && !/zombie|undead|apocalypse|infect|virus|outbreak|plague/i.test(t)) {
+  // Specific penalty: query is z-nation, title contains "nation" but no zombie-ish hints
+  if (/^z[-\s]?nation$/i.test(forms[1] || queryRaw) && /nation/.test(t) && !/zombie|undead|apocalypse|infect|virus|outbreak|plague/i.test(t)) {
     score *= 0.5;
   }
   return score;
@@ -118,9 +130,15 @@ export async function smartSearch(
   }
 
   // 1) TV + Movie search (first page) to find an anchor
+  const forms = canonicalForms(query);
+  const qSpaced = forms[1] || query; // "z nation"
+  const qAsIs   = forms[0] || query; // as typed
+
   const [tvRes, movieRes] = await Promise.all([
-    fetchTMDB('search/tv',    { query, page: 1, include_adult: false, language, region }, opts?.signal),
-    fetchTMDB('search/movie', { query, page: 1, include_adult: false, language, region }, opts?.signal),
+    fetchTMDB('search/tv',    { query: qSpaced, page: 1, include_adult: false, language, region }, opts?.signal)
+      .catch(() => fetchTMDB('search/tv',    { query: qAsIs,   page: 1, include_adult: false, language, region }, opts?.signal)),
+    fetchTMDB('search/movie', { query: qSpaced, page: 1, include_adult: false, language, region }, opts?.signal)
+      .catch(() => fetchTMDB('search/movie', { query: qAsIs,   page: 1, include_adult: false, language, region }, opts?.signal)),
   ]);
   const tv = (tvRes.results ?? []).map(mapTMDBToMediaItem).filter(Boolean) as MediaItem[];
   const mv = (movieRes.results ?? []).map(mapTMDBToMediaItem).filter(Boolean) as MediaItem[];
@@ -129,7 +147,7 @@ export async function smartSearch(
   // 2) Anchor selection: strong title match
   const withScores = base.map(c => ({ c, s: titleScore(query, c.title || '') }))
                          .sort((a, b) => b.s - a.s);
-  const anchor = withScores.length && withScores[0].s >= 0.8 ? withScores[0].c : null;
+  const anchor = withScores.length && withScores[0].s >= 0.75 ? withScores[0].c : null;
 
   // 3) Pull similar + recommendations for the anchor
   let anchorExtras: MediaItem[] = [];

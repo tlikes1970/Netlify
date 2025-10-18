@@ -189,40 +189,6 @@ export default function App() {
     };
   }, []);
 
-  // Handle search events from search cards
-  useEffect(() => {
-    const handleSimilarSearch = (event: CustomEvent) => {
-      console.log('📥 App.tsx received search:similar event:', event.detail);
-      const { query, genre, similarityFactors } = event.detail;
-      console.log('🔄 Setting search query to:', query, 'genre:', genre);
-      console.log('🎯 Genre-focused similarity factors:', similarityFactors);
-      console.log('🎭 Genre breakdown:', {
-        totalGenres: similarityFactors?.genreCount || 0,
-        primary: similarityFactors?.primaryGenre,
-        secondary: similarityFactors?.secondaryGenre,
-        allGenres: similarityFactors?.genres
-      });
-      handleSearch(query, genre, 'all');
-    };
-
-    const handleRefineSearch = (event: CustomEvent) => {
-      console.log('📥 App.tsx received search:refine event:', event.detail);
-      const { query, genre, refinementFilters } = event.detail;
-      console.log('🔄 Setting search query to:', query, 'genre:', genre);
-      console.log('🎯 Refinement filters:', refinementFilters);
-      handleSearch(query, genre, 'all');
-    };
-
-    console.log('🎧 App.tsx setting up event listeners for search events');
-    document.addEventListener('search:similar', handleSimilarSearch as EventListener);
-    document.addEventListener('search:refine', handleRefineSearch as EventListener);
-    
-    return () => {
-      console.log('🧹 App.tsx cleaning up search event listeners');
-      document.removeEventListener('search:similar', handleSimilarSearch as EventListener);
-      document.removeEventListener('search:refine', handleRefineSearch as EventListener);
-    };
-  }, [handleSearch]);
 
   function itemsFor(id: string) {
     switch (id) {

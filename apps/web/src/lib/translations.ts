@@ -21,8 +21,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     reviewNotesAction: 'Review/Notes',
     addTagAction: 'Add Tag',
     holidayAddAction: 'Holiday +',
-    similarToAction: 'Similar To',
-    refineSearchAction: 'Refine Search',
     
     // Settings
     settings: 'Settings',
@@ -324,8 +322,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     reviewNotesAction: 'Reseña/Notas',
     addTagAction: 'Agregar Etiqueta',
     holidayAddAction: 'Fiesta +',
-    similarToAction: 'Similar A',
-    refineSearchAction: 'Refinar Búsqueda',
     
     // Settings
     settings: 'Configuración',
