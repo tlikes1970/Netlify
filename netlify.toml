@@ -2,12 +2,12 @@
 
 [build]
   base    = "apps/web"
-  publish = "apps/web/dist"
-  command = "npm --prefix apps/web run build"
+  publish = "dist"
+  command = "npm run build"
 
 [dev]
   framework   = "#custom"
-  command     = "npm --prefix apps/web run dev -- --port 4173 --strictPort"
+  command     = "npm run dev -- --port 4173 --strictPort"
   targetPort  = 4173
   port        = 8888
   functions   = "netlify/functions"
