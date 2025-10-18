@@ -1,7 +1,7 @@
 // Simple test function to verify Netlify functions are working
 export const config = { path: '/api/test' };
 
-export async function handler(event: any) {
+export async function handler(event) {
   return {
     statusCode: 200,
     headers: {
