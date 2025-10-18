@@ -18,6 +18,7 @@ import { flag } from '@/lib/flags';
 // Lazy load heavy components
 const SettingsPage = lazy(() => import('@/components/SettingsPage'));
 const NotesAndTagsModal = lazy(() => import('@/components/modals/NotesAndTagsModal'));
+const FlickWordModal = lazy(() => import('@/components/games/FlickWordModal'));
 const ListPage = lazy(() => import('@/pages/ListPage'));
 const MyListsPage = lazy(() => import('@/pages/MyListsPage'));
 const DiscoveryPage = lazy(() => import('@/pages/DiscoveryPage'));
@@ -57,6 +58,9 @@ export default function App() {
   // Notes and Tags modal state
   const [notesModalItem, setNotesModalItem] = useState<any>(null);
   const [showNotesModal, setShowNotesModal] = useState(false);
+  
+  // Game modal state
+  const [showFlickWordModal, setShowFlickWordModal] = useState(false);
   
   // Toast system
   const { toasts, addToast, removeToast } = useToast();
@@ -139,7 +143,7 @@ export default function App() {
     return cleanup;
   }, [addToast]);
 
-  // Handle deep links for settings sheet
+  // Handle deep links for settings sheet and games
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
@@ -156,6 +160,8 @@ export default function App() {
             openSettingsSheet(); // Use default tab
           }
         }
+      } else if (hash === '#games/flickword') {
+        setShowFlickWordModal(true);
       }
     };
 
@@ -165,6 +171,22 @@ export default function App() {
     // Listen for hash changes
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Expose game functions globally for compatibility with legacy code
+  useEffect(() => {
+    (window as any).openFlickWordModal = () => {
+      setShowFlickWordModal(true);
+    };
+    
+    (window as any).closeFlickWordModal = () => {
+      setShowFlickWordModal(false);
+    };
+
+    return () => {
+      delete (window as any).openFlickWordModal;
+      delete (window as any).closeFlickWordModal;
+    };
   }, []);
 
   // Handle search events from search cards
@@ -505,6 +527,16 @@ export default function App() {
           isOpen={showAuthModal} 
           onClose={() => setShowAuthModal(false)} 
         />
+
+        {/* FlickWord Game Modal */}
+        {showFlickWordModal && (
+          <Suspense fallback={<div className="loading-spinner">Loading game...</div>}>
+            <FlickWordModal 
+              isOpen={showFlickWordModal} 
+              onClose={() => setShowFlickWordModal(false)} 
+            />
+          </Suspense>
+        )}
       </main>
     </PersonalityErrorBoundary>
   );

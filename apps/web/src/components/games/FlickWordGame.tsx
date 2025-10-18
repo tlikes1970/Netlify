@@ -46,8 +46,10 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
   const loadTodaysWord = useCallback(async () => {
     try {
       setIsLoading(true);
+      console.log('🔄 Loading today\'s word...');
       
       const wordData = await getTodaysWord();
+      console.log('📦 Word data received:', wordData);
       
       setGame(prev => ({
         ...prev,
@@ -59,10 +61,13 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
         showHint: false
       }));
       
+      console.log('✅ Game target set to:', wordData.word.toUpperCase());
+      
     } catch (error) {
-      console.error('Failed to load today\'s word:', error);
+      console.error('❌ Failed to load today\'s word:', error);
       // Fallback to a static word if API fails
       const fallbackWord = 'FLICK';
+      console.log('🔄 Using fallback word:', fallbackWord);
       setGame(prev => ({
         ...prev,
         target: fallbackWord,
@@ -74,6 +79,7 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
       }));
     } finally {
       setIsLoading(false);
+      console.log('🏁 Word loading complete');
     }
   }, []);
 
@@ -148,10 +154,24 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
 
   // Handle submit
   const handleSubmit = useCallback(async () => {
-    if (game.done || game.current.length !== 5) return;
+    console.log('🎯 Submit pressed:', { 
+      current: game.current, 
+      length: game.current.length, 
+      done: game.done,
+      target: game.target 
+    });
+    
+    if (game.done || game.current.length !== 5) {
+      console.log('❌ Submit blocked:', { done: game.done, length: game.current.length });
+      return;
+    }
 
+    console.log('🔍 Validating word:', game.current);
     const valid = await isValidWord(game.current);
+    console.log('✅ Word validation result:', valid);
+    
     if (!valid) {
+      console.log('❌ Word invalid, showing notification');
       showNotification('Not a valid word!', 'error');
       setGame(prev => ({ ...prev, current: '' }));
       return;

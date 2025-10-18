@@ -13,6 +13,15 @@ export default function CommunityPanel() {
   const [flickWordModalOpen, setFlickWordModalOpen] = useState(false);
   const [triviaModalOpen, setTriviaModalOpen] = useState(false);
 
+  // Use global game functions if available
+  const openFlickWord = () => {
+    if (typeof (window as any).openFlickWordModal === 'function') {
+      (window as any).openFlickWordModal();
+    } else {
+      setFlickWordModalOpen(true);
+    }
+  };
+
   return (
     <div className="relative">
       <div data-rail="community" className="grid md:grid-cols-3 gap-4 items-stretch">
@@ -26,7 +35,7 @@ export default function CommunityPanel() {
           {/* FlickWord Game Card */}
           <div 
             className="rounded-2xl bg-neutral-900 border border-white/5 p-4 flex flex-col justify-between cursor-pointer hover:bg-neutral-800 transition-colors"
-            onClick={() => setFlickWordModalOpen(true)}
+            onClick={openFlickWord}
           >
             <div className="w-full">
               <h3 className="text-sm font-semibold text-neutral-200 mb-2">
@@ -47,7 +56,7 @@ export default function CommunityPanel() {
                 className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setFlickWordModalOpen(true);
+                  openFlickWord();
                 }}
               >
                 {translations.play_now || 'Play Now'}
