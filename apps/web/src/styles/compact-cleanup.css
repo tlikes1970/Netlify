@@ -182,5 +182,29 @@ html[data-compact-mobile-v1="true"] .compact-overflow-trigger {
   }
 }
 
+/* Settings sheet layering */
+.sheet-overlay {
+  background: color-mix(in oklab, black 55%, transparent);
+  z-index: var(--z-overlay, 9998);
+  touch-action: none;
+}
+
+.sheet-container {
+  z-index: var(--z-modal, 9999);
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+
+/* Single scroller: body is locked, only the inner body scrolls */
+.sheet-body {
+  overscroll-behavior: contain;
+}
+
+/* Ensure hidden panels are not painted */
+[role="tabpanel"][hidden] { display: none !important; }
+
+/* Stabilize layout when scrollbars disappear */
+html { scrollbar-gutter: stable both-edges; }
+
 
 

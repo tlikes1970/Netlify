@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 // import CardV2 from '../components/cards/CardV2'; // Unused
 import type { MediaItem } from '../components/cards/card.types';
 import { cachedSearchMulti } from './cache';
+import { smartSearch } from './smartSearch';
 import { emit } from '../lib/events';
 import { addToListWithConfirmation } from '../lib/storage';
 import { fetchNextAirDate } from '../tmdb/tv';
@@ -36,7 +37,11 @@ export default function SearchResults({
     abortRef.current = ac;
     setIsLoading(true);
     try {
-      const results = await cachedSearchMulti(query, nextPage, genre ?? null, searchType, { signal: ac.signal });
+      const useSmart = searchType !== 'people' && !query.startsWith('tag:');
+      const results = useSmart
+        ? await smartSearch(query, nextPage, searchType, { signal: ac.signal })
+        : await cachedSearchMulti(query, nextPage, genre ?? null, searchType, { signal: ac.signal });
+
       setItems(prev => replace ? results : [...prev, ...results]);
       setPage(nextPage);
       setHasMore(results.length >= 20); // TMDB default page size

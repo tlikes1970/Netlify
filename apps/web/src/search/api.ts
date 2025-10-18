@@ -56,7 +56,7 @@ function normalizeQuery(q: string): string {
     .trim();
 }
 
-function mapTMDBToMediaItem(r: any): MediaItem {
+export function mapTMDBToMediaItem(r: any): MediaItem {
   const mediaType: MediaType = r.media_type;
   
   // Handle person results differently

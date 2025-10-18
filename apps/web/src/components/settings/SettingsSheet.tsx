@@ -1,27 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useFocusTrap } from '../../lib/a11y/useFocusTrap';
+import { useInertOutside } from '../../lib/a11y/useInertOutside';
+import { initSettingsTabs } from './tabs/initTabs';
 
 type TabId = 'account' | 'display' | 'advanced';
 const VALID_TABS: TabId[] = ['account', 'display', 'advanced'];
 
-function isTab(v: unknown): v is TabId {
-  return typeof v === 'string' && (VALID_TABS as string[]).includes(v);
-}
-
-function tabFromHash(): TabId | null {
-  const m = location.hash.match(/^#settings\/([a-z]+)/i);
-  const t = m?.[1]?.toLowerCase();
-  return isTab(t) ? (t as TabId) : null;
-}
-
-function lastTab(): TabId | null {
-  const t = localStorage.getItem('settings:lastTab') || '';
-  return isTab(t) ? (t as TabId) : null;
-}
-
-function setHashForTab(t: TabId) {
-  const target = `#settings/${t}`;
-  if (location.hash !== target) history.replaceState(null, '', target);
-}
 
 function applyOpen(open: boolean) {
   const html = document.documentElement;
@@ -35,15 +19,20 @@ function applyOpen(open: boolean) {
 }
 
 export function openSettingsSheet(initial?: TabId) {
-  const t = initial ?? tabFromHash() ?? lastTab() ?? 'display';
-  setHashForTab(t);
+  if (initial) {
+    const target = `#settings/${initial}`;
+    if (location.hash !== target) history.replaceState(null, '', target);
+  }
   applyOpen(true);
-  window.dispatchEvent(new CustomEvent('settings:open', { detail: { tab: t } }));
+  window.dispatchEvent(new CustomEvent('settings:open'));
 }
 
 export function closeSettingsSheet() {
   applyOpen(false);
-  if (location.hash.startsWith('#settings/')) history.replaceState(null, '', '#');
+  // Clear hash completely when closing
+  if (location.hash.startsWith('#settings/')) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
   window.dispatchEvent(new Event('settings:close'));
 }
 
@@ -51,23 +40,80 @@ export default function SettingsSheet() {
   const [open, setOpen] = useState<boolean>(
     document.documentElement.getAttribute('data-settings-sheet') === 'true'
   );
-  const [tab, setTab] = useState<TabId>(tabFromHash() ?? lastTab() ?? 'display');
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const bodyRef = useRef<HTMLDivElement | null>(null);
   const firstFocusable = useRef<HTMLButtonElement | null>(null);
 
-  // Sync with hash and custom events
+  // Prevent background scroll with layout stabilization
   useEffect(() => {
-    function handleHash() {
-      const t = tabFromHash();
-      if (t) {
-        setTab(t);
-        setOpen(true);
-        applyOpen(true);
+    if (!open) return;
+    const doc = document.documentElement;
+    const prevOverflow = doc.style.overflow;
+    const prevPadRight = doc.style.paddingRight;
+
+    const scw = window.innerWidth - doc.clientWidth;
+    doc.style.overflow = 'hidden';
+    if (scw > 0) doc.style.paddingRight = `${scw}px`;
+
+    return () => { 
+      doc.style.overflow = prevOverflow; 
+      doc.style.paddingRight = prevPadRight; 
+    };
+  }, [open]);
+
+  // Focus trap + Escape handling
+  useEffect(() => {
+    if (!open) return;
+    const el = dialogRef.current;
+    if (!el) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        closeSettingsSheet();
       }
     }
-    function handleOpen(e: Event) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const t = (e as any)?.detail?.tab;
-      if (isTab(t)) setTab(t);
+    el.addEventListener('keydown', onKey);
+    return () => el.removeEventListener('keydown', onKey);
+  }, [open]);
+
+  // Focus trap
+  useFocusTrap(dialogRef.current, !!open, '[role="tab"][aria-selected="true"]');
+
+  // Hide rest of app from screen readers
+  useInertOutside(dialogRef.current, !!open);
+
+  // iOS soft keyboard: keep inputs visible
+  useEffect(() => {
+    if (!open || !('visualViewport' in window)) return;
+    const vv = window.visualViewport!;
+    const body = bodyRef.current;
+    if (!body) return;
+
+    const onResize = () => {
+      // add bottom padding equal to the occluded area
+      const occluded = Math.max(0, (window.innerHeight - vv.height - vv.offsetTop));
+      body.style.paddingBottom = occluded ? `${occluded + 16}px` : '';
+    };
+    vv.addEventListener('resize', onResize);
+    vv.addEventListener('scroll', onResize);
+    onResize();
+    return () => {
+      vv.removeEventListener('resize', onResize);
+      vv.removeEventListener('scroll', onResize);
+      if (body) body.style.paddingBottom = '';
+    };
+  }, [open]);
+
+  // Initialize tabs when sheet opens
+  useLayoutEffect(() => {
+    if (!open) return;
+    const cleanup = initSettingsTabs(bodyRef.current ?? undefined);
+    return cleanup;
+  }, [open]);
+
+  // Sync with custom events
+  useEffect(() => {
+    function handleOpen() {
       setOpen(true);
       applyOpen(true);
     }
@@ -76,51 +122,28 @@ export default function SettingsSheet() {
       applyOpen(false);
     }
 
-    window.addEventListener('hashchange', handleHash);
-    window.addEventListener('settings:open', handleOpen as EventListener);
+    window.addEventListener('settings:open', handleOpen);
     window.addEventListener('settings:close', handleClose);
-    queueMicrotask(handleHash); // catch early hash
 
     return () => {
-      window.removeEventListener('hashchange', handleHash);
-      window.removeEventListener('settings:open', handleOpen as EventListener);
+      window.removeEventListener('settings:open', handleOpen);
       window.removeEventListener('settings:close', handleClose);
     };
   }, []);
 
-  // Persist last tab, focus first control on open
-  useEffect(() => {
-    localStorage.setItem('settings:lastTab', tab);
-    if (open && firstFocusable.current) firstFocusable.current.focus();
-  }, [tab, open]);
-
-  // ESC closes
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape' && open) {
-        e.stopPropagation();
-        closeSettingsSheet();
-      }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open]);
-
   if (!open) return null;
-
-  const selectTab = (t: TabId) => {
-    setTab(t);
-    setHashForTab(t);
-  };
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="settings-title"
-      className="settings-sheet"
+      aria-label="Settings"
+      tabIndex={-1}
+      className="fixed inset-0 flex items-start justify-center p-4 pt-16"
     >
-      <div className="panel">
+      <div className="sheet-overlay absolute inset-0" />
+      <div className="sheet-container relative w-full max-w-3xl rounded-xl overflow-hidden">
         <header className="segmented" role="tablist" aria-label="Settings sections">
           {VALID_TABS.map((t, i) => (
             <button
@@ -129,9 +152,8 @@ export default function SettingsSheet() {
               role="tab"
               id={`tab-${t}`}
               aria-controls={`panel-${t}`}
-              aria-selected={tab === t}
-              className={tab === t ? 'is-active' : ''}
-              onClick={() => selectTab(t)}
+              className=""
+              tabIndex={-1}
             >
               {t[0].toUpperCase() + t.slice(1)}
             </button>
@@ -142,20 +164,26 @@ export default function SettingsSheet() {
         </header>
 
         {/* Scrollable body */}
-        <section
-          id={`panel-${tab}`}
-          role="tabpanel"
-          aria-labelledby={`tab-${tab}`}
-          data-sheet-body
-          style={{
-            overflow: 'auto',
-            WebkitOverflowScrolling: 'touch',
-            maxHeight:
-              'calc(100dvh - 56px - env(safe-area-inset-top) - env(safe-area-inset-bottom))',
-          }}
-        >
-          {/* TODO: render the tab content for {tab} */}
-        </section>
+        <div ref={bodyRef} className="sheet-body max-h-[80svh] overflow-auto">
+          {VALID_TABS.map((t) => (
+            <section
+              key={t}
+              id={`panel-${t}`}
+              role="tabpanel"
+              aria-labelledby={`tab-${t}`}
+              data-sheet-body
+              hidden
+              style={{
+                overflow: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                maxHeight:
+                  'calc(100dvh - 56px - env(safe-area-inset-top) - env(safe-area-inset-bottom))',
+              }}
+            >
+              {/* TODO: render the tab content for {t} */}
+            </section>
+          ))}
+        </div>
       </div>
     </div>
   );

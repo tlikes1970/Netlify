@@ -745,3 +745,6 @@ input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset:
   font-weight: 700;
   color: var(--text, #e6eaf0);
 }
+
+/* Hide tabpanels when hidden attribute is set (in case of resets) */
+[role="tabpanel"][hidden] { display: none !important; }
