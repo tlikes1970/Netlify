@@ -56,7 +56,7 @@ export default function Rail({ id, title, enabled = true, skeletonCount = 0, ite
   function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     const scroller = e.currentTarget;
     const card = scroller.querySelector<HTMLElement>('[data-testid="cardv2"]');
-    const gap = 12; // matches Tailwind gap-3 ≈ 12px
+    const gap = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--space-3').replace('px', '')) || 12; // matches Tailwind gap-3 ≈ 12px
     const cardWidth = card ? card.getBoundingClientRect().width : 166; // 154 + padding
     const delta = cardWidth + gap;
 

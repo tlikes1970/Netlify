@@ -1,0 +1,212 @@
+/* Compact Actions - Mobile Compact V2 */
+/* Only active when both compact gate and actions split flag are enabled */
+html[data-compact-mobile-v1="true"][data-actions-split="true"] {
+  /* Hide existing action buttons when compact actions are shown */
+  .compact-actions-container {
+    display: block;
+  }
+  
+  /* Hide original actions when compact actions are present */
+  .actions[data-testid="cardv2-actions"] {
+    display: none;
+  }
+  
+  .mobile-actions {
+    display: none;
+  }
+}
+
+/* Compact Primary Action Button */
+html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-primary-action {
+  /* Use compact tokens for consistent styling */
+  padding: var(--space-2, 8px);
+  border-radius: var(--radius, 12px);
+  font-size: var(--font-sm, 13px);
+  font-weight: 500;
+  
+  /* Smooth transitions */
+  transition: all 0.2s ease;
+  
+  /* Focus styles */
+  outline: none;
+}
+
+html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-primary-action:focus {
+  outline: 2px solid var(--accent, #007AFF);
+  outline-offset: 2px;
+}
+
+/* Compact Overflow Menu */
+html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-overflow-trigger {
+  /* Use compact tokens */
+  padding: var(--space-2, 8px);
+  border-radius: var(--radius, 12px);
+  font-size: var(--font-sm, 13px);
+  
+  /* Smooth transitions */
+  transition: all 0.2s ease;
+  
+  /* Focus styles */
+  outline: none;
+}
+
+html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-overflow-trigger:focus {
+  outline: 2px solid var(--accent, #007AFF);
+  outline-offset: 2px;
+}
+
+html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-overflow-menu {
+  /* Use compact tokens for spacing */
+  border-radius: var(--radius, 12px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  
+  /* Smooth animations */
+  animation: compact-menu-fade-in 0.2s ease-out;
+}
+
+@keyframes compact-menu-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-overflow-menu button {
+  /* Use compact tokens */
+  padding: var(--space-3, 12px);
+  font-size: var(--font-sm, 13px);
+  
+  /* Smooth transitions */
+  transition: background-color 0.2s ease;
+}
+
+/* SwipeRow Component */
+html[data-compact-mobile-v1="true"][data-actions-split="true"] .swipe-row-container {
+  /* Use compact tokens */
+  border-radius: var(--radius, 12px);
+  
+  /* Smooth transitions */
+  transition: all 0.3s ease-out;
+}
+
+html[data-compact-mobile-v1="true"][data-actions-split="true"] .swipe-row-content {
+  /* Smooth swipe transitions */
+  transition: transform 0.3s ease-out;
+}
+
+html[data-compact-mobile-v1="true"][data-actions-split="true"] .swipe-row-actions {
+  /* Use compact tokens */
+  border-radius: 0 var(--radius, 12px) var(--radius, 12px) 0;
+  padding: var(--space-2, 8px);
+  
+  /* Smooth transitions */
+  transition: transform 0.3s ease-out;
+}
+
+html[data-compact-mobile-v1="true"][data-actions-split="true"] .swipe-action-button {
+  /* Use compact tokens */
+  padding: var(--space-2, 8px);
+  border-radius: var(--radius, 12px);
+  font-size: var(--font-sm, 13px);
+  font-weight: 500;
+  min-width: 80px;
+  
+  /* Smooth transitions */
+  transition: all 0.2s ease;
+  
+  /* Focus styles */
+  outline: none;
+}
+
+html[data-compact-mobile-v1="true"][data-actions-split="true"] .swipe-action-button:focus {
+  outline: 2px solid var(--bg, #ffffff);
+  outline-offset: 2px;
+}
+
+/* Swipe indicator */
+html[data-compact-mobile-v1="true"][data-actions-split="true"] .swipe-indicator {
+  /* Use compact tokens */
+  right: var(--space-2, 8px);
+  
+  /* Smooth transitions */
+  transition: opacity 0.3s ease-out;
+}
+
+/* Compact Actions Container */
+html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-actions-container {
+  /* Use compact tokens for spacing */
+  padding: var(--space-2, 8px);
+  
+  /* Ensure proper stacking */
+  position: relative;
+  z-index: 1;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 767px) {
+  html[data-compact-mobile-v1="true"][data-actions-split="true"] {
+    /* Ensure swipe actions work properly on mobile */
+    .swipe-row-container {
+      touch-action: pan-y;
+    }
+    
+    /* Optimize button sizes for touch */
+    .compact-primary-action,
+    .compact-overflow-trigger,
+    .swipe-action-button {
+      min-height: 44px; /* iOS touch target minimum */
+    }
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  html[data-compact-mobile-v1="true"][data-actions-split="true"] {
+    .compact-overflow-menu {
+      background-color: var(--bg, #1a1a1a);
+      border-color: var(--line, #333333);
+    }
+    
+    .compact-overflow-menu button {
+      color: var(--text, #ffffff);
+    }
+    
+    .compact-overflow-menu button:hover {
+      background-color: var(--muted, #333333);
+    }
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  html[data-compact-mobile-v1="true"][data-actions-split="true"] {
+    .compact-primary-action,
+    .compact-overflow-trigger,
+    .swipe-action-button {
+      border: 2px solid currentColor;
+    }
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  html[data-compact-mobile-v1="true"][data-actions-split="true"] {
+    .compact-primary-action,
+    .compact-overflow-trigger,
+    .compact-overflow-menu,
+    .swipe-row-content,
+    .swipe-row-actions,
+    .swipe-action-button,
+    .swipe-indicator {
+      transition: none;
+      animation: none;
+    }
+  }
+}
+
+
+

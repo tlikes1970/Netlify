@@ -19,7 +19,7 @@ export default function SearchCard({ id, kind, title, poster }: Props) {
   }
 
   return (
-    <article className="w-[154px]">
+    <article style={{ width: 'var(--poster-w, 154px)' }}>
       <div className="relative poster-2x3 rounded-2xl overflow-hidden bg-neutral-800/40">
         <img src={poster} alt={title} className="w-full h-full object-cover" />
         <button

@@ -1,0 +1,15 @@
+token_name,source_file,source_value,compact_alias,notes
+space-xs,tailwind.config.ts,4px,--space-1,Maps to compact spacing scale
+space-sm,tailwind.config.ts,8px,--space-2,Maps to compact spacing scale
+space-md,tailwind.config.ts,12px,--space-3,Maps to compact spacing scale
+space-lg,tailwind.config.ts,16px,--space-4,Maps to compact spacing scale
+--space-xs,tokens.css,0.25rem,--space-1,CSS var maps to compact spacing scale
+--space-sm,tokens.css,0.5rem,--space-2,CSS var maps to compact spacing scale
+--space-md,tokens.css,1rem,--space-3,CSS var maps to compact spacing scale
+--space-lg,tokens.css,1.5rem,--space-4,CSS var maps to compact spacing scale
+radius-md,tailwind.config.ts,12px,--radius,Maps to compact radius scale
+--aspect-poster,tokens.css,2 / 3,--poster-h,Poster aspect ratio for compact cards
+--mobile-nav-height,global.css,80px,--poster-w,Reference for compact card sizing
+
+
+

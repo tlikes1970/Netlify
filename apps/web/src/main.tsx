@@ -8,6 +8,30 @@ import { debugTmdbSource } from './lib/tmdb';
 import { HOME_RAILS, TABS } from './config/structure';
 import './styles/global.css';
 import './styles/header-marquee.css';
+import './styles/tokens-compact-mobile.css';
+import './styles/compact-home.css';
+import './styles/settings-sheet.css';
+import './styles/compact-actions.css';
+import './styles/compact-lists.css';
+import './styles/compact-a11y-perf.css';
+import './styles/compact-cleanup.css';
+import { installCompactMobileGate, installActionsSplitGate } from './lib/flags';
+
+// Set density to compact (required for compact mobile gate)
+document.documentElement.dataset.density = 'compact';
+
+// Install compact mobile gate
+installCompactMobileGate();
+
+// Install actions split gate
+installActionsSplitGate();
+
+// Install dev diagnostics
+if (import.meta.env.DEV) {
+  import('./debug/compactGateDiagnostics')
+    .then(m => m.installDiagnostics?.())
+    .catch(() => {});
+}
 
 declare global {
   interface Window {

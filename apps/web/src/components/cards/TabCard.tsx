@@ -6,6 +6,9 @@ import StarRating from './StarRating';
 import MyListToggle from '../MyListToggle';
 import SwipeableCard from '../SwipeableCard';
 import { OptimizedImage } from '../OptimizedImage';
+import { CompactPrimaryAction } from '../../features/compact/CompactPrimaryAction';
+import { CompactOverflowMenu } from '../../features/compact/CompactOverflowMenu';
+import { SwipeRow } from '../../features/compact/SwipeRow';
 
 export type TabCardProps = {
   item: MediaItem;
@@ -410,12 +413,45 @@ export default function TabCard({
     : "px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md";
 
   return (
-    <SwipeableCard
-      item={item}
-      actions={actions}
-      context={getSwipeContext()}
-      className={isCondensed ? "mb-4" : "mb-8"}
-    >
+    <SwipeRow trailingActions={
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2, 8px)' }}>
+        {getMobileActions().map((action, i) => (
+          <button
+            key={i}
+            onClick={action.action}
+            className="swipe-action-button"
+            style={{
+              padding: 'var(--space-2, 8px)',
+              borderRadius: 'var(--radius, 12px)',
+              fontSize: 'var(--font-sm, 13px)',
+              backgroundColor: 'var(--bg, #ffffff)',
+              color: 'var(--accent, #007AFF)',
+              border: '1px solid var(--bg, #ffffff)',
+              cursor: 'pointer',
+              fontWeight: '500',
+              minWidth: '80px',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--accent-hover, #0056CC)';
+              e.currentTarget.style.color = 'var(--bg, #ffffff)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg, #ffffff)';
+              e.currentTarget.style.color = 'var(--accent, #007AFF)';
+            }}
+          >
+            {action.label}
+          </button>
+        ))}
+      </div>
+    }>
+      <SwipeableCard
+        item={item}
+        actions={actions}
+        context={getSwipeContext()}
+        className={isCondensed ? "mb-4" : "mb-8"}
+      >
       <article 
         className={`tab-card group relative flex rounded-2xl overflow-hidden shadow-lg transition-all duration-200 hover:shadow-xl ${
           isBeingDragged ? 'opacity-75 scale-95 rotate-1 z-50' : ''
@@ -439,11 +475,16 @@ export default function TabCard({
       >
       {/* Poster (smaller in condensed view) */}
       <div 
-        className={`poster flex-shrink-0 bg-muted rounded-l-2xl relative ${
-          isCondensed ? 'w-20 aspect-[2/3]' : 'w-40 aspect-[2/3]'
+        className={`poster flex-shrink-0 bg-muted relative ${
+          isCondensed ? 'aspect-[2/3]' : 'aspect-[2/3]'
         }`}
         role="img" 
         aria-label={title}
+        style={{ 
+          width: isCondensed ? 'var(--poster-w, 80px)' : 'var(--poster-w, 160px)',
+          height: isCondensed ? 'var(--poster-h, 120px)' : 'var(--poster-h, 240px)',
+          borderRadius: 'var(--radius, 16px) 0 0 var(--radius, 16px)'
+        }}
       >
         {posterUrl ? (
           <OptimizedImage
@@ -587,6 +628,18 @@ export default function TabCard({
             </div>
           </div>
           
+          {/* Compact Actions - only visible when gate and flag are enabled */}
+          <div className="compact-actions-container">
+            <CompactPrimaryAction 
+              item={item as any} 
+              context="tab" 
+            />
+            <CompactOverflowMenu 
+              item={item as any} 
+              context="tab" 
+            />
+          </div>
+          
           {/* Desktop Actions (full actions) */}
           <div className="hidden md:block">
             {/* Free Actions */}
@@ -630,7 +683,7 @@ export default function TabCard({
                 opacity: 0.7
               }}
             >
-            <span className="text-xs font-medium" style={{ color: 'var(--pro)', marginRight: '8px' }}>
+            <span className="text-xs font-medium" style={{ color: 'var(--pro)', marginRight: 'var(--space-2, 8px)' }}>
               PRO:
             </span>
             <button
@@ -696,5 +749,6 @@ export default function TabCard({
       </div>
     </article>
     </SwipeableCard>
+    </SwipeRow>
   );
 }

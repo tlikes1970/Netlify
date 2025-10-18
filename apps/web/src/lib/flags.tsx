@@ -21,3 +21,87 @@ export function useFlag(name: keyof Flags | string): boolean {
   const f = useContext(FlagsContext);
   return Boolean(f[name as string]);
 }
+
+export function flag(name: string): boolean {
+  try {
+    const v = localStorage.getItem('flag:' + name);
+    if (v !== null) return v === 'true';
+  } catch {}
+  return false;
+}
+
+export function installCompactMobileGate() {
+  const html = document.documentElement;
+  const mql = window.matchMedia('(max-width: 768px)');
+
+  const run = () => {
+    try {
+      // If your flag() helper exists and expects 'mobile_compact_v1', use it:
+      const enabled = typeof flag === 'function'
+        ? flag('mobile_compact_v1')
+        : localStorage.getItem('flag:mobile_compact_v1') === 'true';
+
+      const densityOk = html.dataset.density === 'compact';
+      const mobileOk = mql.matches;
+
+      const on = !!(enabled && densityOk && mobileOk);
+      if (on) {
+        html.setAttribute('data-compact-mobile-v1', 'true');
+      } else {
+        html.removeAttribute('data-compact-mobile-v1');
+      }
+    } catch {
+      // swallow; gate should never throw
+    }
+  };
+
+  // fire immediately and after the next microtask (handles late density/flag writes)
+  run();
+  queueMicrotask(run);
+
+  // react to the stuff that actually changes in practice
+  document.addEventListener('DOMContentLoaded', run, { once: true });
+  document.addEventListener('visibilitychange', run, { passive: true });
+  window.addEventListener('resize', run, { passive: true });
+  window.addEventListener('storage', run, { passive: true });
+  window.addEventListener('hashchange', run, { passive: true });
+
+  // density flips are attribute changes; watch only that attribute
+  new MutationObserver((list) => {
+    for (const m of list) {
+      if (m.type === 'attributes' && m.attributeName === 'data-density') {
+        run();
+        break;
+      }
+    }
+  }).observe(html, { attributes: true, attributeFilter: ['data-density'] });
+
+  // optional hook you can dispatch from tests: window.dispatchEvent(new Event('densitychange'))
+  window.addEventListener('densitychange', run, { passive: true });
+}
+
+export function installActionsSplitGate() {
+  const html = document.documentElement;
+  const isMobile = () => {
+    try { return matchMedia('(max-width: 768px)').matches; } catch { return true; }
+  };
+  const ensure = () => {
+    const compactGate = html.dataset.compactMobileV1 === 'true';
+    const flagEnabled = flag('mobile_actions_split_v1');
+    const mobileViewport = isMobile();
+    
+    const on = compactGate && flagEnabled && mobileViewport;
+    if (on) html.dataset.actionsSplit = 'true';
+    else delete html.dataset.actionsSplit;
+  };
+  
+  document.addEventListener('DOMContentLoaded', ensure);
+  document.addEventListener('visibilitychange', ensure);
+  window.addEventListener('resize', ensure);
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'flag:mobile_actions_split_v1') ensure();
+  });
+  
+  // run once if DOM already ready
+  if (document.readyState !== 'loading') ensure();
+}

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 // import CardV2 from '../components/cards/CardV2'; // Unused
 import type { MediaItem } from '../components/cards/card.types';
-import { searchMulti } from './api';
+import { cachedSearchMulti } from './cache';
 import { emit } from '../lib/events';
 import { addToListWithConfirmation } from '../lib/storage';
 import { fetchNextAirDate } from '../tmdb/tv';
@@ -9,66 +9,43 @@ import { useTranslations } from '../lib/language';
 import { useSettings, getPersonalityText } from '../lib/settings';
 import MyListToggle from '../components/MyListToggle';
 import { OptimizedImage } from '../components/OptimizedImage';
-import { usePerformanceOptimization, useEnhancedOfflineCache } from '../hooks/usePerformanceOptimization';
-import { VirtualScrollContainer, LoadingStates, InfiniteScrollSentinel, PerformanceMetrics } from '../components/PerformanceComponents';
 
-export default function SearchResults({ query, genre, searchType = 'all' }: { query: string; genre?: string | null; searchType?: 'all' | 'movies-tv' | 'people' }) {
-  const [initialItems, setInitialItems] = useState<MediaItem[]>([]);
-  // const translations = useTranslations(); // Unused
+export default function SearchResults({
+  query, genre, searchType = 'all', nonce
+}: { query: string; genre?: string | null; searchType?: 'all'|'movies-tv'|'people'; nonce: number }) {
+  const [items, setItems] = useState<MediaItem[]>([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const settings = useSettings();
-  
-  // Enhanced offline cache
-  const { isOnline, cacheStatus, preloadCriticalData } = useEnhancedOfflineCache();
 
-  // Reset pagination when query changes
   useEffect(() => {
-    setInitialItems([]);
-  }, [query, genre, searchType]);
+    // reset on any input change (including nonce)
+    abortRef.current?.abort();
+    setItems([]); setPage(0); setHasMore(true); setError(null);
+    void fetchPage(1, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, genre, searchType, nonce]);
 
-  // Load more function for infinite scroll
-  const loadMoreItems = async (): Promise<MediaItem[]> => {
-    if (query.startsWith('tag:')) {
-      // Tag search - no pagination needed
-      return [];
-    }
-
+  async function fetchPage(nextPage: number, replace = false) {
+    if (isLoading || !hasMore) return;
+    abortRef.current?.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
+    setIsLoading(true);
     try {
-      const results = await searchMulti(query, Math.floor(initialItems.length / 20) + 1, genre, searchType);
-      return results;
-    } catch (error) {
-      throw new Error(error instanceof Error ? error.message : 'Search failed');
+      const results = await cachedSearchMulti(query, nextPage, genre ?? null, searchType, { signal: ac.signal });
+      setItems(prev => replace ? results : [...prev, ...results]);
+      setPage(nextPage);
+      setHasMore(results.length >= 20); // TMDB default page size
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') setError(err?.message || 'Search failed');
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  // Performance optimization system
-  const performance = usePerformanceOptimization(initialItems, {
-    enableInfinite: true,
-    enableVirtual: initialItems.length > 100, // Enable virtual scrolling for large lists
-    enableCache: true,
-    onLoadMore: loadMoreItems,
-    infinite: {
-      pageSize: 20,
-      threshold: 200,
-      maxPages: 50
-    },
-    virtual: {
-      itemHeight: 300, // Approximate height of search result cards
-      overscan: 3,
-      containerHeight: 600
-    },
-    cache: {
-      maxItems: 500,
-      preloadThreshold: 20,
-      cleanupInterval: 30000
-    }
-  });
-
-  // Preload critical data when online
-  useEffect(() => {
-    if (isOnline && performance.items.length > 0) {
-      preloadCriticalData(performance.items.slice(0, 20));
-    }
-  }, [isOnline, performance.items, preloadCriticalData]);
+  }
 
   if (!query) return null;
 
@@ -81,51 +58,50 @@ export default function SearchResults({ query, genre, searchType = 'all' }: { qu
         }
       </h2>
       
-      {performance.isLoading && performance.items.length === 0 && (
+      {isLoading && items.length === 0 && (
         <p className="mt-2 text-sm text-muted-foreground">
           {getPersonalityText('searchLoading', settings.personalityLevel)}
         </p>
       )}
       
-      {performance.error && (
+      {error && (
         <p className="mt-2 text-sm text-red-600">
-          ⚠️ {performance.error}
+          ⚠️ {error}
         </p>
       )}
 
-      <VirtualScrollContainer
-        ref={performance.containerRef}
-        totalHeight={performance.totalHeight}
-        offsetY={performance.offsetY}
-        onScroll={performance.handleScroll}
-        className="h-[600px]"
-      >
-        <div className="space-y-6">
-          {performance.items.map(item => (
-            <SearchResultCard 
-              key={`${item.mediaType}:${item.id}`} 
-              item={item} 
-              onRemove={() => setInitialItems(prev => prev.filter(i => i.id !== item.id))}
-            />
-          ))}
+      <div className="space-y-6">
+        {items.map(item => (
+          <SearchResultCard 
+            key={`${item.mediaType}:${item.id}`} 
+            item={item} 
+            onRemove={() => setItems(prev => prev.filter(i => i.id !== item.id))}
+          />
+        ))}
+      </div>
+      
+      {/* Infinite scroll sentinel */}
+      {hasMore && (
+        <div 
+          className="h-20 flex items-center justify-center"
+          ref={(el) => {
+            if (el) {
+              const observer = new IntersectionObserver(
+                (entries) => {
+                  if (entries[0].isIntersecting && !isLoading) {
+                    fetchPage(page + 1);
+                  }
+                },
+                { threshold: 0.1 }
+              );
+              observer.observe(el);
+              return () => observer.disconnect();
+            }
+          }}
+        >
+          {isLoading && <div className="text-sm text-muted-foreground">Loading more...</div>}
         </div>
-        
-        <InfiniteScrollSentinel sentinelRef={performance.sentinelRef} />
-        <LoadingStates 
-          isLoading={performance.isLoading}
-          hasMore={performance.hasMore}
-          error={performance.error}
-        />
-      </VirtualScrollContainer>
-
-      {/* Performance metrics (development only) */}
-      <PerformanceMetrics
-        cacheSize={performance.cacheSize}
-        visibleItems={performance.items.length}
-        totalItems={performance.allItems.length}
-        isOnline={isOnline}
-        cacheStatus={cacheStatus}
-      />
+      )}
     </section>
   );
 }

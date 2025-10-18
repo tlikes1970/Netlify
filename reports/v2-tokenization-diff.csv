@@ -1,0 +1,18 @@
+file,line,before,after
+apps/web/src/components/cards/CardV2.tsx,38,"className=\"curated-card v2 group w-[120px] sm:w-[154px] select-none\"","style={{ width: 'var(--poster-w, 120px)' }}"
+apps/web/src/components/cards/CardV2.tsx,40,"className=\"relative rounded-xl border shadow-sm overflow-hidden\"","style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', borderRadius: 'var(--radius, 12px)' }}"
+apps/web/src/components/cards/CardV2.tsx,77,"className={[\"truncate\", compact ? \"text-[13px]\" : \"text-sm\", \"font-medium\"].join(' ')}","style={{ fontSize: compact ? 'var(--font-sm, 13px)' : undefined, color: 'var(--text)' }}"
+apps/web/src/components/cards/CardV2.tsx,91,"className=\"text-[10px] cursor-pointer hover:scale-110 transition-transform\"","style={{ fontSize: 'var(--font-sm, 10px)' }}"
+apps/web/src/components/cards/CardV2.tsx,100,"className=\"text-[10px] cursor-pointer hover:scale-110 transition-transform\"","style={{ fontSize: 'var(--font-sm, 10px)' }}"
+apps/web/src/components/cards/CardV2.tsx,112,"className=\"mt-0.5 flex items-center justify-between text-[11px]\"","style={{ fontSize: 'var(--font-sm, 11px)', color: 'var(--muted)' }}"
+apps/web/src/components/cards/CardV2.tsx,173,"className={`rounded-lg border px-2 py-1 text-[11px] leading-none transition-all duration-150 ease-out ${","style={{ fontSize: 'var(--font-sm, 11px)' }}"
+apps/web/src/components/cards/CardV2.tsx,188,"className=\"text-[10px]\"","style={{ fontSize: 'var(--font-sm, 10px)' }}"
+apps/web/src/components/cards/TabCard.tsx,442,"className={`poster flex-shrink-0 bg-muted rounded-l-2xl relative ${","style={{ width: isCondensed ? 'var(--space-4, 80px)' : 'var(--space-4, 160px)', borderRadius: 'var(--radius, 16px) 0 0 var(--radius, 16px)' }}"
+apps/web/src/components/cards/TabCard.tsx,637,"style={{ color: 'var(--pro)', marginRight: '8px' }}","style={{ color: 'var(--pro)', marginRight: 'var(--space-2, 8px)' }}"
+apps/web/src/components/cards/UpNextCard.tsx,63,"className=\"up-next-card group w-[120px] sm:w-[154px] select-none\"","style={{ width: 'var(--poster-w, 120px)' }}"
+apps/web/src/components/cards/UpNextCard.tsx,69,"className=\"relative rounded-xl border shadow-sm overflow-hidden\"","style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', borderRadius: 'var(--radius, 12px)' }}"
+apps/web/src/components/SearchCard.tsx,22,"className=\"w-[154px]\"","style={{ width: 'var(--poster-w, 154px)' }}"
+apps/web/src/components/Rail.tsx,59,"const gap = 12; // matches Tailwind gap-3 ≈ 12px","const gap = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--space-3').replace('px', '')) || 12; // matches Tailwind gap-3 ≈ 12px"
+
+
+

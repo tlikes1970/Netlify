@@ -1,0 +1,186 @@
+/* Compact Cleanup & Polish - Mobile Compact V2 */
+/* Only active when compact mobile gate is enabled */
+html[data-compact-mobile-v1="true"] {
+  /* Z-index tokens for consistent layering */
+  --z-bottom-nav: 1000;
+  --z-fab: 1200;
+  --z-menu: 15000;
+  --z-sheet: 20000;
+}
+
+:root {
+  --z-overlay: 9998;
+  --z-modal: 9999;
+}
+
+/* Universal modal layering */
+.auth-modal-overlay,
+.username-prompt-modal-overlay { z-index: var(--z-overlay); }
+
+.auth-modal-content,
+.username-prompt-modal-content { z-index: var(--z-modal); }
+
+/* Bottom Navigation Safe Area & Z-index */
+html[data-compact-mobile-v1="true"] [data-bottom-nav],
+html[data-compact-mobile-v1="true"] .bottom-nav {
+  z-index: var(--z-bottom-nav, 1000);
+  padding-bottom: max(var(--space-2, 8px), env(safe-area-inset-bottom));
+}
+
+/* FAB Dock Z-index */
+html[data-compact-mobile-v1="true"] .fixed.bottom-4,
+html[data-compact-mobile-v1="true"] .fixed.bottom-8 {
+  z-index: var(--z-fab, 1200);
+}
+
+/* Settings FAB specific */
+html[data-compact-mobile-v1="true"] button[aria-label="Open Settings"] {
+  z-index: var(--z-fab, 1200);
+}
+
+/* Theme Toggle FAB specific */
+html[data-compact-mobile-v1="true"] button[aria-label*="theme"],
+html[data-compact-mobile-v1="true"] button[aria-label*="Theme"] {
+  z-index: var(--z-fab, 1200);
+}
+
+/* Overflow Menus & Popovers Z-index */
+html[data-compact-mobile-v1="true"] .compact-overflow-menu {
+  z-index: var(--z-menu, 15000);
+}
+
+html[data-compact-mobile-v1="true"] [role="menu"] {
+  z-index: var(--z-menu, 15000);
+}
+
+/* Settings Sheet Z-index */
+html[data-compact-mobile-v1="true"] .settings-sheet-overlay {
+  z-index: var(--z-sheet, 20000);
+}
+
+html[data-compact-mobile-v1="true"] .settings-sheet {
+  z-index: var(--z-sheet, 20000);
+}
+
+/* SwipeRow Action Tray Z-index */
+html[data-compact-mobile-v1="true"] .swipe-row-actions {
+  z-index: var(--z-menu, 15000);
+}
+
+/* Content Area Safe Area Padding */
+html[data-compact-mobile-v1="true"] .settings-sheet .content-area {
+  padding-bottom: max(var(--space-4, 16px), env(safe-area-inset-bottom));
+}
+
+/* SwipeRow Safe Area */
+html[data-compact-mobile-v1="true"] .swipe-row-container {
+  padding-bottom: max(var(--space-1, 4px), env(safe-area-inset-bottom));
+}
+
+/* Bottom Navigation Content Spacing */
+html[data-compact-mobile-v1="true"] .mobile-tabs,
+html[data-compact-mobile-v1="true"] [data-mobile-nav] {
+  padding-bottom: max(var(--space-2, 8px), env(safe-area-inset-bottom));
+}
+
+/* Ensure content doesn't overlap with bottom nav */
+html[data-compact-mobile-v1="true"] main {
+  padding-bottom: max(var(--space-4, 16px), env(safe-area-inset-bottom));
+}
+
+/* Card containers respect safe areas */
+html[data-compact-mobile-v1="true"] .rail {
+  margin-bottom: max(var(--space-3, 12px), env(safe-area-inset-bottom));
+}
+
+/* Compact Actions Container Safe Area */
+html[data-compact-mobile-v1="true"] .compact-actions-container {
+  padding-bottom: max(var(--space-2, 8px), env(safe-area-inset-bottom));
+}
+
+/* Remove any potential overlap with fixed elements */
+html[data-compact-mobile-v1="true"] .curated-card,
+html[data-compact-mobile-v1="true"] .tab-card {
+  margin-bottom: var(--space-2, 8px);
+}
+
+/* Ensure proper stacking context for cards */
+html[data-compact-mobile-v1="true"] .curated-card.v2,
+html[data-compact-mobile-v1="true"] .tab-card {
+  position: relative;
+  z-index: 1;
+}
+
+/* Fix any potential z-index conflicts in compact mode */
+html[data-compact-mobile-v1="true"] .swipe-row-container {
+  position: relative;
+  z-index: 1;
+}
+
+html[data-compact-mobile-v1="true"] .swipe-row-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* Ensure proper layering for compact actions */
+html[data-compact-mobile-v1="true"] .compact-primary-action,
+html[data-compact-mobile-v1="true"] .compact-overflow-trigger {
+  position: relative;
+  z-index: 1;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 767px) {
+  html[data-compact-mobile-v1="true"] {
+    /* Ensure proper touch targets don't overlap */
+    .compact-primary-action,
+    .compact-overflow-trigger,
+    .swipe-action-button {
+      min-height: 44px;
+      margin-bottom: var(--space-1, 4px);
+    }
+    
+    /* Additional safe area for mobile */
+    .settings-sheet {
+      padding-bottom: max(var(--space-6, 24px), env(safe-area-inset-bottom));
+    }
+  }
+}
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+  html[data-compact-mobile-v1="true"] {
+    /* Ensure proper contrast for layered elements */
+    .compact-overflow-menu,
+    .settings-sheet,
+    .swipe-row-actions {
+      border: 2px solid var(--line, #000000);
+    }
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  html[data-compact-mobile-v1="true"] {
+    /* Remove transitions that might cause motion issues */
+    .compact-overflow-menu,
+    .settings-sheet,
+    .swipe-row-content,
+    .swipe-row-actions {
+      transition: none;
+    }
+  }
+}
+
+/* Dark mode safe area adjustments */
+@media (prefers-color-scheme: dark) {
+  html[data-compact-mobile-v1="true"] {
+    /* Ensure safe areas work properly in dark mode */
+    .settings-sheet .content-area {
+      background-color: var(--bg, #1a1a1a);
+    }
+  }
+}
+
+
+

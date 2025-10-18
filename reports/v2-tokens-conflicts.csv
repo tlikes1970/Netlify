@@ -1,0 +1,13 @@
+token_name,file_a,line_a,value_a,file_b,line_b,value_b
+--bg,global.css,15,#0f1115,global.css,31,#ffffff
+--card,global.css,16,#171a21,global.css,32,#f8fafc
+--muted,global.css,17,#a9b3c1,global.css,33,#64748b
+--text,global.css,18,#e6eaf0,global.css,34,#1e293b
+--line,global.css,19,#242a33,global.css,35,#e2e8f0
+--accent,global.css,20,#4da3ff,global.css,36,#3b82f6
+--btn,global.css,21,#232a34,global.css,37,#f1f5f9
+--btn2,global.css,22,#1c222b,global.css,38,#e2e8f0
+--shadow,global.css,23,0 6px 24px rgba(0,0,0,.35),global.css,39,0 6px 24px rgba(0,0,0,.1)
+
+
+

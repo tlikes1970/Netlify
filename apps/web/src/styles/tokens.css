@@ -1,3 +1,9 @@
+/*
+  Note: Do not change base token values during the Mobile Compact V1 migration (Step 2).
+  Compact overrides are defined in apps/web/src/styles/tokens-compact-mobile.css and gated.
+  See reports/v2-tokens-alias-map.csv for mapping.
+*/
+
 :root {
   /* Spacing system */
   --space-xs: 0.25rem;

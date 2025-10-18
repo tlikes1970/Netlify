@@ -1,23 +1,14 @@
-[functions]
-directory = "netlify/functions"
+# Netlify config: lock dev + build to the React V2 app in apps/web
 
 [build]
-# Build the React app from apps/web directory
-base = "apps/web"
-command = "npm run build"
-publish = "dist"
-
-[build.environment]
-NODE_VERSION = "18"
+  base    = "apps/web"
+  publish = "apps/web/dist"
+  command = "npm --prefix apps/web run build"
 
 [dev]
-# Run the Vite app inside apps/web
-command = "npm run dev --prefix apps/web"
-targetPort = 5173
-publish = "apps/web"
-
-# Optional pretty URLs for functions
-[[redirects]]
-from = "/api/*"
-to = "/.netlify/functions/:splat"
-status = 200
+  framework   = "#custom"
+  command     = "npm --prefix apps/web run dev -- --port 4173 --strictPort"
+  targetPort  = 4173
+  port        = 8888
+  functions   = "netlify/functions"
+  autoLaunch  = false

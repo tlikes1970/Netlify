@@ -1,0 +1,229 @@
+/* Settings Sheet - Mobile Compact V1 */
+/* Only active when both compact gate and settings sheet flag are enabled */
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] {
+  /* Prevent body scroll when sheet is open */
+  body {
+    overflow: hidden;
+  }
+}
+
+/* Settings Sheet Overlay */
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet-overlay {
+  /* Ensure overlay covers everything */
+  z-index: 1000;
+  
+  /* Smooth fade-in animation */
+  animation: settings-sheet-fade-in 0.2s ease-out;
+}
+
+@keyframes settings-sheet-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Settings Sheet Container */
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet {
+  /* Slide-up animation */
+  animation: settings-sheet-slide-up 0.3s ease-out;
+  
+  /* Ensure proper stacking */
+  z-index: 1001;
+  
+  /* Mobile-optimized spacing */
+  padding-top: var(--space-4, 16px);
+  padding-bottom: env(safe-area-inset-bottom);
+  
+  /* Use compact tokens for consistent spacing */
+  --sheet-padding: var(--space-4, 16px);
+  --sheet-gap: var(--space-3, 12px);
+  --sheet-radius: var(--radius, 12px);
+}
+
+@keyframes settings-sheet-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Segmented Tab Controls */
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet .segmented-controls {
+  display: flex;
+  background-color: var(--muted, #f5f5f5);
+  border-radius: var(--radius, 12px);
+  padding: var(--space-1, 4px);
+  margin-bottom: var(--space-3, 12px);
+}
+
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet .segmented-controls button {
+  flex: 1;
+  padding: var(--space-2, 8px);
+  border: none;
+  border-radius: calc(var(--radius, 12px) - var(--space-1, 4px));
+  background-color: transparent;
+  color: var(--muted, #666666);
+  font-size: var(--font-sm, 13px);
+  font-weight: normal;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet .segmented-controls button.active {
+  background-color: var(--bg, #ffffff);
+  color: var(--text, #000000);
+  font-weight: bold;
+}
+
+/* Content Area */
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet .content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 var(--space-4, 16px) var(--space-4, 16px);
+  
+  /* Custom scrollbar for mobile */
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted, #cccccc) transparent;
+}
+
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet .content-area::-webkit-scrollbar {
+  width: 4px;
+}
+
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet .content-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet .content-area::-webkit-scrollbar-thumb {
+  background-color: var(--muted, #cccccc);
+  border-radius: 2px;
+}
+
+/* Typography */
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet h2 {
+  font-size: var(--font-lg, 16.5px);
+  font-weight: bold;
+  margin: 0 0 var(--space-3, 12px) 0;
+  color: var(--text, #000000);
+}
+
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet h3 {
+  font-size: var(--font-md, 14.5px);
+  font-weight: 600;
+  margin: 0 0 var(--space-2, 8px) 0;
+  color: var(--text, #000000);
+}
+
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet p {
+  font-size: var(--font-sm, 13px);
+  color: var(--muted, #666666);
+  margin: 0 0 var(--space-2, 8px) 0;
+  line-height: 1.4;
+}
+
+/* Focus Management */
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet button:focus {
+  outline: 2px solid var(--accent, #007AFF);
+  outline-offset: 2px;
+}
+
+/* Safe Area Support */
+@supports (padding: max(0px)) {
+  html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet {
+    padding-bottom: max(var(--space-4, 16px), env(safe-area-inset-bottom));
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet {
+    background-color: var(--bg, #1a1a1a);
+    color: var(--text, #ffffff);
+  }
+  
+  html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet .segmented-controls {
+    background-color: var(--muted, #333333);
+  }
+  
+  html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet .segmented-controls button.active {
+    background-color: var(--bg, #1a1a1a);
+    color: var(--text, #ffffff);
+  }
+}
+
+/* Compact: force settings sheet to be a real viewport-fixed sheet with proper stacking */
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] [role="dialog"][aria-modal="true"] {
+  position: fixed;            /* was static */
+  inset: 0;                   /* full viewport */
+  z-index: var(--z-sheet, 20000);
+  display: flex;
+  align-items: flex-end;       /* slide-up panel at bottom */
+  background: rgba(0,0,0,0.4); /* backdrop if you don't already have one */
+}
+
+/* The panel itself (first child) */
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] [role="dialog"][aria-modal="true"] > * {
+  width: 100%;
+  max-height: calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  background: var(--bg, #fff);
+  border-top-left-radius: var(--radius, 12px);
+  border-top-right-radius: var(--radius, 12px);
+  overflow: hidden;            /* contain the scroll area inside */
+  transform: translateY(0);    /* ensure visible state */
+}
+
+/* Make the inner content actually scroll. Match common names or your data hook. */
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] [role="dialog"][aria-modal="true"] main,
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] [role="dialog"][aria-modal="true"] [data-sheet-body],
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] [role="dialog"][aria-modal="true"] .sheet-body,
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] [role="dialog"][aria-modal="true"] .content {
+  flex: 1 1 auto;
+  min-height: 1px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: max(var(--space-4, 16px), env(safe-area-inset-bottom));
+}
+
+/* Minimal structure/stacking rules for new SettingsSheet implementation */
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  z-index: var(--z-sheet, 20000);
+}
+
+.settings-sheet .panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--bg, #111);
+}
+
+.settings-sheet [role="tablist"] {
+  display: flex;
+  gap: var(--space-2, 8px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  border-bottom: 1px solid color-mix(in oklab, white 10%, transparent);
+}
+
+.settings-sheet [role="tab"] {
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: var(--radius, 12px);
+}
+
+.settings-sheet [role="tab"].is-active {
+  outline: 2px solid color-mix(in oklab, white 25%, transparent);
+  outline-offset: 2px;
+}
+
+.settings-sheet [data-sheet-body] {
+  /* additional body styles live inline from the component for maxHeight/overflow */
+  padding: var(--space-4, 16px);
+}
+

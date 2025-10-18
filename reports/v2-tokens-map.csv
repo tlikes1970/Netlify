@@ -1,0 +1,45 @@
+token_name,value,file,line,source_type
+space-xs,4px,tailwind.config.ts,42,tailwind
+space-sm,8px,tailwind.config.ts,43,tailwind
+space-md,12px,tailwind.config.ts,44,tailwind
+space-lg,16px,tailwind.config.ts,45,tailwind
+space-xl,24px,tailwind.config.ts,46,tailwind
+space-xxl,32px,tailwind.config.ts,47,tailwind
+radius-sm,6px,tailwind.config.ts,50,tailwind
+radius-md,12px,tailwind.config.ts,51,tailwind
+radius-lg,16px,tailwind.config.ts,52,tailwind
+bg-base,#0B0B0F,tailwind.config.ts,26,tailwind
+text-primary,#FFFFFF,tailwind.config.ts,28,tailwind
+text-secondary,#B6B6C2,tailwind.config.ts,29,tailwind
+accent-primary,#FF3D71,tailwind.config.ts,31,tailwind
+--space-xs,0.25rem,tokens.css,3,cssvar
+--space-sm,0.5rem,tokens.css,4,cssvar
+--space-md,1rem,tokens.css,5,cssvar
+--space-lg,1.5rem,tokens.css,6,cssvar
+--space-xl,2rem,tokens.css,7,cssvar
+--space-2xl,3rem,tokens.css,8,cssvar
+--aspect-poster,2 / 3,tokens.css,11,cssvar
+--pro,#f0b90b,tokens.css,14,cssvar
+--safe-top,env(safe-area-inset-top, 0px),global.css,7,cssvar
+--bg,#0f1115,global.css,15,cssvar
+--card,#171a21,global.css,16,cssvar
+--muted,#a9b3c1,global.css,17,cssvar
+--text,#e6eaf0,global.css,18,cssvar
+--line,#242a33,global.css,19,cssvar
+--accent,#4da3ff,global.css,20,cssvar
+--btn,#232a34,global.css,21,cssvar
+--btn2,#1c222b,global.css,22,cssvar
+--shadow,0 6px 24px rgba(0,0,0,.35),global.css,23,cssvar
+--bg,#ffffff,global.css,31,cssvar
+--card,#f8fafc,global.css,32,cssvar
+--muted,#64748b,global.css,33,cssvar
+--text,#1e293b,global.css,34,cssvar
+--line,#e2e8f0,global.css,35,cssvar
+--accent,#3b82f6,global.css,36,cssvar
+--btn,#f1f5f9,global.css,37,cssvar
+--btn2,#e2e8f0,global.css,38,cssvar
+--shadow,0 6px 24px rgba(0,0,0,.1),global.css,39,cssvar
+--mobile-nav-height,80px,global.css,51,cssvar
+
+
+

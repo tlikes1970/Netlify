@@ -6,34 +6,54 @@ const IMG = {
 
 export type SearchResult = MediaItem;
 
-export async function searchMulti(query: string, page = 1, genre?: string | null, searchType: 'all' | 'movies-tv' | 'people' = 'all'): Promise<SearchResult[]> {
-  const url = `/.netlify/functions/tmdb-proxy?path=search/multi&query=${encodeURIComponent(query)}&page=${page}&media_type=multi&language=en-US`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`search failed: ${res.status}`);
-  const json = await res.json();
+export async function searchMulti(
+  query: string,
+  page = 1,
+  genre?: string | null,
+  searchType: 'all' | 'movies-tv' | 'people' = 'all',
+  opts?: { signal?: AbortSignal; language?: string; region?: string }
+): Promise<SearchResult[]> {
+  const language = opts?.language ?? 'en-US';
+  const region   = opts?.region ?? 'US';
+  const q = normalizeQuery(query);
 
+  // optional year hint
+  const year = /\b(19|20)\d{2}\b/.exec(q)?.[0];
+  const qs = new URLSearchParams({
+    path: searchType === 'people' ? 'search/person' : 'search/multi',
+    query: q,
+    page: String(page),
+    include_adult: 'false',
+    language,
+    region,
+    ...(year ? { year, first_air_date_year: year } : {})
+  });
+
+  const res = await fetch(`/.netlify/functions/tmdb-proxy?${qs.toString()}`, { signal: opts?.signal });
+  if (!res.ok) throw new Error(`search failed: ${res.status}`);
+
+  const json = await res.json();
   const results = Array.isArray(json.results) ? json.results : [];
 
-  // Filter based on search type
-  let filteredResults = results;
-  if (searchType === 'movies-tv') {
-    filteredResults = results.filter((r: any) => r && (r.media_type === 'movie' || r.media_type === 'tv'));
-  } else if (searchType === 'people') {
-    filteredResults = results.filter((r: any) => r && r.media_type === 'person');
-  }
-  // For 'all', we keep all results
+  let filtered = results;
+  if (searchType === 'movies-tv') filtered = results.filter((r: any) => r?.media_type === 'movie' || r?.media_type === 'tv');
+  if (searchType === 'people')    filtered = results.filter((r: any) => r?.media_type === 'person' || r?.known_for);
 
-  const mapped = filteredResults
-    .map(mapTMDBToMediaItem)
-    .filter(Boolean) as SearchResult[];
+  const mapped = filtered.map(mapTMDBToMediaItem).filter(Boolean) as SearchResult[];
 
-  // Optional genre filter (client-side); swap to server param later if needed
   if (genre && genre !== 'All genres') {
-    // naive check based on TMDB genre_ids; you can enrich if you have a map
     return mapped.filter((m: any) => Array.isArray(m.genre_ids) && m.genre_ids.includes(Number(genre)));
   }
-
   return mapped;
+}
+
+function normalizeQuery(q: string): string {
+  return q
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '') // strip diacritics
+    .replace(/[''']/g, "'").replace(/["""]/g, '"')       // smart quotes
+    .replace(/[–—]/g, '-')                             // dashes
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function mapTMDBToMediaItem(r: any): MediaItem {

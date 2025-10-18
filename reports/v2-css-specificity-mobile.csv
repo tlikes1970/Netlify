@@ -1,0 +1,10 @@
+file,line,selector,has_important,snippet
+global.css,77,.mobile-nav,false,.mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999; }
+global.css,96,[data-cards]::-webkit-scrollbar,false,[data-cards]::-webkit-scrollbar { height: 8px; }
+global.css,97,[data-cards]::-webkit-scrollbar-thumb,false,[data-cards]::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 9999px; }
+flickword.css,199,.key.correct,true,.key.correct { background-color: #20b265 !important; color: white !important; }
+flickword.css,204,.key.present,true,.key.present { background-color: #f7c23c !important; color: white !important; }
+flickword.css,209,.key.absent,true,.key.absent { background-color: #6b7280 !important; color: white !important; }
+
+
+

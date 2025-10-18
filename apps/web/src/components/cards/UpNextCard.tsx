@@ -60,13 +60,14 @@ export default function UpNextCard({ item }: UpNextCardProps) {
 
   return (
     <article 
-      className="up-next-card group w-[120px] sm:w-[154px] select-none" 
+      className="up-next-card group select-none" 
+      style={{ width: 'var(--poster-w, 120px)' }} 
       data-testid="up-next-card" 
       aria-label={title}
     >
       <div 
-        className="relative rounded-xl border shadow-sm overflow-hidden"
-        style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)' }}
+        className="relative border shadow-sm overflow-hidden"
+        style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', borderRadius: 'var(--radius, 12px)' }}
       >
         {/* Poster (2:3) */}
         <div 

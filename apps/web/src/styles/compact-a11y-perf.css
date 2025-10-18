@@ -1,0 +1,244 @@
+/* Accessibility & Performance - Mobile Compact V2 */
+/* Only active when compact mobile gate is enabled */
+html[data-compact-mobile-v1="true"] {
+  /* Reduced motion compliance */
+  @media (prefers-reduced-motion: reduce) {
+    /* Remove all transitions and animations */
+    *,
+    *::before,
+    *::after {
+      transition: none !important;
+      animation: none !important;
+    }
+    
+    /* Specific compact components */
+    .settings-sheet-overlay,
+    .settings-sheet,
+    .compact-overflow-menu,
+    .swipe-row-content,
+    .swipe-row-actions,
+    .compact-primary-action,
+    .compact-overflow-trigger {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+}
+
+/* Focus & Keyboard Polish */
+html[data-compact-mobile-v1="true"] {
+  /* Focus-visible styles for key action elements */
+  .compact-primary-action:focus-visible,
+  .compact-overflow-trigger:focus-visible,
+  .settings-sheet button:focus-visible,
+  .swipe-action-button:focus-visible {
+    outline: 2px solid var(--accent, #007AFF);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2);
+  }
+  
+  /* Ensure focus is visible on sheet tabs */
+  .settings-sheet .segmented-controls button:focus-visible {
+    outline: 2px solid var(--accent, #007AFF);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2);
+  }
+  
+  /* Sheet close button focus */
+  .settings-sheet button[aria-label="Close Settings"]:focus-visible {
+    outline: 2px solid var(--accent, #007AFF);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2);
+  }
+}
+
+/* Touch Target Minimums (Mobile) */
+html[data-compact-mobile-v1="true"] {
+  /* Ensure minimum 44x44px touch targets */
+  .compact-primary-action,
+  .compact-overflow-trigger,
+  .swipe-action-button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: var(--space-3, 12px);
+  }
+  
+  /* Adjust padding to maintain visual balance */
+  .compact-primary-action {
+    padding: var(--space-3, 12px) var(--space-4, 16px);
+  }
+  
+  .compact-overflow-trigger {
+    padding: var(--space-3, 12px) var(--space-4, 16px);
+  }
+  
+  .swipe-action-button {
+    padding: var(--space-3, 12px) var(--space-4, 16px);
+    min-width: 80px; /* Maintain minimum width for readability */
+  }
+}
+
+/* Performance Micro-optimizations */
+html[data-compact-mobile-v1="true"] {
+  /* SwipeRow performance optimization */
+  [data-swipe-active="true"] {
+    will-change: transform;
+  }
+  
+  /* Remove will-change when not actively swiping */
+  .swipe-row-content:not([data-swipe-active="true"]) {
+    will-change: auto;
+  }
+  
+  /* Reduce heavy shadows, prefer subtle borders */
+  .curated-card.v2,
+  .tab-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--line, #e0e0e0);
+  }
+  
+  /* Add containment for card rows */
+  [data-rail] [data-cards] {
+    contain: layout paint;
+  }
+  
+  /* Optimize compact actions container */
+  .compact-actions-container {
+    contain: layout;
+  }
+  
+  /* Optimize swipe row container */
+  .swipe-row-container {
+    contain: layout;
+  }
+}
+
+/* Color Contrast Compliance */
+html[data-compact-mobile-v1="true"] {
+  /* Ensure WCAG AA contrast on buttons */
+  .compact-primary-action {
+    background-color: var(--accent, #007AFF);
+    color: var(--bg, #ffffff);
+    border: 1px solid var(--accent, #007AFF);
+  }
+  
+  .compact-primary-action:hover,
+  .compact-primary-action:focus {
+    background-color: var(--accent-hover, #0056CC);
+    color: var(--bg, #ffffff);
+  }
+  
+  /* Overflow trigger contrast */
+  .compact-overflow-trigger {
+    background-color: var(--muted, #f5f5f5);
+    color: var(--text, #000000);
+    border: 1px solid var(--line, #e0e0e0);
+  }
+  
+  .compact-overflow-trigger:hover,
+  .compact-overflow-trigger:focus {
+    background-color: var(--muted-hover, #e5e5e5);
+    color: var(--text, #000000);
+  }
+  
+  /* Menu items contrast */
+  .compact-overflow-menu button {
+    color: var(--text, #000000);
+    background-color: var(--bg, #ffffff);
+  }
+  
+  .compact-overflow-menu button:hover {
+    background-color: var(--muted, #f5f5f5);
+    color: var(--text, #000000);
+  }
+  
+  /* Swipe action buttons contrast */
+  .swipe-action-button {
+    background-color: var(--bg, #ffffff);
+    color: var(--accent, #007AFF);
+    border: 1px solid var(--bg, #ffffff);
+  }
+  
+  .swipe-action-button:hover {
+    background-color: var(--accent-hover, #0056CC);
+    color: var(--bg, #ffffff);
+  }
+}
+
+/* Dark Mode Contrast Adjustments */
+@media (prefers-color-scheme: dark) {
+  html[data-compact-mobile-v1="true"] {
+    .compact-overflow-trigger {
+      background-color: var(--muted, #333333);
+      color: var(--text, #ffffff);
+      border-color: var(--line, #555555);
+    }
+    
+    .compact-overflow-trigger:hover,
+    .compact-overflow-trigger:focus {
+      background-color: var(--muted-hover, #444444);
+      color: var(--text, #ffffff);
+    }
+    
+    .compact-overflow-menu {
+      background-color: var(--bg, #1a1a1a);
+      border-color: var(--line, #333333);
+    }
+    
+    .compact-overflow-menu button {
+      color: var(--text, #ffffff);
+      background-color: var(--bg, #1a1a1a);
+    }
+    
+    .compact-overflow-menu button:hover {
+      background-color: var(--muted, #333333);
+      color: var(--text, #ffffff);
+    }
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  html[data-compact-mobile-v1="true"] {
+    .compact-primary-action,
+    .compact-overflow-trigger,
+    .swipe-action-button {
+      border: 2px solid currentColor;
+    }
+    
+    .compact-overflow-menu {
+      border: 2px solid var(--line, #000000);
+    }
+    
+    .settings-sheet {
+      border: 2px solid var(--line, #000000);
+    }
+  }
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 767px) {
+  html[data-compact-mobile-v1="true"] {
+    /* Ensure touch targets are properly sized on mobile */
+    .compact-primary-action,
+    .compact-overflow-trigger,
+    .swipe-action-button {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Optimize for mobile performance */
+    .swipe-row-container {
+      contain: strict;
+    }
+    
+    /* Reduce paint complexity on mobile */
+    .curated-card.v2,
+    .tab-card {
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+
+

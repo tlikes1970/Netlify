@@ -17,7 +17,7 @@ export type FlickletHeaderProps = {
   marqueeSpeedSec?: number;  // duration for one full traverse
   changeEveryMs?: number;    // how often to swap messages
   pauseOnHover?: boolean;    // pause marquee animation when hovered
-  onSearch?: (query: string, genre?: string | null) => void;
+  onSearch?: (query: string, genre?: string | null, searchType?: string) => void;
   onClear?: () => void;
 };
 
@@ -188,19 +188,21 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | 
   const [searchType, setSearchType] = React.useState<'all' | 'movies-tv' | 'people'>('all');
   const [showSuggestions, setShowSuggestions] = React.useState(false);
   const [isFocused, setIsFocused] = React.useState(false);
+  const [isComposing, setIsComposing] = React.useState(false);
   const searchContainerRef = React.useRef<HTMLDivElement>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
   
   const submit = () => {
+    const trimmed = q.trim();
     if (searchMode === 'tag') {
-      // For tag search, we'll use a special prefix to indicate it's a tag search
-      onSearch?.(`tag:${q.trim()}`, g, searchType);
+      onSearch?.(`tag:${trimmed}`, g, searchType);
     } else {
-      onSearch?.(q.trim(), g, searchType);
+      onSearch?.(trimmed, g, searchType);
     }
     
     // Add to search history
-    if (q.trim()) {
-      addSearchToHistory(q.trim());
+    if (trimmed) {
+      addSearchToHistory(trimmed);
     }
     
     setShowSuggestions(false);
@@ -212,7 +214,8 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | 
     setSearchMode('title'); 
     setSearchType('all');
     setShowSuggestions(false);
-    onClear?.(); 
+    onClear?.();
+    inputRef.current?.focus();
   };
   
   const handleSuggestionClick = (suggestion: string) => {
@@ -234,9 +237,10 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | 
     setShowSuggestions(e.target.value.length > 0 && isFocused);
   };
   
-  const handleInputFocus = () => {
+  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     setIsFocused(true);
     setShowSuggestions(q.length > 0);
+    e.currentTarget.select();
   };
   
   const handleInputBlur = () => {
@@ -265,44 +269,52 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | 
       <div className="flex items-center gap-3 w-full">
         {/* Search Input - Takes up most of the space */}
         <div className="relative flex-1 min-w-0">
-          <div className="relative flex items-center">
-            <input
-              type="text"
-              placeholder={searchMode === 'tag' ? 'Search by tag...' : translations.searchPlaceholder}
-              value={q}
-              onChange={handleInputChange}
-              onFocus={handleInputFocus}
-              onBlur={handleInputBlur}
-              onKeyDown={e => { 
-                if (e.key === 'Enter') submit(); 
-                if (e.key === 'Escape') clear(); 
-              }}
-              className="w-full rounded-xl border px-4 py-3 pr-12 text-sm outline-none ring-0 focus:border-primary"
-              spellCheck="true"
-            />
-            
-            {/* Voice Search Button */}
-            <div className="absolute right-2">
-              <VoiceSearch
-                onVoiceResult={(text) => {
-                  setQ(text);
-                  setShowSuggestions(false);
-                  // Auto-submit the voice result
-                  setTimeout(() => {
-                    if (searchMode === 'tag') {
-                      onSearch?.(`tag:${text.trim()}`, g);
-                    } else {
-                      onSearch?.(text.trim(), g);
-                    }
-                    addSearchToHistory(text.trim());
-                  }, 100);
+          <form onSubmit={e => { e.preventDefault(); submit(); }}>
+            <div className="relative flex items-center">
+              <input
+                ref={inputRef}
+                type="search"
+                role="searchbox"
+                inputMode="search"
+                aria-label="Search movies, shows, people"
+                placeholder={searchMode === 'tag' ? 'Search by tag...' : translations.searchPlaceholder}
+                value={q}
+                onChange={handleInputChange}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+                onKeyDown={e => { 
+                  if (e.key === 'Enter' && !isComposing) submit(); 
+                  if (e.key === 'Escape') clear(); 
                 }}
-                onError={(error) => {
-                  console.warn('Voice search error:', error);
-                }}
+                onCompositionStart={() => setIsComposing(true)}
+                onCompositionEnd={() => setIsComposing(false)}
+                className="w-full rounded-xl border px-4 py-3 pr-12 text-sm outline-none ring-0 focus:border-primary"
+                spellCheck="true"
               />
+            
+              {/* Voice Search Button */}
+              <div className="absolute right-2">
+                <VoiceSearch
+                  onVoiceResult={(text) => {
+                    setQ(text);
+                    setShowSuggestions(false);
+                    // Auto-submit the voice result
+                    setTimeout(() => {
+                      if (searchMode === 'tag') {
+                        onSearch?.(`tag:${text.trim()}`, g, searchType);
+                      } else {
+                        onSearch?.(text.trim(), g, searchType);
+                      }
+                      addSearchToHistory(text.trim());
+                    }, 100);
+                  }}
+                  onError={(error) => {
+                    console.warn('Voice search error:', error);
+                  }}
+                />
+              </div>
             </div>
-          </div>
+          </form>
           
           {/* Search Suggestions Dropdown */}
           <SearchSuggestions
@@ -384,8 +396,8 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | 
           
           {/* Action Buttons */}
           <div className="flex gap-2">
-            <button className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md" onClick={submit}>{translations.search}</button>
-            <button className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-muted transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md" onClick={clear}>{translations.clear}</button>
+            <button type="submit" className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md" onClick={submit}>{translations.search}</button>
+            <button type="button" className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-muted transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md" onClick={clear}>{translations.clear}</button>
           </div>
         </div>
       </div>

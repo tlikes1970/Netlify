@@ -4,6 +4,8 @@ import { useTranslations } from '../../lib/language';
 import SwipeableCard from '../SwipeableCard';
 import MyListToggle from '../MyListToggle';
 import { OptimizedImage } from '../OptimizedImage';
+import { CompactPrimaryAction } from '../../features/compact/CompactPrimaryAction';
+import { CompactOverflowMenu } from '../../features/compact/CompactOverflowMenu';
 
 export type CardV2Props = {
   item: MediaItem;
@@ -35,10 +37,10 @@ export default function CardV2({ item, context, actions, compact, showRating = t
       context={context}
       disableSwipe={disableSwipe}
     >
-      <article className="curated-card v2 group w-[120px] sm:w-[154px] select-none" data-testid="cardv2" aria-label={title}>
+      <article className="curated-card v2 group select-none" data-testid="cardv2" aria-label={title} style={{ width: 'var(--poster-w, 120px)' }}>
       <div 
-        className="relative rounded-xl border shadow-sm overflow-hidden"
-        style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)' }}
+        className="relative border shadow-sm overflow-hidden"
+        style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', borderRadius: 'var(--radius, 12px)' }}
       >
         {/* Poster (2:3) */}
         <div 
@@ -74,9 +76,12 @@ export default function CardV2({ item, context, actions, compact, showRating = t
         <div className="p-2">
           <div className="flex items-center gap-1">
             <h3 
-              className={["truncate", compact ? "text-[13px]" : "text-sm", "font-medium"].join(' ')} 
+              className={["truncate", compact ? "font-medium" : "text-sm", "font-medium"].join(' ')} 
+              style={{ 
+                fontSize: compact ? 'var(--font-md, 13px)' : undefined,
+                color: 'var(--text)' 
+              }}
               title={title}
-              style={{ color: 'var(--text)' }}
             >
               {title}
             </h3>
@@ -85,7 +90,8 @@ export default function CardV2({ item, context, actions, compact, showRating = t
             <div className="flex gap-0.5 flex-shrink-0">
               {item.userNotes && item.userNotes.trim() && (
                 <span 
-                  className="text-[10px] cursor-pointer hover:scale-110 transition-transform"
+                  className="cursor-pointer hover:scale-110 transition-transform"
+                  style={{ fontSize: 'var(--font-sm, 10px)' }}
                   title={`Notes: ${item.userNotes.substring(0, 50)}${item.userNotes.length > 50 ? '...' : ''}`}
                   onClick={() => actions?.onNotesEdit?.(item)}
                 >
@@ -94,7 +100,8 @@ export default function CardV2({ item, context, actions, compact, showRating = t
               )}
               {item.tags && item.tags.length > 0 && (
                 <span 
-                  className="text-[10px] cursor-pointer hover:scale-110 transition-transform"
+                  className="cursor-pointer hover:scale-110 transition-transform"
+                  style={{ fontSize: 'var(--font-sm, 10px)' }}
                   title={`Tags: ${item.tags.join(', ')}`}
                   onClick={() => actions?.onNotesEdit?.(item)}
                 >
@@ -104,8 +111,8 @@ export default function CardV2({ item, context, actions, compact, showRating = t
             </div>
           </div>
           <div 
-            className="mt-0.5 flex items-center justify-between text-[11px]"
-            style={{ color: 'var(--muted)' }}
+            className="mt-0.5 flex items-center justify-between"
+            style={{ fontSize: 'var(--font-sm, 11px)', color: 'var(--muted)' }}
           >
             <span>{year || 'TBA'}</span>
             {showRating && <span aria-label="rating">{rating || '—'}</span>}
@@ -114,6 +121,18 @@ export default function CardV2({ item, context, actions, compact, showRating = t
 
         {/* Actions per context */}
         <CardActions context={context} item={item} actions={actions} />
+        
+        {/* Compact Actions - only visible when gate and flag are enabled */}
+        <div className="compact-actions-container" style={{ padding: 'var(--space-2, 8px)' }}>
+          <CompactPrimaryAction 
+            item={item as any} 
+            context={context === 'home' || context === 'tab-foryou' || context === 'search' ? 'home' : 'tab'} 
+          />
+          <CompactOverflowMenu 
+            item={item as any} 
+            context={context === 'home' || context === 'tab-foryou' || context === 'search' ? 'home' : 'tab'} 
+          />
+        </div>
       </div>
     </article>
     </SwipeableCard>
@@ -165,13 +184,14 @@ function CardActions({ context, item, actions }: { context: CardContext; item: M
       <button
         type="button"
         onClick={handleClick}
-        className={`rounded-lg border px-2 py-1 text-[11px] leading-none transition-all duration-150 ease-out ${
+        className={`rounded-lg border px-2 py-1 leading-none transition-all duration-150 ease-out ${
           isPressed ? 'scale-95 active:shadow-inner' : 'hover:scale-105 hover:shadow-md'
         } ${isLoadingState ? 'cursor-wait' : 'cursor-pointer'}`}
         style={{ 
           backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)', 
           borderColor: 'var(--line)', 
-          color: 'var(--text)' 
+          color: 'var(--text)',
+          fontSize: 'var(--font-sm, 11px)'
         }}
         data-testid={testId}
         disabled={isPressed || isLoadingState}
@@ -179,7 +199,7 @@ function CardActions({ context, item, actions }: { context: CardContext; item: M
         {isLoadingState ? (
           <div className="flex items-center justify-center">
             <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin mr-1"></div>
-            <span className="text-[10px]">...</span>
+            <span style={{ fontSize: 'var(--font-sm, 10px)' }}>...</span>
           </div>
         ) : (
           label

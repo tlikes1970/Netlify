@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
       react(),
       visualizer({
         filename: 'dist/bundle-analysis.html',
-        open: true,
+        open: false,
         gzipSize: true,
         brotliSize: true,
       }),
