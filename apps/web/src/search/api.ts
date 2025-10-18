@@ -29,7 +29,7 @@ export async function searchMulti(
     ...(year ? { year, first_air_date_year: year } : {})
   });
 
-  const res = await fetch(`/.netlify/functions/tmdb-proxy?${qs.toString()}`, { signal: opts?.signal });
+  const res = await fetch(`/api/tmdb-proxy?${qs.toString()}`, { signal: opts?.signal });
   if (!res.ok) throw new Error(`search failed: ${res.status}`);
 
   const json = await res.json();

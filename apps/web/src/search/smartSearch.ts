@@ -18,7 +18,7 @@ function qs(params: Record<string, any>) {
 }
 
 async function fetchTMDB(path: string, params: Record<string, any>, signal?: AbortSignal) {
-  const url = `/.netlify/functions/tmdb-proxy?${qs({ path, ...params })}`;
+  const url = `/api/tmdb-proxy?${qs({ path, ...params })}`;
   const res = await fetch(url, { signal });
   if (!res.ok) throw new Error(`${path} failed: ${res.status}`);
   return res.json();
