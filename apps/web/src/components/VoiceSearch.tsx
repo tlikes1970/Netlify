@@ -54,6 +54,10 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timeoutRef = useRef<number | null>(null);
+  
+  // Check if voice search is disabled via feature flag
+  const isVoiceSearchDisabled = typeof window !== 'undefined' && 
+    localStorage.getItem('flag:voice_search_disabled') === 'true';
 
   // Check for Web Speech API support
   useEffect(() => {
@@ -91,6 +95,8 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
         console.error('🎤 Voice recognition error:', event.error);
         
         let errorMessage = 'Voice recognition failed';
+        let shouldShowError = true;
+        
         switch (event.error) {
           case 'no-speech':
             errorMessage = 'No speech detected. Please try again.';
@@ -103,14 +109,27 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
             break;
           case 'network':
             errorMessage = 'Network error. Please check your connection.';
+            // Don't show network errors to user - they're often temporary
+            shouldShowError = false;
+            break;
+          case 'aborted':
+            // Don't show aborted errors - they're usually intentional
+            shouldShowError = false;
             break;
           default:
             errorMessage = `Recognition error: ${event.error}`;
         }
         
-        setError(errorMessage);
         setIsListening(false);
-        onError?.(errorMessage);
+        
+        // Only show error to user if it's not a temporary network issue
+        if (shouldShowError) {
+          setError(errorMessage);
+          onError?.(errorMessage);
+        } else {
+          // Clear any existing error for network/aborted issues
+          setError(null);
+        }
       };
       
       // Handle recognition end
@@ -139,6 +158,12 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
   const startListening = () => {
     if (!isSupported || !recognitionRef.current) {
       setError('Voice search is not supported');
+      return;
+    }
+    
+    // Prevent multiple simultaneous recognition sessions
+    if (isListening) {
+      console.log('🎤 Voice recognition already active, ignoring duplicate start');
       return;
     }
     
@@ -177,8 +202,8 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
     setIsListening(false);
   };
 
-  if (!isSupported) {
-    return null; // Don't render if not supported
+  if (!isSupported || isVoiceSearchDisabled) {
+    return null; // Don't render if not supported or disabled
   }
 
   return (
