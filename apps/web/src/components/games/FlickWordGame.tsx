@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getTodaysWord, validateWord } from '../../lib/dailyWordApi';
+import { getTodaysWord } from '../../lib/dailyWordApi';
+import { validateWord } from '../../lib/words/validateWord';
 // import { useTranslations } from '@/lib/language'; // Unused
 
 // Game configuration
@@ -83,12 +84,13 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
     }
   }, []);
 
-  // Validate word
+  // Validate word using new offline-first system
   const isValidWord = useCallback(async (word: string): Promise<boolean> => {
     try {
-      const isValid = await validateWord(word.toLowerCase());
-      console.log(`🔍 Word validation for "${word}": ${isValid ? 'valid' : 'invalid'}`);
-      return isValid;
+      const verdict = await validateWord(word);
+      // Sanitized log
+      console.log(`🔍 Word validation: ${word.toUpperCase()} → ${verdict.valid ? 'valid' : 'invalid'} [${verdict.source}]`);
+      return verdict.valid;
     } catch (error) {
       console.warn('Word validation failed:', error);
       return false;
@@ -172,7 +174,7 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
     
     if (!valid) {
       console.log('❌ Word invalid, showing notification');
-      showNotification('Not a valid word!', 'error');
+      showNotification('Not in word list.', 'error');
       setGame(prev => ({ ...prev, current: '' }));
       return;
     }
