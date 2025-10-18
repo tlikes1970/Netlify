@@ -12,6 +12,8 @@ import HomeUpNextRail from '@/components/rails/HomeUpNextRail';
 import { SettingsFAB, ThemeToggleFAB } from '@/components/FABs';
 import ScrollToTopArrow from '@/components/ScrollToTopArrow';
 import { lazy, Suspense } from 'react';
+import { openSettingsSheet } from '@/components/settings/SettingsSheet';
+import { flag } from '@/lib/flags';
 
 // Lazy load heavy components
 const SettingsPage = lazy(() => import('@/components/SettingsPage'));
@@ -32,10 +34,13 @@ import { useTranslations } from '@/lib/language';
 import { getPersonalityText } from '@/lib/settings';
 import Toast, { useToast } from '@/components/Toast';
 import PersonalityErrorBoundary from '@/components/PersonalityErrorBoundary';
+import { useAuth } from '@/hooks/useAuth';
+import AuthModal from '@/components/AuthModal';
 import '@/styles/flickword.css';
-// import { useAuth } from '@/hooks/useAuth'; // Unused
 
 type View = 'home'|'watching'|'want'|'watched'|'mylists'|'discovery';
+type SearchType = 'all' | 'movies-tv' | 'people';
+type SearchState = { q: string; genre: string | null; type: SearchType; nonce: number };
 
 export default function App() {
   const [view, setView] = useState<View>('home');
@@ -57,7 +62,20 @@ export default function App() {
   const { toasts, addToast, removeToast } = useToast();
 
   // Auth state
-  // const { user } = useAuth(); // Commented out - user not used
+  const { loading: authLoading, isAuthenticated } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Auto-prompt for authentication when not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      // Small delay to ensure the app has fully loaded
+      const timer = setTimeout(() => {
+        setShowAuthModal(true);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading, isAuthenticated]);
 
   // Service Worker for offline caching
   const { isOnline } = useServiceWorker();
@@ -76,11 +94,17 @@ export default function App() {
     await new Promise(resolve => setTimeout(resolve, 1000));
   };
 
-  // Search state
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchGenre, setSearchGenre] = useState<string | null>(null);
-  const [searchType, setSearchType] = useState<'all' | 'movies-tv' | 'people'>('all');
-  const searchActive = !!searchQuery.trim();
+  // Search state - centralized with nonce
+  const [search, setSearch] = useState<SearchState>({ q: '', genre: null, type: 'all', nonce: 0 });
+  const searchActive = !!search.q.trim();
+
+  // Search handlers
+  const handleSearch = (q: string, genre: string | null, type: SearchType) => {
+    const nextQ = q.trim();
+    setSearch(prev => ({ q: nextQ, genre, type, nonce: prev.nonce + 1 }));
+  };
+
+  const handleClear = () => setSearch({ q: '', genre: null, type: 'all', nonce: 0 });
 
   // For You configuration from settings
   const forYouRows = useForYouRows();
@@ -94,6 +118,18 @@ export default function App() {
   // Data rails
   const theaters = useInTheaters();
 
+  // Handle settings click - check gate and flag conditions
+  const handleSettingsClick = () => {
+    const gate = document.documentElement.dataset.compactMobileV1 === 'true';
+    const flagEnabled = flag('settings_mobile_sheet_v1');
+    
+    if (gate && flagEnabled) {
+      openSettingsSheet();
+    } else {
+      setShowSettings(true);
+    }
+  };
+
   // Initialize action bridge
   useEffect(() => {
     // Set up toast callback for personality-based feedback
@@ -103,31 +139,57 @@ export default function App() {
     return cleanup;
   }, [addToast]);
 
-      // Handle search events from search cards
-      useEffect(() => {
-        const handleSimilarSearch = (event: CustomEvent) => {
-          console.log('📥 App.tsx received search:similar event:', event.detail);
-          const { query, genre, similarityFactors } = event.detail;
-          console.log('🔄 Setting search query to:', query, 'genre:', genre);
-          console.log('🎯 Genre-focused similarity factors:', similarityFactors);
-          console.log('🎭 Genre breakdown:', {
-            totalGenres: similarityFactors?.genreCount || 0,
-            primary: similarityFactors?.primaryGenre,
-            secondary: similarityFactors?.secondaryGenre,
-            allGenres: similarityFactors?.genres
-          });
-          setSearchQuery(query);
-          setSearchGenre(genre);
-        };
+  // Handle deep links for settings sheet
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#settings/')) {
+        const tab = hash.replace('#settings/', '').toLowerCase();
+        const gate = document.documentElement.dataset.compactMobileV1 === 'true';
+        const flagEnabled = flag('settings_mobile_sheet_v1');
+        
+        if (gate && flagEnabled) {
+          // Validate tab is a valid TabId before passing to openSettingsSheet
+          if (['account', 'display', 'advanced'].includes(tab)) {
+            openSettingsSheet(tab as 'account' | 'display' | 'advanced');
+          } else {
+            openSettingsSheet(); // Use default tab
+          }
+        }
+      }
+    };
 
-        const handleRefineSearch = (event: CustomEvent) => {
-          console.log('📥 App.tsx received search:refine event:', event.detail);
-          const { query, genre, refinementFilters } = event.detail;
-          console.log('🔄 Setting search query to:', query, 'genre:', genre);
-          console.log('🎯 Refinement filters:', refinementFilters);
-          setSearchQuery(query);
-          setSearchGenre(genre);
-        };
+    // Check hash on load
+    handleHashChange();
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Handle search events from search cards
+  useEffect(() => {
+    const handleSimilarSearch = (event: CustomEvent) => {
+      console.log('📥 App.tsx received search:similar event:', event.detail);
+      const { query, genre, similarityFactors } = event.detail;
+      console.log('🔄 Setting search query to:', query, 'genre:', genre);
+      console.log('🎯 Genre-focused similarity factors:', similarityFactors);
+      console.log('🎭 Genre breakdown:', {
+        totalGenres: similarityFactors?.genreCount || 0,
+        primary: similarityFactors?.primaryGenre,
+        secondary: similarityFactors?.secondaryGenre,
+        allGenres: similarityFactors?.genres
+      });
+      handleSearch(query, genre, 'all');
+    };
+
+    const handleRefineSearch = (event: CustomEvent) => {
+      console.log('📥 App.tsx received search:refine event:', event.detail);
+      const { query, genre, refinementFilters } = event.detail;
+      console.log('🔄 Setting search query to:', query, 'genre:', genre);
+      console.log('🎯 Refinement filters:', refinementFilters);
+      handleSearch(query, genre, 'all');
+    };
 
     console.log('🎧 App.tsx setting up event listeners for search events');
     document.addEventListener('search:similar', handleSimilarSearch as EventListener);
@@ -138,7 +200,7 @@ export default function App() {
       document.removeEventListener('search:similar', handleSimilarSearch as EventListener);
       document.removeEventListener('search:refine', handleRefineSearch as EventListener);
     };
-  }, []);
+  }, [handleSearch]);
 
   function itemsFor(id: string) {
     switch (id) {
@@ -173,11 +235,11 @@ export default function App() {
         <FlickletHeader
           appName="Flicklet"
           showMarquee={false}
-          onSearch={(q, g) => { setSearchQuery(q); setSearchGenre(g ?? null); }}
-          onClear={() => { setSearchQuery(''); setSearchGenre(null); setSearchType('all'); }}
+          onSearch={(q, g, t) => handleSearch(q, g ?? null, (t as SearchType) ?? 'all')}
+          onClear={handleClear}
         />
         {searchActive ? (
-          <SearchResults query={searchQuery} genre={searchGenre} searchType={searchType} />
+          <SearchResults query={search.q} genre={search.genre} searchType={search.type} nonce={search.nonce} />
         ) : (
           <>
             {/* Desktop Tabs */}
@@ -197,7 +259,7 @@ export default function App() {
                 : undefined 
             }}>
               {(view as View) === 'home' && (
-                <div className="min-h-screen">
+                <div className="min-h-screen" data-page="home">
                   {/* Home Page Content */}
                   <div className="px-4 py-6">
                     <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--text)' }}>
@@ -229,27 +291,35 @@ export default function App() {
               )}
               {view === 'watching'  && (
                 <Suspense fallback={<div className="loading-spinner">Loading watching list...</div>}>
-                  <ListPage title="Currently Watching" items={watching} mode="watching" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />
+                  <div data-page="lists" data-list="watching">
+                    <ListPage title="Currently Watching" items={watching} mode="watching" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />
+                  </div>
                 </Suspense>
               )}
               {view === 'want'      && (
                 <Suspense fallback={<div className="loading-spinner">Loading wishlist...</div>}>
-                  <ListPage title="Want to Watch" items={wishlist} mode="want" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />
+                  <div data-page="lists" data-list="wishlist">
+                    <ListPage title="Want to Watch" items={wishlist} mode="want" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />
+                  </div>
                 </Suspense>
               )}
               {view === 'watched'   && (
                 <Suspense fallback={<div className="loading-spinner">Loading watched list...</div>}>
-                  <ListPage title="Watched" items={watched} mode="watched" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />
+                  <div data-page="lists" data-list="watched">
+                    <ListPage title="Watched" items={watched} mode="watched" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />
+                  </div>
                 </Suspense>
               )}
               {view === 'mylists'  && (
                 <Suspense fallback={<div className="loading-spinner">Loading my lists...</div>}>
-                  <MyListsPage />
+                  <div data-page="lists" data-list="mylists">
+                    <MyListsPage />
+                  </div>
                 </Suspense>
               )}
               {view === 'discovery' && (
                 <Suspense fallback={<div className="loading-spinner">Loading discovery...</div>}>
-                  <DiscoveryPage query={searchQuery} genreId={searchGenre ? parseInt(searchGenre) : null} />
+                  <DiscoveryPage query={search.q} genreId={search.genre ? parseInt(search.genre) : null} />
                 </Suspense>
               )}
             </div>
@@ -264,7 +334,7 @@ export default function App() {
         )}
 
         {/* FAB Components - Available on all tabs */}
-        <SettingsFAB onClick={() => setShowSettings(true)} />
+        <SettingsFAB onClick={handleSettingsClick} />
         <ThemeToggleFAB 
           theme={settings.layout.theme} 
           onToggle={() => settingsManager.updateTheme(settings.layout.theme === 'dark' ? 'light' : 'dark')} 
@@ -298,8 +368,8 @@ export default function App() {
         <FlickletHeader
           appName="Flicklet"
           showMarquee={isHome && !searchActive}
-          onSearch={(q, g) => { setSearchQuery(q); setSearchGenre(g ?? null); }}
-          onClear={() => { setSearchQuery(''); setSearchGenre(null); }}
+          onSearch={(q, g, t) => handleSearch(q, g ?? null, (t as SearchType) ?? 'all')}
+          onClear={handleClear}
           messages={[
             getPersonalityText('marquee1', settings.personalityLevel),
             getPersonalityText('marquee2', settings.personalityLevel),
@@ -316,8 +386,7 @@ export default function App() {
           <Tabs current={view} onChange={(tab) => { 
             setView(tab); 
             if (searchActive) { 
-              setSearchQuery(''); 
-              setSearchGenre(null); 
+              handleClear();
             } 
           }} />
         </div>
@@ -327,15 +396,14 @@ export default function App() {
           <MobileTabs current={view} onChange={(tab) => { 
             setView(tab); 
             if (searchActive) { 
-              setSearchQuery(''); 
-              setSearchGenre(null); 
+              handleClear();
             } 
           }} />
         </div>
         
         {searchActive ? (
           <PullToRefreshWrapper onRefresh={handleRefresh}>
-            <SearchResults query={searchQuery} genre={searchGenre} searchType={searchType} />
+            <SearchResults query={search.q} genre={search.genre} searchType={search.type} nonce={search.nonce} />
           </PullToRefreshWrapper>
         ) : (
           <PullToRefreshWrapper onRefresh={handleRefresh}>
@@ -396,7 +464,7 @@ export default function App() {
         )}
 
         {/* FAB Components - Available on all tabs */}
-        <SettingsFAB onClick={() => setShowSettings(true)} />
+        <SettingsFAB onClick={handleSettingsClick} />
         <ThemeToggleFAB 
           theme={settings.layout.theme} 
           onToggle={() => settingsManager.updateTheme(settings.layout.theme === 'dark' ? 'light' : 'dark')} 
@@ -431,6 +499,12 @@ export default function App() {
             onClose={() => removeToast(toast.id)}
           />
         ))}
+
+        {/* Auth Modal */}
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={() => setShowAuthModal(false)} 
+        />
       </main>
     </PersonalityErrorBoundary>
   );
