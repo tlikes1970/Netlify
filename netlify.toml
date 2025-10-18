@@ -1,14 +1,12 @@
-# Netlify config: lock dev + build to the React V2 app in apps/web
+# netlify.toml (at repo root)
 
 [build]
-  base    = "apps/web"
-  publish = "dist"
-  command = "npm run build"
+  base      = "apps/web"
+  publish   = "dist"
+  command   = "npm run build"
+  functions = "netlify/functions"
 
-[dev]
-  framework   = "#custom"
-  command     = "npm run dev -- --port 4173 --strictPort"
-  targetPort  = 4173
-  port        = 8888
-  functions   = "netlify/functions"
-  autoLaunch  = false
+[[redirects]]
+  from = "/api/tmdb-proxy"
+  to   = "/.netlify/functions/tmdb-proxy"
+  status = 200
