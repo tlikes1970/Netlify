@@ -55,18 +55,21 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timeoutRef = useRef<number | null>(null);
   
-  // Check if voice search is disabled via feature flag
+  // Check if voice search is disabled via feature flag (disabled by default to prevent Enter key issues)
   const isVoiceSearchDisabled = typeof window !== 'undefined' && 
-    localStorage.getItem('flag:voice_search_disabled') === 'true';
+    (localStorage.getItem('flag:voice_search_disabled') === 'true' || 
+     localStorage.getItem('flag:voice_search_enabled') !== 'true');
   
   // Expose disable function globally for debugging
   useEffect(() => {
     if (typeof window !== 'undefined') {
       (window as any).disableVoiceSearch = () => {
         localStorage.setItem('flag:voice_search_disabled', 'true');
+        localStorage.removeItem('flag:voice_search_enabled');
         console.log('🎤 Voice search disabled. Refresh page to apply.');
       };
       (window as any).enableVoiceSearch = () => {
+        localStorage.setItem('flag:voice_search_enabled', 'true');
         localStorage.removeItem('flag:voice_search_disabled');
         console.log('🎤 Voice search enabled. Refresh page to apply.');
       };
@@ -216,6 +219,26 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
     setIsListening(false);
   };
 
+  // Handle keyboard events to prevent accidental triggering
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Prevent Enter key from triggering voice search
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    
+    // Only allow space to trigger voice search
+    if (e.key === ' ') {
+      e.preventDefault();
+      if (isListening) {
+        stopListening();
+      } else {
+        startListening();
+      }
+    }
+  };
+
   if (!isSupported || isVoiceSearchDisabled) {
     return null; // Don't render if not supported or disabled
   }
@@ -224,7 +247,9 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
     <div className={`relative ${className}`}>
       <button
         onClick={isListening ? stopListening : startListening}
+        onKeyDown={handleKeyDown}
         disabled={!isSupported}
+        tabIndex={-1}
         className={`
           flex items-center justify-center w-10 h-10 rounded-lg border transition-all duration-200 ease-out
           hover:scale-105 active:scale-95
