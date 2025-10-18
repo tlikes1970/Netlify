@@ -58,6 +58,20 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
   // Check if voice search is disabled via feature flag
   const isVoiceSearchDisabled = typeof window !== 'undefined' && 
     localStorage.getItem('flag:voice_search_disabled') === 'true';
+  
+  // Expose disable function globally for debugging
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).disableVoiceSearch = () => {
+        localStorage.setItem('flag:voice_search_disabled', 'true');
+        console.log('🎤 Voice search disabled. Refresh page to apply.');
+      };
+      (window as any).enableVoiceSearch = () => {
+        localStorage.removeItem('flag:voice_search_disabled');
+        console.log('🎤 Voice search enabled. Refresh page to apply.');
+      };
+    }
+  }, []);
 
   // Check for Web Speech API support
   useEffect(() => {
