@@ -5,23 +5,22 @@ import { useSettings, getPersonalityText } from '@/lib/settings';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import ScrollToTopArrow from '@/components/ScrollToTopArrow';
 import { EpisodeTrackingModal } from '@/components/modals/EpisodeTrackingModal';
-import { NotificationToggleModal } from '@/components/modals/NotificationToggleModal';
 import { useState, useMemo } from 'react';
 
-export default function ListPage({ title, items, mode = 'watching', onNotesEdit, onTagsEdit }: {
+export default function ListPage({ title, items, mode = 'watching', onNotesEdit, onTagsEdit, onNotificationToggle }: {
   title: string;
   items: LibraryEntry[];
   mode?: 'watching'|'want'|'watched'|'discovery';
   onNotesEdit?: (item: MediaItem) => void;
   onTagsEdit?: (item: MediaItem) => void;
+  onNotificationToggle?: (item: MediaItem) => void;
 }) {
+  console.log('🔔 ListPage props:', { title, mode, hasOnNotificationToggle: !!onNotificationToggle });
   const settings = useSettings();
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [sortByTag, setSortByTag] = useState<boolean>(false);
   const [episodeModalOpen, setEpisodeModalOpen] = useState(false);
   const [selectedShow, setSelectedShow] = useState<MediaItem | null>(null);
-  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
-  const [selectedNotificationShow, setSelectedNotificationShow] = useState<MediaItem | null>(null);
   
   // Map mode to CardV2 context
   // const context = mode === 'watching' ? 'tab-watching' : 'tab-foryou'; // Unused
@@ -137,12 +136,7 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
         setEpisodeModalOpen(true);
       }
     },
-    onNotificationToggle: (item: MediaItem) => {
-      if (item.mediaType === 'tv') {
-        setSelectedNotificationShow(item);
-        setNotificationModalOpen(true);
-      }
-    },
+    onNotificationToggle: onNotificationToggle,
   };
 
   return (
@@ -282,17 +276,6 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
         />
       )}
 
-      {/* Notification Toggle Modal */}
-      {selectedNotificationShow && (
-        <NotificationToggleModal
-          isOpen={notificationModalOpen}
-          onClose={() => {
-            setNotificationModalOpen(false);
-            setSelectedNotificationShow(null);
-          }}
-          show={selectedNotificationShow}
-        />
-      )}
     </section>
   );
 }

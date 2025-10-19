@@ -45,6 +45,7 @@ export default function TabCard({
   onDragLeave,
   onDrop
 }: TabCardProps) {
+  console.log('🔔 TabCard render:', { title: item.title, mediaType: item.mediaType, hasOnNotificationToggle: !!actions?.onNotificationToggle });
   const { title, year, posterUrl, voteAverage, userRating, synopsis, mediaType } = item;
   const rating = typeof voteAverage === 'number' ? Math.round(voteAverage * 10) / 10 : undefined;
   const translations = useTranslations();
@@ -121,7 +122,10 @@ export default function TabCard({
       additionalActions.push({
         key: 'notifications',
         label: '🔔 Notifications',
-        action: () => actions?.onNotificationToggle?.(item)
+        action: () => {
+          console.log('🔔 TabCard notification button clicked for:', item.title);
+          actions?.onNotificationToggle?.(item);
+        }
       });
     }
     
@@ -249,7 +253,10 @@ export default function TabCard({
             {/* Notification toggle for TV shows */}
             {mediaType === 'tv' && (
               <button
-                onClick={() => actions?.onNotificationToggle?.(item)}
+                onClick={() => {
+                  console.log('🔔 TabCard notification button clicked for:', item.title);
+                  actions?.onNotificationToggle?.(item);
+                }}
                 className={buttonClass}
                 style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
                 title="Toggle episode notifications"
@@ -295,7 +302,10 @@ export default function TabCard({
             {/* Notification toggle for TV shows */}
             {mediaType === 'tv' && (
               <button
-                onClick={() => actions?.onNotificationToggle?.(item)}
+                onClick={() => {
+                  console.log('🔔 TabCard notification button clicked for:', item.title);
+                  actions?.onNotificationToggle?.(item);
+                }}
                 className={buttonClass}
                 style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
                 title="Toggle episode notifications"
@@ -341,7 +351,10 @@ export default function TabCard({
             {/* Notification toggle for TV shows */}
             {mediaType === 'tv' && (
               <button
-                onClick={() => actions?.onNotificationToggle?.(item)}
+                onClick={() => {
+                  console.log('🔔 TabCard notification button clicked for:', item.title);
+                  actions?.onNotificationToggle?.(item);
+                }}
                 className={buttonClass}
                 style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
                 title="Toggle episode notifications"

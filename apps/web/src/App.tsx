@@ -18,6 +18,7 @@ import { flag } from '@/lib/flags';
 // Lazy load heavy components
 const SettingsPage = lazy(() => import('@/components/SettingsPage'));
 const NotesAndTagsModal = lazy(() => import('@/components/modals/NotesAndTagsModal'));
+import { ShowNotificationSettingsModal } from '@/components/modals/ShowNotificationSettingsModal';
 const FlickWordModal = lazy(() => import('@/components/games/FlickWordModal'));
 const ListPage = lazy(() => import('@/pages/ListPage'));
 const MyListsPage = lazy(() => import('@/pages/MyListsPage'));
@@ -61,6 +62,18 @@ export default function App() {
   
   // Game modal state
   const [showFlickWordModal, setShowFlickWordModal] = useState(false);
+  
+  // Notification modal state
+  const [notificationModalItem, setNotificationModalItem] = useState<any>(null);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+
+  // Debug modal state changes
+  useEffect(() => {
+    console.log('🔔 Modal state changed:', { 
+      showNotificationModal, 
+      notificationModalItem: notificationModalItem?.title 
+    });
+  }, [showNotificationModal, notificationModalItem]);
   
   // Toast system
   const { toasts, addToast, removeToast } = useToast();
@@ -210,6 +223,18 @@ export default function App() {
     setShowNotesModal(true);
   };
 
+  // Notification handler
+  const handleNotificationToggle = (item: any) => {
+    console.log('🔔 App.tsx handleNotificationToggle called for:', item.title, item.mediaType);
+    console.log('🔔 Setting notification modal state:', { 
+      showNotificationModal: true, 
+      notificationModalItem: item 
+    });
+    setNotificationModalItem(item);
+    setShowNotificationModal(true);
+    console.log('🔔 Modal state should now be set');
+  };
+
   const handleSaveNotesAndTags = (item: any, notes: string, tags: string[]) => {
     // Update the item in the library with new notes and tags
     Library.updateNotesAndTags(item.id, item.mediaType, notes, tags);
@@ -280,21 +305,21 @@ export default function App() {
               {view === 'watching'  && (
                 <Suspense fallback={<div className="loading-spinner">Loading watching list...</div>}>
                   <div data-page="lists" data-list="watching">
-                    <ListPage title="Currently Watching" items={watching} mode="watching" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />
+                    <ListPage title="Currently Watching" items={watching} mode="watching" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} />
                   </div>
                 </Suspense>
               )}
               {view === 'want'      && (
                 <Suspense fallback={<div className="loading-spinner">Loading wishlist...</div>}>
                   <div data-page="lists" data-list="wishlist">
-                    <ListPage title="Want to Watch" items={wishlist} mode="want" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />
+                    <ListPage title="Want to Watch" items={wishlist} mode="want" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} />
                   </div>
                 </Suspense>
               )}
               {view === 'watched'   && (
                 <Suspense fallback={<div className="loading-spinner">Loading watched list...</div>}>
                   <div data-page="lists" data-list="watched">
-                    <ListPage title="Watched" items={watched} mode="watched" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} />
+                    <ListPage title="Watched" items={watched} mode="watched" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} />
                   </div>
                 </Suspense>
               )}
@@ -345,6 +370,30 @@ export default function App() {
               onSave={handleSaveNotesAndTags}
             />
           </Suspense>
+        )}
+
+        {/* Show Notification Settings Modal */}
+        {(() => {
+          const shouldRender = showNotificationModal && notificationModalItem;
+          console.log('🔔 Modal render check:', { 
+            showNotificationModal, 
+            notificationModalItem: notificationModalItem?.title,
+            shouldRender 
+          });
+          return shouldRender;
+        })() && (
+          <ShowNotificationSettingsModal
+            isOpen={showNotificationModal}
+            onClose={() => {
+              console.log('🔔 Closing notification modal');
+              setShowNotificationModal(false);
+            }}
+            show={{
+              id: Number(notificationModalItem.id),
+              title: notificationModalItem.title,
+              mediaType: notificationModalItem.mediaType
+            }}
+          />
         )}
       </main>
     );
