@@ -15,12 +15,6 @@
   to   = "/.netlify/functions/tmdb-proxy"
   status = 200
   
-  [[redirects]]
-  from = "/.netlify/functions/emails"
-  to = "/404.html"
-  status = 404
-  force = true
-
 # belt-and-suspenders (if someone links the pretty path)
 [[redirects]]
   from = "/emails"
