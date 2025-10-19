@@ -8,6 +8,7 @@ exports.handler = async (event, context) => {
     method: event.httpMethod,
     hasBody: !!event.body,
     hasApiKey: !!process.env.SENDGRID_API_KEY,
+    ctx: process.env.CONTEXT
   });
 
   // Only allow POST requests
@@ -51,31 +52,47 @@ exports.handler = async (event, context) => {
 
     // Initialize SendGrid
     if (!process.env.SENDGRID_API_KEY) {
-      console.error('❌ SENDGRID_API_KEY not found in environment variables');
+      console.error('❌ SENDGRID_API_KEY not found');
       return {
         statusCode: 500,
         body: JSON.stringify({ 
           error: 'Email service not configured',
-          details: 'SENDGRID_API_KEY is missing'
+          details: 'SENDGRID_API_KEY missing'
         }),
       };
     }
+
+    const FROM = process.env.SENDGRID_FROM;
+    if (!FROM) {
+      console.error('❌ SENDGRID_FROM not set');
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ 
+          error: 'Email service not configured',
+          details: 'SENDGRID_FROM missing'
+        }),
+      };
+    }
+    const REPLY_TO = process.env.SENDGRID_REPLY_TO;
 
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
     // Prepare email message
     const msg = {
-      to: to,
-      from: process.env.FROM_EMAIL || 'notifications@flicklet.app',
-      templateId: templateId,
+      to,
+      from: FROM,
+      ...(REPLY_TO ? { replyTo: REPLY_TO } : {}),
+      templateId,
       dynamicTemplateData: dynamicTemplateData || {},
       subject: subject || 'Flicklet Notification',
+      categories: ['flicklet', 'notifications']
     };
 
     console.log('📧 Sending email via SendGrid:', {
       to: msg.to,
       templateId: msg.templateId,
       hasDynamicData: !!msg.dynamicTemplateData,
+      from: msg.from
     });
 
     // Send email
@@ -95,28 +112,16 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('❌ Error sending email:', error);
-    
-    // Handle SendGrid specific errors
-    if (error.response) {
-      const { statusCode, body } = error.response;
-      console.error('SendGrid error details:', { statusCode, body });
-      
-      return {
-        statusCode: 500,
-        body: JSON.stringify({
-          error: 'Email service error',
-          details: `SendGrid error ${statusCode}: ${body?.errors?.[0]?.message || 'Unknown error'}`,
-        }),
-      };
-    }
-    
+    const status = error?.response?.statusCode;
+    const body = error?.response?.body;
+    console.error('❌ SendGrid fail', { status, body, msg: error.message });
+    const details =
+      (body?.errors && Array.isArray(body.errors) && body.errors.map(e => e.message).join('; ')) ||
+      error.message ||
+      'Unknown error';
     return {
       statusCode: 500,
-      body: JSON.stringify({
-        error: 'Failed to send email',
-        details: error.message || 'Unknown error occurred',
-      }),
+      body: JSON.stringify({ error: 'Email service error', details }),
     };
   }
 };
