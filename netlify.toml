@@ -3,26 +3,32 @@
 # =========================
 
 [build]
-  base    = "apps/web"   # monorepo base
+  base    = "apps/web"          # Monorepo app root
   publish = "dist"
   command = "npm run build"
 
+# For builds (CI/prod), this path is **relative to [build].base**
 [functions]
-  # Functions directory is *relative to build.base*.
-  # Your send-email.js should be at: apps/web/netlify/functions/send-email.js
   directory = "netlify/functions"
   node_bundler = "esbuild"
   external_node_modules = ["@sendgrid/mail"]
 
-# ---- Redirects ----
-# TMDB proxy passthrough to its Netlify Function
+# For local dev, be explicit. Netlify CLI does NOT inherit [build].base here.
+[dev]
+  framework  = "#custom"
+  command    = "npm run dev -- --port 4173 --strictPort"  # Vite dev
+  targetPort = 4173                                       # where Vite actually runs
+  port       = 8888                                       # Netlify proxy port
+  functions  = "apps/web/netlify/functions"               # <-- absolute from repo root
+  autoLaunch = false
+
+# Redirects are optional since you’re calling /.netlify/functions directly,
+# but keeping this is fine if your client ever uses /api/tmdb-proxy.
 [[redirects]]
   from = "/api/tmdb-proxy"
   to   = "/.netlify/functions/tmdb-proxy"
   status = 200
 
-# Belt-and-suspenders: if someone hits /emails, return a 404 page.
-# Do NOT try to redirect /.netlify/functions/emails (Netlify blocks that).
 [[redirects]]
   from = "/emails"
   to   = "/404.html"
