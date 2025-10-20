@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 // import { useTranslations } from '@/lib/language'; // Unused
 import { useSettings } from '@/lib/settings';
+import { getTodaysTrivia, getFreshTrivia } from '../../lib/triviaApi';
 
 interface TriviaQuestion {
   id: string;
@@ -199,13 +200,34 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
     setIsProUser(false); // Default to free user
   }, [settings.pro]);
 
-  // Load questions
+  // Load questions from API (with fresh content for testing)
   useEffect(() => {
-    const loadQuestions = () => {
-      // Get today's deterministic questions
-      const todaysQuestions = getTodaysQuestions();
-      setQuestions(todaysQuestions);
-      setGameState('playing');
+    const loadQuestions = async () => {
+      try {
+        console.log('🧠 Loading fresh trivia questions...');
+        const apiQuestions = await getFreshTrivia();
+        
+        // Convert API format to our format
+        const formattedQuestions = apiQuestions.map((q, index) => ({
+          id: `fresh_${index}`,
+          question: q.question,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation,
+          category: q.category,
+          difficulty: q.difficulty
+        }));
+        
+        console.log(`✅ Loaded ${formattedQuestions.length} fresh trivia questions`);
+        setQuestions(formattedQuestions);
+        setGameState('playing');
+      } catch (error) {
+        console.error('❌ Failed to load fresh trivia questions:', error);
+        // Fallback to hardcoded questions
+        const fallbackQuestions = getTodaysQuestions();
+        setQuestions(fallbackQuestions);
+        setGameState('playing');
+      }
     };
 
     if (gameState === 'loading') {

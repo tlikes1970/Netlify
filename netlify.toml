@@ -7,36 +7,39 @@
   publish = "dist"
   command = "npm run build"
 
-# For builds (CI/prod), this path is **relative to [build].base**
+[build.environment]
+  NODE_VERSION = "20"
+
+# Functions directory: use explicit repo-root path for clarity
 [functions]
-  directory = "netlify/functions"
+  directory = "apps/web/netlify/functions"
   node_bundler = "esbuild"
   external_node_modules = ["@sendgrid/mail"]
 
-# For local dev, be explicit. Netlify CLI does NOT inherit [build].base here.
+# Local dev: Netlify CLI does NOT inherit [build].base
 [dev]
   framework  = "#custom"
-  command    = "npm run dev --prefix apps/web -- --port 4173 --strictPort"  # Vite dev
-  targetPort = 4173                                       # where Vite actually runs
-  port       = 8888                                       # Netlify proxy port
-  functions  = "apps/web/netlify/functions"               # <-- absolute from repo root
+  command    = "npm run dev --prefix apps/web -- --port 4173 --strictPort"
+  targetPort = 4173
+  port       = 8888
+  functions  = "apps/web/netlify/functions"
   autoLaunch = false
 
-# Redirects are optional since you’re calling /.netlify/functions directly,
-# but keeping this is fine if your client ever uses /api/tmdb-proxy.
+# Function alias (optional convenience)
 [[redirects]]
   from = "/api/tmdb-proxy"
   to   = "/.netlify/functions/tmdb-proxy"
   status = 200
 
+# Lock down a path you don't want exposed
 [[redirects]]
   from = "/emails"
   to   = "/404.html"
   status = 404
   force = true
-  
-  [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
 
+# SPA fallback so client routes don't 404
+[[redirects]]
+  from = "/*"
+  to   = "/index.html"
+  status = 200

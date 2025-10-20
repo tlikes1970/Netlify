@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getTodaysWord } from '../../lib/dailyWordApi';
+import { getTodaysWord, getFreshWord } from '../../lib/dailyWordApi';
 import { validateWord } from '../../lib/words/validateWord';
 // import { useTranslations } from '@/lib/language'; // Unused
 
@@ -43,14 +43,15 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Get today's word from API
+  // Get today's word from API (with fresh content for testing)
   const loadTodaysWord = useCallback(async () => {
     try {
       setIsLoading(true);
-      console.log('🔄 Loading today\'s word...');
+      console.log('🔄 Loading fresh word...');
       
-      const wordData = await getTodaysWord();
-      console.log('📦 Word data received:', wordData);
+      // Use fresh word for testing (bypasses cache)
+      const wordData = await getFreshWord();
+      console.log('📦 Fresh word data received:', wordData);
       
       setGame(prev => ({
         ...prev,
@@ -65,15 +66,15 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
       console.log('✅ Game target set to:', wordData.word.toUpperCase());
       
     } catch (error) {
-      console.error('❌ Failed to load today\'s word:', error);
+      console.error('❌ Failed to load fresh word:', error);
       // Fallback to a static word if API fails
-      const fallbackWord = 'FLICK';
+      const fallbackWord = 'CRANE';
       console.log('🔄 Using fallback word:', fallbackWord);
       setGame(prev => ({
         ...prev,
         target: fallbackWord,
         wordInfo: {
-          definition: 'A quick, sharp movement',
+          definition: 'A large wading bird',
           difficulty: 'easy'
         },
         showHint: false
@@ -368,15 +369,6 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
 
   return (
     <div className="flickword-game">
-      {/* Header */}
-      <div className="fw-header">
-        <h3>🎯 FlickWord</h3>
-        <div className="fw-stats">
-          <span className="fw-streak">Streak: 0</span>
-          <span className="fw-timer">Next: --:--</span>
-        </div>
-      </div>
-
       {/* Notification */}
       {notification && (
         <div className={`fw-notification ${notification.type}`}>

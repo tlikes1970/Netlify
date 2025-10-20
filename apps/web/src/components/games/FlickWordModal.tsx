@@ -57,8 +57,8 @@ export default function FlickWordModal({ isOpen, onClose }: FlickWordModalProps)
       const newY = lastPositionRef.current.y + deltaY;
       
       // Clamp to viewport bounds
-      const maxX = (window.innerWidth - 600) / 2;
-      const maxY = (window.innerHeight - 800) / 2;
+      const maxX = (window.innerWidth - 500) / 2;
+      const maxY = (window.innerHeight - 650) / 2;
       
       setModalPosition({
         x: Math.max(-maxX, Math.min(maxX, newX)),
@@ -141,8 +141,8 @@ export default function FlickWordModal({ isOpen, onClose }: FlickWordModalProps)
     top: '50%',
     left: '50%',
     transform: `translate(calc(-50% + ${modalPosition.x}px), calc(-50% + ${modalPosition.y}px))`,
-    width: '600px',
-    height: '800px',
+    width: '500px',
+    height: '650px',
     cursor: isDragging ? 'grabbing' : 'default',
     zIndex: 10000
   };
@@ -175,6 +175,10 @@ export default function FlickWordModal({ isOpen, onClose }: FlickWordModalProps)
         >
           <header className="gm-header gm-drag-handle">
             <h3 id="flickword-modal-title">🎯 FlickWord</h3>
+            <div className="fw-stats">
+              <span className="fw-streak">Streak: 0</span>
+              <span className="fw-timer">Next: --:--</span>
+            </div>
             <button 
               className="gm-close" 
               type="button" 

@@ -83,40 +83,30 @@ const COMMON_WORDS = new Set([
 // Cache key for localStorage
 const CACHE_KEY = 'flicklet:daily-word';
 
-// API endpoints to try (in order of preference) - currently disabled
+// API endpoints to try (in order of preference)
 const WORD_APIS: Array<{
   name: string;
   url: string;
   parser: (data: any) => { word: string; definition?: string; difficulty: string };
 }> = [
-  // Temporarily disabled broken APIs
-  // {
-  //   name: 'Wordnik Random Word',
-  //   url: 'https://api.wordnik.com/v4/words.json/randomWord?hasDictionaryDef=true&minCorpusCount=1000&minLength=5&maxLength=5&api_key=a2a73e7b926c924fad7001ca0641ab2aaf2bab5',
-  //   parser: (data: any) => ({
-  //     word: data.word?.toLowerCase(),
-  //     definition: data.definitions?.[0]?.text,
-  //     difficulty: data.word?.length === 5 ? 'medium' : 'easy'
-  //   })
-  // },
-  // {
-  //   name: 'Random Words API',
-  //   url: 'https://random-words-api.vercel.app/word',
-  //   parser: (data: any) => ({
-  //     word: data.word?.toLowerCase(),
-  //     definition: data.definition,
-  //     difficulty: 'medium'
-  //   })
-  // },
-  // {
-  //   name: 'Datamuse API',
-  //   url: 'https://api.datamuse.com/words?sp=?????&max=1&md=d',
-  //   parser: (data: any) => ({
-  //     word: data[0]?.word?.toLowerCase(),
-  //     definition: data[0]?.defs?.[0]?.split('\t')[1],
-  //     difficulty: 'medium'
-  //   })
-  // }
+  {
+    name: 'Datamuse API',
+    url: 'https://api.datamuse.com/words?sp=?????&max=1&md=d',
+    parser: (data: any) => ({
+      word: data[0]?.word?.toLowerCase(),
+      definition: data[0]?.defs?.[0]?.split('\t')[1],
+      difficulty: 'medium'
+    })
+  },
+  {
+    name: 'Random Word Generator',
+    url: 'https://random-word-api.herokuapp.com/word?length=5',
+    parser: (data: any) => ({
+      word: data[0]?.toLowerCase(),
+      definition: `A random 5-letter word`,
+      difficulty: 'medium'
+    })
+  }
 ];
 
 /**
@@ -359,6 +349,36 @@ export function clearWordCache(): void {
   } catch (error) {
     console.warn('Failed to clear word cache:', error);
   }
+}
+
+/**
+ * Force refresh word (bypass cache for testing)
+ */
+export async function getFreshWord(): Promise<WordApiResponse> {
+  // Clear cache first
+  clearWordCache();
+  
+  // Force API fetch
+  console.log('🔄 Force fetching fresh word from API...');
+  const apiWord = await fetchWordFromApi();
+  
+  if (apiWord) {
+    console.log('✅ Got fresh word from API:', apiWord.word);
+    return apiWord;
+  }
+
+  // Use a different random fallback word for testing
+  const testWords = ['CRANE', 'BLISS', 'GRAVY', 'MASKS', 'TOAST', 'PRIDE', 'TIGER', 'SPINE', 'CROWN', 'HAPPY'];
+  const randomIndex = Math.floor(Math.random() * testWords.length);
+  const testWord = testWords[randomIndex];
+  
+  console.log('🔄 Using random test word:', testWord);
+  return {
+    word: testWord,
+    date: getTodayString(),
+    definition: `A test word for ${testWord.toLowerCase()}`,
+    difficulty: 'medium'
+  };
 }
 
 
