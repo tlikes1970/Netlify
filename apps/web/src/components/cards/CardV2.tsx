@@ -184,14 +184,22 @@ function CardActions({ context, item, actions }: { context: CardContext; item: M
       <button
         type="button"
         onClick={handleClick}
-        className={`rounded-lg border px-2 py-1 leading-none transition-all duration-150 ease-out ${
+        className={`rounded-lg border px-3 py-2 leading-tight transition-all duration-150 ease-out ${
           isPressed ? 'scale-95 active:shadow-inner' : 'hover:scale-105 hover:shadow-md'
         } ${isLoadingState ? 'cursor-wait' : 'cursor-pointer'}`}
         style={{ 
           backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)', 
           borderColor: 'var(--line)', 
           color: 'var(--text)',
-          fontSize: 'var(--font-sm, 11px)'
+          fontSize: 'var(--font-sm, 10px)',
+          minHeight: '32px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          wordWrap: 'break-word',
+          overflowWrap: 'break-word',
+          hyphens: 'auto'
         }}
         data-testid={testId}
         disabled={isPressed || isLoadingState}
@@ -211,7 +219,7 @@ function CardActions({ context, item, actions }: { context: CardContext; item: M
   // Map the context to a set of buttons, min 1, max 4 as per spec
   if (context === 'tab-watching') {
     return (
-      <div className="actions grid grid-cols-2 gap-1 p-2" data-testid="cardv2-actions">
+      <div className="actions grid grid-cols-1 gap-2 p-3" data-testid="cardv2-actions">
         {btn(translations.wantToWatchAction, () => actions?.onWant?.(item), 'act-want')}
         {btn(translations.watchedAction, () => actions?.onWatched?.(item), 'act-watched')}
         {btn(translations.notInterestedAction, () => actions?.onNotInterested?.(item), 'act-not')}
