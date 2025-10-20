@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getTodaysWord, getFreshWord } from '../../lib/dailyWordApi';
+import { getFreshWord } from '../../lib/dailyWordApi';
 import { validateWord } from '../../lib/words/validateWord';
 // import { useTranslations } from '@/lib/language'; // Unused
 

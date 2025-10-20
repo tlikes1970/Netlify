@@ -30,7 +30,7 @@ const TRIVIA_APIS: Array<{
     url: 'https://opentdb.com/api.php?amount=10&category=10&difficulty=medium&type=multiple&encode=url3986',
     parser: (data: any) => {
       if (data.response_code === 0 && data.results && data.results.length > 0) {
-        return data.results.map((item: any, index: number) => {
+        return data.results.map((item: any) => {
           const correctAnswer = decodeURIComponent(item.correct_answer);
           const incorrectAnswers = item.incorrect_answers.map((ans: string) => decodeURIComponent(ans));
           const allChoices = [correctAnswer, ...incorrectAnswers];
@@ -57,7 +57,7 @@ const TRIVIA_APIS: Array<{
     url: 'https://opentdb.com/api.php?amount=10&category=10&difficulty=easy&type=multiple&encode=url3986',
     parser: (data: any) => {
       if (data.response_code === 0 && data.results && data.results.length > 0) {
-        return data.results.map((item: any, index: number) => {
+        return data.results.map((item: any) => {
           const correctAnswer = decodeURIComponent(item.correct_answer);
           const incorrectAnswers = item.incorrect_answers.map((ans: string) => decodeURIComponent(ans));
           const allChoices = [correctAnswer, ...incorrectAnswers];
