@@ -1,24 +1,30 @@
-# netlify.toml (at repo root)
+# =========================
+# Netlify config (repo root)
+# =========================
 
 [build]
-  base      = "apps/web"
-  publish   = "dist"
-  command   = "npm run build"
+  base    = "apps/web"   # monorepo base
+  publish = "dist"
+  command = "npm run build"
 
 [functions]
-  directory = "../netlify/functions"
+  # Functions directory is *relative to build.base*.
+  # Your send-email.js should be at: apps/web/netlify/functions/send-email.js
+  directory = "netlify/functions"
   node_bundler = "esbuild"
   external_node_modules = ["@sendgrid/mail"]
 
+# ---- Redirects ----
+# TMDB proxy passthrough to its Netlify Function
 [[redirects]]
   from = "/api/tmdb-proxy"
-  to   = "/netlify/functions/tmdb-proxy"
+  to   = "/.netlify/functions/tmdb-proxy"
   status = 200
-  
-# belt-and-suspenders (if someone links the pretty path)
+
+# Belt-and-suspenders: if someone hits /emails, return a 404 page.
+# Do NOT try to redirect /.netlify/functions/emails (Netlify blocks that).
 [[redirects]]
   from = "/emails"
-  to = "/404.html"
+  to   = "/404.html"
   status = 404
   force = true
-
