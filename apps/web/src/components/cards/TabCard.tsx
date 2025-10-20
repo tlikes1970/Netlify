@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { CardActionHandlers, MediaItem } from './card.types';
 import { useTranslations } from '../../lib/language';
 import { useSettings } from '../../lib/settings';
+import { Library } from '../../lib/storage';
 import StarRating from './StarRating';
 import MyListToggle from '../MyListToggle';
 import SwipeableCard from '../SwipeableCard';
@@ -94,13 +95,21 @@ export default function TabCard({
         ];
       case 'want':
         return [
-          { key: 'watching', label: isCondensed ? 'Watching' : translations.currentlyWatchingAction, action: () => actions?.onWatched?.(item) },
+          { key: 'watching', label: isCondensed ? 'Watching' : translations.currentlyWatchingAction, action: () => {
+            if (item.id && item.mediaType) {
+              Library.move(item.id, item.mediaType, 'watching');
+            }
+          }},
           { key: 'watched', label: isCondensed ? 'Watched' : translations.watchedAction, action: () => actions?.onWatched?.(item) }
         ];
       case 'watched':
         return [
           { key: 'want', label: isCondensed ? 'Want' : translations.wantToWatchAction, action: () => actions?.onWant?.(item) },
-          { key: 'watching', label: isCondensed ? 'Watching' : translations.currentlyWatchingAction, action: () => actions?.onWant?.(item) }
+          { key: 'watching', label: isCondensed ? 'Watching' : translations.currentlyWatchingAction, action: () => {
+            if (item.id && item.mediaType) {
+              Library.move(item.id, item.mediaType, 'watching');
+            }
+          }}
         ];
       case 'discovery':
         return [
@@ -270,7 +279,12 @@ export default function TabCard({
         return (
           <>
             <button
-              onClick={() => actions?.onWatched?.(item)}
+              onClick={() => {
+                // Move to watching list
+                if (item.id && item.mediaType) {
+                  Library.move(item.id, item.mediaType, 'watching');
+                }
+              }}
               className={buttonClass}
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
@@ -326,7 +340,12 @@ export default function TabCard({
               {isCondensed ? 'Want' : translations.wantToWatchAction}
             </button>
             <button
-              onClick={() => actions?.onWant?.(item)}
+              onClick={() => {
+                // Move to watching list
+                if (item.id && item.mediaType) {
+                  Library.move(item.id, item.mediaType, 'watching');
+                }
+              }}
               className={buttonClass}
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
             >
