@@ -184,7 +184,7 @@ function CardActions({ context, item, actions }: { context: CardContext; item: M
       <button
         type="button"
         onClick={handleClick}
-        className={`rounded-lg border leading-tight transition-all duration-150 ease-out ${
+        className={`rounded-md border leading-tight transition-all duration-150 ease-out ${
           isPressed ? 'scale-95 active:shadow-inner' : 'hover:scale-105 hover:shadow-md'
         } ${isLoadingState ? 'cursor-wait' : 'cursor-pointer'}`}
         style={{ 
@@ -192,7 +192,8 @@ function CardActions({ context, item, actions }: { context: CardContext; item: M
           borderColor: 'var(--line)', 
           color: 'var(--text)',
           fontSize: 'var(--font-sm, 9px)',
-          minHeight: '40px',
+          width: '100%',
+          aspectRatio: '1',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -201,7 +202,7 @@ function CardActions({ context, item, actions }: { context: CardContext; item: M
           overflowWrap: 'break-word',
           hyphens: 'auto',
           lineHeight: '1.2',
-          padding: '8px 4px'
+          padding: '4px'
         }}
         data-testid={testId}
         disabled={isPressed || isLoadingState}
