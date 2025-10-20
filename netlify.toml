@@ -10,9 +10,9 @@
 [build.environment]
   NODE_VERSION = "20"
 
-# Functions directory: use explicit repo-root path for clarity
+# Functions directory: relative to build base (apps/web)
 [functions]
-  directory = "apps/web/netlify/functions"
+  directory = "netlify/functions"
   node_bundler = "esbuild"
   external_node_modules = ["@sendgrid/mail"]
 
@@ -22,7 +22,7 @@
   command    = "npm run dev --prefix apps/web -- --port 4173 --strictPort"
   targetPort = 4173
   port       = 8888
-  functions  = "apps/web/netlify/functions"
+  functions  = "netlify/functions"
   autoLaunch = false
 
 # Function alias (optional convenience)
