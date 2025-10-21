@@ -10,7 +10,7 @@ html[data-density="compact"][data-compact-mobile-v1="true"] {
   --radius: 12px;
 
   /* card dims */
-  --poster-w: 136px;
+  --poster-w: 160px;
   --poster-h: calc(var(--poster-w) * 1.5);
 
   /* type scale */

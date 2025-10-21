@@ -61,7 +61,7 @@ export default function UpNextCard({ item }: UpNextCardProps) {
   return (
     <article 
       className="up-next-card group select-none" 
-      style={{ width: 'var(--poster-w, 120px)' }} 
+      style={{ width: 'var(--poster-w, 160px)' }} 
       data-testid="up-next-card" 
       aria-label={title}
     >
@@ -95,7 +95,7 @@ export default function UpNextCard({ item }: UpNextCardProps) {
         </div>
 
         {/* Content */}
-        <div className="p-3 text-center">
+        <div className="p-2 text-center">
           {/* Title */}
           <h3 
             className="font-bold text-sm mb-1 truncate" 

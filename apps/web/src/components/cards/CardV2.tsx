@@ -37,17 +37,23 @@ export default function CardV2({ item, context, actions, compact, showRating = t
       context={context}
       disableSwipe={disableSwipe}
     >
-      <article className="curated-card v2 group select-none" data-testid="cardv2" aria-label={title} style={{ width: 'var(--poster-w, 120px)' }}>
+      <article className="curated-card v2 group select-none" data-testid="cardv2" aria-label={title} style={{ width: 'var(--poster-w, 160px)' }}>
       <div 
         className="relative border shadow-sm overflow-hidden"
         style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', borderRadius: 'var(--radius, 12px)' }}
       >
         {/* Poster (2:3) */}
         <div 
-          className="poster-wrap relative aspect-[2/3]" 
+          className="poster-wrap relative aspect-[2/3] cursor-pointer" 
           role="img" 
           aria-label={title}
           style={{ backgroundColor: 'var(--muted)' }}
+          onClick={() => {
+            if (item.id && item.mediaType) {
+              const tmdbUrl = `https://www.themoviedb.org/${item.mediaType}/${item.id}`;
+              window.open(tmdbUrl, '_blank', 'noopener,noreferrer');
+            }
+          }}
         >
           {posterUrl ? (
             <OptimizedImage
@@ -73,7 +79,7 @@ export default function CardV2({ item, context, actions, compact, showRating = t
         </div>
 
         {/* Meta */}
-        <div className="p-2">
+        <div className="p-1">
           <div className="flex items-center gap-1">
             <h3 
               className={["truncate", compact ? "font-medium" : "text-sm", "font-medium"].join(' ')} 
@@ -111,7 +117,7 @@ export default function CardV2({ item, context, actions, compact, showRating = t
             </div>
           </div>
           <div 
-            className="mt-0.5 flex items-center justify-between"
+            className="mt-0 flex items-center justify-between"
             style={{ fontSize: 'var(--font-sm, 11px)', color: 'var(--muted)' }}
           >
             <span>{year || 'TBA'}</span>
@@ -123,7 +129,7 @@ export default function CardV2({ item, context, actions, compact, showRating = t
         <CardActions context={context} item={item} actions={actions} />
         
         {/* Compact Actions - only visible when gate and flag are enabled */}
-        <div className="compact-actions-container" style={{ padding: 'var(--space-2, 8px)' }}>
+        <div className="compact-actions-container" style={{ padding: 'var(--space-1, 4px)' }}>
           <CompactPrimaryAction 
             item={item as any} 
             context={context === 'home' || context === 'tab-foryou' || context === 'search' ? 'home' : 'tab'} 
@@ -144,76 +150,80 @@ function CardActions({ context, item, actions }: { context: CardContext; item: M
   const [pressedButtons, setPressedButtons] = React.useState<Set<string>>(new Set());
   const [loadingButtons, setLoadingButtons] = React.useState<Set<string>>(new Set());
   
-  const btn = (label: string, onClick?: () => void, testId?: string, isLoading = false) => {
+  const btn = (
+    label: string,
+    onClick?: () => void,
+    testId?: string,
+    isLoading = false,
+    isSquare = false
+  ) => {
     const buttonKey = `${testId}-${item.id}`;
     const isPressed = pressedButtons.has(buttonKey);
     const isLoadingState = loadingButtons.has(buttonKey) || isLoading;
-    
+
     const handleClick = async () => {
       if (!onClick || isLoadingState) return;
-      
-      // Add pressed state
+
       setPressedButtons(prev => new Set(prev).add(buttonKey));
-      
-      // Add loading state for async operations
       if (testId === 'act-watched' || testId === 'act-want') {
         setLoadingButtons(prev => new Set(prev).add(buttonKey));
       }
-      
       try {
-        // Call the action
         await onClick();
       } finally {
-        // Remove pressed state after animation
         setTimeout(() => {
           setPressedButtons(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(buttonKey);
-            return newSet;
+            const s = new Set(prev);
+            s.delete(buttonKey);
+            return s;
           });
           setLoadingButtons(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(buttonKey);
-            return newSet;
+            const s = new Set(prev);
+            s.delete(buttonKey);
+            return s;
           });
-        }, 200);
+        }, 150);
       }
     };
+
+    const base =
+      'inline-flex items-center justify-center rounded-xl border ' +
+      'bg-[var(--btn)] text-[var(--text)] border-[var(--line)] ' +
+      'shadow-sm transition-[transform,box-shadow,background-color] duration-150 ease-out ' +
+      'hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-inner ' +
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ' +
+      'focus-visible:ring-[var(--accent)] disabled:opacity-60 disabled:cursor-not-allowed';
+
+    const variant = isSquare
+      ? 'w-[68px] h-[40px] sm:w-[72px] sm:h-[44px] p-1.5 text-[10px] leading-[1.05] text-center'
+      : 'w-full h-9 px-3 text-[length:var(--font-sm,12px)] leading-tight font-medium tracking-tight';
+
+    const state = isPressed ? 'translate-y-0.5 shadow-inner' : '';
 
     return (
       <button
         type="button"
         onClick={handleClick}
-        className={`rounded-md border leading-tight transition-all duration-150 ease-out ${
-          isPressed ? 'scale-95 active:shadow-inner' : 'hover:scale-105 hover:shadow-md'
-        } ${isLoadingState ? 'cursor-wait' : 'cursor-pointer'}`}
-        style={{ 
-          backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)', 
-          borderColor: 'var(--line)', 
-          color: 'var(--text)',
-          fontSize: 'var(--font-sm, 9px)',
-          width: '100%',
-          aspectRatio: '1',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          wordWrap: 'break-word',
-          overflowWrap: 'break-word',
-          hyphens: 'auto',
-          lineHeight: '1.2',
-          padding: '4px'
+        className={`${base} ${variant} ${state}`}
+        style={{
+          backgroundColor: isPressed ? 'var(--btn-pressed, var(--btn))' : 'var(--btn)',
         }}
         data-testid={testId}
         disabled={isPressed || isLoadingState}
+        aria-busy={isLoadingState || undefined}
       >
         {isLoadingState ? (
-          <div className="flex items-center justify-center">
-            <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin mr-1"></div>
-            <span style={{ fontSize: 'var(--font-sm, 10px)' }}>...</span>
-          </div>
+          <span className="inline-flex items-center gap-2">
+            <span
+              className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+              aria-hidden="true"
+            />
+            {!isSquare && <span className="text-[length:var(--font-sm,11px)]">Working…</span>}
+          </span>
         ) : (
-          label
+          <span className="block px-0.5 text-center leading-[1.05] [text-wrap:balance] break-words">
+            {label}
+          </span>
         )}
       </button>
     );
@@ -222,26 +232,31 @@ function CardActions({ context, item, actions }: { context: CardContext; item: M
   // Map the context to a set of buttons, min 1, max 4 as per spec
   if (context === 'tab-watching') {
     return (
-      <div className="actions grid grid-cols-2 gap-2 p-3" data-testid="cardv2-actions">
-        {btn(translations.wantToWatchAction, () => actions?.onWant?.(item), 'act-want')}
-        {btn(translations.watchedAction, () => actions?.onWatched?.(item), 'act-watched')}
-        {btn(translations.notInterestedAction, () => actions?.onNotInterested?.(item), 'act-not')}
-        {btn(translations.deleteAction, () => actions?.onDelete?.(item), 'act-delete')}
+      <div
+        className="actions grid grid-cols-2 justify-items-center gap-1.5 p-2"
+        style={{ ['--btn-pressed' as any]: 'var(--accent-weak, var(--accent))' }}
+        data-testid="cardv2-actions"
+      >
+        {btn(translations.wantToWatchAction, () => actions?.onWant?.(item), 'act-want', false, true)}
+        {btn(translations.watchedAction, () => actions?.onWatched?.(item), 'act-watched', false, true)}
+        {btn(translations.notInterestedAction, () => actions?.onNotInterested?.(item), 'act-not', false, true)}
+        {btn(translations.deleteAction, () => actions?.onDelete?.(item), 'act-delete', false, true)}
       </div>
     );
   }
 
   if (context === 'tab-foryou' || context === 'search' || context === 'home') {
     return (
-      <div className="actions grid grid-cols-1 gap-1 p-2" data-testid="cardv2-actions">
+      <div className="actions grid grid-cols-2 gap-1 p-1" data-testid="cardv2-actions">
         {btn(translations.wantToWatchAction, () => actions?.onWant?.(item), 'act-want')}
+        {btn(translations.watchedAction, () => actions?.onWatched?.(item), 'act-watched')}
       </div>
     );
   }
 
   if (context === 'holiday') {
     return (
-      <div className="actions grid grid-cols-2 gap-1 p-2" data-testid="cardv2-actions">
+        <div className="actions grid grid-cols-2 gap-1 p-1" data-testid="cardv2-actions">
         {btn(translations.watchedAction, () => actions?.onWatched?.(item), 'act-watched')}
         {btn(translations.removeAction, () => actions?.onDelete?.(item), 'act-delete')}
       </div>

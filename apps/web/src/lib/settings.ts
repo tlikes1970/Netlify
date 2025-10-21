@@ -63,12 +63,12 @@ const DEFAULT_SETTINGS: Settings = {
   },
   
   pro: {
-    isPro: false,
+    isPro: true,
     features: {
-      advancedNotifications: false,
-      themePacks: false,
-      socialFeatures: false,
-      bloopersAccess: false,
+      advancedNotifications: true,
+      themePacks: true,
+      socialFeatures: true,
+      bloopersAccess: true,
     },
   },
 };

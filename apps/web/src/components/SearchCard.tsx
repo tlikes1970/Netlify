@@ -19,7 +19,7 @@ export default function SearchCard({ id, kind, title, poster }: Props) {
   }
 
   return (
-    <article style={{ width: 'var(--poster-w, 154px)' }}>
+    <article style={{ width: 'var(--poster-w, 160px)' }}>
       <div className="relative poster-2x3 rounded-2xl overflow-hidden bg-neutral-800/40">
         <img src={poster} alt={title} className="w-full h-full object-cover" />
         <button
@@ -30,9 +30,9 @@ export default function SearchCard({ id, kind, title, poster }: Props) {
           {added ? 'Added ✓' : 'Holiday +'}
         </button>
       </div>
-      <div className="mt-2 space-y-2">
+      <div className="mt-1 space-y-1">
         <div className="text-[11px] text-neutral-200 line-clamp-2">{title}</div>
-        <div className="grid grid-cols-1 gap-2">
+        <div className="grid grid-cols-1 gap-1">
           <button className="btn" onClick={want} title="Want to Watch">Want to Watch</button>
           <button className="btn" onClick={watching} title="Mark Watching">Mark Watching</button>
           <button className="btn" onClick={notInt} title="Not Interested">Not Interested</button>
