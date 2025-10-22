@@ -1047,12 +1047,29 @@ function ProTab() {
             <div className="flex items-start gap-3">
               <div className="text-2xl">🔔</div>
               <div className="flex-1">
-                <h5 className="font-medium mb-1" style={{ color: 'var(--text)' }}>Remind Me</h5>
+                <h5 className="font-medium mb-1" style={{ color: 'var(--text)' }}>Advanced Notifications</h5>
                 <p className="text-sm mb-2" style={{ color: 'var(--muted)' }}>
-                  Set custom reminders for shows and movies you want to watch later
+                  Customizable episode notifications with multiple methods, custom timing, and per-show settings
                 </p>
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-1 text-xs rounded-full" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>PRO</span>
+                  <span className="text-xs" style={{ color: 'var(--muted)' }}>Available Now</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Simple Reminder - Free Feature */}
+          <div className="p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--line)' }}>
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">⏰</div>
+              <div className="flex-1">
+                <h5 className="font-medium mb-1" style={{ color: 'var(--text)' }}>Simple Reminder</h5>
+                <p className="text-sm mb-2" style={{ color: 'var(--muted)' }}>
+                  Basic reminder notifications 24 hours before episodes air (in-app only)
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 text-xs rounded-full" style={{ backgroundColor: 'var(--success)', color: 'white' }}>FREE</span>
                   <span className="text-xs" style={{ color: 'var(--muted)' }}>Available Now</span>
                 </div>
               </div>

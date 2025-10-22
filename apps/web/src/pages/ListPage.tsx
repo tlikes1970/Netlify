@@ -8,13 +8,14 @@ import { EpisodeTrackingModal } from '@/components/modals/EpisodeTrackingModal';
 import { getTVShowDetails } from '@/lib/tmdb';
 import { useState, useMemo } from 'react';
 
-export default function ListPage({ title, items, mode = 'watching', onNotesEdit, onTagsEdit, onNotificationToggle }: {
+export default function ListPage({ title, items, mode = 'watching', onNotesEdit, onTagsEdit, onNotificationToggle, onSimpleReminder }: {
   title: string;
   items: LibraryEntry[];
   mode?: 'watching'|'want'|'watched'|'discovery';
   onNotesEdit?: (item: MediaItem) => void;
   onTagsEdit?: (item: MediaItem) => void;
   onNotificationToggle?: (item: MediaItem) => void;
+  onSimpleReminder?: (item: MediaItem) => void;
 }) {
   console.log('🔔 ListPage props:', { title, mode, hasOnNotificationToggle: !!onNotificationToggle });
   const settings = useSettings();
@@ -155,6 +156,7 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
       }
     },
     onNotificationToggle: onNotificationToggle,
+    onSimpleReminder: onSimpleReminder,
   };
 
   return (

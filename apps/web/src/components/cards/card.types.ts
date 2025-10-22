@@ -34,4 +34,5 @@ export interface CardActionHandlers {
   onTagsEdit?: (item: MediaItem) => void;     // open tags editor
   onEpisodeTracking?: (item: MediaItem) => void; // open episode tracking modal
   onNotificationToggle?: (item: MediaItem) => void; // toggle notifications for show
+  onSimpleReminder?: (item: MediaItem) => void; // set simple reminder for show
 }

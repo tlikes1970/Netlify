@@ -127,14 +127,14 @@ export default function TabCard({
     const mobileActions = getMobileActions();
     const additionalActions: Array<{ key: string; label: string; action: () => void; disabled?: boolean }> = [];
     
-    // Add notification toggle for TV shows
+    // Add simple reminder for TV shows
     if (mediaType === 'tv') {
       additionalActions.push({
-        key: 'notifications',
-        label: '🔔 Notifications',
+        key: 'simple-reminder',
+        label: '⏰ Remind Me',
         action: () => {
-          console.log('🔔 TabCard notification button clicked for:', item.title);
-          actions?.onNotificationToggle?.(item);
+          console.log('⏰ TabCard simple reminder button clicked for:', item.title);
+          actions?.onSimpleReminder?.(item);
         }
       });
     }
@@ -260,18 +260,18 @@ export default function TabCard({
                 📝 Notes & Tags
               </button>
             )}
-            {/* Notification toggle for TV shows */}
+            {/* Simple reminder for TV shows (Free feature) */}
             {mediaType === 'tv' && (
               <button
                 onClick={() => {
-                  console.log('🔔 TabCard notification button clicked for:', item.title);
-                  actions?.onNotificationToggle?.(item);
+                  console.log('⏰ TabCard simple reminder button clicked for:', item.title);
+                  actions?.onSimpleReminder?.(item);
                 }}
                 className={buttonClass}
                 style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-                title="Toggle episode notifications"
+                title="Set simple reminder (24 hours before)"
               >
-                🔔 Notifications
+                ⏰ Remind Me
               </button>
             )}
           </>
@@ -314,18 +314,18 @@ export default function TabCard({
                 📝 Notes & Tags
               </button>
             )}
-            {/* Notification toggle for TV shows */}
+            {/* Simple reminder for TV shows (Free feature) */}
             {mediaType === 'tv' && (
               <button
                 onClick={() => {
-                  console.log('🔔 TabCard notification button clicked for:', item.title);
-                  actions?.onNotificationToggle?.(item);
+                  console.log('⏰ TabCard simple reminder button clicked for:', item.title);
+                  actions?.onSimpleReminder?.(item);
                 }}
                 className={buttonClass}
                 style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-                title="Toggle episode notifications"
+                title="Set simple reminder (24 hours before)"
               >
-                🔔 Notifications
+                ⏰ Remind Me
               </button>
             )}
           </>
@@ -368,18 +368,18 @@ export default function TabCard({
                 📝 Notes & Tags
               </button>
             )}
-            {/* Notification toggle for TV shows */}
+            {/* Simple reminder for TV shows (Free feature) */}
             {mediaType === 'tv' && (
               <button
                 onClick={() => {
-                  console.log('🔔 TabCard notification button clicked for:', item.title);
-                  actions?.onNotificationToggle?.(item);
+                  console.log('⏰ TabCard simple reminder button clicked for:', item.title);
+                  actions?.onSimpleReminder?.(item);
                 }}
                 className={buttonClass}
                 style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-                title="Toggle episode notifications"
+                title="Set simple reminder (24 hours before)"
               >
-                🔔 Notifications
+                ⏰ Remind Me
               </button>
             )}
           </>
@@ -764,18 +764,22 @@ export default function TabCard({
               Extras
             </button>
             <button
+              onClick={() => {
+                console.log('🔔 TabCard advanced notifications button clicked for:', item.title);
+                actions?.onNotificationToggle?.(item);
+              }}
               className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
               style={{ 
                 backgroundColor: 'var(--btn)', 
                 color: 'var(--muted)', 
                 borderColor: 'var(--pro)', 
                 border: '1px solid',
-                opacity: 0.6
+                opacity: settings.pro.isPro ? 1 : 0.6
               }}
-              disabled
-              title="Pro feature - upgrade to unlock"
+              disabled={!settings.pro.isPro}
+              title={settings.pro.isPro ? "Advanced notifications with custom timing" : "Pro feature - upgrade to unlock"}
             >
-              Remind Me
+              Advanced Notifications
             </button>
             </div>
           )}

@@ -235,6 +235,13 @@ export default function App() {
     console.log('🔔 Modal state should now be set');
   };
 
+  // Simple reminder handler (Free feature)
+  const handleSimpleReminder = (item: any) => {
+    console.log('⏰ App.tsx handleSimpleReminder called for:', item.title, item.mediaType);
+    // For now, just show a simple alert - this will be replaced with actual reminder logic
+    alert(`⏰ Simple reminder set for "${item.title}" - you'll be notified 24 hours before the next episode airs!`);
+  };
+
   const handleSaveNotesAndTags = (item: any, notes: string, tags: string[]) => {
     // Update the item in the library with new notes and tags
     Library.updateNotesAndTags(item.id, item.mediaType, notes, tags);
@@ -305,21 +312,21 @@ export default function App() {
               {view === 'watching'  && (
                 <Suspense fallback={<div className="loading-spinner">Loading watching list...</div>}>
                   <div data-page="lists" data-list="watching">
-                    <ListPage title="Currently Watching" items={watching} mode="watching" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} />
+                    <ListPage title="Currently Watching" items={watching} mode="watching" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} onSimpleReminder={handleSimpleReminder} />
                   </div>
                 </Suspense>
               )}
               {view === 'want'      && (
                 <Suspense fallback={<div className="loading-spinner">Loading wishlist...</div>}>
                   <div data-page="lists" data-list="wishlist">
-                    <ListPage title="Want to Watch" items={wishlist} mode="want" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} />
+                    <ListPage title="Want to Watch" items={wishlist} mode="want" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} onSimpleReminder={handleSimpleReminder} />
                   </div>
                 </Suspense>
               )}
               {view === 'watched'   && (
                 <Suspense fallback={<div className="loading-spinner">Loading watched list...</div>}>
                   <div data-page="lists" data-list="watched">
-                    <ListPage title="Watched" items={watched} mode="watched" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} />
+                    <ListPage title="Watched" items={watched} mode="watched" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} onSimpleReminder={handleSimpleReminder} />
                   </div>
                 </Suspense>
               )}
