@@ -3,6 +3,7 @@ import UpNextCard from '../cards/UpNextCard';
 import { useLibrary } from '../../lib/storage';
 import { useTranslations } from '../../lib/language';
 import { useSettings, getPersonalityText } from '../../lib/settings';
+import { getShowStatusInfo } from '../../utils/showStatus';
 
 export default function HomeUpNextRail() {
   const watching = useLibrary('watching');
@@ -31,17 +32,40 @@ export default function HomeUpNextRail() {
   }, []);
   
   const items = useMemo(() => {
-    const filtered = watching
-      .filter(i => i.mediaType === 'tv' && !!i.nextAirDate)
-      .sort((a,b) => String(a.nextAirDate).localeCompare(String(b.nextAirDate)))
-      .slice(0, 12);
+    // Get all TV shows from watching list
+    const tvShows = watching.filter(i => i.mediaType === 'tv');
     
-    console.log('🔍 HomeUpNextRail items:', filtered.map(item => ({
+    // Separate shows with dates vs without dates
+    const showsWithDates = tvShows
+      .filter(i => !!i.nextAirDate)
+      .sort((a,b) => String(a.nextAirDate).localeCompare(String(b.nextAirDate)));
+    
+    const showsWithoutDates = tvShows
+      .filter(i => !i.nextAirDate && !getShowStatusInfo(i.showStatus)?.isCompleted)
+      .sort((a,b) => {
+        // Sort by status priority: Returning Series > In Production > Planned
+        const statusPriority = (status: string) => {
+          switch (status) {
+            case 'Returning Series': return 1;
+            case 'In Production': return 2;
+            case 'Planned': return 3;
+            default: return 4;
+          }
+        };
+        return statusPriority(a.showStatus || '') - statusPriority(b.showStatus || '');
+      });
+    
+    // Combine: shows with dates first, then shows without dates
+    const combined = [...showsWithDates, ...showsWithoutDates].slice(0, 12);
+    
+    console.log('🔍 HomeUpNextRail items:', combined.map(item => ({
       title: item.title,
-      nextAirDate: item.nextAirDate
+      nextAirDate: item.nextAirDate,
+      showStatus: item.showStatus,
+      hasDate: !!item.nextAirDate
     })));
     
-    return filtered;
+    return combined;
   }, [watching, forceUpdate]);
 
   return (

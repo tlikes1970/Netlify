@@ -234,6 +234,8 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
               userRating: item.userRating,
               synopsis: item.synopsis,
               nextAirDate: item.nextAirDate,
+              showStatus: item.showStatus,    // ✅ ADD THIS
+              lastAirDate: item.lastAirDate,  // ✅ ADD THIS
               userNotes: item.userNotes, // Pass notes
               tags: item.tags,           // Pass tags
             };

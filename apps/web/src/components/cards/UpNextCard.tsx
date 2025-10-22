@@ -3,6 +3,7 @@ import type { MediaItem } from './card.types';
 import { useTranslations } from '../../lib/language';
 import { OptimizedImage } from '../OptimizedImage';
 import { fetchCurrentEpisodeInfo } from '../../tmdb/tv';
+import { getShowStatusInfo, formatLastAirDate } from '../../utils/showStatus';
 
 export type UpNextCardProps = {
   item: MediaItem;
@@ -16,7 +17,7 @@ export type UpNextCardProps = {
  * - Matches the design mockup exactly
  */
 export default function UpNextCard({ item }: UpNextCardProps) {
-  const { title, year, posterUrl, nextAirDate, mediaType, id } = item;
+  const { title, year, posterUrl, nextAirDate, mediaType, id, showStatus, lastAirDate } = item;
   const translations = useTranslations();
   const [episodeInfo, setEpisodeInfo] = useState<string>('S01E01');
 
@@ -57,6 +58,64 @@ export default function UpNextCard({ item }: UpNextCardProps) {
       fetchEpisodeInfo();
     }
   }, [id, title, mediaType]);
+
+  // Determine if show is completed
+  const statusInfo = getShowStatusInfo(showStatus);
+  const isCompleted = statusInfo?.isCompleted || false;
+
+  // Get the appropriate message based on show status
+  const getStatusMessage = () => {
+    if (isCompleted) {
+      if (showStatus === 'Ended') {
+        return `Series Complete`;
+      } else if (showStatus === 'Canceled') {
+        return `Series Cancelled`;
+      }
+    }
+    
+    // If we have a specific date, show it
+    if (nextAirDate) {
+      return `Up Next: ${formatAirDate(nextAirDate)}`;
+    }
+    
+    // If no date but show is returning/in production/planned, show status
+    if (showStatus) {
+      switch (showStatus) {
+        case 'Returning Series':
+          return 'Returning Soon';
+        case 'In Production':
+          return 'In Production';
+        case 'Planned':
+          return 'Planned';
+        default:
+          return 'Coming Soon';
+      }
+    }
+    
+    return 'Coming Soon';
+  };
+
+  const getStatusColor = () => {
+    if (isCompleted) {
+      return showStatus === 'Canceled' ? '#dc2626' : 'var(--muted)'; // red for cancelled, muted for ended
+    }
+    
+    // Different colors for shows without dates
+    if (!nextAirDate) {
+      switch (showStatus) {
+        case 'Returning Series':
+          return '#16a34a'; // green - same as badge
+        case 'In Production':
+          return '#ea580c'; // orange - same as badge
+        case 'Planned':
+          return '#7c3aed'; // violet - same as badge
+        default:
+          return 'var(--accent)';
+      }
+    }
+    
+    return 'var(--accent)'; // default blue for shows with dates
+  };
 
   return (
     <article 
@@ -119,13 +178,23 @@ export default function UpNextCard({ item }: UpNextCardProps) {
             {year || 'TBA'} • {episodeInfo}
           </div>
 
-          {/* Up Next Date */}
+          {/* Status Message */}
           <div 
             className="text-xs font-medium" 
-            style={{ color: 'var(--accent)' }}
+            style={{ color: getStatusColor() }}
           >
-            Up Next: {formatAirDate(nextAirDate!)}
+            {getStatusMessage()}
           </div>
+          
+          {/* Last Air Date for completed shows */}
+          {isCompleted && lastAirDate && (
+            <div 
+              className="text-xs mt-1" 
+              style={{ color: 'var(--muted)' }}
+            >
+              Last aired: {formatLastAirDate(lastAirDate)}
+            </div>
+          )}
         </div>
       </div>
     </article>
