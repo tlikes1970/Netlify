@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useTranslations } from '@/lib/language';
 
 // YouTube API types
 declare global {
@@ -22,15 +21,14 @@ interface YouTubePlayerProps {
  * Dependencies: YouTube IFrame API, rotation timer, fallback error handling
  */
 
-export default function YouTubePlayer({ playlistId }: YouTubePlayerProps) {
-  const translations = useTranslations();
+export default function YouTubePlayer({ }: YouTubePlayerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [currentVideoTitle, setCurrentVideoTitle] = useState<string>('');
   const playerRef = useRef<HTMLDivElement>(null);
   const youtubePlayerRef = useRef<any>(null);
-  const rotationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const rotationTimerRef = useRef<number | null>(null);
 
   // Official trailer/sizzle videos from verified studio channels
   const videoIds = [

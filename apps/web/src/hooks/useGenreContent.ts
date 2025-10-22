@@ -36,7 +36,9 @@ export function useForYouContent(forYouRows: ForYouRow[]) {
       console.log('🔄 Library changed, updating For You filtering');
       setLibraryVersion(prev => prev + 1);
     });
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, []);
   
   const queries = forYouRows.map(row => 

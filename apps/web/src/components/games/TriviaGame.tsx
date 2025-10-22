@@ -530,14 +530,17 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
           question: q.question,
           options: q.options,
           correctAnswer: q.correctAnswer,
-          explanation: q.explanation,
+          explanation: q.explanation || undefined,
           category: q.category,
           difficulty: q.difficulty
         }));
         
         // For pro users, supplement with additional hardcoded questions if API doesn't provide enough
         if (isProUser && formattedQuestions.length < 50) {
-          const additionalQuestions = getTodaysQuestions(true).slice(formattedQuestions.length);
+          const additionalQuestions = getTodaysQuestions(true).slice(formattedQuestions.length).map(q => ({
+            ...q,
+            explanation: q.explanation || undefined
+          }));
           formattedQuestions.push(...additionalQuestions);
         }
         
