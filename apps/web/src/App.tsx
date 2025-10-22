@@ -494,7 +494,7 @@ export default function App() {
                 {/* In theaters container with address/info header */}
                 <Section title={translations.inTheatersNearYou}>
                   <TheaterInfo />
-                  <Rail id="in-theaters" title={translations.nowPlaying} items={Array.isArray(itemsFor('in-theaters')) ? itemsFor('in-theaters')!.map(item => ({ ...item, id: String(item.id) })) : []} skeletonCount={12} />
+                  <Rail id="in-theaters" title={translations.nowPlaying} items={Array.isArray(itemsFor('in-theaters')) ? itemsFor('in-theaters')!.map(item => ({ ...item, id: String(item.id), year: item.year ? parseInt(String(item.year)) : undefined })) : []} skeletonCount={12} />
                 </Section>
 
                 {/* Feedback container */}

@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { getTVShowDetails, type Episode, type Season, type TVShowDetails } from '@/lib/tmdb';
+import { getTVShowDetails, type Episode, type Season } from '@/lib/tmdb';
 import { lockScroll, unlockScroll } from '@/utils/scrollLock';
 import { cleanupInvalidEpisodeKeys, getValidEpisodeKeys } from '@/utils/episodeProgress';
+
+// Extended episode type with watched state
+type EpisodeWithWatched = Episode & { watched: boolean };
 
 interface EpisodeTrackingModalProps {
   isOpen: boolean;
@@ -16,7 +19,7 @@ interface EpisodeTrackingModalProps {
 }
 
 export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingModalProps) {
-  const [seasons, setSeasons] = useState<(Season & { episodes: (Episode & { watched: boolean })[] })[]>([]);
+  const [seasons, setSeasons] = useState<(Season & { episodes: EpisodeWithWatched[] })[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -116,7 +119,7 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
         season.season_number === seasonNum
           ? {
               ...season,
-              episodes: season.episodes.map(ep => 
+              episodes: season.episodes.map((ep: EpisodeWithWatched) => 
                 ep.episode_number === episodeNum
                   ? { ...ep, watched: !ep.watched }
                   : ep
@@ -131,7 +134,7 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
     const season = seasons.find(s => s.season_number === seasonNum);
     if (!season) return;
     
-    const allWatched = season.episodes.every(ep => ep.watched);
+    const allWatched = season.episodes.every((ep: EpisodeWithWatched) => ep.watched);
     const newWatchedState = !allWatched;
     
     const currentProgress = getSavedEpisodeProgress(show.id);
@@ -150,7 +153,7 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
         s.season_number === seasonNum
           ? {
               ...s,
-              episodes: s.episodes.map(ep => ({ ...ep, watched: newWatchedState }))
+              episodes: s.episodes.map((ep: EpisodeWithWatched) => ({ ...ep, watched: newWatchedState }))
             }
           : s
       )
@@ -159,7 +162,7 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
 
   const getTotalWatchedCount = () => {
     return seasons.reduce((total, season) => 
-      total + season.episodes.filter(ep => ep.watched).length, 0
+      total + season.episodes.filter((ep: EpisodeWithWatched) => ep.watched).length, 0
     );
   };
 
@@ -232,7 +235,7 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
           ) : (
             <div className="space-y-6" style={{ minHeight: '400px' }}>
               {seasons.map(season => {
-                const watchedCount = season.episodes.filter(ep => ep.watched).length;
+                const watchedCount = season.episodes.filter((ep: EpisodeWithWatched) => ep.watched).length;
                 const allWatched = watchedCount === season.episodes.length;
                 const someWatched = watchedCount > 0;
                 
@@ -270,7 +273,7 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
                         >
                           <input
                             type="checkbox"
-                            checked={episode.watched}
+                            checked={(episode as EpisodeWithWatched).watched}
                             onChange={() => toggleEpisodeWatched(episode.season_number, episode.episode_number)}
                             className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                           />

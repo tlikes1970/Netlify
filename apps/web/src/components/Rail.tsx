@@ -3,7 +3,7 @@ import type { MediaItem } from './cards/card.types';
 import { Library } from '@/lib/storage';
 import { useRailImagePreload } from '../hooks/useImagePreload';
 
-type Item = { id: string; kind?: 'movie'|'tv'; title?: string; poster?: string };
+type Item = { id: string; kind?: 'movie'|'tv'; title?: string; poster?: string; year?: number };
 
 type Props = {
   id: string;
@@ -128,7 +128,7 @@ export default function Rail({ id, title, enabled = true, skeletonCount = 0, ite
             mediaType: (it.kind as 'movie'|'tv') || 'movie',
             title: safeTitle,
             posterUrl: it.poster,
-            year: it.year, // Now includes year from TMDB data
+            year: it.year ? String(it.year) : undefined, // Convert number to string for MediaItem
             voteAverage: undefined, // TODO: Add rating from data source
           };
 

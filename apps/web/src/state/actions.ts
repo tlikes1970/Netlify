@@ -12,18 +12,6 @@ export function setToastCallback(callback: (message: string, type: 'success' | '
   toastCallback = callback;
 }
 
-// Helper function to fetch title from TMDB API
-async function fetchTitleFromTMDB(id: string, mediaType: MediaType): Promise<string> {
-  try {
-    const endpoint = mediaType === 'movie' ? `/movie/${id}` : `/tv/${id}`;
-    const data = await get(endpoint);
-    return data.title || data.name || 'Untitled';
-  } catch (error) {
-    console.warn(`Failed to fetch title for ${mediaType}:${id}:`, error);
-    return 'Untitled';
-  }
-}
-
 // Helper function to fetch title and year from TMDB API
 async function fetchMediaDataFromTMDB(id: string, mediaType: MediaType): Promise<{ title: string; year?: string }> {
   try {

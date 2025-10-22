@@ -1,4 +1,4 @@
-import { getEpisodeProgress, formatEpisodeProgress, getProgressColor, type EpisodeProgress } from '@/utils/episodeProgress';
+import { getEpisodeProgress, formatEpisodeProgress, getProgressColor } from '@/utils/episodeProgress';
 
 interface EpisodeProgressDisplayProps {
   showId: number;
