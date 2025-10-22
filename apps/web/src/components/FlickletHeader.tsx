@@ -194,14 +194,14 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | 
   
   const submit = () => {
     const trimmed = q.trim();
-    if (searchMode === 'tag') {
-      onSearch?.(`tag:${trimmed}`, g, searchType);
-    } else {
-      onSearch?.(trimmed, g, searchType);
-    }
-    
-    // Add to search history
     if (trimmed) {
+      if (searchMode === 'tag') {
+        onSearch?.(`tag:${trimmed}`, g, searchType);
+      } else {
+        onSearch?.(trimmed, g, searchType);
+      }
+      
+      // Add to search history
       addSearchToHistory(trimmed);
     }
     
@@ -251,6 +251,26 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | 
     }, 150);
   };
   
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !isComposing) {
+      e.preventDefault();
+      // Use the current input value directly to ensure we get the latest text
+      const currentValue = (e.target as HTMLInputElement).value.trim();
+      if (currentValue) {
+        if (searchMode === 'tag') {
+          onSearch?.(`tag:${currentValue}`, g, searchType);
+        } else {
+          onSearch?.(currentValue, g, searchType);
+        }
+        addSearchToHistory(currentValue);
+      }
+      setShowSuggestions(false);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      clear();
+    }
+  };
+  
   // Close suggestions when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -282,10 +302,7 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: string | 
                 onChange={handleInputChange}
                 onFocus={handleInputFocus}
                 onBlur={handleInputBlur}
-                onKeyDown={e => { 
-                  if (e.key === 'Enter' && !isComposing) submit(); 
-                  if (e.key === 'Escape') clear(); 
-                }}
+                onKeyDown={handleKeyDown}
                 onCompositionStart={() => setIsComposing(true)}
                 onCompositionEnd={() => setIsComposing(false)}
                 className="w-full rounded-xl border px-4 py-3 pr-12 text-sm outline-none ring-0 focus:border-primary"

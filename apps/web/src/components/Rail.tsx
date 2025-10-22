@@ -128,7 +128,7 @@ export default function Rail({ id, title, enabled = true, skeletonCount = 0, ite
             mediaType: (it.kind as 'movie'|'tv') || 'movie',
             title: safeTitle,
             posterUrl: it.poster,
-            year: undefined, // TODO: Add year from data source
+            year: it.year, // Now includes year from TMDB data
             voteAverage: undefined, // TODO: Add rating from data source
           };
 

@@ -9,8 +9,16 @@ const img = (p?: string | null, context: 'poster' | 'backdrop' = 'poster') => {
   return getOptimalImageSize(baseUrl, context);
 };
 
-type Raw = { id: number; title?: string; name?: string; poster_path?: string | null; media_type?: 'movie' | 'tv' | string };
-export type CardData = { id: string; kind: 'movie' | 'tv'; title: string; poster: string };
+type Raw = { 
+  id: number; 
+  title?: string; 
+  name?: string; 
+  poster_path?: string | null; 
+  media_type?: 'movie' | 'tv' | string;
+  release_date?: string;
+  first_air_date?: string;
+};
+export type CardData = { id: string; kind: 'movie' | 'tv'; title: string; poster: string; year?: number };
 
 export type Theater = {
   id: string;
@@ -39,11 +47,25 @@ const map = (r: Raw): CardData => {
     return 'Untitled';
   })();
   
+  // Extract year from release_date (movies) or first_air_date (TV shows)
+  const extractYear = (dateString?: string): number | undefined => {
+    if (!dateString) return undefined;
+    try {
+      const year = new Date(dateString).getFullYear();
+      return isNaN(year) ? undefined : year;
+    } catch {
+      return undefined;
+    }
+  };
+  
+  const year = extractYear(r.release_date || r.first_air_date);
+  
   return {
     id: String(r.id),
     kind: (r.media_type as 'movie' | 'tv') || (r.title ? 'movie' : 'tv'),
     title: safeTitle,
-    poster: img(r.poster_path)
+    poster: img(r.poster_path),
+    year
   };
 };
 
@@ -682,4 +704,109 @@ export async function getLocationFromIP() {
       country: 'US'
     };
   }
+}
+
+// Episode tracking types
+export interface Episode {
+  id: number;
+  name: string;
+  episode_number: number;
+  season_number: number;
+  air_date: string;
+  overview: string;
+  still_path?: string | null;
+  vote_average?: number;
+}
+
+export interface Season {
+  id: number;
+  season_number: number;
+  episode_count: number;
+  name: string;
+  overview: string;
+  air_date: string;
+  poster_path?: string | null;
+  episodes: Episode[];
+}
+
+export interface TVShowDetails {
+  id: number;
+  name: string;
+  number_of_seasons: number;
+  number_of_episodes: number;
+  seasons: Season[];
+}
+
+/**
+ * Fetch TV show details including all seasons and episodes
+ */
+export async function getTVShowDetails(tvId: number): Promise<TVShowDetails> {
+  const data = await get(`/tv/${tvId}`);
+  
+  // Fetch detailed season data for each season
+  const seasonsWithEpisodes: Season[] = [];
+  
+  for (const season of data.seasons || []) {
+    try {
+      const seasonData = await get(`/tv/${tvId}/season/${season.season_number}`);
+      seasonsWithEpisodes.push({
+        id: seasonData.id,
+        season_number: seasonData.season_number,
+        episode_count: seasonData.episodes?.length || 0,
+        name: seasonData.name,
+        overview: seasonData.overview,
+        air_date: seasonData.air_date,
+        poster_path: seasonData.poster_path,
+        episodes: (seasonData.episodes || []).map((ep: any) => ({
+          id: ep.id,
+          name: ep.name,
+          episode_number: ep.episode_number,
+          season_number: ep.season_number,
+          air_date: ep.air_date,
+          overview: ep.overview,
+          still_path: ep.still_path,
+          vote_average: ep.vote_average
+        }))
+      });
+    } catch (error) {
+      console.error(`Failed to fetch season ${season.season_number}:`, error);
+      // Add season without episodes if API call fails
+      seasonsWithEpisodes.push({
+        id: season.id,
+        season_number: season.season_number,
+        episode_count: season.episode_count,
+        name: season.name,
+        overview: season.overview,
+        air_date: season.air_date,
+        poster_path: season.poster_path,
+        episodes: []
+      });
+    }
+  }
+  
+  return {
+    id: data.id,
+    name: data.name,
+    number_of_seasons: data.number_of_seasons,
+    number_of_episodes: data.number_of_episodes,
+    seasons: seasonsWithEpisodes
+  };
+}
+
+/**
+ * Fetch a specific season's episodes
+ */
+export async function getSeasonEpisodes(tvId: number, seasonNumber: number): Promise<Episode[]> {
+  const data = await get(`/tv/${tvId}/season/${seasonNumber}`);
+  
+  return (data.episodes || []).map((ep: any) => ({
+    id: ep.id,
+    name: ep.name,
+    episode_number: ep.episode_number,
+    season_number: ep.season_number,
+    air_date: ep.air_date,
+    overview: ep.overview,
+    still_path: ep.still_path,
+    vote_average: ep.vote_average
+  }));
 }

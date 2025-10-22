@@ -10,6 +10,7 @@ import { OptimizedImage } from '../OptimizedImage';
 import { CompactPrimaryAction } from '../../features/compact/CompactPrimaryAction';
 import { CompactOverflowMenu } from '../../features/compact/CompactOverflowMenu';
 import { SwipeRow } from '../../features/compact/SwipeRow';
+import { EpisodeProgressDisplay } from '../EpisodeProgressDisplay';
 
 export type TabCardProps = {
   item: MediaItem;
@@ -693,21 +694,31 @@ export default function TabCard({
             
             {/* Episode tracking (conditional) */}
             {mediaType === 'tv' && !isCondensed && (
-              <button
-                onClick={() => actions?.onEpisodeTracking?.(item)}
-                className={buttonClass}
-                style={{ 
-                  backgroundColor: 'var(--btn)', 
-                  color: settings.layout.episodeTracking ? 'var(--text)' : 'var(--muted)', 
-                  borderColor: 'var(--line)', 
-                  border: '1px solid',
-                  opacity: settings.layout.episodeTracking ? 1 : 0.6
-                }}
-                disabled={!settings.layout.episodeTracking}
-                title={settings.layout.episodeTracking ? "Track episode progress" : "Enable episode tracking in settings"}
-              >
-                Episode Progress
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => actions?.onEpisodeTracking?.(item)}
+                  className={buttonClass}
+                  style={{ 
+                    backgroundColor: 'var(--btn)', 
+                    color: settings.layout.episodeTracking ? 'var(--text)' : 'var(--muted)', 
+                    borderColor: 'var(--line)', 
+                    border: '1px solid',
+                    opacity: settings.layout.episodeTracking ? 1 : 0.6
+                  }}
+                  disabled={!settings.layout.episodeTracking}
+                  title={settings.layout.episodeTracking ? "Track episode progress" : "Enable episode tracking in settings"}
+                >
+                  Episode Progress
+                </button>
+                
+                {/* Episode progress indicator */}
+                {settings.layout.episodeTracking && (
+                  <EpisodeProgressDisplay 
+                    showId={typeof item.id === 'string' ? parseInt(item.id) : item.id}
+                    compact={true}
+                  />
+                )}
+              </div>
             )}
             </div>
 

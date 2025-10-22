@@ -6,6 +6,7 @@ import MyListToggle from '../MyListToggle';
 import { OptimizedImage } from '../OptimizedImage';
 import { CompactPrimaryAction } from '../../features/compact/CompactPrimaryAction';
 import { CompactOverflowMenu } from '../../features/compact/CompactOverflowMenu';
+import { EpisodeProgressDisplay } from '../EpisodeProgressDisplay';
 
 export type CardV2Props = {
   item: MediaItem;
@@ -116,6 +117,17 @@ export default function CardV2({ item, context, actions, compact, showRating = t
               )}
             </div>
           </div>
+          
+          {/* Episode progress indicator for TV shows */}
+          {item.mediaType === 'tv' && (
+            <div className="mb-1">
+              <EpisodeProgressDisplay 
+                showId={typeof item.id === 'string' ? parseInt(item.id) : item.id}
+                compact={true}
+              />
+            </div>
+          )}
+          
           <div 
             className="mt-0 flex items-center justify-between"
             style={{ fontSize: 'var(--font-sm, 11px)', color: 'var(--muted)' }}

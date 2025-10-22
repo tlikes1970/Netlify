@@ -1,21 +1,8 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-
-interface Episode {
-  id: number;
-  name: string;
-  episode_number: number;
-  season_number: number;
-  air_date: string;
-  overview: string;
-  watched: boolean;
-}
-
-interface Season {
-  season_number: number;
-  episode_count: number;
-  episodes: Episode[];
-}
+import { getTVShowDetails, type Episode, type Season, type TVShowDetails } from '@/lib/tmdb';
+import { lockScroll, unlockScroll } from '@/utils/scrollLock';
+import { cleanupInvalidEpisodeKeys, getValidEpisodeKeys } from '@/utils/episodeProgress';
 
 interface EpisodeTrackingModalProps {
   isOpen: boolean;
@@ -29,7 +16,7 @@ interface EpisodeTrackingModalProps {
 }
 
 export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingModalProps) {
-  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [seasons, setSeasons] = useState<(Season & { episodes: (Episode & { watched: boolean })[] })[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,6 +27,19 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
     }
   }, [isOpen, show.id]);
 
+  // Handle scroll lock when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      lockScroll();
+    } else {
+      unlockScroll();
+    }
+
+    return () => {
+      unlockScroll();
+    };
+  }, [isOpen]);
+
   const loadEpisodeData = async () => {
     setLoading(true);
     setError(null);
@@ -48,35 +48,25 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
       // Get saved episode progress from localStorage
       const savedProgress = getSavedEpisodeProgress(show.id);
       
-      // For now, create mock data - in real implementation, this would fetch from TMDB API
-      const mockSeasons: Season[] = [];
+      // Fetch real episode data from TMDB
+      const tvShowDetails = await getTVShowDetails(show.id);
       
-      for (let seasonNum = 1; seasonNum <= Math.min(show.number_of_seasons, 5); seasonNum++) {
-        const episodeCount = seasonNum === 1 ? 10 : 8; // Mock episode counts
-        const episodes: Episode[] = [];
-        
-        for (let epNum = 1; epNum <= episodeCount; epNum++) {
-          episodes.push({
-            id: seasonNum * 1000 + epNum,
-            name: `Episode ${epNum}`,
-            episode_number: epNum,
-            season_number: seasonNum,
-            air_date: '2024-01-01',
-            overview: `Episode ${epNum} of Season ${seasonNum}`,
-            watched: savedProgress[`S${seasonNum}E${epNum}`] || false
-          });
-        }
-        
-        mockSeasons.push({
-          season_number: seasonNum,
-          episode_count: episodeCount,
-          episodes
-        });
-      }
+      // Map TMDB data to our format with watched state
+      const seasonsWithWatchedState = tvShowDetails.seasons.map(season => ({
+        ...season,
+        episodes: season.episodes.map(episode => ({
+          ...episode,
+          watched: savedProgress[`S${episode.season_number}E${episode.episode_number}`] || false
+        }))
+      }));
       
-      setSeasons(mockSeasons);
+      // Clean up any invalid episode keys that don't correspond to actual episodes
+      const validEpisodeKeys = getValidEpisodeKeys(seasonsWithWatchedState);
+      cleanupInvalidEpisodeKeys(show.id, validEpisodeKeys);
+      
+      setSeasons(seasonsWithWatchedState);
     } catch (err) {
-      setError('Failed to load episode data');
+      setError('Failed to load episode data from TMDB');
       console.error('Episode loading error:', err);
     } finally {
       setLoading(false);
@@ -86,7 +76,11 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
   const getSavedEpisodeProgress = (showId: number): Record<string, boolean> => {
     try {
       const saved = localStorage.getItem(`episode-progress-${showId}`);
-      return saved ? JSON.parse(saved) : {};
+      if (!saved) return {};
+      
+      const data = JSON.parse(saved);
+      // Handle both old format (just episodes) and new format (with totalEpisodes)
+      return data.episodes || data;
     } catch {
       return {};
     }
@@ -94,7 +88,13 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
 
   const saveEpisodeProgress = (showId: number, progress: Record<string, boolean>) => {
     try {
-      localStorage.setItem(`episode-progress-${showId}`, JSON.stringify(progress));
+      // Use the actual show's total episode count from TMDB instead of counting loaded seasons
+      // This ensures accuracy even if not all seasons are loaded
+      const progressData = {
+        episodes: progress,
+        totalEpisodes: show.number_of_episodes
+      };
+      localStorage.setItem(`episode-progress-${showId}`, JSON.stringify(progressData));
     } catch (err) {
       console.error('Failed to save episode progress:', err);
     }
@@ -200,7 +200,21 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+        <div 
+          className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]"
+          style={{ 
+            overscrollBehavior: 'contain',
+            touchAction: 'pan-y'
+          }}
+          onWheel={(e) => {
+            // Prevent wheel events from bubbling to the body
+            e.stopPropagation();
+          }}
+          onTouchMove={(e) => {
+            // Prevent touch scroll from bubbling to the body
+            e.stopPropagation();
+          }}
+        >
           {loading ? (
             <div className="text-center py-8">
               <div className="text-lg" style={{ color: 'var(--muted)' }}>Loading episodes...</div>
@@ -216,7 +230,7 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
               </button>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-6" style={{ minHeight: '400px' }}>
               {seasons.map(season => {
                 const watchedCount = season.episodes.filter(ep => ep.watched).length;
                 const allWatched = watchedCount === season.episodes.length;
@@ -276,6 +290,13 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
                   </div>
                 );
               })}
+              {seasons.length === 0 && !loading && !error && (
+                <div className="text-center py-8">
+                  <div className="text-lg" style={{ color: 'var(--muted)' }}>
+                    No episode data available for this show.
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

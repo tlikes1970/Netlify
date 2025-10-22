@@ -5,6 +5,7 @@ import { useSettings, getPersonalityText } from '@/lib/settings';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import ScrollToTopArrow from '@/components/ScrollToTopArrow';
 import { EpisodeTrackingModal } from '@/components/modals/EpisodeTrackingModal';
+import { getTVShowDetails } from '@/lib/tmdb';
 import { useState, useMemo } from 'react';
 
 export default function ListPage({ title, items, mode = 'watching', onNotesEdit, onTagsEdit, onNotificationToggle }: {
@@ -21,6 +22,7 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
   const [sortByTag, setSortByTag] = useState<boolean>(false);
   const [episodeModalOpen, setEpisodeModalOpen] = useState(false);
   const [selectedShow, setSelectedShow] = useState<MediaItem | null>(null);
+  const [showDetails, setShowDetails] = useState<any>(null);
   
   // Map mode to CardV2 context
   // const context = mode === 'watching' ? 'tab-watching' : 'tab-foryou'; // Unused
@@ -130,10 +132,26 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
     },
     onNotesEdit: onNotesEdit,
     onTagsEdit: onTagsEdit,
-    onEpisodeTracking: (item: MediaItem) => {
+    onEpisodeTracking: async (item: MediaItem) => {
       if (item.mediaType === 'tv') {
         setSelectedShow(item);
         setEpisodeModalOpen(true);
+        
+        // Fetch real show details from TMDB
+        try {
+          const showId = typeof item.id === 'string' ? parseInt(item.id) : item.id;
+          const details = await getTVShowDetails(showId);
+          setShowDetails(details);
+        } catch (error) {
+          console.error('Failed to fetch show details:', error);
+          // Still open modal with basic info
+          setShowDetails({
+            id: typeof item.id === 'string' ? parseInt(item.id) : item.id,
+            name: item.title,
+            number_of_seasons: 1,
+            number_of_episodes: 1
+          });
+        }
       }
     },
     onNotificationToggle: onNotificationToggle,
@@ -266,12 +284,13 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
           onClose={() => {
             setEpisodeModalOpen(false);
             setSelectedShow(null);
+            setShowDetails(null);
           }}
-          show={{
+          show={showDetails || {
             id: typeof selectedShow.id === 'string' ? parseInt(selectedShow.id) : selectedShow.id,
             name: selectedShow.title,
-            number_of_seasons: 5, // Mock data - in real implementation, this would come from TMDB
-            number_of_episodes: 40 // Mock data - in real implementation, this would come from TMDB
+            number_of_seasons: 1,
+            number_of_episodes: 1
           }}
         />
       )}

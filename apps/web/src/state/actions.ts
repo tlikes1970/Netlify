@@ -24,13 +24,37 @@ async function fetchTitleFromTMDB(id: string, mediaType: MediaType): Promise<str
   }
 }
 
+// Helper function to fetch title and year from TMDB API
+async function fetchMediaDataFromTMDB(id: string, mediaType: MediaType): Promise<{ title: string; year?: string }> {
+  try {
+    const endpoint = mediaType === 'movie' ? `/movie/${id}` : `/tv/${id}`;
+    const data = await get(endpoint);
+    
+    const title = data.title || data.name || 'Untitled';
+    
+    // Extract year from release_date (movies) or first_air_date (TV shows)
+    const dateString = mediaType === 'movie' ? data.release_date : data.first_air_date;
+    const year = dateString ? String(dateString).slice(0, 4) : undefined;
+    
+    return { title, year };
+  } catch (error) {
+    console.warn(`Failed to fetch media data for ${mediaType}:${id}:`, error);
+    return { title: 'Untitled' };
+  }
+}
+
 export function mountActionBridge() {
   const off1 = on('card:want', async ({ id, mediaType, title }: { id: string|number; mediaType: string; title?: string }) => {
     // Use provided title or fetch from TMDB
-    const finalTitle = title || await fetchTitleFromTMDB(String(id), mediaType as MediaType);
+    const mediaData = title ? { title } : await fetchMediaDataFromTMDB(String(id), mediaType as MediaType);
     
     // Search "Want to Watch" goes to wishlist, not watching
-    Library.upsert({ id, mediaType: mediaType as MediaType, title: finalTitle }, 'wishlist');
+    Library.upsert({ 
+      id, 
+      mediaType: mediaType as MediaType, 
+      title: mediaData.title,
+      year: mediaData.year
+    }, 'wishlist');
     
     // Show personality-based feedback
     const settings = settingsManager.getSettings();
@@ -40,10 +64,15 @@ export function mountActionBridge() {
 
   const off2 = on('card:watched', async ({ id, mediaType, title }: { id: string|number; mediaType: string; title?: string }) => {
     // Use provided title or fetch from TMDB
-    const finalTitle = title || await fetchTitleFromTMDB(String(id), mediaType as MediaType);
+    const mediaData = title ? { title } : await fetchMediaDataFromTMDB(String(id), mediaType as MediaType);
     
     // Mark as watched
-    Library.upsert({ id, mediaType: mediaType as MediaType, title: finalTitle }, 'watched');
+    Library.upsert({ 
+      id, 
+      mediaType: mediaType as MediaType, 
+      title: mediaData.title,
+      year: mediaData.year
+    }, 'watched');
     
     // Show personality-based feedback
     const settings = settingsManager.getSettings();
@@ -53,10 +82,15 @@ export function mountActionBridge() {
 
   const off3 = on('card:notInterested', async ({ id, mediaType, title }: { id: string|number; mediaType: string; title?: string }) => {
     // Use provided title or fetch from TMDB
-    const finalTitle = title || await fetchTitleFromTMDB(String(id), mediaType as MediaType);
+    const mediaData = title ? { title } : await fetchMediaDataFromTMDB(String(id), mediaType as MediaType);
     
     // Mark as not interested
-    Library.upsert({ id, mediaType: mediaType as MediaType, title: finalTitle }, 'not');
+    Library.upsert({ 
+      id, 
+      mediaType: mediaType as MediaType, 
+      title: mediaData.title,
+      year: mediaData.year
+    }, 'not');
     
     // Show personality-based feedback
     const settings = settingsManager.getSettings();
@@ -70,13 +104,19 @@ export function mountActionBridge() {
   // Optional: startWatching event from Wishlist tab or details view
   const off5 = on('card:startWatching', async ({ id, mediaType, title }: { id: number|string; mediaType: 'movie'|'tv'; title?: string }) => {
     // Use provided title or fetch from TMDB
-    const finalTitle = title || await fetchTitleFromTMDB(String(id), mediaType as MediaType);
+    const mediaData = title ? { title } : await fetchMediaDataFromTMDB(String(id), mediaType as MediaType);
     
     let nextAirDate: string | null = null;
     if (mediaType === 'tv') {
       nextAirDate = await fetchNextAirDate(Number(id));
     }
-    Library.upsert({ id, mediaType: mediaType as MediaType, title: finalTitle, nextAirDate }, 'watching');
+    Library.upsert({ 
+      id, 
+      mediaType: mediaType as MediaType, 
+      title: mediaData.title,
+      year: mediaData.year,
+      nextAirDate 
+    }, 'watching');
     
     // Show personality-based feedback
     const settings = settingsManager.getSettings();
