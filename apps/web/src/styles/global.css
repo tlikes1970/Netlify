@@ -308,7 +308,6 @@ input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset:
 /* YouTube Community Player Styles */
 .youtube-player-container {
   width: 100%;
-  height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--card, #171a21);
@@ -316,48 +315,26 @@ input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset:
   overflow: hidden;
 }
 
-.player-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  background: var(--bg, #0f1115);
-  border-bottom: 1px solid var(--line, #242a33);
-}
-
-.player-header h3 {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--text, #e6eaf0);
-}
-
-.player-controls {
-  display: flex;
-  gap: 8px;
-}
-
 .control-btn {
-  background: var(--line, #242a33);
+  background: transparent;
   border: none;
   border-radius: 6px;
-  padding: 8px 12px;
   cursor: pointer;
   transition: all 0.2s ease;
   color: var(--text, #e6eaf0);
-  font-size: 1rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.control-btn:hover {
-  background: var(--accent, #4da3ff);
-  transform: translateY(-1px);
+.rotation-active {
+  color: var(--accent, #4da3ff) !important;
+  font-weight: 600;
 }
 
-.player-wrapper {
-  position: relative;
-  flex: 1;
-  min-height: 300px;
-  background: #000;
+.rotation-inactive {
+  color: var(--muted, #a9b3c1);
 }
 
 .player-loading {
@@ -392,32 +369,6 @@ input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset:
 .youtube-player {
   width: 100%;
   height: 100%;
-}
-
-.player-info {
-  padding: 16px 20px;
-  background: var(--bg, #0f1115);
-  border-top: 1px solid var(--line, #242a33);
-}
-
-.playlist-description {
-  margin: 0 0 12px 0;
-  font-size: 0.875rem;
-  color: var(--muted, #a9b3c1);
-  line-height: 1.4;
-}
-
-.playlist-stats {
-  display: flex;
-  gap: 16px;
-  font-size: 0.75rem;
-  color: var(--muted, #a9b3c1);
-}
-
-.playlist-stats span {
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
 .youtube-player-error {
