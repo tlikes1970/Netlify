@@ -507,7 +507,7 @@ export default function TabCard({
       >
       {/* Poster (smaller in condensed view) */}
       <div 
-        className={`poster flex-shrink-0 bg-muted relative ${
+        className={`poster flex-shrink-0 bg-muted relative cursor-pointer ${
           isCondensed ? 'aspect-[2/3]' : 'aspect-[2/3]'
         }`}
         role="img" 
@@ -516,6 +516,12 @@ export default function TabCard({
           width: isCondensed ? 'var(--poster-w, 80px)' : 'var(--poster-w, 160px)',
           height: isCondensed ? 'var(--poster-h, 120px)' : 'var(--poster-h, 240px)',
           borderRadius: 'var(--radius, 16px) 0 0 var(--radius, 16px)'
+        }}
+        onClick={() => {
+          if (item.id && item.mediaType) {
+            const tmdbUrl = `https://www.themoviedb.org/${item.mediaType}/${item.id}`;
+            window.open(tmdbUrl, '_blank', 'noopener,noreferrer');
+          }
         }}
       >
         {posterUrl ? (

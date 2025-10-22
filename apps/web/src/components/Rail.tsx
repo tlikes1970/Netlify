@@ -32,23 +32,52 @@ export default function Rail({ id, title, enabled = true, skeletonCount = 0, ite
   // Action handlers using new Library system
   const actions = {
     onWant: (item: MediaItem) => {
+      console.log('🎬 For You Want button clicked:', item);
       if (item.id && item.mediaType) {
-        Library.upsert({ id: item.id, mediaType: item.mediaType, title: item.title }, 'wishlist');
+        Library.upsert({ 
+          id: item.id, 
+          mediaType: item.mediaType, 
+          title: item.title,
+          posterUrl: item.posterUrl,
+          year: item.year,
+          voteAverage: item.voteAverage
+        }, 'wishlist');
+        console.log('✅ Item added to wishlist:', item.title);
       }
     },
     onWatched: (item: MediaItem) => {
+      console.log('🎬 For You Watched button clicked:', item);
       if (item.id && item.mediaType) {
-        Library.move(item.id, item.mediaType, 'watched');
+        Library.upsert({ 
+          id: item.id, 
+          mediaType: item.mediaType, 
+          title: item.title,
+          posterUrl: item.posterUrl,
+          year: item.year,
+          voteAverage: item.voteAverage
+        }, 'watched');
+        console.log('✅ Item added to watched:', item.title);
       }
     },
     onNotInterested: (item: MediaItem) => {
+      console.log('🎬 For You Not Interested button clicked:', item);
       if (item.id && item.mediaType) {
-        Library.move(item.id, item.mediaType, 'not');
+        Library.upsert({ 
+          id: item.id, 
+          mediaType: item.mediaType, 
+          title: item.title,
+          posterUrl: item.posterUrl,
+          year: item.year,
+          voteAverage: item.voteAverage
+        }, 'not');
+        console.log('✅ Item added to not interested:', item.title);
       }
     },
     onDelete: (item: MediaItem) => {
+      console.log('🎬 For You Delete button clicked:', item);
       if (item.id && item.mediaType) {
         Library.remove(item.id, item.mediaType);
+        console.log('✅ Item deleted:', item.title);
       }
     },
   };
@@ -84,11 +113,20 @@ export default function Rail({ id, title, enabled = true, skeletonCount = 0, ite
         className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2"
       >
         {list.map((it, i) => {
-          // Convert Item to MediaItem format
+          // Convert Item to MediaItem format with proper title validation
+          const safeTitle = (() => {
+            // Ensure title is a string and not the same as id
+            if (typeof it.title === 'string' && it.title.trim() && it.title !== String(it.id)) {
+              return it.title.trim();
+            }
+            // If title is missing, undefined, or same as id, use fallback
+            return 'Untitled';
+          })();
+          
           const mediaItem: MediaItem = {
             id: it.id || i,
             mediaType: (it.kind as 'movie'|'tv') || 'movie',
-            title: it.title || 'Untitled',
+            title: safeTitle,
             posterUrl: it.poster,
             year: undefined, // TODO: Add year from data source
             voteAverage: undefined, // TODO: Add rating from data source

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getFreshWord } from '../../lib/dailyWordApi';
+import { getTodaysWord } from '../../lib/dailyWordApi';
 import { validateWord } from '../../lib/words/validateWord';
 // import { useTranslations } from '@/lib/language'; // Unused
 
@@ -43,30 +43,35 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Get today's word from API (with fresh content for testing)
+  // Get today's word from API (same word for all players each day)
   const loadTodaysWord = useCallback(async () => {
     try {
       setIsLoading(true);
-      console.log('🔄 Loading fresh word...');
+      console.log('🔄 Loading today\'s word...');
       
-      // Use fresh word for testing (bypasses cache)
-      const wordData = await getFreshWord();
-      console.log('📦 Fresh word data received:', wordData);
+      // Use daily word (same for all players, rotates daily)
+      const wordData = await getTodaysWord();
+      console.log('📦 Daily word data received:', wordData);
       
-      setGame(prev => ({
-        ...prev,
-        target: wordData.word.toUpperCase(),
-        wordInfo: {
-          definition: wordData.definition,
-          difficulty: wordData.difficulty
-        },
-        showHint: false
-      }));
-      
-      console.log('✅ Game target set to:', wordData.word.toUpperCase());
+      // Validate that we got a proper word
+      if (wordData && wordData.word && wordData.word.length === 5) {
+        setGame(prev => ({
+          ...prev,
+          target: wordData.word.toUpperCase(),
+          wordInfo: {
+            definition: wordData.definition,
+            difficulty: wordData.difficulty
+          },
+          showHint: false
+        }));
+        
+        console.log('✅ Game target set to:', wordData.word.toUpperCase());
+      } else {
+        throw new Error('Invalid word data received');
+      }
       
     } catch (error) {
-      console.error('❌ Failed to load fresh word:', error);
+      console.error('❌ Failed to load daily word:', error);
       // Fallback to a static word if API fails
       const fallbackWord = 'CRANE';
       console.log('🔄 Using fallback word:', fallbackWord);

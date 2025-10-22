@@ -79,12 +79,12 @@ export default function App() {
   const { toasts, addToast, removeToast } = useToast();
 
   // Auth state
-  const { loading: authLoading, isAuthenticated } = useAuth();
+  const { loading: authLoading, authInitialized, isAuthenticated } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Auto-prompt for authentication when not authenticated
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (!authLoading && authInitialized && !isAuthenticated) {
       // Small delay to ensure the app has fully loaded
       const timer = setTimeout(() => {
         setShowAuthModal(true);
@@ -92,7 +92,7 @@ export default function App() {
       
       return () => clearTimeout(timer);
     }
-  }, [authLoading, isAuthenticated]);
+  }, [authLoading, authInitialized, isAuthenticated]);
 
   // Service Worker for offline caching
   const { isOnline } = useServiceWorker();
@@ -396,6 +396,18 @@ export default function App() {
           />
         )}
       </main>
+    );
+  }
+
+  // Show loading screen until auth state is initialized
+  if (!authInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading...</p>
+        </div>
+      </div>
     );
   }
 

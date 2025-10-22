@@ -5,17 +5,34 @@ import type { AuthUser, AuthProvider } from '../lib/auth.types';
 export function useAuth() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authInitialized, setAuthInitialized] = useState(false);
 
   useEffect(() => {
     // Get initial user
     const initialUser = authManager.getCurrentUser();
     setUser(initialUser);
-    setLoading(false);
+    
+    // Check if auth state is already initialized
+    const isInitialized = authManager.isAuthStateInitialized();
+    setAuthInitialized(isInitialized);
+    
+    // If auth is already initialized, we can stop loading
+    if (isInitialized) {
+      setLoading(false);
+    }
 
     // Subscribe to auth state changes
     const unsubscribe = authManager.subscribe((authUser) => {
       setUser(authUser);
-      setLoading(false);
+      
+      // Check if auth state is now initialized
+      const isInitialized = authManager.isAuthStateInitialized();
+      setAuthInitialized(isInitialized);
+      
+      // Only stop loading once auth state is initialized
+      if (isInitialized) {
+        setLoading(false);
+      }
     });
 
     return unsubscribe;
@@ -51,6 +68,7 @@ export function useAuth() {
   return {
     user,
     loading,
+    authInitialized,
     signInWithProvider,
     signInWithEmail,
     signOut,

@@ -22,6 +22,7 @@ class AuthManager {
   private currentUser: AuthUser | null = null;
   private listeners: Set<(user: AuthUser | null) => void> = new Set();
   private isInitialized = false;
+  private authStateInitialized = false;
 
   constructor() {
     this.initialize();
@@ -36,11 +37,22 @@ class AuthManager {
       
       // Update current user
       this.currentUser = authUser;
-      console.log('🔐 Auth state changed:', { 
-        hasUser: !!authUser, 
-        uid: authUser?.uid,
-        email: authUser?.email
-      });
+      
+      // Mark auth state as initialized after first Firebase callback
+      if (!this.authStateInitialized) {
+        this.authStateInitialized = true;
+        console.log('🔐 Auth state initialized:', { 
+          hasUser: !!authUser, 
+          uid: authUser?.uid,
+          email: authUser?.email
+        });
+      } else {
+        console.log('🔐 Auth state changed:', { 
+          hasUser: !!authUser, 
+          uid: authUser?.uid,
+          email: authUser?.email
+        });
+      }
       
       if (authUser) {
         // Create/update user document in Firestore
@@ -242,6 +254,10 @@ class AuthManager {
 
   getCurrentUser(): AuthUser | null {
     return this.currentUser;
+  }
+
+  isAuthStateInitialized(): boolean {
+    return this.authStateInitialized;
   }
 }
 

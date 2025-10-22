@@ -10,12 +10,6 @@ interface TriviaApiResponse {
   difficulty: 'easy' | 'medium' | 'hard';
 }
 
-interface CachedTrivia {
-  questions: TriviaApiResponse[];
-  date: string;
-  timestamp: number;
-}
-
 // Cache key for localStorage
 const CACHE_KEY = 'flicklet:daily-trivia';
 
@@ -80,19 +74,8 @@ const TRIVIA_APIS: Array<{
   }
 ];
 
-/**
- * Get today's date in YYYY-MM-DD format
- */
-function getTodayString(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-/**
- * Check if cached trivia is for today
- */
-function isCachedTriviaValid(cached: CachedTrivia): boolean {
-  return cached.date === getTodayString();
-}
+// Note: Legacy function removed as part of cleanup
+// Use getFreshTrivia() for testing with cache busting
 
 /**
  * Fetch trivia questions from API with fallback
@@ -128,129 +111,8 @@ async function fetchTriviaFromApi(): Promise<TriviaApiResponse[]> {
   return [];
 }
 
-/**
- * Get today's trivia questions (same for all players)
- */
-export async function getTodaysTrivia(): Promise<TriviaApiResponse[]> {
-  const today = getTodayString();
-  
-  // Check cache first
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      const parsedCache: CachedTrivia = JSON.parse(cached);
-      if (isCachedTriviaValid(parsedCache)) {
-        console.log(`📦 Using cached trivia for ${today}: ${parsedCache.questions.length} questions`);
-        return parsedCache.questions;
-      }
-    }
-  } catch (error) {
-    console.warn('Failed to read cached trivia:', error);
-  }
-
-  // Try to fetch from API
-  console.log(`🌐 Fetching new trivia for ${today}...`);
-  const apiQuestions = await fetchTriviaFromApi();
-  
-  if (apiQuestions && apiQuestions.length > 0) {
-    // Cache the API questions
-    const cacheData: CachedTrivia = {
-      questions: apiQuestions,
-      date: today,
-      timestamp: Date.now()
-    };
-    
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-      console.log(`💾 Cached ${apiQuestions.length} trivia questions`);
-    } catch (error) {
-      console.warn('Failed to cache trivia:', error);
-    }
-    
-    return apiQuestions;
-  }
-
-  // Fallback to deterministic questions
-  const fallbackQuestions = getDeterministicQuestions(today);
-  console.log(`🔄 Using fallback trivia for ${today}: ${fallbackQuestions.length} questions`);
-  
-  // Cache the fallback questions
-  const cacheData: CachedTrivia = {
-    questions: fallbackQuestions,
-    date: today,
-    timestamp: Date.now()
-  };
-  
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-  } catch (error) {
-    console.warn('Failed to cache fallback trivia:', error);
-  }
-
-  return fallbackQuestions;
-}
-
-/**
- * Get deterministic questions based on date
- */
-function getDeterministicQuestions(date: string): TriviaApiResponse[] {
-  // Use date as seed for deterministic question selection
-  const seed = date.split('-').join('');
-  const seedNumber = parseInt(seed, 10);
-  
-  // Fallback questions pool
-  const fallbackQuestions: TriviaApiResponse[] = [
-    {
-      question: 'Which movie won the Academy Award for Best Picture in 2023?',
-      options: ['Everything Everywhere All at Once', 'The Banshees of Inisherin', 'Top Gun: Maverick', 'Avatar: The Way of Water'],
-      correctAnswer: 0,
-      explanation: 'Everything Everywhere All at Once won Best Picture at the 95th Academy Awards.',
-      category: 'Awards',
-      difficulty: 'medium'
-    },
-    {
-      question: 'What is the highest-grossing movie of all time?',
-      options: ['Avatar', 'Avengers: Endgame', 'Titanic', 'Star Wars: The Force Awakens'],
-      correctAnswer: 0,
-      explanation: 'Avatar (2009) holds the record for highest-grossing movie worldwide.',
-      category: 'Box Office',
-      difficulty: 'easy'
-    },
-    {
-      question: 'Which streaming service produced "Stranger Things"?',
-      options: ['Hulu', 'Netflix', 'Amazon Prime', 'Disney+'],
-      correctAnswer: 1,
-      explanation: 'Stranger Things is a Netflix original series.',
-      category: 'Streaming',
-      difficulty: 'easy'
-    },
-    {
-      question: 'Who directed "The Dark Knight"?',
-      options: ['Christopher Nolan', 'Zack Snyder', 'Tim Burton', 'Martin Scorsese'],
-      correctAnswer: 0,
-      explanation: 'Christopher Nolan directed The Dark Knight (2008).',
-      category: 'Directors',
-      difficulty: 'medium'
-    },
-    {
-      question: 'What year was the first "Star Wars" movie released?',
-      options: ['1975', '1977', '1979', '1981'],
-      correctAnswer: 1,
-      explanation: 'Star Wars: Episode IV - A New Hope was released in 1977.',
-      category: 'History',
-      difficulty: 'medium'
-    }
-  ];
-  
-  // Select 5 questions deterministically
-  const selectedQuestions = [];
-  for (let i = 0; i < 5; i++) {
-    const questionIndex = (seedNumber + i) % fallbackQuestions.length;
-    selectedQuestions.push(fallbackQuestions[questionIndex]);
-  }
-  
-  return selectedQuestions;
-}
+// Note: Legacy function removed as part of cleanup
+// Use getFreshTrivia() for testing with cache busting
 
 /**
  * Clear trivia cache (for testing)

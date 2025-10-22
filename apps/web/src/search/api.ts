@@ -71,7 +71,13 @@ export function mapTMDBToMediaItem(r: any): MediaItem {
   }
 
   const rawTitle = mediaType === 'movie' ? r.title : r.name;
-  const title = typeof rawTitle === 'string' ? rawTitle : String(rawTitle ?? '').trim();
+  const safeTitle = (() => {
+    if (typeof rawTitle === 'string' && rawTitle.trim() && rawTitle !== String(r.id)) {
+      return rawTitle.trim();
+    }
+    return 'Untitled';
+  })();
+  
   const date  = mediaType === 'movie' ? r.release_date : r.first_air_date;
   const year  = date ? String(date).slice(0, 4) : undefined;
   const posterUrl = r.poster_path ? `https://image.tmdb.org/t/p/w342${r.poster_path}` : undefined;
@@ -79,7 +85,7 @@ export function mapTMDBToMediaItem(r: any): MediaItem {
   return {
     id: r.id,
     mediaType,
-    title: title || 'Untitled',
+    title: safeTitle,
     year,
     posterUrl,
     voteAverage: typeof r.vote_average === 'number' ? r.vote_average : undefined,

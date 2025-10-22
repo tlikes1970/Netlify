@@ -16,14 +16,6 @@ interface CachedWord {
   timestamp: number;
 }
 
-// Fallback words for when API fails
-const FALLBACK_WORDS = [
-  'bliss', 'crane', 'flick', 'gravy', 'masks', 'toast', 'crown', 'spine', 'tiger', 'pride',
-  'happy', 'smile', 'peace', 'light', 'dream', 'magic', 'story', 'music', 'dance', 'heart',
-  'world', 'house', 'water', 'earth', 'night', 'day', 'love', 'hope', 'life', 'time',
-  'space', 'place', 'grace', 'trace', 'brace', 'chase', 'phase', 'raise', 'phase', 'glaze'
-];
-
 // Common 5-letter words for validation fallback
 const COMMON_WORDS = new Set([
   'about', 'above', 'abuse', 'actor', 'acute', 'admit', 'adopt', 'adult', 'after', 'again',
@@ -116,16 +108,155 @@ function getTodayString(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+// Note: Legacy function removed as part of cleanup
+// Use getFreshWord() for testing with cache busting
+
 /**
- * Get a deterministic word for today based on date
- * This ensures all players get the same word each day
+ * Get today's word (same for all players, rotates daily)
+ */
+export async function getTodaysWord(): Promise<WordApiResponse> {
+  const today = getTodayString();
+  
+  // Check cache first
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const parsedCache: CachedWord = JSON.parse(cached);
+      if (isCachedWordValid(parsedCache)) {
+        console.log(`📦 Using cached word for ${today}: ${parsedCache.word}`);
+        return {
+          word: parsedCache.word,
+          date: parsedCache.date,
+          definition: parsedCache.definition,
+          difficulty: parsedCache.difficulty as any
+        };
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to read cached word:', error);
+  }
+
+  // Try to fetch from API
+  console.log(`🌐 Fetching new word for ${today}...`);
+  const apiWord = await fetchWordFromApi();
+  
+  if (apiWord) {
+    // Cache the API word
+    const cacheData: CachedWord = {
+      word: apiWord.word,
+      date: apiWord.date,
+      definition: apiWord.definition,
+      difficulty: apiWord.difficulty,
+      timestamp: Date.now()
+    };
+    
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+      console.log(`💾 Cached API word: ${apiWord.word}`);
+    } catch (error) {
+      console.warn('Failed to cache word:', error);
+    }
+    
+    return apiWord;
+  }
+
+  // Fallback to deterministic word based on date
+  const fallbackWord = getDeterministicWord(today);
+  console.log(`🔄 Using deterministic word for ${today}: ${fallbackWord}`);
+  
+  const fallbackData: WordApiResponse = {
+    word: fallbackWord,
+    date: today,
+    definition: undefined,
+    difficulty: 'medium'
+  };
+
+  // Cache the fallback word
+  const cacheData: CachedWord = {
+    word: fallbackWord,
+    date: today,
+    definition: undefined,
+    difficulty: 'medium',
+    timestamp: Date.now()
+  };
+  
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+  } catch (error) {
+    console.warn('Failed to cache fallback word:', error);
+  }
+
+  return fallbackData;
+}
+
+/**
+ * Get deterministic word based on date (same word for all players each day)
  */
 function getDeterministicWord(date: string): string {
   // Use date as seed for deterministic word selection
   const seed = date.split('-').join('');
   const seedNumber = parseInt(seed, 10);
-  const wordIndex = seedNumber % FALLBACK_WORDS.length;
-  return FALLBACK_WORDS[wordIndex];
+  
+  // Large pool of 5-letter words for daily rotation
+  const dailyWords = [
+    'ABOUT', 'ABOVE', 'ABUSE', 'ACTOR', 'ACUTE', 'ADMIT', 'ADOPT', 'ADULT', 'AFTER', 'AGAIN',
+    'AGENT', 'AGREE', 'AHEAD', 'ALARM', 'ALBUM', 'ALERT', 'ALIEN', 'ALIGN', 'ALIKE', 'ALIVE',
+    'ALLOW', 'ALONE', 'ALONG', 'ALTER', 'AMONG', 'ANGER', 'ANGLE', 'ANGRY', 'APART', 'APPLE',
+    'APPLY', 'ARENA', 'ARGUE', 'ARISE', 'ARRAY', 'ASIDE', 'ASSET', 'AVOID', 'AWAKE', 'AWARD',
+    'AWARE', 'BADLY', 'BASIC', 'BEACH', 'BEGAN', 'BEGIN', 'BEING', 'BELOW', 'BENCH', 'BILLY',
+    'BIRTH', 'BLACK', 'BLAME', 'BLIND', 'BLOCK', 'BLOOD', 'BOARD', 'BOOST', 'BOOTH', 'BOUND',
+    'BRAIN', 'BRAND', 'BRASS', 'BRAVE', 'BREAD', 'BREAK', 'BREED', 'BRIEF', 'BRING', 'BROAD',
+    'BROKE', 'BROWN', 'BUILD', 'BUILT', 'BUYER', 'CABLE', 'CALIF', 'CARRY', 'CATCH', 'CAUSE',
+    'CHAIN', 'CHAIR', 'CHAOS', 'CHARM', 'CHART', 'CHASE', 'CHEAP', 'CHECK', 'CHEST', 'CHIEF',
+    'CHILD', 'CHINA', 'CHOSE', 'CIVIL', 'CLAIM', 'CLASS', 'CLEAN', 'CLEAR', 'CLICK', 'CLIMB',
+    'CLOCK', 'CLOSE', 'CLOUD', 'COACH', 'COAST', 'COUCH', 'COULD', 'COUNT', 'COURT', 'COVER',
+    'CRAFT', 'CRASH', 'CRAZY', 'CREAM', 'CRIME', 'CROSS', 'CROWD', 'CROWN', 'CRUDE', 'CURVE',
+    'CYCLE', 'DAILY', 'DANCE', 'DATED', 'DEALT', 'DEATH', 'DEBUT', 'DELAY', 'DEPTH', 'DOING',
+    'DOUBT', 'DOZEN', 'DRAFT', 'DRAMA', 'DRANK', 'DREAM', 'DRESS', 'DRILL', 'DRINK', 'DRIVE',
+    'DROVE', 'DYING', 'EAGER', 'EARLY', 'EARTH', 'EIGHT', 'ELITE', 'EMPTY', 'ENEMY', 'ENJOY',
+    'ENTER', 'ENTRY', 'EQUAL', 'ERROR', 'EVENT', 'EVERY', 'EXACT', 'EXIST', 'EXTRA', 'FAITH',
+    'FALSE', 'FAULT', 'FIBER', 'FIELD', 'FIFTH', 'FIFTY', 'FIGHT', 'FINAL', 'FIRST', 'FIXED',
+    'FLASH', 'FLEET', 'FLOOR', 'FLUID', 'FOCUS', 'FORCE', 'FORTH', 'FORTY', 'FORUM', 'FOUND',
+    'FRAME', 'FRANK', 'FRAUD', 'FRESH', 'FRONT', 'FROST', 'FRUIT', 'FULLY', 'FUNNY', 'GIANT',
+    'GIVEN', 'GLASS', 'GLOBE', 'GOING', 'GRACE', 'GRADE', 'GRAND', 'GRANT', 'GRASS', 'GRAVE',
+    'GREAT', 'GREEN', 'GROSS', 'GROUP', 'GROWN', 'GUARD', 'GUESS', 'GUEST', 'GUIDE', 'HAPPY',
+    'HARRY', 'HEART', 'HEAVY', 'HORSE', 'HOTEL', 'HOUSE', 'HUMAN', 'IDEAL', 'IMAGE', 'INDEX',
+    'INNER', 'INPUT', 'ISSUE', 'JAPAN', 'JIMMY', 'JOINT', 'JONES', 'JUDGE', 'KNOWN', 'LABEL',
+    'LARGE', 'LASER', 'LATER', 'LAUGH', 'LAYER', 'LEARN', 'LEASE', 'LEAST', 'LEAVE', 'LEGAL',
+    'LEVEL', 'LEWIS', 'LIGHT', 'LIMIT', 'LINKS', 'LIVES', 'LOCAL', 'LOOSE', 'LOWER', 'LUCKY',
+    'LUNCH', 'LYING', 'MAGIC', 'MAJOR', 'MAKER', 'MARCH', 'MARIA', 'MATCH', 'MAYBE', 'MAYOR',
+    'MEANT', 'MEDIA', 'METAL', 'MIGHT', 'MINOR', 'MINUS', 'MIXED', 'MODEL', 'MONEY', 'MONTH',
+    'MORAL', 'MOTOR', 'MOUNT', 'MOUSE', 'MOUTH', 'MOVED', 'MOVIE', 'MUSIC', 'NEEDS', 'NEVER',
+    'NEWLY', 'NIGHT', 'NOISE', 'NORTH', 'NOTED', 'NOVEL', 'NURSE', 'OCCUR', 'OCEAN', 'OFFER',
+    'OFTEN', 'ORDER', 'OTHER', 'OUGHT', 'PAINT', 'PANEL', 'PAPER', 'PARTY', 'PEACE', 'PETER',
+    'PHASE', 'PHONE', 'PHOTO', 'PIANO', 'PIECE', 'PILOT', 'PITCH', 'PLACE', 'PLAIN', 'PLANE',
+    'PLANT', 'PLATE', 'PLAZA', 'PLOT', 'PLUG', 'PLUS', 'POINT', 'POUND', 'POWER', 'PRESS',
+    'PRICE', 'PRIDE', 'PRIME', 'PRINT', 'PRIOR', 'PRIZE', 'PROOF', 'PROUD', 'PROVE', 'QUEEN',
+    'QUICK', 'QUIET', 'QUITE', 'RADIO', 'RAISE', 'RANGE', 'RAPID', 'RATIO', 'REACH', 'READY',
+    'REALM', 'REBEL', 'REFER', 'RELAX', 'REPAY', 'REPLY', 'RIGHT', 'RIGID', 'RISKY', 'RIVER',
+    'ROBIN', 'ROGER', 'ROMAN', 'ROUGH', 'ROUND', 'ROUTE', 'ROYAL', 'RURAL', 'SCALE', 'SCENE',
+    'SCOPE', 'SCORE', 'SENSE', 'SERVE', 'SETUP', 'SEVEN', 'SHALL', 'SHAPE', 'SHARE', 'SHARP',
+    'SHEET', 'SHELF', 'SHELL', 'SHIFT', 'SHINE', 'SHIRT', 'SHOCK', 'SHOOT', 'SHORT', 'SHOWN',
+    'SIDED', 'SIGHT', 'SILLY', 'SINCE', 'SIXTH', 'SIXTY', 'SIZED', 'SKILL', 'SLEEP', 'SLIDE',
+    'SMALL', 'SMART', 'SMILE', 'SMITH', 'SMOKE', 'SNAKE', 'SNOW', 'SOLAR', 'SOLID', 'SOLVE',
+    'SORRY', 'SOUND', 'SOUTH', 'SPACE', 'SPARE', 'SPEAK', 'SPEED', 'SPEND', 'SPENT', 'SPLIT',
+    'SPOKE', 'SPORT', 'STAFF', 'STAGE', 'STAKE', 'STAND', 'START', 'STATE', 'STEAM', 'STEEL',
+    'STEEP', 'STEER', 'STEPS', 'STICK', 'STILL', 'STOCK', 'STONE', 'STOOD', 'STORE', 'STORM',
+    'STORY', 'STRIP', 'STUCK', 'STUDY', 'STUFF', 'STYLE', 'SUGAR', 'SUITE', 'SUPER', 'SWEET',
+    'TABLE', 'TAKEN', 'TASTE', 'TAXES', 'TEACH', 'TERMS', 'THANK', 'THEFT', 'THEIR', 'THEME',
+    'THERE', 'THESE', 'THICK', 'THING', 'THINK', 'THIRD', 'THOSE', 'THREE', 'THREW', 'THROW',
+    'THUMB', 'TIGHT', 'TIMES', 'TIRED', 'TITLE', 'TODAY', 'TOPIC', 'TOTAL', 'TOUCH', 'TOUGH',
+    'TOWER', 'TRACK', 'TRADE', 'TRAIN', 'TREAT', 'TREND', 'TRIAL', 'TRIBE', 'TRICK', 'TRIED',
+    'TRIES', 'TRUCK', 'TRULY', 'TRUST', 'TRUTH', 'TWICE', 'UNDER', 'UNDUE', 'UNION', 'UNITY',
+    'UNTIL', 'UPPER', 'UPSET', 'URBAN', 'USAGE', 'USUAL', 'VALID', 'VALUE', 'VIDEO', 'VIRUS',
+    'VISIT', 'VITAL', 'VOICE', 'WASTE', 'WATCH', 'WATER', 'WHEEL', 'WHERE', 'WHICH', 'WHILE',
+    'WHITE', 'WHOLE', 'WHOSE', 'WOMAN', 'WOMEN', 'WORLD', 'WORRY', 'WORSE', 'WORST', 'WORTH',
+    'WOULD', 'WRITE', 'WRONG', 'WROTE', 'YOUNG', 'YOUTH'
+  ];
+  
+  // Select word deterministically based on date
+  const wordIndex = seedNumber % dailyWords.length;
+  return dailyWords[wordIndex];
 }
 
 /**
@@ -174,83 +305,8 @@ async function fetchWordFromApi(): Promise<WordApiResponse | null> {
   return null;
 }
 
-/**
- * Get today's word (same for all players)
- */
-export async function getTodaysWord(): Promise<WordApiResponse> {
-  const today = getTodayString();
-  
-  // Check cache first
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      const parsedCache: CachedWord = JSON.parse(cached);
-      if (isCachedWordValid(parsedCache)) {
-        console.log(`📦 Using cached word for ${today}: ${parsedCache.word}`);
-        return {
-          word: parsedCache.word,
-          date: parsedCache.date,
-          definition: parsedCache.definition,
-          difficulty: parsedCache.difficulty as any
-        };
-      }
-    }
-  } catch (error) {
-    console.warn('Failed to read cached word:', error);
-  }
-
-  // Try to fetch from API
-  console.log(`🌐 Fetching new word for ${today}...`);
-  const apiWord = await fetchWordFromApi();
-  
-  if (apiWord) {
-    // Cache the API word
-    const cacheData: CachedWord = {
-      word: apiWord.word,
-      date: apiWord.date,
-      definition: apiWord.definition,
-      difficulty: apiWord.difficulty,
-      timestamp: Date.now()
-    };
-    
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-      console.log(`💾 Cached API word: ${apiWord.word}`);
-    } catch (error) {
-      console.warn('Failed to cache word:', error);
-    }
-    
-    return apiWord;
-  }
-
-  // Fallback to deterministic word
-  const fallbackWord = getDeterministicWord(today);
-  console.log(`🔄 Using fallback word for ${today}: ${fallbackWord}`);
-  
-  const fallbackData: WordApiResponse = {
-    word: fallbackWord,
-    date: today,
-    definition: undefined,
-    difficulty: 'medium'
-  };
-
-  // Cache the fallback word
-  const cacheData: CachedWord = {
-    word: fallbackWord,
-    date: today,
-    definition: undefined,
-    difficulty: 'medium',
-    timestamp: Date.now()
-  };
-  
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-  } catch (error) {
-    console.warn('Failed to cache fallback word:', error);
-  }
-
-  return fallbackData;
-}
+// Note: Legacy function removed as part of cleanup
+// Use getFreshWord() for testing with cache busting
 
 /**
  * Validate if a word exists in dictionary

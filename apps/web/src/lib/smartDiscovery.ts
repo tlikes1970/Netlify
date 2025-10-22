@@ -85,7 +85,7 @@ export function analyzeUserPreferences(
 }
 
 /**
- * Scores a potential recommendation based on user preferences
+ * Scores a potential recommendation based on user preferences and ratings
  */
 export function scoreRecommendation(
   item: CardData,
@@ -98,24 +98,24 @@ export function scoreRecommendation(
   // Base score from TMDB popularity/rating
   if (tmdbData?.vote_average) {
     const tmdbScore = tmdbData.vote_average / 10; // Normalize to 0-1
-    score += tmdbScore * 0.3; // 30% weight to TMDB rating
+    score += tmdbScore * 0.25; // 25% weight to TMDB rating
     reasons.push(`High TMDB rating (${tmdbData.vote_average}/10)`);
   }
 
   if (tmdbData?.popularity) {
     const popularityScore = Math.min(tmdbData.popularity / 100, 1); // Normalize popularity
-    score += popularityScore * 0.2; // 20% weight to popularity
+    score += popularityScore * 0.15; // 15% weight to popularity
     reasons.push(`Popular content`);
   }
 
-  // Media type preference
+  // Media type preference based on user's rated content
   const mediaTypePreference = preferences.preferredMediaTypes[item.kind];
-  score += mediaTypePreference * 0.2; // 20% weight to media type preference
+  score += mediaTypePreference * 0.15; // 15% weight to media type preference
   if (mediaTypePreference > 0.6) {
     reasons.push(`Matches your ${item.kind} preference`);
   }
 
-  // Genre preferences (if we have genre data)
+  // Enhanced genre preferences based on user ratings
   if (tmdbData?.genre_ids && Array.isArray(tmdbData.genre_ids)) {
     let genreScore = 0;
     let matchingGenres = 0;
@@ -129,9 +129,17 @@ export function scoreRecommendation(
     
     if (matchingGenres > 0) {
       const avgGenreScore = genreScore / matchingGenres;
-      score += avgGenreScore * 0.3; // 30% weight to genre preferences
+      score += avgGenreScore * 0.25; // 25% weight to genre preferences
       reasons.push(`Matches ${matchingGenres} favorite genre${matchingGenres > 1 ? 's' : ''}`);
     }
+  }
+
+  // User rating compatibility bonus
+  // If user tends to rate highly, boost items with high TMDB ratings
+  if (preferences.averageRating > 3.5 && tmdbData?.vote_average > 7.0) {
+    const ratingBonus = (preferences.averageRating - 3.0) * 0.1; // Up to 0.2 bonus
+    score += ratingBonus;
+    reasons.push(`Matches your high-rating preference`);
   }
 
   // Penalty for not interested items
@@ -208,10 +216,19 @@ export async function getSmartRecommendations(
     for (const candidate of candidates) {
       if (!candidate.poster_path) continue; // Skip items without posters
       
+      // Ensure title is properly extracted and validated
+      const rawTitle = candidate.title || candidate.name;
+      const safeTitle = (() => {
+        if (typeof rawTitle === 'string' && rawTitle.trim() && rawTitle !== String(candidate.id)) {
+          return rawTitle.trim();
+        }
+        return 'Untitled';
+      })();
+      
       const cardData: CardData = {
         id: String(candidate.id),
         kind: candidate.media_type as 'movie' | 'tv',
-        title: candidate.title || candidate.name || 'Untitled',
+        title: safeTitle,
         poster: candidate.poster_path ? `https://image.tmdb.org/t/p/w342${candidate.poster_path}` : ''
       };
 

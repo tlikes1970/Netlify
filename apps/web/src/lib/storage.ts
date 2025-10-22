@@ -166,6 +166,13 @@ export const Library = {
       addedAt: state[key]?.addedAt ?? Date.now(),
     };
     
+    console.log(`📦 Library.upsert stored:`, {
+      id: item.id,
+      title: item.title,
+      posterUrl: item.posterUrl,
+      list: list
+    });
+    
     // Update custom list item counts
     if (oldEntry && oldEntry.list !== list) {
       // Moving from one list to another
@@ -368,6 +375,7 @@ export function useLibrary(list: ListName) {
     const newItems = Library.getByList(list);
     console.log(`🔍 useLibrary(${list}) updated:`, newItems.map(item => ({
       title: item.title,
+      posterUrl: item.posterUrl,
       nextAirDate: item.nextAirDate
     })));
     setItems(newItems);
@@ -375,6 +383,7 @@ export function useLibrary(list: ListName) {
       const updatedItems = Library.getByList(list);
       console.log(`🔔 Library.subscribe(${list}) triggered:`, updatedItems.map(item => ({
         title: item.title,
+        posterUrl: item.posterUrl,
         nextAirDate: item.nextAirDate
       })));
       setItems(updatedItems);

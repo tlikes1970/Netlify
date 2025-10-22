@@ -29,12 +29,23 @@ export type Showtime = {
   available: boolean;
 };
 
-const map = (r: Raw): CardData => ({
-  id: String(r.id),
-  kind: (r.media_type as 'movie' | 'tv') || (r.title ? 'movie' : 'tv'),
-  title: r.title || r.name || 'Untitled',
-  poster: img(r.poster_path)
-});
+const map = (r: Raw): CardData => {
+  // Ensure title is properly extracted and validated
+  const rawTitle = r.title || r.name;
+  const safeTitle = (() => {
+    if (typeof rawTitle === 'string' && rawTitle.trim() && rawTitle !== String(r.id)) {
+      return rawTitle.trim();
+    }
+    return 'Untitled';
+  })();
+  
+  return {
+    id: String(r.id),
+    kind: (r.media_type as 'movie' | 'tv') || (r.title ? 'movie' : 'tv'),
+    title: safeTitle,
+    poster: img(r.poster_path)
+  };
+};
 
 let lastSource: 'proxy' | 'error' = 'proxy';
 export function debugTmdbSource() {

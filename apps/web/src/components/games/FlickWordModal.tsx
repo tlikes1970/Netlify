@@ -58,7 +58,7 @@ export default function FlickWordModal({ isOpen, onClose }: FlickWordModalProps)
       
       // Clamp to viewport bounds
       const maxX = (window.innerWidth - 500) / 2;
-      const maxY = (window.innerHeight - 650) / 2;
+      const maxY = (window.innerHeight - 750) / 2;
       
       setModalPosition({
         x: Math.max(-maxX, Math.min(maxX, newX)),
@@ -142,7 +142,7 @@ export default function FlickWordModal({ isOpen, onClose }: FlickWordModalProps)
     left: '50%',
     transform: `translate(calc(-50% + ${modalPosition.x}px), calc(-50% + ${modalPosition.y}px))`,
     width: '500px',
-    height: '650px',
+    height: '750px',
     cursor: isDragging ? 'grabbing' : 'default',
     zIndex: 10000
   };

@@ -71,10 +71,16 @@ export default function UpNextCard({ item }: UpNextCardProps) {
       >
         {/* Poster (2:3) */}
         <div 
-          className="poster-wrap relative aspect-[2/3]" 
+          className="poster-wrap relative aspect-[2/3] cursor-pointer" 
           role="img" 
           aria-label={title}
           style={{ backgroundColor: 'var(--muted)' }}
+          onClick={() => {
+            if (item.id && item.mediaType) {
+              const tmdbUrl = `https://www.themoviedb.org/${item.mediaType}/${item.id}`;
+              window.open(tmdbUrl, '_blank', 'noopener,noreferrer');
+            }
+          }}
         >
           {posterUrl ? (
             <OptimizedImage
