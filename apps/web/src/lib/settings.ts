@@ -39,6 +39,7 @@ export interface Settings {
       themePacks: boolean;
       socialFeatures: boolean;
       bloopersAccess: boolean;
+      extrasAccess: boolean;
     };
   };
 }
@@ -69,6 +70,7 @@ const DEFAULT_SETTINGS: Settings = {
       themePacks: true,
       socialFeatures: true,
       bloopersAccess: true,
+      extrasAccess: true,
     },
   },
 };

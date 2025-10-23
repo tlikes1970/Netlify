@@ -20,6 +20,9 @@ const SettingsPage = lazy(() => import('@/components/SettingsPage'));
 const NotesAndTagsModal = lazy(() => import('@/components/modals/NotesAndTagsModal'));
 import { ShowNotificationSettingsModal } from '@/components/modals/ShowNotificationSettingsModal';
 const FlickWordModal = lazy(() => import('@/components/games/FlickWordModal'));
+import { BloopersModal } from '@/components/extras/BloopersModal';
+import { ExtrasModal } from '@/components/extras/ExtrasModal';
+import { HelpModal } from '@/components/HelpModal';
 const ListPage = lazy(() => import('@/pages/ListPage'));
 const MyListsPage = lazy(() => import('@/pages/MyListsPage'));
 const DiscoveryPage = lazy(() => import('@/pages/DiscoveryPage'));
@@ -28,6 +31,7 @@ import { useForYouRows } from '@/hooks/useForYouRows';
 import { useForYouContent } from '@/hooks/useGenreContent';
 import { useServiceWorker } from '@/hooks/useServiceWorker';
 import { useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { Library, useLibrary } from '@/lib/storage';
 import { mountActionBridge, setToastCallback } from '@/state/actions';
 import { useSettings, settingsManager } from '@/lib/settings';
@@ -39,6 +43,7 @@ import PersonalityErrorBoundary from '@/components/PersonalityErrorBoundary';
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/AuthModal';
 import '@/styles/flickword.css';
+import { backfillShowStatus } from '@/utils/backfillShowStatus';
 
 type View = 'home'|'watching'|'want'|'watched'|'mylists'|'discovery';
 type SearchType = 'all' | 'movies-tv' | 'people';
@@ -67,6 +72,17 @@ export default function App() {
   const [notificationModalItem, setNotificationModalItem] = useState<any>(null);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
 
+  // Bloopers modal state
+  const [bloopersModalItem, setBloopersModalItem] = useState<any>(null);
+  const [showBloopersModal, setShowBloopersModal] = useState(false);
+
+  // Extras modal state
+  const [extrasModalItem, setExtrasModalItem] = useState<any>(null);
+  const [showExtrasModal, setShowExtrasModal] = useState(false);
+
+  // Help modal state
+  const [showHelpModal, setShowHelpModal] = useState(false);
+
   // Debug modal state changes
   useEffect(() => {
     console.log('🔔 Modal state changed:', { 
@@ -74,6 +90,24 @@ export default function App() {
       notificationModalItem: notificationModalItem?.title 
     });
   }, [showNotificationModal, notificationModalItem]);
+
+  // Debug bloopers modal state changes
+  useEffect(() => {
+    console.log('🎬 Bloopers modal state changed:', { 
+      showBloopersModal, 
+      hasBloopersModalItem: !!bloopersModalItem, 
+      bloopersModalItemTitle: bloopersModalItem?.title
+    });
+  }, [showBloopersModal, bloopersModalItem]);
+
+  // Debug extras modal state changes
+  useEffect(() => {
+    console.log('🎭 Extras modal state changed:', { 
+      showExtrasModal, 
+      hasExtrasModalItem: !!extrasModalItem, 
+      extrasModalItemTitle: extrasModalItem?.title
+    });
+  }, [showExtrasModal, extrasModalItem]);
   
   // Toast system
   const { toasts, addToast, removeToast } = useToast();
@@ -147,13 +181,23 @@ export default function App() {
     }
   };
 
-  // Initialize action bridge
+  // Initialize action bridge and backfill show status
   useEffect(() => {
     // Set up toast callback for personality-based feedback
     setToastCallback(addToast);
     
     const cleanup = mountActionBridge();
-    return cleanup;
+    
+    // Trigger show status backfill after a short delay
+    const backfillTimer = setTimeout(() => {
+      console.log('🔄 App.tsx triggering show status backfill...');
+      backfillShowStatus();
+    }, 3000); // Wait 3 seconds after app loads
+    
+    return () => {
+      cleanup();
+      clearTimeout(backfillTimer);
+    };
   }, [addToast]);
 
   // Handle deep links for settings sheet and games
@@ -242,6 +286,46 @@ export default function App() {
     alert(`⏰ Simple reminder set for "${item.title}" - you'll be notified 24 hours before the next episode airs!`);
   };
 
+  // Bloopers handler
+  const handleBloopersOpen = (item: any) => {
+    console.log('🎬 App.tsx handleBloopersOpen called for:', item.title, item.mediaType);
+    console.log('🎬 Setting bloopers modal state:', { 
+      showBloopersModal: true, 
+      bloopersModalItem: item
+    });
+    
+    flushSync(() => {
+      setBloopersModalItem(item);
+      setShowBloopersModal(true);
+    });
+    
+    console.log('🎬 Bloopers modal state should now be set');
+  };
+
+  // Extras handler
+  const handleExtrasOpen = (item: any) => {
+    console.log('🎭 App.tsx handleExtrasOpen called for:', item.title, item.mediaType);
+    console.log('🎭 Setting extras modal state:', { 
+      showExtrasModal: true, 
+      extrasModalItem: item
+    });
+    
+    flushSync(() => {
+      setExtrasModalItem(item);
+      setShowExtrasModal(true);
+    });
+    
+    console.log('🎭 Extras modal state should now be set');
+  };
+
+  // Help handler
+  const handleHelpOpen = () => {
+    console.log('❓ App.tsx handleHelpOpen called');
+    console.log('❓ Current showHelpModal state:', showHelpModal);
+    setShowHelpModal(true);
+    console.log('❓ setShowHelpModal(true) called');
+  };
+
   const handleSaveNotesAndTags = (item: any, notes: string, tags: string[]) => {
     // Update the item in the library with new notes and tags
     Library.updateNotesAndTags(item.id, item.mediaType, notes, tags);
@@ -252,32 +336,53 @@ export default function App() {
   if (view !== 'home') {
     return (
       <main className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)', minHeight: '100lvh' }}>
+        {/* Debug: Show when modal should be visible - TOP LEVEL */}
+        {showExtrasModal && (
+          <div style={{ 
+            position: 'fixed', 
+            top: '10px', 
+            left: '10px', 
+            background: 'red', 
+            color: 'white', 
+            padding: '10px', 
+            zIndex: 9999,
+            fontSize: '12px'
+          }}>
+            🎬 MODAL SHOULD BE VISIBLE: {extrasModalItem?.title}
+          </div>
+        )}
+        
         <FlickletHeader
           appName="Flicklet"
           showMarquee={false}
           onSearch={(q, g, t) => handleSearch(q, g ?? null, (t as SearchType) ?? 'all')}
           onClear={handleClear}
+          onHelpOpen={() => {
+            console.log('❓ App.tsx onHelpOpen prop called');
+            handleHelpOpen();
+          }}
         />
-        {searchActive ? (
-          <SearchResults query={search.q} genre={search.genre} searchType={search.type} nonce={search.nonce} />
-        ) : (
-          <>
-            {/* Desktop Tabs */}
-            <div className="hidden lg:block">
-              <Tabs current={view} onChange={setView} />
-            </div>
-            
-            {/* Mobile Tabs */}
-            <div className="block lg:hidden">
-              <MobileTabs current={view} onChange={setView} />
-            </div>
-            
-            {/* Add bottom padding for mobile tabs */}
-            <div className="pb-20 lg:pb-0" style={{ 
-              paddingBottom: viewportOffset > 0 && window.visualViewport?.offsetTop === 0 
-                ? `${80 + viewportOffset}px` 
-                : undefined 
-            }}>
+        
+        {/* Desktop Tabs - Always visible */}
+        <div className="hidden lg:block">
+          <Tabs current={view} onChange={setView} />
+        </div>
+        
+        {/* Mobile Tabs - Always visible */}
+        <div className="block lg:hidden">
+          <MobileTabs current={view} onChange={setView} />
+        </div>
+        
+        {/* Content Area */}
+        <div className="pb-20 lg:pb-0" style={{ 
+          paddingBottom: viewportOffset > 0 && window.visualViewport?.offsetTop === 0 
+            ? `${80 + viewportOffset}px` 
+            : undefined 
+        }}>
+          {searchActive ? (
+            <SearchResults query={search.q} genre={search.genre} searchType={search.type} nonce={search.nonce} />
+          ) : (
+            <>
               {(view as View) === 'home' && (
                 <div className="min-h-screen" data-page="home">
                   {/* Home Page Content */}
@@ -312,21 +417,21 @@ export default function App() {
               {view === 'watching'  && (
                 <Suspense fallback={<div className="loading-spinner">Loading watching list...</div>}>
                   <div data-page="lists" data-list="watching">
-                    <ListPage title="Currently Watching" items={watching} mode="watching" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} onSimpleReminder={handleSimpleReminder} />
+                    <ListPage title="Currently Watching" items={watching} mode="watching" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} onSimpleReminder={handleSimpleReminder} onBloopersOpen={handleBloopersOpen} onExtrasOpen={handleExtrasOpen} />
                   </div>
                 </Suspense>
               )}
               {view === 'want'      && (
                 <Suspense fallback={<div className="loading-spinner">Loading wishlist...</div>}>
                   <div data-page="lists" data-list="wishlist">
-                    <ListPage title="Want to Watch" items={wishlist} mode="want" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} onSimpleReminder={handleSimpleReminder} />
+                    <ListPage title="Want to Watch" items={wishlist} mode="want" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} onSimpleReminder={handleSimpleReminder} onBloopersOpen={handleBloopersOpen} onExtrasOpen={handleExtrasOpen} />
                   </div>
                 </Suspense>
               )}
               {view === 'watched'   && (
                 <Suspense fallback={<div className="loading-spinner">Loading watched list...</div>}>
                   <div data-page="lists" data-list="watched">
-                    <ListPage title="Watched" items={watched} mode="watched" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} onSimpleReminder={handleSimpleReminder} />
+                    <ListPage title="Watched" items={watched} mode="watched" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} onSimpleReminder={handleSimpleReminder} onBloopersOpen={handleBloopersOpen} onExtrasOpen={handleExtrasOpen} />
                   </div>
                 </Suspense>
               )}
@@ -342,9 +447,9 @@ export default function App() {
                   <DiscoveryPage query={search.q} genreId={search.genre ? parseInt(search.genre) : null} />
                 </Suspense>
               )}
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
 
         {/* Offline Indicator */}
         {!isOnline && (
@@ -402,6 +507,43 @@ export default function App() {
             }}
           />
         )}
+
+        {/* Bloopers Modal */}
+        {console.log('🎬 BloopersModal render check:', { showBloopersModal, hasBloopersModalItem: !!bloopersModalItem, bloopersModalItemTitle: bloopersModalItem?.title })}
+        {showBloopersModal && bloopersModalItem && (
+          <BloopersModal
+            isOpen={showBloopersModal}
+            onClose={() => setShowBloopersModal(false)}
+            showId={(() => {
+              const id = typeof bloopersModalItem.id === 'string' ? parseInt(bloopersModalItem.id) : bloopersModalItem.id;
+              console.log('🎬 BloopersModal showId conversion:', { originalId: bloopersModalItem.id, convertedId: id, type: typeof id });
+              return id;
+            })()}
+            showTitle={bloopersModalItem.title}
+          />
+        )}
+
+        {/* Extras Modal */}
+        {showExtrasModal && extrasModalItem && (
+          <ExtrasModal
+            isOpen={showExtrasModal}
+            onClose={() => setShowExtrasModal(false)}
+            showId={(() => {
+              const id = typeof extrasModalItem.id === 'string' ? parseInt(extrasModalItem.id) : extrasModalItem.id;
+              console.log('🎭 ExtrasModal showId conversion:', { originalId: extrasModalItem.id, convertedId: id, type: typeof id });
+              return id;
+            })()}
+            showTitle={extrasModalItem.title}
+          />
+        )}
+
+        {/* Help Modal */}
+        {showHelpModal && (
+          <HelpModal
+            isOpen={showHelpModal}
+            onClose={() => setShowHelpModal(false)}
+          />
+        )}
       </main>
     );
   }
@@ -426,6 +568,7 @@ export default function App() {
           showMarquee={isHome && !searchActive}
           onSearch={(q, g, t) => handleSearch(q, g ?? null, (t as SearchType) ?? 'all')}
           onClear={handleClear}
+          onHelpOpen={handleHelpOpen}
           messages={[
             getPersonalityText('marquee1', settings.personalityLevel),
             getPersonalityText('marquee2', settings.personalityLevel),
@@ -567,9 +710,17 @@ export default function App() {
           <Suspense fallback={<div className="loading-spinner">Loading game...</div>}>
             <FlickWordModal 
               isOpen={showFlickWordModal} 
-              onClose={() => setShowFlickWordModal(false)} 
+              onClose={() => setShowFlickWordModal(false)}
             />
           </Suspense>
+        )}
+
+        {/* Help Modal */}
+        {showHelpModal && (
+          <HelpModal
+            isOpen={showHelpModal}
+            onClose={() => setShowHelpModal(false)}
+          />
         )}
       </main>
     </PersonalityErrorBoundary>

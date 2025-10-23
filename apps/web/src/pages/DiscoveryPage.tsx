@@ -44,7 +44,9 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           title: item.title,
           posterUrl: item.posterUrl,
           year: item.year,
-          voteAverage: item.voteAverage
+          voteAverage: item.voteAverage,
+          showStatus: item.showStatus,
+          lastAirDate: item.lastAirDate
         }, 'wishlist');
         console.log('✅ Item added to wishlist from discovery:', item.title);
       }
@@ -58,7 +60,9 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           title: item.title,
           posterUrl: item.posterUrl,
           year: item.year,
-          voteAverage: item.voteAverage
+          voteAverage: item.voteAverage,
+          showStatus: item.showStatus,
+          lastAirDate: item.lastAirDate
         }, 'watched');
         console.log('✅ Item added to watched from discovery:', item.title);
       }
@@ -72,7 +76,9 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           title: item.title,
           posterUrl: item.posterUrl,
           year: item.year,
-          voteAverage: item.voteAverage
+          voteAverage: item.voteAverage,
+          showStatus: item.showStatus,
+          lastAirDate: item.lastAirDate
         }, 'not');
         console.log('✅ Item added to not interested from discovery:', item.title);
       }

@@ -15,6 +15,18 @@ export async function fetchNextAirDate(tvId: number): Promise<string | null> {
   return next || null;
 }
 
+export async function fetchShowStatus(tvId: number): Promise<{status: string, lastAirDate: string | null} | null> {
+  const url = `/.netlify/functions/tmdb-proxy?path=tv/${tvId}&language=en-US`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const json = await res.json();
+  
+  return {
+    status: json?.status || 'Unknown',
+    lastAirDate: json?.last_air_date || null
+  };
+}
+
 export async function fetchCurrentEpisodeInfo(tvId: number): Promise<{season: number, episode: number} | null> {
   const url = `/.netlify/functions/tmdb-proxy?path=tv/${tvId}&language=en-US`;
   const res = await fetch(url);

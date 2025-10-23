@@ -11,8 +11,12 @@ export interface MediaItem {
   runtimeMins?: number;  // optional
   synopsis?: string;     // plot overview from TMDB
   nextAirDate?: string | null; // ISO date for TV next episode (watching only)
+  showStatus?: 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned'; // TV show status
+  lastAirDate?: string;  // ISO date for TV last episode
   userNotes?: string;    // user's personal notes/review
   tags?: string[];       // user-defined tags
+  networks?: string[];   // TV networks or streaming services
+  productionCompanies?: string[]; // Movie production companies
 }
 
 export type CardContext =
@@ -35,4 +39,6 @@ export interface CardActionHandlers {
   onEpisodeTracking?: (item: MediaItem) => void; // open episode tracking modal
   onNotificationToggle?: (item: MediaItem) => void; // toggle notifications for show
   onSimpleReminder?: (item: MediaItem) => void; // set simple reminder for show
+  onBloopersOpen?: (item: MediaItem) => void; // open bloopers modal
+  onExtrasOpen?: (item: MediaItem) => void; // open extras modal
 }

@@ -24,7 +24,7 @@ export default function Tabs({ current, onChange }: TabsProps) {
     { id: 'want',     label: translations.wantToWatch, count: wantCount },
     { id: 'watched',  label: translations.watched, count: watchedCount },
     { id: 'mylists',  label: translations.myLists || 'My Lists', count: myListsCount },
-    { id: 'discovery',label: translations.discovery, count: 0 } // Discovery doesn't have a count
+    { id: 'discovery',label: translations.discovery, count: 0 }, // Discovery doesn't have a count
   ];
   return (
     <div className="w-full">

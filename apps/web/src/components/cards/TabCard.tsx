@@ -3,6 +3,7 @@ import type { CardActionHandlers, MediaItem } from './card.types';
 import { useTranslations } from '../../lib/language';
 import { useSettings } from '../../lib/settings';
 import { Library } from '../../lib/storage';
+import { getShowStatusInfo, formatLastAirDate } from '../../utils/showStatus';
 import StarRating from './StarRating';
 import MyListToggle from '../MyListToggle';
 import SwipeableCard from '../SwipeableCard';
@@ -11,6 +12,7 @@ import { CompactPrimaryAction } from '../../features/compact/CompactPrimaryActio
 import { CompactOverflowMenu } from '../../features/compact/CompactOverflowMenu';
 import { SwipeRow } from '../../features/compact/SwipeRow';
 import { EpisodeProgressDisplay } from '../EpisodeProgressDisplay';
+import { fetchNetworkInfo } from '../../search/api';
 
 export type TabCardProps = {
   item: MediaItem;
@@ -55,6 +57,16 @@ export default function TabCard({
   
   // Mobile ellipsis state
   const [showAllActions, setShowAllActions] = useState(false);
+  
+  // Network information state
+  const [networkInfo, setNetworkInfo] = useState<{ networks?: string[]; productionCompanies?: string[] }>({});
+  
+  // Fetch network information when component mounts
+  React.useEffect(() => {
+    if (mediaType === 'movie' || mediaType === 'tv') {
+      fetchNetworkInfo(Number(item.id), mediaType).then(setNetworkInfo);
+    }
+  }, [item.id, mediaType]);
 
   const handleRatingChange = (rating: number) => {
     if (actions?.onRatingChange) {
@@ -72,14 +84,35 @@ export default function TabCard({
   };
 
   const getWhereToWatch = () => {
-    // TODO: Integrate with streaming service data
-    return 'Where to Watch: Netflix';
+    if (mediaType === 'tv' && networkInfo.networks && networkInfo.networks.length > 0) {
+      return `On ${networkInfo.networks[0]}${networkInfo.networks.length > 1 ? ` (+${networkInfo.networks.length - 1} more)` : ''}`;
+    } else if (mediaType === 'movie' && networkInfo.productionCompanies && networkInfo.productionCompanies.length > 0) {
+      return `From ${networkInfo.productionCompanies[0]}${networkInfo.productionCompanies.length > 1 ? ` (+${networkInfo.productionCompanies.length - 1} more)` : ''}`;
+    }
+    // Don't show placeholder text - only show when we have real data
+    return null;
   };
 
   const getBadges = () => {
     const badges = [];
     if (mediaType === 'tv') {
       badges.push('TV SERIES');
+      
+      // Debug: Log what TabCard receives
+      console.log(`🔍 TabCard ${title} received:`, {
+        showStatus: item.showStatus,
+        lastAirDate: item.lastAirDate,
+        hasShowStatus: item.showStatus !== undefined
+      });
+      
+      // Add show status badge if available
+      const statusInfo = getShowStatusInfo(item.showStatus);
+      if (statusInfo) {
+        badges.push(statusInfo.badge);
+        console.log(`✅ TabCard ${title} adding badge:`, statusInfo.badge);
+      } else {
+        console.log(`❌ TabCard ${title} no badge - showStatus:`, item.showStatus);
+      }
     } else {
       badges.push('MOVIE');
     }
@@ -595,8 +628,8 @@ export default function TabCard({
           {getMetaText()}
         </div>
 
-        {/* Where to Watch - hidden in condensed view */}
-        {!isCondensed && (
+        {/* Where to Watch - only show when we have real data */}
+        {!isCondensed && getWhereToWatch() && (
           <div className="where text-xs mb-2" style={{ color: 'var(--accent)' }}>
             {getWhereToWatch()}
           </div>
@@ -605,15 +638,24 @@ export default function TabCard({
         {/* Badges - hidden in condensed view */}
         {!isCondensed && (
           <div className="badges flex gap-1.5 flex-wrap mb-2">
-            {getBadges().map((badge, index) => (
-              <span
-                key={index}
-                className="badge border border-line rounded px-1.5 py-0.5 text-xs"
-                style={{ color: 'var(--muted)', borderColor: 'var(--line)' }}
-              >
-                {badge}
-              </span>
-            ))}
+            {getBadges().map((badge, index) => {
+              const statusInfo = getShowStatusInfo(item.showStatus);
+              const isStatusBadge = statusInfo && badge === statusInfo.badge;
+              
+              return (
+                <span
+                  key={index}
+                  className="badge border border-line rounded px-1.5 py-0.5 text-xs font-medium"
+                  style={{ 
+                    color: isStatusBadge ? statusInfo.color : 'var(--muted)', 
+                    borderColor: isStatusBadge ? statusInfo.backgroundColor : 'var(--line)',
+                    backgroundColor: isStatusBadge ? statusInfo.backgroundColor : 'transparent'
+                  }}
+                >
+                  {badge}
+                </span>
+              );
+            })}
           </div>
         )}
 
@@ -626,6 +668,25 @@ export default function TabCard({
             {rating ? `${rating}/10` : 'No rating'}
           </span>
         </div>
+
+        {/* Show Completion Status - hidden in condensed view */}
+        {!isCondensed && mediaType === 'tv' && (() => {
+          const statusInfo = getShowStatusInfo(item.showStatus);
+          if (!statusInfo?.isCompleted) return null;
+          
+          return (
+            <div className="completion-status mb-2">
+              <div className="text-xs font-medium" style={{ color: statusInfo.backgroundColor }}>
+                {item.showStatus === 'Ended' ? 'Series Complete' : 'Series Cancelled'}
+              </div>
+              {item.lastAirDate && (
+                <div className="text-xs" style={{ color: 'var(--muted)' }}>
+                  Last aired: {formatLastAirDate(item.lastAirDate)}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* User Rating */}
         {(tabType === 'watching' || tabType === 'watched') && (
@@ -736,30 +797,43 @@ export default function TabCard({
               PRO:
             </span>
             <button
+              onClick={() => {
+                console.log('🎬 TabCard bloopers button clicked for:', item.title);
+                console.log('🎬 Pro settings check:', { 
+                  isPro: settings.pro.isPro, 
+                  bloopersAccess: settings.pro.features.bloopersAccess,
+                  buttonEnabled: settings.pro.isPro && settings.pro.features.bloopersAccess
+                });
+                actions?.onBloopersOpen?.(item);
+              }}
               className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
               style={{ 
                 backgroundColor: 'var(--btn)', 
                 color: 'var(--muted)', 
                 borderColor: 'var(--pro)', 
                 border: '1px solid',
-                opacity: 0.6
+                opacity: settings.pro.isPro && settings.pro.features.bloopersAccess ? 1 : 0.6
               }}
-              disabled
-              title="Pro feature - upgrade to unlock"
+              disabled={!settings.pro.isPro || !settings.pro.features.bloopersAccess}
+              title={settings.pro.isPro && settings.pro.features.bloopersAccess ? "View bloopers and outtakes" : "Pro feature - upgrade to unlock"}
             >
               Bloopers
             </button>
             <button
+              onClick={() => {
+                console.log('🎭 TabCard extras button clicked for:', item.title);
+                actions?.onExtrasOpen?.(item);
+              }}
               className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
               style={{ 
                 backgroundColor: 'var(--btn)', 
                 color: 'var(--muted)', 
                 borderColor: 'var(--pro)', 
                 border: '1px solid',
-                opacity: 0.6
+                opacity: settings.pro.isPro && settings.pro.features.extrasAccess ? 1 : 0.6
               }}
-              disabled
-              title="Pro feature - upgrade to unlock"
+              disabled={!settings.pro.isPro || !settings.pro.features.extrasAccess}
+              title={settings.pro.isPro && settings.pro.features.extrasAccess ? "View behind-the-scenes content" : "Pro feature - upgrade to unlock"}
             >
               Extras
             </button>

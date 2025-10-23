@@ -125,12 +125,32 @@ export default function FeedbackPanel() {
         </form>
       </div>
       <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', border: '1px solid' }}>
-        <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--text)' }}>{translations.whatsComing}</h3>
-        <ul className="text-xs list-disc ml-5 space-y-1" style={{ color: 'var(--muted)' }}>
-          <li>{translations.betterRecommendations}</li>
-          <li>{translations.episodeUpNextWithDates}</li>
-          <li>{translations.shareListsWithFriends}</li>
-        </ul>
+        <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text)' }}>📝 Submit Content</h3>
+        
+        {/* Marquee Comments */}
+        <div className="mb-4">
+          <h4 className="text-xs font-medium mb-2" style={{ color: 'var(--text)' }}>Marquee Comments</h4>
+          <div className="text-xs space-y-1" style={{ color: 'var(--muted)' }}>
+            <p>• Keep comments under 100 characters</p>
+            <p>• Use feedback form on the left</p>
+            <p>• Subject: "Marquee Comment: [Show Name]"</p>
+            <p>• Include your comment in the message body</p>
+          </div>
+        </div>
+
+        {/* Video Submissions */}
+        <div>
+          <h4 className="text-xs font-medium mb-2" style={{ color: 'var(--text)' }}>🎬 Video Submissions</h4>
+          <div className="text-xs space-y-1" style={{ color: 'var(--muted)' }}>
+            <p>• Max file size: 100MB</p>
+            <p>• Formats: MP4, MOV, AVI</p>
+            <p>• Resolution: 720p minimum</p>
+            <p>• Duration: 30 seconds - 5 minutes</p>
+            <p>• Email: <strong>support@flickletapp.com</strong></p>
+            <p>• Subject: "Video Submission: [Show Name] - [Type]"</p>
+            <p>• Include: Show name, video type, your username</p>
+          </div>
+        </div>
       </div>
     </div>
   );

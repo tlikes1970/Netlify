@@ -13,8 +13,9 @@ import type { Language } from '../lib/language.types';
 // Lazy load heavy notification modals
 const NotificationSettings = lazy(() => import('./modals/NotificationSettings').then(m => ({ default: m.NotificationSettings })));
 const NotificationCenter = lazy(() => import('./modals/NotificationCenter').then(m => ({ default: m.NotificationCenter })));
+const AdminExtrasPage = lazy(() => import('../pages/AdminExtrasPage'));
 
-type SettingsTab = 'general' | 'notifications' | 'layout' | 'data' | 'pro' | 'about' | 'social' | 'community';
+type SettingsTab = 'general' | 'notifications' | 'layout' | 'data' | 'pro' | 'about' | 'social' | 'community' | 'admin';
 
 export default function SettingsPage({ onClose }: { onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
@@ -42,6 +43,7 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
     { id: 'social' as const, label: '👥 Social' },
     { id: 'community' as const, label: '🏆 Community' },
     { id: 'pro' as const, label: translations.pro },
+    { id: 'admin' as const, label: '⚙️ Admin' },
     { id: 'about' as const, label: translations.about },
   ];
 
@@ -107,6 +109,11 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
                   {activeTab === 'social' && <SocialTab />}
                   {activeTab === 'community' && <CommunityTab />}
                   {activeTab === 'pro' && <ProTab />}
+                  {activeTab === 'admin' && (
+                    <Suspense fallback={<div className="loading-spinner">Loading admin...</div>}>
+                      <AdminExtrasPage />
+                    </Suspense>
+                  )}
                   {activeTab === 'about' && <AboutTab />}
                 </div>
       </div>

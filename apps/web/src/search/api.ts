@@ -1,7 +1,51 @@
 import type { MediaItem } from '../components/cards/card.types';
+import { get } from '../lib/tmdb';
 
 
 export type SearchResult = MediaItem;
+
+// Function to fetch network/production company information from TMDB detailed endpoints
+export async function fetchNetworkInfo(id: number, mediaType: 'movie' | 'tv'): Promise<{ networks?: string[]; productionCompanies?: string[] }> {
+  const maxRetries = 2;
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const endpoint = mediaType === 'movie' ? `/movie/${id}` : `/tv/${id}`;
+      const data = await get(endpoint);
+      
+      if (mediaType === 'tv') {
+        // For TV shows, get networks
+        const networks = data.networks?.map((network: any) => network.name).filter(Boolean) || [];
+        if (networks.length > 0) {
+          return { networks };
+        }
+      } else {
+        // For movies, get production companies
+        const productionCompanies = data.production_companies?.map((company: any) => company.name).filter(Boolean) || [];
+        if (productionCompanies.length > 0) {
+          return { productionCompanies };
+        }
+      }
+      
+      // If we got data but no networks/companies, that's still a successful response
+      return {};
+      
+    } catch (error) {
+      lastError = error as Error;
+      console.warn(`Attempt ${attempt} failed to fetch network info for ${mediaType}:${id}:`, error);
+      
+      // Wait before retry (exponential backoff)
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+      }
+    }
+  }
+  
+  // If all retries failed, log the final error but don't throw
+  console.error(`All ${maxRetries} attempts failed to fetch network info for ${mediaType}:${id}:`, lastError);
+  return {};
+}
 
 export async function searchMulti(
   query: string,
@@ -91,5 +135,7 @@ export function mapTMDBToMediaItem(r: any): MediaItem {
     voteAverage: typeof r.vote_average === 'number' ? r.vote_average : undefined,
     genre_ids: r.genre_ids,
     synopsis: r.overview || '',
+    showStatus: mediaType === 'tv' ? r.status : undefined,
+    lastAirDate: mediaType === 'tv' ? r.last_air_date : undefined,
   } as MediaItem;
 }

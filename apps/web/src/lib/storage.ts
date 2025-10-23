@@ -373,19 +373,19 @@ export function useLibrary(list: ListName) {
   const [items, setItems] = React.useState(() => Library.getByList(list));
   React.useEffect(() => {
     const newItems = Library.getByList(list);
-    console.log(`🔍 useLibrary(${list}) updated:`, newItems.map(item => ({
-      title: item.title,
-      posterUrl: item.posterUrl,
-      nextAirDate: item.nextAirDate
-    })));
+    console.log(`🔍 useLibrary(${list}) updated:`, newItems.length, 'items');
+    if (newItems.length > 0) {
+      console.log(`🔍 First item showStatus:`, newItems[0].showStatus);
+      console.log(`🔍 First item showStatus type:`, typeof newItems[0].showStatus);
+    }
     setItems(newItems);
     const unsub = Library.subscribe(() => {
       const updatedItems = Library.getByList(list);
-      console.log(`🔔 Library.subscribe(${list}) triggered:`, updatedItems.map(item => ({
-        title: item.title,
-        posterUrl: item.posterUrl,
-        nextAirDate: item.nextAirDate
-      })));
+      console.log(`🔔 Library.subscribe(${list}) triggered:`, updatedItems.length, 'items');
+      if (updatedItems.length > 0) {
+        console.log(`🔔 First item showStatus:`, updatedItems[0].showStatus);
+        console.log(`🔔 First item showStatus type:`, typeof updatedItems[0].showStatus);
+      }
       setItems(updatedItems);
     });
     return () => {

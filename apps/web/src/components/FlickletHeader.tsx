@@ -19,6 +19,7 @@ export type FlickletHeaderProps = {
   pauseOnHover?: boolean;    // pause marquee animation when hovered
   onSearch?: (query: string, genre?: string | null, searchType?: string) => void;
   onClear?: () => void;
+  onHelpOpen?: () => void;   // callback for opening help modal
 };
 
 export default function FlickletHeader({
@@ -30,6 +31,7 @@ export default function FlickletHeader({
   pauseOnHover = true,
   onSearch,
   onClear,
+  onHelpOpen,
 }: FlickletHeaderProps) {
   const translations = useTranslations();
   const { username, needsUsernamePrompt } = useUsername();
@@ -94,7 +96,7 @@ export default function FlickletHeader({
             <div className="text-center">
               <AppTitle text={appName} />
             </div>
-            {/* Right: version + optional show toggle + auth */}
+            {/* Right: version + help + optional show toggle + auth */}
             <div className="flex items-center justify-end gap-2">
               <span
                 className="select-none text-[11px] leading-none text-muted-foreground"
@@ -103,6 +105,28 @@ export default function FlickletHeader({
               >
                 v{APP_VERSION}
               </span>
+              {/* Help Button */}
+              <button
+                onClick={() => {
+                  console.log('❓ Help button clicked in FlickletHeader');
+                  console.log('❓ onHelpOpen function:', onHelpOpen);
+                  try {
+                    if (onHelpOpen) {
+                      onHelpOpen();
+                    } else {
+                      console.error('❓ onHelpOpen is not defined!');
+                    }
+                  } catch (error) {
+                    console.error('❓ Error calling onHelpOpen:', error);
+                  }
+                }}
+                className="rounded-full border border-gray-300 dark:border-gray-600 px-2 py-1 text-[11px] leading-none text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                aria-label="Open help"
+                title="Help & Support"
+                data-testid="help-button"
+              >
+                ?
+              </button>
               {marqueeHidden && (
                 <button
                   type="button"
