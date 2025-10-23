@@ -5,11 +5,12 @@ import { cachedSearchMulti } from './cache';
 import { smartSearch } from './smartSearch';
 import { emit } from '../lib/events';
 import { addToListWithConfirmation } from '../lib/storage';
-import { fetchNextAirDate } from '../tmdb/tv';
+import { fetchNextAirDate, fetchShowStatus } from '../tmdb/tv';
 import { useTranslations } from '../lib/language';
 import { useSettings, getPersonalityText } from '../lib/settings';
 import MyListToggle from '../components/MyListToggle';
 import { OptimizedImage } from '../components/OptimizedImage';
+import { fetchNetworkInfo } from './api';
 
 export default function SearchResults({
   query, genre, searchType = 'all', nonce
@@ -115,6 +116,14 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
   const translations = useTranslations();
   const { posterUrl, mediaType, synopsis } = item;
   const [pressedButtons, setPressedButtons] = React.useState<Set<string>>(new Set());
+  const [networkInfo, setNetworkInfo] = React.useState<{ networks?: string[]; productionCompanies?: string[] }>({});
+  
+  // Fetch network information when component mounts
+  React.useEffect(() => {
+    if (mediaType === 'movie' || mediaType === 'tv') {
+      fetchNetworkInfo(Number(item.id), mediaType).then(setNetworkInfo);
+    }
+  }, [item.id, mediaType]);
   
   // Safe title display helper
   function displayTitle(item: { title?: any; year?: string | number }) {
@@ -125,16 +134,41 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
   
   const title = displayTitle(item);
   
+  // Genre ID to name mapping (common TMDB genres)
+  const getGenreName = (genreIds?: number[]) => {
+    if (!genreIds || genreIds.length === 0) return 'Genre TBA';
+    
+    const genreMap: Record<number, string> = {
+      28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime',
+      99: 'Documentary', 18: 'Drama', 10751: 'Family', 14: 'Fantasy', 36: 'History',
+      27: 'Horror', 10402: 'Music', 9648: 'Mystery', 10749: 'Romance', 878: 'Sci-Fi',
+      10770: 'TV Movie', 53: 'Thriller', 10752: 'War', 37: 'Western'
+    };
+    
+    const firstGenre = genreIds[0];
+    return genreMap[firstGenre] || 'Genre TBA';
+  };
+  
   // Handle person results differently
   if (mediaType === 'person') {
     return <PersonCard item={item} />;
   }
   
-  // Mock data for demo - in real implementation, this would come from TMDB
-  const runtime = mediaType === 'movie' ? '120m' : '45m';
-  const genre = mediaType === 'movie' ? 'Drama' : 'TV Drama';
-  const streamingService = 'Netflix';
-  const badges = ['NEW', 'TRENDING'];
+  // Use actual data from TMDB or sensible defaults
+  const genre = getGenreName((item as any).genre_ids);
+  const mediaTypeLabel = mediaType === 'movie' ? 'Movie' : 'TV Series';
+  const badges = ['NEW', 'TRENDING']; // TODO: Generate based on actual data
+  
+  // Get streaming service information
+  const getStreamingInfo = () => {
+    if (mediaType === 'tv' && networkInfo.networks && networkInfo.networks.length > 0) {
+      return `On ${networkInfo.networks[0]}${networkInfo.networks.length > 1 ? ` (+${networkInfo.networks.length - 1} more)` : ''}`;
+    } else if (mediaType === 'movie' && networkInfo.productionCompanies && networkInfo.productionCompanies.length > 0) {
+      return `From ${networkInfo.productionCompanies[0]}${networkInfo.productionCompanies.length > 1 ? ` (+${networkInfo.productionCompanies.length - 1} more)` : ''}`;
+    }
+    // Don't show placeholder text - only show when we have real data
+    return null;
+  };
   
 
   const handleAction = async (action: string) => {
@@ -153,12 +187,26 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
           });
           break;
         case 'currently-watching':
-          // Fetch next air date for TV shows
+          // Fetch next air date and show status for TV shows
           let nextAirDate: string | null = null;
+          let showStatus: string | undefined = undefined;
+          let lastAirDate: string | undefined = undefined;
+          
           if (mediaType === 'tv') {
             nextAirDate = await fetchNextAirDate(Number(item.id));
+            const statusData = await fetchShowStatus(Number(item.id));
+            if (statusData) {
+              showStatus = statusData.status;
+              lastAirDate = statusData.lastAirDate || undefined;
+            }
           }
-          addToListWithConfirmation({ ...item, nextAirDate }, 'watching', () => {
+          
+          addToListWithConfirmation({ 
+            ...item, 
+            nextAirDate,
+            showStatus: showStatus as 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned' | undefined,
+            lastAirDate
+          }, 'watching', () => {
             onRemove(); // Remove from search results
           });
           break;
@@ -254,10 +302,12 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
         <div className="font-bold text-lg mb-1">{title}</div>
         
         {/* Meta */}
-        <div className="text-muted-foreground text-sm mb-1">{genre} • Runtime: {runtime}</div>
+        <div className="text-muted-foreground text-sm mb-1">{genre} • {mediaTypeLabel}</div>
         
-        {/* Streaming Info */}
-        <div className="text-accent text-sm mb-2">Where to Watch: {streamingService}</div>
+        {/* Streaming Info - only show when we have real data */}
+        {getStreamingInfo() && (
+          <div className="text-accent text-sm mb-2">{getStreamingInfo()}</div>
+        )}
         
         {/* Synopsis */}
         <div className="text-muted-foreground text-sm mb-2 max-h-12 overflow-hidden">
@@ -275,12 +325,17 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
         
         {/* Rating */}
         <div className="flex items-center gap-1 mb-4">
-          <span className="text-accent text-lg cursor-pointer">★</span>
-          <span className="text-accent text-lg cursor-pointer">★</span>
+          <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
+          <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
           <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
           <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
           <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
           <span className="text-muted-foreground text-xs ml-2">(Your rating)</span>
+          {item.voteAverage && (
+            <span className="text-muted-foreground text-xs ml-4">
+              TMDB: {item.voteAverage.toFixed(1)}/10
+            </span>
+          )}
         </div>
         
         {/* Actions */}

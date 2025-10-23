@@ -13,7 +13,7 @@ export function setToastCallback(callback: (message: string, type: 'success' | '
 }
 
 // Helper function to fetch title and year from TMDB API
-async function fetchMediaDataFromTMDB(id: string, mediaType: MediaType): Promise<{ title: string; year?: string }> {
+async function fetchMediaDataFromTMDB(id: string, mediaType: MediaType): Promise<{ title: string; year?: string; showStatus?: string; lastAirDate?: string }> {
   try {
     const endpoint = mediaType === 'movie' ? `/movie/${id}` : `/tv/${id}`;
     const data = await get(endpoint);
@@ -24,7 +24,12 @@ async function fetchMediaDataFromTMDB(id: string, mediaType: MediaType): Promise
     const dateString = mediaType === 'movie' ? data.release_date : data.first_air_date;
     const year = dateString ? String(dateString).slice(0, 4) : undefined;
     
-    return { title, year };
+    return { 
+      title, 
+      year,
+      showStatus: mediaType === 'tv' ? data.status : undefined,
+      lastAirDate: mediaType === 'tv' ? data.last_air_date : undefined
+    };
   } catch (error) {
     console.warn(`Failed to fetch media data for ${mediaType}:${id}:`, error);
     return { title: 'Untitled' };
@@ -41,7 +46,9 @@ export function mountActionBridge() {
       id, 
       mediaType: mediaType as MediaType, 
       title: mediaData.title,
-      year: mediaData.year
+      year: mediaData.year,
+      showStatus: mediaData.showStatus as 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned' | undefined,
+      lastAirDate: mediaData.lastAirDate
     }, 'wishlist');
     
     // Show personality-based feedback
@@ -59,7 +66,9 @@ export function mountActionBridge() {
       id, 
       mediaType: mediaType as MediaType, 
       title: mediaData.title,
-      year: mediaData.year
+      year: mediaData.year,
+      showStatus: mediaData.showStatus as 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned' | undefined,
+      lastAirDate: mediaData.lastAirDate
     }, 'watched');
     
     // Show personality-based feedback
@@ -77,7 +86,9 @@ export function mountActionBridge() {
       id, 
       mediaType: mediaType as MediaType, 
       title: mediaData.title,
-      year: mediaData.year
+      year: mediaData.year,
+      showStatus: mediaData.showStatus as 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned' | undefined,
+      lastAirDate: mediaData.lastAirDate
     }, 'not');
     
     // Show personality-based feedback
@@ -103,7 +114,9 @@ export function mountActionBridge() {
       mediaType: mediaType as MediaType, 
       title: mediaData.title,
       year: mediaData.year,
-      nextAirDate 
+      nextAirDate,
+      showStatus: mediaData.showStatus as 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned' | undefined,
+      lastAirDate: mediaData.lastAirDate
     }, 'watching');
     
     // Show personality-based feedback

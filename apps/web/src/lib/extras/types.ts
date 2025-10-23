@@ -5,7 +5,7 @@ export interface ExtrasVideo {
   thumbnail: string;
   duration: string;
   publishedAt: string;
-  provider: 'youtube' | 'vimeo' | 'archive';
+  provider: 'youtube' | 'vimeo' | 'archive' | 'official';
   channelName: string;
   channelId: string;
   embedUrl: string;

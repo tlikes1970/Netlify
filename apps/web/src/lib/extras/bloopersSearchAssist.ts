@@ -60,7 +60,7 @@ export class BloopersSearchAssist {
    * Search for curated bloopers content
    */
   static async searchBloopers(options: SearchAssistOptions): Promise<BloopersSearchResult[]> {
-    const { showTitle, showId, maxResults = QUALITY_THRESHOLDS.MAX_RESULTS } = options;
+    const { showTitle, maxResults = QUALITY_THRESHOLDS.MAX_RESULTS } = options;
     
     try {
       // Build search query with show title and bloopers keywords
@@ -93,7 +93,7 @@ export class BloopersSearchAssist {
    * Search YouTube for bloopers content
    * Note: This is a stub implementation - replace with actual YouTube API integration
    */
-  private static async searchYouTube(query: string, maxResults: number): Promise<BloopersSearchResult[]> {
+  private static async searchYouTube(query: string, _maxResults: number): Promise<BloopersSearchResult[]> {
     // TODO: Replace with actual YouTube Data API v3 integration
     // For now, return mock data for development/testing
     
