@@ -15,6 +15,7 @@ import './styles/compact-actions.css';
 import './styles/compact-lists.css';
 import './styles/compact-a11y-perf.css';
 import './styles/compact-cleanup.css';
+import './styles/cards-mobile.css';
 import { installCompactMobileGate, installActionsSplitGate } from './lib/flags';
 
 // Set density to compact (required for compact mobile gate)

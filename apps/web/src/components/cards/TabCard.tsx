@@ -13,6 +13,8 @@ import { CompactOverflowMenu } from '../../features/compact/CompactOverflowMenu'
 import { SwipeRow } from '../../features/compact/SwipeRow';
 import { EpisodeProgressDisplay } from '../EpisodeProgressDisplay';
 import { fetchNetworkInfo } from '../../search/api';
+import { TvCardMobile } from './mobile/TvCardMobile';
+import { MovieCardMobile } from './mobile/MovieCardMobile';
 
 export type TabCardProps = {
   item: MediaItem;
@@ -507,6 +509,20 @@ export default function TabCard({
   const buttonClass = isCondensed 
     ? "px-1.5 py-1 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
     : "px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md";
+
+  // Mobile detection for new mobile cards
+  const isMobileCompact = document.documentElement.dataset.compactMobileV1 === 'true';
+  const isActionsSplit = document.documentElement.dataset.actionsSplit === 'true';
+  const isMobile = window.innerWidth < 768;
+  
+  // Use new mobile components when mobile flags are enabled
+  if (isMobileCompact && isActionsSplit && isMobile) {
+    if (mediaType === 'tv') {
+      return <TvCardMobile item={item} actions={actions} tabType={tabType} />;
+    } else if (mediaType === 'movie') {
+      return <MovieCardMobile item={item} actions={actions} tabType={tabType} />;
+    }
+  }
 
   return (
     <SwipeRow trailingActions={
