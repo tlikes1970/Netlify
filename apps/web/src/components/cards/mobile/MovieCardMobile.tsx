@@ -19,6 +19,15 @@ export interface MovieCardMobileProps {
 export function MovieCardMobile({ item, actions, tabType = 'watching' }: MovieCardMobileProps) {
   const { title, year, posterUrl, synopsis } = item;
   
+  // Debug: Log what data we have
+  console.log('🎬 MovieCardMobile data:', { 
+    title, 
+    year, 
+    hasPoster: !!posterUrl, 
+    hasSynopsis: !!synopsis,
+    synopsisLength: synopsis?.length || 0
+  });
+  
   // Get Movie-specific meta information
   const getMetaText = () => {
     const yearText = year || 'TBA';

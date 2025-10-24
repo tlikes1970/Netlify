@@ -20,6 +20,15 @@ export interface TvCardMobileProps {
 export function TvCardMobile({ item, actions, tabType = 'watching' }: TvCardMobileProps) {
   const { title, year, posterUrl, synopsis, showStatus } = item;
   
+  // Debug: Log what data we have
+  console.log('📺 TvCardMobile data:', { 
+    title, 
+    year, 
+    hasPoster: !!posterUrl, 
+    hasSynopsis: !!synopsis,
+    synopsisLength: synopsis?.length || 0
+  });
+  
   // Get TV-specific meta information
   const getMetaText = () => {
     const yearText = year || 'TBA';

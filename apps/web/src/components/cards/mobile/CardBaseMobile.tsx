@@ -49,7 +49,15 @@ export function CardBaseMobile({
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // Debug: Log when component renders
-  console.log('🎯 CardBaseMobile rendering:', { title, swipeEnabled });
+  console.log('🎯 CardBaseMobile rendering:', { 
+    title, 
+    meta, 
+    summary: summary?.substring(0, 50) + '...', 
+    swipeEnabled,
+    hasChips: !!chips,
+    hasActions: !!actions,
+    providersCount: providers.length
+  });
 
   // Enable swipe after hydration to avoid SSR mismatch
   useEffect(() => {
