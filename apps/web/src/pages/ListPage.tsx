@@ -225,7 +225,7 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
       </div>
       
       {processedItems.length > 0 ? (
-        <div className="space-y-0">
+        <div className="space-y-4">
           {processedItems.map((item, index) => {
             // LibraryEntry already has all MediaItem properties
             const mediaItem: MediaItem = {
