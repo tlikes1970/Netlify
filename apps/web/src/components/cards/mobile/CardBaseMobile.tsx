@@ -155,14 +155,16 @@ export function CardBaseMobile({
           style={{
             fontSize: 'var(--font-sm, 14px)',
             fontWeight: '600',
-            color: 'var(--text)',
+            color: '#333333', // DEBUG: Force dark color
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            lineHeight: '1.3'
+            lineHeight: '1.3',
+            backgroundColor: '#ffff00', // DEBUG: Yellow background to see title area
+            padding: '2px'
           }}
         >
-          {title}
+          {title || 'NO TITLE'}
         </div>
 
         {/* Meta */}
@@ -170,32 +172,35 @@ export function CardBaseMobile({
           className="card-meta"
           style={{
             fontSize: 'var(--font-xs, 12px)',
-            color: 'var(--muted)',
+            color: '#666666', // DEBUG: Force dark color
             whiteSpace: 'nowrap',
             overflow: 'hidden',
-            textOverflow: 'ellipsis'
+            textOverflow: 'ellipsis',
+            backgroundColor: '#ffcccc', // DEBUG: Light red background to see meta area
+            padding: '2px'
           }}
         >
-          {meta}
+          {meta || 'NO META'}
         </div>
 
         {/* Summary */}
-        {summary && (
-          <div 
-            className="card-summary"
-            style={{
-              fontSize: 'var(--font-xs, 12px)',
-              color: 'var(--muted)',
-              display: '-webkit-box',
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              lineHeight: '1.4'
-            }}
-          >
-            {summary}
-          </div>
-        )}
+        <div 
+          className="card-summary"
+          style={{
+            fontSize: 'var(--font-xs, 12px)',
+            color: '#666666', // DEBUG: Force dark color
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            lineHeight: '1.4',
+            backgroundColor: '#ccffcc', // DEBUG: Light green background to see summary area
+            padding: '2px',
+            minHeight: '40px'
+          }}
+        >
+          {summary || 'NO SUMMARY'}
+        </div>
 
         {/* Chips and Actions */}
         <div 
@@ -204,11 +209,14 @@ export function CardBaseMobile({
             display: 'flex',
             flexDirection: 'column',
             gap: 'var(--space-xs, 4px)',
-            marginTop: 'auto'
+            marginTop: 'auto',
+            backgroundColor: '#ccccff', // DEBUG: Light blue background to see chips/actions area
+            padding: '2px',
+            minHeight: '30px'
           }}
         >
-          {chips}
-          {actions}
+          {chips || <div style={{color: '#333'}}>NO CHIPS</div>}
+          {actions || <div style={{color: '#333'}}>NO ACTIONS</div>}
         </div>
 
         {/* Actions Row */}
