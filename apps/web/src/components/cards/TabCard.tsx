@@ -74,6 +74,36 @@ export default function TabCard({
     }
   };
 
+  // Smart truncation for mobile descriptions based on title length
+  const truncateAtSentence = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    
+    // Find last complete sentence before maxLength
+    const truncated = text.substring(0, maxLength);
+    const lastSentence = truncated.lastIndexOf('.');
+    
+    if (lastSentence > maxLength * 0.7) {
+      return text.substring(0, lastSentence + 1);
+    }
+    
+    // Fallback: truncate at word boundary
+    const lastSpace = truncated.lastIndexOf(' ');
+    return text.substring(0, lastSpace) + '...';
+  };
+
+  // Get description length based on title length (mobile only)
+  const getMobileDescriptionLength = () => {
+    const titleLength = title.length;
+    
+    if (titleLength <= 20) {
+      return 60; // Short titles: more description space
+    } else if (titleLength <= 40) {
+      return 45;  // Medium titles: medium description space
+    } else {
+      return 35;  // Long titles: less description space
+    }
+  };
+
   const getMetaText = () => {
     const yearText = year || 'TBA';
     if (mediaType === 'tv') {
@@ -581,7 +611,7 @@ export default function TabCard({
 
       {/* Content */}
       <div className={`content flex-1 flex flex-col relative ${
-        isCondensed ? 'p-2' : 'p-4'
+        isCondensed ? 'px-2 py-1 pb-2' : 'px-4 pt-2 pb-4'
       }`}>
         {/* Delete button */}
         <button
@@ -679,7 +709,7 @@ export default function TabCard({
           <div className="user-rating mb-2">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>
-                Your Rating:
+                Rate:
               </span>
               <StarRating
                 value={userRating || 0}
@@ -690,13 +720,23 @@ export default function TabCard({
           </div>
         )}
 
-        {/* Overview - hidden in condensed view */}
+        {/* Overview - desktop only */}
         {!isCondensed && synopsis && (
           <div 
             className="overview text-sm mb-3 max-h-16 overflow-hidden"
             style={{ color: 'var(--muted)' }}
           >
             {synopsis}
+          </div>
+        )}
+
+        {/* Mobile Description - only visible in condensed view */}
+        {isCondensed && synopsis && (
+          <div 
+            className="overview text-xs mb-2"
+            style={{ color: 'var(--muted)' }}
+          >
+            {truncateAtSentence(synopsis, getMobileDescriptionLength())}
           </div>
         )}
 
