@@ -279,11 +279,7 @@ export function TvCardMobile({ item, actions, tabType = 'watching' }: TvCardMobi
           {getChips()}
         </div>
       }
-      actions={
-        <div style={{ display: 'flex', gap: 'var(--space-xs, 4px)', flexWrap: 'wrap' }}>
-          {getActions()}
-        </div>
-      }
+      actions={null}
       swipeConfig={getSwipeConfig()}
       testId={`tv-card-mobile-${item.id}`}
       item={item}

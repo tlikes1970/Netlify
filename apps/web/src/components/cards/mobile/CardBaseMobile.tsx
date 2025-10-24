@@ -77,6 +77,12 @@ export function CardBaseMobile({
       className="card-mobile"
       data-testid={testId}
     >
+      {/* Swipe Background - sits under content, hidden until dragging */}
+      <div className="swipe-bg" aria-hidden="true">
+        <div className="reveal left"></div>
+        <div className="reveal right"></div>
+      </div>
+
       {/* Swipe Target - wraps real content */}
       <div className="swipe-target" ref={targetRef}>
         {/* Poster */}
@@ -96,27 +102,32 @@ export function CardBaseMobile({
 
         {/* Content */}
         <div className="content">
-          {/* Title */}
-          <div className="card-title">
-            {title}
+          {/* Topline */}
+          <div className="topline">
+            <div className="title">
+              {title}
+            </div>
+            <button className="btn-overflow" aria-label="More">
+              ⋯
+            </button>
           </div>
 
-          {/* Meta */}
-          <div className="card-meta">
+          {/* Subline */}
+          <div className="subline">
             {meta}
           </div>
-
-          {/* Summary */}
-          {summary && (
-            <div className="card-summary">
-              {summary}
-            </div>
-          )}
 
           {/* Chips */}
           <div className="chips">
             {chips}
           </div>
+
+          {/* Summary */}
+          {summary && (
+            <div className="summary">
+              {summary}
+            </div>
+          )}
 
           {/* Actions Row */}
           <div className="actions">
@@ -134,8 +145,8 @@ export function CardBaseMobile({
             {draggable && (
               <button
                 className="btn-drag"
-                aria-roledescription="sortable handle"
                 data-drag-handle
+                aria-roledescription="sortable handle"
               >
                 ⋮⋮
               </button>
@@ -144,6 +155,7 @@ export function CardBaseMobile({
             {onDelete && (
               <button
                 className="btn-delete"
+                type="button"
                 onClick={onDelete}
               >
                 Delete
@@ -169,6 +181,7 @@ export function CardBaseMobile({
           background: 'transparent'
         }}
       >
+        <div className="gesture-plane"></div>
         {swipeEnabled && (
           <SwipeRowOverlay
             swipeConfig={swipeConfig}

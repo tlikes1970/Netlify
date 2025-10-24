@@ -251,11 +251,7 @@ export function MovieCardMobile({ item, actions, tabType = 'watching' }: MovieCa
           {getChips()}
         </div>
       }
-      actions={
-        <div style={{ display: 'flex', gap: 'var(--space-xs, 4px)', flexWrap: 'wrap' }}>
-          {getActions()}
-        </div>
-      }
+      actions={null}
       swipeConfig={getSwipeConfig()}
       testId={`movie-card-mobile-${item.id}`}
       item={item}

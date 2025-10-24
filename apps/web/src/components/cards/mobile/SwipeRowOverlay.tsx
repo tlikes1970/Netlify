@@ -35,10 +35,15 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
       setIsDragging(true);
       setCaptureId(e.pointerId);
       
+      // Add dragging class to card
+      const card = gestureRef.current?.closest('.card-mobile');
+      if (card) {
+        card.classList.add('dragging');
+      }
+      
       if (gestureRef.current) {
         gestureRef.current.setPointerCapture(e.pointerId);
         gestureRef.current.classList.add('dragging');
-        gestureRef.current.parentElement?.classList.add('dragging');
       }
       
       if (targetRef.current) {
@@ -65,6 +70,12 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
       
       setIsDragging(false);
       setCaptureId(null);
+      
+      // Remove dragging class from card
+      const card = gestureRef.current?.closest('.card-mobile');
+      if (card) {
+        card.classList.remove('dragging');
+      }
       
       if (gestureRef.current) {
         gestureRef.current.releasePointerCapture(e.pointerId);
@@ -107,6 +118,12 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
       
       setIsDragging(false);
       setCaptureId(null);
+      
+      // Remove dragging class from card
+      const card = gestureRef.current?.closest('.card-mobile');
+      if (card) {
+        card.classList.remove('dragging');
+      }
       
       if (gestureRef.current) {
         gestureRef.current.releasePointerCapture(e.pointerId);
