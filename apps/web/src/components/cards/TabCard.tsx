@@ -848,7 +848,7 @@ export default function TabCard({
 
         {/* Drag handle */}
         <div 
-          className={`handle absolute top-1/2 right-2 transform -translate-y-1/2 cursor-grab text-lg transition-all duration-200 hover:scale-110 ${
+          className={`handle absolute top-1/4 right-2 transform -translate-y-1/2 cursor-grab text-lg transition-all duration-200 hover:scale-110 ${
             isDragging ? 'cursor-grabbing' : 'cursor-grab'
           }`}
           style={{ 
