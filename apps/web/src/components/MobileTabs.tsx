@@ -145,12 +145,12 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
   const watchedCount = watchedItems.length;
   const myListsCount = Array.isArray(customLists) ? customLists.length : 0;
   
-  const TABS: { id: TabId; label: string; count: number; icon: string }[] = [
-    { id: 'watching', label: 'Watching', count: watchingCount, icon: '▶️' },
-    { id: 'want',     label: 'Wishlist', count: wantCount, icon: '❤️' },
-    { id: 'watched',  label: 'Watched', count: watchedCount, icon: '✅' },
-    { id: 'mylists',  label: 'Lists', count: myListsCount, icon: '📋' },
-    { id: 'discovery',label: 'Discover', count: 0, icon: '🔍' }
+  const TABS: { id: TabId; label: string; count: number }[] = [
+    { id: 'watching', label: 'Watching', count: watchingCount },
+    { id: 'want',     label: 'Wishlist', count: wantCount },
+    { id: 'watched',  label: 'Watched', count: watchedCount },
+    { id: 'mylists',  label: 'Lists', count: myListsCount },
+    { id: 'discovery',label: 'Discover', count: 0 }
   ];
 
   return (
@@ -176,17 +176,16 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
           {/* Home Tab */}
           <button
             onClick={() => onChange('home')}
-            className="flex flex-col items-center justify-center p-1 min-h-[60px] transition-all duration-300 ease-out relative flex-1"
+            className="flex flex-col items-center justify-center p-2 min-h-[60px] transition-all duration-200 ease-out relative flex-1"
             style={{
               color: current === 'home' ? 'var(--accent)' : 'var(--muted)',
-              transform: current === 'home' ? 'scale(1.1)' : 'scale(1)'
+              fontWeight: current === 'home' ? '600' : '500'
             }}
           >
-            <span className="text-lg mb-1">🏠</span>
-            <span className="text-xs font-medium">{translations.home}</span>
+            <span className="text-sm font-medium">{translations.home}</span>
             {current === 'home' && (
               <div 
-                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 rounded-full"
+                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 rounded-full"
                 style={{ backgroundColor: 'var(--accent)' }}
               />
             )}
@@ -197,27 +196,26 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
             <button
               key={tab.id}
               onClick={() => onChange(tab.id)}
-              className="flex flex-col items-center justify-center p-1 min-h-[60px] transition-all duration-300 ease-out relative flex-1"
+              className="flex flex-col items-center justify-center p-2 min-h-[60px] transition-all duration-200 ease-out relative flex-1"
               style={{
                 color: current === tab.id ? 'var(--accent)' : 'var(--muted)',
-                transform: current === tab.id ? 'scale(1.1)' : 'scale(1)'
+                fontWeight: current === tab.id ? '600' : '500'
               }}
             >
-              <div className="relative">
-                <span className="text-lg mb-1">{tab.icon}</span>
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-medium">{tab.label}</span>
                 {tab.count > 0 && (
                   <span 
-                    className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1"
+                    className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1"
                     style={{ fontSize: '10px' }}
                   >
                     {tab.count}
                   </span>
                 )}
               </div>
-              <span className="text-xs font-medium">{tab.label}</span>
               {current === tab.id && (
                 <div 
-                  className="absolute top-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 rounded-full"
+                  className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 rounded-full"
                   style={{ backgroundColor: 'var(--accent)' }}
                 />
               )}
