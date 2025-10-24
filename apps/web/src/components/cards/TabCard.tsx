@@ -515,7 +515,22 @@ export default function TabCard({
   const isActionsSplit = document.documentElement.dataset.actionsSplit === 'true';
   const isMobile = window.innerWidth < 768;
   
-  // Use new mobile components when mobile flags are enabled
+  // TEMPORARY: Force mobile components on mobile viewport (bypass flags for testing)
+  if (isMobile) {
+    console.log('📱 Mobile viewport detected, using mobile components:', { 
+      mediaType, 
+      title: item.title,
+      isMobileCompact, 
+      isActionsSplit 
+    });
+    if (mediaType === 'tv') {
+      return <TvCardMobile item={item} actions={actions} tabType={tabType} />;
+    } else if (mediaType === 'movie') {
+      return <MovieCardMobile item={item} actions={actions} tabType={tabType} />;
+    }
+  }
+  
+  // Use new mobile components when mobile flags are enabled (original logic)
   if (isMobileCompact && isActionsSplit && isMobile) {
     if (mediaType === 'tv') {
       return <TvCardMobile item={item} actions={actions} tabType={tabType} />;
