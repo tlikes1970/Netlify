@@ -631,7 +631,7 @@ export default function TabCard({
         {/* Where to Watch - only show when we have real data */}
         {!isCondensed && getWhereToWatch() && (
           <div className="where text-xs mb-2" style={{ color: 'var(--accent)' }}>
-            {getWhereToWatch()}
+            {getWhereToWatch()}{rating ? ` • ${rating}/10` : ''}
           </div>
         )}
 
@@ -659,15 +659,25 @@ export default function TabCard({
           </div>
         )}
 
-        {/* Rating - compact in condensed view */}
-        <div className={`rating flex items-center gap-1 ${
-          isCondensed ? 'mb-1' : 'mb-2'
-        }`}>
-          <span className={isCondensed ? 'text-sm' : 'text-xl'} style={{ color: 'var(--accent)' }}>★</span>
-          <span className={isCondensed ? 'text-xs' : 'text-sm'} style={{ color: 'var(--muted)' }}>
-            {rating ? `${rating}/10` : 'No rating'}
-          </span>
-        </div>
+        {/* Rating - only show in condensed view or when no streaming info */}
+        {isCondensed && (
+          <div className="rating flex items-center gap-1 mb-1">
+            <span className="text-sm" style={{ color: 'var(--accent)' }}>★</span>
+            <span className="text-xs" style={{ color: 'var(--muted)' }}>
+              {rating ? `${rating}/10` : 'No rating'}
+            </span>
+          </div>
+        )}
+        
+        {/* Rating fallback for non-condensed when no streaming info */}
+        {!isCondensed && !getWhereToWatch() && (
+          <div className="rating flex items-center gap-1 mb-2">
+            <span className="text-xl" style={{ color: 'var(--accent)' }}>★</span>
+            <span className="text-sm" style={{ color: 'var(--muted)' }}>
+              {rating ? `${rating}/10` : 'No rating'}
+            </span>
+          </div>
+        )}
 
         {/* Show Completion Status - hidden in condensed view */}
         {!isCondensed && mediaType === 'tv' && (() => {
