@@ -586,8 +586,8 @@ export default function TabCard({
         {/* Delete button */}
         <button
           onClick={() => actions?.onDelete?.(item)}
-          className="absolute top-2 right-2 bg-red-600 text-white border-none px-2 py-1 rounded text-xs cursor-pointer"
-          style={{ fontSize: '11px' }}
+          className="absolute top-1 right-1 bg-red-600 text-white border-none px-1 py-0.5 rounded text-xs cursor-pointer"
+          style={{ fontSize: '10px' }}
         >
           {translations.deleteAction}
         </button>
