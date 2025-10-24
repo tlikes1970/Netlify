@@ -150,21 +150,21 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
       }
     }, [isSwipeOpen, ref]);
 
-    return (
-      <div
-        ref={ref}
-        className="swipe-row-overlay"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          zIndex: 5,
-          margin: 0,
-          padding: 0,
-          border: 'none',
-          boxSizing: 'border-box'
-        }}
-      >
+  return (
+    <div
+      ref={ref}
+      data-swipe-container
+      style={{
+        position: 'absolute',
+        inset: 0,
+        pointerEvents: 'none',
+        zIndex: 5,
+        margin: 0,
+        padding: 0,
+        border: 'none',
+        boxSizing: 'border-box'
+      }}
+    >
         {/* Gesture Zone */}
         <div
           ref={contentRef}

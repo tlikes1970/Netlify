@@ -310,3 +310,70 @@
     --font-md: 12px;
   }
 }
+
+/* Mobile-only overrides - enforce compact mobile design */
+@media (max-width: 640px) {
+  .card-mobile {
+    width: 100%;
+    max-width: 398px;
+    margin: 0 auto var(--space-sm, 8px);
+    box-shadow: none !important;
+    background: var(--surface-0, #fff) !important;
+    border-radius: var(--radius-lg, 12px);
+  }
+
+  /* Two-column grid sizing stays tight */
+  .card-mobile {
+    display: grid;
+    grid-template-columns: var(--poster-w, 112px) 1fr;
+    gap: var(--space-sm, 8px);
+  }
+
+  .card-mobile .poster-column {
+    width: var(--poster-w, 112px);
+    min-width: var(--poster-w, 112px);
+    height: var(--poster-h, 168px);
+    object-fit: cover;
+    border-radius: var(--radius-md, 10px);
+  }
+
+  .card-mobile .content-lane {
+    min-height: var(--content-h, 160px);
+    max-height: var(--content-h, 160px); /* stabilize height */
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto; /* title, chips/meta, summary, actions */
+    row-gap: var(--space-xs, 6px);
+  }
+
+  .card-mobile .card-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .card-mobile .card-summary {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Swipe overlay must NOT affect layout */
+  .swipe-row {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    box-sizing: border-box;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .swipe-row > * { pointer-events: auto; }
+
+  /* Neutralize any desktop card boxes that might leak into mobile */
+  .card-v2, .desktop-card, [class*="card-v2"] {
+    display: none !important;
+  }
+}

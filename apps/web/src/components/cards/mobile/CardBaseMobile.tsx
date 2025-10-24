@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { MediaItem, CardActionHandlers } from '../card.types';
 import { OptimizedImage } from '../../OptimizedImage';
 import { SwipeRowOverlay } from './SwipeRowOverlay';
+import '../../../styles/cards-mobile.css'; // make sure CSS actually loads
 
 /**
  * Process: Mobile Card Base
@@ -46,23 +47,22 @@ export function CardBaseMobile({
     setSwipeEnabled(true);
   }, []);
 
-  // ResizeObserver to sync overlay size with card
+  // ResizeObserver guardrail: keep overlay sized to the card without affecting layout
   useEffect(() => {
-    if (!swipeEnabled || !cardRef.current || !overlayRef.current) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { clientWidth, clientHeight } = entry.target as HTMLElement;
-        if (overlayRef.current) {
-          overlayRef.current.style.width = `${clientWidth}px`;
-          overlayRef.current.style.height = `${clientHeight}px`;
-        }
-      }
-    });
-
-    resizeObserver.observe(cardRef.current);
-    return () => resizeObserver.disconnect();
-  }, [swipeEnabled]);
+    const el = cardRef.current;
+    const overlay = el?.querySelector(".swipe-row");
+    if (!el || !overlay) return;
+    
+    const sync = () => {
+      overlay.style.width = `${el.clientWidth}px`;
+      overlay.style.height = `${el.clientHeight}px`;
+    };
+    
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    sync();
+    return () => ro.disconnect();
+  }, []);
 
   return (
     <div 
@@ -193,7 +193,8 @@ export function CardBaseMobile({
 
       {/* SSR Placeholder - Always Present */}
       <div 
-        className="swipe-row"
+        className="swipe-row" 
+        aria-hidden={!swipeEnabled}
         style={{
           position: 'absolute',
           inset: 0,
@@ -204,16 +205,15 @@ export function CardBaseMobile({
           border: 'none',
           boxSizing: 'border-box'
         }}
-      />
-
-      {/* Swipe Overlay - Only After Hydration */}
-      {swipeEnabled && (
-        <SwipeRowOverlay
-          ref={overlayRef}
-          swipeConfig={swipeConfig}
-          item={item}
-        />
-      )}
+      >
+        {swipeEnabled && (
+          <SwipeRowOverlay
+            ref={overlayRef}
+            swipeConfig={swipeConfig}
+            item={item}
+          />
+        )}
+      </div>
     </div>
   );
 }
