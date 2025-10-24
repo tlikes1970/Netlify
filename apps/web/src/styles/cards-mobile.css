@@ -62,13 +62,15 @@
   display: grid;
   grid-template-rows: auto auto 1fr auto;
   gap: var(--space-xs);
+  background: #ffffff !important; /* Force white background */
+  border: 1px solid #e5e7eb; /* Add border to see the area */
 }
 
 /* Title Clamping - Single Line with Ellipsis */
 .card-mobile .card-title {
   font-size: var(--font-md, 14px);
   font-weight: 600;
-  color: var(--text, #333333);
+  color: #333333 !important; /* Force dark text */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -80,7 +82,7 @@
 /* Meta Information */
 .card-mobile .card-meta {
   font-size: var(--font-xs, 12px);
-  color: var(--muted, #666666);
+  color: #666666 !important; /* Force dark text */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -91,7 +93,7 @@
 /* Summary Clamping - 3 Lines with Ellipsis */
 .card-mobile .card-summary {
   font-size: var(--font-sm, 12px);
-  color: var(--muted, #666666);
+  color: #666666 !important; /* Force dark text */
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -402,9 +404,10 @@
     padding: 2px 8px;
     font-size: 12px;
     line-height: 16px;
-    background: var(--surface-1, #f3f4f6);
-    color: var(--text, #333);
+    background: #f3f4f6 !important; /* Force light background */
+    color: #333333 !important; /* Force dark text */
     white-space: nowrap;
+    border: 1px solid #e5e7eb;
   }
 
   /* Delete + drag */
@@ -424,10 +427,10 @@
     border-radius: 8px;
     display: inline-grid; 
     place-items: center;
-    background: var(--surface-1, #f3f4f6);
+    background: #f3f4f6 !important; /* Force light background */
     border: none;
     cursor: grab;
-    color: var(--text, #333);
+    color: #333333 !important; /* Force dark text */
   }
   .card-mobile .btn-drag:active {
     cursor: grabbing;
