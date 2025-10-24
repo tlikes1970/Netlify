@@ -38,12 +38,60 @@
     object-fit: cover;
   }
 
+  /* Right lane grid stays as-is */
   .content {
     grid-column: 2;
     display: grid;
     grid-template-rows: auto auto 1fr auto; /* title, meta, summary, actions */
     row-gap: 6px;
+    min-height: 168px;
     overflow: hidden;
+  }
+
+  /* Actions row: providers | drag | delete */
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr auto auto;  /* left grows, right is controls */
+    align-items: center;
+    column-gap: 8px;
+  }
+
+  /* Keep buttons INSIDE the lane, aligned to the end */
+  .btn-delete {
+    justify-self: end;
+    padding: 6px 12px;
+    border-radius: 9999px;
+    background: #ef4444;
+    color: #fff;
+    font-weight: 600;
+    line-height: 1;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-drag {
+    justify-self: end;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    background: var(--surface-1,#f3f4f6);
+    border: none;
+    cursor: grab;
+  }
+
+  /* Provider chips */
+  .providers {
+    display: inline-flex;
+    gap: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+    mask-image: linear-gradient(to right, #000 85%, transparent);
+  }
+  .provider-chip {
+    border-radius: 9999px;
+    padding: 2px 8px;
+    font-size: 12px;
+    line-height: 16px;
+    background: var(--surface-1,#f3f4f6);
   }
 
   .card-title {
@@ -63,30 +111,7 @@
     text-overflow: ellipsis;
   }
 
-  .card-summary {
-    font-size: 13px;
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
   .chips { display: flex; gap: 4px; flex-wrap: wrap; }
-
-  .actions {
-    display: grid;
-    grid-template-columns: 1fr auto auto; /* providers | drag | delete */
-    align-items: center;
-    column-gap: 6px;
-    margin-top: 4px;
-  }
-
-  .providers { display: inline-flex; gap: 4px; overflow: hidden; white-space: nowrap; mask-image: linear-gradient(to right, #000 85%, transparent); }
-  .provider-chip { border-radius: 9999px; padding: 2px 8px; font-size: 12px; line-height: 16px; background: var(--surface-1, #f3f4f6); }
-
-  .btn-delete { padding: 6px 10px; border-radius: 9999px; background: #ef4444; color: #fff; font-weight: 600; }
-  .btn-drag { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: var(--surface-1, #f3f4f6); }
 
   /* Swipe overlay remains harmless */
   .swipe-row { position: absolute; inset: 0; pointer-events: none; background: transparent !important; z-index: 5; }
