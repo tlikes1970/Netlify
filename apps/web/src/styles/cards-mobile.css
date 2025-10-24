@@ -376,4 +376,77 @@
   .card-v2, .desktop-card, [class*="card-v2"] {
     display: none !important;
   }
+
+  /* Actions row */
+  .card-mobile .actions {
+    display: grid;
+    grid-template-columns: 1fr auto auto; /* providers | drag | delete */
+    align-items: center;
+    column-gap: var(--space-xs, 6px);
+    margin-top: var(--space-xs, 6px);
+  }
+
+  /* Provider chips */
+  .card-mobile .providers {
+    display: inline-flex;
+    gap: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+    mask-image: linear-gradient(to right, #000 85%, transparent 100%); /* subtle fade */
+  }
+  .card-mobile .provider-chip {
+    border-radius: 9999px;
+    padding: 2px 8px;
+    font-size: 12px;
+    line-height: 16px;
+    background: var(--surface-1, #f3f4f6);
+    color: var(--text, #333);
+    white-space: nowrap;
+  }
+
+  /* Delete + drag */
+  .card-mobile .btn-delete {
+    padding: 6px 10px;
+    border-radius: 9999px;
+    background: #ef4444;
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .card-mobile .btn-drag {
+    width: 32px; 
+    height: 32px;
+    border-radius: 8px;
+    display: inline-grid; 
+    place-items: center;
+    background: var(--surface-1, #f3f4f6);
+    border: none;
+    cursor: grab;
+    color: var(--text, #333);
+  }
+  .card-mobile .btn-drag:active {
+    cursor: grabbing;
+  }
+
+  /* Swipe feedback */
+  .swipe-row .gesture-plane {
+    position: absolute; 
+    inset: 0;
+    touch-action: pan-y; /* allow vertical scroll; we handle horizontal */
+    cursor: grab;
+  }
+  .swipe-row.dragging .gesture-plane { 
+    cursor: grabbing; 
+  }
+  .swipe-row .content-proxy {
+    position: absolute; 
+    inset: 0;
+    will-change: transform;
+    transition: transform 160ms ease-out;
+  }
+  .swipe-row.dragging .content-proxy { 
+    transition: none; 
+  }
 }

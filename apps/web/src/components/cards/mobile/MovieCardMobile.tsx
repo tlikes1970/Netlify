@@ -210,6 +210,27 @@ export function MovieCardMobile({ item, actions, tabType = 'watching' }: MovieCa
     }
   };
 
+  // Get providers for "where to watch"
+  const getProviders = () => {
+    const providers = [];
+    
+    // Add production companies if available
+    if (item.networkInfo?.productionCompanies && item.networkInfo.productionCompanies.length > 0) {
+      item.networkInfo.productionCompanies.forEach(company => {
+        providers.push({ name: company, url: '#' });
+      });
+    }
+    
+    // Add streaming services if available
+    if (item.streamingInfo?.providers && item.streamingInfo.providers.length > 0) {
+      item.streamingInfo.providers.forEach(provider => {
+        providers.push({ name: provider.name, url: provider.url || '#' });
+      });
+    }
+    
+    return providers;
+  };
+
   return (
     <CardBaseMobile
       posterUrl={posterUrl}
@@ -229,6 +250,9 @@ export function MovieCardMobile({ item, actions, tabType = 'watching' }: MovieCa
       swipeConfig={getSwipeConfig()}
       testId={`movie-card-mobile-${item.id}`}
       item={item}
+      onDelete={() => actions?.onDelete?.(item)}
+      draggable={tabType === 'watching'}
+      providers={getProviders()}
     />
   );
 }

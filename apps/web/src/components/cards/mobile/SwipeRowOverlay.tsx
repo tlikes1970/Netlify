@@ -23,98 +23,96 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
     const [startX, setStartX] = useState(0);
     const [currentX, setCurrentX] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
+    const [captureId, setCaptureId] = useState<number | null>(null);
     const contentRef = useRef<HTMLDivElement>(null);
+    const gestureRef = useRef<HTMLDivElement>(null);
 
-    const handleTouchStart = (e: React.TouchEvent) => {
-      const touch = e.touches[0];
-      setStartX(touch.clientX);
-      setCurrentX(touch.clientX);
-      setIsDragging(true);
+    const handlePointerDown = (e: React.PointerEvent) => {
+      // Only handle mouse and touch pointers
+      if (e.pointerType !== 'mouse' && e.pointerType !== 'touch') return;
       
-      if (contentRef.current) {
-        contentRef.current.setAttribute('data-swipe-active', 'true');
-      }
-    };
-
-    const handleTouchMove = (e: React.TouchEvent) => {
-      if (!isDragging) return;
-      
-      const touch = e.touches[0];
-      const deltaX = touch.clientX - startX;
-      
-      // Only allow left swipe (negative deltaX)
-      if (deltaX < 0) {
-        const maxSwipe = -120;
-        const clampedDelta = Math.max(deltaX, maxSwipe);
-        setCurrentX(touch.clientX);
-        
-        if (contentRef.current) {
-          contentRef.current.style.transform = `translateX(${clampedDelta}px)`;
-        }
-      }
-    };
-
-    const handleTouchEnd = () => {
-      if (!isDragging) return;
-      
-      setIsDragging(false);
-      const deltaX = currentX - startX;
-      
-      if (contentRef.current) {
-        contentRef.current.removeAttribute('data-swipe-active');
-        
-        if (deltaX < -60) {
-          contentRef.current.style.transform = 'translateX(-120px)';
-          setIsSwipeOpen(true);
-        } else {
-          contentRef.current.style.transform = 'translateX(0)';
-          setIsSwipeOpen(false);
-        }
-      }
-    };
-
-    const handleMouseDown = (e: React.MouseEvent) => {
       setStartX(e.clientX);
       setCurrentX(e.clientX);
       setIsDragging(true);
+      setCaptureId(e.pointerId);
+      
+      if (gestureRef.current) {
+        gestureRef.current.setPointerCapture(e.pointerId);
+        gestureRef.current.classList.add('dragging');
+      }
       
       if (contentRef.current) {
         contentRef.current.setAttribute('data-swipe-active', 'true');
       }
     };
 
-    const handleMouseMove = (e: React.MouseEvent) => {
-      if (!isDragging) return;
+    const handlePointerMove = (e: React.PointerEvent) => {
+      if (!isDragging || captureId !== e.pointerId) return;
       
       const deltaX = e.clientX - startX;
       
+      // Only allow left swipe (negative deltaX)
       if (deltaX < 0) {
         const maxSwipe = -120;
         const clampedDelta = Math.max(deltaX, maxSwipe);
         setCurrentX(e.clientX);
         
         if (contentRef.current) {
-          contentRef.current.style.transform = `translateX(${clampedDelta}px)`;
+          contentRef.current.style.transform = `translate3d(${clampedDelta}px, 0, 0)`;
         }
       }
     };
 
-    const handleMouseUp = () => {
-      if (!isDragging) return;
+    const handlePointerUp = (e: React.PointerEvent) => {
+      if (!isDragging || captureId !== e.pointerId) return;
       
       setIsDragging(false);
+      setCaptureId(null);
+      
+      if (gestureRef.current) {
+        gestureRef.current.releasePointerCapture(e.pointerId);
+        gestureRef.current.classList.remove('dragging');
+      }
+      
       const deltaX = currentX - startX;
       
       if (contentRef.current) {
         contentRef.current.removeAttribute('data-swipe-active');
         
-        if (deltaX < -60) {
-          contentRef.current.style.transform = 'translateX(-120px)';
+        if (deltaX < -64) {
+          // Swipe threshold reached, trigger action
+          contentRef.current.style.transform = 'translate3d(-120px, 0, 0)';
           setIsSwipeOpen(true);
+          
+          // Trigger the appropriate action based on swipe distance
+          if (deltaX < -100 && swipeConfig.rightAction) {
+            swipeConfig.rightAction.action();
+          } else if (swipeConfig.leftAction) {
+            swipeConfig.leftAction.action();
+          }
         } else {
-          contentRef.current.style.transform = 'translateX(0)';
+          // Snap back to original position
+          contentRef.current.style.transform = 'translate3d(0, 0, 0)';
           setIsSwipeOpen(false);
         }
+      }
+    };
+
+    const handlePointerCancel = (e: React.PointerEvent) => {
+      if (captureId !== e.pointerId) return;
+      
+      setIsDragging(false);
+      setCaptureId(null);
+      
+      if (gestureRef.current) {
+        gestureRef.current.releasePointerCapture(e.pointerId);
+        gestureRef.current.classList.remove('dragging');
+      }
+      
+      if (contentRef.current) {
+        contentRef.current.removeAttribute('data-swipe-active');
+        contentRef.current.style.transform = 'translate3d(0, 0, 0)';
+        setIsSwipeOpen(false);
       }
     };
 
@@ -165,25 +163,35 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
         boxSizing: 'border-box'
       }}
     >
-        {/* Gesture Zone */}
+        {/* Gesture Plane */}
         <div
-          ref={contentRef}
-          className="swipe-gesture-zone"
+          ref={gestureRef}
+          className="gesture-plane"
           style={{
             position: 'absolute',
             inset: 0,
             pointerEvents: 'auto',
-            transition: isDragging ? 'none' : 'transform 0.3s ease-out',
-            transform: 'translateX(0)',
+            touchAction: 'pan-y',
+            cursor: 'grab'
+          }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
+        />
+
+        {/* Content Proxy - moves with swipe */}
+        <div
+          ref={contentRef}
+          className="content-proxy"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            willChange: 'transform',
+            transition: isDragging ? 'none' : 'transform 160ms ease-out',
+            transform: 'translate3d(0, 0, 0)',
             backgroundColor: 'transparent'
           }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
         />
 
         {/* Trailing Actions */}

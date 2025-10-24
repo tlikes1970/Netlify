@@ -238,6 +238,27 @@ export function TvCardMobile({ item, actions, tabType = 'watching' }: TvCardMobi
     }
   };
 
+  // Get providers for "where to watch"
+  const getProviders = () => {
+    const providers = [];
+    
+    // Add network info if available
+    if (item.networkInfo?.networks && item.networkInfo.networks.length > 0) {
+      item.networkInfo.networks.forEach(network => {
+        providers.push({ name: network, url: '#' });
+      });
+    }
+    
+    // Add streaming services if available
+    if (item.streamingInfo?.providers && item.streamingInfo.providers.length > 0) {
+      item.streamingInfo.providers.forEach(provider => {
+        providers.push({ name: provider.name, url: provider.url || '#' });
+      });
+    }
+    
+    return providers;
+  };
+
   return (
     <CardBaseMobile
       posterUrl={posterUrl}
@@ -257,6 +278,9 @@ export function TvCardMobile({ item, actions, tabType = 'watching' }: TvCardMobi
       swipeConfig={getSwipeConfig()}
       testId={`tv-card-mobile-${item.id}`}
       item={item}
+      onDelete={() => actions?.onDelete?.(item)}
+      draggable={tabType === 'watching'}
+      providers={getProviders()}
     />
   );
 }

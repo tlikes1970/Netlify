@@ -25,6 +25,9 @@ export interface CardBaseMobileProps {
   };
   testId?: string;
   item: MediaItem;
+  onDelete?: () => void;
+  draggable?: boolean;
+  providers?: Array<{ name: string; url: string }>;
 }
 
 export function CardBaseMobile({
@@ -36,7 +39,10 @@ export function CardBaseMobile({
   actions,
   swipeConfig,
   testId,
-  item
+  item,
+  onDelete,
+  draggable = false,
+  providers = []
 }: CardBaseMobileProps) {
   const [swipeEnabled, setSwipeEnabled] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -79,6 +85,8 @@ export function CardBaseMobile({
         position: 'relative'
       }}
     >
+      {/* Content Proxy - moves with swipe */}
+      <div className="content-proxy" style={{ position: 'relative', zIndex: 1 }}>
       {/* Poster Column */}
       <div 
         className="poster-column"
@@ -189,7 +197,62 @@ export function CardBaseMobile({
           {chips}
           {actions}
         </div>
+
+        {/* Actions Row */}
+        <div className="actions" style={{ marginTop: 'var(--space-xs, 6px)' }}>
+          <div className="providers">
+            {providers.slice(0, 3).map((provider, index) => (
+              <span key={index} className="provider-chip">
+                {provider.name}
+              </span>
+            ))}
+            {providers.length > 3 && (
+              <span className="provider-chip">+{providers.length - 3}</span>
+            )}
+          </div>
+          
+          <div style={{ display: 'flex', gap: 'var(--space-xs, 6px)', alignItems: 'center' }}>
+            {draggable && (
+              <button
+                className="btn-drag"
+                aria-roledescription="sortable handle"
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  display: 'inline-grid',
+                  placeItems: 'center',
+                  background: 'var(--surface-1, #f3f4f6)',
+                  border: 'none',
+                  cursor: 'grab'
+                }}
+              >
+                ⋮⋮
+              </button>
+            )}
+            
+            {onDelete && (
+              <button
+                className="btn-delete"
+                onClick={onDelete}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '9999px',
+                  background: '#ef4444',
+                  color: '#fff',
+                  fontWeight: '600',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                Delete
+              </button>
+            )}
+          </div>
+        </div>
       </div>
+      </div> {/* End content-proxy */}
 
       {/* SSR Placeholder - Always Present */}
       <div 
