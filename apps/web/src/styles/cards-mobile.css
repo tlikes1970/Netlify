@@ -1,0 +1,312 @@
+/**
+ * Process: Mobile Cards Styles
+ * Purpose: Mobile-specific card styling with overlay swipe and text clamping
+ * Data Source: Design tokens and mobile layout requirements
+ * Update Path: Update CSS variables and styles here for mobile card appearance
+ * Dependencies: CardBaseMobile, SwipeRowOverlay components
+ */
+
+/* Mobile Card Base Styles */
+.card-mobile {
+  /* Local design tokens for mobile cards */
+  --poster-w: 112px;
+  --poster-h: 168px;
+  --content-h: 160px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --font-xs: 10px;
+  --font-sm: 12px;
+  --font-md: 14px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  
+  /* Card layout */
+  display: grid;
+  grid-template-columns: var(--poster-w) 1fr;
+  gap: var(--space-sm);
+  min-height: var(--content-h);
+  max-height: var(--content-h);
+  overflow: hidden;
+  position: relative;
+  background-color: var(--card, #ffffff);
+  border: 1px solid var(--line, #e0e0e0);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm);
+  box-sizing: border-box;
+}
+
+/* Poster Column */
+.card-mobile .poster-column {
+  width: var(--poster-w);
+  min-width: var(--poster-w);
+  height: var(--poster-h);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--card-bg, #f5f5f5);
+}
+
+.card-mobile .poster-column img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+/* Content Lane */
+.card-mobile .content-lane {
+  min-height: var(--content-h);
+  max-height: var(--content-h);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: var(--space-xs);
+}
+
+/* Title Clamping - Single Line with Ellipsis */
+.card-mobile .card-title {
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--text, #333333);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+  margin: 0;
+}
+
+/* Meta Information */
+.card-mobile .card-meta {
+  font-size: var(--font-xs);
+  color: var(--muted, #666666);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+/* Summary Clamping - 3 Lines with Ellipsis */
+.card-mobile .card-summary {
+  font-size: var(--font-sm);
+  color: var(--muted, #666666);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Card Footer */
+.card-mobile .card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: auto;
+}
+
+/* Badge Styles */
+.card-mobile .badge {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--muted, #666666);
+  background-color: var(--card-bg, #f5f5f5);
+  border: 1px solid var(--line, #e0e0e0);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  display: inline-block;
+}
+
+/* Action Button Styles */
+.card-mobile .action-button {
+  font-size: var(--font-xs);
+  padding: 4px 8px;
+  background-color: var(--accent, #007AFF);
+  color: var(--bg, #ffffff);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.card-mobile .action-button:hover {
+  background-color: var(--accent-hover, #0056CC);
+  transform: scale(1.05);
+}
+
+.card-mobile .action-button:active {
+  transform: scale(0.95);
+}
+
+/* Swipe Row Overlay Styles */
+.swipe-row-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  margin: 0;
+  padding: 0;
+  border: none;
+  box-sizing: border-box;
+}
+
+/* Swipe Gesture Zone */
+.swipe-row-overlay .swipe-gesture-zone {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  transition: transform 0.3s ease-out;
+  transform: translateX(0);
+  background-color: transparent;
+}
+
+/* Swipe Actions Panel */
+.swipe-row-overlay .swipe-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 120px;
+  background-color: var(--accent, #007AFF);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-sm);
+  transform: translateX(100%);
+  transition: transform 0.3s ease-out;
+  pointer-events: auto;
+}
+
+/* Swipe Action Buttons */
+.swipe-row-overlay .swipe-action-button {
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
+  background-color: var(--bg, #ffffff);
+  color: var(--accent, #007AFF);
+  border: 1px solid var(--bg, #ffffff);
+  cursor: pointer;
+  font-weight: 500;
+  min-width: 80px;
+  transition: all 0.2s ease;
+}
+
+.swipe-row-overlay .swipe-action-button:hover {
+  background-color: var(--accent-hover, #0056CC);
+  color: var(--bg, #ffffff);
+}
+
+/* Swipe Indicator */
+.swipe-row-overlay .swipe-indicator {
+  position: absolute;
+  top: 50%;
+  right: var(--space-sm);
+  transform: translateY(-50%);
+  opacity: 0.3;
+  transition: opacity 0.3s ease-out;
+  pointer-events: none;
+  color: var(--muted, #666666);
+}
+
+/* SSR Placeholder - Always Present */
+.swipe-row {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  margin: 0;
+  padding: 0;
+  border: none;
+  box-sizing: border-box;
+}
+
+/* Performance Optimization */
+.swipe-row-overlay .swipe-gesture-zone[data-swipe-active="true"] {
+  will-change: transform;
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .card-mobile {
+    background-color: var(--card-dark, #1a1a1a);
+    border-color: var(--line-dark, #333333);
+  }
+  
+  .card-mobile .card-title {
+    color: var(--text-dark, #ffffff);
+  }
+  
+  .card-mobile .card-meta,
+  .card-mobile .card-summary {
+    color: var(--muted-dark, #999999);
+  }
+  
+  .card-mobile .badge {
+    background-color: var(--card-bg-dark, #2a2a2a);
+    border-color: var(--line-dark, #333333);
+    color: var(--muted-dark, #999999);
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .card-mobile {
+    border-width: 2px;
+  }
+  
+  .card-mobile .badge {
+    border-width: 2px;
+  }
+  
+  .card-mobile .action-button {
+    border: 2px solid var(--accent, #007AFF);
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .swipe-row-overlay .swipe-gesture-zone {
+    transition: none;
+  }
+  
+  .swipe-row-overlay .swipe-actions {
+    transition: none;
+  }
+  
+  .swipe-row-overlay .swipe-indicator {
+    transition: none;
+  }
+  
+  .card-mobile .action-button {
+    transition: none;
+  }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 767px) {
+  .card-mobile {
+    --poster-w: 100px;
+    --poster-h: 150px;
+    --content-h: 150px;
+    --space-sm: 6px;
+    --font-xs: 9px;
+    --font-sm: 11px;
+    --font-md: 13px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+  .card-mobile {
+    --poster-w: 90px;
+    --poster-h: 135px;
+    --content-h: 135px;
+    --space-sm: 4px;
+    --font-xs: 8px;
+    --font-sm: 10px;
+    --font-md: 12px;
+  }
+}
