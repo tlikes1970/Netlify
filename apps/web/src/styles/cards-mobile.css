@@ -23,469 +23,161 @@
   --radius-lg: 12px;
   
   /* Card layout */
-  display: grid;
-  grid-template-columns: var(--poster-w) 1fr;
-  gap: var(--space-sm);
-  min-height: var(--content-h);
-  max-height: var(--content-h);
-  overflow: hidden;
+  width: 100%;
+  max-width: 398px;
+  margin: 0 auto var(--space-sm, 8px);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--surface-0, #fff);
+  box-shadow: none;
   position: relative;
-  background-color: var(--card, #ffffff);
-  border: 1px solid var(--line, #e0e0e0);
-  border-radius: var(--radius-lg);
-  padding: var(--space-sm);
+  display: grid;
+  grid-template-columns: var(--poster-w, 112px) 1fr;
+  gap: var(--space-sm, 8px);
+  padding: var(--space-sm, 8px);
   box-sizing: border-box;
 }
 
 /* Poster Column */
 .card-mobile .poster-column {
-  width: var(--poster-w);
-  min-width: var(--poster-w);
-  height: var(--poster-h);
-  border-radius: var(--radius-md);
+  width: var(--poster-w, 112px);
+  min-width: var(--poster-w, 112px);
+  height: var(--poster-h, 168px);
+  border-radius: var(--radius-md, 10px);
   overflow: hidden;
   background-color: var(--card-bg, #f5f5f5);
 }
 
-.card-mobile .poster-column img {
+.card-mobile .poster {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md, 10px);
 }
 
 /* Content Lane */
-.card-mobile .content-lane {
-  min-height: var(--content-h);
-  max-height: var(--content-h);
+.card-mobile .content {
+  min-height: var(--content-h, 160px);
+  max-height: var(--content-h, 160px);
   overflow: hidden;
   display: grid;
   grid-template-rows: auto auto 1fr auto;
-  gap: var(--space-xs);
-  background: #ffffff !important; /* Force white background */
-  border: 1px solid #e5e7eb; /* Add border to see the area */
+  row-gap: var(--space-xs, 6px);
 }
 
 /* Title Clamping - Single Line with Ellipsis */
 .card-mobile .card-title {
-  font-size: var(--font-md, 14px);
-  font-weight: 600;
-  color: #333333 !important; /* Force dark text */
-  white-space: nowrap;
+  font: var(--text-title-sm);
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.3;
-  margin: 0;
-  min-height: 18px; /* Ensure title has height even if empty */
+  white-space: nowrap;
 }
 
 /* Meta Information */
 .card-mobile .card-meta {
   font-size: var(--font-xs, 12px);
-  color: #666666 !important; /* Force dark text */
+  color: var(--muted, #666666);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin: 0;
-  min-height: 14px; /* Ensure meta has height even if empty */
 }
 
 /* Summary Clamping - 3 Lines with Ellipsis */
 .card-mobile .card-summary {
-  font-size: var(--font-sm, 12px);
-  color: #666666 !important; /* Force dark text */
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: 1.4;
-  margin: 0;
-  min-height: 36px; /* Ensure summary has height even if empty */
 }
 
-/* Card Footer */
-.card-mobile .card-footer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  margin-top: auto;
+/* Chips */
+.card-mobile .chips {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-/* Badge Styles */
-.card-mobile .badge {
-  font-size: var(--font-xs);
-  font-weight: 600;
-  color: var(--muted, #666666);
-  background-color: var(--card-bg, #f5f5f5);
-  border: 1px solid var(--line, #e0e0e0);
-  border-radius: var(--radius-sm);
-  padding: 2px 6px;
-  display: inline-block;
-}
-
-/* Action Button Styles */
-.card-mobile .action-button {
-  font-size: var(--font-xs);
-  padding: 4px 8px;
-  background-color: var(--accent, #007AFF);
-  color: var(--bg, #ffffff);
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.card-mobile .action-button:hover {
-  background-color: var(--accent-hover, #0056CC);
-  transform: scale(1.05);
-}
-
-.card-mobile .action-button:active {
-  transform: scale(0.95);
-}
-
-/* Swipe Row Overlay Styles */
-.swipe-row-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 5;
-  margin: 0;
-  padding: 0;
-  border: none;
-  box-sizing: border-box;
-}
-
-/* Swipe Gesture Zone */
-.swipe-row-overlay .swipe-gesture-zone {
-  position: absolute;
-  inset: 0;
-  pointer-events: auto;
-  transition: transform 0.3s ease-out;
-  transform: translateX(0);
-  background-color: transparent;
-}
-
-/* Swipe Actions Panel */
-.swipe-row-overlay .swipe-actions {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 120px;
-  background-color: var(--accent, #007AFF);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  display: flex;
+/* Actions Row */
+.card-mobile .actions {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
   align-items: center;
-  justify-content: center;
-  padding: var(--space-sm);
-  transform: translateX(100%);
-  transition: transform 0.3s ease-out;
-  pointer-events: auto;
+  column-gap: var(--space-xs, 6px);
 }
 
-/* Swipe Action Buttons */
-.swipe-row-overlay .swipe-action-button {
-  padding: var(--space-sm);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-xs);
-  background-color: var(--bg, #ffffff);
-  color: var(--accent, #007AFF);
-  border: 1px solid var(--bg, #ffffff);
+/* Provider chips */
+.card-mobile .providers {
+  display: inline-flex;
+  gap: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  mask-image: linear-gradient(to right, #000 85%, transparent);
+}
+
+.card-mobile .provider-chip {
+  border-radius: 9999px;
+  padding: 2px 8px;
+  font-size: 12px;
+  line-height: 16px;
+  background: var(--surface-1, #f3f4f6);
+}
+
+/* Delete + drag */
+.card-mobile .btn-delete {
+  padding: 6px 10px;
+  border-radius: 9999px;
+  background: #ef4444;
+  color: #fff;
+  font-weight: 600;
+  border: none;
   cursor: pointer;
-  font-weight: 500;
-  min-width: 80px;
-  transition: all 0.2s ease;
+  font-size: 12px;
 }
 
-.swipe-row-overlay .swipe-action-button:hover {
-  background-color: var(--accent-hover, #0056CC);
-  color: var(--bg, #ffffff);
+.card-mobile .btn-drag {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-grid;
+  place-items: center;
+  background: var(--surface-1, #f3f4f6);
+  border: none;
+  cursor: grab;
 }
 
-/* Swipe Indicator */
-.swipe-row-overlay .swipe-indicator {
-  position: absolute;
-  top: 50%;
-  right: var(--space-sm);
-  transform: translateY(-50%);
-  opacity: 0.3;
-  transition: opacity 0.3s ease-out;
-  pointer-events: none;
-  color: var(--muted, #666666);
+.card-mobile .btn-drag:active {
+  cursor: grabbing;
 }
 
-/* SSR Placeholder - Always Present */
+/* Swipe Target - real content that moves */
+.swipe-target {
+  position: relative;
+  will-change: transform;
+}
+
+/* Swipe Overlay - transparent input only */
 .swipe-row {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  background: transparent !important;
   z-index: 5;
-  margin: 0;
-  padding: 0;
-  border: none;
-  box-sizing: border-box;
 }
 
-/* Performance Optimization */
-.swipe-row-overlay .swipe-gesture-zone[data-swipe-active="true"] {
-  will-change: transform;
-}
-
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-  .card-mobile {
-    background-color: var(--card-dark, #1a1a1a);
-    border-color: var(--line-dark, #333333);
-  }
-  
-  .card-mobile .card-title {
-    color: var(--text-dark, #ffffff);
-  }
-  
-  .card-mobile .card-meta,
-  .card-mobile .card-summary {
-    color: var(--muted-dark, #999999);
-  }
-  
-  .card-mobile .badge {
-    background-color: var(--card-bg-dark, #2a2a2a);
-    border-color: var(--line-dark, #333333);
-    color: var(--muted-dark, #999999);
-  }
-}
-
-/* High Contrast Mode Support */
-@media (prefers-contrast: high) {
-  .card-mobile {
-    border-width: 2px;
-  }
-  
-  .card-mobile .badge {
-    border-width: 2px;
-  }
-  
-  .card-mobile .action-button {
-    border: 2px solid var(--accent, #007AFF);
-  }
-}
-
-/* Reduced Motion Support */
-@media (prefers-reduced-motion: reduce) {
-  .swipe-row-overlay .swipe-gesture-zone {
-    transition: none;
-  }
-  
-  .swipe-row-overlay .swipe-actions {
-    transition: none;
-  }
-  
-  .swipe-row-overlay .swipe-indicator {
-    transition: none;
-  }
-  
-  .card-mobile .action-button {
-    transition: none;
-  }
-}
-
-/* Mobile-specific adjustments */
-@media (max-width: 767px) {
-  .card-mobile {
-    --poster-w: 100px;
-    --poster-h: 150px;
-    --content-h: 150px;
-    --space-sm: 6px;
-    --font-xs: 9px;
-    --font-sm: 11px;
-    --font-md: 13px;
-  }
-}
-
-/* Very small screens */
-@media (max-width: 480px) {
-  .card-mobile {
-    --poster-w: 90px;
-    --poster-h: 135px;
-    --content-h: 135px;
-    --space-sm: 4px;
-    --font-xs: 8px;
-    --font-sm: 10px;
-    --font-md: 12px;
-  }
-}
-
-/* Swipe Target - real content that moves */
-.swipe-target { 
-  position: relative; 
-  will-change: transform; 
-}
-
-/* Hide any content-proxy that might exist */
-.content-proxy { 
-  display: none !important; 
-}
-
-/* Swipe Overlay - transparent input only */
-.swipe-row { 
-  position: absolute; 
-  inset: 0; 
-  pointer-events: none; 
-  background: transparent !important; 
-  z-index: 5; 
-}
-
-.swipe-row > .gesture-plane { 
-  position: absolute; 
-  inset: 0; 
-  pointer-events: auto; 
-  touch-action: pan-y; 
-  cursor: grab; 
+.swipe-row > .gesture-plane {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  touch-action: pan-y;
+  cursor: grab;
   background: transparent;
 }
 
-.swipe-row.dragging > .gesture-plane { 
-  cursor: grabbing; 
+.swipe-row.dragging > .gesture-plane {
+  cursor: grabbing;
 }
 
-/* Mobile-only overrides - enforce compact mobile design */
-@media (max-width: 640px) {
-  .card-mobile {
-    width: 100%;
-    max-width: 398px;
-    margin: 0 auto var(--space-sm, 8px);
-    box-shadow: none !important;
-    background: var(--surface-0, #fff) !important;
-    border-radius: var(--radius-lg, 12px);
-  }
-
-  /* Two-column grid sizing stays tight */
-  .card-mobile {
-    display: grid;
-    grid-template-columns: var(--poster-w, 112px) 1fr;
-    gap: var(--space-sm, 8px);
-  }
-
-  .card-mobile .poster-column {
-    width: var(--poster-w, 112px);
-    min-width: var(--poster-w, 112px);
-    height: var(--poster-h, 168px);
-    object-fit: cover;
-    border-radius: var(--radius-md, 10px);
-  }
-
-  .card-mobile .content-lane {
-    min-height: var(--content-h, 160px);
-    max-height: var(--content-h, 160px); /* stabilize height */
-    overflow: hidden;
-    display: grid;
-    grid-template-rows: auto auto 1fr auto; /* title, chips/meta, summary, actions */
-    row-gap: var(--space-xs, 6px);
-  }
-
-  .card-mobile .card-title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .card-mobile .card-summary {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* Swipe overlay must NOT affect layout */
-  .swipe-row {
-    position: absolute;
-    inset: 0;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    box-sizing: border-box;
-    pointer-events: none;
-    z-index: 5;
-  }
-  .swipe-row > * { pointer-events: auto; }
-
-  /* Neutralize any desktop card boxes that might leak into mobile */
-  .card-v2, .desktop-card, [class*="card-v2"] {
-    display: none !important;
-  }
-
-  /* Actions row */
-  .card-mobile .actions {
-    display: grid;
-    grid-template-columns: 1fr auto auto; /* providers | drag | delete */
-    align-items: center;
-    column-gap: var(--space-xs, 6px);
-    margin-top: var(--space-xs, 6px);
-  }
-
-  /* Provider chips */
-  .card-mobile .providers {
-    display: inline-flex;
-    gap: 4px;
-    overflow: hidden;
-    white-space: nowrap;
-    mask-image: linear-gradient(to right, #000 85%, transparent 100%); /* subtle fade */
-  }
-  .card-mobile .provider-chip {
-    border-radius: 9999px;
-    padding: 2px 8px;
-    font-size: 12px;
-    line-height: 16px;
-    background: #f3f4f6 !important; /* Force light background */
-    color: #333333 !important; /* Force dark text */
-    white-space: nowrap;
-    border: 1px solid #e5e7eb;
-  }
-
-  /* Delete + drag */
-  .card-mobile .btn-delete {
-    padding: 6px 10px;
-    border-radius: 9999px;
-    background: #ef4444;
-    color: #fff;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    font-size: 12px;
-  }
-  .card-mobile .btn-drag {
-    width: 32px; 
-    height: 32px;
-    border-radius: 8px;
-    display: inline-grid; 
-    place-items: center;
-    background: #f3f4f6 !important; /* Force light background */
-    border: none;
-    cursor: grab;
-    color: #333333 !important; /* Force dark text */
-  }
-  .card-mobile .btn-drag:active {
-    cursor: grabbing;
-  }
-
-  /* Swipe feedback */
-  .swipe-row .gesture-plane {
-    position: absolute; 
-    inset: 0;
-    touch-action: pan-y; /* allow vertical scroll; we handle horizontal */
-    cursor: grab;
-  }
-  .swipe-row.dragging .gesture-plane { 
-    cursor: grabbing; 
-  }
-  .swipe-row .content-proxy {
-    position: absolute; 
-    inset: 0;
-    will-change: transform;
-    transition: transform 160ms ease-out;
-  }
-  .swipe-row.dragging .content-proxy { 
-    transition: none; 
-  }
+/* Hide any content-proxy that might exist */
+.content-proxy {
+  display: none !important;
 }
+

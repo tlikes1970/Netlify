@@ -48,16 +48,6 @@ export function CardBaseMobile({
   const cardRef = useRef<HTMLDivElement>(null);
   const targetRef = useRef<HTMLDivElement>(null);
 
-  // Debug: Log when component renders
-  console.log('🎯 CardBaseMobile rendering:', { 
-    title, 
-    meta, 
-    summary: summary?.substring(0, 50) + '...', 
-    swipeEnabled,
-    hasChips: !!chips,
-    hasActions: !!actions,
-    providersCount: providers.length
-  });
 
   // Enable swipe after hydration to avoid SSR mismatch
   useEffect(() => {
@@ -86,141 +76,51 @@ export function CardBaseMobile({
       ref={cardRef}
       className="card-mobile"
       data-testid={testId}
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'var(--poster-w, 112px) 1fr',
-        gap: 'var(--space-sm, 8px)',
-        minHeight: 'var(--content-h, 160px)',
-        maxHeight: 'var(--content-h, 160px)',
-        overflow: 'hidden',
-        position: 'relative',
-        border: '2px solid #ff0000', // DEBUG: Red border to see mobile cards
-        backgroundColor: '#f0f0f0' // DEBUG: Light background to see mobile cards
-      }}
     >
       {/* Swipe Target - wraps real content */}
-      <div className="swipe-target" ref={targetRef} style={{ display: 'contents' }}>
+      <div className="swipe-target" ref={targetRef}>
         {/* Poster Column */}
-        <div 
-          className="poster-column"
-          style={{
-            width: 'var(--poster-w, 112px)',
-            minWidth: 'var(--poster-w, 112px)',
-            height: 'var(--poster-h, 168px)',
-            borderRadius: 'var(--radius-md, 10px)',
-            overflow: 'hidden'
-          }}
-        >
+        <div className="poster-column">
           {posterUrl ? (
             <OptimizedImage
               src={posterUrl}
               alt={title}
               context="poster"
               className="h-full w-full"
-              style={{
-                objectFit: 'cover',
-                width: '100%',
-                height: '100%'
-              }}
+              className="poster"
               loading="lazy"
             />
           ) : (
-            <div 
-              className="flex h-full w-full items-center justify-center text-xs"
-              style={{ 
-                color: 'var(--muted)',
-                backgroundColor: 'var(--card-bg)'
-              }}
-            >
+            <div className="flex h-full w-full items-center justify-center text-xs text-muted bg-card-bg">
               No Poster
             </div>
           )}
         </div>
 
         {/* Content Lane */}
-        <div 
-          className="content-lane"
-          style={{
-            minHeight: 'var(--content-h, 160px)',
-            maxHeight: 'var(--content-h, 160px)',
-            overflow: 'hidden',
-            display: 'grid',
-            gridTemplateRows: 'auto auto 1fr auto',
-            gap: 'var(--space-xs, 4px)'
-          }}
-        >
+        <div className="content">
         {/* Title */}
-        <div 
-          className="card-title"
-          style={{
-            fontSize: 'var(--font-sm, 14px)',
-            fontWeight: '600',
-            color: '#333333', // DEBUG: Force dark color
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            lineHeight: '1.3',
-            backgroundColor: '#ffff00', // DEBUG: Yellow background to see title area
-            padding: '2px'
-          }}
-        >
-          {title || 'NO TITLE'}
+        <div className="card-title">
+          {title}
         </div>
 
         {/* Meta */}
-        <div 
-          className="card-meta"
-          style={{
-            fontSize: 'var(--font-xs, 12px)',
-            color: '#666666', // DEBUG: Force dark color
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            backgroundColor: '#ffcccc', // DEBUG: Light red background to see meta area
-            padding: '2px'
-          }}
-        >
-          {meta || 'NO META'}
+        <div className="card-meta">
+          {meta}
         </div>
 
         {/* Summary */}
-        <div 
-          className="card-summary"
-          style={{
-            fontSize: 'var(--font-xs, 12px)',
-            color: '#666666', // DEBUG: Force dark color
-            display: '-webkit-box',
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            lineHeight: '1.4',
-            backgroundColor: '#ccffcc', // DEBUG: Light green background to see summary area
-            padding: '2px',
-            minHeight: '40px'
-          }}
-        >
-          {summary || 'NO SUMMARY'}
+        <div className="card-summary">
+          {summary}
         </div>
 
-        {/* Chips and Actions */}
-        <div 
-          className="card-footer"
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 'var(--space-xs, 4px)',
-            marginTop: 'auto',
-            backgroundColor: '#ccccff', // DEBUG: Light blue background to see chips/actions area
-            padding: '2px',
-            minHeight: '30px'
-          }}
-        >
-          {chips || <div style={{color: '#333'}}>NO CHIPS</div>}
-          {actions || <div style={{color: '#333'}}>NO ACTIONS</div>}
+        {/* Chips */}
+        <div className="chips">
+          {chips}
         </div>
 
         {/* Actions Row */}
-        <div className="actions" style={{ marginTop: 'var(--space-xs, 6px)' }}>
+        <div className="actions">
           <div className="providers">
             {providers.slice(0, 3).map((provider, index) => (
               <span key={index} className="provider-chip">
@@ -232,48 +132,27 @@ export function CardBaseMobile({
             )}
           </div>
           
-          <div style={{ display: 'flex', gap: 'var(--space-xs, 6px)', alignItems: 'center' }}>
-            {draggable && (
-              <button
-                className="btn-drag"
-                aria-roledescription="sortable handle"
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
-                  display: 'inline-grid',
-                  placeItems: 'center',
-                  background: 'var(--surface-1, #f3f4f6)',
-                  border: 'none',
-                  cursor: 'grab'
-                }}
-              >
-                ⋮⋮
-              </button>
-            )}
-            
-            {onDelete && (
-              <button
-                className="btn-delete"
-                onClick={onDelete}
-                style={{
-                  padding: '6px 10px',
-                  borderRadius: '9999px',
-                  background: '#ef4444',
-                  color: '#fff',
-                  fontWeight: '600',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '12px'
-                }}
-              >
-                Delete
-              </button>
-            )}
-          </div>
+          {draggable && (
+            <button
+              className="btn-drag"
+              aria-roledescription="sortable handle"
+              data-drag-handle
+            >
+              ⋮⋮
+            </button>
+          )}
+          
+          {onDelete && (
+            <button
+              className="btn-delete"
+              onClick={onDelete}
+            >
+              Delete
+            </button>
+          )}
         </div>
       </div>
-      </div> {/* End swipe-target */}
+      </div>
 
       {/* Swipe Overlay - Always Present */}
       <div 
