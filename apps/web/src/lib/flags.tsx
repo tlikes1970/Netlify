@@ -85,22 +85,39 @@ export function installActionsSplitGate() {
   const isMobile = () => {
     try { return matchMedia('(max-width: 768px)').matches; } catch { return true; }
   };
+  
   const ensure = () => {
-    const compactGate = html.dataset.compactMobileV1 === 'true';
-    const flagEnabled = flag('mobile_actions_split_v1');
-    const mobileViewport = isMobile();
-    
-    const on = compactGate && flagEnabled && mobileViewport;
-    if (on) html.dataset.actionsSplit = 'true';
-    else delete html.dataset.actionsSplit;
+    try {
+      const compactGate = html.dataset.compactMobileV1 === 'true';
+      // Use the same pattern as installCompactMobileGate - check if flag function exists
+      const flagEnabled = typeof flag === 'function'
+        ? flag('mobile_actions_split_v1')
+        : localStorage.getItem('flag:mobile_actions_split_v1') === 'true';
+      const mobileViewport = isMobile();
+      
+      const on = compactGate && flagEnabled && mobileViewport;
+      if (on) {
+        html.setAttribute('data-actions-split', 'true');
+      } else {
+        html.removeAttribute('data-actions-split');
+      }
+    } catch (error) {
+      console.warn('Actions split gate error:', error);
+      // swallow; gate should never throw
+    }
   };
   
-  document.addEventListener('DOMContentLoaded', ensure);
-  document.addEventListener('visibilitychange', ensure);
-  window.addEventListener('resize', ensure);
+  // fire immediately and after the next microtask (handles late density/flag writes)
+  ensure();
+  queueMicrotask(ensure);
+  
+  // react to the stuff that actually changes in practice
+  document.addEventListener('DOMContentLoaded', ensure, { once: true });
+  document.addEventListener('visibilitychange', ensure, { passive: true });
+  window.addEventListener('resize', ensure, { passive: true });
   window.addEventListener('storage', (e) => {
     if (e.key === 'flag:mobile_actions_split_v1') ensure();
-  });
+  }, { passive: true });
   
   // run once if DOM already ready
   if (document.readyState !== 'loading') ensure();

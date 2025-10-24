@@ -166,7 +166,9 @@ export function SwipeRow({ children, trailingActions }: SwipeRowProps) {
         overflow: 'hidden',
         borderRadius: 'var(--radius, 12px)',
         backgroundColor: 'var(--card, #ffffff)',
-        border: '1px solid var(--line, #e0e0e0)'
+        border: '1px solid var(--line, #e0e0e0)',
+        minHeight: '200px', // Ensure minimum height for cards
+        height: 'auto' // Allow height to grow with content
       }}
     >
       {/* Main content */}
@@ -177,7 +179,9 @@ export function SwipeRow({ children, trailingActions }: SwipeRowProps) {
           transition: isDragging ? 'none' : 'transform 0.3s ease-out',
           transform: 'translateX(0)',
           backgroundColor: 'var(--card, #ffffff)',
-          borderRadius: 'var(--radius, 12px)'
+          borderRadius: 'var(--radius, 12px)',
+          height: '100%', // Take full height of container
+          minHeight: '200px' // Ensure minimum height
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
