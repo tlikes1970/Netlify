@@ -316,6 +316,39 @@
   }
 }
 
+/* Swipe Target - real content that moves */
+.swipe-target { 
+  position: relative; 
+  will-change: transform; 
+}
+
+/* Hide any content-proxy that might exist */
+.content-proxy { 
+  display: none !important; 
+}
+
+/* Swipe Overlay - transparent input only */
+.swipe-row { 
+  position: absolute; 
+  inset: 0; 
+  pointer-events: none; 
+  background: transparent !important; 
+  z-index: 5; 
+}
+
+.swipe-row > .gesture-plane { 
+  position: absolute; 
+  inset: 0; 
+  pointer-events: auto; 
+  touch-action: pan-y; 
+  cursor: grab; 
+  background: transparent;
+}
+
+.swipe-row.dragging > .gesture-plane { 
+  cursor: grabbing; 
+}
+
 /* Mobile-only overrides - enforce compact mobile design */
 @media (max-width: 640px) {
   .card-mobile {

@@ -14,17 +14,16 @@ interface SwipeRowOverlayProps {
     leftAction?: { label: string; action: () => void };
     rightAction?: { label: string; action: () => void };
   };
-  item: MediaItem;
+  targetRef: React.RefObject<HTMLElement>;
 }
 
 export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
-  ({ swipeConfig, item }, ref) => {
+  ({ swipeConfig, targetRef }, ref) => {
     const [isSwipeOpen, setIsSwipeOpen] = useState(false);
     const [startX, setStartX] = useState(0);
     const [currentX, setCurrentX] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [captureId, setCaptureId] = useState<number | null>(null);
-    const contentRef = useRef<HTMLDivElement>(null);
     const gestureRef = useRef<HTMLDivElement>(null);
 
     const handlePointerDown = (e: React.PointerEvent) => {
@@ -39,10 +38,11 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
       if (gestureRef.current) {
         gestureRef.current.setPointerCapture(e.pointerId);
         gestureRef.current.classList.add('dragging');
+        gestureRef.current.parentElement?.classList.add('dragging');
       }
       
-      if (contentRef.current) {
-        contentRef.current.setAttribute('data-swipe-active', 'true');
+      if (targetRef.current) {
+        targetRef.current.setAttribute('data-swipe-active', 'true');
       }
     };
 
@@ -50,16 +50,13 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
       if (!isDragging || captureId !== e.pointerId) return;
       
       const deltaX = e.clientX - startX;
+      setCurrentX(e.clientX);
       
-      // Only allow left swipe (negative deltaX)
-      if (deltaX < 0) {
-        const maxSwipe = -120;
+      // Apply transform to the real content target
+      if (targetRef.current) {
+        const maxSwipe = -120; // Maximum swipe distance
         const clampedDelta = Math.max(deltaX, maxSwipe);
-        setCurrentX(e.clientX);
-        
-        if (contentRef.current) {
-          contentRef.current.style.transform = `translate3d(${clampedDelta}px, 0, 0)`;
-        }
+        targetRef.current.style.transform = `translate3d(${clampedDelta}px, 0, 0)`;
       }
     };
 
@@ -76,12 +73,13 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
       
       const deltaX = currentX - startX;
       
-      if (contentRef.current) {
-        contentRef.current.removeAttribute('data-swipe-active');
+      if (targetRef.current) {
+        targetRef.current.removeAttribute('data-swipe-active');
         
         if (deltaX < -64) {
           // Swipe threshold reached, trigger action
-          contentRef.current.style.transform = 'translate3d(-120px, 0, 0)';
+          targetRef.current.style.transition = 'transform 160ms ease-out';
+          targetRef.current.style.transform = 'translate3d(-120px, 0, 0)';
           setIsSwipeOpen(true);
           
           // Trigger the appropriate action based on swipe distance
@@ -92,7 +90,13 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
           }
         } else {
           // Snap back to original position
-          contentRef.current.style.transform = 'translate3d(0, 0, 0)';
+          targetRef.current.style.transition = 'transform 160ms ease-out';
+          targetRef.current.style.transform = 'translate3d(0, 0, 0)';
+          setTimeout(() => {
+            if (targetRef.current) {
+              targetRef.current.style.transition = '';
+            }
+          }, 200);
           setIsSwipeOpen(false);
         }
       }
@@ -109,9 +113,15 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
         gestureRef.current.classList.remove('dragging');
       }
       
-      if (contentRef.current) {
-        contentRef.current.removeAttribute('data-swipe-active');
-        contentRef.current.style.transform = 'translate3d(0, 0, 0)';
+      if (targetRef.current) {
+        targetRef.current.removeAttribute('data-swipe-active');
+        targetRef.current.style.transition = 'transform 160ms ease-out';
+        targetRef.current.style.transform = 'translate3d(0, 0, 0)';
+        setTimeout(() => {
+          if (targetRef.current) {
+            targetRef.current.style.transition = '';
+          }
+        }, 200);
         setIsSwipeOpen(false);
       }
     };
@@ -160,7 +170,8 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
         margin: 0,
         padding: 0,
         border: 'none',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        background: 'transparent'
       }}
     >
         {/* Gesture Plane */}
@@ -172,26 +183,13 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
             inset: 0,
             pointerEvents: 'auto',
             touchAction: 'pan-y',
-            cursor: 'grab'
+            cursor: 'grab',
+            background: 'transparent'
           }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerCancel}
-        />
-
-        {/* Content Proxy - moves with swipe */}
-        <div
-          ref={contentRef}
-          className="content-proxy"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            willChange: 'transform',
-            transition: isDragging ? 'none' : 'transform 160ms ease-out',
-            transform: 'translate3d(0, 0, 0)',
-            backgroundColor: 'transparent'
-          }}
         />
 
         {/* Trailing Actions */}

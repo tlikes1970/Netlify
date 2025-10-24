@@ -46,7 +46,7 @@ export function CardBaseMobile({
 }: CardBaseMobileProps) {
   const [swipeEnabled, setSwipeEnabled] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const targetRef = useRef<HTMLDivElement>(null);
 
   // Debug: Log when component renders
   console.log('🎯 CardBaseMobile rendering:', { 
@@ -98,57 +98,57 @@ export function CardBaseMobile({
         backgroundColor: '#f0f0f0' // DEBUG: Light background to see mobile cards
       }}
     >
-      {/* Content Proxy - moves with swipe */}
-      <div className="content-proxy" style={{ position: 'relative', zIndex: 1 }}>
-      {/* Poster Column */}
-      <div 
-        className="poster-column"
-        style={{
-          width: 'var(--poster-w, 112px)',
-          minWidth: 'var(--poster-w, 112px)',
-          height: 'var(--poster-h, 168px)',
-          borderRadius: 'var(--radius-md, 10px)',
-          overflow: 'hidden'
-        }}
-      >
-        {posterUrl ? (
-          <OptimizedImage
-            src={posterUrl}
-            alt={title}
-            context="poster"
-            className="h-full w-full"
-            style={{
-              objectFit: 'cover',
-              width: '100%',
-              height: '100%'
-            }}
-            loading="lazy"
-          />
-        ) : (
-          <div 
-            className="flex h-full w-full items-center justify-center text-xs"
-            style={{ 
-              color: 'var(--muted)',
-              backgroundColor: 'var(--card-bg)'
-            }}
-          >
-            No Poster
-          </div>
-        )}
-      </div>
+      {/* Swipe Target - wraps real content */}
+      <div className="swipe-target" ref={targetRef} style={{ display: 'contents' }}>
+        {/* Poster Column */}
+        <div 
+          className="poster-column"
+          style={{
+            width: 'var(--poster-w, 112px)',
+            minWidth: 'var(--poster-w, 112px)',
+            height: 'var(--poster-h, 168px)',
+            borderRadius: 'var(--radius-md, 10px)',
+            overflow: 'hidden'
+          }}
+        >
+          {posterUrl ? (
+            <OptimizedImage
+              src={posterUrl}
+              alt={title}
+              context="poster"
+              className="h-full w-full"
+              style={{
+                objectFit: 'cover',
+                width: '100%',
+                height: '100%'
+              }}
+              loading="lazy"
+            />
+          ) : (
+            <div 
+              className="flex h-full w-full items-center justify-center text-xs"
+              style={{ 
+                color: 'var(--muted)',
+                backgroundColor: 'var(--card-bg)'
+              }}
+            >
+              No Poster
+            </div>
+          )}
+        </div>
 
-      {/* Content Lane */}
-      <div 
-        className="content-lane"
-        style={{
-          minHeight: 'var(--content-h, 160px)',
-          maxHeight: 'var(--content-h, 160px)',
-          overflow: 'hidden',
-          display: 'grid',
-          gridTemplateRows: 'auto auto 1fr auto',
-          gap: 'var(--space-xs, 4px)'
-        }}
-      >
+        {/* Content Lane */}
+        <div 
+          className="content-lane"
+          style={{
+            minHeight: 'var(--content-h, 160px)',
+            maxHeight: 'var(--content-h, 160px)',
+            overflow: 'hidden',
+            display: 'grid',
+            gridTemplateRows: 'auto auto 1fr auto',
+            gap: 'var(--space-xs, 4px)'
+          }}
+        >
         {/* Title */}
         <div 
           className="card-title"
@@ -273,9 +273,9 @@ export function CardBaseMobile({
           </div>
         </div>
       </div>
-      </div> {/* End content-proxy */}
+      </div> {/* End swipe-target */}
 
-      {/* SSR Placeholder - Always Present */}
+      {/* Swipe Overlay - Always Present */}
       <div 
         className="swipe-row" 
         aria-hidden={!swipeEnabled}
@@ -287,14 +287,14 @@ export function CardBaseMobile({
           margin: 0,
           padding: 0,
           border: 'none',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          background: 'transparent'
         }}
       >
         {swipeEnabled && (
           <SwipeRowOverlay
-            ref={overlayRef}
             swipeConfig={swipeConfig}
-            item={item}
+            targetRef={targetRef}
           />
         )}
       </div>
