@@ -115,5 +115,4 @@
   /* Fix leaking reveals */
   .chips .reveal, .content .reveal { display:none !important; }
 }
-}
 
