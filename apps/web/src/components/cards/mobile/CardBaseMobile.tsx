@@ -48,6 +48,9 @@ export function CardBaseMobile({
   const cardRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
+  // Debug: Log when component renders
+  console.log('🎯 CardBaseMobile rendering:', { title, swipeEnabled });
+
   // Enable swipe after hydration to avoid SSR mismatch
   useEffect(() => {
     setSwipeEnabled(true);
@@ -82,7 +85,9 @@ export function CardBaseMobile({
         minHeight: 'var(--content-h, 160px)',
         maxHeight: 'var(--content-h, 160px)',
         overflow: 'hidden',
-        position: 'relative'
+        position: 'relative',
+        border: '2px solid #ff0000', // DEBUG: Red border to see mobile cards
+        backgroundColor: '#f0f0f0' // DEBUG: Light background to see mobile cards
       }}
     >
       {/* Content Proxy - moves with swipe */}
