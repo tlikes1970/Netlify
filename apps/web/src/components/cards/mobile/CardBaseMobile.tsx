@@ -79,79 +79,78 @@ export function CardBaseMobile({
     >
       {/* Swipe Target - wraps real content */}
       <div className="swipe-target" ref={targetRef}>
-        {/* Poster Column */}
-        <div className="poster-column">
-          {posterUrl ? (
-            <OptimizedImage
-              src={posterUrl}
-              alt={title}
-              context="poster"
-              className="h-full w-full"
-              className="poster"
-              loading="lazy"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-xs text-muted bg-card-bg">
-              No Poster
+        {/* Poster */}
+        {posterUrl ? (
+          <OptimizedImage
+            src={posterUrl}
+            alt={title}
+            context="poster"
+            className="poster"
+            loading="lazy"
+          />
+        ) : (
+          <div className="poster flex items-center justify-center text-xs text-muted bg-card-bg">
+            No Poster
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="content">
+          {/* Title */}
+          <div className="card-title">
+            {title}
+          </div>
+
+          {/* Meta */}
+          <div className="card-meta">
+            {meta}
+          </div>
+
+          {/* Summary */}
+          {summary && (
+            <div className="card-summary">
+              {summary}
             </div>
           )}
-        </div>
 
-        {/* Content Lane */}
-        <div className="content">
-        {/* Title */}
-        <div className="card-title">
-          {title}
-        </div>
+          {/* Chips */}
+          <div className="chips">
+            {chips}
+          </div>
 
-        {/* Meta */}
-        <div className="card-meta">
-          {meta}
-        </div>
-
-        {/* Summary */}
-        <div className="card-summary">
-          {summary}
-        </div>
-
-        {/* Chips */}
-        <div className="chips">
-          {chips}
-        </div>
-
-        {/* Actions Row */}
-        <div className="actions">
-          <div className="providers">
-            {providers.slice(0, 3).map((provider, index) => (
-              <span key={index} className="provider-chip">
-                {provider.name}
-              </span>
-            ))}
-            {providers.length > 3 && (
-              <span className="provider-chip">+{providers.length - 3}</span>
+          {/* Actions Row */}
+          <div className="actions">
+            <div className="providers">
+              {providers.slice(0, 3).map((provider, index) => (
+                <span key={index} className="provider-chip">
+                  {provider.name}
+                </span>
+              ))}
+              {providers.length > 3 && (
+                <span className="provider-chip">+{providers.length - 3}</span>
+              )}
+            </div>
+            
+            {draggable && (
+              <button
+                className="btn-drag"
+                aria-roledescription="sortable handle"
+                data-drag-handle
+              >
+                ⋮⋮
+              </button>
+            )}
+            
+            {onDelete && (
+              <button
+                className="btn-delete"
+                onClick={onDelete}
+              >
+                Delete
+              </button>
             )}
           </div>
-          
-          {draggable && (
-            <button
-              className="btn-drag"
-              aria-roledescription="sortable handle"
-              data-drag-handle
-            >
-              ⋮⋮
-            </button>
-          )}
-          
-          {onDelete && (
-            <button
-              className="btn-delete"
-              onClick={onDelete}
-            >
-              Delete
-            </button>
-          )}
         </div>
-      </div>
       </div>
 
       {/* Swipe Overlay - Always Present */}
