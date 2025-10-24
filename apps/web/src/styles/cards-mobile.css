@@ -7,17 +7,27 @@
  */
 
 @media (max-width: 640px) {
+  /* Card shell: only visuals/spacing, NOT the 2-col grid */
   .card-mobile {
-    display: grid;
-    grid-template-columns: 112px 1fr;
-    gap: 8px;
-    align-items: start;
+    position: relative;
     background: var(--surface-0, #fff);
     border-radius: 12px;
     padding: 8px;
     margin-bottom: 10px;
-    position: relative;
     box-shadow: none;
+    /* remove any grid/flex on the shell */
+    display: block;
+  }
+
+  /* The element we translate for swipe is also the grid container */
+  .swipe-target {
+    position: relative;
+    will-change: transform;
+    display: grid;
+    grid-template-columns: 112px 1fr;
+    gap: 8px;
+    align-items: start;
+    min-height: 168px; /* matches poster */
   }
 
   .poster {
@@ -33,7 +43,6 @@
     display: grid;
     grid-template-rows: auto auto 1fr auto; /* title, meta, summary, actions */
     row-gap: 6px;
-    min-height: 168px;
     overflow: hidden;
   }
 
@@ -63,11 +72,7 @@
     overflow: hidden;
   }
 
-  .chips {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-  }
+  .chips { display: flex; gap: 4px; flex-wrap: wrap; }
 
   .actions {
     display: grid;
@@ -77,37 +82,13 @@
     margin-top: 4px;
   }
 
-  .providers { 
-    display: inline-flex; 
-    gap: 4px; 
-    overflow: hidden; 
-    white-space: nowrap; 
-    mask-image: linear-gradient(to right, #000 85%, transparent);
-  }
-  .provider-chip {
-    border-radius: 9999px;
-    padding: 2px 8px;
-    font-size: 12px;
-    line-height: 16px;
-    background: var(--surface-1, #f3f4f6);
-  }
+  .providers { display: inline-flex; gap: 4px; overflow: hidden; white-space: nowrap; mask-image: linear-gradient(to right, #000 85%, transparent); }
+  .provider-chip { border-radius: 9999px; padding: 2px 8px; font-size: 12px; line-height: 16px; background: var(--surface-1, #f3f4f6); }
 
-  .btn-delete {
-    padding: 6px 10px;
-    border-radius: 9999px;
-    background: #ef4444;
-    color: #fff;
-    font-weight: 600;
-  }
+  .btn-delete { padding: 6px 10px; border-radius: 9999px; background: #ef4444; color: #fff; font-weight: 600; }
+  .btn-drag { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: var(--surface-1, #f3f4f6); }
 
-  .btn-drag {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    display: grid; place-items: center;
-    background: var(--surface-1, #f3f4f6);
-  }
-
-  .swipe-target { position: relative; will-change: transform; }
+  /* Swipe overlay remains harmless */
   .swipe-row { position: absolute; inset: 0; pointer-events: none; background: transparent !important; z-index: 5; }
   .swipe-row > .gesture-plane { position: absolute; inset: 0; pointer-events: auto; touch-action: pan-y; cursor: grab; }
   .swipe-row.dragging > .gesture-plane { cursor: grabbing; }
