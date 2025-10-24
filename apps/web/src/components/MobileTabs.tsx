@@ -2,6 +2,7 @@ import { useTranslations } from '../lib/language';
 import { useLibrary } from '../lib/storage';
 import { useCustomLists } from '../lib/customLists';
 import { useEffect, useState, createContext, useContext } from 'react';
+import React from 'react';
 
 type TabId = 'watching'|'want'|'watched'|'mylists'|'discovery'; // Removed 'not' - now handled by modal
 export type MobileTabsProps = { current: 'home' | TabId; onChange: (next: 'home' | TabId) => void; };
@@ -191,35 +192,50 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
             )}
           </button>
 
+          {/* Vertical Separator */}
+          <div 
+            className="h-8 w-px"
+            style={{ backgroundColor: 'var(--line)' }}
+          />
+
           {/* Main Tabs */}
-          {TABS.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => onChange(tab.id)}
-              className="flex flex-col items-center justify-center p-2 min-h-[60px] transition-all duration-200 ease-out relative flex-1"
-              style={{
-                color: current === tab.id ? 'var(--accent)' : 'var(--muted)',
-                fontWeight: current === tab.id ? '600' : '500'
-              }}
-            >
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-medium">{tab.label}</span>
-                {tab.count > 0 && (
-                  <span 
-                    className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1"
-                    style={{ fontSize: '10px' }}
-                  >
-                    {tab.count}
-                  </span>
+          {TABS.map((tab, index) => (
+            <React.Fragment key={tab.id}>
+              <button
+                onClick={() => onChange(tab.id)}
+                className="flex flex-col items-center justify-center p-2 min-h-[60px] transition-all duration-200 ease-out relative flex-1"
+                style={{
+                  color: current === tab.id ? 'var(--accent)' : 'var(--muted)',
+                  fontWeight: current === tab.id ? '600' : '500'
+                }}
+              >
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-medium">{tab.label}</span>
+                  {tab.count > 0 && (
+                    <span 
+                      className="bg-gray-500 text-white text-xs font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1"
+                      style={{ fontSize: '10px' }}
+                    >
+                      {tab.count}
+                    </span>
+                  )}
+                </div>
+                {current === tab.id && (
+                  <div 
+                    className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 rounded-full"
+                    style={{ backgroundColor: 'var(--accent)' }}
+                  />
                 )}
-              </div>
-              {current === tab.id && (
+              </button>
+              
+              {/* Vertical Separator between tabs (except after last tab) */}
+              {index < TABS.length - 1 && (
                 <div 
-                  className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 rounded-full"
-                  style={{ backgroundColor: 'var(--accent)' }}
+                  className="h-8 w-px"
+                  style={{ backgroundColor: 'var(--line)' }}
                 />
               )}
-            </button>
+            </React.Fragment>
           ))}
         </div>
       </nav>
