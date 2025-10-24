@@ -358,10 +358,21 @@ export const Library = {
   reloadFromStorage() {
     try {
       const stored = JSON.parse(localStorage.getItem(KEY) || '{}');
+      console.log('🔄 Library.reloadFromStorage - before:', Object.keys(state).length, 'items');
+      console.log('🔄 Library.reloadFromStorage - localStorage:', Object.keys(stored).length, 'items');
+      
+      // Clear existing state
       Object.keys(state).forEach(key => delete state[key]);
+      
+      // Load new state
       Object.assign(state, stored);
+      
+      console.log('🔄 Library.reloadFromStorage - after:', Object.keys(state).length, 'items');
+      
+      // Emit to notify all subscribers
       emit();
-      console.log('🔄 Library state reloaded from localStorage');
+      
+      console.log('✅ Library state reloaded from localStorage and subscribers notified');
     } catch (error) {
       console.error('❌ Failed to reload Library from localStorage:', error);
     }
@@ -370,27 +381,34 @@ export const Library = {
 };
 
 export function useLibrary(list: ListName) {
-  const [items, setItems] = React.useState(() => Library.getByList(list));
+  const [items, setItems] = React.useState(() => {
+    const initialItems = Library.getByList(list);
+    console.log(`🔍 useLibrary(${list}) initial state:`, initialItems.length, 'items');
+    return initialItems;
+  });
+  
   React.useEffect(() => {
     const newItems = Library.getByList(list);
-    console.log(`🔍 useLibrary(${list}) updated:`, newItems.length, 'items');
+    console.log(`🔍 useLibrary(${list}) effect - current items:`, newItems.length, 'items');
     if (newItems.length > 0) {
-      console.log(`🔍 First item showStatus:`, newItems[0].showStatus);
-      console.log(`🔍 First item showStatus type:`, typeof newItems[0].showStatus);
+      console.log(`🔍 First item:`, { title: newItems[0].title, list: newItems[0].list });
     }
     setItems(newItems);
+    
     const unsub = Library.subscribe(() => {
       const updatedItems = Library.getByList(list);
       console.log(`🔔 Library.subscribe(${list}) triggered:`, updatedItems.length, 'items');
       if (updatedItems.length > 0) {
-        console.log(`🔔 First item showStatus:`, updatedItems[0].showStatus);
-        console.log(`🔔 First item showStatus type:`, typeof updatedItems[0].showStatus);
+        console.log(`🔔 First item:`, { title: updatedItems[0].title, list: updatedItems[0].list });
       }
       setItems(updatedItems);
     });
+    
     return () => {
       unsub();
     };
   }, [list]);
+  
+  console.log(`🔍 useLibrary(${list}) returning:`, items.length, 'items');
   return items;
 }

@@ -1,6 +1,5 @@
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-// import { updateDoc } from 'firebase/firestore'; // Unused
-// import { db } from '../firebase'; // Temporarily disabled due to import resolution issue
+import { db } from './firebase';
 import type { LibraryEntry } from './storage';
 
 /**
@@ -23,24 +22,10 @@ export class FirebaseSyncManager {
   }
 
   /**
-   * Get Firebase db instance dynamically to avoid import issues
+   * Get Firebase db instance - use direct import
    */
-  private async getFirebaseDb() {
-    try {
-      // Try to get db from window (if available)
-      const firebaseApp = (window as any).firebaseApp;
-      if (firebaseApp) {
-        return firebaseApp.firestore();
-      }
-      
-      // Fallback: try to import dynamically using ES6 imports
-      const { getFirestore } = await import('firebase/firestore');
-      const { getApp } = await import('firebase/app');
-      return getFirestore(getApp());
-    } catch (error) {
-      console.warn('Could not get Firebase db instance:', error);
-      return null;
-    }
+  private getFirebaseDb() {
+    return db;
   }
 
   /**
@@ -184,11 +169,7 @@ export class FirebaseSyncManager {
       }
 
       // Save to Firestore
-      const firebaseDb = await this.getFirebaseDb();
-      if (!firebaseDb) {
-        console.warn('Firebase db not available, skipping sync');
-        return false;
-      }
+      const firebaseDb = this.getFirebaseDb();
       
       const userRef = doc(firebaseDb, 'users', uid);
       await setDoc(userRef, payload, { merge: true });
@@ -211,11 +192,7 @@ export class FirebaseSyncManager {
     try {
       console.log('📥 Loading data from Firebase for user:', uid);
 
-      const firebaseDb = await this.getFirebaseDb();
-      if (!firebaseDb) {
-        console.warn('Firebase db not available, skipping load');
-        return false;
-      }
+      const firebaseDb = this.getFirebaseDb();
 
       const userRef = doc(firebaseDb, 'users', uid);
       const userDoc = await getDoc(userRef);
@@ -406,6 +383,13 @@ export class FirebaseSyncManager {
     
     // Trigger Library update event
     window.dispatchEvent(new CustomEvent('library:updated'));
+    
+    // Force a small delay and reload again to ensure UI catches up
+    setTimeout(() => {
+      console.log('🔄 Firebase sync - forcing second Library reload...');
+      Library.reloadFromStorage();
+      window.dispatchEvent(new CustomEvent('library:updated'));
+    }, 100);
   }
 
   /**
