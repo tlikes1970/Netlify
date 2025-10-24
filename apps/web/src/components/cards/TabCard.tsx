@@ -592,12 +592,12 @@ export default function TabCard({
           {translations.deleteAction}
         </button>
 
-        {/* Title */}
+        {/* Title with Year */}
         <div className="flex items-center gap-2 mb-1">
           <h3 className={`title font-bold ${
             isCondensed ? 'text-sm' : 'text-base'
           }`} style={{ color: 'var(--text)' }}>
-            {title}
+            {title}{year ? ` • ${year}` : ''}
           </h3>
           
           {/* Notes and Tags Indicators */}
@@ -621,11 +621,6 @@ export default function TabCard({
               </span>
             )}
           </div>
-        </div>
-
-        {/* Meta */}
-        <div className="meta text-xs mb-1" style={{ color: 'var(--muted)' }}>
-          {getMetaText()}
         </div>
 
         {/* Where to Watch - only show when we have real data */}
@@ -678,25 +673,6 @@ export default function TabCard({
             </span>
           </div>
         )}
-
-        {/* Show Completion Status - hidden in condensed view */}
-        {!isCondensed && mediaType === 'tv' && (() => {
-          const statusInfo = getShowStatusInfo(item.showStatus);
-          if (!statusInfo?.isCompleted) return null;
-          
-          return (
-            <div className="completion-status mb-2">
-              <div className="text-xs font-medium" style={{ color: statusInfo.backgroundColor }}>
-                {item.showStatus === 'Ended' ? 'Series Complete' : 'Series Cancelled'}
-              </div>
-              {item.lastAirDate && (
-                <div className="text-xs" style={{ color: 'var(--muted)' }}>
-                  Last aired: {formatLastAirDate(item.lastAirDate)}
-                </div>
-              )}
-            </div>
-          );
-        })()}
 
         {/* User Rating */}
         {(tabType === 'watching' || tabType === 'watched') && (
