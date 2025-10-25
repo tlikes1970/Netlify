@@ -74,3 +74,4 @@ console.log('✓ Non-layout-affecting overlay');
 console.log('✓ Unified TV/Movie components');
 console.log('✓ Centralized swipe maps');
 console.log('✓ Desktop regression protection');
+

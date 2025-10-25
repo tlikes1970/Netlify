@@ -20,8 +20,10 @@
 
   /* SWIPE BACKGROUND — sits UNDER content, hidden until dragging */
   .card-mobile .swipe-bg {
-    position: absolute; inset: 0;
-    z-index: 1; pointer-events: none;
+    position: absolute; 
+    inset: 0; 
+    z-index: 1; 
+    pointer-events: none;
   }
   .card-mobile .swipe-bg .reveal {
     position: absolute; top: 0; bottom: 0; width: 40%;
@@ -42,6 +44,12 @@
   .card-mobile .swipe-bg .hint.left  { left: 12px; }
   .card-mobile .swipe-bg .hint.right { right: 12px; }
 
+  /* Hint visibility */
+  .card-mobile .hint { 
+    opacity: 0; 
+    transition: opacity 120ms; 
+  }
+  
   /* Only show active hint for direction */
   .card-mobile.drag-left  .swipe-bg .hint.left,
   .card-mobile.drag-right .swipe-bg .hint.right {
@@ -57,7 +65,15 @@
     grid-template-columns: 112px 1fr;
     gap: 8px;
     align-items: start;
-    min-height: 168px;
+    transition: transform 160ms ease-out;
+  }
+  
+  .card-mobile.dragging .swipe-target {
+    transition: none;
+  }
+  
+  .card-mobile.swipe-open .swipe-target {
+    transform: translate3d(-120px,0,0);
   }
 
   .card-mobile .poster {
@@ -71,7 +87,6 @@
     display: grid;
     grid-template-rows: auto auto auto auto auto auto; /* topline, subline, chips, rating, summary, actions */
     row-gap: 6px;
-    min-height: 168px;
     overflow: hidden;
   }
 

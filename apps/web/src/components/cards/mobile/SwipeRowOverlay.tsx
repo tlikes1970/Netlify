@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef } from 'react';
+import React, { useState, useRef, forwardRef, useEffect } from 'react';
 import type { SwipeConfig } from '../../../lib/swipeMaps';
 import type { MediaItem, CardActionHandlers } from '../card.types';
 
@@ -18,12 +18,16 @@ interface SwipeRowOverlayProps {
 }
 
 export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
-  ({ swipeConfig, targetRef, item, actions }) => {
+  ({ swipeConfig, targetRef, item, actions }, ref) => {
     const [startX, setStartX] = useState(0);
     const [currentX, setCurrentX] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [captureId, setCaptureId] = useState<number | null>(null);
     const gestureRef = useRef<HTMLDivElement>(null);
+
+    // Normalized thresholds
+    const OPEN_TRAY = 60;   // px
+    const FIRE_PRIMARY = 100; // px
 
     const handlePointerDown = (e: React.PointerEvent) => {
       // Only handle mouse and touch pointers
@@ -68,11 +72,12 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
         card.classList.toggle('drag-right', deltaX > 0);
       }
       
-      // Apply transform to the real content target
+      // Apply transform to the real content target with clamping
       if (targetRef.current) {
+        const clampedDelta = Math.min(0, deltaX); // Only allow left swipes
         const maxSwipe = -120; // Maximum swipe distance
-        const clampedDelta = Math.max(deltaX, maxSwipe);
-        targetRef.current.style.transform = `translate3d(${clampedDelta}px, 0, 0)`;
+        const finalDelta = Math.max(clampedDelta, maxSwipe);
+        targetRef.current.style.transform = `translate3d(${finalDelta}px, 0, 0)`;
       }
     };
 
@@ -98,16 +103,29 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
       if (targetRef.current) {
         targetRef.current.removeAttribute('data-swipe-active');
         
-        if (deltaX < -64) {
-          // Swipe threshold reached, trigger action
+        if (deltaX <= -FIRE_PRIMARY) {
+          // Fire primary action and snap back
+          targetRef.current.style.transition = 'transform 160ms ease-out';
+          targetRef.current.style.transform = 'translate3d(0, 0, 0)';
+          
+          // Trigger the primary action (rightAction for left swipes)
+          if (swipeConfig.rightAction) {
+            swipeConfig.rightAction.action(item, actions);
+          }
+          
+          setTimeout(() => {
+            if (targetRef.current) {
+              targetRef.current.style.transition = '';
+            }
+          }, 180);
+        } else if (deltaX <= -OPEN_TRAY) {
+          // Open tray state without firing action
           targetRef.current.style.transition = 'transform 160ms ease-out';
           targetRef.current.style.transform = 'translate3d(-120px, 0, 0)';
           
-          // Trigger the appropriate action based on swipe distance
-          if (deltaX < -100 && swipeConfig.rightAction) {
-            swipeConfig.rightAction.action(item, actions);
-          } else if (swipeConfig.leftAction) {
-            swipeConfig.leftAction.action(item, actions);
+          // Add swipe-open class for CSS styling
+          if (card) {
+            card.classList.add('swipe-open');
           }
         } else {
           // Snap back to original position
@@ -117,7 +135,7 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
             if (targetRef.current) {
               targetRef.current.style.transition = '';
             }
-          }, 200);
+          }, 180);
         }
       }
     };
@@ -151,9 +169,56 @@ export const SwipeRowOverlay = forwardRef<HTMLDivElement, SwipeRowOverlayProps>(
       }
     };
 
+    // Escape and outside-click handlers
+    useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          const card = gestureRef.current?.closest('.card-mobile');
+          if (card && card.classList.contains('swipe-open')) {
+            card.classList.remove('swipe-open');
+            if (targetRef.current) {
+              targetRef.current.style.transition = 'transform 160ms ease-out';
+              targetRef.current.style.transform = 'translate3d(0, 0, 0)';
+              setTimeout(() => {
+                if (targetRef.current) {
+                  targetRef.current.style.transition = '';
+                }
+              }, 180);
+            }
+          }
+        }
+      };
+
+      const handleClickOutside = (e: MouseEvent) => {
+        const card = gestureRef.current?.closest('.card-mobile');
+        if (card && card.classList.contains('swipe-open') && !card.contains(e.target as Node)) {
+          card.classList.remove('swipe-open');
+          if (targetRef.current) {
+            targetRef.current.style.transition = 'transform 160ms ease-out';
+            targetRef.current.style.transform = 'translate3d(0, 0, 0)';
+            setTimeout(() => {
+              if (targetRef.current) {
+                targetRef.current.style.transition = '';
+              }
+            }, 180);
+          }
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('mousedown', handleClickOutside);
+      
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, []);
+
 
   return (
-    <div className="gesture-plane"
+    <div 
+      ref={ref}
+      className="gesture-plane"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

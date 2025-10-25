@@ -87,3 +87,4 @@ setTimeout(() => {
     console.log('ℹ️ SwipeRow not expected to be active');
   }
 }, 100);
+

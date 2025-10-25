@@ -22,3 +22,4 @@ console.log('- window.innerWidth =', window.innerWidth);
 // Force refresh the page to apply changes
 console.log('🔄 Refreshing page to apply changes...');
 window.location.reload();
+

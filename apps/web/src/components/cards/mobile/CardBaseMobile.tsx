@@ -292,7 +292,6 @@ export function CardBaseMobile({
         style={{
           position: 'absolute',
           inset: 0,
-          pointerEvents: 'none',
           zIndex: 5,
           margin: 0,
           padding: 0,

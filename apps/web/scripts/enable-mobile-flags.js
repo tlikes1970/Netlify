@@ -16,3 +16,4 @@ console.log('- flag:mobile_actions_split_v1 =', localStorage.getItem('flag:mobil
 // Force refresh the page to apply changes
 console.log('🔄 Refreshing page to apply changes...');
 window.location.reload();
+

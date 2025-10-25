@@ -73,3 +73,4 @@ console.log('1. Mobile flags not enabled');
 console.log('2. Viewport too wide (> 768px)');
 console.log('3. TabCard mobile detection failing');
 console.log('4. Component compilation errors');
+

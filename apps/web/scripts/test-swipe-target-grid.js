@@ -79,3 +79,4 @@
   console.log('- Poster and content are direct children of .swipe-target');
   console.log('- Swipe still translates the entire .swipe-target element');
 })();
+

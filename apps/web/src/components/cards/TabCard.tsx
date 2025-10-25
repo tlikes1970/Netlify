@@ -10,7 +10,6 @@ import SwipeableCard from '../SwipeableCard';
 import { OptimizedImage } from '../OptimizedImage';
 import { CompactPrimaryAction } from '../../features/compact/CompactPrimaryAction';
 import { CompactOverflowMenu } from '../../features/compact/CompactOverflowMenu';
-import { SwipeRow } from '../../features/compact/SwipeRow';
 import { EpisodeProgressDisplay } from '../EpisodeProgressDisplay';
 import { fetchNetworkInfo } from '../../search/api';
 import { TvCardMobile } from './mobile/TvCardMobile';
@@ -143,46 +142,46 @@ export default function TabCard({
     return badges;
   };
 
-  // Get mobile-specific actions (only primary actions)
-  const getMobileActions = () => {
+  // Get all actions for desktop/expanded view
+  const getAllActions = (): Array<{ key: string; label: string; action: () => void; disabled?: boolean }> => {
+    const primaryActions: Array<{ key: string; label: string; action: () => void; disabled?: boolean }> = [];
+    const additionalActions: Array<{ key: string; label: string; action: () => void; disabled?: boolean }> = [];
+    
+    // Add primary actions based on tab type
     switch (tabType) {
       case 'watching':
-        return [
+        primaryActions.push(
           { key: 'want', label: isCondensed ? 'Want' : translations.wantToWatchAction, action: () => actions?.onWant?.(item) },
           { key: 'watched', label: isCondensed ? 'Watched' : translations.watchedAction, action: () => actions?.onWatched?.(item) }
-        ];
+        );
+        break;
       case 'want':
-        return [
+        primaryActions.push(
           { key: 'watching', label: isCondensed ? 'Watching' : translations.currentlyWatchingAction, action: () => {
             if (item.id && item.mediaType) {
               Library.move(item.id, item.mediaType, 'watching');
             }
           }},
           { key: 'watched', label: isCondensed ? 'Watched' : translations.watchedAction, action: () => actions?.onWatched?.(item) }
-        ];
+        );
+        break;
       case 'watched':
-        return [
+        primaryActions.push(
           { key: 'want', label: isCondensed ? 'Want' : translations.wantToWatchAction, action: () => actions?.onWant?.(item) },
           { key: 'watching', label: isCondensed ? 'Watching' : translations.currentlyWatchingAction, action: () => {
             if (item.id && item.mediaType) {
               Library.move(item.id, item.mediaType, 'watching');
             }
           }}
-        ];
+        );
+        break;
       case 'discovery':
-        return [
+        primaryActions.push(
           { key: 'want', label: isCondensed ? 'Want' : translations.wantToWatchAction, action: () => actions?.onWant?.(item) },
           { key: 'watching', label: isCondensed ? 'Watching' : translations.currentlyWatchingAction, action: () => actions?.onWant?.(item) }
-        ];
-      default:
-        return [];
+        );
+        break;
     }
-  };
-
-  // Get all actions for desktop/expanded view
-  const getAllActions = (): Array<{ key: string; label: string; action: () => void; disabled?: boolean }> => {
-    const mobileActions = getMobileActions();
-    const additionalActions: Array<{ key: string; label: string; action: () => void; disabled?: boolean }> = [];
     
     // Add simple reminder for TV shows
     if (mediaType === 'tv') {
@@ -215,19 +214,19 @@ export default function TabCard({
       });
     }
     
-    return [...mobileActions, ...additionalActions];
+    return [...primaryActions, ...additionalActions];
   };
 
   // Render mobile actions with ellipsis overflow
   const renderMobileActions = () => {
     const allActions = getAllActions();
-    const mobileActions = getMobileActions();
-    const hasMoreActions = allActions.length > mobileActions.length;
+    const primaryActions = allActions.slice(0, 2); // First 2 actions are primary
+    const hasMoreActions = allActions.length > 2;
     
     return (
       <div className="flex flex-wrap gap-1">
         {/* Primary mobile actions */}
-        {mobileActions.map((action) => (
+        {primaryActions.map((action) => (
           <button
             key={action.key}
             onClick={action.action}
@@ -542,45 +541,12 @@ export default function TabCard({
   }
 
   return (
-    <SwipeRow trailingActions={
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2, 8px)' }}>
-        {getMobileActions().map((action, i) => (
-          <button
-            key={i}
-            onClick={action.action}
-            className="swipe-action-button"
-            style={{
-              padding: 'var(--space-2, 8px)',
-              borderRadius: 'var(--radius, 12px)',
-              fontSize: 'var(--font-sm, 13px)',
-              backgroundColor: 'var(--bg, #ffffff)',
-              color: 'var(--accent, #007AFF)',
-              border: '1px solid var(--bg, #ffffff)',
-              cursor: 'pointer',
-              fontWeight: '500',
-              minWidth: '80px',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--accent-hover, #0056CC)';
-              e.currentTarget.style.color = 'var(--bg, #ffffff)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--bg, #ffffff)';
-              e.currentTarget.style.color = 'var(--accent, #007AFF)';
-            }}
-          >
-            {action.label}
-          </button>
-        ))}
-      </div>
-    }>
-      <SwipeableCard
-        item={item}
-        actions={actions}
-        context={getSwipeContext()}
-        className={isCondensed ? "mb-4" : "mb-8"}
-      >
+    <SwipeableCard
+      item={item}
+      actions={actions}
+      context={getSwipeContext()}
+      className={isCondensed ? "mb-4" : "mb-8"}
+    >
       <article 
         className={`tab-card group relative flex rounded-2xl overflow-hidden shadow-lg transition-all duration-200 hover:shadow-xl ${
           isBeingDragged ? 'opacity-75 scale-95 rotate-1 z-50' : ''
@@ -935,6 +901,5 @@ export default function TabCard({
       </div>
     </article>
     </SwipeableCard>
-    </SwipeRow>
   );
 }
