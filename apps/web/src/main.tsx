@@ -91,7 +91,6 @@ if (typeof window !== 'undefined') {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).debugQueries = () =>
-  // @ts-ignore intentional: inspect internal query cache
   Array.from((queryClient as any).getQueryCache().getAll()).map((q: any) => ({
     key: q.queryKey?.join('/') ?? 'unknown',
     status: q.state.status,

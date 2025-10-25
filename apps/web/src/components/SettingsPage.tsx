@@ -1654,7 +1654,7 @@ function SharingModal({ onClose }: { onClose: () => void }) {
     try {
       await navigator.clipboard.writeText(shareableText);
       alert('Copied to clipboard!');
-    } catch (error) {
+    } catch (_error) {
       // Fallback for older browsers
       const textarea = document.createElement('textarea');
       textarea.value = shareableText;

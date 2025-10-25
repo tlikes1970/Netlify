@@ -87,7 +87,7 @@ function collectDiagnostics() {
           }
         }
       }
-    } catch (e) {
+    } catch (_e) {
       // Cross-origin stylesheets may throw
     }
   }

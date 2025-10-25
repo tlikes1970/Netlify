@@ -28,7 +28,7 @@ export default function SearchResults({
     abortRef.current?.abort();
     setItems([]); setPage(0); setHasMore(true); setError(null);
     void fetchPage(1, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line
   }, [query, genre, searchType, nonce]);
 
   async function fetchPage(nextPage: number, replace = false) {
@@ -186,7 +186,7 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
             onRemove(); // Remove from search results
           });
           break;
-        case 'currently-watching':
+        case 'currently-watching': {
           // Fetch next air date and show status for TV shows
           let nextAirDate: string | null = null;
           let showStatus: string | undefined = undefined;
@@ -210,6 +210,7 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
             onRemove(); // Remove from search results
           });
           break;
+        }
         case 'watched':
           addToListWithConfirmation(item, 'watched', () => {
             emit('card:watched', { id: item.id, mediaType: item.mediaType as any });
@@ -386,7 +387,7 @@ function PersonCard({ item }: { item: MediaItem }) {
           // Open TMDB person page
           window.open(`https://www.themoviedb.org/person/${item.id}`, '_blank');
           break;
-        case 'search-works':
+        case 'search-works': {
           // Search for their works
           const event = new CustomEvent('search:person-works', { 
             detail: { 
@@ -396,6 +397,7 @@ function PersonCard({ item }: { item: MediaItem }) {
           });
           document.dispatchEvent(event);
           break;
+        }
         default:
           console.log(`${action} clicked for ${title}`);
       }

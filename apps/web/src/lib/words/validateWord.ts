@@ -10,7 +10,9 @@ function loadLS(): Record<string, Verdict> {
   try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { return {}; }
 }
 function saveLS(obj: Record<string, Verdict>) {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(obj)); } catch {}
+  try { localStorage.setItem(LS_KEY, JSON.stringify(obj)); } catch {
+    // Ignore localStorage errors
+  }
 }
 const LS = loadLS();
 

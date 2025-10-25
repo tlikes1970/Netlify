@@ -1,6 +1,6 @@
 export type FlickletEventMap = {
   'search:submit': { query: string; genre?: string | null };
-  'search:clear': {};
+  'search:clear': Record<string, never>;
   'card:want': { id: string | number; mediaType: 'movie' | 'tv'; };
   'card:watched': { id: string | number; mediaType: 'movie' | 'tv'; };
   'card:notInterested': { id: string | number; mediaType: 'movie' | 'tv'; };

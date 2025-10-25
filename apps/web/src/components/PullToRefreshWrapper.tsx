@@ -13,7 +13,7 @@ export default function PullToRefreshWrapper({
   children,
   className = '',
   indicatorClassName = '',
-  compact = false,
+  compact: _compact = false,
   ...pullToRefreshProps
 }: PullToRefreshWrapperProps) {
   const {

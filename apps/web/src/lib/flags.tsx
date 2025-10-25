@@ -26,7 +26,9 @@ export function flag(name: string): boolean {
   try {
     const v = localStorage.getItem('flag:' + name);
     if (v !== null) return v === 'true';
-  } catch {}
+  } catch {
+    // Ignore localStorage errors
+  }
   return false;
 }
 

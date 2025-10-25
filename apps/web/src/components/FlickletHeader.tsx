@@ -54,17 +54,23 @@ export default function FlickletHeader({
     try {
       const saved = typeof window !== 'undefined' ? window.localStorage.getItem('flicklet.marqueeHidden') : null;
       setMarqueeHidden(saved === '1');
-    } catch {}
+    } catch {
+      // Ignore localStorage errors
+    }
   }, []);
 
   const hideMarquee = () => {
     setMarqueeHidden(true);
-    try { window.localStorage.setItem('flicklet.marqueeHidden', '1'); } catch {}
+    try { window.localStorage.setItem('flicklet.marqueeHidden', '1'); } catch {
+      // Ignore localStorage errors
+    }
   };
 
   const showMarqueePref = () => {
     setMarqueeHidden(false);
-    try { window.localStorage.removeItem('flicklet.marqueeHidden'); } catch {}
+    try { window.localStorage.removeItem('flicklet.marqueeHidden'); } catch {
+      // Ignore localStorage errors
+    }
   };
 
   // Check if username prompt is needed
