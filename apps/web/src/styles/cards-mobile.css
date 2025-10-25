@@ -6,7 +6,7 @@
  * Dependencies: CardBaseMobile, SwipeRowOverlay components
  */
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .card-mobile {
     position: relative;
     background: var(--surface-0,#fff);

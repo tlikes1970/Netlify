@@ -35,26 +35,41 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
   // Visual Viewport API listener for iOS Safari keyboard handling
   useEffect(() => {
     if (!window.visualViewport) {
-      console.log('📱 Visual Viewport API not supported, using focus/blur fallback');
+      console.log('📱 Visual Viewport API not supported, using safe fallback');
       
-      // Fallback for older iOS: listen to input focus/blur
-      const handleInputFocus = () => {
-        console.log('📱 Input focused, adjusting nav position');
-        setViewportOffset(250); // Reduced estimate for iOS keyboard
+      // Safe fallback: listen to resize, orientationchange, and visibilitychange
+      const handleFallbackResize = () => {
+        console.log('📱 Fallback resize detected, checking for keyboard');
+        // Simple heuristic: if viewport height is significantly less than screen height
+        const heightDiff = window.innerHeight - window.screen.height;
+        if (Math.abs(heightDiff) > 100) {
+          setViewportOffset(Math.abs(heightDiff));
+        } else {
+          setViewportOffset(0);
+        }
       };
       
-      const handleInputBlur = () => {
-        console.log('📱 Input blurred, resetting nav position');
-        setViewportOffset(0);
+      const handleOrientationChange = () => {
+        console.log('📱 Orientation change detected');
+        setTimeout(() => setViewportOffset(0), 100); // Reset after orientation settles
       };
       
-      // Listen for input focus/blur events
-      document.addEventListener('focusin', handleInputFocus);
-      document.addEventListener('focusout', handleInputBlur);
+      const handleVisibilityChange = () => {
+        console.log('📱 Visibility change detected');
+        if (document.hidden) {
+          setViewportOffset(0);
+        }
+      };
+      
+      // Listen for safe fallback events
+      window.addEventListener('resize', handleFallbackResize);
+      window.addEventListener('orientationchange', handleOrientationChange);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
       
       return () => {
-        document.removeEventListener('focusin', handleInputFocus);
-        document.removeEventListener('focusout', handleInputBlur);
+        window.removeEventListener('resize', handleFallbackResize);
+        window.removeEventListener('orientationchange', handleOrientationChange);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
       };
     }
     

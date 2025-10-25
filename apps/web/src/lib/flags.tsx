@@ -90,7 +90,7 @@ export function installActionsSplitGate() {
   
   const ensure = () => {
     try {
-      const compactGate = html.dataset.compactMobileV1 === 'true';
+      const compactGate = html.getAttribute('data-compact-mobile-v1') === 'true';
       // Use the same pattern as installCompactMobileGate - check if flag function exists
       const flagEnabled = typeof flag === 'function'
         ? flag('mobile_actions_split_v1')

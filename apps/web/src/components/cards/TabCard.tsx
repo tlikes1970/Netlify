@@ -502,8 +502,8 @@ export default function TabCard({
     : "px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md";
 
   // Mobile detection for new mobile cards
-  const isMobileCompact = document.documentElement.dataset.compactMobileV1 === 'true';
-  const isActionsSplit = document.documentElement.dataset.actionsSplit === 'true';
+  const isMobileCompact = document.documentElement.getAttribute('data-compact-mobile-v1') === 'true';
+  const isActionsSplit = document.documentElement.getAttribute('data-actions-split') === 'true';
   const isMobile = window.innerWidth < 768;
   
   // Convert tabType to tabKey for mobile components

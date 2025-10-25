@@ -138,8 +138,11 @@ export function CardBaseMobile({
     const ro = new ResizeObserver(sync);
     ro.observe(el);
     sync();
-    return () => ro.disconnect();
-  }, []);
+    
+    return () => {
+      ro.disconnect();
+    };
+  }, [item.id, swipeEnabled]); // Recreate observer when item changes or swipe state changes
 
   return (
     <div 

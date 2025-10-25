@@ -20,6 +20,7 @@ export interface SwipeConfig {
 }
 
 export type TabType = 'watching' | 'want' | 'watched' | 'discovery';
+export type TabKey = 'watching' | 'watched' | 'wishlist';
 
 /**
  * Get swipe configuration for a specific tab type
