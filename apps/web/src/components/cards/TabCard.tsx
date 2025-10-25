@@ -253,7 +253,7 @@ export default function TabCard({
         {showAllActions && hasMoreActions && (
           <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-10 p-2">
             <div className="flex flex-wrap gap-1">
-              {allActions.slice(mobileActions.length).map((action) => (
+              {allActions.slice(primaryActions.length).map((action) => (
                 <button
                   key={action.key}
                   onClick={() => {
