@@ -7,6 +7,7 @@
  */
 
 import type { MediaItem, CardActionHandlers } from '../components/cards/card.types';
+import { Library } from './storage';
 
 export interface SwipeAction {
   label: string;
@@ -22,72 +23,72 @@ export type TabType = 'watching' | 'want' | 'watched' | 'discovery';
 
 /**
  * Get swipe configuration for a specific tab type
- * @param tabType - The current tab context
- * @param mediaType - The media type (tv or movie)
- * @param actions - Action handlers for the card
+ * @param tabKey - The current tab context (watching|watched|wishlist)
+ * @param item - The media item
  * @returns Swipe configuration with left and right actions
  */
 export function getSwipeConfig(
-  tabType: TabType,
-  mediaType: 'tv' | 'movie',
-  actions?: CardActionHandlers
+  tabKey: 'watching' | 'watched' | 'wishlist',
+  item: MediaItem
 ): SwipeConfig {
-  const { Library } = require('../lib/storage');
-
-  switch (tabType) {
+  switch (tabKey) {
     case 'watching':
       return {
         leftAction: {
-          label: 'Want',
-          action: (item: MediaItem) => actions?.onWant?.(item)
-        },
-        rightAction: {
           label: 'Watched',
-          action: (item: MediaItem) => actions?.onWatched?.(item)
-        }
-      };
-
-    case 'want':
-      return {
-        leftAction: {
-          label: 'Watching',
-          action: (item: MediaItem) => {
+          action: () => {
             if (item.id && item.mediaType) {
-              Library.move(item.id, item.mediaType, 'watching');
+              Library.move(item.id, item.mediaType, 'watched');
             }
           }
         },
         rightAction: {
-          label: 'Watched',
-          action: (item: MediaItem) => actions?.onWatched?.(item)
+          label: 'Wishlist',
+          action: () => {
+            if (item.id && item.mediaType) {
+              Library.move(item.id, item.mediaType, 'want' as any);
+            }
+          }
         }
       };
 
     case 'watched':
       return {
         leftAction: {
-          label: 'Want',
-          action: (item: MediaItem) => actions?.onWant?.(item)
-        },
-        rightAction: {
           label: 'Watching',
-          action: (item: MediaItem) => {
+          action: () => {
             if (item.id && item.mediaType) {
               Library.move(item.id, item.mediaType, 'watching');
+            }
+          }
+        },
+        rightAction: {
+          label: 'Wishlist',
+          action: () => {
+            if (item.id && item.mediaType) {
+              Library.move(item.id, item.mediaType, 'want' as any);
             }
           }
         }
       };
 
-    case 'discovery':
+    case 'wishlist':
       return {
         leftAction: {
-          label: 'Want',
-          action: (item: MediaItem) => actions?.onWant?.(item)
+          label: 'Watching',
+          action: () => {
+            if (item.id && item.mediaType) {
+              Library.move(item.id, item.mediaType, 'watching');
+            }
+          }
         },
         rightAction: {
-          label: 'Watching',
-          action: (item: MediaItem) => actions?.onWant?.(item) // Discovery uses onWant for "start watching"
+          label: 'Watched',
+          action: () => {
+            if (item.id && item.mediaType) {
+              Library.move(item.id, item.mediaType, 'watched');
+            }
+          }
         }
       };
 
@@ -105,10 +106,9 @@ export function getSwipeConfig(
  */
 export function getAllSwipeActions(
   tabType: TabType,
-  mediaType: 'tv' | 'movie',
+  _mediaType: 'tv' | 'movie',
   actions?: CardActionHandlers
 ): SwipeAction[] {
-  const { Library } = require('../lib/storage');
 
   switch (tabType) {
     case 'watching':
@@ -189,5 +189,23 @@ export function getAllSwipeActions(
 
     default:
       return [];
+  }
+}
+
+/**
+ * Get human-readable swipe hint labels for a specific tab type
+ * @param tabKey - The current tab context (watching|watched|wishlist)
+ * @returns Object with leftLabel and rightLabel for swipe hints
+ */
+export function getSwipeLabels(tabKey: 'watching' | 'watched' | 'wishlist') {
+  switch (tabKey) {
+    case 'watching':
+      return { leftLabel: 'Mark Watched', rightLabel: 'Move to Wishlist' };
+    case 'watched':
+      return { leftLabel: 'Move to Watching', rightLabel: 'Move to Wishlist' };
+    case 'wishlist':
+      return { leftLabel: 'Move to Watching', rightLabel: 'Mark Watched' };
+    default:
+      return { leftLabel: '', rightLabel: '' };
   }
 }

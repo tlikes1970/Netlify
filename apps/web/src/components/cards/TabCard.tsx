@@ -3,7 +3,7 @@ import type { CardActionHandlers, MediaItem } from './card.types';
 import { useTranslations } from '../../lib/language';
 import { useSettings } from '../../lib/settings';
 import { Library } from '../../lib/storage';
-import { getShowStatusInfo, formatLastAirDate } from '../../utils/showStatus';
+import { getShowStatusInfo } from '../../utils/showStatus';
 import StarRating from './StarRating';
 import MyListToggle from '../MyListToggle';
 import SwipeableCard from '../SwipeableCard';
@@ -106,14 +106,6 @@ export default function TabCard({
     }
   };
 
-  const getMetaText = () => {
-    const yearText = year || 'TBA';
-    if (mediaType === 'tv') {
-      return `${yearText} • TV Show`;
-    } else {
-      return `${yearText} • Movie`;
-    }
-  };
 
   const getWhereToWatch = () => {
     if (mediaType === 'tv' && networkInfo.networks && networkInfo.networks.length > 0) {
@@ -515,6 +507,16 @@ export default function TabCard({
   const isActionsSplit = document.documentElement.dataset.actionsSplit === 'true';
   const isMobile = window.innerWidth < 768;
   
+  // Convert tabType to tabKey for mobile components
+  const getTabKey = (tabType: string): 'watching' | 'watched' | 'wishlist' => {
+    switch (tabType) {
+      case 'watching': return 'watching';
+      case 'watched': return 'watched';
+      case 'want': return 'wishlist';
+      default: return 'watching';
+    }
+  };
+
   // TEMPORARY: Force mobile components on mobile viewport (bypass flags for testing)
   if (isMobile) {
     console.log('📱 Mobile viewport detected, using mobile components:', { 
@@ -524,18 +526,18 @@ export default function TabCard({
       isActionsSplit 
     });
     if (mediaType === 'tv') {
-      return <TvCardMobile item={item} actions={actions} tabType={tabType} />;
+      return <TvCardMobile item={item} actions={actions} tabKey={getTabKey(tabType)} />;
     } else if (mediaType === 'movie') {
-      return <MovieCardMobile item={item} actions={actions} tabType={tabType} />;
+      return <MovieCardMobile item={item} actions={actions} tabKey={getTabKey(tabType)} />;
     }
   }
   
   // Use new mobile components when mobile flags are enabled (original logic)
   if (isMobileCompact && isActionsSplit && isMobile) {
     if (mediaType === 'tv') {
-      return <TvCardMobile item={item} actions={actions} tabType={tabType} />;
+      return <TvCardMobile item={item} actions={actions} tabKey={getTabKey(tabType)} />;
     } else if (mediaType === 'movie') {
-      return <MovieCardMobile item={item} actions={actions} tabType={tabType} />;
+      return <MovieCardMobile item={item} actions={actions} tabKey={getTabKey(tabType)} />;
     }
   }
 
