@@ -8,7 +8,7 @@ console.log('====================');
 
 // Check mobile flags
 console.log('\n1. MOBILE FLAGS STATUS:');
-console.log('data-compact-mobile-v1:', document.documentElement.dataset.compactMobileV1);
+console.log('data-compact-mobile-v1:', document.documentElement.getAttribute('data-compact-mobile-v1'));
 console.log('data-actions-split:', document.documentElement.dataset.actionsSplit);
 console.log('data-density:', document.documentElement.dataset.density);
 console.log('localStorage mobile_compact_v1:', localStorage.getItem('flag:mobile_compact_v1'));
@@ -17,7 +17,7 @@ console.log('localStorage mobile_actions_split_v1:', localStorage.getItem('flag:
 // Check viewport
 console.log('\n2. VIEWPORT INFO:');
 console.log('window.innerWidth:', window.innerWidth);
-console.log('isMobile (< 768px):', window.innerWidth < 768);
+console.log('isMobile (< 768px):', window.matchMedia('(max-width: 768px)').matches);
 
 // Check if mobile cards are being rendered
 console.log('\n3. MOBILE CARD DETECTION:');

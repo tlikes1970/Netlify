@@ -11,41 +11,89 @@ import { useSettings, getPersonalityText } from '../lib/settings';
 import MyListToggle from '../components/MyListToggle';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { fetchNetworkInfo } from './api';
+import { searchTagsLocal } from '../lib/libraryIndex';
+
+type SearchResultWithPagination = {
+  items: MediaItem[];
+  page: number;
+  totalPages: number;
+};
 
 export default function SearchResults({
-  query, genre, searchType = 'all', nonce
-}: { query: string; genre?: string | null; searchType?: 'all'|'movies-tv'|'people'; nonce: number }) {
+  query, genre, searchType = 'all'
+}: { query: string; genre?: number | null; searchType?: 'all'|'movies-tv'|'people' }) {
   const [items, setItems] = useState<MediaItem[]>([]);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const settings = useSettings();
 
   useEffect(() => {
-    // reset on any input change (including nonce)
+    // reset on any input change
     abortRef.current?.abort();
-    setItems([]); setPage(0); setHasMore(true); setError(null);
+    setItems([]); setCurrentPage(1); setTotalPages(1); setError(null);
     void fetchPage(1, true);
     // eslint-disable-next-line
-  }, [query, genre, searchType, nonce]);
+  }, [query, genre, searchType]);
+
+  // Setup intersection observer for infinite scroll
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+
+    // Create single observer instance
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoading && currentPage < totalPages) {
+          void fetchPage(currentPage + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observerRef.current.observe(sentinelRef.current);
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
+    };
+  }, [currentPage, totalPages, isLoading]);
 
   async function fetchPage(nextPage: number, replace = false) {
-    if (isLoading || !hasMore) return;
+    if (isLoading) return;
     abortRef.current?.abort();
     const ac = new AbortController();
     abortRef.current = ac;
     setIsLoading(true);
     try {
-      const useSmart = searchType !== 'people' && !query.startsWith('tag:');
-      const results = useSmart
-        ? await smartSearch(query, nextPage, searchType, { signal: ac.signal })
-        : await cachedSearchMulti(query, nextPage, genre ?? null, searchType, { signal: ac.signal });
+      let result: SearchResultWithPagination;
 
-      setItems(prev => replace ? results : [...prev, ...results]);
-      setPage(nextPage);
-      setHasMore(results.length >= 20); // TMDB default page size
+      if (query.startsWith('tag:')) {
+        // Tag search from local library
+        const tagQuery = query.substring(4);
+        const localResults = searchTagsLocal(tagQuery);
+        result = {
+          items: localResults,
+          page: 1,
+          totalPages: 1 // Tag search is single page
+        };
+      } else {
+        const useSmart = searchType !== 'people';
+        const searchResult = useSmart
+          ? await smartSearch(query, nextPage, searchType, { signal: ac.signal })
+          : await cachedSearchMulti(query, nextPage, genre ?? null, searchType, { signal: ac.signal });
+
+        result = searchResult;
+      }
+
+      setItems(prev => replace ? result.items : [...prev, ...result.items]);
+      setCurrentPage(result.page);
+      setTotalPages(result.totalPages);
     } catch (err: any) {
       if (err?.name !== 'AbortError') setError(err?.message || 'Search failed');
     } finally {
@@ -87,23 +135,10 @@ export default function SearchResults({
       </div>
       
       {/* Infinite scroll sentinel */}
-      {hasMore && (
+      {currentPage < totalPages && (
         <div 
+          ref={sentinelRef}
           className="h-20 flex items-center justify-center"
-          ref={(el) => {
-            if (el) {
-              const observer = new IntersectionObserver(
-                (entries) => {
-                  if (entries[0].isIntersecting && !isLoading) {
-                    fetchPage(page + 1);
-                  }
-                },
-                { threshold: 0.1 }
-              );
-              observer.observe(el);
-              return () => observer.disconnect();
-            }
-          }}
         >
           {isLoading && <div className="text-sm text-muted-foreground">Loading more...</div>}
         </div>

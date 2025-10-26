@@ -1,7 +1,8 @@
 import React from 'react';
 import type { MediaItem, CardActionHandlers } from '../components/cards/card.types';
-import { useSwipeActions } from '../hooks/useSwipeActions';
+import { useSwipe } from '../lib/useSwipe';
 import { useIsDesktop } from '../hooks/useDeviceDetection';
+import { SWIPE } from '../lib/gestures';
 
 export interface SwipeableCardProps {
   item: MediaItem;
@@ -26,17 +27,158 @@ export default function SwipeableCard({
   const isDesktopDevice = useIsDesktop();
   const swipeDisabled = disableSwipe || isDesktopDevice;
 
+  // Define swipe actions based on context
+  const getSwipeActions = () => {
+    switch (context) {
+      case 'tab-watching':
+        return [
+          {
+            id: 'want',
+            label: 'Want',
+            icon: '❤️',
+            color: '#ffffff',
+            backgroundColor: '#ef4444',
+            action: () => actions?.onWant?.(item)
+          },
+          {
+            id: 'watched',
+            label: 'Watched',
+            icon: '✅',
+            color: '#ffffff',
+            backgroundColor: '#10b981',
+            action: () => actions?.onWatched?.(item)
+          },
+          {
+            id: 'not-interested',
+            label: 'Not Interested',
+            icon: '👎',
+            color: '#ffffff',
+            backgroundColor: '#6b7280',
+            action: () => actions?.onNotInterested?.(item)
+          },
+          {
+            id: 'delete',
+            label: 'Delete',
+            icon: '🗑️',
+            color: '#ffffff',
+            backgroundColor: '#dc2626',
+            action: () => actions?.onDelete?.(item)
+          }
+        ];
+
+      case 'tab-want':
+        return [
+          {
+            id: 'watching',
+            label: 'Watching',
+            icon: '▶️',
+            color: '#ffffff',
+            backgroundColor: '#3b82f6',
+            action: () => actions?.onWant?.(item) // Move to watching
+          },
+          {
+            id: 'watched',
+            label: 'Watched',
+            icon: '✅',
+            color: '#ffffff',
+            backgroundColor: '#10b981',
+            action: () => actions?.onWatched?.(item)
+          },
+          {
+            id: 'delete',
+            label: 'Remove',
+            icon: '🗑️',
+            color: '#ffffff',
+            backgroundColor: '#dc2626',
+            action: () => actions?.onDelete?.(item)
+          }
+        ];
+
+      case 'tab-watched':
+        return [
+          {
+            id: 'watching',
+            label: 'Rewatch',
+            icon: '🔄',
+            color: '#ffffff',
+            backgroundColor: '#3b82f6',
+            action: () => actions?.onWant?.(item) // Move to watching
+          },
+          {
+            id: 'want',
+            label: 'Want',
+            icon: '❤️',
+            color: '#ffffff',
+            backgroundColor: '#ef4444',
+            action: () => actions?.onWant?.(item)
+          },
+          {
+            id: 'delete',
+            label: 'Remove',
+            icon: '🗑️',
+            color: '#ffffff',
+            backgroundColor: '#dc2626',
+            action: () => actions?.onDelete?.(item)
+          }
+        ];
+
+      case 'tab-foryou':
+      case 'search':
+      case 'home':
+        return [
+          {
+            id: 'want',
+            label: 'Want to Watch',
+            icon: '❤️',
+            color: '#ffffff',
+            backgroundColor: '#ef4444',
+            action: () => actions?.onWant?.(item)
+          }
+        ];
+
+      default:
+        return [];
+    }
+  };
+
+  const swipeActions = getSwipeActions();
+
   const {
     swipeState,
-    cardRef,
-    previewAction,
+    elementRef,
     handlers
-  } = useSwipeActions({
-    item,
-    actions,
-    context,
-    disableSwipe: swipeDisabled
+  } = useSwipe({
+    config: {
+      threshold: SWIPE.threshold,
+      maxSwipeDistance: SWIPE.max,
+      enableBidirectional: true
+    },
+    onSwipeAction: (direction) => {
+      if (direction === 'right' && swipeActions.length > 0) {
+        swipeActions[0].action();
+      } else if (direction === 'left' && swipeActions.length > 1) {
+        swipeActions[1].action();
+      }
+    },
+    disabled: swipeDisabled
   });
+
+  // Get the current action being previewed
+  const getPreviewAction = () => {
+    if (!swipeState.isSwipeActive || swipeState.swipeDistance < SWIPE.threshold) {
+      return null;
+    }
+
+    if (swipeState.direction === 'right' && swipeActions.length > 0) {
+      return swipeActions[0];
+    } else if (swipeState.direction === 'left' && swipeActions.length > 1) {
+      return swipeActions[1];
+    }
+
+    return null;
+  };
+
+  const previewAction = getPreviewAction();
 
   // Calculate transform based on swipe state
   const getTransform = () => {
@@ -109,10 +251,11 @@ export default function SwipeableCard({
       
       {/* Main Card Content */}
       <div
-        ref={cardRef}
-        className={`transition-transform duration-200 ease-out ${className}`}
+        ref={elementRef}
+        className={`transition-transform duration-200 ease-out ${swipeDisabled ? '' : 'swipe-surface'} ${className}`}
         style={{
           transform: getTransform(),
+          pointerEvents: swipeState.isSwipeActive && swipeState.swipeDistance > 0 ? 'none' : 'auto',
           ...style
         }}
         {...(swipeDisabled ? {} : handlers)}

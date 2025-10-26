@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { isMobileNow, onMobileChange } from '../lib/isMobile';
 
 // Detect if device supports touch
 export const isTouchDevice = () => {
@@ -6,9 +7,7 @@ export const isTouchDevice = () => {
 };
 
 // Detect if screen is mobile-sized
-export const isMobileScreen = () => {
-  return window.innerWidth <= 768; // Mobile breakpoint
-};
+export const isMobileScreen = isMobileNow;
 
 // Detect if device is desktop (no touch OR large screen)
 export const isDesktop = () => {
@@ -49,15 +48,10 @@ export function useIsTouchDevice() {
 
 // Hook to track if screen is mobile-sized
 export function useIsMobileScreen() {
-  const [isMobile, setIsMobile] = useState(isMobileScreen());
+  const [isMobile, setIsMobile] = useState(isMobileNow());
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(isMobileScreen());
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return onMobileChange(setIsMobile);
   }, []);
 
   return isMobile;

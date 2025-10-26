@@ -110,3 +110,6 @@ console.log('3. Try mouse/trackpad swipe on cards');
 console.log('4. Check actions row has providers, delete, drag');
 console.log('5. Verify height stays stable');
 
+
+
+

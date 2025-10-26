@@ -1,4 +1,6 @@
 import { flag } from '../../lib/flags';
+import { isCompactMobileV1 } from '../../lib/mobileFlags';
+import { dlog } from '../../lib/log';
 
 export interface ActionDescriptor {
   id: string;
@@ -22,7 +24,7 @@ export type ActionContext = 'home' | 'tab';
 export function getPrimaryAction(item: ActionItem, context: ActionContext): ActionDescriptor | null {
   void context; // keep signature stable, mute TS6133
   // Check if the actions split feature is enabled
-  const gate = document.documentElement.dataset.compactMobileV1 === 'true';
+  const gate = isCompactMobileV1();
   const flagEnabled = flag('mobile_actions_split_v1');
   
   if (!gate || !flagEnabled) {
@@ -39,7 +41,7 @@ export function getPrimaryAction(item: ActionItem, context: ActionContext): Acti
         label: 'Mark Watched',
         onClick: () => {
           // Call existing handler - this would be wired to the actual handler
-          console.log('Mark as watched:', item.id);
+          dlog('Mark as watched:', item.id);
           // In real implementation, this would call the existing markAsWatched handler
         }
       };
@@ -50,7 +52,7 @@ export function getPrimaryAction(item: ActionItem, context: ActionContext): Acti
         id: 'mark-watching',
         label: 'Start Watching',
         onClick: () => {
-          console.log('Start watching:', item.id);
+          dlog('Start watching:', item.id);
           // In real implementation, this would call the existing addToWatching handler
         }
       };
@@ -60,7 +62,7 @@ export function getPrimaryAction(item: ActionItem, context: ActionContext): Acti
         id: 'mark-want',
         label: 'Want to Watch',
         onClick: () => {
-          console.log('Add to want list:', item.id);
+          dlog('Add to want list:', item.id);
           // In real implementation, this would call the existing addToWishlist handler
         }
       };
@@ -71,7 +73,7 @@ export function getPrimaryAction(item: ActionItem, context: ActionContext): Acti
         id: 'mark-want',
         label: 'Want to Watch',
         onClick: () => {
-          console.log('Add to want list:', item.id);
+          dlog('Add to want list:', item.id);
           // In real implementation, this would call the existing addToWishlist handler
         }
       };
@@ -84,7 +86,7 @@ export function getPrimaryAction(item: ActionItem, context: ActionContext): Acti
  */
 export function getAllActions(item: ActionItem, context: ActionContext): ActionDescriptor[] {
   void context; // keep signature stable, mute TS6133
-  const gate = document.documentElement.dataset.compactMobileV1 === 'true';
+  const gate = isCompactMobileV1();
   const flagEnabled = flag('mobile_actions_split_v1');
   
   if (!gate || !flagEnabled) {
@@ -101,17 +103,17 @@ export function getAllActions(item: ActionItem, context: ActionContext): ActionD
         {
           id: 'mark-watched',
           label: 'Mark Watched',
-          onClick: () => console.log('Mark as watched:', item.id)
+          onClick: () => dlog('Mark as watched:', item.id)
         },
         {
           id: 'mark-want',
           label: 'Move to Want List',
-          onClick: () => console.log('Move to want list:', item.id)
+          onClick: () => dlog('Move to want list:', item.id)
         },
         {
           id: 'remove',
           label: 'Remove',
-          onClick: () => console.log('Remove from list:', item.id)
+          onClick: () => dlog('Remove from list:', item.id)
         }
       );
       break;
@@ -122,17 +124,17 @@ export function getAllActions(item: ActionItem, context: ActionContext): ActionD
         {
           id: 'mark-watching',
           label: 'Start Watching',
-          onClick: () => console.log('Start watching:', item.id)
+          onClick: () => dlog('Start watching:', item.id)
         },
         {
           id: 'mark-watched',
           label: 'Mark Watched',
-          onClick: () => console.log('Mark as watched:', item.id)
+          onClick: () => dlog('Mark as watched:', item.id)
         },
         {
           id: 'remove',
           label: 'Remove',
-          onClick: () => console.log('Remove from list:', item.id)
+          onClick: () => dlog('Remove from list:', item.id)
         }
       );
       break;
@@ -142,17 +144,17 @@ export function getAllActions(item: ActionItem, context: ActionContext): ActionD
         {
           id: 'mark-want',
           label: 'Want to Watch',
-          onClick: () => console.log('Add to want list:', item.id)
+          onClick: () => dlog('Add to want list:', item.id)
         },
         {
           id: 'mark-watching',
           label: 'Start Watching',
-          onClick: () => console.log('Start watching:', item.id)
+          onClick: () => dlog('Start watching:', item.id)
         },
         {
           id: 'remove',
           label: 'Remove',
-          onClick: () => console.log('Remove from list:', item.id)
+          onClick: () => dlog('Remove from list:', item.id)
         }
       );
       break;
@@ -163,12 +165,12 @@ export function getAllActions(item: ActionItem, context: ActionContext): ActionD
         {
           id: 'mark-want',
           label: 'Want to Watch',
-          onClick: () => console.log('Add to want list:', item.id)
+          onClick: () => dlog('Add to want list:', item.id)
         },
         {
           id: 'mark-watching',
           label: 'Start Watching',
-          onClick: () => console.log('Start watching:', item.id)
+          onClick: () => dlog('Start watching:', item.id)
         }
       );
       break;

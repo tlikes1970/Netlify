@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type { MediaItem } from '../components/cards/card.types';
+import { useSafeResizeObserver } from './useSafeResizeObserver';
 
 // Enhanced cache management
 interface CacheConfig {
@@ -187,19 +188,14 @@ export function usePerformanceOptimization<T extends MediaItem>(
     setScrollTop(target.scrollTop);
   }, [enableVirtual]);
 
-  // Container resize handling
-  useEffect(() => {
-    if (!enableVirtual || !containerRef.current) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setContainerHeight(entry.contentRect.height);
-      }
-    });
-
-    resizeObserver.observe(containerRef.current);
-    return () => resizeObserver.disconnect();
-  }, [enableVirtual]);
+  // Container resize handling with safe ResizeObserver
+  useSafeResizeObserver(
+    containerRef,
+    useCallback((entry) => {
+      setContainerHeight(entry.contentRect.height);
+    }, []),
+    { enabled: enableVirtual }
+  );
 
   // Cache cleanup
   useEffect(() => {

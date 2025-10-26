@@ -1,5 +1,5 @@
 {
   "appId": "com.TravisL.tvtracker",
   "appName": "TV Tracker",
-  "webDir": "www"
+  "webDir": "apps/web/dist"
 }

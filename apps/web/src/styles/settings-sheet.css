@@ -10,7 +10,7 @@ html[data-compact-mobile-v1="true"][data-settings-sheet="true"] {
 /* Settings Sheet Overlay */
 html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet-overlay {
   /* Ensure overlay covers everything */
-  z-index: 1000;
+  z-index: var(--z-nav);
   
   /* Smooth fade-in animation */
   animation: settings-sheet-fade-in 0.2s ease-out;
@@ -31,7 +31,7 @@ html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet 
   animation: settings-sheet-slide-up 0.3s ease-out;
   
   /* Ensure proper stacking */
-  z-index: 1001;
+  z-index: var(--z-modal);
   
   /* Mobile-optimized spacing */
   padding-top: var(--space-4, 16px);

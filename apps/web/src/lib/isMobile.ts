@@ -64,3 +64,6 @@ export const isMobileScreen = isMobileNow;
 export const isDesktop = (): boolean => {
   return !isMobileNow();
 };
+
+
+

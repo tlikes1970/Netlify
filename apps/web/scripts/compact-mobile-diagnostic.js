@@ -13,13 +13,13 @@ const currentState = {
   },
   attributes: {
     density: document.documentElement.dataset.density,
-    compactMobileV1: document.documentElement.dataset.compactMobileV1,
-    actionsSplit: document.documentElement.dataset.actionsSplit
+    compactMobileV1: document.documentElement.getAttribute('data-compact-mobile-v1'),
+    actionsSplit: document.documentElement.getAttribute('data-actions-split')
   },
   viewport: {
     width: window.innerWidth,
     height: window.innerHeight,
-    isMobile: window.innerWidth < 768
+    isMobile: window.matchMedia('(max-width: 768px)').matches
   }
 };
 
@@ -84,8 +84,8 @@ window.dispatchEvent(new Event('resize'));
 
 setTimeout(() => {
   const test1State = {
-    compactMobileV1: document.documentElement.dataset.compactMobileV1,
-    actionsSplit: document.documentElement.dataset.actionsSplit,
+    compactMobileV1: document.documentElement.getAttribute('data-compact-mobile-v1'),
+    actionsSplit: document.documentElement.getAttribute('data-actions-split'),
     tabCardCount: document.querySelectorAll('.tab-card').length,
     swipeRowCount: document.querySelectorAll('.swipe-row-container').length
   };
@@ -98,7 +98,7 @@ setTimeout(() => {
   
   setTimeout(() => {
     const test2State = {
-      compactMobileV1: document.documentElement.dataset.compactMobileV1,
+      compactMobileV1: document.documentElement.getAttribute('data-compact-mobile-v1'),
       actionsSplit: document.documentElement.dataset.actionsSplit,
       tabCardCount: document.querySelectorAll('.tab-card').length,
       swipeRowCount: document.querySelectorAll('.swipe-row-container').length
@@ -108,11 +108,11 @@ setTimeout(() => {
     // Test 3: Check SwipeRow component logic
     console.log('\n🧪 TEST 3: SwipeRow component logic');
     const swipeRowLogic = {
-      gate: document.documentElement.dataset.compactMobileV1 === 'true',
-      flagEnabled: document.documentElement.dataset.actionsSplit === 'true',
-      isMobile: window.innerWidth < 768,
-      shouldRenderSwipeRow: document.documentElement.dataset.compactMobileV1 === 'true' && 
-                            document.documentElement.dataset.actionsSplit === 'true' && 
+      gate: document.documentElement.getAttribute('data-compact-mobile-v1') === 'true',
+      flagEnabled: document.documentElement.getAttribute('data-actions-split') === 'true',
+      isMobile: window.matchMedia('(max-width: 768px)').matches,
+      shouldRenderSwipeRow: document.documentElement.getAttribute('data-compact-mobile-v1') === 'true' && 
+                            document.documentElement.getAttribute('data-actions-split') === 'true' && 
                             window.innerWidth < 768
     };
     console.log('SwipeRow logic:', swipeRowLogic);

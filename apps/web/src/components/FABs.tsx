@@ -20,7 +20,7 @@ export function SettingsFAB({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={handleClick}
-      className={`fixed bottom-4 left-4 lg:bottom-8 lg:left-8 z-[9999] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-150 ease-out ${
+      className={`fixed bottom-4 left-4 lg:bottom-8 lg:left-8 z-nav w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-150 ease-out ${
         isPressed ? 'scale-95 active:shadow-inner' : 'hover:scale-105 hover:shadow-md'
       }`}
       style={{
@@ -80,7 +80,7 @@ export function ThemeToggleFAB({ theme, onToggle }: { theme: 'light' | 'dark'; o
   return (
     <button
       onClick={handleClick}
-      className={`fixed bottom-4 right-4 lg:bottom-8 lg:right-8 z-[9999] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-150 ease-out ${
+      className={`fixed bottom-4 right-4 lg:bottom-8 lg:right-8 z-nav w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-150 ease-out ${
         isPressed ? 'scale-95 active:shadow-inner' : 'hover:scale-105 hover:shadow-md'
       }`}
       style={{

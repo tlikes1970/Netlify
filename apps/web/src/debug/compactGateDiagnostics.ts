@@ -3,6 +3,9 @@
  * Instruments HTML attribute writes and provides runtime snapshot
  */
 
+import { getFlag } from '../lib/mobileFlags';
+import { isMobileNow } from '../lib/isMobile';
+
 let originalSetAttribute: typeof Element.prototype.setAttribute;
 let originalRemoveAttribute: typeof Element.prototype.removeAttribute;
 let mutationObserver: MutationObserver | null = null;
@@ -36,16 +39,15 @@ function instrumentHtmlWrites() {
 }
 
 function reportGateStatus() {
-  const html = document.documentElement;
-  const compactGateAttr = html.getAttribute('data-compact-mobile-v1');
-  const actionsSplitAttr = html.getAttribute('data-actions-split');
+  const compactGateAttr = getFlag('compact-mobile-v1') ? 'true' : 'false';
+  const actionsSplitAttr = getFlag('actions-split') ? 'true' : 'false';
   
   console.group('🔍 Gate Status Report');
   console.log('data-compact-mobile-v1:', compactGateAttr);
   console.log('data-actions-split:', actionsSplitAttr);
   
   // Check CSS/JS agreement
-  const compactGateCSS = window.matchMedia('(max-width: 768px)').matches;
+  const compactGateCSS = isMobileNow();
   const compactGateJS = compactGateAttr === 'true';
   const actionsSplitJS = actionsSplitAttr === 'true';
   
@@ -120,7 +122,7 @@ function collectDiagnostics() {
     height: window.innerHeight,
     density: html.dataset.density ?? null,
     flagMobileCompactV1: localStorage.getItem('flag:mobile_compact_v1') === 'true',
-    compactAttr: html.getAttribute('data-compact-mobile-v1'), // "true" | "false" | null
+    compactAttr: getFlag('compact-mobile-v1') ? 'true' : 'false', // "true" | "false"
     compactAttrPresent: html.hasAttribute('data-compact-mobile-v1'),
     hasHScroll: scrollingElement.scrollWidth > scrollingElement.clientWidth,
     dialogs: [...document.querySelectorAll('[role="dialog"][aria-modal="true"]')].length,

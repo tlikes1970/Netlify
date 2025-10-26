@@ -1,33 +1,34 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from '../lib/language';
+import Portal from './Portal';
 
 export type FilterChipsProps = {
-  selectedGenre: string | null;
-  onGenreChange: (genre: string | null) => void;
+  selectedGenre: number | null;
+  onGenreChange: (genre: number | null) => void;
   className?: string;
 };
 
-// Popular genres for search filtering - using TMDB genre IDs
+// Popular genres for search filtering - using TMDB genre IDs (numeric)
 const POPULAR_GENRES = [
   { id: null, name: 'All Genres' },
-  { id: '28', name: 'Action' },
-  { id: '35', name: 'Comedy' },
-  { id: '18', name: 'Drama' },
-  { id: '27', name: 'Horror' },
-  { id: '10749', name: 'Romance' },
-  { id: '878', name: 'Sci-Fi' },
-  { id: '14', name: 'Fantasy' },
-  { id: '53', name: 'Thriller' },
-  { id: '16', name: 'Animation' },
-  { id: '99', name: 'Documentary' },
-  { id: '80', name: 'Crime' },
-  { id: '12', name: 'Adventure' },
-  { id: '10751', name: 'Family' },
-  { id: '36', name: 'History' },
-  { id: '10402', name: 'Music' },
-  { id: '9648', name: 'Mystery' },
-  { id: '10752', name: 'War' },
-  { id: '37', name: 'Western' }
+  { id: 28, name: 'Action' },
+  { id: 35, name: 'Comedy' },
+  { id: 18, name: 'Drama' },
+  { id: 27, name: 'Horror' },
+  { id: 10749, name: 'Romance' },
+  { id: 878, name: 'Sci-Fi' },
+  { id: 14, name: 'Fantasy' },
+  { id: 53, name: 'Thriller' },
+  { id: 16, name: 'Animation' },
+  { id: 99, name: 'Documentary' },
+  { id: 80, name: 'Crime' },
+  { id: 12, name: 'Adventure' },
+  { id: 10751, name: 'Family' },
+  { id: 36, name: 'History' },
+  { id: 10402, name: 'Music' },
+  { id: 9648, name: 'Mystery' },
+  { id: 10752, name: 'War' },
+  { id: 37, name: 'Western' }
 ];
 
 export default function FilterChips({ selectedGenre, onGenreChange, className = '' }: FilterChipsProps) {
@@ -38,7 +39,7 @@ export default function FilterChips({ selectedGenre, onGenreChange, className = 
   // Get the selected genre name for display
   const selectedGenreName = POPULAR_GENRES.find(g => g.id === selectedGenre)?.name || translations.allGenres;
   
-  const handleGenreClick = (genreId: string | null) => {
+  const handleGenreClick = (genreId: number | null) => {
     onGenreChange(genreId);
     setIsOpen(false); // Close dropdown after selection
   };
@@ -80,56 +81,61 @@ export default function FilterChips({ selectedGenre, onGenreChange, className = 
         </span>
       </button>
       
-      {/* Dropdown Content - Fixed positioning */}
-      {isOpen && (
-        <>
-          {/* Backdrop to close dropdown */}
-          <div 
-            className="fixed inset-0 z-[9998]"
-            onClick={() => setIsOpen(false)}
-          />
-          
-          <div 
-            className="
-              fixed bg-card border border-line rounded-xl shadow-lg
-              max-h-80 overflow-y-auto
-            "
-            style={{ 
-              backgroundColor: 'var(--card)', 
-              borderColor: 'var(--line)',
-              zIndex: 9999,
-              top: dropdownRef.current ? dropdownRef.current.getBoundingClientRect().bottom + 4 : 0,
-              left: dropdownRef.current ? dropdownRef.current.getBoundingClientRect().left : 0,
-              width: dropdownRef.current ? dropdownRef.current.getBoundingClientRect().width : 'auto',
-              maxWidth: '400px'
-            }}
-          >
-          <div className="py-2">
-            {/* Simple List */}
-            {POPULAR_GENRES.map(genre => (
-              <button
-                key={genre.id || 'all'}
-                onClick={() => handleGenreClick(genre.id)}
-                className={`
-                  w-full text-left px-4 py-2 text-sm
-                  transition-colors duration-200
-                  hover:bg-muted
-                  ${selectedGenre === genre.id
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-foreground'
-                  }
-                `}
-                style={{
-                  backgroundColor: selectedGenre === genre.id ? 'var(--accent)' : 'transparent',
-                  color: selectedGenre === genre.id ? 'var(--accent-foreground)' : 'var(--foreground)'
-                }}
-              >
-                {genre.name}
-              </button>
-            ))}
-          </div>
-          </div>
-        </>
+      {/* Dropdown Content - Portal to escape stacking contexts */}
+      {isOpen && dropdownRef.current && (
+        <Portal>
+          <>
+            {/* Backdrop to close dropdown */}
+            <div 
+              className="fixed inset-0 z-dropdown"
+              onClick={() => setIsOpen(false)}
+              style={{ 
+                zIndex: 'calc(var(--z-dropdown) - 1)' 
+              }}
+            />
+            
+            <div 
+              className="
+                fixed bg-card border border-line rounded-xl shadow-lg
+                max-h-80 overflow-y-auto
+              "
+              style={{ 
+                backgroundColor: 'var(--card)', 
+                borderColor: 'var(--line)',
+                zIndex: 'var(--z-dropdown)',
+                top: dropdownRef.current.getBoundingClientRect().bottom + 4,
+                left: dropdownRef.current.getBoundingClientRect().left,
+                width: dropdownRef.current.getBoundingClientRect().width,
+                maxWidth: '400px'
+              }}
+            >
+              <div className="py-2">
+                {/* Simple List */}
+                {POPULAR_GENRES.map(genre => (
+                  <button
+                    key={genre.id || 'all'}
+                    onClick={() => handleGenreClick(genre.id)}
+                    className={`
+                      w-full text-left px-4 py-2 text-sm
+                      transition-colors duration-200
+                      hover:bg-muted
+                      ${selectedGenre === genre.id
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-foreground'
+                      }
+                    `}
+                    style={{
+                      backgroundColor: selectedGenre === genre.id ? 'var(--accent)' : 'transparent',
+                      color: selectedGenre === genre.id ? 'var(--accent-foreground)' : 'var(--foreground)'
+                    }}
+                  >
+                    {genre.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        </Portal>
       )}
     </div>
   );

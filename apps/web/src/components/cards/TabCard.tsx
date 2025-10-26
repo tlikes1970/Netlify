@@ -10,6 +10,9 @@ import SwipeableCard from '../SwipeableCard';
 import { OptimizedImage } from '../OptimizedImage';
 import { CompactPrimaryAction } from '../../features/compact/CompactPrimaryAction';
 import { CompactOverflowMenu } from '../../features/compact/CompactOverflowMenu';
+import { isCompactMobileV1, isActionsSplit } from '../../lib/mobileFlags';
+import { isMobileNow } from '../../lib/isMobile';
+import { dlog } from '../../lib/log';
 import { EpisodeProgressDisplay } from '../EpisodeProgressDisplay';
 import { fetchNetworkInfo } from '../../search/api';
 import { TvCardMobile } from './mobile/TvCardMobile';
@@ -50,7 +53,7 @@ export default function TabCard({
   onDragLeave,
   onDrop
 }: TabCardProps) {
-  console.log('🔔 TabCard render:', { title: item.title, mediaType: item.mediaType, hasOnNotificationToggle: !!actions?.onNotificationToggle });
+  dlog('🔔 TabCard render:', { title: item.title, mediaType: item.mediaType, hasOnNotificationToggle: !!actions?.onNotificationToggle });
   const { title, year, posterUrl, voteAverage, userRating, synopsis, mediaType } = item;
   const rating = typeof voteAverage === 'number' ? Math.round(voteAverage * 10) / 10 : undefined;
   const translations = useTranslations();
@@ -122,7 +125,7 @@ export default function TabCard({
       badges.push('TV SERIES');
       
       // Debug: Log what TabCard receives
-      console.log(`🔍 TabCard ${title} received:`, {
+      dlog(`🔍 TabCard ${title} received:`, {
         showStatus: item.showStatus,
         lastAirDate: item.lastAirDate,
         hasShowStatus: item.showStatus !== undefined
@@ -132,9 +135,9 @@ export default function TabCard({
       const statusInfo = getShowStatusInfo(item.showStatus);
       if (statusInfo) {
         badges.push(statusInfo.badge);
-        console.log(`✅ TabCard ${title} adding badge:`, statusInfo.badge);
+        dlog(`✅ TabCard ${title} adding badge:`, statusInfo.badge);
       } else {
-        console.log(`❌ TabCard ${title} no badge - showStatus:`, item.showStatus);
+        dlog(`❌ TabCard ${title} no badge - showStatus:`, item.showStatus);
       }
     } else {
       badges.push('MOVIE');
@@ -189,7 +192,7 @@ export default function TabCard({
         key: 'simple-reminder',
         label: '⏰ Remind Me',
         action: () => {
-          console.log('⏰ TabCard simple reminder button clicked for:', item.title);
+          dlog('⏰ TabCard simple reminder button clicked for:', item.title);
           actions?.onSimpleReminder?.(item);
         }
       });
@@ -320,7 +323,7 @@ export default function TabCard({
             {mediaType === 'tv' && (
               <button
                 onClick={() => {
-                  console.log('⏰ TabCard simple reminder button clicked for:', item.title);
+                  dlog('⏰ TabCard simple reminder button clicked for:', item.title);
                   actions?.onSimpleReminder?.(item);
                 }}
                 className={buttonClass}
@@ -374,7 +377,7 @@ export default function TabCard({
             {mediaType === 'tv' && (
               <button
                 onClick={() => {
-                  console.log('⏰ TabCard simple reminder button clicked for:', item.title);
+                  dlog('⏰ TabCard simple reminder button clicked for:', item.title);
                   actions?.onSimpleReminder?.(item);
                 }}
                 className={buttonClass}
@@ -428,7 +431,7 @@ export default function TabCard({
             {mediaType === 'tv' && (
               <button
                 onClick={() => {
-                  console.log('⏰ TabCard simple reminder button clicked for:', item.title);
+                  dlog('⏰ TabCard simple reminder button clicked for:', item.title);
                   actions?.onSimpleReminder?.(item);
                 }}
                 className={buttonClass}
@@ -502,9 +505,9 @@ export default function TabCard({
     : "px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md";
 
   // Mobile detection for new mobile cards
-  const isMobileCompact = document.documentElement.getAttribute('data-compact-mobile-v1') === 'true';
-  const isActionsSplit = document.documentElement.getAttribute('data-actions-split') === 'true';
-  const isMobile = window.innerWidth < 768;
+  const isMobileCompact = isCompactMobileV1();
+  const actionsSplit = isActionsSplit();
+  const isMobile = isMobileNow();
   
   // Convert tabType to tabKey for mobile components
   const getTabKey = (tabType: string): 'watching' | 'watched' | 'wishlist' => {
@@ -518,11 +521,11 @@ export default function TabCard({
 
   // TEMPORARY: Force mobile components on mobile viewport (bypass flags for testing)
   if (isMobile) {
-    console.log('📱 Mobile viewport detected, using mobile components:', { 
+    dlog('📱 Mobile viewport detected, using mobile components:', { 
       mediaType, 
       title: item.title,
       isMobileCompact, 
-      isActionsSplit 
+      isActionsSplit: actionsSplit 
     });
     if (mediaType === 'tv') {
       return <TvCardMobile item={item} actions={actions} tabKey={getTabKey(tabType)} />;
@@ -532,7 +535,7 @@ export default function TabCard({
   }
   
   // Use new mobile components when mobile flags are enabled (original logic)
-  if (isMobileCompact && isActionsSplit && isMobile) {
+  if (isMobileCompact && actionsSplit && isMobile) {
     if (mediaType === 'tv') {
       return <TvCardMobile item={item} actions={actions} tabKey={getTabKey(tabType)} />;
     } else if (mediaType === 'movie') {
@@ -823,8 +826,8 @@ export default function TabCard({
             </span>
             <button
               onClick={() => {
-                console.log('🎬 TabCard bloopers button clicked for:', item.title);
-                console.log('🎬 Pro settings check:', { 
+                dlog('🎬 TabCard bloopers button clicked for:', item.title);
+                dlog('🎬 Pro settings check:', { 
                   isPro: settings.pro.isPro, 
                   bloopersAccess: settings.pro.features.bloopersAccess,
                   buttonEnabled: settings.pro.isPro && settings.pro.features.bloopersAccess
@@ -846,7 +849,7 @@ export default function TabCard({
             </button>
             <button
               onClick={() => {
-                console.log('🎭 TabCard extras button clicked for:', item.title);
+                dlog('🎭 TabCard extras button clicked for:', item.title);
                 actions?.onExtrasOpen?.(item);
               }}
               className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
@@ -864,7 +867,7 @@ export default function TabCard({
             </button>
             <button
               onClick={() => {
-                console.log('🔔 TabCard advanced notifications button clicked for:', item.title);
+                dlog('🔔 TabCard advanced notifications button clicked for:', item.title);
                 actions?.onNotificationToggle?.(item);
               }}
               className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"

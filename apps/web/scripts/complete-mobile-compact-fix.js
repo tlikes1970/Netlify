@@ -25,16 +25,16 @@ console.log('✅ Triggered gate re-evaluation');
 setTimeout(() => {
   const html = document.documentElement;
   console.log('🔍 Current State:');
-  console.log('- data-compact-mobile-v1:', html.dataset.compactMobileV1);
-  console.log('- data-actions-split:', html.dataset.actionsSplit);
+  console.log('- data-compact-mobile-v1:', html.getAttribute('data-compact-mobile-v1'));
+  console.log('- data-actions-split:', html.getAttribute('data-actions-split'));
   console.log('- data-density:', html.dataset.density);
   console.log('- Viewport width:', window.innerWidth);
-  console.log('- Is mobile:', window.innerWidth < 768);
+  console.log('- Is mobile:', window.matchMedia('(max-width: 768px)').matches);
   
   // Check if SwipeRow should be active
-  const shouldBeActive = html.dataset.compactMobileV1 === 'true' && 
-                        html.dataset.actionsSplit === 'true' && 
-                        window.innerWidth < 768;
+  const shouldBeActive = html.getAttribute('data-compact-mobile-v1') === 'true' && 
+                        html.getAttribute('data-actions-split') === 'true' && 
+                        window.matchMedia('(max-width: 768px)').matches;
   console.log('- SwipeRow should be active:', shouldBeActive);
   
   if (shouldBeActive) {

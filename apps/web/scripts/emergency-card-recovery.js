@@ -11,8 +11,8 @@ localStorage.removeItem('flag:mobile_actions_split_v1');
 document.documentElement.dataset.density = 'normal';
 
 // Remove all compact attributes
-delete document.documentElement.dataset.compactMobileV1;
-delete document.documentElement.dataset.actionsSplit;
+document.documentElement.removeAttribute('data-compact-mobile-v1');
+document.documentElement.removeAttribute('data-actions-split');
 
 console.log('✅ Disabled all compact mobile flags');
 console.log('✅ Set density to normal');

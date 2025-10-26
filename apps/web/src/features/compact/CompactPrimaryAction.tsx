@@ -1,4 +1,5 @@
 import { ActionItem, ActionContext, getPrimaryAction } from './actionsMap';
+import { isCompactMobileV1, isActionsSplit } from '../../lib/mobileFlags';
 
 interface CompactPrimaryActionProps {
   item: ActionItem;
@@ -6,8 +7,8 @@ interface CompactPrimaryActionProps {
 }
 
 export function CompactPrimaryAction({ item, context }: CompactPrimaryActionProps) {
-  const gate = document.documentElement.dataset.compactMobileV1 === 'true';
-  const flagEnabled = document.documentElement.dataset.actionsSplit === 'true';
+  const gate = isCompactMobileV1();
+  const flagEnabled = isActionsSplit();
   
   if (!gate || !flagEnabled) {
     return null;

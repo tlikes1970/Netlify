@@ -1,10 +1,10 @@
 // apps/web/src/lib/words/localWords.ts
-// Local, offline-first acceptance set. Replace this with your real list(s).
-// Supports Set or an optional Bloom filter loaded from a static asset.
+// DEPRECATED: This file kept for backward compatibility only
+// Word validation now uses API-managed wordlist only
 
 let ACCEPT_SET: Set<string> | null = null;
 
-// Minimal dev seed. Replace with real data (e.g., from ENABLE/SCOWL) in production.
+// Minimal dev seed (backup only)
 const DEV_SEED = [
   'couch','scowl','zesty','zebra','zombi','zoned','stare','cigar','react','watch','other'
 ];

@@ -15,8 +15,8 @@ console.log('- flag:mobile_actions_split_v1 =', localStorage.getItem('flag:mobil
 
 // Check if flags are now active
 console.log('🔍 Checking flag status:');
-console.log('- document.documentElement.dataset.compactMobileV1 =', document.documentElement.dataset.compactMobileV1);
-console.log('- document.documentElement.dataset.actionsSplit =', document.documentElement.dataset.actionsSplit);
+console.log('- document.documentElement.getAttribute("data-compact-mobile-v1") =', document.documentElement.getAttribute('data-compact-mobile-v1'));
+console.log('- document.documentElement.getAttribute("data-actions-split") =', document.documentElement.getAttribute('data-actions-split'));
 console.log('- window.innerWidth =', window.innerWidth);
 
 // Force refresh the page to apply changes

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { getTVShowDetails, type Episode, type Season } from '@/lib/tmdb';
 import { lockScroll, unlockScroll } from '@/utils/scrollLock';
 import { cleanupInvalidEpisodeKeys, getValidEpisodeKeys } from '@/utils/episodeProgress';
+import ErrorBoundary from '../ErrorBoundary';
 
 // Extended episode type with watched state
 type EpisodeWithWatched = Episode & { watched: boolean };
@@ -173,7 +174,7 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center">
+    <div className="fixed inset-0 z-modal flex items-center justify-center">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black bg-opacity-50"
@@ -234,72 +235,74 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
             </div>
           ) : (
             <div className="space-y-6" style={{ minHeight: '400px' }}>
-              {seasons.map(season => {
-                const watchedCount = season.episodes.filter((ep: EpisodeWithWatched) => ep.watched).length;
-                const allWatched = watchedCount === season.episodes.length;
-                const someWatched = watchedCount > 0;
-                
-                return (
-                  <div key={season.season_number} className="border rounded-lg p-4" style={{ borderColor: 'var(--line)' }}>
-                    {/* Season Header */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-semibold">Season {season.season_number}</h3>
-                        <span className="text-sm" style={{ color: 'var(--muted)' }}>
-                          ({watchedCount}/{season.episodes.length} watched)
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => toggleSeasonWatched(season.season_number)}
-                        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                          allWatched 
-                            ? 'bg-green-500 text-white hover:bg-green-600'
-                            : someWatched
-                            ? 'bg-yellow-500 text-white hover:bg-yellow-600'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                      >
-                        {allWatched ? 'All Watched' : someWatched ? 'Mark All' : 'Mark All'}
-                      </button>
-                    </div>
-
-                    {/* Episodes */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {season.episodes.map(episode => (
-                        <label 
-                          key={episode.id}
-                          className="flex items-center gap-3 p-2 rounded hover:bg-gray-50 cursor-pointer transition-colors"
-                          style={{ backgroundColor: 'var(--bg)' }}
+              <ErrorBoundary name="EpisodeList" onReset={() => {/* Optional: could reload episode data */}}>
+                {seasons.map(season => {
+                  const watchedCount = season.episodes.filter((ep: EpisodeWithWatched) => ep.watched).length;
+                  const allWatched = watchedCount === season.episodes.length;
+                  const someWatched = watchedCount > 0;
+                  
+                  return (
+                    <div key={season.season_number} className="border rounded-lg p-4" style={{ borderColor: 'var(--line)' }}>
+                      {/* Season Header */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-lg font-semibold">Season {season.season_number}</h3>
+                          <span className="text-sm" style={{ color: 'var(--muted)' }}>
+                            ({watchedCount}/{season.episodes.length} watched)
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => toggleSeasonWatched(season.season_number)}
+                          className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                            allWatched 
+                              ? 'bg-green-500 text-white hover:bg-green-600'
+                              : someWatched
+                              ? 'bg-yellow-500 text-white hover:bg-yellow-600'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
                         >
-                          <input
-                            type="checkbox"
-                            checked={(episode as EpisodeWithWatched).watched}
-                            onChange={() => toggleEpisodeWatched(episode.season_number, episode.episode_number)}
-                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-sm">
-                              S{episode.season_number}E{episode.episode_number}: {episode.name}
-                            </div>
-                            {episode.overview && (
-                              <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
-                                {episode.overview}
+                          {allWatched ? 'All Watched' : someWatched ? 'Mark All' : 'Mark All'}
+                        </button>
+                      </div>
+
+                      {/* Episodes */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {season.episodes.map(episode => (
+                          <label 
+                            key={episode.id}
+                            className="flex items-center gap-3 p-2 rounded hover:bg-gray-50 cursor-pointer transition-colors"
+                            style={{ backgroundColor: 'var(--bg)' }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={(episode as EpisodeWithWatched).watched}
+                              onChange={() => toggleEpisodeWatched(episode.season_number, episode.episode_number)}
+                              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm">
+                                S{episode.season_number}E{episode.episode_number}: {episode.name}
                               </div>
-                            )}
-                          </div>
-                        </label>
-                      ))}
+                              {episode.overview && (
+                                <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
+                                  {episode.overview}
+                                </div>
+                              )}
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+                {seasons.length === 0 && !loading && !error && (
+                  <div className="text-center py-8">
+                    <div className="text-lg" style={{ color: 'var(--muted)' }}>
+                      No episode data available for this show.
                     </div>
                   </div>
-                );
-              })}
-              {seasons.length === 0 && !loading && !error && (
-                <div className="text-center py-8">
-                  <div className="text-lg" style={{ color: 'var(--muted)' }}>
-                    No episode data available for this show.
-                  </div>
-                </div>
-              )}
+                )}
+              </ErrorBoundary>
             </div>
           )}
         </div>

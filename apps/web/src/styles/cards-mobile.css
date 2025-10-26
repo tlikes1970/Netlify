@@ -22,7 +22,7 @@
   .card-mobile .swipe-bg {
     position: absolute; 
     inset: 0; 
-    z-index: 1; 
+    z-index: var(--z-base); 
     pointer-events: none;
   }
   .card-mobile .swipe-bg .reveal {
@@ -59,7 +59,7 @@
   /* SWIPE TARGET — the thing we translate AND the grid container */
   .card-mobile .swipe-target {
     position: relative;
-    z-index: 2; /* above reveal bg */
+    z-index: calc(var(--z-base) + 1);
     will-change: transform;
     display: grid;
     grid-template-columns: 112px 1fr;
@@ -239,7 +239,7 @@
     background: transparent;
     color: var(--text-muted, #666);
     cursor: grab; 
-    z-index: 4;
+    z-index: calc(var(--z-base) + 3);
     border-left: 1px solid color-mix(in srgb, #000 8%, transparent);
     touch-action: none; /* don't pan-x/y from the rail */
     border: none;
@@ -267,7 +267,7 @@
     position: absolute; 
     inset: 0; 
     pointer-events: none; 
-    z-index: 3; 
+    z-index: calc(var(--z-base) + 2); 
   }
   .card-mobile .swipe-row > .gesture-plane { 
     position: absolute; 

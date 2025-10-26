@@ -1,20 +1,8 @@
 // apps/web/src/lib/words/validateWord.ts
-import { isAcceptedLocal } from './localWords';
 
-export type Verdict = { valid: boolean; source: 'local' | 'remote' | 'none'; reason?: string };
+export type Verdict = { valid: boolean; source: 'api' | 'none'; reason?: string };
 
 const MEMO = new Map<string, Verdict>();
-const LS_KEY = 'word-valid-v1';
-
-function loadLS(): Record<string, Verdict> {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { return {}; }
-}
-function saveLS(obj: Record<string, Verdict>) {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(obj)); } catch {
-    // Ignore localStorage errors
-  }
-}
-const LS = loadLS();
 
 function normalize(w: string) {
   return w.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
@@ -51,31 +39,26 @@ export async function validateWord(raw: string): Promise<Verdict> {
   const w = normalize(raw);
   if (w.length !== 5 || /[^a-z]/.test(w)) return { valid: false, source: 'none', reason: 'format' };
 
+  // Check memo first
   if (MEMO.has(w)) return MEMO.get(w)!;
-  if (LS[w]) { MEMO.set(w, LS[w]); return LS[w]; }
 
-  // 1) Local fast path
-  if (await isAcceptedLocal(w)) {
-    const v: Verdict = { valid: true, source: 'local' };
-    MEMO.set(w, v); LS[w] = v; saveLS(LS); return v;
-  }
-
-  // 2) Remote checks in parallel (optional generosity)
+  // API-managed wordlist - only query remote
   const ac = new AbortController();
   const tasks: Array<Promise<boolean>> = [];
   if (isOpen('dictionary')) tasks.push(askDictionary(w, ac.signal).catch(e => { if ((e as Error)?.message.includes('401')) trip('dictionary'); return false; }));
-  if (isOpen('wordnik'))    tasks.push(askWordnik(w, ac.signal).catch(e => { if ((e as Error)?.message.includes('401')) trip('wordnik'); return false; }));
+  if (isOpen('wordnik')) tasks.push(askWordnik(w, ac.signal).catch(e => { if ((e as Error)?.message.includes('401')) trip('wordnik'); return false; }));
 
-  let remoteValid = false;
+  let apiValid = false;
   if (tasks.length) {
     const results = await Promise.allSettled(tasks);
-    remoteValid = results.some(r => r.status === 'fulfilled' && r.value === true);
+    apiValid = results.some(r => r.status === 'fulfilled' && r.value === true);
   }
 
-  const verdict: Verdict = remoteValid
-    ? { valid: true, source: 'remote' }
+  const verdict: Verdict = apiValid
+    ? { valid: true, source: 'api' }
     : { valid: false, source: 'none', reason: 'not-found' };
 
-  MEMO.set(w, verdict); LS[w] = verdict; saveLS(LS);
+  // Cache in memory only (no localStorage)
+  MEMO.set(w, verdict);
   return verdict;
 }

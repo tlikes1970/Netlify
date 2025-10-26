@@ -7,6 +7,7 @@ import {
   onAuthStateChanged,
   User
 } from 'firebase/auth';
+import { isMobileNow } from './isMobile';
 import { 
   doc, 
   setDoc, 
@@ -144,7 +145,7 @@ class AuthManager {
   }
 
   private async signInWithGoogle(): Promise<void> {
-    const isMobile = window.innerWidth <= 768;
+    const isMobile = isMobileNow();
     
     if (isMobile) {
       // Mobile: use redirect

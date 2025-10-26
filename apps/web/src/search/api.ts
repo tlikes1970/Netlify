@@ -4,6 +4,12 @@ import { get } from '../lib/tmdb';
 
 export type SearchResult = MediaItem;
 
+export type SearchResultWithPagination = {
+  items: SearchResult[];
+  page: number;
+  totalPages: number;
+};
+
 // Function to fetch network/production company information from TMDB detailed endpoints
 export async function fetchNetworkInfo(id: number, mediaType: 'movie' | 'tv'): Promise<{ networks?: string[]; productionCompanies?: string[] }> {
   const maxRetries = 2;
@@ -50,10 +56,10 @@ export async function fetchNetworkInfo(id: number, mediaType: 'movie' | 'tv'): P
 export async function searchMulti(
   query: string,
   page = 1,
-  genre?: string | null,
+  genre?: number | null,
   searchType: 'all' | 'movies-tv' | 'people' = 'all',
   opts?: { signal?: AbortSignal; language?: string; region?: string }
-): Promise<SearchResult[]> {
+): Promise<SearchResultWithPagination> {
   const language = opts?.language ?? 'en-US';
   const region   = opts?.region ?? 'US';
   const q = normalizeQuery(query);
@@ -75,6 +81,7 @@ export async function searchMulti(
 
   const json = await res.json();
   const results = Array.isArray(json.results) ? json.results : [];
+  const totalPages = json.total_pages ?? 1;
 
   let filtered = results;
   if (searchType === 'movies-tv') filtered = results.filter((r: any) => r?.media_type === 'movie' || r?.media_type === 'tv');
@@ -82,10 +89,15 @@ export async function searchMulti(
 
   const mapped = filtered.map(mapTMDBToMediaItem).filter(Boolean) as SearchResult[];
 
-  if (genre && genre !== 'All genres') {
-    return mapped.filter((m: any) => Array.isArray(m.genre_ids) && m.genre_ids.includes(Number(genre)));
-  }
-  return mapped;
+  const finalResults = genre
+    ? mapped.filter((m: any) => Array.isArray(m.genre_ids) && m.genre_ids.includes(genre))
+    : mapped;
+
+  return {
+    items: finalResults,
+    page,
+    totalPages
+  };
 }
 
 function normalizeQuery(q: string): string {
