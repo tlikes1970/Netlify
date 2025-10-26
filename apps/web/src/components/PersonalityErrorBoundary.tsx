@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { derr } from '../lib/log';
 import { settingsManager, getPersonalityText } from '../lib/settings';
 
 interface Props {
@@ -22,7 +23,7 @@ export default class PersonalityErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('PersonalityErrorBoundary caught an error:', error, errorInfo);
+    derr('PersonalityErrorBoundary caught an error:', error, errorInfo);
   }
 
   render() {
