@@ -18,7 +18,7 @@ export default function HomeYourShowsRail() {
             <div key={`${item.mediaType}:${item.id}`} className="flex-shrink-0">
               <CardV2
                 item={item}
-                context="tab-watching"
+                context="home"
                 disableSwipe={true}
                 actions={{
                   onWant: i => Library.move(i.id, i.mediaType, 'wishlist'),
