@@ -672,17 +672,14 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
 
   return (
     <div className="trivia-game">
-      {/* Header */}
-      <div className="trivia-header">
-        <h3>🧠 Daily Trivia {isProUser && <span className="pro-badge">PRO</span>}</h3>
-        <div className="trivia-progress">
-          <span>{currentQuestionIndex + 1}/{questions.length}</span>
-          <div className="progress-bar">
-            <div 
-              className="progress-fill" 
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+      {/* Progress indicator */}
+      <div className="trivia-progress">
+        <span>{currentQuestionIndex + 1}/{questions.length}</span>
+        <div className="progress-bar">
+          <div 
+            className="progress-fill" 
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </div>
 
