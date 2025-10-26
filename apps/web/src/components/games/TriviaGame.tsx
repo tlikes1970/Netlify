@@ -521,8 +521,9 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
   useEffect(() => {
     const loadQuestions = async () => {
       try {
-        console.log(`🧠 Loading fresh trivia questions for ${isProUser ? 'Pro' : 'Free'} user...`);
-        const apiQuestions = await getFreshTrivia();
+        console.log(`🧠 Loading cached trivia questions for ${isProUser ? 'Pro' : 'Free'} user...`);
+        // Use cached trivia to avoid rate limits
+        const apiQuestions = await getCachedTrivia();
         
         // Convert API format to our format
         const formattedQuestions = apiQuestions.map((q, index) => ({
@@ -548,8 +549,9 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
         setQuestions(formattedQuestions);
         setGameState('playing');
       } catch (error) {
-        console.error('❌ Failed to load fresh trivia questions:', error);
+        console.error('❌ Failed to load trivia questions:', error);
         // Fallback to hardcoded questions
+        console.log('📚 Using fallback trivia questions');
         const fallbackQuestions = getTodaysQuestions(isProUser);
         setQuestions(fallbackQuestions);
         setGameState('playing');

@@ -127,6 +127,50 @@ export function clearTriviaCache(): void {
 }
 
 /**
+ * Get cached trivia or fetch from API
+ */
+export async function getCachedTrivia(): Promise<TriviaApiResponse[]> {
+  try {
+    // Try to get from cache
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      const cacheDate = new Date(parsed.date);
+      const now = new Date();
+      
+      // Use cache if it's from today
+      if (cacheDate.toDateString() === now.toDateString()) {
+        console.log('✅ Using cached trivia questions');
+        return parsed.questions;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to read cache:', error);
+  }
+  
+  // Cache miss or expired - fetch from API
+  console.log('🔄 Fetching trivia from API...');
+  const apiQuestions = await fetchTriviaFromApi();
+  
+  if (apiQuestions && apiQuestions.length > 0) {
+    // Save to cache
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        date: new Date().toISOString(),
+        questions: apiQuestions
+      }));
+      console.log('💾 Cached trivia questions');
+    } catch (error) {
+      console.warn('Failed to cache trivia:', error);
+    }
+    
+    return apiQuestions;
+  }
+  
+  throw new Error('Failed to fetch trivia from API');
+}
+
+/**
  * Force refresh trivia (bypass cache for testing)
  */
 export async function getFreshTrivia(): Promise<TriviaApiResponse[]> {
