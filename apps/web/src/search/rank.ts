@@ -207,16 +207,4 @@ export function tieBreak(
   return (bMeta.releaseYear ?? 0) - (aMeta.releaseYear ?? 0);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function maybeFranchiseHeadBoost(
-  q: string, 
-  meta: { tier: string; voteCount?: number; popularity?: number }
-): void {
-  const single = tokens(q).length === 1;
-  const isHead = (meta.voteCount ?? 0) > 50000 || (meta.popularity ?? 0) > 200;
-  if (single && isHead && meta.tier === 'word') {
-    // eslint-disable-next-line no-param-reassign
-    meta.tier = 'starts';
-  }
-}
 

@@ -104,7 +104,7 @@ export async function smartSearch(
       popularity: item.voteAverage ? item.voteAverage * 10 : undefined, // rough estimate
       voteAverage: item.voteAverage,
       voteCount: undefined,
-      releaseYear: item.year ? parseInt(item.year) : null,
+      releaseYear: item.year ? parseInt(item.year) : undefined,
       mediaType: item.mediaType,
       originalLanguage: undefined
     }, { preferType: searchType === 'movies-tv' ? 'all' : searchType });
@@ -114,7 +114,7 @@ export async function smartSearch(
       tier: scored.titleSig.tier,
       voteCount: undefined as number | undefined,
       voteAverage: item.voteAverage,
-      releaseYear: item.year ? parseInt(item.year) : null,
+      releaseYear: item.year ? parseInt(item.year) : undefined,
       popularity: item.voteAverage ? item.voteAverage * 10 : undefined,
       title: item.title
     };
@@ -214,7 +214,7 @@ export async function smartSearch(
           popularity: item.voteAverage ? item.voteAverage * 10 : undefined,
           voteAverage: item.voteAverage,
           voteCount: undefined,
-          releaseYear: item.year ? parseInt(item.year) : null,
+          releaseYear: item.year ? parseInt(item.year) : undefined,
           mediaType: item.mediaType,
           originalLanguage: undefined
         }, { preferType: searchType === 'movies-tv' ? 'all' : searchType });
@@ -223,7 +223,7 @@ export async function smartSearch(
           tier: scored.titleSig.tier,
           voteCount: undefined as number | undefined,
           voteAverage: item.voteAverage,
-          releaseYear: item.year ? parseInt(item.year) : null,
+          releaseYear: item.year ? parseInt(item.year) : undefined,
           popularity: item.voteAverage ? item.voteAverage * 10 : undefined,
           title: item.title
         };
@@ -254,7 +254,7 @@ export async function smartSearch(
       meta: original?.meta || { 
         tier: 'overlap', 
         voteAverage: item.voteAverage, 
-        releaseYear: item.year ? parseInt(item.year) : null,
+        releaseYear: item.year ? parseInt(item.year) : undefined,
         title: item.title
       } 
     };
