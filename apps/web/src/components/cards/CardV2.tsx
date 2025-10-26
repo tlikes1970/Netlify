@@ -118,8 +118,8 @@ export default function CardV2({ item, context, actions, compact, showRating = t
             </div>
           </div>
           
-          {/* Episode progress indicator for TV shows */}
-          {item.mediaType === 'tv' && (
+          {/* Episode progress indicator for TV shows - only show on tab contexts, not home/search */}
+          {item.mediaType === 'tv' && (context === 'tab-watching' || context === 'tab-want' || context === 'tab-watched' || context === 'tab-not') && (
             <div className="mb-1">
               <EpisodeProgressDisplay 
                 showId={typeof item.id === 'string' ? parseInt(item.id) : item.id}
