@@ -14,6 +14,13 @@ html[data-compact-mobile-v1="true"][data-actions-split="true"] {
   .mobile-actions {
     display: none;
   }
+  
+  /* Hide desktop action buttons in TabCard */
+  .tab-card .actions .free-actions,
+  .tab-card .actions .pro-actions,
+  .tab-card .actions > div.hidden.md\\:block {
+    display: none !important;
+  }
 }
 
 /* Compact Primary Action Button */

@@ -85,10 +85,6 @@ export function installCompactMobileGate() {
 }
 
 export function installActionsSplitGate() {
-  const isMobile = () => {
-    try { return isMobileNow(); } catch { return true; }
-  };
-  
   const ensure = () => {
     try {
       const compactGate = getFlag('compact-mobile-v1');
@@ -96,9 +92,10 @@ export function installActionsSplitGate() {
       const flagEnabled = typeof flag === 'function'
         ? flag('mobile_actions_split_v1')
         : localStorage.getItem('flag:mobile_actions_split_v1') === 'true';
-      const mobileViewport = isMobile();
       
-      const on = compactGate && flagEnabled && mobileViewport;
+      // Enable actions-split if compact gate AND feature flag are both enabled
+      // No viewport check - this feature works on all screen sizes
+      const on = compactGate && flagEnabled;
       if (on) {
         setFlag('actions-split', true);
       } else {
@@ -117,7 +114,6 @@ export function installActionsSplitGate() {
   // react to the stuff that actually changes in practice
   document.addEventListener('DOMContentLoaded', ensure, { once: true });
   document.addEventListener('visibilitychange', ensure, { passive: true });
-  window.addEventListener('resize', ensure, { passive: true });
   window.addEventListener('storage', (e) => {
     if (e.key === 'flag:mobile_actions_split_v1') ensure();
   }, { passive: true });
