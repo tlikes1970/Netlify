@@ -167,7 +167,8 @@ export async function getCachedTrivia(): Promise<TriviaApiResponse[]> {
     return apiQuestions;
   }
   
-  throw new Error('Failed to fetch trivia from API');
+  console.warn('⚠️ API returned no questions, falling back to hardcoded questions');
+  return [];
 }
 
 /**

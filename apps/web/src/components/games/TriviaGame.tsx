@@ -525,24 +525,35 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
         // Use cached trivia to avoid rate limits
         const apiQuestions = await getCachedTrivia();
         
-        // Convert API format to our format
-        const formattedQuestions = apiQuestions.map((q, index) => ({
-          id: `fresh_${index}`,
-          question: q.question,
-          options: q.options,
-          correctAnswer: q.correctAnswer,
-          explanation: q.explanation || undefined,
-          category: q.category,
-          difficulty: q.difficulty
-        }));
+        let formattedQuestions;
         
-        // For pro users, supplement with additional hardcoded questions if API doesn't provide enough
-        if (isProUser && formattedQuestions.length < 50) {
-          const additionalQuestions = getTodaysQuestions(true).slice(formattedQuestions.length).map(q => ({
+        if (apiQuestions && apiQuestions.length > 0) {
+          // Convert API format to our format
+          formattedQuestions = apiQuestions.map((q, index) => ({
+            id: `fresh_${index}`,
+            question: q.question,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+            explanation: q.explanation || undefined,
+            category: q.category,
+            difficulty: q.difficulty
+          }));
+          
+          // For pro users, supplement with additional hardcoded questions if API doesn't provide enough
+          if (isProUser && formattedQuestions.length < 50) {
+            const additionalQuestions = getTodaysQuestions(true).slice(formattedQuestions.length).map(q => ({
+              ...q,
+              explanation: q.explanation || undefined
+            }));
+            formattedQuestions.push(...additionalQuestions);
+          }
+        } else {
+          // No API questions available, use fallback
+          console.log('📚 Using fallback trivia questions');
+          formattedQuestions = getTodaysQuestions(isProUser).map(q => ({
             ...q,
             explanation: q.explanation || undefined
           }));
-          formattedQuestions.push(...additionalQuestions);
         }
         
         console.log(`✅ Loaded ${formattedQuestions.length} trivia questions for ${isProUser ? 'Pro' : 'Free'} user`);
