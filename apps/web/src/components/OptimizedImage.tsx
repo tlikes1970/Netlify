@@ -1,5 +1,5 @@
-// import { useState } from 'react'; // Unused
 import { getOptimalImageSize } from '../hooks/useImageOptimization';
+import { useImageFallback } from '../lib/useImageFallback';
 
 // Optimized Image Component
 interface OptimizedImageProps {
@@ -9,8 +9,10 @@ interface OptimizedImageProps {
   context?: 'poster' | 'backdrop';
   fallbackSrc?: string;
   loading?: 'lazy' | 'eager';
+  fetchpriority?: 'high' | 'low' | 'auto';
   onLoad?: () => void;
   onError?: () => void;
+  style?: React.CSSProperties;
 }
 
 export function OptimizedImage({
@@ -20,22 +22,38 @@ export function OptimizedImage({
   context = 'poster',
   fallbackSrc,
   loading = 'lazy',
+  fetchpriority = 'low',
   onLoad,
-  onError
+  onError,
+  style
 }: OptimizedImageProps) {
   // Get optimized image URL
   const optimizedSrc = src ? getOptimalImageSize(src, context) : fallbackSrc || '';
   
+  // Use fallback hook for retry logic - start with placeholder if src is empty
+  const initial = optimizedSrc || fallbackSrc || '';
+  const { currentSrc, onError: handleError } = useImageFallback(initial, { 
+    maxRetries: 1, 
+    placeholderSrc: fallbackSrc 
+  });
+
+  // Combined error handler
+  const handleImageError = () => {
+    handleError();
+    onError?.();
+  };
+  
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} style={style}>
       <img
-        src={optimizedSrc}
+        src={currentSrc}
         alt={alt}
         className="h-full w-full object-cover"
         loading={loading}
         decoding="async"
+        fetchpriority={fetchpriority}
         onLoad={onLoad}
-        onError={onError}
+        onError={handleImageError}
       />
     </div>
   );

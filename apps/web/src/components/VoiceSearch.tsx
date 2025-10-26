@@ -31,12 +31,12 @@ interface SpeechRecognition extends EventTarget {
   onend: (() => void) | null;
 }
 
-declare var SpeechRecognition: {
+declare const SpeechRecognition: {
   prototype: SpeechRecognition;
   new(): SpeechRecognition;
 };
 
-declare var webkitSpeechRecognition: {
+declare const _webkitSpeechRecognition: {
   prototype: SpeechRecognition;
   new(): SpeechRecognition;
 };
@@ -219,18 +219,12 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
     setIsListening(false);
   };
 
-  // Handle keyboard events to prevent accidental triggering
+  // Handle keyboard events when button is focused
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Prevent Enter key from triggering voice search
-    if (e.key === 'Enter') {
+    // Only handle Space and Enter for accessibility
+    if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       e.stopPropagation();
-      return;
-    }
-    
-    // Only allow space to trigger voice search
-    if (e.key === ' ') {
-      e.preventDefault();
       if (isListening) {
         stopListening();
       } else {
@@ -249,7 +243,9 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
         onClick={isListening ? stopListening : startListening}
         onKeyDown={handleKeyDown}
         disabled={!isSupported}
-        tabIndex={-1}
+        tabIndex={0}
+        role="button"
+        aria-pressed={isListening}
         className={`
           flex items-center justify-center w-10 h-10 rounded-lg border transition-all duration-200 ease-out
           hover:scale-105 active:scale-95

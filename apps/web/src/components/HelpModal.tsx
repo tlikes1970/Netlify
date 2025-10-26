@@ -309,11 +309,11 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
   return (
     <>
       <div 
-        className="fixed inset-0 z-[1100] bg-black bg-opacity-50" 
+        className="fixed inset-0 z-overlay bg-black bg-opacity-50" 
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-modal flex items-center justify-center p-4">
         <div 
           ref={modalRef}
           className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-xl"

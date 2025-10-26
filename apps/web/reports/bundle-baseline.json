@@ -1,0 +1,71 @@
+{
+  "mainChunkSize": 151784,
+  "mainChunkGzipSize": 45535,
+  "totalSize": 1098328,
+  "totalGzipSize": 329498,
+  "chunkCount": 12,
+  "chunks": [
+    {
+      "name": "AdminExtrasPage-81d592be.js",
+      "size": 8561,
+      "gzipSize": 2568
+    },
+    {
+      "name": "community-522739e7.js",
+      "size": 9313,
+      "gzipSize": 2794
+    },
+    {
+      "name": "extrasProvider-bcdf59df.js",
+      "size": 5165,
+      "gzipSize": 1550
+    },
+    {
+      "name": "firebase-app-3e6db42c.js",
+      "size": 689,
+      "gzipSize": 207
+    },
+    {
+      "name": "firebase-auth-41bcd574.js",
+      "size": 172861,
+      "gzipSize": 51858
+    },
+    {
+      "name": "firebase-firestore-b7b9ad2a.js",
+      "size": 293186,
+      "gzipSize": 87956
+    },
+    {
+      "name": "games-23f18348.js",
+      "size": 70323,
+      "gzipSize": 21097
+    },
+    {
+      "name": "index-e89a78ae.js",
+      "size": 151784,
+      "gzipSize": 45535
+    },
+    {
+      "name": "modals-5fe29d8c.js",
+      "size": 63777,
+      "gzipSize": 19133
+    },
+    {
+      "name": "pages-3e9569ff.js",
+      "size": 114784,
+      "gzipSize": 34435
+    },
+    {
+      "name": "react-vendor-b1791c80.js",
+      "size": 140884,
+      "gzipSize": 42265
+    },
+    {
+      "name": "settings-b3931a55.js",
+      "size": 67001,
+      "gzipSize": 20100
+    }
+  ],
+  "timestamp": "2025-10-26T03:49:05.459Z",
+  "version": "D3-polish-baseline"
+}

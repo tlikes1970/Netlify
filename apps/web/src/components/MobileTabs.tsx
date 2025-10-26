@@ -3,6 +3,7 @@ import { useLibrary } from '../lib/storage';
 import { useCustomLists } from '../lib/customLists';
 import { useEffect, useState, createContext, useContext } from 'react';
 import React from 'react';
+import { dlog } from '../lib/log';
 
 type TabId = 'watching'|'want'|'watched'|'mylists'|'discovery'; // Removed 'not' - now handled by modal
 export type MobileTabsProps = { current: 'home' | TabId; onChange: (next: 'home' | TabId) => void; };
@@ -22,7 +23,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
   const [viewportOffset, setViewportOffset] = useState(0);
   
   // Debug logging
-  console.log('📱 MobileTabs rendering:', { 
+  dlog('📱 MobileTabs rendering:', { 
     current, 
     screenWidth: window.innerWidth,
     screenHeight: window.innerHeight,
@@ -35,26 +36,41 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
   // Visual Viewport API listener for iOS Safari keyboard handling
   useEffect(() => {
     if (!window.visualViewport) {
-      console.log('📱 Visual Viewport API not supported, using focus/blur fallback');
+      dlog('📱 Visual Viewport API not supported, using safe fallback');
       
-      // Fallback for older iOS: listen to input focus/blur
-      const handleInputFocus = () => {
-        console.log('📱 Input focused, adjusting nav position');
-        setViewportOffset(250); // Reduced estimate for iOS keyboard
+      // Safe fallback: listen to resize, orientationchange, and visibilitychange
+      const handleFallbackResize = () => {
+        dlog('📱 Fallback resize detected, checking for keyboard');
+        // Simple heuristic: if viewport height is significantly less than screen height
+        const heightDiff = window.innerHeight - window.screen.height;
+        if (Math.abs(heightDiff) > 100) {
+          setViewportOffset(Math.abs(heightDiff));
+        } else {
+          setViewportOffset(0);
+        }
       };
       
-      const handleInputBlur = () => {
-        console.log('📱 Input blurred, resetting nav position');
-        setViewportOffset(0);
+      const handleOrientationChange = () => {
+        dlog('📱 Orientation change detected');
+        setTimeout(() => setViewportOffset(0), 100); // Reset after orientation settles
       };
       
-      // Listen for input focus/blur events
-      document.addEventListener('focusin', handleInputFocus);
-      document.addEventListener('focusout', handleInputBlur);
+      const handleVisibilityChange = () => {
+        dlog('📱 Visibility change detected');
+        if (document.hidden) {
+          setViewportOffset(0);
+        }
+      };
+      
+      // Listen for safe fallback events
+      window.addEventListener('resize', handleFallbackResize);
+      window.addEventListener('orientationchange', handleOrientationChange);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
       
       return () => {
-        document.removeEventListener('focusin', handleInputFocus);
-        document.removeEventListener('focusout', handleInputBlur);
+        window.removeEventListener('resize', handleFallbackResize);
+        window.removeEventListener('orientationchange', handleOrientationChange);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
       };
     }
     
@@ -75,7 +91,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
         // Calculate delta to detect toolbar changes vs keyboard
         const offsetTopDelta = Math.abs(currentOffsetTop - prevOffsetTop);
         
-        console.log('📱 Visual viewport changed:', { 
+        dlog('📱 Visual viewport changed:', { 
           visualHeight, 
           screenHeight, 
           currentOffsetTop,
@@ -86,7 +102,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
         
         // If offsetTop changed significantly (>50px), it's toolbar animation - ignore
         if (offsetTopDelta > 50) {
-          console.log('📱 Toolbar animation detected, ignoring offset change');
+          dlog('📱 Toolbar animation detected, ignoring offset change');
           setViewportOffset(0);
           prevOffsetTop = currentOffsetTop;
           return;
@@ -157,7 +173,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
   return (
     <ViewportContext.Provider value={{ viewportOffset }}>
       <nav 
-        className="mobile-nav fixed left-0 right-0 z-[9999] px-1 py-2"
+        className="mobile-nav fixed left-0 right-0 z-nav px-1 py-2"
         style={{ 
           paddingBottom: 'calc(8px + env(safe-area-inset-bottom))',
           boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)',

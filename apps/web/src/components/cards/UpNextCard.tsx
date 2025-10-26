@@ -4,6 +4,7 @@ import { useTranslations } from '../../lib/language';
 import { OptimizedImage } from '../OptimizedImage';
 import { fetchCurrentEpisodeInfo } from '../../tmdb/tv';
 import { getShowStatusInfo, formatLastAirDate } from '../../utils/showStatus';
+import { dlog } from '../../lib/log';
 
 export type UpNextCardProps = {
   item: MediaItem;
@@ -22,8 +23,8 @@ export default function UpNextCard({ item }: UpNextCardProps) {
   const [episodeInfo, setEpisodeInfo] = useState<string>('S01E01');
 
   // Debug: Log the nextAirDate prop and timezone info
-  console.log(`🔍 UpNextCard ${title} received nextAirDate:`, nextAirDate);
-  console.log(`🌍 Current timezone:`, Intl.DateTimeFormat().resolvedOptions().timeZone);
+  dlog(`🔍 UpNextCard ${title} received nextAirDate:`, nextAirDate);
+  dlog(`🌍 Current timezone:`, Intl.DateTimeFormat().resolvedOptions().timeZone);
 
   const formatAirDate = (dateString: string) => {
     try {
@@ -34,7 +35,7 @@ export default function UpNextCard({ item }: UpNextCardProps) {
         day: 'numeric',
         timeZone: 'UTC' // Ensure we're working in UTC
       });
-      console.log(`📅 Formatting ${dateString} → ${formatted} (UTC)`);
+      dlog(`📅 Formatting ${dateString} → ${formatted} (UTC)`);
       return formatted;
     } catch {
       return dateString;
@@ -50,7 +51,7 @@ export default function UpNextCard({ item }: UpNextCardProps) {
           setEpisodeInfo(`S${info.season.toString().padStart(2, '0')}E${info.episode.toString().padStart(2, '0')}`);
         }
       } catch (error) {
-        console.log(`Failed to fetch episode info for ${title}:`, error);
+        dlog(`Failed to fetch episode info for ${title}:`, error);
       }
     };
 

@@ -6,7 +6,7 @@
  * Dependencies: CardBaseMobile, SwipeRowOverlay components
  */
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .card-mobile {
     position: relative;
     background: var(--surface-0,#fff);
@@ -20,8 +20,10 @@
 
   /* SWIPE BACKGROUND — sits UNDER content, hidden until dragging */
   .card-mobile .swipe-bg {
-    position: absolute; inset: 0;
-    z-index: 1; pointer-events: none;
+    position: absolute; 
+    inset: 0; 
+    z-index: var(--z-base); 
+    pointer-events: none;
   }
   .card-mobile .swipe-bg .reveal {
     position: absolute; top: 0; bottom: 0; width: 40%;
@@ -42,6 +44,12 @@
   .card-mobile .swipe-bg .hint.left  { left: 12px; }
   .card-mobile .swipe-bg .hint.right { right: 12px; }
 
+  /* Hint visibility */
+  .card-mobile .hint { 
+    opacity: 0; 
+    transition: opacity 120ms; 
+  }
+  
   /* Only show active hint for direction */
   .card-mobile.drag-left  .swipe-bg .hint.left,
   .card-mobile.drag-right .swipe-bg .hint.right {
@@ -51,13 +59,21 @@
   /* SWIPE TARGET — the thing we translate AND the grid container */
   .card-mobile .swipe-target {
     position: relative;
-    z-index: 2; /* above reveal bg */
+    z-index: calc(var(--z-base) + 1);
     will-change: transform;
     display: grid;
     grid-template-columns: 112px 1fr;
     gap: 8px;
     align-items: start;
-    min-height: 168px;
+    transition: transform 160ms ease-out;
+  }
+  
+  .card-mobile.dragging .swipe-target {
+    transition: none;
+  }
+  
+  .card-mobile.swipe-open .swipe-target {
+    transform: translate3d(-120px,0,0);
   }
 
   .card-mobile .poster {
@@ -71,7 +87,6 @@
     display: grid;
     grid-template-rows: auto auto auto auto auto auto; /* topline, subline, chips, rating, summary, actions */
     row-gap: 6px;
-    min-height: 168px;
     overflow: hidden;
   }
 
@@ -224,7 +239,7 @@
     background: transparent;
     color: var(--text-muted, #666);
     cursor: grab; 
-    z-index: 4;
+    z-index: calc(var(--z-base) + 3);
     border-left: 1px solid color-mix(in srgb, #000 8%, transparent);
     touch-action: none; /* don't pan-x/y from the rail */
     border: none;
@@ -252,7 +267,7 @@
     position: absolute; 
     inset: 0; 
     pointer-events: none; 
-    z-index: 3; 
+    z-index: calc(var(--z-base) + 2); 
   }
   .card-mobile .swipe-row > .gesture-plane { 
     position: absolute; 

@@ -14,6 +14,7 @@ import ScrollToTopArrow from '@/components/ScrollToTopArrow';
 import { lazy, Suspense } from 'react';
 import { openSettingsSheet } from '@/components/settings/SettingsSheet';
 import { flag } from '@/lib/flags';
+import { isCompactMobileV1 } from '@/lib/mobileFlags';
 
 // Lazy load heavy components
 const SettingsPage = lazy(() => import('@/components/SettingsPage'));
@@ -47,7 +48,7 @@ import { backfillShowStatus } from '@/utils/backfillShowStatus';
 
 type View = 'home'|'watching'|'want'|'watched'|'mylists'|'discovery';
 type SearchType = 'all' | 'movies-tv' | 'people';
-type SearchState = { q: string; genre: string | null; type: SearchType; nonce: number };
+type SearchState = { q: string; genre: number | null; type: SearchType };
 
 export default function App() {
   const [view, setView] = useState<View>('home');
@@ -145,17 +146,17 @@ export default function App() {
     await new Promise(resolve => setTimeout(resolve, 1000));
   };
 
-  // Search state - centralized with nonce
-  const [search, setSearch] = useState<SearchState>({ q: '', genre: null, type: 'all', nonce: 0 });
+  // Search state
+  const [search, setSearch] = useState<SearchState>({ q: '', genre: null, type: 'all' });
   const searchActive = !!search.q.trim();
 
   // Search handlers
-  const handleSearch = (q: string, genre: string | null, type: SearchType) => {
+  const handleSearch = (q: string, genre: number | null, type: SearchType) => {
     const nextQ = q.trim();
-    setSearch(prev => ({ q: nextQ, genre, type, nonce: prev.nonce + 1 }));
+    setSearch({ q: nextQ, genre, type });
   };
 
-  const handleClear = () => setSearch({ q: '', genre: null, type: 'all', nonce: 0 });
+  const handleClear = () => setSearch({ q: '', genre: null, type: 'all' });
 
   // For You configuration from settings
   const forYouRows = useForYouRows();
@@ -171,7 +172,7 @@ export default function App() {
 
   // Handle settings click - check gate and flag conditions
   const handleSettingsClick = () => {
-    const gate = document.documentElement.dataset.compactMobileV1 === 'true';
+    const gate = isCompactMobileV1();
     const flagEnabled = flag('settings_mobile_sheet_v1');
     
     if (gate && flagEnabled) {
@@ -206,7 +207,7 @@ export default function App() {
       const hash = window.location.hash;
       if (hash.startsWith('#settings/')) {
         const tab = hash.replace('#settings/', '').toLowerCase();
-        const gate = document.documentElement.dataset.compactMobileV1 === 'true';
+        const gate = isCompactMobileV1();
         const flagEnabled = flag('settings_mobile_sheet_v1');
         
         if (gate && flagEnabled) {
@@ -363,13 +364,13 @@ export default function App() {
           }}
         />
         
-        {/* Desktop Tabs - Always visible */}
-        <div className="hidden lg:block">
+        {/* Desktop Tabs - tablet and above */}
+        <div className="hidden md:block">
           <Tabs current={view} onChange={setView} />
         </div>
         
-        {/* Mobile Tabs - Always visible */}
-        <div className="block lg:hidden">
+        {/* Mobile Tabs - mobile only */}
+        <div className="block md:hidden">
           <MobileTabs current={view} onChange={setView} />
         </div>
         
@@ -380,7 +381,7 @@ export default function App() {
             : undefined 
         }}>
           {searchActive ? (
-            <SearchResults query={search.q} genre={search.genre} searchType={search.type} nonce={search.nonce} />
+            <SearchResults query={search.q} genre={search.genre} searchType={search.type} />
           ) : (
             <>
               {(view as View) === 'home' && (
@@ -580,8 +581,8 @@ export default function App() {
           changeEveryMs={30000}
         />
         
-        {/* Desktop Tabs - always visible */}
-        <div className="hidden lg:block">
+        {/* Desktop Tabs - tablet and above */}
+        <div className="hidden md:block">
           <Tabs current={view} onChange={(tab) => { 
             setView(tab); 
             if (searchActive) { 
@@ -590,8 +591,8 @@ export default function App() {
           }} />
         </div>
         
-        {/* Mobile Tabs - always visible */}
-        <div className="block lg:hidden">
+        {/* Mobile Tabs - mobile only */}
+        <div className="block md:hidden">
           <MobileTabs current={view} onChange={(tab) => { 
             setView(tab); 
             if (searchActive) { 
@@ -602,7 +603,7 @@ export default function App() {
         
         {searchActive ? (
           <PullToRefreshWrapper onRefresh={handleRefresh}>
-            <SearchResults query={search.q} genre={search.genre} searchType={search.type} nonce={search.nonce} />
+            <SearchResults query={search.q} genre={search.genre} searchType={search.type} />
           </PullToRefreshWrapper>
         ) : (
           <PullToRefreshWrapper onRefresh={handleRefresh}>

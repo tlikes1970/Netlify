@@ -48,7 +48,7 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
   ];
 
   return (
-    <div className="fixed inset-0 z-[99999] backdrop-blur-sm flex items-start justify-center pt-24 p-4" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
+    <div className="fixed inset-0 z-modal backdrop-blur-sm flex items-start justify-center pt-24 p-4" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
       <div className="rounded-xl w-full max-w-4xl h-[80vh] flex overflow-hidden" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', border: '1px solid' }}>
         {/* Left sidebar - Tabs */}
         <div className="w-48 p-4" style={{ backgroundColor: 'var(--btn)', borderRightColor: 'var(--line)', borderRight: '1px solid' }}>
@@ -1654,7 +1654,7 @@ function SharingModal({ onClose }: { onClose: () => void }) {
     try {
       await navigator.clipboard.writeText(shareableText);
       alert('Copied to clipboard!');
-    } catch (error) {
+    } catch (_error) {
       // Fallback for older browsers
       const textarea = document.createElement('textarea');
       textarea.value = shareableText;
@@ -1670,7 +1670,7 @@ function SharingModal({ onClose }: { onClose: () => void }) {
 
   if (showResult) {
     return (
-      <div className="fixed inset-0 z-[99999] backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-modal backdrop-blur-sm flex items-center justify-center p-4">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
           <div className="p-6">
             <div className="flex justify-between items-center mb-4">
@@ -1718,7 +1718,7 @@ function SharingModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[99999] backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-modal backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">

@@ -39,7 +39,7 @@ export default function ScrollToTopArrow({ threshold = 400, className = '' }: Sc
   return (
     <button
       onClick={scrollToTop}
-      className={`fixed bottom-20 right-4 lg:bottom-24 lg:right-8 z-[9998] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-out hover:scale-105 hover:shadow-xl ${className}`}
+      className={`fixed bottom-20 right-4 lg:bottom-24 lg:right-8 z-dropdown w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-out hover:scale-105 hover:shadow-xl ${className}`}
       style={{
         backgroundColor: 'var(--btn)',
         borderColor: 'var(--line)',
@@ -68,6 +68,7 @@ export default function ScrollToTopArrow({ threshold = 400, className = '' }: Sc
     </button>
   );
 }
+
 
 
 

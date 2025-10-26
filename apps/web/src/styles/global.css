@@ -85,7 +85,7 @@ html, body, #root {
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 9999;
+    z-index: var(--z-nav);
     /* Force it to stay within viewport */
     max-height: 100lvh;
     /* Force visibility */
@@ -118,7 +118,7 @@ input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset:
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9999;
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -685,3 +685,20 @@ input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset:
 
 /* Hide tabpanels when hidden attribute is set (in case of resets) */
 [role="tabpanel"][hidden] { display: none !important; }
+
+/* Z-index semantic utilities */
+.z-base { z-index: var(--z-base); }
+.z-nav { z-index: var(--z-nav); }
+.z-dropdown { z-index: var(--z-dropdown); }
+.z-overlay { z-index: var(--z-overlay); }
+.z-modal { z-index: var(--z-modal); }
+.z-toast { z-index: var(--z-toast); }
+
+/* Touch action utilities for swipe handling */
+.touch-pan-y { touch-action: pan-y; }
+.touch-none { touch-action: none; }
+
+/* D2.3: swipe surface allows vertical scrolling, JS handles horizontal without preventDefault */
+.swipe-surface { touch-action: pan-y; }
+/* In case we ever need to fully own the gesture (rare): */
+.swipe-surface--own { touch-action: none; }

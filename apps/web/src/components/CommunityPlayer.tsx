@@ -21,7 +21,7 @@ interface YouTubePlayerProps {
  * Dependencies: YouTube IFrame API, rotation timer, fallback error handling
  */
 
-export default function YouTubePlayer({ }: YouTubePlayerProps) {
+export default function YouTubePlayer(_props: YouTubePlayerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);

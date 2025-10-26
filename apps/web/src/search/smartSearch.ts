@@ -1,11 +1,15 @@
-// apps/web/src/search/smartSearch.ts
-// Lightweight TMDB orchestrator: search tv+movie, select anchor, pull similar+recommendations,
-// blend with plain results, then re-rank to avoid false matches like "nation(s)" for "z-nation".
+/**
+ * Smart search orchestrator
+ * Purpose: Searches TMDB and ranks results using BM25-like scoring
+ * Data Source: TMDB API responses
+ * Update Path: Adjust anchors in smartSearch function
+ * Dependencies: Uses computeSearchScore from rank.ts, mapTMDBToMediaItem from api.ts
+ */
 
 import type { MediaItem } from '../components/cards/card.types';
-import type { SearchResult } from './api';
-// Reuse your existing mapper. If your path differs, adjust the import.
+import type { SearchResult, SearchResultWithPagination } from './api';
 import { mapTMDBToMediaItem } from './api';
+import { computeSearchScore, tieBreak } from './rank';
 
 type SearchType = 'all' | 'movies-tv' | 'people';
 
@@ -24,93 +28,23 @@ async function fetchTMDB(path: string, params: Record<string, any>, signal?: Abo
   return res.json();
 }
 
-// Normalize, but keep hyphens meaningful; don't drop the 'z-' in z-nation.
 function normalizeQuery(q: string): string {
   return q
-    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')   // strip diacritics
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[''']/g, "'").replace(/["""]/g, '"')
     .trim();
 }
 
-// Generate canonical variants so both "z nation" and "z-nation" anchor.
-function canonicalForms(q: string) {
-  const base   = normalizeQuery(q);
-  const hyphen = base.replace(/[–—]/g, '-');
-  const spaced = hyphen.replace(/[-]+/g, ' ');      // "z nation"
-  const tight  = hyphen.replace(/[-\s]+/g, '');     // "znation"
-  return Array.from(new Set([base, hyphen, spaced, tight].map(s => s.toLowerCase())));
-}
-
-function tokenize(s: string): string[] {
-  return s.toLowerCase().split(/[^a-z0-9']+/).filter(Boolean);
-}
-function jaccard(a: Set<string>, b: Set<string>) {
-  const i = new Set([...a].filter(x => b.has(x))).size;
-  const u = new Set([...a, ...b]).size || 1;
-  return i / u;
-}
-
-// Stronger title scoring that respects canonical forms and penalizes false "nation" hits.
-function titleScore(queryRaw: string, titleRaw: string): number {
-  const forms = canonicalForms(queryRaw);
-  const t = normalizeQuery(titleRaw).toLowerCase();
-
-  // Exact or contains on any canonical form get big boosts
-  for (const f of forms) {
-    if (t === f) return 1.0;
-    if (t.includes(f)) return 0.9;
+function dedupeWithScore(items: Array<{ item: MediaItem; score: number }>) {
+  const seen = new Map<string, { item: MediaItem; score: number }>();
+  for (const entry of items) {
+    const key = `${entry.item.mediaType}:${entry.item.id}`;
+    const existing = seen.get(key);
+    if (!existing || entry.score > existing.score) {
+      seen.set(key, entry);
+    }
   }
-
-  // Token similarity using the spaced form to preserve "z nation" tokens
-  const qTokens = new Set(tokenize(forms[1] || queryRaw));
-  const tTokens = new Set(tokenize(t));
-  let score = jaccard(qTokens, tTokens);
-
-  // Specific penalty: query is z-nation, title contains "nation" but no zombie-ish hints
-  if (/^z[-\s]?nation$/i.test(forms[1] || queryRaw) && /nation/.test(t) && !/zombie|undead|apocalypse|infect|virus|outbreak|plague/i.test(t)) {
-    score *= 0.5;
-  }
-  return score;
-}
-
-const TV_GENRES_HINT = new Set([27, 10765, 10759]); // Horror, Sci-Fi&Fantasy, Action&Adventure
-const MOVIE_GENRES_HINT = new Set([27, 878, 28]);   // Horror, Sci-Fi, Action
-function genreScore(item: any): number {
-  const ids: number[] = item.genre_ids || [];
-  if (item.mediaType === 'tv')    return ids.some(id => TV_GENRES_HINT.has(id)) ? 0.25 : 0;
-  if (item.mediaType === 'movie') return ids.some(id => MOVIE_GENRES_HINT.has(id)) ? 0.25 : 0;
-  return 0;
-}
-
-function overviewHintScore(overview?: string): number {
-  if (!overview) return 0;
-  const o = overview.toLowerCase();
-  const hits = ['zombie','undead','apocalypse','virus','outbreak','plague'];
-  const n = hits.reduce((acc, h) => acc + (o.includes(h) ? 1 : 0), 0);
-  return Math.min(0.25, n * 0.07);
-}
-
-function popularityNibble(v?: number) {
-  return Math.min(0.25, (v ?? 0) / 40);
-}
-
-function rank(query: string, item: MediaItem): number {
-  const t = titleScore(query, item.title || '');
-  const g = genreScore(item);
-  const o = overviewHintScore(item.synopsis);
-  const p = popularityNibble(item.voteAverage);
-  // 70% title, small additive boosts from genre/overview/popularity
-  return t * 0.7 + g + o + p;
-}
-
-function dedupe(items: MediaItem[]) {
-  const seen = new Set<string>();
-  const out: MediaItem[] = [];
-  for (const it of items) {
-    const key = `${it.mediaType}:${it.id}`;
-    if (!seen.has(key)) { seen.add(key); out.push(it); }
-  }
-  return out;
+  return Array.from(seen.values());
 }
 
 export async function smartSearch(
@@ -118,68 +52,257 @@ export async function smartSearch(
   page = 1,
   searchType: SearchType = 'all',
   opts?: { signal?: AbortSignal; language?: string; region?: string }
-): Promise<SearchResult[]> {
+): Promise<SearchResultWithPagination> {
   const language = opts?.language ?? 'en-US';
   const region   = opts?.region ?? 'US';
   const query    = normalizeQuery(queryRaw);
 
-  // People-only: keep existing flow simple
+  // People-only: simple flow
   if (searchType === 'people') {
     const json = await fetchTMDB('search/person', { query, page, include_adult: false, language, region }, opts?.signal);
-    return (json.results ?? []).map(mapTMDBToMediaItem).filter(Boolean) as SearchResult[];
+    const items = (json.results ?? []).map(mapTMDBToMediaItem).filter(Boolean) as SearchResult[];
+    return {
+      items,
+      page,
+      totalPages: json.total_pages ?? 1
+    };
   }
 
-  // 1) TV + Movie search (first page) to find an anchor
-  const forms = canonicalForms(query);
-  const qSpaced = forms[1] || query; // "z nation"
-  const qAsIs   = forms[0] || query; // as typed
-
-  const [tvRes, movieRes] = await Promise.all([
-    fetchTMDB('search/tv',    { query: qSpaced, page: 1, include_adult: false, language, region }, opts?.signal)
-      .catch(() => fetchTMDB('search/tv',    { query: qAsIs,   page: 1, include_adult: false, language, region }, opts?.signal)),
-    fetchTMDB('search/movie', { query: qSpaced, page: 1, include_adult: false, language, region }, opts?.signal)
-      .catch(() => fetchTMDB('search/movie', { query: qAsIs,   page: 1, include_adult: false, language, region }, opts?.signal)),
-  ]);
-  const tv = (tvRes.results ?? []).map(mapTMDBToMediaItem).filter(Boolean) as MediaItem[];
-  const mv = (movieRes.results ?? []).map(mapTMDBToMediaItem).filter(Boolean) as MediaItem[];
-  const base = [...tv, ...mv];
-
-  // 2) Anchor selection: strong title match
-  const withScores = base.map(c => ({ c, s: titleScore(query, c.title || '') }))
-                         .sort((a, b) => b.s - a.s);
-  const anchor = withScores.length && withScores[0].s >= 0.75 ? withScores[0].c : null;
-
-  // 3) Pull similar + recommendations for the anchor
-  let anchorExtras: MediaItem[] = [];
-  if (anchor && (anchor.mediaType === 'tv' || anchor.mediaType === 'movie')) {
-    try {
-      const [sim, rec] = await Promise.all([
-        fetchTMDB(`${anchor.mediaType}/${anchor.id}/similar`, { page: 1, language }, opts?.signal),
-        fetchTMDB(`${anchor.mediaType}/${anchor.id}/recommendations`, { page: 1, language }, opts?.signal),
-      ]);
-      const a = (sim.results ?? []).map(mapTMDBToMediaItem).filter(Boolean) as MediaItem[];
-      const b = (rec.results ?? []).map(mapTMDBToMediaItem).filter(Boolean) as MediaItem[];
-      anchorExtras = dedupe([...a, ...b]);
-    } catch { /* extras are optional */ }
-  }
-
-  // 4) Plain multi results for breadth on requested page
-  const plain = await fetchTMDB('search/multi', {
+  // Get multi search results for the requested page
+  const multiJson = await fetchTMDB('search/multi', {
     query, page, include_adult: false, language, region
-  }, opts?.signal).then(j => (j.results ?? [])
+  }, opts?.signal);
+  
+  let allItems = (multiJson.results ?? [])
     .map(mapTMDBToMediaItem)
-    .filter(Boolean)) as MediaItem[];
+    .filter(Boolean) as MediaItem[];
 
-  // 5) Combine, dedupe, rank
-  const combined = dedupe([...(anchor ? [anchor] : []), ...anchorExtras, ...base, ...plain]);
-  const ranked = combined
-    .map(item => ({ item, score: rank(query, item) }))
-    .sort((a, b) => b.score - a.score)
-    .map(x => x.item);
-
-  // Respect movies-tv filter if needed
-  if (searchType === 'movies-tv') {
-    return ranked.filter(r => r.mediaType === 'tv' || r.mediaType === 'movie');
+  // Also search TV and Movie endpoints for better coverage
+  if (page === 1) {
+    try {
+      const [tvJson, movieJson] = await Promise.all([
+        fetchTMDB('search/tv', { query, page: 1, include_adult: false, language, region }, opts?.signal).catch(() => ({ results: [] })),
+        fetchTMDB('search/movie', { query, page: 1, include_adult: false, language, region }, opts?.signal).catch(() => ({ results: [] }))
+      ]);
+      
+      const tvItems = ((tvJson.results ?? []) as any[]).map(mapTMDBToMediaItem).filter(Boolean) as MediaItem[];
+      const movieItems = ((movieJson.results ?? []) as any[]).map(mapTMDBToMediaItem).filter(Boolean) as MediaItem[];
+      
+      allItems = [...allItems, ...tvItems, ...movieItems];
+    } catch {
+      // Fallback to multi-only
+    }
   }
-  return ranked;
+
+  // Score items to find anchor
+  const allWithMeta = allItems.map(item => {
+    const scored = computeSearchScore(query, {
+      title: item.title || '',
+      originalTitle: undefined,
+      aliases: [],
+      overview: item.synopsis,
+      popularity: item.voteAverage ? item.voteAverage * 10 : undefined, // rough estimate
+      voteAverage: item.voteAverage,
+      voteCount: undefined,
+      releaseYear: item.year ? parseInt(item.year) : null,
+      mediaType: item.mediaType,
+      originalLanguage: undefined
+    }, { preferType: searchType });
+    
+    // Apply franchise head boost if applicable
+    const meta = {
+      tier: scored.titleSig.tier,
+      voteCount: undefined as number | undefined,
+      voteAverage: item.voteAverage,
+      releaseYear: item.year ? parseInt(item.year) : null,
+      popularity: item.voteAverage ? item.voteAverage * 10 : undefined,
+      title: item.title
+    };
+    
+    // Franchise head heuristic
+    const single = query.split(/\s+/).length === 1;
+    const isHead = (meta.voteCount ?? 0) > 50000 || (meta.popularity ?? 0) > 200;
+    if (single && isHead && meta.tier === 'word') {
+      meta.tier = 'starts';
+      scored.titleSig.tier = 'starts';
+    }
+    
+    return { 
+      item, 
+      score: scored.score, 
+      titleSig: scored.titleSig,
+      meta 
+    };
+  });
+
+  // Find anchor - use RAW titleSig.score, not the weighted total score
+  console.log('🔍 Debug: Searching for anchor...');
+  console.log('Query:', query);
+  console.log('Total items found:', allWithMeta.length);
+  
+  // Show all candidates with their tier and score
+  console.log('All candidates with scores:');
+  allWithMeta.forEach((x, i) => {
+    if (x.titleSig.score >= 0.80 || x.titleSig.tier !== 'overlap') {
+      console.log(`  ${i}. "${x.item.title}" (${x.item.year || '?'}) - tier: ${x.titleSig.tier}, titleSig: ${x.titleSig.score.toFixed(3)}, total: ${x.score.toFixed(3)}`);
+    }
+  });
+  
+  // Find all anchor candidates
+  // Filter: require leading tier OR exact tier with article (like "The Matrix")
+  const anchorCandidates = allWithMeta.filter(
+    x => x.titleSig.score >= 0.92 
+      || (x.titleSig.tier === 'leading' && x.titleSig.score >= 0.95)
+      || (x.titleSig.tier === 'exact' && (x.item.title?.toLowerCase().startsWith('the ') || x.item.title?.toLowerCase().startsWith('a ')))
+  );
+  
+  // Prioritize anchor selection:
+  // 1. Leading tier with article (like "The Matrix")
+  // 2. Then exact tier with article
+  // 3. Then other leading/exact matches
+  const leadingWithArticle = anchorCandidates.filter(x => 
+    x.titleSig.tier === 'leading' && (x.item.title?.toLowerCase().startsWith('the ') || x.item.title?.toLowerCase().startsWith('a '))
+  );
+  const exactWithArticle = anchorCandidates.filter(x => 
+    x.titleSig.tier === 'exact' && (x.item.title?.toLowerCase().startsWith('the ') || x.item.title?.toLowerCase().startsWith('a '))
+  );
+  const leadingMatches = anchorCandidates.filter(x => x.titleSig.tier === 'leading');
+  const exactMatches = anchorCandidates.filter(x => x.titleSig.tier === 'exact');
+  
+  const anchorEntry = leadingWithArticle.length > 0
+    ? // Prefer "The Matrix" (1999) over "Matrix" (1973)
+      leadingWithArticle.sort((a, b) => {
+        const yearDiff = (a.item.year || 9999) - (b.item.year || 9999);
+        return yearDiff !== 0 ? yearDiff : b.score - a.score;
+      })[0]
+    : exactWithArticle.length > 0
+    ? exactWithArticle.sort((a, b) => b.score - a.score)[0]
+    : leadingMatches.length > 0
+    ? leadingMatches.sort((a, b) => {
+        const yearDiff = (a.item.year || 9999) - (b.item.year || 9999);
+        return yearDiff !== 0 ? yearDiff : b.score - a.score;
+      })[0]
+    : exactMatches.length > 0
+    ? exactMatches.sort((a, b) => b.score - a.score)[0]
+    : null;
+  
+  const anchor = anchorEntry?.item || null;
+  
+  console.log('Anchor candidates found:', anchorCandidates.length);
+  console.log('Anchor selected:', anchor?.title, `(${anchor?.year})`, 'with tier:', anchorEntry?.titleSig.tier, 'score:', anchorEntry?.score);
+
+  // Fetch similar/recommendations if we have a high-confidence anchor
+  let extras: MediaItem[] = [];
+  if (anchor && anchor.mediaType !== 'person') {
+    try {
+      const [simJson, recJson] = await Promise.all([
+        fetchTMDB(`${anchor.mediaType}/${anchor.id}/similar`, { page: 1, language }, opts?.signal).catch(() => ({ results: [] })),
+        fetchTMDB(`${anchor.mediaType}/${anchor.id}/recommendations`, { page: 1, language }, opts?.signal).catch(() => ({ results: [] }))
+      ]);
+      
+      const sim = ((simJson.results ?? []) as any[]).map(mapTMDBToMediaItem).filter(Boolean) as MediaItem[];
+      const rec = ((recJson.results ?? []) as any[]).map(mapTMDBToMediaItem).filter(Boolean) as MediaItem[];
+      extras = [...sim, ...rec];
+      
+      // Score extras and add to allWithMeta
+      const extrasWithMeta = extras.map(item => {
+        const scored = computeSearchScore(query, {
+          title: item.title || '',
+          originalTitle: undefined,
+          aliases: [],
+          overview: item.synopsis,
+          popularity: item.voteAverage ? item.voteAverage * 10 : undefined,
+          voteAverage: item.voteAverage,
+          voteCount: undefined,
+          releaseYear: item.year ? parseInt(item.year) : null,
+          mediaType: item.mediaType,
+          originalLanguage: undefined
+        }, { preferType: searchType });
+        
+        const meta = {
+          tier: scored.titleSig.tier,
+          voteCount: undefined as number | undefined,
+          voteAverage: item.voteAverage,
+          releaseYear: item.year ? parseInt(item.year) : null,
+          popularity: item.voteAverage ? item.voteAverage * 10 : undefined,
+          title: item.title
+        };
+        
+        return { 
+          item, 
+          score: scored.score, 
+          titleSig: scored.titleSig,
+          meta 
+        };
+      });
+      
+      allWithMeta.push(...extrasWithMeta);
+    } catch {
+      // Extras are optional
+    }
+  }
+
+  // Dedupe keeping highest-scored duplicate
+  const deduped = dedupeWithScore(allWithMeta.map(({ item, score }) => ({ item, score })));
+  
+  // Sort by score with tie-breaking
+  const withMeta = deduped.map(({ item, score }) => {
+    const original = allWithMeta.find(x => x.item === item);
+    return { 
+      item, 
+      score, 
+      meta: original?.meta || { 
+        tier: 'overlap', 
+        voteAverage: item.voteAverage, 
+        releaseYear: item.year ? parseInt(item.year) : null,
+        title: item.title
+      } 
+    };
+  });
+  
+  const ranked = withMeta.sort((a, b) => {
+    const scoreDiff = b.score - a.score;
+    // More lenient threshold for franchise tie-breaking
+    // This allows the tie-breaker to prefer popular sequels over originals
+    if (Math.abs(scoreDiff) < 0.05) { // essentially equal
+      return tieBreak(a.meta, b.meta, query);
+    }
+    return scoreDiff;
+  });
+
+  console.log('📊 Final ranked top 5:', ranked.slice(0, 5).map((x, i) => ({
+    rank: i + 1,
+    title: x.item.title,
+    tier: x.meta.tier,
+    score: x.score
+  })));
+
+  // Force anchor to index 0 if it exists
+  if (anchor) {
+    const anchorIndex = ranked.findIndex(x => x.item === anchor);
+    console.log('🎯 Anchor at index:', anchorIndex, 'forcing to 0');
+    if (anchorIndex > 0) {
+      const anchorItem = ranked[anchorIndex];
+      ranked.splice(anchorIndex, 1);
+      ranked.unshift(anchorItem);
+    }
+  }
+
+  const finalRanked = ranked.map(x => x.item);
+  
+  console.log('✅ Final results after anchor force:', finalRanked.slice(0, 5).map((x, i) => ({
+    rank: i + 1,
+    title: x.title
+  })));
+
+  // Apply type filter
+  const filtered = searchType === 'movies-tv'
+    ? finalRanked.filter(r => r.mediaType === 'tv' || r.mediaType === 'movie')
+    : finalRanked;
+
+  return {
+    items: filtered,
+    page,
+    totalPages: multiJson.total_pages ?? 1
+  };
 }

@@ -143,7 +143,7 @@ html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-actions-
   
   /* Ensure proper stacking */
   position: relative;
-  z-index: 1;
+  z-index: var(--z-base);
 }
 
 /* Mobile-specific adjustments */
@@ -207,6 +207,7 @@ html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-actions-
     }
   }
 }
+
 
 
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLibrary, Library } from '@/lib/storage';
+import ErrorBoundary from '../ErrorBoundary';
 
 interface NotInterestedModalProps {
   isOpen: boolean;
@@ -26,7 +27,7 @@ export default function NotInterestedModal({ isOpen, onClose }: NotInterestedMod
   };
 
   return (
-    <div className="fixed inset-0 z-[99999] backdrop-blur-sm flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
+    <div className="fixed inset-0 z-modal backdrop-blur-sm flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
       <div className="rounded-xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', border: '1px solid' }}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: 'var(--line)' }}>
@@ -67,56 +68,58 @@ export default function NotInterestedModal({ isOpen, onClose }: NotInterestedMod
                 </p>
               </div>
               
-              {notInterestedItems.map((item) => (
-                <div key={item.id} className="relative">
-                  <div className="flex items-start gap-4 p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--line)' }}>
-                    {/* Poster */}
-                    <div className="w-20 aspect-[2/3] rounded-lg overflow-hidden flex-shrink-0">
-                      {item.posterUrl ? (
-                        <img 
-                          src={item.posterUrl} 
-                          alt={item.title}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'var(--btn)' }}>
-                          <span className="text-2xl">🎬</span>
+              <ErrorBoundary name="NotInterestedList" onReset={() => {/* Optional: could refetch data */}}>
+                {notInterestedItems.map((item) => (
+                  <div key={item.id} className="relative">
+                    <div className="flex items-start gap-4 p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--line)' }}>
+                      {/* Poster */}
+                      <div className="w-20 aspect-[2/3] rounded-lg overflow-hidden flex-shrink-0">
+                        {item.posterUrl ? (
+                          <img 
+                            src={item.posterUrl} 
+                            alt={item.title}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'var(--btn)' }}>
+                            <span className="text-2xl">🎬</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-medium mb-1" style={{ color: 'var(--text)' }}>
+                          {item.title}
+                        </h3>
+                        {item.year && (
+                          <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
+                            {item.year}
+                          </p>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex gap-2 flex-wrap">
+                          <button
+                            onClick={() => handleRemoveItem(item)}
+                            className="px-3 py-1.5 text-sm rounded-lg transition-colors"
+                            style={{ backgroundColor: '#ef4444', color: 'white' }}
+                          >
+                            🗑️ Remove
+                          </button>
                         </div>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-medium mb-1" style={{ color: 'var(--text)' }}>
-                        {item.title}
-                      </h3>
-                      {item.year && (
-                        <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
-                          {item.year}
-                        </p>
-                      )}
-
-                      {/* Actions */}
-                      <div className="flex gap-2 flex-wrap">
-                        <button
-                          onClick={() => handleRemoveItem(item)}
-                          className="px-3 py-1.5 text-sm rounded-lg transition-colors"
-                          style={{ backgroundColor: '#ef4444', color: 'white' }}
-                        >
-                          🗑️ Remove
-                        </button>
                       </div>
                     </div>
+                    
+                    {isRemoving === item.id && (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
+                        <div className="text-white text-sm">Removing...</div>
+                      </div>
+                    )}
                   </div>
-                  
-                  {isRemoving === item.id && (
-                    <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
-                      <div className="text-white text-sm">Removing...</div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                ))}
+              </ErrorBoundary>
             </div>
           )}
         </div>

@@ -1,9 +1,9 @@
-import { searchMulti, type SearchResult } from './api';
+import { searchMulti, type SearchResultWithPagination } from './api';
 
-const CACHE = new Map<string, { t: number; v: SearchResult[] }>();
+const CACHE = new Map<string, { t: number; v: SearchResultWithPagination }>();
 const TTL = 5 * 60 * 1000; // 5 minutes
 
-export async function cachedSearchMulti(...args: Parameters<typeof searchMulti>) {
+export async function cachedSearchMulti(...args: Parameters<typeof searchMulti>): Promise<SearchResultWithPagination> {
   const [q, page, genre, type] = args;
   const key = [q, page, genre ?? '', type].join('|');
   const hit = CACHE.get(key);

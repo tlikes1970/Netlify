@@ -33,22 +33,40 @@ const POPULAR_SUGGESTIONS = [
   'Superhero shows'
 ];
 
-// Search history management
+// Search history management with timestamps
 const SEARCH_HISTORY_KEY = 'flicklet.search-history';
-const MAX_HISTORY_ITEMS = 10;
+const MAX_HISTORY_ITEMS = 20;
+const HISTORY_EXPIRY_DAYS = 90;
+
+type HistoryEntry = { q: string; ts: number };
 
 function getSearchHistory(): string[] {
   try {
     const stored = localStorage.getItem(SEARCH_HISTORY_KEY);
-    return stored ? JSON.parse(stored) : [];
+    if (!stored) return [];
+    
+    const entries: HistoryEntry[] = JSON.parse(stored);
+    const cutoffTime = Date.now() - (HISTORY_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+    
+    // Filter out expired entries and return just the queries
+    const valid = entries
+      .filter(entry => entry.ts >= cutoffTime)
+      .map(entry => entry.q);
+    
+    // Save cleaned history back
+    if (valid.length !== entries.length) {
+      saveSearchHistoryEntries(valid.map(q => ({ q, ts: Date.now() })));
+    }
+    
+    return valid;
   } catch {
     return [];
   }
 }
 
-function saveSearchHistory(history: string[]): void {
+function saveSearchHistoryEntries(entries: HistoryEntry[]): void {
   try {
-    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(entries));
   } catch (error) {
     console.warn('Failed to save search history:', error);
   }
@@ -57,16 +75,28 @@ function saveSearchHistory(history: string[]): void {
 function addToSearchHistory(query: string): void {
   if (!query.trim()) return;
   
-  const history = getSearchHistory();
+  const entries: HistoryEntry[] = getSearchHistoryEntries();
   const trimmedQuery = query.trim();
   
   // Remove if already exists
-  const filteredHistory = history.filter(item => item !== trimmedQuery);
+  const filtered = entries.filter(e => e.q !== trimmedQuery);
   
-  // Add to beginning
-  const newHistory = [trimmedQuery, ...filteredHistory].slice(0, MAX_HISTORY_ITEMS);
+  // Add to beginning with current timestamp
+  const newHistory = [
+    { q: trimmedQuery, ts: Date.now() },
+    ...filtered
+  ].slice(0, MAX_HISTORY_ITEMS);
   
-  saveSearchHistory(newHistory);
+  saveSearchHistoryEntries(newHistory);
+}
+
+function getSearchHistoryEntries(): HistoryEntry[] {
+  try {
+    const stored = localStorage.getItem(SEARCH_HISTORY_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
 }
 
 export function addSearchToHistory(query: string): void {
@@ -200,6 +230,7 @@ export default function SearchSuggestions({
                 <button
                   key={`history-${item}`}
                   onClick={() => handleSuggestionClick(item)}
+                  onMouseDown={(e) => e.preventDefault()}
                   className={`
                     w-full text-left px-3 py-2 rounded-lg text-sm transition-colors
                     ${selectedIndex === index
@@ -237,6 +268,7 @@ export default function SearchSuggestions({
                 <button
                   key={`suggestion-${suggestion}`}
                   onClick={() => handleSuggestionClick(suggestion)}
+                  onMouseDown={(e) => e.preventDefault()}
                   className={`
                     w-full text-left px-3 py-2 rounded-lg text-sm transition-colors
                     ${selectedIndex === adjustedIndex

@@ -7,6 +7,7 @@ import ScrollToTopArrow from '@/components/ScrollToTopArrow';
 import { EpisodeTrackingModal } from '@/components/modals/EpisodeTrackingModal';
 import { getTVShowDetails } from '@/lib/tmdb';
 import { useState, useMemo } from 'react';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 export default function ListPage({ title, items, mode = 'watching', onNotesEdit, onTagsEdit, onNotificationToggle, onSimpleReminder, onBloopersOpen, onExtrasOpen }: {
   title: string;
@@ -19,7 +20,6 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
   onBloopersOpen?: (item: MediaItem) => void;
   onExtrasOpen?: (item: MediaItem) => void;
 }) {
-  console.log('🔔 ListPage props:', { title, mode, hasOnNotificationToggle: !!onNotificationToggle });
   const settings = useSettings();
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [sortByTag, setSortByTag] = useState<boolean>(false);
@@ -77,7 +77,6 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
 
   // Drag and drop functionality
   const handleReorder = (fromIndex: number, toIndex: number) => {
-    console.log(`🔄 Reordering item from index ${fromIndex} to ${toIndex} in ${mode} list`);
     if (mode !== 'discovery') {
       Library.reorder(mode as any, fromIndex, toIndex);
     }
@@ -225,42 +224,47 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
       </div>
       
       {processedItems.length > 0 ? (
-        <div className="space-y-4">
-          {processedItems.map((item, index) => {
-            // LibraryEntry already has all MediaItem properties
-            const mediaItem: MediaItem = {
-              id: item.id,
-              mediaType: item.mediaType,
-              title: item.title,
-              posterUrl: item.posterUrl,
-              year: item.year,
-              voteAverage: item.voteAverage,
-              userRating: item.userRating,
-              synopsis: item.synopsis,
-              nextAirDate: item.nextAirDate,
-              showStatus: item.showStatus,    // ✅ ADD THIS
-              lastAirDate: item.lastAirDate,  // ✅ ADD THIS
-              userNotes: item.userNotes, // Pass notes
-              tags: item.tags,           // Pass tags
-            };
+        <ErrorBoundary name="MobileList" onReset={() => {
+          // ListPage receives data as props, so parent component should handle refetch
+          // This will reset the error boundary state
+        }}>
+          <div className="space-y-4">
+            {processedItems.map((item, index) => {
+              // LibraryEntry already has all MediaItem properties
+              const mediaItem: MediaItem = {
+                id: item.id,
+                mediaType: item.mediaType,
+                title: item.title,
+                posterUrl: item.posterUrl,
+                year: item.year,
+                voteAverage: item.voteAverage,
+                userRating: item.userRating,
+                synopsis: item.synopsis,
+                nextAirDate: item.nextAirDate,
+                showStatus: item.showStatus,    // ✅ ADD THIS
+                lastAirDate: item.lastAirDate,  // ✅ ADD THIS
+                userNotes: item.userNotes, // Pass notes
+                tags: item.tags,           // Pass tags
+              };
 
-            return (
-              <TabCard
-                key={item.id}
-                item={mediaItem}
-                actions={actions}
-                tabType={mode}
-                index={index}
-                dragState={dragState}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              />
-            );
-          })}
-        </div>
+              return (
+                <TabCard
+                  key={item.id}
+                  item={mediaItem}
+                  actions={actions}
+                  tabType={mode}
+                  index={index}
+                  dragState={dragState}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                />
+              );
+            })}
+          </div>
+        </ErrorBoundary>
       ) : (
         <div className="text-center py-8" style={{ color: 'var(--muted)' }}>
           <p className="text-sm">

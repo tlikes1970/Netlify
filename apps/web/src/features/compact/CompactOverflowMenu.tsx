@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { ActionItem, ActionContext, getAllActions } from './actionsMap';
+import { isCompactMobileV1, isActionsSplit } from '../../lib/mobileFlags';
 
 interface CompactOverflowMenuProps {
   item: ActionItem;
@@ -39,8 +40,8 @@ export function CompactOverflowMenu({ item, context }: CompactOverflowMenuProps)
   }, [isOpen]);
 
   // Compute conditional values after hooks
-  const gate = document.documentElement.dataset.compactMobileV1 === 'true';
-  const flagEnabled = document.documentElement.dataset.actionsSplit === 'true';
+  const gate = isCompactMobileV1();
+  const flagEnabled = isActionsSplit();
   
   if (!gate || !flagEnabled) {
     return null;

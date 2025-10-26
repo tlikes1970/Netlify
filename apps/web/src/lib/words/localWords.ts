@@ -1,10 +1,10 @@
 // apps/web/src/lib/words/localWords.ts
-// Local, offline-first acceptance set. Replace this with your real list(s).
-// Supports Set or an optional Bloom filter loaded from a static asset.
+// DEPRECATED: This file kept for backward compatibility only
+// Word validation now uses API-managed wordlist only
 
 let ACCEPT_SET: Set<string> | null = null;
 
-// Minimal dev seed. Replace with real data (e.g., from ENABLE/SCOWL) in production.
+// Minimal dev seed (backup only)
 const DEV_SEED = [
   'couch','scowl','zesty','zebra','zombi','zoned','stare','cigar','react','watch','other'
 ];
@@ -55,7 +55,9 @@ export async function initLocalWords(): Promise<void> {
         BLOOM = new TinyBloom(json);
         return;
       }
-    } catch {}
+    } catch {
+      // Ignore fetch errors, fall back to Set
+    }
     // Fallback Set (dev or shipped JSON)
     ACCEPT_SET = new Set<string>(DEV_SEED);
     try {
@@ -64,7 +66,9 @@ export async function initLocalWords(): Promise<void> {
         const arr = (await res.json()) as string[];
         ACCEPT_SET = new Set(arr.map(w => w.toLowerCase()));
       }
-    } catch {}
+    } catch {
+      // Ignore fetch errors, use dev seed
+    }
   })();
 
   await bloomInitPromise;

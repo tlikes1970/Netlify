@@ -108,25 +108,25 @@ html[data-compact-mobile-v1="true"] .tab-card {
 html[data-compact-mobile-v1="true"] .curated-card.v2,
 html[data-compact-mobile-v1="true"] .tab-card {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-base);
 }
 
 /* Fix any potential z-index conflicts in compact mode */
 html[data-compact-mobile-v1="true"] .swipe-row-container {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-base);
 }
 
 html[data-compact-mobile-v1="true"] .swipe-row-content {
   position: relative;
-  z-index: 2;
+  z-index: calc(var(--z-base) + 1);
 }
 
 /* Ensure proper layering for compact actions */
 html[data-compact-mobile-v1="true"] .compact-primary-action,
 html[data-compact-mobile-v1="true"] .compact-overflow-trigger {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-base);
 }
 
 /* Mobile-specific adjustments */

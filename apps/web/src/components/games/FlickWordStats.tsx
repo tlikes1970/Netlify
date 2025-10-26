@@ -10,11 +10,9 @@ interface FlickWordStats {
   winRate: number;
 }
 
-interface FlickWordStatsProps {
-  // No onGameComplete needed - stats are loaded from localStorage
-}
+type FlickWordStatsProps = Record<string, never>;
 
-export default function FlickWordStats({}: FlickWordStatsProps) {
+export default function FlickWordStats(_props: FlickWordStatsProps) {
   const translations = useTranslations();
   const [stats, setStats] = useState<FlickWordStats>({
     games: 0,

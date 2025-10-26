@@ -14,10 +14,10 @@ console.log('localStorage flag:mobile_actions_split_v1:', localStorage.getItem('
 console.log('\n🚪 GATE CONDITIONS:');
 const html = document.documentElement;
 const conditions = {
-  compactGate: html.dataset.compactMobileV1 === 'true',
+  compactGate: html.getAttribute('data-compact-mobile-v1') === 'true',
   flagEnabled: flag('mobile_actions_split_v1'),
   mobileViewport: matchMedia('(max-width: 768px)').matches,
-  allConditionsMet: html.dataset.compactMobileV1 === 'true' && 
+  allConditionsMet: html.getAttribute('data-compact-mobile-v1') === 'true' && 
                     flag('mobile_actions_split_v1') && 
                     matchMedia('(max-width: 768px)').matches
 };
@@ -25,14 +25,14 @@ console.log('Conditions:', conditions);
 
 // Step 3: Test the gate logic manually
 console.log('\n🧪 MANUAL GATE TEST:');
-console.log('Before - data-actions-split:', html.dataset.actionsSplit);
+console.log('Before - data-actions-split:', html.getAttribute('data-actions-split'));
 
 // Enable the flag
 localStorage.setItem('flag:mobile_actions_split_v1', 'true');
 console.log('Set flag:mobile_actions_split_v1 to true');
 
 // Test the gate logic manually
-const compactGate = html.dataset.compactMobileV1 === 'true';
+const compactGate = html.getAttribute('data-compact-mobile-v1') === 'true';
 const flagEnabled = flag('mobile_actions_split_v1');
 const mobileViewport = matchMedia('(max-width: 768px)').matches;
 
@@ -44,13 +44,13 @@ console.log('Manual gate check:', {
 });
 
 if (compactGate && flagEnabled && mobileViewport) {
-  html.dataset.actionsSplit = 'true';
+  html.setAttribute('data-actions-split', 'true');
   console.log('✅ Manually set data-actions-split="true"');
 } else {
   console.log('❌ Conditions not met for setting data-actions-split');
 }
 
-console.log('After - data-actions-split:', html.dataset.actionsSplit);
+console.log('After - data-actions-split:', html.getAttribute('data-actions-split'));
 
 // Step 4: Trigger the gate manually
 console.log('\n🔄 TRIGGERING GATE MANUALLY:');
@@ -58,17 +58,17 @@ window.dispatchEvent(new Event('storage'));
 console.log('Dispatched storage event');
 
 setTimeout(() => {
-  console.log('After storage event - data-actions-split:', html.dataset.actionsSplit);
+  console.log('After storage event - data-actions-split:', html.getAttribute('data-actions-split'));
   
   // Step 5: Check SwipeRow conditions
   console.log('\n📱 SWIPE ROW CONDITIONS:');
   const swipeRowConditions = {
-    gate: html.dataset.compactMobileV1 === 'true',
-    flagEnabled: html.dataset.actionsSplit === 'true',
-    isMobile: window.innerWidth < 768,
-    shouldShowSwipeRow: html.dataset.compactMobileV1 === 'true' && 
-                       html.dataset.actionsSplit === 'true' && 
-                       window.innerWidth < 768
+    gate: html.getAttribute('data-compact-mobile-v1') === 'true',
+    flagEnabled: html.getAttribute('data-actions-split') === 'true',
+    isMobile: window.matchMedia('(max-width: 768px)').matches,
+    shouldShowSwipeRow: html.getAttribute('data-compact-mobile-v1') === 'true' && 
+                       html.getAttribute('data-actions-split') === 'true' && 
+                       window.matchMedia('(max-width: 768px)').matches
   };
   console.log('SwipeRow conditions:', swipeRowConditions);
   
@@ -87,3 +87,4 @@ setTimeout(() => {
     console.log('ℹ️ SwipeRow not expected to be active');
   }
 }, 100);
+

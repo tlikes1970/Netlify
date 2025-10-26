@@ -8,7 +8,7 @@ console.log('================================');
 
 // Test 1: Check if mobile flags are available
 console.log('\n1. Checking mobile flags:');
-console.log('   data-compact-mobile-v1:', document.documentElement.dataset.compactMobileV1);
+console.log('   data-compact-mobile-v1:', document.documentElement.getAttribute('data-compact-mobile-v1'));
 console.log('   data-actions-split:', document.documentElement.dataset.actionsSplit);
 console.log('   data-density:', document.documentElement.dataset.density);
 
@@ -102,3 +102,4 @@ cardSummaries.forEach((summary, index) => {
 console.log('\n🎯 INTEGRATION TEST COMPLETE');
 console.log('If you see mobile cards with stable dimensions and swipe functionality,');
 console.log('the implementation is working correctly!');
+

@@ -1,3 +1,5 @@
+import { isMobileNow } from '../lib/isMobile';
+
 // TMDB Image Size Constants
 export const TMDB_IMAGE_SIZES = {
   // Poster sizes (2:3 aspect ratio)
@@ -45,7 +47,7 @@ export function getOptimalImageSize(
   if (context === 'poster') {
     // For posters, prioritize quality over file size on high-DPI screens
     // Use responsive card width based on screen size
-    const isMobile = window.innerWidth <= 768;
+    const isMobile = isMobileNow();
     const cardWidth = isMobile ? 120 : 154; // Responsive card width
     const requiredWidth = cardWidth * devicePixelRatio;
     

@@ -4,7 +4,9 @@
     "community_games_enabled": false,
     "homeRowSpotlight": false,
     "flicklet_episodeTracking_enabled": false,
-    "EXTRAS_BLOOPERS_SEARCH_ASSIST": false
+    "EXTRAS_BLOOPERS_SEARCH_ASSIST": false,
+    "mobile_compact_v1": false,
+    "mobile_actions_split_v1": false
   },
   "discovered": [
     "flicklet:episodeTracking:enabled"

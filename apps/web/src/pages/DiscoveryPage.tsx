@@ -4,6 +4,7 @@ import { useSmartDiscovery } from '@/hooks/useSmartDiscovery';
 import CardV2 from '@/components/cards/CardV2';
 import type { MediaItem } from '@/components/cards/card.types';
 import { Library } from '@/lib/storage';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 export default function DiscoveryPage({ query, genreId }:{ query: string; genreId: number | null }) {
   const searchResults = useSearch(query);
@@ -36,7 +37,6 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
   // Action handlers using Library.upsert
   const actions = {
     onWant: (item: MediaItem) => {
-      console.log('🎬 Discovery onWant clicked:', item);
       if (item.id && item.mediaType) {
         Library.upsert({ 
           id: item.id, 
@@ -48,11 +48,9 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           showStatus: item.showStatus,
           lastAirDate: item.lastAirDate
         }, 'wishlist');
-        console.log('✅ Item added to wishlist from discovery:', item.title);
       }
     },
     onWatched: (item: MediaItem) => {
-      console.log('🎬 Discovery onWatched clicked:', item);
       if (item.id && item.mediaType) {
         Library.upsert({ 
           id: item.id, 
@@ -64,11 +62,9 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           showStatus: item.showStatus,
           lastAirDate: item.lastAirDate
         }, 'watched');
-        console.log('✅ Item added to watched from discovery:', item.title);
       }
     },
     onNotInterested: (item: MediaItem) => {
-      console.log('🎬 Discovery onNotInterested clicked:', item);
       if (item.id && item.mediaType) {
         Library.upsert({ 
           id: item.id, 
@@ -80,7 +76,6 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           showStatus: item.showStatus,
           lastAirDate: item.lastAirDate
         }, 'not');
-        console.log('✅ Item added to not interested from discovery:', item.title);
       }
     }
   };
@@ -131,28 +126,35 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
         )}
         
         {items.length > 0 && (
-          <div className="grid grid-cols-[repeat(auto-fill,154px)] gap-3">
-            {items.map((it: any, index: number) => {
-              const mediaItem: MediaItem = {
-                id: it.id,
-                mediaType: it.kind,
-                title: it.title,
-                posterUrl: it.posterUrl || it.poster, // Use posterUrl if available, fallback to poster
-                year: it.year,
-                voteAverage: it.voteAverage,
-              };
-              
-              return (
-                <div key={`${it.kind}-${it.id}-${index}`} className="relative">
-                  <CardV2 
-                    item={mediaItem} 
-                    context="tab-foryou"
-                    actions={actions}
-                  />
-                </div>
-              );
-            })}
-          </div>
+          <ErrorBoundary name="DiscoveryResults" onReset={() => {
+            // Refetch search results if searching, otherwise discovery will auto-refetch
+            if (query.trim()) {
+              searchResults.refetch();
+            }
+          }}>
+            <div className="grid grid-cols-[repeat(auto-fill,154px)] gap-3">
+              {items.map((it: any, index: number) => {
+                const mediaItem: MediaItem = {
+                  id: it.id,
+                  mediaType: it.kind,
+                  title: it.title,
+                  posterUrl: it.posterUrl || it.poster, // Use posterUrl if available, fallback to poster
+                  year: it.year,
+                  voteAverage: it.voteAverage,
+                };
+                
+                return (
+                  <div key={`${it.kind}-${it.id}-${index}`} className="relative">
+                    <CardV2 
+                      item={mediaItem} 
+                      context="tab-foryou"
+                      actions={actions}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </ErrorBoundary>
         )}
         
         {!query && items.length > 0 && (

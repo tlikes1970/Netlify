@@ -18,7 +18,7 @@ console.log('');
 const html = document.documentElement;
 const attrs = {
   density: html.dataset.density,
-  compactMobileV1: html.dataset.compactMobileV1,
+  compactMobileV1: html.getAttribute('data-compact-mobile-v1'),
   actionsSplit: html.dataset.actionsSplit
 };
 console.log('🏷️ HTML Attributes:');

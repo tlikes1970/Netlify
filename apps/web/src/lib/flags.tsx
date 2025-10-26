@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import flagsData from './FEATURE_FLAGS.json';
+import { setFlag, getFlag } from './mobileFlags';
+import { isMobileNow, isMobileQuery } from './isMobile';
 
 type Flags = Record<string, boolean>;
 
@@ -26,13 +28,15 @@ export function flag(name: string): boolean {
   try {
     const v = localStorage.getItem('flag:' + name);
     if (v !== null) return v === 'true';
-  } catch {}
+  } catch {
+    // Ignore localStorage errors
+  }
   return false;
 }
 
 export function installCompactMobileGate() {
   const html = document.documentElement;
-  const mql = window.matchMedia('(max-width: 768px)');
+  const mql = window.matchMedia(isMobileQuery);
 
   const run = () => {
     try {
@@ -46,9 +50,9 @@ export function installCompactMobileGate() {
 
       const on = !!(enabled && densityOk && mobileOk);
       if (on) {
-        html.setAttribute('data-compact-mobile-v1', 'true');
+        setFlag('compact-mobile-v1', true);
       } else {
-        html.removeAttribute('data-compact-mobile-v1');
+        setFlag('compact-mobile-v1', false);
       }
     } catch {
       // swallow; gate should never throw
@@ -81,14 +85,13 @@ export function installCompactMobileGate() {
 }
 
 export function installActionsSplitGate() {
-  const html = document.documentElement;
   const isMobile = () => {
-    try { return matchMedia('(max-width: 768px)').matches; } catch { return true; }
+    try { return isMobileNow(); } catch { return true; }
   };
   
   const ensure = () => {
     try {
-      const compactGate = html.dataset.compactMobileV1 === 'true';
+      const compactGate = getFlag('compact-mobile-v1');
       // Use the same pattern as installCompactMobileGate - check if flag function exists
       const flagEnabled = typeof flag === 'function'
         ? flag('mobile_actions_split_v1')
@@ -97,9 +100,9 @@ export function installActionsSplitGate() {
       
       const on = compactGate && flagEnabled && mobileViewport;
       if (on) {
-        html.setAttribute('data-actions-split', 'true');
+        setFlag('actions-split', true);
       } else {
-        html.removeAttribute('data-actions-split');
+        setFlag('actions-split', false);
       }
     } catch (error) {
       console.warn('Actions split gate error:', error);

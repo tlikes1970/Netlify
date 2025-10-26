@@ -60,7 +60,7 @@ setTimeout(() => {
     // Check current state
     console.log('\n📊 CURRENT STATE:');
     const state = {
-      compactMobileV1: document.documentElement.dataset.compactMobileV1,
+      compactMobileV1: document.documentElement.getAttribute('data-compact-mobile-v1'),
       actionsSplit: document.documentElement.dataset.actionsSplit,
       density: document.documentElement.dataset.density,
       tabCardCount: document.querySelectorAll('.tab-card').length,
@@ -110,3 +110,4 @@ setTimeout(() => {
     
   }, 1000);
 }, 1000);
+

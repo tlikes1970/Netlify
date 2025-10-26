@@ -100,7 +100,7 @@ function cleanMarqueeText(text: string): string | null {
   if (!text || typeof text !== 'string') return null;
   
   // Remove excessive punctuation and clean up
-  let cleaned = text.trim();
+  const cleaned = text.trim();
   
   // Skip if too short or too long
   if (cleaned.length < 10 || cleaned.length > 200) return null;

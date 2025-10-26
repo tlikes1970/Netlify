@@ -17,9 +17,17 @@ import './styles/compact-a11y-perf.css';
 import './styles/compact-cleanup.css';
 import './styles/cards-mobile.css';
 import { installCompactMobileGate, installActionsSplitGate } from './lib/flags';
+import { initFlags } from './lib/mobileFlags';
 
 // Set density to compact (required for compact mobile gate)
 document.documentElement.dataset.density = 'compact';
+
+// Initialize mobile flags with defaults
+initFlags({
+  'compact-mobile-v1': false,
+  'actions-split': false,
+  'debug-logging': false
+});
 
 // Install compact mobile gate
 installCompactMobileGate();
@@ -91,7 +99,6 @@ if (typeof window !== 'undefined') {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).debugQueries = () =>
-  // @ts-ignore intentional: inspect internal query cache
   Array.from((queryClient as any).getQueryCache().getAll()).map((q: any) => ({
     key: q.queryKey?.join('/') ?? 'unknown',
     status: q.state.status,

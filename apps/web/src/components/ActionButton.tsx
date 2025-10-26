@@ -52,7 +52,7 @@ export function ActionButton({
         setState(prev => ({ ...prev, success: false }));
       }, 1000);
 
-    } catch (error) {
+    } catch (_error) {
       // Set error state
       setState(prev => ({ ...prev, error: true }));
 

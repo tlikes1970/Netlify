@@ -214,7 +214,7 @@
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  z-index: 1000;
+  z-index: var(--z-nav);
   animation: notification-slide-in 0.3s ease-out;
 }
 

@@ -93,3 +93,7 @@
   console.log('- Swipe: working with pointer events');
   console.log('- Text: clamped properly');
 })();
+
+
+
+
