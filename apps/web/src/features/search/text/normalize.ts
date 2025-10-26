@@ -12,7 +12,7 @@ const ARTICLES = new Set(['the', 'a', 'an']);
 /**
  * Base normalization: lowercase, trim, collapse spaces
  */
-export function normalizeBase(s: string, locale = 'en'): string {
+export function normalizeBase(s: string): string {
   return s
     .toLowerCase()
     .trim()
@@ -22,8 +22,8 @@ export function normalizeBase(s: string, locale = 'en'): string {
 /**
  * Normalize with leading article removal for title matching
  */
-export function normalizeTitleLoose(s: string, locale = 'en'): string {
-  const base = normalizeBase(s, locale);
+export function normalizeTitleLoose(s: string): string {
+  const base = normalizeBase(s);
   const parts = base.split(/\s+/);
   
   // Remove leading article if present
@@ -53,8 +53,8 @@ export function foldDiacritics(s: string): string {
 /**
  * Tokenize with stopword removal
  */
-export function tokens(s: string, locale = 'en'): string[] {
-  const normalized = foldDiacritics(stripPunctuation(normalizeBase(s, locale)));
+export function tokens(s: string): string[] {
+  const normalized = foldDiacritics(stripPunctuation(normalizeBase(s)));
   return normalized
     .split(/\s+/)
     .filter(token => token.length > 0 && !STOPWORDS.has(token));
@@ -63,14 +63,14 @@ export function tokens(s: string, locale = 'en'): string[] {
 /**
  * Full normalization pipeline for matching
  */
-export function normalizeForMatch(s: string, locale = 'en'): string {
-  return foldDiacritics(stripPunctuation(normalizeBase(s, locale)));
+export function normalizeForMatch(s: string): string {
+  return foldDiacritics(stripPunctuation(normalizeBase(s)));
 }
 
 /**
  * Check if two strings match loosely (after normalization)
  */
-export function matchesLoose(a: string, b: string, locale = 'en'): boolean {
-  return normalizeTitleLoose(a, locale) === normalizeTitleLoose(b, locale);
+export function matchesLoose(a: string, b: string): boolean {
+  return normalizeTitleLoose(a) === normalizeTitleLoose(b);
 }
 

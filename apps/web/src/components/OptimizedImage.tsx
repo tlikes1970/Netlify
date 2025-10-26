@@ -51,7 +51,7 @@ export function OptimizedImage({
         className="h-full w-full object-cover"
         loading={loading}
         decoding="async"
-        fetchpriority={fetchpriority}
+        fetchPriority={fetchpriority}
         onLoad={onLoad}
         onError={handleImageError}
       />

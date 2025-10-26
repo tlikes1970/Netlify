@@ -107,7 +107,7 @@ export async function smartSearch(
       releaseYear: item.year ? parseInt(item.year) : null,
       mediaType: item.mediaType,
       originalLanguage: undefined
-    }, { preferType: searchType });
+    }, { preferType: searchType === 'movies-tv' ? 'all' : searchType });
     
     // Apply franchise head boost if applicable
     const meta = {
@@ -172,14 +172,14 @@ export async function smartSearch(
   const anchorEntry = leadingWithArticle.length > 0
     ? // Prefer "The Matrix" (1999) over "Matrix" (1973)
       leadingWithArticle.sort((a, b) => {
-        const yearDiff = (a.item.year || 9999) - (b.item.year || 9999);
+        const yearDiff = (parseInt(a.item.year || '9999') || 9999) - (parseInt(b.item.year || '9999') || 9999);
         return yearDiff !== 0 ? yearDiff : b.score - a.score;
       })[0]
     : exactWithArticle.length > 0
     ? exactWithArticle.sort((a, b) => b.score - a.score)[0]
     : leadingMatches.length > 0
     ? leadingMatches.sort((a, b) => {
-        const yearDiff = (a.item.year || 9999) - (b.item.year || 9999);
+        const yearDiff = (parseInt(a.item.year || '9999') || 9999) - (parseInt(b.item.year || '9999') || 9999);
         return yearDiff !== 0 ? yearDiff : b.score - a.score;
       })[0]
     : exactMatches.length > 0
@@ -217,7 +217,7 @@ export async function smartSearch(
           releaseYear: item.year ? parseInt(item.year) : null,
           mediaType: item.mediaType,
           originalLanguage: undefined
-        }, { preferType: searchType });
+        }, { preferType: searchType === 'movies-tv' ? 'all' : searchType });
         
         const meta = {
           tier: scored.titleSig.tier,

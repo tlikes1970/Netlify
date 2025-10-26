@@ -445,7 +445,7 @@ export default function App() {
               )}
               {view === 'discovery' && (
                 <Suspense fallback={<div className="loading-spinner">Loading discovery...</div>}>
-                  <DiscoveryPage query={search.q} genreId={search.genre ? parseInt(search.genre) : null} />
+                  <DiscoveryPage query={search.q} genreId={search.genre || null} />
                 </Suspense>
               )}
             </>

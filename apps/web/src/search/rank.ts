@@ -207,6 +207,7 @@ export function tieBreak(
   return (bMeta.releaseYear ?? 0) - (aMeta.releaseYear ?? 0);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function maybeFranchiseHeadBoost(
   q: string, 
   meta: { tier: string; voteCount?: number; popularity?: number }

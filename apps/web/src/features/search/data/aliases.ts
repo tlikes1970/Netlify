@@ -16,7 +16,6 @@ export const ALIASES: Record<string, string> = {
   'db': 'dragon ball',
   'sw': 'star wars',
   'st': 'star trek',
-  'lotr': 'the lord of the rings',
   'hp': 'harry potter',
   'hp1': 'harry potter and the philosophers stone',
   'hp2': 'harry potter and the chamber of secrets',

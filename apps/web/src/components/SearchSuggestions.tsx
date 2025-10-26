@@ -187,7 +187,7 @@ export default function SearchSuggestions({
   
   const clearHistory = () => {
     setSearchHistory([]);
-    saveSearchHistory([]);
+    localStorage.setItem('searchHistory', JSON.stringify([]));
   };
   
   if (!isVisible || filteredSuggestions.length === 0) {
