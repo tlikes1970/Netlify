@@ -1,5 +1,5 @@
 import React from 'react';
-import type { MediaItem, CardActionHandlers } from '../components/cards/card.types';
+import type { MediaItem, CardActionHandlers, CardContext } from '../components/cards/card.types';
 import { useSwipe } from '../lib/useSwipe';
 import { useIsDesktop } from '../hooks/useDeviceDetection';
 import { SWIPE } from '../lib/gestures';
@@ -8,7 +8,7 @@ import { Library } from '../lib/storage';
 export interface SwipeableCardProps {
   item: MediaItem;
   actions?: CardActionHandlers;
-  context: 'tab-watching' | 'tab-want' | 'tab-watched' | 'tab-foryou' | 'search' | 'home' | 'holiday';
+  context: CardContext;
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
@@ -144,6 +144,31 @@ export default function SwipeableCard({
             color: '#ffffff',
             backgroundColor: '#ef4444',
             action: () => actions?.onWant?.(item)
+          }
+        ];
+
+      case 'tab-not':
+        return [
+          {
+            id: 'watching',
+            label: 'Watching',
+            icon: '▶️',
+            color: '#ffffff',
+            backgroundColor: '#3b82f6',
+            action: () => {
+              // Move from not interested to watching
+              if (item.id && item.mediaType) {
+                Library.move(item.id, item.mediaType, 'watching');
+              }
+            }
+          },
+          {
+            id: 'delete',
+            label: 'Delete',
+            icon: '🗑️',
+            color: '#ffffff',
+            backgroundColor: '#dc2626',
+            action: () => actions?.onDelete?.(item)
           }
         ];
 
