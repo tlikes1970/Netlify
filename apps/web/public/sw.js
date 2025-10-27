@@ -1,8 +1,8 @@
 // Service Worker for Image Caching and Notifications
 // This service worker caches optimized images for offline viewing and handles background notifications
 
-const CACHE_NAME = 'flicklet-images-v1';
-const IMAGE_CACHE_NAME = 'flicklet-image-cache-v1';
+const CACHE_NAME = 'flicklet-images-v2';
+const IMAGE_CACHE_NAME = 'flicklet-image-cache-v2';
 
 // Cache strategies for different types of requests
 const CACHE_STRATEGIES = {
