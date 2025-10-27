@@ -9,7 +9,7 @@ interface OptimizedImageProps {
   context?: 'poster' | 'backdrop';
   fallbackSrc?: string;
   loading?: 'lazy' | 'eager';
-  fetchpriority?: 'high' | 'low' | 'auto';
+  fetchPriority?: 'high' | 'low' | 'auto';
   onLoad?: () => void;
   onError?: () => void;
   style?: React.CSSProperties;
@@ -22,7 +22,7 @@ export function OptimizedImage({
   context = 'poster',
   fallbackSrc,
   loading = 'lazy',
-  fetchpriority = 'low',
+  fetchPriority = 'low',
   onLoad,
   onError,
   style
@@ -51,7 +51,7 @@ export function OptimizedImage({
         className="h-full w-full object-cover"
         loading={loading}
         decoding="async"
-        fetchpriority={fetchpriority}
+        fetchPriority={fetchPriority}
         onLoad={onLoad}
         onError={handleImageError}
       />

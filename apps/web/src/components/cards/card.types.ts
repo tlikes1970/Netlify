@@ -21,7 +21,10 @@ export interface MediaItem {
 
 export type CardContext =
   | 'home'
-  | 'tab-watching'      // Your Shows
+  | 'tab-watching'      // Your Shows / Currently Watching
+  | 'tab-want'          // Want to Watch / Wishlist
+  | 'tab-watched'       // Watched
+  | 'tab-not'           // Not Interested
   | 'tab-foryou'        // For You / Discovery
   | 'search'
   | 'holiday';

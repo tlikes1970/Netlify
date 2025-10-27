@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import flagsData from './FEATURE_FLAGS.json';
 import { setFlag, getFlag } from './mobileFlags';
-import { isMobileNow, isMobileQuery } from './isMobile';
+import { isMobileQuery } from './isMobile';
 
 type Flags = Record<string, boolean>;
 
