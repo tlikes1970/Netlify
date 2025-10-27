@@ -95,7 +95,7 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
     try {
       const verdict = await validateWord(word);
       // Sanitized log
-      console.log(`🔍 Word validation: ${word.toUpperCase()} → ${verdict.valid ? 'valid' : 'invalid'} [${verdict.source}]`);
+      console.log(`🔍 Word validation: ${word.toUpperCase()} → ${verdict.valid ? '✅ valid' : '❌ invalid'} [source: ${verdict.source}${verdict.reason ? `, reason: ${verdict.reason}` : ''}]`);
       return verdict.valid;
     } catch (error) {
       console.warn('Word validation failed:', error);

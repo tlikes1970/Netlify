@@ -1,6 +1,8 @@
 // apps/web/src/lib/words/validateWord.ts
 
-export type Verdict = { valid: boolean; source: 'api' | 'none'; reason?: string };
+import { isAcceptedLocal } from './localWords';
+
+export type Verdict = { valid: boolean; source: 'api' | 'local' | 'none'; reason?: string };
 
 const MEMO = new Map<string, Verdict>();
 
@@ -54,9 +56,16 @@ export async function validateWord(raw: string): Promise<Verdict> {
     apiValid = results.some(r => r.status === 'fulfilled' && r.value === true);
   }
 
-  const verdict: Verdict = apiValid
-    ? { valid: true, source: 'api' }
-    : { valid: false, source: 'none', reason: 'not-found' };
+  let verdict: Verdict;
+  if (apiValid) {
+    verdict = { valid: true, source: 'api' };
+  } else {
+    // Fallback to local word list if API fails
+    const localValid = await isAcceptedLocal(w);
+    verdict = localValid
+      ? { valid: true, source: 'local' }
+      : { valid: false, source: 'none', reason: 'not-found' };
+  }
 
   // Cache in memory only (no localStorage)
   MEMO.set(w, verdict);
