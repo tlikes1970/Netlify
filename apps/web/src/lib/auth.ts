@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  getRedirectResult,
   User
 } from 'firebase/auth';
 import { isMobileNow } from './isMobile';
@@ -29,8 +30,29 @@ class AuthManager {
     this.initialize();
   }
 
-  private initialize() {
+  private async initialize() {
     if (this.isInitialized) return;
+    
+    // Check for redirect result FIRST (before setting up auth state listener)
+    // This ensures we handle the redirect result if user is returning from Google/Apple sign-in
+    try {
+      console.log('🔍 Checking for redirect result...');
+      const result = await getRedirectResult(auth);
+      
+      if (result && result.user) {
+        console.log('✅ Redirect sign-in successful:', {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName
+        });
+        // The user is now signed in, onAuthStateChanged will fire and handle the rest
+      } else {
+        console.log('ℹ️ No redirect result - not returning from sign-in');
+      }
+    } catch (error) {
+      console.error('❌ Error checking redirect result:', error);
+      // Continue initialization even if redirect check fails
+    }
     
     // Listen for auth state changes
     onAuthStateChanged(auth, async (user) => {
