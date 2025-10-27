@@ -9,6 +9,38 @@ import {
   User
 } from 'firebase/auth';
 import { isMobileNow } from './isMobile';
+
+// Detect if we're in a blocked OAuth context
+// Google blocks OAuth inside embedded browsers (PWA standalone, in-app browsers, etc.)
+function isBlockedOAuthContext(): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  const ua = navigator.userAgent || '';
+  const isPWAStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+  const isInAppBrowser = 
+    ua.includes('wv') ||          // Android WebView
+    ua.includes('FBAN') ||         // Facebook App Browser
+    ua.includes('FBAV') ||         // Facebook App Browser
+    ua.includes('Instagram') ||    // Instagram in-app
+    ua.includes('Line/') ||        // Line in-app
+    ua.includes('Twitter') ||      // Twitter in-app
+    ua.includes('TikTok') ||       // TikTok in-app
+    ua.includes('GSA/') ||         // Google Search App
+    ua.includes('EdgA') ||         // Edge Android WebView
+    (ua.includes('Electron') && !ua.includes('Chrome/91')); // Electron without modern Chrome
+  
+  const isStandalone = (window as any).standalone || isPWAStandalone;
+  
+  if (isStandalone) {
+    console.log('🚫 PWA standalone mode detected - Google OAuth is blocked');
+  }
+  
+  if (isInAppBrowser) {
+    console.log('🚫 In-app browser detected - Google OAuth is blocked');
+  }
+  
+  return isStandalone || isInAppBrowser;
+}
 import { 
   doc, 
   setDoc, 
@@ -168,7 +200,19 @@ class AuthManager {
 
   private async signInWithGoogle(): Promise<void> {
     const isMobile = isMobileNow();
-    console.log('🚀 Starting Google sign-in...', { isMobile, userAgent: navigator.userAgent });
+    const isBlocked = isBlockedOAuthContext();
+    
+    console.log('🚀 Starting Google sign-in...', { 
+      isMobile, 
+      isBlocked,
+      userAgent: navigator.userAgent,
+      displayMode: (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ? 'standalone' : 'browser'
+    });
+    
+    if (isBlocked) {
+      console.error('🚫 Google sign-in attempted in blocked context (PWA standalone or in-app browser)');
+      throw new Error('OAUTH_BLOCKED');
+    }
     
     if (isMobile) {
       // Mobile: use redirect

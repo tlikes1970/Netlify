@@ -4,6 +4,36 @@ import { useTranslations } from '../lib/language';
 import type { AuthProvider } from '../lib/auth.types';
 import ModalPortal from './ModalPortal';
 
+// Detect if we're in a blocked OAuth context
+function isBlockedOAuthContext(): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  const ua = navigator.userAgent || '';
+  const isPWAStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+  const isInAppBrowser = 
+    ua.includes('wv') ||          // Android WebView
+    ua.includes('FBAN') ||         // Facebook App Browser
+    ua.includes('FBAV') ||         // Facebook App Browser
+    ua.includes('Instagram') ||    // Instagram in-app
+    ua.includes('Line/') ||        // Line in-app
+    ua.includes('Twitter') ||      // Twitter in-app
+    ua.includes('TikTok') ||       // TikTok in-app
+    ua.includes('GSA/') ||         // Google Search App
+    ua.includes('EdgA') ||         // Edge Android WebView
+    (ua.includes('Electron') && !ua.includes('Chrome/91')); // Electron without modern Chrome
+  
+  const isStandalone = (window as any).standalone || isPWAStandalone;
+  
+  return isStandalone || isInAppBrowser;
+}
+
+function getOpenInBrowserURL(): string {
+  const currentURL = window.location.href;
+  const url = new URL(currentURL);
+  url.searchParams.set('redirect_bounce', '1');
+  return url.toString();
+}
+
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,6 +44,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const translations = useTranslations();
   const [loading, setLoading] = useState<AuthProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isBlocked] = useState(() => isBlockedOAuthContext());
 
   useEffect(() => {
     if (!isOpen) return;
@@ -27,6 +58,12 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   const handleProviderSignIn = async (provider: AuthProvider) => {
     console.log(`🔐 AuthModal: handleProviderSignIn called with provider: ${provider}`);
+    
+    if (isBlocked) {
+      console.log(`🔐 AuthModal: Blocked context detected, not attempting sign-in`);
+      return;
+    }
+    
     setLoading(provider);
     setError(null);
     
@@ -37,7 +74,12 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       onClose();
     } catch (error: any) {
       console.error(`🔐 AuthModal: ${provider} sign-in failed:`, error);
-      setError(error.message || 'Sign-in failed. Please try again.');
+      
+      if (error.message === 'OAUTH_BLOCKED') {
+        setError('blocked');
+      } else {
+        setError(error.message || 'Sign-in failed. Please try again.');
+      }
     } finally {
       setLoading(null);
     }
@@ -80,12 +122,32 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </button>
           </div>
 
-          {error && (
+          {error === 'blocked' ? (
+            <div className="mb-4 p-4 rounded-lg" 
+                 style={{ backgroundColor: '#fff3cd', borderColor: '#ffc107', border: '2px solid' }}>
+              <p className="mb-2 font-semibold" style={{ color: '#856404' }}>
+                Sign-in needs your device's browser
+              </p>
+              <p className="mb-3 text-sm" style={{ color: '#856404' }}>
+                This screen is an embedded browser, which Google doesn't allow for security reasons. 
+                Tap 'Open in browser' to continue securely.
+              </p>
+              <a
+                href={getOpenInBrowserURL()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-4 py-2 rounded-lg font-semibold text-center"
+                style={{ backgroundColor: '#ffc107', color: '#000' }}
+              >
+                Open in Browser
+              </a>
+            </div>
+          ) : error ? (
             <div className="mb-4 p-3 rounded-lg text-sm" 
                  style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}>
               {error}
             </div>
-          )}
+          ) : null}
 
           <div className="space-y-3">
             <button
@@ -93,9 +155,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 console.log('🔐 AuthModal: Google button clicked');
                 handleProviderSignIn('google');
               }}
-              disabled={loading === 'google'}
+              disabled={loading === 'google' || isBlocked}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+              style={{ 
+                backgroundColor: isBlocked ? 'var(--muted)' : 'var(--btn)', 
+                color: 'var(--text)', 
+                borderColor: 'var(--line)', 
+                border: '1px solid' 
+              }}
             >
               {loading === 'google' ? (
                 <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
