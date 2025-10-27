@@ -110,7 +110,10 @@ export function useSwipe({
 
   // Handle pointer/touch end
   const handleEnd = useCallback(() => {
-    if (!swipeState.isSwipeActive || disabled) return;
+    if (!swipeState.isSwipeActive || disabled) {
+      isHorizontalGesture.current = false;
+      return;
+    }
 
     const { swipeDistance, direction } = swipeState;
     
@@ -142,6 +145,7 @@ export function useSwipe({
         direction: null,
         actionTriggered: false
       });
+      isHorizontalGesture.current = false;
     }, resetDelay);
   }, [swipeState, threshold, disabled, onSwipeEnd, onSwipeAction]);
 
@@ -173,36 +177,54 @@ export function useSwipe({
     handleEnd();
   }, [handleEnd]);
 
+  // Track if we've confirmed this is a horizontal swipe
+  const isHorizontalGesture = useRef(false);
+  
   // Pointer events (modern approach)
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     // Only handle mouse and touch pointers
     if (e.pointerType !== 'mouse' && e.pointerType !== 'touch') return;
     
     handleStart(e.clientX, e.clientY);
+    isHorizontalGesture.current = false;
     
-    if (elementRef.current) {
-      elementRef.current.setPointerCapture(e.pointerId);
-    }
+    // Don't capture pointer immediately - wait to see if it's horizontal
   }, [handleStart]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     handleMove(e.clientX, e.clientY);
-  }, [handleMove]);
+    
+    // Only capture pointer if this is clearly a horizontal gesture
+    if (swipeState.isSwipeActive && elementRef.current && !isHorizontalGesture.current) {
+      const deltaX = e.clientX - startX.current;
+      const deltaY = e.clientY - startY.current;
+      const isHorizontal = Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 20;
+      
+      if (isHorizontal) {
+        isHorizontalGesture.current = true;
+        elementRef.current.setPointerCapture(e.pointerId);
+      }
+    }
+  }, [handleMove, swipeState.isSwipeActive]);
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
     handleEnd();
     
-    if (elementRef.current) {
+    if (elementRef.current && isHorizontalGesture.current) {
       elementRef.current.releasePointerCapture(e.pointerId);
     }
+    
+    isHorizontalGesture.current = false;
   }, [handleEnd]);
 
   const handlePointerCancel = useCallback((e: React.PointerEvent) => {
     handleEnd();
     
-    if (elementRef.current) {
+    if (elementRef.current && isHorizontalGesture.current) {
       elementRef.current.releasePointerCapture(e.pointerId);
     }
+    
+    isHorizontalGesture.current = false;
   }, [handleEnd]);
 
   // Programmatic close on route changes and scroll start

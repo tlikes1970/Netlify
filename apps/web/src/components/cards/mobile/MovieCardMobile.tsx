@@ -86,74 +86,88 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCar
       actions={actions}
       context={getContextFromTabKey(tabKey)}
     >
-      <div className="card-mobile" style={{ display: 'flex', gap: '8px' }}>
-        {/* Drag Handle */}
-        <div className="drag-handle" style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          cursor: 'grab', 
-          padding: '0 4px',
-          color: 'var(--muted)'
-        }}>
-          <div style={{ 
-            width: '3px', 
-            height: '40px', 
-            background: 'var(--line)',
-            borderRadius: '2px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px',
-            padding: '2px 0'
-          }}>
-            <div style={{ width: '100%', height: '2px', background: 'currentColor', borderRadius: '1px' }}></div>
-            <div style={{ width: '100%', height: '2px', background: 'currentColor', borderRadius: '1px' }}></div>
-            <div style={{ width: '100%', height: '2px', background: 'currentColor', borderRadius: '1px' }}></div>
-          </div>
-        </div>
-        
-        <div className="swipe-target" style={{ flex: 1 }}>
-          <div className="poster-section">
-            <div className="poster-wrapper">
-              <OptimizedImage
-                src={posterUrl || ''}
-                alt={`${title} poster`}
-                context="poster"
-                fallbackSrc={POSTER_PLACEHOLDER}
-                className="poster-image"
-                style={{
-                  width: '112px',
-                  height: '168px',
-                  borderRadius: 'var(--radius-md, 8px)'
-                }}
-                loading="lazy"
-              />
+      <div className="card-mobile" style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        gap: '8px',
+        border: '1px solid var(--line)',
+        borderRadius: '12px',
+        backgroundColor: 'var(--card-bg, #ffffff)',
+        padding: '12px',
+        marginBottom: '12px'
+      }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="swipe-target" style={{ flex: 1 }}>
+            <div className="poster-section">
+              <div className="poster-wrapper">
+                <OptimizedImage
+                  src={posterUrl || ''}
+                  alt={`${title} poster`}
+                  context="poster"
+                  fallbackSrc={POSTER_PLACEHOLDER}
+                  className="poster-image"
+                  style={{
+                    width: '112px',
+                    height: '168px',
+                    borderRadius: 'var(--radius-md, 8px)'
+                  }}
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            
+            <div className="content-section">
+              <div className="header">
+                <h3 className="title" style={{ fontSize: 'var(--font-lg, 16px)', fontWeight: '600', color: 'var(--text)' }}>
+                  {title}
+                </h3>
+                <div className="meta" style={{ fontSize: 'var(--font-sm, 12px)', color: 'var(--text)' }}>
+                  {getMetaText()}
+                </div>
+              </div>
+              
+              <div className="chips" style={{ display: 'flex', gap: 'var(--space-xs, 4px)', flexWrap: 'wrap' }}>
+                {getChips()}
+              </div>
+              
+              {synopsis && (
+                <div className="summary" style={{ fontSize: 'var(--font-sm, 12px)', color: 'var(--text)', lineHeight: '1.4', opacity: 0.9 }}>
+                  {synopsis}
+                </div>
+              )}
             </div>
           </div>
           
-          <div className="content-section">
-            <div className="header">
-              <h3 className="title" style={{ fontSize: 'var(--font-lg, 16px)', fontWeight: '600', color: 'var(--text)' }}>
-                {title}
-              </h3>
-              <div className="meta" style={{ fontSize: 'var(--font-sm, 12px)', color: 'var(--muted)' }}>
-                {getMetaText()}
-              </div>
+          {/* Drag Handle - Right side, middle */}
+          <div className="drag-handle" style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            cursor: 'grab', 
+            padding: '4px 8px',
+            color: 'var(--muted)'
+          }}>
+            <div style={{ 
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              alignItems: 'center'
+            }}>
+              <svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="8" cy="6" r="1.5" fill="currentColor"/>
+                <circle cx="8" cy="12" r="1.5" fill="currentColor"/>
+                <circle cx="8" cy="18" r="1.5" fill="currentColor"/>
+                <circle cx="8" cy="24" r="1.5" fill="currentColor"/>
+                <circle cx="16" cy="6" r="1.5" fill="currentColor"/>
+                <circle cx="16" cy="12" r="1.5" fill="currentColor"/>
+                <circle cx="16" cy="18" r="1.5" fill="currentColor"/>
+                <circle cx="16" cy="24" r="1.5" fill="currentColor"/>
+              </svg>
             </div>
-            
-            <div className="chips" style={{ display: 'flex', gap: 'var(--space-xs, 4px)', flexWrap: 'wrap' }}>
-              {getChips()}
-            </div>
-            
-            {synopsis && (
-              <div className="summary" style={{ fontSize: 'var(--font-sm, 12px)', color: 'var(--muted)', lineHeight: '1.4' }}>
-                {synopsis}
-              </div>
-            )}
           </div>
         </div>
         
-        {/* Overflow Menu */}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        {/* Overflow Menu at bottom */}
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%', paddingTop: '8px', borderTop: '1px solid var(--line)' }}>
           <CompactOverflowMenu 
             item={item as any} 
             context="tab" 
