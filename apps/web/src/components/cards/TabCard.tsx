@@ -501,8 +501,8 @@ export default function TabCard({
 
   // Define buttonClass at component level so it can be used throughout
   const buttonClass = isCondensed 
-    ? "px-1.5 py-1 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md inline-block"
-    : "px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md inline-block";
+    ? "px-1.5 py-1 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+    : "px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md";
 
   // Mobile detection for new mobile cards
   const isMobileCompact = isCompactMobileV1();
@@ -775,7 +775,7 @@ export default function TabCard({
             className={`free-actions flex flex-wrap gap-2 rounded-lg border border-dashed ${
               isCondensed ? 'p-1 mb-2' : 'p-2 mb-3'
             }`}
-            style={{ borderColor: 'var(--line)', maxWidth: '100%' }}
+            style={{ borderColor: 'var(--line)' }}
           >
             {/* Tab-specific primary actions */}
             {getTabSpecificActions()}
@@ -818,8 +818,7 @@ export default function TabCard({
               style={{ 
                 borderColor: 'var(--pro)', 
                 backgroundColor: 'rgba(240, 185, 11, 0.1)',
-                opacity: 0.7,
-                maxWidth: '100%'
+                opacity: 0.7
               }}
             >
             <span className="text-xs font-medium" style={{ color: 'var(--pro)', marginRight: 'var(--space-2, 8px)' }}>
@@ -835,7 +834,7 @@ export default function TabCard({
                 });
                 actions?.onBloopersOpen?.(item);
               }}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md inline-block"
+              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
               style={{ 
                 backgroundColor: 'var(--btn)', 
                 color: 'var(--muted)', 
@@ -853,7 +852,7 @@ export default function TabCard({
                 dlog('🎭 TabCard extras button clicked for:', item.title);
                 actions?.onExtrasOpen?.(item);
               }}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md inline-block"
+              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
               style={{ 
                 backgroundColor: 'var(--btn)', 
                 color: 'var(--muted)', 
@@ -871,7 +870,7 @@ export default function TabCard({
                 dlog('🔔 TabCard advanced notifications button clicked for:', item.title);
                 actions?.onNotificationToggle?.(item);
               }}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md inline-block"
+              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
               style={{ 
                 backgroundColor: 'var(--btn)', 
                 color: 'var(--muted)', 
