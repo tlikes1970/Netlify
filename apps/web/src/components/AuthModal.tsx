@@ -26,14 +26,17 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   if (!isOpen) return null;
 
   const handleProviderSignIn = async (provider: AuthProvider) => {
+    console.log(`🔐 AuthModal: handleProviderSignIn called with provider: ${provider}`);
     setLoading(provider);
     setError(null);
     
     try {
+      console.log(`🔐 AuthModal: Calling signInWithProvider for ${provider}`);
       await signInWithProvider(provider);
+      console.log(`🔐 AuthModal: signInWithProvider completed successfully`);
       onClose();
     } catch (error: any) {
-      console.error(`${provider} sign-in failed:`, error);
+      console.error(`🔐 AuthModal: ${provider} sign-in failed:`, error);
       setError(error.message || 'Sign-in failed. Please try again.');
     } finally {
       setLoading(null);
@@ -86,7 +89,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
           <div className="space-y-3">
             <button
-              onClick={() => handleProviderSignIn('google')}
+              onClick={() => {
+                console.log('🔐 AuthModal: Google button clicked');
+                handleProviderSignIn('google');
+              }}
               disabled={loading === 'google'}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
