@@ -36,7 +36,7 @@ export default function SwipeableCard({
           {
             id: 'want',
             label: 'Want',
-            icon: '❤️',
+            icon: '',
             color: '#ffffff',
             backgroundColor: '#ef4444',
             action: () => actions?.onWant?.(item)
@@ -44,7 +44,7 @@ export default function SwipeableCard({
           {
             id: 'watched',
             label: 'Watched',
-            icon: '✅',
+            icon: '',
             color: '#ffffff',
             backgroundColor: '#10b981',
             action: () => actions?.onWatched?.(item)
@@ -52,7 +52,7 @@ export default function SwipeableCard({
           {
             id: 'not-interested',
             label: 'Not Interested',
-            icon: '👎',
+            icon: '',
             color: '#ffffff',
             backgroundColor: '#6b7280',
             action: () => actions?.onNotInterested?.(item)
@@ -60,7 +60,7 @@ export default function SwipeableCard({
           {
             id: 'delete',
             label: 'Delete',
-            icon: '🗑️',
+            icon: '',
             color: '#ffffff',
             backgroundColor: '#dc2626',
             action: () => actions?.onDelete?.(item)
@@ -72,7 +72,7 @@ export default function SwipeableCard({
           {
             id: 'watching',
             label: 'Watching',
-            icon: '▶️',
+            icon: '',
             color: '#ffffff',
             backgroundColor: '#3b82f6',
             action: () => {
@@ -85,7 +85,7 @@ export default function SwipeableCard({
           {
             id: 'watched',
             label: 'Watched',
-            icon: '✅',
+            icon: '',
             color: '#ffffff',
             backgroundColor: '#10b981',
             action: () => actions?.onWatched?.(item)
@@ -93,7 +93,7 @@ export default function SwipeableCard({
           {
             id: 'delete',
             label: 'Remove',
-            icon: '🗑️',
+            icon: '',
             color: '#ffffff',
             backgroundColor: '#dc2626',
             action: () => actions?.onDelete?.(item)
@@ -105,7 +105,7 @@ export default function SwipeableCard({
           {
             id: 'watching',
             label: 'Rewatch',
-            icon: '🔄',
+            icon: '',
             color: '#ffffff',
             backgroundColor: '#3b82f6',
             action: () => {
@@ -118,7 +118,7 @@ export default function SwipeableCard({
           {
             id: 'want',
             label: 'Want',
-            icon: '❤️',
+            icon: '',
             color: '#ffffff',
             backgroundColor: '#ef4444',
             action: () => actions?.onWant?.(item)
@@ -126,7 +126,7 @@ export default function SwipeableCard({
           {
             id: 'delete',
             label: 'Remove',
-            icon: '🗑️',
+            icon: '',
             color: '#ffffff',
             backgroundColor: '#dc2626',
             action: () => actions?.onDelete?.(item)
@@ -140,7 +140,7 @@ export default function SwipeableCard({
           {
             id: 'want',
             label: 'Want to Watch',
-            icon: '❤️',
+            icon: '',
             color: '#ffffff',
             backgroundColor: '#ef4444',
             action: () => actions?.onWant?.(item)
@@ -152,7 +152,7 @@ export default function SwipeableCard({
           {
             id: 'watching',
             label: 'Watching',
-            icon: '▶️',
+            icon: '',
             color: '#ffffff',
             backgroundColor: '#3b82f6',
             action: () => {
@@ -165,7 +165,7 @@ export default function SwipeableCard({
           {
             id: 'delete',
             label: 'Delete',
-            icon: '🗑️',
+            icon: '',
             color: '#ffffff',
             backgroundColor: '#dc2626',
             action: () => actions?.onDelete?.(item)
@@ -248,17 +248,33 @@ export default function SwipeableCard({
           {/* Right swipe action (first action) */}
           {swipeState.direction === 'right' && (
             <div
-              className="absolute inset-0 flex items-center justify-start pl-6 z-10 transition-opacity duration-200"
+              className="absolute inset-0 flex items-center justify-start pl-6 z-10 transition-opacity duration-300"
               style={{
                 backgroundColor: previewAction.backgroundColor,
                 opacity: getOverlayOpacity()
               }}
             >
-              <div className="flex items-center gap-3 text-white">
-                <span className="text-2xl">{previewAction.icon}</span>
+              <div className="flex items-center gap-3" style={{ color: previewAction.color }}>
+                {previewAction.icon && <span className="text-2xl">{previewAction.icon}</span>}
                 <div>
-                  <div className="text-sm font-semibold">{previewAction.label}</div>
-                  <div className="text-xs opacity-90">Swipe to {previewAction.label.toLowerCase()}</div>
+                  <div 
+                    className="text-sm font-semibold" 
+                    style={{ 
+                      textShadow: '1px 1px 2px rgba(0,0,0,0.8), -1px -1px 2px rgba(0,0,0,0.8)',
+                      WebkitTextStroke: '0.5px rgba(0,0,0,0.8)'
+                    }}
+                  >
+                    {previewAction.label}
+                  </div>
+                  <div 
+                    className="text-xs opacity-90"
+                    style={{ 
+                      textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+                      WebkitTextStroke: '0.3px rgba(0,0,0,0.8)'
+                    }}
+                  >
+                    Swipe to {previewAction.label.toLowerCase()}
+                  </div>
                 </div>
               </div>
             </div>
@@ -267,18 +283,34 @@ export default function SwipeableCard({
           {/* Left swipe action (second action) */}
           {swipeState.direction === 'left' && (
             <div
-              className="absolute inset-0 flex items-center justify-end pr-6 z-10 transition-opacity duration-200"
+              className="absolute inset-0 flex items-center justify-end pr-6 z-10 transition-opacity duration-300"
               style={{
                 backgroundColor: previewAction.backgroundColor,
                 opacity: getOverlayOpacity()
               }}
             >
-              <div className="flex items-center gap-3 text-white">
+              <div className="flex items-center gap-3" style={{ color: previewAction.color }}>
                 <div className="text-right">
-                  <div className="text-sm font-semibold">{previewAction.label}</div>
-                  <div className="text-xs opacity-90">Swipe to {previewAction.label.toLowerCase()}</div>
+                  <div 
+                    className="text-sm font-semibold"
+                    style={{ 
+                      textShadow: '1px 1px 2px rgba(0,0,0,0.8), -1px -1px 2px rgba(0,0,0,0.8)',
+                      WebkitTextStroke: '0.5px rgba(0,0,0,0.8)'
+                    }}
+                  >
+                    {previewAction.label}
+                  </div>
+                  <div 
+                    className="text-xs opacity-90"
+                    style={{ 
+                      textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+                      WebkitTextStroke: '0.3px rgba(0,0,0,0.8)'
+                    }}
+                  >
+                    Swipe to {previewAction.label.toLowerCase()}
+                  </div>
                 </div>
-                <span className="text-2xl">{previewAction.icon}</span>
+                {previewAction.icon && <span className="text-2xl">{previewAction.icon}</span>}
               </div>
             </div>
           )}
@@ -288,7 +320,7 @@ export default function SwipeableCard({
       {/* Main Card Content */}
       <div
         ref={elementRef}
-        className={`transition-transform duration-200 ease-out ${swipeDisabled ? '' : 'swipe-surface'} ${className}`}
+        className={`transition-transform duration-500 ease-out ${swipeDisabled ? '' : 'swipe-surface'} ${className}`}
         style={{
           transform: getTransform(),
           pointerEvents: swipeState.isSwipeActive && swipeState.swipeDistance > 0 ? 'none' : 'auto',

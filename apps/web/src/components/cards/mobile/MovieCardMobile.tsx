@@ -1,6 +1,7 @@
 import type { MediaItem, CardActionHandlers } from '../card.types';
 import SwipeableCard from '../../SwipeableCard';
 import { OptimizedImage } from '../../OptimizedImage';
+import { CompactOverflowMenu } from '../../../features/compact/CompactOverflowMenu';
 
 // neutral 112x168 poster placeholder (SVG data URI)
 const POSTER_PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
@@ -85,8 +86,32 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCar
       actions={actions}
       context={getContextFromTabKey(tabKey)}
     >
-      <div className="card-mobile">
-        <div className="swipe-target">
+      <div className="card-mobile" style={{ display: 'flex', gap: '8px' }}>
+        {/* Drag Handle */}
+        <div className="drag-handle" style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          cursor: 'grab', 
+          padding: '0 4px',
+          color: 'var(--muted)'
+        }}>
+          <div style={{ 
+            width: '3px', 
+            height: '40px', 
+            background: 'var(--line)',
+            borderRadius: '2px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+            padding: '2px 0'
+          }}>
+            <div style={{ width: '100%', height: '2px', background: 'currentColor', borderRadius: '1px' }}></div>
+            <div style={{ width: '100%', height: '2px', background: 'currentColor', borderRadius: '1px' }}></div>
+            <div style={{ width: '100%', height: '2px', background: 'currentColor', borderRadius: '1px' }}></div>
+          </div>
+        </div>
+        
+        <div className="swipe-target" style={{ flex: 1 }}>
           <div className="poster-section">
             <div className="poster-wrapper">
               <OptimizedImage
@@ -125,6 +150,14 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCar
               </div>
             )}
           </div>
+        </div>
+        
+        {/* Overflow Menu */}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <CompactOverflowMenu 
+            item={item as any} 
+            context="tab" 
+          />
         </div>
       </div>
     </SwipeableCard>
