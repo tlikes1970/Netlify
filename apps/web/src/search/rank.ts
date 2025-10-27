@@ -4,6 +4,12 @@
  * Data Source: MediaItem fields from TMDB responses
  * Update Path: Adjust coefficients in computeScore function
  * Dependencies: Used by smartSearch and api.ts
+ * 
+ * Test Assertions:
+ * - "predator" → Predator (1987) should rank in top 3
+ * - "predator 1987" → Predator (1987) should rank #1 (year bonus +20)
+ * - Exact title matches beat purely popular but non-exact matches
+ * - Franchise roots (earliest year) preferred over sequels in tie-breaking
  */
 
 const ARTICLES = new Set(['the','a','an']);
@@ -19,6 +25,7 @@ export type SearchFeatures = {
   releaseYear?: number | null;
   mediaType: 'movie' | 'tv' | 'person';
   originalLanguage?: string | null;
+  collectionName?: string;   // TMDB collection name if part of a franchise
 };
 
 export type TitleSignal = { score: number; tier: 'exact'|'leading'|'starts'|'word'|'contains'|'overlap' };
@@ -28,38 +35,101 @@ export function computeSearchScore(
   features: SearchFeatures, 
   opts: {
     preferType?: 'movie' | 'tv' | 'person' | 'all',
-    userLocaleLangs?: string[]
+    userLocaleLangs?: string[],
+    debugSearch?: boolean
   } = {}
-): { score: number; titleSig: TitleSignal } {
+): { score: number; titleSig: TitleSignal; debug?: Record<string, number> } {
   const q = normalize(query);
   const title = normalize(features.title);
   const orig = normalize(features.originalTitle || '');
   const aliases = (features.aliases || []).map(normalize);
+  
+  // Parse year from query if present
+  const yearMatch = /\b(19|20)\d{2}\b/.exec(query);
+  const queryYear = yearMatch ? parseInt(yearMatch[0]) : null;
 
+  // Title matching signals
   const titleSig = titleSignal(q, [title, orig, ...aliases]);
-  const bm25 = bm25Like(q, [title, orig, ...(features.overview ? [normalize(features.overview)] : [])]);
+  const titleExact = titleSig.tier === 'exact' ? 1 : 0;
+  const titlePrefix = titleSig.tier === 'starts' ? 1 : 0;
+  const titleContains = titleSig.tier === 'contains' ? 1 : 0;
+  
+  // Check AKA exact match
+  const akaExact = aliases.some(a => a === q) ? 1 : 0;
+  
+  // Franchise root detection
+  const franchiseRoot = features.collectionName ? 
+    (normalize(features.collectionName).includes(q) ? 1 : 0) : 0;
 
-  const popularityNorm = clamp((features.popularity ?? 0) / 200, 0, 1);
+  // Year match bonus
+  const yearBonus = (queryYear && features.releaseYear === queryYear) ? 20 : 0;
+
+  // Skip overview BM25 for single-token queries
+  const isSingleToken = tokensLower(query).length === 1;
+  const bm25 = isSingleToken 
+    ? bm25Like(q, [title, orig, ...aliases])
+    : bm25Like(q, [title, orig, ...(features.overview ? [normalize(features.overview)] : [])]);
+
+  // Capped popularity bonus: min(10, 10 * log1p(pop_norm * 100))
+  const popRaw = features.popularity ?? 0;
+  const popNorm = clamp(popRaw / 200, 0, 1);
+  const popLog = Math.log1p(popNorm * 100);
+  const popularityBonus = Math.min(10 * popLog / 3.0, 10);
+
+  // Recency bonus: small positive if ≤5yrs, soft negative after, capped [-6, +8]
+  const now = new Date().getFullYear();
+  const age = features.releaseYear ? now - features.releaseYear : 50;
+  const recencyBonus = age <= 5 
+    ? Math.min(age * 1.6, 8) 
+    : Math.max(-6, -(age - 5) * 0.3); // Very gentle negative curve
+
+  // Halve pop/recency when exact or franchise hit
+  const reducePopRecency = (titleExact || akaExact || franchiseRoot);
+  const finalPopBonus = reducePopRecency ? popularityBonus * 0.5 : popularityBonus;
+  const finalRecencyBonus = reducePopRecency ? recencyBonus * 0.5 : recencyBonus;
+
   const voteAvgNorm = clamp((features.voteAverage ?? 0) / 10, 0, 1);
-  const voteCntSig = 1 - Math.exp(-(features.voteCount ?? 0) / 5000);  // sigmoid-ish
+  const voteCntSig = 1 - Math.exp(-(features.voteCount ?? 0) / 5000);
   const voteSig = voteCntSig * voteAvgNorm;
 
-  const recency = recencyBoost(features.releaseYear ?? null);
   const typeMatch = opts.preferType && opts.preferType !== 'all'
     ? (features.mediaType === opts.preferType ? 1 : 0)
     : 0;
 
   const langHint = langBoost(features.originalLanguage, opts.userLocaleLangs || []);
 
+  // New scoring formula with proper weights
+  const score = 100 * titleExact
+              + 60 * akaExact
+              + 45 * titlePrefix
+              + 25 * titleContains
+              + 30 * franchiseRoot
+              + yearBonus
+              + finalPopBonus
+              + finalRecencyBonus
+              + 5 * voteSig
+              + 0.5 * typeMatch
+              + 0.5 * langHint
+              + 2 * bm25;
+
+  const debug = opts.debugSearch ? {
+    titleExact,
+    akaExact,
+    titlePrefix,
+    titleContains,
+    franchiseRoot,
+    yearMatch: yearBonus,
+    popBonus: finalPopBonus,
+    recencyBonus: finalRecencyBonus,
+    voteSig,
+    bm25,
+    total: score
+  } : undefined;
+
   return {
-    score: 3.5 * titleSig.score
-         + 1.2 * bm25
-         + 0.8 * popularityNorm
-         + 1.0 * voteSig
-         + 0.3 * recency
-         + 0.3 * typeMatch
-         + 0.2 * langHint,
-    titleSig
+    score,
+    titleSig,
+    debug
   };
 }
 

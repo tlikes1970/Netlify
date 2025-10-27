@@ -33,12 +33,11 @@ const POSTER_PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
 export interface MovieCardMobileProps {
   item: MediaItem;
   actions?: CardActionHandlers;
-  tabKey?: 'watching' | 'watched' | 'wishlist';
+  tabKey?: 'watching' | 'watched' | 'want';
 }
 
 export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCardMobileProps) {
   const { title, year, posterUrl, synopsis } = item;
-  
   
   // Get Movie-specific meta information
   const getMetaText = () => {
@@ -67,17 +66,51 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCar
     ];
   };
 
-  // Note: Removed unused functions (getProviders, handleRate, handleOverflowClick)
-  // These were part of the CardBaseMobile implementation
+  // Determine primary action based on tab
+  const getPrimaryAction = () => {
+    switch (tabKey) {
+      case 'watching':
+        return {
+          label: 'Watched',
+          onClick: () => actions?.onWatched?.(item)
+        };
+      case 'watched':
+        return {
+          label: 'Want to Watch',
+          onClick: () => actions?.onWant?.(item)
+        };
+      case 'want':
+        return {
+          label: 'Want to Watch',
+          onClick: () => actions?.onWant?.(item)
+        };
+      default:
+        return {
+          label: 'Watched',
+          onClick: () => actions?.onWatched?.(item)
+        };
+    }
+  };
+
+  const primaryAction = getPrimaryAction();
 
   // Convert tabKey to SwipeableCard context
-  const getContextFromTabKey = (tabKey: 'watching' | 'watched' | 'wishlist') => {
+  const getContextFromTabKey = (tabKey: 'watching' | 'watched' | 'want') => {
     switch (tabKey) {
       case 'watching': return 'tab-watching';
       case 'watched': return 'tab-watched';
-      case 'wishlist': return 'tab-want';
+      case 'want': return 'tab-want';
       default: return 'tab-watching';
     }
+  };
+
+  // Truncate synopsis to 2 lines
+  const truncateSynopsis = (text: string, maxLines: number = 2) => {
+    if (!text) return '';
+    const words = text.split(' ');
+    const maxLength = 100; // rough estimate for 2 lines
+    if (text.length <= maxLength) return text;
+    return words.slice(0, Math.floor(words.length * 0.7)).join(' ') + '...';
   };
 
   return (
@@ -86,92 +119,44 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCar
       actions={actions}
       context={getContextFromTabKey(tabKey)}
     >
-      <div className="card-mobile" style={{ 
-        display: 'flex', 
-        flexDirection: 'column',
-        gap: '8px',
-        border: '1px solid var(--line)',
-        borderRadius: '12px',
-        backgroundColor: 'var(--card-bg, #ffffff)',
-        padding: '12px',
-        marginBottom: '12px'
-      }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <div className="swipe-target" style={{ flex: 1 }}>
-            <div className="poster-section">
-              <div className="poster-wrapper">
-                <OptimizedImage
-                  src={posterUrl || ''}
-                  alt={`${title} poster`}
-                  context="poster"
-                  fallbackSrc={POSTER_PLACEHOLDER}
-                  className="poster-image"
-                  style={{
-                    width: '112px',
-                    height: '168px',
-                    borderRadius: 'var(--radius-md, 8px)'
-                  }}
-                  loading="lazy"
-                />
-              </div>
-            </div>
-            
-            <div className="content-section">
-              <div className="header">
-                <h3 className="title" style={{ fontSize: 'var(--font-lg, 16px)', fontWeight: '600', color: 'var(--text)' }}>
-                  {title}
-                </h3>
-                <div className="meta" style={{ fontSize: 'var(--font-sm, 12px)', color: 'var(--text)' }}>
-                  {getMetaText()}
-                </div>
-              </div>
-              
-              <div className="chips" style={{ display: 'flex', gap: 'var(--space-xs, 4px)', flexWrap: 'wrap' }}>
-                {getChips()}
-              </div>
-              
-              {synopsis && (
-                <div className="summary" style={{ fontSize: 'var(--font-sm, 12px)', color: 'var(--text)', lineHeight: '1.4', opacity: 0.9 }}>
-                  {synopsis}
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Drag Handle - Right side, middle */}
-          <div className="drag-handle" style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            cursor: 'grab', 
-            padding: '4px 8px',
-            color: 'var(--muted)'
-          }}>
-            <div style={{ 
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '6px',
-              alignItems: 'center'
-            }}>
-              <svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="8" cy="6" r="1.5" fill="currentColor"/>
-                <circle cx="8" cy="12" r="1.5" fill="currentColor"/>
-                <circle cx="8" cy="18" r="1.5" fill="currentColor"/>
-                <circle cx="8" cy="24" r="1.5" fill="currentColor"/>
-                <circle cx="16" cy="6" r="1.5" fill="currentColor"/>
-                <circle cx="16" cy="12" r="1.5" fill="currentColor"/>
-                <circle cx="16" cy="18" r="1.5" fill="currentColor"/>
-                <circle cx="16" cy="24" r="1.5" fill="currentColor"/>
-              </svg>
-            </div>
-          </div>
-        </div>
-        
-        {/* Overflow Menu at bottom */}
-        <div style={{ display: 'flex', alignItems: 'center', width: '100%', paddingTop: '8px', borderTop: '1px solid var(--line)' }}>
-          <CompactOverflowMenu 
-            item={item as any} 
-            context="tab" 
+      <div className="card-mobile">
+        {/* Poster Column */}
+        <div className="poster-col">
+          <OptimizedImage
+            src={posterUrl || ''}
+            alt={`${title} poster`}
+            context="poster"
+            fallbackSrc={POSTER_PLACEHOLDER}
+            className="poster-image"
+            loading="lazy"
           />
+        </div>
+
+        {/* Info Column */}
+        <div className="info-col">
+          <header>
+            <h3>{title}</h3>
+            <span className="meta">{getMetaText()}</span>
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
+              {getChips()}
+            </div>
+          </header>
+          
+          {synopsis && (
+            <p className="synopsis">{truncateSynopsis(synopsis, 2)}</p>
+          )}
+
+          <div className="mobile-actions-row">
+            <button className="primary-action" onClick={primaryAction.onClick}>
+              {primaryAction.label}
+            </button>
+            <CompactOverflowMenu 
+              item={item as any} 
+              context={`tab-${tabKey}`}
+              actions={actions}
+              showText={false}
+            />
+          </div>
         </div>
       </div>
     </SwipeableCard>

@@ -75,3 +75,95 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
   margin-bottom: 0.5rem; /* 8px */
 }
 
+/* NEW: Unified Desktop Card Layout */
+.card-desktop {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl, 16px);
+  background: var(--card, #171a21);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--line, #242a33);
+}
+
+.card-desktop .poster-col {
+  flex-shrink: 0;
+}
+
+.card-desktop .poster-col img {
+  width: 160px;
+  height: 240px;
+  object-fit: cover;
+  border-radius: var(--radius-md, 8px);
+}
+
+.card-desktop .info-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.card-desktop .info-col header {
+  margin-bottom: var(--space-2);
+}
+
+.card-desktop .info-col header h3 {
+  font-size: var(--text-lg, 18px);
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 var(--space-1, 4px) 0;
+}
+
+.card-desktop .info-col header .meta {
+  font-size: var(--font-sm, 13px);
+  color: var(--muted);
+}
+
+.card-desktop .rating-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.card-desktop .rating-row .rating-score {
+  font-size: var(--font-sm, 13px);
+  color: var(--muted);
+}
+
+.card-desktop .synopsis {
+  font-size: var(--font-sm, 13px);
+  line-height: 1.5;
+  color: var(--muted);
+  margin-bottom: var(--space-2);
+  flex-grow: 1;
+}
+
+.card-desktop .actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.card-desktop .pro-strip {
+  margin-top: var(--space-2);
+  background: color-mix(in srgb, var(--pro) 15%, transparent);
+  padding: var(--space-2);
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid color-mix(in srgb, var(--pro) 30%, transparent);
+}
+
+.card-desktop .pro-strip .pro-label {
+  font-weight: 600;
+  margin-right: var(--space-2);
+  color: var(--pro);
+  font-size: var(--font-xs, 11px);
+  text-transform: uppercase;
+}
+
+.card-desktop .pro-strip button {
+  margin-right: var(--space-2);
+}
+

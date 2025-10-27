@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlickWord Cache Clearer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056CC;
+        }
+        button.danger {
+            background: #e74c3c;
+        }
+        button.danger:hover {
+            background: #c0392b;
+        }
+        .info {
+            background: #3a3a3a;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            color: #6aaa64;
+        }
+        .error {
+            color: #e74c3c;
+        }
+        .warning {
+            color: #c9b458;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 FlickWord Cache Manager</h1>
+        
+        <p>This tool helps you debug and clear the FlickWord daily word cache.</p>
+        
+        <div id="info" class="info">
+            Click "Inspect Cache" to see current cache state
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <button onclick="inspect()">Inspect Cache</button>
+            <button class="danger" onclick="clearCache()">Clear Cache</button>
+            <button onclick="showWeek()">Show Weekly Words</button>
+        </div>
+        
+        <div id="output" class="info" style="display: none;"></div>
+    </div>
+
+    <script>
+        const CACHE_KEY = 'flicklet:daily-word';
+        
+        function inspect() {
+            try {
+                const cached = localStorage.getItem(CACHE_KEY);
+                const today = new Date().toISOString().slice(0, 10);
+                
+                const output = document.getElementById('output');
+                const info = document.getElementById('info');
+                
+                if (!cached) {
+                    info.innerHTML = '<span class="warning">❌ No cache found</span>';
+                    output.style.display = 'none';
+                    return;
+                }
+                
+                const parsed = JSON.parse(cached);
+                const isValid = parsed.date === today;
+                
+                info.innerHTML = `
+                    <div class="${isValid ? 'success' : 'warning'}">
+                        <strong>Cache Status:</strong> ${isValid ? '✅ Valid for today' : '⚠️ Expired (wrong date)'}
+                    </div>
+                    <br>
+                    <strong>Cached Word:</strong> ${parsed.word || 'N/A'}<br>
+                    <strong>Cached Date:</strong> ${parsed.date}<br>
+                    <strong>Today:</strong> ${today}<br>
+                    <strong>Definition:</strong> ${parsed.definition || 'N/A'}<br>
+                    <strong>Cached At:</strong> ${new Date(parsed.timestamp).toLocaleString()}
+                `;
+                
+                output.style.display = 'block';
+                output.innerHTML = `
+                    <strong>Full Cache Data:</strong><br>
+                    <pre>${JSON.stringify(parsed, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                document.getElementById('info').innerHTML = 
+                    `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+        
+        function clearCache() {
+            if (confirm('Are you sure you want to clear the word cache? You will get a new word when you reload the game.')) {
+                try {
+                    localStorage.removeItem(CACHE_KEY);
+                    document.getElementById('info').innerHTML = 
+                        '<span class="success">✅ Cache cleared! Reload the game to get a new word.</span>';
+                    document.getElementById('output').style.display = 'none';
+                } catch (error) {
+                    document.getElementById('info').innerHTML = 
+                        `<span class="error">❌ Failed to clear: ${error.message}</span>`;
+                }
+            }
+        }
+        
+        async function showWeek() {
+            try {
+                const response = await fetch('/words/accepted.json');
+                if (!response.ok) throw new Error('Failed to load word list');
+                const words = await response.json();
+                
+                const output = document.getElementById('output');
+                const today = new Date();
+                
+                let html = '<strong>📅 Next 7 Days:</strong><br><br>';
+                
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(today);
+                    date.setDate(date.getDate() + i);
+                    const dateString = date.toISOString().slice(0, 10);
+                    const seed = parseInt(dateString.replace(/-/g, ''), 10);
+                    const index = seed % words.length;
+                    const word = words[index];
+                    
+                    const isToday = i === 0;
+                    html += `<div style="margin: 5px 0; ${isToday ? 'font-weight: bold; color: #6aaa64;' : ''}">`;
+                    html += `${isToday ? '👉 TODAY: ' : ''}${dateString} → <strong>${word}</strong> (index ${index})`;
+                    html += `</div>`;
+                }
+                
+                output.style.display = 'block';
+                output.innerHTML = html;
+                
+            } catch (error) {
+                document.getElementById('info').innerHTML = 
+                    `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+        
+        // Auto-inspect on load
+        inspect();
+    </script>
+</body>
+</html>
+

@@ -6,6 +6,7 @@ import { Library } from '../../lib/storage';
 import { getShowStatusInfo } from '../../utils/showStatus';
 import StarRating from './StarRating';
 import MyListToggle from '../MyListToggle';
+import { useIsDesktop } from '../../hooks/useDeviceDetection';
 import SwipeableCard from '../SwipeableCard';
 import { OptimizedImage } from '../OptimizedImage';
 import { CompactPrimaryAction } from '../../features/compact/CompactPrimaryAction';
@@ -58,6 +59,7 @@ export default function TabCard({
   const rating = typeof voteAverage === 'number' ? Math.round(voteAverage * 10) / 10 : undefined;
   const translations = useTranslations();
   const settings = useSettings();
+  const { ready, isDesktop } = useIsDesktop(); // Device detection for conditional swipe
   
   // Mobile ellipsis state
   const [showAllActions, setShowAllActions] = useState(false);
@@ -510,17 +512,46 @@ export default function TabCard({
   const isMobile = isMobileNow();
   
   // Convert tabType to tabKey for mobile components
-  const getTabKey = (tabType: string): 'watching' | 'watched' | 'wishlist' => {
+  const getTabKey = (tabType: string): 'watching' | 'watched' | 'want' => {
     switch (tabType) {
       case 'watching': return 'watching';
       case 'watched': return 'watched';
-      case 'want': return 'wishlist';
+      case 'want': return 'want';
       default: return 'watching';
     }
   };
 
+  // Guard: wait for viewport detection to avoid hydration mismatch
+  if (!ready) {
+    // Render a neutral skeleton that works on both mobile and desktop
+    return (
+      <article 
+        className="tab-card" 
+        data-card="skeleton"
+        style={{ 
+          display: 'flex', 
+          gap: '16px', 
+          padding: '16px', 
+          borderRadius: '16px', 
+          backgroundColor: 'var(--card)', 
+          border: '1px solid var(--line)',
+          minHeight: '180px'
+        }}
+      >
+        <div style={{ 
+          width: '160px', 
+          height: '240px', 
+          backgroundColor: 'var(--muted)', 
+          borderRadius: '8px',
+          flexShrink: 0 
+        }} />
+        <div style={{ flex: 1 }} />
+      </article>
+    );
+  }
+
   // TEMPORARY: Force mobile components on mobile viewport (bypass flags for testing)
-  if (isMobile) {
+  if (!isDesktop && isMobile) {
     dlog('📱 Mobile viewport detected, using mobile components:', { 
       mediaType, 
       title: item.title,
@@ -543,24 +574,16 @@ export default function TabCard({
     }
   }
 
-  return (
-    <SwipeableCard
-      item={item}
-      actions={actions}
-      context={getSwipeContext()}
-      className={isCondensed ? "mb-3" : "mb-5"}
-    >
+  // Card content (shared between mobile and desktop)
+  const cardContent = (
       <article 
-        className={`tab-card group relative flex rounded-2xl overflow-hidden shadow-lg transition-all duration-200 hover:shadow-xl ${
+        className={`card-desktop tab-card group relative ${
           isBeingDragged ? 'opacity-75 scale-95 rotate-1 z-50' : ''
         } ${isDropTarget ? 'ring-2 ring-blue-400 ring-opacity-50 scale-105' : ''}`}
         data-testid="tab-card" 
+        data-card-type="tab"
         aria-label={title}
         style={{
-          backgroundColor: 'var(--card)',
-          borderColor: isDropTarget ? 'var(--accent)' : 'var(--line)',
-          border: '1px solid',
-          minHeight: isCondensed ? '120px' : '200px',
           transform: isBeingDragged ? 'rotate(2deg)' : 'none',
           transition: 'all 0.2s ease-in-out'
         }}
@@ -571,18 +594,11 @@ export default function TabCard({
         onDragLeave={onDragLeave}
         onDrop={onDrop}
       >
-      {/* Poster (smaller in condensed view) */}
+      {/* Poster Column */}
       <div 
-        className={`poster flex-shrink-0 bg-muted relative cursor-pointer ${
-          isCondensed ? 'aspect-[2/3]' : 'aspect-[2/3]'
-        }`}
+        className="poster-col"
         role="img" 
         aria-label={title}
-        style={{ 
-          width: isCondensed ? 'var(--poster-w, 80px)' : 'var(--poster-w, 160px)',
-          height: isCondensed ? 'var(--poster-h, 120px)' : 'var(--poster-h, 240px)',
-          borderRadius: 'var(--radius, 16px) 0 0 var(--radius, 16px)'
-        }}
         onClick={(e) => {
           // Don't open TMDB if clicking on a button inside the poster
           if ((e.target as HTMLElement).closest('button')) {
@@ -605,7 +621,7 @@ export default function TabCard({
         ) : (
           <div 
             className="flex h-full w-full items-center justify-center text-xs"
-            style={{ color: 'var(--muted)' }}
+            style={{ color: 'var(--muted)', minHeight: '240px' }}
           >
             {translations.noPoster}
           </div>
@@ -615,26 +631,14 @@ export default function TabCard({
         <MyListToggle item={item} />
       </div>
 
-      {/* Content */}
-      <div className={`content flex-1 flex flex-col relative ${
-        isCondensed ? 'px-2 py-1 pb-2' : 'px-4 pt-2 pb-4'
-      }`}>
-        {/* Delete button */}
-        <button
-          onClick={() => actions?.onDelete?.(item)}
-          className="absolute top-1 right-1 bg-red-600 text-white border-none px-1 py-0.5 rounded text-xs cursor-pointer"
-          style={{ fontSize: '10px' }}
-        >
-          {translations.deleteAction}
-        </button>
+      {/* Info Column */}
+      <div className="info-col relative">
 
-        {/* Title with Year */}
-        <div className="flex items-center gap-2 mb-1">
-          <h3 className={`title font-bold ${
-            isCondensed ? 'text-sm' : 'text-base'
-          }`} style={{ color: 'var(--text)' }}>
-            {title}{year ? ` • ${year}` : ''}
-          </h3>
+        <header>
+          <h3>{title}</h3>
+          <span className="meta">
+            {year || 'TBA'} • {mediaType === 'tv' ? 'TV Show' : 'Movie'}
+          </span>
           
           {/* Notes and Tags Indicators */}
           <div className="flex gap-1">
@@ -657,234 +661,106 @@ export default function TabCard({
               </span>
             )}
           </div>
-        </div>
+        </header>
 
-        {/* Where to Watch - only show when we have real data */}
-        {!isCondensed && getWhereToWatch() && (
-          <div className="where text-xs mb-2" style={{ color: 'var(--accent)' }}>
-            {getWhereToWatch()}{rating ? ` • ${rating}/10` : ''}
-          </div>
-        )}
-
-        {/* Badges - hidden in condensed view */}
-        {!isCondensed && (
-          <div className="badges flex gap-1.5 flex-wrap mb-2">
-            {getBadges().map((badge, index) => {
-              const statusInfo = getShowStatusInfo(item.showStatus);
-              const isStatusBadge = statusInfo && badge === statusInfo.badge;
-              
-              return (
-                <span
-                  key={index}
-                  className="badge border border-line rounded px-1.5 py-0.5 text-xs font-medium"
-                  style={{ 
-                    color: isStatusBadge ? statusInfo.color : 'var(--muted)', 
-                    borderColor: isStatusBadge ? statusInfo.backgroundColor : 'var(--line)',
-                    backgroundColor: isStatusBadge ? statusInfo.backgroundColor : 'transparent'
-                  }}
-                >
-                  {badge}
-                </span>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Rating - only show in condensed view or when no streaming info */}
-        {isCondensed && (
-          <div className="rating flex items-center gap-1 mb-1">
-            <span className="text-sm" style={{ color: 'var(--accent)' }}>★</span>
-            <span className="text-xs" style={{ color: 'var(--muted)' }}>
-              {rating ? `${rating}/10` : 'No rating'}
-            </span>
-          </div>
-        )}
-        
-        {/* Rating fallback for non-condensed when no streaming info */}
-        {!isCondensed && !getWhereToWatch() && (
-          <div className="rating flex items-center gap-1 mb-2">
-            <span className="text-xl" style={{ color: 'var(--accent)' }}>★</span>
-            <span className="text-sm" style={{ color: 'var(--muted)' }}>
-              {rating ? `${rating}/10` : 'No rating'}
-            </span>
-          </div>
-        )}
-
-        {/* User Rating */}
+        {/* Rating Row */}
         {(tabType === 'watching' || tabType === 'watched') && (
-          <div className="user-rating mb-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>
-                Rate:
-              </span>
-              <StarRating
-                value={userRating || 0}
-                onChange={handleRatingChange}
-                size="sm"
-              />
-            </div>
+          <div className="rating-row">
+            <StarRating
+              value={userRating || 0}
+              onChange={handleRatingChange}
+              size="sm"
+            />
+            {rating && (
+              <span className="rating-score">({rating}/10)</span>
+            )}
           </div>
         )}
 
-        {/* Overview / Description - show on all tabs */}
+        {/* Synopsis */}
         {synopsis && (
-          <div 
-            className={`overview mb-2 ${isCondensed ? 'text-xs' : 'text-sm'}`}
-            style={{ 
-              color: 'var(--muted)',
-              ...(!isCondensed && { maxHeight: '64px', overflow: 'hidden' })
-            }}
-          >
-            {isCondensed ? truncateAtSentence(synopsis, getMobileDescriptionLength()) : synopsis}
-          </div>
+          <p className="synopsis">
+            {synopsis}
+          </p>
         )}
 
-        {/* Actions */}
-        <div className="actions mt-auto relative">
-          {/* Mobile Actions (with ellipsis) */}
-          <div className="md:hidden">
-            <div 
-              className={`mobile-actions inline-flex flex-wrap gap-1 rounded-lg border border-dashed ${
-                isCondensed ? 'mb-2' : 'mb-3'
-              }`}
-              style={{ borderColor: 'var(--line)', padding: '2px' }}
-            >
-              {renderMobileActions()}
-            </div>
-          </div>
-          
-          {/* Compact Actions - only visible when gate and flag are enabled */}
-          <div className="compact-actions-container">
-            <CompactPrimaryAction 
-              item={item as any} 
-              context="tab" 
-            />
-            <CompactOverflowMenu 
-              item={item as any} 
-              context="tab" 
-            />
-          </div>
-          
-          {/* Desktop Actions (full actions) */}
-          <div className="hidden md:block inline-flex flex-col">
-            {/* Free Actions */}
-          <div 
-            className={`free-actions flex flex-wrap gap-2 rounded-lg border border-dashed ${
-              isCondensed ? 'mb-2' : 'mb-6'
-            }`}
-            style={{ borderColor: 'var(--line)', padding: '2px' }}
-          >
-            {/* Tab-specific primary actions */}
-            {getTabSpecificActions()}
-            
+        {/* Actions Row */}
+        <div className="actions-row">
+          {/* Tab-specific primary actions */}
+          {getTabSpecificActions()}
+
             
             {/* Episode tracking (conditional) */}
-            {mediaType === 'tv' && !isCondensed && (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => actions?.onEpisodeTracking?.(item)}
-                  className={buttonClass}
-                  style={{ 
-                    backgroundColor: 'var(--btn)', 
-                    color: settings.layout.episodeTracking ? 'var(--text)' : 'var(--muted)', 
-                    borderColor: 'var(--line)', 
-                    border: '1px solid',
-                    opacity: settings.layout.episodeTracking ? 1 : 0.6
-                  }}
-                  disabled={!settings.layout.episodeTracking}
-                  title={settings.layout.episodeTracking ? "Track episode progress" : "Enable episode tracking in settings"}
-                >
-                  Episode Progress
-                </button>
-                
-                {/* Episode progress indicator */}
-                {settings.layout.episodeTracking && (
-                  <EpisodeProgressDisplay 
-                    showId={typeof item.id === 'string' ? parseInt(item.id) : item.id}
-                    compact={true}
-                  />
-                )}
-              </div>
+            {mediaType === 'tv' && (
+              <button
+                onClick={() => actions?.onEpisodeTracking?.(item)}
+                className={buttonClass}
+                style={{ 
+                  backgroundColor: 'var(--btn)', 
+                  color: settings.layout.episodeTracking ? 'var(--text)' : 'var(--muted)', 
+                  borderColor: 'var(--line)', 
+                  border: '1px solid',
+                  opacity: settings.layout.episodeTracking ? 1 : 0.6
+                }}
+                disabled={!settings.layout.episodeTracking}
+                title={settings.layout.episodeTracking ? "Track episode progress" : "Enable episode tracking in settings"}
+              >
+                Episode Progress
+              </button>
             )}
-            </div>
+        </div>
 
-            {/* Pro Actions - hidden in condensed view */}
-          {!isCondensed && (
-            <div 
-              className="pro-actions flex flex-wrap gap-2 rounded-lg border border-dashed"
-      style={{ 
-        borderColor: 'var(--pro)', 
-        backgroundColor: 'rgba(240, 185, 11, 0.15)',
-        opacity: 0.85,
-        padding: '2px'
-      }}
-            >
-            <span className="text-xs font-medium" style={{ color: 'var(--pro)', marginRight: 'var(--space-2, 8px)' }}>
-              PRO:
-            </span>
+        {/* Pro Strip */}
+        {!isCondensed && (
+          <div className="pro-strip">
+            <span className="pro-label">PRO:</span>
             <button
-              onClick={() => {
-                dlog('🎬 TabCard bloopers button clicked for:', item.title);
-                dlog('🎬 Pro settings check:', { 
-                  isPro: settings.pro.isPro, 
-                  bloopersAccess: settings.pro.features.bloopersAccess,
-                  buttonEnabled: settings.pro.isPro && settings.pro.features.bloopersAccess
-                });
-                actions?.onBloopersOpen?.(item);
-              }}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md font-semibold"
-              style={{ 
-                backgroundColor: settings.pro.isPro && settings.pro.features.bloopersAccess ? 'var(--pro)' : 'var(--btn)', 
-                color: settings.pro.isPro && settings.pro.features.bloopersAccess ? '#000' : 'var(--muted)', 
-                borderColor: 'var(--pro)', 
+              onClick={() => actions?.onBloopersOpen?.(item)}
+              disabled={!settings.pro.isPro || !settings.pro.features.bloopersAccess}
+              title={settings.pro.isPro && settings.pro.features.bloopersAccess ? "View bloopers and outtakes" : "Pro feature - upgrade to unlock"}
+              className={buttonClass}
+              style={{
+                backgroundColor: settings.pro.isPro && settings.pro.features.bloopersAccess ? 'var(--pro)' : 'var(--btn)',
+                color: settings.pro.isPro && settings.pro.features.bloopersAccess ? '#000' : 'var(--muted)',
+                borderColor: 'var(--pro)',
                 border: '1px solid',
                 opacity: settings.pro.isPro && settings.pro.features.bloopersAccess ? 1 : 0.65
               }}
-              disabled={!settings.pro.isPro || !settings.pro.features.bloopersAccess}
-              title={settings.pro.isPro && settings.pro.features.bloopersAccess ? "View bloopers and outtakes" : "Pro feature - upgrade to unlock"}
             >
               Bloopers
             </button>
             <button
-              onClick={() => {
-                dlog('🎭 TabCard extras button clicked for:', item.title);
-                actions?.onExtrasOpen?.(item);
-              }}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md font-semibold"
-              style={{ 
-                backgroundColor: settings.pro.isPro && settings.pro.features.extrasAccess ? 'var(--pro)' : 'var(--btn)', 
-                color: settings.pro.isPro && settings.pro.features.extrasAccess ? '#000' : 'var(--muted)', 
-                borderColor: 'var(--pro)', 
+              onClick={() => actions?.onExtrasOpen?.(item)}
+              disabled={!settings.pro.isPro || !settings.pro.features.extrasAccess}
+              title={settings.pro.isPro && settings.pro.features.extrasAccess ? "View behind-the-scenes content" : "Pro feature - upgrade to unlock"}
+              className={buttonClass}
+              style={{
+                backgroundColor: settings.pro.isPro && settings.pro.features.extrasAccess ? 'var(--pro)' : 'var(--btn)',
+                color: settings.pro.isPro && settings.pro.features.extrasAccess ? '#000' : 'var(--muted)',
+                borderColor: 'var(--pro)',
                 border: '1px solid',
                 opacity: settings.pro.isPro && settings.pro.features.extrasAccess ? 1 : 0.65
               }}
-              disabled={!settings.pro.isPro || !settings.pro.features.extrasAccess}
-              title={settings.pro.isPro && settings.pro.features.extrasAccess ? "View behind-the-scenes content" : "Pro feature - upgrade to unlock"}
             >
               Extras
             </button>
             <button
-              onClick={() => {
-                dlog('🔔 TabCard advanced notifications button clicked for:', item.title);
-                actions?.onNotificationToggle?.(item);
-              }}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md font-semibold"
-              style={{ 
-                backgroundColor: settings.pro.isPro ? 'var(--pro)' : 'var(--btn)', 
-                color: settings.pro.isPro ? '#000' : 'var(--muted)', 
-                borderColor: 'var(--pro)', 
+              onClick={() => actions?.onNotificationToggle?.(item)}
+              disabled={!settings.pro.isPro}
+              title={settings.pro.isPro ? "Advanced notifications with custom timing" : "Pro feature - upgrade to unlock"}
+              className={buttonClass}
+              style={{
+                backgroundColor: settings.pro.isPro ? 'var(--pro)' : 'var(--btn)',
+                color: settings.pro.isPro ? '#000' : 'var(--muted)',
+                borderColor: 'var(--pro)',
                 border: '1px solid',
                 opacity: settings.pro.isPro ? 1 : 0.65
               }}
-              disabled={!settings.pro.isPro}
-              title={settings.pro.isPro ? "Advanced notifications with custom timing" : "Pro feature - upgrade to unlock"}
             >
               Advanced Notifications
             </button>
-            </div>
-          )}
           </div>
-        </div>
+        )}
 
         {/* Drag handle */}
         <div 
@@ -901,6 +777,22 @@ export default function TabCard({
         </div>
       </div>
     </article>
+  );
+
+  // Mobile: wrap with SwipeableCard (swipe functionality)
+  // Desktop: no wrapper at all (just the card + More menu)
+  if (isDesktop && ready) {
+    return cardContent;
+  }
+
+  return (
+    <SwipeableCard
+      item={item}
+      actions={actions}
+      context={getSwipeContext()}
+      className={isCondensed ? "mb-3" : "mb-5"}
+    >
+      {cardContent}
     </SwipeableCard>
   );
 }

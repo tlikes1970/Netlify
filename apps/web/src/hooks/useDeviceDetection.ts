@@ -14,20 +14,25 @@ export const isDesktop = () => {
   return !isTouchDevice() || !isMobileScreen();
 };
 
-// Hook to track if device is desktop
-export function useIsDesktop() {
-  const [isDesktopDevice, setIsDesktopDevice] = useState(isDesktop());
+// Hook to track if device is desktop (hydration-safe with ready flag)
+export function useIsDesktop(bp = 1024) {
+  const [ready, setReady] = useState(false);
+  const [isDesktopDevice, setIsDesktopDevice] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth >= bp;
+  });
 
   useEffect(() => {
+    setReady(true); // mark after mount to avoid SSR mismatch
     const handleResize = () => {
-      setIsDesktopDevice(isDesktop());
+      setIsDesktopDevice(window.innerWidth >= bp);
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [bp]);
 
-  return isDesktopDevice;
+  return { ready, isDesktop: isDesktopDevice };
 }
 
 // Hook to track if device supports touch

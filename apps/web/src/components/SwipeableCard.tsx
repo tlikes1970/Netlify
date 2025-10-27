@@ -34,14 +34,6 @@ export default function SwipeableCard({
       case 'tab-watching':
         return [
           {
-            id: 'want',
-            label: 'Want',
-            icon: '',
-            color: '#ffffff',
-            backgroundColor: '#ef4444',
-            action: () => actions?.onWant?.(item)
-          },
-          {
             id: 'watched',
             label: 'Watched',
             icon: '',
@@ -50,25 +42,25 @@ export default function SwipeableCard({
             action: () => actions?.onWatched?.(item)
           },
           {
-            id: 'not-interested',
-            label: 'Not Interested',
+            id: 'want',
+            label: 'Want',
             icon: '',
             color: '#ffffff',
-            backgroundColor: '#6b7280',
-            action: () => actions?.onNotInterested?.(item)
-          },
-          {
-            id: 'delete',
-            label: 'Delete',
-            icon: '',
-            color: '#ffffff',
-            backgroundColor: '#dc2626',
-            action: () => actions?.onDelete?.(item)
+            backgroundColor: '#ef4444',
+            action: () => actions?.onWant?.(item)
           }
         ];
 
       case 'tab-want':
         return [
+          {
+            id: 'watched',
+            label: 'Watched',
+            icon: '',
+            color: '#ffffff',
+            backgroundColor: '#10b981',
+            action: () => actions?.onWatched?.(item)
+          },
           {
             id: 'watching',
             label: 'Watching',
@@ -81,40 +73,11 @@ export default function SwipeableCard({
                 Library.move(item.id, item.mediaType, 'watching');
               }
             }
-          },
-          {
-            id: 'watched',
-            label: 'Watched',
-            icon: '',
-            color: '#ffffff',
-            backgroundColor: '#10b981',
-            action: () => actions?.onWatched?.(item)
-          },
-          {
-            id: 'delete',
-            label: 'Remove',
-            icon: '',
-            color: '#ffffff',
-            backgroundColor: '#dc2626',
-            action: () => actions?.onDelete?.(item)
           }
         ];
 
       case 'tab-watched':
         return [
-          {
-            id: 'watching',
-            label: 'Rewatch',
-            icon: '',
-            color: '#ffffff',
-            backgroundColor: '#3b82f6',
-            action: () => {
-              // Move from watched to watching
-              if (item.id && item.mediaType) {
-                Library.move(item.id, item.mediaType, 'watching');
-              }
-            }
-          },
           {
             id: 'want',
             label: 'Want',
@@ -124,12 +87,17 @@ export default function SwipeableCard({
             action: () => actions?.onWant?.(item)
           },
           {
-            id: 'delete',
-            label: 'Remove',
+            id: 'watching',
+            label: 'Watching',
             icon: '',
             color: '#ffffff',
-            backgroundColor: '#dc2626',
-            action: () => actions?.onDelete?.(item)
+            backgroundColor: '#3b82f6',
+            action: () => {
+              // Move from watched to watching
+              if (item.id && item.mediaType) {
+                Library.move(item.id, item.mediaType, 'watching');
+              }
+            }
           }
         ];
 

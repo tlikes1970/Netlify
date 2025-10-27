@@ -47,15 +47,31 @@ function dedupeWithScore(items: Array<{ item: MediaItem; score: number }>) {
   return Array.from(seen.values());
 }
 
+function dedupeWithAllMeta<T extends { item: MediaItem }>(items: T[]): T[] {
+  const seen = new Map<string, T>();
+  for (const entry of items) {
+    const key = `${entry.item.mediaType}:${entry.item.id}`;
+    const existing = seen.get(key);
+    if (!existing || entry.score > existing.score) {
+      seen.set(key, entry);
+    }
+  }
+  return Array.from(seen.values());
+}
+
 export async function smartSearch(
   queryRaw: string,
   page = 1,
   searchType: SearchType = 'all',
-  opts?: { signal?: AbortSignal; language?: string; region?: string }
+  opts?: { signal?: AbortSignal; language?: string; region?: string; debugSearch?: boolean }
 ): Promise<SearchResultWithPagination> {
   const language = opts?.language ?? 'en-US';
   const region   = opts?.region ?? 'US';
   const query    = normalizeQuery(queryRaw);
+  
+  // Check for debug flag in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const debugMode = opts?.debugSearch || urlParams.get('debugSearch') === '1';
 
   // People-only: simple flow
   if (searchType === 'people') {
@@ -106,10 +122,13 @@ export async function smartSearch(
       voteCount: undefined,
       releaseYear: item.year ? parseInt(item.year) : undefined,
       mediaType: item.mediaType,
-      originalLanguage: undefined
-    }, { preferType: searchType === 'movies-tv' ? 'all' : searchType });
+      originalLanguage: undefined,
+      collectionName: undefined // Will be populated later if available
+    }, { 
+      preferType: searchType === 'movies-tv' ? 'all' : searchType,
+      debugSearch: debugMode 
+    });
     
-    // Apply franchise head boost if applicable
     const meta = {
       tier: scored.titleSig.tier,
       voteCount: undefined as number | undefined,
@@ -119,19 +138,12 @@ export async function smartSearch(
       title: item.title
     };
     
-    // Franchise head heuristic
-    const single = query.split(/\s+/).length === 1;
-    const isHead = (meta.voteCount ?? 0) > 50000 || (meta.popularity ?? 0) > 200;
-    if (single && isHead && meta.tier === 'word') {
-      meta.tier = 'starts';
-      scored.titleSig.tier = 'starts';
-    }
-    
     return { 
       item, 
       score: scored.score, 
       titleSig: scored.titleSig,
-      meta 
+      meta,
+      debug: scored.debug
     };
   });
 
@@ -148,117 +160,83 @@ export async function smartSearch(
     }
   });
   
-  // Find all anchor candidates
-  // Filter: require leading tier OR exact tier with article (like "The Matrix")
-  const anchorCandidates = allWithMeta.filter(
-    x => x.titleSig.score >= 0.92 
-      || (x.titleSig.tier === 'leading' && x.titleSig.score >= 0.95)
-      || (x.titleSig.tier === 'exact' && (x.item.title?.toLowerCase().startsWith('the ') || x.item.title?.toLowerCase().startsWith('a ')))
-  );
+  // Find canonical candidates for potential pinning
+  const exactCandidates = allWithMeta.filter(x => x.titleSig.tier === 'exact' && x.score > 0);
   
-  // Prioritize anchor selection:
-  // 1. Leading tier with article (like "The Matrix")
-  // 2. Then exact tier with article
-  // 3. Then other leading/exact matches
-  const leadingWithArticle = anchorCandidates.filter(x => 
-    x.titleSig.tier === 'leading' && (x.item.title?.toLowerCase().startsWith('the ') || x.item.title?.toLowerCase().startsWith('a '))
-  );
-  const exactWithArticle = anchorCandidates.filter(x => 
-    x.titleSig.tier === 'exact' && (x.item.title?.toLowerCase().startsWith('the ') || x.item.title?.toLowerCase().startsWith('a '))
-  );
-  const leadingMatches = anchorCandidates.filter(x => x.titleSig.tier === 'leading');
-  const exactMatches = anchorCandidates.filter(x => x.titleSig.tier === 'exact');
+  if (debugMode && exactCandidates.length > 0) {
+    console.log(`Found ${exactCandidates.length} exact matches for pinning consideration`);
+    exactCandidates.slice(0, 5).forEach(x => {
+      console.log(`  - "${x.item.title}" (${x.item.year}) - score: ${x.score.toFixed(2)}`);
+    });
+  }
   
-  const anchorEntry = leadingWithArticle.length > 0
-    ? // Prefer "The Matrix" (1999) over "Matrix" (1973)
-      leadingWithArticle.sort((a, b) => {
-        const yearDiff = (parseInt(a.item.year || '9999') || 9999) - (parseInt(b.item.year || '9999') || 9999);
-        return yearDiff !== 0 ? yearDiff : b.score - a.score;
-      })[0]
-    : exactWithArticle.length > 0
-    ? exactWithArticle.sort((a, b) => b.score - a.score)[0]
-    : leadingMatches.length > 0
-    ? leadingMatches.sort((a, b) => {
-        const yearDiff = (parseInt(a.item.year || '9999') || 9999) - (parseInt(b.item.year || '9999') || 9999);
-        return yearDiff !== 0 ? yearDiff : b.score - a.score;
-      })[0]
-    : exactMatches.length > 0
-    ? exactMatches.sort((a, b) => b.score - a.score)[0]
-    : null;
+  // Disable anchor chaos - let canonical pinning handle promotion
+  const anchor = null;
   
-  const anchor = anchorEntry?.item || null;
-  
-  console.log('Anchor candidates found:', anchorCandidates.length);
-  console.log('Anchor selected:', anchor?.title, `(${anchor?.year})`, 'with tier:', anchorEntry?.titleSig.tier, 'score:', anchorEntry?.score);
-
-  // Fetch similar/recommendations if we have a high-confidence anchor
+  // Fetch similar/recommendations if we have exact matches
   let extras: MediaItem[] = [];
-  if (anchor && anchor.mediaType !== 'person') {
-    try {
-      const [simJson, recJson] = await Promise.all([
-        fetchTMDB(`${anchor.mediaType}/${anchor.id}/similar`, { page: 1, language }, opts?.signal).catch(() => ({ results: [] })),
-        fetchTMDB(`${anchor.mediaType}/${anchor.id}/recommendations`, { page: 1, language }, opts?.signal).catch(() => ({ results: [] }))
-      ]);
-      
-      const sim = ((simJson.results ?? []) as any[]).map(mapTMDBToMediaItem).filter(Boolean) as MediaItem[];
-      const rec = ((recJson.results ?? []) as any[]).map(mapTMDBToMediaItem).filter(Boolean) as MediaItem[];
-      extras = [...sim, ...rec];
-      
-      // Score extras and add to allWithMeta
-      const extrasWithMeta = extras.map(item => {
-        const scored = computeSearchScore(query, {
-          title: item.title || '',
-          originalTitle: undefined,
-          aliases: [],
-          overview: item.synopsis,
-          popularity: item.voteAverage ? item.voteAverage * 10 : undefined,
-          voteAverage: item.voteAverage,
-          voteCount: undefined,
-          releaseYear: item.year ? parseInt(item.year) : undefined,
-          mediaType: item.mediaType,
-          originalLanguage: undefined
-        }, { preferType: searchType === 'movies-tv' ? 'all' : searchType });
+  if (exactCandidates.length > 0) {
+    const bestMatch = exactCandidates.sort((a, b) => b.score - a.score)[0];
+    if (bestMatch.item.mediaType !== 'person') {
+      try {
+        const [simJson, recJson] = await Promise.all([
+          fetchTMDB(`${bestMatch.item.mediaType}/${bestMatch.item.id}/similar`, { page: 1, language }, opts?.signal).catch(() => ({ results: [] })),
+          fetchTMDB(`${bestMatch.item.mediaType}/${bestMatch.item.id}/recommendations`, { page: 1, language }, opts?.signal).catch(() => ({ results: [] }))
+        ]);
         
-        const meta = {
-          tier: scored.titleSig.tier,
-          voteCount: undefined as number | undefined,
-          voteAverage: item.voteAverage,
-          releaseYear: item.year ? parseInt(item.year) : undefined,
-          popularity: item.voteAverage ? item.voteAverage * 10 : undefined,
-          title: item.title
-        };
+        const sim = ((simJson.results ?? []) as any[]).map(mapTMDBToMediaItem).filter(Boolean) as MediaItem[];
+        const rec = ((recJson.results ?? []) as any[]).map(mapTMDBToMediaItem).filter(Boolean) as MediaItem[];
+        extras = [...sim, ...rec];
         
-        return { 
-          item, 
-          score: scored.score, 
-          titleSig: scored.titleSig,
-          meta 
-        };
-      });
-      
-      allWithMeta.push(...extrasWithMeta);
-    } catch {
-      // Extras are optional
+        // Score extras and add to allWithMeta
+        const extrasWithMeta = extras.map(item => {
+          const scored = computeSearchScore(query, {
+            title: item.title || '',
+            originalTitle: undefined,
+            aliases: [],
+            overview: item.synopsis,
+            popularity: item.voteAverage ? item.voteAverage * 10 : undefined,
+            voteAverage: item.voteAverage,
+            voteCount: undefined,
+            releaseYear: item.year ? parseInt(item.year) : undefined,
+            mediaType: item.mediaType,
+            originalLanguage: undefined,
+            collectionName: undefined
+          }, { 
+            preferType: searchType === 'movies-tv' ? 'all' : searchType,
+            debugSearch: debugMode
+          });
+          
+          const meta = {
+            tier: scored.titleSig.tier,
+            voteCount: undefined as number | undefined,
+            voteAverage: item.voteAverage,
+            releaseYear: item.year ? parseInt(item.year) : undefined,
+            popularity: item.voteAverage ? item.voteAverage * 10 : undefined,
+            title: item.title
+          };
+          
+          return { 
+            item, 
+            score: scored.score, 
+            titleSig: scored.titleSig,
+            meta,
+            debug: scored.debug
+          };
+        });
+        
+        allWithMeta.push(...extrasWithMeta);
+      } catch {
+        // Extras are optional
+      }
     }
   }
 
-  // Dedupe keeping highest-scored duplicate
-  const deduped = dedupeWithScore(allWithMeta.map(({ item, score }) => ({ item, score })));
+  // Dedupe keeping highest-scored duplicate - preserve all metadata
+  const deduped = dedupeWithAllMeta(allWithMeta);
   
-  // Sort by score with tie-breaking
-  const withMeta = deduped.map(({ item, score }) => {
-    const original = allWithMeta.find(x => x.item === item);
-    return { 
-      item, 
-      score, 
-      meta: original?.meta || { 
-        tier: 'overlap', 
-        voteAverage: item.voteAverage, 
-        releaseYear: item.year ? parseInt(item.year) : undefined,
-        title: item.title
-      } 
-    };
-  });
+  // Sort by score with tie-breaking - metadata already preserved
+  const withMeta = deduped;
   
   const ranked = withMeta.sort((a, b) => {
     const scoreDiff = b.score - a.score;
@@ -270,6 +248,40 @@ export async function smartSearch(
     return scoreDiff;
   });
 
+  // Debug logging for top 20 results in table format
+  if (debugMode) {
+    console.log('\n📊 SEARCH RANKING DEBUG - Top 20 Results');
+    console.log('Query:', queryRaw);
+    console.log('═'.repeat(120));
+    
+    const tableData = ranked.slice(0, 20).map((x, i) => {
+      const debugInfo = (x as any).debug || {};
+      return {
+        rank: i + 1,
+        title: `"${x.item.title.substring(0, 40)}"`,
+        year: x.item.year || '?',
+        score: x.score.toFixed(1),
+        tier: x.meta.tier,
+        ...(Object.keys(debugInfo).length > 0 ? {
+          exact: debugInfo.titleExact || 0,
+          prefix: debugInfo.titlePrefix || 0,
+          contains: debugInfo.titleContains || 0,
+          pop: (debugInfo.popBonus || 0).toFixed(1),
+          recency: (debugInfo.recencyBonus || 0).toFixed(1)
+        } : {})
+      };
+    });
+    
+    console.table(tableData);
+    console.log('');
+    
+    // Show pinning status if applicable
+    const exacts = ranked.filter(x => x.titleSig.tier === 'exact');
+    if (exacts.length > 0) {
+      console.log(`✅ Canonical pinning active: ${exacts.length} exact match(es) found`);
+    }
+  }
+
   console.log('📊 Final ranked top 5:', ranked.slice(0, 5).map((x, i) => ({
     rank: i + 1,
     title: x.item.title,
@@ -277,14 +289,20 @@ export async function smartSearch(
     score: x.score
   })));
 
-  // Force anchor to index 0 if it exists
-  if (anchor) {
-    const anchorIndex = ranked.findIndex(x => x.item === anchor);
-    console.log('🎯 Anchor at index:', anchorIndex, 'forcing to 0');
-    if (anchorIndex > 0) {
-      const anchorItem = ranked[anchorIndex];
-      ranked.splice(anchorIndex, 1);
-      ranked.unshift(anchorItem);
+  // Canonical pinning: promote the highest-scoring exact match to rank 1
+  const exactInRanked = ranked.filter(x => x.titleSig.tier === 'exact');
+  if (exactInRanked.length > 0) {
+    const highestExact = exactInRanked.reduce((best, current) => current.score > best.score ? current : best);
+    const exactIndex = ranked.indexOf(highestExact);
+    
+    if (exactIndex > 0) {
+      if (debugMode) {
+        console.log(`📌 PINNED: "${highestExact.item.title}" (${highestExact.item.year}) to rank 1 (was rank ${exactIndex + 1})`);
+      }
+      ranked.splice(exactIndex, 1);
+      ranked.unshift(highestExact);
+    } else if (debugMode) {
+      console.log(`✅ "${highestExact.item.title}" already at rank 1`);
     }
   }
 

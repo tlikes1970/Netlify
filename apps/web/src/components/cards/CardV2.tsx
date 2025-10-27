@@ -1,6 +1,7 @@
 import React from 'react';
 import type { CardContext, CardActionHandlers, MediaItem } from './card.types';
 import { useTranslations } from '../../lib/language';
+import { useIsDesktop } from '../../hooks/useDeviceDetection';
 import SwipeableCard from '../SwipeableCard';
 import MyListToggle from '../MyListToggle';
 import { OptimizedImage } from '../OptimizedImage';
@@ -23,21 +24,18 @@ export type CardV2Props = {
  * - 2:3 poster with safe fallback
  * - context-specific action bar
  * - optional Holiday + chip top-right (where relevant)
+ * - SWIPE ONLY ON MOBILE: Desktop has zero swipe wrapper
  */
 export default function CardV2({ item, context, actions, compact, showRating = true, disableSwipe = false }: CardV2Props) {
   const { title, year, posterUrl, voteAverage } = item;
   const rating = typeof voteAverage === 'number' ? Math.round(voteAverage * 10) / 10 : undefined;
   const translations = useTranslations();
+  const isDesktop = useIsDesktop(); // Device detection for conditional swipe
 
   const showMyListBtn = context === 'tab-foryou' || context === 'search' || context === 'home' || context === 'tab-watching' || context === 'holiday';
 
-  return (
-    <SwipeableCard
-      item={item}
-      actions={actions}
-      context={context}
-      disableSwipe={disableSwipe}
-    >
+  // Card content (shared between mobile and desktop)
+  const cardContent = (
       <article className="curated-card v2 group select-none" data-testid="cardv2" aria-label={title} style={{ width: 'var(--poster-w, 160px)' }}>
       <div 
         className="relative border shadow-sm overflow-hidden"
@@ -152,11 +150,28 @@ export default function CardV2({ item, context, actions, compact, showRating = t
           />
           <CompactOverflowMenu 
             item={item as any} 
-            context={context === 'home' || context === 'tab-foryou' || context === 'search' ? 'home' : 'tab'} 
+            context={context === 'home' || context === 'tab-foryou' || context === 'search' ? 'home' : 'tab'}
+            actions={actions}
           />
         </div>
       </div>
     </article>
+  );
+
+  // Mobile: wrap with SwipeableCard (swipe functionality + More menu)
+  // Desktop: no wrapper at all (just the card + More menu)
+  if (isDesktop || disableSwipe) {
+    return cardContent;
+  }
+
+  return (
+    <SwipeableCard
+      item={item}
+      actions={actions}
+      context={context}
+      disableSwipe={false}
+    >
+      {cardContent}
     </SwipeableCard>
   );
 }

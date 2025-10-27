@@ -1,5 +1,30 @@
+/* Z-index ladder for proper layering */
+:root {
+  --z-rail: 0;
+  --z-card: 10;
+  --z-menu: 1000;
+  --z-toast: 1100;
+}
+
 /* Compact Actions - Mobile Compact V2 */
-/* Only active when both compact gate and actions split flag are enabled */
+/* Hidden on desktop */
+.compact-actions-container {
+  display: none;
+}
+
+/* Show only on mobile screens, but hide from tab cards */
+@media (max-width: 1023px) {
+  .compact-actions-container {
+    display: block;
+  }
+  
+  /* Hide compact actions on tab cards */
+  article[data-card-type="tab"] .compact-actions-container {
+    display: none !important;
+  }
+}
+
+/* Enhanced styling when both compact gate and actions split flag are enabled */
 html[data-compact-mobile-v1="true"][data-actions-split="true"] {
   /* Hide existing action buttons when compact actions are shown */
   .compact-actions-container {
@@ -23,8 +48,8 @@ html[data-compact-mobile-v1="true"][data-actions-split="true"] {
   }
 }
 
-/* Compact Primary Action Button */
-html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-primary-action {
+/* Compact Primary Action Button - Base Styles */
+.compact-primary-action {
   /* Use compact tokens for consistent styling */
   padding: var(--space-2, 8px);
   border-radius: var(--radius, 12px);
@@ -38,13 +63,18 @@ html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-primary-
   outline: none;
 }
 
-html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-primary-action:focus {
+.compact-primary-action:focus {
   outline: 2px solid var(--accent, #007AFF);
   outline-offset: 2px;
 }
 
-/* Compact Overflow Menu */
-html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-overflow-trigger {
+/* Enhanced styling when flags enabled */
+html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-primary-action {
+  /* Additional styling when flags are enabled */
+}
+
+/* Compact Overflow Menu - Base Styles */
+.compact-overflow-trigger {
   /* Use compact tokens */
   padding: var(--space-2, 8px);
   border-radius: var(--radius, 12px);
@@ -57,18 +87,27 @@ html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-overflow
   outline: none;
 }
 
-html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-overflow-trigger:focus {
+.compact-overflow-trigger:focus {
   outline: 2px solid var(--accent, #007AFF);
   outline-offset: 2px;
 }
 
-html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-overflow-menu {
+.compact-overflow-menu {
   /* Use compact tokens for spacing */
   border-radius: var(--radius, 12px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   
   /* Smooth animations */
   animation: compact-menu-fade-in 0.2s ease-out;
+}
+
+.compact-overflow-menu button {
+  /* Use compact tokens */
+  padding: var(--space-3, 12px);
+  font-size: var(--font-sm, 13px);
+  
+  /* Smooth transitions */
+  transition: background-color 0.2s ease;
 }
 
 @keyframes compact-menu-fade-in {
@@ -82,13 +121,10 @@ html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-overflow
   }
 }
 
+/* Enhanced styling when flags enabled */
+html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-overflow-trigger:focus,
 html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-overflow-menu button {
-  /* Use compact tokens */
-  padding: var(--space-3, 12px);
-  font-size: var(--font-sm, 13px);
-  
-  /* Smooth transitions */
-  transition: background-color 0.2s ease;
+  /* Additional styling when flags are enabled */
 }
 
 /* SwipeRow Component */
@@ -212,6 +248,84 @@ html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-actions-
       transition: none;
       animation: none;
     }
+  }
+}
+
+/* Menu Portal - Fixed positioning for overflow menus */
+.menu-portal {
+  position: fixed;
+  z-index: var(--z-menu);
+  min-width: 200px;
+  max-width: min(90vw, 320px);
+  max-height: min(56vh, 420px);
+  overflow: auto;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line, #e0e0e0);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  animation: menu-fade-in 0.15s ease-out;
+}
+
+.menu-portal[data-dir="up"] { 
+  transform-origin: bottom left; 
+}
+
+.menu-portal[data-dir="down"] { 
+  transform-origin: top left; 
+}
+
+/* Menu items */
+.menu-portal button[role="menuitem"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  font: inherit;
+  border: 0;
+  background: transparent;
+  color: var(--text, #000000);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.menu-portal button[role="menuitem"]:focus-visible {
+  outline: 2px solid var(--accent, #007AFF);
+  outline-offset: 2px;
+}
+
+.menu-portal button[role="menuitem"]:hover {
+  background-color: var(--muted, #f5f5f5);
+}
+
+.menu-portal button[role="menuitem"]:active {
+  background-color: var(--muted-hover, #e5e5e5);
+}
+
+@keyframes menu-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Dark mode support for portal menu */
+@media (prefers-color-scheme: dark) {
+  .menu-portal {
+    background: var(--surface, #1a1a1a);
+    border-color: var(--line, #333333);
+  }
+  
+  .menu-portal button[role="menuitem"] {
+    color: var(--text, #ffffff);
+  }
+  
+  .menu-portal button[role="menuitem"]:hover {
+    background-color: var(--muted, #333333);
   }
 }
 
