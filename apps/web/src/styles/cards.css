@@ -1,0 +1,77 @@
+/* Card Styles - Focus, Spacing, and Pro Buttons */
+
+/* Card focus outline: subtle, tight, focus-only */
+.tab-card:focus {
+  outline: none;
+}
+
+.tab-card:focus-visible,
+.curated-card:focus-visible {
+  /* 1px dotted, lower contrast, pulled in */
+  outline: 1px dotted color-mix(in srgb, var(--line) 55%, transparent);
+  outline-offset: -2px;
+}
+
+/* Keyboard-focus helper, if used */
+.tab-card.is-keyboard-focus,
+.curated-card.is-keyboard-focus {
+  outline: 1px dotted color-mix(in srgb, var(--line) 55%, transparent);
+  outline-offset: -2px;
+}
+
+@supports not (color-mix: srgb) {
+  .tab-card:focus-visible,
+  .curated-card:focus-visible,
+  .tab-card.is-keyboard-focus,
+  .curated-card.is-keyboard-focus {
+    outline-color: rgba(255, 255, 255, 0.25);
+  }
+}
+
+/* Pro button container styling */
+.pro-actions {
+  border: 1px dotted color-mix(in srgb, var(--line) 45%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card) 90%, var(--pro) 10%);
+}
+
+html[data-compact-mobile-v1="true"] .pro-actions {
+  padding: 6px 8px;
+  border-radius: 12px;
+}
+
+/* Card row spacing - reduce gaps */
+.space-y-4 {
+  gap: 12px; /* was 16px (space-y-4) */
+}
+
+.space-y-3 {
+  gap: 9px; /* was 12px (space-y-3) */
+}
+
+/* Compact mobile gets even tighter spacing */
+html[data-compact-mobile-v1="true"] .space-y-4 {
+  gap: 10px;
+}
+
+html[data-compact-mobile-v1="true"] .space-y-3 {
+  gap: 8px;
+}
+
+/* Additional card margin adjustments */
+.tab-card.mb-5 {
+  margin-bottom: 1.25rem; /* 20px, reduced from mb-8 (32px) */
+}
+
+.tab-card.mb-3 {
+  margin-bottom: 0.75rem; /* 12px, reduced from mb-4 (16px) */
+}
+
+html[data-compact-mobile-v1="true"] .tab-card.mb-5 {
+  margin-bottom: 1rem; /* 16px */
+}
+
+html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
+  margin-bottom: 0.5rem; /* 8px */
+}
+

@@ -157,13 +157,6 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           </ErrorBoundary>
         )}
         
-        {!query && items.length > 0 && (
-          <div className="mt-6 text-center">
-            <p className="text-xs text-neutral-500">
-              💡 Use the search bar to find content
-            </p>
-          </div>
-        )}
       </div>
     </section>
   );

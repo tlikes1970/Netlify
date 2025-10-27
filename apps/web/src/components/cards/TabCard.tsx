@@ -548,7 +548,7 @@ export default function TabCard({
       item={item}
       actions={actions}
       context={getSwipeContext()}
-      className={isCondensed ? "mb-4" : "mb-8"}
+      className={isCondensed ? "mb-3" : "mb-5"}
     >
       <article 
         className={`tab-card group relative flex rounded-2xl overflow-hidden shadow-lg transition-all duration-200 hover:shadow-xl ${
@@ -583,7 +583,11 @@ export default function TabCard({
           height: isCondensed ? 'var(--poster-h, 120px)' : 'var(--poster-h, 240px)',
           borderRadius: 'var(--radius, 16px) 0 0 var(--radius, 16px)'
         }}
-        onClick={() => {
+        onClick={(e) => {
+          // Don't open TMDB if clicking on a button inside the poster
+          if ((e.target as HTMLElement).closest('button')) {
+            return;
+          }
           if (item.id && item.mediaType) {
             const tmdbUrl = `https://www.themoviedb.org/${item.mediaType}/${item.id}`;
             window.open(tmdbUrl, '_blank', 'noopener,noreferrer');
@@ -747,10 +751,10 @@ export default function TabCard({
           {/* Mobile Actions (with ellipsis) */}
           <div className="md:hidden">
             <div 
-              className={`mobile-actions flex flex-wrap gap-1 rounded-lg border border-dashed ${
-                isCondensed ? 'p-1 mb-2' : 'p-2 mb-3'
+              className={`mobile-actions inline-flex flex-wrap gap-1 rounded-lg border border-dashed ${
+                isCondensed ? 'mb-2' : 'mb-3'
               }`}
-              style={{ borderColor: 'var(--line)' }}
+              style={{ borderColor: 'var(--line)', padding: '2px' }}
             >
               {renderMobileActions()}
             </div>
@@ -769,13 +773,13 @@ export default function TabCard({
           </div>
           
           {/* Desktop Actions (full actions) */}
-          <div className="hidden md:block">
+          <div className="hidden md:block inline-flex flex-col">
             {/* Free Actions */}
           <div 
             className={`free-actions flex flex-wrap gap-2 rounded-lg border border-dashed ${
-              isCondensed ? 'p-1 mb-2' : 'p-2 mb-3'
+              isCondensed ? 'mb-2' : 'mb-6'
             }`}
-            style={{ borderColor: 'var(--line)' }}
+            style={{ borderColor: 'var(--line)', padding: '2px' }}
           >
             {/* Tab-specific primary actions */}
             {getTabSpecificActions()}
@@ -814,12 +818,13 @@ export default function TabCard({
             {/* Pro Actions - hidden in condensed view */}
           {!isCondensed && (
             <div 
-              className="pro-actions flex flex-wrap gap-2 p-2 rounded-lg border border-dashed"
-              style={{ 
-                borderColor: 'var(--pro)', 
-                backgroundColor: 'rgba(240, 185, 11, 0.1)',
-                opacity: 0.7
-              }}
+              className="pro-actions flex flex-wrap gap-2 rounded-lg border border-dashed"
+      style={{ 
+        borderColor: 'var(--pro)', 
+        backgroundColor: 'rgba(240, 185, 11, 0.15)',
+        opacity: 0.85,
+        padding: '2px'
+      }}
             >
             <span className="text-xs font-medium" style={{ color: 'var(--pro)', marginRight: 'var(--space-2, 8px)' }}>
               PRO:
@@ -834,13 +839,13 @@ export default function TabCard({
                 });
                 actions?.onBloopersOpen?.(item);
               }}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md font-semibold"
               style={{ 
-                backgroundColor: 'var(--btn)', 
-                color: 'var(--muted)', 
+                backgroundColor: settings.pro.isPro && settings.pro.features.bloopersAccess ? 'var(--pro)' : 'var(--btn)', 
+                color: settings.pro.isPro && settings.pro.features.bloopersAccess ? '#000' : 'var(--muted)', 
                 borderColor: 'var(--pro)', 
                 border: '1px solid',
-                opacity: settings.pro.isPro && settings.pro.features.bloopersAccess ? 1 : 0.6
+                opacity: settings.pro.isPro && settings.pro.features.bloopersAccess ? 1 : 0.65
               }}
               disabled={!settings.pro.isPro || !settings.pro.features.bloopersAccess}
               title={settings.pro.isPro && settings.pro.features.bloopersAccess ? "View bloopers and outtakes" : "Pro feature - upgrade to unlock"}
@@ -852,13 +857,13 @@ export default function TabCard({
                 dlog('🎭 TabCard extras button clicked for:', item.title);
                 actions?.onExtrasOpen?.(item);
               }}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md font-semibold"
               style={{ 
-                backgroundColor: 'var(--btn)', 
-                color: 'var(--muted)', 
+                backgroundColor: settings.pro.isPro && settings.pro.features.extrasAccess ? 'var(--pro)' : 'var(--btn)', 
+                color: settings.pro.isPro && settings.pro.features.extrasAccess ? '#000' : 'var(--muted)', 
                 borderColor: 'var(--pro)', 
                 border: '1px solid',
-                opacity: settings.pro.isPro && settings.pro.features.extrasAccess ? 1 : 0.6
+                opacity: settings.pro.isPro && settings.pro.features.extrasAccess ? 1 : 0.65
               }}
               disabled={!settings.pro.isPro || !settings.pro.features.extrasAccess}
               title={settings.pro.isPro && settings.pro.features.extrasAccess ? "View behind-the-scenes content" : "Pro feature - upgrade to unlock"}
@@ -870,13 +875,13 @@ export default function TabCard({
                 dlog('🔔 TabCard advanced notifications button clicked for:', item.title);
                 actions?.onNotificationToggle?.(item);
               }}
-              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+              className="px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md font-semibold"
               style={{ 
-                backgroundColor: 'var(--btn)', 
-                color: 'var(--muted)', 
+                backgroundColor: settings.pro.isPro ? 'var(--pro)' : 'var(--btn)', 
+                color: settings.pro.isPro ? '#000' : 'var(--muted)', 
                 borderColor: 'var(--pro)', 
                 border: '1px solid',
-                opacity: settings.pro.isPro ? 1 : 0.6
+                opacity: settings.pro.isPro ? 1 : 0.65
               }}
               disabled={!settings.pro.isPro}
               title={settings.pro.isPro ? "Advanced notifications with custom timing" : "Pro feature - upgrade to unlock"}

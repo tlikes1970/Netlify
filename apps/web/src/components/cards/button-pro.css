@@ -1,0 +1,56 @@
+/* Pro Button Styles - High Contrast, Clear States */
+
+/* Scoped to card buttons only */
+.card .btn-pro,
+.card [data-pro="true"],
+.tab-card .btn-pro,
+.tab-card [data-pro="true"] {
+  background: var(--pro, #f0b90b);
+  color: #000;
+  border: 1px solid color-mix(in srgb, var(--pro, #f0b90b) 75%, black 25%);
+  font-weight: 600;
+  opacity: 1;
+}
+
+.card .btn-pro:hover,
+.card [data-pro="true"]:hover,
+.tab-card .btn-pro:hover,
+.tab-card [data-pro="true"]:hover {
+  filter: saturate(1.06);
+  transform: translateY(-0.5px);
+}
+
+.card .btn-pro:active,
+.card [data-pro="true"]:active,
+.tab-card .btn-pro:active,
+.tab-card [data-pro="true"]:active {
+  filter: brightness(0.98);
+  transform: translateY(0);
+}
+
+.card .btn-pro[disabled],
+.card [data-pro="true"][disabled],
+.tab-card .btn-pro[disabled],
+.tab-card [data-pro="true"][disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Optional: a thin local focus for the button itself */
+.card .btn-pro:focus-visible,
+.card [data-pro="true"]:focus-visible,
+.tab-card .btn-pro:focus-visible,
+.tab-card [data-pro="true"]:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--pro, #f0b90b) 60%, white 40%);
+  outline-offset: 2px;
+}
+
+@supports not (color-mix: srgb) {
+  .card .btn-pro:focus-visible,
+  .card [data-pro="true"]:focus-visible,
+  .tab-card .btn-pro:focus-visible,
+  .tab-card [data-pro="true"]:focus-visible {
+    outline-color: rgba(240, 185, 11, 0.6);
+  }
+}
+

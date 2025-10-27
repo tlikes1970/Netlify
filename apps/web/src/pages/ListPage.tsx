@@ -228,7 +228,7 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
           // ListPage receives data as props, so parent component should handle refetch
           // This will reset the error boundary state
         }}>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {processedItems.map((item, index) => {
               // LibraryEntry already has all MediaItem properties
               const mediaItem: MediaItem = {

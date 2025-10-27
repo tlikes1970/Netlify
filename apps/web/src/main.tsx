@@ -16,6 +16,8 @@ import './styles/compact-lists.css';
 import './styles/compact-a11y-perf.css';
 import './styles/compact-cleanup.css';
 import './styles/cards-mobile.css';
+import './styles/cards.css';
+import './components/cards/button-pro.css';
 import { installCompactMobileGate, installActionsSplitGate } from './lib/flags';
 import { initFlags } from './lib/mobileFlags';
 

@@ -49,7 +49,11 @@ export default function CardV2({ item, context, actions, compact, showRating = t
           role="img" 
           aria-label={title}
           style={{ backgroundColor: 'var(--muted)' }}
-          onClick={() => {
+          onClick={(e) => {
+            // Don't open TMDB if clicking on a button inside the poster
+            if ((e.target as HTMLElement).closest('button')) {
+              return;
+            }
             if (item.id && item.mediaType) {
               const tmdbUrl = `https://www.themoviedb.org/${item.mediaType}/${item.id}`;
               window.open(tmdbUrl, '_blank', 'noopener,noreferrer');

@@ -10,7 +10,9 @@ export default function MyListToggle({ item }: MyListToggleProps) {
   const [showModal, setShowModal] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default behavior
+    e.stopPropagation(); // Prevent triggering parent poster click
     setIsPressed(true);
     // Always show modal for list selection
     setShowModal(true);
@@ -31,6 +33,7 @@ export default function MyListToggle({ item }: MyListToggleProps) {
         onClick={handleClick}
         onContextMenu={(e) => {
           e.preventDefault();
+          e.stopPropagation(); // Prevent triggering parent poster click
           handleLongPress();
         }}
         className={`absolute right-1.5 top-1.5 rounded-full border bg-background/80 px-2 py-0.5 text-[11px] leading-none backdrop-blur transition hover:bg-accent hover:text-accent-foreground ${
