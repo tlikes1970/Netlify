@@ -55,6 +55,12 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
+  // Don't cache navigation requests (important for auth redirects)
+  if (request.mode === 'navigate') {
+    event.respondWith(fetch(request));
+    return;
+  }
+  
   // Handle TMDB image requests
   if (url.hostname === 'image.tmdb.org') {
     event.respondWith(handleImageRequest(request));
@@ -67,7 +73,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Handle static asset requests
+  // Handle static asset requests (with cache-busting for JS files)
   if (url.pathname.startsWith('/assets/') || url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
     event.respondWith(handleStaticRequest(request));
     return;
@@ -156,7 +162,7 @@ async function handleApiRequest(request) {
   }
 }
 
-// Handle static asset requests with cache-first strategy
+// Handle static asset requests with stale-while-revalidate strategy
 async function handleStaticRequest(request) {
   const cache = await caches.open(CACHE_NAME);
   
@@ -166,6 +172,19 @@ async function handleStaticRequest(request) {
     
     if (cachedResponse) {
       console.log('[SW] Serving static asset from cache:', request.url);
+      
+      // Revalidate in background for JS files (ensure auth logic is fresh)
+      if (request.url.endsWith('.js')) {
+        fetch(request).then((response) => {
+          if (response.ok) {
+            cache.put(request, response.clone());
+            console.log('[SW] Updated JS cache:', request.url);
+          }
+        }).catch(() => {
+          // Ignore background fetch errors
+        });
+      }
+      
       return cachedResponse;
     }
     

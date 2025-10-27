@@ -168,14 +168,20 @@ class AuthManager {
 
   private async signInWithGoogle(): Promise<void> {
     const isMobile = isMobileNow();
+    console.log('🚀 Starting Google sign-in...', { isMobile, userAgent: navigator.userAgent });
     
     if (isMobile) {
       // Mobile: use redirect
+      console.log('📱 Mobile device detected - using redirect flow');
       await signInWithRedirect(auth, googleProvider);
+      // Note: This will redirect the page to Google. The redirect result will be handled
+      // when the page loads after returning from Google.
     } else {
       // Desktop: try popup first
+      console.log('🖥️ Desktop device detected - trying popup first');
       try {
         await signInWithPopup(auth, googleProvider);
+        console.log('✅ Popup sign-in successful');
       } catch (error: any) {
         // Popup blocked, fallback to redirect
         if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
