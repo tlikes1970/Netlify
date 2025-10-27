@@ -35,13 +35,13 @@ export default function AccountButton() {
 
   return (
     <>
-      <div className="flex flex-col items-center gap-1">
-        <div className="text-xs" style={{ color: 'var(--muted)' }}>
+      <div className="flex flex-col items-center gap-0.5 md:gap-1">
+        <div className="text-[10px] md:text-xs hidden md:block" style={{ color: 'var(--muted)' }}>
           {getHelperText()}
         </div>
         <button
           onClick={handleClick}
-          className="px-4 py-2 rounded-lg transition-colors hover:scale-105"
+          className="px-2 py-1 md:px-4 md:py-2 rounded-lg transition-colors hover:scale-105 text-xs md:text-sm min-w-[2rem] md:min-w-0"
           style={{ 
             backgroundColor: 'var(--btn)', 
             color: 'var(--text)', 
@@ -53,7 +53,8 @@ export default function AccountButton() {
             : (translations.clickToSignIn || 'Click to sign in')
           }
         >
-          {isAuthenticated ? `👤 ${getDisplayName()}` : getDisplayName()}
+          <span className="block md:hidden">👤</span>
+          <span className="hidden md:block">{isAuthenticated ? `👤 ${getDisplayName()}` : getDisplayName()}</span>
         </button>
       </div>
 

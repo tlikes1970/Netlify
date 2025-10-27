@@ -726,23 +726,16 @@ export default function TabCard({
           </div>
         )}
 
-        {/* Overview - desktop only */}
-        {!isCondensed && synopsis && (
+        {/* Overview / Description - show on all tabs */}
+        {synopsis && (
           <div 
-            className="overview text-sm mb-3 max-h-16 overflow-hidden"
-            style={{ color: 'var(--muted)' }}
+            className={`overview mb-2 ${isCondensed ? 'text-xs' : 'text-sm'}`}
+            style={{ 
+              color: 'var(--muted)',
+              ...(!isCondensed && { maxHeight: '64px', overflow: 'hidden' })
+            }}
           >
-            {synopsis}
-          </div>
-        )}
-
-        {/* Mobile Description - only visible in condensed view */}
-        {isCondensed && synopsis && (
-          <div 
-            className="overview text-xs mb-2"
-            style={{ color: 'var(--muted)' }}
-          >
-            {truncateAtSentence(synopsis, getMobileDescriptionLength())}
+            {isCondensed ? truncateAtSentence(synopsis, getMobileDescriptionLength()) : synopsis}
           </div>
         )}
 

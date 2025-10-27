@@ -3,6 +3,7 @@ import type { MediaItem, CardActionHandlers } from '../components/cards/card.typ
 import { useSwipe } from '../lib/useSwipe';
 import { useIsDesktop } from '../hooks/useDeviceDetection';
 import { SWIPE } from '../lib/gestures';
+import { Library } from '../lib/storage';
 
 export interface SwipeableCardProps {
   item: MediaItem;
@@ -74,7 +75,12 @@ export default function SwipeableCard({
             icon: '▶️',
             color: '#ffffff',
             backgroundColor: '#3b82f6',
-            action: () => actions?.onWant?.(item) // Move to watching
+            action: () => {
+              // Move from wishlist to watching
+              if (item.id && item.mediaType) {
+                Library.move(item.id, item.mediaType, 'watching');
+              }
+            }
           },
           {
             id: 'watched',
@@ -102,7 +108,12 @@ export default function SwipeableCard({
             icon: '🔄',
             color: '#ffffff',
             backgroundColor: '#3b82f6',
-            action: () => actions?.onWant?.(item) // Move to watching
+            action: () => {
+              // Move from watched to watching
+              if (item.id && item.mediaType) {
+                Library.move(item.id, item.mediaType, 'watching');
+              }
+            }
           },
           {
             id: 'want',

@@ -126,7 +126,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
         if (window.visualViewport && Math.abs(window.visualViewport.offsetTop) < 50) {
           const navElement = document.querySelector('.mobile-nav') as HTMLElement;
           if (navElement) {
-            navElement.style.bottom = '0px';
+            navElement.style.bottom = '0';
           }
         }
       }, 100);
@@ -183,7 +183,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
           borderTop: '1px solid var(--line)',
           height: `${MOBILE_NAV_HEIGHT}px`,
           position: 'fixed',
-          bottom: viewportOffset, // Dynamic bottom position for iOS Safari keyboard
+          bottom: `${viewportOffset}px`, // Dynamic bottom position for iOS Safari keyboard
           left: 0,
           right: 0,
           zIndex: 9999
@@ -225,17 +225,15 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
                   fontWeight: current === tab.id ? '600' : '500'
                 }}
               >
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-medium">{tab.label}</span>
-                  {tab.count > 0 && (
-                    <span 
-                      className="bg-gray-500 text-white text-xs font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1"
-                      style={{ fontSize: '10px' }}
-                    >
-                      {tab.count}
-                    </span>
-                  )}
-                </div>
+                <span className="text-sm font-medium">{tab.label}</span>
+                {tab.count > 0 && (
+                  <span 
+                    className="bg-gray-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 mt-0.5"
+                    style={{ fontSize: '10px' }}
+                  >
+                    {tab.count}
+                  </span>
+                )}
                 {current === tab.id && (
                   <div 
                     className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 rounded-full"

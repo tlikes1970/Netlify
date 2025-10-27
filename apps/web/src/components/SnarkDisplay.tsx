@@ -13,7 +13,7 @@ export default function SnarkDisplay() {
   const snarkText = getPersonalityText('welcome', settings.personalityLevel, { username });
 
   return (
-    <div className="text-sm" style={{ color: 'var(--muted)' }}>
+    <div className="text-xs md:text-sm truncate max-w-[100px] md:max-w-none" style={{ color: 'var(--muted)' }}>
       {snarkText}
     </div>
   );

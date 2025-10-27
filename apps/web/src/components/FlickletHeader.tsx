@@ -108,10 +108,10 @@ export default function FlickletHeader({
     <>
       {/* Main header (not sticky) */}
       <header className="border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-6">
-          <div className="grid grid-cols-3 items-center gap-4 py-4 sm:py-6">
+        <div className="mx-auto w-full max-w-screen-2xl px-3 py-3 md:px-6 md:py-6">
+          <div className="grid grid-cols-3 items-center gap-2 md:gap-4">
             {/* Left: username + snark */}
-            <div className="min-w-0 text-left">
+            <div className="min-w-0 text-left md:text-sm">
               <SnarkDisplay />
             </div>
             {/* Center: title */}
@@ -119,9 +119,9 @@ export default function FlickletHeader({
               <AppTitle text={appName} />
             </div>
             {/* Right: version + help + optional show toggle + auth */}
-            <div className="flex items-center justify-end gap-2">
+            <div className="flex items-center justify-end gap-1 md:gap-2">
               <span
-                className="select-none text-[11px] leading-none text-muted-foreground"
+                className="select-none text-[10px] md:text-[11px] leading-none text-muted-foreground"
                 title="App version"
                 data-testid="app-version"
               >
@@ -138,7 +138,7 @@ export default function FlickletHeader({
                     console.error('Error calling onHelpOpen:', error);
                   }
                 }}
-                className="rounded-full border border-gray-300 dark:border-gray-600 px-2 py-1 text-[11px] leading-none text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                className="rounded-full border border-gray-300 dark:border-gray-600 px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-[11px] leading-none text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                 aria-label="Open help"
                 title="Help & Support"
                 data-testid="help-button"
@@ -149,7 +149,7 @@ export default function FlickletHeader({
                 <button
                   type="button"
                   onClick={showMarqueePref}
-                  className="rounded-full border px-2 py-1 text-[11px] leading-none text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  className="rounded-full border px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-[11px] leading-none text-muted-foreground hover:bg-accent hover:text-accent-foreground hidden md:block"
                   aria-pressed="false"
                   data-testid="marquee-show"
                   title="Show marquee"
@@ -171,7 +171,7 @@ export default function FlickletHeader({
           backgroundColor: 'var(--bg)'
         }}
       >
-        <div className="mx-auto w-full max-w-screen-2xl px-3 sm:px-4 py-2">
+        <div className="mx-auto w-full max-w-screen-2xl px-2 py-1.5 md:px-4 md:py-2">
           <SearchRow 
             onSearch={(q, g, type) => {
               console.log('[SEARCH]', { q, g, type });
@@ -395,7 +395,7 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: number | 
         <button
           type="button"
           onClick={() => setShowFiltersDropdown(!showFiltersDropdown)}
-          className="rounded-l-2xl border-r-0 px-3 py-3 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-all h-full"
+          className="rounded-l-2xl border-r-0 px-2 py-2 md:px-3 md:py-3 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-all h-full"
           aria-haspopup="menu"
           aria-expanded={showFiltersDropdown}
           aria-label={`Filters: ${getFiltersSummary()}`}
@@ -556,12 +556,12 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: number | 
               onKeyDown={handleKeyDown}
               onCompositionStart={() => setIsComposing(true)}
               onCompositionEnd={() => setIsComposing(false)}
-              className="w-full rounded-none border-l-0 border-r-0 border-y-0 px-4 py-3 pr-12 text-sm outline-none ring-0 focus:border-primary"
+              className="w-full rounded-none border-l-0 border-r-0 border-y-0 px-2 py-2 md:px-4 md:py-3 pr-8 md:pr-12 text-xs md:text-sm outline-none ring-0 focus:border-primary"
               spellCheck="true"
             />
           
             {/* Voice Search Button */}
-            <div className="absolute right-2">
+            <div className="absolute right-1 md:right-2">
               <VoiceSearch
                 onVoiceResult={(text) => {
                   setQ(text);
@@ -595,8 +595,8 @@ function SearchRow({ onSearch, onClear }: { onSearch?: (q: string, g?: number | 
       
       {/* Action Buttons */}
       <div className="flex">
-        <button type="submit" className="rounded-r-2xl rounded-l-none border-l-0 border-r-0 px-3 py-3 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-all duration-150 ease-out" onClick={submit}>{translations.search}</button>
-        <button type="button" className="rounded-r-2xl rounded-l-none border-l-0 px-3 py-3 text-xs font-semibold hover:bg-muted transition-all duration-150 ease-out" onClick={clear}>{translations.clear}</button>
+        <button type="submit" className="rounded-r-2xl rounded-l-none border-l-0 border-r-0 px-2 py-2 md:px-3 md:py-3 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-all duration-150 ease-out" onClick={submit}>{translations.search}</button>
+        <button type="button" className="rounded-r-2xl rounded-l-none border-l-0 px-2 py-2 md:px-3 md:py-3 text-xs font-semibold hover:bg-muted transition-all duration-150 ease-out" onClick={clear}>{translations.clear}</button>
       </div>
     </div>
   );
