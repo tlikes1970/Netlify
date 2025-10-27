@@ -15,7 +15,7 @@ export interface ActionItem {
   // Add other properties as needed based on existing card data structure
 }
 
-export type ActionContext = 'home' | 'tab';
+export type ActionContext = 'home' | 'tab' | 'tab-watching' | 'tab-want' | 'tab-watched' | 'tab-foryou' | 'tab-not' | 'search';
 
 /**
  * Get the primary action for an item based on context

@@ -105,7 +105,7 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCar
   };
 
   // Truncate synopsis to 2 lines
-  const truncateSynopsis = (text: string, maxLines: number = 2) => {
+  const truncateSynopsis = (text: string) => {
     if (!text) return '';
     const words = text.split(' ');
     const maxLength = 100; // rough estimate for 2 lines
@@ -143,7 +143,7 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCar
           </header>
           
           {synopsis && (
-            <p className="synopsis">{truncateSynopsis(synopsis, 2)}</p>
+            <p className="synopsis">{truncateSynopsis(synopsis)}</p>
           )}
 
           <div className="mobile-actions-row">

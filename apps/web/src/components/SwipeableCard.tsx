@@ -25,7 +25,7 @@ export default function SwipeableCard({
   disableSwipe = false
 }: SwipeableCardProps) {
   // Auto-disable swipe on desktop
-  const isDesktopDevice = useIsDesktop();
+  const { isDesktop: isDesktopDevice } = useIsDesktop();
   const swipeDisabled = disableSwipe || isDesktopDevice;
 
   // Define swipe actions based on context

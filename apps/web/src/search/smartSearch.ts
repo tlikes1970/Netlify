@@ -35,24 +35,12 @@ function normalizeQuery(q: string): string {
     .trim();
 }
 
-function dedupeWithScore(items: Array<{ item: MediaItem; score: number }>) {
-  const seen = new Map<string, { item: MediaItem; score: number }>();
-  for (const entry of items) {
-    const key = `${entry.item.mediaType}:${entry.item.id}`;
-    const existing = seen.get(key);
-    if (!existing || entry.score > existing.score) {
-      seen.set(key, entry);
-    }
-  }
-  return Array.from(seen.values());
-}
-
-function dedupeWithAllMeta<T extends { item: MediaItem }>(items: T[]): T[] {
+function dedupeWithAllMeta<T extends { item: MediaItem; score: number }>(items: T[]): T[] {
   const seen = new Map<string, T>();
   for (const entry of items) {
     const key = `${entry.item.mediaType}:${entry.item.id}`;
     const existing = seen.get(key);
-    if (!existing || entry.score > existing.score) {
+    if (!existing || (entry as any).score > (existing as any).score) {
       seen.set(key, entry);
     }
   }
@@ -171,7 +159,7 @@ export async function smartSearch(
   }
   
   // Disable anchor chaos - let canonical pinning handle promotion
-  const anchor = null;
+  // (_anchor was removed - no longer needed)
   
   // Fetch similar/recommendations if we have exact matches
   let extras: MediaItem[] = [];
@@ -308,10 +296,6 @@ export async function smartSearch(
 
   const finalRanked = ranked.map(x => x.item);
   
-  console.log('✅ Final results after anchor force:', finalRanked.slice(0, 5).map((x, i) => ({
-    rank: i + 1,
-    title: x.title
-  })));
 
   // Apply type filter
   const filtered = searchType === 'movies-tv'

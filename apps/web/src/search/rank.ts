@@ -216,15 +216,6 @@ function clamp(n: number, a: number, b: number): number {
   return Math.max(a, Math.min(b, n));
 }
 
-function recencyBoost(year: number | null): number {
-  if (!year) return 0;
-  const now = new Date().getFullYear();
-  const age = Math.max(0, now - year);
-  if (age >= 25) return 0;
-  if (age <= 2) return 1;
-  return clamp(1 - (age - 2) / 23, 0, 1); // fades over ~25y
-}
-
 function langBoost(orig: string | null | undefined, locales: string[]): number {
   if (!orig || locales.length === 0) return 0;
   const lc = new Set(locales.map(l => l.slice(0,2)));

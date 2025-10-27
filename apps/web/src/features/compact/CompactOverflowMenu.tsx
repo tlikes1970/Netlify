@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ActionItem, ActionContext, getAllActions } from './actionsMap';
-import { isCompactMobileV1, isActionsSplit } from '../../lib/mobileFlags';
+import { ActionItem, ActionContext } from './actionsMap';
 import type { CardActionHandlers, MediaItem } from '../../components/cards/card.types';
 import { Portal } from '../../components/overlay/Portal';
 
@@ -90,7 +89,7 @@ export function CompactOverflowMenu({ item, context, actions, showText = true }:
   useEffect(() => {
     if (!isOpen) return;
 
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = (e: Event) => {
       const target = e.target as Node;
       // Check if click is outside both button and menu
       const isOutsideButton = buttonRef.current && !buttonRef.current.contains(target);
@@ -142,8 +141,7 @@ export function CompactOverflowMenu({ item, context, actions, showText = true }:
         if (handlers.onWant) menuItems.push({ id: 'want', label: 'Want to Watch', onClick: handlers.onWant });
         if (handlers.onNotInterested) menuItems.push({ id: 'not-interested', label: 'Not Interested', onClick: handlers.onNotInterested });
         if (handlers.onNotesEdit) menuItems.push({ id: 'notes', label: 'Notes & Tags', onClick: handlers.onNotesEdit });
-        if (handlers.onRatingChange) menuItems.push({ id: 'rate', label: 'Rate', onClick: () => handlers.onRatingChange?.(item, 0) });
-        if (handlers.onAddToList) menuItems.push({ id: 'add-list', label: 'Add to List', onClick: handlers.onAddToList });
+        if (handlers.onRatingChange) menuItems.push({ id: 'rate', label: 'Rate', onClick: () => handlers.onRatingChange?.(item as any, 0) });
         if (handlers.onBloopersOpen) menuItems.push({ id: 'bloopers', label: 'Bloopers', onClick: handlers.onBloopersOpen });
         if (handlers.onExtrasOpen) menuItems.push({ id: 'extras', label: 'Extras', onClick: handlers.onExtrasOpen });
         if (handlers.onNotificationToggle) menuItems.push({ id: 'notifications', label: 'Advanced Notifications', onClick: handlers.onNotificationToggle });
@@ -154,8 +152,7 @@ export function CompactOverflowMenu({ item, context, actions, showText = true }:
         if (handlers.onWant) menuItems.push({ id: 'want', label: 'Want to Watch', onClick: handlers.onWant });
         if (handlers.onNotInterested) menuItems.push({ id: 'not-interested', label: 'Not Interested', onClick: handlers.onNotInterested });
         if (handlers.onNotesEdit) menuItems.push({ id: 'notes', label: 'Notes & Tags', onClick: handlers.onNotesEdit });
-        if (handlers.onRatingChange) menuItems.push({ id: 'rate', label: 'Rate', onClick: () => handlers.onRatingChange?.(item, 0) });
-        if (handlers.onAddToList) menuItems.push({ id: 'add-list', label: 'Add to List', onClick: handlers.onAddToList });
+        if (handlers.onRatingChange) menuItems.push({ id: 'rate', label: 'Rate', onClick: () => handlers.onRatingChange?.(item as any, 0) });
         if (handlers.onBloopersOpen) menuItems.push({ id: 'bloopers', label: 'Bloopers', onClick: handlers.onBloopersOpen });
         if (handlers.onExtrasOpen) menuItems.push({ id: 'extras', label: 'Extras', onClick: handlers.onExtrasOpen });
         if (handlers.onNotificationToggle) menuItems.push({ id: 'notifications', label: 'Advanced Notifications', onClick: handlers.onNotificationToggle });
@@ -167,8 +164,7 @@ export function CompactOverflowMenu({ item, context, actions, showText = true }:
         if (handlers.onWant) menuItems.push({ id: 'remove-want', label: 'Remove from Want to Watch', onClick: handlers.onWant });
         if (handlers.onNotInterested) menuItems.push({ id: 'not-interested', label: 'Not Interested', onClick: handlers.onNotInterested });
         if (handlers.onNotesEdit) menuItems.push({ id: 'notes', label: 'Notes & Tags', onClick: handlers.onNotesEdit });
-        if (handlers.onRatingChange) menuItems.push({ id: 'rate', label: 'Rate', onClick: () => handlers.onRatingChange?.(item, 0) });
-        if (handlers.onAddToList) menuItems.push({ id: 'add-list', label: 'Add to List', onClick: handlers.onAddToList });
+        if (handlers.onRatingChange) menuItems.push({ id: 'rate', label: 'Rate', onClick: () => handlers.onRatingChange?.(item as any, 0) });
         if (handlers.onBloopersOpen) menuItems.push({ id: 'bloopers', label: 'Bloopers', onClick: handlers.onBloopersOpen });
         if (handlers.onExtrasOpen) menuItems.push({ id: 'extras', label: 'Extras', onClick: handlers.onExtrasOpen });
         if (handlers.onNotificationToggle) menuItems.push({ id: 'notifications', label: 'Advanced Notifications', onClick: handlers.onNotificationToggle });

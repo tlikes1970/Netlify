@@ -1,21 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { CardActionHandlers, MediaItem } from './card.types';
 import { useTranslations } from '../../lib/language';
 import { useSettings } from '../../lib/settings';
 import { Library } from '../../lib/storage';
-import { getShowStatusInfo } from '../../utils/showStatus';
 import StarRating from './StarRating';
 import MyListToggle from '../MyListToggle';
 import { useIsDesktop } from '../../hooks/useDeviceDetection';
 import SwipeableCard from '../SwipeableCard';
 import { OptimizedImage } from '../OptimizedImage';
-import { CompactPrimaryAction } from '../../features/compact/CompactPrimaryAction';
-import { CompactOverflowMenu } from '../../features/compact/CompactOverflowMenu';
 import { isCompactMobileV1, isActionsSplit } from '../../lib/mobileFlags';
 import { isMobileNow } from '../../lib/isMobile';
 import { dlog } from '../../lib/log';
-import { EpisodeProgressDisplay } from '../EpisodeProgressDisplay';
-import { fetchNetworkInfo } from '../../search/api';
 import { TvCardMobile } from './mobile/TvCardMobile';
 import { MovieCardMobile } from './mobile/MovieCardMobile';
 
@@ -61,18 +56,6 @@ export default function TabCard({
   const settings = useSettings();
   const { ready, isDesktop } = useIsDesktop(); // Device detection for conditional swipe
   
-  // Mobile ellipsis state
-  const [showAllActions, setShowAllActions] = useState(false);
-  
-  // Network information state
-  const [networkInfo, setNetworkInfo] = useState<{ networks?: string[]; productionCompanies?: string[] }>({});
-  
-  // Fetch network information when component mounts
-  React.useEffect(() => {
-    if (mediaType === 'movie' || mediaType === 'tv') {
-      fetchNetworkInfo(Number(item.id), mediaType).then(setNetworkInfo);
-    }
-  }, [item.id, mediaType]);
 
   const handleRatingChange = (rating: number) => {
     if (actions?.onRatingChange) {
@@ -80,210 +63,6 @@ export default function TabCard({
     }
   };
 
-  // Smart truncation for mobile descriptions based on title length
-  const truncateAtSentence = (text: string, maxLength: number) => {
-    if (text.length <= maxLength) return text;
-    
-    // Find last complete sentence before maxLength
-    const truncated = text.substring(0, maxLength);
-    const lastSentence = truncated.lastIndexOf('.');
-    
-    if (lastSentence > maxLength * 0.7) {
-      return text.substring(0, lastSentence + 1);
-    }
-    
-    // Fallback: truncate at word boundary
-    const lastSpace = truncated.lastIndexOf(' ');
-    return text.substring(0, lastSpace) + '...';
-  };
-
-  // Get description length based on title length (mobile only)
-  const getMobileDescriptionLength = () => {
-    const titleLength = title.length;
-    
-    if (titleLength <= 20) {
-      return 60; // Short titles: more description space
-    } else if (titleLength <= 40) {
-      return 45;  // Medium titles: medium description space
-    } else {
-      return 35;  // Long titles: less description space
-    }
-  };
-
-
-  const getWhereToWatch = () => {
-    if (mediaType === 'tv' && networkInfo.networks && networkInfo.networks.length > 0) {
-      return `On ${networkInfo.networks[0]}${networkInfo.networks.length > 1 ? ` (+${networkInfo.networks.length - 1} more)` : ''}`;
-    } else if (mediaType === 'movie' && networkInfo.productionCompanies && networkInfo.productionCompanies.length > 0) {
-      return `From ${networkInfo.productionCompanies[0]}${networkInfo.productionCompanies.length > 1 ? ` (+${networkInfo.productionCompanies.length - 1} more)` : ''}`;
-    }
-    // Don't show placeholder text - only show when we have real data
-    return null;
-  };
-
-  const getBadges = () => {
-    const badges = [];
-    if (mediaType === 'tv') {
-      badges.push('TV SERIES');
-      
-      // Debug: Log what TabCard receives
-      dlog(`🔍 TabCard ${title} received:`, {
-        showStatus: item.showStatus,
-        lastAirDate: item.lastAirDate,
-        hasShowStatus: item.showStatus !== undefined
-      });
-      
-      // Add show status badge if available
-      const statusInfo = getShowStatusInfo(item.showStatus);
-      if (statusInfo) {
-        badges.push(statusInfo.badge);
-        dlog(`✅ TabCard ${title} adding badge:`, statusInfo.badge);
-      } else {
-        dlog(`❌ TabCard ${title} no badge - showStatus:`, item.showStatus);
-      }
-    } else {
-      badges.push('MOVIE');
-    }
-    return badges;
-  };
-
-  // Get all actions for desktop/expanded view
-  const getAllActions = (): Array<{ key: string; label: string; action: () => void; disabled?: boolean }> => {
-    const primaryActions: Array<{ key: string; label: string; action: () => void; disabled?: boolean }> = [];
-    const additionalActions: Array<{ key: string; label: string; action: () => void; disabled?: boolean }> = [];
-    
-    // Add primary actions based on tab type
-    switch (tabType) {
-      case 'watching':
-        primaryActions.push(
-          { key: 'want', label: isCondensed ? 'Want' : translations.wantToWatchAction, action: () => actions?.onWant?.(item) },
-          { key: 'watched', label: isCondensed ? 'Watched' : translations.watchedAction, action: () => actions?.onWatched?.(item) }
-        );
-        break;
-      case 'want':
-        primaryActions.push(
-          { key: 'watching', label: isCondensed ? 'Watching' : translations.currentlyWatchingAction, action: () => {
-            if (item.id && item.mediaType) {
-              Library.move(item.id, item.mediaType, 'watching');
-            }
-          }},
-          { key: 'watched', label: isCondensed ? 'Watched' : translations.watchedAction, action: () => actions?.onWatched?.(item) }
-        );
-        break;
-      case 'watched':
-        primaryActions.push(
-          { key: 'want', label: isCondensed ? 'Want' : translations.wantToWatchAction, action: () => actions?.onWant?.(item) },
-          { key: 'watching', label: isCondensed ? 'Watching' : translations.currentlyWatchingAction, action: () => {
-            if (item.id && item.mediaType) {
-              Library.move(item.id, item.mediaType, 'watching');
-            }
-          }}
-        );
-        break;
-      case 'discovery':
-        primaryActions.push(
-          { key: 'want', label: isCondensed ? 'Want' : translations.wantToWatchAction, action: () => actions?.onWant?.(item) },
-          { key: 'watching', label: isCondensed ? 'Watching' : translations.currentlyWatchingAction, action: () => actions?.onWant?.(item) }
-        );
-        break;
-    }
-    
-    // Add simple reminder for TV shows
-    if (mediaType === 'tv') {
-      additionalActions.push({
-        key: 'simple-reminder',
-        label: '⏰ Remind Me',
-        action: () => {
-          dlog('⏰ TabCard simple reminder button clicked for:', item.title);
-          actions?.onSimpleReminder?.(item);
-        }
-      });
-    }
-    
-    // Add notes edit if not condensed
-    if (!isCondensed) {
-      additionalActions.push({
-        key: 'notes',
-        label: '📝 Notes & Tags',
-        action: () => actions?.onNotesEdit?.(item)
-      });
-    }
-    
-    // Add episode tracking for TV shows if not condensed
-    if (mediaType === 'tv' && !isCondensed) {
-      additionalActions.push({
-        key: 'episodes',
-        label: 'Episode Progress',
-        action: () => actions?.onEpisodeTracking?.(item),
-        disabled: !settings.layout.episodeTracking
-      });
-    }
-    
-    return [...primaryActions, ...additionalActions];
-  };
-
-  // Render mobile actions with ellipsis overflow
-  const renderMobileActions = () => {
-    const allActions = getAllActions();
-    const primaryActions = allActions.slice(0, 2); // First 2 actions are primary
-    const hasMoreActions = allActions.length > 2;
-    
-    return (
-      <div className="flex flex-wrap gap-1">
-        {/* Primary mobile actions */}
-        {primaryActions.map((action) => (
-          <button
-            key={action.key}
-            onClick={action.action}
-            className={buttonClass}
-            style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-          >
-            {action.label}
-          </button>
-        ))}
-        
-        {/* Ellipsis button for additional actions */}
-        {hasMoreActions && (
-          <button
-            onClick={() => setShowAllActions(!showAllActions)}
-            className={buttonClass}
-            style={{ backgroundColor: 'var(--btn)', color: 'var(--muted)', borderColor: 'var(--line)', border: '1px solid' }}
-            title="More actions"
-          >
-            ⋯
-          </button>
-        )}
-        
-        {/* Additional actions dropdown */}
-        {showAllActions && hasMoreActions && (
-          <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-10 p-2">
-            <div className="flex flex-wrap gap-1">
-              {allActions.slice(primaryActions.length).map((action) => (
-                <button
-                  key={action.key}
-                  onClick={() => {
-                    action.action();
-                    setShowAllActions(false);
-                  }}
-                  disabled={action.disabled || false}
-                  className={buttonClass}
-                  style={{ 
-                    backgroundColor: 'var(--btn)', 
-                    color: (action.disabled || false) ? 'var(--muted)' : 'var(--text)', 
-                    borderColor: 'var(--line)', 
-                    border: '1px solid',
-                    opacity: (action.disabled || false) ? 0.6 : 1
-                  }}
-                >
-                  {action.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
 
   const getTabSpecificActions = () => {
     
