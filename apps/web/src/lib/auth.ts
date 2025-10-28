@@ -370,20 +370,35 @@ class AuthManager {
   }
 
   async signInWithEmail(email: string, password: string): Promise<void> {
-    // Security fix: Do NOT auto-create accounts
-    // This prevents malicious users from creating accounts via password reuse attacks
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error: any) {
-      // If user not found, throw specific error instead of auto-creating
-      if (error.code === 'auth/user-not-found') {
-        throw new Error('No account found with this email. Please check your email or sign up.');
-      } else if (error.code === 'auth/wrong-password') {
-        throw new Error('Incorrect password. Please try again.');
+      // Firebase doesn't distinguish between wrong email and wrong password
+      // It returns 'auth/invalid-credential' for both cases for security
+      if (error.code === 'auth/invalid-credential') {
+        throw new Error('Invalid email or password. Please try again or create a new account.');
       } else if (error.code === 'auth/invalid-email') {
         throw new Error('Invalid email address.');
       } else if (error.code === 'auth/too-many-requests') {
         throw new Error('Too many failed attempts. Please try again later.');
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async createAccountWithEmail(email: string, password: string): Promise<void> {
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+    } catch (error: any) {
+      if (error.code === 'auth/email-already-in-use') {
+        throw new Error('This email is already registered. Please sign in instead.');
+      } else if (error.code === 'auth/invalid-email') {
+        throw new Error('Invalid email address.');
+      } else if (error.code === 'auth/weak-password') {
+        throw new Error('Password is too weak. Please use at least 6 characters.');
+      } else if (error.code === 'auth/too-many-requests') {
+        throw new Error('Too many requests. Please try again later.');
       } else {
         throw error;
       }

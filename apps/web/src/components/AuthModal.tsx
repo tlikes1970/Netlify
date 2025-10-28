@@ -42,7 +42,7 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const { signInWithProvider, signInWithEmail: signInEmail } = useAuth();
+  const { signInWithProvider, signInWithEmail: signInEmail, createAccountWithEmail } = useAuth();
   const translations = useTranslations();
   const [loading, setLoading] = useState<AuthProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +50,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -135,14 +136,29 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     try {
       setLoading('email');
-      logger.log('Attempting email sign-in', { email });
-      await signInEmail(email, password);
-      logger.log('Email sign-in successful');
+      
+      if (isCreatingAccount) {
+        logger.log('Creating account', { email });
+        await createAccountWithEmail(email, password);
+        logger.log('Account creation successful');
+      } else {
+        logger.log('Attempting email sign-in', { email });
+        await signInEmail(email, password);
+        logger.log('Email sign-in successful');
+      }
+      
       onClose();
       setShowEmailForm(false);
     } catch (error: any) {
-      logger.error('Email sign-in failed', error);
-      setError(error.message || 'Sign-in failed. Please try again.');
+      logger.error(isCreatingAccount ? 'Account creation failed' : 'Email sign-in failed', error);
+      
+      // For invalid-credential errors during sign-in, suggest creating account
+      if (error.code === 'auth/invalid-credential' && !isCreatingAccount) {
+        setError('Invalid email or password. No account found. Would you like to create one?');
+      } else {
+        setError(error.message || (isCreatingAccount ? 'Account creation failed' : 'Sign-in failed. Please try again.'));
+      }
+      
       setLoading(null);
     }
   };
@@ -259,6 +275,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     setEmail('');
                     setPassword('');
                     setError(null);
+                    setIsCreatingAccount(false);
                   }}
                   className="flex-1 px-4 py-2 rounded-lg border transition-colors"
                   style={{ 
@@ -281,9 +298,39 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     touchAction: 'manipulation'
                   }}
                 >
-                  {loading === 'email' ? 'Signing in...' : 'Sign In'}
+                  {loading === 'email' 
+                    ? (isCreatingAccount ? 'Creating...' : 'Signing in...') 
+                    : (isCreatingAccount ? 'Create Account' : 'Sign In')}
                 </button>
               </div>
+              
+              {!isCreatingAccount && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCreatingAccount(true);
+                    setError(null);
+                  }}
+                  className="w-full text-sm text-center underline"
+                  style={{ color: 'var(--muted)' }}
+                >
+                  Don't have an account? Create one
+                </button>
+              )}
+              
+              {isCreatingAccount && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCreatingAccount(false);
+                    setError(null);
+                  }}
+                  className="w-full text-sm text-center underline"
+                  style={{ color: 'var(--muted)' }}
+                >
+                  Already have an account? Sign in
+                </button>
+              )}
             </form>
           ) : (
 

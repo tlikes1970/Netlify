@@ -56,6 +56,15 @@ export function useAuth() {
     }
   };
 
+  const createAccountWithEmail = async (email: string, password: string) => {
+    try {
+      await authManager.createAccountWithEmail(email, password);
+    } catch (error) {
+      console.error('Account creation failed:', error);
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     try {
       await authManager.signOut();
@@ -71,6 +80,7 @@ export function useAuth() {
     authInitialized,
     signInWithProvider,
     signInWithEmail,
+    createAccountWithEmail,
     signOut,
     isAuthenticated: !!user,
   };
