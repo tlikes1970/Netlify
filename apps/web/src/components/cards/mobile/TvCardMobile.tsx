@@ -169,10 +169,6 @@ export function TvCardMobile({ item, actions, tabKey = 'watching' }: TvCardMobil
               {getChips()}
             </div>
           </header>
-          
-          {synopsis && (
-            <p className="synopsis">{truncateSynopsis(synopsis)}</p>
-          )}
 
           <div className="mobile-actions-row">
             <button className="primary-action" onClick={primaryAction.onClick}>

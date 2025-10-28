@@ -141,10 +141,6 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCar
               {getChips()}
             </div>
           </header>
-          
-          {synopsis && (
-            <p className="synopsis">{truncateSynopsis(synopsis)}</p>
-          )}
 
           <div className="mobile-actions-row">
             <button className="primary-action" onClick={primaryAction.onClick}>
