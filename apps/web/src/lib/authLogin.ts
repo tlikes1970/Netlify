@@ -31,6 +31,14 @@ function isWebView(): boolean {
  * Google sign-in helper that uses redirect on mobile/webview and popup on desktop
  */
 export async function googleLogin() {
+  // Validate origin before proceeding
+  try {
+    validateOAuthOrigin();
+  } catch (error) {
+    logger.error('Origin validation failed before Google sign-in', error);
+    throw error;
+  }
+  
   const useRedirect = isWebView();
   const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
   
@@ -104,10 +112,12 @@ export async function googleLogin() {
 }
 
 /**
- * Logs the current origin to help verify OAuth configuration
+ * Validates the current origin against allowed OAuth origins
+ * @returns true if origin is valid, throws error if invalid
+ * @throws Error if origin is not authorized
  */
-export function logAuthOriginHint() {
-  if (typeof window === 'undefined') return;
+export function validateOAuthOrigin(): boolean {
+  if (typeof window === 'undefined') return true;
   
   const origin = window.location.origin;
   
@@ -123,14 +133,25 @@ export function logAuthOriginHint() {
   ]);
   
   if (!allowedOrigins.has(origin)) {
-    logger.warn('[AUTH] Origin not in OAuth JavaScript origins', origin);
-    logger.warn('To fix: Add this origin to Google Cloud Console → OAuth 2.0 Client IDs');
-    logger.warn('Also add authorized redirect URIs', {
-      origin,
-      handler: `${origin}/__/auth/handler`
-    });
-  } else {
-    logger.log('[AUTH] Origin OK', origin);
+    const errorMsg = `Unauthorized origin: ${origin}. Please configure this origin in Firebase Console.`;
+    logger.error('[AUTH] Origin validation failed', origin);
+    throw new Error(errorMsg);
+  }
+  
+  logger.log('[AUTH] Origin validated', origin);
+  return true;
+}
+
+/**
+ * Logs the current origin to help verify OAuth configuration
+ * @deprecated Use validateOAuthOrigin() instead
+ */
+export function logAuthOriginHint() {
+  try {
+    validateOAuthOrigin();
+  } catch (error) {
+    // Silently fail for logging purposes
+    logger.warn('Origin validation warning', error);
   }
 }
 
