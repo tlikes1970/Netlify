@@ -225,11 +225,16 @@ export async function getSmartRecommendations(
         return 'Untitled';
       })();
       
+      // Extract year from release_date or first_air_date
+      const date = candidate.release_date || candidate.first_air_date;
+      const year = date ? parseInt(String(date).slice(0, 4)) : undefined;
+      
       const cardData: CardData = {
         id: String(candidate.id),
         kind: candidate.media_type as 'movie' | 'tv',
         title: safeTitle,
-        poster: candidate.poster_path ? `https://image.tmdb.org/t/p/w342${candidate.poster_path}` : ''
+        poster: candidate.poster_path ? `https://image.tmdb.org/t/p/w342${candidate.poster_path}` : '',
+        year
       };
 
       const score = scoreRecommendation(cardData, preferences, candidate);

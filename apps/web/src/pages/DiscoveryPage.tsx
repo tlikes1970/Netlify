@@ -25,6 +25,8 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
       title: rec.item.title,
       poster: rec.item.poster,
       posterUrl: rec.item.poster, // Ensure posterUrl is available for CardV2
+      year: rec.item.year,
+      voteAverage: rec.item.voteAverage,
       genre_ids: [], // Will be populated by TMDB data
       score: rec.score,
       reasons: rec.reasons
