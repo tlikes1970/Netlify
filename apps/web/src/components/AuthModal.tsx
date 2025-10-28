@@ -115,8 +115,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
       >
         <div
-          className="auth-modal-content rounded-xl w-full max-w-md p-6"
+          className="auth-modal-content rounded-xl w-full max-w-md p-6 relative z-10"
           style={{ backgroundColor: 'var(--card)', border: '1px solid var(--line)' }}
+          onClick={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
         >
           
           <div className="flex items-center justify-between mb-4">
@@ -168,15 +170,19 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <button
               onClick={() => {
                 console.log('🔐 AuthModal: Google button clicked');
-                handleProviderSignIn('google');
+                if (!isBlocked) {
+                  handleProviderSignIn('google');
+                }
               }}
+              onTouchStart={(e) => e.stopPropagation()}
               disabled={loading === 'google' || isBlocked}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ 
                 backgroundColor: isBlocked ? 'var(--muted)' : 'var(--btn)', 
                 color: 'var(--text)', 
                 borderColor: 'var(--line)', 
-                border: '1px solid' 
+                border: '1px solid',
+                touchAction: 'manipulation'
               }}
             >
               {loading === 'google' ? (
@@ -194,9 +200,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
             <button
               onClick={() => handleProviderSignIn('apple')}
+              onTouchStart={(e) => e.stopPropagation()}
               disabled={loading === 'apple'}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+              style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid', touchAction: 'manipulation' }}
             >
               {loading === 'apple' ? (
                 <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
@@ -210,8 +217,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
             <button
               onClick={handleEmailSignIn}
+              onTouchStart={(e) => e.stopPropagation()}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg transition-colors"
-              style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+              style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid', touchAction: 'manipulation' }}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />

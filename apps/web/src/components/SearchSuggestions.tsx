@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { fetchAutocomplete, type AutocompleteSuggestion } from '../search/autocomplete';
 // import { useTranslations } from '../lib/language'; // Unused
 
 export type SearchSuggestionsProps = {
@@ -113,14 +114,51 @@ export default function SearchSuggestions({
   // const translations = useTranslations(); // Unused
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
+  const [tmdbSuggestions, setTmdbSuggestions] = useState<AutocompleteSuggestion[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   // Load search history on mount
   useEffect(() => {
     setSearchHistory(getSearchHistory());
   }, []);
   
+  // Fetch TMDB autocomplete suggestions
+  useEffect(() => {
+    if (!query.trim() || query.length < 2) {
+      setTmdbSuggestions([]);
+      return;
+    }
+
+    // Cancel previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
+    const fetchSuggestions = async () => {
+      try {
+        const suggestions = await fetchAutocomplete(query, abortControllerRef.current?.signal);
+        setTmdbSuggestions(suggestions);
+      } catch (error) {
+        if (error instanceof Error && error.name !== 'AbortError') {
+          console.warn('Failed to fetch autocomplete:', error);
+        }
+        setTmdbSuggestions([]);
+      }
+    };
+
+    // Debounce TMDB requests
+    const timer = setTimeout(fetchSuggestions, 300);
+    return () => {
+      clearTimeout(timer);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [query]);
+
   // Filter suggestions based on query
   useEffect(() => {
     if (!query.trim()) {
@@ -150,7 +188,10 @@ export default function SearchSuggestions({
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isVisible || filteredSuggestions.length === 0) return;
+      const hasHistory = searchHistory.length > 0;
+      const maxIndex = (hasHistory ? 3 : 0) + tmdbSuggestions.length + filteredSuggestions.length;
+      
+      if (!isVisible || maxIndex === 0) return;
       
       switch (e.key) {
         case 'ArrowDown':
@@ -190,7 +231,9 @@ export default function SearchSuggestions({
     localStorage.setItem('searchHistory', JSON.stringify([]));
   };
   
-  if (!isVisible || filteredSuggestions.length === 0) {
+  const totalSuggestions = tmdbSuggestions.length + filteredSuggestions.length;
+  
+  if (!isVisible || totalSuggestions === 0) {
     return null;
   }
   
@@ -253,43 +296,89 @@ export default function SearchSuggestions({
           </div>
         )}
         
+        {/* TMDB Autocomplete Section */}
+        {tmdbSuggestions.length > 0 && (
+          <div className="mb-3">
+            <div className="text-xs font-medium mb-2" style={{ color: 'var(--muted)' }}>
+              From TMDB
+            </div>
+            
+            <div className="space-y-1">
+              {tmdbSuggestions.map((suggestion, index) => {
+                const adjustedIndex = index;
+                
+                return (
+                  <button
+                    key={`tmdb-${suggestion.type}-${suggestion.id}`}
+                    onClick={() => handleSuggestionClick(suggestion.title)}
+                    onMouseDown={(e) => e.preventDefault()}
+                    className={`
+                      w-full text-left px-3 py-2 rounded-lg text-sm transition-colors
+                      ${selectedIndex === adjustedIndex
+                        ? 'bg-accent text-accent-foreground'
+                        : 'hover:bg-muted text-foreground'
+                      }
+                    `}
+                    style={{
+                      backgroundColor: selectedIndex === adjustedIndex ? 'var(--accent)' : 'transparent',
+                      color: selectedIndex === adjustedIndex ? 'var(--accent-foreground)' : 'var(--foreground)'
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">{suggestion.type === 'movie' ? '🎬' : suggestion.type === 'tv' ? '📺' : '👤'}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{suggestion.title}</div>
+                        {suggestion.subtitle && (
+                          <div className="text-xs opacity-75 truncate">{suggestion.subtitle}</div>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Suggestions Section */}
-        <div>
-          <div className="text-xs font-medium mb-2" style={{ color: 'var(--muted)' }}>
-            Suggestions
+        {filteredSuggestions.length > 0 && (
+          <div>
+            <div className="text-xs font-medium mb-2" style={{ color: 'var(--muted)' }}>
+              Popular
+            </div>
+            
+            <div className="space-y-1">
+              {filteredSuggestions.map((suggestion, index) => {
+                const isHistoryItem = searchHistory.includes(suggestion);
+                const adjustedIndex = tmdbSuggestions.length + index + (searchHistory.length > 0 ? 3 : 0);
+                
+                return (
+                  <button
+                    key={`suggestion-${suggestion}`}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    onMouseDown={(e) => e.preventDefault()}
+                    className={`
+                      w-full text-left px-3 py-2 rounded-lg text-sm transition-colors
+                      ${selectedIndex === adjustedIndex
+                        ? 'bg-accent text-accent-foreground'
+                        : 'hover:bg-muted text-foreground'
+                      }
+                    `}
+                    style={{
+                      backgroundColor: selectedIndex === adjustedIndex ? 'var(--accent)' : 'transparent',
+                      color: selectedIndex === adjustedIndex ? 'var(--accent-foreground)' : 'var(--foreground)'
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">{isHistoryItem ? '🕒' : '💡'}</span>
+                      <span>{suggestion}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          
-          <div className="space-y-1">
-            {filteredSuggestions.map((suggestion, index) => {
-              const isHistoryItem = searchHistory.includes(suggestion);
-              const adjustedIndex = isHistoryItem ? index : index + (searchHistory.length > 0 ? 3 : 0);
-              
-              return (
-                <button
-                  key={`suggestion-${suggestion}`}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  onMouseDown={(e) => e.preventDefault()}
-                  className={`
-                    w-full text-left px-3 py-2 rounded-lg text-sm transition-colors
-                    ${selectedIndex === adjustedIndex
-                      ? 'bg-accent text-accent-foreground'
-                      : 'hover:bg-muted text-foreground'
-                    }
-                  `}
-                  style={{
-                    backgroundColor: selectedIndex === adjustedIndex ? 'var(--accent)' : 'transparent',
-                    color: selectedIndex === adjustedIndex ? 'var(--accent-foreground)' : 'var(--foreground)'
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs">{isHistoryItem ? '🕒' : '💡'}</span>
-                    <span>{suggestion}</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

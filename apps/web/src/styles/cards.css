@@ -78,7 +78,7 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 /* NEW: Unified Desktop Card Layout */
 .card-desktop {
   display: flex;
-  gap: var(--space-4);
+  gap: 1.5rem;
   padding: var(--space-4);
   border-radius: var(--radius-xl, 16px);
   background: var(--card, #171a21);
@@ -101,30 +101,51 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .card-desktop .info-col header {
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .card-desktop .info-col header h3 {
   font-size: var(--text-lg, 18px);
   font-weight: 600;
   color: var(--text);
-  margin: 0 0 var(--space-1, 4px) 0;
+  margin: 0 0 var(--space-2, 8px) 0;
 }
 
 .card-desktop .info-col header .meta {
   font-size: var(--font-sm, 13px);
   color: var(--muted);
+  margin-bottom: var(--space-2);
+}
+
+.card-desktop .streaming-info {
+  font-size: var(--font-sm, 13px);
+  color: var(--muted);
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.card-desktop .status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border-radius: 6px;
+  font-size: var(--font-xs, 11px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .card-desktop .rating-row {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .card-desktop .rating-row .rating-score {
@@ -132,38 +153,42 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
   color: var(--muted);
 }
 
+.card-desktop .synopsis-wrapper {
+  flex-grow: 1;
+  margin-bottom: var(--space-4);
+}
+
 .card-desktop .synopsis {
   font-size: var(--font-sm, 13px);
-  line-height: 1.5;
-  color: var(--muted);
-  margin-bottom: var(--space-2);
-  flex-grow: 1;
+  line-height: 1.6;
+  color: var(--text);
+  opacity: 0.9;
+  margin: 0;
+  padding: var(--space-3) 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.card-desktop .buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-top: var(--space-4);
 }
 
 .card-desktop .actions-row {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
+  gap: 0.875rem;
 }
 
-.card-desktop .pro-strip {
-  margin-top: var(--space-2);
-  background: color-mix(in srgb, var(--pro) 15%, transparent);
-  padding: var(--space-2);
+.card-desktop .pro-buttons-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.875rem;
+  padding: var(--space-3);
   border-radius: var(--radius-lg, 12px);
-  border: 1px solid color-mix(in srgb, var(--pro) 30%, transparent);
-}
-
-.card-desktop .pro-strip .pro-label {
-  font-weight: 600;
-  margin-right: var(--space-2);
-  color: var(--pro);
-  font-size: var(--font-xs, 11px);
-  text-transform: uppercase;
-}
-
-.card-desktop .pro-strip button {
-  margin-right: var(--space-2);
+  border: 2px dotted var(--pro);
+  margin-top: var(--space-2);
 }
 

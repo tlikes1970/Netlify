@@ -159,17 +159,28 @@ export const Library = {
     const key = k(item.id, item.mediaType);
     const oldEntry = state[key];
     
+    // Filter out undefined values from item to preserve existing data
+    // This ensures synopsis, notes, tags etc. aren't accidentally cleared
+    const filteredItem = Object.fromEntries(
+      Object.entries(item).filter(([_, value]) => value !== undefined)
+    ) as Partial<MediaItem>;
+    
+    // Preserve existing data when updating
+    // Only update fields that are explicitly provided (and not undefined)
     state[key] = {
-      ...state[key],
-      ...item,
+      ...(oldEntry || {}), // Keep all existing data
+      ...filteredItem,      // Apply only defined fields from new item
+      id: item.id,          // Always use current id and mediaType
+      mediaType: item.mediaType,
       list,
-      addedAt: state[key]?.addedAt ?? Date.now(),
+      addedAt: oldEntry?.addedAt ?? Date.now(),
     };
     
     console.log(`📦 Library.upsert stored:`, {
       id: item.id,
       title: item.title,
       posterUrl: item.posterUrl,
+      synopsis: state[key].synopsis ? 'present' : 'missing',
       list: list
     });
     
@@ -210,7 +221,11 @@ export const Library = {
     if (!curr) return;
     
     const oldList = curr.list;
-    state[key] = { ...curr, list };
+    // Preserve ALL existing data including synopsis, notes, tags, etc. when moving
+    state[key] = { 
+      ...curr,  // All existing fields preserved
+      list      // Only update the list property
+    };
     
     // Update custom list item counts
     if (oldList !== list) {

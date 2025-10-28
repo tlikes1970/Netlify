@@ -174,6 +174,15 @@ class AuthManager {
           email: result.user.email,
           displayName: result.user.displayName
         });
+        
+        // Clean up the URL by removing auth parameters to prevent loops
+        try {
+          window.history.replaceState({}, document.title, window.location.pathname);
+          console.log('🧹 Cleaned up URL parameters');
+        } catch (e) {
+          console.warn('Failed to clean up URL:', e);
+        }
+        
         // The user is now signed in, onAuthStateChanged will fire and handle the rest
       } else {
         console.log('ℹ️ No redirect result returned from Firebase');
@@ -187,11 +196,26 @@ class AuthManager {
             uid: retryResult.user.uid,
             email: retryResult.user.email
           });
+          
+          // Clean up the URL on successful retry
+          try {
+            window.history.replaceState({}, document.title, window.location.pathname);
+            console.log('🧹 Cleaned up URL parameters');
+          } catch (e) {
+            console.warn('Failed to clean up URL:', e);
+          }
         } else {
           console.log('❌ Still no redirect result after retry');
           
+          // Clean up URL even if no result to prevent infinite loops
           if (hasAuthParams) {
-            console.warn('⚠️ URL has auth parameters but getRedirectResult returned nothing - this might indicate a misconfiguration');
+            console.warn('⚠️ URL has auth parameters but getRedirectResult returned nothing - cleaning up URL to prevent loop');
+            try {
+              window.history.replaceState({}, document.title, window.location.pathname);
+              console.log('🧹 Cleaned up URL parameters to prevent redirect loop');
+            } catch (e) {
+              console.warn('Failed to clean up URL:', e);
+            }
           }
         }
       }

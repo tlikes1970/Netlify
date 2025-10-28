@@ -154,8 +154,11 @@ export function useServiceWorker() {
     };
   }, []);
 
-  // Auto-register on mount
+  // Auto-register on mount (disabled in dev)
   useEffect(() => {
+    // Don't register in dev mode
+    if (import.meta.env.DEV) return;
+    
     if (state.isSupported && !state.isRegistered && !state.error) {
       register();
     }

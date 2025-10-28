@@ -282,8 +282,8 @@ export default function TabCard({
 
   // Define buttonClass at component level so it can be used throughout
   const buttonClass = isCondensed 
-    ? "px-1.5 py-1 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
-    : "px-2.5 py-1.5 rounded text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md";
+    ? "px-3 py-2 rounded-lg text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
+    : "px-4 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md";
 
   // Mobile detection for new mobile cards
   const isMobileCompact = isCompactMobileV1();
@@ -415,9 +415,29 @@ export default function TabCard({
 
         <header>
           <h3>{title}</h3>
-          <span className="meta">
-            {year || 'TBA'} • {mediaType === 'tv' ? 'TV Show' : 'Movie'}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="meta">
+              {year || 'TBA'} • {mediaType === 'tv' ? 'TV Show' : 'Movie'}
+            </span>
+            
+            {/* Status badge for TV shows */}
+            {mediaType === 'tv' && item.showStatus && (
+              <span className="status-badge">
+                {item.showStatus === 'Returning Series' && 'RETURNING'}
+                {item.showStatus === 'Ended' && 'COMPLETE'}
+                {item.showStatus === 'In Production' && 'IN PRODUCTION'}
+                {item.showStatus === 'Canceled' && 'CANCELED'}
+                {item.showStatus === 'Planned' && 'UPCOMING'}
+              </span>
+            )}
+          </div>
+          
+          {/* Streaming service / network info */}
+          {item.networks && item.networks.length > 0 && (
+            <div className="streaming-info">
+              Where to Watch: <span style={{ color: 'var(--accent)' }}>{item.networks[0]}</span>
+            </div>
+          )}
           
           {/* Notes and Tags Indicators */}
           <div className="flex gap-1">
@@ -456,90 +476,96 @@ export default function TabCard({
           </div>
         )}
 
-        {/* Synopsis */}
-        {synopsis && (
-          <p className="synopsis">
-            {synopsis}
-          </p>
-        )}
-
-        {/* Actions Row */}
-        <div className="actions-row">
-          {/* Tab-specific primary actions */}
-          {getTabSpecificActions()}
-
-            
-            {/* Episode tracking (conditional) */}
-            {mediaType === 'tv' && (
-              <button
-                onClick={() => actions?.onEpisodeTracking?.(item)}
-                className={buttonClass}
-                style={{ 
-                  backgroundColor: 'var(--btn)', 
-                  color: settings.layout.episodeTracking ? 'var(--text)' : 'var(--muted)', 
-                  borderColor: 'var(--line)', 
-                  border: '1px solid',
-                  opacity: settings.layout.episodeTracking ? 1 : 0.6
-                }}
-                disabled={!settings.layout.episodeTracking}
-                title={settings.layout.episodeTracking ? "Track episode progress" : "Enable episode tracking in settings"}
-              >
-                Episode Progress
-              </button>
-            )}
-        </div>
-
-        {/* Pro Strip */}
-        {!isCondensed && (
-          <div className="pro-strip">
-            <span className="pro-label">PRO:</span>
-            <button
-              onClick={() => actions?.onBloopersOpen?.(item)}
-              disabled={!settings.pro.isPro || !settings.pro.features.bloopersAccess}
-              title={settings.pro.isPro && settings.pro.features.bloopersAccess ? "View bloopers and outtakes" : "Pro feature - upgrade to unlock"}
-              className={buttonClass}
-              style={{
-                backgroundColor: settings.pro.isPro && settings.pro.features.bloopersAccess ? 'var(--pro)' : 'var(--btn)',
-                color: settings.pro.isPro && settings.pro.features.bloopersAccess ? '#000' : 'var(--muted)',
-                borderColor: 'var(--pro)',
-                border: '1px solid',
-                opacity: settings.pro.isPro && settings.pro.features.bloopersAccess ? 1 : 0.65
-              }}
-            >
-              Bloopers
-            </button>
-            <button
-              onClick={() => actions?.onExtrasOpen?.(item)}
-              disabled={!settings.pro.isPro || !settings.pro.features.extrasAccess}
-              title={settings.pro.isPro && settings.pro.features.extrasAccess ? "View behind-the-scenes content" : "Pro feature - upgrade to unlock"}
-              className={buttonClass}
-              style={{
-                backgroundColor: settings.pro.isPro && settings.pro.features.extrasAccess ? 'var(--pro)' : 'var(--btn)',
-                color: settings.pro.isPro && settings.pro.features.extrasAccess ? '#000' : 'var(--muted)',
-                borderColor: 'var(--pro)',
-                border: '1px solid',
-                opacity: settings.pro.isPro && settings.pro.features.extrasAccess ? 1 : 0.65
-              }}
-            >
-              Extras
-            </button>
-            <button
-              onClick={() => actions?.onNotificationToggle?.(item)}
-              disabled={!settings.pro.isPro}
-              title={settings.pro.isPro ? "Advanced notifications with custom timing" : "Pro feature - upgrade to unlock"}
-              className={buttonClass}
-              style={{
-                backgroundColor: settings.pro.isPro ? 'var(--pro)' : 'var(--btn)',
-                color: settings.pro.isPro ? '#000' : 'var(--muted)',
-                borderColor: 'var(--pro)',
-                border: '1px solid',
-                opacity: settings.pro.isPro ? 1 : 0.65
-              }}
-            >
-              Advanced Notifications
-            </button>
+        {/* Synopsis - Description */}
+        {synopsis ? (
+          <div className="synopsis-wrapper" style={{ flexGrow: 1 }}>
+            <p className="synopsis">
+              {synopsis}
+            </p>
           </div>
+        ) : (
+          <div className="synopsis-wrapper" style={{ flexGrow: 1 }} />
         )}
+
+        {/* Buttons Container - Bottom Aligned */}
+        <div className="buttons-container">
+          {/* Actions Row */}
+          <div className="actions-row">
+            {/* Tab-specific primary actions */}
+            {getTabSpecificActions()}
+
+              
+              {/* Episode tracking (conditional) */}
+              {mediaType === 'tv' && (
+                <button
+                  onClick={() => actions?.onEpisodeTracking?.(item)}
+                  className={buttonClass}
+                  style={{ 
+                    backgroundColor: 'var(--btn)', 
+                    color: settings.layout.episodeTracking ? 'var(--text)' : 'var(--muted)', 
+                    borderColor: 'var(--line)', 
+                    border: '1px solid',
+                    opacity: settings.layout.episodeTracking ? 1 : 0.6
+                  }}
+                  disabled={!settings.layout.episodeTracking}
+                  title={settings.layout.episodeTracking ? "Track episode progress" : "Enable episode tracking in settings"}
+                >
+                  Episode Progress
+                </button>
+              )}
+          </div>
+
+          {/* Pro Strip - with dotted yellow border */}
+          {!isCondensed && (
+            <div className="pro-buttons-row">
+              <button
+                onClick={() => actions?.onBloopersOpen?.(item)}
+                disabled={!settings.pro.isPro || !settings.pro.features.bloopersAccess}
+                title={settings.pro.isPro && settings.pro.features.bloopersAccess ? "View bloopers and outtakes" : "Pro feature - upgrade to unlock"}
+                className={buttonClass}
+                style={{
+                  backgroundColor: 'var(--btn)',
+                  color: 'var(--text)',
+                  borderColor: 'var(--line)',
+                  border: '1px solid',
+                  opacity: settings.pro.isPro && settings.pro.features.bloopersAccess ? 1 : 0.65
+                }}
+              >
+                Bloopers
+              </button>
+              <button
+                onClick={() => actions?.onExtrasOpen?.(item)}
+                disabled={!settings.pro.isPro || !settings.pro.features.extrasAccess}
+                title={settings.pro.isPro && settings.pro.features.extrasAccess ? "View behind-the-scenes content" : "Pro feature - upgrade to unlock"}
+                className={buttonClass}
+                style={{
+                  backgroundColor: 'var(--btn)',
+                  color: 'var(--text)',
+                  borderColor: 'var(--line)',
+                  border: '1px solid',
+                  opacity: settings.pro.isPro && settings.pro.features.extrasAccess ? 1 : 0.65
+                }}
+              >
+                Extras
+              </button>
+              <button
+                onClick={() => actions?.onNotificationToggle?.(item)}
+                disabled={!settings.pro.isPro}
+                title={settings.pro.isPro ? "Advanced notifications with custom timing" : "Pro feature - upgrade to unlock"}
+                className={buttonClass}
+                style={{
+                  backgroundColor: 'var(--btn)',
+                  color: 'var(--text)',
+                  borderColor: 'var(--line)',
+                  border: '1px solid',
+                  opacity: settings.pro.isPro ? 1 : 0.65
+                }}
+              >
+                Advanced Notifications
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Drag handle */}
         <div 
@@ -554,6 +580,21 @@ export default function TabCard({
         >
           ⋮⋮
         </div>
+
+        {/* Delete button - bottom right */}
+        <button
+          onClick={() => actions?.onDelete?.(item)}
+          className="absolute bottom-3 right-3 px-4 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md font-semibold"
+          style={{ 
+            backgroundColor: 'var(--btn)',
+            color: '#ef4444',
+            borderColor: '#ef4444',
+            border: '1px solid'
+          }}
+          title="Delete this item"
+        >
+          🗑️ Delete
+        </button>
       </div>
     </article>
   );

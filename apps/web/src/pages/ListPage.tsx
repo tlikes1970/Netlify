@@ -109,7 +109,7 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
   const actions = {
     onWant: (item: MediaItem) => {
       if (item.id && item.mediaType) {
-        Library.upsert({ id: item.id, mediaType: item.mediaType, title: item.title }, 'wishlist');
+        Library.move(item.id, item.mediaType, 'wishlist');
       }
     },
     onWatched: (item: MediaItem) => {

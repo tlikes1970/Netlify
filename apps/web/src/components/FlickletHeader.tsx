@@ -165,10 +165,13 @@ export default function FlickletHeader({
 
       {/* Sticky search bar */}
       <div 
-        className="sticky top-0 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        className="sticky top-0"
         style={{ 
-          zIndex: 'var(--z-nav)',
-          backgroundColor: 'var(--bg)'
+          zIndex: 'var(--z-overlay)',
+          backgroundColor: 'rgba(15, 17, 21, 0.75)',
+          backdropFilter: 'blur(12px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
         }}
       >
         <div className="mx-auto w-full max-w-screen-2xl px-2 py-1.5 md:px-4 md:py-2">

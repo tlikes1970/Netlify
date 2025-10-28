@@ -46,7 +46,8 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           year: item.year,
           voteAverage: item.voteAverage,
           showStatus: item.showStatus,
-          lastAirDate: item.lastAirDate
+          lastAirDate: item.lastAirDate,
+          synopsis: item.synopsis
         }, 'wishlist');
       }
     },
@@ -60,7 +61,8 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           year: item.year,
           voteAverage: item.voteAverage,
           showStatus: item.showStatus,
-          lastAirDate: item.lastAirDate
+          lastAirDate: item.lastAirDate,
+          synopsis: item.synopsis
         }, 'watched');
       }
     },
@@ -74,7 +76,8 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           year: item.year,
           voteAverage: item.voteAverage,
           showStatus: item.showStatus,
-          lastAirDate: item.lastAirDate
+          lastAirDate: item.lastAirDate,
+          synopsis: item.synopsis
         }, 'not');
       }
     }

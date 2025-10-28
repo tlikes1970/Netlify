@@ -366,12 +366,20 @@ export default function App() {
         
         {/* Desktop Tabs - tablet and above */}
         <div className="hidden md:block">
-          <Tabs current={view} onChange={setView} />
+          <Tabs current={view} onChange={(tab) => { 
+            // Clear search when switching tabs
+            handleClear();
+            setView(tab); 
+          }} />
         </div>
         
         {/* Mobile Tabs - mobile only */}
         <div className="block md:hidden">
-          <MobileTabs current={view} onChange={setView} />
+          <MobileTabs current={view} onChange={(tab) => { 
+            // Clear search when switching tabs
+            handleClear();
+            setView(tab); 
+          }} />
         </div>
         
         {/* Content Area */}
@@ -584,20 +592,18 @@ export default function App() {
         {/* Desktop Tabs - tablet and above */}
         <div className="hidden md:block">
           <Tabs current={view} onChange={(tab) => { 
+            // Clear search when switching tabs
+            handleClear();
             setView(tab); 
-            if (searchActive) { 
-              handleClear();
-            } 
           }} />
         </div>
         
         {/* Mobile Tabs - mobile only */}
         <div className="block md:hidden">
           <MobileTabs current={view} onChange={(tab) => { 
+            // Clear search when switching tabs
+            handleClear();
             setView(tab); 
-            if (searchActive) { 
-              handleClear();
-            } 
           }} />
         </div>
         
