@@ -1,5 +1,3 @@
-import type { MediaItem } from '../components/cards/card.types';
-
 export type AutocompleteSuggestion = {
   title: string;
   subtitle?: string;
