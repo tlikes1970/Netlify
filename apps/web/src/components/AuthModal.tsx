@@ -175,11 +175,11 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         aria-modal="true"
         aria-label={translations.signIn || 'Sign In'}
         className="auth-modal-overlay fixed inset-0 backdrop-blur-sm flex items-start justify-center pt-48 p-4"
-        style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+        style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 20000 }}
       >
         <div
           className="auth-modal-content rounded-xl w-full max-w-md p-6 relative z-10"
-          style={{ backgroundColor: 'var(--card)', border: '1px solid var(--line)' }}
+          style={{ backgroundColor: 'var(--card)', border: '1px solid var(--line)', zIndex: 20001 }}
           onClick={(e) => e.stopPropagation()}
           onTouchStart={(e) => e.stopPropagation()}
         >
