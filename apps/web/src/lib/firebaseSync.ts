@@ -61,6 +61,11 @@ export class FirebaseSyncManager {
       user_notes: item.userNotes || null, // V2 addition for user notes
       user_tags: item.tags || [], // V2 addition for user tags
       next_air_date: item.nextAirDate || null, // V2 addition for TV shows
+      synopsis: item.synopsis || null, // V2 addition for show descriptions
+      show_status: item.showStatus || null, // V2 addition for TV show status
+      last_air_date: item.lastAirDate || null, // V2 addition for TV shows
+      networks: item.networks || null, // V2 addition
+      production_companies: item.productionCompanies || null, // V2 addition
     };
   }
 
@@ -273,7 +278,7 @@ export class FirebaseSyncManager {
               posterUrl: cloudItem.poster_path,
               voteAverage: cloudItem.vote_average,
               userRating: cloudItem.user_rating || undefined,
-              synopsis: '', // Not stored in cloud
+              synopsis: cloudItem.synopsis || '',
               list: list,
               addedAt: Date.now(),
             };
@@ -303,8 +308,12 @@ export class FirebaseSyncManager {
               posterUrl: cloudItem.poster_path,
               voteAverage: cloudItem.vote_average,
               userRating: cloudItem.user_rating || undefined,
-              synopsis: '', // Not stored in cloud
+              synopsis: cloudItem.synopsis || '',
+              showStatus: cloudItem.show_status,
+              lastAirDate: cloudItem.last_air_date,
               nextAirDate: cloudItem.next_air_date,
+              networks: cloudItem.networks,
+              productionCompanies: cloudItem.production_companies,
               list: list,
               addedAt: Date.now(),
             };
@@ -337,8 +346,12 @@ export class FirebaseSyncManager {
                 posterUrl: cloudItem.poster_path,
                 voteAverage: cloudItem.vote_average,
                 userRating: cloudItem.user_rating || undefined,
-                synopsis: '', // Not stored in cloud
+                synopsis: cloudItem.synopsis || '',
+                showStatus: cloudItem.show_status,
+                lastAirDate: cloudItem.last_air_date,
                 nextAirDate: cloudItem.next_air_date,
+                networks: cloudItem.networks,
+                productionCompanies: cloudItem.production_companies,
                 list: `custom:${customListId}`,
                 addedAt: Date.now(),
               };
