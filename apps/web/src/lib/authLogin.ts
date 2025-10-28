@@ -1,5 +1,6 @@
 import { signInWithRedirect, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from './firebase';
+import { logger } from './logger';
 
 /**
  * Detects if we're in a WebView or standalone PWA
@@ -41,45 +42,42 @@ export async function googleLogin() {
     timestamp: new Date().toISOString()
   };
   
-  console.log('🔐 Google sign-in method:', useRedirect ? 'redirect (mobile/webview)' : 'popup (desktop)');
-  console.log('📍 Current origin:', window.location.origin);
-  console.log('📍 Full URL:', window.location.href);
-  console.log('📍 Is localhost:', isLocalhost);
+  logger.log('Google sign-in method', useRedirect ? 'redirect (mobile/webview)' : 'popup (desktop)');
+  logger.debug('Current origin', window.location.origin);
+  logger.debug('Is localhost', isLocalhost);
   
   try {
+    // LOCALHOST WORKAROUND: Use popup mode even if webview would use redirect
+    // This avoids Firebase's redirect handler issues with localhost
     if (isLocalhost) {
-      // LOCALHOST WORKAROUND: Use popup mode even if webview would use redirect
-      // This avoids Firebase's redirect handler issues with localhost
-      console.log('🖥️ Localhost detected - using popup mode to avoid Firebase redirect issues');
-      console.log('🪟 Starting popup sign-in...');
+      logger.log('Localhost detected - using popup mode to avoid Firebase redirect issues');
       await signInWithPopup(auth, googleProvider);
-      console.log('✅ Popup sign-in successful');
+      logger.log('Popup sign-in successful');
     } else if (useRedirect) {
-      console.log('🔄 Starting redirect sign-in...');
+      logger.log('Starting redirect sign-in');
       
       // Save to localStorage before redirect so we can see it after page reload
       try {
         const existingLogs = JSON.parse(localStorage.getItem('auth-debug-logs') || '[]');
         existingLogs.push({ type: 'redirect-start', ...logData });
         localStorage.setItem('auth-debug-logs', JSON.stringify(existingLogs.slice(-10))); // Keep last 10 entries
-        console.log('💾 Saved debug log to localStorage');
+        logger.debug('Saved debug log to localStorage');
       } catch (e) {
-        console.error('Failed to save debug log:', e);
+        logger.error('Failed to save debug log', e);
       }
       
       await signInWithRedirect(auth, googleProvider);
-      console.log('✅ Redirect initiated - you should be redirected to Google now');
+      logger.log('Redirect initiated - user will be redirected to Google');
       // Note: Page will reload after Google auth
     } else {
-      console.log('🪟 Starting popup sign-in...');
+      logger.log('Starting popup sign-in');
       await signInWithPopup(auth, googleProvider);
-      console.log('✅ Popup sign-in successful');
+      logger.log('Popup sign-in successful');
     }
   } catch (error: any) {
-    console.error('❌ Google sign-in failed:', error);
-    console.error('Error code:', error.code);
-    console.error('Error message:', error.message);
-    console.error('Error details:', JSON.stringify(error, null, 2));
+    logger.error('Google sign-in failed', error);
+    logger.debug('Error code', error.code);
+    logger.debug('Error message', error.message);
     
     // Save error to localStorage
     try {
@@ -97,7 +95,7 @@ export async function googleLogin() {
     
     // If popup fails with blocked error, fallback to redirect
     if (!useRedirect && !isLocalhost && (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user')) {
-      console.log('🔄 Popup blocked, falling back to redirect');
+      logger.warn('Popup blocked, falling back to redirect');
       return signInWithRedirect(auth, googleProvider);
     }
     
@@ -125,13 +123,14 @@ export function logAuthOriginHint() {
   ]);
   
   if (!allowedOrigins.has(origin)) {
-    console.warn('⚠️ [AUTH] Origin not in OAuth JavaScript origins:', origin);
-    console.warn('📝 To fix: Add this origin to Google Cloud Console → OAuth 2.0 Client IDs');
-    console.warn('📝 Also add authorized redirect URIs:');
-    console.warn(`   - ${origin}`);
-    console.warn(`   - ${origin}/__/auth/handler`);
+    logger.warn('[AUTH] Origin not in OAuth JavaScript origins', origin);
+    logger.warn('To fix: Add this origin to Google Cloud Console → OAuth 2.0 Client IDs');
+    logger.warn('Also add authorized redirect URIs', {
+      origin,
+      handler: `${origin}/__/auth/handler`
+    });
   } else {
-    console.info('✅ [AUTH] Origin OK:', origin);
+    logger.log('[AUTH] Origin OK', origin);
   }
 }
 
