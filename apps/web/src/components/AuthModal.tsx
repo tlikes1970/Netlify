@@ -4,6 +4,7 @@ import { useTranslations } from '../lib/language';
 import type { AuthProvider } from '../lib/auth.types';
 import ModalPortal from './ModalPortal';
 import { googleLogin } from '../lib/authLogin';
+import { logger } from '../lib/logger';
 
 // Detect if we're in a blocked OAuth context
 function isBlockedOAuthContext(): boolean {
@@ -41,14 +42,23 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const { signInWithProvider } = useAuth();
+  const { signInWithProvider, signInWithEmail: signInEmail } = useAuth();
   const translations = useTranslations();
   const [loading, setLoading] = useState<AuthProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isBlocked] = useState(() => isBlockedOAuthContext());
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setShowEmailForm(false);
+      setEmail('');
+      setPassword('');
+      setError(null);
+      return;
+    }
     const { style } = document.documentElement;
     const prev = style.overflow;
     style.overflow = 'hidden';
@@ -101,8 +111,40 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   };
 
   const handleEmailSignIn = () => {
-    onClose();
-    // TODO: Open email sign-in modal
+    setShowEmailForm(true);
+  };
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    
+    if (!email || !password) {
+      setError('Email and password are required');
+      return;
+    }
+
+    if (!email.includes('@')) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    try {
+      setLoading('email');
+      logger.log('Attempting email sign-in', { email });
+      await signInEmail(email, password);
+      logger.log('Email sign-in successful');
+      onClose();
+      setShowEmailForm(false);
+    } catch (error: any) {
+      logger.error('Email sign-in failed', error);
+      setError(error.message || 'Sign-in failed. Please try again.');
+      setLoading(null);
+    }
   };
 
   return (
@@ -166,6 +208,85 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
           ) : null}
 
+          {showEmailForm ? (
+            <form onSubmit={handleEmailSubmit} className="space-y-3">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border"
+                  style={{ 
+                    backgroundColor: 'var(--btn)', 
+                    color: 'var(--text)', 
+                    borderColor: 'var(--line)',
+                    outline: 'none'
+                  }}
+                  placeholder="your@email.com"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border"
+                  style={{ 
+                    backgroundColor: 'var(--btn)', 
+                    color: 'var(--text)', 
+                    borderColor: 'var(--line)',
+                    outline: 'none'
+                  }}
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEmailForm(false);
+                    setEmail('');
+                    setPassword('');
+                    setError(null);
+                  }}
+                  className="flex-1 px-4 py-2 rounded-lg border transition-colors"
+                  style={{ 
+                    backgroundColor: 'var(--btn)', 
+                    color: 'var(--text)', 
+                    borderColor: 'var(--line)',
+                    touchAction: 'manipulation'
+                  }}
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading === 'email'}
+                  className="flex-1 px-4 py-2 rounded-lg border transition-colors disabled:opacity-50"
+                  style={{ 
+                    backgroundColor: 'var(--accent)', 
+                    color: '#fff', 
+                    border: 'none',
+                    touchAction: 'manipulation'
+                  }}
+                >
+                  {loading === 'email' ? 'Signing in...' : 'Sign In'}
+                </button>
+              </div>
+            </form>
+          ) : (
+
           <div className="space-y-3">
             <button
               onClick={() => {
@@ -226,6 +347,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </svg>
               <span>{translations.signInWithEmail || 'Sign in with Email'}</span>
             </button>
+          )}
           </div>
 
           <div className="mt-4 text-xs text-center" style={{ color: 'var(--muted)' }}>
