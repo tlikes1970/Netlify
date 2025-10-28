@@ -48,23 +48,7 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCar
 
   // Get Movie-specific chips/badges
   const getChips = () => {
-    return [
-      <span
-        key="movie"
-        className="badge"
-        style={{
-          fontSize: 'var(--font-xs, 10px)',
-          fontWeight: '600',
-          color: 'var(--muted)',
-          backgroundColor: 'var(--card-bg)',
-          border: '1px solid var(--line)',
-          borderRadius: 'var(--radius-sm, 4px)',
-          padding: '2px 6px'
-        }}
-      >
-        MOVIE
-      </span>
-    ];
+    return []; // No badges for movies - meta already shows "Movie"
   };
 
   const handleRatingChange = (rating: number) => {
@@ -107,12 +91,14 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCar
           <header>
             <h3>{title}</h3>
             <span className="meta">{getMetaText()}</span>
-            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
-              {getChips()}
-            </div>
+            {getChips().length > 0 && (
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '8px' }}>
+                {getChips()}
+              </div>
+            )}
           </header>
 
-          <div className="mobile-actions-row">
+          <div className="mobile-actions-row" style={{ marginTop: '12px' }}>
             <StarRating
               value={userRating || 0}
               onChange={handleRatingChange}

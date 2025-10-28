@@ -51,26 +51,7 @@ export function TvCardMobile({ item, actions, tabKey = 'watching' }: TvCardMobil
   const getChips = () => {
     const chips = [];
     
-    // Add TV SERIES badge
-    chips.push(
-      <span
-        key="tv-series"
-        className="badge"
-        style={{
-          fontSize: 'var(--font-xs, 10px)',
-          fontWeight: '600',
-          color: 'var(--muted)',
-          backgroundColor: 'var(--card-bg)',
-          border: '1px solid var(--line)',
-          borderRadius: 'var(--radius-sm, 4px)',
-          padding: '2px 6px'
-        }}
-      >
-        TV SERIES
-      </span>
-    );
-    
-    // Add show status badge if available
+    // Only add show status badge if available (removed "TV SERIES" since meta already says "TV Show")
     const statusInfo = getShowStatusInfo(showStatus);
     if (statusInfo) {
       chips.push(
@@ -135,12 +116,14 @@ export function TvCardMobile({ item, actions, tabKey = 'watching' }: TvCardMobil
           <header>
             <h3>{title}</h3>
             <span className="meta">{getMetaText()}</span>
-            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
-              {getChips()}
-            </div>
+            {getChips().length > 0 && (
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '8px' }}>
+                {getChips()}
+              </div>
+            )}
           </header>
 
-          <div className="mobile-actions-row">
+          <div className="mobile-actions-row" style={{ marginTop: '12px' }}>
             <StarRating
               value={userRating || 0}
               onChange={handleRatingChange}
