@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useSearch } from '@/hooks/useSearch';
 import { useSmartDiscovery } from '@/hooks/useSmartDiscovery';
+import { useAuth } from '@/hooks/useAuth';
 import CardV2 from '@/components/cards/CardV2';
 import type { MediaItem } from '@/components/cards/card.types';
 import { Library } from '@/lib/storage';
@@ -9,6 +10,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 export default function DiscoveryPage({ query, genreId }:{ query: string; genreId: number | null }) {
   const searchResults = useSearch(query);
   const { recommendations, isLoading: discoveryLoading, error: discoveryError } = useSmartDiscovery();
+  const { isAuthenticated } = useAuth();
   
   const items = useMemo(() => {
     // If user is searching, use search results
@@ -18,7 +20,12 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
       return all.filter((it: any) => Array.isArray(it.genre_ids) && it.genre_ids.includes(genreId));
     }
     
-    // For discovery without search, use smart recommendations
+    // For discovery without search, only show recommendations if authenticated
+    if (!isAuthenticated) {
+      return [];
+    }
+    
+    // For authenticated users, use smart recommendations
     return recommendations.map(rec => ({
       id: rec.item.id,
       kind: rec.item.kind,
@@ -31,7 +38,7 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
       score: rec.score,
       reasons: rec.reasons
     }));
-  }, [query, genreId, searchResults.data, recommendations]);
+  }, [query, genreId, searchResults.data, recommendations, isAuthenticated]);
 
   const isLoading = query.trim() ? searchResults.isFetching : discoveryLoading;
   const hasError = query.trim() ? searchResults.error : discoveryError;
@@ -99,7 +106,19 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           </div>
         )}
         
-        {!query && !items.length && !isLoading && (
+        {!query && !items.length && !isLoading && !isAuthenticated && (
+          <div className="text-center py-8">
+            <div className="text-4xl mb-4">🔐</div>
+            <h3 className="text-lg font-medium text-neutral-200 mb-2">
+              Sign In to Discover Content
+            </h3>
+            <p className="text-sm text-neutral-400 mb-4">
+              Sign in to get personalized recommendations based on your ratings and preferences.
+            </p>
+          </div>
+        )}
+        
+        {!query && !items.length && !isLoading && isAuthenticated && (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">🎬</div>
             <h3 className="text-lg font-medium text-neutral-200 mb-2">
