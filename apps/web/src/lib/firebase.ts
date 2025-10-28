@@ -17,11 +17,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase services
+// Note: Firebase v9 automatically uses LOCAL persistence by default
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 // Auth providers
 export const googleProvider = new GoogleAuthProvider();
+
+// For localhost development, we need to enable popup mode instead of redirect
+// This avoids Firebase's managed redirect handler which isn't working properly
+if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+  console.log('🔧 Localhost detected - using direct popup flow');
+}
+
 export const appleProvider = new OAuthProvider('apple.com');
 
 // Configure Apple provider

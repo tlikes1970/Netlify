@@ -6,6 +6,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/query';
 import { debugTmdbSource } from './lib/tmdb';
 import { HOME_RAILS, TABS } from './config/structure';
+import { registerServiceWorker, devUnregisterAllSW } from './sw-register';
 import './styles/global.css';
 import './styles/header-marquee.css';
 import './styles/tokens-compact-mobile.css';
@@ -20,6 +21,10 @@ import './styles/cards.css';
 import './components/cards/button-pro.css';
 import { installCompactMobileGate, installActionsSplitGate } from './lib/flags';
 import { initFlags } from './lib/mobileFlags';
+import { logAuthOriginHint } from './lib/authLogin';
+
+// Log auth origin for OAuth verification
+logAuthOriginHint();
 
 // Set density to compact (required for compact mobile gate)
 document.documentElement.dataset.density = 'compact';
@@ -158,6 +163,23 @@ if (typeof window !== 'undefined') {
   } catch { return { watching: 0, wishlist: 0, watched: 0, not: 0 }; }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(window as any).debugAuthLogs = () => {
+  try {
+    const logs = JSON.parse(localStorage.getItem('auth-debug-logs') || '[]');
+    console.log('📋 Auth Debug Logs:', logs);
+    return logs;
+  } catch (e) {
+    console.error('Failed to retrieve auth debug logs:', e);
+    return [];
+  }
+};
+
+// Import and expose Firebase auth debug utility
+import('./utils/debug-auth').then(m => {
+  (window as any).debugFirebaseAuth = m.debugFirebaseAuth;
+});
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
@@ -167,3 +189,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </React.StrictMode>
 );
+
+// Kill any leftover SWs during dev, before app boot.
+if (import.meta.env.DEV) {
+  devUnregisterAllSW().catch(() => {});
+  // Nuclear safety net: kill any SW that appears
+  import('./sw-dev-kill').catch(() => {});
+}
+
+registerServiceWorker();

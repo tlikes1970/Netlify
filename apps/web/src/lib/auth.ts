@@ -68,7 +68,105 @@ class AuthManager {
     // Check for redirect result FIRST (before setting up auth state listener)
     // This ensures we handle the redirect result if user is returning from Google/Apple sign-in
     try {
+      // CRITICAL: Save URL IMMEDIATELY before anything else touches it
+      const currentHref = window.location.href;
+      const currentHash = window.location.hash;
+      const currentSearch = window.location.search;
+      const currentOrigin = window.location.origin;
+      const currentPath = window.location.pathname;
+      
+      const returnUrlData = {
+        fullUrl: currentHref,
+        origin: currentOrigin,
+        path: currentPath,
+        search: currentSearch,
+        hash: currentHash,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Save to localStorage so we can inspect after redirect
+      try {
+        const existingLogs = JSON.parse(localStorage.getItem('auth-debug-logs') || '[]');
+        existingLogs.push({ type: 'redirect-return', ...returnUrlData });
+        localStorage.setItem('auth-debug-logs', JSON.stringify(existingLogs.slice(-10)));
+      } catch (e) {
+        // ignore
+      }
+      
       console.log('🔍 Checking for redirect result...');
+      console.log('🔍 IMMEDIATE snapshot:', {
+        href: currentHref,
+        hash: currentHash,
+        search: currentSearch
+      });
+      
+      // DEBUG: Check sessionStorage for Firebase auth state
+      console.log('🔍 Checking sessionStorage for Firebase auth state...');
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && (key.includes('firebase') || key.includes('auth') || key.includes('redirect'))) {
+          console.log(`🔍 sessionStorage[${key}]:`, sessionStorage.getItem(key));
+        }
+      }
+      
+      // Check if there's a pending redirect (means redirect started but didn't complete)
+      const pendingRedirectKeys = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && key.includes('pendingRedirect')) {
+          pendingRedirectKeys.push(key);
+          console.error('🚨 FIREBASE HAS A PENDING REDIRECT!', key);
+          console.error('  This means:');
+          console.error('    1. Redirect started successfully');
+          console.error('    2. Google authentication completed');
+          console.error('    3. BUT Firebase handler did NOT redirect back to app with auth data');
+          console.error('');
+          console.error('  🔧 Clearing the pending redirect flag...');
+          sessionStorage.removeItem(key);
+          console.log('  ✅ Cleared. The flag will be set again on next sign-in attempt.');
+        }
+      }
+      
+      if (pendingRedirectKeys.length === 0) {
+        console.log('✅ No pending redirect flags - app is in a clean state');
+      }
+      
+      console.log('🔍 window.location.href:', window.location.href);
+      console.log('🔍 window.location.search:', window.location.search);
+      console.log('🔍 window.location.hash:', window.location.hash);
+      
+      // Check if URL suggests we're returning from a redirect
+      const hasAuthParams = window.location.hash || window.location.search;
+      if (hasAuthParams) {
+        console.log('🔍 URL contains auth parameters, this might be a redirect return');
+        
+        // Parse hash for Firebase auth errors
+        if (window.location.hash) {
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          const error = hashParams.get('error');
+          const errorCode = hashParams.get('error_code');
+          const errorDescription = hashParams.get('error_description');
+          if (error) {
+            console.error('❌ Firebase auth error in URL:', { error, errorCode, errorDescription });
+            
+            // Save error to localStorage
+            try {
+              const existingLogs = JSON.parse(localStorage.getItem('auth-debug-logs') || '[]');
+              existingLogs.push({ 
+                type: 'redirect-error', 
+                error, 
+                errorCode, 
+                errorDescription,
+                timestamp: new Date().toISOString()
+              });
+              localStorage.setItem('auth-debug-logs', JSON.stringify(existingLogs.slice(-10)));
+            } catch (e) {
+              // ignore
+            }
+          }
+        }
+      }
+      
       const result = await getRedirectResult(auth);
       
       if (result && result.user) {
@@ -79,7 +177,24 @@ class AuthManager {
         });
         // The user is now signed in, onAuthStateChanged will fire and handle the rest
       } else {
-        console.log('ℹ️ No redirect result - not returning from sign-in');
+        console.log('ℹ️ No redirect result returned from Firebase');
+        
+        // DEBUG: Try one more time after a short delay in case there's a timing issue
+        console.log('🔄 Retrying getRedirectResult after 500ms...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const retryResult = await getRedirectResult(auth);
+        if (retryResult && retryResult.user) {
+          console.log('✅ Redirect sign-in successful on retry:', {
+            uid: retryResult.user.uid,
+            email: retryResult.user.email
+          });
+        } else {
+          console.log('❌ Still no redirect result after retry');
+          
+          if (hasAuthParams) {
+            console.warn('⚠️ URL has auth parameters but getRedirectResult returned nothing - this might indicate a misconfiguration');
+          }
+        }
       }
     } catch (error) {
       console.error('❌ Error checking redirect result:', error);
@@ -214,27 +329,26 @@ class AuthManager {
       throw new Error('OAUTH_BLOCKED');
     }
     
-    if (isMobile) {
-      // Mobile: use redirect
-      console.log('📱 Mobile device detected - using redirect flow');
+    // Use redirect for both mobile and desktop to avoid popup blocking issues
+    console.log('📱 Using redirect flow for Google sign-in');
+    try {
       await signInWithRedirect(auth, googleProvider);
+      console.log('✅ Redirect initiated - page will reload after sign-in');
       // Note: This will redirect the page to Google. The redirect result will be handled
       // when the page loads after returning from Google.
-    } else {
-      // Desktop: try popup first
-      console.log('🖥️ Desktop device detected - trying popup first');
-      try {
-        await signInWithPopup(auth, googleProvider);
-        console.log('✅ Popup sign-in successful');
-      } catch (error: any) {
-        // Popup blocked, fallback to redirect
-        if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
-          console.log('🔄 Popup blocked, falling back to redirect');
-          await signInWithRedirect(auth, googleProvider);
-        } else {
-          throw error;
-        }
+    } catch (error: any) {
+      console.error('❌ Google redirect sign-in failed:', error);
+      
+      // Check for common configuration errors
+      if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized')) {
+        console.error('🚫 Configuration Error: localhost:8888 is not an authorized domain');
+        console.error('📝 To fix: Go to Google Cloud Console → APIs & Services → Credentials');
+        console.error('📝 Add these authorized redirect URIs:');
+        console.error('   - http://localhost:8888');
+        console.error('   - http://localhost:8888/__/auth/handler');
       }
+      
+      throw error;
     }
   }
 

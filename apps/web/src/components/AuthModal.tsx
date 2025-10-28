@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useTranslations } from '../lib/language';
 import type { AuthProvider } from '../lib/auth.types';
 import ModalPortal from './ModalPortal';
+import { googleLogin } from '../lib/authLogin';
 
 // Detect if we're in a blocked OAuth context
 function isBlockedOAuthContext(): boolean {
@@ -58,6 +59,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   const handleProviderSignIn = async (provider: AuthProvider) => {
     console.log(`🔐 AuthModal: handleProviderSignIn called with provider: ${provider}`);
+    console.log(`📍 Current origin: ${window.location.origin}`);
+    console.log(`📍 Full URL: ${window.location.href}`);
     
     if (isBlocked) {
       console.log(`🔐 AuthModal: Blocked context detected, not attempting sign-in`);
@@ -68,9 +71,22 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setError(null);
     
     try {
-      console.log(`🔐 AuthModal: Calling signInWithProvider for ${provider}`);
-      await signInWithProvider(provider);
-      console.log(`🔐 AuthModal: signInWithProvider completed successfully`);
+      console.log(`🔐 AuthModal: Calling sign-in for ${provider}`);
+      
+      // Use the new googleLogin helper for Google sign-in
+      if (provider === 'google') {
+        console.log('🔐 Using googleLogin helper...');
+        await googleLogin();
+        console.log('✅ googleLogin returned successfully');
+      } else {
+        // Fall back to authManager for other providers (Apple, email)
+        console.log('🔐 Using authManager for non-Google provider...');
+        await signInWithProvider(provider);
+      }
+      
+      console.log(`🔐 AuthModal: ${provider} sign-in completed successfully`);
+      // Close modal after successful sign-in (popup or regular flow)
+      // For redirect flow, the page will reload anyway so modal state doesn't matter
       onClose();
     } catch (error: any) {
       console.error(`🔐 AuthModal: ${provider} sign-in failed:`, error);
@@ -80,7 +96,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       } else {
         setError(error.message || 'Sign-in failed. Please try again.');
       }
-    } finally {
       setLoading(null);
     }
   };
