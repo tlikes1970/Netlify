@@ -132,7 +132,7 @@ export function CompactOverflowMenu({ item, context, actions, showText = true }:
   };
 
   // Build menu actions based on context and available handlers
-  function buildMenuActions(item: ActionItem, context: ActionContext, handlers: CardActionHandlers) {
+  function buildMenuActions(_item: ActionItem, context: ActionContext, handlers: CardActionHandlers) {
     const menuItems: Array<{ id: string; label: string; onClick: (item: MediaItem) => void }> = [];
     
     // Add context-appropriate actions
