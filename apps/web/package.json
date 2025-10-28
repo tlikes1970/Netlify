@@ -1,7 +1,7 @@
 {
   "name": "flicklet-web",
   "private": true,
-  "version": "0.1.61",
+  "version": "0.1.62",
   "type": "module",
   "engines": {
     "node": ">=18 <21"

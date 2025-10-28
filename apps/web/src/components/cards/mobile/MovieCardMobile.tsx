@@ -37,7 +37,7 @@ export interface MovieCardMobileProps {
 }
 
 export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCardMobileProps) {
-  const { title, year, posterUrl, synopsis } = item;
+  const { title, year, posterUrl } = item;
   
   // Get Movie-specific meta information
   const getMetaText = () => {
@@ -102,15 +102,6 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCar
       case 'want': return 'tab-want';
       default: return 'tab-watching';
     }
-  };
-
-  // Truncate synopsis to 2 lines
-  const truncateSynopsis = (text: string) => {
-    if (!text) return '';
-    const words = text.split(' ');
-    const maxLength = 100; // rough estimate for 2 lines
-    if (text.length <= maxLength) return text;
-    return words.slice(0, Math.floor(words.length * 0.7)).join(' ') + '...';
   };
 
   return (

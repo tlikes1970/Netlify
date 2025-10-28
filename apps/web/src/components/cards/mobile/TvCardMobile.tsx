@@ -38,7 +38,7 @@ export interface TvCardMobileProps {
 }
 
 export function TvCardMobile({ item, actions, tabKey = 'watching' }: TvCardMobileProps) {
-  const { title, year, posterUrl, synopsis, showStatus } = item;
+  const { title, year, posterUrl, showStatus } = item;
   
   // Get TV-specific meta information
   const getMetaText = () => {
@@ -130,15 +130,6 @@ export function TvCardMobile({ item, actions, tabKey = 'watching' }: TvCardMobil
       case 'want': return 'tab-want';
       default: return 'tab-watching';
     }
-  };
-
-  // Truncate synopsis to 2 lines
-  const truncateSynopsis = (text: string) => {
-    if (!text) return '';
-    const words = text.split(' ');
-    const maxLength = 100; // rough estimate for 2 lines
-    if (text.length <= maxLength) return text;
-    return words.slice(0, Math.floor(words.length * 0.7)).join(' ') + '...';
   };
 
   return (
