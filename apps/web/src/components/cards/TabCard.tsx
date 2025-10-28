@@ -471,7 +471,7 @@ export default function TabCard({
               size="sm"
             />
             {rating && (
-              <span className="rating-score">({rating}/10)</span>
+              <span className="rating-score ml-2">({rating}/10)</span>
             )}
           </div>
         )}

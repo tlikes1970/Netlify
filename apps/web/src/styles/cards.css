@@ -101,7 +101,7 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 .card-desktop .info-col header {
@@ -144,7 +144,7 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 .card-desktop .rating-row {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-4);
   margin-bottom: var(--space-4);
 }
 
