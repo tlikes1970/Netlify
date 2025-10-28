@@ -119,7 +119,10 @@ export default function App() {
 
   // Auto-prompt for authentication when not authenticated
   useEffect(() => {
-    if (!authLoading && authInitialized && !isAuthenticated) {
+    // Don't auto-open modal if we're returning from an OAuth redirect
+    const isReturningFromRedirect = window.location.hash || window.location.search;
+    
+    if (!authLoading && authInitialized && !isAuthenticated && !isReturningFromRedirect) {
       // Small delay to ensure the app has fully loaded
       const timer = setTimeout(() => {
         setShowAuthModal(true);
