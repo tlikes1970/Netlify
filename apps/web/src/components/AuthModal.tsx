@@ -59,6 +59,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       setEmail('');
       setPassword('');
       setError(null);
+      setIsRedirecting(false);
+      setLoading(null);
       return;
     }
     const { style } = document.documentElement;
