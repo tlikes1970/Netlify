@@ -8,7 +8,7 @@ export function debugFirebaseAuth() {
   console.log('📦 Session Storage:');
   for (let i = 0; i < sessionStorage.length; i++) {
     const key = sessionStorage.key(i);
-    if (key && key.includes('firebase') || key.includes('auth')) {
+    if (key && (key.includes('firebase') || key.includes('auth'))) {
       console.log(`  ${key}:`, sessionStorage.getItem(key));
     }
   }
@@ -17,7 +17,7 @@ export function debugFirebaseAuth() {
   console.log('📦 Local Storage (Firebase keys):');
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key && key.includes('firebase') || key.includes('auth')) {
+    if (key && (key.includes('firebase') || key.includes('auth'))) {
       try {
         const value = localStorage.getItem(key);
         // Try to parse if it's JSON

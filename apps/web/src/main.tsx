@@ -193,7 +193,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 // Kill any leftover SWs during dev, before app boot.
 if (import.meta.env.DEV) {
   devUnregisterAllSW().catch(() => {});
-  // Nuclear safety net: kill any SW that appears
+  // Nuclear safety net: kill any SW that appears (side-effect import)
   import('./sw-dev-kill').catch(() => {});
 }
 

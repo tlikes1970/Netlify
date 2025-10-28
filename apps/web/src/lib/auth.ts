@@ -1,5 +1,4 @@
 import { 
-  signInWithPopup, 
   signInWithRedirect, 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
