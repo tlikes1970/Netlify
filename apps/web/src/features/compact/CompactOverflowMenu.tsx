@@ -141,7 +141,6 @@ export function CompactOverflowMenu({ item, context, actions, showText = true }:
         if (handlers.onWant) menuItems.push({ id: 'want', label: 'Want to Watch', onClick: handlers.onWant });
         if (handlers.onNotInterested) menuItems.push({ id: 'not-interested', label: 'Not Interested', onClick: handlers.onNotInterested });
         if (handlers.onNotesEdit) menuItems.push({ id: 'notes', label: 'Notes & Tags', onClick: handlers.onNotesEdit });
-        if (handlers.onRatingChange) menuItems.push({ id: 'rate', label: 'Rate', onClick: () => handlers.onRatingChange?.(item as any, 0) });
         if (handlers.onBloopersOpen) menuItems.push({ id: 'bloopers', label: 'Bloopers', onClick: handlers.onBloopersOpen });
         if (handlers.onExtrasOpen) menuItems.push({ id: 'extras', label: 'Extras', onClick: handlers.onExtrasOpen });
         if (handlers.onNotificationToggle) menuItems.push({ id: 'notifications', label: 'Advanced Notifications', onClick: handlers.onNotificationToggle });
@@ -152,7 +151,6 @@ export function CompactOverflowMenu({ item, context, actions, showText = true }:
         if (handlers.onWant) menuItems.push({ id: 'want', label: 'Want to Watch', onClick: handlers.onWant });
         if (handlers.onNotInterested) menuItems.push({ id: 'not-interested', label: 'Not Interested', onClick: handlers.onNotInterested });
         if (handlers.onNotesEdit) menuItems.push({ id: 'notes', label: 'Notes & Tags', onClick: handlers.onNotesEdit });
-        if (handlers.onRatingChange) menuItems.push({ id: 'rate', label: 'Rate', onClick: () => handlers.onRatingChange?.(item as any, 0) });
         if (handlers.onBloopersOpen) menuItems.push({ id: 'bloopers', label: 'Bloopers', onClick: handlers.onBloopersOpen });
         if (handlers.onExtrasOpen) menuItems.push({ id: 'extras', label: 'Extras', onClick: handlers.onExtrasOpen });
         if (handlers.onNotificationToggle) menuItems.push({ id: 'notifications', label: 'Advanced Notifications', onClick: handlers.onNotificationToggle });
@@ -164,7 +162,6 @@ export function CompactOverflowMenu({ item, context, actions, showText = true }:
         if (handlers.onWant) menuItems.push({ id: 'remove-want', label: 'Remove from Want to Watch', onClick: handlers.onWant });
         if (handlers.onNotInterested) menuItems.push({ id: 'not-interested', label: 'Not Interested', onClick: handlers.onNotInterested });
         if (handlers.onNotesEdit) menuItems.push({ id: 'notes', label: 'Notes & Tags', onClick: handlers.onNotesEdit });
-        if (handlers.onRatingChange) menuItems.push({ id: 'rate', label: 'Rate', onClick: () => handlers.onRatingChange?.(item as any, 0) });
         if (handlers.onBloopersOpen) menuItems.push({ id: 'bloopers', label: 'Bloopers', onClick: handlers.onBloopersOpen });
         if (handlers.onExtrasOpen) menuItems.push({ id: 'extras', label: 'Extras', onClick: handlers.onExtrasOpen });
         if (handlers.onNotificationToggle) menuItems.push({ id: 'notifications', label: 'Advanced Notifications', onClick: handlers.onNotificationToggle });
@@ -203,7 +200,10 @@ export function CompactOverflowMenu({ item, context, actions, showText = true }:
           color: 'var(--text, #000000)',
           border: 'none',
           cursor: 'pointer',
-          width: showText ? '100%' : 'auto',
+          width: showText ? '100%' : '44px',
+          height: showText ? 'auto' : '44px',
+          minWidth: showText ? 'auto' : '44px',
+          minHeight: showText ? 'auto' : '44px',
           marginTop: 'var(--space-2, 8px)',
           transition: 'all 0.2s ease',
           display: 'flex',

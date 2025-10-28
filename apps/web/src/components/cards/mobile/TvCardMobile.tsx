@@ -3,6 +3,7 @@ import SwipeableCard from '../../SwipeableCard';
 import { OptimizedImage } from '../../OptimizedImage';
 import { getShowStatusInfo } from '../../../utils/showStatus';
 import { CompactOverflowMenu } from '../../../features/compact/CompactOverflowMenu';
+import StarRating from '../StarRating';
 
 // neutral 112x168 poster placeholder (SVG data URI)
 const POSTER_PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
@@ -38,7 +39,7 @@ export interface TvCardMobileProps {
 }
 
 export function TvCardMobile({ item, actions, tabKey = 'watching' }: TvCardMobileProps) {
-  const { title, year, posterUrl, showStatus } = item;
+  const { title, year, posterUrl, showStatus, userRating } = item;
   
   // Get TV-specific meta information
   const getMetaText = () => {
@@ -94,33 +95,11 @@ export function TvCardMobile({ item, actions, tabKey = 'watching' }: TvCardMobil
     return chips;
   };
 
-  // Determine primary action based on tab
-  const getPrimaryAction = () => {
-    switch (tabKey) {
-      case 'watching':
-        return {
-          label: 'Watched',
-          onClick: () => actions?.onWatched?.(item)
-        };
-      case 'watched':
-        return {
-          label: 'Want to Watch',
-          onClick: () => actions?.onWant?.(item)
-        };
-      case 'want':
-        return {
-          label: 'Want to Watch',
-          onClick: () => actions?.onWant?.(item)
-        };
-      default:
-        return {
-          label: 'Watched',
-          onClick: () => actions?.onWatched?.(item)
-        };
+  const handleRatingChange = (rating: number) => {
+    if (actions?.onRatingChange) {
+      actions.onRatingChange(item, rating);
     }
   };
-
-  const primaryAction = getPrimaryAction();
 
   // Convert tabKey to SwipeableCard context
   const getContextFromTabKey = (tabKey: 'watching' | 'watched' | 'want') => {
@@ -162,9 +141,14 @@ export function TvCardMobile({ item, actions, tabKey = 'watching' }: TvCardMobil
           </header>
 
           <div className="mobile-actions-row">
-            <button className="primary-action" onClick={primaryAction.onClick}>
-              {primaryAction.label}
-            </button>
+            <StarRating
+              value={userRating || 0}
+              onChange={handleRatingChange}
+              size="sm"
+            />
+          </div>
+          
+          <div className="mobile-overflow-position">
             <CompactOverflowMenu 
               item={item as any} 
               context={`tab-${tabKey}`}
