@@ -2,15 +2,16 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// Firebase configuration from environment variables
+// Firebase configuration from environment variables with fallback to hardcoded values
+// This allows the app to work both locally with .env and in production without requiring Netlify env vars
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'flicklet-71dff.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'flicklet-71dff',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'flicklet-71dff.appspot.com',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '1034923556763',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:1034923556763:web:bba5489cd1d9412c9c2b3e',
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-YL4TJ4FHJC',
 };
 
 // Initialize Firebase
