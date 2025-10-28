@@ -28,12 +28,10 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
     // For authenticated users, use smart recommendations
     return recommendations.map(rec => ({
       id: rec.item.id,
-      kind: rec.item.kind,
+      mediaType: rec.item.kind,
       title: rec.item.title,
-      poster: rec.item.poster,
-      posterUrl: rec.item.poster, // Ensure posterUrl is available for CardV2
-      year: rec.item.year,
-      voteAverage: rec.item.voteAverage,
+      posterUrl: rec.item.poster,
+      year: rec.item.year?.toString(),
       genre_ids: [], // Will be populated by TMDB data
       score: rec.score,
       reasons: rec.reasons
