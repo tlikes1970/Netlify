@@ -347,8 +347,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </svg>
               <span>{translations.signInWithEmail || 'Sign in with Email'}</span>
             </button>
-          )}
           </div>
+          )}
 
           <div className="mt-4 text-xs text-center" style={{ color: 'var(--muted)' }}>
             {translations.signInDescription || 'Sign in to sync your lists across devices'}
