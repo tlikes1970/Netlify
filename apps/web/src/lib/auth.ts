@@ -7,7 +7,18 @@ import {
   getRedirectResult,
   User
 } from 'firebase/auth';
+import { 
+  doc, 
+  setDoc, 
+  getDoc, 
+  updateDoc, 
+  serverTimestamp 
+} from 'firebase/firestore';
 import { isMobileNow } from './isMobile';
+import { logger } from './logger';
+import { auth, db, googleProvider, appleProvider } from './firebase';
+import { firebaseSyncManager } from './firebaseSync';
+import type { AuthUser, UserDocument, UserSettings, AuthProvider } from './auth.types';
 
 // Detect if we're in a blocked OAuth context
 // Google blocks OAuth inside embedded browsers (PWA standalone, in-app browsers, etc.)
@@ -31,25 +42,15 @@ function isBlockedOAuthContext(): boolean {
   const isStandalone = (window as any).standalone || isPWAStandalone;
   
   if (isStandalone) {
-    console.log('🚫 PWA standalone mode detected - Google OAuth is blocked');
+    logger.warn('PWA standalone mode detected - Google OAuth is blocked');
   }
   
   if (isInAppBrowser) {
-    console.log('🚫 In-app browser detected - Google OAuth is blocked');
+    logger.warn('In-app browser detected - Google OAuth is blocked');
   }
   
   return isStandalone || isInAppBrowser;
 }
-import { 
-  doc, 
-  setDoc, 
-  getDoc, 
-  updateDoc, 
-  serverTimestamp 
-} from 'firebase/firestore';
-import { auth, db, googleProvider, appleProvider } from './firebase';
-import { firebaseSyncManager } from './firebaseSync';
-import type { AuthUser, UserDocument, UserSettings, AuthProvider } from './auth.types';
 
 class AuthManager {
   private currentUser: AuthUser | null = null;
@@ -92,19 +93,19 @@ class AuthManager {
         // ignore
       }
       
-      console.log('🔍 Checking for redirect result...');
-      console.log('🔍 IMMEDIATE snapshot:', {
+      logger.log('Checking for redirect result...');
+      logger.debug('Redirect URL snapshot', {
         href: currentHref,
         hash: currentHash,
         search: currentSearch
       });
       
       // DEBUG: Check sessionStorage for Firebase auth state
-      console.log('🔍 Checking sessionStorage for Firebase auth state...');
+      logger.debug('Checking sessionStorage for Firebase auth state');
       for (let i = 0; i < sessionStorage.length; i++) {
         const key = sessionStorage.key(i);
         if (key && (key.includes('firebase') || key.includes('auth') || key.includes('redirect'))) {
-          console.log(`🔍 sessionStorage[${key}]:`, sessionStorage.getItem(key));
+          logger.debug(`sessionStorage[${key}]`, sessionStorage.getItem(key));
         }
       }
       
@@ -114,30 +115,27 @@ class AuthManager {
         const key = sessionStorage.key(i);
         if (key && key.includes('pendingRedirect')) {
           pendingRedirectKeys.push(key);
-          console.error('🚨 FIREBASE HAS A PENDING REDIRECT!', key);
-          console.error('  This means:');
-          console.error('    1. Redirect started successfully');
-          console.error('    2. Google authentication completed');
-          console.error('    3. BUT Firebase handler did NOT redirect back to app with auth data');
-          console.error('');
-          console.error('  🔧 Clearing the pending redirect flag...');
+          logger.error('FIREBASE HAS A PENDING REDIRECT', key);
+          logger.warn('Redirect started but handler did not complete');
           sessionStorage.removeItem(key);
-          console.log('  ✅ Cleared. The flag will be set again on next sign-in attempt.');
+          logger.log('Cleared pending redirect flag');
         }
       }
       
       if (pendingRedirectKeys.length === 0) {
-        console.log('✅ No pending redirect flags - app is in a clean state');
+        logger.debug('No pending redirect flags - app is in a clean state');
       }
       
-      console.log('🔍 window.location.href:', window.location.href);
-      console.log('🔍 window.location.search:', window.location.search);
-      console.log('🔍 window.location.hash:', window.location.hash);
+      logger.debug('Window location', {
+        href: window.location.href,
+        search: window.location.search,
+        hash: window.location.hash
+      });
       
       // Check if URL suggests we're returning from a redirect
       const hasAuthParams = window.location.hash || window.location.search;
       if (hasAuthParams) {
-        console.log('🔍 URL contains auth parameters, this might be a redirect return');
+        logger.debug('URL contains auth parameters, might be redirect return');
         
         // Parse hash for Firebase auth errors
         if (window.location.hash) {
@@ -146,7 +144,7 @@ class AuthManager {
           const errorCode = hashParams.get('error_code');
           const errorDescription = hashParams.get('error_description');
           if (error) {
-            console.error('❌ Firebase auth error in URL:', { error, errorCode, errorDescription });
+            logger.error('Firebase auth error in URL', { error, errorCode, errorDescription });
             
             // Save error to localStorage
             try {
@@ -169,7 +167,7 @@ class AuthManager {
       const result = await getRedirectResult(auth);
       
       if (result && result.user) {
-        console.log('✅ Redirect sign-in successful:', {
+        logger.log('Redirect sign-in successful', {
           uid: result.user.uid,
           email: result.user.email,
           displayName: result.user.displayName
@@ -178,21 +176,21 @@ class AuthManager {
         // Clean up the URL by removing auth parameters to prevent loops
         try {
           window.history.replaceState({}, document.title, window.location.pathname);
-          console.log('🧹 Cleaned up URL parameters');
+          logger.debug('Cleaned up URL parameters');
         } catch (e) {
-          console.warn('Failed to clean up URL:', e);
+          logger.warn('Failed to clean up URL', e);
         }
         
         // The user is now signed in, onAuthStateChanged will fire and handle the rest
       } else {
-        console.log('ℹ️ No redirect result returned from Firebase');
+        logger.log('No redirect result returned from Firebase');
         
         // DEBUG: Try one more time after a short delay in case there's a timing issue
-        console.log('🔄 Retrying getRedirectResult after 500ms...');
+        logger.debug('Retrying getRedirectResult after 500ms');
         await new Promise(resolve => setTimeout(resolve, 500));
         const retryResult = await getRedirectResult(auth);
         if (retryResult && retryResult.user) {
-          console.log('✅ Redirect sign-in successful on retry:', {
+          logger.log('Redirect sign-in successful on retry', {
             uid: retryResult.user.uid,
             email: retryResult.user.email
           });
@@ -200,27 +198,27 @@ class AuthManager {
           // Clean up the URL on successful retry
           try {
             window.history.replaceState({}, document.title, window.location.pathname);
-            console.log('🧹 Cleaned up URL parameters');
+            logger.debug('Cleaned up URL parameters');
           } catch (e) {
-            console.warn('Failed to clean up URL:', e);
+            logger.warn('Failed to clean up URL', e);
           }
         } else {
-          console.log('❌ Still no redirect result after retry');
+          logger.warn('Still no redirect result after retry');
           
           // Clean up URL even if no result to prevent infinite loops
           if (hasAuthParams) {
-            console.warn('⚠️ URL has auth parameters but getRedirectResult returned nothing - cleaning up URL to prevent loop');
+            logger.warn('URL has auth parameters but getRedirectResult returned nothing - cleaning up URL to prevent loop');
             try {
               window.history.replaceState({}, document.title, window.location.pathname);
-              console.log('🧹 Cleaned up URL parameters to prevent redirect loop');
+              logger.debug('Cleaned up URL parameters to prevent redirect loop');
             } catch (e) {
-              console.warn('Failed to clean up URL:', e);
+              logger.warn('Failed to clean up URL', e);
             }
           }
         }
       }
     } catch (error) {
-      console.error('❌ Error checking redirect result:', error);
+      logger.error('Error checking redirect result', error);
       // Continue initialization even if redirect check fails
     }
     
@@ -234,13 +232,13 @@ class AuthManager {
       // Mark auth state as initialized after first Firebase callback
       if (!this.authStateInitialized) {
         this.authStateInitialized = true;
-        console.log('🔐 Auth state initialized:', { 
+        logger.log('Auth state initialized', { 
           hasUser: !!authUser, 
           uid: authUser?.uid,
           email: authUser?.email
         });
       } else {
-        console.log('🔐 Auth state changed:', { 
+        logger.log('Auth state changed', { 
           hasUser: !!authUser, 
           uid: authUser?.uid,
           email: authUser?.email
@@ -301,7 +299,7 @@ class AuthManager {
       };
       
       await setDoc(userRef, userDoc);
-      console.log('✅ Created new user document:', authUser.uid);
+      logger.log('Created new user document', authUser.uid);
     } else {
       // Update last login time
       await updateDoc(userRef, {
@@ -312,7 +310,7 @@ class AuthManager {
           photoURL: authUser.photoURL || '',
         },
       });
-      console.log('✅ Updated user document:', authUser.uid);
+      logger.log('Updated user document', authUser.uid);
     }
   }
 
@@ -331,7 +329,7 @@ class AuthManager {
           throw new Error(`Unknown provider: ${provider}`);
       }
     } catch (error) {
-      console.error(`❌ ${provider} sign-in failed:`, error);
+      logger.error(`${provider} sign-in failed`, error);
       throw error;
     }
   }
@@ -340,37 +338,28 @@ class AuthManager {
     const isMobile = isMobileNow();
     const isBlocked = isBlockedOAuthContext();
     
-    console.log('🚀 Starting Google sign-in...', { 
+    logger.log('Starting Google sign-in', { 
       isMobile, 
       isBlocked,
-      userAgent: navigator.userAgent,
+      userAgent: navigator.userAgent.substring(0, 50),
       displayMode: (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ? 'standalone' : 'browser'
     });
     
     if (isBlocked) {
-      console.error('🚫 Google sign-in attempted in blocked context (PWA standalone or in-app browser)');
+      logger.error('Google sign-in attempted in blocked context (PWA standalone or in-app browser)');
       throw new Error('OAUTH_BLOCKED');
     }
     
     // Use redirect for both mobile and desktop to avoid popup blocking issues
-    console.log('📱 Using redirect flow for Google sign-in');
+    logger.log('Using redirect flow for Google sign-in');
     try {
       await signInWithRedirect(auth, googleProvider);
-      console.log('✅ Redirect initiated - page will reload after sign-in');
+      logger.log('Redirect initiated - page will reload after sign-in');
       // Note: This will redirect the page to Google. The redirect result will be handled
       // when the page loads after returning from Google.
     } catch (error: any) {
-      console.error('❌ Google redirect sign-in failed:', error);
-      
-      // Check for common configuration errors
-      if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized')) {
-        console.error('🚫 Configuration Error: localhost:8888 is not an authorized domain');
-        console.error('📝 To fix: Go to Google Cloud Console → APIs & Services → Credentials');
-        console.error('📝 Add these authorized redirect URIs:');
-        console.error('   - http://localhost:8888');
-        console.error('   - http://localhost:8888/__/auth/handler');
-      }
-      
+      logger.error('Google redirect sign-in failed', error);
+      // Remove unauthorized-domain handling - let Firebase throw the proper error
       throw error;
     }
   }
@@ -381,12 +370,20 @@ class AuthManager {
   }
 
   async signInWithEmail(email: string, password: string): Promise<void> {
+    // Security fix: Do NOT auto-create accounts
+    // This prevents malicious users from creating accounts via password reuse attacks
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error: any) {
+      // If user not found, throw specific error instead of auto-creating
       if (error.code === 'auth/user-not-found') {
-        // User doesn't exist, create account
-        await createUserWithEmailAndPassword(auth, email, password);
+        throw new Error('No account found with this email. Please check your email or sign up.');
+      } else if (error.code === 'auth/wrong-password') {
+        throw new Error('Incorrect password. Please try again.');
+      } else if (error.code === 'auth/invalid-email') {
+        throw new Error('Invalid email address.');
+      } else if (error.code === 'auth/too-many-requests') {
+        throw new Error('Too many failed attempts. Please try again later.');
       } else {
         throw error;
       }
@@ -417,9 +414,9 @@ class AuthManager {
       // Dispatch event to clear Library state
       window.dispatchEvent(new CustomEvent('library:cleared'));
       
-      console.log('🧹 Cleared local data on sign-out for privacy');
+      logger.log('Cleared local data on sign-out for privacy');
     } catch (error) {
-      console.error('❌ Failed to clear local data:', error);
+      logger.error('Failed to clear local data', error);
     }
   }
 
@@ -435,7 +432,7 @@ class AuthManager {
       
       return null;
     } catch (error) {
-      console.error('❌ Failed to get user settings:', error);
+      logger.error('Failed to get user settings', error);
       return null;
     }
   }
@@ -446,9 +443,9 @@ class AuthManager {
       await updateDoc(userRef, {
         settings: settings,
       });
-      console.log('✅ Updated user settings:', settings);
+      logger.log('Updated user settings', settings);
     } catch (error) {
-      console.error('❌ Failed to update user settings:', error);
+      logger.error('Failed to update user settings', error);
       throw error;
     }
   }

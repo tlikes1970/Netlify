@@ -2,15 +2,15 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// Firebase configuration (same as V1)
+// Firebase configuration from environment variables
 const firebaseConfig = {
-  apiKey: 'AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM',
-  authDomain: 'flicklet-71dff.firebaseapp.com',
-  projectId: 'flicklet-71dff',
-  storageBucket: 'flicklet-71dff.appspot.com',
-  messagingSenderId: '1034923556763',
-  appId: '1:1034923556763:web:bba5489cd1d9412c9c2b3e',
-  measurementId: 'G-YL4TJ4FHJC',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
