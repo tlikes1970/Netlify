@@ -51,6 +51,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -87,11 +88,15 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       // Use the new googleLogin helper for Google sign-in
       if (provider === 'google') {
         console.log('🔐 Using googleLogin helper...');
+        setIsRedirecting(true);
+        // For redirect flows, show loading state before redirect
+        setTimeout(() => {}, 100);
         await googleLogin();
         console.log('✅ googleLogin returned successfully');
       } else {
         // Fall back to authManager for other providers (Apple, email)
         console.log('🔐 Using authManager for non-Google provider...');
+        setIsRedirecting(true);
         await signInWithProvider(provider);
       }
       
@@ -178,6 +183,16 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           onClick={(e) => e.stopPropagation()}
           onTouchStart={(e) => e.stopPropagation()}
         >
+          {/* Redirect Loading Overlay */}
+          {isRedirecting && (
+            <div className="absolute inset-0 bg-black bg-opacity-75 rounded-xl flex items-center justify-center z-50">
+              <div className="text-center">
+                <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-white font-semibold">Redirecting to sign in...</p>
+                <p className="text-white text-sm mt-2 opacity-75">Please wait</p>
+              </div>
+            </div>
+          )}
           
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>
