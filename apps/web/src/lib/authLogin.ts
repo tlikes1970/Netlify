@@ -91,23 +91,36 @@ export async function googleLogin() {
   const useRedirect = isWebView();
   const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
   
+  // ⚠️ SAFARI WORKAROUND: Use popup on iOS when redirect params disappear
+  // Firebase officially recommends popup for iOS when redirect results vanish
+  const isSafariIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) && 
+                      !((window as any).MSStream) && // Exclude IE
+                      !(/Chrome|CriOS|FxiOS|EdgiOS/.test(navigator.userAgent)); // Exclude Chrome/Firefox/Edge on iOS
+  
   // Log and save to localStorage before redirect
   const logData = {
     method: useRedirect ? 'redirect' : 'popup',
     origin: window.location.origin,
     fullUrl: window.location.href,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    isSafariIOS,
   };
   
-  logger.log('Google sign-in method', useRedirect ? 'redirect (mobile/webview)' : 'popup (desktop)');
+  logger.log('Google sign-in method', useRedirect && !isSafariIOS ? 'redirect (mobile/webview)' : isSafariIOS ? 'popup (Safari iOS)' : 'popup (desktop)');
   logger.debug('Current origin', window.location.origin);
   logger.debug('Is localhost', isLocalhost);
+  logger.debug('Is Safari iOS', isSafariIOS);
   
   try {
     // LOCALHOST WORKAROUND: Use popup mode even if webview would use redirect
     // This avoids Firebase's redirect handler issues with localhost
     if (isLocalhost) {
       logger.log('Localhost detected - using popup mode to avoid Firebase redirect issues');
+      await signInWithPopup(auth, googleProvider);
+      logger.log('Popup sign-in successful');
+    } else if (isSafariIOS) {
+      // ⚠️ SAFARI WORKAROUND: Use popup on iOS when redirect params disappear
+      logger.log('Safari iOS detected - using popup mode (Firebase recommendation for iOS)');
       await signInWithPopup(auth, googleProvider);
       logger.log('Popup sign-in successful');
     } else if (useRedirect) {

@@ -19,7 +19,10 @@ import { GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
 // Firebase configuration
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'flicklet-71dff.firebaseapp.com',
+  // ⚠️ CRITICAL: authDomain MUST match the actual domain users visit
+  // If it's flicklet-71dff.firebaseapp.com but users visit flicklet.netlify.app,
+  // Google redirects to the wrong domain and Safari drops the params
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'flicklet.netlify.app',
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'flicklet-71dff',
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'flicklet-71dff.appspot.com',
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '1034923556763',

@@ -52,6 +52,13 @@
   status = 404
   force = true
 
+# ⚠️ CRITICAL: Preserve Firebase auth handler paths - must come BEFORE catch-all
+# This prevents Netlify from rewriting /__/auth/handler to /index.html and stripping query params
+[[redirects]]
+  from = "/__/auth/*"
+  to   = "/__/auth/:splat"
+  status = 200
+
 # SPA fallback so client routes don't 404
 [[redirects]]
   from = "/*"
