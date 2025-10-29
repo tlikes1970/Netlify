@@ -178,27 +178,61 @@ export async function googleLogin() {
       window.addEventListener('pagehide', pagehideListener, { once: true });
       document.addEventListener('visibilitychange', visibilityListener, { once: true });
       
+      // Clean up timer if redirect succeeds
+      const cleanup = () => {
+        if (stuckTimer) {
+          clearTimeout(stuckTimer);
+        }
+        window.removeEventListener('pagehide', pagehideListener);
+        document.removeEventListener('visibilitychange', visibilityListener);
+      };
+      
+      // ⚠️ FIX #3: Redirect liveness probe and auto-fallback on iOS
       // If timer fires first, redirect never left the page (Safari stall)
-      const stuckTimer = setTimeout(() => {
+      // Automatically switch to popup for iOS
+      const stuckTimer = setTimeout(async () => {
         if (!pagehideFired && !visibilityChangeFired) {
           logger.error('[CRITICAL] Redirect stuck - page never left after 1500ms');
           authLogManager.log('stuck_redirect', {
             timestamp: new Date().toISOString(),
             elapsed: Date.now() - redirectStartTime,
             shouldPopupFallback: true,
+            platform: navigator.userAgent,
           });
+          
+          // Auto-fallback to popup on iOS
+          const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+          if (isIOS) {
+            logger.log('[Auto-fallback] iOS detected - switching to popup mode');
+            try {
+              // Clean up the redirect attempt
+              cleanup();
+              
+              // Switch to popup
+              await signInWithPopup(auth, googleProvider);
+              logger.log('[Auto-fallback] Popup sign-in successful after redirect stall');
+              authLogManager.log('auto_fallback_popup_success', {
+                reason: 'redirect_stuck',
+                platform: 'iOS',
+              });
+              return; // Exit early - popup succeeded
+            } catch (popupError: any) {
+              logger.error('[Auto-fallback] Popup failed after redirect stall', popupError);
+              authLogManager.log('auto_fallback_popup_failed', {
+                error: popupError?.message || String(popupError),
+                code: popupError?.code,
+              });
+              // Don't throw - let the error bubble up naturally
+            }
+          } else {
+            // Non-iOS - just clean up
+            cleanup();
+          }
+        } else {
+          // Redirect succeeded - clean up listeners
+          cleanup();
         }
-        // Clean up listeners
-        window.removeEventListener('pagehide', pagehideListener);
-        document.removeEventListener('visibilitychange', visibilityListener);
       }, 1500);
-      
-      // Clean up timer if redirect succeeds
-      const cleanup = () => {
-        clearTimeout(stuckTimer);
-        window.removeEventListener('pagehide', pagehideListener);
-        document.removeEventListener('visibilitychange', visibilityListener);
-      };
       
       // Save to localStorage before redirect so we can see it after page reload
       try {
@@ -215,8 +249,22 @@ export async function googleLogin() {
         logger.log('Redirect initiated - user will be redirected to Google');
         // Note: Page will reload after Google auth
         // cleanup() won't run if redirect succeeds (page reloads)
+        // If stuckTimer fires, it will handle auto-fallback
       } catch (error) {
         cleanup(); // Clean up if redirect fails
+        // Don't throw immediately - check if we should auto-fallback instead
+        const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+        if (isIOS && error && typeof error === 'object' && 'code' in error && error.code === 'auth/cancelled-popup-request') {
+          logger.warn('[Auto-fallback] Redirect failed with cancelled popup - retrying with popup');
+          try {
+            await signInWithPopup(auth, googleProvider);
+            logger.log('[Auto-fallback] Popup sign-in successful after redirect error');
+            return; // Success
+          } catch (popupError) {
+            logger.error('[Auto-fallback] Popup also failed', popupError);
+            throw popupError; // Throw original or popup error
+          }
+        }
         throw error;
       }
     } else {

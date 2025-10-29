@@ -30,15 +30,55 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-YL4TJ4FHJC',
 };
 
+// ⚠️ FIX #1: Single Auth instance guard
 // ⚠️ SINGLE SOURCE OF TRUTH: Only place Firebase is initialized
 // Initialize Firebase app (only once)
 let app = getApps()[0];
+let authInstance: ReturnType<typeof getAuth> | null = null;
+
 if (!app) {
   app = initializeApp(firebaseConfig);
+} else {
+  // App already initialized - check if it's from this module or duplicate
+  // If getApps() returns more than 1 app, that's a duplicate
+  const allApps = getApps();
+  if (allApps.length > 1) {
+    // Runtime guard: detect duplicate initialization
+    const error = new Error('DUPLICATE_AUTH_INSTANCE: Multiple Firebase apps detected. Only firebaseBootstrap.ts should call initializeApp.');
+    console.error('[FirebaseBootstrap] CRITICAL ERROR:', error);
+    console.error('[FirebaseBootstrap] Existing apps:', allApps.map(a => a.name));
+    // Hard crash for visibility
+    throw error;
+  }
+  // Single app already exists - that's fine, it's from a previous module load
+  console.log('[FirebaseBootstrap] Reusing existing Firebase app');
 }
 
 // Initialize Firebase services
-export const auth = getAuth(app);
+authInstance = getAuth(app);
+
+// ⚠️ FIX #5: Verify origin/client combo at runtime
+if (typeof window !== 'undefined') {
+  const currentOrigin = window.location.origin.replace('http://', 'https://').replace(/:\d+$/, ''); // Normalize
+  const expectedDomain = firebaseConfig.authDomain;
+  
+  // Check if origin matches authDomain (allowing for www prefix and port differences)
+  const originMatches = 
+    currentOrigin === `https://${expectedDomain}` ||
+    currentOrigin === `https://www.${expectedDomain}` ||
+    currentOrigin.endsWith(`.${expectedDomain}`) ||
+    currentOrigin.includes(expectedDomain);
+  
+  if (!originMatches) {
+    const warning = `[FirebaseBootstrap] ORIGIN MISMATCH: location.origin (${currentOrigin}) does not match authDomain (${expectedDomain}). This may cause OAuth redirect failures.`;
+    console.error(warning);
+    // Log but don't crash - might be localhost or preview build
+  } else {
+    console.log(`[FirebaseBootstrap] Origin verified: ${currentOrigin} matches authDomain ${expectedDomain}`);
+  }
+}
+
+export const auth = authInstance!;
 export const db = getFirestore(app);
 
 // ⚠️ CRITICAL: Set persistence IMMEDIATELY after auth init (module load time)
@@ -90,16 +130,18 @@ export async function bootstrapFirebase(): Promise<void> {
   const startTime = Date.now();
   
   try {
-    // Step 1: Set persistence explicitly (may already be set synchronously above, but ensure it)
+    // ⚠️ FIX #2: Lock persistence BEFORE any sign-in or listener is wired
     // Safari requires persistence to be set BEFORE any redirect or sign-in call
     // This is a critical timing requirement - Firebase SDK warns about this
+    // We AWAIT here to ensure it completes before wiring up listeners
     await setPersistence(auth, browserLocalPersistence);
     
     // Log that persistence is confirmed set
     if (typeof console !== 'undefined') {
-      console.log('[FirebaseBootstrap] Persistence confirmed set before auth operations');
+      console.log('[FirebaseBootstrap] Persistence LOCKED before any auth operations');
     }
     
+    // ⚠️ CRITICAL: Now that persistence is locked, wire up listeners
     // Step 2: Wait for onAuthStateChanged to fire at least once
     // OR timeout after 5000ms (safety net)
     const authStateReady = new Promise<string>((resolve) => {

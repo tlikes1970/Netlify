@@ -497,51 +497,37 @@ class AuthManager {
       let result = await this.redirectResultPromise;
       this.markRedirectResolved();
       
-      // ⚠️ RACE DETECTION: If page_entry_params had code but getRedirectResult returned null,
-      // Use exponential backoff retry (300ms, then 700ms)
+      // ⚠️ FIX #4: Late-binding retry if URL had code/state but result is null
+      // Wait 300-500ms and try exactly once more
+      // Log init_race_retry_success or init_race_retry_empty
       if (!result && entryHadCode && hasAuthParams) {
         logger.warn('Init race detected: page_entry_params had code but getRedirectResult returned null');
         authLogManager.log('init_race_detected', {
           entryHadCode,
           hasAuthParams,
           authCurrentUser: auth.currentUser?.uid || null,
-          attempt: 1,
+          action: 'will_retry_once_400ms',
         });
         
-        // Exponential backoff: first retry after 300ms
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Wait 400ms (middle of 300-500ms range) and retry exactly once
+        await new Promise(resolve => setTimeout(resolve, 400));
         
-        logger.log('Retrying getRedirectResult after 300ms (init race)');
-        result = await getRedirectResult(auth);
+        logger.log('Retrying getRedirectResult after 400ms (init race retry)');
+        const retryResult = await getRedirectResult(auth);
         
-        if (!result) {
-          // Second retry after 700ms (exponential backoff: 300 -> 700)
-          authLogManager.log('init_race_retry_attempt_1_empty', {
-            attempt: 1,
-            delay: 300,
-          });
-          
-          await new Promise(resolve => setTimeout(resolve, 700));
-          
-          logger.log('Retrying getRedirectResult after 700ms (init race retry 2)');
-          authLogManager.log('init_race_retry_attempt_2', {
-            attempt: 2,
-            delay: 700,
-          });
-          
-          result = await getRedirectResult(auth);
-        }
-        
-        if (result && result.user) {
+        if (retryResult && retryResult.user) {
           logger.log('Redirect sign-in successful after init race retry');
           authLogManager.log('init_race_retry_success', {
-            uid: result.user.uid,
-            finalAttempt: result ? 'success' : 'failed',
+            uid: retryResult.user.uid,
+            retryDelay: 400,
+            conclusion: 'redirect_resolved_after_retry',
           });
+          result = retryResult; // Use retry result
         } else {
-          logger.warn('Init race retry also returned null after all attempts');
-          authLogManager.log('init_race_retry_still_empty', {
-            attempts: 2,
+          logger.warn('Retry returned null - redirect params were likely lost');
+          authLogManager.log('init_race_retry_empty', {
+            retryDelay: 400,
+            conclusion: 'redirect_params_lost_or_stripped',
           });
         }
       }
