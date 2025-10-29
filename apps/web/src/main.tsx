@@ -24,6 +24,27 @@ import { initFlags } from './lib/mobileFlags';
 import { logAuthOriginHint } from './lib/authLogin';
 import { authManager } from './lib/auth';
 import { logger } from './lib/logger';
+import { authLogManager } from './lib/authLog';
+
+// ⚠️ CRITICAL: Log page entry params BEFORE Firebase runs
+// This captures the URL state at the earliest possible moment
+(function logPageEntryParams() {
+  try {
+    const getQueryParam = (key: string): string | null => {
+      const params = new URLSearchParams(window.location.search);
+      const hashParams = window.location.hash ? new URLSearchParams(window.location.hash.substring(1)) : null;
+      return params.get(key) || hashParams?.get(key) || null;
+    };
+    
+    authLogManager.log('page_entry_params', {
+      hasCode: !!getQueryParam('code'),
+      hasState: !!getQueryParam('state'),
+      href: window.location.href,
+    });
+  } catch (e) {
+    // ignore - logging should never break startup
+  }
+})();
 
 // ⚠️ CRITICAL: Initialize Firebase auth BEFORE app renders
 // This ensures redirect handling happens before React components mount
