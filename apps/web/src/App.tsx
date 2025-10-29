@@ -117,10 +117,24 @@ export default function App() {
   const { loading: authLoading, authInitialized, isAuthenticated, status } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   
-  // Check for debug mode
+  // Check for debug mode - persist across redirects
   const [showDebugHUD] = useState(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.has('debugAuth');
+    const hasDebugParam = urlParams.has('debugAuth') || urlParams.has('debugAuth') === true;
+    // Persist in localStorage so it survives redirects
+    if (hasDebugParam) {
+      try {
+        localStorage.setItem('flicklet.debugAuth', 'true');
+      } catch (e) {
+        // ignore
+      }
+    }
+    // Check both URL param and localStorage
+    try {
+      return hasDebugParam || localStorage.getItem('flicklet.debugAuth') === 'true';
+    } catch (e) {
+      return hasDebugParam;
+    }
   });
 
   // Auto-prompt for authentication when not authenticated
@@ -727,22 +741,27 @@ export default function App() {
             position: 'fixed',
             bottom: '20px',
             right: '20px',
-            background: 'rgba(0,0,0,0.8)',
+            background: 'rgba(0,0,0,0.9)',
             color: 'white',
             padding: '12px',
             borderRadius: '8px',
-            fontSize: '12px',
+            fontSize: '11px',
             fontFamily: 'monospace',
             zIndex: 99999,
-            maxWidth: '300px',
-            pointerEvents: 'none'
+            maxWidth: '280px',
+            pointerEvents: 'none',
+            border: '2px solid #00ff00',
+            boxShadow: '0 0 10px rgba(0,255,0,0.5)'
           }}>
-            <div><strong>Auth Debug</strong></div>
-            <div>Status: {status}</div>
+            <div style={{ marginBottom: '8px', fontWeight: 'bold', color: '#00ff00' }}>🔍 Auth Debug</div>
+            <div>Status: <span style={{ color: status === 'redirecting' || status === 'resolving' ? '#ffff00' : '#fff' }}>{status}</span></div>
             <div>Loading: {authLoading ? 'yes' : 'no'}</div>
             <div>Initialized: {authInitialized ? 'yes' : 'no'}</div>
             <div>Auth: {isAuthenticated ? 'yes' : 'no'}</div>
-            <div>Modal: {showAuthModal ? 'open' : 'closed'}</div>
+            <div>Modal: <span style={{ color: showAuthModal ? '#ff6b6b' : '#51cf66' }}>{showAuthModal ? 'OPEN' : 'closed'}</span></div>
+            <div style={{ marginTop: '8px', fontSize: '10px', color: '#999' }}>
+              URL: {new URLSearchParams(window.location.search).toString().substring(0, 30)}
+            </div>
           </div>
         )}
 

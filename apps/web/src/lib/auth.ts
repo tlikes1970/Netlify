@@ -98,7 +98,18 @@ class AuthManager {
   private async initialize() {
     if (this.isInitialized) return;
     
-    this.setStatus('checking');
+    // Check for persisted status from before redirect (survives page reload)
+    try {
+      const persistedStatus = localStorage.getItem('flicklet.auth.status');
+      if (persistedStatus && ['redirecting', 'resolving'].includes(persistedStatus)) {
+        this.setStatus(persistedStatus as AuthStatus);
+        logger.log(`Restored auth status from localStorage: ${persistedStatus}`);
+      } else {
+        this.setStatus('checking');
+      }
+    } catch (e) {
+      this.setStatus('checking');
+    }
     
     // Check for redirect result FIRST (before setting up auth state listener)
     // This ensures we handle the redirect result if user is returning from Google/Apple sign-in
@@ -191,6 +202,12 @@ class AuthManager {
       // ⚠️ CRITICAL: Set resolving status when processing redirect
       if (hasAuthParams) {
         this.setStatus('resolving');
+        // Persist status across potential page reloads
+        try {
+          localStorage.setItem('flicklet.auth.status', 'resolving');
+        } catch (e) {
+          // ignore
+        }
         logger.debug('Processing redirect result - status: resolving');
       }
       
@@ -275,8 +292,20 @@ class AuthManager {
       // Update status based on auth state
       if (authUser) {
         this.setStatus('authenticated');
+        // Clear persisted status - auth is complete
+        try {
+          localStorage.removeItem('flicklet.auth.status');
+        } catch (e) {
+          // ignore
+        }
       } else {
         this.setStatus('unauthenticated');
+        // Clear persisted status if we're unauthenticated
+        try {
+          localStorage.removeItem('flicklet.auth.status');
+        } catch (e) {
+          // ignore
+        }
       }
       
       // Mark auth state as initialized after first Firebase callback

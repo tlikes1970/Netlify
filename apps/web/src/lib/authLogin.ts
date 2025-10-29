@@ -1,6 +1,7 @@
 import { signInWithRedirect, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from './firebase';
 import { logger } from './logger';
+import { authManager } from './auth';
 
 /**
  * Detects if we're in a WebView or standalone PWA
@@ -31,10 +32,23 @@ function isWebView(): boolean {
  * Google sign-in helper that uses redirect on mobile/webview and popup on desktop
  */
 export async function googleLogin() {
+  // Set redirecting status BEFORE starting redirect
+  authManager.setStatus('redirecting');
+  
+  // Persist status to localStorage so it survives redirect
+  try {
+    localStorage.setItem('flicklet.auth.status', 'redirecting');
+    logger.debug('Set status to redirecting and persisted to localStorage');
+  } catch (e) {
+    logger.warn('Failed to persist auth status', e);
+  }
+  
   // Validate origin before proceeding
   try {
     validateOAuthOrigin();
   } catch (error) {
+    authManager.setStatus('unauthenticated');
+    localStorage.removeItem('flicklet.auth.status');
     logger.error('Origin validation failed before Google sign-in', error);
     throw error;
   }
