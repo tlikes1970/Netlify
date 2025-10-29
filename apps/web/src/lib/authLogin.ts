@@ -2,6 +2,8 @@ import { signInWithRedirect, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from './firebase';
 import { logger } from './logger';
 import { authManager } from './auth';
+import { markAuthInFlight } from './authBroadcast';
+import { ensurePersistenceBeforeAuth } from './persistence';
 
 /**
  * Detects if we're in a WebView or standalone PWA
@@ -32,6 +34,9 @@ function isWebView(): boolean {
  * Google sign-in helper that uses redirect on mobile/webview and popup on desktop
  */
 export async function googleLogin() {
+  // ⚠️ PERSISTENCE: Force IndexedDB/local before auth (iOS requirement)
+  await ensurePersistenceBeforeAuth();
+  
   // ⚠️ CRITICAL: Clean URL of debug params before redirect
   // Safari and Firebase may reject OAuth redirects with unexpected query params
   const urlParams = new URLSearchParams(window.location.search);
@@ -45,10 +50,18 @@ export async function googleLogin() {
   // Set redirecting status BEFORE starting redirect
   authManager.setStatus('redirecting');
   
+  // Generate unique state ID for integrity check
+  const stateId = `auth_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  
   // Persist status to localStorage so it survives redirect
   try {
     localStorage.setItem('flicklet.auth.status', 'redirecting');
-    logger.debug('Set status to redirecting and persisted to localStorage');
+    localStorage.setItem('flicklet.auth.stateId', stateId);
+    localStorage.setItem('flicklet.auth.redirect.start', Date.now().toString());
+    logger.debug(`Set status to redirecting with stateId: ${stateId}`);
+    
+    // Broadcast to other tabs
+    markAuthInFlight('redirecting');
   } catch (e) {
     logger.warn('Failed to persist auth status', e);
   }
@@ -144,6 +157,21 @@ export async function googleLogin() {
 }
 
 /**
+ * Normalize origin to canonical form (remove www, ensure https)
+ */
+function normalizeOrigin(origin: string): string {
+  let normalized = origin.toLowerCase();
+  // Remove www prefix for consistency
+  if (normalized.startsWith('https://www.')) {
+    normalized = normalized.replace('https://www.', 'https://');
+  }
+  if (normalized.startsWith('http://www.')) {
+    normalized = normalized.replace('http://www.', 'http://');
+  }
+  return normalized;
+}
+
+/**
  * Validates the current origin against allowed OAuth origins
  * @returns true if origin is valid, throws error if invalid
  * @throws Error if origin is not authorized
@@ -152,9 +180,9 @@ export function validateOAuthOrigin(): boolean {
   if (typeof window === 'undefined') return true;
   
   const origin = window.location.origin;
+  const normalized = normalizeOrigin(origin);
   
-  // Known allowed origins for OAuth JavaScript origins
-  // Note: Netlify may add query params or fragments that don't affect origin
+  // Known allowed origins (canonical form, no www)
   const allowedOrigins = new Set([
     'http://localhost',
     'http://localhost:8888',
@@ -166,21 +194,24 @@ export function validateOAuthOrigin(): boolean {
   ]);
   
   // Also allow any netlify.app subdomain (for preview deployments)
-  const isNetlifyApp = origin.includes('.netlify.app') || origin.includes('.netlify.com');
+  const isNetlifyApp = normalized.includes('.netlify.app') || normalized.includes('.netlify.com');
   
-  // Allow Netlify preview deployments
-  if (!allowedOrigins.has(origin) && !isNetlifyApp) {
-    const errorMsg = `Unauthorized origin: ${origin}. Please configure this origin in Firebase Console.`;
-    logger.error('[AUTH] Origin validation failed', origin);
+  // Normalize and check
+  const normalizedAllowed = Array.from(allowedOrigins).map(normalizeOrigin);
+  const isAllowed = normalizedAllowed.includes(normalized) || isNetlifyApp;
+  
+  if (!isAllowed) {
+    const errorMsg = `Unauthorized origin: ${origin} (normalized: ${normalized}). Please configure this origin in Firebase Console.`;
+    logger.error('[AUTH] Origin validation failed', { origin, normalized });
     logger.warn('[AUTH] If this is a Netlify preview deployment, add it to Firebase authorized domains');
     throw new Error(errorMsg);
   }
   
-  if (isNetlifyApp && !allowedOrigins.has(origin)) {
+  if (isNetlifyApp && !normalizedAllowed.includes(normalized)) {
     logger.warn(`[AUTH] Netlify preview domain detected: ${origin}. Consider adding to Firebase authorized domains.`);
   }
   
-  logger.log('[AUTH] Origin validated', origin);
+  logger.log('[AUTH] Origin validated', { original: origin, normalized });
   return true;
 }
 

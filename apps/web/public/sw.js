@@ -28,8 +28,17 @@ self.addEventListener('fetch', e => {
                     url.search.includes('redirect');
   
   if (isAuthURL) {
-    console.log('[SW] Auth URL detected - network only:', url.pathname + url.search);
-    e.respondWith(fetch(req));
+    console.log('[SW] Auth URL detected - network only (no-store):', url.pathname + url.search);
+    // ⚠️ KILL-SWITCH: Use cache: 'no-store' for auth URLs to prevent any caching
+    e.respondWith(fetch(req, { cache: 'no-store' }));
+    return;
+  }
+  
+  // ⚠️ KILL-SWITCH: Check response headers - if Location header contains code= or state=, never cache
+  // This is a belt-and-suspenders check for redirects we might miss
+  if (req.mode === 'navigate' && (url.search.includes('code=') || url.search.includes('state='))) {
+    console.log('[SW] Navigate request with auth params - no-store:', url.pathname + url.search);
+    e.respondWith(fetch(req, { cache: 'no-store' }));
     return;
   }
   

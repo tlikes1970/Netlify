@@ -19,6 +19,7 @@ import { logger } from './logger';
 import { auth, db, googleProvider, appleProvider } from './firebase';
 import { firebaseSyncManager } from './firebaseSync';
 import type { AuthUser, UserDocument, UserSettings, AuthProvider, AuthStatus } from './auth.types';
+import { markAuthInFlight, broadcastAuthComplete, isAuthInFlightInOtherTab } from './authBroadcast';
 
 // Detect if we're in a blocked OAuth context
 // Google blocks OAuth inside embedded browsers (PWA standalone, in-app browsers, etc.)
@@ -81,6 +82,8 @@ class AuthManager {
   private isInitialized = false;
   private authStateInitialized = false;
   private authStatus: AuthStatus = 'idle';
+  private redirectResultFetched = false; // One-shot latch for getRedirectResult()
+  private redirectResultPromise: Promise<any> | null = null; // Ensure only one call
 
   constructor() {
     this.initialize();
@@ -94,16 +97,76 @@ class AuthManager {
     this.authStatus = status;
     logger.debug(`Auth status changed: ${status}`);
   }
+  
+  // Check if redirect was already resolved recently (within 5 seconds)
+  private wasRedirectRecentlyResolved(): boolean {
+    try {
+      const resolvedAt = localStorage.getItem('flicklet.auth.resolvedAt');
+      if (!resolvedAt) return false;
+      
+      const resolvedTime = parseInt(resolvedAt);
+      const now = Date.now();
+      const timeSince = now - resolvedTime;
+      
+      // If resolved within last 5 seconds, skip
+      if (timeSince < 5000 && timeSince > 0) {
+        logger.debug(`Redirect was resolved ${timeSince}ms ago - skipping getRedirectResult()`);
+        return true;
+      }
+      
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+  
+  // Mark redirect as resolved
+  private markRedirectResolved(): void {
+    try {
+      localStorage.setItem('flicklet.auth.resolvedAt', Date.now().toString());
+      this.redirectResultFetched = true;
+    } catch (e) {
+      // ignore
+    }
+  }
 
   private async initialize() {
     if (this.isInitialized) return;
     
-    // Check for persisted status from before redirect (survives page reload)
+    // ⚠️ CRASH-SAFE: Check for stuck redirecting state (>60s = likely crash)
     try {
       const persistedStatus = localStorage.getItem('flicklet.auth.status');
-      if (persistedStatus && ['redirecting', 'resolving'].includes(persistedStatus)) {
-        this.setStatus(persistedStatus as AuthStatus);
-        logger.log(`Restored auth status from localStorage: ${persistedStatus}`);
+      const resolvingStart = localStorage.getItem('flicklet.auth.resolving.start');
+      
+      if (persistedStatus === 'redirecting' || persistedStatus === 'resolving') {
+        if (resolvingStart) {
+          const startTime = parseInt(resolvingStart);
+          const now = Date.now();
+          const timeSince = now - startTime;
+          
+          // If stuck in redirecting/resolving for >60s, reset to checking
+          if (timeSince > 60000) {
+            logger.warn(`Auth stuck in ${persistedStatus} for ${timeSince}ms - resetting to checking`);
+            this.setStatus('checking');
+            try {
+              localStorage.removeItem('flicklet.auth.status');
+              localStorage.removeItem('flicklet.auth.resolving.start');
+            } catch (e) {
+              // ignore
+            }
+          } else {
+            this.setStatus(persistedStatus as AuthStatus);
+            logger.log(`Restored auth status from localStorage: ${persistedStatus} (${timeSince}ms ago)`);
+          }
+        } else {
+          // No timestamp - assume old state, reset
+          this.setStatus('checking');
+          try {
+            localStorage.removeItem('flicklet.auth.status');
+          } catch (e) {
+            // ignore
+          }
+        }
       } else {
         this.setStatus('checking');
       }
@@ -197,7 +260,39 @@ class AuthManager {
         }
       }
       
-      const result = await getRedirectResult(auth);
+      // ⚠️ STATE INTEGRITY: Verify stateId matches (prevents cross-origin/cross-tab confusion)
+      try {
+        const savedStateId = localStorage.getItem('flicklet.auth.stateId');
+        if (hasAuthParams && savedStateId) {
+          // State ID exists - this should match our redirect
+          logger.debug(`Redirect return detected with saved stateId: ${savedStateId.substring(0, 20)}...`);
+        } else if (hasAuthParams && !savedStateId) {
+          // URL has auth params but no saved state - suspicious, but continue
+          logger.warn('Redirect return detected but no saved stateId - possible state mismatch');
+        }
+      } catch (e) {
+        // ignore
+      }
+      
+      // ⚠️ IDEMPOTENCY: Ensure getRedirectResult() runs exactly once per load
+      // Check if already fetched or recently resolved
+      if (this.redirectResultFetched || this.wasRedirectRecentlyResolved()) {
+        logger.debug('getRedirectResult() already fetched or recently resolved - skipping');
+        return;
+      }
+      
+      // If there's an in-flight promise, reuse it
+      if (this.redirectResultPromise) {
+        logger.debug('getRedirectResult() already in flight - waiting for existing promise');
+        const result = await this.redirectResultPromise;
+        if (result && result.user) {
+          this.markRedirectResolved();
+        }
+        return;
+      }
+      
+      // Create single promise for this load
+      this.redirectResultPromise = getRedirectResult(auth);
       
       // ⚠️ CRITICAL: Set resolving status when processing redirect
       // This must happen BEFORE Firebase processes the result
@@ -208,11 +303,17 @@ class AuthManager {
           localStorage.setItem('flicklet.auth.status', 'resolving');
           // Also set a timestamp to track how long we've been resolving
           localStorage.setItem('flicklet.auth.resolving.start', Date.now().toString());
+          
+          // Broadcast to other tabs
+          markAuthInFlight('resolving');
         } catch (e) {
           // ignore
         }
         logger.log('Processing redirect result - status: resolving (URL has auth params)');
       }
+      
+      const result = await this.redirectResultPromise;
+      this.markRedirectResolved();
       
       if (result && result.user) {
         logger.log('Redirect sign-in successful', {
@@ -221,13 +322,9 @@ class AuthManager {
           displayName: result.user.displayName
         });
         
-        // Clean up the URL by removing auth parameters to prevent loops
-        try {
-          window.history.replaceState({}, document.title, window.location.pathname);
-          logger.debug('Cleaned up URL parameters');
-        } catch (e) {
-          logger.warn('Failed to clean up URL', e);
-        }
+        // ⚠️ CRITICAL: Delay URL cleanup until after getRedirectResult() fully settles
+        // Don't clean URL here - wait for onAuthStateChanged to fire
+        // URL cleanup will happen after auth state is confirmed
         
         // The user is now signed in, onAuthStateChanged will fire and handle the rest
       } else {
@@ -250,25 +347,21 @@ class AuthManager {
               email: retryResult.user.email
             });
             
-            // Clean up the URL on successful retry
-            try {
-              window.history.replaceState({}, document.title, window.location.pathname);
-              logger.debug('Cleaned up URL parameters');
-            } catch (e) {
-              logger.warn('Failed to clean up URL', e);
-            }
+            // ⚠️ Don't clean URL here - delay until auth state is confirmed
+            // URL cleanup happens after onAuthStateChanged fires
           } else {
             logger.warn('Still no redirect result after retry - URL had auth params but no result');
             
-            // Clean up URL to prevent loop - auth params suggest redirect happened but no result
-            try {
-              window.history.replaceState({}, document.title, window.location.pathname);
-              logger.debug('Cleaned up URL parameters to prevent redirect loop');
-              // Clear processing flag since auth failed
-              sessionStorage.removeItem('flicklet.auth.processing');
-            } catch (e) {
-              logger.warn('Failed to clean up URL', e);
-            }
+            // Only clean URL if we're absolutely sure there's no result coming
+            // Delay cleanup to avoid race conditions
+            setTimeout(() => {
+              try {
+                window.history.replaceState({}, document.title, window.location.pathname);
+                logger.debug('Cleaned up URL parameters (delayed after retry failure)');
+              } catch (e) {
+                logger.warn('Failed to clean up URL', e);
+              }
+            }, 1000);
           }
         } else {
           logger.debug('No auth params in URL and no redirect result - user is not signing in via redirect');
@@ -298,14 +391,37 @@ class AuthManager {
         // Clear persisted status - auth is complete
         try {
           localStorage.removeItem('flicklet.auth.status');
+          localStorage.removeItem('flicklet.auth.resolving.start');
+          localStorage.removeItem('flicklet.auth.stateId');
+          localStorage.removeItem('flicklet.auth.redirect.start');
+          localStorage.removeItem('flicklet.auth.broadcast');
+          
+          // Broadcast completion to other tabs
+          broadcastAuthComplete();
         } catch (e) {
           // ignore
         }
+        
+        // ⚠️ NOW safe to clean URL - auth state is confirmed
+        // Delay slightly to ensure all Firebase callbacks have fired
+        setTimeout(() => {
+          try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasAuthParams = urlParams.has('state') || urlParams.has('code') || urlParams.has('error');
+            if (hasAuthParams || window.location.hash) {
+              window.history.replaceState({}, document.title, window.location.pathname);
+              logger.debug('Cleaned up URL parameters after auth state confirmed');
+            }
+          } catch (e) {
+            logger.warn('Failed to clean up URL', e);
+          }
+        }, 500);
       } else {
         this.setStatus('unauthenticated');
         // Clear persisted status if we're unauthenticated
         try {
           localStorage.removeItem('flicklet.auth.status');
+          localStorage.removeItem('flicklet.auth.resolving.start');
         } catch (e) {
           // ignore
         }
@@ -399,6 +515,10 @@ class AuthManager {
   }
 
   async signInWithProvider(provider: AuthProvider): Promise<void> {
+    // ⚠️ PERSISTENCE: Force IndexedDB/local before auth (iOS requirement)
+    const { ensurePersistenceBeforeAuth } = await import('./persistence');
+    await ensurePersistenceBeforeAuth();
+    
     this.setStatus('redirecting');
     
     try {

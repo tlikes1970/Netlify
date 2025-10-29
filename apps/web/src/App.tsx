@@ -43,6 +43,7 @@ import Toast, { useToast } from '@/components/Toast';
 import PersonalityErrorBoundary from '@/components/PersonalityErrorBoundary';
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/AuthModal';
+import { isAuthInFlightInOtherTab } from '@/lib/authBroadcast';
 import '@/styles/flickword.css';
 import { backfillShowStatus } from '@/utils/backfillShowStatus';
 
@@ -156,7 +157,15 @@ export default function App() {
     const hasAuthParams = urlParams.has('state') || urlParams.has('code') || urlParams.has('error');
     const isReturningFromRedirect = window.location.hash || hasAuthParams;
     
-    const shouldBlock = isRedirectingOrResolving || persistedStatusBlocking || isReturningFromRedirect;
+    // ⚠️ MULTI-TAB SAFETY: Check if auth is in-flight in another tab
+    let otherTabBlocking = false;
+    try {
+      otherTabBlocking = isAuthInFlightInOtherTab();
+    } catch (e) {
+      // ignore - BroadcastChannel may not be available
+    }
+    
+    const shouldBlock = isRedirectingOrResolving || persistedStatusBlocking || isReturningFromRedirect || otherTabBlocking;
     
     if (!authLoading && authInitialized && !isAuthenticated && !shouldBlock) {
       // Small delay to ensure the app has fully loaded
