@@ -1,5 +1,5 @@
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from './firebase';
+import { db } from './firebaseBootstrap';
 import type { LibraryEntry } from './storage';
 
 /**

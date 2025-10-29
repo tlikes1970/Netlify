@@ -25,7 +25,7 @@ import { logAuthOriginHint } from './lib/authLogin';
 import { authManager } from './lib/auth';
 import { logger } from './lib/logger';
 import { authLogManager } from './lib/authLog';
-import { ensureAuthPersistence } from './lib/firebase';
+import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './lib/firebaseBootstrap';
 
 // ⚠️ CRITICAL: Log page entry params BEFORE Firebase runs
 // This captures the URL state at the earliest possible moment
@@ -47,19 +47,28 @@ import { ensureAuthPersistence } from './lib/firebase';
   }
 })();
 
-// ⚠️ CRITICAL: Set Firebase persistence BEFORE any auth operations
-// This ensures auth state survives redirects
-logger.log('[Boot] Setting Firebase persistence...');
-ensureAuthPersistence().then(() => {
-  logger.log('[Boot] Firebase persistence set');
+// ⚠️ CRITICAL: Bootstrap Firebase BEFORE anything else
+// This ensures persistence is set and auth state is initialized before any auth operations
+logger.log('[Boot] Bootstrapping Firebase...');
+bootstrapFirebase().then(() => {
+  const readyTimestamp = getFirebaseReadyTimestamp();
+  logger.log('[Boot] Firebase ready', readyTimestamp ? `at ${readyTimestamp}` : '');
+  
+  // Log firebaseReady resolution
+  if (readyTimestamp) {
+    authLogManager.log('firebaseReady_resolved_at', {
+      timestamp: readyTimestamp,
+      iso: readyTimestamp,
+    });
+  }
+  
+  // ⚠️ CRITICAL: Initialize Firebase auth AFTER bootstrap
+  // This ensures redirect handling happens after Firebase is fully ready
+  logger.log('[Boot] Initializing Firebase auth manager...');
+  void authManager; // Force module load and initialization
 }).catch((e) => {
-  logger.warn('[Boot] Failed to set persistence (continuing anyway)', e);
+  logger.error('[Boot] Firebase bootstrap failed', e);
 });
-
-// ⚠️ CRITICAL: Initialize Firebase auth BEFORE app renders
-// This ensures redirect handling happens before React components mount
-logger.log('[Boot] Initializing Firebase auth manager...');
-void authManager; // Force module load and initialization
 
 // Log auth origin for OAuth verification
 logAuthOriginHint();
@@ -218,15 +227,42 @@ import('./utils/debug-auth').then(m => {
   (window as any).debugFirebaseAuth = m.debugFirebaseAuth;
 });
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <FlagsProvider>
-        <App />
-      </FlagsProvider>
-    </QueryClientProvider>
-  </React.StrictMode>
-);
+// ⚠️ CRITICAL: Wait for Firebase to be ready before rendering React app
+// This physically prevents any auth operations from running before Firebase is initialized
+(async function bootstrapApp() {
+  try {
+    await firebaseReady;
+    const readyTimestamp = getFirebaseReadyTimestamp();
+    
+    if (readyTimestamp) {
+      authLogManager.log('app_render_after_firebaseReady', {
+        firebaseReadyTimestamp: readyTimestamp,
+      });
+    }
+    
+    ReactDOM.createRoot(document.getElementById('root')!).render(
+      <React.StrictMode>
+        <QueryClientProvider client={queryClient}>
+          <FlagsProvider>
+            <App />
+          </FlagsProvider>
+        </QueryClientProvider>
+      </React.StrictMode>
+    );
+  } catch (error) {
+    console.error('[Boot] Failed to bootstrap app:', error);
+    // Still render app even if Firebase bootstrap fails (graceful degradation)
+    ReactDOM.createRoot(document.getElementById('root')!).render(
+      <React.StrictMode>
+        <QueryClientProvider client={queryClient}>
+          <FlagsProvider>
+            <App />
+          </FlagsProvider>
+        </QueryClientProvider>
+      </React.StrictMode>
+    );
+  }
+})();
 
 // Kill any leftover SWs during dev, before app boot.
 if (import.meta.env.DEV) {

@@ -16,7 +16,7 @@ import {
 } from 'firebase/firestore';
 import { isMobileNow } from './isMobile';
 import { logger } from './logger';
-import { auth, db, googleProvider, appleProvider, firebaseReady } from './firebase';
+import { auth, db, googleProvider, appleProvider, firebaseReady, getFirebaseReadyTimestamp } from './firebaseBootstrap';
 import { firebaseSyncManager } from './firebaseSync';
 import type { AuthUser, UserDocument, UserSettings, AuthProvider, AuthStatus } from './auth.types';
 import { markAuthInFlight, broadcastAuthComplete } from './authBroadcast';
@@ -84,11 +84,13 @@ class AuthManager {
   private authStateInitialized = false;
   private authStatus: AuthStatus = 'idle';
   private redirectResultFetched = false; // One-shot latch for getRedirectResult()
+  private redirectResultResolved = false; // One-shot latch: set to true once getRedirectResult completes
   private redirectResultPromise: Promise<any> | null = null; // Ensure only one call
   
   // Reset redirect state - called when starting a new redirect
   public resetRedirectState(): void {
     this.redirectResultFetched = false;
+    this.redirectResultResolved = false; // Reset one-shot latch for new redirect
     this.redirectResultPromise = null;
     try {
       localStorage.removeItem('flicklet.auth.resolvedAt');
@@ -353,8 +355,19 @@ class AuthManager {
         this.redirectResultPromise = null;
       }
       
-      // Log getRedirectResult start
-      authLogManager.log('getRedirectResult_start', { hasAuthParams });
+      // ⚠️ ONE-SHOT LATCH: Prevent getRedirectResult from running twice
+      if (this.redirectResultResolved) {
+        logger.debug('getRedirectResult already resolved - one-shot latch prevents rerun');
+        return;
+      }
+      
+      // Log getRedirectResult start with timestamp
+      const getRedirectResultCalledAt = new Date().toISOString();
+      authLogManager.log('getRedirectResult_called_at', {
+        timestamp: getRedirectResultCalledAt,
+        iso: getRedirectResultCalledAt,
+        hasAuthParams,
+      });
       
       // Get stored page_entry_params to check for init race (before waiting for Firebase)
       const storedPageEntry = authLogManager.getAllEntries().find(e => e.event === 'page_entry_params');
@@ -363,6 +376,36 @@ class AuthManager {
       // ⚠️ CRITICAL: Wait for Firebase to be ready before calling getRedirectResult
       // This prevents race conditions where Firebase hasn't initialized yet
       await firebaseReady;
+      
+      // ⚠️ GUARD: Double-check Firebase is ready and auth is defined
+      const firebaseReadyTimestamp = getFirebaseReadyTimestamp();
+      if (!auth) {
+        const error = new Error('Auth instance is undefined');
+        logger.error('[CRITICAL] Auth instance is undefined', error);
+        authLogManager.log('getRedirectResult_error', {
+          error: 'Auth instance is undefined',
+          code: 'AUTH_UNDEFINED',
+          stack: error.stack,
+        });
+        throw error;
+      }
+      
+      // ⚠️ ORDERING CHECK: If getRedirectResult was called before firebaseReady resolved, log error
+      if (firebaseReadyTimestamp && getRedirectResultCalledAt < firebaseReadyTimestamp) {
+        const orderingError = new Error('BROKEN ORDERING: getRedirectResult called before firebaseReady resolved');
+        logger.error('[CRITICAL] Broken ordering detected', {
+          getRedirectResultCalledAt,
+          firebaseReadyTimestamp,
+          stack: orderingError.stack,
+        });
+        authLogManager.log('init_ordering_violation', {
+          getRedirectResultCalledAt,
+          firebaseReadyTimestamp,
+          violation: true,
+          stack: new Error().stack,
+        });
+        // Don't throw - continue anyway, but log loudly
+      }
       
       // Create single promise for this load
       this.redirectResultPromise = getRedirectResult(auth);
@@ -389,47 +432,56 @@ class AuthManager {
       this.markRedirectResolved();
       
       // ⚠️ RACE DETECTION: If page_entry_params had code but getRedirectResult returned null,
-      // Firebase may not have been ready yet. Retry once after firebase_init_complete.
+      // Use exponential backoff retry (300ms, then 700ms)
       if (!result && entryHadCode && hasAuthParams) {
         logger.warn('Init race detected: page_entry_params had code but getRedirectResult returned null');
         authLogManager.log('init_race_detected', {
           entryHadCode,
           hasAuthParams,
           authCurrentUser: auth.currentUser?.uid || null,
+          attempt: 1,
         });
         
-        // Wait for firebase_init_complete event
-        await new Promise<void>((resolve) => {
-          const checkInit = () => {
-            const entries = authLogManager.getAllEntries();
-            if (entries.some(e => e.event === 'firebase_init_complete')) {
-              resolve();
-            } else {
-              setTimeout(checkInit, 50);
-            }
-          };
-          // Give it a max of 1 second
-          setTimeout(resolve, 1000);
-          checkInit();
-        });
-        
-        // Small delay to ensure Firebase has processed the redirect
+        // Exponential backoff: first retry after 300ms
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        // Retry getRedirectResult once
-        logger.log('Retrying getRedirectResult after init race detection');
+        logger.log('Retrying getRedirectResult after 300ms (init race)');
         result = await getRedirectResult(auth);
+        
+        if (!result) {
+          // Second retry after 700ms (exponential backoff: 300 -> 700)
+          authLogManager.log('init_race_retry_attempt_1_empty', {
+            attempt: 1,
+            delay: 300,
+          });
+          
+          await new Promise(resolve => setTimeout(resolve, 700));
+          
+          logger.log('Retrying getRedirectResult after 700ms (init race retry 2)');
+          authLogManager.log('init_race_retry_attempt_2', {
+            attempt: 2,
+            delay: 700,
+          });
+          
+          result = await getRedirectResult(auth);
+        }
         
         if (result && result.user) {
           logger.log('Redirect sign-in successful after init race retry');
           authLogManager.log('init_race_retry_success', {
             uid: result.user.uid,
+            finalAttempt: result ? 'success' : 'failed',
           });
         } else {
-          logger.warn('Init race retry also returned null');
-          authLogManager.log('init_race_retry_still_empty', {});
+          logger.warn('Init race retry also returned null after all attempts');
+          authLogManager.log('init_race_retry_still_empty', {
+            attempts: 2,
+          });
         }
       }
+      
+      // Mark as resolved (one-shot latch)
+      this.redirectResultResolved = true;
       
       if (result && result.user) {
         logger.log('Redirect sign-in successful', {
@@ -451,6 +503,12 @@ class AuthManager {
           operationType: result.operationType,
         });
         
+        // Instrumentation: getRedirectResult_result
+        authLogManager.log('getRedirectResult_result', {
+          result: 'ok',
+          providerId: result.providerId,
+        });
+        
         // ⚠️ CRITICAL: Delay URL cleanup until after getRedirectResult() fully settles
         // Don't clean URL here - wait for onAuthStateChanged to fire
         // URL cleanup will happen after auth state is confirmed
@@ -467,6 +525,12 @@ class AuthManager {
         
         // One-liner: getRedirectResult_empty
         authLogManager.log('getRedirectResult_empty', {
+          hasAuthParams,
+        });
+        
+        // Instrumentation: getRedirectResult_result
+        authLogManager.log('getRedirectResult_result', {
+          result: 'empty',
           hasAuthParams,
         });
         
@@ -532,10 +596,18 @@ class AuthManager {
         error: error instanceof Error ? error.message : String(error),
         code: (error as any)?.code || 'unknown',
       });
+      
+      // Instrumentation: getRedirectResult_result
+      authLogManager.log('getRedirectResult_result', {
+        result: 'error',
+        error: error instanceof Error ? error.message : String(error),
+        code: (error as any)?.code || 'unknown',
+      });
       // Continue initialization even if redirect check fails
     }
     
-    // Log Firebase init complete
+    // Log Firebase init complete (auth manager initialized)
+    // Note: firebaseReady_resolved_at is logged separately in main.tsx
     authLogManager.log('firebase_init_complete', {
       timestamp: new Date().toISOString(),
     });
@@ -733,10 +805,7 @@ class AuthManager {
       origin: typeof window !== 'undefined' ? window.location.origin : 'unknown',
     });
     
-    // ⚠️ PERSISTENCE: Ensure Firebase persistence is set before redirect
-    const { ensureAuthPersistence } = await import('./firebase');
-    await ensureAuthPersistence();
-    
+    // ⚠️ PERSISTENCE: Firebase persistence is already set by bootstrap
     // ⚠️ PERSISTENCE: Force IndexedDB/local before auth (iOS requirement)
     const { ensurePersistenceBeforeAuth } = await import('./persistence');
     const persistenceResult = await ensurePersistenceBeforeAuth();

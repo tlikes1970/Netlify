@@ -1,5 +1,5 @@
 import { signInWithRedirect, signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from './firebase';
+import { auth, googleProvider } from './firebaseBootstrap';
 import { logger } from './logger';
 import { authManager } from './auth';
 import { markAuthInFlight } from './authBroadcast';
