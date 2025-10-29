@@ -34,10 +34,15 @@
   functions  = "netlify/functions"
   autoLaunch = false
 
-# Function alias (optional convenience)
+# Function aliases (optional convenience)
 [[redirects]]
   from = "/api/tmdb-proxy"
   to   = "/.netlify/functions/tmdb-proxy"
+  status = 200
+
+[[redirects]]
+  from = "/api/dict/entries"
+  to   = "/.netlify/functions/dict-proxy"
   status = 200
 
 # Lock down a path you don't want exposed

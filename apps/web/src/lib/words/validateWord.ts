@@ -17,19 +17,24 @@ function withTimeout<T>(p: Promise<T>, ms = 2000): Promise<T> {
   });
 }
 
-// serverless proxies (no keys in client)
+// Dictionary API proxy (Netlify function)
 async function askDictionary(word: string, signal?: AbortSignal): Promise<boolean> {
-  const r = await withTimeout(fetch(`/api/dict/entries?word=${encodeURIComponent(word)}`, { signal }), 2000);
-  if (!r.ok) return false;
-  const j = await r.json();
-  // Accept true if array with length or explicit {valid:true}
-  return Array.isArray(j) ? j.length > 0 : Boolean(j?.valid);
-}
-async function askWordnik(word: string, signal?: AbortSignal): Promise<boolean> {
-  const r = await withTimeout(fetch(`/api/wordnik/definitions?word=${encodeURIComponent(word)}`, { signal }), 2000);
-  if (!r.ok) return false;
-  const j = await r.json();
-  return Array.isArray(j) ? j.length > 0 : Boolean(j?.valid);
+  try {
+    const r = await withTimeout(
+      fetch(`/.netlify/functions/dict-proxy?word=${encodeURIComponent(word)}`, { signal }), 
+      3000
+    );
+    if (!r.ok) {
+      console.warn('Dictionary API returned non-OK status:', r.status);
+      return false;
+    }
+    const j = await r.json();
+    // API returns {valid: true/false}
+    return Boolean(j?.valid);
+  } catch (error) {
+    console.warn('Dictionary API request failed:', error);
+    return false;
+  }
 }
 
 // circuit breaker per provider
@@ -53,26 +58,26 @@ export async function validateWord(raw: string): Promise<Verdict> {
     return verdict;
   }
 
-  // Slow path: Only query APIs if word not found locally (rare case)
-  // This handles words outside the accepted list but still valid
-  const ac = new AbortController();
-  const tasks: Array<Promise<boolean>> = [];
-  if (isOpen('dictionary')) tasks.push(askDictionary(w, ac.signal).catch(e => { if ((e as Error)?.message.includes('401')) trip('dictionary'); return false; }));
-  if (isOpen('wordnik')) tasks.push(askWordnik(w, ac.signal).catch(e => { if ((e as Error)?.message.includes('401')) trip('wordnik'); return false; }));
-
+  // Slow path: Query dictionary API if word not found locally
+  // This is CRITICAL - ensures we don't reject valid words not in our local list
   let apiValid = false;
-  if (tasks.length) {
-    const results = await Promise.allSettled(tasks);
-    apiValid = results.some(r => r.status === 'fulfilled' && r.value === true);
+  
+  if (isOpen('dictionary')) {
+    try {
+      apiValid = await askDictionary(w);
+      if (apiValid) {
+        const verdict: Verdict = { valid: true, source: 'api' };
+        MEMO.set(w, verdict);
+        return verdict;
+      }
+    } catch (error) {
+      // Log but don't fail - API errors shouldn't block the game
+      console.warn('Dictionary API check failed for word:', w, error);
+    }
   }
 
-  let verdict: Verdict;
-  if (apiValid) {
-    verdict = { valid: true, source: 'api' };
-  } else {
-    // Word not in local list and APIs didn't confirm it either
-    verdict = { valid: false, source: 'none', reason: 'not-found' };
-  }
+  // If word is not in local list AND not in dictionary, it's invalid
+  const verdict: Verdict = { valid: false, source: 'none', reason: 'not-found' };
 
   // Cache in memory only (no localStorage)
   MEMO.set(w, verdict);
