@@ -47,6 +47,10 @@ export async function googleLogin() {
     logger.debug('Removed debugAuth param from URL before redirect');
   }
   
+  // ⚠️ CRITICAL: Reset redirect state before starting new redirect
+  // This ensures getRedirectResult() will run when we return from OAuth
+  authManager.resetRedirectState();
+  
   // Set redirecting status BEFORE starting redirect
   authManager.setStatus('redirecting');
   

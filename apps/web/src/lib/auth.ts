@@ -84,6 +84,17 @@ class AuthManager {
   private authStatus: AuthStatus = 'idle';
   private redirectResultFetched = false; // One-shot latch for getRedirectResult()
   private redirectResultPromise: Promise<any> | null = null; // Ensure only one call
+  
+  // Reset redirect state - called when starting a new redirect
+  public resetRedirectState(): void {
+    this.redirectResultFetched = false;
+    this.redirectResultPromise = null;
+    try {
+      localStorage.removeItem('flicklet.auth.resolvedAt');
+    } catch (e) {
+      // ignore
+    }
+  }
 
   constructor() {
     this.initialize();
@@ -99,7 +110,13 @@ class AuthManager {
   }
   
   // Check if redirect was already resolved recently (within 5 seconds)
-  private wasRedirectRecentlyResolved(): boolean {
+  // Only skip if we're NOT returning from a redirect (no auth params = already processed)
+  private wasRedirectRecentlyResolved(hasAuthParams: boolean): boolean {
+    // If we have auth params in URL, this is a legitimate redirect return - never skip
+    if (hasAuthParams) {
+      return false;
+    }
+    
     try {
       const resolvedAt = localStorage.getItem('flicklet.auth.resolvedAt');
       if (!resolvedAt) return false;
@@ -108,9 +125,9 @@ class AuthManager {
       const now = Date.now();
       const timeSince = now - resolvedTime;
       
-      // If resolved within last 5 seconds, skip
-      if (timeSince < 5000 && timeSince > 0) {
-        logger.debug(`Redirect was resolved ${timeSince}ms ago - skipping getRedirectResult()`);
+      // Only skip if resolved within last 2 seconds AND no auth params (prevents double-call, not legitimate redirect)
+      if (timeSince < 2000 && timeSince > 0) {
+        logger.debug(`Redirect was resolved ${timeSince}ms ago and no auth params - skipping getRedirectResult()`);
         return true;
       }
       
@@ -275,20 +292,30 @@ class AuthManager {
       }
       
       // ⚠️ IDEMPOTENCY: Ensure getRedirectResult() runs exactly once per load
-      // Check if already fetched or recently resolved
-      if (this.redirectResultFetched || this.wasRedirectRecentlyResolved()) {
-        logger.debug('getRedirectResult() already fetched or recently resolved - skipping');
+      // BUT: If we have auth params, this is a legitimate redirect return - always process it
+      if (this.redirectResultFetched && !hasAuthParams) {
+        logger.debug('getRedirectResult() already fetched and no auth params - skipping');
         return;
       }
       
-      // If there's an in-flight promise, reuse it
-      if (this.redirectResultPromise) {
+      // Check if recently resolved (only skip if no auth params)
+      if (!hasAuthParams && this.wasRedirectRecentlyResolved(hasAuthParams)) {
+        logger.debug('getRedirectResult() recently resolved and no auth params - skipping');
+        return;
+      }
+      
+      // If there's an in-flight promise, reuse it (but only if we have auth params)
+      // Without auth params, the promise is stale and we should create a new one
+      if (this.redirectResultPromise && hasAuthParams) {
         logger.debug('getRedirectResult() already in flight - waiting for existing promise');
         const result = await this.redirectResultPromise;
         if (result && result.user) {
           this.markRedirectResolved();
         }
         return;
+      } else if (this.redirectResultPromise && !hasAuthParams) {
+        logger.debug('Stale redirect promise detected without auth params - clearing and starting fresh');
+        this.redirectResultPromise = null;
       }
       
       // Create single promise for this load
@@ -518,6 +545,10 @@ class AuthManager {
     // ⚠️ PERSISTENCE: Force IndexedDB/local before auth (iOS requirement)
     const { ensurePersistenceBeforeAuth } = await import('./persistence');
     await ensurePersistenceBeforeAuth();
+    
+    // ⚠️ CRITICAL: Reset redirect state before starting new redirect
+    // This ensures getRedirectResult() will run when we return from OAuth
+    this.resetRedirectState();
     
     this.setStatus('redirecting');
     

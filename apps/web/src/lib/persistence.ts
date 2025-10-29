@@ -48,8 +48,10 @@ export async function ensurePersistenceBeforeAuth(): Promise<void> {
     localStorage.removeItem(testKey);
     console.debug('[Persistence] IndexedDB unavailable - using localStorage fallback');
   } catch (e) {
-    console.error('[Persistence] Neither IndexedDB nor localStorage available!', e);
-    throw new Error('No storage available for auth state');
+    // Don't throw - log warning but continue
+    // Some browsers may have restricted storage but auth might still work
+    console.warn('[Persistence] Storage test failed, but continuing with auth:', e);
+    // Firebase will handle storage errors gracefully
   }
   
   // ⚠️ CRITICAL: NEVER use sessionStorage for auth state persistence
