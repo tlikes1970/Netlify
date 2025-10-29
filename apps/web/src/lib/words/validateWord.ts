@@ -40,7 +40,6 @@ async function askDictionary(word: string, signal?: AbortSignal): Promise<boolea
 // circuit breaker per provider
 const breaker: Record<string, number> = {};
 function isOpen(name: string) { return (breaker[name] ?? 0) < Date.now(); }
-function trip(name: string, minutes = 10) { breaker[name] = Date.now() + minutes * 60_000; }
 
 export async function validateWord(raw: string): Promise<Verdict> {
   const w = normalize(raw);
