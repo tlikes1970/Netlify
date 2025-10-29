@@ -19,7 +19,7 @@ import { logger } from './logger';
 import { auth, db, googleProvider, appleProvider } from './firebase';
 import { firebaseSyncManager } from './firebaseSync';
 import type { AuthUser, UserDocument, UserSettings, AuthProvider, AuthStatus } from './auth.types';
-import { markAuthInFlight, broadcastAuthComplete, isAuthInFlightInOtherTab } from './authBroadcast';
+import { markAuthInFlight, broadcastAuthComplete } from './authBroadcast';
 
 // Detect if we're in a blocked OAuth context
 // Google blocks OAuth inside embedded browsers (PWA standalone, in-app browsers, etc.)
