@@ -120,7 +120,9 @@ export default function App() {
   // Auto-prompt for authentication when not authenticated
   useEffect(() => {
     // Don't auto-open modal if we're returning from an OAuth redirect
-    const isReturningFromRedirect = window.location.hash || window.location.search;
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasAuthParams = urlParams.has('state') || urlParams.has('code') || urlParams.has('error');
+    const isReturningFromRedirect = window.location.hash || hasAuthParams;
     
     if (!authLoading && authInitialized && !isAuthenticated && !isReturningFromRedirect) {
       // Small delay to ensure the app has fully loaded
