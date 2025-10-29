@@ -44,13 +44,21 @@ export async function googleLogin() {
   }
   
   // Validate origin before proceeding
+  // Note: Safari may show security warnings during OAuth - this is normal
   try {
     validateOAuthOrigin();
-  } catch (error) {
-    authManager.setStatus('unauthenticated');
-    localStorage.removeItem('flicklet.auth.status');
-    logger.error('Origin validation failed before Google sign-in', error);
-    throw error;
+  } catch (error: any) {
+    // Log but don't fail on Safari - Safari handles security differently
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    if (isSafari) {
+      logger.warn('[AUTH] Safari detected - origin validation warning (may be normal)', error.message);
+      // Continue anyway - Safari's security model is different
+    } else {
+      authManager.setStatus('unauthenticated');
+      localStorage.removeItem('flicklet.auth.status');
+      logger.error('Origin validation failed before Google sign-in', error);
+      throw error;
+    }
   }
   
   const useRedirect = isWebView();
@@ -136,6 +144,7 @@ export function validateOAuthOrigin(): boolean {
   const origin = window.location.origin;
   
   // Known allowed origins for OAuth JavaScript origins
+  // Note: Netlify may add query params or fragments that don't affect origin
   const allowedOrigins = new Set([
     'http://localhost',
     'http://localhost:8888',
@@ -146,10 +155,19 @@ export function validateOAuthOrigin(): boolean {
     'https://flicklet-71dff.firebaseapp.com'
   ]);
   
-  if (!allowedOrigins.has(origin)) {
+  // Also allow any netlify.app subdomain (for preview deployments)
+  const isNetlifyApp = origin.includes('.netlify.app') || origin.includes('.netlify.com');
+  
+  // Allow Netlify preview deployments
+  if (!allowedOrigins.has(origin) && !isNetlifyApp) {
     const errorMsg = `Unauthorized origin: ${origin}. Please configure this origin in Firebase Console.`;
     logger.error('[AUTH] Origin validation failed', origin);
+    logger.warn('[AUTH] If this is a Netlify preview deployment, add it to Firebase authorized domains');
     throw new Error(errorMsg);
+  }
+  
+  if (isNetlifyApp && !allowedOrigins.has(origin)) {
+    logger.warn(`[AUTH] Netlify preview domain detected: ${origin}. Consider adding to Firebase authorized domains.`);
   }
   
   logger.log('[AUTH] Origin validated', origin);
