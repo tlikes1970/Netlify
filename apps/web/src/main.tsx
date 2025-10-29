@@ -28,9 +28,11 @@ import { logAuthOriginHint } from './lib/authLogin';
 import { logger } from './lib/logger';
 import { authLogManager } from './lib/authLog';
 import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './lib/firebaseBootstrap';
+import { generateDiagnosticsBundle, formatDiagnosticsAsMarkdown } from './lib/authDiagnostics';
 
 // ⚠️ CRITICAL: Log page entry params BEFORE Firebase runs
 // This captures the URL state at the earliest possible moment
+// Phase B: One-time "URL at boot" log with full context
 (function logPageEntryParams() {
   try {
     const getQueryParam = (key: string): string | null => {
@@ -39,10 +41,24 @@ import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './l
       return params.get(key) || hashParams?.get(key) || null;
     };
     
+    const bootTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    
     authLogManager.log('page_entry_params', {
       hasCode: !!getQueryParam('code'),
       hasState: !!getQueryParam('state'),
       href: window.location.href,
+    });
+    
+    // Phase B: Enhanced boot URL log
+    authLogManager.log('url_check', {
+      href: window.location.href,
+      search: window.location.search,
+      hash: window.location.hash,
+      pathname: window.location.pathname,
+      origin: window.location.origin,
+      visibilityState: typeof document !== 'undefined' ? document.visibilityState : 'unknown',
+      bootTime: bootTime,
+      timestamp: new Date().toISOString(),
     });
   } catch (e) {
     // ignore - logging should never break startup
@@ -245,6 +261,32 @@ import('./utils/debug-auth').then(m => {
     // Import authManager AFTER firebaseReady resolves to prevent constructor from racing
     const { authManager } = await import('./lib/auth');
     void authManager; // Force module load and initialization
+    
+    // Phase A: Generate diagnostics bundle after bootstrap
+    try {
+      const diagnostics = await generateDiagnosticsBundle();
+      const markdown = formatDiagnosticsAsMarkdown(diagnostics);
+      
+      // Store diagnostics in window for export
+      if (typeof window !== 'undefined') {
+        (window as any).__authDiagnostics = diagnostics;
+        (window as any).__exportAuthDiagnostics = () => {
+          const blob = new Blob([markdown], { type: 'text/markdown' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `auth-diagnostics-${new Date().toISOString().replace(/[:.]/g, '-')}.md`;
+          a.click();
+          URL.revokeObjectURL(url);
+        };
+        
+        // Also log to console for immediate access
+        console.log('[Auth Diagnostics] Bundle generated - call window.__exportAuthDiagnostics() to download');
+        console.log('[Auth Diagnostics] Preview:', diagnostics);
+      }
+    } catch (e) {
+      logger.warn('[Boot] Failed to generate diagnostics bundle', e);
+    }
     
     // Now render React app
     ReactDOM.createRoot(document.getElementById('root')!).render(

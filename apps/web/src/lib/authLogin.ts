@@ -4,6 +4,7 @@ import { logger } from './logger';
 import { authManager } from './auth';
 import { markAuthInFlight } from './authBroadcast';
 import { ensurePersistenceBeforeAuth } from './persistence';
+import { authLogManager } from './authLog';
 
 /**
  * Detects if we're in a WebView or standalone PWA
@@ -136,6 +137,57 @@ export async function googleLogin() {
     if (useRedirect) {
       logger.log('Starting redirect sign-in (webview/Android)');
       
+      // Phase B: Redirect liveness probe - detect Safari stall
+      // Start a 1500ms timer to detect if redirect never leaves the page
+      const redirectStartTime = Date.now();
+      let pagehideFired = false;
+      let visibilityChangeFired = false;
+      
+      const pagehideListener = () => {
+        pagehideFired = true;
+        logger.log('Redirect liveness: pagehide fired - redirect initiated');
+        authLogManager.log('redirect_liveness_pagehide', {
+          timestamp: new Date().toISOString(),
+          elapsed: Date.now() - redirectStartTime,
+        });
+      };
+      
+      const visibilityListener = () => {
+        if (document.visibilityState === 'hidden') {
+          visibilityChangeFired = true;
+          logger.log('Redirect liveness: visibility hidden - redirect initiated');
+          authLogManager.log('redirect_liveness_visibility', {
+            timestamp: new Date().toISOString(),
+            elapsed: Date.now() - redirectStartTime,
+          });
+        }
+      };
+      
+      window.addEventListener('pagehide', pagehideListener, { once: true });
+      document.addEventListener('visibilitychange', visibilityListener, { once: true });
+      
+      // If timer fires first, redirect never left the page (Safari stall)
+      const stuckTimer = setTimeout(() => {
+        if (!pagehideFired && !visibilityChangeFired) {
+          logger.error('[CRITICAL] Redirect stuck - page never left after 1500ms');
+          authLogManager.log('stuck_redirect', {
+            timestamp: new Date().toISOString(),
+            elapsed: Date.now() - redirectStartTime,
+            shouldPopupFallback: true,
+          });
+        }
+        // Clean up listeners
+        window.removeEventListener('pagehide', pagehideListener);
+        document.removeEventListener('visibilitychange', visibilityListener);
+      }, 1500);
+      
+      // Clean up timer if redirect succeeds
+      const cleanup = () => {
+        clearTimeout(stuckTimer);
+        window.removeEventListener('pagehide', pagehideListener);
+        document.removeEventListener('visibilitychange', visibilityListener);
+      };
+      
       // Save to localStorage before redirect so we can see it after page reload
       try {
         const existingLogs = JSON.parse(localStorage.getItem('auth-debug-logs') || '[]');
@@ -146,9 +198,15 @@ export async function googleLogin() {
         logger.error('Failed to save debug log', e);
       }
       
-      await signInWithRedirect(auth, googleProvider);
-      logger.log('Redirect initiated - user will be redirected to Google');
-      // Note: Page will reload after Google auth
+      try {
+        await signInWithRedirect(auth, googleProvider);
+        logger.log('Redirect initiated - user will be redirected to Google');
+        // Note: Page will reload after Google auth
+        // cleanup() won't run if redirect succeeds (page reloads)
+      } catch (error) {
+        cleanup(); // Clean up if redirect fails
+        throw error;
+      }
     } else {
       logger.log('Starting popup sign-in (desktop browser)');
       await signInWithPopup(auth, googleProvider);
