@@ -49,23 +49,13 @@ import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './l
 
 // ⚠️ CRITICAL: Bootstrap Firebase BEFORE anything else
 // This ensures persistence is set and auth state is initialized before any auth operations
-logger.log('[Boot] Bootstrapping Firebase...');
+// Note: Bootstrap happens asynchronously - firebaseReady promise blocks render
+logger.log('[Boot] Starting Firebase bootstrap...');
 bootstrapFirebase().then(() => {
   const readyTimestamp = getFirebaseReadyTimestamp();
-  logger.log('[Boot] Firebase ready', readyTimestamp ? `at ${readyTimestamp}` : '');
+  logger.log('[Boot] Firebase bootstrap complete', readyTimestamp ? `at ${readyTimestamp}` : '');
   
-  // Log firebaseReady resolution
-  if (readyTimestamp) {
-    authLogManager.log('firebaseReady_resolved_at', {
-      timestamp: readyTimestamp,
-      iso: readyTimestamp,
-    });
-  }
-  
-  // ⚠️ CRITICAL: Initialize Firebase auth AFTER bootstrap
-  // This ensures redirect handling happens after Firebase is fully ready
-  logger.log('[Boot] Initializing Firebase auth manager...');
-  void authManager; // Force module load and initialization
+  // Log firebaseReady resolution (this happens in bootstrapApp after await)
 }).catch((e) => {
   logger.error('[Boot] Firebase bootstrap failed', e);
 });
@@ -227,19 +217,32 @@ import('./utils/debug-auth').then(m => {
   (window as any).debugFirebaseAuth = m.debugFirebaseAuth;
 });
 
-// ⚠️ CRITICAL: Wait for Firebase to be ready before rendering React app
+// ⚠️ CRITICAL: Block React render until Firebase is ready
 // This physically prevents any auth operations from running before Firebase is initialized
 (async function bootstrapApp() {
   try {
+    // Wait for Firebase bootstrap to complete
     await firebaseReady;
     const readyTimestamp = getFirebaseReadyTimestamp();
     
+    // Log firebaseReady resolution
     if (readyTimestamp) {
+      authLogManager.log('firebaseReady_resolved_at', {
+        timestamp: readyTimestamp,
+        iso: readyTimestamp,
+      });
+      
       authLogManager.log('app_render_after_firebaseReady', {
         firebaseReadyTimestamp: readyTimestamp,
       });
     }
     
+    // ⚠️ CRITICAL: Initialize Firebase auth AFTER bootstrap but before render
+    // This ensures redirect handling happens after Firebase is fully ready
+    logger.log('[Boot] Initializing Firebase auth manager...');
+    void authManager; // Force module load and initialization
+    
+    // Now render React app
     ReactDOM.createRoot(document.getElementById('root')!).render(
       <React.StrictMode>
         <QueryClientProvider client={queryClient}>

@@ -92,6 +92,12 @@ class AuthManager {
     this.redirectResultFetched = false;
     this.redirectResultResolved = false; // Reset one-shot latch for new redirect
     this.redirectResultPromise = null;
+    
+    // Reset global one-shot latch
+    if (typeof window !== 'undefined') {
+      window.__redirectResolved = false;
+    }
+    
     try {
       localStorage.removeItem('flicklet.auth.resolvedAt');
     } catch (e) {
@@ -355,18 +361,33 @@ class AuthManager {
         this.redirectResultPromise = null;
       }
       
+      // ⚠️ GLOBAL ONE-SHOT LATCH: Prevent duplicate calls from other bundles
+      if (typeof window !== 'undefined' && window.__redirectResolved) {
+        logger.debug('getRedirectResult already resolved globally - window.__redirectResolved prevents rerun');
+        return;
+      }
+      
       // ⚠️ ONE-SHOT LATCH: Prevent getRedirectResult from running twice
       if (this.redirectResultResolved) {
         logger.debug('getRedirectResult already resolved - one-shot latch prevents rerun');
         return;
       }
       
+      // Get Firebase ready timestamp BEFORE calling getRedirectResult
+      const firebaseReadyTimestamp = getFirebaseReadyTimestamp();
+      
       // Log getRedirectResult start with timestamp
       const getRedirectResultCalledAt = new Date().toISOString();
+      
+      // Calculate if getRedirectResult is called after firebaseReady
+      const getRedirectAfterReady = firebaseReadyTimestamp ? getRedirectResultCalledAt >= firebaseReadyTimestamp : false;
+      
       authLogManager.log('getRedirectResult_called_at', {
         timestamp: getRedirectResultCalledAt,
         iso: getRedirectResultCalledAt,
         hasAuthParams,
+        getRedirect_after_ready: getRedirectAfterReady,
+        firebaseReadyTimestamp: firebaseReadyTimestamp || null,
       });
       
       // Get stored page_entry_params to check for init race (before waiting for Firebase)
@@ -378,7 +399,6 @@ class AuthManager {
       await firebaseReady;
       
       // ⚠️ GUARD: Double-check Firebase is ready and auth is defined
-      const firebaseReadyTimestamp = getFirebaseReadyTimestamp();
       if (!auth) {
         const error = new Error('Auth instance is undefined');
         logger.error('[CRITICAL] Auth instance is undefined', error);
@@ -390,7 +410,7 @@ class AuthManager {
         throw error;
       }
       
-      // ⚠️ ORDERING CHECK: If getRedirectResult was called before firebaseReady resolved, log error
+      // ⚠️ ORDERING CHECK: If getRedirectResult was called before firebaseReady resolved, log error loudly
       if (firebaseReadyTimestamp && getRedirectResultCalledAt < firebaseReadyTimestamp) {
         const orderingError = new Error('BROKEN ORDERING: getRedirectResult called before firebaseReady resolved');
         logger.error('[CRITICAL] Broken ordering detected', {
@@ -402,7 +422,7 @@ class AuthManager {
           getRedirectResultCalledAt,
           firebaseReadyTimestamp,
           violation: true,
-          stack: new Error().stack,
+          stack: orderingError.stack,
         });
         // Don't throw - continue anyway, but log loudly
       }
@@ -480,8 +500,11 @@ class AuthManager {
         }
       }
       
-      // Mark as resolved (one-shot latch)
+      // Mark as resolved (one-shot latch - both local and global)
       this.redirectResultResolved = true;
+      if (typeof window !== 'undefined') {
+        window.__redirectResolved = true;
+      }
       
       if (result && result.user) {
         logger.log('Redirect sign-in successful', {
@@ -613,8 +636,16 @@ class AuthManager {
     });
     
     // Listen for auth state changes
+    // Note: This is the ONLY onAuthStateChanged listener in the app
+    // All other code must use authManager.subscribe() instead
     onAuthStateChanged(auth, async (user) => {
       const authUser = user ? this.convertFirebaseUser(user) : null;
+      
+      // Log auth listener fired with hasUser boolean
+      authLogManager.log('auth_listener_fired', {
+        hasUser: !!authUser,
+        uid: authUser?.uid || null,
+      });
       
       // Update current user
       this.currentUser = authUser;
@@ -631,11 +662,7 @@ class AuthManager {
           emailVerified: user.emailVerified || false,
         });
         
-        // One-liner: auth_listener_fired
-        authLogManager.log('auth_listener_fired', {
-          uid: authUser.uid,
-          hasUser: true,
-        });
+        // Duplicate log removed - already logged at the start of onAuthStateChanged
         
         // One-liner: final_status
         authLogManager.log('final_status', {
@@ -685,11 +712,7 @@ class AuthManager {
         // Log auth state change
         authLogManager.log('auth_state_unauthenticated', {});
         
-        // One-liner: auth_listener_fired (no user)
-        authLogManager.log('auth_listener_fired', {
-          uid: null,
-          hasUser: false,
-        });
+        // Duplicate log removed - already logged at the start of onAuthStateChanged
         
         // One-liner: final_status
         authLogManager.log('final_status', {

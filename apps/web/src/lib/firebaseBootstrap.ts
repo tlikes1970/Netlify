@@ -27,6 +27,7 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-YL4TJ4FHJC',
 };
 
+// ⚠️ SINGLE SOURCE OF TRUTH: Only place Firebase is initialized
 // Initialize Firebase app (only once)
 let app = getApps()[0];
 if (!app) {
@@ -42,6 +43,13 @@ export const googleProvider = new GoogleAuthProvider();
 export const appleProvider = new OAuthProvider('apple.com');
 appleProvider.addScope('email');
 appleProvider.addScope('name');
+
+// ⚠️ GLOBAL ONE-SHOT LATCH: Prevent duplicate getRedirectResult calls across bundles
+declare global {
+  interface Window {
+    __redirectResolved?: boolean;
+  }
+}
 
 // Firebase ready promise - resolves only when persistence is set AND onAuthStateChanged fires
 let firebaseReadyResolver: ((timestamp: string) => void) | null = null;
@@ -78,7 +86,7 @@ export async function bootstrapFirebase(): Promise<void> {
         }
       });
       
-      // Safety timeout: resolve after 5 seconds even if onAuthStateChanged never fires
+      // Safety timeout: resolve after 3-5 seconds even if onAuthStateChanged never fires
       setTimeout(() => {
         if (!resolved) {
           resolved = true;
@@ -86,7 +94,7 @@ export async function bootstrapFirebase(): Promise<void> {
           unsubscribe();
           resolve(timestamp);
         }
-      }, 5000);
+      }, 4000); // 4s hard timeout (3-5s range)
     });
     
     // Step 3: Wait for auth state to initialize
