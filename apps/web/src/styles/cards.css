@@ -79,11 +79,12 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 .card-desktop {
   display: flex;
   gap: 1.25rem; /* Reduced from 1.5rem */
-  padding: 1rem 1.25rem; /* Reduced top/bottom, slightly tighter sides */
+  padding: 1rem 1.25rem 0.875rem 1.25rem; /* Minimal bottom padding */
   border-radius: var(--radius-xl, 16px);
   background: var(--card, #171a21);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--line, #242a33);
+  min-height: fit-content; /* Card height fits content, not fixed */
 }
 
 .card-desktop .poster-col {
@@ -232,5 +233,15 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 .card-desktop .info-col {
   position: relative;
   padding-bottom: 48px; /* Space for Delete button */
+}
+
+/* Remove extra space from empty synopsis */
+.card-desktop .synopsis-wrapper:empty {
+  display: none;
+}
+
+.card-desktop .synopsis-wrapper {
+  flex-grow: 0; /* Don't grow to fill space */
+  flex-shrink: 1;
 }
 
