@@ -200,15 +200,18 @@ class AuthManager {
       const result = await getRedirectResult(auth);
       
       // ⚠️ CRITICAL: Set resolving status when processing redirect
+      // This must happen BEFORE Firebase processes the result
       if (hasAuthParams) {
         this.setStatus('resolving');
         // Persist status across potential page reloads
         try {
           localStorage.setItem('flicklet.auth.status', 'resolving');
+          // Also set a timestamp to track how long we've been resolving
+          localStorage.setItem('flicklet.auth.resolving.start', Date.now().toString());
         } catch (e) {
           // ignore
         }
-        logger.debug('Processing redirect result - status: resolving');
+        logger.log('Processing redirect result - status: resolving (URL has auth params)');
       }
       
       if (result && result.user) {

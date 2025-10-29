@@ -142,7 +142,23 @@ export default function App() {
     // Don't auto-open modal if we're in redirecting or resolving state
     const isRedirectingOrResolving = status === 'redirecting' || status === 'resolving';
     
-    if (!authLoading && authInitialized && !isAuthenticated && !isRedirectingOrResolving) {
+    // Also check localStorage for persisted status (in case React state hasn't updated yet)
+    let persistedStatusBlocking = false;
+    try {
+      const persistedStatus = localStorage.getItem('flicklet.auth.status');
+      persistedStatusBlocking = persistedStatus === 'redirecting' || persistedStatus === 'resolving';
+    } catch (e) {
+      // ignore
+    }
+    
+    // Check if URL has auth params (we're returning from redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasAuthParams = urlParams.has('state') || urlParams.has('code') || urlParams.has('error');
+    const isReturningFromRedirect = window.location.hash || hasAuthParams;
+    
+    const shouldBlock = isRedirectingOrResolving || persistedStatusBlocking || isReturningFromRedirect;
+    
+    if (!authLoading && authInitialized && !isAuthenticated && !shouldBlock) {
       // Small delay to ensure the app has fully loaded
       const timer = setTimeout(() => {
         setShowAuthModal(true);
@@ -761,6 +777,9 @@ export default function App() {
             <div>Modal: <span style={{ color: showAuthModal ? '#ff6b6b' : '#51cf66' }}>{showAuthModal ? 'OPEN' : 'closed'}</span></div>
             <div style={{ marginTop: '8px', fontSize: '10px', color: '#999' }}>
               URL: {new URLSearchParams(window.location.search).toString().substring(0, 30)}
+            </div>
+            <div style={{ marginTop: '4px', fontSize: '10px', color: '#999' }}>
+              Persisted: {localStorage.getItem('flicklet.auth.status') || 'none'}
             </div>
           </div>
         )}

@@ -13,6 +13,10 @@ export function useAuth() {
     const initialUser = authManager.getCurrentUser();
     setUser(initialUser);
     
+    // Get initial status immediately (includes restored status from localStorage)
+    const initialStatus = authManager.getStatus();
+    setStatus(initialStatus);
+    
     // Check if auth state is already initialized
     const isInitialized = authManager.isAuthStateInitialized();
     setAuthInitialized(isInitialized);
