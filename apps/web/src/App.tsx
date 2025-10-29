@@ -118,7 +118,7 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   
   // Check for debug mode
-  const [showDebugHUD, setShowDebugHUD] = useState(() => {
+  const [showDebugHUD] = useState(() => {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.has('debugAuth');
   });
