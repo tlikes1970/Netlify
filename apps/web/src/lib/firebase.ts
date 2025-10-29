@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, OAuthProvider, setPersistence, browserLocalPersistence, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 // Firebase configuration from environment variables with fallback to hardcoded values
@@ -18,9 +18,66 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase services
-// Note: Firebase v9 automatically uses LOCAL persistence by default
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// ⚠️ CRITICAL: Set persistence explicitly BEFORE any auth operations
+// This ensures auth state survives redirects (especially on iOS)
+let persistenceSet = false;
+let persistencePromise: Promise<void> | null = null;
+
+export async function ensureAuthPersistence(): Promise<void> {
+  if (persistenceSet) return;
+  
+  if (!persistencePromise) {
+    persistencePromise = setPersistence(auth, browserLocalPersistence).then(() => {
+      persistenceSet = true;
+    });
+  }
+  
+  return persistencePromise;
+}
+
+// Firebase ready promise - resolves when auth state is initialized
+let firebaseReadyResolver: (() => void) | null = null;
+export const firebaseReady = new Promise<void>((resolve) => {
+  firebaseReadyResolver = resolve;
+});
+
+// Helper to resolve the ready promise
+function resolveFirebaseReady() {
+  if (firebaseReadyResolver) {
+    const resolver = firebaseReadyResolver;
+    firebaseReadyResolver = null;
+    resolver();
+  }
+}
+
+// Wait for auth state to initialize, then resolve ready promise
+let authInitDetected = false;
+const unsubscribe = onAuthStateChanged(auth, () => {
+  if (!authInitDetected) {
+    authInitDetected = true;
+    resolveFirebaseReady();
+    unsubscribe(); // Clean up listener after first fire
+  }
+});
+
+// If auth is already initialized (e.g., user already signed in), resolve immediately
+if (auth.currentUser !== null) {
+  authInitDetected = true;
+  unsubscribe(); // Clean up unused listener
+  resolveFirebaseReady();
+} else {
+  // Set a timeout to resolve anyway after 500ms (safety net)
+  setTimeout(() => {
+    if (!authInitDetected) {
+      authInitDetected = true;
+      unsubscribe(); // Clean up unused listener
+      resolveFirebaseReady();
+    }
+  }, 500);
+}
 
 // Auth providers
 export const googleProvider = new GoogleAuthProvider();

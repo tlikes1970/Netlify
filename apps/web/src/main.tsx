@@ -25,6 +25,7 @@ import { logAuthOriginHint } from './lib/authLogin';
 import { authManager } from './lib/auth';
 import { logger } from './lib/logger';
 import { authLogManager } from './lib/authLog';
+import { ensureAuthPersistence } from './lib/firebase';
 
 // ⚠️ CRITICAL: Log page entry params BEFORE Firebase runs
 // This captures the URL state at the earliest possible moment
@@ -45,6 +46,15 @@ import { authLogManager } from './lib/authLog';
     // ignore - logging should never break startup
   }
 })();
+
+// ⚠️ CRITICAL: Set Firebase persistence BEFORE any auth operations
+// This ensures auth state survives redirects
+logger.log('[Boot] Setting Firebase persistence...');
+ensureAuthPersistence().then(() => {
+  logger.log('[Boot] Firebase persistence set');
+}).catch((e) => {
+  logger.warn('[Boot] Failed to set persistence (continuing anyway)', e);
+});
 
 // ⚠️ CRITICAL: Initialize Firebase auth BEFORE app renders
 // This ensures redirect handling happens before React components mount
