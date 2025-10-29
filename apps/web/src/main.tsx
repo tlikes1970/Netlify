@@ -35,17 +35,49 @@ import { generateDiagnosticsBundle, formatDiagnosticsAsMarkdown } from './lib/au
 // Phase B: One-time "URL at boot" log with full context
 (function logPageEntryParams() {
   try {
-    const getQueryParam = (key: string): string | null => {
-      const params = new URLSearchParams(window.location.search);
-      const hashParams = window.location.hash ? new URLSearchParams(window.location.hash.substring(1)) : null;
-      return params.get(key) || hashParams?.get(key) || null;
-    };
+    // ⚠️ CRITICAL: Check URL params at the very top of bootstrap
+    // This must run before ANY Firebase code or router logic
+    const params = new URLSearchParams(window.location.search);
+    const hasCode = params.has('code');
+    const hasState = params.has('state');
+    
+    // Also check hash params (Firebase sometimes uses hash fragments)
+    let hasCodeInHash = false;
+    let hasStateInHash = false;
+    if (window.location.hash) {
+      try {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        hasCodeInHash = hashParams.has('code');
+        hasStateInHash = hashParams.has('state');
+      } catch (e) {
+        // ignore
+      }
+    }
+    
+    const finalHasCode = hasCode || hasCodeInHash;
+    const finalHasState = hasState || hasStateInHash;
+    
+    // Console log for immediate visibility
+    console.log('[Boot] page_entry_params', { 
+      hasCode: finalHasCode, 
+      hasState: finalHasState, 
+      search: window.location.search,
+      hash: window.location.hash,
+      href: window.location.href 
+    });
     
     const bootTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
     
+    // Log to HUD
     authLogManager.log('page_entry_params', {
-      hasCode: !!getQueryParam('code'),
-      hasState: !!getQueryParam('state'),
+      hasCode: finalHasCode,
+      hasState: finalHasState,
+      hasCodeInSearch: hasCode,
+      hasStateInSearch: hasState,
+      hasCodeInHash: hasCodeInHash,
+      hasStateInHash: hasStateInHash,
+      search: window.location.search,
+      hash: window.location.hash,
       href: window.location.href,
     });
     
@@ -62,6 +94,7 @@ import { generateDiagnosticsBundle, formatDiagnosticsAsMarkdown } from './lib/au
     });
   } catch (e) {
     // ignore - logging should never break startup
+    console.error('[Boot] Failed to log page_entry_params', e);
   }
 })();
 

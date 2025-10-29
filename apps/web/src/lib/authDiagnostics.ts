@@ -57,22 +57,28 @@ export async function collectRuntimeConfig(): Promise<RuntimeConfig> {
   let persistenceMethod: string | null = null;
   let persistenceSetBeforeSignIn = false;
   try {
-    // Check if Firebase bootstrap has run (persistence should be set)
-    // We check authLogManager for persistence_selected event
     const entries = authLogManager.getAllEntries();
+    
+    // Check if persistence_selected was logged (from ensurePersistenceBeforeAuth)
     const persistenceEntry = entries.find(e => e.event === 'persistence_selected');
     if (persistenceEntry && persistenceEntry.data && typeof persistenceEntry.data === 'object') {
       persistenceMethod = (persistenceEntry.data as any).method || null;
-      persistenceSetBeforeSignIn = true; // If we logged it, it was set
-    } else {
-      // Fallback: check if IndexedDB is available (Firebase prefers it)
+    }
+    
+    // Check if persistence_ensured was logged (from authLogin.ts - double-check before sign-in)
+    const persistenceEnsured = entries.some(e => e.event === 'persistence_ensured');
+    
+    // Persistence is set at module load time in firebaseBootstrap.ts AND confirmed in bootstrapFirebase()
+    // So it should always be set before sign-in unless there's a timing issue
+    persistenceSetBeforeSignIn = persistenceEnsured || !!persistenceEntry;
+    
+    // Fallback: check storage availability
+    if (!persistenceMethod) {
       if (typeof indexedDB !== 'undefined') {
         persistenceMethod = 'IndexedDB (likely)';
       } else if (typeof localStorage !== 'undefined') {
         persistenceMethod = 'localStorage (fallback)';
       }
-      // Check if persistence_ensured was logged (from ensurePersistenceBeforeAuth)
-      persistenceSetBeforeSignIn = entries.some(e => e.event === 'persistence_ensured');
     }
   } catch (e) {
     persistenceMethod = 'unknown';

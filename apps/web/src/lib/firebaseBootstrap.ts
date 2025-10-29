@@ -41,6 +41,24 @@ if (!app) {
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
+// ⚠️ CRITICAL: Set persistence IMMEDIATELY after auth init (module load time)
+// Safari will drop redirect credentials if persistence isn't locked in before redirect
+// This must happen as early as possible - at module load, before any sign-in logic runs
+// Firebase's setPersistence is async, but calling it here ensures it starts before anything else
+// We also set it in bootstrapFirebase() to ensure it completes before auth operations
+try {
+  // Start setting persistence immediately (don't await - this runs at module load)
+  setPersistence(auth, browserLocalPersistence).then(() => {
+    if (typeof console !== 'undefined') {
+      console.log('[FirebaseBootstrap] Persistence set at module load time');
+    }
+  }).catch((e) => {
+    console.error('[FirebaseBootstrap] Failed to set persistence at module load', e);
+  });
+} catch (e) {
+  console.error('[FirebaseBootstrap] Error starting persistence', e);
+}
+
 // Auth providers
 export const googleProvider = new GoogleAuthProvider();
 export const appleProvider = new OAuthProvider('apple.com');
@@ -72,8 +90,15 @@ export async function bootstrapFirebase(): Promise<void> {
   const startTime = Date.now();
   
   try {
-    // Step 1: Set persistence explicitly
+    // Step 1: Set persistence explicitly (may already be set synchronously above, but ensure it)
+    // Safari requires persistence to be set BEFORE any redirect or sign-in call
+    // This is a critical timing requirement - Firebase SDK warns about this
     await setPersistence(auth, browserLocalPersistence);
+    
+    // Log that persistence is confirmed set
+    if (typeof console !== 'undefined') {
+      console.log('[FirebaseBootstrap] Persistence confirmed set before auth operations');
+    }
     
     // Step 2: Wait for onAuthStateChanged to fire at least once
     // OR timeout after 5000ms (safety net)
