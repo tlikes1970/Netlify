@@ -88,12 +88,13 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 
 .card-desktop .poster-col {
   flex-shrink: 0;
-  align-self: flex-start; /* Align poster top with title */
+  align-self: stretch; /* Stretch poster to full card height */
+  height: 100%;
 }
 
 .card-desktop .poster-col img {
   width: 160px;
-  height: 240px;
+  height: 100%; /* Full height of card */
   object-fit: cover;
   border-radius: var(--radius-md, 8px);
 }
