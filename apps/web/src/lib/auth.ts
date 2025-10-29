@@ -52,6 +52,29 @@ function isBlockedOAuthContext(): boolean {
   return isStandalone || isInAppBrowser;
 }
 
+// Track recent auth attempts to prevent loops
+const AUTH_ATTEMPT_KEY = 'flicklet.auth.attempt.timestamp';
+const AUTH_ATTEMPT_WINDOW = 30000; // 30 seconds - prevents rapid retries
+
+function shouldBlockAuthAttempt(): boolean {
+  const lastAttempt = localStorage.getItem(AUTH_ATTEMPT_KEY);
+  if (!lastAttempt) return false;
+  
+  const timeSince = Date.now() - parseInt(lastAttempt);
+  const blocked = timeSince < AUTH_ATTEMPT_WINDOW;
+  
+  if (blocked) {
+    logger.warn(`Auth attempt blocked - last attempt ${timeSince}ms ago (${AUTH_ATTEMPT_WINDOW}ms window)`);
+  }
+  
+  return blocked;
+}
+
+function recordAuthAttempt(): void {
+  localStorage.setItem(AUTH_ATTEMPT_KEY, Date.now().toString());
+  logger.debug('Recorded auth attempt timestamp');
+}
+
 class AuthManager {
   private currentUser: AuthUser | null = null;
   private listeners: Set<(user: AuthUser | null) => void> = new Set();
@@ -100,7 +123,7 @@ class AuthManager {
         search: currentSearch
       });
       
-      // DEBUG: Check sessionStorage for Firebase auth state
+      // DEBUG: Check sessionStorage for Firebase auth state (read-only)
       logger.debug('Checking sessionStorage for Firebase auth state');
       for (let i = 0; i < sessionStorage.length; i++) {
         const key = sessionStorage.key(i);
@@ -109,22 +132,9 @@ class AuthManager {
         }
       }
       
-      // Check if there's a pending redirect (means redirect started but didn't complete)
-      const pendingRedirectKeys = [];
-      for (let i = 0; i < sessionStorage.length; i++) {
-        const key = sessionStorage.key(i);
-        if (key && key.includes('pendingRedirect')) {
-          pendingRedirectKeys.push(key);
-          logger.error('FIREBASE HAS A PENDING REDIRECT', key);
-          logger.warn('Redirect started but handler did not complete');
-          sessionStorage.removeItem(key);
-          logger.log('Cleared pending redirect flag');
-        }
-      }
-      
-      if (pendingRedirectKeys.length === 0) {
-        logger.debug('No pending redirect flags - app is in a clean state');
-      }
+      // ⚠️ CRITICAL: Never modify Firebase's sessionStorage
+      // Firebase manages its own auth state. Manual removal causes auth loops.
+      // We only log, never modify sessionStorage keys that Firebase uses.
       
       logger.debug('Window location', {
         href: window.location.href,
@@ -185,29 +195,34 @@ class AuthManager {
       } else {
         logger.log('No redirect result returned from Firebase');
         
-        // DEBUG: Try one more time after a short delay in case there's a timing issue
-        logger.debug('Retrying getRedirectResult after 500ms');
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const retryResult = await getRedirectResult(auth);
-        if (retryResult && retryResult.user) {
-          logger.log('Redirect sign-in successful on retry', {
-            uid: retryResult.user.uid,
-            email: retryResult.user.email
-          });
+        // Only retry if we have auth params in URL (means we're actually returning from redirect)
+        if (hasAuthParams) {
+          // Detect if mobile for longer retry delay (mobile networks are slower)
+          const ua = navigator.userAgent || '';
+          const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
+          const retryDelay = isMobile ? 1500 : 500; // Longer delay on mobile networks
           
-          // Clean up the URL on successful retry
-          try {
-            window.history.replaceState({}, document.title, window.location.pathname);
-            logger.debug('Cleaned up URL parameters');
-          } catch (e) {
-            logger.warn('Failed to clean up URL', e);
-          }
-        } else {
-          logger.warn('Still no redirect result after retry');
+          logger.debug(`Retrying getRedirectResult after ${retryDelay}ms (mobile: ${isMobile})`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
           
-          // Clean up URL even if no result to prevent infinite loops
-          if (hasAuthParams) {
-            logger.warn('URL has auth parameters but getRedirectResult returned nothing - cleaning up URL to prevent loop');
+          const retryResult = await getRedirectResult(auth);
+          if (retryResult && retryResult.user) {
+            logger.log('Redirect sign-in successful on retry', {
+              uid: retryResult.user.uid,
+              email: retryResult.user.email
+            });
+            
+            // Clean up the URL on successful retry
+            try {
+              window.history.replaceState({}, document.title, window.location.pathname);
+              logger.debug('Cleaned up URL parameters');
+            } catch (e) {
+              logger.warn('Failed to clean up URL', e);
+            }
+          } else {
+            logger.warn('Still no redirect result after retry - URL had auth params but no result');
+            
+            // Clean up URL to prevent loop - auth params suggest redirect happened but no result
             try {
               window.history.replaceState({}, document.title, window.location.pathname);
               logger.debug('Cleaned up URL parameters to prevent redirect loop');
@@ -215,6 +230,8 @@ class AuthManager {
               logger.warn('Failed to clean up URL', e);
             }
           }
+        } else {
+          logger.debug('No auth params in URL and no redirect result - user is not signing in via redirect');
         }
       }
     } catch (error) {
@@ -335,6 +352,11 @@ class AuthManager {
   }
 
   private async signInWithGoogle(): Promise<void> {
+    // Check if we should block this auth attempt to prevent loops
+    if (shouldBlockAuthAttempt()) {
+      throw new Error('Authentication attempted too frequently. Please wait a moment and try again.');
+    }
+    
     const isMobile = isMobileNow();
     const isBlocked = isBlockedOAuthContext();
     
@@ -349,6 +371,9 @@ class AuthManager {
       logger.error('Google sign-in attempted in blocked context (PWA standalone or in-app browser)');
       throw new Error('OAUTH_BLOCKED');
     }
+    
+    // Record this auth attempt to prevent rapid retries
+    recordAuthAttempt();
     
     // Use redirect for both mobile and desktop to avoid popup blocking issues
     logger.log('Using redirect flow for Google sign-in');
@@ -365,6 +390,14 @@ class AuthManager {
   }
 
   private async signInWithApple(): Promise<void> {
+    // Check if we should block this auth attempt to prevent loops
+    if (shouldBlockAuthAttempt()) {
+      throw new Error('Authentication attempted too frequently. Please wait a moment and try again.');
+    }
+    
+    // Record this auth attempt to prevent rapid retries
+    recordAuthAttempt();
+    
     // Apple always uses redirect
     await signInWithRedirect(auth, appleProvider);
   }

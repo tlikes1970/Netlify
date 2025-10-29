@@ -84,8 +84,6 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
   background: var(--card, #171a21);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--line, #242a33);
-  width: 100%; /* Full width of container */
-  max-width: 800px; /* Cap at reasonable desktop width */
 }
 
 .card-desktop .poster-col {
@@ -95,7 +93,7 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 }
 
 .card-desktop .poster-col img {
-  width: 160px;
+  width: 215px;
   height: 100%; /* Full height of card */
   object-fit: cover;
   border-radius: var(--radius-md, 8px);
