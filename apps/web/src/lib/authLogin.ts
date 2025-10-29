@@ -32,6 +32,16 @@ function isWebView(): boolean {
  * Google sign-in helper that uses redirect on mobile/webview and popup on desktop
  */
 export async function googleLogin() {
+  // ⚠️ CRITICAL: Clean URL of debug params before redirect
+  // Safari and Firebase may reject OAuth redirects with unexpected query params
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('debugAuth')) {
+    urlParams.delete('debugAuth');
+    const cleanUrl = window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : '') + window.location.hash;
+    window.history.replaceState({}, document.title, cleanUrl);
+    logger.debug('Removed debugAuth param from URL before redirect');
+  }
+  
   // Set redirecting status BEFORE starting redirect
   authManager.setStatus('redirecting');
   

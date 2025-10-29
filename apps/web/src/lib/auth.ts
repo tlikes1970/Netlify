@@ -423,6 +423,16 @@ class AuthManager {
   }
 
   private async signInWithGoogle(): Promise<void> {
+    // ⚠️ CRITICAL: Clean URL of debug params before redirect
+    // Safari and Firebase may reject OAuth redirects with unexpected query params
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('debugAuth')) {
+      urlParams.delete('debugAuth');
+      const cleanUrl = window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : '') + window.location.hash;
+      window.history.replaceState({}, document.title, cleanUrl);
+      logger.debug('Removed debugAuth param from URL before redirect');
+    }
+    
     // Check if we should block this auth attempt to prevent loops
     if (shouldBlockAuthAttempt()) {
       throw new Error('Authentication attempted too frequently. Please wait a moment and try again.');
@@ -461,6 +471,16 @@ class AuthManager {
   }
 
   private async signInWithApple(): Promise<void> {
+    // ⚠️ CRITICAL: Clean URL of debug params before redirect
+    // Safari and Firebase may reject OAuth redirects with unexpected query params
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('debugAuth')) {
+      urlParams.delete('debugAuth');
+      const cleanUrl = window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : '') + window.location.hash;
+      window.history.replaceState({}, document.title, cleanUrl);
+      logger.debug('Removed debugAuth param from URL before redirect');
+    }
+    
     // Check if we should block this auth attempt to prevent loops
     if (shouldBlockAuthAttempt()) {
       throw new Error('Authentication attempted too frequently. Please wait a moment and try again.');
