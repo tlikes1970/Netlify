@@ -176,6 +176,17 @@ class AuthManager {
       
       const result = await getRedirectResult(auth);
       
+      // ⚠️ CRITICAL: Mark that we're processing a redirect BEFORE cleaning URL
+      // This prevents App.tsx from reopening the modal during the auth state transition
+      if (hasAuthParams) {
+        try {
+          sessionStorage.setItem('flicklet.auth.processing', 'true');
+          logger.debug('Marked auth as processing to prevent modal reopening');
+        } catch (e) {
+          logger.warn('Failed to set processing flag', e);
+        }
+      }
+      
       if (result && result.user) {
         logger.log('Redirect sign-in successful', {
           uid: result.user.uid,
@@ -226,12 +237,20 @@ class AuthManager {
             try {
               window.history.replaceState({}, document.title, window.location.pathname);
               logger.debug('Cleaned up URL parameters to prevent redirect loop');
+              // Clear processing flag since auth failed
+              sessionStorage.removeItem('flicklet.auth.processing');
             } catch (e) {
               logger.warn('Failed to clean up URL', e);
             }
           }
         } else {
           logger.debug('No auth params in URL and no redirect result - user is not signing in via redirect');
+          // Clear processing flag if it was set
+          try {
+            sessionStorage.removeItem('flicklet.auth.processing');
+          } catch (e) {
+            // ignore
+          }
         }
       }
     } catch (error) {
@@ -245,6 +264,14 @@ class AuthManager {
       
       // Update current user
       this.currentUser = authUser;
+      
+      // Clear the processing flag once auth state is known
+      try {
+        sessionStorage.removeItem('flicklet.auth.processing');
+        logger.debug('Cleared auth processing flag');
+      } catch (e) {
+        // ignore
+      }
       
       // Mark auth state as initialized after first Firebase callback
       if (!this.authStateInitialized) {

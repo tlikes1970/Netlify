@@ -124,7 +124,10 @@ export default function App() {
     const hasAuthParams = urlParams.has('state') || urlParams.has('code') || urlParams.has('error');
     const isReturningFromRedirect = window.location.hash || hasAuthParams;
     
-    if (!authLoading && authInitialized && !isAuthenticated && !isReturningFromRedirect) {
+    // Check if auth is currently being processed (prevents modal during auth state transition)
+    const isProcessing = sessionStorage.getItem('flicklet.auth.processing') === 'true';
+    
+    if (!authLoading && authInitialized && !isAuthenticated && !isReturningFromRedirect && !isProcessing) {
       // Small delay to ensure the app has fully loaded
       const timer = setTimeout(() => {
         setShowAuthModal(true);
