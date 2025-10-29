@@ -14,14 +14,17 @@ interface TriviaApiResponse {
 const CACHE_KEY = 'flicklet:daily-trivia';
 
 // API endpoints to try (in order of preference)
+// OpenTriviaDB Categories:
+// 11 = Entertainment: Film (Movies)
+// 14 = Entertainment: Television (TV Shows)
 const TRIVIA_APIS: Array<{
   name: string;
   url: string;
   parser: (data: any) => TriviaApiResponse[];
 }> = [
   {
-    name: 'OpenTriviaDB',
-    url: 'https://opentdb.com/api.php?amount=10&category=10&difficulty=medium&type=multiple&encode=url3986',
+    name: 'OpenTriviaDB - Movies',
+    url: 'https://opentdb.com/api.php?amount=10&category=11&difficulty=medium&type=multiple&encode=url3986',
     parser: (data: any) => {
       if (data.response_code === 0 && data.results && data.results.length > 0) {
         return data.results.map((item: any) => {
@@ -38,7 +41,7 @@ const TRIVIA_APIS: Array<{
             options: shuffledChoices,
             correctAnswer: correctIndex,
             explanation: `The correct answer is ${correctAnswer}.`,
-            category: 'Entertainment',
+            category: 'Film',
             difficulty: item.difficulty as 'easy' | 'medium' | 'hard'
           };
         });
@@ -47,8 +50,8 @@ const TRIVIA_APIS: Array<{
     }
   },
   {
-    name: 'OpenTriviaDB (Easy)',
-    url: 'https://opentdb.com/api.php?amount=10&category=10&difficulty=easy&type=multiple&encode=url3986',
+    name: 'OpenTriviaDB - TV Shows',
+    url: 'https://opentdb.com/api.php?amount=10&category=14&difficulty=medium&type=multiple&encode=url3986',
     parser: (data: any) => {
       if (data.response_code === 0 && data.results && data.results.length > 0) {
         return data.results.map((item: any) => {
@@ -64,7 +67,59 @@ const TRIVIA_APIS: Array<{
             options: shuffledChoices,
             correctAnswer: correctIndex,
             explanation: `The correct answer is ${correctAnswer}.`,
-            category: 'Entertainment',
+            category: 'Television',
+            difficulty: item.difficulty as 'easy' | 'medium' | 'hard'
+          };
+        });
+      }
+      return [];
+    }
+  },
+  {
+    name: 'OpenTriviaDB - Movies (Easy)',
+    url: 'https://opentdb.com/api.php?amount=10&category=11&difficulty=easy&type=multiple&encode=url3986',
+    parser: (data: any) => {
+      if (data.response_code === 0 && data.results && data.results.length > 0) {
+        return data.results.map((item: any) => {
+          const correctAnswer = decodeURIComponent(item.correct_answer);
+          const incorrectAnswers = item.incorrect_answers.map((ans: string) => decodeURIComponent(ans));
+          const allChoices = [correctAnswer, ...incorrectAnswers];
+
+          const shuffledChoices = [...allChoices].sort(() => Math.random() - 0.5);
+          const correctIndex = shuffledChoices.indexOf(correctAnswer);
+
+          return {
+            question: decodeURIComponent(item.question),
+            options: shuffledChoices,
+            correctAnswer: correctIndex,
+            explanation: `The correct answer is ${correctAnswer}.`,
+            category: 'Film',
+            difficulty: 'easy' as const
+          };
+        });
+      }
+      return [];
+    }
+  },
+  {
+    name: 'OpenTriviaDB - TV Shows (Easy)',
+    url: 'https://opentdb.com/api.php?amount=10&category=14&difficulty=easy&type=multiple&encode=url3986',
+    parser: (data: any) => {
+      if (data.response_code === 0 && data.results && data.results.length > 0) {
+        return data.results.map((item: any) => {
+          const correctAnswer = decodeURIComponent(item.correct_answer);
+          const incorrectAnswers = item.incorrect_answers.map((ans: string) => decodeURIComponent(ans));
+          const allChoices = [correctAnswer, ...incorrectAnswers];
+
+          const shuffledChoices = [...allChoices].sort(() => Math.random() - 0.5);
+          const correctIndex = shuffledChoices.indexOf(correctAnswer);
+
+          return {
+            question: decodeURIComponent(item.question),
+            options: shuffledChoices,
+            correctAnswer: correctIndex,
+            explanation: `The correct answer is ${correctAnswer}.`,
+            category: 'Television',
             difficulty: 'easy' as const
           };
         });
