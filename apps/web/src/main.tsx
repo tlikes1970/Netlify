@@ -28,7 +28,7 @@ import { logger } from './lib/logger';
 // ⚠️ CRITICAL: Initialize Firebase auth BEFORE app renders
 // This ensures redirect handling happens before React components mount
 logger.log('[Boot] Initializing Firebase auth manager...');
-authManager; // Force module load and initialization
+void authManager; // Force module load and initialization
 
 // Log auth origin for OAuth verification
 logAuthOriginHint();

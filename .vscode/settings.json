@@ -1,0 +1,42 @@
+{
+  // TypeScript: Use workspace version for better compatibility
+  "typescript.tsdk": "apps/web/node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  // Editor: Auto-format on save
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // Auto-fix ESLint issues on save
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // ESLint: Validate TypeScript and React files
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.workingDirectories": [{ "pattern": "apps/web" }],
+
+  // TypeScript: Prefer relative imports
+  "typescript.preferences.importModuleSpecifier": "relative",
+
+  // Files: Exclude from search (already in .gitignore but good for performance)
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.vite": true
+  },
+
+  // Search: Exclude build artifacts
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.vite": true,
+    "**/build": true
+  }
+}
+

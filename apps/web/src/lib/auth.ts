@@ -265,9 +265,19 @@ class AuthManager {
       if (hasAuthParams) {
         logger.debug('URL contains auth parameters, might be redirect return');
         
-        // Log redirect return
+        // Log redirect return with one-liner
         const urlParams = new URLSearchParams(window.location.search);
         const hashParams = window.location.hash ? new URLSearchParams(window.location.hash.substring(1)) : null;
+        const hasCode = urlParams.has('code') || (hashParams?.has('code') ?? false);
+        const hasState = urlParams.has('state') || (hashParams?.has('state') ?? false);
+        
+        authLogManager.log('returned_with_params', {
+          hasCode,
+          hasState,
+          hasSearch: !!window.location.search,
+          hasHash: !!window.location.hash,
+        });
+        
         authLogManager.log('redirect_return', {
           hasSearch: !!window.location.search,
           hasHash: !!window.location.hash,
@@ -343,6 +353,9 @@ class AuthManager {
         this.redirectResultPromise = null;
       }
       
+      // Log getRedirectResult start
+      authLogManager.log('getRedirectResult_start', { hasAuthParams });
+      
       // Create single promise for this load
       this.redirectResultPromise = getRedirectResult(auth);
       
@@ -381,6 +394,12 @@ class AuthManager {
           hasCredential: !!result.credential,
         });
         
+        // One-liner: getRedirectResult_ok
+        authLogManager.log('getRedirectResult_ok', {
+          providerId: result.providerId,
+          operationType: result.operationType,
+        });
+        
         // ⚠️ CRITICAL: Delay URL cleanup until after getRedirectResult() fully settles
         // Don't clean URL here - wait for onAuthStateChanged to fire
         // URL cleanup will happen after auth state is confirmed
@@ -393,6 +412,11 @@ class AuthManager {
         authLogManager.log('redirect_result_empty', {
           hasAuthParams,
           reason: 'getRedirectResult returned null/undefined',
+        });
+        
+        // One-liner: getRedirectResult_empty
+        authLogManager.log('getRedirectResult_empty', {
+          hasAuthParams,
         });
         
         // Only retry if we have auth params in URL (means we're actually returning from redirect)
@@ -440,8 +464,18 @@ class AuthManager {
       }
     } catch (error) {
       logger.error('Error checking redirect result', error);
+      // One-liner: getRedirectResult_error
+      authLogManager.log('getRedirectResult_error', {
+        error: error instanceof Error ? error.message : String(error),
+        code: (error as any)?.code || 'unknown',
+      });
       // Continue initialization even if redirect check fails
     }
+    
+    // Log Firebase init complete
+    authLogManager.log('firebase_init_complete', {
+      timestamp: new Date().toISOString(),
+    });
     
     // Listen for auth state changes
     onAuthStateChanged(auth, async (user) => {
@@ -460,6 +494,18 @@ class AuthManager {
           uid: authUser.uid,
           provider: providerData?.providerId || 'unknown',
           emailVerified: user.emailVerified || false,
+        });
+        
+        // One-liner: auth_listener_fired
+        authLogManager.log('auth_listener_fired', {
+          uid: authUser.uid,
+          hasUser: true,
+        });
+        
+        // One-liner: final_status
+        authLogManager.log('final_status', {
+          status: 'authenticated',
+          reason: 'success',
         });
         
         // Mark auth flow as complete
@@ -503,6 +549,18 @@ class AuthManager {
         
         // Log auth state change
         authLogManager.log('auth_state_unauthenticated', {});
+        
+        // One-liner: auth_listener_fired (no user)
+        authLogManager.log('auth_listener_fired', {
+          uid: null,
+          hasUser: false,
+        });
+        
+        // One-liner: final_status
+        authLogManager.log('final_status', {
+          status: 'unauthenticated',
+          reason: 'no_user',
+        });
         
         // Mark auth flow as complete (failed/unauthenticated)
         authLogManager.markComplete('unauthenticated', false);
@@ -703,6 +761,11 @@ class AuthManager {
       provider: 'google',
       method: 'redirect',
       url: window.location.href,
+    });
+    
+    // One-liner: oauth_redirect_start
+    authLogManager.log('oauth_redirect_start', {
+      provider: 'google',
     });
     
     try {

@@ -4,6 +4,8 @@
  * NEVER use sessionStorage for auth state
  */
 
+import { authLogManager } from './authLog';
+
 async function ensureIndexedDB(): Promise<boolean> {
   if (typeof indexedDB === 'undefined') {
     return false;
@@ -30,14 +32,16 @@ async function ensureIndexedDB(): Promise<boolean> {
   }
 }
 
-export async function ensurePersistenceBeforeAuth(): Promise<void> {
+export async function ensurePersistenceBeforeAuth(): Promise<string> {
   // Try IndexedDB first (preferred on iOS)
   const indexedDBAvailable = await ensureIndexedDB();
   
   if (indexedDBAvailable) {
     console.debug('[Persistence] IndexedDB available - using for auth state');
+    // One-liner: persistence_selected
+    authLogManager.log('persistence_selected', { method: 'IndexedDB' });
     // IndexedDB is available - Firebase will use it automatically
-    return;
+    return 'IndexedDB';
   }
   
   // Fallback to localStorage (less reliable on iOS but better than sessionStorage)
@@ -47,11 +51,17 @@ export async function ensurePersistenceBeforeAuth(): Promise<void> {
     localStorage.setItem(testKey, 'test');
     localStorage.removeItem(testKey);
     console.debug('[Persistence] IndexedDB unavailable - using localStorage fallback');
+    // One-liner: persistence_selected
+    authLogManager.log('persistence_selected', { method: 'localStorage' });
+    return 'localStorage';
   } catch (e) {
     // Don't throw - log warning but continue
     // Some browsers may have restricted storage but auth might still work
     console.warn('[Persistence] Storage test failed, but continuing with auth:', e);
+    // One-liner: persistence_selected
+    authLogManager.log('persistence_selected', { method: 'unknown' });
     // Firebase will handle storage errors gracefully
+    return 'unknown';
   }
   
   // ⚠️ CRITICAL: NEVER use sessionStorage for auth state persistence

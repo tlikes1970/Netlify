@@ -3,17 +3,37 @@
 
 echo "🔍 Running pre-push checks..."
 
-# Run TypeScript type checking in apps/web
-echo "  ✓ Type checking..."
 cd apps/web || exit 1
+
+# Type checking
+echo "  ✓ Type checking..."
 npm run typecheck
 TYPE_CHECK_EXIT=$?
+
+# Linting (only fail on errors, not warnings)
+echo "  ✓ Linting (errors only)..."
+LINT_OUTPUT=$(npm run lint --silent 2>&1)
+ERROR_COUNT=$(echo "$LINT_OUTPUT" | grep -oE "[0-9]+ errors" | grep -oE "[0-9]+" | head -1 || echo "0")
+if [ "$ERROR_COUNT" -gt 0 ]; then
+  echo "    ❌ ESLint found $ERROR_COUNT error(s)"
+  echo "$LINT_OUTPUT" | grep "error"
+  LINT_HAS_ERRORS=1
+else
+  echo "    ✓ No ESLint errors (warnings allowed)"
+  LINT_HAS_ERRORS=0
+fi
 
 # Return to root
 cd ../..
 
+# Fail if TypeScript errors or ESLint errors
 if [ $TYPE_CHECK_EXIT -ne 0 ]; then
   echo "❌ TypeScript errors found. Please fix before pushing."
+  exit 1
+fi
+
+if [ $LINT_HAS_ERRORS -eq 1 ]; then
+  echo "❌ ESLint errors found. Please fix before pushing."
   exit 1
 fi
 

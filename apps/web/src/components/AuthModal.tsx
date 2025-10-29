@@ -5,6 +5,7 @@ import type { AuthProvider } from '../lib/auth.types';
 import ModalPortal from './ModalPortal';
 import { googleLogin } from '../lib/authLogin';
 import { logger } from '../lib/logger';
+import { authLogManager } from '../lib/authLog';
 
 // Detect if we're in a blocked OAuth context
 function isBlockedOAuthContext(): boolean {
@@ -90,6 +91,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       // Use the new googleLogin helper for Google sign-in
       if (provider === 'google') {
         console.log('🔐 Using googleLogin helper...');
+        // Log sign-in intent
+        authLogManager.log('sign_in_intent', { provider: 'google' });
         setIsRedirecting(true);
         // For redirect flows, show loading state before redirect
         setTimeout(() => {}, 100);
