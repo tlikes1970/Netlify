@@ -3,29 +3,19 @@
 # =========================
 
 [build]
-  base    = "apps/web"          # Monorepo app root
+  base    = "apps/web"
   publish = "dist"
   command = "npm run build"
 
 [build.environment]
   NODE_VERSION = "20"
-  # Note: VITE_FIREBASE_* variables must be set in Netlify Dashboard
-  # Go to Site Settings > Environment Variables and add:
-  # VITE_FIREBASE_API_KEY
-  # VITE_FIREBASE_AUTH_DOMAIN
-  # VITE_FIREBASE_PROJECT_ID
-  # VITE_FIREBASE_STORAGE_BUCKET
-  # VITE_FIREBASE_MESSAGING_SENDER_ID
-  # VITE_FIREBASE_APP_ID
-  # VITE_FIREBASE_MEASUREMENT_ID
+  # VITE_FIREBASE_* live in the Netlify dashboard
 
-# Functions directory: relative to build base (apps/web)
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
   external_node_modules = ["@sendgrid/mail"]
 
-# Local dev: Netlify CLI does NOT inherit [build].base
 [dev]
   framework  = "#custom"
   command    = "npm run dev --prefix apps/web -- --port 4173 --strictPort"
@@ -34,7 +24,7 @@
   functions  = "netlify/functions"
   autoLaunch = false
 
-# Function aliases (optional convenience)
+# API proxies
 [[redirects]]
   from = "/api/tmdb-proxy"
   to   = "/.netlify/functions/tmdb-proxy"
@@ -45,22 +35,32 @@
   to   = "/.netlify/functions/dict-proxy"
   status = 200
 
-# Lock down a path you don't want exposed
+# Hide a path
 [[redirects]]
   from = "/emails"
   to   = "/404.html"
   status = 404
   force = true
 
-# ⚠️ CRITICAL: Preserve Firebase auth handler paths - must come BEFORE catch-all
-# This prevents Netlify from rewriting /__/auth/handler to /index.html and stripping query params
+# ⚠️ CRITICAL: preserve Firebase auth handler paths (must be above catch-all)
 [[redirects]]
   from = "/__/auth/*"
   to   = "/__/auth/:splat"
   status = 200
 
-# SPA fallback so client routes don't 404
+# SPA fallback
 [[redirects]]
   from = "/*"
   to   = "/index.html"
   status = 200
+
+# --- Headers to stop the browser from being “too helpful” ---
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/__/auth/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
