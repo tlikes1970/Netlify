@@ -86,7 +86,7 @@ export async function bootstrapFirebase(): Promise<void> {
         }
       });
       
-      // Safety timeout: resolve after 3-5 seconds even if onAuthStateChanged never fires
+      // Safety timeout: resolve after 5 seconds even if onAuthStateChanged never fires
       setTimeout(() => {
         if (!resolved) {
           resolved = true;
@@ -94,7 +94,7 @@ export async function bootstrapFirebase(): Promise<void> {
           unsubscribe();
           resolve(timestamp);
         }
-      }, 4000); // 4s hard timeout (3-5s range)
+      }, 5000); // 5s hard timeout
     });
     
     // Step 3: Wait for auth state to initialize

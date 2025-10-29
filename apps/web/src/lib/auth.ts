@@ -106,7 +106,17 @@ class AuthManager {
   }
 
   constructor() {
-    this.initialize();
+    // ⚠️ CRITICAL: Don't initialize until Firebase is ready
+    // This prevents getRedirectResult() from being called before Firebase bootstrap completes
+    firebaseReady.then(() => {
+      this.initialize();
+    }).catch((e) => {
+      logger.error('[AuthManager] Failed to wait for Firebase ready', e);
+      // Initialize anyway after timeout to prevent app from hanging
+      setTimeout(() => {
+        this.initialize();
+      }, 5000);
+    });
   }
   
   getStatus(): AuthStatus {
@@ -379,24 +389,57 @@ class AuthManager {
       // Log getRedirectResult start with timestamp
       const getRedirectResultCalledAt = new Date().toISOString();
       
-      // Calculate if getRedirectResult is called after firebaseReady
-      const getRedirectAfterReady = firebaseReadyTimestamp ? getRedirectResultCalledAt >= firebaseReadyTimestamp : false;
+      // ⚠️ EXPLICIT GUARD: If Firebase is not ready yet, return early and log violation
+      if (!firebaseReadyTimestamp) {
+        // Firebase hasn't resolved yet - this is a race condition
+        logger.error('[CRITICAL] getRedirectResult called before Firebase ready - returning early');
+        authLogManager.log('init_ordering_violation', {
+          getRedirectResultCalledAt,
+          firebaseReadyTimestamp: null,
+          violation: true,
+          deltaMs: 'N/A (Firebase not ready yet)',
+          action: 'returning_early',
+        });
+        
+        // Wait for Firebase to be ready, then retry
+        await firebaseReady;
+        const newReadyTimestamp = getFirebaseReadyTimestamp();
+        if (!newReadyTimestamp) {
+          logger.error('[CRITICAL] Firebase ready promise resolved but timestamp is null');
+          return; // Give up
+        }
+        
+        // Log the retry attempt
+        const retryCalledAt = new Date().toISOString();
+        authLogManager.log('getRedirectResult_retry_after_wait', {
+          originalCalledAt: getRedirectResultCalledAt,
+          firebaseReadyTimestamp: newReadyTimestamp,
+          retryCalledAt,
+          deltaMs: Date.parse(retryCalledAt) - Date.parse(getRedirectResultCalledAt),
+        });
+      }
+      
+      // Re-check after potential wait
+      const finalReadyTimestamp = getFirebaseReadyTimestamp();
+      const finalGetRedirectAfterReady = finalReadyTimestamp ? getRedirectResultCalledAt >= finalReadyTimestamp : false;
       
       authLogManager.log('getRedirectResult_called_at', {
         timestamp: getRedirectResultCalledAt,
         iso: getRedirectResultCalledAt,
         hasAuthParams,
-        getRedirect_after_ready: getRedirectAfterReady,
-        firebaseReadyTimestamp: firebaseReadyTimestamp || null,
+        getRedirect_after_ready: finalGetRedirectAfterReady,
+        firebaseReadyTimestamp: finalReadyTimestamp || null,
       });
       
-      // Get stored page_entry_params to check for init race (before waiting for Firebase)
+      // ⚠️ HARD GUARD: Double-check Firebase is ready - if not, wait
+      if (!finalReadyTimestamp || !finalGetRedirectAfterReady) {
+        logger.warn('[CRITICAL] Firebase not ready, waiting...');
+        await firebaseReady;
+      }
+      
+      // Get stored page_entry_params to check for init race (after Firebase is confirmed ready)
       const storedPageEntry = authLogManager.getAllEntries().find(e => e.event === 'page_entry_params');
       const entryHadCode = storedPageEntry?.data && typeof storedPageEntry.data === 'object' && (storedPageEntry.data as any).hasCode === true;
-      
-      // ⚠️ CRITICAL: Wait for Firebase to be ready before calling getRedirectResult
-      // This prevents race conditions where Firebase hasn't initialized yet
-      await firebaseReady;
       
       // ⚠️ GUARD: Double-check Firebase is ready and auth is defined
       if (!auth) {
@@ -410,21 +453,24 @@ class AuthManager {
         throw error;
       }
       
-      // ⚠️ ORDERING CHECK: If getRedirectResult was called before firebaseReady resolved, log error loudly
-      if (firebaseReadyTimestamp && getRedirectResultCalledAt < firebaseReadyTimestamp) {
+      // ⚠️ FINAL ORDERING CHECK: If getRedirectResult was called before firebaseReady resolved, log error loudly
+      if (finalReadyTimestamp && getRedirectResultCalledAt < finalReadyTimestamp) {
+        const deltaMs = Date.parse(finalReadyTimestamp) - Date.parse(getRedirectResultCalledAt);
         const orderingError = new Error('BROKEN ORDERING: getRedirectResult called before firebaseReady resolved');
         logger.error('[CRITICAL] Broken ordering detected', {
           getRedirectResultCalledAt,
-          firebaseReadyTimestamp,
+          firebaseReadyTimestamp: finalReadyTimestamp,
+          deltaMs,
           stack: orderingError.stack,
         });
         authLogManager.log('init_ordering_violation', {
           getRedirectResultCalledAt,
-          firebaseReadyTimestamp,
+          firebaseReadyTimestamp: finalReadyTimestamp,
           violation: true,
+          deltaMs,
           stack: orderingError.stack,
         });
-        // Don't throw - continue anyway, but log loudly
+        // Continue anyway after waiting, but log loudly
       }
       
       // Create single promise for this load

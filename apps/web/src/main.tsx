@@ -22,7 +22,9 @@ import './components/cards/button-pro.css';
 import { installCompactMobileGate, installActionsSplitGate } from './lib/flags';
 import { initFlags } from './lib/mobileFlags';
 import { logAuthOriginHint } from './lib/authLogin';
-import { authManager } from './lib/auth';
+// ⚠️ CRITICAL: Don't import authManager here - it triggers constructor
+// Import it AFTER firebaseReady resolves to prevent race condition
+// import { authManager } from './lib/auth'; // Moved to after firebaseReady
 import { logger } from './lib/logger';
 import { authLogManager } from './lib/authLog';
 import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './lib/firebaseBootstrap';
@@ -240,6 +242,8 @@ import('./utils/debug-auth').then(m => {
     // ⚠️ CRITICAL: Initialize Firebase auth AFTER bootstrap but before render
     // This ensures redirect handling happens after Firebase is fully ready
     logger.log('[Boot] Initializing Firebase auth manager...');
+    // Import authManager AFTER firebaseReady resolves to prevent constructor from racing
+    const { authManager } = await import('./lib/auth');
     void authManager; // Force module load and initialization
     
     // Now render React app
