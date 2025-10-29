@@ -46,6 +46,7 @@ import AuthModal from '@/components/AuthModal';
 import { isAuthInFlightInOtherTab } from '@/lib/authBroadcast';
 import '@/styles/flickword.css';
 import { backfillShowStatus } from '@/utils/backfillShowStatus';
+import DebugAuthHUD from '@/components/DebugAuthHUD';
 
 type View = 'home'|'watching'|'want'|'watched'|'mylists'|'discovery';
 type SearchType = 'all' | 'movies-tv' | 'people';
@@ -762,35 +763,13 @@ export default function App() {
         
         {/* Debug HUD */}
         {showDebugHUD && (
-          <div style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            background: 'rgba(0,0,0,0.9)',
-            color: 'white',
-            padding: '12px',
-            borderRadius: '8px',
-            fontSize: '11px',
-            fontFamily: 'monospace',
-            zIndex: 99999,
-            maxWidth: '280px',
-            pointerEvents: 'none',
-            border: '2px solid #00ff00',
-            boxShadow: '0 0 10px rgba(0,255,0,0.5)'
-          }}>
-            <div style={{ marginBottom: '8px', fontWeight: 'bold', color: '#00ff00' }}>🔍 Auth Debug</div>
-            <div>Status: <span style={{ color: status === 'redirecting' || status === 'resolving' ? '#ffff00' : '#fff' }}>{status}</span></div>
-            <div>Loading: {authLoading ? 'yes' : 'no'}</div>
-            <div>Initialized: {authInitialized ? 'yes' : 'no'}</div>
-            <div>Auth: {isAuthenticated ? 'yes' : 'no'}</div>
-            <div>Modal: <span style={{ color: showAuthModal ? '#ff6b6b' : '#51cf66' }}>{showAuthModal ? 'OPEN' : 'closed'}</span></div>
-            <div style={{ marginTop: '8px', fontSize: '10px', color: '#999' }}>
-              URL: {new URLSearchParams(window.location.search).toString().substring(0, 30)}
-            </div>
-            <div style={{ marginTop: '4px', fontSize: '10px', color: '#999' }}>
-              Persisted: {localStorage.getItem('flicklet.auth.status') || 'none'}
-            </div>
-          </div>
+          <DebugAuthHUD 
+            status={status}
+            authLoading={authLoading}
+            authInitialized={authInitialized}
+            isAuthenticated={isAuthenticated}
+            showAuthModal={showAuthModal}
+          />
         )}
 
         {/* FlickWord Game Modal */}

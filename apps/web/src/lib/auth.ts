@@ -20,6 +20,7 @@ import { auth, db, googleProvider, appleProvider } from './firebase';
 import { firebaseSyncManager } from './firebaseSync';
 import type { AuthUser, UserDocument, UserSettings, AuthProvider, AuthStatus } from './auth.types';
 import { markAuthInFlight, broadcastAuthComplete } from './authBroadcast';
+import { authLogManager } from './authLog';
 
 // Detect if we're in a blocked OAuth context
 // Google blocks OAuth inside embedded browsers (PWA standalone, in-app browsers, etc.)
@@ -105,8 +106,15 @@ class AuthManager {
   }
   
   setStatus(status: AuthStatus): void {
+    const prevStatus = this.authStatus;
     this.authStatus = status;
     logger.debug(`Auth status changed: ${status}`);
+    
+    // Log status transition
+    authLogManager.log(status, {
+      previousStatus: prevStatus,
+      transition: `${prevStatus} → ${status}`,
+    });
   }
   
   // Check if redirect was already resolved recently (within 5 seconds)
@@ -149,6 +157,13 @@ class AuthManager {
 
   private async initialize() {
     if (this.isInitialized) return;
+    
+    // Create trace ID for this auth session
+    authLogManager.createTraceId();
+    authLogManager.log('init', {
+      origin: typeof window !== 'undefined' ? window.location.origin : 'unknown',
+      url: typeof window !== 'undefined' ? window.location.href : 'unknown',
+    });
     
     // ⚠️ CRASH-SAFE: Check for stuck redirecting state (>60s = likely crash)
     try {
@@ -250,6 +265,16 @@ class AuthManager {
       if (hasAuthParams) {
         logger.debug('URL contains auth parameters, might be redirect return');
         
+        // Log redirect return
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = window.location.hash ? new URLSearchParams(window.location.hash.substring(1)) : null;
+        authLogManager.log('redirect_return', {
+          hasSearch: !!window.location.search,
+          hasHash: !!window.location.hash,
+          searchParams: Array.from(urlParams.keys()),
+          hashParams: hashParams ? Array.from(hashParams.keys()) : [],
+        });
+        
         // Parse hash for Firebase auth errors
         if (window.location.hash) {
           const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -349,6 +374,13 @@ class AuthManager {
           displayName: result.user.displayName
         });
         
+        // Log successful redirect result
+        authLogManager.log('redirect_result_success', {
+          providerId: result.providerId,
+          operationType: result.operationType,
+          hasCredential: !!result.credential,
+        });
+        
         // ⚠️ CRITICAL: Delay URL cleanup until after getRedirectResult() fully settles
         // Don't clean URL here - wait for onAuthStateChanged to fire
         // URL cleanup will happen after auth state is confirmed
@@ -356,6 +388,12 @@ class AuthManager {
         // The user is now signed in, onAuthStateChanged will fire and handle the rest
       } else {
         logger.log('No redirect result returned from Firebase');
+        
+        // Log failed redirect result
+        authLogManager.log('redirect_result_empty', {
+          hasAuthParams,
+          reason: 'getRedirectResult returned null/undefined',
+        });
         
         // Only retry if we have auth params in URL (means we're actually returning from redirect)
         if (hasAuthParams) {
@@ -413,8 +451,20 @@ class AuthManager {
       this.currentUser = authUser;
       
       // Update status based on auth state
-      if (authUser) {
+      if (authUser && user) {
         this.setStatus('authenticated');
+        
+        // Log auth state change (get provider info from Firebase User)
+        const providerData = user.providerData?.[0];
+        authLogManager.log('auth_state_authenticated', {
+          uid: authUser.uid,
+          provider: providerData?.providerId || 'unknown',
+          emailVerified: user.emailVerified || false,
+        });
+        
+        // Mark auth flow as complete
+        authLogManager.markComplete('authenticated', true);
+        
         // Clear persisted status - auth is complete
         try {
           localStorage.removeItem('flicklet.auth.status');
@@ -438,13 +488,25 @@ class AuthManager {
             if (hasAuthParams || window.location.hash) {
               window.history.replaceState({}, document.title, window.location.pathname);
               logger.debug('Cleaned up URL parameters after auth state confirmed');
+              authLogManager.log('url_cleaned', {
+                reason: 'auth_confirmed',
+                hadAuthParams: hasAuthParams,
+                hadHash: !!window.location.hash,
+              });
             }
           } catch (e) {
             logger.warn('Failed to clean up URL', e);
           }
         }, 500);
-      } else {
+      } else if (!authUser) {
         this.setStatus('unauthenticated');
+        
+        // Log auth state change
+        authLogManager.log('auth_state_unauthenticated', {});
+        
+        // Mark auth flow as complete (failed/unauthenticated)
+        authLogManager.markComplete('unauthenticated', false);
+        
         // Clear persisted status if we're unauthenticated
         try {
           localStorage.removeItem('flicklet.auth.status');
@@ -542,9 +604,20 @@ class AuthManager {
   }
 
   async signInWithProvider(provider: AuthProvider): Promise<void> {
+    // Create new trace ID for this sign-in attempt
+    const traceId = authLogManager.createTraceId();
+    authLogManager.log('signin_start', {
+      provider,
+      traceId,
+      origin: typeof window !== 'undefined' ? window.location.origin : 'unknown',
+    });
+    
     // ⚠️ PERSISTENCE: Force IndexedDB/local before auth (iOS requirement)
     const { ensurePersistenceBeforeAuth } = await import('./persistence');
-    await ensurePersistenceBeforeAuth();
+    const persistenceResult = await ensurePersistenceBeforeAuth();
+    authLogManager.log('persistence_ensured', {
+      method: persistenceResult,
+    });
     
     // ⚠️ CRITICAL: Reset redirect state before starting new redirect
     // This ensures getRedirectResult() will run when we return from OAuth
@@ -562,9 +635,17 @@ class AuthManager {
           break;
         case 'email':
           this.setStatus('unauthenticated');
+          authLogManager.log('signin_error', {
+            provider,
+            error: 'Email sign-in requires email/password',
+          });
           throw new Error('Email sign-in requires email/password');
         default:
           this.setStatus('unauthenticated');
+          authLogManager.log('signin_error', {
+            provider,
+            error: `Unknown provider: ${provider}`,
+          });
           throw new Error(`Unknown provider: ${provider}`);
       }
       // Note: redirecting status persists through the redirect
@@ -572,6 +653,10 @@ class AuthManager {
     } catch (error) {
       this.setStatus('unauthenticated');
       logger.error(`${provider} sign-in failed`, error);
+      authLogManager.log('signin_error', {
+        provider,
+        error: error instanceof Error ? error.message : String(error),
+      });
       throw error;
     }
   }
@@ -612,6 +697,14 @@ class AuthManager {
     
     // Use redirect for both mobile and desktop to avoid popup blocking issues
     logger.log('Using redirect flow for Google sign-in');
+    
+    // Log redirect initiation
+    authLogManager.log('redirect_initiated', {
+      provider: 'google',
+      method: 'redirect',
+      url: window.location.href,
+    });
+    
     try {
       await signInWithRedirect(auth, googleProvider);
       logger.log('Redirect initiated - page will reload after sign-in');
