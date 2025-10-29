@@ -246,7 +246,7 @@ class AuthManager {
       });
       
       // Check if URL suggests we're returning from a redirect
-      const hasAuthParams = window.location.hash || window.location.search;
+      const hasAuthParams = !!(window.location.hash || window.location.search);
       if (hasAuthParams) {
         logger.debug('URL contains auth parameters, might be redirect return');
         
