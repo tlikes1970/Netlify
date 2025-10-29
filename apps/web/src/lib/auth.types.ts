@@ -44,8 +44,17 @@ export interface UserDocument {
 
 export type AuthProvider = 'google' | 'apple' | 'email';
 
+export type AuthStatus = 
+  | 'idle'              // Initial state, not checked
+  | 'checking'         // Checking existing session
+  | 'authenticated'    // User is signed in
+  | 'unauthenticated'  // User is signed out
+  | 'redirecting'      // OAuth redirect in progress (DO NOT SHOW MODAL)
+  | 'resolving';       // Processing redirect result (DO NOT SHOW MODAL)
+
 export interface AuthState {
   user: AuthUser | null;
   loading: boolean;
   error: string | null;
+  status: AuthStatus;
 }

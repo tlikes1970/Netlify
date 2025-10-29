@@ -93,7 +93,7 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 }
 
 .card-desktop .poster-col img {
-  width: 215px;
+  width: 225px;
   height: 100%; /* Full height of card */
   object-fit: cover;
   border-radius: var(--radius-md, 8px);

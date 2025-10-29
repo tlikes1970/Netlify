@@ -114,20 +114,21 @@ export default function App() {
   const { toasts, addToast, removeToast } = useToast();
 
   // Auth state
-  const { loading: authLoading, authInitialized, isAuthenticated } = useAuth();
+  const { loading: authLoading, authInitialized, isAuthenticated, status } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  
+  // Check for debug mode
+  const [showDebugHUD, setShowDebugHUD] = useState(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.has('debugAuth');
+  });
 
   // Auto-prompt for authentication when not authenticated
   useEffect(() => {
-    // Don't auto-open modal if we're returning from an OAuth redirect
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasAuthParams = urlParams.has('state') || urlParams.has('code') || urlParams.has('error');
-    const isReturningFromRedirect = window.location.hash || hasAuthParams;
+    // Don't auto-open modal if we're in redirecting or resolving state
+    const isRedirectingOrResolving = status === 'redirecting' || status === 'resolving';
     
-    // Check if auth is currently being processed (prevents modal during auth state transition)
-    const isProcessing = sessionStorage.getItem('flicklet.auth.processing') === 'true';
-    
-    if (!authLoading && authInitialized && !isAuthenticated && !isReturningFromRedirect && !isProcessing) {
+    if (!authLoading && authInitialized && !isAuthenticated && !isRedirectingOrResolving) {
       // Small delay to ensure the app has fully loaded
       const timer = setTimeout(() => {
         setShowAuthModal(true);
@@ -135,7 +136,7 @@ export default function App() {
       
       return () => clearTimeout(timer);
     }
-  }, [authLoading, authInitialized, isAuthenticated]);
+  }, [authLoading, authInitialized, isAuthenticated, status]);
 
   // Service Worker for offline caching
   const { isOnline } = useServiceWorker();
@@ -719,6 +720,31 @@ export default function App() {
           isOpen={showAuthModal} 
           onClose={() => setShowAuthModal(false)} 
         />
+        
+        {/* Debug HUD */}
+        {showDebugHUD && (
+          <div style={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            background: 'rgba(0,0,0,0.8)',
+            color: 'white',
+            padding: '12px',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontFamily: 'monospace',
+            zIndex: 99999,
+            maxWidth: '300px',
+            pointerEvents: 'none'
+          }}>
+            <div><strong>Auth Debug</strong></div>
+            <div>Status: {status}</div>
+            <div>Loading: {authLoading ? 'yes' : 'no'}</div>
+            <div>Initialized: {authInitialized ? 'yes' : 'no'}</div>
+            <div>Auth: {isAuthenticated ? 'yes' : 'no'}</div>
+            <div>Modal: {showAuthModal ? 'open' : 'closed'}</div>
+          </div>
+        )}
 
         {/* FlickWord Game Modal */}
         {showFlickWordModal && (

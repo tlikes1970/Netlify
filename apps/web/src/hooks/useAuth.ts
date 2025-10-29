@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { authManager } from '../lib/auth';
-import type { AuthUser, AuthProvider } from '../lib/auth.types';
+import type { AuthUser, AuthProvider, AuthStatus } from '../lib/auth.types';
 
 export function useAuth() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [authInitialized, setAuthInitialized] = useState(false);
+  const [status, setStatus] = useState<string>('idle');
 
   useEffect(() => {
     // Get initial user
@@ -24,6 +25,10 @@ export function useAuth() {
     // Subscribe to auth state changes
     const unsubscribe = authManager.subscribe((authUser) => {
       setUser(authUser);
+      
+      // Update status from auth manager
+      const currentStatus = authManager.getStatus();
+      setStatus(currentStatus);
       
       // Check if auth state is now initialized
       const isInitialized = authManager.isAuthStateInitialized();
@@ -83,5 +88,6 @@ export function useAuth() {
     createAccountWithEmail,
     signOut,
     isAuthenticated: !!user,
+    status,
   };
 }

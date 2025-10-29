@@ -22,6 +22,13 @@ import './components/cards/button-pro.css';
 import { installCompactMobileGate, installActionsSplitGate } from './lib/flags';
 import { initFlags } from './lib/mobileFlags';
 import { logAuthOriginHint } from './lib/authLogin';
+import { authManager } from './lib/auth';
+import { logger } from './lib/logger';
+
+// ⚠️ CRITICAL: Initialize Firebase auth BEFORE app renders
+// This ensures redirect handling happens before React components mount
+logger.log('[Boot] Initializing Firebase auth manager...');
+authManager; // Force module load and initialization
 
 // Log auth origin for OAuth verification
 logAuthOriginHint();

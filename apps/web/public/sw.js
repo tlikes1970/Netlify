@@ -1,11 +1,13 @@
 /* eslint-disable no-restricted-globals */
-const CACHE_NAME = 'app-assets-v1';
+const CACHE_NAME = 'app-assets-v2';
 
 self.addEventListener('install', e => {
+  console.log('[SW] Installing v2 - clearing old caches');
   e.waitUntil(self.skipWaiting());
 });
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
+    console.log('[SW] Activating v2 - clearing old caches');
     const keep = new Set([CACHE_NAME]);
     const keys = await caches.keys();
     await Promise.all(keys.map(k => (keep.has(k) ? null : caches.delete(k))));
@@ -17,8 +19,31 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  
+  // NETWORK ONLY: Never cache auth URLs or redirect handlers
+  const isAuthURL = url.pathname.includes('/__/auth/') || 
+                    url.search.includes('code=') || 
+                    url.search.includes('state=') || 
+                    url.search.includes('oauth') || 
+                    url.search.includes('redirect');
+  
+  if (isAuthURL) {
+    console.log('[SW] Auth URL detected - network only:', url.pathname + url.search);
+    e.respondWith(fetch(req));
+    return;
+  }
+  
   if (req.mode === 'navigate') return; // do NOT intercept page loads
 
+  // Network only for API calls and auth-related files
+  if (url.pathname.includes('/api/') || 
+      url.pathname.includes('/auth/') || 
+      url.pathname.includes('auth')) {
+    console.log('[SW] API/Auth path - network only:', url.pathname);
+    e.respondWith(fetch(req));
+    return;
+  }
+  
   if (!/\.(?:js|css|ico|png|jpg|jpeg|gif|svg|webp|woff2?|ttf|eot|json)$/.test(url.pathname)) return;
 
   e.respondWith((async () => {

@@ -18,7 +18,7 @@ import { isMobileNow } from './isMobile';
 import { logger } from './logger';
 import { auth, db, googleProvider, appleProvider } from './firebase';
 import { firebaseSyncManager } from './firebaseSync';
-import type { AuthUser, UserDocument, UserSettings, AuthProvider } from './auth.types';
+import type { AuthUser, UserDocument, UserSettings, AuthProvider, AuthStatus } from './auth.types';
 
 // Detect if we're in a blocked OAuth context
 // Google blocks OAuth inside embedded browsers (PWA standalone, in-app browsers, etc.)
@@ -80,13 +80,25 @@ class AuthManager {
   private listeners: Set<(user: AuthUser | null) => void> = new Set();
   private isInitialized = false;
   private authStateInitialized = false;
+  private authStatus: AuthStatus = 'idle';
 
   constructor() {
     this.initialize();
   }
+  
+  getStatus(): AuthStatus {
+    return this.authStatus;
+  }
+  
+  setStatus(status: AuthStatus): void {
+    this.authStatus = status;
+    logger.debug(`Auth status changed: ${status}`);
+  }
 
   private async initialize() {
     if (this.isInitialized) return;
+    
+    this.setStatus('checking');
     
     // Check for redirect result FIRST (before setting up auth state listener)
     // This ensures we handle the redirect result if user is returning from Google/Apple sign-in
@@ -176,15 +188,10 @@ class AuthManager {
       
       const result = await getRedirectResult(auth);
       
-      // ⚠️ CRITICAL: Mark that we're processing a redirect BEFORE cleaning URL
-      // This prevents App.tsx from reopening the modal during the auth state transition
+      // ⚠️ CRITICAL: Set resolving status when processing redirect
       if (hasAuthParams) {
-        try {
-          sessionStorage.setItem('flicklet.auth.processing', 'true');
-          logger.debug('Marked auth as processing to prevent modal reopening');
-        } catch (e) {
-          logger.warn('Failed to set processing flag', e);
-        }
+        this.setStatus('resolving');
+        logger.debug('Processing redirect result - status: resolving');
       }
       
       if (result && result.user) {
@@ -265,12 +272,11 @@ class AuthManager {
       // Update current user
       this.currentUser = authUser;
       
-      // Clear the processing flag once auth state is known
-      try {
-        sessionStorage.removeItem('flicklet.auth.processing');
-        logger.debug('Cleared auth processing flag');
-      } catch (e) {
-        // ignore
+      // Update status based on auth state
+      if (authUser) {
+        this.setStatus('authenticated');
+      } else {
+        this.setStatus('unauthenticated');
       }
       
       // Mark auth state as initialized after first Firebase callback
@@ -279,13 +285,15 @@ class AuthManager {
         logger.log('Auth state initialized', { 
           hasUser: !!authUser, 
           uid: authUser?.uid,
-          email: authUser?.email
+          email: authUser?.email,
+          status: this.authStatus
         });
       } else {
         logger.log('Auth state changed', { 
           hasUser: !!authUser, 
           uid: authUser?.uid,
-          email: authUser?.email
+          email: authUser?.email,
+          status: this.authStatus
         });
       }
       
@@ -359,6 +367,8 @@ class AuthManager {
   }
 
   async signInWithProvider(provider: AuthProvider): Promise<void> {
+    this.setStatus('redirecting');
+    
     try {
       switch (provider) {
         case 'google':
@@ -368,11 +378,16 @@ class AuthManager {
           await this.signInWithApple();
           break;
         case 'email':
+          this.setStatus('unauthenticated');
           throw new Error('Email sign-in requires email/password');
         default:
+          this.setStatus('unauthenticated');
           throw new Error(`Unknown provider: ${provider}`);
       }
+      // Note: redirecting status persists through the redirect
+      // Status will be updated when the page returns from OAuth
     } catch (error) {
+      this.setStatus('unauthenticated');
       logger.error(`${provider} sign-in failed`, error);
       throw error;
     }
