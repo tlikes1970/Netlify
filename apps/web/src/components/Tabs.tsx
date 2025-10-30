@@ -36,7 +36,7 @@ export default function Tabs({ current, onChange }: TabsProps) {
         <nav aria-label="Primary" className="w-full">
           <div className="flex items-center gap-4 w-full">
             {/* All Tabs - Home + Main Tabs */}
-            <div role="tablist" aria-label="Navigation" className="flex gap-4 w-full">
+            <div role="tablist" aria-label="Navigation" className="flex gap-4 w-full items-center">
               {/* Home Tab */}
               <button
                 aria-current={current === 'home' ? 'page' : undefined}
