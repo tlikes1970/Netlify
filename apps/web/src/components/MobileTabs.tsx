@@ -213,11 +213,11 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
           zIndex: 9999
         }}
       >
-        <div className="flex items-center justify-around h-full">
+        <div className="flex items-center justify-between h-full">
           {/* Home Tab */}
           <button
             onClick={() => onChange('home')}
-            className="flex flex-col items-center justify-center p-2 min-h-[60px] transition-all duration-200 ease-out relative flex-1"
+            className="flex flex-col items-center justify-center p-2 min-h-[60px] transition-all duration-200 ease-out relative shrink-0"
             style={{
               color: current === 'home' ? 'var(--accent)' : 'var(--muted)',
               fontWeight: current === 'home' ? '600' : '500'
@@ -232,18 +232,14 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
             )}
           </button>
 
-          {/* Vertical Separator */}
-          <div 
-            className="h-8 w-px"
-            style={{ backgroundColor: 'var(--line)' }}
-          />
+          
 
           {/* Main Tabs (visible) */}
-          {visibleTabs.map((tab, index) => (
+          {visibleTabs.map((tab) => (
             <React.Fragment key={tab.id}>
               <button
                 onClick={() => onChange(tab.id)}
-                className="flex flex-col items-center justify-center p-2 min-h-[60px] transition-all duration-200 ease-out relative flex-1"
+                className="flex flex-col items-center justify-center p-2 min-h-[60px] transition-all duration-200 ease-out relative shrink-0"
                 style={{
                   color: current === tab.id ? 'var(--accent)' : 'var(--muted)',
                   fontWeight: current === tab.id ? '600' : '500'
@@ -266,22 +262,13 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
                 )}
               </button>
               
-              {/* Vertical Separator between tabs (except after last tab) */}
-              {index < visibleTabs.length - 1 && (
-                <div 
-                  className="h-8 w-px"
-                  style={{ backgroundColor: 'var(--line)' }}
-                />
-              )}
+              
             </React.Fragment>
           ))}
 
           {/* More overflow */}
           {overflowTabs.length > 0 && (
-            <>
-              {/* Separator before More */}
-              <div className="h-8 w-px" style={{ backgroundColor: 'var(--line)' }} />
-              <div ref={moreRef} className="relative flex-1 flex items-center justify-center">
+              <div ref={moreRef} className="relative shrink-0 flex items-center justify-center">
                 <button
                   onClick={() => setMoreOpen(v => !v)}
                   className="flex flex-col items-center justify-center p-2 min-h-[60px] transition-all duration-200 ease-out relative"
@@ -319,7 +306,6 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
                   )}
                 </button>
               </div>
-            </>
           )}
         </div>
       </nav>
