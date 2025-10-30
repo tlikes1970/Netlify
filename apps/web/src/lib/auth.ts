@@ -15,10 +15,10 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { logger } from './logger';
-import { auth, db, appleProvider, firebaseReady, getFirebaseReadyTimestamp } from './firebaseBootstrap';
+import { auth, db, appleProvider, firebaseReady } from './firebaseBootstrap';
 import { firebaseSyncManager } from './firebaseSync';
 import type { AuthUser, UserDocument, UserSettings, AuthProvider, AuthStatus } from './auth.types';
-import { markAuthInFlight, broadcastAuthComplete } from './authBroadcast';
+import { broadcastAuthComplete } from './authBroadcast';
 import { authLogManager } from './authLog';
 
 // Removed: isBlockedOAuthContext function (unused after removing signInWithGoogle method)
@@ -85,16 +85,6 @@ class AuthManager {
   }
   
   // No redirect recency latches; redirect processing is gated by a session flag
-  
-  // Mark redirect as resolved
-  private markRedirectResolved(): void {
-    try {
-      localStorage.setItem('flicklet.auth.resolvedAt', Date.now().toString());
-      this.redirectResultFetched = true;
-    } catch (e) {
-      // ignore
-    }
-  }
 
   private async initialize() {
     if (this.isInitialized) return;
@@ -157,9 +147,8 @@ class AuthManager {
           const result = await getRedirectResult(auth as any);
           if (result && result.user) {
             authLogManager.log('redirect_result_success', {
-              providerId: result.providerId,
-              operationType: result.operationType,
-              hasCredential: !!result.credential,
+              providerId: (result as any).providerId,
+              operationType: (result as any).operationType,
             });
           } else {
             authLogManager.log('redirect_result_empty', {});
@@ -385,10 +374,6 @@ class AuthManager {
       method: persistenceResult,
       firebasePersistenceSet: true,
     });
-    
-    // ⚠️ CRITICAL: Reset redirect state before starting new redirect
-    // This ensures getRedirectResult() will run when we return from OAuth
-    this.resetRedirectState();
     
     this.setStatus('redirecting');
     
