@@ -43,6 +43,7 @@ export async function googleLogin() {
 
   // Minimal UI/logging allowed before popup opens (within user gesture)
   try {
+    authLogManager.log("tap_started", { user_gesture: true });
     authLogManager.log("popup_open_in_user_gesture", {
       popup_open_in_user_gesture: true,
     });
@@ -62,6 +63,7 @@ export async function googleLogin() {
 
     const popupPromise = signInWithPopup(auth, googleProvider)
       .then(async () => {
+        authLogManager.log("popup_opened", { in_gesture: true });
         logger.log("[iOS] Popup sign-in successful");
         // Post-popup: run persistence/analytics work
         try {
@@ -94,13 +96,15 @@ export async function googleLogin() {
             e
           );
         }
+        authLogManager.log("popup_result", { ok: true });
       })
-      .catch((error: any) => {
+      .catch((error: unknown) => {
         logger.error("[iOS] Popup sign-in failed", error);
         authLogManager.log("popup_forced_ios_failed", {
-          error: error?.message || String(error),
-          code: error?.code,
+          error: (error as any)?.message || String(error),
+          code: (error as any)?.code,
         });
+        authLogManager.log("popup_result", { ok: false, error: (error as any)?.code || 'unknown' });
         throw error;
       });
 
@@ -126,6 +130,27 @@ export async function googleLogin() {
 
   // Also ensure IndexedDB/localStorage availability
   await ensurePersistenceBeforeAuth();
+  
+  // Auto-clear redirecting sticky if page doesn't actually leave within 5s
+  try {
+    const startedAt = Date.now();
+    setTimeout(() => {
+      try {
+        const persisted = localStorage.getItem("flicklet.auth.status");
+        const elapsed = Date.now() - startedAt;
+        const pageHidden = document.visibilityState === "hidden";
+        if (persisted === "redirecting" && !pageHidden) {
+          localStorage.removeItem("flicklet.auth.status");
+          authLogManager.log("redirect_label_cleared", { elapsedMs: elapsed, reason: "no_pagehide_in_5s" });
+          logger.warn("[AuthLogin] Cleared stale redirecting label after 5s (page never left)");
+        }
+  } catch (e) {
+    // ignore
+  }
+    }, 5000);
+  } catch (e) {
+    // ignore
+  }
 
   // ⚠️ CRITICAL: Clean URL of debug params before redirect
   // Safari and Firebase may reject OAuth redirects with unexpected query params
