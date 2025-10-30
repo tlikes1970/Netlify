@@ -4,12 +4,15 @@ cd apps/web || exit 1
 
 # Type checking
 echo "  ✓ Type checking..."
-npm run typecheck
-TYPE_CHECK_EXIT=$?
+if npm run typecheck; then
+  TYPE_CHECK_EXIT=0
+else
+  TYPE_CHECK_EXIT=1
+fi
 
 # Linting (only fail on errors, not warnings)
 echo "  ✓ Linting (errors only)..."
-LINT_OUTPUT=$(npm run lint --silent 2>&1)
+LINT_OUTPUT=$(npm run lint --silent 2>&1 || true)
 ERROR_COUNT=$(echo "$LINT_OUTPUT" | grep -oE "[0-9]+ errors" | grep -oE "[0-9]+" | head -1 || echo "0")
 if [ "$ERROR_COUNT" -gt 0 ]; then
   echo "    ❌ ESLint found $ERROR_COUNT error(s)"

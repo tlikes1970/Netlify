@@ -43,7 +43,9 @@ export async function googleLogin() {
 
   // Minimal UI/logging allowed before popup opens (within user gesture)
   try {
-    authLogManager.log("popup_open_in_user_gesture", { popup_open_in_user_gesture: true });
+    authLogManager.log("popup_open_in_user_gesture", {
+      popup_open_in_user_gesture: true,
+    });
   } catch (e) {
     logger.debug("[AuthLogin] Failed to log popup_open_in_user_gesture", e);
   }
@@ -63,15 +65,22 @@ export async function googleLogin() {
         logger.log("[iOS] Popup sign-in successful");
         // Post-popup: run persistence/analytics work
         try {
-          const { persistenceModuleLoadReady } = await import("./firebaseBootstrap");
+          const { persistenceModuleLoadReady } = await import(
+            "./firebaseBootstrap"
+          );
           await persistenceModuleLoadReady.catch(() => {
             // ignore
           });
         } catch (e) {
-          logger.debug("[AuthLogin] persistenceModuleLoadReady post-popup noop", e);
+          logger.debug(
+            "[AuthLogin] persistenceModuleLoadReady post-popup noop",
+            e
+          );
         }
         try {
-          const { setPersistence, browserLocalPersistence } = await import("firebase/auth");
+          const { setPersistence, browserLocalPersistence } = await import(
+            "firebase/auth"
+          );
           await setPersistence(auth, browserLocalPersistence);
           logger.debug("[AuthLogin] Persistence confirmed after popup");
         } catch (e) {
@@ -80,7 +89,10 @@ export async function googleLogin() {
         try {
           await ensurePersistenceBeforeAuth();
         } catch (e) {
-          logger.warn("[AuthLogin] ensurePersistenceBeforeAuth post-popup warning", e);
+          logger.warn(
+            "[AuthLogin] ensurePersistenceBeforeAuth post-popup warning",
+            e
+          );
         }
       })
       .catch((error: any) => {
