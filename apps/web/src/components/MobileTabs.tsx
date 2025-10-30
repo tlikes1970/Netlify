@@ -213,7 +213,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
           zIndex: 9999
         }}
       >
-        <div className="flex items-center justify-around h-full">
+        <div className="flex items-center justify-around h-full w-full">
           {/* Home Tab */}
           <button
             onClick={() => onChange('home')}
@@ -265,7 +265,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
               {/* Vertical Separator between tabs (except after last tab) */}
               {index < visibleTabs.length - 1 && (
                 <div 
-                  className="h-8 w-px"
+                  className="h-8 w-px flex-none"
                   style={{ backgroundColor: 'var(--line)' }}
                 />
               )}
@@ -276,7 +276,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
           {overflowTabs.length > 0 && (
               <>
                 {/* Separator before More */}
-                <div className="h-8 w-px" style={{ backgroundColor: 'var(--line)' }} />
+                <div className="h-8 w-px flex-none" style={{ backgroundColor: 'var(--line)' }} />
                 <div ref={moreRef} className="relative flex-1 flex items-center justify-center">
                 <button
                   onClick={() => setMoreOpen(v => !v)}
