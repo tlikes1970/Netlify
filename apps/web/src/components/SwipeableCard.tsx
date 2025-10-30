@@ -157,6 +157,16 @@ export default function SwipeableCard({
       maxSwipeDistance: SWIPE.max,
       enableBidirectional: true
     },
+    onSwipeMove: (d, dir) => {
+      if (rowRef.current) {
+        rowRef.current.style.transform = `translateX(${dir === 'left' ? -d : d}px)`;
+      }
+    },
+    onSwipeEnd: () => {
+      if (rowRef.current) {
+        rowRef.current.style.transform = '';
+      }
+    },
     onSwipeAction: (direction) => {
       if (direction === 'right' && swipeActions.length > 0) {
         swipeActions[0].action();
@@ -207,6 +217,8 @@ export default function SwipeableCard({
     const progress = Math.min(swipeState.swipeDistance / 100, 1);
     return progress * 0.9; // Max opacity of 0.9
   };
+
+  const rowRef = React.useRef<HTMLDivElement>(null);
 
   return (
     <div className="relative overflow-hidden">
@@ -286,17 +298,10 @@ export default function SwipeableCard({
       )}
       
       {/* Main Card Content */}
-      <div
-        ref={elementRef}
-        className={`transition-transform duration-500 ease-out ${swipeDisabled ? '' : 'swipe-surface'} ${className}`}
-        style={{
-          transform: getTransform(),
-          pointerEvents: swipeState.isSwipeActive && swipeState.swipeDistance > 0 ? 'none' : 'auto',
-          ...style
-        }}
-        {...(swipeDisabled ? {} : handlers)}
-      >
-        {children}
+      <div ref={elementRef} className={`${swipeDisabled ? '' : 'swipeable'} ${className}`} {...(swipeDisabled ? {} : handlers)}>
+        <div ref={rowRef} style={{ pointerEvents: swipeState.isSwipeActive && swipeState.swipeDistance > 0 ? 'none' : 'auto', ...style }}>
+          {children}
+        </div>
       </div>
       
       {/* Swipe Instructions (only show on mobile) */}
