@@ -22,7 +22,7 @@ const firebaseConfig = {
   // ⚠️ CRITICAL: authDomain MUST match the actual domain users visit
   // If it's flicklet-71dff.firebaseapp.com but users visit flicklet.netlify.app,
   // Google redirects to the wrong domain and Safari drops the params
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'flicklet.netlify.app',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'flicklet-71dff.firebaseapp.com',
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'flicklet-71dff',
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'flicklet-71dff.appspot.com',
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '1034923556763',
@@ -71,7 +71,7 @@ if (typeof window !== 'undefined') {
   
   if (!originMatches) {
     const warning = `[FirebaseBootstrap] ORIGIN MISMATCH: location.origin (${currentOrigin}) does not match authDomain (${expectedDomain}). This may cause OAuth redirect failures.`;
-    console.error(warning);
+    console.warn(warning);
     // Log but don't crash - might be localhost or preview build
   } else {
     console.log(`[FirebaseBootstrap] Origin verified: ${currentOrigin} matches authDomain ${expectedDomain}`);
@@ -81,30 +81,7 @@ if (typeof window !== 'undefined') {
 export const auth = authInstance!;
 export const db = getFirestore(app);
 
-// ⚠️ CRITICAL: Set persistence IMMEDIATELY after auth init (module load time)
-// Safari will drop redirect credentials if persistence isn't locked in before redirect
-// This must happen as early as possible - at module load, before any sign-in logic runs
-// Firebase's setPersistence is async, but calling it here ensures it starts before anything else
-// We also set it in bootstrapFirebase() to ensure it completes before auth operations
-// 
-// ⚠️ NOTE: This is non-blocking (module load), but bootstrapFirebase() awaits persistence
-// before wiring listeners, and googleLogin() double-checks before sign-in
-let persistenceModuleLoadPromise: Promise<void> | null = null;
-try {
-  // Start setting persistence immediately (don't await - this runs at module load)
-  persistenceModuleLoadPromise = setPersistence(auth, browserLocalPersistence).then(() => {
-    if (typeof console !== 'undefined') {
-      console.log('[FirebaseBootstrap] Persistence set at module load time');
-    }
-  }).catch((e) => {
-    console.error('[FirebaseBootstrap] Failed to set persistence at module load', e);
-  });
-} catch (e) {
-  console.error('[FirebaseBootstrap] Error starting persistence', e);
-}
-
-// Export promise so sign-in flows can await it if needed
-export const persistenceModuleLoadReady = persistenceModuleLoadPromise || Promise.resolve();
+// Note: Persistence is set once inside bootstrapFirebase() before listeners are wired.
 
 // Auth providers
 export const googleProvider = new GoogleAuthProvider();

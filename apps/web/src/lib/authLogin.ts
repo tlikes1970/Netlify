@@ -37,10 +37,10 @@ function isWebView(): boolean {
  * Google sign-in helper that uses redirect on mobile/webview and popup on desktop
  */
 export async function googleLogin() {
-  // ⚠️ CRITICAL: Detect iOS at the top - force popup immediately
-  // iOS Safari drops OAuth params during redirects, so we must use popup
-  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  // Reliable UA checks
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  const isSafari = /Safari/i.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS|Android/i.test(ua);
   const disableRedirect = (() => {
     try {
       return localStorage.getItem("flag:disable_redirect") === "1";
@@ -49,22 +49,10 @@ export async function googleLogin() {
     }
   })();
 
-  // ANDROID/DESKTOP: If redirects are disabled (by flag) open popup immediately
-  // Keep this path synchronous (no awaits prior) to avoid popup blockers
-  if (!isIOS && disableRedirect) {
-    try {
-      authLogManager.log("popup_forced_no_redirect", {
-        platform: navigator.userAgent,
-        reason: "disable_redirect_flag",
-        timestamp: new Date().toISOString(),
-      });
-      await signInWithPopup(auth, googleProvider);
-      logger.log("[Popup] Sign-in successful (redirect disabled)");
-      return;
-    } catch (error) {
-      logger.error("[Popup] Sign-in failed (redirect disabled)", error);
-      throw error;
-    }
+  // iOS or Safari: synchronous popup, minimal work before call
+  if (isIOS || isSafari) {
+    await signInWithPopup(auth, googleProvider);
+    return;
   }
 
   // Minimal UI/logging allowed before popup opens (within user gesture)
@@ -77,110 +65,15 @@ export async function googleLogin() {
     logger.debug("[AuthLogin] Failed to log popup_open_in_user_gesture", e);
   }
 
-  // ⚠️ iOS FORCE POPUP PATH: Open popup synchronously inside the user gesture
-  // No awaits/promises before this call on iOS
-  if (isIOS) {
-    logger.log("[iOS] Forcing popup mode - Safari drops redirect params");
-    authLogManager.log("popup_forced_ios", {
-      forced: true,
-      reason: "iOS Safari drops OAuth params during redirects",
-      timestamp: new Date().toISOString(),
-    });
-
-    let resolved = false;
-    const watchman = setTimeout(() => {
-      if (!resolved) {
-        try {
-          authLogManager.log("popup_unresolved_after_5s", { hint: true });
-          localStorage.setItem("flicklet.auth.popup.hint", "1");
-          window.dispatchEvent(new CustomEvent("auth:popup-hint"));
-        } catch (e) {
-          // ignore
-        }
-      }
-    }, 5000);
-
-    const popupPromise = signInWithPopup(auth, googleProvider)
-      .then(async () => {
-        resolved = true;
-        clearTimeout(watchman);
-        try {
-          localStorage.removeItem("flicklet.auth.popup.hint");
-          window.dispatchEvent(new CustomEvent("auth:popup-hint"));
-        } catch (e) {
-          /* ignore */
-        }
-        authLogManager.log("popup_opened", { in_gesture: true });
-        logger.log("[iOS] Popup sign-in successful");
-        // Post-popup: run persistence/analytics work
-        try {
-          const { persistenceModuleLoadReady } = await import(
-            "./firebaseBootstrap"
-          );
-          await persistenceModuleLoadReady.catch(() => {
-            // ignore
-          });
-        } catch (e) {
-          logger.debug(
-            "[AuthLogin] persistenceModuleLoadReady post-popup noop",
-            e
-          );
-        }
-        try {
-          const { setPersistence, browserLocalPersistence } = await import(
-            "firebase/auth"
-          );
-          await setPersistence(auth, browserLocalPersistence);
-          logger.debug("[AuthLogin] Persistence confirmed after popup");
-        } catch (e) {
-          logger.warn("[AuthLogin] Failed to set persistence after popup", e);
-        }
-        try {
-          await ensurePersistenceBeforeAuth();
-        } catch (e) {
-          logger.warn(
-            "[AuthLogin] ensurePersistenceBeforeAuth post-popup warning",
-            e
-          );
-        }
-        authLogManager.log("popup_result", { ok: true });
-      })
-      .catch((error: unknown) => {
-        resolved = true;
-        clearTimeout(watchman);
-        logger.error("[iOS] Popup sign-in failed", error);
-        authLogManager.log("popup_forced_ios_failed", {
-          error: (error as any)?.message || String(error),
-          code: (error as any)?.code,
-        });
-        authLogManager.log("popup_result", {
-          ok: false,
-          error: (error as any)?.code || "unknown",
-        });
-        throw error;
-      });
-
-    return popupPromise;
+  // ANDROID/DESKTOP: If redirects are disabled (by flag) open popup immediately
+  // Keep this path as early as possible to avoid popup blockers
+  if (!isIOS && disableRedirect) {
+    await signInWithPopup(auth, googleProvider);
+    return;
   }
 
   // ⚠️ PERSISTENCE (non‑iOS): Safe to run before sign-in for redirect/popup flows
-  try {
-    const { persistenceModuleLoadReady } = await import("./firebaseBootstrap");
-    await persistenceModuleLoadReady.catch(() => {
-      /* noop */ return undefined;
-    });
-
-    const { setPersistence, browserLocalPersistence } = await import(
-      "firebase/auth"
-    );
-    await setPersistence(auth, browserLocalPersistence);
-    logger.debug("[AuthLogin] Persistence confirmed set before sign-in");
-  } catch (e) {
-    logger.warn(
-      "[AuthLogin] Failed to ensure persistence (continuing anyway)",
-      e
-    );
-  }
+  // (Bootstrap sets Firebase persistence once; we only ensure browser storage viability here if needed)
 
   // Also ensure IndexedDB/localStorage availability
   await ensurePersistenceBeforeAuth();
@@ -224,11 +117,8 @@ export async function googleLogin() {
     logger.debug("Removed debugAuth param from URL before redirect");
   }
 
-  // ⚠️ CRITICAL: Reset redirect state and mark only if redirects are enabled
+  // Mark redirecting only if redirects are enabled
   if (!disableRedirect && !(isIOS || isSafari)) {
-    // This ensures getRedirectResult() will run when we return from OAuth
-    authManager.resetRedirectState();
-    // Set redirecting status BEFORE starting redirect
     authManager.setStatus("redirecting");
   }
 
@@ -257,20 +147,7 @@ export async function googleLogin() {
   try {
     validateOAuthOrigin();
   } catch (error: any) {
-    // Log but don't fail on Safari - Safari handles security differently
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    if (isSafari) {
-      logger.warn(
-        "[AUTH] Safari detected - origin validation warning (may be normal)",
-        error.message
-      );
-      // Continue anyway - Safari's security model is different
-    } else {
-      authManager.setStatus("unauthenticated");
-      localStorage.removeItem("flicklet.auth.status");
-      logger.error("Origin validation failed before Google sign-in", error);
-      throw error;
-    }
+    logger.warn("[AUTH] Origin validation warning", error?.message || error);
   }
 
   const isLocalhost =
@@ -315,104 +192,10 @@ export async function googleLogin() {
     }
     if (useRedirect) {
       logger.log("Starting redirect sign-in (webview/Android)");
-
-      // Phase B: Redirect liveness probe - detect Safari stall
-      // Start a 1500ms timer to detect if redirect never leaves the page
-      const redirectStartTime = Date.now();
-      let pagehideFired = false;
-      let visibilityChangeFired = false;
-
-      const pagehideListener = () => {
-        pagehideFired = true;
-        logger.log("Redirect liveness: pagehide fired - redirect initiated");
-        authLogManager.log("redirect_liveness_pagehide", {
-          timestamp: new Date().toISOString(),
-          elapsed: Date.now() - redirectStartTime,
-        });
-      };
-
-      const visibilityListener = () => {
-        if (document.visibilityState === "hidden") {
-          visibilityChangeFired = true;
-          logger.log(
-            "Redirect liveness: visibility hidden - redirect initiated"
-          );
-          authLogManager.log("redirect_liveness_visibility", {
-            timestamp: new Date().toISOString(),
-            elapsed: Date.now() - redirectStartTime,
-          });
-        }
-      };
-
-      window.addEventListener("pagehide", pagehideListener, { once: true });
-      document.addEventListener("visibilitychange", visibilityListener, {
-        once: true,
-      });
-
-      // Clean up timer if redirect succeeds
-      const cleanup = () => {
-        if (stuckTimer) {
-          clearTimeout(stuckTimer);
-        }
-        window.removeEventListener("pagehide", pagehideListener);
-        document.removeEventListener("visibilitychange", visibilityListener);
-      };
-
-      // ⚠️ Redirect liveness probe and auto-fallback
-      // If timer fires first, redirect never left the page
-      // iOS: switch to popup; Android: attempt popup as best-effort
-      const stuckTimer = setTimeout(async () => {
-        if (!pagehideFired && !visibilityChangeFired) {
-          logger.error(
-            "[CRITICAL] Redirect stuck - page never left after 1500ms"
-          );
-          authLogManager.log("stuck_redirect", {
-            timestamp: new Date().toISOString(),
-            elapsed: Date.now() - redirectStartTime,
-            shouldPopupFallback: true,
-            platform: navigator.userAgent,
-          });
-
-          // Auto-fallback to popup on iOS; best-effort on Android
-          const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-          const isAndroid = /Android/i.test(navigator.userAgent);
-          if (isIOS || isAndroid) {
-            logger.log(
-              "[Auto-fallback] Switching to popup mode after redirect stall"
-            );
-            try {
-              // Clean up the redirect attempt
-              cleanup();
-
-              // Switch to popup
-              await signInWithPopup(auth, googleProvider);
-              logger.log(
-                "[Auto-fallback] Popup sign-in successful after redirect stall"
-              );
-              authLogManager.log("auto_fallback_popup_success", {
-                reason: "redirect_stuck",
-                platform: isIOS ? "iOS" : isAndroid ? "Android" : "other",
-              });
-              return; // Exit early - popup succeeded
-            } catch (popupError: any) {
-              logger.error(
-                "[Auto-fallback] Popup failed after redirect stall",
-                popupError
-              );
-              authLogManager.log("auto_fallback_popup_failed", {
-                error: popupError?.message || String(popupError),
-                code: popupError?.code,
-              });
-              // Don't throw - let the error bubble up naturally
-            }
-          }
-          // Clean up if popup path didn't succeed
-          cleanup();
-        } else {
-          // Redirect succeeded - clean up listeners
-          cleanup();
-        }
-      }, 1500);
+      // Mark that we initiated a redirect so the app can process the result once
+      try {
+        sessionStorage.setItem('flk:didRedirect', '1');
+      } catch (e) { /* noop */ }
 
       // Save to localStorage before redirect so we can see it after page reload
       try {
@@ -429,16 +212,8 @@ export async function googleLogin() {
         logger.error("Failed to save debug log", e);
       }
 
-      try {
-        await signInWithRedirect(auth, googleProvider);
-        logger.log("Redirect initiated - user will be redirected to Google");
-        // Note: Page will reload after Google auth
-        // cleanup() won't run if redirect succeeds (page reloads)
-        // If stuckTimer fires, it will handle auto-fallback
-      } catch (error) {
-        cleanup(); // Clean up if redirect fails
-        throw error;
-      }
+      await signInWithRedirect(auth, googleProvider);
+      logger.log("Redirect initiated - user will be redirected to Google");
     } else {
       logger.log("Starting popup sign-in (desktop browser)");
       await signInWithPopup(auth, googleProvider);

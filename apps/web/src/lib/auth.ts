@@ -52,27 +52,7 @@ class AuthManager {
   private isInitialized = false;
   private authStateInitialized = false;
   private authStatus: AuthStatus = 'idle';
-  private redirectResultFetched = false; // One-shot latch for getRedirectResult()
-  private redirectResultResolved = false; // One-shot latch: set to true once getRedirectResult completes
-  private redirectResultPromise: Promise<any> | null = null; // Ensure only one call
   
-  // Reset redirect state - called when starting a new redirect
-  public resetRedirectState(): void {
-    this.redirectResultFetched = false;
-    this.redirectResultResolved = false; // Reset one-shot latch for new redirect
-    this.redirectResultPromise = null;
-    
-    // Reset global one-shot latch
-    if (typeof window !== 'undefined') {
-      window.__redirectResolved = false;
-    }
-    
-    try {
-      localStorage.removeItem('flicklet.auth.resolvedAt');
-    } catch (e) {
-      // ignore
-    }
-  }
 
   constructor() {
     // ⚠️ CRITICAL: Don't initialize until Firebase is ready
@@ -104,33 +84,7 @@ class AuthManager {
     });
   }
   
-  // Check if redirect was already resolved recently (within 5 seconds)
-  // Only skip if we're NOT returning from a redirect (no auth params = already processed)
-  private wasRedirectRecentlyResolved(hasAuthParams: boolean): boolean {
-    // If we have auth params in URL, this is a legitimate redirect return - never skip
-    if (hasAuthParams) {
-      return false;
-    }
-    
-    try {
-      const resolvedAt = localStorage.getItem('flicklet.auth.resolvedAt');
-      if (!resolvedAt) return false;
-      
-      const resolvedTime = parseInt(resolvedAt);
-      const now = Date.now();
-      const timeSince = now - resolvedTime;
-      
-      // Only skip if resolved within last 2 seconds AND no auth params (prevents double-call, not legitimate redirect)
-      if (timeSince < 2000 && timeSince > 0) {
-        logger.debug(`Redirect was resolved ${timeSince}ms ago and no auth params - skipping getRedirectResult()`);
-        return true;
-      }
-      
-      return false;
-    } catch (e) {
-      return false;
-    }
-  }
+  // No redirect recency latches; redirect processing is gated by a session flag
   
   // Mark redirect as resolved
   private markRedirectResolved(): void {
@@ -193,469 +147,35 @@ class AuthManager {
       this.setStatus('checking');
     }
     
-    // Check for redirect result FIRST (before setting up auth state listener)
-    // This ensures we handle the redirect result if user is returning from Google/Apple sign-in
+    // Check for redirect result FIRST (only if we initiated it)
     try {
-      // CRITICAL: Save URL IMMEDIATELY before anything else touches it
-      const currentHref = window.location.href;
-      const currentHash = window.location.hash;
-      const currentSearch = window.location.search;
-      const currentOrigin = window.location.origin;
-      const currentPath = window.location.pathname;
-      
-      const returnUrlData = {
-        fullUrl: currentHref,
-        origin: currentOrigin,
-        path: currentPath,
-        search: currentSearch,
-        hash: currentHash,
-        timestamp: new Date().toISOString()
-      };
-      
-      // Save to localStorage so we can inspect after redirect
-      try {
-        const existingLogs = JSON.parse(localStorage.getItem('auth-debug-logs') || '[]');
-        existingLogs.push({ type: 'redirect-return', ...returnUrlData });
-        localStorage.setItem('auth-debug-logs', JSON.stringify(existingLogs.slice(-10)));
-      } catch (e) {
-        // ignore
-      }
-      
-      logger.log('Checking for redirect result...');
-      logger.debug('Redirect URL snapshot', {
-        href: currentHref,
-        hash: currentHash,
-        search: currentSearch
-      });
-      
-      // DEBUG: Check sessionStorage for Firebase auth state (read-only)
-      logger.debug('Checking sessionStorage for Firebase auth state');
-      for (let i = 0; i < sessionStorage.length; i++) {
-        const key = sessionStorage.key(i);
-        if (key && (key.includes('firebase') || key.includes('auth') || key.includes('redirect'))) {
-          logger.debug(`sessionStorage[${key}]`, sessionStorage.getItem(key));
-        }
-      }
-      
-      // ⚠️ CRITICAL: Never modify Firebase's sessionStorage
-      // Firebase manages its own auth state. Manual removal causes auth loops.
-      // We only log, never modify sessionStorage keys that Firebase uses.
-      
-      logger.debug('Window location', {
-        href: window.location.href,
-        search: window.location.search,
-        hash: window.location.hash
-      });
-      
-      // Check if URL suggests we're returning from a redirect
-      const hasAuthParams = !!(window.location.hash || window.location.search);
-      if (hasAuthParams) {
-        logger.debug('URL contains auth parameters, might be redirect return');
-        
-        // Log redirect return with one-liner
-        const urlParams = new URLSearchParams(window.location.search);
-        const hashParams = window.location.hash ? new URLSearchParams(window.location.hash.substring(1)) : null;
-        const hasCode = urlParams.has('code') || (hashParams?.has('code') ?? false);
-        const hasState = urlParams.has('state') || (hashParams?.has('state') ?? false);
-        
-        authLogManager.log('returned_with_params', {
-          hasCode,
-          hasState,
-          hasSearch: !!window.location.search,
-          hasHash: !!window.location.hash,
-        });
-        
-        authLogManager.log('redirect_return', {
-          hasSearch: !!window.location.search,
-          hasHash: !!window.location.hash,
-          searchParams: Array.from(urlParams.keys()),
-          hashParams: hashParams ? Array.from(hashParams.keys()) : [],
-        });
-        
-        // Parse hash for Firebase auth errors
-        if (window.location.hash) {
-          const hashParams = new URLSearchParams(window.location.hash.substring(1));
-          const error = hashParams.get('error');
-          const errorCode = hashParams.get('error_code');
-          const errorDescription = hashParams.get('error_description');
-          if (error) {
-            logger.error('Firebase auth error in URL', { error, errorCode, errorDescription });
-            
-            // Save error to localStorage
-            try {
-              const existingLogs = JSON.parse(localStorage.getItem('auth-debug-logs') || '[]');
-              existingLogs.push({ 
-                type: 'redirect-error', 
-                error, 
-                errorCode, 
-                errorDescription,
-                timestamp: new Date().toISOString()
-              });
-              localStorage.setItem('auth-debug-logs', JSON.stringify(existingLogs.slice(-10)));
-            } catch (e) {
-              // ignore
-            }
-          }
-        }
-      }
-      
-      // ⚠️ STATE INTEGRITY: Verify stateId matches (prevents cross-origin/cross-tab confusion)
-      try {
-        const savedStateId = localStorage.getItem('flicklet.auth.stateId');
-        if (hasAuthParams && savedStateId) {
-          // State ID exists - this should match our redirect
-          logger.debug(`Redirect return detected with saved stateId: ${savedStateId.substring(0, 20)}...`);
-        } else if (hasAuthParams && !savedStateId) {
-          // URL has auth params but no saved state - suspicious, but continue
-          logger.warn('Redirect return detected but no saved stateId - possible state mismatch');
-        }
-      } catch (e) {
-        // ignore
-      }
-      
-      // ⚠️ IDEMPOTENCY: Ensure getRedirectResult() runs exactly once per load
-      // BUT: If we have auth params, this is a legitimate redirect return - always process it
-      if (this.redirectResultFetched && !hasAuthParams) {
-        logger.debug('getRedirectResult() already fetched and no auth params - skipping');
-        return;
-      }
-      
-      // Check if recently resolved (only skip if no auth params)
-      if (!hasAuthParams && this.wasRedirectRecentlyResolved(hasAuthParams)) {
-        logger.debug('getRedirectResult() recently resolved and no auth params - skipping');
-        return;
-      }
-      
-      // If there's an in-flight promise, reuse it (but only if we have auth params)
-      // Without auth params, the promise is stale and we should create a new one
-      if (this.redirectResultPromise && hasAuthParams) {
-        logger.debug('getRedirectResult() already in flight - waiting for existing promise');
-        const result = await this.redirectResultPromise;
-        if (result && result.user) {
-          this.markRedirectResolved();
-        }
-        return;
-      } else if (this.redirectResultPromise && !hasAuthParams) {
-        logger.debug('Stale redirect promise detected without auth params - clearing and starting fresh');
-        this.redirectResultPromise = null;
-      }
-      
-      // ⚠️ GLOBAL ONE-SHOT LATCH: Prevent duplicate calls from other bundles
-      if (typeof window !== 'undefined' && window.__redirectResolved) {
-        logger.debug('getRedirectResult already resolved globally - window.__redirectResolved prevents rerun');
-        return;
-      }
-      
-      // ⚠️ ONE-SHOT LATCH: Prevent getRedirectResult from running twice
-      if (this.redirectResultResolved) {
-        logger.debug('getRedirectResult already resolved - one-shot latch prevents rerun');
-        return;
-      }
-      
-      // Get Firebase ready timestamp BEFORE calling getRedirectResult
-      const firebaseReadyTimestamp = getFirebaseReadyTimestamp();
-      
-      // Log getRedirectResult start with timestamp
-      const getRedirectResultCalledAt = new Date().toISOString();
-      
-      // ⚠️ EXPLICIT GUARD: If Firebase is not ready yet, return early and log violation
-      if (!firebaseReadyTimestamp) {
-        // Firebase hasn't resolved yet - this is a race condition
-        logger.error('[CRITICAL] getRedirectResult called before Firebase ready - returning early');
-        authLogManager.log('init_ordering_violation', {
-          getRedirectResultCalledAt,
-          firebaseReadyTimestamp: null,
-          violation: true,
-          deltaMs: 'N/A (Firebase not ready yet)',
-          action: 'returning_early',
-        });
-        
-        // Wait for Firebase to be ready, then retry
-        await firebaseReady;
-        const newReadyTimestamp = getFirebaseReadyTimestamp();
-        if (!newReadyTimestamp) {
-          logger.error('[CRITICAL] Firebase ready promise resolved but timestamp is null');
-          return; // Give up
-        }
-        
-        // Log the retry attempt
-        const retryCalledAt = new Date().toISOString();
-        authLogManager.log('getRedirectResult_retry_after_wait', {
-          originalCalledAt: getRedirectResultCalledAt,
-          firebaseReadyTimestamp: newReadyTimestamp,
-          retryCalledAt,
-          deltaMs: Date.parse(retryCalledAt) - Date.parse(getRedirectResultCalledAt),
-        });
-      }
-      
-      // Re-check after potential wait
-      const finalReadyTimestamp = getFirebaseReadyTimestamp();
-      const finalGetRedirectAfterReady = finalReadyTimestamp ? getRedirectResultCalledAt >= finalReadyTimestamp : false;
-      
-      authLogManager.log('getRedirectResult_called_at', {
-        timestamp: getRedirectResultCalledAt,
-        iso: getRedirectResultCalledAt,
-        hasAuthParams,
-        getRedirect_after_ready: finalGetRedirectAfterReady,
-        firebaseReadyTimestamp: finalReadyTimestamp || null,
-      });
-      
-      // ⚠️ HARD GUARD: Double-check Firebase is ready - if not, wait
-      if (!finalReadyTimestamp || !finalGetRedirectAfterReady) {
-        logger.warn('[CRITICAL] Firebase not ready, waiting...');
-        await firebaseReady;
-      }
-      
-      // Get stored page_entry_params to check for init race (after Firebase is confirmed ready)
-      const storedPageEntry = authLogManager.getAllEntries().find(e => e.event === 'page_entry_params');
-      const entryHadCode = storedPageEntry?.data && typeof storedPageEntry.data === 'object' && (storedPageEntry.data as any).hasCode === true;
-      
-      // ⚠️ GUARD: Double-check Firebase is ready and auth is defined
-      if (!auth) {
-        const error = new Error('Auth instance is undefined');
-        logger.error('[CRITICAL] Auth instance is undefined', error);
-        authLogManager.log('getRedirectResult_error', {
-          error: 'Auth instance is undefined',
-          code: 'AUTH_UNDEFINED',
-          stack: error.stack,
-        });
-        throw error;
-      }
-      
-      // ⚠️ FINAL ORDERING CHECK: If getRedirectResult was called before firebaseReady resolved, log error loudly
-      if (finalReadyTimestamp && getRedirectResultCalledAt < finalReadyTimestamp) {
-        const deltaMs = Date.parse(finalReadyTimestamp) - Date.parse(getRedirectResultCalledAt);
-        const orderingError = new Error('BROKEN ORDERING: getRedirectResult called before firebaseReady resolved');
-        logger.error('[CRITICAL] Broken ordering detected', {
-          getRedirectResultCalledAt,
-          firebaseReadyTimestamp: finalReadyTimestamp,
-          deltaMs,
-          stack: orderingError.stack,
-        });
-        authLogManager.log('init_ordering_violation', {
-          getRedirectResultCalledAt,
-          firebaseReadyTimestamp: finalReadyTimestamp,
-          violation: true,
-          deltaMs,
-          stack: orderingError.stack,
-        });
-        // Continue anyway after waiting, but log loudly
-      }
-      
-      // Create single promise for this load
-      this.redirectResultPromise = getRedirectResult(auth);
-      
-      // ⚠️ CRITICAL: Set resolving status when processing redirect
-      // This must happen BEFORE Firebase processes the result
-      if (hasAuthParams) {
+      const didRedirect = sessionStorage.getItem('flk:didRedirect') === '1';
+      if (didRedirect) {
+        sessionStorage.removeItem('flk:didRedirect');
         this.setStatus('resolving');
-        // Persist status across potential page reloads
         try {
-          localStorage.setItem('flicklet.auth.status', 'resolving');
-          // Also set a timestamp to track how long we've been resolving
-          localStorage.setItem('flicklet.auth.resolving.start', Date.now().toString());
-          
-          // Broadcast to other tabs
-          markAuthInFlight('resolving');
-        } catch (e) {
-          // ignore
-        }
-        logger.log('Processing redirect result - status: resolving (URL has auth params)');
-      }
-      
-      let result = await this.redirectResultPromise;
-      this.markRedirectResolved();
-      
-      // ⚠️ FIX #4: Late-binding retry if URL had code/state but result is null
-      // Wait 300-500ms and try exactly once more
-      // Log init_race_retry_success or init_race_retry_empty
-      if (!result && entryHadCode && hasAuthParams) {
-        logger.warn('Init race detected: page_entry_params had code but getRedirectResult returned null');
-        authLogManager.log('init_race_detected', {
-          entryHadCode,
-          hasAuthParams,
-          authCurrentUser: auth.currentUser?.uid || null,
-          action: 'will_retry_once_400ms',
-        });
-        
-        // Wait 400ms (middle of 300-500ms range) and retry exactly once
-        await new Promise(resolve => setTimeout(resolve, 400));
-        
-        logger.log('Retrying getRedirectResult after 400ms (init race retry)');
-        const retryResult = await getRedirectResult(auth);
-        
-        if (retryResult && retryResult.user) {
-          logger.log('Redirect sign-in successful after init race retry');
-          authLogManager.log('init_race_retry_success', {
-            uid: retryResult.user.uid,
-            retryDelay: 400,
-            conclusion: 'redirect_resolved_after_retry',
-          });
-          result = retryResult; // Use retry result
-        } else {
-          logger.warn('Retry returned null - redirect params were likely lost');
-          authLogManager.log('init_race_retry_empty', {
-            retryDelay: 400,
-            conclusion: 'redirect_params_lost_or_stripped',
-          });
-        }
-      } else if (!result && hasAuthParams && !entryHadCode) {
-        // ⚠️ CONSOLIDATED: Retry logic for hasAuthParams but no entryHadCode (mobile slower networks)
-        // Only retry if we have auth params in URL (means we're actually returning from redirect)
-        // and we didn't already do an init race retry above
-        const ua = navigator.userAgent || '';
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
-        const retryDelay = isMobile ? 300 : 200; // Shorter delay since Firebase should be ready now
-        
-        logger.debug(`Retrying getRedirectResult after ${retryDelay}ms (mobile: ${isMobile})`);
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
-        
-        const retryResult = await getRedirectResult(auth);
-        if (retryResult && retryResult.user) {
-          logger.log('Redirect sign-in successful on retry', {
-            uid: retryResult.user.uid,
-            email: retryResult.user.email
-          });
-          
-          authLogManager.log('getRedirectResult_ok', {
-            providerId: retryResult.providerId,
-            operationType: retryResult.operationType,
-            afterRetry: true,
-          });
-          
-          result = retryResult; // Use retry result
-        } else {
-          logger.warn('Still no redirect result after retry - URL had auth params but no result');
-        }
-      }
-      
-      // Mark as resolved (one-shot latch - both local and global)
-      this.redirectResultResolved = true;
-      if (typeof window !== 'undefined') {
-        window.__redirectResolved = true;
-      }
-      
-      if (result && result.user) {
-        logger.log('Redirect sign-in successful', {
-          uid: result.user.uid,
-          email: result.user.email,
-          displayName: result.user.displayName
-        });
-        
-        // Log successful redirect result
-        authLogManager.log('redirect_result_success', {
-          providerId: result.providerId,
-          operationType: result.operationType,
-          hasCredential: !!result.credential,
-        });
-        
-        // One-liner: getRedirectResult_ok
-        authLogManager.log('getRedirectResult_ok', {
-          providerId: result.providerId,
-          operationType: result.operationType,
-        });
-        
-        // Instrumentation: getRedirectResult_result
-        authLogManager.log('getRedirectResult_result', {
-          result: 'ok',
-          providerId: result.providerId,
-        });
-        
-        // ⚠️ CRITICAL: Delay URL cleanup until after getRedirectResult() fully settles
-        // Don't clean URL here - wait for onAuthStateChanged to fire
-        // URL cleanup will happen after auth state is confirmed
-        
-        // The user is now signed in, onAuthStateChanged will fire and handle the rest
-      } else {
-        logger.log('No redirect result returned from Firebase');
-        
-        // Log failed redirect result
-        authLogManager.log('redirect_result_empty', {
-          hasAuthParams,
-          reason: 'getRedirectResult returned null/undefined',
-        });
-        
-        // One-liner: getRedirectResult_empty
-        authLogManager.log('getRedirectResult_empty', {
-          hasAuthParams,
-        });
-        
-        // Instrumentation: getRedirectResult_result
-        authLogManager.log('getRedirectResult_result', {
-          result: 'empty',
-          hasAuthParams,
-        });
-        
-        // Only retry if we have auth params in URL (means we're actually returning from redirect)
-        // and we didn't already do an init race retry
-        if (hasAuthParams && !entryHadCode) {
-          // Detect if mobile for longer retry delay (mobile networks are slower)
-          const ua = navigator.userAgent || '';
-          const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
-          const retryDelay = isMobile ? 300 : 200; // Shorter delay since Firebase should be ready now
-          
-          logger.debug(`Retrying getRedirectResult after ${retryDelay}ms (mobile: ${isMobile})`);
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
-          
-          const retryResult = await getRedirectResult(auth);
-          if (retryResult && retryResult.user) {
-            logger.log('Redirect sign-in successful on retry', {
-              uid: retryResult.user.uid,
-              email: retryResult.user.email
+          const result = await getRedirectResult(auth as any);
+          if (result && result.user) {
+            authLogManager.log('redirect_result_success', {
+              providerId: result.providerId,
+              operationType: result.operationType,
+              hasCredential: !!result.credential,
             });
-            
-            authLogManager.log('getRedirectResult_ok', {
-              providerId: retryResult.providerId,
-              operationType: retryResult.operationType,
-              afterRetry: true,
-            });
-            
-            // ⚠️ Don't clean URL here - delay until auth state is confirmed
-            // URL cleanup happens after onAuthStateChanged fires
           } else {
-            logger.warn('Still no redirect result after retry - URL had auth params but no result');
-            
-            authLogManager.log('getRedirectResult_empty', {
-              hasAuthParams,
-              afterRetry: true,
-            });
-            
-            // Only clean URL if we're absolutely sure there's no result coming
-            // Delay cleanup to avoid race conditions
-            setTimeout(() => {
-              try {
-                window.history.replaceState({}, document.title, window.location.pathname);
-                logger.debug('Cleaned up URL parameters (delayed after retry failure)');
-              } catch (e) {
-                logger.warn('Failed to clean up URL', e);
-              }
-            }, 1000);
+            authLogManager.log('redirect_result_empty', {});
           }
-        } else {
-          logger.debug('No auth params in URL and no redirect result - user is not signing in via redirect');
-          // Clear processing flag if it was set
-          try {
-            sessionStorage.removeItem('flicklet.auth.processing');
-          } catch (e) {
-            // ignore
-          }
+        } catch (e: any) {
+          logger.error('Error checking redirect result', e);
+          authLogManager.log('getRedirectResult_error', {
+            error: e?.message || String(e),
+            code: e?.code || 'unknown',
+          });
         }
+      } else {
+        logger.debug('No redirect flag present - skipping getRedirectResult');
       }
-    } catch (error) {
-      logger.error('Error checking redirect result', error);
-      // One-liner: getRedirectResult_error
-      authLogManager.log('getRedirectResult_error', {
-        error: error instanceof Error ? error.message : String(error),
-        code: (error as any)?.code || 'unknown',
-      });
-      
-      // Instrumentation: getRedirectResult_result
-      authLogManager.log('getRedirectResult_result', {
-        result: 'error',
-        error: error instanceof Error ? error.message : String(error),
-        code: (error as any)?.code || 'unknown',
-      });
-      // Continue initialization even if redirect check fails
+    } catch (e) {
+      // ignore
     }
     
     // Log Firebase init complete (auth manager initialized)
@@ -667,7 +187,7 @@ class AuthManager {
     // Listen for auth state changes
     // Note: This is the ONLY onAuthStateChanged listener in the app
     // All other code must use authManager.subscribe() instead
-    onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(auth as any, async (user) => {
       const authUser = user ? this.convertFirebaseUser(user) : null;
       
       // Log auth listener fired with hasUser boolean
@@ -874,11 +394,11 @@ class AuthManager {
     
     try {
       switch (provider) {
-        case 'google':
-          // Google sign-in uses googleLogin() helper from authLogin.ts
-          // This is called from AuthModal, but keeping this for backwards compatibility
-          logger.warn('signInWithProvider("google") is deprecated - use googleLogin() from authLogin.ts');
-          throw new Error('Use googleLogin() helper instead of signInWithProvider("google")');
+        case 'google': {
+          const { googleLogin } = await import('./authLogin');
+          await googleLogin();
+          return;
+        }
         case 'apple': {
           // ⚠️ TODO: Create appleLogin() helper similar to googleLogin()
           // For now, using basic redirect (no iOS popup fallback yet)

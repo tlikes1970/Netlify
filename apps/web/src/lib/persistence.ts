@@ -2,6 +2,8 @@
  * Persistence on iOS: Force IndexedDB/local before any auth call
  * Falls back to localStorage if IndexedDB fails
  * NEVER use sessionStorage for auth state
+ * Note: Firebase auth persistence is set centrally in bootstrapFirebase().
+ * Do not call setPersistence elsewhere.
  */
 
 import { authLogManager } from './authLog';
