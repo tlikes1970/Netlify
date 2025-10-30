@@ -707,3 +707,10 @@ input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset:
 .swipe-surface { touch-action: pan-y; }
 /* In case we ever need to fully own the gesture (rare): */
 .swipe-surface--own { touch-action: none; }
+
+/* Swipeable rows must allow vertical page scroll by default */
+.swipeable {
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
