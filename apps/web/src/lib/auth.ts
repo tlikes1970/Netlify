@@ -110,7 +110,7 @@ class AuthManager {
       if (logs && logs.length > 200000) {
         localStorage.removeItem('auth-debug-logs');
       }
-    } catch {}
+    } catch (e) { void e; }
     
     // ⚠️ CRASH-SAFE: Check for stuck redirecting state (>60s = likely crash)
     try {
