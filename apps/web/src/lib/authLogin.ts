@@ -13,7 +13,6 @@ function isWebView(): boolean {
   if (typeof window === "undefined") return false;
 
   const ua = navigator.userAgent;
-  const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(ua);
   const isInAppBrowser =
     ua.includes("wv") || // Android WebView
     ua.includes("FBAN") || // Facebook App Browser
@@ -30,7 +29,8 @@ function isWebView(): boolean {
     window.matchMedia &&
     window.matchMedia("(display-mode: standalone)").matches;
 
-  return isMobileDevice || isInAppBrowser || isStandalone;
+  // Only treat true in-app browsers/webviews or installed PWA as webview context
+  return isInAppBrowser || isStandalone;
 }
 
 /**
@@ -41,7 +41,31 @@ export async function googleLogin() {
   // iOS Safari drops OAuth params during redirects, so we must use popup
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
   const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  const disableRedirect = (() => { try { return localStorage.getItem('flag:disable_redirect') === '1'; } catch { return false; } })();
+  const disableRedirect = (() => {
+    try {
+      return localStorage.getItem("flag:disable_redirect") === "1";
+    } catch {
+      return false;
+    }
+  })();
+
+  // ANDROID/DESKTOP: If redirects are disabled (by flag) open popup immediately
+  // Keep this path synchronous (no awaits prior) to avoid popup blockers
+  if (!isIOS && disableRedirect) {
+    try {
+      authLogManager.log("popup_forced_no_redirect", {
+        platform: navigator.userAgent,
+        reason: "disable_redirect_flag",
+        timestamp: new Date().toISOString(),
+      });
+      await signInWithPopup(auth, googleProvider);
+      logger.log("[Popup] Sign-in successful (redirect disabled)");
+      return;
+    } catch (error) {
+      logger.error("[Popup] Sign-in failed (redirect disabled)", error);
+      throw error;
+    }
+  }
 
   // Minimal UI/logging allowed before popup opens (within user gesture)
   try {
@@ -216,7 +240,10 @@ export async function googleLogin() {
     try {
       localStorage.setItem("flicklet.auth.status", "redirecting");
       localStorage.setItem("flicklet.auth.stateId", stateId);
-      localStorage.setItem("flicklet.auth.redirect.start", Date.now().toString());
+      localStorage.setItem(
+        "flicklet.auth.redirect.start",
+        Date.now().toString()
+      );
       logger.debug(`Set status to redirecting with stateId: ${stateId}`);
       // Broadcast to other tabs
       markAuthInFlight("redirecting");
@@ -278,12 +305,14 @@ export async function googleLogin() {
       return;
     }
 
-  // Desktop/Android: Use redirect flow for webviews, popup for regular browsers
-  let useRedirect = isWebView();
-  if (disableRedirect || isSafari) {
-    useRedirect = false;
-    logger.warn("[AuthLogin] Redirect disabled (flag or Safari) - using popup");
-  }
+    // Desktop/Android: Use redirect flow for webviews, popup for regular browsers
+    let useRedirect = isWebView();
+    if (disableRedirect || isSafari) {
+      useRedirect = false;
+      logger.warn(
+        "[AuthLogin] Redirect disabled (flag or Safari) - using popup"
+      );
+    }
     if (useRedirect) {
       logger.log("Starting redirect sign-in (webview/Android)");
 
@@ -329,9 +358,9 @@ export async function googleLogin() {
         document.removeEventListener("visibilitychange", visibilityListener);
       };
 
-      // ⚠️ FIX #3: Redirect liveness probe and auto-fallback on iOS
-      // If timer fires first, redirect never left the page (Safari stall)
-      // Automatically switch to popup for iOS
+      // ⚠️ Redirect liveness probe and auto-fallback
+      // If timer fires first, redirect never left the page
+      // iOS: switch to popup; Android: attempt popup as best-effort
       const stuckTimer = setTimeout(async () => {
         if (!pagehideFired && !visibilityChangeFired) {
           logger.error(
@@ -344,11 +373,12 @@ export async function googleLogin() {
             platform: navigator.userAgent,
           });
 
-          // Auto-fallback to popup on iOS
+          // Auto-fallback to popup on iOS; best-effort on Android
           const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-          if (isIOS) {
+          const isAndroid = /Android/i.test(navigator.userAgent);
+          if (isIOS || isAndroid) {
             logger.log(
-              "[Auto-fallback] iOS detected - switching to popup mode"
+              "[Auto-fallback] Switching to popup mode after redirect stall"
             );
             try {
               // Clean up the redirect attempt
@@ -361,7 +391,7 @@ export async function googleLogin() {
               );
               authLogManager.log("auto_fallback_popup_success", {
                 reason: "redirect_stuck",
-                platform: "iOS",
+                platform: isIOS ? "iOS" : isAndroid ? "Android" : "other",
               });
               return; // Exit early - popup succeeded
             } catch (popupError: any) {
@@ -375,10 +405,9 @@ export async function googleLogin() {
               });
               // Don't throw - let the error bubble up naturally
             }
-          } else {
-            // Non-iOS - just clean up
-            cleanup();
           }
+          // Clean up if popup path didn't succeed
+          cleanup();
         } else {
           // Redirect succeeded - clean up listeners
           cleanup();
@@ -443,7 +472,8 @@ export async function googleLogin() {
     if (
       (error.code === "auth/popup-blocked" ||
         error.code === "auth/popup-closed-by-user") &&
-      !disableRedirect && !(isIOS || isSafari)
+      !disableRedirect &&
+      !(isIOS || isSafari)
     ) {
       logger.warn("Popup blocked, falling back to redirect (allowed)");
       return signInWithRedirect(auth, googleProvider);
