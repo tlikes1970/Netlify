@@ -86,9 +86,13 @@ export const db = getFirestore(app);
 // This must happen as early as possible - at module load, before any sign-in logic runs
 // Firebase's setPersistence is async, but calling it here ensures it starts before anything else
 // We also set it in bootstrapFirebase() to ensure it completes before auth operations
+// 
+// ⚠️ NOTE: This is non-blocking (module load), but bootstrapFirebase() awaits persistence
+// before wiring listeners, and googleLogin() double-checks before sign-in
+let persistenceModuleLoadPromise: Promise<void> | null = null;
 try {
   // Start setting persistence immediately (don't await - this runs at module load)
-  setPersistence(auth, browserLocalPersistence).then(() => {
+  persistenceModuleLoadPromise = setPersistence(auth, browserLocalPersistence).then(() => {
     if (typeof console !== 'undefined') {
       console.log('[FirebaseBootstrap] Persistence set at module load time');
     }
@@ -98,6 +102,9 @@ try {
 } catch (e) {
   console.error('[FirebaseBootstrap] Error starting persistence', e);
 }
+
+// Export promise so sign-in flows can await it if needed
+export const persistenceModuleLoadReady = persistenceModuleLoadPromise || Promise.resolve();
 
 // Auth providers
 export const googleProvider = new GoogleAuthProvider();

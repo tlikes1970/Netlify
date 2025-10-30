@@ -14,45 +14,14 @@ import {
   updateDoc, 
   serverTimestamp 
 } from 'firebase/firestore';
-import { isMobileNow } from './isMobile';
 import { logger } from './logger';
-import { auth, db, googleProvider, appleProvider, firebaseReady, getFirebaseReadyTimestamp } from './firebaseBootstrap';
+import { auth, db, appleProvider, firebaseReady, getFirebaseReadyTimestamp } from './firebaseBootstrap';
 import { firebaseSyncManager } from './firebaseSync';
 import type { AuthUser, UserDocument, UserSettings, AuthProvider, AuthStatus } from './auth.types';
 import { markAuthInFlight, broadcastAuthComplete } from './authBroadcast';
 import { authLogManager } from './authLog';
 
-// Detect if we're in a blocked OAuth context
-// Google blocks OAuth inside embedded browsers (PWA standalone, in-app browsers, etc.)
-function isBlockedOAuthContext(): boolean {
-  if (typeof window === 'undefined') return false;
-  
-  const ua = navigator.userAgent || '';
-  const isPWAStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
-  const isInAppBrowser = 
-    ua.includes('wv') ||          // Android WebView
-    ua.includes('FBAN') ||         // Facebook App Browser
-    ua.includes('FBAV') ||         // Facebook App Browser
-    ua.includes('Instagram') ||    // Instagram in-app
-    ua.includes('Line/') ||        // Line in-app
-    ua.includes('Twitter') ||      // Twitter in-app
-    ua.includes('TikTok') ||       // TikTok in-app
-    ua.includes('GSA/') ||         // Google Search App
-    ua.includes('EdgA') ||         // Edge Android WebView
-    (ua.includes('Electron') && !ua.includes('Chrome/91')); // Electron without modern Chrome
-  
-  const isStandalone = (window as any).standalone || isPWAStandalone;
-  
-  if (isStandalone) {
-    logger.warn('PWA standalone mode detected - Google OAuth is blocked');
-  }
-  
-  if (isInAppBrowser) {
-    logger.warn('In-app browser detected - Google OAuth is blocked');
-  }
-  
-  return isStandalone || isInAppBrowser;
-}
+// Removed: isBlockedOAuthContext function (unused after removing signInWithGoogle method)
 
 // Track recent auth attempts to prevent loops
 const AUTH_ATTEMPT_KEY = 'flicklet.auth.attempt.timestamp';
@@ -530,6 +499,34 @@ class AuthManager {
             conclusion: 'redirect_params_lost_or_stripped',
           });
         }
+      } else if (!result && hasAuthParams && !entryHadCode) {
+        // ⚠️ CONSOLIDATED: Retry logic for hasAuthParams but no entryHadCode (mobile slower networks)
+        // Only retry if we have auth params in URL (means we're actually returning from redirect)
+        // and we didn't already do an init race retry above
+        const ua = navigator.userAgent || '';
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
+        const retryDelay = isMobile ? 300 : 200; // Shorter delay since Firebase should be ready now
+        
+        logger.debug(`Retrying getRedirectResult after ${retryDelay}ms (mobile: ${isMobile})`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        
+        const retryResult = await getRedirectResult(auth);
+        if (retryResult && retryResult.user) {
+          logger.log('Redirect sign-in successful on retry', {
+            uid: retryResult.user.uid,
+            email: retryResult.user.email
+          });
+          
+          authLogManager.log('getRedirectResult_ok', {
+            providerId: retryResult.providerId,
+            operationType: retryResult.operationType,
+            afterRetry: true,
+          });
+          
+          result = retryResult; // Use retry result
+        } else {
+          logger.warn('Still no redirect result after retry - URL had auth params but no result');
+        }
       }
       
       // Mark as resolved (one-shot latch - both local and global)
@@ -878,10 +875,37 @@ class AuthManager {
     try {
       switch (provider) {
         case 'google':
-          await this.signInWithGoogle();
-          break;
+          // Google sign-in uses googleLogin() helper from authLogin.ts
+          // This is called from AuthModal, but keeping this for backwards compatibility
+          logger.warn('signInWithProvider("google") is deprecated - use googleLogin() from authLogin.ts');
+          throw new Error('Use googleLogin() helper instead of signInWithProvider("google")');
         case 'apple':
-          await this.signInWithApple();
+          // ⚠️ TODO: Create appleLogin() helper similar to googleLogin()
+          // For now, using basic redirect (no iOS popup fallback yet)
+          logger.warn('Apple sign-in via signInWithProvider is deprecated - will be migrated to appleLogin() helper');
+          
+          // Ensure persistence before sign-in
+          const { setPersistence, browserLocalPersistence } = await import('firebase/auth');
+          await setPersistence(auth, browserLocalPersistence);
+          
+          // Clean URL of debug params before redirect
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.has('debugAuth')) {
+            urlParams.delete('debugAuth');
+            const cleanUrl = window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : '') + window.location.hash;
+            window.history.replaceState({}, document.title, cleanUrl);
+            logger.debug('Removed debugAuth param from URL before redirect');
+          }
+          
+          // Check if we should block this auth attempt to prevent loops
+          if (shouldBlockAuthAttempt()) {
+            throw new Error('Authentication attempted too frequently. Please wait a moment and try again.');
+          }
+          
+          // Record this auth attempt to prevent rapid retries
+          recordAuthAttempt();
+          
+          await signInWithRedirect(auth, appleProvider);
           break;
         case 'email':
           this.setStatus('unauthenticated');
@@ -911,89 +935,9 @@ class AuthManager {
     }
   }
 
-  private async signInWithGoogle(): Promise<void> {
-    // ⚠️ CRITICAL: Clean URL of debug params before redirect
-    // Safari and Firebase may reject OAuth redirects with unexpected query params
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('debugAuth')) {
-      urlParams.delete('debugAuth');
-      const cleanUrl = window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : '') + window.location.hash;
-      window.history.replaceState({}, document.title, cleanUrl);
-      logger.debug('Removed debugAuth param from URL before redirect');
-    }
-    
-    // Check if we should block this auth attempt to prevent loops
-    if (shouldBlockAuthAttempt()) {
-      throw new Error('Authentication attempted too frequently. Please wait a moment and try again.');
-    }
-    
-    const isMobile = isMobileNow();
-    const isBlocked = isBlockedOAuthContext();
-    
-    logger.log('Starting Google sign-in', { 
-      isMobile, 
-      isBlocked,
-      userAgent: navigator.userAgent.substring(0, 50),
-      displayMode: (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ? 'standalone' : 'browser'
-    });
-    
-    if (isBlocked) {
-      logger.error('Google sign-in attempted in blocked context (PWA standalone or in-app browser)');
-      throw new Error('OAUTH_BLOCKED');
-    }
-    
-    // Record this auth attempt to prevent rapid retries
-    recordAuthAttempt();
-    
-    // Use redirect for both mobile and desktop to avoid popup blocking issues
-    logger.log('Using redirect flow for Google sign-in');
-    
-    // Log redirect initiation
-    authLogManager.log('redirect_initiated', {
-      provider: 'google',
-      method: 'redirect',
-      url: window.location.href,
-    });
-    
-    // One-liner: oauth_redirect_start
-    authLogManager.log('oauth_redirect_start', {
-      provider: 'google',
-    });
-    
-    try {
-      await signInWithRedirect(auth, googleProvider);
-      logger.log('Redirect initiated - page will reload after sign-in');
-      // Note: This will redirect the page to Google. The redirect result will be handled
-      // when the page loads after returning from Google.
-    } catch (error: any) {
-      logger.error('Google redirect sign-in failed', error);
-      // Remove unauthorized-domain handling - let Firebase throw the proper error
-      throw error;
-    }
-  }
-
-  private async signInWithApple(): Promise<void> {
-    // ⚠️ CRITICAL: Clean URL of debug params before redirect
-    // Safari and Firebase may reject OAuth redirects with unexpected query params
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('debugAuth')) {
-      urlParams.delete('debugAuth');
-      const cleanUrl = window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : '') + window.location.hash;
-      window.history.replaceState({}, document.title, cleanUrl);
-      logger.debug('Removed debugAuth param from URL before redirect');
-    }
-    
-    // Check if we should block this auth attempt to prevent loops
-    if (shouldBlockAuthAttempt()) {
-      throw new Error('Authentication attempted too frequently. Please wait a moment and try again.');
-    }
-    
-    // Record this auth attempt to prevent rapid retries
-    recordAuthAttempt();
-    
-    // Apple always uses redirect
-    await signInWithRedirect(auth, appleProvider);
-  }
+  // ⚠️ REMOVED: signInWithGoogle() and signInWithApple() private methods
+  // These legacy methods have been removed - Google uses googleLogin() from authLogin.ts
+  // Apple sign-in is now inline in signInWithProvider() (will be migrated to appleLogin() helper)
 
   async signInWithEmail(email: string, password: string): Promise<void> {
     try {

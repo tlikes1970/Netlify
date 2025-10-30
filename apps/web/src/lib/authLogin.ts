@@ -35,11 +35,23 @@ function isWebView(): boolean {
  * Google sign-in helper that uses redirect on mobile/webview and popup on desktop
  */
 export async function googleLogin() {
-  // ⚠️ PERSISTENCE: Firebase persistence should already be set in firebaseBootstrap.ts
-  // but we double-check here before any sign-in call
-  // Safari requires persistence to be locked in BEFORE redirect begins
-  // This ensures it's definitely set, even if bootstrap timing was off
+  // ⚠️ PERSISTENCE: Firebase persistence must be set BEFORE redirect begins
+  // Safari will drop redirect credentials if persistence isn't locked in
+  // 
+  // We check in this order:
+  // 1. Module load promise (from firebaseBootstrap.ts - may already be resolved)
+  // 2. Bootstrap promise (awaited in bootstrapFirebase())
+  // 3. Explicit setPersistence call here (double-check before sign-in)
+  // 4. IndexedDB/localStorage availability check
+  
   try {
+    // Wait for module-load persistence promise (if it exists and hasn't resolved)
+    const { persistenceModuleLoadReady } = await import('./firebaseBootstrap');
+    await persistenceModuleLoadReady.catch(() => {
+      // Ignore - will try explicit set below
+    });
+    
+    // Explicit setPersistence to ensure it's definitely set before redirect
     const { setPersistence, browserLocalPersistence } = await import('firebase/auth');
     await setPersistence(auth, browserLocalPersistence);
     logger.debug('[AuthLogin] Persistence confirmed set before sign-in');
