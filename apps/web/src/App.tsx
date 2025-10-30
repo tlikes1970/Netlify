@@ -47,7 +47,6 @@ import { isAuthInFlightInOtherTab } from '@/lib/authBroadcast';
 import '@/styles/flickword.css';
 import { backfillShowStatus } from '@/utils/backfillShowStatus';
 import DebugAuthHUD from '@/components/DebugAuthHUD';
-import { APP_VERSION } from '@/version';
 import { useReturningShows } from '@/state/selectors/useReturningShows';
 import { trackTabOpenedReturning } from '@/lib/analytics';
 import { getNextAirDate, isReturning, isWithinWindow } from '@/lib/constants/metadata';

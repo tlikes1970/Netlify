@@ -194,21 +194,6 @@ export default function SwipeableCard({
 
   const previewAction = getPreviewAction();
 
-  // Calculate transform based on swipe state
-  const getTransform = () => {
-    if (!swipeState.isSwipeActive) return 'translateX(0)';
-    
-    const distance = swipeState.swipeDistance;
-    const direction = swipeState.direction;
-    
-    if (direction === 'right') {
-      return `translateX(${distance}px)`;
-    } else if (direction === 'left') {
-      return `translateX(-${distance}px)`;
-    }
-    
-    return 'translateX(0)';
-  };
 
   // Calculate swipe action overlay opacity
   const getOverlayOpacity = () => {
