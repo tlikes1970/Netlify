@@ -45,8 +45,8 @@ export interface SessionInfo {
 }
 
 // Constants
-const RING_BUFFER_SIZE = 200;
-const MAX_PERSISTED_SESSIONS = 10;
+const RING_BUFFER_SIZE = 150;
+const MAX_PERSISTED_SESSIONS = 5;
 const STORAGE_KEY = 'flicklet.auth.logs';
 const CURRENT_TRACE_KEY = 'flicklet.auth.traceId';
 

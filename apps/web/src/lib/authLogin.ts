@@ -38,9 +38,10 @@ function isWebView(): boolean {
  */
 export async function googleLogin() {
   // Reliable UA checks
-  const ua = navigator.userAgent || '';
+  const ua = navigator.userAgent || "";
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
-  const isSafari = /Safari/i.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS|Android/i.test(ua);
+  const isSafari =
+    /Safari/i.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS|Android/i.test(ua);
   const disableRedirect = (() => {
     try {
       return localStorage.getItem("flag:disable_redirect") === "1";
@@ -194,8 +195,10 @@ export async function googleLogin() {
       logger.log("Starting redirect sign-in (webview/Android)");
       // Mark that we initiated a redirect so the app can process the result once
       try {
-        sessionStorage.setItem('flk:didRedirect', '1');
-      } catch (e) { /* noop */ }
+        sessionStorage.setItem("flk:didRedirect", "1");
+      } catch (e) {
+        /* noop */
+      }
 
       // Save to localStorage before redirect so we can see it after page reload
       try {

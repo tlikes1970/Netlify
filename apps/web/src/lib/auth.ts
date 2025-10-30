@@ -96,6 +96,22 @@ class AuthManager {
       url: typeof window !== 'undefined' ? window.location.href : 'unknown',
     });
     
+    // Opportunistic boot scrub of obsolete storage keys (no side effects)
+    try {
+      const keys = [
+        'flicklet.auth.resolvedAt',
+        'flicklet.auth.redirect.start',
+        'flicklet.auth.broadcast',
+        'flicklet.auth.resolving.start',
+      ];
+      for (const k of keys) localStorage.removeItem(k);
+      // Trim legacy auth debug logs formats if ever present
+      const logs = localStorage.getItem('auth-debug-logs');
+      if (logs && logs.length > 200000) {
+        localStorage.removeItem('auth-debug-logs');
+      }
+    } catch {}
+    
     // ⚠️ CRASH-SAFE: Check for stuck redirecting state (>60s = likely crash)
     try {
       const persistedStatus = localStorage.getItem('flicklet.auth.status');

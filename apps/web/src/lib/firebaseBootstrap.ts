@@ -89,12 +89,7 @@ export const appleProvider = new OAuthProvider('apple.com');
 appleProvider.addScope('email');
 appleProvider.addScope('name');
 
-// ⚠️ GLOBAL ONE-SHOT LATCH: Prevent duplicate getRedirectResult calls across bundles
-declare global {
-  interface Window {
-    __redirectResolved?: boolean;
-  }
-}
+// Note: no global latches; redirect handling is gated by an explicit session flag
 
 // Firebase ready promise - resolves only when persistence is set AND onAuthStateChanged fires
 let firebaseReadyResolver: ((timestamp: string) => void) | null = null;
