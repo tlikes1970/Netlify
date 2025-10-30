@@ -40,6 +40,8 @@ export async function googleLogin() {
   // ⚠️ CRITICAL: Detect iOS at the top - force popup immediately
   // iOS Safari drops OAuth params during redirects, so we must use popup
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  const disableRedirect = (() => { try { return localStorage.getItem('flag:disable_redirect') === '1'; } catch { return false; } })();
 
   // Minimal UI/logging allowed before popup opens (within user gesture)
   try {
@@ -67,7 +69,7 @@ export async function googleLogin() {
         try {
           authLogManager.log("popup_unresolved_after_5s", { hint: true });
           localStorage.setItem("flicklet.auth.popup.hint", "1");
-          window.dispatchEvent(new CustomEvent('auth:popup-hint'));
+          window.dispatchEvent(new CustomEvent("auth:popup-hint"));
         } catch (e) {
           // ignore
         }
@@ -78,7 +80,12 @@ export async function googleLogin() {
       .then(async () => {
         resolved = true;
         clearTimeout(watchman);
-        try { localStorage.removeItem("flicklet.auth.popup.hint"); window.dispatchEvent(new CustomEvent('auth:popup-hint')); } catch (e) { /* ignore */ }
+        try {
+          localStorage.removeItem("flicklet.auth.popup.hint");
+          window.dispatchEvent(new CustomEvent("auth:popup-hint"));
+        } catch (e) {
+          /* ignore */
+        }
         authLogManager.log("popup_opened", { in_gesture: true });
         logger.log("[iOS] Popup sign-in successful");
         // Post-popup: run persistence/analytics work
@@ -135,7 +142,9 @@ export async function googleLogin() {
   // ⚠️ PERSISTENCE (non‑iOS): Safe to run before sign-in for redirect/popup flows
   try {
     const { persistenceModuleLoadReady } = await import("./firebaseBootstrap");
-    await persistenceModuleLoadReady.catch(() => {});
+    await persistenceModuleLoadReady.catch(() => {
+      /* noop */ return undefined;
+    });
 
     const { setPersistence, browserLocalPersistence } = await import(
       "firebase/auth"
@@ -191,27 +200,29 @@ export async function googleLogin() {
     logger.debug("Removed debugAuth param from URL before redirect");
   }
 
-  // ⚠️ CRITICAL: Reset redirect state before starting new redirect
-  // This ensures getRedirectResult() will run when we return from OAuth
-  authManager.resetRedirectState();
-
-  // Set redirecting status BEFORE starting redirect
-  authManager.setStatus("redirecting");
+  // ⚠️ CRITICAL: Reset redirect state and mark only if redirects are enabled
+  if (!disableRedirect && !(isIOS || isSafari)) {
+    // This ensures getRedirectResult() will run when we return from OAuth
+    authManager.resetRedirectState();
+    // Set redirecting status BEFORE starting redirect
+    authManager.setStatus("redirecting");
+  }
 
   // Generate unique state ID for integrity check
   const stateId = `auth_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-  // Persist status to localStorage so it survives redirect
-  try {
-    localStorage.setItem("flicklet.auth.status", "redirecting");
-    localStorage.setItem("flicklet.auth.stateId", stateId);
-    localStorage.setItem("flicklet.auth.redirect.start", Date.now().toString());
-    logger.debug(`Set status to redirecting with stateId: ${stateId}`);
-
-    // Broadcast to other tabs
-    markAuthInFlight("redirecting");
-  } catch (e) {
-    logger.warn("Failed to persist auth status", e);
+  // Persist status only if redirect is enabled
+  if (!disableRedirect && !(isIOS || isSafari)) {
+    try {
+      localStorage.setItem("flicklet.auth.status", "redirecting");
+      localStorage.setItem("flicklet.auth.stateId", stateId);
+      localStorage.setItem("flicklet.auth.redirect.start", Date.now().toString());
+      logger.debug(`Set status to redirecting with stateId: ${stateId}`);
+      // Broadcast to other tabs
+      markAuthInFlight("redirecting");
+    } catch (e) {
+      logger.warn("Failed to persist auth status", e);
+    }
   }
 
   // Validate origin before proceeding
@@ -267,8 +278,12 @@ export async function googleLogin() {
       return;
     }
 
-    // Desktop/Android: Use redirect flow for webviews, popup for regular browsers
-    const useRedirect = isWebView();
+  // Desktop/Android: Use redirect flow for webviews, popup for regular browsers
+  let useRedirect = isWebView();
+  if (disableRedirect || isSafari) {
+    useRedirect = false;
+    logger.warn("[AuthLogin] Redirect disabled (flag or Safari) - using popup");
+  }
     if (useRedirect) {
       logger.log("Starting redirect sign-in (webview/Android)");
 
@@ -424,12 +439,13 @@ export async function googleLogin() {
       // ignore
     }
 
-    // If popup fails with blocked error, fallback to redirect (non-iOS only)
+    // If popup fails with blocked error, fallback to redirect only when allowed
     if (
-      error.code === "auth/popup-blocked" ||
-      error.code === "auth/popup-closed-by-user"
+      (error.code === "auth/popup-blocked" ||
+        error.code === "auth/popup-closed-by-user") &&
+      !disableRedirect && !(isIOS || isSafari)
     ) {
-      logger.warn("Popup blocked, falling back to redirect");
+      logger.warn("Popup blocked, falling back to redirect (allowed)");
       return signInWithRedirect(auth, googleProvider);
     }
 

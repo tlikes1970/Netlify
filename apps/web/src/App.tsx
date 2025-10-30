@@ -627,7 +627,7 @@ export default function App() {
             <button
               className="rounded border px-2 py-0.5 text-[11px] hover:bg-accent hover:text-accent-foreground"
               onClick={() => {
-                try { localStorage.removeItem('flicklet.auth.popup.hint'); } catch {}
+                try { localStorage.removeItem('flicklet.auth.popup.hint'); } catch (e) { /* ignore */ }
                 setShowPopupHint(false);
                 // User gesture: retry
                 void googleLogin();
@@ -635,7 +635,7 @@ export default function App() {
             >Try again</button>
             <button
               className="rounded border px-2 py-0.5 text-[11px] hover:bg-muted"
-              onClick={() => { try { localStorage.removeItem('flicklet.auth.popup.hint'); } catch {}; setShowPopupHint(false); }}
+              onClick={() => { try { localStorage.removeItem('flicklet.auth.popup.hint'); } catch (e) { /* ignore */ } setShowPopupHint(false); }}
               aria-label="Dismiss"
               title="Dismiss"
             >Dismiss</button>
