@@ -52,15 +52,20 @@ export default function FlickWordStats(_props: FlickWordStatsProps) {
 
     loadStats();
     
-    // Listen for storage changes to refresh stats
+    // Refresh on cross-tab storage and same-tab custom event
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'flickword:stats' || e.key === 'flicklet-data') {
         loadStats();
       }
     };
+    const handleLocalUpdate = () => loadStats();
     
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('flickword:stats-updated', handleLocalUpdate as any);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('flickword:stats-updated', handleLocalUpdate as any);
+    };
   }, []);
 
   return (

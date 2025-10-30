@@ -115,7 +115,11 @@ export default function FlickWordModal({ isOpen, onClose }: FlickWordModalProps)
       console.error('Failed to save FlickWord stats:', error);
     }
     
-    // Update stats via the global handler
+    // Notify listeners in this tab that stats changed
+    try {
+      window.dispatchEvent(new CustomEvent('flickword:stats-updated'));
+    } catch {}
+    // Update stats via optional global handler (legacy)
     if ((window as any).handleFlickWordGameComplete) {
       (window as any).handleFlickWordGameComplete(won, guesses);
     }
