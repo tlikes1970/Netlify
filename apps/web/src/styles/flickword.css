@@ -119,13 +119,14 @@
   width: 100%;
   max-width: 520px;
   margin: 0 auto;
+  padding: 0 12px; /* symmetric inset */
   box-sizing: border-box;
 }
 
 .fw-kb-row {
   display: flex;
   gap: clamp(4px, 1.2vw, 8px);
-  justify-content: center;
+  justify-content: center; /* center row to avoid left-heavy layout */
 }
 
 .fw-key {
