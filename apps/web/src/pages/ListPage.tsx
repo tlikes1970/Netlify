@@ -1,4 +1,5 @@
 import TabCard from '@/components/cards/TabCard';
+import UpNextCard from '@/components/cards/UpNextCard';
 import type { MediaItem } from '@/components/cards/card.types';
 import { Library, LibraryEntry } from '@/lib/storage';
 import { useSettings, getPersonalityText } from '@/lib/settings';
@@ -231,7 +232,33 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
           // ListPage receives data as props, so parent component should handle refetch
           // This will reset the error boundary state
         }}>
-          <div className="space-y-3">
+          {mode === 'returning' ? (
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+              {processedItems.slice(0, 12).map((item) => {
+                const mediaItem: MediaItem = {
+                  id: item.id,
+                  mediaType: item.mediaType,
+                  title: item.title,
+                  posterUrl: item.posterUrl,
+                  year: item.year,
+                  voteAverage: item.voteAverage,
+                  userRating: item.userRating,
+                  synopsis: item.synopsis,
+                  nextAirDate: item.nextAirDate,
+                  showStatus: item.showStatus,
+                  lastAirDate: item.lastAirDate,
+                  userNotes: item.userNotes,
+                  tags: item.tags,
+                };
+                return (
+                  <div key={`${item.mediaType}:${item.id}:${item.nextAirDate}`} className="flex-shrink-0">
+                    <UpNextCard item={mediaItem} />
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="space-y-3">
             {processedItems.map((item, index) => {
               // LibraryEntry already has all MediaItem properties
               const mediaItem: MediaItem = {
@@ -267,6 +294,7 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
               );
             })}
           </div>
+          )}
         </ErrorBoundary>
       ) : (
         <div className="text-center py-8" style={{ color: 'var(--muted)' }}>
