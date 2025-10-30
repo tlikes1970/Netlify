@@ -2,7 +2,7 @@ import { useTranslations } from '../lib/language';
 import { useLibrary } from '../lib/storage';
 import { useCustomLists } from '../lib/customLists';
 import { useReturningShows } from '@/state/selectors/useReturningShows';
-import { useEffect, useState, createContext, useContext } from 'react';
+import { useEffect, useState, createContext, useContext, useMemo, useRef } from 'react';
 import React from 'react';
 import { dlog } from '../lib/log';
 
@@ -174,6 +174,25 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
     { id: 'discovery',label: 'Discover', count: 0 }
   ];
 
+  // Split into visible vs overflow (first 4 visible)
+  const { visibleTabs, overflowTabs } = useMemo(() => {
+    const visible = TABS.slice(0, 4);
+    const overflow = TABS.slice(4);
+    return { visibleTabs: visible, overflowTabs: overflow };
+  }, [TABS]);
+
+  // "More" dropdown for mobile
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (!moreRef.current) return;
+      if (!moreRef.current.contains(e.target as Node)) setMoreOpen(false);
+    };
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
+  }, []);
+
   return (
     <ViewportContext.Provider value={{ viewportOffset }}>
       <nav 
@@ -218,8 +237,8 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
             style={{ backgroundColor: 'var(--line)' }}
           />
 
-          {/* Main Tabs */}
-          {TABS.map((tab, index) => (
+          {/* Main Tabs (visible) */}
+          {visibleTabs.map((tab, index) => (
             <React.Fragment key={tab.id}>
               <button
                 onClick={() => onChange(tab.id)}
@@ -247,7 +266,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
               </button>
               
               {/* Vertical Separator between tabs (except after last tab) */}
-              {index < TABS.length - 1 && (
+              {index < visibleTabs.length - 1 && (
                 <div 
                   className="h-8 w-px"
                   style={{ backgroundColor: 'var(--line)' }}
@@ -255,6 +274,52 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
               )}
             </React.Fragment>
           ))}
+
+          {/* More overflow */}
+          {overflowTabs.length > 0 && (
+            <>
+              {/* Separator before More */}
+              <div className="h-8 w-px" style={{ backgroundColor: 'var(--line)' }} />
+              <div ref={moreRef} className="relative flex-1 flex items-center justify-center">
+                <button
+                  onClick={() => setMoreOpen(v => !v)}
+                  className="flex flex-col items-center justify-center p-2 min-h-[60px] transition-all duration-200 ease-out relative"
+                  style={{ color: moreOpen ? 'var(--accent)' : 'var(--muted)', fontWeight: moreOpen ? 600 as any : 500 as any }}
+                  aria-haspopup="menu"
+                  aria-expanded={moreOpen}
+                >
+                  <span className="text-sm font-medium">More</span>
+                  {overflowTabs.some(t => t.count > 0) && (
+                    <span className="bg-gray-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 mt-0.5">
+                      {overflowTabs.reduce((sum, t) => sum + (t.count || 0), 0)}
+                    </span>
+                  )}
+                  {moreOpen && (
+                    <div 
+                      role="menu"
+                      className="absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 min-w-[160px] rounded-xl shadow-lg border"
+                      style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)' }}
+                    >
+                      {overflowTabs.map(t => (
+                        <button
+                          key={t.id}
+                          role="menuitem"
+                          onClick={() => { setMoreOpen(false); onChange(t.id); }}
+                          className="w-full text-left px-4 py-2 flex items-center justify-between hover:opacity-90"
+                          style={{ color: 'var(--text)' }}
+                        >
+                          <span>{t.label}</span>
+                          {t.count > 0 && (
+                            <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-bold" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>{t.count}</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </nav>
     </ViewportContext.Provider>
