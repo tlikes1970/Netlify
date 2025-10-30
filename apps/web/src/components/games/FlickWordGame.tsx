@@ -175,12 +175,17 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
     }
 
     console.log('🔍 Validating word:', game.current);
-    const valid = await isValidWord(game.current);
-    console.log('✅ Word validation result:', valid);
+    const verdict = await validateWord(game.current);
+    console.log('✅ Word validation result:', verdict);
     
-    if (!valid) {
-      console.log('❌ Word invalid, showing notification');
-      showNotification('Not in word list.', 'error');
+    if (!verdict.valid) {
+      if (verdict.reason === 'length') {
+        showNotification('Use 5 letters.', 'error');
+      } else if (verdict.reason === 'charset' || verdict.reason === 'format') {
+        showNotification('Letters only.', 'error');
+      } else {
+        // Silent on not-found; accept logic will prevent hitting this often after refactor
+      }
       setGame(prev => ({ ...prev, current: '' }));
       return;
     }

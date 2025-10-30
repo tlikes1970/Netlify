@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "prebuild": "npm run lexicon:build",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
@@ -16,7 +17,8 @@
     "check-all": "npm run typecheck && npm run lint",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "analyze:bundle": "npm run build && node scripts/bundle-budget-check.js"
+    "analyze:bundle": "npm run build && node scripts/bundle-budget-check.js",
+    "lexicon:build": "node scripts/build-lexicon.mjs"
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.6",

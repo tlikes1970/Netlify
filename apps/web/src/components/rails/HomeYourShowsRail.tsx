@@ -20,6 +20,7 @@ export default function HomeYourShowsRail() {
                 item={item}
                 context="tab-watching"
                 disableSwipe={true}
+                disableOverflow={true}
                 actions={{
                   onWant: i => Library.move(i.id, i.mediaType, 'wishlist'),
                   onWatched: i => Library.move(i.id, i.mediaType, 'watched'),
