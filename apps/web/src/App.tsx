@@ -48,6 +48,7 @@ import '@/styles/flickword.css';
 import { backfillShowStatus } from '@/utils/backfillShowStatus';
 import DebugAuthHUD from '@/components/DebugAuthHUD';
 import { APP_VERSION } from '@/version';
+import { googleLogin } from '@/lib/authLogin';
 
 type View = 'home'|'watching'|'want'|'watched'|'mylists'|'discovery';
 type SearchType = 'all' | 'movies-tv' | 'people';
@@ -181,6 +182,19 @@ export default function App() {
 
   // Service Worker for offline caching
   const { isOnline } = useServiceWorker();
+
+  // Popup hint banner state
+  const [showPopupHint, setShowPopupHint] = useState<boolean>(() => {
+    try { return localStorage.getItem('flicklet.auth.popup.hint') === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    const handler = () => {
+      try { setShowPopupHint(localStorage.getItem('flicklet.auth.popup.hint') === '1'); } catch {}
+    };
+    window.addEventListener('auth:popup-hint', handler as any);
+    const t = setInterval(handler, 1000);
+    return () => { window.removeEventListener('auth:popup-hint', handler as any); clearInterval(t); };
+  }, []);
 
   // Refresh function for pull-to-refresh
   const handleRefresh = async () => {
@@ -605,6 +619,29 @@ export default function App() {
           />
         )}
       </main>
+      {/* Popup hint banner */}
+      {showPopupHint && (
+        <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-[10000] rounded-lg border bg-background/95 backdrop-blur px-3 py-2 text-xs md:text-sm text-foreground shadow-lg">
+          <div className="flex items-center gap-2">
+            <span>Allow popups and third‑party cookies for Google sign‑in.</span>
+            <button
+              className="rounded border px-2 py-0.5 text-[11px] hover:bg-accent hover:text-accent-foreground"
+              onClick={() => {
+                try { localStorage.removeItem('flicklet.auth.popup.hint'); } catch {}
+                setShowPopupHint(false);
+                // User gesture: retry
+                void googleLogin();
+              }}
+            >Try again</button>
+            <button
+              className="rounded border px-2 py-0.5 text-[11px] hover:bg-muted"
+              onClick={() => { try { localStorage.removeItem('flicklet.auth.popup.hint'); } catch {}; setShowPopupHint(false); }}
+              aria-label="Dismiss"
+              title="Dismiss"
+            >Dismiss</button>
+          </div>
+        </div>
+      )}
       {/* Temporary Testing Version Badge */}
       <div
         style={{

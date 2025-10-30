@@ -61,8 +61,24 @@ export async function googleLogin() {
       timestamp: new Date().toISOString(),
     });
 
+    let resolved = false;
+    const watchman = setTimeout(() => {
+      if (!resolved) {
+        try {
+          authLogManager.log("popup_unresolved_after_5s", { hint: true });
+          localStorage.setItem("flicklet.auth.popup.hint", "1");
+          window.dispatchEvent(new CustomEvent('auth:popup-hint'));
+        } catch (e) {
+          // ignore
+        }
+      }
+    }, 5000);
+
     const popupPromise = signInWithPopup(auth, googleProvider)
       .then(async () => {
+        resolved = true;
+        clearTimeout(watchman);
+        try { localStorage.removeItem("flicklet.auth.popup.hint"); window.dispatchEvent(new CustomEvent('auth:popup-hint')); } catch (e) { /* ignore */ }
         authLogManager.log("popup_opened", { in_gesture: true });
         logger.log("[iOS] Popup sign-in successful");
         // Post-popup: run persistence/analytics work
@@ -99,12 +115,17 @@ export async function googleLogin() {
         authLogManager.log("popup_result", { ok: true });
       })
       .catch((error: unknown) => {
+        resolved = true;
+        clearTimeout(watchman);
         logger.error("[iOS] Popup sign-in failed", error);
         authLogManager.log("popup_forced_ios_failed", {
           error: (error as any)?.message || String(error),
           code: (error as any)?.code,
         });
-        authLogManager.log("popup_result", { ok: false, error: (error as any)?.code || 'unknown' });
+        authLogManager.log("popup_result", {
+          ok: false,
+          error: (error as any)?.code || "unknown",
+        });
         throw error;
       });
 
@@ -130,7 +151,7 @@ export async function googleLogin() {
 
   // Also ensure IndexedDB/localStorage availability
   await ensurePersistenceBeforeAuth();
-  
+
   // Auto-clear redirecting sticky if page doesn't actually leave within 5s
   try {
     const startedAt = Date.now();
@@ -141,12 +162,17 @@ export async function googleLogin() {
         const pageHidden = document.visibilityState === "hidden";
         if (persisted === "redirecting" && !pageHidden) {
           localStorage.removeItem("flicklet.auth.status");
-          authLogManager.log("redirect_label_cleared", { elapsedMs: elapsed, reason: "no_pagehide_in_5s" });
-          logger.warn("[AuthLogin] Cleared stale redirecting label after 5s (page never left)");
+          authLogManager.log("redirect_label_cleared", {
+            elapsedMs: elapsed,
+            reason: "no_pagehide_in_5s",
+          });
+          logger.warn(
+            "[AuthLogin] Cleared stale redirecting label after 5s (page never left)"
+          );
         }
-  } catch (e) {
-    // ignore
-  }
+      } catch (e) {
+        // ignore
+      }
     }, 5000);
   } catch (e) {
     // ignore
