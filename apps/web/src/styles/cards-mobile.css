@@ -129,7 +129,8 @@
   .card-mobile .stars { 
     display: inline-flex; 
     gap: 4px; 
-    touch-action: none; 
+    /* Allow vertical scrolling to win when starting on the stars */
+    touch-action: pan-y; 
   }
   .card-mobile .star { 
     inline-size: 32px; 
@@ -241,7 +242,8 @@
     cursor: grab; 
     z-index: calc(var(--z-base) + 3);
     border-left: 1px solid color-mix(in srgb, #000 8%, transparent);
-    touch-action: none; /* don't pan-x/y from the rail */
+    /* Allow vertical scroll; we detect horizontal intent in JS */
+    touch-action: pan-y;
     border: none;
     font-size: 18px;
     line-height: 1;
