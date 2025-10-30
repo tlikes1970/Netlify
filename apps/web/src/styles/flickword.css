@@ -124,7 +124,7 @@
   margin: 0 auto;
   padding: 0; /* match grid (no side padding) */
   box-sizing: border-box;
-  transform: translateX(6px); /* nudge right by 6px to visually center */
+  transform: translateX(10px); /* nudge right by 10px (previously 6px) */
 }
 
 .fw-kb-row { display: flex; width: 100%; }
