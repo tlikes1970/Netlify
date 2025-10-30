@@ -157,6 +157,15 @@ export function useSwipe({
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
+    const deltaX = touch.clientX - startX.current;
+    const deltaY = touch.clientY - startY.current;
+    const isHorizontal = Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 12;
+    if (!isHorizontal) {
+      // Let the page scroll; do not preventDefault
+      return;
+    }
+    // Horizontal swipe confirmed; prevent vertical scroll hijack
+    e.preventDefault();
     handleMove(touch.clientX, touch.clientY);
   }, [handleMove]);
 
