@@ -879,7 +879,7 @@ class AuthManager {
           // This is called from AuthModal, but keeping this for backwards compatibility
           logger.warn('signInWithProvider("google") is deprecated - use googleLogin() from authLogin.ts');
           throw new Error('Use googleLogin() helper instead of signInWithProvider("google")');
-        case 'apple':
+        case 'apple': {
           // ⚠️ TODO: Create appleLogin() helper similar to googleLogin()
           // For now, using basic redirect (no iOS popup fallback yet)
           logger.warn('Apple sign-in via signInWithProvider is deprecated - will be migrated to appleLogin() helper');
@@ -907,6 +907,7 @@ class AuthManager {
           
           await signInWithRedirect(auth, appleProvider);
           break;
+        }
         case 'email':
           this.setStatus('unauthenticated');
           authLogManager.log('signin_error', {
