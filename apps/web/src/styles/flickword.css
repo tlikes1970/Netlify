@@ -6,8 +6,10 @@
   flex-direction: column;
   gap: 16px;
   padding: 24px;
-  max-width: 450px;
+  width: 100%;
+  max-width: 520px;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 /* Game Header */
