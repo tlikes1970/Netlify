@@ -32,10 +32,11 @@ export default function Tabs({ current, onChange }: TabsProps) {
     { id: 'discovery',label: translations.discovery, count: 0 }, // Discovery doesn't have a count
   ];
 
-  // Split into visible vs overflow (first 4 visible)
+  // Split into visible vs overflow (keep Lists visible; move Returning to More)
   const { visibleTabs, overflowTabs } = useMemo(() => {
-    const visible = TABS.slice(0, 4);
-    const overflow = TABS.slice(4);
+    const visibleIds = new Set<TabId>(['watching', 'want', 'watched', 'mylists']);
+    const visible = TABS.filter(t => visibleIds.has(t.id as TabId));
+    const overflow = TABS.filter(t => !visibleIds.has(t.id as TabId));
     return { visibleTabs: visible, overflowTabs: overflow };
   }, [TABS]);
 

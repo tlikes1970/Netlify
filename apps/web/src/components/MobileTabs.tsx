@@ -174,10 +174,11 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
     { id: 'discovery',label: 'Discover', count: 0 }
   ];
 
-  // Split into visible vs overflow (first 4 visible)
+  // Split into visible vs overflow (keep Lists visible; move Returning to More)
   const { visibleTabs, overflowTabs } = useMemo(() => {
-    const visible = TABS.slice(0, 4);
-    const overflow = TABS.slice(4);
+    const visibleIds: TabId[] = ['watching', 'want', 'watched', 'mylists'];
+    const visible = TABS.filter(t => (visibleIds as string[]).includes(t.id));
+    const overflow = TABS.filter(t => !(visibleIds as string[]).includes(t.id));
     return { visibleTabs: visible, overflowTabs: overflow };
   }, [TABS]);
 
