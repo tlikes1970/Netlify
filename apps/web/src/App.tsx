@@ -48,13 +48,25 @@ import '@/styles/flickword.css';
 import { backfillShowStatus } from '@/utils/backfillShowStatus';
 import DebugAuthHUD from '@/components/DebugAuthHUD';
 import { APP_VERSION } from '@/version';
+import { useReturningShows } from '@/state/selectors/useReturningShows';
+import { trackTabOpenedReturning } from '@/lib/analytics';
+import { getNextAirDate, isReturning, isWithinWindow } from '@/lib/constants/metadata';
 import { googleLogin } from '@/lib/authLogin';
 
-type View = 'home'|'watching'|'want'|'watched'|'mylists'|'discovery';
+type View = 'home'|'watching'|'want'|'watched'|'returning'|'mylists'|'discovery';
 type SearchType = 'all' | 'movies-tv' | 'people';
 type SearchState = { q: string; genre: number | null; type: SearchType };
 
 export default function App() {
+  // Computed smart views
+  const returning = useReturningShows();
+
+  // Analytics for Returning tab open
+  useEffect(() => {
+    if (view === 'returning') {
+      trackTabOpenedReturning(Array.isArray(returning) ? returning.length : 0);
+    }
+  }, [view, returning]);
   const [view, setView] = useState<View>('home');
   const isHome = typeof window !== 'undefined' && window.location.pathname === '/';
 
@@ -230,6 +242,11 @@ export default function App() {
   const watching = useLibrary('watching');
   const wishlist = useLibrary('wishlist');
   const watched = useLibrary('watched');
+
+  // De-dupe: hide returning from Watching unless within window
+  const watchingVisible = useMemo(() => {
+    return watching.filter(item => !isReturning(item) || isWithinWindow(getNextAirDate(item)));
+  }, [watching]);
 
   // Data rails
   const theaters = useInTheaters();
@@ -491,7 +508,7 @@ export default function App() {
               {view === 'watching'  && (
                 <Suspense fallback={<div className="loading-spinner">Loading watching list...</div>}>
                   <div data-page="lists" data-list="watching">
-                    <ListPage title="Currently Watching" items={watching} mode="watching" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} onSimpleReminder={handleSimpleReminder} onBloopersOpen={handleBloopersOpen} onExtrasOpen={handleExtrasOpen} />
+                    <ListPage title="Currently Watching" items={watchingVisible} mode="watching" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} onSimpleReminder={handleSimpleReminder} onBloopersOpen={handleBloopersOpen} onExtrasOpen={handleExtrasOpen} />
                   </div>
                 </Suspense>
               )}
@@ -506,6 +523,13 @@ export default function App() {
                 <Suspense fallback={<div className="loading-spinner">Loading watched list...</div>}>
                   <div data-page="lists" data-list="watched">
                     <ListPage title="Watched" items={watched} mode="watched" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} onSimpleReminder={handleSimpleReminder} onBloopersOpen={handleBloopersOpen} onExtrasOpen={handleExtrasOpen} />
+                  </div>
+                </Suspense>
+              )}
+              {view === 'returning' && (
+                <Suspense fallback={<div className="loading-spinner">Loading returning shows...</div>}>
+                  <div data-page="lists" data-list="returning">
+                    <ListPage title="Returning" items={returning as any} mode="returning" onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onNotificationToggle={handleNotificationToggle} onSimpleReminder={handleSimpleReminder} onBloopersOpen={handleBloopersOpen} onExtrasOpen={handleExtrasOpen} />
                   </div>
                 </Suspense>
               )}

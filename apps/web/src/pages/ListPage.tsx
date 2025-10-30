@@ -12,7 +12,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 export default function ListPage({ title, items, mode = 'watching', onNotesEdit, onTagsEdit, onNotificationToggle, onSimpleReminder, onBloopersOpen, onExtrasOpen }: {
   title: string;
   items: LibraryEntry[];
-  mode?: 'watching'|'want'|'watched'|'discovery';
+  mode?: 'watching'|'want'|'watched'|'returning'|'discovery';
   onNotesEdit?: (item: MediaItem) => void;
   onTagsEdit?: (item: MediaItem) => void;
   onNotificationToggle?: (item: MediaItem) => void;
@@ -93,6 +93,9 @@ export default function ListPage({ title, items, mode = 'watching', onNotesEdit,
 
   // Get appropriate empty state text based on title
   const getEmptyText = () => {
+    if (mode === 'returning') {
+      return 'No returning shows yet. When a series is confirmed, it’ll show up here automatically.';
+    }
     if (title.toLowerCase().includes('watching')) {
       return getPersonalityText('emptyWatching', settings.personalityLevel);
     } else if (title.toLowerCase().includes('wishlist') || title.toLowerCase().includes('want')) {

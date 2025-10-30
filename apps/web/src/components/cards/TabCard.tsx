@@ -8,6 +8,7 @@ import MyListToggle from '../MyListToggle';
 import { useIsDesktop } from '../../hooks/useDeviceDetection';
 import SwipeableCard from '../SwipeableCard';
 import { OptimizedImage } from '../OptimizedImage';
+import { trackOpenFromReturning } from '@/lib/analytics';
 import { isCompactMobileV1, isActionsSplit } from '../../lib/mobileFlags';
 import { isMobileNow } from '../../lib/isMobile';
 import { dlog } from '../../lib/log';
@@ -17,7 +18,7 @@ import { MovieCardMobile } from './mobile/MovieCardMobile';
 export type TabCardProps = {
   item: MediaItem;
   actions?: CardActionHandlers;
-  tabType?: 'watching' | 'want' | 'watched' | 'discovery';
+  tabType?: 'watching' | 'want' | 'watched' | 'returning' | 'discovery';
   index?: number;
   dragState?: {
     draggedItem: { id: string; index: number } | null;
@@ -384,6 +385,9 @@ export default function TabCard({
             return;
           }
           if (item.id && item.mediaType) {
+            if (tabType === 'returning') {
+              trackOpenFromReturning(item.id, item.title);
+            }
             const tmdbUrl = `https://www.themoviedb.org/${item.mediaType}/${item.id}`;
             window.open(tmdbUrl, '_blank', 'noopener,noreferrer');
           }
