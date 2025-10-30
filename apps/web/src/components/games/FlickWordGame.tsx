@@ -274,7 +274,7 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
   const renderKeyboard = () => {
     const rows = [];
     
-    // Row 1: QWERTYUIOP + Backspace
+    // Row 1: QWERTYUIOP (no backspace here)
     const row1 = [];
     for (const letter of KEYBOARD_ROWS[0]) {
       const status = game.status[letter] || '';
@@ -288,15 +288,6 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
         </button>
       );
     }
-    row1.push(
-      <button
-        key="backspace"
-        className="fw-key fw-key-back"
-        onClick={handleBackspace}
-      >
-        ⌫
-      </button>
-    );
     rows.push(
       <div key="row1" className="fw-kb-row">
         {row1}
@@ -323,8 +314,18 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
       </div>
     );
     
-    // Row 3: ZXCVBNM + Enter
-    const row3 = [];
+    // Row 3: Enter + ZXCVBNM + Backspace
+    const row3 = [
+      (
+        <button
+          key="enter"
+          className="fw-key fw-key-enter"
+          onClick={handleSubmit}
+        >
+          Enter
+        </button>
+      )
+    ];
     for (const letter of KEYBOARD_ROWS[2]) {
       const status = game.status[letter] || '';
       row3.push(
@@ -339,11 +340,11 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
     }
     row3.push(
       <button
-        key="enter"
-        className="fw-key fw-key-enter"
-        onClick={handleSubmit}
+        key="backspace"
+        className="fw-key fw-key-back"
+        onClick={handleBackspace}
       >
-        Enter
+        ⌫
       </button>
     );
     rows.push(
