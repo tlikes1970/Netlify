@@ -290,7 +290,7 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
     }
     rows.push(
       <div key="row1" className="fw-kb-row">
-        {row1}
+        <div className="fw-kb-wrap">{row1}</div>
       </div>
     );
     
@@ -310,7 +310,7 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
     }
     rows.push(
       <div key="row2" className="fw-kb-row">
-        {row2}
+        <div className="fw-kb-wrap">{row2}</div>
       </div>
     );
     
@@ -349,7 +349,7 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
     );
     rows.push(
       <div key="row3" className="fw-kb-row">
-        {row3}
+        <div className="fw-kb-wrap">{row3}</div>
       </div>
     );
     
