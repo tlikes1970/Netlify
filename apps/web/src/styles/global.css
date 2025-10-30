@@ -201,7 +201,7 @@ input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset:
 
 .gm-body {
   padding: 16px;
-  overflow: auto;
+  overflow: hidden; /* prevent inner scrolling */
   display: flex;
   flex-direction: column;
   flex: 1;
