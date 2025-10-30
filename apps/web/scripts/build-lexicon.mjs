@@ -4,7 +4,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const root = path.resolve('apps/web/public/words');
+// Resolve relative to the working directory (apps/web)
+const root = path.resolve(process.cwd(), 'public/words');
 const validPath = path.join(root, 'valid-guess.txt');
 const answersPath = path.join(root, 'answers.txt');
 const shardsDir = path.join(root, 'shards');
