@@ -400,9 +400,6 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
 
       {/* Actions */}
       <div className="fw-actions">
-        <button className="fw-btn fw-new-game" onClick={initializeGame}>
-          New Game
-        </button>
         {onClose && (
           <button className="fw-btn fw-close" onClick={onClose}>
             Close

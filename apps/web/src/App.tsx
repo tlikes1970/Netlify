@@ -31,7 +31,7 @@ import PullToRefreshWrapper from '@/components/PullToRefreshWrapper';
 import { useForYouRows } from '@/hooks/useForYouRows';
 import { useForYouContent } from '@/hooks/useGenreContent';
 import { useServiceWorker } from '@/hooks/useServiceWorker';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { Library, useLibrary } from '@/lib/storage';
 import { mountActionBridge, setToastCallback } from '@/state/actions';
@@ -60,13 +60,6 @@ type SearchState = { q: string; genre: number | null; type: SearchType };
 export default function App() {
   // Computed smart views
   const returning = useReturningShows();
-
-  // Analytics for Returning tab open
-  useEffect(() => {
-    if (view === 'returning') {
-      trackTabOpenedReturning(Array.isArray(returning) ? returning.length : 0);
-    }
-  }, [view, returning]);
   const [view, setView] = useState<View>('home');
   const isHome = typeof window !== 'undefined' && window.location.pathname === '/';
 
@@ -247,6 +240,13 @@ export default function App() {
   const watchingVisible = useMemo(() => {
     return watching.filter(item => !isReturning(item) || isWithinWindow(getNextAirDate(item)));
   }, [watching]);
+
+  // Analytics for Returning tab open
+  useEffect(() => {
+    if (view === 'returning') {
+      trackTabOpenedReturning(Array.isArray(returning) ? returning.length : 0);
+    }
+  }, [view, returning]);
 
   // Data rails
   const theaters = useInTheaters();

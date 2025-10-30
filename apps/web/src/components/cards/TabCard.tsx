@@ -365,9 +365,10 @@ export default function TabCard({
         aria-label={title}
         style={{
           transform: isBeingDragged ? 'rotate(2deg)' : 'none',
-          transition: 'all 0.2s ease-in-out'
+          transition: 'all 0.2s ease-in-out',
+          touchAction: 'pan-y'
         }}
-        draggable={true}
+        draggable={isDesktop}
         onDragStart={(e) => onDragStart?.(e, index)}
         onDragEnd={onDragEnd}
         onDragOver={(e) => onDragOver?.(e, index)}

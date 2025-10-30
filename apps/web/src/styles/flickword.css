@@ -68,9 +68,10 @@
 /* Game Grid */
 .fw-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
-  max-width: 350px;
+  /* Keep 5 equal columns; size is driven by tile clamp below */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(4px, 1.2vw, 6px);
+  width: min(92vw, 420px);
   margin: 0 auto;
 }
 
@@ -79,15 +80,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: clamp(22px, 4.5vw, 32px);
   font-weight: bold;
   border: 2px solid var(--line, #333333);
-  border-radius: 6px;
+  border-radius: 8px;
   background-color: var(--card, #1a1a1a);
   color: var(--text, #ffffff);
   transition: all 0.2s ease;
-  min-height: 50px;
-  min-width: 50px;
+  width: clamp(52px, 18vw, 72px);
+  min-width: clamp(52px, 18vw, 72px);
 }
 
 .fw-tile.correct {
@@ -112,25 +113,25 @@
 .fw-keyboard {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-width: 400px;
+  gap: clamp(6px, 1.5vw, 8px);
+  width: min(96vw, 520px);
   margin: 0 auto;
 }
 
 .fw-kb-row {
   display: flex;
-  gap: 4px;
+  gap: clamp(4px, 1.2vw, 8px);
   justify-content: center;
 }
 
 .fw-key {
-  min-width: 36px;
-  height: 48px;
-  padding: 0 8px;
-  font-size: 16px;
+  min-width: clamp(40px, 8vw, 56px);
+  height: clamp(48px, 9vw, 64px);
+  padding: 0 clamp(8px, 2vw, 12px);
+  font-size: clamp(16px, 3.8vw, 20px);
   font-weight: bold;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   background-color: var(--btn, #333333);
   color: var(--text, #ffffff);
   cursor: pointer;
@@ -164,8 +165,8 @@
 }
 
 .fw-key-back, .fw-key-enter {
-  min-width: 60px;
-  font-size: 14px;
+  min-width: clamp(64px, 12vw, 90px);
+  font-size: clamp(14px, 3.4vw, 18px);
 }
 
 /* Actions */
