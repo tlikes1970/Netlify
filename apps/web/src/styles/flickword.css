@@ -120,9 +120,9 @@
   gap: clamp(6px, 1.5vw, 8px);
   --kb-gap: clamp(4px, 1.2vw, 8px);
   width: 100%;
-  max-width: 520px;
+  max-width: 420px; /* match grid width for perfect alignment */
   margin: 0 auto;
-  padding: 0 12px; /* symmetric inset */
+  padding: 0; /* match grid (no side padding) */
   box-sizing: border-box;
 }
 
