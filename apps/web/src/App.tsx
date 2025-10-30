@@ -622,24 +622,6 @@ export default function App() {
           v{APP_VERSION}
         </span>
       </div>
-      {/* Temporary Testing Version Badge */}
-      <div
-        style={{
-          position: 'fixed',
-          right: 8,
-          bottom: 8,
-          zIndex: 9999,
-          opacity: 0.9,
-        }}
-      >
-        <span
-          className="rounded-md border px-2 py-1 text-[10px] md:text-xs bg-background/90 backdrop-blur text-muted-foreground"
-          title="App version"
-          data-testid="floating-app-version"
-        >
-          v{APP_VERSION}
-        </span>
-      </div>
     );
   }
 
