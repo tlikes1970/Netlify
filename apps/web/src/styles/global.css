@@ -170,7 +170,7 @@ input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset:
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: 20px 28px; /* extra inset so left icon and close button aren't flush */
   border-bottom: 1px solid var(--line, #242a33);
   background: var(--bg, #0f1115);
 }
@@ -188,7 +188,8 @@ input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset:
   font-size: 1.5rem;
   cursor: pointer;
   color: var(--muted, #a9b3c1);
-  padding: 4px;
+  padding: 6px; /* slightly larger hit area */
+  margin-right: 2px; /* keep away from rounded edge to prevent visual clipping */
   border-radius: 4px;
   transition: all 0.2s ease;
 }
@@ -200,11 +201,14 @@ input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset:
 
 .gm-body {
   padding: 16px;
-  overflow: auto;
+  overflow: hidden; /* prevent inner scrolling */
   display: flex;
   flex-direction: column;
+  align-items: center; /* center all modal content horizontally */
   flex: 1;
   min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Scroll to top arrow animation */

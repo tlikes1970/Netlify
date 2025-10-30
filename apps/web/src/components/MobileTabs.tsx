@@ -1,11 +1,12 @@
 import { useTranslations } from '../lib/language';
 import { useLibrary } from '../lib/storage';
 import { useCustomLists } from '../lib/customLists';
+import { useReturningShows } from '@/state/selectors/useReturningShows';
 import { useEffect, useState, createContext, useContext } from 'react';
 import React from 'react';
 import { dlog } from '../lib/log';
 
-type TabId = 'watching'|'want'|'watched'|'mylists'|'discovery'; // Removed 'not' - now handled by modal
+type TabId = 'watching'|'want'|'watched'|'returning'|'mylists'|'discovery'; // Removed 'not' - now handled by modal
 export type MobileTabsProps = { current: 'home' | TabId; onChange: (next: 'home' | TabId) => void; };
 
 // Single source of truth for mobile nav height
@@ -156,16 +157,19 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
   const watchingItems = useLibrary('watching');
   const wantItems = useLibrary('wishlist');
   const watchedItems = useLibrary('watched');
+  const returningItems = useReturningShows();
   
   const watchingCount = watchingItems.length;
   const wantCount = wantItems.length;
   const watchedCount = watchedItems.length;
   const myListsCount = Array.isArray(customLists) ? customLists.length : 0;
+  const returningCount = returningItems.length;
   
   const TABS: { id: TabId; label: string; count: number }[] = [
     { id: 'watching', label: 'Watching', count: watchingCount },
     { id: 'want',     label: 'Wishlist', count: wantCount },
     { id: 'watched',  label: 'Watched', count: watchedCount },
+    { id: 'returning',label: 'Returning', count: returningCount },
     { id: 'mylists',  label: 'Lists', count: myListsCount },
     { id: 'discovery',label: 'Discover', count: 0 }
   ];

@@ -155,6 +155,9 @@ export function addToListWithConfirmation(item: MediaItem, targetList: ListName,
 }
 
 export const Library = {
+  getAll(): LibraryEntry[] {
+    return Object.values(state);
+  },
   upsert(item: MediaItem, list: ListName) {
     const key = k(item.id, item.mediaType);
     const oldEntry = state[key];

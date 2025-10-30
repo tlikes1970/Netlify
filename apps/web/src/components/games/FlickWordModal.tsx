@@ -140,9 +140,9 @@ export default function FlickWordModal({ isOpen, onClose }: FlickWordModalProps)
     position: 'fixed' as const,
     top: '50%',
     left: '50%',
-    transform: `translate(calc(-50% + ${modalPosition.x}px), calc(-50% + ${modalPosition.y}px))`,
-    width: '500px',
-    height: '750px',
+    transform: `translate(-50%, -50%) translate(${modalPosition.x}px, ${modalPosition.y}px)`,
+    width: 'min(90vw, 500px)',
+    height: 'min(90vh, 750px)',
     cursor: isDragging ? 'grabbing' : 'default',
     zIndex: 10000
   };

@@ -17,6 +17,7 @@ export type CardV2Props = {
   compact?: boolean;          // smaller text; still 2:3 poster
   showRating?: boolean;       // default true where voteAverage exists
   disableSwipe?: boolean;     // disable swipe actions for horizontal scrolling contexts
+  disableOverflow?: boolean;  // hide overflow menu (e.g., home currently watching rail)
 };
 
 /**
@@ -26,7 +27,7 @@ export type CardV2Props = {
  * - optional Holiday + chip top-right (where relevant)
  * - SWIPE ONLY ON MOBILE: Desktop has zero swipe wrapper
  */
-export default function CardV2({ item, context, actions, compact, showRating = true, disableSwipe = false }: CardV2Props) {
+export default function CardV2({ item, context, actions, compact, showRating = true, disableSwipe = false, disableOverflow = false }: CardV2Props) {
   const { title, year, posterUrl, voteAverage } = item;
   const rating = typeof voteAverage === 'number' ? Math.round(voteAverage * 10) / 10 : undefined;
   const translations = useTranslations();
@@ -148,11 +149,13 @@ export default function CardV2({ item, context, actions, compact, showRating = t
             item={item as any} 
             context={context === 'home' || context === 'tab-foryou' || context === 'search' ? 'home' : 'tab'} 
           />
-          <CompactOverflowMenu 
-            item={item as any} 
-            context={context === 'home' || context === 'tab-foryou' || context === 'search' ? 'home' : 'tab'}
-            actions={actions}
-          />
+          {!disableOverflow && (
+            <CompactOverflowMenu 
+              item={item as any} 
+              context={context === 'home' || context === 'tab-foryou' || context === 'search' ? 'home' : 'tab'}
+              actions={actions}
+            />
+          )}
         </div>
       </div>
     </article>

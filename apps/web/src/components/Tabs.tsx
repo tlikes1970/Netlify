@@ -1,8 +1,9 @@
 import { useTranslations } from '../lib/language';
 import { useLibrary } from '../lib/storage';
+import { useReturningShows } from '@/state/selectors/useReturningShows';
 import { useCustomLists } from '../lib/customLists';
 
-type TabId = 'watching'|'want'|'watched'|'mylists'|'discovery'; // Removed 'not' - now handled by modal
+type TabId = 'watching'|'want'|'watched'|'returning'|'mylists'|'discovery'; // Removed 'not' - now handled by modal
 export type TabsProps = { current: 'home' | TabId; onChange: (next: 'home' | TabId) => void; };
 
 export default function Tabs({ current, onChange }: TabsProps) {
@@ -13,16 +14,19 @@ export default function Tabs({ current, onChange }: TabsProps) {
   const watchingItems = useLibrary('watching');
   const wantItems = useLibrary('wishlist');
   const watchedItems = useLibrary('watched');
+  const returningItems = useReturningShows();
   
   const watchingCount = watchingItems.length;
   const wantCount = wantItems.length;
   const watchedCount = watchedItems.length;
   const myListsCount = Array.isArray(customLists) ? customLists.length : 0;
+  const returningCount = returningItems.length;
   
   const TABS: { id: TabId; label: string; count: number }[] = [
     { id: 'watching', label: translations.currentlyWatching, count: watchingCount },
     { id: 'want',     label: translations.wantToWatch, count: wantCount },
     { id: 'watched',  label: translations.watched, count: watchedCount },
+    { id: 'returning',label: 'Returning', count: returningCount },
     { id: 'mylists',  label: translations.myLists || 'My Lists', count: myListsCount },
     { id: 'discovery',label: translations.discovery, count: 0 }, // Discovery doesn't have a count
   ];

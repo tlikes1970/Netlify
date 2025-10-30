@@ -175,12 +175,17 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
     }
 
     console.log('🔍 Validating word:', game.current);
-    const valid = await isValidWord(game.current);
-    console.log('✅ Word validation result:', valid);
+    const verdict = await validateWord(game.current);
+    console.log('✅ Word validation result:', verdict);
     
-    if (!valid) {
-      console.log('❌ Word invalid, showing notification');
-      showNotification('Not in word list.', 'error');
+    if (!verdict.valid) {
+      if (verdict.reason === 'length') {
+        showNotification('Use 5 letters.', 'error');
+      } else if (verdict.reason === 'charset' || verdict.reason === 'format') {
+        showNotification('Letters only.', 'error');
+      } else {
+        // Silent on not-found; accept logic will prevent hitting this often after refactor
+      }
       setGame(prev => ({ ...prev, current: '' }));
       return;
     }
@@ -274,7 +279,7 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
   const renderKeyboard = () => {
     const rows = [];
     
-    // Row 1: QWERTYUIOP + Backspace
+    // Row 1: QWERTYUIOP (no backspace here)
     const row1 = [];
     for (const letter of KEYBOARD_ROWS[0]) {
       const status = game.status[letter] || '';
@@ -288,18 +293,9 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
         </button>
       );
     }
-    row1.push(
-      <button
-        key="backspace"
-        className="fw-key fw-key-back"
-        onClick={handleBackspace}
-      >
-        ⌫
-      </button>
-    );
     rows.push(
       <div key="row1" className="fw-kb-row">
-        {row1}
+        <div className="fw-kb-wrap">{row1}</div>
       </div>
     );
     
@@ -319,12 +315,22 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
     }
     rows.push(
       <div key="row2" className="fw-kb-row">
-        {row2}
+        <div className="fw-kb-wrap">{row2}</div>
       </div>
     );
     
-    // Row 3: ZXCVBNM + Enter
-    const row3 = [];
+    // Row 3: Enter + ZXCVBNM + Backspace
+    const row3 = [
+      (
+        <button
+          key="enter"
+          className="fw-key fw-key-enter"
+          onClick={handleSubmit}
+        >
+          Enter
+        </button>
+      )
+    ];
     for (const letter of KEYBOARD_ROWS[2]) {
       const status = game.status[letter] || '';
       row3.push(
@@ -339,16 +345,16 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
     }
     row3.push(
       <button
-        key="enter"
-        className="fw-key fw-key-enter"
-        onClick={handleSubmit}
+        key="backspace"
+        className="fw-key fw-key-back"
+        onClick={handleBackspace}
       >
-        Enter
+        ⌫
       </button>
     );
     rows.push(
       <div key="row3" className="fw-kb-row">
-        {row3}
+        <div className="fw-kb-wrap">{row3}</div>
       </div>
     );
     
@@ -400,9 +406,6 @@ export default function FlickWordGame({ onClose, onGameComplete }: FlickWordGame
 
       {/* Actions */}
       <div className="fw-actions">
-        <button className="fw-btn fw-new-game" onClick={initializeGame}>
-          New Game
-        </button>
         {onClose && (
           <button className="fw-btn fw-close" onClick={onClose}>
             Close
