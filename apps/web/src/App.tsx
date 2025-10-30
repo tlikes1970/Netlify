@@ -386,6 +386,7 @@ export default function App() {
 
   if (view !== 'home') {
     return (
+      <>
       <main className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)', minHeight: '100lvh' }}>
         {/* Debug: Show when modal should be visible - TOP LEVEL */}
         {showExtrasModal && (
@@ -622,6 +623,7 @@ export default function App() {
           v{APP_VERSION}
         </span>
       </div>
+      </>
     );
   }
 
