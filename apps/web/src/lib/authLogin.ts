@@ -35,7 +35,11 @@ function isWebView(): boolean {
  * Google sign-in helper that uses redirect on mobile/webview and popup on desktop
  */
 export async function googleLogin() {
-  // ⚠️ PERSISTENCE: Firebase persistence must be set BEFORE redirect begins
+  // ⚠️ CRITICAL: Detect iOS at the top - force popup immediately
+  // iOS Safari drops OAuth params during redirects, so we must use popup
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  
+  // ⚠️ PERSISTENCE: Firebase persistence must be set BEFORE any sign-in
   // Safari will drop redirect credentials if persistence isn't locked in
   // 
   // We check in this order:
@@ -51,7 +55,7 @@ export async function googleLogin() {
       // Ignore - will try explicit set below
     });
     
-    // Explicit setPersistence to ensure it's definitely set before redirect
+    // Explicit setPersistence to ensure it's definitely set before sign-in
     const { setPersistence, browserLocalPersistence } = await import('firebase/auth');
     await setPersistence(auth, browserLocalPersistence);
     logger.debug('[AuthLogin] Persistence confirmed set before sign-in');
@@ -61,6 +65,30 @@ export async function googleLogin() {
   
   // Also ensure IndexedDB/localStorage availability
   await ensurePersistenceBeforeAuth();
+  
+  // ⚠️ iOS FORCE POPUP PATH: Return early after persistence setup
+  // This bypasses all redirect logic to prevent Safari from stripping OAuth params
+  if (isIOS) {
+    logger.log('[iOS] Forcing popup mode - Safari drops redirect params');
+    authLogManager.log('popup_forced_ios', { 
+      forced: true,
+      reason: 'iOS Safari drops OAuth params during redirects',
+      timestamp: new Date().toISOString(),
+    });
+    
+    try {
+      await signInWithPopup(auth, googleProvider);
+      logger.log('[iOS] Popup sign-in successful');
+      return;
+    } catch (error: any) {
+      logger.error('[iOS] Popup sign-in failed', error);
+      authLogManager.log('popup_forced_ios_failed', {
+        error: error?.message || String(error),
+        code: error?.code,
+      });
+      throw error;
+    }
+  }
   
   // ⚠️ CRITICAL: Clean URL of debug params before redirect
   // Safari and Firebase may reject OAuth redirects with unexpected query params
@@ -115,37 +143,21 @@ export async function googleLogin() {
   
   const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
   
-  // ⚠️ CRITICAL: iOS 17+ Safari drops OAuth params during redirects
-  // Firebase officially recommends popup fallback for iOS
-  // This bypasses the redirect path entirely to prevent Safari from stripping query params
-  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  
   // Log and save to localStorage before redirect
   const logData = {
-    method: isIOS || isLocalhost ? 'popup' : 'redirect',
+    method: isLocalhost ? 'popup' : 'redirect',
     origin: window.location.origin,
     fullUrl: window.location.href,
     timestamp: new Date().toISOString(),
-    isIOS,
+    isIOS: false, // iOS path already handled above
     isLocalhost,
   };
   
-  logger.log('Google sign-in method', isIOS ? 'popup (iOS - Safari drops redirect params)' : isLocalhost ? 'popup (localhost)' : 'redirect (desktop/Android)');
+  logger.log('Google sign-in method', isLocalhost ? 'popup (localhost)' : 'redirect (desktop/Android)');
   logger.debug('Current origin', window.location.origin);
   logger.debug('Is localhost', isLocalhost);
-  logger.debug('Is iOS', isIOS);
   
   try {
-    // ⚠️ IOS WORKAROUND: Use popup on iOS to prevent Safari from stripping OAuth params
-    // iOS 17+ Safari's ITP often drops code= and state= during redirects
-    // Popup bypasses the redirect path entirely
-    if (isIOS) {
-      logger.log('iOS detected - using popup mode to prevent Safari from stripping OAuth params');
-      logger.log('This follows Firebase recommendation for iOS when redirect params disappear');
-      await signInWithPopup(auth, googleProvider);
-      logger.log('Popup sign-in successful');
-      return;
-    }
     
     // LOCALHOST WORKAROUND: Use popup mode even if webview would use redirect
     // This avoids Firebase's redirect handler issues with localhost
@@ -264,19 +276,6 @@ export async function googleLogin() {
         // If stuckTimer fires, it will handle auto-fallback
       } catch (error) {
         cleanup(); // Clean up if redirect fails
-        // Don't throw immediately - check if we should auto-fallback instead
-        const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-        if (isIOS && error && typeof error === 'object' && 'code' in error && error.code === 'auth/cancelled-popup-request') {
-          logger.warn('[Auto-fallback] Redirect failed with cancelled popup - retrying with popup');
-          try {
-            await signInWithPopup(auth, googleProvider);
-            logger.log('[Auto-fallback] Popup sign-in successful after redirect error');
-            return; // Success
-          } catch (popupError) {
-            logger.error('[Auto-fallback] Popup also failed', popupError);
-            throw popupError; // Throw original or popup error
-          }
-        }
         throw error;
       }
     } else {
@@ -303,17 +302,10 @@ export async function googleLogin() {
       // ignore
     }
     
-    // If popup fails with blocked error, fallback to redirect (except on iOS where redirect won't work)
-    if (!isIOS && (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user')) {
-      logger.warn('Popup blocked on non-iOS device, falling back to redirect');
+    // If popup fails with blocked error, fallback to redirect (non-iOS only)
+    if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+      logger.warn('Popup blocked, falling back to redirect');
       return signInWithRedirect(auth, googleProvider);
-    }
-    
-    // On iOS, if popup fails, we can't fallback to redirect (will lose params)
-    // User must allow popups or try again
-    if (isIOS && (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user')) {
-      logger.error('iOS popup blocked - cannot fallback to redirect (Safari will strip params)');
-      throw new Error('Please allow popups to sign in on iOS devices. Redirect flow is not supported on iOS due to Safari privacy restrictions.');
     }
     
     throw error;
