@@ -2,7 +2,6 @@ import { useTranslations } from '../lib/language';
 import { useLibrary } from '../lib/storage';
 import { useReturningShows } from '@/state/selectors/useReturningShows';
 import { useCustomLists } from '../lib/customLists';
-import { useMemo, useState, useRef, useEffect } from 'react';
 
 type TabId = 'watching'|'want'|'watched'|'returning'|'mylists'|'discovery'; // Removed 'not' - now handled by modal
 export type TabsProps = { current: 'home' | TabId; onChange: (next: 'home' | TabId) => void; };
@@ -31,26 +30,6 @@ export default function Tabs({ current, onChange }: TabsProps) {
     { id: 'mylists',  label: translations.myLists || 'My Lists', count: myListsCount },
     { id: 'discovery',label: translations.discovery, count: 0 }, // Discovery doesn't have a count
   ];
-
-  // Split into visible vs overflow (keep Lists visible; move Returning to More)
-  const { visibleTabs, overflowTabs } = useMemo(() => {
-    const visibleIds = new Set<TabId>(['watching', 'want', 'watched', 'mylists']);
-    const visible = TABS.filter(t => visibleIds.has(t.id as TabId));
-    const overflow = TABS.filter(t => !visibleIds.has(t.id as TabId));
-    return { visibleTabs: visible, overflowTabs: overflow };
-  }, [TABS]);
-
-  // "More" dropdown state and outside-click close
-  const [moreOpen, setMoreOpen] = useState(false);
-  const moreRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    const onDocClick = (e: MouseEvent) => {
-      if (!moreRef.current) return;
-      if (!moreRef.current.contains(e.target as Node)) setMoreOpen(false);
-    };
-    document.addEventListener('click', onDocClick);
-    return () => document.removeEventListener('click', onDocClick);
-  }, []);
   return (
     <div className="w-full">
       <div className="w-full px-4 py-4">
@@ -72,8 +51,8 @@ export default function Tabs({ current, onChange }: TabsProps) {
                 {translations.home}
               </button>
               
-              {/* Main Tabs (visible) */}
-              {visibleTabs.map(t => (
+              {/* Main Tabs */}
+              {TABS.map(t => (
                 <button
                   key={t.id}
                   role="tab"
@@ -101,52 +80,6 @@ export default function Tabs({ current, onChange }: TabsProps) {
                   </span>
                 </button>
               ))}
-
-              {/* More overflow menu */}
-              {overflowTabs.length > 0 && (
-                <div ref={moreRef} className="relative">
-                  <button
-                    onClick={() => setMoreOpen(v => !v)}
-                    className="px-6 py-3 rounded-xl text-base font-semibold transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md shadow-sm flex items-center gap-2"
-                    style={{
-                      backgroundColor: 'var(--card)',
-                      color: 'var(--text)',
-                      border: '1px solid var(--line)'
-                    }}
-                    aria-haspopup="menu"
-                    aria-expanded={moreOpen}
-                  >
-                    More
-                    {overflowTabs.some(t => t.count > 0) && (
-                      <span className="ml-1 px-2 py-1 rounded-full text-sm font-bold" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>
-                        {overflowTabs.reduce((sum, t) => sum + (t.count || 0), 0)}
-                      </span>
-                    )}
-                  </button>
-                  {moreOpen && (
-                    <div
-                      role="menu"
-                      className="absolute mt-2 right-0 min-w-[180px] rounded-xl shadow-lg border"
-                      style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', zIndex: 1000 }}
-                    >
-                      {overflowTabs.map(t => (
-                        <button
-                          key={t.id}
-                          role="menuitem"
-                          onClick={() => { setMoreOpen(false); onChange(t.id); }}
-                          className="w-full text-left px-4 py-2 flex items-center justify-between hover:opacity-90"
-                          style={{ color: 'var(--text)' }}
-                        >
-                          <span>{t.label}</span>
-                          {t.count > 0 && (
-                            <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-bold" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>{t.count}</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         </nav>
