@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { SWIPE } from './gestures';
 
 export interface SwipeState {
@@ -7,14 +7,12 @@ export interface SwipeState {
   direction: 'left' | 'right' | null;
   actionTriggered: boolean;
 }
-
 export interface SwipeConfig {
   threshold?: number;
   maxSwipeDistance?: number;
   enableBidirectional?: boolean;
   enableRTL?: boolean;
 }
-
 export interface UseSwipeProps {
   config?: SwipeConfig;
   onSwipeStart?: () => void;
@@ -45,248 +43,133 @@ export function useSwipe({
     actionTriggered: false
   });
 
-  const startX = useRef<number>(0);
-  const startY = useRef<number>(0);
-  const isDragging = useRef<boolean>(false);
   const elementRef = useRef<HTMLDivElement>(null);
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const axisLock = useRef<'x' | 'y' | null>(null);
+  const captured = useRef(false);
 
-  // Clamp X delta with min/max bounds
-  const clampX = useCallback((deltaX: number, bounds: { min: number; max: number }) => {
-    return Math.min(Math.max(deltaX, bounds.min), bounds.max);
-  }, []);
+  // rAF coalescing
+  const rafId = useRef<number | null>(null);
+  const pending = useRef<{ distance: number; direction: 'left' | 'right' | null } | null>(null);
 
-  // Handle pointer/touch start
-  const handleStart = useCallback((clientX: number, clientY: number) => {
+  const clampX = useCallback((dx: number, b: { min: number; max: number }) => Math.min(Math.max(dx, b.min), b.max), []);
+
+  const begin = useCallback((x: number, y: number) => {
     if (disabled) return;
-    
-    startX.current = clientX;
-    startY.current = clientY;
-    isDragging.current = false;
-    
-    setSwipeState(prev => ({
-      ...prev,
-      isSwipeActive: true,
-      swipeDistance: 0,
-      direction: null,
-      actionTriggered: false
-    }));
+    startX.current = x;
+    startY.current = y;
+    axisLock.current = null;
+    captured.current = false;
 
+    setSwipeState(s => ({ ...s, isSwipeActive: true, swipeDistance: 0, direction: null, actionTriggered: false }));
     onSwipeStart?.();
   }, [disabled, onSwipeStart]);
 
-  // Handle pointer/touch move
-  const handleMove = useCallback((clientX: number, clientY: number) => {
-    if (!swipeState.isSwipeActive || disabled) return;
+  const moveCore = useCallback((x: number, y: number) => {
+    if (disabled || !swipeState.isSwipeActive) return;
 
-    const deltaX = clientX - startX.current;
-    const deltaY = clientY - startY.current;
-    
-    // Determine if this is a horizontal swipe (not vertical scroll)
-    const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
-    
-    if (!isDragging.current && Math.abs(deltaX) > 10) {
-      isDragging.current = true;
+    const dx = x - startX.current;
+    const dy = y - startY.current;
+
+    if (!axisLock.current) {
+      const ax = Math.abs(dx), ay = Math.abs(dy);
+      if (ax > 8 || ay > 8) axisLock.current = ax > ay ? 'x' : 'y';
     }
+    if (axisLock.current === 'y') return; // let vertical scroll happen
 
-    if (isDragging.current && isHorizontalSwipe) {
-      // Apply clamping based on configuration
-      const bounds = enableBidirectional 
-        ? { min: -maxSwipeDistance, max: maxSwipeDistance }
-        : { min: -maxSwipeDistance, max: 0 }; // Only left swipes
-      
-      const clampedDeltaX = clampX(deltaX, bounds);
-      const distance = Math.abs(clampedDeltaX);
-      const direction = clampedDeltaX > 0 ? 'right' : 'left';
-      
-      setSwipeState(prev => ({
-        ...prev,
-        swipeDistance: distance,
-        direction
-      }));
+    const bounds = enableBidirectional ? { min: -maxSwipeDistance, max: maxSwipeDistance }
+                                       : { min: -maxSwipeDistance, max: 0 };
+    const clamped = clampX(dx, bounds);
+    const distance = Math.abs(clamped);
+    const direction: 'left' | 'right' | null = clamped === 0 ? null : (clamped > 0 ? 'right' : 'left');
 
-      onSwipeMove?.(distance, direction);
-    }
-  }, [swipeState.isSwipeActive, disabled, maxSwipeDistance, enableBidirectional, clampX, onSwipeMove]);
-
-  // Handle pointer/touch end
-  const handleEnd = useCallback(() => {
-    if (!swipeState.isSwipeActive || disabled) {
-      isHorizontalGesture.current = false;
-      return;
-    }
-
-    const { swipeDistance, direction } = swipeState;
-    
-    onSwipeEnd?.(swipeDistance, direction);
-    
-    // Check if swipe threshold was met
-    if (swipeDistance >= threshold && direction && !swipeState.actionTriggered) {
-      setSwipeState(prev => ({
-        ...prev,
-        actionTriggered: true
-      }));
-      
-      onSwipeAction?.(direction);
-      
-      // Add haptic feedback on mobile
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
-      }
-    }
-
-    // Reset swipe state - respect reduced motion preference
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const resetDelay = prefersReducedMotion ? 0 : 300;
-    
-    setTimeout(() => {
-      setSwipeState({
-        isSwipeActive: false,
-        swipeDistance: 0,
-        direction: null,
-        actionTriggered: false
+    pending.current = { distance, direction };
+    if (rafId.current == null) {
+      rafId.current = requestAnimationFrame(() => {
+        rafId.current = null;
+        const p = pending.current;
+        pending.current = null;
+        if (!p) return;
+        setSwipeState(s => ({ ...s, swipeDistance: p.distance, direction: p.direction }));
+        if (p.direction) onSwipeMove?.(p.distance, p.direction);
       });
-      isHorizontalGesture.current = false;
-    }, resetDelay);
-  }, [swipeState, threshold, disabled, onSwipeEnd, onSwipeAction]);
-
-  // Touch events
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    handleStart(touch.clientX, touch.clientY);
-  }, [handleStart]);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - startX.current;
-    const deltaY = touch.clientY - startY.current;
-    const isHorizontal = Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 12;
-    if (!isHorizontal) {
-      // Let the page scroll; do not preventDefault
-      return;
     }
-    // Horizontal swipe confirmed; prevent vertical scroll hijack
-    e.preventDefault();
-    handleMove(touch.clientX, touch.clientY);
-  }, [handleMove]);
+  }, [disabled, swipeState.isSwipeActive, enableBidirectional, maxSwipeDistance, clampX, onSwipeMove]);
 
-  const handleTouchEnd = useCallback(() => {
-    handleEnd();
-  }, [handleEnd]);
+  const endCore = useCallback(() => {
+    if (disabled || !swipeState.isSwipeActive) {
+      axisLock.current = null; captured.current = false; return;
+    }
+    const { swipeDistance, direction, actionTriggered } = swipeState;
 
-  // Mouse events (for desktop testing)
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    handleStart(e.clientX, e.clientY);
-  }, [handleStart]);
+    onSwipeEnd?.(swipeDistance, direction);
+    if (swipeDistance >= threshold && direction && !actionTriggered) {
+      setSwipeState(s => ({ ...s, actionTriggered: true }));
+      onSwipeAction?.(direction);
+      if (navigator.vibrate) navigator.vibrate(30);
+    }
+    setSwipeState({ isSwipeActive: false, swipeDistance: 0, direction: null, actionTriggered: false });
+    axisLock.current = null; captured.current = false;
+  }, [disabled, swipeState, threshold, onSwipeEnd, onSwipeAction]);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    handleMove(e.clientX, e.clientY);
-  }, [handleMove]);
-
-  const handleMouseUp = useCallback(() => {
-    handleEnd();
-  }, [handleEnd]);
-
-  // Track if we've confirmed this is a horizontal swipe
-  const isHorizontalGesture = useRef(false);
-  
-  // Pointer events (modern approach)
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    // Only handle mouse and touch pointers
-    if (e.pointerType !== 'mouse' && e.pointerType !== 'touch') return;
-    
-    handleStart(e.clientX, e.clientY);
-    isHorizontalGesture.current = false;
-    
-    // Don't capture pointer immediately - wait to see if it's horizontal
-  }, [handleStart]);
-
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    handleMove(e.clientX, e.clientY);
-    
-    // Only capture pointer if this is clearly a horizontal gesture
-    if (swipeState.isSwipeActive && elementRef.current && !isHorizontalGesture.current) {
-      const deltaX = e.clientX - startX.current;
-      const deltaY = e.clientY - startY.current;
-      const isHorizontal = Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 20;
-      
-      if (isHorizontal) {
-        isHorizontalGesture.current = true;
-        elementRef.current.setPointerCapture(e.pointerId);
+  const pointerHandlers = useMemo(() => ({
+    onPointerDown: (e: React.PointerEvent) => {
+      if (e.pointerType === 'mouse' || e.pointerType === 'touch' || e.pointerType === 'pen') {
+        begin(e.clientX, e.clientY);
       }
+    },
+    onPointerMove: (e: React.PointerEvent) => {
+      if (!swipeState.isSwipeActive) return;
+      moveCore(e.clientX, e.clientY);
+      if (!captured.current && axisLock.current === 'x' && elementRef.current) {
+        captured.current = true;
+        elementRef.current.setPointerCapture?.(e.pointerId);
+      }
+    },
+    onPointerUp: (e: React.PointerEvent) => {
+      endCore();
+      if (captured.current && elementRef.current) elementRef.current.releasePointerCapture?.(e.pointerId);
+    },
+    onPointerCancel: (e: React.PointerEvent) => {
+      endCore();
+      if (captured.current && elementRef.current) elementRef.current.releasePointerCapture?.(e.pointerId);
     }
-  }, [handleMove, swipeState.isSwipeActive]);
+  }), [begin, moveCore, endCore, swipeState.isSwipeActive]);
 
-  const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    handleEnd();
-    
-    if (elementRef.current && isHorizontalGesture.current) {
-      elementRef.current.releasePointerCapture(e.pointerId);
-    }
-    
-    isHorizontalGesture.current = false;
-  }, [handleEnd]);
+  // Touch fallback for older iOS
+  const touchHandlers = useMemo(() => ({
+    onTouchStart: (e: React.TouchEvent) => begin(e.touches[0].clientX, e.touches[0].clientY),
+    onTouchMove: (e: React.TouchEvent) => {
+      const t = e.touches[0];
+      const dx = t.clientX - startX.current, dy = t.clientY - startY.current;
+      if (!axisLock.current) {
+        const ax = Math.abs(dx), ay = Math.abs(dy);
+        if (ax > 8 || ay > 8) axisLock.current = ax > ay ? 'x' : 'y';
+      }
+      if (axisLock.current === 'x') { e.preventDefault(); moveCore(t.clientX, t.clientY); }
+    },
+    onTouchEnd: () => endCore()
+  }), [begin, moveCore, endCore]);
 
-  const handlePointerCancel = useCallback((e: React.PointerEvent) => {
-    handleEnd();
-    
-    if (elementRef.current && isHorizontalGesture.current) {
-      elementRef.current.releasePointerCapture(e.pointerId);
-    }
-    
-    isHorizontalGesture.current = false;
-  }, [handleEnd]);
+  useEffect(() => () => { if (rafId.current != null) cancelAnimationFrame(rafId.current); }, []);
 
-  // Programmatic close on route changes and scroll start
+  // Only reset on history pop; do not tie to scroll events
   useEffect(() => {
-    const handleRouteChange = () => {
-      if (swipeState.isSwipeActive) {
-        setSwipeState({
-          isSwipeActive: false,
-          swipeDistance: 0,
-          direction: null,
-          actionTriggered: false
-        });
-      }
+    const onPop = () => {
+      setSwipeState({ isSwipeActive: false, swipeDistance: 0, direction: null, actionTriggered: false });
+      axisLock.current = null; captured.current = false;
     };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
-    const handleScrollStart = () => {
-      if (swipeState.isSwipeActive) {
-        setSwipeState({
-          isSwipeActive: false,
-          swipeDistance: 0,
-          direction: null,
-          actionTriggered: false
-        });
-      }
-    };
-
-    // Listen for route changes (popstate) and scroll events
-    window.addEventListener('popstate', handleRouteChange);
-    window.addEventListener('scroll', handleScrollStart, { passive: true });
-    
-    return () => {
-      window.removeEventListener('popstate', handleRouteChange);
-      window.removeEventListener('scroll', handleScrollStart);
-    };
-  }, [swipeState.isSwipeActive]);
-
+  const supportsPointer = typeof window !== 'undefined' && 'PointerEvent' in window;
   return {
     swipeState,
     elementRef,
-    handlers: {
-      // Pointer events (preferred - modern approach)
-      onPointerDown: handlePointerDown,
-      onPointerMove: handlePointerMove,
-      onPointerUp: handlePointerUp,
-      onPointerCancel: handlePointerCancel,
-      // Touch events (fallback for older browsers)
-      onTouchStart: handleTouchStart,
-      onTouchMove: handleTouchMove,
-      onTouchEnd: handleTouchEnd,
-      // Mouse events (for desktop testing)
-      onMouseDown: handleMouseDown,
-      onMouseMove: handleMouseMove,
-      onMouseUp: handleMouseUp
-    }
+    handlers: supportsPointer
+      ? pointerHandlers
+      : { ...touchHandlers, onMouseDown: (e: any) => begin(e.clientX, e.clientY), onMouseMove: (e: any) => moveCore(e.clientX, e.clientY), onMouseUp: () => endCore() }
   };
 }
