@@ -9,12 +9,12 @@ async function loadShard(first: string): Promise<Set<string>> {
   try {
     const r = await fetch(`/words/shards/${first}.txt`, { cache: 'force-cache' });
     if (r.ok) text = await r.text();
-  } catch {}
+  } catch (e) { /* ignore network error; will fallback to full list */ }
   if (!text) {
     try {
       const r2 = await fetch('/words/valid-guess.txt', { cache: 'force-cache' });
       if (r2.ok) text = await r2.text();
-    } catch {}
+    } catch (e) { /* ignore fallback fetch failure */ }
   }
   const set = new Set<string>(
     text

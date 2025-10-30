@@ -17,7 +17,7 @@ export function useReturningShows(): ReturningShow[] {
 
   useEffect(() => {
     const unsub = Library.subscribe(() => setVersion(v => v + 1));
-    return () => unsub();
+    return () => { unsub(); };
   }, []);
 
   const all = useMemo(() => Library.getAll(), [version]);
