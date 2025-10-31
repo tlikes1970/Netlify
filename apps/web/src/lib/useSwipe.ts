@@ -194,11 +194,16 @@ export function useSwipe({
 
   const pointerHandlers = useMemo(() => ({
     onPointerDown: (e: React.PointerEvent) => {
-      if (e.pointerType === 'mouse' || e.pointerType === 'touch' || e.pointerType === 'pen') {
+      // Only handle pointer events from touch/pen, not mouse (mouse wheel should work normally)
+      // Mouse button clicks are handled separately, so we only need touch/pen for swipe
+      if (e.pointerType === 'touch' || e.pointerType === 'pen') {
         begin(e.clientX, e.clientY);
       }
     },
     onPointerMove: (e: React.PointerEvent) => {
+      // Only handle touch/pen pointer events, not mouse (mouse wheel/scroll should work normally)
+      if (e.pointerType === 'mouse') return;
+      
       // Phase 5: If timing improvements enabled, always call moveCore to allow activation check
       // Otherwise, only call if swipe is already active (original behavior)
       if (swipeTimingEnabled || swipeState.isSwipeActive) {
