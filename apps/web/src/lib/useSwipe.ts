@@ -239,7 +239,29 @@ export function useSwipe({
     onTouchStart: (e: React.TouchEvent) => begin(e.touches[0].clientX, e.touches[0].clientY),
     onTouchMove: (e: React.TouchEvent) => {
       const t = e.touches[0];
-      // Phase 5: Always call moveCore - it handles axis detection and activation
+      
+      // Quick check: if this is clearly upward vertical movement, immediately allow scroll
+      // This handles quick flicks where initial movement might be small but clearly vertical
+      const dx = t.clientX - startX.current;
+      const dy = t.clientY - startY.current;
+      const ay = Math.abs(dy);
+      const ax = Math.abs(dx);
+      
+      // If vertical movement is significant and upward, immediately lock to vertical
+      // This prevents any processing that might interfere with quick scrolls
+      if (dy < 0 && ay > 5 && (axisLock.current === null || axisLock.current === 'y')) {
+        // Upward scroll detected - lock to vertical immediately and return
+        axisLock.current = 'y';
+        // Don't call moveCore - just allow the scroll
+        return;
+      }
+      
+      // If already locked to vertical, don't process at all - just allow scroll
+      if (axisLock.current === 'y') {
+        return;
+      }
+      
+      // Phase 5: Call moveCore for axis detection and activation
       moveCore(t.clientX, t.clientY);
       
       // Only preventDefault if we're definitely in horizontal swipe mode
