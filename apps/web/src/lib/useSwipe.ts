@@ -240,19 +240,27 @@ export function useSwipe({
     onTouchMove: (e: React.TouchEvent) => {
       const t = e.touches[0];
       
-      // Quick check: if this is clearly upward vertical movement, immediately allow scroll
-      // This handles quick flicks where initial movement might be small but clearly vertical
+      // Quick check: if this is upward vertical movement, immediately allow scroll
+      // This handles quick flicks where ANY upward movement should immediately allow scroll
       const dx = t.clientX - startX.current;
       const dy = t.clientY - startY.current;
       const ay = Math.abs(dy);
       const ax = Math.abs(dx);
       
-      // If vertical movement is significant and upward, immediately lock to vertical
-      // This prevents any processing that might interfere with quick scrolls
-      if (dy < 0 && ay > 5 && (axisLock.current === null || axisLock.current === 'y')) {
+      // If ANY upward movement detected, immediately lock to vertical and allow scroll
+      // This is critical for quick flicks - even 1px upward should trigger this
+      if (dy < 0 && (axisLock.current === null || axisLock.current === 'y')) {
         // Upward scroll detected - lock to vertical immediately and return
+        // Don't wait for thresholds - quick flicks need immediate response
         axisLock.current = 'y';
-        // Don't call moveCore - just allow the scroll
+        // Don't call moveCore - just allow the scroll to proceed
+        return;
+      }
+      
+      // Also check for significant downward movement (but not upward)
+      // If downward is clearly dominant, also lock to vertical
+      if (dy > 0 && ay > ax && axisLock.current === null) {
+        axisLock.current = 'y';
         return;
       }
       
