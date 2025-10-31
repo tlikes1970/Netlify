@@ -103,29 +103,62 @@ export function applyModalScrollIsolation(
     });
   }
 
-  // 4. Prevent wheel events from propagating to background
+  // 4. Prevent wheel events from propagating to background only when at boundaries
+  // Don't interfere with normal scrolling within the modal
   const handleWheel = (e: WheelEvent) => {
-    // Only prevent if scrolling modal content
     const target = e.target as HTMLElement;
-    if (modalElement.contains(target)) {
-      e.stopPropagation();
-      
-      // If at scroll boundaries, prevent further scrolling
-      const scrollableTarget = target.closest('[style*="overflow"], [class*="scroll"]') as HTMLElement;
-      if (scrollableTarget) {
-        const { scrollTop, scrollHeight, clientHeight } = scrollableTarget;
-        const isAtTop = scrollTop <= 0;
-        const isAtBottom = scrollTop >= scrollHeight - clientHeight - 1;
-        
-        if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
-          if (e.cancelable) {
-            e.preventDefault();
-          }
-        }
-      }
+    if (!modalElement.contains(target)) {
+      // Not in modal - allow normal behavior
+      return;
     }
+
+    // Find the scrollable element - check element itself and all parents up to modal
+    const isScrollable = (el: HTMLElement): boolean => {
+      const style = window.getComputedStyle(el);
+      const overflowY = style.overflowY;
+      const overflow = style.overflow;
+      return (overflowY === 'auto' || overflowY === 'scroll' || overflow === 'auto' || overflow === 'scroll') &&
+             el.scrollHeight > el.clientHeight;
+    };
+
+    // Walk up the DOM tree to find the scrollable container
+    let scrollableTarget: HTMLElement | null = null;
+    let current: HTMLElement | null = target as HTMLElement;
+    
+    while (current && modalElement.contains(current)) {
+      if (isScrollable(current)) {
+        scrollableTarget = current;
+        break;
+      }
+      current = current.parentElement;
+    }
+    
+    if (scrollableTarget) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollableTarget;
+      const tolerance = 1; // Small tolerance for floating point issues
+      const isAtTop = scrollTop <= tolerance;
+      const isAtBottom = scrollTop >= scrollHeight - clientHeight - tolerance;
+      
+      // Only prevent propagation/preventDefault if we're at boundaries trying to overscroll
+      // This prevents scroll chaining to background while allowing normal modal scrolling
+      const tryingToScrollUp = e.deltaY < 0;
+      const tryingToScrollDown = e.deltaY > 0;
+      
+      if ((isAtTop && tryingToScrollUp) || (isAtBottom && tryingToScrollDown)) {
+        // At boundary and trying to scroll beyond - prevent it from reaching background
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+        e.stopPropagation();
+      }
+      // Otherwise, allow normal scrolling within modal (don't stop propagation)
+    }
+    // If no scrollable target found, allow event to propagate normally
+    // This ensures normal mouse wheel scrolling works in the modal
   };
 
+  // Add listener to document in bubble phase (not capture) so modal can handle scroll normally
+  // We'll stop propagation only when needed
   document.addEventListener('wheel', handleWheel, { passive: false });
   cleanupFunctions.push(() => {
     document.removeEventListener('wheel', handleWheel);
