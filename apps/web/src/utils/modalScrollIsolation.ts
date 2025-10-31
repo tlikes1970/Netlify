@@ -67,7 +67,7 @@ export function applyModalScrollIsolation(
 
     const handleOverlayTouchMove = (e: TouchEvent) => {
       // Prevent scroll on overlay from affecting background
-      if (e.target === overlayElement) {
+      if (e.target === overlayElement && e.cancelable) {
         e.preventDefault();
         e.stopPropagation();
       }
@@ -118,7 +118,9 @@ export function applyModalScrollIsolation(
         const isAtBottom = scrollTop >= scrollHeight - clientHeight - 1;
         
         if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
-          e.preventDefault();
+          if (e.cancelable) {
+            e.preventDefault();
+          }
         }
       }
     }

@@ -229,8 +229,9 @@ export function useSwipe({
       moveCore(t.clientX, t.clientY);
       
       // Only preventDefault if we're definitely in horizontal swipe mode
+      // Check if event is cancelable to avoid "Ignored attempt to cancel" warnings
       // If locked to y or still uncertain, allow default scroll behavior
-      if (axisLock.current === 'x' && swipeState.isSwipeActive) { 
+      if (axisLock.current === 'x' && swipeState.isSwipeActive && e.cancelable) { 
         e.preventDefault(); 
       }
     },

@@ -117,8 +117,8 @@ export function usePullToRefresh({
       }));
 
       // Phase 6: Improved preventDefault timing - only when definitely pulling
-      // Ensure preventDefault is called reliably
-      if (pullRefreshEnabled || true) { // Always prevent when pulling
+      // Check if event is cancelable to avoid "Ignored attempt to cancel" warnings
+      if (e.cancelable) {
         e.preventDefault();
       }
     }
