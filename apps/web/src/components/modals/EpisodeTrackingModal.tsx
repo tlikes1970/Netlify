@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { getTVShowDetails, type Episode, type Season } from '@/lib/tmdb';
 import { lockScroll, unlockScroll } from '@/utils/scrollLock';
 import { cleanupInvalidEpisodeKeys, getValidEpisodeKeys } from '@/utils/episodeProgress';
+import { useModalScrollIsolation } from '@/utils/modalScrollIsolation';
 import ErrorBoundary from '../ErrorBoundary';
 
 // Extended episode type with watched state
@@ -23,6 +24,11 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
   const [seasons, setSeasons] = useState<(Season & { episodes: EpisodeWithWatched[] })[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  
+  // Apply modal scroll isolation when enabled
+  useModalScrollIsolation(modalRef, overlayRef, isOpen);
 
   // Load episode data when modal opens
   useEffect(() => {
@@ -177,12 +183,14 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
     <div className="fixed inset-0 z-modal flex items-center justify-center">
       {/* Backdrop */}
       <div 
+        ref={overlayRef}
         className="absolute inset-0 bg-black bg-opacity-50"
         onClick={onClose}
       />
       
       {/* Modal */}
       <div 
+        ref={modalRef}
         className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden"
         style={{ backgroundColor: 'var(--card)', color: 'var(--text)' }}
       >
@@ -209,14 +217,6 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
           style={{ 
             overscrollBehavior: 'contain',
             touchAction: 'pan-y'
-          }}
-          onWheel={(e) => {
-            // Prevent wheel events from bubbling to the body
-            e.stopPropagation();
-          }}
-          onTouchMove={(e) => {
-            // Prevent touch scroll from bubbling to the body
-            e.stopPropagation();
           }}
         >
           {loading ? (
