@@ -96,25 +96,28 @@ export function useSwipe({
         return;
       }
       
-      // Determine axis
-      if (ax > ay * 1.5) {
-        // Horizontal is clearly dominant - activate swipe and lock to x
+      // Determine axis - strongly bias toward vertical for quick scrolls
+      // On iOS, quick upward scrolls can have initial horizontal drift that misclassifies
+      if (ax > ay * 2.0) {
+        // Horizontal must be TWICE vertical to lock - very strict requirement
         axisLock.current = 'x';
         setSwipeState(s => ({ ...s, isSwipeActive: true, swipeDistance: 0, direction: null, actionTriggered: false }));
         onSwipeStart?.();
-      } else if (ay > ax * 1.5) {
-        // Vertical is clearly dominant - lock to y and don't activate swipe
+      } else if (ay > ax * 1.2) {
+        // Vertical is clearly dominant - lock to y immediately and allow scroll
         axisLock.current = 'y';
         // Don't activate swipe for vertical - allow scroll
         return;
       } else {
-        // Too close to call - wait for more movement
-        // Prefer vertical (allow scrolling) if vertical is even slightly more
-        if (ay > ax) {
+        // Too close to call - strongly prefer vertical (allow scrolling)
+        // This handles cases where there's slight horizontal drift during rapid vertical scroll
+        if (ay >= ax) {
+          // If vertical is equal or greater, prefer vertical (allow scroll)
           axisLock.current = 'y';
           return; // Allow scroll
         }
-        // If horizontal is slightly more but not clearly dominant, wait
+        // If horizontal is slightly more but not 2x, wait for more movement
+        // Don't lock to horizontal too quickly - give vertical scroll a chance
         return;
       }
     }
@@ -127,20 +130,26 @@ export function useSwipe({
     if (axisLock.current === null) {
       const ax = Math.abs(dx), ay = Math.abs(dy);
       if (swipeTimingEnabled) {
-        // Phase 5: Improved axis detection
+        // Phase 5: Improved axis detection - strongly bias toward vertical
         if (ax > 15 || ay > 15) {
-          if (ax > ay * 1.5) {
+          // Require horizontal to be 2x vertical (very strict) to avoid false positives
+          if (ax > ay * 2.0) {
             axisLock.current = 'x';
             // Activate swipe if not already active
             if (!swipeState.isSwipeActive) {
               setSwipeState(s => ({ ...s, isSwipeActive: true, swipeDistance: 0, direction: null, actionTriggered: false }));
               onSwipeStart?.();
             }
-          } else if (ay > ax * 1.5) {
+          } else if (ay > ax * 1.2) {
+            // Vertical is clearly dominant - lock immediately and allow scroll
             axisLock.current = 'y';
             return; // Allow scroll
           } else {
-            if (ay > ax) axisLock.current = 'y';
+            // Ambiguous - prefer vertical if equal or greater
+            if (ay >= ax) {
+              axisLock.current = 'y';
+            }
+            // Otherwise wait for more movement
           }
         } else {
           // Not enough movement yet - wait
