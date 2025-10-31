@@ -1,3 +1,11 @@
+/**
+ * Process: Pull-to-Refresh
+ * Purpose: Provide pull-to-refresh gesture handling with iOS freeze prevention
+ * Data Source: Touch events, container scroll state
+ * Update Path: usePullToRefresh hook configuration
+ * Dependencies: scrollFeatureFlags (pull-refresh-fix, ios-scroll-fix)
+ */
+
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { isScrollFeatureEnabled } from '../utils/scrollFeatureFlags';
 
@@ -16,6 +24,11 @@ export interface UsePullToRefreshProps {
   enabled?: boolean;
 }
 
+// Thresholds (feature-flagged)
+const START_THRESHOLD = 20; // Must pull down 20px before PTR "owns" the gesture
+const VISUAL_THRESHOLD = 16; // No transforms below this distance
+const SCROLL_TOLERANCE = 5; // Tolerance for "at top" detection (px)
+
 export function usePullToRefresh({
   onRefresh,
   threshold = 80,
@@ -23,8 +36,8 @@ export function usePullToRefresh({
   resistance = 0.5,
   enabled = true
 }: UsePullToRefreshProps) {
-  // Phase 6: Check if pull-to-refresh improvements are enabled
   const pullRefreshEnabled = typeof window !== 'undefined' && isScrollFeatureEnabled('pull-refresh-fix');
+  const iosScrollFixEnabled = typeof window !== 'undefined' && isScrollFeatureEnabled('ios-scroll-fix');
   
   const [state, setState] = useState<PullToRefreshState>({
     isPulling: false,
@@ -35,8 +48,21 @@ export function usePullToRefresh({
 
   const startY = useRef<number>(0);
   const currentY = useRef<number>(0);
-  const isDragging = useRef<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const topTolerance = pullRefreshEnabled || iosScrollFixEnabled ? SCROLL_TOLERANCE : 0;
+
+  // Check if container is actually scrollable
+  const isContainerScrollable = useCallback((container: HTMLElement): boolean => {
+    const { scrollHeight, clientHeight } = container;
+    const tolerance = 1; // Small tolerance for floating point
+    return scrollHeight > clientHeight + tolerance;
+  }, []);
+
+  // Check if container is at top with tolerance
+  const isAtTop = useCallback((container: HTMLElement): boolean => {
+    const scrollTop = container.scrollTop || (container as any).scrollY || 0;
+    return scrollTop <= topTolerance;
+  }, [topTolerance]);
 
   // Calculate pull distance with resistance
   const calculatePullDistance = useCallback((deltaY: number) => {
@@ -47,42 +73,48 @@ export function usePullToRefresh({
     return Math.min(deltaY * resistanceFactor, maxPullDistance);
   }, [maxPullDistance, resistance]);
 
-  // Handle touch start
+  // Handle touch start - observe only, do not block
   const handleTouchStart = useCallback((e: TouchEvent) => {
     if (!enabled || state.isRefreshing) return;
     
     const container = containerRef.current;
     if (!container) return;
 
-    // Phase 6: Improved scroll position detection
-    // Handle negative scrollTop (some browsers/scroll containers)
-    // Add tolerance for near-top positions
-    const scrollTop = container.scrollTop || (container as any).scrollY || 0;
-    const tolerance = pullRefreshEnabled ? 5 : 0; // Allow 5px tolerance when improvements enabled
-    
-    // Only start pull-to-refresh if we're at (or near) the top of the scroll
-    if (scrollTop > tolerance) return;
+    // Guard: Disable PTR for non-scrollable containers
+    if (!isContainerScrollable(container)) {
+      return;
+    }
+
+    // Only consider PTR if at top
+    if (!isAtTop(container)) {
+      return;
+    }
 
     const touch = e.touches[0];
     startY.current = touch.clientY;
     currentY.current = touch.clientY;
-    isDragging.current = false;
-  }, [enabled, state.isRefreshing, pullRefreshEnabled]);
+    
+    // Reset pulling state on new touch
+    if (state.isPulling) {
+      setState(prev => ({
+        ...prev,
+        isPulling: false,
+        pullDistance: 0,
+        canRefresh: false
+      }));
+    }
+  }, [enabled, state.isRefreshing, state.isPulling, isContainerScrollable, isAtTop]);
 
-  // Handle touch move
+  // Handle touch move - only preventDefault when already in pulling state
   const handleTouchMove = useCallback((e: TouchEvent) => {
     if (!enabled || state.isRefreshing) return;
     
     const container = containerRef.current;
     if (!container) return;
 
-    // Phase 6: Improved scroll position detection
-    const scrollTop = container.scrollTop || (container as any).scrollY || 0;
-    const tolerance = pullRefreshEnabled ? 5 : 0;
-    
-    // Only handle if we're at (or near) the top of the scroll
-    if (scrollTop > tolerance) {
-      // If we've scrolled away from top, reset pull state
+    // Guard: Disable PTR for non-scrollable containers
+    if (!isContainerScrollable(container)) {
+      // Hard reset if we were pulling
       if (state.isPulling) {
         setState(prev => ({
           ...prev,
@@ -90,7 +122,19 @@ export function usePullToRefresh({
           pullDistance: 0,
           canRefresh: false
         }));
-        isDragging.current = false;
+      }
+      return;
+    }
+
+    // Check if still at top - if scrolled away, hard reset
+    if (!isAtTop(container)) {
+      if (state.isPulling) {
+        setState(prev => ({
+          ...prev,
+          isPulling: false,
+          pullDistance: 0,
+          canRefresh: false
+        }));
       }
       return;
     }
@@ -100,14 +144,18 @@ export function usePullToRefresh({
     
     const deltaY = currentY.current - startY.current;
     
-    // Only start dragging if we've moved down enough (downward = positive deltaY)
-    if (!isDragging.current && deltaY > 10) {
-      isDragging.current = true;
-    }
+    // Only transition to pulling if all conditions met:
+    // 1. Clearly downward gesture (deltaY > START_THRESHOLD)
+    // 2. Container is scrollable (already checked)
+    // 3. Container is at top (already checked)
+    const shouldEnterPulling = deltaY > START_THRESHOLD;
 
-    if (isDragging.current && deltaY > 0) {
+    if (shouldEnterPulling) {
+      // We are now in pulling state
       const pullDistance = calculatePullDistance(deltaY);
       const canRefresh = pullDistance >= threshold;
+      
+      const wasPulling = state.isPulling;
       
       setState(prev => ({
         ...prev,
@@ -116,19 +164,50 @@ export function usePullToRefresh({
         canRefresh
       }));
 
-      // Phase 6: Improved preventDefault timing - only when definitely pulling
-      // Check if event is cancelable to avoid "Ignored attempt to cancel" warnings
+      // Only preventDefault if we're in pulling state AND past start threshold
+      // This allows native scroll for micro flicks (< START_THRESHOLD)
+      if (!wasPulling && deltaY > START_THRESHOLD) {
+        // Logging for debugging (can be removed in production)
+        if (process.env.NODE_ENV === 'development' && pullRefreshEnabled) {
+          console.log('PTR considered', {
+            scrollTop: container.scrollTop,
+            deltaY,
+            isPulling: true
+          });
+        }
+      }
+
+      // Only call preventDefault when we're definitely in pulling state
       if (e.cancelable) {
         e.preventDefault();
+        if (process.env.NODE_ENV === 'development' && pullRefreshEnabled) {
+          console.log('PTR blocked default', {
+            isPulling: true,
+            deltaY,
+            pullDistance
+          });
+        }
+      }
+    } else {
+      // Not enough downward movement - let native scroll handle it
+      // But if we were pulling and user pulled up, reset
+      if (state.isPulling && deltaY <= 0) {
+        setState(prev => ({
+          ...prev,
+          isPulling: false,
+          pullDistance: 0,
+          canRefresh: false
+        }));
       }
     }
-  }, [enabled, state.isRefreshing, state.isPulling, threshold, calculatePullDistance, pullRefreshEnabled]);
+  }, [enabled, state.isRefreshing, state.isPulling, threshold, calculatePullDistance, isContainerScrollable, isAtTop, pullRefreshEnabled]);
 
   // Handle touch end
   const handleTouchEnd = useCallback(async () => {
-    if (!enabled || !state.isPulling) return;
+    if (!enabled) return;
 
-    if (state.canRefresh && !state.isRefreshing) {
+    // If we were pulling and reached refresh threshold, trigger refresh
+    if (state.isPulling && state.canRefresh && !state.isRefreshing) {
       setState(prev => ({
         ...prev,
         isRefreshing: true,
@@ -147,8 +226,8 @@ export function usePullToRefresh({
           canRefresh: false
         }));
       }
-    } else {
-      // Reset without refreshing
+    } else if (state.isPulling) {
+      // Reset without refreshing - snap back
       setState(prev => ({
         ...prev,
         isPulling: false,
@@ -156,8 +235,6 @@ export function usePullToRefresh({
         canRefresh: false
       }));
     }
-
-    isDragging.current = false;
   }, [enabled, state.isPulling, state.canRefresh, state.isRefreshing, onRefresh]);
 
   // Add event listeners
@@ -165,8 +242,13 @@ export function usePullToRefresh({
     const container = containerRef.current;
     if (!container) return;
 
-    container.addEventListener('touchstart', handleTouchStart, { passive: false });
+    // touchstart: passive true (observe only, don't block)
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    
+    // touchmove: passive false (need option to preventDefault), but only call preventDefault when pulling
     container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    
+    // touchend: passive true (non-blocking)
     container.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
@@ -176,24 +258,29 @@ export function usePullToRefresh({
     };
   }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
-  // Calculate refresh indicator styles
+  // Calculate refresh indicator styles - no visual feedback below visual threshold
   const getRefreshIndicatorStyles = () => {
-    const progress = Math.min(state.pullDistance / threshold, 1);
-    const opacity = state.isPulling ? Math.min(progress, 1) : 0;
+    // Only show indicator if pull distance exceeds visual threshold
+    const effectiveDistance = state.pullDistance >= VISUAL_THRESHOLD ? state.pullDistance : 0;
+    const progress = Math.min(effectiveDistance / threshold, 1);
+    const opacity = state.isPulling && effectiveDistance > 0 ? Math.min(progress, 1) : 0;
     const scale = state.isRefreshing ? 1 : Math.min(progress, 1);
     
     return {
-      transform: `translateY(${state.pullDistance}px) scale(${scale})`,
+      transform: effectiveDistance > 0 ? `translateY(${effectiveDistance}px) scale(${scale})` : 'translateY(0) scale(0)',
       opacity,
       transition: state.isRefreshing ? 'all 0.3s ease-out' : 'opacity 0.2s ease-out'
     };
   };
 
-  // Calculate container styles
+  // Calculate container styles - no transform below visual threshold
   const getContainerStyles = () => {
+    // Only apply transform if pull distance exceeds visual threshold
+    const effectiveDistance = state.pullDistance >= VISUAL_THRESHOLD ? state.pullDistance : 0;
+    
     return {
-      transform: state.isPulling ? `translateY(${state.pullDistance}px)` : 'translateY(0)',
-      transition: state.isRefreshing ? 'transform 0.3s ease-out' : 'none'
+      transform: effectiveDistance > 0 ? `translateY(${effectiveDistance}px)` : 'translateY(0)',
+      transition: state.isRefreshing ? 'transform 0.3s ease-out' : (state.isPulling && effectiveDistance === 0 ? 'transform 0.2s ease-out' : 'none')
     };
   };
 

@@ -57,6 +57,7 @@ export function applyModalScrollIsolation(
   scrollableElements.forEach(applyOverscrollBehavior);
 
   // 2. Prevent touch event propagation from overlay to background
+  // Only preventDefault when actually needed (at boundaries), not for normal vertical motion
   if (overlayElement) {
     const handleOverlayTouchStart = (e: TouchEvent) => {
       // Prevent touch events on overlay from reaching background
@@ -66,7 +67,8 @@ export function applyModalScrollIsolation(
     };
 
     const handleOverlayTouchMove = (e: TouchEvent) => {
-      // Prevent scroll on overlay from affecting background
+      // Only preventDefault if touching overlay directly (not modal content)
+      // This prevents background scroll while allowing normal modal scrolling
       if (e.target === overlayElement && e.cancelable) {
         e.preventDefault();
         e.stopPropagation();
@@ -84,21 +86,67 @@ export function applyModalScrollIsolation(
   // 3. Prevent touch events on modal content from propagating to background
   // Note: overscroll-behavior: contain CSS handles scroll chaining, so we don't need
   // aggressive JavaScript boundary detection that could interfere with normal scrolling
+  // Only preventDefault at boundaries during overscroll attempts, not for normal vertical motion
   if (modalContent) {
-    // Only prevent touch events from bubbling to document/body when touching modal content
-    // This prevents background scroll while allowing normal modal scrolling
+    let touchStartY = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY = e.touches[0].clientY;
+    };
+
     const handleTouchMove = (e: TouchEvent) => {
       // Only stop propagation if we're sure this touch is within the modal
       // Don't interfere with normal scrolling - let CSS overscroll-behavior handle boundaries
-      if (modalElement.contains(e.target as Node)) {
-        // Prevent this touch from affecting background scroll, but don't preventDefault
-        // which would block the scroll entirely
+      if (!modalElement.contains(e.target as Node)) {
+        return;
+      }
+
+      // Find the scrollable element within modal that contains the touch target
+      const findScrollableParent = (el: HTMLElement | null): HTMLElement | null => {
+        if (!el || !modalElement.contains(el)) return null;
+        
+        const style = window.getComputedStyle(el);
+        const overflowY = style.overflowY;
+        const overflow = style.overflow;
+        const isScrollable = (overflowY === 'auto' || overflowY === 'scroll' || overflow === 'auto' || overflow === 'scroll') &&
+                             el.scrollHeight > el.clientHeight;
+        
+        if (isScrollable) return el;
+        return findScrollableParent(el.parentElement);
+      };
+
+      const scrollableContainer = findScrollableParent(e.target as HTMLElement);
+      
+      if (scrollableContainer) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollableContainer;
+        const tolerance = 1;
+        const isAtTop = scrollTop <= tolerance;
+        const isAtBottom = scrollTop >= scrollHeight - clientHeight - tolerance;
+        
+        const deltaY = e.touches[0].clientY - touchStartY;
+        const tryingToOverscrollUp = isAtTop && deltaY > 0; // At top, trying to scroll up (overscroll)
+        const tryingToOverscrollDown = isAtBottom && deltaY < 0; // At bottom, trying to scroll down (overscroll)
+        
+        // Only preventDefault if we're at a boundary AND trying to overscroll
+        // This allows normal vertical scrolling within modal boundaries
+        if ((tryingToOverscrollUp || tryingToOverscrollDown) && e.cancelable) {
+          e.preventDefault();
+          e.stopPropagation();
+        } else {
+          // Normal scrolling - just stop propagation to prevent background scroll
+          // but don't preventDefault which would block native scroll
+          e.stopPropagation();
+        }
+      } else {
+        // No scrollable container - just stop propagation
         e.stopPropagation();
       }
     };
 
-    modalContent.addEventListener('touchmove', handleTouchMove, { passive: true });
+    modalContent.addEventListener('touchstart', handleTouchStart, { passive: true });
+    modalContent.addEventListener('touchmove', handleTouchMove, { passive: false });
     cleanupFunctions.push(() => {
+      modalContent.removeEventListener('touchstart', handleTouchStart);
       modalContent.removeEventListener('touchmove', handleTouchMove);
     });
   }

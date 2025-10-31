@@ -45,13 +45,24 @@ export function isScrollFeatureEnabled(flagName: ScrollFeatureFlag): boolean {
  * Set a scroll feature flag
  * @param flagName - The feature flag name
  * @param enabled - Boolean value to set
+ * Note: In browser, this persists to localStorage and can be verified via window.scrollFeatures.list()
  */
 export function setScrollFeatureFlag(flagName: ScrollFeatureFlag, enabled: boolean): void {
+  // Only early-return in SSR (server-side rendering), not in browser
+  // This ensures flags can be enabled in browser via console
   if (typeof window === 'undefined') return;
   
   try {
     localStorage.setItem(`flag:${flagName}`, enabled.toString());
     console.log(`🔧 Scroll Feature Flag "${flagName}" set to ${enabled}`);
+    
+    // Verify persistence (helpful for debugging)
+    if (process.env.NODE_ENV === 'development') {
+      const verified = localStorage.getItem(`flag:${flagName}`) === enabled.toString();
+      if (!verified) {
+        console.warn(`⚠️ Flag "${flagName}" may not have persisted correctly`);
+      }
+    }
   } catch (error) {
     console.error(`Failed to set scroll feature flag "${flagName}":`, error);
   }
