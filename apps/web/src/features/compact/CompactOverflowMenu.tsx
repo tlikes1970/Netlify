@@ -104,14 +104,15 @@ export function CompactOverflowMenu({ item, context, actions, showText = true }:
     // Small delay to avoid closing on the same click that opened it
     const timeoutId = setTimeout(() => {
       // Use capture phase to catch all clicks
-      document.addEventListener('mousedown', handleClickOutside, true);
-      document.addEventListener('touchstart', handleClickOutside, true);
+      // Passive: true for better scroll performance (not preventing default)
+      document.addEventListener('mousedown', handleClickOutside, { passive: true, capture: true });
+      document.addEventListener('touchstart', handleClickOutside, { passive: true, capture: true });
     }, 0);
 
     return () => {
       clearTimeout(timeoutId);
-      document.removeEventListener('mousedown', handleClickOutside, true);
-      document.removeEventListener('touchstart', handleClickOutside, true);
+      document.removeEventListener('mousedown', handleClickOutside, { passive: true, capture: true });
+      document.removeEventListener('touchstart', handleClickOutside, { passive: true, capture: true });
     };
   }, [isOpen]);
 

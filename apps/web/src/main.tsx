@@ -22,6 +22,9 @@ import './components/cards/button-pro.css';
 import { installCompactMobileGate, installActionsSplitGate } from './lib/flags';
 import { initFlags } from './lib/mobileFlags';
 import { logAuthOriginHint } from './lib/authLogin';
+// Import scroll feature flags and logger to ensure window exposure
+import './utils/scrollFeatureFlags';
+import './utils/scrollLogger';
 // ⚠️ CRITICAL: Don't import authManager here - it triggers constructor
 // Import it AFTER firebaseReady resolves to prevent race condition
 // import { authManager } from './lib/auth'; // Moved to after firebaseReady
