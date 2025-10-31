@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { ActionItem, ActionContext } from './actionsMap';
 import type { CardActionHandlers, MediaItem } from '../../components/cards/card.types';
 import { Portal } from '../../components/overlay/Portal';
+import { useSettings } from '../../lib/settings';
 
 interface CompactOverflowMenuProps {
   item: ActionItem;
@@ -21,6 +22,7 @@ export function CompactOverflowMenu({ item, context, actions, showText = true }:
   const [menuPosition, setMenuPosition] = useState<MenuPosition>({ top: 0, left: 0, direction: 'down' });
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const settings = useSettings();
 
   // Calculate menu position
   const calculatePosition = () => {
@@ -104,14 +106,15 @@ export function CompactOverflowMenu({ item, context, actions, showText = true }:
     // Small delay to avoid closing on the same click that opened it
     const timeoutId = setTimeout(() => {
       // Use capture phase to catch all clicks
-      document.addEventListener('mousedown', handleClickOutside, true);
-      document.addEventListener('touchstart', handleClickOutside, true);
+      // Passive: true for better scroll performance (not preventing default)
+      document.addEventListener('mousedown', handleClickOutside, { capture: true });
+      document.addEventListener('touchstart', handleClickOutside, { passive: true, capture: true });
     }, 0);
 
     return () => {
       clearTimeout(timeoutId);
-      document.removeEventListener('mousedown', handleClickOutside, true);
-      document.removeEventListener('touchstart', handleClickOutside, true);
+      document.removeEventListener('mousedown', handleClickOutside, { capture: true });
+      document.removeEventListener('touchstart', handleClickOutside, { passive: true, capture: true } as AddEventListenerOptions);
     };
   }, [isOpen]);
 
@@ -135,11 +138,17 @@ export function CompactOverflowMenu({ item, context, actions, showText = true }:
   function buildMenuActions(_item: ActionItem, context: ActionContext, handlers: CardActionHandlers) {
     const menuItems: Array<{ id: string; label: string; onClick: (item: MediaItem) => void }> = [];
     
+    // Check if item is a TV show (for episode tracking)
+    const isTVShow = (_item as any)?.mediaType === 'tv';
+    // Only show episode tracking if enabled in settings
+    const episodeTrackingEnabled = settings.layout.episodeTracking;
+    
     // Add context-appropriate actions
     switch (context) {
       case 'tab-watching':
         if (handlers.onWant) menuItems.push({ id: 'want', label: 'Want to Watch', onClick: handlers.onWant });
         if (handlers.onNotInterested) menuItems.push({ id: 'not-interested', label: 'Not Interested', onClick: handlers.onNotInterested });
+        if (isTVShow && episodeTrackingEnabled && handlers.onEpisodeTracking) menuItems.push({ id: 'episodes', label: 'Episodes', onClick: handlers.onEpisodeTracking });
         if (handlers.onNotesEdit) menuItems.push({ id: 'notes', label: 'Notes & Tags', onClick: handlers.onNotesEdit });
         if (handlers.onBloopersOpen) menuItems.push({ id: 'bloopers', label: 'Bloopers', onClick: handlers.onBloopersOpen });
         if (handlers.onExtrasOpen) menuItems.push({ id: 'extras', label: 'Extras', onClick: handlers.onExtrasOpen });
@@ -150,6 +159,7 @@ export function CompactOverflowMenu({ item, context, actions, showText = true }:
       case 'tab-watched':
         if (handlers.onWant) menuItems.push({ id: 'want', label: 'Want to Watch', onClick: handlers.onWant });
         if (handlers.onNotInterested) menuItems.push({ id: 'not-interested', label: 'Not Interested', onClick: handlers.onNotInterested });
+        if (isTVShow && episodeTrackingEnabled && handlers.onEpisodeTracking) menuItems.push({ id: 'episodes', label: 'Episodes', onClick: handlers.onEpisodeTracking });
         if (handlers.onNotesEdit) menuItems.push({ id: 'notes', label: 'Notes & Tags', onClick: handlers.onNotesEdit });
         if (handlers.onBloopersOpen) menuItems.push({ id: 'bloopers', label: 'Bloopers', onClick: handlers.onBloopersOpen });
         if (handlers.onExtrasOpen) menuItems.push({ id: 'extras', label: 'Extras', onClick: handlers.onExtrasOpen });
