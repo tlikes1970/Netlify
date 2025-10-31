@@ -1,0 +1,78 @@
+/**
+ * Process: Touch Action System
+ * Purpose: Centralized touch-action CSS declarations for consistent gesture handling
+ * Data Source: CSS custom properties and class definitions
+ * Update Path: Update CSS custom properties here, apply classes to elements
+ * Dependencies: All components using touch gestures
+ */
+
+/* Phase 7: CSS Touch-Action Consolidation */
+
+/* CSS Custom Properties for Touch Action */
+:root {
+  /* Standard touch actions */
+  --touch-action-pan-y: pan-y;        /* Allow vertical scrolling only */
+  --touch-action-pan-x: pan-x;        /* Allow horizontal scrolling only */
+  --touch-action-pan: pan-x pan-y;     /* Allow both directions */
+  --touch-action-none: none;           /* Disable all touch gestures */
+  --touch-action-manipulation: manipulation; /* Allow panning and pinch-zoom only */
+  
+  /* Swipe-specific */
+  --touch-action-swipeable: pan-y;     /* Swipeable cards - vertical scroll, JS handles horizontal */
+  --touch-action-modal: pan-y;         /* Modal content - vertical scroll only */
+  --touch-action-container: pan-y;     /* Container elements - vertical scroll */
+}
+
+/* Utility Classes - Use these instead of inline styles */
+
+/* Allow vertical scrolling only (most common) */
+.touch-pan-y {
+  touch-action: var(--touch-action-pan-y);
+}
+
+/* Allow horizontal scrolling only */
+.touch-pan-x {
+  touch-action: var(--touch-action-pan-x);
+}
+
+/* Allow both directions */
+.touch-pan {
+  touch-action: var(--touch-action-pan);
+}
+
+/* Disable all touch gestures */
+.touch-none {
+  touch-action: var(--touch-action-none);
+}
+
+/* Swipeable surfaces - vertical scroll, JS handles horizontal swipe */
+.swipeable,
+.swipe-surface {
+  touch-action: var(--touch-action-swipeable);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* In case we ever need to fully own the gesture (rare) */
+.swipe-surface--own {
+  touch-action: var(--touch-action-none);
+}
+
+/* Modal content - isolated vertical scroll */
+.modal-content,
+.modal-scrollable {
+  touch-action: var(--touch-action-modal);
+  overscroll-behavior: contain;
+}
+
+/* Container elements */
+.container-scrollable {
+  touch-action: var(--touch-action-container);
+}
+
+/* Feature flag gating for Phase 7 */
+html[data-css-touch-action-consolidation="true"] {
+  /* When flag enabled, use centralized system */
+  /* Existing classes will use the custom properties above */
+}
+

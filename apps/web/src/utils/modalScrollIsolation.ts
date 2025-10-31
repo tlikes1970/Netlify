@@ -81,51 +81,24 @@ export function applyModalScrollIsolation(
     });
   }
 
-  // 3. Scroll boundary detection for modal content (prevents overscroll)
-  // Note: overscroll-behavior: contain CSS handles most cases, but we add JS fallback
+  // 3. Prevent touch events on modal content from propagating to background
+  // Note: overscroll-behavior: contain CSS handles scroll chaining, so we don't need
+  // aggressive JavaScript boundary detection that could interfere with normal scrolling
   if (modalContent) {
-    let touchStartY = 0;
-    let isScrolling = false;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      if (modalContent?.contains(e.target as Node)) {
-        touchStartY = e.touches[0]?.clientY || 0;
-        isScrolling = false;
-      }
-    };
-
+    // Only prevent touch events from bubbling to document/body when touching modal content
+    // This prevents background scroll while allowing normal modal scrolling
     const handleTouchMove = (e: TouchEvent) => {
-      if (!modalContent?.contains(e.target as Node)) return;
-      
-      const target = e.target as HTMLElement;
-      const scrollableParent = target.closest('[style*="overflow"], [class*="scroll"], [class*="overflow"]') as HTMLElement;
-      const scrollable = scrollableParent || modalContent;
-      
-      if (!scrollable) return;
-
-      const { scrollTop, scrollHeight, clientHeight } = scrollable;
-      const touchY = e.touches[0]?.clientY || 0;
-      const deltaY = touchY - touchStartY;
-      
-      // If at boundaries and trying to overscroll, prevent it
-      const isAtTop = scrollTop <= 0;
-      const isAtBottom = scrollTop >= scrollHeight - clientHeight - 1;
-      
-      if ((isAtTop && deltaY > 0) || (isAtBottom && deltaY < 0)) {
-        // Trying to overscroll - prevent default and stop propagation
-        e.preventDefault();
-        e.stopPropagation();
-        isScrolling = true;
-      } else {
-        // Normal scroll - allow it, but prevent propagation to background
+      // Only stop propagation if we're sure this touch is within the modal
+      // Don't interfere with normal scrolling - let CSS overscroll-behavior handle boundaries
+      if (modalElement.contains(e.target as Node)) {
+        // Prevent this touch from affecting background scroll, but don't preventDefault
+        // which would block the scroll entirely
         e.stopPropagation();
       }
     };
 
-    modalContent.addEventListener('touchstart', handleTouchStart, { passive: true });
-    modalContent.addEventListener('touchmove', handleTouchMove, { passive: false });
+    modalContent.addEventListener('touchmove', handleTouchMove, { passive: true });
     cleanupFunctions.push(() => {
-      modalContent.removeEventListener('touchstart', handleTouchStart);
       modalContent.removeEventListener('touchmove', handleTouchMove);
     });
   }

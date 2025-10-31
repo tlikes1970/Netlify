@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { isScrollFeatureEnabled } from '../utils/scrollFeatureFlags';
 
 export interface PullToRefreshState {
   isPulling: boolean;
@@ -22,6 +23,9 @@ export function usePullToRefresh({
   resistance = 0.5,
   enabled = true
 }: UsePullToRefreshProps) {
+  // Phase 6: Check if pull-to-refresh improvements are enabled
+  const pullRefreshEnabled = typeof window !== 'undefined' && isScrollFeatureEnabled('pull-refresh-fix');
+  
   const [state, setState] = useState<PullToRefreshState>({
     isPulling: false,
     isRefreshing: false,
@@ -50,14 +54,20 @@ export function usePullToRefresh({
     const container = containerRef.current;
     if (!container) return;
 
-    // Only start pull-to-refresh if we're at the top of the scroll
-    if (container.scrollTop > 0) return;
+    // Phase 6: Improved scroll position detection
+    // Handle negative scrollTop (some browsers/scroll containers)
+    // Add tolerance for near-top positions
+    const scrollTop = container.scrollTop || (container as any).scrollY || 0;
+    const tolerance = pullRefreshEnabled ? 5 : 0; // Allow 5px tolerance when improvements enabled
+    
+    // Only start pull-to-refresh if we're at (or near) the top of the scroll
+    if (scrollTop > tolerance) return;
 
     const touch = e.touches[0];
     startY.current = touch.clientY;
     currentY.current = touch.clientY;
     isDragging.current = false;
-  }, [enabled, state.isRefreshing]);
+  }, [enabled, state.isRefreshing, pullRefreshEnabled]);
 
   // Handle touch move
   const handleTouchMove = useCallback((e: TouchEvent) => {
@@ -66,15 +76,31 @@ export function usePullToRefresh({
     const container = containerRef.current;
     if (!container) return;
 
-    // Only handle if we're at the top of the scroll
-    if (container.scrollTop > 0) return;
+    // Phase 6: Improved scroll position detection
+    const scrollTop = container.scrollTop || (container as any).scrollY || 0;
+    const tolerance = pullRefreshEnabled ? 5 : 0;
+    
+    // Only handle if we're at (or near) the top of the scroll
+    if (scrollTop > tolerance) {
+      // If we've scrolled away from top, reset pull state
+      if (state.isPulling) {
+        setState(prev => ({
+          ...prev,
+          isPulling: false,
+          pullDistance: 0,
+          canRefresh: false
+        }));
+        isDragging.current = false;
+      }
+      return;
+    }
 
     const touch = e.touches[0];
     currentY.current = touch.clientY;
     
     const deltaY = currentY.current - startY.current;
     
-    // Only start dragging if we've moved down enough
+    // Only start dragging if we've moved down enough (downward = positive deltaY)
     if (!isDragging.current && deltaY > 10) {
       isDragging.current = true;
     }
@@ -90,10 +116,13 @@ export function usePullToRefresh({
         canRefresh
       }));
 
-      // Prevent default scrolling when pulling
-      e.preventDefault();
+      // Phase 6: Improved preventDefault timing - only when definitely pulling
+      // Ensure preventDefault is called reliably
+      if (pullRefreshEnabled || true) { // Always prevent when pulling
+        e.preventDefault();
+      }
     }
-  }, [enabled, state.isRefreshing, threshold, calculatePullDistance]);
+  }, [enabled, state.isRefreshing, state.isPulling, threshold, calculatePullDistance, pullRefreshEnabled]);
 
   // Handle touch end
   const handleTouchEnd = useCallback(async () => {
