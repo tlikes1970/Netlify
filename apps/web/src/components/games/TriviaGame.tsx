@@ -28,6 +28,8 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
   const [gameState, setGameState] = useState<'loading' | 'playing' | 'completed'>('loading');
   const [showExplanation, setShowExplanation] = useState(false);
   const [isProUser, setIsProUser] = useState(false);
+  const [currentGame, setCurrentGame] = useState(1); // Track which game we're on (1-5 for pro)
+  const [gamesCompletedToday, setGamesCompletedToday] = useState(0); // Track games completed today
 
   // Sample trivia questions (in a real app, these would come from an API)
   const sampleQuestions: TriviaQuestion[] = [
@@ -489,7 +491,9 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
   };
 
   // Get today's questions based on date (deterministic rotation)
-  const getTodaysQuestions = (isPro: boolean = false) => {
+  // For pro users: returns 10 questions for the current game (game 1-5)
+  // For free users: returns 5 questions (single game)
+  const getTodaysQuestions = (isPro: boolean = false, gameNumber: number = 1) => {
     const today = getTodayString();
     const dateSeed = today.split('-').join('');
     const seedNumber = parseInt(dateSeed, 10);
@@ -498,39 +502,131 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
     const daysSinceEpoch = Math.floor(seedNumber / 10000); // Roughly days since 2000
     const cycleDay = daysSinceEpoch % 3; // 0, 1, or 2
     
-    // Pro users get more questions
-    const questionsPerDay = isPro ? 50 : 5;
+    // Pro users: 10 questions per game (5 games = 50 total)
+    // Free users: 5 questions per day
+    const questionsPerGame = isPro ? 10 : 5;
+    const totalQuestionsPerDay = isPro ? 50 : 5;
     
     const todaysQuestions = [];
-    for (let i = 0; i < questionsPerDay; i++) {
-      const questionIndex = (cycleDay * questionsPerDay + i) % sampleQuestions.length;
+    // Calculate starting index for this game
+    const startIndex = isPro ? (gameNumber - 1) * 10 : 0;
+    
+    for (let i = 0; i < questionsPerGame; i++) {
+      const globalIndex = startIndex + i;
+      const questionIndex = (cycleDay * totalQuestionsPerDay + globalIndex) % sampleQuestions.length;
       todaysQuestions.push(sampleQuestions[questionIndex]);
     }
     
-    console.log(`🎯 Today's trivia questions (${isPro ? 'Pro' : 'Free'} user, cycle day ${cycleDay}):`, todaysQuestions.map(q => q.id));
+    console.log(`🎯 Game ${gameNumber} questions (${isPro ? 'Pro' : 'Free'} user, cycle day ${cycleDay}):`, todaysQuestions.map(q => q.id));
     return todaysQuestions;
   };
 
-  // Check if user is Pro
+  // Get games completed today from localStorage
+  const getGamesCompletedToday = (): number => {
+    try {
+      const today = getTodayString();
+      const key = `flicklet:trivia:games:${today}`;
+      const completed = localStorage.getItem(key);
+      return completed ? parseInt(completed, 10) : 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  // Save games completed today to localStorage
+  const saveGamesCompletedToday = (count: number): void => {
+    try {
+      const today = getTodayString();
+      const key = `flicklet:trivia:games:${today}`;
+      localStorage.setItem(key, String(count));
+    } catch (error) {
+      console.warn('Failed to save games completed:', error);
+    }
+  };
+
+  // Update trivia stats after game completes
+  const updateTriviaStats = (gameScore: number, totalQuestions: number): void => {
+    try {
+      const existingData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');
+      const currentStats = existingData.trivia || { 
+        games: 0, 
+        wins: 0, 
+        losses: 0, 
+        correct: 0, 
+        total: 0, 
+        streak: 0, 
+        maxStreak: 0 
+      };
+      
+      const percentage = totalQuestions > 0 ? Math.round((gameScore / totalQuestions) * 100) : 0;
+      const isWin = percentage >= 60; // 60% or higher is a win
+      
+      const newStats = {
+        games: currentStats.games + 1,
+        wins: currentStats.wins + (isWin ? 1 : 0),
+        losses: currentStats.losses + (isWin ? 0 : 1),
+        correct: currentStats.correct + gameScore,
+        total: currentStats.total + totalQuestions,
+        streak: isWin ? currentStats.streak + 1 : 0,
+        maxStreak: isWin ? Math.max(currentStats.maxStreak, currentStats.streak + 1) : currentStats.maxStreak
+      };
+      
+      const updatedData = {
+        ...existingData,
+        trivia: newStats
+      };
+      
+      localStorage.setItem('flicklet-data', JSON.stringify(updatedData));
+      localStorage.setItem('trivia:stats', JSON.stringify(newStats));
+      
+      // Notify listeners
+      window.dispatchEvent(new CustomEvent('trivia:statsUpdated'));
+      
+      console.log('💾 Trivia stats saved:', newStats);
+    } catch (error) {
+      console.error('Failed to save trivia stats:', error);
+    }
+  };
+
+  // Check if user is Pro and initialize games completed
   useEffect(() => {
     setIsProUser(settings.pro.isPro);
-    console.log('🎯 Pro user status:', settings.pro.isPro);
+    const completed = getGamesCompletedToday();
+    setGamesCompletedToday(completed);
+    // Set current game to next game to play (completed + 1, or 1 if not pro)
+    if (settings.pro.isPro) {
+      const nextGame = Math.min(completed + 1, 5); // Max 5 games
+      setCurrentGame(nextGame);
+      console.log('🎯 Pro user status:', settings.pro.isPro, 'Games completed today:', completed, 'Starting game:', nextGame);
+    } else {
+      setCurrentGame(1);
+      console.log('🎯 Free user, starting game 1');
+    }
   }, [settings.pro]);
 
   // Load questions from API (with fresh content for testing)
+  // For pro users: loads 10 questions for the current game
+  // For free users: loads 5 questions
   useEffect(() => {
     const loadQuestions = async () => {
       try {
-        console.log(`🧠 Loading cached trivia questions for ${isProUser ? 'Pro' : 'Free'} user...`);
+        const gameNumber = isProUser ? currentGame : 1;
+        console.log(`🧠 Loading trivia questions for ${isProUser ? 'Pro' : 'Free'} user, Game ${gameNumber}...`);
+        
         // Use cached trivia to avoid rate limits
         const apiQuestions = await getCachedTrivia();
         
         let formattedQuestions;
+        const questionsNeeded = isProUser ? 10 : 5;
         
         if (apiQuestions && apiQuestions.length > 0) {
           // Convert API format to our format
-          formattedQuestions = apiQuestions.map((q, index) => ({
-            id: `fresh_${index}`,
+          // For pro users, take 10 questions starting from the appropriate offset for this game
+          const startIndex = isProUser ? ((gameNumber - 1) * 10) % apiQuestions.length : 0;
+          const selectedApiQuestions = apiQuestions.slice(startIndex, startIndex + questionsNeeded);
+          
+          formattedQuestions = selectedApiQuestions.map((q, index) => ({
+            id: `fresh_${startIndex + index}`,
             question: q.question,
             options: q.options,
             correctAnswer: q.correctAnswer,
@@ -539,31 +635,34 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
             difficulty: q.difficulty
           }));
           
-          // For pro users, supplement with additional hardcoded questions if API doesn't provide enough
-          if (isProUser && formattedQuestions.length < 50) {
-            const additionalQuestions = getTodaysQuestions(true).slice(formattedQuestions.length).map(q => ({
-              ...q,
-              explanation: q.explanation || undefined
-            }));
+          // If we don't have enough from API, supplement with hardcoded questions
+          if (formattedQuestions.length < questionsNeeded) {
+            const additionalNeeded = questionsNeeded - formattedQuestions.length;
+            const additionalQuestions = getTodaysQuestions(isProUser, gameNumber)
+              .slice(formattedQuestions.length, formattedQuestions.length + additionalNeeded)
+              .map(q => ({
+                ...q,
+                explanation: q.explanation || undefined
+              }));
             formattedQuestions.push(...additionalQuestions);
           }
         } else {
           // No API questions available, use fallback
           console.log('📚 Using fallback trivia questions');
-          formattedQuestions = getTodaysQuestions(isProUser).map(q => ({
+          formattedQuestions = getTodaysQuestions(isProUser, gameNumber).map(q => ({
             ...q,
             explanation: q.explanation || undefined
           }));
         }
         
-        console.log(`✅ Loaded ${formattedQuestions.length} trivia questions for ${isProUser ? 'Pro' : 'Free'} user`);
+        console.log(`✅ Loaded ${formattedQuestions.length} trivia questions for Game ${gameNumber} (${isProUser ? 'Pro' : 'Free'} user)`);
         setQuestions(formattedQuestions);
         setGameState('playing');
       } catch (error) {
         console.error('❌ Failed to load trivia questions:', error);
         // Fallback to hardcoded questions
         console.log('📚 Using fallback trivia questions');
-        const fallbackQuestions = getTodaysQuestions(isProUser);
+        const fallbackQuestions = getTodaysQuestions(isProUser, currentGame);
         setQuestions(fallbackQuestions);
         setGameState('playing');
       }
@@ -572,7 +671,7 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
     if (gameState === 'loading') {
       loadQuestions();
     }
-  }, [gameState, isProUser]);
+  }, [gameState, isProUser, currentGame]);
 
   const handleAnswerSelect = useCallback((answerIndex: number) => {
     if (selectedAnswer !== null) return; // Prevent multiple selections
@@ -591,18 +690,40 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
       setSelectedAnswer(null);
       setShowExplanation(false);
     } else {
+      // Game completed - update stats
+      updateTriviaStats(score, questions.length);
+      
+      // Increment games completed today
+      const newGamesCompleted = gamesCompletedToday + 1;
+      setGamesCompletedToday(newGamesCompleted);
+      saveGamesCompletedToday(newGamesCompleted);
+      
       setGameState('completed');
       onGameComplete?.(score, questions.length);
     }
-  }, [currentQuestionIndex, questions.length, score, onGameComplete]);
+  }, [currentQuestionIndex, questions.length, score, onGameComplete, gamesCompletedToday]);
 
   const handleRestart = useCallback(() => {
+    // Reset current game
     setCurrentQuestionIndex(0);
     setSelectedAnswer(null);
     setScore(0);
     setShowExplanation(false);
     setGameState('loading');
   }, []);
+
+  // Start next game (for pro users with games remaining)
+  const handleNextGame = useCallback(() => {
+    if (isProUser && gamesCompletedToday < 5) {
+      const nextGame = gamesCompletedToday + 1;
+      setCurrentGame(nextGame);
+      setCurrentQuestionIndex(0);
+      setSelectedAnswer(null);
+      setScore(0);
+      setShowExplanation(false);
+      setGameState('loading');
+    }
+  }, [isProUser, gamesCompletedToday]);
 
   const getScoreColor = (percentage: number) => {
     if (percentage >= 80) return 'text-green-400';
@@ -623,11 +744,16 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
 
   if (gameState === 'completed') {
     const percentage = Math.round((score / questions.length) * 100);
+    const canPlayNextGame = isProUser && gamesCompletedToday < 5;
+    const gamesRemaining = isProUser ? 5 - gamesCompletedToday : 0;
     
     return (
       <div className="trivia-game">
         <div className="trivia-completed">
-          <h3>🎉 Quiz Complete!</h3>
+          <h3>🎉 Game {gamesCompletedToday} Complete!</h3>
+          {isProUser && (
+            <p className="game-progress">Game {gamesCompletedToday} of 5</p>
+          )}
           <div className="score-display">
             <div className="score-circle">
               <span className={`score-percentage ${getScoreColor(percentage)}`}>
@@ -646,9 +772,15 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
           </div>
           
           <div className="completion-actions">
-            <button className="btn-primary" onClick={handleRestart}>
-              Play Again
-            </button>
+            {canPlayNextGame ? (
+              <button className="btn-primary" onClick={handleNextGame}>
+                Play Game {gamesCompletedToday + 1} ({gamesRemaining} remaining)
+              </button>
+            ) : (
+              <button className="btn-primary" onClick={handleRestart}>
+                Play Again
+              </button>
+            )}
             {onClose && (
               <button className="btn-secondary" onClick={onClose}>
                 Close
@@ -658,7 +790,12 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
           
           {!isProUser && (
             <div className="pro-upsell">
-              <p>🔒 Want more questions? Upgrade to Pro for 50 daily trivia questions!</p>
+              <p>🔒 Want more questions? Upgrade to Pro for 5 games of 10 questions each!</p>
+            </div>
+          )}
+          {isProUser && gamesCompletedToday >= 5 && (
+            <div className="games-limit">
+              <p>✅ You've completed all 5 games today! Come back tomorrow for more!</p>
             </div>
           )}
         </div>
@@ -685,6 +822,16 @@ export default function TriviaGame({ onClose, onGameComplete }: TriviaGameProps)
 
   return (
     <div className="trivia-game">
+      {/* Game progress indicator (for pro users) */}
+      {isProUser && (
+        <div className="trivia-game-header">
+          <span>Game {currentGame} of 5</span>
+          {gamesCompletedToday > 0 && (
+            <span className="games-completed">({gamesCompletedToday} completed)</span>
+          )}
+        </div>
+      )}
+      
       {/* Progress indicator */}
       <div className="trivia-progress">
         <span>{currentQuestionIndex + 1}/{questions.length}</span>
