@@ -178,6 +178,44 @@ export default function FlickWordModal({ isOpen, onClose }: FlickWordModalProps)
           onMouseDown={handleMouseDown}
         >
           <header className="gm-header gm-drag-handle">
+            {/* TEMPORARY: Small testing button above title */}
+            <button
+              onClick={async (e) => {
+                e.stopPropagation();
+                // Clear cache and load new random word
+                const { getCommonWordsArray } = await import('../../lib/words/commonWords');
+                const commonWords = getCommonWordsArray();
+                if (commonWords && commonWords.length > 0) {
+                  const randomIndex = Math.floor(Math.random() * commonWords.length);
+                  const newWord = commonWords[randomIndex].toUpperCase();
+                  localStorage.removeItem('flicklet:daily-word');
+                  localStorage.setItem('flicklet:daily-word', JSON.stringify({
+                    word: newWord.toLowerCase(),
+                    date: new Date().toISOString().slice(0, 10),
+                    timestamp: Date.now()
+                  }));
+                  // Reload to get new word
+                  window.location.reload();
+                }
+              }}
+              aria-label="Load new word (testing)"
+              style={{
+                backgroundColor: "#f7c23c",
+                color: "#000",
+                fontSize: "10px",
+                fontWeight: "600",
+                padding: "4px 8px",
+                border: "1px solid #000",
+                borderRadius: "4px",
+                cursor: "pointer",
+                marginBottom: "4px",
+                lineHeight: "1",
+                display: "block",
+              }}
+              title="Load new word"
+            >
+              🧪
+            </button>
             <h3 id="flickword-modal-title">🎯 FlickWord</h3>
             <div className="fw-stats">
               <span className="fw-streak">Streak: 0</span>
