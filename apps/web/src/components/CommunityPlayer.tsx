@@ -5,6 +5,7 @@ interface WeeklyFilmData {
   itemId: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface CommunityPlayerProps {
   // Keep interface for future extensibility
 }
