@@ -269,7 +269,7 @@ export default function YouTubePlayer(_props: YouTubePlayerProps) {
   }
 
   return (
-    <div className="youtube-player-container max-w-[420px] md:max-w-[560px] mx-auto bg-neutral-900/70 border border-neutral-800/50 rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:shadow-[0_0_30px_rgba(0,0,0,0.8)] transition-shadow">
+    <div className="youtube-player-container max-w-[420px] md:max-w-[560px] h-[1500px] mx-auto bg-neutral-900/70 border border-neutral-800/50 rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:shadow-[0_0_30px_rgba(0,0,0,0.8)] transition-shadow flex flex-col">
       {/* Header section - vertical stacking */}
       <div className="flex justify-between items-center p-3 pb-2">
         <div className="flex flex-col">
@@ -310,8 +310,8 @@ export default function YouTubePlayer(_props: YouTubePlayerProps) {
         </div>
       </div>
       
-      {/* Video frame with proper margins */}
-      <div className="my-3 px-3">
+      {/* Video frame with proper margins - flex to fill remaining space */}
+      <div className="flex-1 my-3 px-3 flex items-center justify-center min-h-0">
         {isLoading && (
           <div className="player-loading">
             <div className="loading-spinner"></div>
@@ -319,7 +319,7 @@ export default function YouTubePlayer(_props: YouTubePlayerProps) {
           </div>
         )}
         
-        <div className="aspect-video rounded-xl overflow-hidden border border-neutral-700/60 mx-auto shadow-inner">
+        <div className="w-full h-full max-h-full rounded-xl overflow-hidden border border-neutral-700/60 mx-auto shadow-inner">
           <div 
             ref={playerRef}
             className="youtube-player w-full h-full"
