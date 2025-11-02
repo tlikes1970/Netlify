@@ -22,23 +22,44 @@ const MEMO = new Map<string, Verdict>();
  */
 async function checkDictionary(word: string): Promise<boolean> {
   try {
-    // Use Netlify function proxy via redirect path
+    // Use Netlify function proxy
     const proxyUrl = '/.netlify/functions/dict-proxy';
-    const response = await fetch(`${proxyUrl}?word=${encodeURIComponent(word)}`, {
+    const url = `${proxyUrl}?word=${encodeURIComponent(word)}`;
+    
+    console.log(`🔍 Checking dictionary for "${word}": ${url}`);
+    
+    const response = await fetch(url, {
       cache: 'force-cache', // Cache results to avoid repeated API calls
     });
 
+    console.log(`📡 Dictionary API response for "${word}":`, {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+    });
+
     if (!response.ok) {
+      // Log the error details
+      const errorText = await response.text().catch(() => 'Unable to read error');
+      console.warn(`❌ Dictionary API error for "${word}":`, {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+      });
       // API error - default to false (safer to reject than accept)
       return false;
     }
 
     // The dict-proxy returns { valid: boolean } format
     const data = await response.json();
-    return data.valid === true;
+    const isValid = data.valid === true;
+    
+    console.log(`✅ Dictionary API result for "${word}":`, { valid: isValid, data });
+    
+    return isValid;
   } catch (error) {
     // Network error or parse error - default to false
-    console.warn(`Dictionary API check failed for "${word}":`, error);
+    console.error(`❌ Dictionary API check failed for "${word}":`, error);
     return false;
   }
 }
