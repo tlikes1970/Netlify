@@ -66,13 +66,26 @@ async function checkDictionary(word: string): Promise<boolean> {
 
 export async function validateWord(raw: string): Promise<Verdict> {
   const w = normalize(raw);
-  if (!/^[a-z]+$/.test(w)) return { valid: false, source: 'none', reason: 'charset' };
-  if (!isFiveLetters(w)) return { valid: false, source: 'none', reason: 'length' };
+  console.log(`🔍 validateWord called for "${raw}" (normalized: "${w}")`);
+  
+  if (!/^[a-z]+$/.test(w)) {
+    console.log(`❌ Invalid charset for "${w}"`);
+    return { valid: false, source: 'none', reason: 'charset' };
+  }
+  if (!isFiveLetters(w)) {
+    console.log(`❌ Invalid length for "${w}"`);
+    return { valid: false, source: 'none', reason: 'length' };
+  }
 
-  if (MEMO.has(w)) return MEMO.get(w)!;
+  if (MEMO.has(w)) {
+    const cached = MEMO.get(w)!;
+    console.log(`📦 Using cached result for "${w}":`, cached);
+    return cached;
+  }
 
   // Check exclusion list first (reject non-words explicitly)
   if (isExcluded(w)) {
+    console.log(`🚫 "${w}" is excluded`);
     const verdict: Verdict = { valid: false, source: 'none', reason: 'not-found' };
     MEMO.set(w, verdict);
     return verdict;
@@ -80,7 +93,9 @@ export async function validateWord(raw: string): Promise<Verdict> {
 
   // Primary check: Use accepted.json (2,175 words) via isAcceptedLocal
   // This is much more comprehensive than the lexicon worker's valid-guess.txt
-  if (await isAcceptedLocal(w)) {
+  const isLocal = await isAcceptedLocal(w);
+  console.log(`📚 Local check for "${w}":`, isLocal);
+  if (isLocal) {
     const verdict: Verdict = { valid: true, source: 'local' };
     MEMO.set(w, verdict);
     return verdict;
@@ -88,14 +103,17 @@ export async function validateWord(raw: string): Promise<Verdict> {
 
   // Fallback: Check dictionary API for words not in accepted.json
   // This allows valid words like "stilt" and "adieu" that aren't in the curated list
+  console.log(`🌐 Word "${w}" not in local list, checking dictionary API...`);
   const isValidInDictionary = await checkDictionary(w);
   if (isValidInDictionary) {
+    console.log(`✅ Dictionary API confirmed "${w}" is valid`);
     const verdict: Verdict = { valid: true, source: 'dictionary' };
     MEMO.set(w, verdict);
     return verdict;
   }
 
   // Reject words not found in local list or dictionary
+  console.log(`❌ "${w}" not found in local list or dictionary`);
   const verdict: Verdict = { valid: false, source: 'none', reason: 'not-found' };
   MEMO.set(w, verdict);
   return verdict;

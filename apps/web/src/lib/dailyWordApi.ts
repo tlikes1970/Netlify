@@ -127,35 +127,52 @@ export async function getTodaysWord(): Promise<WordApiResponse> {
 
 /**
  * Get deterministic word based on date (same word for all players each day)
- * Uses accepted.json with excluded words filtered out
+ * Uses commonWords list to ensure only familiar, everyday words are selected
  */
 async function getDeterministicWord(date: string): Promise<string> {
-  // Import exclusion list (shared with validateWord)
+  // Import exclusion list and common words
   const { isExcluded } = await import('./words/excludedWords');
+  const { getCommonWordsArray } = await import('./words/commonWords');
   
   try {
-    // Load accepted.json
+    // Use common words list (curated familiar words) instead of all accepted.json
+    const commonWords = getCommonWordsArray();
+    
+    if (commonWords && commonWords.length > 0) {
+      // Filter out excluded words from common words
+      const validWords = commonWords.filter(w => !isExcluded(w));
+      
+      if (validWords.length > 0) {
+        // Use date as seed for deterministic word selection
+        const seed = date.split('-').join('');
+        const seedNumber = parseInt(seed, 10);
+        const wordIndex = seedNumber % validWords.length;
+        const selectedWord = validWords[wordIndex].toUpperCase();
+        
+        console.log(`📚 Selected from ${validWords.length} common words, index ${wordIndex}: ${selectedWord}`);
+        return selectedWord;
+      }
+    }
+    
+    // Fallback: try accepted.json if commonWords fails
+    console.warn('⚠️ Common words list not available, falling back to accepted.json');
     const response = await fetch('/words/accepted.json', { cache: 'force-cache' });
     if (response.ok) {
       const allWords: string[] = await response.json();
-      
-      // Filter out excluded words (basic check - should have been here from the start)
       const validWords = allWords.filter(w => !isExcluded(w));
       
-      // Use date as seed for deterministic word selection
-      const seed = date.split('-').join('');
-      const seedNumber = parseInt(seed, 10);
-      
       if (validWords.length > 0) {
+        const seed = date.split('-').join('');
+        const seedNumber = parseInt(seed, 10);
         const wordIndex = seedNumber % validWords.length;
         return validWords[wordIndex].toUpperCase();
       }
     }
   } catch (error) {
-    console.warn('⚠️ Failed to load accepted words:', error);
+    console.warn('⚠️ Failed to load words:', error);
   }
   
-  // Fallback if words couldn't be loaded
+  // Final fallback
   console.warn('⚠️ Using fallback word');
   return 'HOUSE';
 }

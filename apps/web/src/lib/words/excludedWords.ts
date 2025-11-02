@@ -10,6 +10,7 @@ export const EXCLUDED_WORDS = new Set([
   'hollo',  // Not a standard English word (archaic/obsolete)
   'heres',  // Should be "here's" (contraction) or "herds"
   'drily',  // Uncommon alternate spelling - "dryly" is more common
+  'gonif',  // Very uncommon Yiddish word (alternate spelling "ganef") - not familiar to most players
   // Add other non-words or uncommon alternate spellings here as needed
 ]);
 
