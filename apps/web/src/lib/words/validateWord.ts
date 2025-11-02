@@ -50,11 +50,28 @@ async function checkDictionary(word: string): Promise<boolean> {
       return false;
     }
 
-    // The dict-proxy returns { valid: boolean } format
+    // The dict-proxy should return { valid: boolean } format
     const data = await response.json();
-    const isValid = data.valid === true;
     
-    console.log(`✅ Dictionary API result for "${word}":`, { valid: isValid, data });
+    // Handle both formats: {valid: boolean} or raw array from API
+    let isValid = false;
+    if (typeof data === 'object' && data !== null) {
+      if ('valid' in data) {
+        // New format: {valid: boolean}
+        isValid = data.valid === true;
+      } else if (Array.isArray(data)) {
+        // Legacy format: raw array from dictionary API
+        isValid = data.length > 0;
+      }
+    }
+    
+    console.log(`✅ Dictionary API result for "${word}":`, { 
+      valid: isValid, 
+      dataType: Array.isArray(data) ? 'array' : typeof data,
+      dataLength: Array.isArray(data) ? data.length : undefined,
+      hasValidProperty: data && typeof data === 'object' && 'valid' in data,
+      rawData: data
+    });
     
     return isValid;
   } catch (error) {
