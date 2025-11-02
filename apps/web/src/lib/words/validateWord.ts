@@ -1,12 +1,47 @@
+/**
+ * Process: Word Validation
+ * Purpose: Validate guesses using accepted words list with dictionary API fallback
+ * Data Source: accepted.json (primary), dictionary API (fallback)
+ * Update Path: validateWord() function validates against local list, then dictionary API
+ * Dependencies: lexicon.ts, localWords.ts, excludedWords.ts
+ */
+
 // apps/web/src/lib/words/validateWord.ts
 
-import { normalize, isFiveLetters, isValidLocal } from './lexicon';
+import { normalize, isFiveLetters } from './lexicon';
 import { isAcceptedLocal } from './localWords';
-import { safetyNetAccept } from './safetyNet';
+import { isExcluded } from './excludedWords';
 
-export type Verdict = { valid: boolean; source: 'local' | 'none'; reason?: 'format' | 'not-found' | 'charset' | 'length'; soft?: boolean };
+export type Verdict = { valid: boolean; source: 'local' | 'dictionary' | 'none'; reason?: 'format' | 'not-found' | 'charset' | 'length'; soft?: boolean };
 
 const MEMO = new Map<string, Verdict>();
+
+/**
+ * Check if word is valid using dictionary API as fallback
+ * This allows valid words like "stilt" and "adieu" that aren't in accepted.json
+ */
+async function checkDictionary(word: string): Promise<boolean> {
+  try {
+    // Use Netlify function proxy via redirect path
+    const proxyUrl = '/.netlify/functions/dict-proxy';
+    const response = await fetch(`${proxyUrl}?word=${encodeURIComponent(word)}`, {
+      cache: 'force-cache', // Cache results to avoid repeated API calls
+    });
+
+    if (!response.ok) {
+      // API error - default to false (safer to reject than accept)
+      return false;
+    }
+
+    // The dict-proxy returns { valid: boolean } format
+    const data = await response.json();
+    return data.valid === true;
+  } catch (error) {
+    // Network error or parse error - default to false
+    console.warn(`Dictionary API check failed for "${word}":`, error);
+    return false;
+  }
+}
 
 export async function validateWord(raw: string): Promise<Verdict> {
   const w = normalize(raw);
@@ -15,28 +50,32 @@ export async function validateWord(raw: string): Promise<Verdict> {
 
   if (MEMO.has(w)) return MEMO.get(w)!;
 
-  if (await isValidLocal(w)) {
+  // Check exclusion list first (reject non-words explicitly)
+  if (isExcluded(w)) {
+    const verdict: Verdict = { valid: false, source: 'none', reason: 'not-found' };
+    MEMO.set(w, verdict);
+    return verdict;
+  }
+
+  // Primary check: Use accepted.json (2,175 words) via isAcceptedLocal
+  // This is much more comprehensive than the lexicon worker's valid-guess.txt
+  if (await isAcceptedLocal(w)) {
     const verdict: Verdict = { valid: true, source: 'local' };
     MEMO.set(w, verdict);
     return verdict;
   }
 
-  // Safety net: allow common morphology/variants to avoid rejecting real words
-  if (await safetyNetAccept(w, isValidLocal)) {
-    const verdict: Verdict = { valid: true, source: 'local', soft: true };
+  // Fallback: Check dictionary API for words not in accepted.json
+  // This allows valid words like "stilt" and "adieu" that aren't in the curated list
+  const isValidInDictionary = await checkDictionary(w);
+  if (isValidInDictionary) {
+    const verdict: Verdict = { valid: true, source: 'dictionary' };
     MEMO.set(w, verdict);
     return verdict;
   }
 
-  // Legacy fallback: if legacy local list has it, accept
-  if (await isAcceptedLocal(w)) {
-    const verdict: Verdict = { valid: true, source: 'local', soft: true };
-    MEMO.set(w, verdict);
-    return verdict;
-  }
-
-  // Hardening: as last resort, accept to avoid blocking gameplay in absence of lexicon assets
-  const softVerdict: Verdict = { valid: true, source: 'local', soft: true };
-  MEMO.set(w, softVerdict);
-  return softVerdict;
+  // Reject words not found in local list or dictionary
+  const verdict: Verdict = { valid: false, source: 'none', reason: 'not-found' };
+  MEMO.set(w, verdict);
+  return verdict;
 }

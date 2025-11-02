@@ -16,36 +16,7 @@ interface CachedWord {
   timestamp: number;
 }
 
-// Module-level cache for accepted words list
-let ACCEPTED_WORDS_CACHE: string[] | null = null;
-
-/**
- * Load accepted words list from public/words/accepted.json
- * Cached after first load
- */
-async function loadAcceptedWords(): Promise<string[]> {
-  if (ACCEPTED_WORDS_CACHE) {
-    return ACCEPTED_WORDS_CACHE;
-  }
-  
-  try {
-    const response = await fetch('/words/accepted.json');
-    if (response.ok) {
-      const words = await response.json();
-      const normalizedWords = words.map((w: string) => w.toLowerCase());
-      ACCEPTED_WORDS_CACHE = normalizedWords;
-      console.log(`✅ Loaded ${normalizedWords.length} accepted words`);
-      return normalizedWords;
-    }
-  } catch (error) {
-    console.error('Failed to load accepted words from JSON:', error);
-  }
-  
-  // Fallback to empty array - will rely on API or deterministic pool
-  console.warn('⚠️ Using fallback word list (API or deterministic pool only)');
-  ACCEPTED_WORDS_CACHE = [];
-  return [];
-}
+// Module-level cache for accepted words list (deprecated - using commonWords.ts now)
 
 // Cache key for localStorage
 const CACHE_KEY = 'flicklet:daily-word';
@@ -156,25 +127,37 @@ export async function getTodaysWord(): Promise<WordApiResponse> {
 
 /**
  * Get deterministic word based on date (same word for all players each day)
- * Now uses the full accepted words list from accepted.json
+ * Uses accepted.json with excluded words filtered out
  */
 async function getDeterministicWord(date: string): Promise<string> {
-  // Load accepted words list (cached after first load)
-  const acceptedWords = await loadAcceptedWords();
+  // Import exclusion list (shared with validateWord)
+  const { isExcluded } = await import('./words/excludedWords');
   
-  // Use date as seed for deterministic word selection
-  const seed = date.split('-').join('');
-  const seedNumber = parseInt(seed, 10);
-  
-  // If we have accepted words, use them; otherwise fallback to CRANE
-  if (acceptedWords && acceptedWords.length > 0) {
-    const wordIndex = seedNumber % acceptedWords.length;
-    return acceptedWords[wordIndex].toUpperCase();
+  try {
+    // Load accepted.json
+    const response = await fetch('/words/accepted.json', { cache: 'force-cache' });
+    if (response.ok) {
+      const allWords: string[] = await response.json();
+      
+      // Filter out excluded words (basic check - should have been here from the start)
+      const validWords = allWords.filter(w => !isExcluded(w));
+      
+      // Use date as seed for deterministic word selection
+      const seed = date.split('-').join('');
+      const seedNumber = parseInt(seed, 10);
+      
+      if (validWords.length > 0) {
+        const wordIndex = seedNumber % validWords.length;
+        return validWords[wordIndex].toUpperCase();
+      }
+    }
+  } catch (error) {
+    console.warn('⚠️ Failed to load accepted words:', error);
   }
   
-  // Fallback if accepted words couldn't be loaded
-  console.warn('⚠️ No accepted words loaded, using fallback');
-  return 'CRANE';
+  // Fallback if words couldn't be loaded
+  console.warn('⚠️ Using fallback word');
+  return 'HOUSE';
 }
 
 /**
