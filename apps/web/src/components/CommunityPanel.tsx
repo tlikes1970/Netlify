@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { useTranslations } from '@/lib/language';
 import FlickWordStats from './games/FlickWordStats';
 import TriviaStats from './games/TriviaStats';
@@ -97,15 +97,12 @@ export default function CommunityPanel() {
           </div>
         </div>
 
-        {/* Right: Coming Soon (spans 1 column) */}
-        <div className="rounded-2xl bg-neutral-900 border border-white/5 p-4 flex flex-col justify-center items-center text-center">
-          <div className="text-4xl mb-3">🚀</div>
-          <h3 className="text-sm font-semibold text-neutral-200 mb-2">
-            Coming Soon
+        {/* =====  NEW COMMUNITY HUB  ===== */}
+        <div className="bg-base rounded-xl shadow-card p-4">
+          <h3 className="text-primary text-lg font-semibold mb-3">
+            Latest Posts
           </h3>
-          <p className="text-xs text-neutral-400">
-            More community features and interactive content coming your way!
-          </p>
+          <CommunityHub />
         </div>
       </div>
 
@@ -124,6 +121,77 @@ export default function CommunityPanel() {
           onClose={() => setTriviaModalOpen(false)}
         />
       </Suspense>
+    </div>
+  );
+}
+
+/* ----------  CommunityHub  ---------- */
+function CommunityHub() {
+  const [posts, setPosts] = React.useState([]);
+  const [page, setPage]   = React.useState(1);
+  const [total, setTotal] = React.useState(0);
+  const pageSize = 5;
+
+  React.useEffect(() => {
+    fetch(`http://localhost:4000/api/v1/posts?page=${page}&pageSize=${pageSize}&sort=newest`)
+      .then(r => r.json())
+      .then(json => {
+        setPosts(json.posts);
+        setTotal(json.total);
+      })
+      .catch(err => console.error('CommunityHub fetch', err));
+  }, [page]);
+
+  const handlePostClick = (slug: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    window.history.pushState({}, '', `/posts/${slug}`);
+    // Dispatch custom event for App.tsx to listen
+    window.dispatchEvent(new Event('pushstate'));
+  };
+
+  return (
+    <div className="space-y-3">
+      {posts.map((p: any) => (
+        <a
+          key={p.slug}
+          href={`/posts/${p.slug}`}
+          onClick={(e) => handlePostClick(p.slug, e)}
+          className="block bg-layer rounded-lg p-3 hover:ring-2 hover:ring-accent-primary transition cursor-pointer"
+        >
+          <h4 className="text-primary font-medium truncate">{p.title}</h4>
+          <p className="text-secondary text-sm mt-1 line-clamp-2">
+            {p.content?.slice(0, 100) || p.excerpt || ''}
+            {p.content && p.content.length > 100 ? '...' : ''}
+          </p>
+          <div className="flex items-center gap-2 mt-2 text-xs text-secondary">
+            <span>{p.author?.username || p.author?.name || 'Unknown'}</span>
+            <span>·</span>
+            <span>{new Date(p.publishedAt).toLocaleDateString()}</span>
+          </div>
+        </a>
+      ))}
+
+      {total > pageSize && (
+        <div className="flex items-center justify-between pt-2">
+          <button
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page === 1}
+            className="px-3 py-1 rounded bg-layer text-secondary disabled:opacity-50"
+          >
+            Prev
+          </button>
+          <span className="text-secondary text-sm">
+            {page} / {Math.ceil(total / pageSize)}
+          </span>
+          <button
+            onClick={() => setPage(page + 1)}
+            disabled={page >= Math.ceil(total / pageSize)}
+            className="px-3 py-1 rounded bg-layer text-secondary disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

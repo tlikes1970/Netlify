@@ -12,6 +12,7 @@ import HomeUpNextRail from '@/components/rails/HomeUpNextRail';
 import { SettingsFAB, ThemeToggleFAB } from '@/components/FABs';
 import ScrollToTopArrow from '@/components/ScrollToTopArrow';
 import { lazy, Suspense } from 'react';
+import PostDetail from '@/components/PostDetail';
 import { openSettingsSheet } from '@/components/settings/SettingsSheet';
 import { flag } from '@/lib/flags';
 import { isCompactMobileV1 } from '@/lib/mobileFlags';
@@ -60,7 +61,30 @@ export default function App() {
   // Computed smart views
   const returning = useReturningShows();
   const [view, setView] = useState<View>('home');
-  const isHome = typeof window !== 'undefined' && window.location.pathname === '/';
+  const [currentPath, setCurrentPath] = useState(
+    typeof window !== 'undefined' ? window.location.pathname : '/'
+  );
+  const isHome = currentPath === '/';
+  
+  // Detect post routes
+  const postSlugMatch = currentPath.match(/^\/posts\/([^/]+)$/);
+  const postSlug = postSlugMatch ? postSlugMatch[1] : null;
+
+  // Listen for path changes (from pushState/popState)
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    
+    window.addEventListener('popstate', handleLocationChange);
+    // Also listen for custom navigation events
+    window.addEventListener('pushstate', handleLocationChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('pushstate', handleLocationChange);
+    };
+  }, []);
 
   // Settings state
   const settings = useSettings();
@@ -679,6 +703,15 @@ export default function App() {
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading...</p>
         </div>
       </div>
+    );
+  }
+
+  // Render post detail page if on /posts/:slug route
+  if (postSlug) {
+    return (
+      <PersonalityErrorBoundary>
+        <PostDetail slug={postSlug} />
+      </PersonalityErrorBoundary>
     );
   }
 
