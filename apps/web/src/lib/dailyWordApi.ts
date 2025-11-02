@@ -68,19 +68,27 @@ function getTodayString(): string {
 export async function getTodaysWord(): Promise<WordApiResponse> {
   const today = getTodayString();
   
-  // Check cache first
+  // Check cache first, but validate it's not excluded
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
       const parsedCache: CachedWord = JSON.parse(cached);
       if (isCachedWordValid(parsedCache)) {
-        console.log(`📦 Using cached word for ${today}: ${parsedCache.word}`);
+        // Validate cached word is not in exclusion list
+        const { isExcluded } = await import('./words/excludedWords');
+        const cachedWordLower = parsedCache.word.toLowerCase();
         
-        // MIGRATION: If cache has old format or invalid data, clear it
-        if (!parsedCache.date || typeof parsedCache.word !== 'string' || parsedCache.word.length !== 5) {
+        if (isExcluded(cachedWordLower)) {
+          console.warn(`🚫 Cached word "${parsedCache.word}" is now excluded, clearing cache...`);
+          localStorage.removeItem(CACHE_KEY);
+          // Fall through to get a new word
+        } else if (!parsedCache.date || typeof parsedCache.word !== 'string' || parsedCache.word.length !== 5) {
+          // MIGRATION: If cache has old format or invalid data, clear it
           console.warn('🔄 Invalid cache format detected, clearing...');
           localStorage.removeItem(CACHE_KEY);
+          // Fall through to get a new word
         } else {
+          console.log(`📦 Using cached word for ${today}: ${parsedCache.word}`);
           return {
             word: parsedCache.word,
             date: parsedCache.date,
@@ -139,8 +147,18 @@ async function getDeterministicWord(date: string): Promise<string> {
     const commonWords = getCommonWordsArray();
     
     if (commonWords && commonWords.length > 0) {
+      console.log(`📚 Loaded ${commonWords.length} common words`);
+      
       // Filter out excluded words from common words
-      const validWords = commonWords.filter(w => !isExcluded(w));
+      const validWords = commonWords.filter(w => {
+        const excluded = isExcluded(w);
+        if (excluded) {
+          console.log(`🚫 Filtered out excluded word from common list: ${w}`);
+        }
+        return !excluded;
+      });
+      
+      console.log(`✅ After filtering excluded words: ${validWords.length} valid common words`);
       
       if (validWords.length > 0) {
         // Use date as seed for deterministic word selection
@@ -148,6 +166,16 @@ async function getDeterministicWord(date: string): Promise<string> {
         const seedNumber = parseInt(seed, 10);
         const wordIndex = seedNumber % validWords.length;
         const selectedWord = validWords[wordIndex].toUpperCase();
+        
+        // Double-check the selected word is not excluded (safety check)
+        if (isExcluded(selectedWord.toLowerCase())) {
+          console.error(`❌ ERROR: Selected word "${selectedWord}" is excluded! This should not happen.`);
+          // Pick the next word as fallback
+          const fallbackIndex = (wordIndex + 1) % validWords.length;
+          const fallbackWord = validWords[fallbackIndex].toUpperCase();
+          console.log(`🔄 Using fallback word: ${fallbackWord}`);
+          return fallbackWord;
+        }
         
         console.log(`📚 Selected from ${validWords.length} common words, index ${wordIndex}: ${selectedWord}`);
         return selectedWord;
@@ -159,13 +187,26 @@ async function getDeterministicWord(date: string): Promise<string> {
     const response = await fetch('/words/accepted.json', { cache: 'force-cache' });
     if (response.ok) {
       const allWords: string[] = await response.json();
-      const validWords = allWords.filter(w => !isExcluded(w));
+      console.log(`📚 Loaded ${allWords.length} words from accepted.json`);
+      
+      // Filter out excluded words - this is critical!
+      const validWords = allWords.filter(w => {
+        const excluded = isExcluded(w);
+        if (excluded) {
+          console.log(`🚫 Filtered out excluded word: ${w}`);
+        }
+        return !excluded;
+      });
+      
+      console.log(`✅ After filtering excluded words: ${validWords.length} valid words`);
       
       if (validWords.length > 0) {
         const seed = date.split('-').join('');
         const seedNumber = parseInt(seed, 10);
         const wordIndex = seedNumber % validWords.length;
-        return validWords[wordIndex].toUpperCase();
+        const selectedWord = validWords[wordIndex].toUpperCase();
+        console.log(`📚 Selected from accepted.json, index ${wordIndex}: ${selectedWord}`);
+        return selectedWord;
       }
     }
   } catch (error) {
