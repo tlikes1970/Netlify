@@ -72,13 +72,6 @@ export default function FlickletHeader({
     }
   }, []);
 
-  const hideMarquee = () => {
-    setMarqueeHidden(true);
-    try { window.localStorage.setItem('flicklet.marqueeHidden', '1'); } catch {
-      // Ignore localStorage errors
-    }
-  };
-
   // Check if username prompt is needed
   // Use a ref to track if we've already shown the prompt to prevent loops
   const promptShownRef = React.useRef(false);
