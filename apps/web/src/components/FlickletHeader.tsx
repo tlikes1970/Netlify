@@ -57,7 +57,7 @@ export default function FlickletHeader({
   onHelpOpen,
 }: FlickletHeaderProps) {
   const translations = useTranslations();
-  const { username, needsUsernamePrompt } = useUsername();
+  const { username, needsUsernamePrompt, loading: usernameLoading } = useUsername();
   const { isInstallable, promptInstall } = useInstallPrompt();
   const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
   
@@ -103,6 +103,11 @@ export default function FlickletHeader({
   const isPromptingRef = React.useRef(false);
   
   useEffect(() => {
+    // Skip if username is still loading - wait for it to finish
+    if (usernameLoading) {
+      return;
+    }
+    
     // Skip if we're already processing a prompt action
     if (isPromptingRef.current) {
       return;
@@ -119,7 +124,7 @@ export default function FlickletHeader({
       // Reset the ref when prompt is no longer needed (user has username or skipped)
       promptShownRef.current = false;
     }
-  }, [username, needsUsernamePrompt, showUsernamePrompt]);
+  }, [username, usernameLoading, needsUsernamePrompt, showUsernamePrompt]);
   
   const handleCloseUsernamePrompt = () => {
     isPromptingRef.current = true;
