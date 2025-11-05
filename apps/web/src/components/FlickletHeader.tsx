@@ -190,18 +190,6 @@ export default function FlickletHeader({
               >
                 ?
               </button>
-              {marqueeHidden && (
-                <button
-                  type="button"
-                  onClick={showMarqueePref}
-                  className="rounded-full border px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-[11px] leading-none text-muted-foreground hover:bg-accent hover:text-accent-foreground hidden md:block"
-                  aria-pressed="false"
-                  data-testid="marquee-show"
-                  title="Show marquee"
-                >
-                  {translations.showMarquee}
-                </button>
-              )}
               <AccountButton />
             </div>
           </div>

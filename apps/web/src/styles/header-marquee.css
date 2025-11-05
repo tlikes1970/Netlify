@@ -1,12 +1,13 @@
 @keyframes flicklet-scroll-x {
-  from { transform: translate3d(100%, 0, 0); }
-  to   { transform: translate3d(-100%, 0, 0); }
+  from { 
+    transform: translate3d(100vw, 0, 0); 
+  }
+  to { 
+    transform: translate3d(-100%, 0, 0); 
+  }
 }
 
 .f-marquee-rail {
-  /* fade edges so text enters/exits gracefully */
-  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
   position: relative;
   z-index: var(--z-base);
   overflow: hidden;
@@ -15,6 +16,9 @@
 .f-marquee-scroll {
   animation: flicklet-scroll-x var(--marquee-duration, 30s) linear infinite;
   will-change: transform;
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
 /* Pause on hover when enabled via data attribute */
