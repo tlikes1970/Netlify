@@ -88,6 +88,15 @@ service cloud.firestore {
       }
     }
 
+    // Tags collection - read for all (public metadata), write for admins only
+    match /tags/{tagId} {
+      // Anyone can read tags (public metadata)
+      allow read: if true;
+      
+      // Only admins can create/update/delete tags
+      allow write: if isAdmin();
+    }
+
     // Users collection
     match /users/{userId} {
       // Users can read their own document, or any authenticated user can read (for public profiles)
