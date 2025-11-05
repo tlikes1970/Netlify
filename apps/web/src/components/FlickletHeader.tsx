@@ -625,13 +625,11 @@ function MarqueeBar({
   speedSec = 30,
   changeEveryMs = 20000,
   pauseOnHover = true,
-  onClose,
 }: {
   messages: string[];
   speedSec?: number;
   changeEveryMs?: number;
   pauseOnHover?: boolean;
-  onClose?: () => void;
 }) {
   const [idx, setIdx] = useState(0);
   const [apiMessages, setApiMessages] = useState<string[]>([]);
