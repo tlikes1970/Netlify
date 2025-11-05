@@ -56,21 +56,10 @@ export default function FlickletHeader({
   onClear,
   onHelpOpen,
 }: FlickletHeaderProps) {
-  const translations = useTranslations();
   const { username, needsUsernamePrompt, loading: usernameLoading } = useUsername();
   const { isInstallable, promptInstall } = useInstallPrompt();
   const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
   
-  // Use provided messages or default translated messages
-  // const defaultMessages = [ // Unused
-  //   translations.marqueeMessage1,
-  //   translations.marqueeMessage2,
-  //   translations.marqueeMessage3,
-  //   translations.marqueeMessage4,
-  //   translations.marqueeMessage5,
-  // ];
-  
-  // const marqueeMessages = messages || defaultMessages; // Unused
   // Persisted marquee visibility
   const [marqueeHidden, setMarqueeHidden] = useState<boolean>(false);
 
@@ -86,13 +75,6 @@ export default function FlickletHeader({
   const hideMarquee = () => {
     setMarqueeHidden(true);
     try { window.localStorage.setItem('flicklet.marqueeHidden', '1'); } catch {
-      // Ignore localStorage errors
-    }
-  };
-
-  const showMarqueePref = () => {
-    setMarqueeHidden(false);
-    try { window.localStorage.removeItem('flicklet.marqueeHidden'); } catch {
       // Ignore localStorage errors
     }
   };
@@ -651,10 +633,11 @@ function MarqueeBar({
   pauseOnHover?: boolean;
   onClose?: () => void;
 }) {
-  const translations = useTranslations();
   const [idx, setIdx] = useState(0);
   const [apiMessages, setApiMessages] = useState<string[]>([]);
+  const [isPaused, setIsPaused] = useState(false);
   const keyRef = useRef(0);
+  const scrollerRef = useRef<HTMLDivElement>(null);
 
   // Load API content when component mounts
   useEffect(() => {
@@ -685,9 +668,19 @@ function MarqueeBar({
     const t = setInterval(() => {
       setIdx(i => (i + 1) % currentMessages.length);
       keyRef.current += 1; // restart CSS animation
+      setIsPaused(false); // Resume animation when message changes
     }, Math.max(4000, changeEveryMs));
     return () => clearInterval(t);
   }, [apiMessages, messages, changeEveryMs]);
+
+  // Handle click to pause/resume
+  const handleClick = () => {
+    if (scrollerRef.current) {
+      const newPaused = !isPaused;
+      setIsPaused(newPaused);
+      scrollerRef.current.style.animationPlayState = newPaused ? 'paused' : 'running';
+    }
+  };
 
   const currentMessages = apiMessages.length > 0 ? apiMessages : messages;
   const msg = currentMessages[idx] || "";
@@ -700,27 +693,20 @@ function MarqueeBar({
     >
       <div className="mx-auto w-full max-w-screen-2xl px-3 sm:px-4">
         <div className="relative h-9 sm:h-10 overflow-hidden">
-          {/* Close / Hide control */}
-          {onClose && (
-            <button
-              type="button"
-              onClick={onClose}
-              className="absolute right-1.5 top-1.5 z-dropdown rounded-md border px-2 py-0.5 text-[11px] leading-none backdrop-blur hover:bg-accent hover:text-accent-foreground"
-              aria-label="Hide marquee"
-              data-testid="marquee-hide"
-            >
-              {translations.hideMarquee}
-            </button>
-          )}
           <div
+            ref={scrollerRef}
             key={keyRef.current}
-            className="absolute inset-0 whitespace-nowrap f-marquee-scroll"
-            style={{ ["--marquee-duration" as any]: `${Math.max(10, speedSec)}s` }}
+            className="absolute inset-0 whitespace-nowrap f-marquee-scroll cursor-pointer"
+            style={{ 
+              ["--marquee-duration" as any]: `${Math.max(10, speedSec)}s`,
+              animationPlayState: isPaused ? 'paused' : 'running'
+            }}
+            onClick={handleClick}
             aria-live="polite"
             data-testid="marquee-scroller"
+            title={isPaused ? 'Click to resume' : 'Click to pause'}
           >
-            <span className="pr-[100vw] align-middle text-sm sm:text-base md:text-lg">{msg}</span>
-            <span className="pr-[100vw] align-middle text-sm sm:text-base md:text-lg" aria-hidden>{msg}</span>
+            <span className="inline-block align-middle text-sm sm:text-base md:text-lg whitespace-nowrap">{msg}</span>
           </div>
         </div>
       </div>
