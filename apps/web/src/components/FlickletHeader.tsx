@@ -98,13 +98,39 @@ export default function FlickletHeader({
   };
 
   // Check if username prompt is needed
+  // Use a ref to track if we've already shown the prompt to prevent loops
+  const promptShownRef = React.useRef(false);
+  const isPromptingRef = React.useRef(false);
+  
   useEffect(() => {
-    if (needsUsernamePrompt()) {
-      setShowUsernamePrompt(true);
-    } else {
-      setShowUsernamePrompt(false);
+    // Skip if we're already processing a prompt action
+    if (isPromptingRef.current) {
+      return;
     }
-  }, [username]); // Remove needsUsernamePrompt from dependencies
+    
+    const needsPrompt = needsUsernamePrompt();
+    
+    // Only show if we haven't already shown it in this session
+    if (needsPrompt && !promptShownRef.current && !showUsernamePrompt) {
+      setShowUsernamePrompt(true);
+      promptShownRef.current = true;
+    } else if (!needsPrompt) {
+      setShowUsernamePrompt(false);
+      // Reset the ref when prompt is no longer needed (user has username or skipped)
+      promptShownRef.current = false;
+    }
+  }, [username, needsUsernamePrompt, showUsernamePrompt]);
+  
+  const handleCloseUsernamePrompt = () => {
+    isPromptingRef.current = true;
+    setShowUsernamePrompt(false);
+    // Reset the ref when modal is closed so it can be shown again if needed
+    promptShownRef.current = false;
+    // Allow prompting again after a short delay
+    setTimeout(() => {
+      isPromptingRef.current = false;
+    }, 100);
+  };
 
   return (
     <>
@@ -216,7 +242,7 @@ export default function FlickletHeader({
       {/* Username prompt modal */}
       <UsernamePromptModal 
         isOpen={showUsernamePrompt} 
-        onClose={() => setShowUsernamePrompt(false)} 
+        onClose={handleCloseUsernamePrompt} 
       />
     </>
   );
