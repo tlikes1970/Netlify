@@ -210,7 +210,6 @@ export default function FlickletHeader({
           speedSec={marqueeSpeedSec}
           changeEveryMs={changeEveryMs}
           pauseOnHover={pauseOnHover}
-          onClose={hideMarquee}
         />
       )}
 
