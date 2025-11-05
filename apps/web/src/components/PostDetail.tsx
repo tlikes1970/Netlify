@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import VoteBar from './VoteBar';
 import CommentComposer from './CommentComposer';
 import CommentList from './CommentList';
+import { collection, query, where, limit, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebaseBootstrap';
 
 interface PostDetailProps {
   slug: string;
@@ -38,21 +40,51 @@ export default function PostDetail({ slug }: PostDetailProps) {
     setLoading(true);
     setError(null);
 
-    // Fetch post
-    fetch(`http://localhost:4000/api/v1/posts/${slug}`)
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch post');
-        return res.json();
-      })
-      .then((data) => {
-        setPost(data);
+    // Fetch post from Firestore by slug
+    const fetchPost = async () => {
+      try {
+        const postsRef = collection(db, 'posts');
+        const q = query(postsRef, where('slug', '==', slug), limit(1));
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          throw new Error('Post not found');
+        }
+
+        const doc = snapshot.docs[0];
+        const data = doc.data();
+        
+        // Convert tagSlugs to tags array format
+        const tagSlugs = data.tagSlugs || [];
+        const tags = tagSlugs.map((slug: string) => ({
+          slug,
+          name: slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' '),
+        }));
+        
+        setPost({
+          id: doc.id,
+          title: data.title || '',
+          excerpt: data.excerpt || '',
+          content: data.content || data.body || '',
+          body: data.body || data.content || '',
+          publishedAt: data.publishedAt?.toDate?.()?.toISOString() || data.publishedAt || new Date().toISOString(),
+          author: data.author || { 
+            username: data.authorName || 'Anonymous',
+            name: data.authorName || 'Anonymous',
+            email: data.authorId || '',
+            profile: {}
+          },
+          tags: tags,
+        });
         setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err: any) {
         console.error('PostDetail fetch error:', err);
-        setError(err.message);
+        setError(err.message || 'Failed to fetch post');
         setLoading(false);
-      });
+      }
+    };
+
+    fetchPost();
   }, [slug]);
 
   if (loading) {

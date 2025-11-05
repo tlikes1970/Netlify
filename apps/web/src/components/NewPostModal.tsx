@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
 import { db, serverTimestamp } from '../lib/firebaseBootstrap';
 import { useAuth } from '../hooks/useAuth';
 import ModalPortal from './ModalPortal';
@@ -35,20 +35,58 @@ export default function NewPostModal({ isOpen, onClose, onSuccess }: NewPostModa
   const [error, setError] = useState<string | null>(null);
   const [fetchingTags, setFetchingTags] = useState(true);
 
-  // Fetch available tags on mount
+  // Fetch available tags from Firestore
   useEffect(() => {
     if (isOpen) {
       setFetchingTags(true);
-      fetch('http://localhost:4000/api/v1/tags')
-        .then((res) => res.json())
-        .then((data) => {
-          setTags(data);
+      const fetchTags = async () => {
+        try {
+          // Try to fetch from tags collection first
+          const tagsRef = collection(db, 'tags');
+          const tagsQuery = query(tagsRef, orderBy('name', 'asc'));
+          const snapshot = await getDocs(tagsQuery);
+          
+          if (!snapshot.empty) {
+            const tagsData = snapshot.docs.map((doc) => {
+              const data = doc.data();
+              return {
+                slug: data.slug || doc.id,
+                name: data.name || data.slug || doc.id,
+                countOfPosts: data.countOfPosts || 0,
+              };
+            });
+            setTags(tagsData);
+          } else {
+            // Fallback: extract unique tags from posts
+            const postsRef = collection(db, 'posts');
+            const postsSnapshot = await getDocs(postsRef);
+            const tagMap = new Map<string, number>();
+            
+            postsSnapshot.forEach((doc) => {
+              const data = doc.data();
+              const tagSlugs = data.tagSlugs || [];
+              tagSlugs.forEach((slug: string) => {
+                tagMap.set(slug, (tagMap.get(slug) || 0) + 1);
+              });
+            });
+            
+            const tagsData = Array.from(tagMap.entries()).map(([slug, count]) => ({
+              slug,
+              name: slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' '),
+              countOfPosts: count,
+            }));
+            
+            setTags(tagsData);
+          }
           setFetchingTags(false);
-        })
-        .catch((err) => {
+        } catch (err) {
           console.error('Failed to fetch tags:', err);
+          setTags([]);
           setFetchingTags(false);
-        });
+        }
+      };
+      
+      fetchTags();
     }
   }, [isOpen]);
 

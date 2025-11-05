@@ -6,6 +6,8 @@ import CommunityPlayer from './CommunityPlayer';
 import { useAuth } from '../hooks/useAuth';
 import NewPostModal from './NewPostModal';
 import PostCard, { PostCardProps } from './PostCard';
+import { collection, query, orderBy, limit, getDocs, getCountFromServer } from 'firebase/firestore';
+import { db } from '../lib/firebaseBootstrap';
 
 type Post = PostCardProps['post'];
 
@@ -164,25 +166,58 @@ function CommunityHub() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const pageSize = 3;   // ← always 3 so Firestore fallback fires
+  const pageSize = 3;
 
   React.useEffect(() => {
-    fetch(`http://localhost:4000/api/v1/posts?page=${page}&pageSize=${pageSize}&sort=newest`)
-      .then(r => {
-        if (!r.ok) {
-          throw new Error(`API error: ${r.status} ${r.statusText}`);
-        }
-        return r.json();
-      })
-      .then(json => {
-        setPosts(Array.isArray(json.posts) ? json.posts : []);
-        setTotal(json.total || 0);
-      })
-      .catch(err => {
+    const fetchPosts = async () => {
+      try {
+        // Get total count
+        const postsRef = collection(db, 'posts');
+        const countSnapshot = await getCountFromServer(postsRef);
+        setTotal(countSnapshot.data().count);
+
+        // Fetch posts with pagination
+        const postsQuery = query(
+          postsRef,
+          orderBy('publishedAt', 'desc'),
+          limit(pageSize)
+        );
+        
+        const snapshot = await getDocs(postsQuery);
+        const postsData = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          // Convert tagSlugs to tags array format
+          const tagSlugs = data.tagSlugs || [];
+          const tags = tagSlugs.map((slug: string) => ({
+            slug,
+            name: slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' '),
+          }));
+          
+          return {
+            id: doc.id,
+            slug: data.slug || doc.id,
+            title: data.title || '',
+            content: data.content || data.body || '',
+            excerpt: data.excerpt || '',
+            body: data.body || data.content || '',
+            publishedAt: data.publishedAt?.toDate?.()?.toISOString() || data.publishedAt || new Date().toISOString(),
+            author: data.author || { 
+              username: data.authorName || 'Anonymous',
+              name: data.authorName || 'Anonymous',
+            },
+            tags: tags,
+          };
+        });
+        
+        setPosts(postsData);
+      } catch (err) {
         console.error('CommunityHub fetch', err);
         setPosts([]);
         setTotal(0);
-      });
+      }
+    };
+
+    fetchPosts();
   }, [page]);
 
   const handlePostClick = (slug: string, e?: React.MouseEvent) => {
