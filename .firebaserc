@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "staging": "flicklet-71dff",
+    "default": "flicklet-71dff"
+  },
+  "targets": {},
+  "etags": {
+    "flicklet-71dff": {
+      "extensionInstances": {
+        "firestore-send-email": "a3a80cb222030ef74d14cf4155befb48b2999847d0e068b7bc9cdda0c9281f97"
+      }
+    }
+  }
+}

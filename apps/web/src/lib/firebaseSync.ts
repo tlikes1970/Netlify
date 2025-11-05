@@ -12,7 +12,7 @@ export class FirebaseSyncManager {
   private static instance: FirebaseSyncManager;
   private isInitialized = false;
   private syncInProgress = false;
-  private syncTimeout: number | null = null;
+  private syncTimeout: ReturnType<typeof setTimeout> | null = null;
 
   static getInstance(): FirebaseSyncManager {
     if (!FirebaseSyncManager.instance) {

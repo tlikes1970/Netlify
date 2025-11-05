@@ -12,6 +12,7 @@ import HomeUpNextRail from '@/components/rails/HomeUpNextRail';
 import { SettingsFAB, ThemeToggleFAB } from '@/components/FABs';
 import ScrollToTopArrow from '@/components/ScrollToTopArrow';
 import { lazy, Suspense } from 'react';
+import PostDetail from '@/components/PostDetail';
 import { openSettingsSheet } from '@/components/settings/SettingsSheet';
 import { flag } from '@/lib/flags';
 import { isCompactMobileV1 } from '@/lib/mobileFlags';
@@ -27,6 +28,7 @@ import { HelpModal } from '@/components/HelpModal';
 const ListPage = lazy(() => import('@/pages/ListPage'));
 const MyListsPage = lazy(() => import('@/pages/MyListsPage'));
 const DiscoveryPage = lazy(() => import('@/pages/DiscoveryPage'));
+const AdminPage = lazy(() => import('@/pages/AdminPage'));
 import PullToRefreshWrapper from '@/components/PullToRefreshWrapper';
 import { useForYouRows } from '@/hooks/useForYouRows';
 import { useForYouContent } from '@/hooks/useGenreContent';
@@ -42,6 +44,7 @@ import { getPersonalityText } from '@/lib/settings';
 import Toast, { useToast } from '@/components/Toast';
 import PersonalityErrorBoundary from '@/components/PersonalityErrorBoundary';
 import { useAuth } from '@/hooks/useAuth';
+import { initializeMessaging, getFCMToken, setupForegroundMessageHandler } from './firebase-messaging';
 import AuthModal from '@/components/AuthModal';
 import { isAuthInFlightInOtherTab } from '@/lib/authBroadcast';
 import '@/styles/flickword.css';
@@ -60,7 +63,31 @@ export default function App() {
   // Computed smart views
   const returning = useReturningShows();
   const [view, setView] = useState<View>('home');
-  const isHome = typeof window !== 'undefined' && window.location.pathname === '/';
+  const [currentPath, setCurrentPath] = useState(
+    typeof window !== 'undefined' ? window.location.pathname : '/'
+  );
+  const isHome = currentPath === '/';
+  const isAdmin = currentPath === '/admin';
+  
+  // Detect post routes
+  const postSlugMatch = currentPath.match(/^\/posts\/([^/]+)$/);
+  const postSlug = postSlugMatch ? postSlugMatch[1] : null;
+
+  // Listen for path changes (from pushState/popState)
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    
+    window.addEventListener('popstate', handleLocationChange);
+    // Also listen for custom navigation events
+    window.addEventListener('pushstate', handleLocationChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('pushstate', handleLocationChange);
+    };
+  }, []);
 
   // Settings state
   const settings = useSettings();
@@ -123,6 +150,28 @@ export default function App() {
 
   // Auth state
   const { loading: authLoading, authInitialized, isAuthenticated, status } = useAuth();
+
+  // Initialize FCM and setup message handlers
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Initialize messaging
+      initializeMessaging().then(() => {
+        // Get FCM token and store it
+        getFCMToken().then((token) => {
+          if (token) {
+            console.log('[FCM] Token obtained and stored');
+          }
+        });
+
+        // Setup foreground message handler (shows toast)
+        setupForegroundMessageHandler((payload) => {
+          const title = payload.notification?.title || 'New notification';
+          const body = payload.notification?.body || '';
+          addToast(`${title}: ${body}`, 'info');
+        });
+      });
+    }
+  }, [isAuthenticated, addToast]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   
   // Check for debug mode - persist across redirects
@@ -679,6 +728,33 @@ export default function App() {
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading...</p>
         </div>
       </div>
+    );
+  }
+
+  // Render admin page if on /admin route
+  if (isAdmin) {
+    return (
+      <PersonalityErrorBoundary>
+        <Suspense fallback={
+          <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+            <div className="text-center">
+              <div className="w-8 h-8 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading...</p>
+            </div>
+          </div>
+        }>
+          <AdminPage />
+        </Suspense>
+      </PersonalityErrorBoundary>
+    );
+  }
+
+  // Render post detail page if on /posts/:slug route
+  if (postSlug) {
+    return (
+      <PersonalityErrorBoundary>
+        <PostDetail slug={postSlug} />
+      </PersonalityErrorBoundary>
     );
   }
 

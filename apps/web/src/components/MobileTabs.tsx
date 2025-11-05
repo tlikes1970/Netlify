@@ -76,7 +76,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
     }
     
     let prevOffsetTop = 0;
-    let throttleTimeout: number | null = null;
+    let throttleTimeout: ReturnType<typeof setTimeout> | null = null;
     
     const handleViewportChange = () => {
       // Throttle to prevent rapid fires from iOS toolbar animations
@@ -119,7 +119,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
     };
     
     // Scroll reset listener for aggressive repaint forcing
-    let scrollResetTimeout: number | null = null;
+    let scrollResetTimeout: ReturnType<typeof setTimeout> | null = null;
     const handleScrollReset = () => {
       if (scrollResetTimeout) clearTimeout(scrollResetTimeout);
       scrollResetTimeout = setTimeout(() => {

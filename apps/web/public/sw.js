@@ -1,11 +1,16 @@
 /* eslint-disable no-restricted-globals */
+// Skip-waiting + clients-claim on install/activate
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
 const CACHE_NAME = "app-assets-v2";
 const SW_VERSION = "v4";
 
-self.addEventListener("install", (e) => {
-  console.log("[SW] Installing " + SW_VERSION + " - clearing old caches");
-  e.waitUntil(self.skipWaiting());
-});
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     (async () => {
@@ -15,7 +20,6 @@ self.addEventListener("activate", (e) => {
       await Promise.all(
         keys.map((k) => (keep.has(k) ? null : caches.delete(k)))
       );
-      await self.clients.claim();
     })()
   );
 });
@@ -45,7 +49,50 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  if (req.mode === "navigate") return; // do NOT intercept page loads
+  // Cache-first for /posts/* routes
+  if (url.pathname.startsWith("/posts/")) {
+    e.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cached = await cache.match(req);
+        if (cached) {
+          // Return cached version and update in background
+          fetch(req).then((response) => {
+            if (response.ok) cache.put(req, response.clone());
+          }).catch(() => {});
+          return cached;
+        }
+        const response = await fetch(req);
+        if (response.ok) cache.put(req, response.clone());
+        return response;
+      })
+    );
+    return;
+  }
+
+  // Stale-while-revalidate for API calls
+  if (url.pathname.startsWith("/api/")) {
+    e.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cached = await cache.match(req);
+        const fetchPromise = fetch(req).then((response) => {
+          if (response.ok) cache.put(req, response.clone());
+          return response;
+        });
+        return cached || fetchPromise;
+      })
+    );
+    return;
+  }
+
+  if (req.mode === "navigate") {
+    // Offline fallback page
+    e.respondWith(
+      fetch(req).catch(() => {
+        return caches.match("/offline.html") || new Response("Offline", { status: 503 });
+      })
+    );
+    return;
+  }
 
   // Network only for API calls and auth-related files
   if (

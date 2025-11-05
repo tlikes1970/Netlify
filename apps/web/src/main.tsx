@@ -1,6 +1,25 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+
+// Initialize Sentry for error tracking (only in production with DSN)
+if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
+  import('@sentry/react').then((Sentry) => {
+    Sentry.init({
+      dsn: import.meta.env.VITE_SENTRY_DSN,
+      environment: import.meta.env.MODE || 'production',
+      integrations: [
+        Sentry.browserTracingIntegration(),
+        Sentry.replayIntegration(),
+      ],
+      tracesSampleRate: 0.1,
+      replaysSessionSampleRate: 0.1,
+      replaysOnErrorSampleRate: 1.0,
+    });
+  }).catch(() => {
+    // Sentry not available, continue without it
+  });
+}
 import { FlagsProvider } from './lib/flags';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/query';

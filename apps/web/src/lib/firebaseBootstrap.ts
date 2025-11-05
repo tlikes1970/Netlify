@@ -13,7 +13,8 @@ import {
   browserLocalPersistence,
   onAuthStateChanged
 } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, serverTimestamp } from 'firebase/firestore';
+import { getFunctions } from 'firebase/functions';
 import { GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
 
 // Firebase configuration
@@ -80,6 +81,8 @@ if (typeof window !== 'undefined') {
 
 export const auth = authInstance!;
 export const db = getFirestore(app);
+export const functions = getFunctions(app);
+export { serverTimestamp };
 
 // Note: Persistence is set once inside bootstrapFirebase() before listeners are wired.
 

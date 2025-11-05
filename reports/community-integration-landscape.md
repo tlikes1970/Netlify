@@ -1,0 +1,266 @@
+# Community Hub Integration Landscape Report
+
+**Generated:** 2025-11-02  
+**Scan Type:** Read-only inventory  
+**Purpose:** Identify existing Flicklet infrastructure for Phase 1 Community Hub reuse
+
+---
+
+## 1. Runtime Versions Already Pinned
+
+### Node Version
+
+- **`.nvmrc`** (root): `20`
+  - File: `/.nvmrc`
+  - Command to verify: `cat .nvmrc`
+- **Package.json engines:**
+  - `apps/web/package.json`: `"node": ">=18 <21"`
+  - Root `package.json`: No engines field
+
+### Package Manager
+
+- **pnpm** is used (2 lockfiles found):
+  - `/web/pnpm-lock.yaml`
+  - `/server/pnpm-lock.yaml`
+- **npm** also present (legacy):
+  - `/package-lock.json` (root)
+- **No workspace config** (`pnpm-workspace.yaml`) found
+- **Version enforcement:** Lockfiles indicate pnpm v10.20.0+ in use
+
+### Postgres Version
+
+- **docker-compose.yml** (root):
+  ```yaml
+  image: postgres:16-alpine
+  ```
+
+  - File: `/docker-compose.yml` lines 3-13
+  - Port: `5432` (mapped to host)
+  - Database name: `community`
+  - Credentials: `postgres/postgres`
+
+---
+
+## 2. Folder Conventions
+
+### Backend/Server Folders
+
+- **`/server`** exists (Express API)
+  - Entry: `/server/src/index.js`
+  - Package: `/server/package.json`
+- **No `/api` or `/backend`** folders found
+
+### Frontend/Web Folders
+
+- **`/web`** exists (Next.js 16 App Router)
+  - Entry: `/web/app/page.tsx`
+  - Package: `/web/package.json`
+- **`/apps/web`** exists (Vite + React 18)
+  - Entry: `/apps/web/src/main.tsx`
+  - Package: `/apps/web/package.json`
+- **No `/frontend` or `/app`** folders found
+
+### Environment Variables
+
+- **Per-package `.env.example` files:**
+  - `/server/.env.example`: Contains `DATABASE_URL` and `PORT=4000`
+  - `/web/.env.example`: Contains `NEXT_PUBLIC_API_URL=http://localhost:4000`
+- **No root `.env.example`** found
+- **Pattern:** Each service maintains its own `.env.example`
+
+---
+
+## 3. Database Tooling in Place
+
+### Prisma Installation
+
+- **Installed:** Yes
+  - Schema: `/server/prisma/schema.prisma`
+  - Client: `@prisma/client@^5.19.0` in `/server/package.json`
+  - CLI: `prisma@^5.19.0` (devDependency)
+  - Lockfile reference: `/server/pnpm-lock.yaml` contains Prisma packages
+
+### Migration Command
+
+- **Command:** `pnpm migrate` (in `/server/package.json`)
+  - Script: `"migrate": "prisma migrate dev --name init_community"`
+  - Run from: `/server` directory
+  - Existing migration: `/server/prisma/migrations/20251102183447_init_community/`
+
+### Seed Script
+
+- **Script:** `pnpm seed` (in `/server/package.json`)
+  - Script: `"seed": "node prisma/seed.js"`
+  - File: `/server/prisma/seed.js`
+  - Pattern: Idempotent (clears then seeds)
+  - Prisma config: `"seed": "node prisma/seed.js"` in `/server/package.json`
+
+### Docker Compose Postgres Service
+
+- **File:** `/docker-compose.yml`
+- **Service block:**
+  ```yaml
+  services:
+    postgres:
+      image: postgres:16-alpine
+      container_name: postgres
+      restart: unless-stopped
+      environment:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_DB: community
+      ports:
+        - "5432:5432"
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+  ```
+- **Command to start:** `docker compose up postgres` (from root)
+
+---
+
+## 4. API Patterns We Can Copy
+
+### Express Entry Files
+
+- **`/server/src/index.js`**
+  - Framework: Express 4.18.2
+  - Port: 4000 (from `process.env.PORT`)
+  - ES Modules: `"type": "module"` in package.json
+
+### Health Route
+
+- **Route:** `GET /health`
+  - Handler: `/server/src/index.js` lines 21-29
+  - Response: `{ status: 'ok', db: 'connected' }` or `{ status: 'error', db: 'disconnected' }`
+  - Test command: `curl http://localhost:4000/health`
+
+### Error Handler Middleware
+
+- **File:** `/server/src/middleware/errorHandler.js`
+- **Exports:**
+  - `errorHandler(err, req, res, next)`: Handles Prisma errors (P2025 → 404), defaults to 500
+  - `notFoundHandler(req, res)`: Returns 404 `{ error: 'Not found' }`
+- **Usage:** Applied via `app.use()` in `/server/src/index.js` lines 39-40
+
+### Test Framework
+
+- **Jest** installed:
+  - Command: `pnpm test:server` (in `/server/package.json`)
+  - Script: `"test:server": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand --detectOpenHandles --forceExit"`
+  - Config: `/server/jest.config.cjs`
+  - Test file example: `/server/__tests__/posts.test.mjs`
+  - Dependencies: `jest@^29.7.0`, `supertest@^6.3.3`, `@types/jest@^29.5.0`
+
+---
+
+## 5. Front-End Build Patterns
+
+### Next.js Version
+
+- **Next.js 16.0.1** installed in `/web`:
+  - Package: `/web/package.json` line 14
+  - App Router: Yes (uses `/app` directory)
+  - Config: `/web/next.config.ts`
+  - Turbopack: Enabled by default
+
+### Tailwind Configuration
+
+- **`/apps/web/tailwind.config.ts`** exists:
+  - Framework: Tailwind CSS 3.4.18 (Vite app)
+  - Extends: Design tokens from `/migration/inputs/DESIGN_TOKENS.json`
+  - Custom colors: `bg.base`, `text.primary`, `accent.primary`
+- **`/web`** (Next.js) uses Tailwind 4.1.16:
+  - Config auto-generated by `create-next-app`
+  - Package: `/web/package.json` line 22
+
+### Shared UI Components
+
+- **Location:** `/apps/web/src/components/`
+- **Reusable examples:**
+  - Cards: `/apps/web/src/components/Card.tsx` (base card component)
+  - Cards V2: `/apps/web/src/components/cards/CardV2.tsx` (advanced card with actions)
+  - Modals: `/apps/web/src/components/modals/` directory (NotificationCenter, etc.)
+  - Pagination: Not found (likely in InfiniteScrollContainer)
+  - Skeletons: Not explicitly named (check `PerformanceComponents.tsx`)
+
+### Static Export
+
+- **Not using `next export`** (Next.js 16 uses App Router)
+- **Vite build** (apps/web):
+  - Command: `pnpm build` in `/apps/web/package.json`
+  - Script: `"build": "tsc && vite build"`
+  - Output: `/apps/web/dist/`
+- **Next.js standalone output:**
+  - Config: `/web/next.config.ts` line 4: `output: "standalone"`
+  - Build command: `pnpm build` in `/web/package.json`
+
+---
+
+## 6. CI / CD & Containers
+
+### GitHub Actions
+
+- **Not found:** No `.github/workflows/` directory
+- **Command to verify:** `Test-Path .github\workflows` returns `False`
+
+### Dockerfiles
+
+- **Not found:** No `Dockerfile` or `Dockerfile.*` in repo
+- **Docker Compose only:** `/docker-compose.yml` (Postgres service only)
+
+### Secrets Management
+
+- **No CI secrets found** (no workflow files to inspect)
+- **Local env pattern:** `.env.example` files per package
+
+---
+
+## 7. Existing Services We Must Avoid Clashing With
+
+### Ports in Use
+
+- **3000:** Next.js dev server (`/web/package.json` script: `"dev": "next dev -p 3000"`)
+- **4000:** Express API server (`/server/src/index.js` line 10: `PORT || 4000`)
+- **5432:** PostgreSQL (docker-compose.yml line 11: `"5432:5432"`)
+- **8000:** Vite preview server (root `package.json` script: `"serve": "vite preview --port 8000"`)
+- **8888:** Netlify dev (mentioned in README.md, not hard-coded)
+
+### Route Prefix `/api/v1`
+
+- **Already occupied:** `/server/src/index.js` lines 32-36
+  - Routes registered:
+    - `GET /api/v1/posts`
+    - `GET /api/v1/posts/:slug`
+    - `GET /api/v1/posts/:slug/comments`
+    - `GET /api/v1/users/:username`
+    - `GET /api/v1/tags`
+  - **Verdict:** Community Hub already uses `/api/v1` - no conflict
+
+### Other API Routes
+
+- **Apps/web uses `/api` pattern:**
+  - `/apps/web/src/search/api.ts` - TMDB search API wrapper
+  - Not REST routes (library functions)
+
+---
+
+## 8. Quick Reuse Verdict
+
+- **Prisma:** ✅ Yes, use existing (`/server/prisma/`) - schema, migrations, seed all in place
+- **Next.js:** ✅ Already installed at 16.0.1 in `/web` - App Router ready, no upgrade needed
+- **Tailwind:** ✅ Already configured in both `/apps/web` (v3) and `/web` (v4) - use `/web` Tailwind for new pages
+- **Express:** ✅ Yes, use existing (`/server/src/index.js`) - error handlers, health route patterns ready
+- **Jest:** ✅ Yes, use existing (`/server/__tests__/`) - test setup with supertest, ES modules configured
+- **Postgres:** ✅ Yes, use existing (`docker-compose.yml`) - Postgres 16-alpine service configured
+- **Package Manager:** ✅ Use pnpm - lockfiles present, workspace-ready structure
+- **Node Version:** ✅ Use Node 20 (`.nvmrc`) - matches engines in apps/web
+- **Docker:** ⚠️ No Dockerfile found - will need to create one for server containerization
+- **CI/CD:** ⚠️ No GitHub Actions - will need to create workflows for builds/deploys
+- **Shared Components:** ⚠️ Partial - Card components exist in `/apps/web` but may need Next.js adaptation for `/web`
+
+---
+
+**Report written to /reports/community-integration-landscape.md – 100% read-only scan complete.**
+
+
+

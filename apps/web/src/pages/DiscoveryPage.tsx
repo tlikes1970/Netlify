@@ -8,14 +8,14 @@ import { Library } from '@/lib/storage';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 export default function DiscoveryPage({ query, genreId }:{ query: string; genreId: number | null }) {
-  const searchResults = useSearch(query);
+  const searchResults = useSearch({ queryText: query });
   const { recommendations, isLoading: discoveryLoading, error: discoveryError } = useSmartDiscovery();
   const { isAuthenticated } = useAuth();
   
   const items = useMemo(() => {
     // If user is searching, use search results
     if (query.trim()) {
-      const all = searchResults.data ?? [];
+      const all = searchResults.results ?? [];
       if (!genreId) return all;
       return all.filter((it: any) => Array.isArray(it.genre_ids) && it.genre_ids.includes(genreId));
     }
@@ -36,9 +36,9 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
       score: rec.score,
       reasons: rec.reasons
     }));
-  }, [query, genreId, searchResults.data, recommendations, isAuthenticated]);
+  }, [query, genreId, searchResults.results, recommendations, isAuthenticated]);
 
-  const isLoading = query.trim() ? searchResults.isFetching : discoveryLoading;
+  const isLoading = query.trim() ? searchResults.loading : discoveryLoading;
   const hasError = query.trim() ? searchResults.error : discoveryError;
 
   // Action handlers using Library.upsert
@@ -151,7 +151,7 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           <ErrorBoundary name="DiscoveryResults" onReset={() => {
             // Refetch search results if searching, otherwise discovery will auto-refetch
             if (query.trim()) {
-              searchResults.refetch();
+              // Search results update automatically via Firestore listener
             }
           }}>
             <div className="grid grid-cols-[repeat(auto-fill,154px)] gap-3">

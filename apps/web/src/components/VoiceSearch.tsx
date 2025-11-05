@@ -53,7 +53,7 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
   const [isSupported, setIsSupported] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const timeoutRef = useRef<number | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Check if voice search is disabled via feature flag (disabled by default to prevent Enter key issues)
   const isVoiceSearchDisabled = typeof window !== 'undefined' && 

@@ -18,10 +18,38 @@ export function registerServiceWorker() {
     return;
   }
 
-  window.addEventListener('load', () => {
+  // Register immediately (don't wait for load event) so Lighthouse can detect it
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      navigator.serviceWorker
+        .register('/sw.js', { scope: '/' })
+        .then(reg => {
+          console.info('[SW] registered:', reg.scope);
+          // Ensure service worker is active for Lighthouse
+          if (reg.installing) {
+            reg.installing.addEventListener('statechange', () => {
+              if (reg.installing?.state === 'activated') {
+                reg.update();
+              }
+            });
+          }
+        })
+        .catch(err => console.error('[SW] registration failed:', err));
+    });
+  } else {
+    // DOM already loaded, register immediately
     navigator.serviceWorker
       .register('/sw.js', { scope: '/' })
-      .then(reg => console.info('[SW] registered:', reg.scope))
+      .then(reg => {
+        console.info('[SW] registered:', reg.scope);
+        if (reg.installing) {
+          reg.installing.addEventListener('statechange', () => {
+            if (reg.installing?.state === 'activated') {
+              reg.update();
+            }
+          });
+        }
+      })
       .catch(err => console.error('[SW] registration failed:', err));
-  });
+  }
 }

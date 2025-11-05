@@ -1,0 +1,28 @@
+{
+  "disallowed": [
+    "fuck",
+    "shit",
+    "asshole",
+    "bastard",
+    "bitch",
+    "cunt",
+    "nigger",
+    "retard",
+    "piss",
+    "prick",
+    "cock",
+    "dick",
+    "whore",
+    "slut"
+  ],
+  "censor": {
+    "damn": "d•mn",
+    "hell": "h•ll",
+    "crap": "cr•p",
+    "frick": "fr•ck",
+    "freak": "fr•ak"
+  }
+}
+
+
+

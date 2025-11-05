@@ -1,0 +1,122 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'admin';
+    }
+
+    // Posts collection - read for all, write for authenticated users
+    match /posts/{postId} {
+      // Anyone can read posts (public community hub)
+      allow read: if true;
+      
+      // Only authenticated users can create posts
+      allow create: if isAuthenticated() 
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.keys().hasAll(['title', 'excerpt', 'body', 'slug', 'authorId', 'authorName', 'tagSlugs', 'publishedAt', 'updatedAt', 'score', 'voteCount', 'commentCount'])
+        && request.resource.data.score == 0
+        && request.resource.data.voteCount == 0
+        && request.resource.data.commentCount == 0;
+      
+      // Only post author can update their own post, or admin
+      // Also allow Cloud Functions to update score and voteCount
+      allow update: if (isOwner(resource.data.authorId) || isAdmin())
+        && request.resource.data.authorId == resource.data.authorId; // authorId cannot be changed
+      
+      // Only post author can delete their own post, or admin
+      allow delete: if isOwner(resource.data.authorId) || isAdmin();
+
+      // Votes sub-collection - one vote per user
+      match /votes/{userId} {
+        // Anyone can read votes (for transparency)
+        allow read: if true;
+        
+        // Users can only create/update/delete their own vote
+        allow write: if isAuthenticated() 
+          && userId == request.auth.uid
+          && request.resource.data.value is int
+          && (request.resource.data.value == 1 || request.resource.data.value == -1);
+      }
+
+      // Comments sub-collection
+      match /comments/{commentId} {
+        // Anyone can read comments
+        allow read: if true;
+        
+        // Authenticated users can create comments
+        allow create: if isAuthenticated()
+          && request.resource.data.authorId == request.auth.uid
+          && request.resource.data.keys().hasAll(['authorId', 'authorName', 'authorAvatar', 'body', 'createdAt', 'updatedAt'])
+          && request.resource.data.body is string
+          && request.resource.data.body.size() > 0
+          && request.resource.data.body.size() <= 5000;
+        
+        // Comment authors can update their own comments
+        allow update: if isAuthenticated()
+          && resource.data.authorId == request.auth.uid
+          && request.resource.data.authorId == resource.data.authorId // authorId cannot be changed
+          && request.resource.data.body is string
+          && request.resource.data.body.size() > 0
+          && request.resource.data.body.size() <= 5000;
+        
+        // Comment authors or post authors can delete comments, or admin
+        allow delete: if isAuthenticated()
+          && (resource.data.authorId == request.auth.uid || get(/databases/$(database)/documents/posts/$(postId)).data.authorId == request.auth.uid || isAdmin());
+
+        // Replies sub-collection
+        match /replies/{replyId} {
+          allow read: if true;
+          allow create: if isAuthenticated()
+            && request.resource.data.authorId == request.auth.uid
+            && request.resource.data.keys().hasAll(['authorId', 'authorName', 'authorAvatar', 'body', 'createdAt'])
+            && request.resource.data.body is string
+            && request.resource.data.body.size() > 0
+            && request.resource.data.body.size() <= 500;
+          allow update, delete: if isAuthenticated()
+            && request.auth.uid == resource.data.authorId;
+        }
+      }
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Users can read their own document, or any authenticated user can read (for public profiles)
+      allow read: if isAuthenticated();
+      
+      // Users can create their own document on first login
+      allow create: if isAuthenticated()
+        && userId == request.auth.uid
+        && request.resource.data.uid == request.auth.uid;
+      
+      // Users can update their own document
+      allow update: if isAuthenticated()
+        && userId == request.auth.uid
+        && request.resource.data.uid == resource.data.uid; // uid cannot be changed
+      
+      // Users can delete their own document
+      allow delete: if isAuthenticated()
+        && userId == request.auth.uid;
+    }
+
+    // Admin rules - allow read/write for admin role (catch-all for any unmatched paths)
+    match /{document=**} {
+      allow read, write: if request.auth.token.role == 'admin';
+    }
+
+    // Default deny for all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

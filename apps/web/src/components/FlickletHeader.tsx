@@ -5,6 +5,7 @@ import AccountButton from "./AccountButton";
 import SnarkDisplay from "./SnarkDisplay";
 import UsernamePromptModal from "./UsernamePromptModal";
 import { useUsername } from "../hooks/useUsername";
+import { useInstallPrompt } from "../hooks/useInstallPrompt";
 import SearchSuggestions, { addSearchToHistory } from "./SearchSuggestions";
 import VoiceSearch from "./VoiceSearch";
 import { fetchMarqueeContent, preloadMarqueeContent } from "../lib/marqueeApi";
@@ -57,6 +58,7 @@ export default function FlickletHeader({
 }: FlickletHeaderProps) {
   const translations = useTranslations();
   const { username, needsUsernamePrompt } = useUsername();
+  const { isInstallable, promptInstall } = useInstallPrompt();
   const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
   
   // Use provided messages or default translated messages
@@ -127,6 +129,18 @@ export default function FlickletHeader({
               >
                 v{APP_VERSION}
               </span>
+              {/* Install Button */}
+              {isInstallable && (
+                <button
+                  onClick={promptInstall}
+                  className="rounded-full border border-gray-300 dark:border-gray-600 px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-[11px] leading-none text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                  aria-label="Install app"
+                  title="Install Flicklet"
+                  data-testid="install-button"
+                >
+                  Install
+                </button>
+              )}
               {/* Help Button */}
               <button
                 onClick={() => {
