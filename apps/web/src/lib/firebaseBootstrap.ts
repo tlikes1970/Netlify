@@ -18,6 +18,7 @@ import {
 import { getFirestore, serverTimestamp } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { GoogleAuthProvider, OAuthProvider } from "firebase/auth";
+import { isAuthDebug, logAuth, safeOrigin, maskSecret } from "./authDebug";
 
 // Firebase configuration
 export const firebaseConfig = {
@@ -111,8 +112,8 @@ export function verifyAuthEnvironment(): {
   return { ok: true, recommendPopup: false };
 }
 
-// Log auth environment on boot (dev only)
-if (typeof window !== "undefined" && import.meta.env.DEV) {
+// Log auth environment on boot (dev only or debug mode)
+if (typeof window !== "undefined" && (import.meta.env.DEV || isAuthDebug())) {
   const env = verifyAuthEnvironment();
   const here = window.location.origin;
   const authDomain = firebaseConfig.authDomain;
@@ -120,6 +121,19 @@ if (typeof window !== "undefined" && import.meta.env.DEV) {
   console.log(
     `[FirebaseBootstrap] Auth boot: origin=${here} authDomain=${authDomain} flow=${flow}`
   );
+  
+  // Debug logging
+  if (isAuthDebug()) {
+    logAuth('firebase_config_loaded', {
+      authDomain: firebaseConfig.authDomain,
+      projectId: firebaseConfig.projectId,
+      apiKey: maskSecret(firebaseConfig.apiKey),
+      appId: maskSecret(firebaseConfig.appId),
+      origin: here,
+      recommendPopup: env.recommendPopup,
+      flow,
+    });
+  }
 }
 
 export const auth = authInstance!;
@@ -169,6 +183,14 @@ export async function bootstrapFirebase(): Promise<void> {
         "[FirebaseBootstrap] Persistence LOCKED before any auth operations"
       );
     }
+    
+    // Debug logging
+    if (isAuthDebug()) {
+      logAuth('persistence_locked', {
+        method: 'browserLocalPersistence',
+        origin: safeOrigin(),
+      });
+    }
 
     // ⚠️ CRITICAL: Now that persistence is locked, wire up listeners
     // Step 2: Wait for onAuthStateChanged to fire at least once
@@ -215,6 +237,15 @@ export async function bootstrapFirebase(): Promise<void> {
       console.log(
         `[FirebaseBootstrap] Ready after ${duration}ms at ${timestamp}`
       );
+    }
+    
+    // Debug logging
+    if (isAuthDebug()) {
+      logAuth('firebase_ready', {
+        durationMs: duration,
+        timestamp,
+        origin: safeOrigin(),
+      });
     }
   } catch (error) {
     // Even on error, resolve after timeout to prevent app from hanging

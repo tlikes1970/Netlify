@@ -29,6 +29,7 @@ const ListPage = lazy(() => import('@/pages/ListPage'));
 const MyListsPage = lazy(() => import('@/pages/MyListsPage'));
 const DiscoveryPage = lazy(() => import('@/pages/DiscoveryPage'));
 const AdminPage = lazy(() => import('@/pages/AdminPage'));
+const AuthDebugPage = lazy(() => import('@/debug/AuthDebugPage'));
 import PullToRefreshWrapper from '@/components/PullToRefreshWrapper';
 import { useForYouRows } from '@/hooks/useForYouRows';
 import { useForYouContent } from '@/hooks/useGenreContent';
@@ -66,6 +67,7 @@ export default function App() {
     typeof window !== 'undefined' ? window.location.pathname : '/'
   );
   const isAdmin = currentPath === '/admin';
+  const isDebugAuth = currentPath === '/debug/auth';
   
   // Detect post routes
   const postSlugMatch = currentPath.match(/^\/posts\/([^/]+)$/);
@@ -727,6 +729,24 @@ export default function App() {
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading...</p>
         </div>
       </div>
+    );
+  }
+
+  // Render debug auth page if on /debug/auth route
+  if (isDebugAuth) {
+    return (
+      <PersonalityErrorBoundary>
+        <Suspense fallback={
+          <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+            <div className="text-center">
+              <div className="w-8 h-8 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading...</p>
+            </div>
+          </div>
+        }>
+          <AuthDebugPage />
+        </Suspense>
+      </PersonalityErrorBoundary>
     );
   }
 

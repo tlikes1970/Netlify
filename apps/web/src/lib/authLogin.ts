@@ -4,6 +4,7 @@ import { authManager } from "./auth";
 import { markAuthInFlight } from "./authBroadcast";
 import { ensurePersistenceBeforeAuth } from "./persistence";
 import { authLogManager } from "./authLog";
+import { isAuthDebug, logAuth, safeOrigin, getAuthMode } from "./authDebug";
 
 /**
  * Detects if we're in a WebView or standalone PWA
@@ -39,6 +40,17 @@ function isWebView(): boolean {
  * - Popup on iOS/Safari (better compatibility)
  */
 export async function googleLogin() {
+  // Check for authMode override from query param
+  const authModeOverride = getAuthMode();
+  
+  // Debug logging
+  if (isAuthDebug()) {
+    logAuth('google_login_start', {
+      origin: safeOrigin(),
+      authModeOverride,
+    });
+  }
+  
   // Check environment first (primary factor)
   const env = verifyAuthEnvironment();
   
@@ -54,6 +66,26 @@ export async function googleLogin() {
       return false;
     }
   })();
+  
+  // If authMode override is set, use it (for this session only)
+  if (authModeOverride === 'popup') {
+    if (isAuthDebug()) {
+      logAuth('auth_mode_override', { mode: 'popup', reason: 'query param' });
+    }
+    await firebaseSignInWithPopup(auth, googleProvider);
+    return;
+  } else if (authModeOverride === 'redirect') {
+    if (isAuthDebug()) {
+      logAuth('auth_mode_override', { mode: 'redirect', reason: 'query param' });
+    }
+    try {
+      sessionStorage.setItem("flk:didRedirect", "1");
+    } catch (e) {
+      /* noop */
+    }
+    await firebaseSignInWithRedirect(auth, googleProvider);
+    return;
+  }
 
   // Environment check failed - show error and use popup as fallback
   if (!env.ok) {
@@ -202,6 +234,16 @@ export async function googleLogin() {
   
   if (useRedirect) {
     logger.log("Starting redirect sign-in (canonical domain, webview/Android)");
+    
+    // Debug logging
+    if (isAuthDebug()) {
+      logAuth('redirect_start', {
+        origin: safeOrigin(),
+        redirectURI: window.location.href,
+        authDomain: (auth as any).app?.options?.authDomain || 'unknown',
+      });
+    }
+    
     // Mark that we initiated a redirect so the app can process the result once
     try {
       sessionStorage.setItem("flk:didRedirect", "1");
@@ -233,8 +275,22 @@ export async function googleLogin() {
         ? "redirect disabled by flag" 
         : "desktop browser";
     logger.log(`Starting popup sign-in (${reason})`);
+    
+    // Debug logging
+    if (isAuthDebug()) {
+      logAuth('popup_start', {
+        origin: safeOrigin(),
+        reason,
+      });
+    }
+    
     await firebaseSignInWithPopup(auth, googleProvider);
     logger.log("Popup sign-in successful");
+    
+    // Debug logging
+    if (isAuthDebug()) {
+      logAuth('popup_success', {});
+    }
   }
   } catch (error: any) {
     logger.error("Google sign-in failed", error);

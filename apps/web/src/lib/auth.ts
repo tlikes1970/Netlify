@@ -15,11 +15,12 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { logger } from './logger';
-import { auth, db, appleProvider, firebaseReady } from './firebaseBootstrap';
+import { auth, db, appleProvider, firebaseReady, firebaseConfig } from './firebaseBootstrap';
 import { firebaseSyncManager } from './firebaseSync';
 import type { AuthUser, UserDocument, UserSettings, AuthProvider, AuthStatus } from './auth.types';
 import { broadcastAuthComplete } from './authBroadcast';
 import { authLogManager } from './authLog';
+import { isAuthDebug, logAuth, safeOrigin, getAuthMode } from './authDebug';
 
 // Removed: isBlockedOAuthContext function (unused after removing signInWithGoogle method)
 
@@ -165,6 +166,59 @@ class AuthManager {
         sessionStorage.setItem(onceKey, '1');
         sessionStorage.removeItem('flk:didRedirect');
         this.setStatus('resolving');
+        
+        // Debug logging: redirect return
+        if (isAuthDebug()) {
+          const currentOrigin = safeOrigin();
+          const expectedOrigin = currentOrigin;
+          const authDomainOrigin = `https://${firebaseConfig.authDomain}`;
+          const originMatches = currentOrigin === expectedOrigin;
+          
+          logAuth('redirect_return', {
+            locationHref: typeof window !== 'undefined' ? window.location.href : 'unknown',
+            documentReferrer: typeof document !== 'undefined' ? document.referrer : 'unknown',
+            currentOrigin,
+            expectedOrigin,
+            authDomain: firebaseConfig.authDomain,
+            authDomainOrigin,
+            originMatches,
+            windowTopEqualsWindow: typeof window !== 'undefined' ? window.top === window : false,
+          });
+        }
+        
+        // Harden redirect: verify origin before processing
+        if (typeof window !== 'undefined') {
+          const currentOrigin = safeOrigin();
+          const expectedOrigin = currentOrigin; // Should match current origin
+          const urlOrigin = new URL(window.location.href).origin;
+          
+          if (urlOrigin !== expectedOrigin) {
+            const errorMsg = `Auth return origin mismatch: got ${urlOrigin} expected ${expectedOrigin}. Check OAuth Authorized domains and Firebase authDomain.`;
+            logger.error('[AuthManager]', errorMsg);
+            
+            if (isAuthDebug()) {
+              logAuth('redirect_origin_mismatch', {
+                got: urlOrigin,
+                expected: expectedOrigin,
+                locationHref: window.location.href,
+              });
+            }
+            
+            // Show non-blocking banner
+            window.dispatchEvent(new CustomEvent('auth:origin-mismatch', {
+              detail: {
+                got: urlOrigin,
+                expected: expectedOrigin,
+                message: errorMsg,
+              }
+            }));
+            
+            // Abort looping - don't process redirect
+            this.setStatus('unauthenticated');
+            return;
+          }
+        }
+        
         try {
           const result = await getRedirectResult(auth as any);
           if (result && result.user) {
@@ -172,8 +226,20 @@ class AuthManager {
               providerId: (result as any).providerId,
               operationType: (result as any).operationType,
             });
+            
+            if (isAuthDebug()) {
+              logAuth('redirect_result_success', {
+                providerId: (result as any).providerId,
+                operationType: (result as any).operationType,
+                hasUser: !!result.user,
+              });
+            }
           } else {
             authLogManager.log('redirect_result_empty', {});
+            
+            if (isAuthDebug()) {
+              logAuth('redirect_result_empty', {});
+            }
           }
         } catch (e: any) {
           logger.error('Error checking redirect result', e);
@@ -181,13 +247,36 @@ class AuthManager {
             error: e?.message || String(e),
             code: e?.code || 'unknown',
           });
+          
+          if (isAuthDebug()) {
+            logAuth('getRedirectResult_error', {
+              error: e?.message || String(e),
+              code: e?.code || 'unknown',
+            });
+            
+            // Diagnose common errors
+            if (e?.code === 'auth/network-request-failed') {
+              logAuth('diagnosis', { issue: 'Network request failed - check connectivity or CORS' });
+            } else if (e?.code === 'auth/unauthorized-domain') {
+              logAuth('diagnosis', { issue: 'Unauthorized domain - add to Firebase authorized domains' });
+            } else if (e?.message?.includes('postMessage')) {
+              logAuth('diagnosis', { issue: 'postMessage target origin mismatch - check OAuth redirect URI' });
+            }
+          }
+          
           // Show error UI instead of retrying
           this.handleAuthConfigError(e);
         }
       } else if (alreadyProcessed) {
         logger.debug('Redirect result already processed - skipping getRedirectResult');
+        if (isAuthDebug()) {
+          logAuth('redirect_already_processed', {});
+        }
       } else {
         logger.debug('No redirect flag present - skipping getRedirectResult');
+        if (isAuthDebug()) {
+          logAuth('no_redirect_flag', {});
+        }
       }
     } catch (e) {
       // ignore
@@ -391,6 +480,17 @@ class AuthManager {
       traceId,
       origin: typeof window !== 'undefined' ? window.location.origin : 'unknown',
     });
+    
+    // Debug logging
+    if (isAuthDebug()) {
+      const authMode = getAuthMode();
+      logAuth('signin_start', {
+        provider,
+        traceId,
+        origin: safeOrigin(),
+        authModeOverride: authMode,
+      });
+    }
     
     // ⚠️ PERSISTENCE: Firebase persistence is already set by bootstrap
     // ⚠️ PERSISTENCE: Force IndexedDB/local before auth (iOS requirement)

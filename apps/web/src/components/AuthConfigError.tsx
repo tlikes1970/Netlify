@@ -17,8 +17,15 @@ interface AuthConfigError {
   timestamp: string;
 }
 
+interface OriginMismatchError {
+  got: string;
+  expected: string;
+  message: string;
+}
+
 export default function AuthConfigError() {
   const [error, setError] = useState<AuthConfigError | null>(null);
+  const [originMismatch, setOriginMismatch] = useState<OriginMismatchError | null>(null);
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
@@ -26,11 +33,18 @@ export default function AuthConfigError() {
       setError(e.detail);
       setShowPopup(true);
     };
+    
+    const handleOriginMismatch = (e: CustomEvent<OriginMismatchError>) => {
+      setOriginMismatch(e.detail);
+      setShowPopup(true);
+    };
 
     window.addEventListener('auth:config-error', handleError as EventListener);
+    window.addEventListener('auth:origin-mismatch', handleOriginMismatch as EventListener);
 
     return () => {
       window.removeEventListener('auth:config-error', handleError as EventListener);
+      window.removeEventListener('auth:origin-mismatch', handleOriginMismatch as EventListener);
     };
   }, []);
 
@@ -48,14 +62,70 @@ export default function AuthConfigError() {
   const handleDismiss = () => {
     setShowPopup(false);
     setError(null);
+    setOriginMismatch(null);
   };
 
-  if (!showPopup || !error) {
+  if (!showPopup || (!error && !originMismatch)) {
     return null;
   }
 
   const env = verifyAuthEnvironment();
   const isNonCanonical = env.recommendPopup;
+  
+  // Show origin mismatch banner (non-blocking)
+  if (originMismatch) {
+    return (
+      <div
+        className="fixed top-0 left-0 right-0 z-50 p-4"
+        style={{
+          backgroundColor: '#dc3545',
+          color: 'white',
+          borderBottom: '2px solid #c82333',
+        }}
+      >
+        <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <strong>Auth return origin mismatch:</strong> got {originMismatch.got} expected {originMismatch.expected}. 
+            Check OAuth Authorized domains and Firebase authDomain.
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handlePopupSignIn}
+              className="px-4 py-2 rounded text-sm font-medium transition-colors"
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+              }}
+            >
+              Retry with Popup
+            </button>
+            <button
+              onClick={handleDismiss}
+              className="px-4 py-2 rounded text-sm font-medium transition-colors"
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -82,7 +152,7 @@ export default function AuthConfigError() {
             : "This domain isn't authorized for Google sign-in. Use the popup sign-in or try the production site."}
         </p>
 
-        {error.code && (
+        {error && error.code && (
           <p className="text-xs mb-4" style={{ color: 'var(--muted)' }}>
             Error: {error.code}
           </p>
