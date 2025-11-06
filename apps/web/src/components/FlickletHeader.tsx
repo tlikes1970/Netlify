@@ -53,34 +53,69 @@ export default function FlickletHeader({
     useUsername();
   const { isInstallable, promptInstall } = useInstallPrompt();
   const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
-  const skipInProgressRef = React.useRef(false);
+  const hasShownRef = React.useRef(false);
+  const currentUserIdRef = React.useRef<string | null>(null);
+
+  // Reset hasShown when user changes
+  useEffect(() => {
+    if (user?.uid !== currentUserIdRef.current) {
+      currentUserIdRef.current = user?.uid || null;
+      hasShownRef.current = false;
+    }
+  }, [user?.uid]);
 
   useEffect(() => {
-    // Don't run if we're in the process of skipping/closing
-    if (skipInProgressRef.current) {
-      return;
-    }
-
     // Don't show modal while loading (prevents race conditions with Firestore)
     if (loading) {
       return;
     }
 
+    // Only show once per user session
+    if (hasShownRef.current) {
+      return;
+    }
+
     const shouldShow = !!(user?.uid && !username && !usernamePrompted);
+
+    // Enhanced logging for investigation (production-safe)
+    if (shouldShow || showUsernamePrompt) {
+      const logData = {
+        shouldShow,
+        currentlyShowing: showUsernamePrompt,
+        hasUser: !!user?.uid,
+        hasUsername: !!username,
+        usernamePrompted,
+        loading,
+        timestamp: new Date().toISOString(),
+        environment:
+          window.location.hostname === "localhost" ? "localhost" : "production",
+      };
+      console.log("🎯 Username prompt check:", logData);
+
+      // Store decision log for investigation
+      try {
+        const existingLogs = JSON.parse(
+          localStorage.getItem("flicklet.username.prompt.decisions") || "[]"
+        );
+        existingLogs.push(logData);
+        localStorage.setItem(
+          "flicklet.username.prompt.decisions",
+          JSON.stringify(existingLogs.slice(-20))
+        );
+      } catch (e) {
+        // ignore
+      }
+    }
 
     if (shouldShow && !showUsernamePrompt) {
       setShowUsernamePrompt(true);
+      hasShownRef.current = true;
+      console.log("✅ Username prompt modal opened");
     } else if (!shouldShow && showUsernamePrompt) {
       setShowUsernamePrompt(false);
+      console.log("❌ Username prompt modal closed (conditions not met)");
     }
   }, [username, usernamePrompted, showUsernamePrompt, user?.uid, loading]);
-
-  // Reset skip guard when usernamePrompted becomes true (skip completed)
-  useEffect(() => {
-    if (usernamePrompted && skipInProgressRef.current) {
-      skipInProgressRef.current = false;
-    }
-  }, [usernamePrompted]);
 
   return (
     <>
@@ -168,15 +203,13 @@ export default function FlickletHeader({
       <UsernamePromptModal
         isOpen={showUsernamePrompt}
         onClose={async () => {
-          skipInProgressRef.current = true;
           setShowUsernamePrompt(false);
           try {
             await skipUsernamePrompt(); // Treat close as explicit skip
-            // Guard will be reset when usernamePrompted state updates
           } catch (error) {
             console.error("Failed to skip username prompt:", error);
-            // Reset guard on error so modal can be shown again if needed
-            skipInProgressRef.current = false;
+            // On error, allow modal to be shown again
+            hasShownRef.current = false;
           }
         }}
       />

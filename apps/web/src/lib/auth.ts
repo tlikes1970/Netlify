@@ -557,10 +557,26 @@ class AuthManager {
   async updateUserSettings(uid: string, settings: Partial<UserSettings>): Promise<void> {
     try {
       const userRef = doc(db, 'users', uid);
+      
+      // Read existing settings first to preserve other fields
+      const userSnap = await getDoc(userRef);
+      const existingData = userSnap.exists() ? userSnap.data() : {};
+      const existingSettings = existingData.settings || {};
+      
+      // Merge new settings with existing settings
+      const mergedSettings = {
+        ...existingSettings,
+        ...settings,
+      };
+      
+      // Update with merged settings
       await updateDoc(userRef, {
-        settings: settings,
+        settings: mergedSettings,
       });
-      logger.log('Updated user settings', settings);
+      logger.log('Updated user settings', { 
+        updated: settings, 
+        merged: mergedSettings 
+      });
     } catch (error) {
       logger.error('Failed to update user settings', error);
       throw error;

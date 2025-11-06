@@ -67,6 +67,8 @@ export function useUsername() {
       // Don't reload if skip is in progress (prevents overwriting optimistic state)
       if (usernameStateManager.skipInProgress) {
         console.log("⏸️ Skipping loadUsername - skip in progress");
+        // Still set loading to false so modal can show if needed
+        usernameStateManager.setLoading(false);
         return;
       }
 
@@ -83,7 +85,10 @@ export function useUsername() {
       }
 
       try {
+        const loadStartTime = performance.now();
         const settings = await authManager.getUserSettings(currentUser.uid);
+        const loadTime = performance.now() - loadStartTime;
+        
         if (settings) {
           const usernameValue = settings.username || "";
           const promptedValue = settings.usernamePrompted || false;
@@ -92,16 +97,47 @@ export function useUsername() {
           if (!usernameStateManager.skipInProgress) {
             usernameStateManager.setUsernamePrompted(promptedValue);
             usernameStateManager.setUsername(usernameValue);
-            console.log("✅ Username loaded:", {
+            
+            // Enhanced logging for investigation
+            const logData = {
               username: usernameValue,
               prompted: promptedValue,
-            });
+              loadTimeMs: Math.round(loadTime),
+              timestamp: new Date().toISOString(),
+              environment: window.location.hostname === 'localhost' ? 'localhost' : 'production',
+            };
+            console.log("✅ Username loaded:", logData);
+            
+            // Store in localStorage for investigation (production-safe, limited size)
+            try {
+              const existingLogs = JSON.parse(localStorage.getItem('flicklet.username.logs') || '[]');
+              existingLogs.push(logData);
+              // Keep only last 20 entries
+              localStorage.setItem('flicklet.username.logs', JSON.stringify(existingLogs.slice(-20)));
+            } catch (e) {
+              // ignore storage errors
+            }
           } else {
             console.log("⏸️ Skipping state update - skip in progress");
           }
+        } else {
+          console.warn("⚠️ No settings found for user:", currentUser.uid);
         }
       } catch (error) {
         console.error("Failed to load username:", error);
+        // Log error for investigation
+        try {
+          const errorLog = {
+            error: error instanceof Error ? error.message : String(error),
+            timestamp: new Date().toISOString(),
+            environment: window.location.hostname === 'localhost' ? 'localhost' : 'production',
+          };
+          const existingLogs = JSON.parse(localStorage.getItem('flicklet.username.errors') || '[]');
+          existingLogs.push(errorLog);
+          localStorage.setItem('flicklet.username.errors', JSON.stringify(existingLogs.slice(-10)));
+        } catch (e) {
+          // ignore
+        }
       } finally {
         usernameStateManager.setLoading(false);
       }
@@ -183,17 +219,28 @@ export function useUsername() {
       console.log("✅ Username prompt skipped (optimistic)");
 
       // Then persist to Firestore
+      const writeStartTime = performance.now();
       await authManager.updateUserSettings(currentUser.uid, {
         usernamePrompted: true,
       });
+      const writeTime = performance.now() - writeStartTime;
 
-      console.log("✅ Username prompt skipped (persisted)");
+      console.log("✅ Username prompt skipped (persisted)", {
+        writeTimeMs: Math.round(writeTime),
+        timestamp: new Date().toISOString(),
+      });
       
-      // Clear flag after a short delay to allow Firestore write to complete
-      // This prevents loadUsername from reading stale data
+      // Clear flag after write completes + buffer (investigation: track actual write time)
+      // If write takes >500ms, we may have issues on slow networks
+      const clearDelay = Math.max(500, Math.round(writeTime * 1.5));
+      if (writeTime > 500) {
+        console.warn(`⚠️ Firestore write took ${Math.round(writeTime)}ms (longer than expected)`);
+      }
+      
       setTimeout(() => {
         usernameStateManager.skipInProgress = false;
-      }, 500);
+        console.log("🔓 Skip flag cleared after", clearDelay, "ms");
+      }, clearDelay);
     } catch (error) {
       // Clear flag on error so we can retry
       usernameStateManager.skipInProgress = false;

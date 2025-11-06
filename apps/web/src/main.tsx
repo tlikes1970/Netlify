@@ -290,6 +290,18 @@ import('./utils/debug-auth').then(m => {
   (window as any).debugFirebaseAuth = m.debugFirebaseAuth;
 });
 
+// Import username diagnostics loader first (immediate availability)
+import('./utils/usernameDiagnosticsLoader').catch(() => {
+  // ignore
+});
+
+// Import username diagnostics (exposes window.debugUsername, etc.)
+import('./utils/usernameDiagnostics').then(() => {
+  console.log('[Boot] Username diagnostics loaded - window.debugUsername() available');
+}).catch((e) => {
+  console.warn('[Boot] Failed to load username diagnostics:', e);
+});
+
 // ⚠️ CRITICAL: Block React render until Firebase is ready
 // This physically prevents any auth operations from running before Firebase is initialized
 (async function bootstrapApp() {
