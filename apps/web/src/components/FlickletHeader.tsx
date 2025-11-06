@@ -49,44 +49,20 @@ export default function FlickletHeader({
   onClear,
   onHelpOpen,
 }: FlickletHeaderProps) {
-  const { username, needsUsernamePrompt } = useUsername();
+  const { username, usernamePrompted, user, skipUsernamePrompt } =
+    useUsername();
   const { isInstallable, promptInstall } = useInstallPrompt();
   const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
 
-  // Check if username prompt is needed
-  // Use a ref to track if we've already shown the prompt to prevent loops
-  const promptShownRef = React.useRef(false);
-  const isPromptingRef = React.useRef(false);
-
   useEffect(() => {
-    // Skip if we're already processing a prompt action
-    if (isPromptingRef.current) {
-      return;
-    }
+    const shouldShow = !!(user?.uid && !username && !usernamePrompted);
 
-    const needsPrompt = needsUsernamePrompt();
-
-    // Only show if we haven't already shown it in this session
-    if (needsPrompt && !promptShownRef.current && !showUsernamePrompt) {
+    if (shouldShow && !showUsernamePrompt) {
       setShowUsernamePrompt(true);
-      promptShownRef.current = true;
-    } else if (!needsPrompt) {
+    } else if (!shouldShow && showUsernamePrompt) {
       setShowUsernamePrompt(false);
-      // Reset the ref when prompt is no longer needed (user has username or skipped)
-      promptShownRef.current = false;
     }
-  }, [username, needsUsernamePrompt, showUsernamePrompt]);
-
-  const handleCloseUsernamePrompt = () => {
-    isPromptingRef.current = true;
-    setShowUsernamePrompt(false);
-    // Reset the ref when modal is closed so it can be shown again if needed
-    promptShownRef.current = false;
-    // Allow prompting again after a short delay
-    setTimeout(() => {
-      isPromptingRef.current = false;
-    }, 100);
-  };
+  }, [username, usernamePrompted, showUsernamePrompt, user]);
 
   return (
     <>
@@ -173,7 +149,10 @@ export default function FlickletHeader({
       {/* Username prompt modal */}
       <UsernamePromptModal
         isOpen={showUsernamePrompt}
-        onClose={handleCloseUsernamePrompt}
+        onClose={() => {
+          skipUsernamePrompt(); // Treat close as explicit skip
+          setShowUsernamePrompt(false);
+        }}
       />
     </>
   );
