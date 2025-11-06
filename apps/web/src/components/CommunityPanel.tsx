@@ -41,7 +41,7 @@ export default function CommunityPanel() {
       setPostsError(null);
       
       // Determine API URL - check for environment variable or use default
-      let apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
       
       const response = await fetch(`${apiUrl}/api/v1/posts?page=1&pageSize=5&sort=newest`);
       

@@ -240,7 +240,7 @@ export default function App() {
   });
   useEffect(() => {
     const handler = () => {
-    	  try { setShowPopupHint(localStorage.getItem('flicklet.auth.popup.hint') === '1'); } catch (e) { void e; }
+      try { setShowPopupHint(localStorage.getItem('flicklet.auth.popup.hint') === '1'); } catch (e) { void e; }
     };
     window.addEventListener('auth:popup-hint', handler as any);
     const t = setInterval(handler, 1000);

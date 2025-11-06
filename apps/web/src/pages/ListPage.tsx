@@ -472,7 +472,9 @@ export default function ListPage({
       try {
         const flagValue = localStorage.getItem("flag:drag-animation-v1");
         return flagValue === "false";
-      } catch {}
+      } catch {
+        // Ignore localStorage errors
+      }
     }
     return false; // Default: animation enabled
   }, []);
