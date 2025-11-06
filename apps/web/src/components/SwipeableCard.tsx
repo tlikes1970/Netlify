@@ -178,8 +178,9 @@ export default function SwipeableCard({
   });
 
   // Get the current action being previewed
+  // Show preview much earlier (at 20px instead of 100px threshold) so users see what will happen
   const getPreviewAction = () => {
-    if (!swipeState.isSwipeActive || swipeState.swipeDistance < SWIPE.threshold) {
+    if (!swipeState.isSwipeActive || swipeState.swipeDistance < 20) {
       return null;
     }
 
@@ -196,10 +197,16 @@ export default function SwipeableCard({
 
 
   // Calculate swipe action overlay opacity
+  // Show animation earlier - start at 15px, full opacity by 60px (instead of 100px)
   const getOverlayOpacity = () => {
     if (!swipeState.isSwipeActive || !previewAction) return 0;
     
-    const progress = Math.min(swipeState.swipeDistance / 100, 1);
+    // Start showing at 15px, reach full opacity by 60px
+    const minDistance = 15;
+    const maxDistance = 60;
+    const progress = swipeState.swipeDistance < minDistance 
+      ? 0 
+      : Math.min((swipeState.swipeDistance - minDistance) / (maxDistance - minDistance), 1);
     return progress * 0.9; // Max opacity of 0.9
   };
 

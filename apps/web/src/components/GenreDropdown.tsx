@@ -79,25 +79,37 @@ export default function GenreDropdown({ selectedGenres, onGenresChange, classNam
       {/* Dropdown Menu */}
       {isOpen && (
         <div 
-          className="absolute top-full left-0 right-0 mt-1 bg-card border border-line rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
-          style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)' }}
+          className="absolute top-full left-0 right-0 mt-1 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
+          style={{ 
+            backgroundColor: 'var(--menu-bg)', 
+            borderColor: 'var(--menu-border)',
+            border: '1px solid var(--menu-border)'
+          }}
         >
           <div className="p-2">
-            <div className="text-xs font-medium mb-2" style={{ color: 'var(--muted)' }}>
+            <div className="text-xs font-medium mb-2" style={{ color: 'var(--menu-text-muted)' }}>
               Choose your favorite genres:
             </div>
             <div className="grid grid-cols-2 gap-1">
               {genres.map(genre => (
                 <label
                   key={genre.id}
-                  className="flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-opacity-10 hover:bg-accent transition-colors"
-                  style={{ color: 'var(--text)' }}
+                  className="flex items-center gap-2 p-2 rounded cursor-pointer transition-colors"
+                  style={{ 
+                    color: 'var(--menu-text)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--menu-hover)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                 >
                   <input
                     type="checkbox"
                     checked={selectedGenres.includes(genre.id)}
                     onChange={() => handleGenreToggle(genre.id)}
-                    className="rounded border-line"
+                    className="rounded"
                     style={{ accentColor: 'var(--accent)' }}
                   />
                   <span className="text-sm">{genre.name}</span>
@@ -109,11 +121,12 @@ export default function GenreDropdown({ selectedGenres, onGenresChange, classNam
             {selectedGenres.length > 0 && (
               <button
                 onClick={() => onGenresChange([])}
-                className="w-full mt-2 px-3 py-1 text-xs rounded border border-dashed transition-colors"
+                className="w-full mt-2 px-3 py-1 text-xs rounded border border-dashed transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                 style={{ 
-                  color: 'var(--muted)', 
-                  borderColor: 'var(--line)',
-                  backgroundColor: 'transparent'
+                  color: 'var(--menu-text-muted)', 
+                  borderColor: 'var(--menu-border)',
+                  backgroundColor: 'transparent',
+                  outlineColor: 'var(--menu-focus)'
                 }}
               >
                 Clear All

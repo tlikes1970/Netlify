@@ -215,12 +215,21 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
     
     try {
       switch (action) {
-        case 'want':
-          addToListWithConfirmation(item, 'wishlist', () => {
+        case 'want': {
+          // Include network data if available
+          const networks = networkInfo.networks || item.networks;
+          const productionCompanies = networkInfo.productionCompanies || item.productionCompanies;
+          
+          addToListWithConfirmation({ 
+            ...item,
+            networks: networks, // ✅ Save network data
+            productionCompanies: productionCompanies // ✅ Save production companies
+          }, 'wishlist', () => {
             emit('card:want', { id: item.id, mediaType: item.mediaType as any });
             onRemove(); // Remove from search results
           });
           break;
+        }
         case 'currently-watching': {
           // Fetch next air date and show status for TV shows
           let nextAirDate: string | null = null;
@@ -236,22 +245,37 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
             }
           }
           
+          // Include network data if available
+          const networks = networkInfo.networks || item.networks;
+          const productionCompanies = networkInfo.productionCompanies || item.productionCompanies;
+          
           addToListWithConfirmation({ 
             ...item, 
             nextAirDate,
             showStatus: showStatus as 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned' | undefined,
-            lastAirDate
+            lastAirDate,
+            networks: networks, // ✅ Save network data
+            productionCompanies: productionCompanies // ✅ Save production companies
           }, 'watching', () => {
             onRemove(); // Remove from search results
           });
           break;
         }
-        case 'watched':
-          addToListWithConfirmation(item, 'watched', () => {
+        case 'watched': {
+          // Include network data if available
+          const networks = networkInfo.networks || item.networks;
+          const productionCompanies = networkInfo.productionCompanies || item.productionCompanies;
+          
+          addToListWithConfirmation({ 
+            ...item,
+            networks: networks, // ✅ Save network data
+            productionCompanies: productionCompanies // ✅ Save production companies
+          }, 'watched', () => {
             emit('card:watched', { id: item.id, mediaType: item.mediaType as any });
             onRemove(); // Remove from search results
           });
           break;
+        }
         case 'not-interested':
           addToListWithConfirmation(item, 'not', () => {
             emit('card:notInterested', { id: item.id, mediaType: item.mediaType as any });

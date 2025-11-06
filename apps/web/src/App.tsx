@@ -46,6 +46,7 @@ import PersonalityErrorBoundary from '@/components/PersonalityErrorBoundary';
 import { useAuth } from '@/hooks/useAuth';
 import { initializeMessaging, getFCMToken, setupForegroundMessageHandler } from './firebase-messaging';
 import AuthModal from '@/components/AuthModal';
+import AuthConfigError from '@/components/AuthConfigError';
 import { isAuthInFlightInOtherTab } from '@/lib/authBroadcast';
 import '@/styles/flickword.css';
 import { backfillShowStatus } from '@/utils/backfillShowStatus';
@@ -284,9 +285,11 @@ export default function App() {
   const wishlist = useLibrary('wishlist');
   const watched = useLibrary('watched');
 
-  // De-dupe: hide returning from Watching unless within window
+  // Show all watching items in the tab (no filtering)
+  // Note: The "Returning" tab is a separate smart view for returning shows
+  // Users should see all their watching items in the Currently Watching tab
   const watchingVisible = useMemo(() => {
-    return watching.filter(item => !isReturning(item) || isWithinWindow(getNextAirDate(item)));
+    return watching; // Show all items - don't filter out returning shows
   }, [watching]);
 
   // Analytics for Returning tab open
@@ -485,7 +488,6 @@ export default function App() {
         
         <FlickletHeader
           appName="Flicklet"
-          showMarquee={false}
           onSearch={(q, g, t) => handleSearch(q, g ?? null, (t as SearchType) ?? 'all')}
           onClear={handleClear}
           onHelpOpen={() => {
@@ -763,19 +765,9 @@ export default function App() {
       <main className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)', minHeight: '100lvh' }}>
         <FlickletHeader
           appName="Flicklet"
-          showMarquee={isHome && !searchActive}
           onSearch={(q, g, t) => handleSearch(q, g ?? null, (t as SearchType) ?? 'all')}
           onClear={handleClear}
           onHelpOpen={handleHelpOpen}
-          messages={[
-            getPersonalityText('marquee1', settings.personalityLevel),
-            getPersonalityText('marquee2', settings.personalityLevel),
-            getPersonalityText('marquee3', settings.personalityLevel),
-            getPersonalityText('marquee4', settings.personalityLevel),
-            getPersonalityText('marquee5', settings.personalityLevel),
-          ]}
-          marqueeSpeedSec={60}
-          changeEveryMs={30000}
         />
         
         {/* Desktop Tabs - tablet and above */}
@@ -900,6 +892,9 @@ export default function App() {
           isOpen={showAuthModal} 
           onClose={() => setShowAuthModal(false)} 
         />
+        
+        {/* Auth Config Error Surface */}
+        <AuthConfigError />
         
         {/* Debug HUD */}
         {showDebugHUD && (

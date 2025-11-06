@@ -1,132 +1,100 @@
-import { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
-import { db, serverTimestamp } from '../lib/firebaseBootstrap';
-import { useAuth } from '../hooks/useAuth';
-import ModalPortal from './ModalPortal';
+/**
+ * Process: New Post Modal
+ * Purpose: Allow authenticated users to create posts with optimistic submit
+ * Data Source: Firestore posts collection
+ * Update Path: User submits post → writes to Firestore → Cloud Function sanitizes
+ * Dependencies: firebaseBootstrap, authManager, serverTimestamp
+ */
 
-interface Tag {
-  slug: string;
-  name: string;
-  countOfPosts: number;
-}
+import { useState, FormEvent, KeyboardEvent, useRef, useEffect } from 'react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../lib/firebaseBootstrap';
+import { useAuth } from '../hooks/useAuth';
+import { trackCommunityPostCreate } from '../lib/analytics';
 
 interface NewPostModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (slug: string) => void;
+  onPostCreated?: () => void;
 }
 
-// Helper function to generate slug from title
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
+const MAX_LENGTH = 5000;
+const MIN_LENGTH = 1;
 
-export default function NewPostModal({ isOpen, onClose, onSuccess }: NewPostModalProps) {
-  const { user } = useAuth();
-  const [title, setTitle] = useState('');
-  const [excerpt, setExcerpt] = useState('');
-  const [body, setBody] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(false);
+export default function NewPostModal({ isOpen, onClose, onPostCreated }: NewPostModalProps) {
+  const { isAuthenticated, user } = useAuth();
+  const [content, setContent] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fetchingTags, setFetchingTags] = useState(true);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const announcementRef = useRef<HTMLDivElement>(null);
 
-  // Fetch available tags from Firestore
+  const remainingChars = MAX_LENGTH - content.length;
+  const canSubmit = content.trim().length >= MIN_LENGTH && content.trim().length <= MAX_LENGTH && !submitting;
+
+  // Focus textarea when modal opens
   useEffect(() => {
-    if (isOpen) {
-      setFetchingTags(true);
-      const fetchTags = async () => {
-        try {
-          // Try to fetch from tags collection first
-          const tagsRef = collection(db, 'tags');
-          const tagsQuery = query(tagsRef, orderBy('name', 'asc'));
-          const snapshot = await getDocs(tagsQuery);
-          
-          if (!snapshot.empty) {
-            const tagsData = snapshot.docs.map((doc) => {
-              const data = doc.data();
-              return {
-                slug: data.slug || doc.id,
-                name: data.name || data.slug || doc.id,
-                countOfPosts: data.countOfPosts || 0,
-              };
-            });
-            setTags(tagsData);
-          } else {
-            // Fallback: extract unique tags from posts
-            const postsRef = collection(db, 'posts');
-            const postsSnapshot = await getDocs(postsRef);
-            const tagMap = new Map<string, number>();
-            
-            postsSnapshot.forEach((doc) => {
-              const data = doc.data();
-              const tagSlugs = data.tagSlugs || [];
-              tagSlugs.forEach((slug: string) => {
-                tagMap.set(slug, (tagMap.get(slug) || 0) + 1);
-              });
-            });
-            
-            const tagsData = Array.from(tagMap.entries()).map(([slug, count]) => ({
-              slug,
-              name: slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' '),
-              countOfPosts: count,
-            }));
-            
-            setTags(tagsData);
-          }
-          setFetchingTags(false);
-        } catch (err) {
-          console.error('Failed to fetch tags:', err);
-          setTags([]);
-          setFetchingTags(false);
-        }
-      };
-      
-      fetchTags();
+    if (isOpen && textareaRef.current) {
+      setTimeout(() => textareaRef.current?.focus(), 100);
     }
   }, [isOpen]);
 
-  const handleTagToggle = (tagSlug: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tagSlug)
-        ? prev.filter((slug) => slug !== tagSlug)
-        : [...prev, tagSlug]
-    );
-  };
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setContent('');
+      setError(null);
+      setSubmitting(false);
+    }
+  }, [isOpen]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
-    if (!user) {
+    if (!isAuthenticated || !user) {
       setError('You must be signed in to create a post');
       return;
     }
 
-    if (!title.trim() || !body.trim()) {
-      setError('Title and body are required');
+    if (!canSubmit) {
       return;
     }
 
-    setLoading(true);
+    const trimmedContent = content.trim();
+    
+    // Validation
+    if (trimmedContent.length < MIN_LENGTH) {
+      setError('Post must be at least 1 character long');
+      return;
+    }
+
+    if (trimmedContent.length > MAX_LENGTH) {
+      setError(`Post must be no more than ${MAX_LENGTH} characters`);
+      return;
+    }
+
+    setSubmitting(true);
     setError(null);
 
     try {
-      const slug = generateSlug(title);
+      // Generate slug from content
+      const title = trimmedContent.slice(0, 100).trim() || 'Untitled Post';
+      const slug = title
+        .toLowerCase()
+        .replace(/[^\da-z]+/g, '-')
+        .replace(/^-|-$/g, '') + `-${Date.now()}`;
+
+      const postsRef = collection(db, 'posts');
       
-      // Create post document in Firestore
-      await addDoc(collection(db, 'posts'), {
-        title: title.trim(),
-        excerpt: excerpt.trim() || '',
-        body: body.trim(),
+      // Create post in Firestore (matches Firestore rules structure)
+      await addDoc(postsRef, {
+        title,
+        excerpt: trimmedContent.slice(0, 200).trim(),
+        body: trimmedContent,
         slug,
         authorId: user.uid,
         authorName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
-        authorAvatar: user.photoURL || '',
-        tagSlugs: selectedTags,
+        tagSlugs: [],
         publishedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         score: 0,
@@ -134,35 +102,45 @@ export default function NewPostModal({ isOpen, onClose, onSuccess }: NewPostModa
         commentCount: 0,
       });
 
-      // Reset form
-      setTitle('');
-      setExcerpt('');
-      setBody('');
-      setSelectedTags([]);
-      setLoading(false);
-      onClose();
-      
-      // Navigate to new post
-      if (onSuccess) {
-        onSuccess(slug);
-      } else {
-        window.history.pushState({}, '', `/posts/${slug}`);
-        window.dispatchEvent(new Event('pushstate'));
+      // Track analytics
+      trackCommunityPostCreate(false, trimmedContent.length);
+
+      // Clear form and announce success
+      setContent('');
+      if (announcementRef.current) {
+        announcementRef.current.textContent = 'Post published.';
       }
+
+      // Call callback
+      if (onPostCreated) {
+        onPostCreated();
+      }
+
+      // Close modal
+      onClose();
     } catch (err: any) {
       console.error('Failed to create post:', err);
-      setError(err.message || 'Failed to create post. Please try again.');
-      setLoading(false);
+      
+      // Check if error is from Cloud Function rejection
+      if (err.message?.includes('disallowed words')) {
+        setError('Post contains disallowed words');
+      } else {
+        setError(err.message || 'Failed to post. Please try again.');
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleClose = () => {
-    if (!loading) {
-      setTitle('');
-      setExcerpt('');
-      setBody('');
-      setSelectedTags([]);
-      setError(null);
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    // Cmd/Ctrl + Enter submits
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      handleSubmit(e as any);
+    }
+    // Plain Enter just inserts newline (default behavior)
+    // Escape closes modal
+    if (e.key === 'Escape' && !submitting) {
       onClose();
     }
   };
@@ -170,194 +148,143 @@ export default function NewPostModal({ isOpen, onClose, onSuccess }: NewPostModa
   if (!isOpen) return null;
 
   return (
-    <ModalPortal>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))',
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}
-        onClick={handleClose}
+        className="bg-layer rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-line shadow-lg"
+        style={{
+          maxHeight: 'calc(90vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+        }}
+        onClick={(e) => e.stopPropagation()}
       >
-        <div
-          className="w-full max-w-2xl rounded-lg p-6 max-h-[90vh] overflow-y-auto"
-          style={{
-            backgroundColor: 'var(--bg)',
-            border: '1px solid var(--line)',
-            color: 'var(--text)',
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold" style={{ color: 'var(--text)' }}>
-              New Post
-            </h2>
-            <button
-              onClick={handleClose}
-              disabled={loading}
-              className="text-2xl leading-none hover:opacity-70 transition"
-              style={{ color: 'var(--muted)' }}
-              aria-label="Close"
-            >
-              ×
-            </button>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-primary">Create Post</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-muted hover:text-primary transition"
+            aria-label="Close modal"
+            disabled={submitting}
+          >
+            <span className="text-2xl">&times;</span>
+          </button>
+        </div>
+
+        {!isAuthenticated ? (
+          <div className="p-4 rounded-lg bg-layer border border-line">
+            <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
+              Sign in to create a post
+            </p>
           </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div
-                className="p-3 rounded-lg text-sm"
-                style={{ backgroundColor: 'var(--layer)', color: '#ef4444', border: '1px solid #ef4444' }}
-              >
-                {error}
-              </div>
-            )}
-
-            {/* Title */}
-            <div>
-              <label
-                htmlFor="title"
-                className="block text-sm font-medium mb-2"
-                style={{ color: 'var(--text)' }}
-              >
-                Title *
-              </label>
-              <input
-                id="title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                disabled={loading}
-                className="w-full px-3 py-2 rounded-lg text-sm"
-                style={{
-                  backgroundColor: 'var(--layer)',
-                  color: 'var(--text)',
-                  border: '1px solid var(--line)',
-                }}
-                placeholder="Enter post title"
-              />
-            </div>
-
-            {/* Excerpt */}
-            <div>
-              <label
-                htmlFor="excerpt"
-                className="block text-sm font-medium mb-2"
-                style={{ color: 'var(--text)' }}
-              >
-                Excerpt
-              </label>
-              <input
-                id="excerpt"
-                type="text"
-                value={excerpt}
-                onChange={(e) => setExcerpt(e.target.value)}
-                disabled={loading}
-                className="w-full px-3 py-2 rounded-lg text-sm"
-                style={{
-                  backgroundColor: "var(--layer)",
-                  color: "var(--text)",
-                  border: "1px solid var(--line)",
-                }}
-                placeholder="Brief summary (optional)"
-              />
-            </div>
-
-            {/* Body */}
-            <div>
-              <label
-                htmlFor="body"
-                className="block text-sm font-medium mb-2"
-                style={{ color: 'var(--text)' }}
-              >
-                Content * (Markdown supported)
+        ) : (
+          <form
+            onSubmit={handleSubmit}
+            role="form"
+            aria-label="Create post"
+          >
+            <div className="mb-4">
+              <label htmlFor="post-content" className="sr-only">
+                Post content
               </label>
               <textarea
-                id="body"
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                required
-                disabled={loading}
-                rows={12}
-                className="w-full px-3 py-2 rounded-lg text-sm resize-y font-mono"
-                style={{
-                  backgroundColor: 'var(--layer)',
-                  color: 'var(--text)',
-                  border: '1px solid var(--line)',
+                id="post-content"
+                ref={textareaRef}
+                value={content}
+                onChange={(e) => {
+                  setContent(e.target.value);
+                  setError(null);
                 }}
-                placeholder="Write your post content here..."
+                onKeyDown={handleKeyDown}
+                placeholder="What's on your mind?"
+                disabled={submitting}
+                rows={6}
+                maxLength={MAX_LENGTH}
+                className="w-full px-3 py-2 rounded-lg text-sm resize-y min-h-[150px]"
+                style={{
+                  backgroundColor: 'var(--bg)',
+                  color: 'var(--text)',
+                  border: `1px solid ${error ? '#ef4444' : 'var(--line)'}`,
+                }}
+                aria-label="Post content"
+                aria-describedby="post-help post-error"
+                aria-invalid={!!error}
               />
-            </div>
-
-            {/* Tags */}
-            <div>
-              <label
-                className="block text-sm font-medium mb-2"
-                style={{ color: 'var(--text)' }}
-              >
-                Tags
-              </label>
-              {fetchingTags ? (
-                <div className="text-sm" style={{ color: 'var(--muted)' }}>
-                  Loading tags...
-                </div>
-              ) : tags.length === 0 ? (
-                <div className="text-sm" style={{ color: 'var(--muted)' }}>
-                  No tags available
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {tags.map((tag) => (
-                    <button
-                      key={tag.slug}
-                      type="button"
-                      onClick={() => handleTagToggle(tag.slug)}
-                      disabled={loading}
-                      className="px-3 py-1 rounded-full text-xs font-medium transition"
-                      style={{
-                        backgroundColor: selectedTags.includes(tag.slug)
-                          ? 'var(--accent-primary)'
-                          : 'var(--layer)',
-                        color: selectedTags.includes(tag.slug) ? '#fff' : 'var(--text)',
-                        border: `1px solid ${selectedTags.includes(tag.slug) ? 'var(--accent-primary)' : 'var(--line)'}`,
-                      }}
-                    >
-                      {tag.name}
-                    </button>
-                  ))}
+              
+              {error && (
+                <div
+                  id="post-error"
+                  className="mt-2 text-sm"
+                  style={{ color: '#ef4444' }}
+                  role="alert"
+                >
+                  {error}
                 </div>
               )}
+
+              <div className="flex items-center justify-between mt-2">
+                <span
+                  id="post-help"
+                  className="text-xs"
+                  style={{
+                    color: remainingChars < 100 ? '#ef4444' : 'var(--muted)',
+                  }}
+                >
+                  {remainingChars} characters remaining
+                </span>
+                <span className="text-xs" style={{ color: 'var(--muted)' }}>
+                  Press Cmd/Ctrl+Enter to submit, Esc to close
+                </span>
+              </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t" style={{ borderColor: 'var(--line)' }}>
+            <div className="flex items-center justify-end gap-2">
               <button
                 type="button"
-                onClick={handleClose}
-                disabled={loading}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition"
+                onClick={onClose}
+                disabled={submitting}
+                className="px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  backgroundColor: 'var(--layer)',
+                  backgroundColor: 'var(--btn)',
                   color: 'var(--text)',
-                  border: '1px solid var(--line)',
                 }}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={loading || !title.trim() || !body.trim()}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                disabled={!canSubmit}
+                className="px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  backgroundColor: 'var(--accent-primary)',
-                  color: '#fff',
+                  backgroundColor: canSubmit ? 'var(--accent-primary)' : 'var(--btn)',
+                  color: canSubmit ? '#fff' : 'var(--muted)',
                 }}
+                aria-label={submitting ? 'Posting...' : 'Submit post'}
               >
-                {loading ? 'Publishing...' : 'Publish'}
+                {submitting ? 'Posting...' : 'Post'}
               </button>
             </div>
           </form>
-        </div>
+        )}
+
+        {/* Screen reader announcement */}
+        <div
+          ref={announcementRef}
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="sr-only"
+        />
       </div>
-    </ModalPortal>
+    </div>
   );
 }
-

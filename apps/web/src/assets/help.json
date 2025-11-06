@@ -1,0 +1,349 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2025-01-01",
+  "sections": {
+    "pwa-install": {
+      "title": "How to Install the PWA",
+      "content": [
+        {
+          "type": "heading",
+          "text": "Mobile (Android)"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Open Flicklet in Chrome or Edge browser",
+            "Tap the menu (three dots) in the top right",
+            "Select 'Install app' or 'Add to Home Screen'",
+            "Confirm installation",
+            "Open the app from your home screen"
+          ]
+        },
+        {
+          "type": "screenshot",
+          "description": "Chrome → Install prompt in address bar"
+        },
+        {
+          "type": "heading",
+          "text": "Desktop (Windows/Mac)"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Open Flicklet in Chrome or Edge browser",
+            "Look for the install icon in the address bar",
+            "Click 'Install' when prompted",
+            "Or use the 'Install' button in the header",
+            "The app will open in its own window"
+          ]
+        },
+        {
+          "type": "screenshot",
+          "description": "Desktop → Install button in header"
+        },
+        {
+          "type": "heading",
+          "text": "iOS (iPhone/iPad)"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Open Flicklet in Safari",
+            "Tap the share button (square with arrow)",
+            "Select 'Add to Home Screen'",
+            "Customize the name if desired",
+            "Tap 'Add'"
+          ]
+        },
+        {
+          "type": "screenshot",
+          "description": "Safari → Share sheet → Add to Home Screen"
+        },
+        {
+          "type": "note",
+          "text": "Once installed, Flicklet works offline and can send push notifications!"
+        }
+      ]
+    },
+    "search-tags": {
+      "title": "How to Use Search & Tag Filters",
+      "content": [
+        {
+          "type": "heading",
+          "text": "Text Search"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Click the search bar at the top of the page",
+            "Type a movie or TV show title",
+            "Press Enter or click the search button",
+            "Results appear with posters and descriptions",
+            "You can also search for actor names"
+          ]
+        },
+        {
+          "type": "screenshot",
+          "description": "Search bar → typing 'The Office' → highlighted results drop-down"
+        },
+        {
+          "type": "heading",
+          "text": "Tag Search"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Type 'tag:' followed by a tag name",
+            "Example: 'tag:comedy' or 'tag:action'",
+            "Press Enter to search",
+            "Only items with that tag will appear"
+          ]
+        },
+        {
+          "type": "screenshot",
+          "description": "Search bar → typing 'tag:comedy' → filtered results"
+        },
+        {
+          "type": "heading",
+          "text": "Tag Filtering"
+        },
+        {
+          "type": "list",
+          "items": [
+            "After performing a search, look for tag chips",
+            "Click any tag chip to filter by that tag",
+            "Multiple tags can be active at once",
+            "Click the 'X' on a tag chip to remove the filter"
+          ]
+        },
+        {
+          "type": "screenshot",
+          "description": "Tag chip row → clicking 'comedy' → filtered feed"
+        },
+        {
+          "type": "tip",
+          "text": "Use the '/' key to quickly jump to the search bar!"
+        }
+      ]
+    },
+    "vote-comment-mention": {
+      "title": "How to Vote, Comment & Mention",
+      "content": [
+        {
+          "type": "heading",
+          "text": "Voting"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Find the vote buttons (thumbs up/down) on any post",
+            "Click thumbs up to upvote, thumbs down to downvote",
+            "Click again to remove your vote",
+            "You can only vote once per post",
+            "Votes are anonymous but public"
+          ]
+        },
+        {
+          "type": "screenshot",
+          "description": "Post card → thumbs up/down buttons → vote count updates live"
+        },
+        {
+          "type": "heading",
+          "text": "Commenting"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Scroll to the comments section at the bottom of a post",
+            "Type your comment in the text box",
+            "Click 'Post Comment' or press Ctrl+Enter (Cmd+Enter on Mac)",
+            "Comments are limited to 5,000 characters",
+            "Comments are automatically sanitized for inappropriate content"
+          ]
+        },
+        {
+          "type": "screenshot",
+          "description": "Comment box → typing → 'Post Comment' button"
+        },
+        {
+          "type": "heading",
+          "text": "Mentioning Users"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Type '@' followed by a username in a comment",
+            "Example: '@johndoe'",
+            "The mentioned user will receive an email notification (if subscribed)",
+            "Mentions are case-insensitive",
+            "Make sure you spell the username correctly"
+          ]
+        },
+        {
+          "type": "screenshot",
+          "description": "Comment box → typing '@jane' → mention highlight"
+        },
+        {
+          "type": "heading",
+          "text": "Replying to Comments"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Click 'Reply' on any comment",
+            "Type your reply (limited to 500 characters)",
+            "Click 'Post Reply' or press Enter",
+            "The original commenter will receive a push notification",
+            "Replies are nested under the original comment"
+          ]
+        },
+        {
+          "type": "screenshot",
+          "description": "Comment → 'Reply' button → reply box → nested reply"
+        },
+        {
+          "type": "note",
+          "text": "You must be signed in to vote, comment, or mention users."
+        }
+      ]
+    },
+    "unsubscribe-email": {
+      "title": "How to Unsubscribe from Email",
+      "content": [
+        {
+          "type": "heading",
+          "text": "Method 1: Email Link"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Open your weekly digest email",
+            "Scroll to the bottom",
+            "Click the 'Unsubscribe' link",
+            "You'll be redirected to the unsubscribe page",
+            "Your subscription will be cancelled immediately"
+          ]
+        },
+        {
+          "type": "screenshot",
+          "description": "Weekly digest email → bottom → 'Unsubscribe' link"
+        },
+        {
+          "type": "heading",
+          "text": "Method 2: Settings (Coming Soon)"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Go to Settings → Notifications",
+            "Find the 'Email Digest' toggle",
+            "Turn it off to unsubscribe",
+            "Turn it back on to resubscribe"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "What You'll Miss"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Weekly summary of top posts",
+            "Notifications when someone mentions you",
+            "New comment highlights",
+            "You'll still receive push notifications if enabled"
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Unsubscribe tokens expire after 30 days. If the link doesn't work, contact support."
+        }
+      ]
+    },
+    "keyboard-shortcuts": {
+      "title": "Keyboard Shortcuts",
+      "content": [
+        {
+          "type": "heading",
+          "text": "Desktop Shortcuts"
+        },
+        {
+          "type": "table",
+          "headers": ["Key", "Action"],
+          "rows": [
+            ["Esc", "Close modals or exit search"],
+            ["Tab", "Move between fields or buttons"],
+            ["Enter", "Activate selected button or submit form"],
+            ["/", "Jump to search bar"],
+            ["Ctrl+Enter / Cmd+Enter", "Post comment (when in comment box)"]
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Mobile Gestures (Coming Soon)"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Tap and hold: Reorder items (on supported lists)"
+          ]
+        }
+      ]
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "content": [
+        {
+          "type": "qa",
+          "question": "Why can't I install the app on my iPhone?",
+          "answer": "iOS requires you to use Safari's 'Add to Home Screen' feature. The install prompt may not appear automatically on iOS, but you can manually add it from the Safari share menu."
+        },
+        {
+          "type": "qa",
+          "question": "How do I become an admin?",
+          "answer": "Admin roles are granted manually by the development team. Contact support with your email address to request admin access. You'll need to sign out and sign back in after the role is granted."
+        },
+        {
+          "type": "qa",
+          "question": "Why aren't my emails arriving?",
+          "answer": "Check your spam folder first. Make sure your email address is verified in Firebase Auth. You also need to have 'emailSubscriber=true' in your user profile. Contact support if issues persist."
+        },
+        {
+          "type": "qa",
+          "question": "Can I use the app offline?",
+          "answer": "Yes! Once you've visited a post while online, it will be cached and available offline. However, new searches and comments require an internet connection. Comments will be queued and sent when you're back online."
+        },
+        {
+          "type": "qa",
+          "question": "Why aren't push notifications working?",
+          "answer": "Make sure you've granted notification permission in your browser settings. Push notifications require HTTPS (they work on the production site). Some browsers, especially Safari on iOS, have limited push notification support."
+        },
+        {
+          "type": "qa",
+          "question": "How do I report a bug?",
+          "answer": "Go to Settings → Feedback and fill out the form. Include what you were doing, what you expected, what happened instead, and your browser/device information. Screenshots are helpful!"
+        },
+        {
+          "type": "qa",
+          "question": "Can I delete my comments?",
+          "answer": "Yes! You can delete your own comments by clicking the delete button (trash icon) on any comment you've written. Post authors and admins can also delete comments on their posts."
+        },
+        {
+          "type": "qa",
+          "question": "How do I change my username?",
+          "answer": "Your username is based on your Google account display name. To change it, update your Google account profile, then sign out and sign back in to Flicklet."
+        },
+        {
+          "type": "qa",
+          "question": "What happens if I vote on a post?",
+          "answer": "Your vote (upvote or downvote) is recorded anonymously. The post's score and vote count update in real-time. You can change or remove your vote at any time."
+        },
+        {
+          "type": "qa",
+          "question": "Can I use Flicklet without signing in?",
+          "answer": "You can browse and read posts without signing in, but you need to sign in to vote, comment, or access your personal lists. Sign-in is required for the full experience."
+        }
+      ]
+    }
+  }
+}

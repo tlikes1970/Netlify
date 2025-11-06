@@ -3,6 +3,7 @@ import type { MediaItem, MediaType } from '../components/cards/card.types';
 import type { ListName } from '../state/library.types';
 import { customListManager } from './customLists';
 import { authManager } from './auth';
+import { debounce } from './debounce';
 
 const KEY = 'flicklet.library.v2';
 const OLD_KEY = 'flicklet:v2:saved';
@@ -109,6 +110,72 @@ function save(s: State) {
 
 function emit() {
   subs.forEach(fn => fn());
+}
+
+// Debounced persistence with flush capability
+// Track pending writes for idempotency
+let isSaving = false;
+let pendingCustomOrder: { tabKey: string; orderIds: string[] } | null = null;
+
+// Idempotent save function (guarantees one write per burst)
+function performSave() {
+  if (isSaving) {
+    // Already saving, skip to prevent duplicate writes
+    if (process.env.NODE_ENV === 'development') {
+      console.info('[reorder] skip: save already in progress');
+    }
+    return;
+  }
+
+  isSaving = true;
+
+  try {
+    // Save library state
+    save(state);
+    emit();
+
+    // Save custom order if pending
+    if (pendingCustomOrder) {
+      try {
+        localStorage.setItem(
+          `flk.tab.${pendingCustomOrder.tabKey}.order.custom`,
+          JSON.stringify(pendingCustomOrder.orderIds)
+        );
+        pendingCustomOrder = null;
+      } catch (e) {
+        console.warn('Failed to save custom order to localStorage:', e);
+      }
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      console.info('[reorder] flushed: save + emit + localStorage');
+    }
+  } catch (error) {
+    console.error('[reorder] save failed:', error);
+  } finally {
+    isSaving = false;
+  }
+}
+
+// Debounced save function
+const debouncedSave = debounce(performSave, 150);
+
+// Queue a custom order save (debounced)
+function queueCustomOrderSave(tabKey: string, orderIds: string[]) {
+  pendingCustomOrder = { tabKey, orderIds };
+  debouncedSave();
+}
+
+// Export flush function for external use (e.g., on drop completion, beforeunload)
+export function flushPendingSaves() {
+  debouncedSave.flush();
+}
+
+// Flush on page unload to ensure data is saved
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    flushPendingSaves();
+  });
 }
 
 // Helper function to get human-readable list name
@@ -284,7 +351,20 @@ export const Library = {
       }
     });
     
-    save(state); emit();
+    // Queue debounced save for rapid reorders (performance optimization)
+    if (process.env.NODE_ENV === 'development') {
+      console.info('[reorder] queued: save + emit');
+    }
+    debouncedSave();
+    
+    // Queue custom order save (debounced, idempotent)
+    try {
+      const tabKey = list === 'wishlist' ? 'want' : list;
+      const orderIds = reorderedItems.map(item => `${item.id}:${item.mediaType}`);
+      queueCustomOrderSave(tabKey, orderIds);
+    } catch (e) {
+      console.warn('Failed to queue custom order save:', e);
+    }
     
     console.log(`🔄 Reordered ${list} list: moved item from ${fromIndex} to ${toIndex}`);
     
@@ -294,6 +374,17 @@ export const Library = {
       window.dispatchEvent(new CustomEvent('library:changed', { 
         detail: { uid: currentUser.uid, operation: 'reorder' } 
       }));
+    }
+  },
+  
+  // Reset custom order for a tab
+  resetCustomOrder(list: ListName) {
+    try {
+      const tabKey = list === 'wishlist' ? 'want' : list;
+      localStorage.removeItem(`flk.tab.${tabKey}.order.custom`);
+      console.log(`🔄 Reset custom order for ${tabKey} tab`);
+    } catch (e) {
+      console.warn('Failed to reset custom order:', e);
     }
   },
   remove(id: string | number, mediaType: MediaType) {

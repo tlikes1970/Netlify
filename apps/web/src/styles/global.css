@@ -27,6 +27,16 @@
   --btn: #232a34;
   --btn2: #1c222b;
   --shadow: 0 6px 24px rgba(0,0,0,.35);
+  
+  /* Menu tokens - WCAG AA compliant (≥4.5:1 contrast) */
+  --menu-bg: #171a21;
+  --menu-border: #242a33;
+  --menu-text: #e6eaf0;
+  --menu-text-muted: #a9b3c1;
+  --menu-text-disabled: #5a6470;
+  --menu-hover: #232a34;
+  --menu-focus: #4da3ff;
+  --accent-primary: #4da3ff;
 }
 
 /* Light theme */
@@ -43,6 +53,16 @@
   --btn: #f1f5f9;
   --btn2: #e2e8f0;
   --shadow: 0 6px 24px rgba(0,0,0,.1);
+  
+  /* Menu tokens - WCAG AA compliant (≥4.5:1 contrast) */
+  --menu-bg: #ffffff;
+  --menu-border: #e2e8f0;
+  --menu-text: #1e293b;
+  --menu-text-muted: #64748b;
+  --menu-text-disabled: #94a3b8;
+  --menu-hover: #f1f5f9;
+  --menu-focus: #3b82f6;
+  --accent-primary: #3b82f6;
 }
 
 html, body, #root { 
@@ -102,14 +122,16 @@ html, body, #root {
 [data-cards]::-webkit-scrollbar { height: 8px; }
 [data-cards]::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 9999px; }
 
-/* Subtle focus ring for buttons */
-button:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset: 2px; }
+/* Focus styles for menu elements - WCAG AA compliant */
+select:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--menu-focus) !important;
+  outline-offset: 2px;
+}
 
 /* Rounded, consistent action buttons */
 .btn { @apply px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs text-neutral-100 transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md; }
-
-/* Inputs baseline */
-input:focus-visible { outline: 2px solid rgba(255,255,255,0.35); outline-offset: 2px; }
 
 /* Game Modal Styles */
 .game-modal {

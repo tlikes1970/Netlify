@@ -154,9 +154,15 @@ class AuthManager {
     }
     
     // Check for redirect result FIRST (only if we initiated it)
+    // One-shot guard: prevent loop by checking sessionStorage flag
     try {
+      const onceKey = 'flk.auth.redirect.once';
       const didRedirect = sessionStorage.getItem('flk:didRedirect') === '1';
-      if (didRedirect) {
+      const alreadyProcessed = sessionStorage.getItem(onceKey) === '1';
+      
+      if (didRedirect && !alreadyProcessed) {
+        // Mark as processed immediately to prevent retry
+        sessionStorage.setItem(onceKey, '1');
         sessionStorage.removeItem('flk:didRedirect');
         this.setStatus('resolving');
         try {
@@ -175,7 +181,11 @@ class AuthManager {
             error: e?.message || String(e),
             code: e?.code || 'unknown',
           });
+          // Show error UI instead of retrying
+          this.handleAuthConfigError(e);
         }
+      } else if (alreadyProcessed) {
+        logger.debug('Redirect result already processed - skipping getRedirectResult');
       } else {
         logger.debug('No redirect flag present - skipping getRedirectResult');
       }
@@ -564,6 +574,26 @@ class AuthManager {
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  /**
+   * Handle auth configuration errors (e.g., domain mismatch, unauthorized redirect)
+   * Shows error UI instead of retrying
+   */
+  private handleAuthConfigError(error: any): void {
+    logger.error('[AuthManager] Auth config error:', error);
+    
+    // Dispatch event to show error UI
+    window.dispatchEvent(new CustomEvent('auth:config-error', {
+      detail: {
+        error: error?.message || String(error),
+        code: error?.code || 'unknown',
+        timestamp: new Date().toISOString(),
+      }
+    }));
+    
+    // Set status to unauthenticated to prevent retry loops
+    this.setStatus('unauthenticated');
   }
 
   getCurrentUser(): AuthUser | null {

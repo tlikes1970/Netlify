@@ -3,6 +3,8 @@ import SwipeableCard from '../../SwipeableCard';
 import { OptimizedImage } from '../../OptimizedImage';
 import { CompactOverflowMenu } from '../../../features/compact/CompactOverflowMenu';
 import StarRating from '../StarRating';
+import { ProviderBadges } from '../ProviderBadge';
+import { DragHandle } from '../DragHandle';
 
 // neutral 112x168 poster placeholder (SVG data URI)
 const POSTER_PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
@@ -35,9 +37,14 @@ export interface MovieCardMobileProps {
   item: MediaItem;
   actions?: CardActionHandlers;
   tabKey?: 'watching' | 'watched' | 'want';
+  index?: number;
+  onDragStart?: (e: React.DragEvent | React.TouchEvent, index: number) => void;
+  onDragEnd?: () => void;
+  onKeyboardReorder?: (direction: "up" | "down") => void;
+  isDragging?: boolean;
 }
 
-export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCardMobileProps) {
+export function MovieCardMobile({ item, actions, tabKey = 'watching', index = 0, onDragStart, onDragEnd, onKeyboardReorder, isDragging }: MovieCardMobileProps) {
   const { title, year, posterUrl, userRating } = item;
   
   // Get Movie-specific meta information
@@ -73,7 +80,35 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCar
       actions={actions}
       context={getContextFromTabKey(tabKey)}
     >
-      <div className="card-mobile">
+      <div 
+        className="card-mobile" 
+        style={{ position: 'relative', overflow: 'visible', zIndex: 'auto' }}
+        data-item-index={index}
+      >
+        {/* Drag Handle - Mobile (always visible, dimmed; full opacity on touch-hold) */}
+        {onDragStart && (
+          <DragHandle
+            itemId={String(item.id)}
+            index={index}
+            onDragStart={(e, idx) => {
+              if ('touches' in e) {
+                // Touch event - notify parent
+                onDragStart(e as any, idx);
+              } else {
+                onDragStart(e as any, idx);
+              }
+            }}
+            onDragEnd={onDragEnd}
+            onKeyboardReorder={onKeyboardReorder}
+            isDragging={isDragging}
+            itemTitle={item.title}
+            onTouchDragMove={(e, idx) => {
+              // Touch drag move is handled by global listener in DragHandle
+              // This callback is called to notify parent about potential drop target
+            }}
+          />
+        )}
+        
         {/* Poster Column */}
         <div className="poster-col">
           <OptimizedImage
@@ -95,6 +130,10 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching' }: MovieCar
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '8px' }}>
                 {getChips()}
               </div>
+            )}
+            {/* Provider badges */}
+            {item.networks && item.networks.length > 0 && (
+              <ProviderBadges providers={item.networks} maxVisible={2} mediaType="movie" />
             )}
           </header>
 

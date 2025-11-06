@@ -20,7 +20,10 @@ export type ScrollFeatureFlag =
   | 'modal-scroll-isolation'
   | 'swipe-timing-fix'
   | 'pull-refresh-fix'
-  | 'css-touch-action-consolidation';
+  | 'css-touch-action-consolidation'
+  | 'drag-handle-v1'
+  | 'drag-animation-v1'
+  | 'drag-touch-hold-reduced';
 
 /**
  * Check if a scroll feature flag is enabled
@@ -81,6 +84,9 @@ export function getAllScrollFeatureFlags(): Record<ScrollFeatureFlag, boolean> {
     'swipe-timing-fix': isScrollFeatureEnabled('swipe-timing-fix'),
     'pull-refresh-fix': isScrollFeatureEnabled('pull-refresh-fix'),
     'css-touch-action-consolidation': isScrollFeatureEnabled('css-touch-action-consolidation'),
+    'drag-handle-v1': isScrollFeatureEnabled('drag-handle-v1'),
+    'drag-animation-v1': isScrollFeatureEnabled('drag-animation-v1'),
+    'drag-touch-hold-reduced': isScrollFeatureEnabled('drag-touch-hold-reduced'),
   };
 }
 
@@ -96,6 +102,9 @@ export function enableAllScrollFeatures(): void {
     'swipe-timing-fix',
     'pull-refresh-fix',
     'css-touch-action-consolidation',
+    'drag-handle-v1',
+    'drag-animation-v1',
+    'drag-touch-hold-reduced',
   ];
   
   flags.forEach(flagName => setScrollFeatureFlag(flagName, true));
@@ -114,6 +123,9 @@ export function disableAllScrollFeatures(): void {
     'swipe-timing-fix',
     'pull-refresh-fix',
     'css-touch-action-consolidation',
+    'drag-handle-v1',
+    'drag-animation-v1',
+    'drag-touch-hold-reduced',
   ];
   
   flags.forEach(flagName => setScrollFeatureFlag(flagName, false));

@@ -1,5 +1,4 @@
-import { signInWithRedirect, signInWithPopup } from "firebase/auth";
-import { auth, googleProvider } from "./firebaseBootstrap";
+import { auth, googleProvider, verifyAuthEnvironment, signInWithRedirect as firebaseSignInWithRedirect, signInWithPopup as firebaseSignInWithPopup } from "./firebaseBootstrap";
 import { logger } from "./logger";
 import { authManager } from "./auth";
 import { markAuthInFlight } from "./authBroadcast";
@@ -34,10 +33,16 @@ function isWebView(): boolean {
 }
 
 /**
- * Google sign-in helper that uses redirect on mobile/webview and popup on desktop
+ * Google sign-in helper that uses environment-aware flow selection
+ * - Redirect on canonical prod/staging domains
+ * - Popup on preview/unknown domains (avoids domain whitelisting issues)
+ * - Popup on iOS/Safari (better compatibility)
  */
 export async function googleLogin() {
-  // Reliable UA checks
+  // Check environment first (primary factor)
+  const env = verifyAuthEnvironment();
+  
+  // Reliable UA checks (secondary factor for iOS/Safari)
   const ua = navigator.userAgent || "";
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
   const isSafari =
@@ -50,9 +55,17 @@ export async function googleLogin() {
     }
   })();
 
-  // iOS or Safari: synchronous popup, minimal work before call
+  // Environment check failed - show error and use popup as fallback
+  if (!env.ok) {
+    logger.error("[AuthLogin] Environment verification failed:", env.reason);
+    // Still try popup as fallback
+    await firebaseSignInWithPopup(auth, googleProvider);
+    return;
+  }
+
+  // iOS or Safari: always use popup (better compatibility)
   if (isIOS || isSafari) {
-    await signInWithPopup(auth, googleProvider);
+    await firebaseSignInWithPopup(auth, googleProvider);
     return;
   }
 
@@ -172,56 +185,57 @@ export async function googleLogin() {
   logger.debug("Is localhost", isLocalhost);
 
   try {
-    // LOCALHOST WORKAROUND: Use popup mode even if webview would use redirect
-    // This avoids Firebase's redirect handler issues with localhost
-    if (isLocalhost) {
-      logger.log(
-        "Localhost detected - using popup mode to avoid Firebase redirect issues"
+  // LOCALHOST WORKAROUND: Use popup mode even if webview would use redirect
+  // This avoids Firebase's redirect handler issues with localhost
+  if (isLocalhost) {
+    logger.log(
+      "Localhost detected - using popup mode to avoid Firebase redirect issues"
+    );
+    await firebaseSignInWithPopup(auth, googleProvider);
+    logger.log("Popup sign-in successful");
+    return;
+  }
+
+  // Flow selection based on environment check
+  // Environment recommends popup for preview/unknown domains
+  const useRedirect = !env.recommendPopup && !disableRedirect && isWebView();
+  
+  if (useRedirect) {
+    logger.log("Starting redirect sign-in (canonical domain, webview/Android)");
+    // Mark that we initiated a redirect so the app can process the result once
+    try {
+      sessionStorage.setItem("flk:didRedirect", "1");
+    } catch (e) {
+      /* noop */
+    }
+
+    // Save to localStorage before redirect so we can see it after page reload
+    try {
+      const existingLogs = JSON.parse(
+        localStorage.getItem("auth-debug-logs") || "[]"
       );
-      await signInWithPopup(auth, googleProvider);
-      logger.log("Popup sign-in successful");
-      return;
+      existingLogs.push({ type: "redirect-start", ...logData });
+      localStorage.setItem(
+        "auth-debug-logs",
+        JSON.stringify(existingLogs.slice(-10))
+      ); // Keep last 10 entries
+      logger.debug("Saved debug log to localStorage");
+    } catch (e) {
+      logger.error("Failed to save debug log", e);
     }
 
-    // Desktop/Android: Use redirect flow for webviews, popup for regular browsers
-    let useRedirect = isWebView();
-    if (disableRedirect || isSafari) {
-      useRedirect = false;
-      logger.warn(
-        "[AuthLogin] Redirect disabled (flag or Safari) - using popup"
-      );
-    }
-    if (useRedirect) {
-      logger.log("Starting redirect sign-in (webview/Android)");
-      // Mark that we initiated a redirect so the app can process the result once
-      try {
-        sessionStorage.setItem("flk:didRedirect", "1");
-      } catch (e) {
-        /* noop */
-      }
-
-      // Save to localStorage before redirect so we can see it after page reload
-      try {
-        const existingLogs = JSON.parse(
-          localStorage.getItem("auth-debug-logs") || "[]"
-        );
-        existingLogs.push({ type: "redirect-start", ...logData });
-        localStorage.setItem(
-          "auth-debug-logs",
-          JSON.stringify(existingLogs.slice(-10))
-        ); // Keep last 10 entries
-        logger.debug("Saved debug log to localStorage");
-      } catch (e) {
-        logger.error("Failed to save debug log", e);
-      }
-
-      await signInWithRedirect(auth, googleProvider);
-      logger.log("Redirect initiated - user will be redirected to Google");
-    } else {
-      logger.log("Starting popup sign-in (desktop browser)");
-      await signInWithPopup(auth, googleProvider);
-      logger.log("Popup sign-in successful");
-    }
+    await firebaseSignInWithRedirect(auth, googleProvider);
+    logger.log("Redirect initiated - user will be redirected to Google");
+  } else {
+    const reason = env.recommendPopup 
+      ? "preview/unknown domain (popup recommended)" 
+      : disableRedirect 
+        ? "redirect disabled by flag" 
+        : "desktop browser";
+    logger.log(`Starting popup sign-in (${reason})`);
+    await firebaseSignInWithPopup(auth, googleProvider);
+    logger.log("Popup sign-in successful");
+  }
   } catch (error: any) {
     logger.error("Google sign-in failed", error);
     logger.debug("Error code", error.code);
@@ -246,15 +260,18 @@ export async function googleLogin() {
       // ignore
     }
 
-    // If popup fails with blocked error, fallback to redirect only when allowed
+    // If popup fails with blocked error, fallback to redirect only when allowed and on canonical domain
+    // Re-check environment in case it changed
+    const envCheck = verifyAuthEnvironment();
     if (
       (error.code === "auth/popup-blocked" ||
         error.code === "auth/popup-closed-by-user") &&
       !disableRedirect &&
-      !(isIOS || isSafari)
+      !(isIOS || isSafari) &&
+      !envCheck.recommendPopup
     ) {
-      logger.warn("Popup blocked, falling back to redirect (allowed)");
-      return signInWithRedirect(auth, googleProvider);
+      logger.warn("Popup blocked, falling back to redirect (allowed on canonical domain)");
+      return firebaseSignInWithRedirect(auth, googleProvider);
     }
 
     throw error;

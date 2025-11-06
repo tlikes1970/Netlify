@@ -78,16 +78,25 @@ export default function AvatarMenu({ user, isAuthenticated }: AvatarMenuProps) {
 
         {/* Dropdown Menu */}
         {showMenu && (
-          <div className="absolute right-0 top-full mt-2 w-48 bg-neutral-900 border border-white/10 rounded-lg shadow-lg z-50">
+          <div 
+            className="absolute right-0 top-full mt-2 w-48 rounded-lg shadow-lg z-50"
+            style={{
+              backgroundColor: 'var(--menu-bg)',
+              border: '1px solid var(--menu-border)'
+            }}
+          >
             <div className="py-2">
               {isAuthenticated ? (
                 <>
                   {/* User Info */}
-                  <div className="px-4 py-2 border-b border-white/10">
-                    <div className="text-sm text-white font-medium">
+                  <div 
+                    className="px-4 py-2 border-b"
+                    style={{ borderColor: 'var(--menu-border)' }}
+                  >
+                    <div className="text-sm font-medium" style={{ color: 'var(--menu-text)' }}>
                       {getDisplayName()}
                     </div>
-                    <div className="text-xs text-neutral-400">
+                    <div className="text-xs" style={{ color: 'var(--menu-text-muted)' }}>
                       {user?.email}
                     </div>
                   </div>
@@ -98,7 +107,17 @@ export default function AvatarMenu({ user, isAuthenticated }: AvatarMenuProps) {
                       setShowMenu(false);
                       // TODO: Open settings
                     }}
-                    className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors"
+                    className="w-full px-4 py-2 text-left text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                    style={{
+                      color: 'var(--menu-text)',
+                      outlineColor: 'var(--menu-focus)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--menu-hover)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
                   >
                     Settings
                   </button>
@@ -108,16 +127,39 @@ export default function AvatarMenu({ user, isAuthenticated }: AvatarMenuProps) {
                       setShowMenu(false);
                       // TODO: Open profile
                     }}
-                    className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors"
+                    className="w-full px-4 py-2 text-left text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                    style={{
+                      color: 'var(--menu-text)',
+                      outlineColor: 'var(--menu-focus)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--menu-hover)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
                   >
                     Profile
                   </button>
                   
-                  <div className="border-t border-white/10 my-1"></div>
+                  <div 
+                    className="border-t my-1"
+                    style={{ borderColor: 'var(--menu-border)' }}
+                  ></div>
                   
                   <button
                     onClick={handleSignOut}
-                    className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-white/10 transition-colors"
+                    className="w-full px-4 py-2 text-left text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                    style={{
+                      color: '#ef4444',
+                      outlineColor: 'var(--menu-focus)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--menu-hover)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
                   >
                     Sign Out
                   </button>
@@ -128,7 +170,17 @@ export default function AvatarMenu({ user, isAuthenticated }: AvatarMenuProps) {
                     setShowMenu(false);
                     setShowAuthModal(true);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors"
+                  className="w-full px-4 py-2 text-left text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  style={{
+                    color: 'var(--menu-text)',
+                    outlineColor: 'var(--menu-focus)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--menu-hover)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                 >
                   Sign In
                 </button>

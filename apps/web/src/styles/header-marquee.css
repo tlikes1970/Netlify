@@ -1,31 +1,85 @@
+/* Marquee base duration (25% faster: 14s instead of 30s) */
+:root {
+  --marquee-base-duration: 14s;
+  --text-width: 0px; /* Will be overridden by JS */
+}
+
 @keyframes flicklet-scroll-x {
   from { 
-    transform: translate3d(100vw, 0, 0); 
+    transform: translateX(0);
   }
   to { 
-    transform: translate3d(-100%, 0, 0); 
+    transform: translateX(calc(-1 * var(--marquee-distance, 100vw)));
   }
 }
 
+/* RTL support: flip direction */
+[dir="rtl"] .f-marquee-track {
+  --marquee-direction: -1;
+  animation-direction: reverse;
+}
+
 .f-marquee-rail {
+  /* Subtle edge fade using mask */
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    black 24px,
+    black calc(100% - 24px),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    black 24px,
+    black calc(100% - 24px),
+    transparent 100%
+  );
   position: relative;
   z-index: var(--z-base);
   overflow: hidden;
 }
 
-.f-marquee-scroll {
-  animation: flicklet-scroll-x var(--marquee-duration, 30s) linear infinite;
+.f-marquee-track {
+  animation: flicklet-scroll-x var(--marquee-duration, var(--marquee-base-duration)) linear infinite;
   will-change: transform;
   display: flex;
-  align-items: center;
-  height: 100%;
+  animation-fill-mode: both;
 }
 
-/* Pause on hover when enabled via data attribute */
-.f-marquee-rail[data-pause-on-hover="true"]:hover .f-marquee-scroll {
+/* Pause on hover/focus when enabled */
+.f-marquee-rail[data-pause-on-hover="true"]:hover .f-marquee-track,
+.f-marquee-rail[data-pause-on-hover="true"]:focus-within .f-marquee-track {
   animation-play-state: paused;
 }
 
+/* Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
-  .f-marquee-scroll { animation: none; }
+  .f-marquee-track {
+    animation: none;
+  }
+  
+  /* Show static text with fade masks only */
+  .f-marquee-rail {
+    mask-image: linear-gradient(
+      90deg,
+      transparent,
+      black 24px,
+      black calc(100% - 24px),
+      transparent 100%
+    );
+  }
+}
+
+/* Dev speed controls */
+.f-marquee-rail[data-marquee-speed="fast"] {
+  --marquee-base-duration: 10s;
+}
+
+.f-marquee-rail[data-marquee-speed="slow"] {
+  --marquee-base-duration: 20s;
+}
+
+.f-marquee-rail[data-marquee-speed="normal"] {
+  --marquee-base-duration: 14s;
 }

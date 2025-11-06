@@ -22,11 +22,13 @@ export function useDragAndDrop<T extends { id: string }>(
   });
 
   const dragStartRef = useRef<number | null>(null);
+  const isDragEndingRef = useRef<boolean>(false); // Prevent double onDragEnd calls
 
   const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
     const item = items[index];
     if (!item) return;
 
+    console.log('[useDragAndDrop] drag start', { index, itemId: item.id });
     dragStartRef.current = index;
     
     setDragState({
@@ -47,36 +49,78 @@ export function useDragAndDrop<T extends { id: string }>(
   }, [items]);
 
   const handleDragEnd = useCallback((e: React.DragEvent) => {
+    // Prevent double calls
+    if (isDragEndingRef.current) {
+      console.log('[useDragAndDrop] drag end ignored - already processing');
+      return;
+    }
+    
+    isDragEndingRef.current = true;
+    
+    console.log('[useDragAndDrop] drag end', { 
+      draggedItem: dragState.draggedItem, 
+      draggedOverIndex: dragState.draggedOverIndex,
+      dragStart: dragStartRef.current 
+    });
+
+    // Save state BEFORE resetting (in case we need it for FLIP)
+    const wasDragging = dragState.isDragging;
+    const draggedItem = dragState.draggedItem;
+    const draggedOverIndex = dragState.draggedOverIndex;
+    const fromIndex = dragStartRef.current;
+
     // Reset visual feedback
     if (e.currentTarget instanceof HTMLElement) {
       e.currentTarget.style.opacity = '';
       e.currentTarget.style.transform = '';
+      e.currentTarget.classList.remove('is-dragging');
     }
 
-    // Perform reorder if we have valid drop target
-    if (
-      dragState.draggedItem &&
-      dragState.draggedOverIndex !== null &&
-      dragStartRef.current !== null &&
-      dragStartRef.current !== dragState.draggedOverIndex
-    ) {
-      onReorder(dragStartRef.current, dragState.draggedOverIndex);
-    }
-
-    // Reset state
+    // Reset state FIRST (before reorder) so FLIP can detect the change
     setDragState({
       draggedItem: null,
       draggedOverIndex: null,
       isDragging: false,
     });
     dragStartRef.current = null;
+
+    // Perform reorder if we have valid drop target (use saved values)
+    if (
+      wasDragging &&
+      draggedItem &&
+      draggedOverIndex !== null &&
+      fromIndex !== null &&
+      fromIndex !== draggedOverIndex
+    ) {
+      console.log('[useDragAndDrop] reordering', { 
+        from: fromIndex, 
+        to: draggedOverIndex 
+      });
+      // Use setTimeout to ensure state reset completes before reorder
+      // This allows FLIP to detect isDragging: false
+      setTimeout(() => {
+        onReorder(fromIndex, draggedOverIndex);
+        // Reset flag after reorder completes
+        setTimeout(() => {
+          isDragEndingRef.current = false;
+        }, 100);
+      }, 0);
+    } else {
+      console.log('[useDragAndDrop] no reorder - invalid drop target');
+      // Reset flag immediately if no reorder
+      setTimeout(() => {
+        isDragEndingRef.current = false;
+      }, 100);
+    }
   }, [dragState, onReorder]);
 
   const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
     e.dataTransfer.dropEffect = 'move';
 
     if (dragState.draggedOverIndex !== index) {
+      console.log('[useDragAndDrop] drag over', { index, draggedOverIndex: dragState.draggedOverIndex });
       setDragState(prev => ({
         ...prev,
         draggedOverIndex: index,

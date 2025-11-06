@@ -272,10 +272,17 @@ export default function SearchSuggestions({
               {searchHistory.slice(0, 3).map((item, index) => (
                 <button
                   key={`history-${item}`}
-                  onClick={() => handleSuggestionClick(item)}
-                  onMouseDown={(e) => e.preventDefault()}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSuggestionClick(item);
+                  }}
                   className={`
-                    w-full text-left px-3 py-2 rounded-lg text-sm transition-colors
+                    w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer
                     ${selectedIndex === index
                       ? 'bg-accent text-accent-foreground'
                       : 'hover:bg-muted text-foreground'
@@ -310,10 +317,17 @@ export default function SearchSuggestions({
                 return (
                   <button
                     key={`tmdb-${suggestion.type}-${suggestion.id}`}
-                    onClick={() => handleSuggestionClick(suggestion.title)}
-                    onMouseDown={(e) => e.preventDefault()}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSuggestionClick(suggestion.title);
+                    }}
                     className={`
-                      w-full text-left px-3 py-2 rounded-lg text-sm transition-colors
+                      w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer
                       ${selectedIndex === adjustedIndex
                         ? 'bg-accent text-accent-foreground'
                         : 'hover:bg-muted text-foreground'
@@ -355,10 +369,17 @@ export default function SearchSuggestions({
                 return (
                   <button
                     key={`suggestion-${suggestion}`}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    onMouseDown={(e) => e.preventDefault()}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSuggestionClick(suggestion);
+                    }}
                     className={`
-                      w-full text-left px-3 py-2 rounded-lg text-sm transition-colors
+                      w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer
                       ${selectedIndex === adjustedIndex
                         ? 'bg-accent text-accent-foreground'
                         : 'hover:bg-muted text-foreground'

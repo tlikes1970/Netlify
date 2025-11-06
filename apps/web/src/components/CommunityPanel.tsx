@@ -1,26 +1,78 @@
-import React, { useState, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense, useEffect } from 'react';
 import { useTranslations } from '@/lib/language';
 import FlickWordStats from './games/FlickWordStats';
 import TriviaStats from './games/TriviaStats';
 import CommunityPlayer from './CommunityPlayer';
-import { useAuth } from '../hooks/useAuth';
 import NewPostModal from './NewPostModal';
-import PostCard, { PostCardProps } from './PostCard';
-import { collection, query, orderBy, limit, getDocs, getCountFromServer } from 'firebase/firestore';
-import { db } from '../lib/firebaseBootstrap';
-
-type Post = PostCardProps['post'];
 
 // Lazy load game modals
 const FlickWordModal = lazy(() => import('./games/FlickWordModal'));
 const TriviaModal = lazy(() => import('./games/TriviaModal'));
 
+interface Post {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt?: string;
+  publishedAt: string;
+  author: {
+    username?: string;
+    name?: string;
+    profile?: {
+      avatarUrl?: string;
+    };
+  };
+  tags?: Array<{ slug: string; name: string }>;
+}
+
 export default function CommunityPanel() {
   const translations = useTranslations();
-  const { isAuthenticated } = useAuth();
   const [flickWordModalOpen, setFlickWordModalOpen] = useState(false);
   const [triviaModalOpen, setTriviaModalOpen] = useState(false);
-  const [showNewPostModal, setShowNewPostModal] = useState(false);
+  const [newPostModalOpen, setNewPostModalOpen] = useState(false);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [postsError, setPostsError] = useState<string | null>(null);
+
+  // Fetch posts from API
+  const fetchPosts = async () => {
+    try {
+      setPostsLoading(true);
+      setPostsError(null);
+      
+      // Determine API URL - check for environment variable or use default
+      let apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+      
+      const response = await fetch(`${apiUrl}/api/v1/posts?page=1&pageSize=5&sort=newest`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch posts: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      setPosts(data.posts || []);
+    } catch (error) {
+      console.error('[CommunityPanel] Error fetching posts:', error);
+      // More user-friendly error message
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        setPostsError('Unable to connect to server. The backend may not be running.');
+      } else {
+        setPostsError(error instanceof Error ? error.message : 'Failed to load posts');
+      }
+      setPosts([]);
+    } finally {
+      setPostsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const handlePostCreated = () => {
+    // Refresh posts list after new post is created
+    fetchPosts();
+  };
 
   // Use global game functions if available
   const openFlickWord = () => {
@@ -29,6 +81,11 @@ export default function CommunityPanel() {
     } else {
       setFlickWordModalOpen(true);
     }
+  };
+
+  const handlePostClick = (slug: string) => {
+    window.history.pushState({}, '', `/posts/${slug}`);
+    window.dispatchEvent(new Event('pushstate'));
   };
 
   return (
@@ -106,28 +163,75 @@ export default function CommunityPanel() {
           </div>
         </div>
 
-        {/* =====  NEW COMMUNITY HUB  ===== */}
-        <div className="bg-base rounded-xl shadow-card p-4">
+        {/* Right: Recent Posts (spans 1 column) */}
+        <div className="rounded-2xl bg-neutral-900 border border-white/5 p-4 flex flex-col">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-primary text-lg font-semibold">
-              Latest Posts
+            <h3 className="text-sm font-semibold text-neutral-200">
+              {translations.recent_posts || 'Recent Posts'}
             </h3>
-            {isAuthenticated && (
-              <button
-                onClick={() => setShowNewPostModal(true)}
-                className="px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium transition"
-                style={{
-                  backgroundColor: 'var(--accent-primary)',
-                  color: '#fff',
-                }}
-                title="Create new post"
-              >
-                <span className="hidden md:inline">New Post</span>
-                <span className="md:hidden">+</span>
-              </button>
-            )}
+            <button
+              onClick={() => setNewPostModalOpen(true)}
+              className="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors"
+              style={{
+                backgroundColor: 'var(--accent-primary)',
+                color: '#fff',
+              }}
+              aria-label="Create new post"
+            >
+              Post
+            </button>
           </div>
-          <CommunityHub />
+          
+          {postsLoading ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-xs text-neutral-400">Loading posts...</div>
+            </div>
+          ) : postsError ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-xs text-neutral-400">{postsError}</div>
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-xs text-neutral-400">No posts yet</div>
+            </div>
+          ) : (
+            <div className="flex-1 space-y-3 overflow-y-auto">
+              {posts.map((post) => {
+                const publishDate = post.publishedAt
+                  ? new Date(post.publishedAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                    })
+                  : null;
+                
+                return (
+                  <div
+                    key={post.id}
+                    onClick={() => handlePostClick(post.slug)}
+                    className="cursor-pointer hover:bg-neutral-800/50 rounded-lg p-2 transition-colors"
+                  >
+                    <h4 className="text-xs font-semibold text-neutral-200 mb-1 line-clamp-2">
+                      {post.title}
+                    </h4>
+                    {post.excerpt && (
+                      <p className="text-xs text-neutral-400 mb-2 line-clamp-2">
+                        {post.excerpt}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 text-xs text-neutral-500">
+                      <span>{post.author?.username || post.author?.name || 'Unknown'}</span>
+                      {publishDate && (
+                        <>
+                          <span>·</span>
+                          <span>{publishDate}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -149,125 +253,10 @@ export default function CommunityPanel() {
 
       {/* New Post Modal */}
       <NewPostModal
-        isOpen={showNewPostModal}
-        onClose={() => setShowNewPostModal(false)}
-        onSuccess={(slug) => {
-          setShowNewPostModal(false);
-          window.history.pushState({}, '', `/posts/${slug}`);
-          window.dispatchEvent(new Event('pushstate'));
-        }}
+        isOpen={newPostModalOpen}
+        onClose={() => setNewPostModalOpen(false)}
+        onPostCreated={handlePostCreated}
       />
-    </div>
-  );
-}
-
-/* ----------  CommunityHub  ---------- */
-function CommunityHub() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const pageSize = 3;
-
-  React.useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        // Get total count
-        const postsRef = collection(db, 'posts');
-        const countSnapshot = await getCountFromServer(postsRef);
-        setTotal(countSnapshot.data().count);
-
-        // Fetch posts with pagination
-        const postsQuery = query(
-          postsRef,
-          orderBy('publishedAt', 'desc'),
-          limit(pageSize)
-        );
-        
-        const snapshot = await getDocs(postsQuery);
-        const postsData = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          // Convert tagSlugs to tags array format
-          const tagSlugs = data.tagSlugs || [];
-          const tags = tagSlugs.map((slug: string) => ({
-            slug,
-            name: slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' '),
-          }));
-          
-          return {
-            id: doc.id,
-            slug: data.slug || doc.id,
-            title: data.title || '',
-            content: data.content || data.body || '',
-            excerpt: data.excerpt || '',
-            body: data.body || data.content || '',
-            publishedAt: data.publishedAt?.toDate?.()?.toISOString() || data.publishedAt || new Date().toISOString(),
-            author: data.author || { 
-              username: data.authorName || 'Anonymous',
-              name: data.authorName || 'Anonymous',
-            },
-            tags: tags,
-          };
-        });
-        
-        setPosts(postsData);
-      } catch (err) {
-        console.error('CommunityHub fetch', err);
-        setPosts([]);
-        setTotal(0);
-      }
-    };
-
-    fetchPosts();
-  }, [page]);
-
-  const handlePostClick = (slug: string, e?: React.MouseEvent) => {
-    e?.preventDefault?.();
-    window.history.pushState({}, '', `/posts/${slug}`);
-    // Dispatch custom event for App.tsx to listen
-    window.dispatchEvent(new Event('pushstate'));
-  };
-
-  return (
-    <div className="space-y-3">
-      {posts.map((p: any) => (
-        <PostCard
-          key={p.slug}
-          post={{
-            id: p.id || p.slug, // Use id if available, fallback to slug
-            slug: p.slug,
-            title: p.title,
-            content: p.content,
-            excerpt: p.excerpt,
-            body: p.body,
-            publishedAt: p.publishedAt,
-            author: p.author || {},
-            tags: p.tags,
-          }}
-          onClick={handlePostClick}
-        />
-      ))}
-
-      {total > pageSize && (
-        <div className="flex items-center justify-between pt-2">
-          <button
-            onClick={() => setPage(Math.max(1, page - 1))}
-            disabled={page === 1}
-            className="px-3 py-1 rounded bg-layer text-secondary disabled:opacity-50"
-          >
-            Prev
-          </button>
-          <span className="text-secondary text-sm">
-            {page} / {Math.ceil(total / pageSize)}
-          </span>
-          <button
-            onClick={() => setPage(page + 1)}
-            disabled={page >= Math.ceil(total / pageSize)}
-            className="px-3 py-1 rounded bg-layer text-secondary disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      )}
     </div>
   );
 }
