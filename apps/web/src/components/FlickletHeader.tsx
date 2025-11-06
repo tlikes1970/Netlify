@@ -55,12 +55,14 @@ export default function FlickletHeader({
   const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
   const hasShownRef = React.useRef(false);
   const currentUserIdRef = React.useRef<string | null>(null);
+  const isClosingRef = React.useRef(false); // Track if we're in the process of closing
 
   // Reset hasShown when user changes
   useEffect(() => {
     if (user?.uid !== currentUserIdRef.current) {
       currentUserIdRef.current = user?.uid || null;
       hasShownRef.current = false;
+      isClosingRef.current = false; // Reset closing flag on user change
     }
   }, [user?.uid]);
 
@@ -72,6 +74,11 @@ export default function FlickletHeader({
 
     // Only show once per user session
     if (hasShownRef.current) {
+      return;
+    }
+
+    // Don't show if we're in the process of closing (prevents loops)
+    if (isClosingRef.current) {
       return;
     }
 
@@ -107,12 +114,16 @@ export default function FlickletHeader({
       }
     }
 
-    if (shouldShow && !showUsernamePrompt) {
+    if (shouldShow && !showUsernamePrompt && !isClosingRef.current) {
       setShowUsernamePrompt(true);
       hasShownRef.current = true;
+      isClosingRef.current = false; // Reset closing flag when opening
       console.log("✅ Username prompt modal opened");
-    } else if (!shouldShow && showUsernamePrompt) {
+    } else if (!shouldShow && showUsernamePrompt && !isClosingRef.current) {
+      // Conditions no longer met - close modal automatically
+      // Don't call skip here - only skip when user explicitly closes
       setShowUsernamePrompt(false);
+      // Keep hasShownRef = true to prevent reopening
       console.log("❌ Username prompt modal closed (conditions not met)");
     }
   }, [username, usernamePrompted, showUsernamePrompt, user?.uid, loading]);
@@ -203,13 +214,33 @@ export default function FlickletHeader({
       <UsernamePromptModal
         isOpen={showUsernamePrompt}
         onClose={async () => {
+          // Prevent multiple close calls
+          if (isClosingRef.current) {
+            console.log("⏸️ Already closing, ignoring duplicate onClose");
+            return;
+          }
+          
+          isClosingRef.current = true;
+          
+          // Close modal first
           setShowUsernamePrompt(false);
+          // Mark as shown to prevent reopening
+          hasShownRef.current = true;
+          
+          // Only skip if user explicitly closed (not if conditions changed)
+          // This prevents loops when state updates trigger automatic closes
           try {
-            await skipUsernamePrompt(); // Treat close as explicit skip
+            await skipUsernamePrompt();
+            console.log("✅ Username prompt skipped via close");
           } catch (error) {
             console.error("Failed to skip username prompt:", error);
-            // On error, allow modal to be shown again
+            // On error, allow modal to be shown again on next check
             hasShownRef.current = false;
+          } finally {
+            // Reset closing flag after a delay to allow state to settle
+            setTimeout(() => {
+              isClosingRef.current = false;
+            }, 1000);
           }
         }}
       />

@@ -154,7 +154,12 @@ export function useUsername() {
       setFirebaseUser(auth.currentUser);
       if (user?.uid) {
         // User logged in - reload username
-        loadUsername();
+        // But skip if skip is in progress (prevents loop after skipUsernamePrompt)
+        if (!usernameStateManager.skipInProgress) {
+          loadUsername();
+        } else {
+          console.log("⏸️ Skipping loadUsername from auth subscription - skip in progress");
+        }
       } else {
         // User logged out - reset state
         usernameStateManager.setUsername("");
