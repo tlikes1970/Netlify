@@ -25,8 +25,6 @@ export function useKeyboardReorder({
   const handleKeyDown = useCallback((e: KeyboardEvent, index: number) => {
     // Only handle if focused item has drag handle focused or card is focused
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-      const _isShift = e.shiftKey;
-      
       // Prevent default scrolling
       e.preventDefault();
       e.stopPropagation();
