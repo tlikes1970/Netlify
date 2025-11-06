@@ -12,6 +12,10 @@ import { isAuthDebug, logAuth, getQueryFlag } from './authDebug';
 import { auth, googleProvider } from './firebaseBootstrap';
 
 let bootOnce = false;
+let _resolveReady: (() => void) | null = null;
+export const authReady = new Promise<void>((res) => {
+  _resolveReady = res;
+});
 
 export async function initAuthOnLoad(): Promise<void> {
   if (bootOnce) return;
@@ -34,6 +38,8 @@ export async function initAuthOnLoad(): Promise<void> {
       }
       clearRedirectFlag();
       markInitDone();
+      _resolveReady?.();
+      _resolveReady = null;
       return;
     }
     
@@ -54,6 +60,8 @@ export async function initAuthOnLoad(): Promise<void> {
   // 2) If already signed in, we're done
   if (auth.currentUser) {
     markInitDone();
+    _resolveReady?.();
+    _resolveReady = null;
     return;
   }
 
@@ -61,6 +69,8 @@ export async function initAuthOnLoad(): Promise<void> {
   if (forcePopup || preferPopup) {
     await startPopup();
     markInitDone();
+    _resolveReady?.();
+    _resolveReady = null;
     return;
   }
 
@@ -70,6 +80,8 @@ export async function initAuthOnLoad(): Promise<void> {
         logAuth('redirect_blocked_budget', {});
       }
       markInitDone();
+      _resolveReady?.();
+      _resolveReady = null;
       return;
     }
     
@@ -78,10 +90,14 @@ export async function initAuthOnLoad(): Promise<void> {
     await startRedirect();
     // navigation happens; function returns only if provider blocks
     markInitDone();
+    _resolveReady?.();
+    _resolveReady = null;
     return;
   }
 
   markInitDone();
+  _resolveReady?.();
+  _resolveReady = null;
 }
 
 function shouldUseRedirect(): boolean {

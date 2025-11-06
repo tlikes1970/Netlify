@@ -10,6 +10,8 @@ import { useEffect, useState } from 'react';
 import { firebaseConfig } from '@/lib/firebaseBootstrap';
 import { isAuthDebug, getQueryFlag, getAuthMode, getRecentAuthLogs, clearAuthLogs, maskSecret, safeOrigin, isAuthorizedOrigin } from '@/lib/authDebug';
 import { getRedirectAttemptCount, isInitDone } from '@/lib/authGuard';
+import { authReady } from '@/lib/authFlow';
+import installAuthDebugBridge from './authDebugBridge';
 
 interface StorageTest {
   name: string;
@@ -32,6 +34,20 @@ export default function AuthDebugPage() {
   const [swInfo, setSwInfo] = useState<any>(null);
   const [authLogs, setAuthLogs] = useState(getRecentAuthLogs());
   const [cookieTestResult, setCookieTestResult] = useState<{ success: boolean; error?: string } | null>(null);
+  const [authReadyStatus, setAuthReadyStatus] = useState<boolean | null>(null);
+  const [bypassUsername, setBypassUsername] = useState<string>('');
+  const [probeResults, setProbeResults] = useState<any>({});
+
+  // Install debug bridge
+  useEffect(() => {
+    installAuthDebugBridge();
+    
+    // Check auth ready status
+    authReady.then(() => setAuthReadyStatus(true)).catch(() => setAuthReadyStatus(false));
+    
+    // Check bypass flag
+    setBypassUsername(import.meta.env.VITE_BYPASS_USERNAME || '');
+  }, []);
 
   // Refresh logs periodically
   useEffect(() => {
@@ -464,6 +480,102 @@ export default function AuthDebugPage() {
             {getQueryFlag('sw') === 'skip' ? '✅ sw=skip' : 'sw=skip'}
           </button>
         </div>
+      </section>
+
+      {/* Auth Status */}
+      <section style={{ marginBottom: '30px', padding: '15px', border: '1px solid #ccc', borderRadius: '4px' }}>
+        <h2>Auth Status</h2>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <tbody>
+            <tr>
+              <td style={{ padding: '5px', fontWeight: 'bold' }}>Auth Ready:</td>
+              <td style={{ padding: '5px' }}>
+                {authReadyStatus === null ? '⏳ Checking...' : authReadyStatus ? '✅ Yes' : '❌ No'}
+              </td>
+            </tr>
+            <tr>
+              <td style={{ padding: '5px', fontWeight: 'bold' }}>Username Bypass:</td>
+              <td style={{ padding: '5px' }}>
+                {bypassUsername === '1' ? '✅ ON (modal will be skipped)' : '❌ OFF'}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      {/* Debug Probes */}
+      <section style={{ marginBottom: '30px', padding: '15px', border: '1px solid #ccc', borderRadius: '4px' }}>
+        <h2>Debug Probes</h2>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
+          <button
+            onClick={async () => {
+              try {
+                const result = await (window as any).__probeAuth?.();
+                setProbeResults({ ...probeResults, auth: result });
+              } catch (e: any) {
+                setProbeResults({ ...probeResults, auth: { error: e.message } });
+              }
+            }}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            Probe Auth
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                const result = await (window as any).__probeUsername?.();
+                setProbeResults({ ...probeResults, username: result });
+              } catch (e: any) {
+                setProbeResults({ ...probeResults, username: { error: e.message } });
+              }
+            }}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            Probe Username
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                const result = await (window as any).__probeWrite?.();
+                setProbeResults({ ...probeResults, write: result });
+              } catch (e: any) {
+                setProbeResults({ ...probeResults, write: { error: e.message } });
+              }
+            }}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            Test Write
+          </button>
+        </div>
+        {Object.keys(probeResults).length > 0 && (
+          <div style={{ marginTop: '15px' }}>
+            <h3 style={{ marginBottom: '10px' }}>Probe Results:</h3>
+            <pre style={{ backgroundColor: '#f5f5f5', padding: '10px', borderRadius: '4px', overflow: 'auto', fontSize: '12px' }}>
+              {JSON.stringify(probeResults, null, 2)}
+            </pre>
+          </div>
+        )}
       </section>
 
       {/* Auth Logs */}

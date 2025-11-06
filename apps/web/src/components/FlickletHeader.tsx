@@ -67,6 +67,12 @@ export default function FlickletHeader({
   }, [user?.uid]);
 
   useEffect(() => {
+    // Check bypass flag - if enabled, skip username modal entirely
+    const bypassUsername = import.meta.env.VITE_BYPASS_USERNAME === "1";
+    if (bypassUsername) {
+      return;
+    }
+
     // Don't show modal while loading (prevents race conditions with Firestore)
     if (loading) {
       return;

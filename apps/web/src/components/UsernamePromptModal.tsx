@@ -3,19 +3,25 @@ import { useUsername } from '../hooks/useUsername';
 import { useTranslations } from '../lib/language';
 import { useAuth } from '../hooks/useAuth';
 import ModalPortal from './ModalPortal';
+import { ensureUsernameChosen } from '../features/username/usernameFlow';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '../lib/firebaseBootstrap';
 
 interface UsernamePromptModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+type ModalState = 'working' | 'error' | 'done';
+
 export default function UsernamePromptModal({ isOpen, onClose }: UsernamePromptModalProps) {
   const { user } = useAuth();
   const { updateUsername, skipUsernamePrompt } = useUsername();
   const translations = useTranslations();
   const [username, setUsername] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [state, setState] = useState<ModalState>('working');
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -32,35 +38,70 @@ export default function UsernamePromptModal({ isOpen, onClose }: UsernamePromptM
     
     if (!username.trim()) {
       setError(translations.usernameRequired || 'Username is required');
+      setErrorCode('NO_CANDIDATE');
+      setState('error');
       return;
     }
 
-    setLoading(true);
+    setState('working');
     setError(null);
+    setErrorCode(null);
 
     try {
+      await ensureUsernameChosen(async () => username.trim());
+      // Also update the hook's state for consistency
       await updateUsername(username.trim());
-      onClose();
+      setState('done');
+      setTimeout(() => onClose(), 300);
     } catch (error: any) {
-      console.error('Failed to update username:', error);
+      console.error('Failed to claim username:', error);
+      const code = error?.code || 'UNKNOWN_ERROR';
+      setErrorCode(code);
       setError(error.message || 'Failed to save username');
-    } finally {
-      setLoading(false);
+      setState('error');
     }
   };
 
   const handleSkip = async () => {
-    setLoading(true);
+    setState('working');
     setError(null);
+    setErrorCode(null);
 
     try {
       await skipUsernamePrompt();
-      onClose();
+      setState('done');
+      setTimeout(() => onClose(), 300);
     } catch (error: any) {
       console.error('Failed to skip username prompt:', error);
+      const code = error?.code || 'UNKNOWN_ERROR';
+      setErrorCode(code);
       setError(error.message || 'Failed to skip username prompt');
-    } finally {
-      setLoading(false);
+      setState('error');
+    }
+  };
+
+  const handleRetry = () => {
+    setState('working');
+    setError(null);
+    setErrorCode(null);
+    setUsername('');
+  };
+
+  const handleSignInAgain = async () => {
+    setState('working');
+    setError(null);
+    setErrorCode(null);
+
+    try {
+      await signInWithPopup(auth, googleProvider);
+      // After successful sign-in, auth state will update and modal should close
+      setState('done');
+      setTimeout(() => onClose(), 300);
+    } catch (error: any) {
+      console.error('Failed to sign in:', error);
+      setErrorCode(error?.code || 'SIGNIN_FAILED');
+      setError('Failed to sign in. Please try again.');
+      setState('error');
     }
   };
 
@@ -119,37 +160,76 @@ export default function UsernamePromptModal({ isOpen, onClose }: UsernamePromptM
               </p>
             </div>
 
-            {error && (
+            {error && state === 'error' && (
               <div className="p-3 rounded-lg text-sm" 
                    style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}>
-                {error}
+                <div className="mb-2">{error}</div>
+                {errorCode === 'USERNAME_TAKEN' && (
+                  <button
+                    type="button"
+                    onClick={handleRetry}
+                    className="text-sm underline"
+                    style={{ color: 'var(--accent)' }}
+                  >
+                    Try a different username
+                  </button>
+                )}
+                {errorCode === 'AUTH_NOT_SIGNED_IN' && (
+                  <button
+                    type="button"
+                    onClick={handleSignInAgain}
+                    className="text-sm underline"
+                    style={{ color: 'var(--accent)' }}
+                  >
+                    Sign in again
+                  </button>
+                )}
+                {(errorCode === 'USERNAME_TIMEOUT' || errorCode === 'NO_CANDIDATE') && (
+                  <button
+                    type="button"
+                    onClick={handleRetry}
+                    className="text-sm underline"
+                    style={{ color: 'var(--accent)' }}
+                  >
+                    Retry
+                  </button>
+                )}
+              </div>
+            )}
+
+            {state === 'done' && (
+              <div className="p-3 rounded-lg text-sm" 
+                   style={{ backgroundColor: '#d4edda', color: '#155724', borderColor: '#c3e6cb', border: '1px solid' }}>
+                ✓ Username saved successfully!
               </div>
             )}
 
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={handleSkip}
-                disabled={loading}
-                className="flex-1 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
-                    {translations.saving || 'Saving...'}
-                  </div>
-                ) : (
-                  translations.skip || 'Skip'
-                )}
-              </button>
+              {state !== 'error' && (
+                <button
+                  type="button"
+                  onClick={handleSkip}
+                  disabled={state === 'working' || state === 'done'}
+                  className="flex-1 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+                >
+                  {state === 'working' ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
+                      {translations.saving || 'Saving...'}
+                    </div>
+                  ) : (
+                    translations.skip || 'Skip'
+                  )}
+                </button>
+              )}
               <button
                 type="submit"
-                disabled={loading || !username.trim()}
+                disabled={state === 'working' || state === 'done' || !username.trim()}
                 className="flex-1 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: 'var(--accent)', color: 'white' }}
               >
-                {loading ? (
+                {state === 'working' ? (
                   <div className="flex items-center justify-center">
                     <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
                     {translations.saving || 'Saving...'}

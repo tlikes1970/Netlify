@@ -5,6 +5,7 @@ This document describes the auth debugging and diagnostic tools added to help di
 ## Overview
 
 The auth debug system provides:
+
 - A diagnostic page at `/debug/auth` showing environment, config, storage, cookies, and SW status
 - Verbose auth logging guarded by `?debug=auth` or `FLK_AUTH_DEBUG=1`
 - Hardened redirect handling with origin verification
@@ -16,6 +17,7 @@ The auth debug system provides:
 ### Accessing the Debug Page
 
 Navigate to `/debug/auth` in your browser. The page shows:
+
 - **Environment**: Current origin, referrer, protocol, iframe status
 - **Firebase Config**: Masked config values (apiKey, appId show first/last 3 chars)
 - **Cookies**: All cookies for current domain with SameSite test
@@ -28,6 +30,7 @@ Navigate to `/debug/auth` in your browser. The page shows:
 Debug logging is enabled via:
 
 1. **URL Parameter**: Add `?debug=auth` to any URL
+
    ```
    https://flicklet.netlify.app/?debug=auth
    ```
@@ -42,15 +45,19 @@ When enabled, console logs will include structured `[AuthDebug]` events with tim
 ### Query Parameters
 
 #### `?debug=auth`
+
 Enables verbose auth logging. All auth events are logged to console with `[AuthDebug]` prefix and added to the log buffer visible on `/debug/auth`.
 
 #### `?authMode=popup`
+
 Forces popup flow for this session only. Overrides normal flow selection logic.
 
 #### `?authMode=redirect`
+
 Forces redirect flow for this session only. Overrides normal flow selection logic.
 
 #### `?sw=skip`
+
 Unregisters all service workers and clears caches. Useful for eliminating cache interference during testing. Only works in debug mode.
 
 ### Example URLs
@@ -119,12 +126,14 @@ When reporting auth issues, capture:
 ### Playwright E2E Test
 
 A lightweight Playwright test is included at `apps/web/tests/auth.spec.ts` that:
+
 - Tests redirect result parsing (one-shot guard)
 - Verifies origin mismatch banner appears
 - Tests `authMode` query param overrides
 - Ensures no redirect loops
 
 Run with:
+
 ```bash
 npx playwright test apps/web/tests/auth.spec.ts
 ```
@@ -218,9 +227,9 @@ The debug system is designed to have zero impact on production UX when debug fla
 ## Future Enhancements
 
 Potential improvements:
+
 - Export logs to file/download
 - Real-time log streaming via WebSocket
 - Integration with error tracking (Sentry)
 - Automated origin mismatch detection and reporting
 - Performance metrics for auth flow
-
