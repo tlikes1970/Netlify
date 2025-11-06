@@ -49,12 +49,23 @@ export default function FlickletHeader({
   onClear,
   onHelpOpen,
 }: FlickletHeaderProps) {
-  const { username, usernamePrompted, user, skipUsernamePrompt } =
+  const { username, usernamePrompted, user, skipUsernamePrompt, loading } =
     useUsername();
   const { isInstallable, promptInstall } = useInstallPrompt();
   const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
+  const skipInProgressRef = React.useRef(false);
 
   useEffect(() => {
+    // Don't run if we're in the process of skipping/closing
+    if (skipInProgressRef.current) {
+      return;
+    }
+
+    // Don't show modal while loading (prevents race conditions with Firestore)
+    if (loading) {
+      return;
+    }
+
     const shouldShow = !!(user?.uid && !username && !usernamePrompted);
 
     if (shouldShow && !showUsernamePrompt) {
@@ -62,7 +73,14 @@ export default function FlickletHeader({
     } else if (!shouldShow && showUsernamePrompt) {
       setShowUsernamePrompt(false);
     }
-  }, [username, usernamePrompted, showUsernamePrompt, user]);
+  }, [username, usernamePrompted, showUsernamePrompt, user?.uid, loading]);
+
+  // Reset skip guard when usernamePrompted becomes true (skip completed)
+  useEffect(() => {
+    if (usernamePrompted && skipInProgressRef.current) {
+      skipInProgressRef.current = false;
+    }
+  }, [usernamePrompted]);
 
   return (
     <>
@@ -149,9 +167,17 @@ export default function FlickletHeader({
       {/* Username prompt modal */}
       <UsernamePromptModal
         isOpen={showUsernamePrompt}
-        onClose={() => {
-          skipUsernamePrompt(); // Treat close as explicit skip
+        onClose={async () => {
+          skipInProgressRef.current = true;
           setShowUsernamePrompt(false);
+          try {
+            await skipUsernamePrompt(); // Treat close as explicit skip
+            // Guard will be reset when usernamePrompted state updates
+          } catch (error) {
+            console.error("Failed to skip username prompt:", error);
+            // Reset guard on error so modal can be shown again if needed
+            skipInProgressRef.current = false;
+          }
         }}
       />
     </>

@@ -9,6 +9,7 @@ class UsernameStateManager {
   private username: string = "";
   private usernamePrompted: boolean = false;
   private loading: boolean = true;
+  skipInProgress: boolean = false; // Public to allow skipUsernamePrompt to set it
   private subscribers: Set<() => void> = new Set();
 
   getState() {
@@ -63,6 +64,12 @@ export function useUsername() {
 
   useEffect(() => {
     const loadUsername = async () => {
+      // Don't reload if skip is in progress (prevents overwriting optimistic state)
+      if (usernameStateManager.skipInProgress) {
+        console.log("⏸️ Skipping loadUsername - skip in progress");
+        return;
+      }
+
       const currentUser = authManager.getCurrentUser();
       console.log("🔄 Loading username for user:", currentUser?.uid);
 
@@ -81,13 +88,17 @@ export function useUsername() {
           const usernameValue = settings.username || "";
           const promptedValue = settings.usernamePrompted || false;
 
-          usernameStateManager.setUsernamePrompted(promptedValue);
-
-          usernameStateManager.setUsername(usernameValue);
-          console.log("✅ Username loaded:", {
-            username: usernameValue,
-            prompted: promptedValue,
-          });
+          // Only update if skip is not in progress (skip sets optimistic state)
+          if (!usernameStateManager.skipInProgress) {
+            usernameStateManager.setUsernamePrompted(promptedValue);
+            usernameStateManager.setUsername(usernameValue);
+            console.log("✅ Username loaded:", {
+              username: usernameValue,
+              prompted: promptedValue,
+            });
+          } else {
+            console.log("⏸️ Skipping state update - skip in progress");
+          }
         }
       } catch (error) {
         console.error("Failed to load username:", error);
@@ -164,13 +175,28 @@ export function useUsername() {
     }
 
     try {
+      // Set flag to prevent loadUsername from overwriting our optimistic state
+      usernameStateManager.skipInProgress = true;
+      
+      // Optimistically update state immediately
+      usernameStateManager.setUsernamePrompted(true);
+      console.log("✅ Username prompt skipped (optimistic)");
+
+      // Then persist to Firestore
       await authManager.updateUserSettings(currentUser.uid, {
         usernamePrompted: true,
       });
 
-      usernameStateManager.setUsernamePrompted(true);
-      console.log("✅ Username prompt skipped");
+      console.log("✅ Username prompt skipped (persisted)");
+      
+      // Clear flag after a short delay to allow Firestore write to complete
+      // This prevents loadUsername from reading stale data
+      setTimeout(() => {
+        usernameStateManager.skipInProgress = false;
+      }, 500);
     } catch (error) {
+      // Clear flag on error so we can retry
+      usernameStateManager.skipInProgress = false;
       console.error("Failed to skip username prompt:", error);
       throw error;
     }
