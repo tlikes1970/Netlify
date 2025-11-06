@@ -135,7 +135,6 @@ export default function PostDetail({ slug }: PostDetailProps) {
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
       <FlickletHeader
         appName="Flicklet"
-        showMarquee={false}
         onSearch={() => {}}
         onClear={() => {}}
       />

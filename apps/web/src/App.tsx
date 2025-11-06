@@ -40,7 +40,6 @@ import { mountActionBridge, setToastCallback } from '@/state/actions';
 import { useSettings, settingsManager } from '@/lib/settings';
 import { useInTheaters } from '@/hooks/useTmdb';
 import { useTranslations } from '@/lib/language';
-import { getPersonalityText } from '@/lib/settings';
 import Toast, { useToast } from '@/components/Toast';
 import PersonalityErrorBoundary from '@/components/PersonalityErrorBoundary';
 import { useAuth } from '@/hooks/useAuth';
@@ -53,7 +52,6 @@ import { backfillShowStatus } from '@/utils/backfillShowStatus';
 import DebugAuthHUD from '@/components/DebugAuthHUD';
 import { useReturningShows } from '@/state/selectors/useReturningShows';
 import { trackTabOpenedReturning } from '@/lib/analytics';
-import { getNextAirDate, isReturning, isWithinWindow } from '@/lib/constants/metadata';
 import { googleLogin } from '@/lib/authLogin';
 
 type View = 'home'|'watching'|'want'|'watched'|'returning'|'mylists'|'discovery';
@@ -67,7 +65,7 @@ export default function App() {
   const [currentPath, setCurrentPath] = useState(
     typeof window !== 'undefined' ? window.location.pathname : '/'
   );
-  const isHome = currentPath === '/';
+  const _isHome = currentPath === '/';
   const isAdmin = currentPath === '/admin';
   
   // Detect post routes
