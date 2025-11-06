@@ -65,7 +65,6 @@ export default function App() {
   const [currentPath, setCurrentPath] = useState(
     typeof window !== 'undefined' ? window.location.pathname : '/'
   );
-  const _isHome = currentPath === '/';
   const isAdmin = currentPath === '/admin';
   
   // Detect post routes
