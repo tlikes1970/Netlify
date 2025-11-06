@@ -73,5 +73,13 @@ module.exports = {
       allowTaggedTemplates: true,
     }],
   },
-  ignorePatterns: ["dist", "node_modules", "*.config.*"],
+  ignorePatterns: [
+    "dist", 
+    "node_modules", 
+    "*.config.*",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/test-setup.ts"
+  ],
 };
