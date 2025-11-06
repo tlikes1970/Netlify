@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react';
 import { firebaseConfig } from '@/lib/firebaseBootstrap';
 import { isAuthDebug, getQueryFlag, getAuthMode, getRecentAuthLogs, clearAuthLogs, maskSecret, safeOrigin, isAuthorizedOrigin } from '@/lib/authDebug';
+import { getRedirectAttemptCount, isInitDone } from '@/lib/authGuard';
 
 interface StorageTest {
   name: string;
@@ -258,6 +259,18 @@ export default function AuthDebugPage() {
               <td style={{ padding: '5px', fontWeight: 'bold' }}>Auth Mode Override:</td>
               <td style={{ padding: '5px' }}>
                 {getAuthMode() ? `✅ ${getAuthMode()}` : '(none)'}
+              </td>
+            </tr>
+            <tr>
+              <td style={{ padding: '5px', fontWeight: 'bold' }}>Auth Init Done:</td>
+              <td style={{ padding: '5px' }}>
+                {isInitDone() ? '✅ Yes' : '❌ No'}
+              </td>
+            </tr>
+            <tr>
+              <td style={{ padding: '5px', fontWeight: 'bold' }}>Redirect Attempts (last 10m):</td>
+              <td style={{ padding: '5px' }}>
+                {getRedirectAttemptCount()}
               </td>
             </tr>
           </tbody>

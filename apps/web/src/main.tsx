@@ -322,10 +322,14 @@ import('./utils/usernameDiagnostics').then(() => {
       });
     }
     
-    // ⚠️ CRITICAL: Initialize Firebase auth AFTER bootstrap but before render
+    // ⚠️ CRITICAL: Initialize auth flow (calls getRedirectResult exactly once)
     // This ensures redirect handling happens after Firebase is fully ready
+    logger.log('[Boot] Initializing auth flow...');
+    const { initAuthOnLoad } = await import('./lib/authFlow');
+    initAuthOnLoad(); // call once at boot; ensure no other calls elsewhere
+    
+    // Also initialize auth manager for existing hooks
     logger.log('[Boot] Initializing Firebase auth manager...');
-    // Import authManager AFTER firebaseReady resolves to prevent constructor from racing
     const { authManager } = await import('./lib/auth');
     void authManager; // Force module load and initialization
     

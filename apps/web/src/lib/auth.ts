@@ -156,9 +156,18 @@ class AuthManager {
     }
     
     // Check for redirect result FIRST (only if we initiated it)
+    // NOTE: authFlow.ts now handles getRedirectResult - this is a fallback for existing code
     // Use session guard to prevent loops
     try {
       const forcePopup = getAuthMode() === 'popup';
+      
+      // Only process if authFlow hasn't already handled it (check init done flag)
+      const { isInitDone } = await import('./authGuard');
+      if (isInitDone()) {
+        // authFlow already processed redirect result, skip here
+        logger.debug('Auth init already done - skipping redirect result check');
+        return;
+      }
       
       // Handle redirect result exactly once
       if (hasRedirectStarted() && !forcePopup) {

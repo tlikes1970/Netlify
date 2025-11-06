@@ -142,7 +142,7 @@ function getAuthorizedDomains(): string[] {
   }
   
   // Fallback to hardcoded list for debug
-  return ['flicklet.netlify.app', 'localhost', '127.0.0.1'];
+  return ['flicklet.netlify.app', 'localhost', '127.0.0.1', 'flickletapp.com'];
 }
 
 /**
