@@ -5,6 +5,7 @@ import { markAuthInFlight } from "./authBroadcast";
 import { ensurePersistenceBeforeAuth } from "./persistence";
 import { authLogManager } from "./authLog";
 import { isAuthDebug, logAuth, safeOrigin, getAuthMode } from "./authDebug";
+import { markRedirectStarted, hasRedirectStarted, clearRedirectGuard } from "./authGuard";
 
 /**
  * Detects if we're in a WebView or standalone PWA
@@ -72,17 +73,22 @@ export async function googleLogin() {
     if (isAuthDebug()) {
       logAuth('auth_mode_override', { mode: 'popup', reason: 'query param' });
     }
+    clearRedirectGuard(); // Clear any stale guard
     await firebaseSignInWithPopup(auth, googleProvider);
     return;
   } else if (authModeOverride === 'redirect') {
     if (isAuthDebug()) {
       logAuth('auth_mode_override', { mode: 'redirect', reason: 'query param' });
     }
-    try {
-      sessionStorage.setItem("flk:didRedirect", "1");
-    } catch (e) {
-      /* noop */
+    // Check guard to prevent loops
+    if (hasRedirectStarted()) {
+      if (isAuthDebug()) {
+        logAuth('redirect_blocked_by_guard', {});
+      }
+      logger.warn('[AuthLogin] Redirect blocked - guard already set');
+      return;
     }
+    markRedirectStarted();
     await firebaseSignInWithRedirect(auth, googleProvider);
     return;
   }
@@ -233,6 +239,15 @@ export async function googleLogin() {
   const useRedirect = !env.recommendPopup && !disableRedirect && isWebView();
   
   if (useRedirect) {
+    // Check guard to prevent loops
+    if (hasRedirectStarted()) {
+      if (isAuthDebug()) {
+        logAuth('redirect_blocked_by_guard', {});
+      }
+      logger.warn('[AuthLogin] Redirect blocked - guard already set');
+      return;
+    }
+    
     logger.log("Starting redirect sign-in (canonical domain, webview/Android)");
     
     // Debug logging
@@ -244,12 +259,8 @@ export async function googleLogin() {
       });
     }
     
-    // Mark that we initiated a redirect so the app can process the result once
-    try {
-      sessionStorage.setItem("flk:didRedirect", "1");
-    } catch (e) {
-      /* noop */
-    }
+    // Mark redirect started using guard
+    markRedirectStarted();
 
     // Save to localStorage before redirect so we can see it after page reload
     try {
@@ -275,6 +286,9 @@ export async function googleLogin() {
         ? "redirect disabled by flag" 
         : "desktop browser";
     logger.log(`Starting popup sign-in (${reason})`);
+    
+    // Clear any stale redirect guard when using popup
+    clearRedirectGuard();
     
     // Debug logging
     if (isAuthDebug()) {

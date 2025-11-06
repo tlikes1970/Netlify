@@ -21,6 +21,7 @@ import type { AuthUser, UserDocument, UserSettings, AuthProvider, AuthStatus } f
 import { broadcastAuthComplete } from './authBroadcast';
 import { authLogManager } from './authLog';
 import { isAuthDebug, logAuth, safeOrigin, getAuthMode } from './authDebug';
+import { clearRedirectGuard, hasRedirectStarted } from './authGuard';
 
 // Removed: isBlockedOAuthContext function (unused after removing signInWithGoogle method)
 
@@ -155,73 +156,28 @@ class AuthManager {
     }
     
     // Check for redirect result FIRST (only if we initiated it)
-    // One-shot guard: prevent loop by checking sessionStorage flag
+    // Use session guard to prevent loops
     try {
-      const onceKey = 'flk.auth.redirect.once';
-      const didRedirect = sessionStorage.getItem('flk:didRedirect') === '1';
-      const alreadyProcessed = sessionStorage.getItem(onceKey) === '1';
+      const forcePopup = getAuthMode() === 'popup';
       
-      if (didRedirect && !alreadyProcessed) {
-        // Mark as processed immediately to prevent retry
-        sessionStorage.setItem(onceKey, '1');
-        sessionStorage.removeItem('flk:didRedirect');
+      // Handle redirect result exactly once
+      if (hasRedirectStarted() && !forcePopup) {
         this.setStatus('resolving');
         
         // Debug logging: redirect return
         if (isAuthDebug()) {
-          const currentOrigin = safeOrigin();
-          const expectedOrigin = currentOrigin;
-          const authDomainOrigin = `https://${firebaseConfig.authDomain}`;
-          const originMatches = currentOrigin === expectedOrigin;
-          
           logAuth('redirect_return', {
             locationHref: typeof window !== 'undefined' ? window.location.href : 'unknown',
             documentReferrer: typeof document !== 'undefined' ? document.referrer : 'unknown',
-            currentOrigin,
-            expectedOrigin,
+            currentOrigin: safeOrigin(),
             authDomain: firebaseConfig.authDomain,
-            authDomainOrigin,
-            originMatches,
             windowTopEqualsWindow: typeof window !== 'undefined' ? window.top === window : false,
           });
         }
         
-        // Harden redirect: verify origin before processing
-        if (typeof window !== 'undefined') {
-          const currentOrigin = safeOrigin();
-          const expectedOrigin = currentOrigin; // Should match current origin
-          const urlOrigin = new URL(window.location.href).origin;
-          
-          if (urlOrigin !== expectedOrigin) {
-            const errorMsg = `Auth return origin mismatch: got ${urlOrigin} expected ${expectedOrigin}. Check OAuth Authorized domains and Firebase authDomain.`;
-            logger.error('[AuthManager]', errorMsg);
-            
-            if (isAuthDebug()) {
-              logAuth('redirect_origin_mismatch', {
-                got: urlOrigin,
-                expected: expectedOrigin,
-                locationHref: window.location.href,
-              });
-            }
-            
-            // Show non-blocking banner
-            window.dispatchEvent(new CustomEvent('auth:origin-mismatch', {
-              detail: {
-                got: urlOrigin,
-                expected: expectedOrigin,
-                message: errorMsg,
-              }
-            }));
-            
-            // Abort looping - don't process redirect
-            this.setStatus('unauthenticated');
-            return;
-          }
-        }
-        
         try {
           const result = await getRedirectResult(auth as any);
-          if (result && result.user) {
+          if (result?.user) {
             authLogManager.log('redirect_result_success', {
               providerId: (result as any).providerId,
               operationType: (result as any).operationType,
@@ -234,13 +190,26 @@ class AuthManager {
                 hasUser: !!result.user,
               });
             }
-          } else {
-            authLogManager.log('redirect_result_empty', {});
             
-            if (isAuthDebug()) {
-              logAuth('redirect_result_empty', {});
-            }
+            clearRedirectGuard();
+            return;
           }
+          
+          // Empty result - redirect didn't complete
+          authLogManager.log('redirect_result_empty', { hadGuard: hasRedirectStarted() });
+          
+          if (isAuthDebug()) {
+            logAuth('redirect_result_empty', { hadGuard: hasRedirectStarted() });
+          }
+          
+          // Show banner for failed redirect attempt
+          window.dispatchEvent(new CustomEvent('auth:redirect-empty', {
+            detail: {
+              message: 'Login didn\'t complete. Try popup sign-in.',
+            }
+          }));
+          
+          clearRedirectGuard(); // Reset guard to avoid loops
         } catch (e: any) {
           logger.error('Error checking redirect result', e);
           authLogManager.log('getRedirectResult_error', {
@@ -249,9 +218,9 @@ class AuthManager {
           });
           
           if (isAuthDebug()) {
-            logAuth('getRedirectResult_error', {
-              error: e?.message || String(e),
-              code: e?.code || 'unknown',
+            logAuth('redirect_result_error', {
+              code: e?.code,
+              message: e?.message?.slice?.(0, 140),
             });
             
             // Diagnose common errors
@@ -266,20 +235,17 @@ class AuthManager {
           
           // Show error UI instead of retrying
           this.handleAuthConfigError(e);
+          clearRedirectGuard();
         }
-      } else if (alreadyProcessed) {
-        logger.debug('Redirect result already processed - skipping getRedirectResult');
+      } else if (!hasRedirectStarted()) {
+        logger.debug('No redirect guard present - skipping getRedirectResult');
         if (isAuthDebug()) {
-          logAuth('redirect_already_processed', {});
-        }
-      } else {
-        logger.debug('No redirect flag present - skipping getRedirectResult');
-        if (isAuthDebug()) {
-          logAuth('no_redirect_flag', {});
+          logAuth('no_redirect_guard', {});
         }
       }
     } catch (e) {
       // ignore
+      clearRedirectGuard();
     }
     
     // Log Firebase init complete (auth manager initialized)

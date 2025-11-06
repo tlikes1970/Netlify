@@ -130,3 +130,31 @@ export function getAuthMode(): 'popup' | 'redirect' | null {
   return null;
 }
 
+/**
+ * Get authorized domains list
+ * Checks build env first, falls back to hardcoded list
+ */
+function getAuthorizedDomains(): string[] {
+  // Check build-time env
+  const envDomains = import.meta.env.VITE_AUTHORIZED_DOMAINS;
+  if (envDomains) {
+    return envDomains.split(',').map((d: string) => d.trim());
+  }
+  
+  // Fallback to hardcoded list for debug
+  return ['flicklet.netlify.app', 'localhost', '127.0.0.1'];
+}
+
+/**
+ * Check if current origin is authorized
+ * Compares hostname against authorized domains list, not authDomain
+ */
+export function isAuthorizedOrigin(): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  const authorizedDomains = getAuthorizedDomains();
+  const currentHostname = window.location.hostname;
+  
+  return authorizedDomains.includes(currentHostname);
+}
+

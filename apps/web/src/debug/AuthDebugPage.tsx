@@ -8,7 +8,7 @@
 
 import { useEffect, useState } from 'react';
 import { firebaseConfig } from '@/lib/firebaseBootstrap';
-import { isAuthDebug, getQueryFlag, getAuthMode, getRecentAuthLogs, clearAuthLogs, maskSecret, safeOrigin } from '@/lib/authDebug';
+import { isAuthDebug, getQueryFlag, getAuthMode, getRecentAuthLogs, clearAuthLogs, maskSecret, safeOrigin, isAuthorizedOrigin } from '@/lib/authDebug';
 
 interface StorageTest {
   name: string;
@@ -217,8 +217,10 @@ export default function AuthDebugPage() {
   const isHttps = window.location.protocol === 'https:';
   const currentOrigin = safeOrigin();
   const authDomain = firebaseConfig.authDomain;
-  const originMatches = currentOrigin === `https://${authDomain}` || 
-                        currentOrigin.replace('https://', '') === authDomain;
+  const isAuthorized = isAuthorizedOrigin();
+  // Show both values but don't treat inequality as error on Netlify
+  const originMatchesAuthDomain = currentOrigin === `https://${authDomain}` || 
+                                   currentOrigin.replace('https://', '') === authDomain;
 
   return (
     <div style={{ padding: '20px', fontFamily: 'monospace', fontSize: '14px', maxWidth: '1200px', margin: '0 auto' }}>
@@ -284,14 +286,19 @@ export default function AuthDebugPage() {
               <td style={{ padding: '5px' }}>{maskSecret(firebaseConfig.appId)}</td>
             </tr>
             <tr>
-              <td style={{ padding: '5px', fontWeight: 'bold' }}>Origin Match:</td>
+              <td style={{ padding: '5px', fontWeight: 'bold' }}>Authorized Origin:</td>
               <td style={{ padding: '5px' }}>
-                {originMatches ? '✅ Matches' : '❌ Mismatch'}
-                {!originMatches && (
-                  <span style={{ color: 'red', marginLeft: '10px' }}>
-                    ⚠️ Origin mismatch may cause redirect issues
-                  </span>
-                )}
+                {isAuthorized ? '✅ Authorized' : '❌ Not Authorized'}
+              </td>
+            </tr>
+            <tr>
+              <td style={{ padding: '5px', fontWeight: 'bold' }}>Origin vs authDomain:</td>
+              <td style={{ padding: '5px' }}>
+                {originMatchesAuthDomain ? '✅ Matches' : '⚠️ Different (normal on Netlify)'}
+                <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>
+                  Origin: {currentOrigin.replace('https://', '')}<br />
+                  authDomain: {authDomain}
+                </div>
               </td>
             </tr>
           </tbody>

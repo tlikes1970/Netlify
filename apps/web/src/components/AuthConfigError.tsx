@@ -23,9 +23,14 @@ interface OriginMismatchError {
   message: string;
 }
 
+interface RedirectEmptyError {
+  message: string;
+}
+
 export default function AuthConfigError() {
   const [error, setError] = useState<AuthConfigError | null>(null);
   const [originMismatch, setOriginMismatch] = useState<OriginMismatchError | null>(null);
+  const [redirectEmpty, setRedirectEmpty] = useState<RedirectEmptyError | null>(null);
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
@@ -38,13 +43,20 @@ export default function AuthConfigError() {
       setOriginMismatch(e.detail);
       setShowPopup(true);
     };
+    
+    const handleRedirectEmpty = (e: CustomEvent<RedirectEmptyError>) => {
+      setRedirectEmpty(e.detail);
+      setShowPopup(true);
+    };
 
     window.addEventListener('auth:config-error', handleError as EventListener);
     window.addEventListener('auth:origin-mismatch', handleOriginMismatch as EventListener);
+    window.addEventListener('auth:redirect-empty', handleRedirectEmpty as EventListener);
 
     return () => {
       window.removeEventListener('auth:config-error', handleError as EventListener);
       window.removeEventListener('auth:origin-mismatch', handleOriginMismatch as EventListener);
+      window.removeEventListener('auth:redirect-empty', handleRedirectEmpty as EventListener);
     };
   }, []);
 
@@ -63,14 +75,75 @@ export default function AuthConfigError() {
     setShowPopup(false);
     setError(null);
     setOriginMismatch(null);
+    setRedirectEmpty(null);
+  };
+  
+  const handleTryPopup = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('authMode', 'popup');
+    window.location.href = url.toString();
   };
 
-  if (!showPopup || (!error && !originMismatch)) {
+  if (!showPopup || (!error && !originMismatch && !redirectEmpty)) {
     return null;
   }
 
   const env = verifyAuthEnvironment();
   const isNonCanonical = env.recommendPopup;
+  
+  // Show redirect empty banner (non-blocking)
+  if (redirectEmpty) {
+    return (
+      <div
+        className="fixed top-0 left-0 right-0 z-50 p-4"
+        style={{
+          backgroundColor: '#ffc107',
+          color: '#000',
+          borderBottom: '2px solid #ff9800',
+        }}
+      >
+        <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <strong>{redirectEmpty.message}</strong>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleTryPopup}
+              className="px-4 py-2 rounded text-sm font-medium transition-colors"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                color: '#000',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              Try Popup Sign-In
+            </button>
+            <button
+              onClick={handleDismiss}
+              className="px-4 py-2 rounded text-sm font-medium transition-colors"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                color: '#000',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   // Show origin mismatch banner (non-blocking)
   if (originMismatch) {
