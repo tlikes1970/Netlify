@@ -119,13 +119,10 @@ export default function FlickletHeader({
       hasShownRef.current = true;
       isClosingRef.current = false; // Reset closing flag when opening
       console.log("✅ Username prompt modal opened");
-    } else if (!shouldShow && showUsernamePrompt && !isClosingRef.current) {
-      // Conditions no longer met - close modal automatically
-      // Don't call skip here - only skip when user explicitly closes
-      setShowUsernamePrompt(false);
-      // Keep hasShownRef = true to prevent reopening
-      console.log("❌ Username prompt modal closed (conditions not met)");
     }
+    // REMOVED: Auto-close logic that was causing loops
+    // Once modal is open, only close it when user explicitly closes it
+    // This prevents loops from state updates during loadUsername()
   }, [username, usernamePrompted, showUsernamePrompt, user?.uid, loading]);
 
   return (
@@ -219,14 +216,14 @@ export default function FlickletHeader({
             console.log("⏸️ Already closing, ignoring duplicate onClose");
             return;
           }
-          
+
           isClosingRef.current = true;
-          
+
           // Close modal first
           setShowUsernamePrompt(false);
           // Mark as shown to prevent reopening
           hasShownRef.current = true;
-          
+
           // Only skip if user explicitly closed (not if conditions changed)
           // This prevents loops when state updates trigger automatic closes
           try {

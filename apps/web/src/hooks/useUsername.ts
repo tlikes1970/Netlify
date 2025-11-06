@@ -63,6 +63,8 @@ export function useUsername() {
   const { username, usernamePrompted, loading } = state;
 
   useEffect(() => {
+    let isLoading = false; // Track if loadUsername is currently running
+    
     const loadUsername = async () => {
       // Don't reload if skip is in progress (prevents overwriting optimistic state)
       if (usernameStateManager.skipInProgress) {
@@ -71,6 +73,15 @@ export function useUsername() {
         usernameStateManager.setLoading(false);
         return;
       }
+
+      // Prevent concurrent calls
+      if (isLoading) {
+        console.log("⏸️ Skipping loadUsername - already loading");
+        return;
+      }
+
+      isLoading = true;
+      usernameStateManager.setLoading(true);
 
       const currentUser = authManager.getCurrentUser();
       console.log("🔄 Loading username for user:", currentUser?.uid);
@@ -139,11 +150,20 @@ export function useUsername() {
           // ignore
         }
       } finally {
+        isLoading = false;
         usernameStateManager.setLoading(false);
       }
     };
 
-    loadUsername();
+    // Track if initial load has completed to avoid duplicate calls
+    let initialLoadComplete = false;
+    
+    const doInitialLoad = async () => {
+      await loadUsername();
+      initialLoadComplete = true;
+    };
+    
+    doInitialLoad();
 
     // Subscribe to auth state changes
     const unsubscribe = authManager.subscribe((user) => {
@@ -155,10 +175,15 @@ export function useUsername() {
       if (user?.uid) {
         // User logged in - reload username
         // But skip if skip is in progress (prevents loop after skipUsernamePrompt)
-        if (!usernameStateManager.skipInProgress) {
+        // Also skip if initial load hasn't completed yet (prevents duplicate calls on page load)
+        if (!usernameStateManager.skipInProgress && initialLoadComplete && !isLoading) {
           loadUsername();
         } else {
-          console.log("⏸️ Skipping loadUsername from auth subscription - skip in progress");
+          console.log("⏸️ Skipping loadUsername from auth subscription", {
+            skipInProgress: usernameStateManager.skipInProgress,
+            initialLoadComplete,
+            isLoading,
+          });
         }
       } else {
         // User logged out - reset state
@@ -166,6 +191,7 @@ export function useUsername() {
         usernameStateManager.setUsernamePrompted(false);
         usernameStateManager.setLoading(false);
         setFirebaseUser(null);
+        initialLoadComplete = false;
       }
     });
 
