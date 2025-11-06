@@ -167,7 +167,7 @@ export default function CommunityPanel() {
         <div className="rounded-2xl bg-neutral-900 border border-white/5 p-4 flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-neutral-200">
-              {translations.recent_posts || 'Recent Posts'}
+              {'Recent Posts'}
             </h3>
             <button
               onClick={() => setNewPostModalOpen(true)}

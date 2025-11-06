@@ -7,7 +7,6 @@
  */
 
 import type { MediaItem } from '../components/cards/card.types';
-import { mapTMDBToMediaItem } from './api';
 import { rankCandidates } from '../lib/searchRelevance';
 
 async function fetchTMDB(path: string, params: Record<string, any>, signal?: AbortSignal) {

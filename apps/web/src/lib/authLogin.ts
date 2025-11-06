@@ -82,7 +82,7 @@ export async function googleLogin() {
   // ANDROID/DESKTOP: If redirects are disabled (by flag) open popup immediately
   // Keep this path as early as possible to avoid popup blockers
   if (!isIOS && disableRedirect) {
-    await signInWithPopup(auth, googleProvider);
+    await firebaseSignInWithPopup(auth, googleProvider);
     return;
   }
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useIsDesktop } from '../../hooks/useDeviceDetection';
 
 export interface ProviderBadgeProps {
@@ -69,7 +68,7 @@ function getShortLabel(provider: string): string {
  * - Accessible with aria-label
  */
 export function ProviderBadge({ provider, className = '', mediaType = 'tv' }: ProviderBadgeProps) {
-  const { ready, isDesktop } = useIsDesktop();
+  const { ready, isDesktop: _isDesktop } = useIsDesktop();
   
   // Wait for viewport detection to avoid hydration mismatch
   if (!ready) {
@@ -112,7 +111,7 @@ export interface ProviderBadgesProps {
 export function ProviderBadges({ providers, className = '', maxVisible = 3, mediaType = 'tv' }: ProviderBadgesProps) {
   // Debug: Log when providers are missing
   if (!providers || providers.length === 0) {
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.debug('[ProviderBadges] No providers provided', { providers });
     }
     return null;
@@ -122,7 +121,7 @@ export function ProviderBadges({ providers, className = '', maxVisible = 3, medi
   const validProviders = providers.filter(p => p && typeof p === 'string' && p.trim().length > 0);
   
   if (validProviders.length === 0) {
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.debug('[ProviderBadges] No valid providers after filtering', { providers });
     }
     return null;

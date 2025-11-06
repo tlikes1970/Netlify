@@ -127,7 +127,7 @@ export function TvCardMobile({ item, actions, tabKey = 'watching', index = 0, on
             onKeyboardReorder={onKeyboardReorder}
             isDragging={isDragging}
             itemTitle={item.title}
-            onTouchDragMove={(e, idx) => {
+            onTouchDragMove={(_e, _idx) => {
               // Touch drag move is handled by global listener in DragHandle
               // This callback is called to notify parent about potential drop target
             }}

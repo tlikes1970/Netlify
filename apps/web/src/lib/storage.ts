@@ -121,7 +121,7 @@ let pendingCustomOrder: { tabKey: string; orderIds: string[] } | null = null;
 function performSave() {
   if (isSaving) {
     // Already saving, skip to prevent duplicate writes
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.info('[reorder] skip: save already in progress');
     }
     return;
@@ -147,7 +147,7 @@ function performSave() {
       }
     }
 
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.info('[reorder] flushed: save + emit + localStorage');
     }
   } catch (error) {
@@ -352,7 +352,7 @@ export const Library = {
     });
     
     // Queue debounced save for rapid reorders (performance optimization)
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.info('[reorder] queued: save + emit');
     }
     debouncedSave();

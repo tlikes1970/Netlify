@@ -399,7 +399,7 @@ export default function ListPage({
       originalHandleDragEnd(e);
       // Flush pending saves immediately after drop completes
       flushPendingSaves();
-      if (process.env.NODE_ENV === "development") {
+      if (import.meta.env.DEV) {
         // eslint-disable-next-line no-console
         console.info("[reorder] flushed on drop completion");
       }
