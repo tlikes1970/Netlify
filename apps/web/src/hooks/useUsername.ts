@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { updateProfile } from "firebase/auth";
-import { getFirebaseAuth } from "../lib/firebaseBootstrap";
+import { getFirebaseAuth, firebaseReady } from "../lib/firebaseBootstrap";
 import { authManager } from "../lib/auth";
 // import type { UserSettings } from '../lib/auth.types'; // Unused
 
@@ -48,6 +48,24 @@ class UsernameStateManager {
 const usernameStateManager = new UsernameStateManager();
 
 export function useUsername() {
+  const [firebaseIsReady, setFirebaseIsReady] = useState(false);
+
+  useEffect(() => {
+    firebaseReady.then(() => setFirebaseIsReady(true));
+  }, []);
+
+  if (!firebaseIsReady) {
+    return { 
+      loading: true, 
+      username: "", 
+      usernamePrompted: false, 
+      needsUsernamePrompt: () => false,
+      updateUsername: async () => {},
+      skipUsernamePrompt: async () => {},
+      user: null,
+    };
+  }
+
   const [state, setState] = useState(() => usernameStateManager.getState());
   const auth = getFirebaseAuth();
   const [firebaseUser, setFirebaseUser] = useState(auth.currentUser);

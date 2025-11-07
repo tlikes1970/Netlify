@@ -18,7 +18,6 @@ import {
 import { getFirestore, serverTimestamp } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { GoogleAuthProvider, OAuthProvider } from "firebase/auth";
-import { isAuthDebug, logAuth, safeOrigin, maskSecret } from "./authDebug";
 
 // Firebase configuration
 const config = {
@@ -62,33 +61,16 @@ try {
     console.log("[FirebaseBootstrap] App initialized");
   } else {
     app = getApp();
-    console.warn("[FirebaseBootstrap] Reusing existing app");
   }
 
   auth = getAuth(app);
 
   // Make persistence non-blocking
   setPersistence(auth, indexedDBLocalPersistence).catch(() => {
-    console.warn("[FirebaseBootstrap] Persistence setup failed");
+    // Persistence failed - continue anyway
   });
 
   db = getFirestore(app);
-
-  // Debug escape hatch: only if explicitly enabled
-  try {
-    if (localStorage.getItem("flk:debug:auth") === "1") {
-      // @ts-expect-error debug
-      window.firebaseApp = app;
-      // @ts-expect-error debug
-      window.firebaseAuth = auth;
-      // @ts-expect-error debug
-      window.firebaseDb = db;
-      // Optional sanity check
-      console.log("[debug] firebase handles exposed");
-    }
-  } catch {
-    /* localStorage may be blocked; ignore */
-  }
 } catch (error) {
   console.error("[FirebaseBootstrap] Fatal init error:", error);
   throw error;
@@ -134,30 +116,6 @@ export function verifyAuthEnvironment(): {
 
   // On prod/staging host: redirect allowed if that host is authorized in Firebase console
   return { ok: true, recommendPopup: false };
-}
-
-// Log auth environment on boot (dev only or debug mode)
-if (typeof window !== "undefined" && (import.meta.env.DEV || isAuthDebug())) {
-  const env = verifyAuthEnvironment();
-  const here = window.location.origin;
-  const authDomain = firebaseConfig.authDomain;
-  const flow = env.recommendPopup ? "popup" : "redirect";
-  console.log(
-    `[FirebaseBootstrap] Auth boot: origin=${here} authDomain=${authDomain} flow=${flow}`
-  );
-
-  // Debug logging
-  if (isAuthDebug()) {
-    logAuth("firebase_config_loaded", {
-      authDomain: firebaseConfig.authDomain,
-      projectId: firebaseConfig.projectId,
-      apiKey: maskSecret(firebaseConfig.apiKey),
-      appId: maskSecret(firebaseConfig.appId),
-      origin: here,
-      recommendPopup: env.recommendPopup,
-      flow,
-    });
-  }
 }
 
 export const functions = getFunctions(app);
@@ -208,14 +166,6 @@ export async function bootstrapFirebase(): Promise<void> {
       );
     }
 
-    // Debug logging
-    if (isAuthDebug()) {
-      logAuth("persistence_locked", {
-        method: "indexedDBLocalPersistence",
-        origin: safeOrigin(),
-      });
-    }
-
     // ⚠️ CRITICAL: Now that persistence is locked, wire up listeners
     // Step 2: Wait for onAuthStateChanged to fire at least once
     // OR timeout after 5000ms (safety net)
@@ -262,15 +212,6 @@ export async function bootstrapFirebase(): Promise<void> {
         `[FirebaseBootstrap] Ready after ${duration}ms at ${timestamp}`
       );
     }
-
-    // Debug logging
-    if (isAuthDebug()) {
-      logAuth("firebase_ready", {
-        durationMs: duration,
-        timestamp,
-        origin: safeOrigin(),
-      });
-    }
   } catch (error) {
     // Even on error, resolve after timeout to prevent app from hanging
     readyResolved = true;
@@ -296,32 +237,3 @@ export function isFirebaseReady(): boolean {
 }
 
 export default app;
-
-// Dev-only sanity log: ensure exactly one app
-if (typeof window !== "undefined" && import.meta.env.DEV) {
-  console.log("[FirebaseBootstrap] App initialized:", app.name);
-  const apps = getApps();
-  console.log(
-    "[FirebaseBootstrap] All apps:",
-    apps.map((a) => a.name)
-  );
-  if (apps.length !== 1) {
-    console.warn(
-      "[FirebaseBootstrap] WARNING: Expected exactly 1 app, found",
-      apps.length
-    );
-  }
-}
-
-// Add this NOW - it's the only way to know for sure
-if (typeof window !== "undefined") {
-  // Remove the MODE check temporarily
-  console.log("🔥 FIREBASE SANITY CHECK");
-  console.log("   Total apps:", getApps().length);
-  console.log(
-    "   App names:",
-    getApps().map((a) => a.name)
-  );
-  console.log("   Current user:", auth.currentUser?.uid || "null");
-  console.log("   Auth instance app name:", auth.app.name);
-}

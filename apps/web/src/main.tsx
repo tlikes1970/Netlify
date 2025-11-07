@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
@@ -49,8 +49,7 @@ import './utils/scrollLogger';
 // import { authManager } from './lib/auth'; // Moved to after firebaseReady
 import { logger } from './lib/logger';
 import { authLogManager } from './lib/authLog';
-import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp, isFirebaseReady } from './lib/firebaseBootstrap';
-import { generateDiagnosticsBundle, formatDiagnosticsAsMarkdown } from './lib/authDiagnostics';
+import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './lib/firebaseBootstrap';
 
 // Install auth debug bridge globally when ?debug=auth is present.
 // This avoids route/lazy-load/treeshake issues.
@@ -301,30 +300,11 @@ import('./utils/debug-auth').then(m => {
   (window as any).debugFirebaseAuth = m.debugFirebaseAuth;
 });
 
-// Import username diagnostics loader first (immediate availability)
-import('./utils/usernameDiagnosticsLoader').catch(() => {
-  // ignore
-});
-
-// Import username diagnostics (exposes window.debugUsername, etc.)
-import('./utils/usernameDiagnostics').then(() => {
-  console.log('[Boot] Username diagnostics loaded - window.debugUsername() available');
-}).catch((e) => {
-  console.warn('[Boot] Failed to load username diagnostics:', e);
-});
-
-// Add this log
-console.log('[Main] isFirebaseReady():', isFirebaseReady());
 
 // ⚠️ CRITICAL: Don't block UI on auth - wait for first auth tick or timeout
 // This ensures app renders even if auth state takes time to initialize
 (async function bootstrapApp() {
   try {
-    // Add logging for firebaseReady promise
-    firebaseReady.then(() => {
-      console.log('[Main] Firebase ready promise resolved');
-    });
-    
     // Wait for Firebase bootstrap to complete (with timeout)
     await Promise.race([
       firebaseReady,
@@ -351,12 +331,6 @@ console.log('[Main] isFirebaseReady():', isFirebaseReady());
     const { auth } = await import('./lib/firebaseBootstrap');
     const { getRedirectResult } = await import('firebase/auth');
     
-    // Dev-only logging for auth instance verification
-    if (import.meta.env.DEV) {
-      console.log('[AuthGate] Using auth instance:', auth.app.name);
-      console.log('[AuthGate] Current user:', auth.currentUser?.uid || '(none)');
-    }
-    
     // Run redirect result in background with timeout
     Promise.race([
       getRedirectResult(auth),
@@ -373,38 +347,12 @@ console.log('[Main] isFirebaseReady():', isFirebaseReady());
     const { authManager } = await import('./lib/auth');
     void authManager; // Force module load and initialization
     
-    // Phase A: Generate diagnostics bundle after bootstrap
-    try {
-      const diagnostics = await generateDiagnosticsBundle();
-      const markdown = formatDiagnosticsAsMarkdown(diagnostics);
-      
-      // Store diagnostics in window for export
-      if (typeof window !== 'undefined') {
-        (window as any).__authDiagnostics = diagnostics;
-        (window as any).__exportAuthDiagnostics = () => {
-          const blob = new Blob([markdown], { type: 'text/markdown' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `auth-diagnostics-${new Date().toISOString().replace(/[:.]/g, '-')}.md`;
-          a.click();
-          URL.revokeObjectURL(url);
-        };
-        
-        // Also log to console for immediate access
-        console.log('[Auth Diagnostics] Bundle generated - call window.__exportAuthDiagnostics() to download');
-        console.log('[Auth Diagnostics] Preview:', diagnostics);
-      }
-    } catch (e) {
-      logger.warn('[Boot] Failed to generate diagnostics bundle', e);
-    }
-    
-    // Now render React app with Firebase ready wrapper
+    // Now render React app
     ReactDOM.createRoot(document.getElementById('root')!).render(
       <React.StrictMode>
         <QueryClientProvider client={queryClient}>
           <FlagsProvider>
-            <AppWrapper />
+            <App />
           </FlagsProvider>
         </QueryClientProvider>
       </React.StrictMode>
@@ -416,39 +364,13 @@ console.log('[Main] isFirebaseReady():', isFirebaseReady());
       <React.StrictMode>
         <QueryClientProvider client={queryClient}>
           <FlagsProvider>
-            <AppWrapper />
+            <App />
           </FlagsProvider>
         </QueryClientProvider>
       </React.StrictMode>
     );
   }
 })();
-
-// React wrapper that re-renders when Firebase is ready
-function AppWrapper() {
-  const [firebaseIsReady, setFirebaseIsReady] = useState(isFirebaseReady());
-
-  useEffect(() => {
-    // Re-render when Firebase is ready
-    firebaseReady.then(() => {
-      console.log('[AppWrapper] Firebase ready promise resolved, updating state');
-      setFirebaseIsReady(true);
-    });
-  }, []);
-
-  if (!firebaseIsReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading Firebase...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return <App />;
-}
 
 // Kill any leftover SWs during dev, before app boot.
 if (import.meta.env.DEV) {

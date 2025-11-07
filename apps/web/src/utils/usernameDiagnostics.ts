@@ -237,16 +237,5 @@ export async function testFirestoreWriteTiming(): Promise<{
 }
 
 // Expose to window for console access immediately
-if (typeof window !== 'undefined') {
-  // Set functions immediately (before module fully loads)
-  (window as any).debugUsername = diagnoseUsernamePrompt;
-  (window as any).monitorUsernameState = monitorUsernameState;
-  (window as any).testFirestoreWriteTiming = testFirestoreWriteTiming;
-  
-  // Log that diagnostics are available
-  console.log('[UsernameDiagnostics] ✅ Available functions:');
-  console.log('  - window.debugUsername() - Full diagnostic');
-  console.log('  - window.monitorUsernameState(ms) - Monitor state changes');
-  console.log('  - window.testFirestoreWriteTiming() - Test write performance');
-}
+// Debug functions removed - no longer exposed to window
 
