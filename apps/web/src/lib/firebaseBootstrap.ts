@@ -296,8 +296,9 @@ export default app;
 
 // Dev-only sanity log: ensure exactly one app
 if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  console.log('[FirebaseBootstrap] App initialized:', app.name);
   const apps = getApps();
-  console.log('[fb apps]', apps.map(a => a.name)); // must be ["[DEFAULT]"]
+  console.log('[FirebaseBootstrap] All apps:', apps.map(a => a.name));
   if (apps.length !== 1) {
     console.warn('[FirebaseBootstrap] WARNING: Expected exactly 1 app, found', apps.length);
   }

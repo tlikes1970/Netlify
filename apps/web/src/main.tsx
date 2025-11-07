@@ -343,6 +343,12 @@ import('./utils/usernameDiagnostics').then(() => {
     const { auth } = await import('./lib/firebaseBootstrap');
     const { getRedirectResult } = await import('firebase/auth');
     
+    // Dev-only logging for auth instance verification
+    if (import.meta.env.DEV) {
+      console.log('[AuthGate] Using auth instance:', auth.app.name);
+      console.log('[AuthGate] Current user:', auth.currentUser?.uid || '(none)');
+    }
+    
     // Run redirect result in background with timeout
     Promise.race([
       getRedirectResult(auth),
