@@ -6,7 +6,7 @@
  * Dependencies: None (to avoid circular deps)
  */
 
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp, getApp, getApps } from "firebase/app";
 import {
   getAuth,
   setPersistence,
@@ -49,26 +49,54 @@ export const firebaseConfig = config;
 // Expected canonical base URL (production/staging)
 const BASE_URL = import.meta.env.VITE_PUBLIC_BASE_URL?.replace(/\/$/, '') || null;
 
-// ⚠️ SINGLE SOURCE OF TRUTH: Only place Firebase is initialized
-const app = getApps()[0] ?? initializeApp(config);
-const auth = getAuth(app);
-void setPersistence(auth, indexedDBLocalPersistence); // non-blocking
-const db = getFirestore(app);
+// CRITICAL: Prevent re-initialization at the module level
+// Use let instead of const to allow reassignment if needed
+let app: ReturnType<typeof initializeApp>;
+let auth: ReturnType<typeof getAuth>;
+let db: ReturnType<typeof getFirestore>;
 
-// Debug escape hatch: only if explicitly enabled
 try {
-  if (localStorage.getItem('flk:debug:auth') === '1') {
-    // @ts-expect-error debug
-    window.firebaseApp = app;
-    // @ts-expect-error debug
-    window.firebaseAuth = auth;
-    // @ts-expect-error debug
-    window.firebaseDb = db;
-    // Optional sanity check
-    console.log('[debug] firebase handles exposed');
+  if (getApps().length === 0) {
+    app = initializeApp(config);
+    console.log('[FirebaseBootstrap] App initialized');
+  } else {
+    app = getApp();
+    console.warn('[FirebaseBootstrap] Reusing existing app');
   }
-} catch { /* localStorage may be blocked; ignore */ }
+  
+  auth = getAuth(app);
+  
+  // Make persistence non-blocking
+  setPersistence(auth, indexedDBLocalPersistence).catch(() => {
+    console.warn('[FirebaseBootstrap] Persistence setup failed');
+  });
+  
+  db = getFirestore(app);
+  
+  // Debug escape hatch: only if explicitly enabled
+  try {
+    if (localStorage.getItem('flk:debug:auth') === '1') {
+      // @ts-expect-error debug
+      window.firebaseApp = app;
+      // @ts-expect-error debug
+      window.firebaseAuth = auth;
+      // @ts-expect-error debug
+      window.firebaseDb = db;
+      // Optional sanity check
+      console.log('[debug] firebase handles exposed');
+    }
+  } catch { /* localStorage may be blocked; ignore */ }
+} catch (error) {
+  console.error('[FirebaseBootstrap] Fatal init error:', error);
+  throw error;
+}
 
+// Export getters to prevent race conditions (recommended)
+export const getFirebaseApp = () => app;
+export const getFirebaseAuth = () => auth;
+export const getFirebaseFirestore = () => db;
+
+// Also export direct references for backward compatibility
 export { app, auth, db };
 
 /**
