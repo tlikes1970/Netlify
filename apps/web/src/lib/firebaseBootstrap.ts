@@ -6,11 +6,11 @@
  * Dependencies: None (to avoid circular deps)
  */
 
-import { initializeApp, getApps, getApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import {
   getAuth,
   setPersistence,
-  browserLocalPersistence,
+  indexedDBLocalPersistence,
   onAuthStateChanged,
   signInWithRedirect,
   signInWithPopup,
@@ -21,7 +21,7 @@ import { GoogleAuthProvider, OAuthProvider } from "firebase/auth";
 import { isAuthDebug, logAuth, safeOrigin, maskSecret } from "./authDebug";
 
 // Firebase configuration
-export const firebaseConfig = {
+const config = {
   apiKey:
     import.meta.env.VITE_FIREBASE_API_KEY ||
     "AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM",
@@ -43,23 +43,33 @@ export const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-YL4TJ4FHJC",
 };
 
+// Export config for backwards compatibility
+export const firebaseConfig = config;
+
 // Expected canonical base URL (production/staging)
 const BASE_URL = import.meta.env.VITE_PUBLIC_BASE_URL?.replace(/\/$/, '') || null;
 
 // ⚠️ SINGLE SOURCE OF TRUTH: Only place Firebase is initialized
-// Singleton Firebase app instance
-export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const app = getApps()[0] ?? initializeApp(config);
+const auth = getAuth(app);
+void setPersistence(auth, indexedDBLocalPersistence); // non-blocking
+const db = getFirestore(app);
 
-// Singleton auth instance - never block UI if persistence fails
-export const auth = getAuth(app);
-setPersistence(auth, browserLocalPersistence).catch(() => {
-  // Safari private mode or other persistence failures - continue without blocking
-});
+// Debug escape hatch: only if explicitly enabled
+try {
+  if (localStorage.getItem('flk:debug:auth') === '1') {
+    // @ts-expect-error debug
+    window.firebaseApp = app;
+    // @ts-expect-error debug
+    window.firebaseAuth = auth;
+    // @ts-expect-error debug
+    window.firebaseDb = db;
+    // Optional sanity check
+    console.log('[debug] firebase handles exposed');
+  }
+} catch { /* localStorage may be blocked; ignore */ }
 
-// Dev-only: expose handle for console debugging
-if (typeof window !== 'undefined' && import.meta.env.DEV) {
-  (window as any).firebaseAuth = auth;
-}
+export { app, auth, db };
 
 /**
  * Verify auth environment and recommend flow
@@ -119,7 +129,6 @@ if (typeof window !== "undefined" && (import.meta.env.DEV || isAuthDebug())) {
   }
 }
 
-export const db = getFirestore(app);
 export const functions = getFunctions(app);
 export { serverTimestamp };
 
@@ -156,7 +165,7 @@ export async function bootstrapFirebase(): Promise<void> {
     // Persistence is already set above (non-blocking), but ensure it's complete before listeners
     // Safari requires persistence to be set BEFORE any redirect or sign-in call
     try {
-      await setPersistence(auth, browserLocalPersistence);
+      await setPersistence(auth, indexedDBLocalPersistence);
     } catch (e) {
       // Already set above, or persistence failed - continue anyway
     }
@@ -171,7 +180,7 @@ export async function bootstrapFirebase(): Promise<void> {
     // Debug logging
     if (isAuthDebug()) {
       logAuth('persistence_locked', {
-        method: 'browserLocalPersistence',
+        method: 'indexedDBLocalPersistence',
         origin: safeOrigin(),
       });
     }
