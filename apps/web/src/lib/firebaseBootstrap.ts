@@ -303,3 +303,12 @@ if (typeof window !== 'undefined' && import.meta.env.DEV) {
     console.warn('[FirebaseBootstrap] WARNING: Expected exactly 1 app, found', apps.length);
   }
 }
+
+// Add this NOW - it's the only way to know for sure
+if (typeof window !== 'undefined' && import.meta.env.MODE !== 'production') {
+  console.log('🔥 FIREBASE SANITY CHECK');
+  console.log('   Total apps:', getApps().length);
+  console.log('   App names:', getApps().map(a => a.name));
+  console.log('   Current user:', auth.currentUser?.uid || 'null');
+  console.log('   Auth instance app name:', auth.app.name);
+}
