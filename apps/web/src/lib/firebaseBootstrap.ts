@@ -6,7 +6,7 @@
  * Dependencies: None (to avoid circular deps)
  */
 
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import {
   getAuth,
   setPersistence,
@@ -46,37 +46,20 @@ export const firebaseConfig = {
 // Expected canonical base URL (production/staging)
 const BASE_URL = import.meta.env.VITE_PUBLIC_BASE_URL?.replace(/\/$/, '') || null;
 
-// ⚠️ FIX #1: Single Auth instance guard
 // ⚠️ SINGLE SOURCE OF TRUTH: Only place Firebase is initialized
-// Initialize Firebase app (only once)
-let app = getApps()[0];
-let authInstance: ReturnType<typeof getAuth> | null = null;
+// Singleton Firebase app instance
+export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-if (!app) {
-  app = initializeApp(firebaseConfig);
-} else {
-  // App already initialized - check if it's from this module or duplicate
-  // If getApps() returns more than 1 app, that's a duplicate
-  const allApps = getApps();
-  if (allApps.length > 1) {
-    // Runtime guard: detect duplicate initialization
-    const error = new Error(
-      "DUPLICATE_AUTH_INSTANCE: Multiple Firebase apps detected. Only firebaseBootstrap.ts should call initializeApp."
-    );
-    console.error("[FirebaseBootstrap] CRITICAL ERROR:", error);
-    console.error(
-      "[FirebaseBootstrap] Existing apps:",
-      allApps.map((a) => a.name)
-    );
-    // Hard crash for visibility
-    throw error;
-  }
-  // Single app already exists - that's fine, it's from a previous module load
-  console.log("[FirebaseBootstrap] Reusing existing Firebase app");
+// Singleton auth instance - never block UI if persistence fails
+export const auth = getAuth(app);
+setPersistence(auth, browserLocalPersistence).catch(() => {
+  // Safari private mode or other persistence failures - continue without blocking
+});
+
+// Dev-only: expose handle for console debugging
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  (window as any).firebaseAuth = auth;
 }
-
-// Initialize Firebase services
-authInstance = getAuth(app);
 
 /**
  * Verify auth environment and recommend flow
@@ -136,7 +119,6 @@ if (typeof window !== "undefined" && (import.meta.env.DEV || isAuthDebug())) {
   }
 }
 
-export const auth = authInstance!;
 export const db = getFirestore(app);
 export const functions = getFunctions(app);
 export { serverTimestamp };
@@ -171,11 +153,13 @@ export async function bootstrapFirebase(): Promise<void> {
   const startTime = Date.now();
 
   try {
-    // ⚠️ FIX #2: Lock persistence BEFORE any sign-in or listener is wired
+    // Persistence is already set above (non-blocking), but ensure it's complete before listeners
     // Safari requires persistence to be set BEFORE any redirect or sign-in call
-    // This is a critical timing requirement - Firebase SDK warns about this
-    // We AWAIT here to ensure it completes before wiring up listeners
-    await setPersistence(auth, browserLocalPersistence);
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+    } catch (e) {
+      // Already set above, or persistence failed - continue anyway
+    }
 
     // Log that persistence is confirmed set
     if (typeof console !== "undefined") {
@@ -272,3 +256,12 @@ export function isFirebaseReady(): boolean {
 }
 
 export default app;
+
+// Dev-only sanity log: ensure exactly one app
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  const apps = getApps();
+  console.log('[fb apps]', apps.map(a => a.name)); // must be ["[DEFAULT]"]
+  if (apps.length !== 1) {
+    console.warn('[FirebaseBootstrap] WARNING: Expected exactly 1 app, found', apps.length);
+  }
+}

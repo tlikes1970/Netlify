@@ -4,8 +4,7 @@
  * Usage: Call window.debugUsername() in browser console
  */
 
-import { authManager } from '../lib/auth';
-import { db } from '../lib/firebaseBootstrap';
+import { auth, db } from '../lib/firebaseBootstrap';
 import { doc, getDoc } from 'firebase/firestore';
 
 interface DiagnosticResult {
@@ -52,9 +51,9 @@ export async function diagnoseUsernamePrompt(): Promise<DiagnosticResult> {
   const environment = isLocalhost ? 'localhost' : 
                       window.location.hostname.includes('netlify') ? 'production' : 'unknown';
   
-  // Check auth state
+  // Check auth state using shared auth instance
   const authCheckStart = performance.now();
-  const currentUser = authManager.getCurrentUser();
+  const currentUser = auth.currentUser;
   const authCheckTime = performance.now() - authCheckStart;
   
   const authState = {
@@ -156,7 +155,7 @@ export function monitorUsernameState(durationMs: number = 10000): void {
   const checks: Array<{ time: number; state: any }> = [];
   
   const checkInterval = setInterval(async () => {
-    const currentUser = authManager.getCurrentUser();
+    const currentUser = auth.currentUser;
     const state = {
       hasUser: !!currentUser?.uid,
       uid: currentUser?.uid,
@@ -197,7 +196,7 @@ export async function testFirestoreWriteTiming(): Promise<{
   verifyTime: number;
   success: boolean;
 }> {
-  const currentUser = authManager.getCurrentUser();
+  const currentUser = auth.currentUser;
   if (!currentUser?.uid) {
     throw new Error('No authenticated user');
   }
@@ -207,8 +206,9 @@ export async function testFirestoreWriteTiming(): Promise<{
   
   // Measure write time
   const writeStart = performance.now();
-  await authManager.updateUserSettings(currentUser.uid, {
-    username: testValue,
+  const { updateDoc } = await import('firebase/firestore');
+  await updateDoc(userRef, {
+    'settings.username': testValue,
   });
   const writeTime = performance.now() - writeStart;
   
@@ -224,8 +224,8 @@ export async function testFirestoreWriteTiming(): Promise<{
   const success = data?.settings?.username === testValue;
   
   // Clean up test value
-  await authManager.updateUserSettings(currentUser.uid, {
-    username: currentUser.displayName || '',
+  await updateDoc(userRef, {
+    'settings.username': currentUser.displayName || '',
   });
   
   return {

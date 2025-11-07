@@ -52,6 +52,17 @@ import { authLogManager } from './lib/authLog';
 import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './lib/firebaseBootstrap';
 import { generateDiagnosticsBundle, formatDiagnosticsAsMarkdown } from './lib/authDiagnostics';
 
+// Install auth debug bridge globally when ?debug=auth is present.
+// This avoids route/lazy-load/treeshake issues.
+(function installAuthBridgeGlobally() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('debug') !== 'auth') return;
+  
+  import('./debug/authDebugBridge')
+    .then(m => m.installAuthDebugBridge && m.installAuthDebugBridge())
+    .catch(err => console.warn('[Bridge] failed to install', err));
+})();
+
 // ⚠️ CRITICAL: Log page entry params BEFORE Firebase runs
 // This captures the URL state at the earliest possible moment
 // Phase B: One-time "URL at boot" log with full context
@@ -302,12 +313,15 @@ import('./utils/usernameDiagnostics').then(() => {
   console.warn('[Boot] Failed to load username diagnostics:', e);
 });
 
-// ⚠️ CRITICAL: Block React render until Firebase is ready
-// This physically prevents any auth operations from running before Firebase is initialized
+// ⚠️ CRITICAL: Don't block UI on auth - wait for first auth tick or timeout
+// This ensures app renders even if auth state takes time to initialize
 (async function bootstrapApp() {
   try {
-    // Wait for Firebase bootstrap to complete
-    await firebaseReady;
+    // Wait for Firebase bootstrap to complete (with timeout)
+    await Promise.race([
+      firebaseReady,
+      new Promise(resolve => setTimeout(resolve, 4000))
+    ]);
     const readyTimestamp = getFirebaseReadyTimestamp();
     
     // Log firebaseReady resolution
@@ -322,10 +336,22 @@ import('./utils/usernameDiagnostics').then(() => {
       });
     }
     
-    // ⚠️ CRITICAL: Initialize auth flow (calls getRedirectResult exactly once)
-    // This ensures redirect handling happens after Firebase is fully ready
+    // Initialize auth flow in background - don't block render
+    // getRedirectResult runs with timeout so it doesn't hang
     logger.log('[Boot] Initializing auth flow...');
     const { initAuthOnLoad } = await import('./lib/authFlow');
+    const { auth } = await import('./lib/firebaseBootstrap');
+    const { getRedirectResult } = await import('firebase/auth');
+    
+    // Run redirect result in background with timeout
+    Promise.race([
+      getRedirectResult(auth),
+      new Promise(resolve => setTimeout(resolve, 3000))
+    ]).catch(() => {
+      // Swallow errors - continue anyway
+    });
+    
+    // Initialize auth flow (non-blocking)
     initAuthOnLoad(); // call once at boot; ensure no other calls elsewhere
     
     // Also initialize auth manager for existing hooks

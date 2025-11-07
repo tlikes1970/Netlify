@@ -7,8 +7,7 @@
  */
 
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
-import { getAuth } from 'firebase/auth';
-import { db } from './lib/firebaseBootstrap';
+import { db, auth } from './lib/firebaseBootstrap';
 import { doc, setDoc } from 'firebase/firestore';
 
 // Get VAPID key from environment or use default
@@ -78,7 +77,6 @@ export async function getFCMToken(): Promise<string | null> {
     
     if (token) {
       // Store token in user document
-      const auth = getAuth();
       const user = auth.currentUser;
       if (user) {
         await setDoc(

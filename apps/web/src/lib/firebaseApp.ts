@@ -1,25 +1,17 @@
 /**
- * Process: Firebase App Singleton
- * Purpose: Prevent double initialization during React StrictMode
- * Data Source: Firebase SDK, environment config
- * Update Path: Set once at app startup, never modified
- * Dependencies: firebaseBootstrap (for config)
+ * Process: Firebase App Singleton (DEPRECATED)
+ * Purpose: Re-export from firebaseBootstrap to maintain backward compatibility
+ * Data Source: firebaseBootstrap singleton
+ * Update Path: Use firebaseBootstrap directly instead
+ * Dependencies: firebaseBootstrap
+ * 
+ * @deprecated Use `import { app } from './firebaseBootstrap'` directly
  */
 
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { firebaseConfig } from './firebaseBootstrap';
-
-let app: ReturnType<typeof initializeApp> | null = null;
+// Re-export from singleton to prevent duplicate initialization
+import { app } from './firebaseBootstrap';
 
 export function getFirebaseApp() {
-  if (app) return app;
-  
-  if (getApps().length) {
-    app = getApp();
-    return app;
-  }
-  
-  app = initializeApp(firebaseConfig);
   return app;
 }
 

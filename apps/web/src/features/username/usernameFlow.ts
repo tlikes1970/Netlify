@@ -7,9 +7,10 @@
  */
 
 import { authReady } from '@/lib/authFlow';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, getDoc, runTransaction } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc, runTransaction } from 'firebase/firestore';
 import { isAuthDebug, logAuth } from '@/lib/authDebug';
+import { auth, db } from '@/lib/firebaseBootstrap';
 
 const USERNAME_TIMEOUT_MS = 12000;
 
@@ -17,9 +18,6 @@ export async function ensureUsernameChosen(
   getCandidate: () => Promise<string | null>
 ): Promise<{ status: 'has' | 'claimed'; username: string }> {
   await authReady;
-
-  const auth = getAuth();
-  const db = getFirestore();
   const user = await new Promise<any>((r) => {
     if (auth.currentUser) return r(auth.currentUser);
     const un = onAuthStateChanged(

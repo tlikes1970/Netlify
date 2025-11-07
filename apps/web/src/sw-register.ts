@@ -12,10 +12,12 @@ export async function devUnregisterAllSW() {
 export function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
 
-  // Check for ?sw=skip param (debug mode only)
+  // Check for ?sw=skip or ?sw=hardreset param (debug mode only)
   if (typeof window !== 'undefined') {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('sw') === 'skip') {
+    const swParam = urlParams.get('sw');
+    
+    if (swParam === 'skip') {
       // Unregister all SWs and clear caches
       navigator.serviceWorker.getRegistrations().then(registrations => {
         registrations.forEach(reg => reg.unregister());
@@ -25,6 +27,25 @@ export function registerServiceWorker() {
           });
         }
         console.info('[SW] Skipped via ?sw=skip param');
+      });
+      return;
+    }
+    
+    if (swParam === 'hardreset') {
+      // Hard reset: unregister all SWs, clear all caches, then reload without the param
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
+        if ('caches' in window) {
+          caches.keys().then(keys => {
+            keys.forEach(k => caches.delete(k));
+          });
+        }
+        console.info('[SW] Hard reset: unregistered all SWs and cleared caches');
+        // Reload without the hardreset param
+        setTimeout(() => {
+          const newUrl = location.pathname + location.search.replace(/[?&]sw=hardreset(&|$)/, (_, sep) => sep || '').replace(/^&/, '?');
+          location.replace(newUrl || location.pathname);
+        }, 100);
       });
       return;
     }

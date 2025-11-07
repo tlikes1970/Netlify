@@ -1,15 +1,15 @@
 /**
  * Process: Auth Debug Bridge
  * Purpose: Expose Firebase app, auth, and db to window for debugging (debug mode only)
- * Data Source: Firebase app instance from firebaseApp
+ * Data Source: Firebase app instance from firebaseBootstrap singleton
  * Update Path: Called once when debug page loads
- * Dependencies: firebaseApp, authDebug
+ * Dependencies: firebaseBootstrap, authDebug
  */
 
-import { getApps, getApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { isAuthDebug } from '@/lib/authDebug';
+import { app, auth, db } from '@/lib/firebaseBootstrap';
 
 function mask(s: string | null | undefined): string {
   if (!s) return s || '';
@@ -20,15 +20,6 @@ function mask(s: string | null | undefined): string {
 
 export function installAuthDebugBridge() {
   if (!isAuthDebug()) return;
-
-  const app = getApps().length ? getApp() : null;
-  if (!app) {
-    console.warn('[Bridge] No default Firebase app in bundle.');
-    return;
-  }
-
-  const auth = getAuth(app);
-  const db = getFirestore(app);
 
   // Expose SAFE handles
   (window as any).__fb = { app, auth, db };

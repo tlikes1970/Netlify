@@ -3,7 +3,7 @@
  * Purpose: Centralized auth initialization that calls getRedirectResult exactly once, never auto-restarts
  * Data Source: Firebase Auth, sessionStorage guards
  * Update Path: Called once at app boot, respects attempt budget
- * Dependencies: firebaseApp, authGuard, authDebug
+ * Dependencies: firebaseBootstrap, authGuard, authDebug
  */
 
 import { browserLocalPersistence, setPersistence, getRedirectResult, signInWithRedirect, signInWithPopup } from 'firebase/auth';
