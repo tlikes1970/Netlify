@@ -59,7 +59,7 @@ import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './l
   
   import('./debug/authDebugBridge')
     .then(m => m.installAuthDebugBridge && m.installAuthDebugBridge())
-    .catch(err => console.warn('[Bridge] failed to install', err));
+    .catch(() => { /* ignore */ });
 })();
 
 // ⚠️ CRITICAL: Log page entry params BEFORE Firebase runs
@@ -89,15 +89,6 @@ import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './l
     const finalHasCode = hasCode || hasCodeInHash;
     const finalHasState = hasState || hasStateInHash;
     
-    // Console log for immediate visibility
-    console.log('[Boot] page_entry_params', { 
-      hasCode: finalHasCode, 
-      hasState: finalHasState, 
-      search: window.location.search,
-      hash: window.location.hash,
-      href: window.location.href 
-    });
-    
     const bootTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
     
     // Log to HUD
@@ -126,7 +117,7 @@ import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './l
     });
   } catch (e) {
     // ignore - logging should never break startup
-    console.error('[Boot] Failed to log page_entry_params', e);
+    // Ignore logging errors
   }
 })();
 
@@ -287,10 +278,10 @@ if (typeof window !== 'undefined') {
 (window as any).debugAuthLogs = () => {
   try {
     const logs = JSON.parse(localStorage.getItem('auth-debug-logs') || '[]');
-    console.log('📋 Auth Debug Logs:', logs);
+    // Return logs without console output
     return logs;
   } catch (e) {
-    console.error('Failed to retrieve auth debug logs:', e);
+    // Ignore errors
     return [];
   }
 };

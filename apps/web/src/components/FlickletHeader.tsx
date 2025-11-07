@@ -6,6 +6,7 @@ import SnarkDisplay from "./SnarkDisplay";
 import UsernamePromptModal from "./UsernamePromptModal";
 import { useUsername } from "../hooks/useUsername";
 import { useInstallPrompt } from "../hooks/useInstallPrompt";
+import { authManager } from "../lib/auth";
 import SearchSuggestions, { addSearchToHistory } from "./SearchSuggestions";
 import VoiceSearch from "./VoiceSearch";
 import Portal from "./Portal";
@@ -49,87 +50,26 @@ export default function FlickletHeader({
   onClear,
   onHelpOpen,
 }: FlickletHeaderProps) {
-  const { username, usernamePrompted, user, skipUsernamePrompt, loading } =
-    useUsername();
+  const {
+    username,
+    usernamePrompted,
+    loading: usernameLoading,
+  } = useUsername();
   const { isInstallable, promptInstall } = useInstallPrompt();
   const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
-  const hasShownRef = React.useRef(false);
-  const currentUserIdRef = React.useRef<string | null>(null);
-  const isClosingRef = React.useRef(false); // Track if we're in the process of closing
 
-  // Reset hasShown when user changes
+  // Non-blocking prompt check
   useEffect(() => {
-    if (user?.uid !== currentUserIdRef.current) {
-      currentUserIdRef.current = user?.uid || null;
-      hasShownRef.current = false;
-      isClosingRef.current = false; // Reset closing flag on user change
-    }
-  }, [user?.uid]);
+    // Skip if username already exists or prompt was shown
+    if (usernameLoading) return;
 
-  useEffect(() => {
-    // Check bypass flag - if enabled, skip username modal entirely
-    const bypassUsername = import.meta.env.VITE_BYPASS_USERNAME === "1";
-    if (bypassUsername) {
-      return;
-    }
+    const currentUser = authManager.getCurrentUser();
+    const needsPrompt = !!(currentUser?.uid && !username && !usernamePrompted);
 
-    // Don't show modal while loading (prevents race conditions with Firestore)
-    if (loading) {
-      return;
-    }
-
-    // Only show once per user session
-    if (hasShownRef.current) {
-      return;
-    }
-
-    // Don't show if we're in the process of closing (prevents loops)
-    if (isClosingRef.current) {
-      return;
-    }
-
-    const shouldShow = !!(user?.uid && !username && !usernamePrompted);
-
-    // Enhanced logging for investigation (production-safe)
-    if (shouldShow || showUsernamePrompt) {
-      const logData = {
-        shouldShow,
-        currentlyShowing: showUsernamePrompt,
-        hasUser: !!user?.uid,
-        hasUsername: !!username,
-        usernamePrompted,
-        loading,
-        timestamp: new Date().toISOString(),
-        environment:
-          window.location.hostname === "localhost" ? "localhost" : "production",
-      };
-      console.log("🎯 Username prompt check:", logData);
-
-      // Store decision log for investigation
-      try {
-        const existingLogs = JSON.parse(
-          localStorage.getItem("flicklet.username.prompt.decisions") || "[]"
-        );
-        existingLogs.push(logData);
-        localStorage.setItem(
-          "flicklet.username.prompt.decisions",
-          JSON.stringify(existingLogs.slice(-20))
-        );
-      } catch (e) {
-        // ignore
-      }
-    }
-
-    if (shouldShow && !showUsernamePrompt && !isClosingRef.current) {
+    if (needsPrompt && !showUsernamePrompt) {
       setShowUsernamePrompt(true);
-      hasShownRef.current = true;
-      isClosingRef.current = false; // Reset closing flag when opening
-      console.log("✅ Username prompt modal opened");
     }
-    // REMOVED: Auto-close logic that was causing loops
-    // Once modal is open, only close it when user explicitly closes it
-    // This prevents loops from state updates during loadUsername()
-  }, [username, usernamePrompted, showUsernamePrompt, user?.uid, loading]);
+  }, [username, usernamePrompted, usernameLoading, showUsernamePrompt]);
 
   return (
     <>
@@ -173,8 +113,8 @@ export default function FlickletHeader({
                     if (onHelpOpen) {
                       onHelpOpen();
                     }
-                  } catch (error) {
-                    console.error("Error calling onHelpOpen:", error);
+                  } catch {
+                    // Ignore errors
                   }
                 }}
                 className="rounded-full border border-gray-300 dark:border-gray-600 px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-[11px] leading-none text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
@@ -200,52 +140,14 @@ export default function FlickletHeader({
         }}
       >
         <div className="mx-auto w-full max-w-screen-2xl px-2 py-1.5 md:px-4 md:py-2">
-          <SearchRow
-            onSearch={(q, g, type) => {
-              console.log("[SEARCH]", { q, g, type });
-              onSearch?.(q, g, type);
-            }}
-            onClear={() => {
-              console.log("[CLEAR]");
-              onClear?.();
-            }}
-          />
+          <SearchRow onSearch={onSearch} onClear={onClear} />
         </div>
       </div>
 
-      {/* Username prompt modal */}
+      {/* Modal overlay - doesn't block UI */}
       <UsernamePromptModal
         isOpen={showUsernamePrompt}
-        onClose={async () => {
-          // Prevent multiple close calls
-          if (isClosingRef.current) {
-            console.log("⏸️ Already closing, ignoring duplicate onClose");
-            return;
-          }
-
-          isClosingRef.current = true;
-
-          // Close modal first
-          setShowUsernamePrompt(false);
-          // Mark as shown to prevent reopening
-          hasShownRef.current = true;
-
-          // Only skip if user explicitly closed (not if conditions changed)
-          // This prevents loops when state updates trigger automatic closes
-          try {
-            await skipUsernamePrompt();
-            console.log("✅ Username prompt skipped via close");
-          } catch (error) {
-            console.error("Failed to skip username prompt:", error);
-            // On error, allow modal to be shown again on next check
-            hasShownRef.current = false;
-          } finally {
-            // Reset closing flag after a delay to allow state to settle
-            setTimeout(() => {
-              isClosingRef.current = false;
-            }, 1000);
-          }
-        }}
+        onClose={() => setShowUsernamePrompt(false)}
       />
     </>
   );
@@ -672,8 +574,8 @@ function SearchRow({
                     addSearchToHistory(text.trim());
                   }, 100);
                 }}
-                onError={(error) => {
-                  console.warn("Voice search error:", error);
+                onError={() => {
+                  // Ignore errors
                 }}
               />
             </div>
