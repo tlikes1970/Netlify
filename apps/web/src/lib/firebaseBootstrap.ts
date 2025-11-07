@@ -47,7 +47,8 @@ const config = {
 export const firebaseConfig = config;
 
 // Expected canonical base URL (production/staging)
-const BASE_URL = import.meta.env.VITE_PUBLIC_BASE_URL?.replace(/\/$/, '') || null;
+const BASE_URL =
+  import.meta.env.VITE_PUBLIC_BASE_URL?.replace(/\/$/, "") || null;
 
 // CRITICAL: Prevent re-initialization at the module level
 // Use let instead of const to allow reassignment if needed
@@ -58,24 +59,24 @@ let db: ReturnType<typeof getFirestore>;
 try {
   if (getApps().length === 0) {
     app = initializeApp(config);
-    console.log('[FirebaseBootstrap] App initialized');
+    console.log("[FirebaseBootstrap] App initialized");
   } else {
     app = getApp();
-    console.warn('[FirebaseBootstrap] Reusing existing app');
+    console.warn("[FirebaseBootstrap] Reusing existing app");
   }
-  
+
   auth = getAuth(app);
-  
+
   // Make persistence non-blocking
   setPersistence(auth, indexedDBLocalPersistence).catch(() => {
-    console.warn('[FirebaseBootstrap] Persistence setup failed');
+    console.warn("[FirebaseBootstrap] Persistence setup failed");
   });
-  
+
   db = getFirestore(app);
-  
+
   // Debug escape hatch: only if explicitly enabled
   try {
-    if (localStorage.getItem('flk:debug:auth') === '1') {
+    if (localStorage.getItem("flk:debug:auth") === "1") {
       // @ts-expect-error debug
       window.firebaseApp = app;
       // @ts-expect-error debug
@@ -83,11 +84,13 @@ try {
       // @ts-expect-error debug
       window.firebaseDb = db;
       // Optional sanity check
-      console.log('[debug] firebase handles exposed');
+      console.log("[debug] firebase handles exposed");
     }
-  } catch { /* localStorage may be blocked; ignore */ }
+  } catch {
+    /* localStorage may be blocked; ignore */
+  }
 } catch (error) {
-  console.error('[FirebaseBootstrap] Fatal init error:', error);
+  console.error("[FirebaseBootstrap] Fatal init error:", error);
   throw error;
 }
 
@@ -142,10 +145,10 @@ if (typeof window !== "undefined" && (import.meta.env.DEV || isAuthDebug())) {
   console.log(
     `[FirebaseBootstrap] Auth boot: origin=${here} authDomain=${authDomain} flow=${flow}`
   );
-  
+
   // Debug logging
   if (isAuthDebug()) {
-    logAuth('firebase_config_loaded', {
+    logAuth("firebase_config_loaded", {
       authDomain: firebaseConfig.authDomain,
       projectId: firebaseConfig.projectId,
       apiKey: maskSecret(firebaseConfig.apiKey),
@@ -204,11 +207,11 @@ export async function bootstrapFirebase(): Promise<void> {
         "[FirebaseBootstrap] Persistence LOCKED before any auth operations"
       );
     }
-    
+
     // Debug logging
     if (isAuthDebug()) {
-      logAuth('persistence_locked', {
-        method: 'indexedDBLocalPersistence',
+      logAuth("persistence_locked", {
+        method: "indexedDBLocalPersistence",
         origin: safeOrigin(),
       });
     }
@@ -259,10 +262,10 @@ export async function bootstrapFirebase(): Promise<void> {
         `[FirebaseBootstrap] Ready after ${duration}ms at ${timestamp}`
       );
     }
-    
+
     // Debug logging
     if (isAuthDebug()) {
-      logAuth('firebase_ready', {
+      logAuth("firebase_ready", {
         durationMs: duration,
         timestamp,
         origin: safeOrigin(),
@@ -295,20 +298,30 @@ export function isFirebaseReady(): boolean {
 export default app;
 
 // Dev-only sanity log: ensure exactly one app
-if (typeof window !== 'undefined' && import.meta.env.DEV) {
-  console.log('[FirebaseBootstrap] App initialized:', app.name);
+if (typeof window !== "undefined" && import.meta.env.DEV) {
+  console.log("[FirebaseBootstrap] App initialized:", app.name);
   const apps = getApps();
-  console.log('[FirebaseBootstrap] All apps:', apps.map(a => a.name));
+  console.log(
+    "[FirebaseBootstrap] All apps:",
+    apps.map((a) => a.name)
+  );
   if (apps.length !== 1) {
-    console.warn('[FirebaseBootstrap] WARNING: Expected exactly 1 app, found', apps.length);
+    console.warn(
+      "[FirebaseBootstrap] WARNING: Expected exactly 1 app, found",
+      apps.length
+    );
   }
 }
 
 // Add this NOW - it's the only way to know for sure
-if (typeof window !== 'undefined' && import.meta.env.MODE !== 'production') {
-  console.log('🔥 FIREBASE SANITY CHECK');
-  console.log('   Total apps:', getApps().length);
-  console.log('   App names:', getApps().map(a => a.name));
-  console.log('   Current user:', auth.currentUser?.uid || 'null');
-  console.log('   Auth instance app name:', auth.app.name);
+if (typeof window !== "undefined") {
+  // Remove the MODE check temporarily
+  console.log("🔥 FIREBASE SANITY CHECK");
+  console.log("   Total apps:", getApps().length);
+  console.log(
+    "   App names:",
+    getApps().map((a) => a.name)
+  );
+  console.log("   Current user:", auth.currentUser?.uid || "null");
+  console.log("   Auth instance app name:", auth.app.name);
 }
