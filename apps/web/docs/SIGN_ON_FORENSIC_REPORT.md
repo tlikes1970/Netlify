@@ -9,15 +9,18 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ## Authentication Methods Overview
 
 ### 1. Google Sign-In
+
 **Entry Point:** `AuthModal.tsx` → `googleLogin()` in `authLogin.ts`
 
 **Flow Selection:**
+
 - **Localhost:** Always uses popup (immediate completion)
 - **Production:** Uses redirect on canonical domains, popup on preview/unknown domains
 - **iOS/Safari:** Always uses popup (better compatibility)
 - **Android/Desktop:** Redirect on webview, popup otherwise
 
 **What Happens:**
+
 1. User clicks "Sign in with Google"
 2. System checks environment and device type
 3. Opens popup OR redirects to Google OAuth
@@ -29,14 +32,17 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ---
 
 ### 2. Apple Sign-In
+
 **Entry Point:** `AuthModal.tsx` → `signInWithProvider('apple')` in `auth.ts`
 
 **Flow:**
+
 - Always uses redirect (never popup)
 - Requires verified domains in Apple Developer Console
 - Shows warning on localhost
 
 **What Happens:**
+
 1. User clicks "Sign in with Apple"
 2. System ensures persistence is set
 3. Cleans URL of debug params
@@ -49,9 +55,11 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ---
 
 ### 3. Email/Password Sign-In
+
 **Entry Point:** `AuthModal.tsx` → `signInWithEmail()` or `createAccountWithEmail()` in `auth.ts`
 
 **What Happens:**
+
 1. User clicks "Sign in with Email"
 2. Modal shows email/password form
 3. User can toggle between "Sign In" and "Create Account"
@@ -68,15 +76,18 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ### Phase 1: Authentication Initiation
 
 **Stage Setup (Firebase Bootstrap)**
+
 - Location: `firebaseBootstrap.ts`
 - Sets Firebase persistence to `indexedDBLocalPersistence`
 - Initializes Firebase Auth, Firestore, and Functions
 - Creates `firebaseReady` promise that resolves when auth state initializes
 
 **What's Written to Browser:**
+
 - Nothing yet (just initialization)
 
 **What's Read from Firebase:**
+
 - Nothing yet (just initialization)
 
 ---
@@ -84,6 +95,7 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ### Phase 2: User Initiates Sign-In
 
 **Google Sign-In Specific:**
+
 - Location: `authLogin.ts:43` - `googleLogin()`
 - Checks for `?authMode=popup` or `?authMode=redirect` query params (overrides)
 - Validates OAuth origin
@@ -91,16 +103,19 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 - Persists status to localStorage: `flicklet.auth.status = "redirecting"`
 
 **What's Written to Browser:**
+
 - `localStorage.flicklet.auth.status = "redirecting"` (redirect flow only)
 - `localStorage.flicklet.auth.stateId = "auth_{timestamp}_{random}"` (redirect flow only)
 - `localStorage.flicklet.auth.redirect.start = "{timestamp}"` (redirect flow only)
 - `sessionStorage` redirect guard flag
 
 **What's Sent to Firebase:**
+
 - OAuth redirect request to Google/Apple (via Firebase Auth SDK)
 - No direct Firestore writes yet
 
 **What's Received from Firebase:**
+
 - OAuth redirect URL (user is sent to Google/Apple)
 
 ---
@@ -108,16 +123,20 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ### Phase 3: OAuth Provider Authentication
 
 **What Happens:**
+
 - User authenticates with Google/Apple
 - Provider redirects back to app with OAuth tokens
 
 **What's Written to Browser:**
+
 - OAuth state/code in URL query params (temporary, cleaned after processing)
 
 **What's Sent to Firebase:**
+
 - OAuth tokens via redirect callback
 
 **What's Received from Firebase:**
+
 - OAuth result with user credentials
 - Firebase Auth user object
 
@@ -128,16 +147,19 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 **Location:** `auth.ts:190-290` (in `initialize()`) and `authFlow.ts:20-101`
 
 **What Happens:**
+
 1. `getRedirectResult(auth)` is called (exactly once, guarded by session flag)
 2. If result exists, Firebase Auth user is created
 3. Redirect guard is cleared
 4. URL params are cleaned (after 500ms delay)
 
 **What's Written to Browser:**
+
 - Redirect guard cleared from sessionStorage
 - URL cleaned (OAuth params removed)
 
 **What's Received from Firebase:**
+
 - `UserCredential` object containing:
   - `user.uid` - Unique user ID
   - `user.email` - Email address
@@ -153,6 +175,7 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 **Location:** `auth.ts:314-450` - `onAuthStateChanged` callback
 
 **What Happens:**
+
 1. Firebase fires `onAuthStateChanged` event
 2. User object is converted to `AuthUser` format
 3. Status set to `'authenticated'`
@@ -161,6 +184,7 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 6. All listeners are notified
 
 **What's Written to Browser:**
+
 - `localStorage.flicklet.auth.status` cleared (auth complete)
 - `localStorage.flicklet.auth.resolving.start` cleared
 - `localStorage.flicklet.auth.stateId` cleared
@@ -168,9 +192,11 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 - `localStorage.flicklet.auth.broadcast` cleared
 
 **What's Sent to Firebase:**
+
 - See Phase 6 below
 
 **What's Received from Firebase:**
+
 - Firebase Auth `User` object (already received, this is the callback)
 
 ---
@@ -182,6 +208,7 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 #### For NEW Users:
 
 **What's Written to Firestore:**
+
 ```javascript
 // Collection: users
 // Document ID: {uid}
@@ -209,11 +236,13 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ```
 
 **What's Read from Firestore:**
+
 - Document existence check: `getDoc(userRef)` - returns `null` if new user
 
 #### For EXISTING Users:
 
 **What's Written to Firestore:**
+
 ```javascript
 // Collection: users
 // Document ID: {uid}
@@ -229,6 +258,7 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ```
 
 **What's Read from Firestore:**
+
 - Existing document: `getDoc(userRef)` - returns existing data
 - Checks for:
   - `existingData.profile.displayName` (custom display name)
@@ -242,6 +272,7 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 **Location:** `firebaseSync.ts:196-228` - `loadFromFirebase()`
 
 **What's Read from Firestore:**
+
 ```javascript
 // Collection: users
 // Document ID: {uid}
@@ -256,10 +287,12 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ```
 
 **What's Written to Browser:**
+
 - Merged watchlist data into `localStorage.flicklet.library.v2`
 - Duplicates are removed during merge
 
 **What's Sent to Firebase:**
+
 - Nothing (read-only operation)
 
 ---
@@ -269,11 +302,13 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 **Location:** `useUsername.ts:103-191` - `loadUsername()`
 
 **What Happens:**
+
 1. Hook subscribes to `authManager` changes
 2. When auth state changes, `loadUsername()` is called
 3. Calls `authManager.getUserSettings(uid)`
 
 **What's Read from Firestore:**
+
 ```javascript
 // Collection: users
 // Document ID: {uid}
@@ -287,6 +322,7 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ```
 
 **What's Written to Browser:**
+
 - `usernameStateManager` state updated:
   - `username` - The username value (or empty string)
   - `usernamePrompted` - Whether user has been prompted (or skipped)
@@ -294,6 +330,7 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 - Debug logs to `localStorage.flicklet.username.logs` (last 20 entries)
 
 **What's Sent to Firebase:**
+
 - Nothing (read-only operation)
 
 ---
@@ -305,11 +342,13 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 **Trigger:** User is authenticated, has no username, and `usernamePrompted === false`
 
 **What Happens:**
+
 1. User enters username in modal
 2. `updateUsername()` is called
 3. Calls `authManager.updateUserSettings(uid, { username, usernamePrompted: true })`
 
 **What's Written to Firestore:**
+
 ```javascript
 // Collection: users
 // Document ID: {uid}
@@ -324,9 +363,11 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ```
 
 **What's Read from Firestore:**
+
 - Existing settings: `getDoc(userRef)` to read current settings before merge
 
 **What's Written to Browser:**
+
 - `usernameStateManager` updated with new username
 - Local state reflects username immediately
 
@@ -337,11 +378,13 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 **Location:** `usernameFlow.ts:17-93` - `ensureUsernameChosen()`
 
 **What Happens:**
+
 1. Checks if user already has username
 2. If not, prompts for candidate username
 3. Uses Firestore transaction to claim username atomically
 
 **What's Written to Firestore:**
+
 ```javascript
 // Transaction writes TWO documents:
 
@@ -365,10 +408,12 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ```
 
 **What's Read from Firestore:**
+
 - `users/{uid}` - Check for existing username
 - `usernames/{candidate.toLowerCase()}` - Check if username is taken (in transaction)
 
 **What's Written to Browser:**
+
 - Nothing (Firestore transaction handles everything)
 
 ---
@@ -378,6 +423,7 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ### What Goes TO Firebase
 
 #### Firebase Auth (Authentication):
+
 - OAuth redirect requests (Google/Apple)
 - Email/password credentials (Email sign-in)
 - **No direct writes** - Firebase Auth handles internally
@@ -385,6 +431,7 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 #### Firestore (User Data):
 
 **On First Sign-In:**
+
 - `users/{uid}` document created with:
   - Basic profile (email, displayName, photoURL)
   - Settings (usernamePrompted: false, theme, lang)
@@ -392,12 +439,14 @@ This report documents the complete sign-on process for Google, Apple, and Email 
   - `lastLoginAt` timestamp
 
 **On Subsequent Sign-Ins:**
+
 - `users/{uid}` document updated with:
   - `lastLoginAt` timestamp
   - Profile fields (email, displayName, photoURL) - preserves custom displayName
   - **Does NOT overwrite** existing username or custom displayName
 
 **When Username is Set:**
+
 - `users/{uid}/settings.username` updated
 - `users/{uid}/settings.usernamePrompted` set to true
 - `usernames/{username.toLowerCase()}` document created (if using transaction flow)
@@ -407,6 +456,7 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ### What Comes FROM Firebase
 
 #### Firebase Auth:
+
 - `User` object containing:
   - `uid` - Unique identifier
   - `email` - Email address
@@ -418,12 +468,14 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 #### Firestore:
 
 **User Document (`users/{uid}`):**
+
 - Complete user profile
 - Settings (including username and usernamePrompted)
 - Watchlists (TV and movies)
 - `lastLoginAt` timestamp
 
 **Username Lookup (`usernames/{handle}`):**
+
 - Only read during username claim transaction
 - Contains: `{ uid, createdAt }`
 
@@ -442,6 +494,7 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ### Display Name Logic
 
 **Priority Order:**
+
 1. `settings.username` (if exists) - User's chosen username
 2. `profile.displayName` (if different from Firebase Auth) - Custom display name
 3. `user.displayName` (from Firebase Auth) - Provider's display name
@@ -454,18 +507,21 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ## Error Handling
 
 ### OAuth Errors:
+
 - `auth/popup-blocked` → Falls back to redirect (if allowed)
 - `auth/popup-closed-by-user` → Falls back to redirect (if allowed)
 - `auth/network-request-failed` → Logged, user sees error
 - `auth/unauthorized-domain` → Logged, shows config error banner
 
 ### Email/Password Errors:
+
 - `auth/invalid-credential` → "Invalid email or password"
 - `auth/email-already-in-use` → "Email already registered"
 - `auth/weak-password` → "Password too weak"
 - `auth/too-many-requests` → "Too many requests, try later"
 
 ### Username Errors:
+
 - `USERNAME_TAKEN` → Username already exists
 - `USERNAME_TIMEOUT` → Transaction took >12 seconds
 - `AUTH_NOT_SIGNED_IN` → User not authenticated
@@ -486,16 +542,19 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ## Debugging & Logging
 
 ### Auth Logs:
+
 - Stored in `localStorage.auth-debug-logs` (last 10 entries)
 - Enabled via `?debug=auth` query param
 - Logs include: sign-in start, redirect/popup selection, errors, completion
 
 ### Username Logs:
+
 - Stored in `localStorage.flicklet.username.logs` (last 20 entries)
 - Includes: username value, prompted status, load time, timestamp
 - Errors stored in `localStorage.flicklet.username.errors` (last 10 entries)
 
 ### Status Tracking:
+
 - `localStorage.flicklet.auth.status` - Current auth status
 - `sessionStorage` - Redirect guards and attempt budgets
 
@@ -504,20 +563,24 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ## Files Involved
 
 ### Core Authentication:
+
 - `apps/web/src/lib/firebaseBootstrap.ts` - Firebase initialization
 - `apps/web/src/lib/auth.ts` - AuthManager class, user document management
 - `apps/web/src/lib/authLogin.ts` - Google sign-in helper
 - `apps/web/src/lib/authFlow.ts` - Redirect result processing
 
 ### UI Components:
+
 - `apps/web/src/components/AuthModal.tsx` - Sign-in modal
 - `apps/web/src/hooks/useAuth.ts` - Auth hook for components
 
 ### Username Handling:
+
 - `apps/web/src/hooks/useUsername.ts` - Username state management
 - `apps/web/src/features/username/usernameFlow.ts` - Username claim flow
 
 ### Data Sync:
+
 - `apps/web/src/lib/firebaseSync.ts` - Watchlist data sync
 
 ---
@@ -525,6 +588,7 @@ This report documents the complete sign-on process for Google, Apple, and Email 
 ## Conclusion
 
 The sign-on process is a multi-phase operation involving:
+
 1. OAuth/Email authentication via Firebase Auth
 2. User document creation/update in Firestore
 3. Cloud data loading and merging
@@ -532,4 +596,3 @@ The sign-on process is a multi-phase operation involving:
 5. State synchronization across components
 
 All three methods (Google, Apple, Email) converge at the `onAuthStateChanged` callback, which triggers the same post-authentication flow. Username handling is separate from authentication and occurs after the user is authenticated.
-

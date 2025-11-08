@@ -8,7 +8,7 @@
 
 2. **Sign-In Screen**: If you're not signed in, the app shows a sign-in screen with options for Google, Apple, or Email.
 
-3. **Google Sign-In**: 
+3. **Google Sign-In**:
    - On localhost: Opens a popup window, you sign in with Google, popup closes, you're signed in.
    - On production: Redirects you to Google's sign-in page, you sign in, Google redirects you back to the app.
 
@@ -16,14 +16,14 @@
 
 5. **Email Sign-In**: You enter your email and password, the app checks with Firebase, and you're signed in.
 
-6. **After Sign-In**: 
+6. **After Sign-In**:
    - Firebase creates or updates your user account
    - The app creates a document in Firestore with your information
    - Your display name comes from Google/Apple (shown on the sign-in button)
    - If you haven't chosen a username yet, you'll be prompted to pick one
    - Your username is stored separately and used in greetings
 
-7. **Username Prompt**: 
+7. **Username Prompt**:
    - Shows after sign-in if you haven't set a username
    - You can enter a username or skip
    - Only shown once per account
@@ -33,16 +33,19 @@
 ## Issues (Not Fixed)
 
 ### Issue 1: Slow Sign-On Screen Initialization
+
 - **Symptom**: Takes 10+ seconds to show the sign-on screen
 - **Location**: `auth.ts` - `onAuthStateChanged` not firing immediately
 - **Evidence**: Logs show `[AuthManager] Force initializing after timeout` and `[App] Auth initialization timeout - authInitialized still false after 10 seconds`
 
 ### Issue 2: Username Prompt Not Showing After Sign-In
+
 - **Symptom**: After successful sign-in, username prompt modal does not appear
 - **Location**: `useUsername.ts` - username loading logic
 - **Evidence**: Logs show `⏸️ Skipping loadUsername from auth subscription {skipInProgress: false, initialLoadComplete: true, isLoading: true}` - loading state stuck
 
 ### Issue 3: Display Name Overwritten with Stale Data
+
 - **Symptom**: After sign-in, display name shows old value (e.g., "sivarT") instead of current Google display name (e.g., "Travis Likes")
 - **Location**: `auth.ts` - `ensureUserDocument()` and `convertFirebaseUser()`
 - **Evidence**: User verified display name is "Travis Likes" in Google and Firebase, but app shows "sivarT"
@@ -114,7 +117,7 @@ import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './l
 (function installAuthBridgeGlobally() {
   const params = new URLSearchParams(location.search);
   if (params.get('debug') !== 'auth') return;
-  
+
   import('./debug/authDebugBridge')
     .then(m => m.installAuthDebugBridge && m.installAuthDebugBridge())
     .catch(() => { /* ignore */ });
@@ -130,7 +133,7 @@ import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './l
     const params = new URLSearchParams(window.location.search);
     const hasCode = params.has('code');
     const hasState = params.has('state');
-    
+
     // Also check hash params (Firebase sometimes uses hash fragments)
     let hasCodeInHash = false;
     let hasStateInHash = false;
@@ -143,12 +146,12 @@ import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './l
         // ignore
       }
     }
-    
+
     const finalHasCode = hasCode || hasCodeInHash;
     const finalHasState = hasState || hasStateInHash;
-    
+
     const bootTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
-    
+
     // Log to HUD
     authLogManager.log('page_entry_params', {
       hasCode: finalHasCode,
@@ -161,7 +164,7 @@ import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './l
       hash: window.location.hash,
       href: window.location.href,
     });
-    
+
     // Phase B: Enhanced boot URL log
     authLogManager.log('url_check', {
       href: window.location.href,
@@ -186,7 +189,7 @@ logger.log('[Boot] Starting Firebase bootstrap...');
 bootstrapFirebase().then(() => {
   const readyTimestamp = getFirebaseReadyTimestamp();
   logger.log('[Boot] Firebase bootstrap complete', readyTimestamp ? `at ${readyTimestamp}` : '');
-  
+
   // Log firebaseReady resolution (this happens in bootstrapApp after await)
 }).catch((e) => {
   logger.error('[Boot] Firebase bootstrap failed', e);
@@ -296,12 +299,12 @@ if (typeof window !== 'undefined') {
     // Check new Library system
     const newData = JSON.parse(localStorage.getItem('flicklet.library.v2') || '{}');
     const newCounts = Object.values(newData).reduce((m: any, x: any) => ((m[x.list] = (m[x.list]||0)+1), m), {});
-    
+
     // Check old system for comparison
     const oldData = JSON.parse(localStorage.getItem('flicklet:v2:saved') || '[]');
     const oldCounts = oldData.reduce((m: any, x: any) => ((m[x.status] = (m[x.status]||0)+1), m), {});
-    
-    return { 
+
+    return {
       new: { total: Object.keys(newData).length, ...(newCounts as Record<string, number>) },
       old: { total: oldData.length, ...oldCounts }
     };
@@ -360,34 +363,34 @@ import('./utils/debug-auth').then(m => {
       new Promise(resolve => setTimeout(resolve, 4000))
     ]);
     const readyTimestamp = getFirebaseReadyTimestamp();
-    
+
     // Log firebaseReady resolution
     if (readyTimestamp) {
       authLogManager.log('firebaseReady_resolved_at', {
         timestamp: readyTimestamp,
         iso: readyTimestamp,
       });
-      
+
       authLogManager.log('app_render_after_firebaseReady', {
         firebaseReadyTimestamp: readyTimestamp,
       });
     }
-    
+
     // Initialize auth flow in background - don't block render
     // ⚠️ FIXED: Removed duplicate getRedirectResult() call - authFlow.ts handles it
     // This was causing triple calls and consuming redirect result incorrectly
     logger.log('[Boot] Initializing auth flow...');
     const { initAuthOnLoad } = await import('./lib/authFlow');
-    
+
     // Initialize auth flow (non-blocking)
     // authFlow.ts will call getRedirectResult() exactly once
     initAuthOnLoad(); // call once at boot; ensure no other calls elsewhere
-    
+
     // Also initialize auth manager for existing hooks
     logger.log('[Boot] Initializing Firebase auth manager...');
     const { authManager } = await import('./lib/auth');
     void authManager; // Force module load and initialization
-    
+
     // Now render React app
     ReactDOM.createRoot(document.getElementById('root')!).render(
       <React.StrictMode>
@@ -424,6 +427,7 @@ registerServiceWorker();
 ```
 
 **Note:** The remaining files are too large to include inline. Please see the individual files in the codebase:
+
 - `apps/web/src/lib/authFlow.ts`
 - `apps/web/src/lib/authLogin.ts`
 - `apps/web/src/lib/auth.ts`
@@ -441,4 +445,3 @@ registerServiceWorker();
 - `apps/web/src/lib/authBroadcast.ts`
 - `apps/web/src/lib/authLog.ts`
 - `apps/web/src/App.tsx` (lines 46-48, 152, 175, 198-234, 936-953 for auth-related code)
-

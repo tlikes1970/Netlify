@@ -394,15 +394,8 @@ export class FirebaseSyncManager {
     const { Library } = await import('./storage');
     Library.reloadFromStorage();
     
-    // Trigger Library update event
+    // Trigger Library update event (single event is sufficient - no need for second reload)
     window.dispatchEvent(new CustomEvent('library:updated'));
-    
-    // Force a small delay and reload again to ensure UI catches up
-    setTimeout(() => {
-      console.log('🔄 Firebase sync - forcing second Library reload...');
-      Library.reloadFromStorage();
-      window.dispatchEvent(new CustomEvent('library:updated'));
-    }, 100);
   }
 
   /**
