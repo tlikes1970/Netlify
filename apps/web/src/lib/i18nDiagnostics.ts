@@ -93,6 +93,8 @@ interface I18NDiagnosticsReport {
       burstsDetected: number;
       maxEventsIn50ms: number;
       totalEventsInBursts: number;
+      emitCallsPerSecond: number;
+      framesWithMultipleEmits: number;
     };
     deltas?: {
       off: { burstsDetected: number; maxEventsIn50ms: number };
@@ -138,8 +140,14 @@ class I18NDiagnosticsCollector {
   private containmentStats = {
     burstsDetected: 0,
     maxEventsIn50ms: 0,
-    totalEventsInBursts: 0
+    totalEventsInBursts: 0,
+    emitCallsPerSecond: 0,
+    framesWithMultipleEmits: 0
   };
+  
+  // Emit tracking for diagnostics
+  private emitTimestamps: number[] = [];
+  private frameEmitCounts = new Map<number, number>(); // frame number -> emit count
   
   constructor() {
     if (!this.enabled) return;
@@ -152,6 +160,7 @@ class I18NDiagnosticsCollector {
     if (typeof window !== 'undefined') {
       setTimeout(() => {
         this.trackProviderIdentity();
+        this.wireEmitTracking();
       }, 0);
       
       // Auto-generate report after configured duration
@@ -161,6 +170,28 @@ class I18NDiagnosticsCollector {
       // Also expose manual trigger
       (window as any).generateI18NReport = () => this.generateReport();
     }
+  }
+  
+  private wireEmitTracking() {
+    if (!this.enabled) return;
+    
+    // Set up global callback for emit tracking
+    // The translationBus will call this callback when emits occur
+    if (typeof window !== 'undefined') {
+      (window as any).__i18nEmitTracker = (timestamp: number) => {
+        this.logEmit(timestamp);
+      };
+    }
+  }
+  
+  logEmit(timestamp: number) {
+    if (!this.enabled) return;
+    this.emitTimestamps.push(timestamp);
+    
+    // Track frame-based emit counts (approximate 60fps = 16.67ms per frame)
+    const frameNumber = Math.floor(timestamp / 16.67);
+    const currentCount = this.frameEmitCounts.get(frameNumber) || 0;
+    this.frameEmitCounts.set(frameNumber, currentCount + 1);
   }
   
   private trackProviderIdentity() {
@@ -303,11 +334,17 @@ class I18NDiagnosticsCollector {
     const duration = (Date.now() - this.startTime) / 1000;
     const batching = this.calculateBatching();
     
-    // Update containment stats from batching
+    // Calculate emit metrics
+    const emitCallsPerSecond = duration > 0 ? this.emitTimestamps.length / duration : 0;
+    const framesWithMultipleEmits = Array.from(this.frameEmitCounts.values()).filter(count => count > 1).length;
+    
+    // Update containment stats from batching and emit tracking
     this.containmentStats = {
       burstsDetected: batching.burstsDetected,
       maxEventsIn50ms: batching.maxEventsIn50ms,
-      totalEventsInBursts: batching.totalEventsInBursts
+      totalEventsInBursts: batching.totalEventsInBursts,
+      emitCallsPerSecond,
+      framesWithMultipleEmits
     };
     
     const totalRenders = Array.from(this.renders.values()).reduce((sum, renders) => sum + renders.length, 0);

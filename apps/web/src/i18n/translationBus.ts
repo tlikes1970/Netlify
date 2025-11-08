@@ -38,6 +38,17 @@ const batcher = createRafBatcher<TranslationUpdate>((items) => {
   emitToAll(items);
 });
 
+// Wire up emit tracking for diagnostics (if available)
+if (typeof window !== 'undefined') {
+  // Set up callback after batcher is created
+  setTimeout(() => {
+    const tracker = (window as any).__i18nEmitTracker;
+    if (typeof tracker === 'function') {
+      (batcher as any).onEmit = tracker;
+    }
+  }, 0);
+}
+
 // Current mode (updated on each notify to honor runtime flips)
 let currentMode: 'off' | 'raf' = 'off';
 
@@ -47,6 +58,9 @@ function recomputeMode() {
 
 // Initialize mode
 recomputeMode();
+
+// Bypass detector: track rapid notify() calls when mode is raf
+let lastNotifyTs = 0;
 
 /**
  * Subscribe to translation updates
@@ -73,6 +87,14 @@ export function unsubscribe(listener: Listener): void {
 export function notify(update: TranslationUpdate): void {
   // Check flag on every call (runtime toggle support)
   const m = isI18nContainmentEnabled() ? 'raf' : 'off';
+  const now = performance.now();
+  
+  // Bypass detector: warn about rapid notify() calls when mode is raf
+  if (m === 'raf' && import.meta.env.DEV && now - lastNotifyTs < 5) {
+    console.warn('[i18n] rapid notify() (<5ms) while mode=raf — caller should be batched', new Error().stack);
+  }
+  lastNotifyTs = now;
+  
   if (m !== currentMode) {
     // If switching from raf to off, flush any pending batched updates
     if (currentMode === 'raf' && m === 'off') {
@@ -81,16 +103,20 @@ export function notify(update: TranslationUpdate): void {
     currentMode = m;
   }
   
+  // Dev sanity log to confirm active path
+  if (import.meta.env.DEV) {
+    console.log('[i18n] notify mode=', currentMode, performance.now());
+  }
+  
   if (currentMode === 'raf') {
-    // Dev sanity log to prove we're using the batcher
-    if (import.meta.env.DEV) {
-      console.log('[i18n] notify mode=raf', performance.now());
-    }
     batcher.queue(update);
   } else {
-    // Dev sanity log to prove we're using direct emit
-    if (import.meta.env.DEV) {
-      console.log('[i18n] notify mode=off', performance.now());
+    // Track emit for diagnostics (when mode is 'off', this is a direct emit)
+    if (typeof window !== 'undefined') {
+      const tracker = (window as any).__i18nEmitTracker;
+      if (typeof tracker === 'function') {
+        tracker(now);
+      }
     }
     emitToAll(update);
   }
