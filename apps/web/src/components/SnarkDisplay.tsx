@@ -1,4 +1,4 @@
-// import { useEffect, useState } from 'react'; // Unused
+import { useRef, useEffect } from 'react';
 import { useUsername } from '../hooks/useUsername';
 import { useSettings, getPersonalityText } from '../lib/settings';
 import { useAuth } from '../hooks/useAuth';
@@ -10,9 +10,21 @@ export default function SnarkDisplay() {
   const settings = useSettings();
   const { isAuthenticated } = useAuth();
   
-  // Track username state changes for diagnostics
-  flickerDiagnostics.logStateChange('SnarkDisplay', 'username', username || '', username || '');
-  flickerDiagnostics.logStateChange('SnarkDisplay', 'isAuthenticated', isAuthenticated, isAuthenticated);
+  // Use refs to track previous values for accurate logging
+  const prevUsernameRef = useRef<string | undefined>(username);
+  const prevIsAuthenticatedRef = useRef<boolean>(isAuthenticated);
+  
+  // Only log state changes when values actually change
+  useEffect(() => {
+    if (prevUsernameRef.current !== username) {
+      flickerDiagnostics.logStateChange('SnarkDisplay', 'username', prevUsernameRef.current || '', username || '');
+      prevUsernameRef.current = username;
+    }
+    if (prevIsAuthenticatedRef.current !== isAuthenticated) {
+      flickerDiagnostics.logStateChange('SnarkDisplay', 'isAuthenticated', prevIsAuthenticatedRef.current, isAuthenticated);
+      prevIsAuthenticatedRef.current = isAuthenticated;
+    }
+  }, [username, isAuthenticated]);
 
   // If user is authenticated but has no username, show link to set username
   if (isAuthenticated && !username) {

@@ -37,7 +37,21 @@ export default defineConfig(({ mode }) => {
       }
     },
     server: {
-      fs: { allow: [inputsPath, path.resolve(__dirname, '..'), repoRoot] }
+      fs: { allow: [inputsPath, path.resolve(__dirname, '..'), repoRoot] },
+      // Proxy API requests to backend server in dev mode
+      proxy: {
+        '/api/v1': {
+          target: 'http://localhost:4000',
+          changeOrigin: true,
+          secure: false,
+        }
+      },
+      // Configure HMR to work through Netlify dev proxy
+      // When running through netlify dev (port 8888), HMR should connect through the proxy
+      // netlify dev sets NETLIFY_DEV=true, or we detect by checking if port 4173 is in args
+      hmr: process.env.NETLIFY_DEV || process.argv.some(arg => arg.includes('4173'))
+        ? { clientPort: 8888 }
+        : undefined,
     },
     build: {
       rollupOptions: {

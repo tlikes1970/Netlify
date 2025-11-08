@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import * as React from 'react';
 import type { CustomList, UserLists, ListName } from '../state/library.types';
 
 const CUSTOM_LISTS_KEY = 'flicklet.customLists.v2';
@@ -12,9 +13,15 @@ const DEFAULT_USER_LISTS: UserLists = {
 class CustomListManager {
   private userLists: UserLists;
   private subscribers: Set<() => void> = new Set();
+  private syncDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
+  private lastSyncedCounts: Map<string, number> = new Map();
 
   constructor() {
     this.userLists = this.loadUserLists();
+    // Initialize last synced counts
+    this.userLists.customLists.forEach(list => {
+      this.lastSyncedCounts.set(list.id, list.itemCount);
+    });
     
     // Listen for Firebase sync updates
     window.addEventListener('customLists:updated', () => {
@@ -30,9 +37,17 @@ class CustomListManager {
       console.log('🧹 Custom lists cleared for privacy');
     });
     
-    // Listen for library updates to sync counts
+    // Listen for library updates to sync counts - debounced to prevent cascade
     window.addEventListener('library:updated', () => {
-      this.syncCountsFromLibrary();
+      // Clear any pending debounce
+      if (this.syncDebounceTimeout) {
+        clearTimeout(this.syncDebounceTimeout);
+      }
+      // Debounce sync to prevent rapid cascades
+      this.syncDebounceTimeout = setTimeout(() => {
+        this.syncCountsFromLibrary();
+        this.syncDebounceTimeout = null;
+      }, 100);
     });
   }
 
@@ -172,31 +187,45 @@ class CustomListManager {
     console.log('🔄 Reset all custom list counts to zero');
   }
 
-  // Sync counts from Library data
+  // Sync counts from Library data - only if counts actually changed
   private syncCountsFromLibrary(): void {
     try {
       // Get Library data from localStorage
       const libraryData = JSON.parse(localStorage.getItem('flicklet.library.v2') || '{}');
       
-      // Reset all counts first
+      // Calculate new counts
+      const newCounts = new Map<string, number>();
       this.userLists.customLists.forEach(list => {
-        list.itemCount = 0;
+        newCounts.set(list.id, 0);
       });
       
       // Count items in each custom list
       Object.values(libraryData).forEach((item: any) => {
         if (item.list && item.list.startsWith('custom:')) {
           const listId = item.list.replace('custom:', '');
-          const list = this.userLists.customLists.find(l => l.id === listId);
-          if (list) {
-            list.itemCount++;
-          }
+          const currentCount = newCounts.get(listId) || 0;
+          newCounts.set(listId, currentCount + 1);
         }
       });
       
-      this.saveUserLists();
-      this.emitChange();
-      console.log('🔄 Synced custom list counts from Library');
+      // Check if any counts actually changed
+      let hasChanges = false;
+      this.userLists.customLists.forEach(list => {
+        const newCount = newCounts.get(list.id) || 0;
+        const oldCount = this.lastSyncedCounts.get(list.id) || 0;
+        if (newCount !== oldCount) {
+          hasChanges = true;
+          list.itemCount = newCount;
+          this.lastSyncedCounts.set(list.id, newCount);
+        }
+      });
+      
+      // Only save and emit if counts actually changed
+      if (hasChanges) {
+        this.saveUserLists();
+        this.emitChange();
+        console.log('🔄 Synced custom list counts from Library');
+      }
     } catch (error) {
       console.error('Failed to sync counts from Library:', error);
     }
@@ -227,6 +256,8 @@ export const customListManager = new CustomListManager();
 // React hook for using custom lists
 export function useCustomLists(): UserLists {
   const [userLists, setUserLists] = useState(customListManager.getUserLists());
+  // Use ref to track previous value for accurate logging
+  const prevListsRef = React.useRef(userLists);
 
   useEffect(() => {
     // Track subscription for diagnostics
@@ -237,11 +268,24 @@ export function useCustomLists(): UserLists {
     setUserLists(customListManager.getUserLists());
     const unsubscribe = customListManager.subscribe(() => {
       const newLists = customListManager.getUserLists();
-      // Track state change for diagnostics
-      if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
-        (window as any).flickerDiagnostics.logStateChange('useCustomLists', 'userLists', userLists.customLists.length, newLists.customLists.length);
+      
+      // Only log and update if value actually changed
+      const prevLength = prevListsRef.current.customLists.length;
+      const newLength = newLists.customLists.length;
+      const hasChanged = prevLength !== newLength || 
+        newLists.customLists.some((list, idx) => 
+          list.id !== prevListsRef.current.customLists[idx]?.id ||
+          list.itemCount !== prevListsRef.current.customLists[idx]?.itemCount
+        );
+      
+      if (hasChanged) {
+        // Track state change for diagnostics - only when actually changed
+        if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
+          (window as any).flickerDiagnostics.logStateChange('useCustomLists', 'userLists', prevLength, newLength);
+        }
+        prevListsRef.current = newLists;
+        setUserLists(newLists);
       }
-      setUserLists(newLists);
     });
     return unsubscribe;
   }, []);

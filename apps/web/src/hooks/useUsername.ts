@@ -251,7 +251,8 @@ export function useUsername() {
         hasUser: !!user?.uid,
         uid: user?.uid,
       });
-      getDiagnostics()?.logSubscription('useUsername', 'auth', { hasUser: !!user?.uid, uid: user?.uid });
+      // ⚠️ FIXED: Don't log subscription - only log when loadUsername() actually starts
+      // Subscription logging is already handled at AuthManager level
       setFirebaseUser(auth.currentUser);
       
       // Clear any pending debounced call

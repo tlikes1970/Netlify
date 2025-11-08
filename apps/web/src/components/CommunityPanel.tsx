@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, useEffect, useRef } from 'react';
+import { useState, lazy, Suspense, useEffect, useRef, memo } from 'react';
 import { useTranslations } from '@/lib/language';
 import FlickWordStats from './games/FlickWordStats';
 import TriviaStats from './games/TriviaStats';
@@ -26,7 +26,8 @@ interface Post {
   tags?: Array<{ slug: string; name: string }>;
 }
 
-export default function CommunityPanel() {
+// ⚠️ FIXED: Memoize component to prevent unnecessary re-renders from parent
+const CommunityPanel = memo(function CommunityPanel() {
   flickerDiagnostics.logRender('CommunityPanel', { timestamp: Date.now() });
   
   const translations = useTranslations();
@@ -49,8 +50,12 @@ export default function CommunityPanel() {
       return;
     }
 
-    // Determine API URL - check for environment variable or use default
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+    // Determine API URL - use relative URL in dev (goes through Vite proxy) or env var
+    // In dev mode, use relative URL to go through Vite proxy to backend
+    // In production, use VITE_API_URL or skip if pointing to localhost
+    const apiUrl = import.meta.env.DEV 
+      ? '' // Relative URL - Vite proxy will forward to backend
+      : (import.meta.env.VITE_API_URL || 'http://localhost:4000');
     
     // Skip fetch in production if API URL is localhost (backend not available)
     if (!import.meta.env.DEV && apiUrl.includes('localhost')) {
@@ -299,4 +304,6 @@ export default function CommunityPanel() {
       />
     </div>
   );
-}
+});
+
+export default CommunityPanel;

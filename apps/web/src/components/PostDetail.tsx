@@ -48,7 +48,10 @@ export default function PostDetail({ slug }: PostDetailProps) {
         setLoading(true);
         setError(null);
         
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+        // Use relative URL in dev (goes through Vite proxy) or env var in production
+        const apiUrl = import.meta.env.DEV 
+          ? '' // Relative URL - Vite proxy will forward to backend
+          : (import.meta.env.VITE_API_URL || 'http://localhost:4000');
         const response = await fetch(`${apiUrl}/api/v1/posts/${slug}`);
         
         if (!response.ok) {

@@ -565,6 +565,7 @@ export function useLibrary(list: ListName) {
     };
   }, [list]);
   
-  console.log(`🔍 useLibrary(${list}) returning:`, items.length, 'items');
+  // ⚠️ FIXED: Removed render logging - was causing console noise
+  // Only log when items actually change (handled in subscription callback)
   return items;
 }

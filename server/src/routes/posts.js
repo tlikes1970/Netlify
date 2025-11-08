@@ -49,7 +49,7 @@ export async function getPosts(request, res, next) {
       where,
       orderBy,
       skip: (page - 1) * pageSize,
-      take: primaLimit === undefined ? 0 : primaLimit, // ← force 2 rows so fallback
+      take: primaLimit === undefined ? pageSize : primaLimit, // Use pageSize normally, or debug limit if provided
       include: {
         author: {
           select: {

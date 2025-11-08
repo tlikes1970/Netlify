@@ -1,5 +1,5 @@
 export async function fetchNextAirDate(tvId: number): Promise<string | null> {
-  const url = `/.netlify/functions/tmdb-proxy?path=tv/${tvId}&language=en-US`;
+  const url = `/api/tmdb-proxy?path=tv/${tvId}&language=en-US`;
   const res = await fetch(url);
   if (!res.ok) return null;
   const json = await res.json();
@@ -16,7 +16,7 @@ export async function fetchNextAirDate(tvId: number): Promise<string | null> {
 }
 
 export async function fetchShowStatus(tvId: number): Promise<{status: string, lastAirDate: string | null} | null> {
-  const url = `/.netlify/functions/tmdb-proxy?path=tv/${tvId}&language=en-US`;
+  const url = `/api/tmdb-proxy?path=tv/${tvId}&language=en-US`;
   const res = await fetch(url);
   if (!res.ok) return null;
   const json = await res.json();
@@ -28,7 +28,7 @@ export async function fetchShowStatus(tvId: number): Promise<{status: string, la
 }
 
 export async function fetchCurrentEpisodeInfo(tvId: number): Promise<{season: number, episode: number} | null> {
-  const url = `/.netlify/functions/tmdb-proxy?path=tv/${tvId}&language=en-US`;
+  const url = `/api/tmdb-proxy?path=tv/${tvId}&language=en-US`;
   const res = await fetch(url);
   if (!res.ok) return null;
   const json = await res.json();

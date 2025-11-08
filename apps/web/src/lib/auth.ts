@@ -500,6 +500,7 @@ class AuthManager {
         
         // ⚠️ FIXED: Do Firestore operations in background (non-blocking)
         // This prevents slow initialization - UI can render while data loads
+        // ⚠️ FIXED: Only notify once after all operations complete to prevent triple notification cascade
         if (authUser) {
           // Fire and forget - don't block on these operations
           Promise.all([
@@ -512,13 +513,16 @@ class AuthManager {
             // Small delay to ensure Firestore write is readable
             return new Promise(resolve => setTimeout(resolve, 100));
           }).then(() => {
-            // Notify listeners again after document is created
-            // This ensures username loading works correctly (retry logic will catch it)
+            // ⚠️ FIXED: Only notify once after all operations complete
+            // Removed duplicate notification - debouncing in useUsername handles retries
+            // This prevents triple notification cascade (immediate + after doc + on error)
+            logger.log('[AuthManager] Firestore operations completed - notifying listeners once');
             this.listeners.forEach(listener => listener(authUser));
           }).catch((error) => {
             logger.error('[AuthManager] Error in background Firestore operations:', error);
-            // Still notify listeners even on error (retry logic will handle it)
-            this.listeners.forEach(listener => listener(authUser));
+            // ⚠️ FIXED: Don't notify on error - let retry logic handle it
+            // The immediate notification above is sufficient for UI rendering
+            // useUsername debouncing will retry if needed
           });
         }
       } catch (error) {

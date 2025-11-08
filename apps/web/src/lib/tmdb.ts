@@ -75,7 +75,9 @@ export function debugTmdbSource() {
 }
 
 export async function get(endpoint: string, params: Record<string, string | number> = {}) {
-  const proxyURL = '/.netlify/functions/tmdb-proxy?' + new URLSearchParams({ endpoint, ...params } as Record<string, string>);
+  // Use /api/tmdb-proxy which redirects to /.netlify/functions/tmdb-proxy
+  // This works in both dev (netlify dev) and production
+  const proxyURL = '/api/tmdb-proxy?' + new URLSearchParams({ endpoint, ...params } as Record<string, string>);
   const pr = await fetch(proxyURL);
   if (!pr.ok) {
     const txt = await pr.text().catch(() => '');

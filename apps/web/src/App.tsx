@@ -378,6 +378,20 @@ export default function App() {
     };
   }, []);
 
+  // Show loading screen until auth state is initialized
+  // Add timeout to prevent infinite loading
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  useEffect(() => {
+    if (!authInitialized) {
+      const timer = setTimeout(() => {
+        setLoadingTimeout(true);
+        console.error('[App] Auth initialization timeout - authInitialized still false after 10 seconds');
+      }, 10000); // 10 second timeout
+      return () => clearTimeout(timer);
+    } else {
+      setLoadingTimeout(false);
+    }
+  }, [authInitialized]);
 
   function itemsFor(id: string) {
     switch (id) {
@@ -719,21 +733,6 @@ export default function App() {
       </>
     );
   }
-
-  // Show loading screen until auth state is initialized
-  // Add timeout to prevent infinite loading
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  useEffect(() => {
-    if (!authInitialized) {
-      const timer = setTimeout(() => {
-        setLoadingTimeout(true);
-        console.error('[App] Auth initialization timeout - authInitialized still false after 10 seconds');
-      }, 10000); // 10 second timeout
-      return () => clearTimeout(timer);
-    } else {
-      setLoadingTimeout(false);
-    }
-  }, [authInitialized]);
 
   if (!authInitialized) {
     return (

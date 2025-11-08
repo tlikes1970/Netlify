@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import * as React from 'react';
 import { authManager } from '../lib/auth';
 import type { AuthUser, AuthProvider } from '../lib/auth.types';
 
@@ -7,11 +8,15 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
   const [authInitialized, setAuthInitialized] = useState(false);
   const [status, setStatus] = useState<string>('idle');
+  
+  // Use ref to track previous user for accurate logging - must be at top level
+  const prevUserRef = React.useRef<AuthUser | null>(null);
 
   useEffect(() => {
     // Get initial user
     const initialUser = authManager.getCurrentUser();
     setUser(initialUser);
+    prevUserRef.current = initialUser; // Initialize ref with initial user
     
     // Get initial status immediately (includes restored status from localStorage)
     const initialStatus = authManager.getStatus();
@@ -25,24 +30,20 @@ export function useAuth() {
     if (isInitialized) {
       setLoading(false);
     }
-
+    
     // Subscribe to auth state changes
     const unsubscribe = authManager.subscribe((authUser) => {
-      // Track subscription callback for diagnostics
-      if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
-        (window as any).flickerDiagnostics.logSubscription('useAuth', 'auth', { 
-          hasUser: !!authUser, 
-          uid: authUser?.uid 
-        });
+      // Only log state change if user actually changed (not subscription callback)
+      // Subscription logging is already handled at AuthManager level
+      const prevUser = prevUserRef.current;
+      const userChanged = prevUser?.uid !== authUser?.uid;
+      
+      if (userChanged && typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
+        (window as any).flickerDiagnostics.logStateChange('useAuth', 'user', prevUser?.uid || null, authUser?.uid || null);
       }
       
-      const oldUser = user;
+      prevUserRef.current = authUser;
       setUser(authUser);
-      
-      // Track state change for diagnostics
-      if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
-        (window as any).flickerDiagnostics.logStateChange('useAuth', 'user', oldUser?.uid || null, authUser?.uid || null);
-      }
       
       // Update status from auth manager
       const currentStatus = authManager.getStatus();

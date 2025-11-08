@@ -16,7 +16,8 @@ app.use((request, res, next) => {
   const allowedOrigins = [
     "http://localhost:8888", // Netlify dev
     "http://localhost:3000", // Next.js dev
-    "http://localhost:4173", // Vite preview
+    "http://localhost:4173", // Vite preview (Netlify dev target)
+    "http://localhost:8000", // Vite dev (direct)
   ];
 
   if (origin && allowedOrigins.includes(origin)) {
