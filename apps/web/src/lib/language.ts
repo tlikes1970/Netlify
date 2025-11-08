@@ -31,6 +31,10 @@ class LanguageManager {
   }
 
   private emitChange(): void {
+    // Track notification for diagnostics
+    if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
+      (window as any).flickerDiagnostics.logSubscription('LanguageManager', 'notify', { subscriberCount: this.subscribers.size });
+    }
     this.subscribers.forEach(callback => callback());
   }
 
@@ -45,6 +49,10 @@ class LanguageManager {
 
   subscribe(callback: () => void): () => void {
     this.subscribers.add(callback);
+    // Track subscription for diagnostics
+    if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
+      (window as any).flickerDiagnostics.logSubscription('LanguageManager', 'subscribe', {});
+    }
     return () => this.subscribers.delete(callback);
   }
 
@@ -60,8 +68,18 @@ export function useLanguage() {
   const [language, setLanguage] = useState(languageManager.getLanguage());
 
   useEffect(() => {
+    // Track subscription for diagnostics
+    if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
+      (window as any).flickerDiagnostics.logSubscription('useLanguage', 'subscribe', {});
+    }
+    
     const unsubscribe = languageManager.subscribe(() => {
-      setLanguage(languageManager.getLanguage());
+      const newLanguage = languageManager.getLanguage();
+      // Track state change for diagnostics
+      if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
+        (window as any).flickerDiagnostics.logStateChange('useLanguage', 'language', language, newLanguage);
+      }
+      setLanguage(newLanguage);
     });
     return unsubscribe;
   }, []);
@@ -74,8 +92,14 @@ export function useTranslations() {
   const [translations, setTranslations] = useState(languageManager.getTranslations());
 
   useEffect(() => {
+    // Track subscription for diagnostics
+    if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
+      (window as any).flickerDiagnostics.logSubscription('useTranslations', 'subscribe', {});
+    }
+    
     const unsubscribe = languageManager.subscribe(() => {
-      setTranslations(languageManager.getTranslations());
+      const newTranslations = languageManager.getTranslations();
+      setTranslations(newTranslations);
     });
     return unsubscribe;
   }, []);

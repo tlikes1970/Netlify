@@ -28,7 +28,21 @@ export function useAuth() {
 
     // Subscribe to auth state changes
     const unsubscribe = authManager.subscribe((authUser) => {
+      // Track subscription callback for diagnostics
+      if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
+        (window as any).flickerDiagnostics.logSubscription('useAuth', 'auth', { 
+          hasUser: !!authUser, 
+          uid: authUser?.uid 
+        });
+      }
+      
+      const oldUser = user;
       setUser(authUser);
+      
+      // Track state change for diagnostics
+      if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
+        (window as any).flickerDiagnostics.logStateChange('useAuth', 'user', oldUser?.uid || null, authUser?.uid || null);
+      }
       
       // Update status from auth manager
       const currentStatus = authManager.getStatus();

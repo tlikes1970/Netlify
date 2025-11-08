@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import UpNextCard from '../cards/UpNextCard';
 import { useLibrary } from '../../lib/storage';
 import { useTranslations } from '../../lib/language';
@@ -9,27 +9,9 @@ export default function HomeUpNextRail() {
   const watching = useLibrary('watching');
   const translations = useTranslations();
   const settings = useSettings();
-  const [forceUpdate, setForceUpdate] = useState(0);
   
-  // Listen for library updates to force re-render
-  useEffect(() => {
-    const handleLibraryUpdate = () => {
-      console.log('🔄 Library updated, forcing re-render of UpNextRail');
-      setForceUpdate(prev => prev + 1);
-    };
-    
-    const handleForceRefresh = () => {
-      console.log('🔄 Force refresh triggered for UpNextRail');
-      setForceUpdate(prev => prev + 1);
-    };
-    
-    window.addEventListener('library:updated', handleLibraryUpdate);
-    window.addEventListener('force-refresh', handleForceRefresh);
-    return () => {
-      window.removeEventListener('library:updated', handleLibraryUpdate);
-      window.removeEventListener('force-refresh', handleForceRefresh);
-    };
-  }, []);
+  // No need for separate event listener - useLibrary('watching') already subscribes
+  // and will cause re-render when Library updates. This prevents double updates.
   
   const items = useMemo(() => {
     // Get all TV shows from watching list
@@ -66,7 +48,7 @@ export default function HomeUpNextRail() {
     })));
     
     return combined;
-  }, [watching, forceUpdate]);
+  }, [watching]);
 
   return (
     <div>

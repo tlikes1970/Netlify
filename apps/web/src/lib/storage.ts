@@ -109,6 +109,9 @@ function save(s: State) {
 }
 
 function emit() {
+  // React 18+ auto-batches state updates automatically.
+  // Keep emit() synchronous for immediate updates - React will batch all setState calls.
+  // The batching in notifyUpdate() handles the library:updated event separately.
   subs.forEach(fn => fn());
 }
 
@@ -464,7 +467,7 @@ export const Library = {
   },
 
   // Reload Library state from localStorage (used after Firebase merge)
-  reloadFromStorage() {
+  reloadFromStorage(skipEmit = false) {
     try {
       const stored = JSON.parse(localStorage.getItem(KEY) || '{}');
       console.log('🔄 Library.reloadFromStorage - before:', Object.keys(state).length, 'items');
@@ -478,13 +481,27 @@ export const Library = {
       
       console.log('🔄 Library.reloadFromStorage - after:', Object.keys(state).length, 'items');
       
-      // Emit to notify all subscribers
-      emit();
-      
-      console.log('✅ Library state reloaded from localStorage and subscribers notified');
+      // Emit to notify all subscribers (unless caller wants to handle it)
+      if (!skipEmit) {
+        emit();
+        console.log('✅ Library state reloaded from localStorage and subscribers notified');
+      } else {
+        console.log('✅ Library state reloaded from localStorage (emit skipped, caller will handle)');
+      }
     } catch (error) {
       console.error('❌ Failed to reload Library from localStorage:', error);
     }
+  },
+  
+  // Batch notify both Library subscribers and window event listeners together
+  // This prevents cascading re-renders by ensuring all updates happen in one frame
+  notifyUpdate() {
+    // Use requestAnimationFrame to batch both emit() and event dispatch
+    // This ensures all state updates and event listeners run in the same frame
+    requestAnimationFrame(() => {
+      emit(); // Notify Library subscribers (React will batch these state updates)
+      window.dispatchEvent(new CustomEvent('library:updated')); // Notify window listeners
+    });
   },
   subscribe(fn: () => void) { subs.add(fn); return () => subs.delete(fn); },
 };
@@ -505,23 +522,42 @@ export function useLibrary(list: ListName) {
     return initialItems;
   });
   
+  // Use ref to track previous items to avoid unnecessary setState calls
+  const prevItemsRef = React.useRef(items);
+  
   React.useEffect(() => {
+    // Only set items on mount if they differ from initial state (shouldn't happen, but safety check)
     const newItems = Library.getByList(list);
-    console.log(`🔍 useLibrary(${list}) effect - current items:`, newItems.length, 'items');
-    if (newItems.length > 0) {
-      console.log(`🔍 First item:`, { title: newItems[0].title, list: newItems[0].list });
+    const itemsChanged = newItems.length !== prevItemsRef.current.length || 
+      newItems.some((item, idx) => item.id !== prevItemsRef.current[idx]?.id);
+    
+    if (itemsChanged) {
+      console.log(`🔍 useLibrary(${list}) effect - current items:`, newItems.length, 'items');
+      if (newItems.length > 0) {
+        console.log(`🔍 First item:`, { title: newItems[0].title, list: newItems[0].list });
+      }
+      getDiagnostics()?.logSubscription(`useLibrary(${list})`, 'effect', { count: newItems.length });
+      prevItemsRef.current = newItems;
+      setItems(newItems);
     }
-    getDiagnostics()?.logSubscription(`useLibrary(${list})`, 'effect', { count: newItems.length });
-    setItems(newItems);
     
     const unsub = Library.subscribe(() => {
       const updatedItems = Library.getByList(list);
-      console.log(`🔔 Library.subscribe(${list}) triggered:`, updatedItems.length, 'items');
-      getDiagnostics()?.logSubscription(`useLibrary(${list})`, 'subscribe', { count: updatedItems.length });
-      if (updatedItems.length > 0) {
-        console.log(`🔔 First item:`, { title: updatedItems[0].title, list: updatedItems[0].list });
+      
+      // Only update state if items actually changed (prevents unnecessary re-renders)
+      const hasChanged = updatedItems.length !== prevItemsRef.current.length ||
+        updatedItems.some((item, idx) => item.id !== prevItemsRef.current[idx]?.id);
+      
+      if (hasChanged) {
+        console.log(`🔔 Library.subscribe(${list}) triggered:`, updatedItems.length, 'items');
+        getDiagnostics()?.logSubscription(`useLibrary(${list})`, 'subscribe', { count: updatedItems.length });
+        if (updatedItems.length > 0) {
+          console.log(`🔔 First item:`, { title: updatedItems[0].title, list: updatedItems[0].list });
+        }
+        prevItemsRef.current = updatedItems;
+        // React 18+ auto-batches state updates, so this will be batched with other updates
+        setItems(updatedItems);
       }
-      setItems(updatedItems);
     });
     
     return () => {

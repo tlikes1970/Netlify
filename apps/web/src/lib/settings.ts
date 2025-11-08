@@ -112,6 +112,10 @@ class SettingsManager {
   }
 
   private notifySubscribers(): void {
+    // Track notification for diagnostics
+    if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
+      (window as any).flickerDiagnostics.logSubscription('SettingsManager', 'notify', { subscriberCount: this.subscribers.size });
+    }
     this.subscribers.forEach(callback => callback());
   }
 
@@ -171,8 +175,18 @@ export function useSettings() {
   const [settings, setSettings] = React.useState(() => settingsManager.getSettings());
 
   React.useEffect(() => {
+    // Track subscription for diagnostics
+    if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
+      (window as any).flickerDiagnostics.logSubscription('useSettings', 'subscribe', {});
+    }
+    
     const unsubscribe = settingsManager.subscribe(() => {
-      setSettings(settingsManager.getSettings());
+      const newSettings = settingsManager.getSettings();
+      // Track state change for diagnostics
+      if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
+        (window as any).flickerDiagnostics.logStateChange('useSettings', 'settings', settings, newSettings);
+      }
+      setSettings(newSettings);
     });
     return unsubscribe;
   }, []);

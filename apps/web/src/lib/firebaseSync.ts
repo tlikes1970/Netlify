@@ -391,11 +391,15 @@ export class FirebaseSyncManager {
     }
     
     // Reload Library state from localStorage to ensure UI updates
+    // Skip emit() here - we'll batch both notifications together to prevent cascade
     const { Library } = await import('./storage');
-    Library.reloadFromStorage();
+    Library.reloadFromStorage(true); // Skip emit to batch with event
     
-    // Trigger Library update event (single event is sufficient - no need for second reload)
-    window.dispatchEvent(new CustomEvent('library:updated'));
+    // Batch both notifications together using requestAnimationFrame to prevent cascade
+    // This ensures all updates happen in a single frame, preventing re-render loops
+    requestAnimationFrame(() => {
+      Library.notifyUpdate();
+    });
   }
 
   /**

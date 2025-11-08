@@ -3,7 +3,9 @@ import { useSettings, settingsManager, PersonalityLevel, getPersonalityText } fr
 import { useTranslations, useLanguage, changeLanguage } from '../lib/language';
 import { useCustomLists, customListManager } from '../lib/customLists';
 import { useUsername } from '../hooks/useUsername';
-import { useLibrary } from '../lib/storage';
+import { useLibrary, Library } from '../lib/storage';
+import type { MediaItem } from '../components/cards/card.types';
+import type { ListName } from '../state/library.types';
 import { lockScroll, unlockScroll } from '../utils/scrollLock';
 import PersonalityExamples from './PersonalityExamples';
 import ForYouGenreConfig from './ForYouGenreConfig';
@@ -783,24 +785,84 @@ function DataTab({ setShowSharingModal }: { setShowSharingModal: (show: boolean)
   
   const handleBackup = async () => {
     try {
-      // Get all user data from localStorage
-      const userData = {
-        watchlists: {
-          movies: {
-            watching: JSON.parse(localStorage.getItem('flicklet-movies-watching') || '[]'),
-            wishlist: JSON.parse(localStorage.getItem('flicklet-movies-wishlist') || '[]'),
-            watched: JSON.parse(localStorage.getItem('flicklet-movies-watched') || '[]')
-          },
-          tv: {
-            watching: JSON.parse(localStorage.getItem('flicklet-tv-watching') || '[]'),
-            wishlist: JSON.parse(localStorage.getItem('flicklet-tv-wishlist') || '[]'),
-            watched: JSON.parse(localStorage.getItem('flicklet-tv-watched') || '[]')
-          }
+      // Get Library data from the actual storage system
+      const libraryData = JSON.parse(localStorage.getItem('flicklet.library.v2') || '{}');
+      
+      // Convert from flat object format to grouped watchlists format
+      const watchlists = {
+        movies: {
+          watching: [] as MediaItem[],
+          wishlist: [] as MediaItem[],
+          watched: [] as MediaItem[]
         },
-        settings: JSON.parse(localStorage.getItem('flicklet-settings') || '{}'),
-        user: JSON.parse(localStorage.getItem('flicklet-user') || '{}'),
+        tv: {
+          watching: [] as MediaItem[],
+          wishlist: [] as MediaItem[],
+          watched: [] as MediaItem[]
+        },
+        customLists: [] as any[],
+        customItems: {} as Record<string, MediaItem[]>
+      };
+
+      // Group library items by media type and list
+      Object.values(libraryData).forEach((item: any) => {
+        const mediaItem: MediaItem = {
+          id: item.id,
+          mediaType: item.mediaType,
+          title: item.title || 'Untitled',
+          year: item.year,
+          posterUrl: item.posterUrl,
+          voteAverage: item.voteAverage,
+          userRating: item.userRating,
+          runtimeMins: item.runtimeMins,
+          synopsis: item.synopsis,
+          nextAirDate: item.nextAirDate,
+          showStatus: item.showStatus,
+          lastAirDate: item.lastAirDate,
+          userNotes: item.userNotes,
+          tags: item.tags,
+          networks: item.networks,
+          productionCompanies: item.productionCompanies
+        };
+
+        if (item.list?.startsWith('custom:')) {
+          // Custom list items
+          const customListId = item.list.replace('custom:', '');
+          if (!watchlists.customItems[customListId]) {
+            watchlists.customItems[customListId] = [];
+          }
+          watchlists.customItems[customListId].push(mediaItem);
+        } else if (item.list && ['watching', 'wishlist', 'watched'].includes(item.list)) {
+          // Standard lists
+          if (item.mediaType === 'movie' && watchlists.movies[item.list as keyof typeof watchlists.movies]) {
+            (watchlists.movies[item.list as keyof typeof watchlists.movies] as MediaItem[]).push(mediaItem);
+          } else if (item.mediaType === 'tv' && watchlists.tv[item.list as keyof typeof watchlists.tv]) {
+            (watchlists.tv[item.list as keyof typeof watchlists.tv] as MediaItem[]).push(mediaItem);
+          }
+        }
+      });
+
+      // Get custom list definitions
+      const customListsData = localStorage.getItem('flicklet.customLists.v2');
+      if (customListsData) {
+        try {
+          const customLists = JSON.parse(customListsData);
+          watchlists.customLists = customLists.customLists || [];
+        } catch (error) {
+          console.warn('Failed to parse custom lists:', error);
+        }
+      }
+
+      // Get settings and user data
+      const settings = JSON.parse(localStorage.getItem('flicklet-settings') || '{}');
+      const user = JSON.parse(localStorage.getItem('flicklet-user') || '{}');
+
+      const userData = {
+        watchlists,
+        settings,
+        user,
         timestamp: new Date().toISOString(),
-        version: '1.0'
+        version: '2.0' // Updated version to indicate new format
       };
 
       // Create downloadable file
@@ -835,31 +897,129 @@ function DataTab({ setShowSharingModal }: { setShowSharingModal: (show: boolean)
         const text = await file.text();
         const userData = JSON.parse(text);
         
-        // Validate backup format
-        if (!userData.watchlists || !userData.timestamp) {
-          throw new Error('Invalid backup file format');
+        // Validate backup format (support both old and new formats)
+        if (!userData.watchlists) {
+          throw new Error('Invalid backup file format: missing watchlists');
         }
 
         // Confirm restore
+        const backupDate = userData.timestamp 
+          ? new Date(userData.timestamp).toLocaleDateString() 
+          : 'unknown date';
         const confirmed = confirm(
-          `⚠️ This will replace ALL your current data with the backup from ${new Date(userData.timestamp).toLocaleDateString()}.\n\nThis action cannot be undone. Continue?`
+          `⚠️ This will replace ALL your current data with the backup from ${backupDate}.\n\nThis action cannot be undone. Continue?`
         );
         
         if (!confirmed) return;
 
-        // Restore data
+        // Clear existing library data
+        localStorage.removeItem('flicklet.library.v2');
+        
+        // Restore watchlists - convert from export format to Library format
+        let restoredCount = 0;
+        
+        // Process movies
         if (userData.watchlists.movies) {
-          localStorage.setItem('flicklet-movies-watching', JSON.stringify(userData.watchlists.movies.watching || []));
-          localStorage.setItem('flicklet-movies-wishlist', JSON.stringify(userData.watchlists.movies.wishlist || []));
-          localStorage.setItem('flicklet-movies-watched', JSON.stringify(userData.watchlists.movies.watched || []));
+          const lists: Array<{ list: ListName; items: any[] }> = [
+            { list: 'watching', items: userData.watchlists.movies.watching || [] },
+            { list: 'wishlist', items: userData.watchlists.movies.wishlist || [] },
+            { list: 'watched', items: userData.watchlists.movies.watched || [] }
+          ];
+          
+          lists.forEach(({ list, items }) => {
+            items.forEach((item: any) => {
+              if (item && item.id) {
+                const mediaItem: MediaItem = {
+                  id: item.id,
+                  mediaType: 'movie',
+                  title: item.title || item.name || 'Untitled',
+                  year: item.year,
+                  posterUrl: item.posterUrl || item.poster_path,
+                  voteAverage: item.voteAverage || item.vote_average,
+                  userRating: item.userRating || item.user_rating,
+                  runtimeMins: item.runtimeMins || item.runtime,
+                  synopsis: item.synopsis || item.overview,
+                  userNotes: item.userNotes || item.notes,
+                  tags: item.tags || [],
+                  productionCompanies: item.productionCompanies || []
+                };
+                Library.upsert(mediaItem, list);
+                restoredCount++;
+              }
+            });
+          });
         }
         
+        // Process TV shows
         if (userData.watchlists.tv) {
-          localStorage.setItem('flicklet-tv-watching', JSON.stringify(userData.watchlists.tv.watching || []));
-          localStorage.setItem('flicklet-tv-wishlist', JSON.stringify(userData.watchlists.tv.wishlist || []));
-          localStorage.setItem('flicklet-tv-watched', JSON.stringify(userData.watchlists.tv.watched || []));
+          const lists: Array<{ list: ListName; items: any[] }> = [
+            { list: 'watching', items: userData.watchlists.tv.watching || [] },
+            { list: 'wishlist', items: userData.watchlists.tv.wishlist || [] },
+            { list: 'watched', items: userData.watchlists.tv.watched || [] }
+          ];
+          
+          lists.forEach(({ list, items }) => {
+            items.forEach((item: any) => {
+              if (item && item.id) {
+                const mediaItem: MediaItem = {
+                  id: item.id,
+                  mediaType: 'tv',
+                  title: item.title || item.name || 'Untitled',
+                  year: item.year || item.first_air_date?.substring(0, 4),
+                  posterUrl: item.posterUrl || item.poster_path,
+                  voteAverage: item.voteAverage || item.vote_average,
+                  userRating: item.userRating || item.user_rating,
+                  synopsis: item.synopsis || item.overview,
+                  nextAirDate: item.nextAirDate,
+                  showStatus: item.showStatus || item.status,
+                  lastAirDate: item.lastAirDate || item.last_air_date,
+                  userNotes: item.userNotes || item.notes,
+                  tags: item.tags || [],
+                  networks: item.networks || []
+                };
+                Library.upsert(mediaItem, list);
+                restoredCount++;
+              }
+            });
+          });
         }
         
+        // Restore custom lists and items (if present in backup)
+        if (userData.watchlists.customLists && Array.isArray(userData.watchlists.customLists)) {
+          const customListsData = {
+            customLists: userData.watchlists.customLists,
+            selectedListId: userData.watchlists.selectedListId || null,
+            maxLists: userData.watchlists.maxLists || 10
+          };
+          localStorage.setItem('flicklet.customLists.v2', JSON.stringify(customListsData));
+        }
+        
+        if (userData.watchlists.customItems && typeof userData.watchlists.customItems === 'object') {
+          Object.entries(userData.watchlists.customItems).forEach(([listId, items]: [string, any]) => {
+            if (Array.isArray(items)) {
+              items.forEach((item: any) => {
+                if (item && item.id) {
+                  const mediaItem: MediaItem = {
+                    id: item.id,
+                    mediaType: item.mediaType || 'movie',
+                    title: item.title || item.name || 'Untitled',
+                    year: item.year,
+                    posterUrl: item.posterUrl || item.poster_path,
+                    voteAverage: item.voteAverage || item.vote_average,
+                    userRating: item.userRating || item.user_rating,
+                    synopsis: item.synopsis || item.overview,
+                    userNotes: item.userNotes || item.notes,
+                    tags: item.tags || []
+                  };
+                  Library.upsert(mediaItem, `custom:${listId}` as ListName);
+                  restoredCount++;
+                }
+              });
+            }
+          });
+        }
+        
+        // Restore settings and user data
         if (userData.settings) {
           localStorage.setItem('flicklet-settings', JSON.stringify(userData.settings));
         }
@@ -868,7 +1028,7 @@ function DataTab({ setShowSharingModal }: { setShowSharingModal: (show: boolean)
           localStorage.setItem('flicklet-user', JSON.stringify(userData.user));
         }
 
-        alert('✅ Data restored successfully! Please refresh the page to see changes.');
+        alert(`✅ Data restored successfully! ${restoredCount} items restored. Please refresh the page to see changes.`);
         
         // Trigger page refresh after a short delay
         setTimeout(() => {
@@ -877,7 +1037,7 @@ function DataTab({ setShowSharingModal }: { setShowSharingModal: (show: boolean)
         
       } catch (error) {
         console.error('Restore failed:', error);
-        alert('❌ Restore failed. Please check the backup file and try again.');
+        alert(`❌ Restore failed: ${error instanceof Error ? error.message : 'Unknown error'}. Please check the backup file and try again.`);
       }
     };
     input.click();

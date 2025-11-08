@@ -3,12 +3,21 @@ import { getFirebaseAuth, firebaseReady } from "../lib/firebaseBootstrap";
 import { authManager } from "../lib/auth";
 // import type { UserSettings } from '../lib/auth.types'; // Unused
 
+// Get diagnostics from window if available (avoids circular dependency)
+const getDiagnostics = () => {
+  if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
+    return (window as any).flickerDiagnostics;
+  }
+  return null;
+};
+
 // Create a simple state manager for username
 class UsernameStateManager {
   private username: string = "";
   private usernamePrompted: boolean = false;
   private loading: boolean = true;
   skipInProgress: boolean = false; // Public to allow skipUsernamePrompt to set it
+  isLoading: boolean = false; // Public to allow loadUsername to check/set it (shared across all instances)
   private subscribers: Set<() => void> = new Set();
 
   getState() {
@@ -98,25 +107,27 @@ export function useUsername() {
   useEffect(() => {
     // Only run if Firebase is ready
     if (!firebaseIsReady) return;
-    let isLoading = false; // Track if loadUsername is currently running
     
-    const loadUsername = async () => {
+      const loadUsername = async () => {
       // Don't reload if skip is in progress (prevents overwriting optimistic state)
       if (usernameStateManager.skipInProgress) {
         console.log("⏸️ Skipping loadUsername - skip in progress");
+        getDiagnostics()?.log('useUsername', 'LOAD_SKIPPED', { reason: 'skipInProgress' });
         // Still set loading to false so modal can show if needed
         usernameStateManager.setLoading(false);
         return;
       }
 
-      // Prevent concurrent calls
-      if (isLoading) {
+      // Prevent concurrent calls using shared flag (prevents multiple instances from loading simultaneously)
+      if (usernameStateManager.isLoading) {
         console.log("⏸️ Skipping loadUsername - already loading");
+        getDiagnostics()?.log('useUsername', 'LOAD_SKIPPED', { reason: 'alreadyLoading' });
         return;
       }
 
-      isLoading = true;
+      usernameStateManager.isLoading = true;
       usernameStateManager.setLoading(true);
+      getDiagnostics()?.log('useUsername', 'LOAD_START', { timestamp: Date.now() });
 
       const currentUser = authManager.getCurrentUser();
       console.log("🔄 Loading username for user:", currentUser?.uid);
@@ -161,8 +172,12 @@ export function useUsername() {
 
           // Only update if skip is not in progress (skip sets optimistic state)
           if (!usernameStateManager.skipInProgress) {
+            const oldUsername = usernameStateManager.getState().username;
             usernameStateManager.setUsernamePrompted(promptedValue);
             usernameStateManager.setUsername(usernameValue);
+            
+            // Track username state change for diagnostics
+            getDiagnostics()?.logStateChange('useUsername', 'username', oldUsername, usernameValue);
             
             // Enhanced logging for investigation
             const logData = {
@@ -174,6 +189,7 @@ export function useUsername() {
               environment: window.location.hostname === 'localhost' ? 'localhost' : 'production',
             };
             console.log("✅ Username loaded:", logData);
+            getDiagnostics()?.log('useUsername', 'LOAD_SUCCESS', logData);
             
             // Store in localStorage for investigation (production-safe, limited size)
             try {
@@ -212,7 +228,7 @@ export function useUsername() {
           // ignore
         }
       } finally {
-        isLoading = false;
+        usernameStateManager.isLoading = false;
         usernameStateManager.setLoading(false);
       }
     };
@@ -224,36 +240,48 @@ export function useUsername() {
     
     doInitialLoad();
 
+    // Debounce auth subscription callbacks to prevent multiple rapid loadUsername() calls
+    // AuthManager notifies listeners multiple times (immediate, after doc creation, on error)
+    // This debouncing prevents username flicker from rapid state changes
+    let authSubscriptionTimeout: ReturnType<typeof setTimeout> | null = null;
+    
     // Subscribe to auth state changes
     const unsubscribe = authManager.subscribe((user) => {
       console.log("🔔 Auth subscription triggered:", {
         hasUser: !!user?.uid,
         uid: user?.uid,
       });
+      getDiagnostics()?.logSubscription('useUsername', 'auth', { hasUser: !!user?.uid, uid: user?.uid });
       setFirebaseUser(auth.currentUser);
+      
+      // Clear any pending debounced call
+      if (authSubscriptionTimeout) {
+        clearTimeout(authSubscriptionTimeout);
+        authSubscriptionTimeout = null;
+      }
+      
       if (user?.uid) {
         // User logged in - reload username
-        // ⚠️ FIXED: Always reload username after sign-in, even if initial load is in progress
-        // The initial load might be for a different user (or no user), so we need to reload
+        // ⚠️ FIXED: Debounce to prevent multiple rapid calls from auth notifications
+        // AuthManager notifies listeners multiple times (immediate, after doc creation, on error)
+        // We debounce to only load once after all notifications settle
         if (!usernameStateManager.skipInProgress) {
-          // Use a small delay to ensure Firestore document is created after sign-in
-          setTimeout(() => {
-            if (!isLoading) {
+          // Debounce: wait 300ms after last auth notification before loading
+          // This ensures we only load once even if authManager notifies multiple times
+          authSubscriptionTimeout = setTimeout(() => {
+            // Check again if still not loading (prevents race condition)
+            if (!usernameStateManager.isLoading && !usernameStateManager.skipInProgress) {
               loadUsername();
             } else {
-              // If still loading, wait a bit more and try again
-              setTimeout(() => {
-                if (!isLoading) {
-                  loadUsername();
-                }
-              }, 500);
+              console.log("⏸️ Skipping loadUsername from auth subscription - already loading or skip in progress");
             }
-          }, 200);
+            authSubscriptionTimeout = null;
+          }, 300);
         } else {
           console.log("⏸️ Skipping loadUsername from auth subscription - skip in progress");
         }
       } else {
-        // User logged out - reset state
+        // User logged out - reset state immediately (no debounce needed)
         usernameStateManager.setUsername("");
         usernameStateManager.setUsernamePrompted(false);
         usernameStateManager.setLoading(false);

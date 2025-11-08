@@ -125,15 +125,31 @@ export const flickerDiagnostics = {
 if (typeof window !== 'undefined') {
   (window as any).flickerDiagnostics = flickerDiagnostics;
   
-  // Listen for library:updated events
-  window.addEventListener('library:updated', () => {
-    flickerDiagnostics.logEvent('library:updated');
+  // Track ALL custom events that could cause re-renders
+  const eventsToTrack = [
+    'library:updated',
+    'library:changed',
+    'auth:changed',
+    'auth:ready',
+    'customLists:updated',
+    'force-refresh',
+    'pushstate',
+    'cards:changed',
+    'library:reloaded',
+  ];
+  
+  eventsToTrack.forEach(eventName => {
+    window.addEventListener(eventName, (e: any) => {
+      flickerDiagnostics.logEvent(eventName, e.detail || {});
+    });
   });
   
-  // Listen for library:changed events
-  window.addEventListener('library:changed', (e: any) => {
-    flickerDiagnostics.logEvent('library:changed', e.detail);
-  });
+  // Also track pushstate events (history changes)
+  const originalPushState = window.history.pushState;
+  window.history.pushState = function(...args) {
+    flickerDiagnostics.logEvent('history:pushstate', { url: args[2] });
+    return originalPushState.apply(window.history, args);
+  };
 }
 
 

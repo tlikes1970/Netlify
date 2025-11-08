@@ -3,7 +3,7 @@ import { fetchGenreContent, CardData } from '@/lib/tmdb';
 // import { useSettings, getPersonalityText } from '@/lib/settings'; // Unused
 import { ForYouRow } from '@/components/GenreRowConfig';
 import { Library } from '@/lib/storage';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export function useGenreContent(mainGenre: string, subGenre: string) {
   // const settings = useSettings(); // Unused
@@ -29,12 +29,20 @@ export function useForYouContent(forYouRows: ForYouRow[]) {
   
   // State to trigger re-renders when library changes
   const [libraryVersion, setLibraryVersion] = useState(0);
+  const prevLibrarySizeRef = useRef(Library.getAll().length);
   
-  // Subscribe to library changes
+  // Subscribe to library changes - only update if library size actually changed
+  // This prevents unnecessary re-renders when library updates don't affect filtering
   useEffect(() => {
     const unsubscribe = Library.subscribe(() => {
-      console.log('🔄 Library changed, updating For You filtering');
-      setLibraryVersion(prev => prev + 1);
+      const currentSize = Library.getAll().length;
+      // Only update if library size changed (items added/removed)
+      // This is a simple heuristic - could be improved to check specific items
+      if (currentSize !== prevLibrarySizeRef.current) {
+        console.log('🔄 Library changed, updating For You filtering');
+        prevLibrarySizeRef.current = currentSize;
+        setLibraryVersion(prev => prev + 1);
+      }
     });
     return () => {
       unsubscribe();
