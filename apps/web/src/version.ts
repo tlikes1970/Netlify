@@ -1,5 +1,14 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.143: i18n rAF-batched update containment w/ runtime flags + diagnostics
+// - Added i18n/featureFlags.ts for runtime toggles (localStorage-based)
+// - Added i18n/rafBatcher.ts for requestAnimationFrame batching
+// - Added i18n/translationBus.ts for centralized translation notifications
+// - Updated useTranslations to handle batched payloads (array normalization)
+// - Enhanced diagnostics to track containment metrics (bursts, maxEventsIn50ms)
+// - Runtime toggle: localStorage.setItem('i18n:containment', 'on'|'off')
+// - Diagnostics auto-run: localStorage.setItem('i18n:diagnostics:autoRun', 'true')
+// - All changes behind flags, default behavior unchanged, reversible in one commit
 // ⚠️ VERSION 0.1.142: Added unified I18N diagnostics system
 // - Created i18nDiagnostics.ts with structured JSON report generation
 // - Tracks: Strict Mode effects, provider identity, subscriber metrics, batching, key violations
@@ -38,4 +47,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.142";
+export const APP_VERSION = "0.1.143";

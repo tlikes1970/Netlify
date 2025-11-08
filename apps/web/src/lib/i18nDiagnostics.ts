@@ -6,6 +6,7 @@
  */
 
 import { APP_VERSION } from '../version';
+import { isI18nContainmentEnabled, isI18nDiagnosticsEnabled, getI18nDiagnosticsDuration } from '../i18n/featureFlags';
 
 // Lazy access to languageManager to avoid circular dependency
 // Access it from the module after initialization
@@ -28,8 +29,10 @@ function getLanguageManager() {
 }
 
 // Feature flag - enable via localStorage or URL param
+// Now uses centralized feature flags
 const I18N_DIAGNOSTICS_ENABLED = 
   typeof window !== 'undefined' && (
+    isI18nDiagnosticsEnabled() ||
     new URLSearchParams(window.location.search).get('i18n-diagnostics') === 'true' ||
     localStorage.getItem('i18n-diagnostics') === 'enabled'
   );
@@ -82,6 +85,19 @@ interface I18NDiagnosticsReport {
     rendersAfter: number;
     improvement: number;
   };
+  containment: {
+    enabled: boolean;
+    mode: 'off' | 'raf';
+    stats: {
+      burstsDetected: number;
+      maxEventsIn50ms: number;
+      totalEventsInBursts: number;
+    };
+    deltas?: {
+      off: { burstsDetected: number; maxEventsIn50ms: number };
+      on: { burstsDetected: number; maxEventsIn50ms: number };
+    };
+  };
 }
 
 // Data collectors
@@ -118,9 +134,17 @@ class I18NDiagnosticsCollector {
   private containmentEnabled = false;
   private rendersBeforeContainment = 0;
   private rendersAfterContainment = 0;
+  private containmentStats = {
+    burstsDetected: 0,
+    maxEventsIn50ms: 0,
+    totalEventsInBursts: 0
+  };
   
   constructor() {
     if (!this.enabled) return;
+    
+    // Track containment state
+    this.containmentEnabled = isI18nContainmentEnabled();
     
     // Delay provider identity tracking to avoid circular dependency
     // Wait for next tick so all modules are initialized
@@ -129,8 +153,9 @@ class I18NDiagnosticsCollector {
         this.trackProviderIdentity();
       }, 0);
       
-      // Auto-generate report after 60 seconds or on manual trigger
-      setTimeout(() => this.generateReport(), 60000);
+      // Auto-generate report after configured duration
+      const duration = getI18nDiagnosticsDuration();
+      setTimeout(() => this.generateReport(), duration);
       
       // Also expose manual trigger
       (window as any).generateI18NReport = () => this.generateReport();
@@ -277,6 +302,13 @@ class I18NDiagnosticsCollector {
     const duration = (Date.now() - this.startTime) / 1000;
     const batching = this.calculateBatching();
     
+    // Update containment stats from batching
+    this.containmentStats = {
+      burstsDetected: batching.burstsDetected,
+      maxEventsIn50ms: batching.maxEventsIn50ms,
+      totalEventsInBursts: batching.totalEventsInBursts
+    };
+    
     const totalRenders = Array.from(this.renders.values()).reduce((sum, renders) => sum + renders.length, 0);
     const uniqueMountIds = new Set([
       ...Array.from(this.subscriptions.keys()),
@@ -329,6 +361,14 @@ class I18NDiagnosticsCollector {
         improvement: this.rendersAfterContainment > 0 
           ? ((this.rendersBeforeContainment - this.rendersAfterContainment) / this.rendersBeforeContainment) * 100
           : 0
+      },
+      containment: {
+        enabled: this.containmentEnabled,
+        mode: this.containmentEnabled ? 'raf' : 'off',
+        stats: this.containmentStats,
+        // deltas would be populated if we had before/after comparison
+        // For now, this is a single run
+        deltas: undefined
       }
     };
     
@@ -340,7 +380,8 @@ class I18NDiagnosticsCollector {
     // Download as JSON file
     this.downloadReport(report);
     
-    console.info('[I18N] Diagnostics report generated. Run generateI18NReport() to regenerate.');
+    const containmentStatus = this.containmentEnabled ? 'on' : 'off';
+    console.info(`[I18N] Diagnostics complete (containment=${containmentStatus}). Report at localStorage["i18n:diagnosticsReport"].`);
     
     return report;
   }

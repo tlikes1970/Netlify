@@ -3,6 +3,7 @@ import * as React from 'react';
 import type { Language } from './language.types';
 import TRANSLATIONS from './translations';
 import { i18nDiagnostics } from './i18nDiagnostics';
+import { translationBus, type TranslationUpdate } from '../i18n/translationBus';
 
 const KEY = 'flicklet.language.v2';
 
@@ -37,6 +38,16 @@ class LanguageManager {
     if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
       (window as any).flickerDiagnostics.logSubscription('LanguageManager', 'notify', { subscriberCount: this.subscribers.size });
     }
+    
+    // Notify via translation bus (supports batching when containment enabled)
+    const update = {
+      translations: this.getTranslations(),
+      language: this.currentLanguage,
+      timestamp: Date.now()
+    };
+    translationBus.notify(update);
+    
+    // Also notify legacy subscribers directly (for backward compatibility)
     this.subscribers.forEach(callback => callback());
   }
 
@@ -161,8 +172,12 @@ export function useTranslations() {
       });
     }
     
-    const unsubscribe = languageManager.subscribe(() => {
-      const newTranslations = languageManager.getTranslations();
+    // Subscribe to translation bus (supports batched updates when containment enabled)
+    const handleTranslationUpdate = (payload: TranslationUpdate | TranslationUpdate[]) => {
+      // Normalize: if array (batched), use the last update (most recent)
+      // If single, use it directly
+      const update = Array.isArray(payload) ? payload[payload.length - 1] : payload;
+      const newTranslations = update.translations;
       
       // I18N Diagnostics - track provider identity changes
       if (i18nDiagnostics) {
@@ -181,7 +196,26 @@ export function useTranslations() {
         // Log when we skip an update to track unnecessary notifications
         diagnostics.log('useTranslations', 'SKIP_UPDATE', { reason: 'translations unchanged' });
       }
+    };
+    
+    // Subscribe to translation bus
+    const unsubscribeBus = translationBus.subscribe(handleTranslationUpdate);
+    
+    // Also subscribe to legacy languageManager for backward compatibility
+    const unsubscribeLegacy = languageManager.subscribe(() => {
+      const newTranslations = languageManager.getTranslations();
+      handleTranslationUpdate({
+        translations: newTranslations,
+        language: languageManager.getLanguage(),
+        timestamp: Date.now()
+      });
     });
+    
+    // Return combined unsubscribe
+    const unsubscribe = () => {
+      unsubscribeBus();
+      unsubscribeLegacy();
+    };
     
     return () => {
       // I18N Diagnostics tracking
