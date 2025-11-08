@@ -1,5 +1,11 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.139: Enhanced flicker diagnostics with mount/unmount and render tracking
+// - Added logMount() and logUnmount() methods to flickerDiagnostics
+// - Enhanced useTranslations to track every render, mount, unmount, and effect lifecycle
+// - Added unique mountId to track individual hook instances across mount/unmount cycles
+// - Increased MAX_LOGS from 200 to 500 to capture more diagnostic data
+// - This will help determine root cause: are components mounting/unmounting or just re-rendering?
 // ⚠️ VERSION 0.1.138: Fixed React hooks violation, backend API, and TMDB proxy issues
 // - Fixed React hooks violation in App.tsx: moved loadingTimeout hooks before early returns
 // - Fixed backend 500 error: changed take: 0 to take: pageSize in posts.js
@@ -18,4 +24,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.138";
+export const APP_VERSION = "0.1.139";

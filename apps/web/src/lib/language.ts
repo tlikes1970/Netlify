@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import * as React from 'react';
 import type { Language } from './language.types';
 import TRANSLATIONS from './translations';
 
@@ -89,19 +90,64 @@ export function useLanguage() {
 
 // React hook for translations
 export function useTranslations() {
+  const diagnostics = typeof window !== 'undefined' ? (window as any).flickerDiagnostics : null;
+  const renderCountRef = React.useRef(0);
+  const mountIdRef = React.useRef<string | null>(null);
+  
+  // Track every render
+  renderCountRef.current += 1;
+  const isFirstRender = renderCountRef.current === 1;
+  
+  // Generate unique mount ID for this hook instance
+  if (isFirstRender && !mountIdRef.current) {
+    mountIdRef.current = `useTranslations-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+  
+  if (diagnostics) {
+    if (isFirstRender) {
+      diagnostics.logMount('useTranslations', { 
+        renderCount: renderCountRef.current,
+        mountId: mountIdRef.current 
+      });
+    } else {
+      diagnostics.logRender('useTranslations', { 
+        renderCount: renderCountRef.current, 
+        isReRender: true,
+        mountId: mountIdRef.current
+      });
+    }
+  }
+  
   const [translations, setTranslations] = useState(languageManager.getTranslations());
 
   useEffect(() => {
     // Track subscription for diagnostics
-    if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
-      (window as any).flickerDiagnostics.logSubscription('useTranslations', 'subscribe', {});
+    if (diagnostics) {
+      diagnostics.logEffect('useTranslations', 'effect-mount', []);
+      diagnostics.logSubscription('useTranslations', 'subscribe', { 
+        renderCount: renderCountRef.current,
+        mountId: mountIdRef.current
+      });
     }
     
     const unsubscribe = languageManager.subscribe(() => {
       const newTranslations = languageManager.getTranslations();
+      if (diagnostics) {
+        diagnostics.logStateChange('useTranslations', 'translations', translations, newTranslations);
+      }
       setTranslations(newTranslations);
     });
-    return unsubscribe;
+    
+    return () => {
+      if (diagnostics) {
+        diagnostics.logEffect('useTranslations', 'effect-unmount', []);
+        diagnostics.logUnmount('useTranslations', { 
+          renderCount: renderCountRef.current,
+          mountId: mountIdRef.current
+        });
+      }
+      unsubscribe();
+    };
   }, []);
 
   return translations;

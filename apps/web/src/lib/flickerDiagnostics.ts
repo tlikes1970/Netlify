@@ -25,7 +25,7 @@ const logs: Array<{
   stack?: string;
 }> = [];
 
-const MAX_LOGS = 200;
+const MAX_LOGS = 500; // Increased to capture more data for root cause analysis
 
 function log(component: string, event: string, data?: any) {
   if (!ENABLED) return;
@@ -69,6 +69,14 @@ export const flickerDiagnostics = {
   
   logEvent(eventName: string, data?: any) {
     log('EVENT', eventName, data);
+  },
+
+  logMount(component: string, data?: any) {
+    log(component, 'MOUNT', data);
+  },
+
+  logUnmount(component: string, data?: any) {
+    log(component, 'UNMOUNT', data);
   },
   
   getLogs() {
