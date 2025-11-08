@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import * as React from 'react';
 import type { Language } from './language.types';
 import TRANSLATIONS from './translations';
+import { i18nDiagnostics } from './i18nDiagnostics';
 
 const KEY = 'flicklet.language.v2';
 
@@ -44,8 +45,14 @@ class LanguageManager {
   }
 
   setLanguage(language: Language): void {
+    const changed = this.currentLanguage !== language;
     this.currentLanguage = language;
     this.saveLanguage();
+    
+    // I18N Diagnostics - track language changes
+    if (changed && i18nDiagnostics) {
+      i18nDiagnostics.logEvent('language-change');
+    }
   }
 
   subscribe(callback: () => void): () => void {
@@ -104,6 +111,15 @@ export function useTranslations() {
     mountIdRef.current = `useTranslations-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
   
+  // I18N Diagnostics tracking
+  if (i18nDiagnostics && mountIdRef.current) {
+    if (isFirstRender) {
+      i18nDiagnostics.logMount(mountIdRef.current);
+    } else {
+      i18nDiagnostics.logRender(mountIdRef.current);
+    }
+  }
+  
   if (diagnostics) {
     if (isFirstRender) {
       diagnostics.logMount('useTranslations', { 
@@ -122,6 +138,15 @@ export function useTranslations() {
   const [translations, setTranslations] = useState(languageManager.getTranslations());
 
   useEffect(() => {
+    const mountId = mountIdRef.current;
+    const subscriptionTime = Date.now();
+    
+    // I18N Diagnostics tracking
+    if (i18nDiagnostics && mountId) {
+      i18nDiagnostics.logSubscription(mountId, subscriptionTime);
+      i18nDiagnostics.logEvent('subscription');
+    }
+    
     // Track subscription for diagnostics
     if (diagnostics) {
       diagnostics.logEffect('useTranslations', 'effect-mount', []);
@@ -133,6 +158,11 @@ export function useTranslations() {
     
     const unsubscribe = languageManager.subscribe(() => {
       const newTranslations = languageManager.getTranslations();
+      
+      // I18N Diagnostics - track provider identity changes
+      if (i18nDiagnostics) {
+        i18nDiagnostics.logEvent('provider-notify');
+      }
       
       // Only update if translations actually changed (prevent unnecessary re-renders)
       // Compare by reference since TRANSLATIONS[language] returns constant objects
@@ -149,6 +179,11 @@ export function useTranslations() {
     });
     
     return () => {
+      // I18N Diagnostics tracking
+      if (i18nDiagnostics && mountId) {
+        i18nDiagnostics.logUnmount(mountId);
+      }
+      
       if (diagnostics) {
         diagnostics.logEffect('useTranslations', 'effect-unmount', []);
         diagnostics.logUnmount('useTranslations', { 

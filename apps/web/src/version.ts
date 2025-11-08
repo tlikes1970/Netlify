@@ -1,5 +1,10 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.142: Added unified I18N diagnostics system
+// - Created i18nDiagnostics.ts with structured JSON report generation
+// - Tracks: Strict Mode effects, provider identity, subscriber metrics, batching, key violations
+// - Saves report to localStorage and downloads as JSON file
+// - Enable via ?i18n-diagnostics=true or localStorage.setItem('i18n-diagnostics', 'enabled')
 // ⚠️ VERSION 0.1.141: Fixed useTranslations subscription cascade causing flicker
 // - Added prevTranslationsRef to track previous translations value
 // - Only call setTranslations() when translations actually change (prevent unnecessary re-renders)
@@ -33,4 +38,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.141";
+export const APP_VERSION = "0.1.142";
