@@ -1,5 +1,14 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.141: Fixed useTranslations subscription cascade causing flicker
+// - Added prevTranslationsRef to track previous translations value
+// - Only call setTranslations() when translations actually change (prevent unnecessary re-renders)
+// - This fixes the 3600 subscription->render pairs from 160 subscriptions (22.5 renders per subscription)
+// - Root cause: subscription callback was always calling setState even when value didn't change
+// ⚠️ VERSION 0.1.140: Added root cause analysis function to flicker diagnostics
+// - Added analyzeRootCause() method to flickerDiagnostics
+// - Answers 3 key questions: mount vs render, subscription cascades, rapid sequences
+// - Provides automated analysis with recommendations
 // ⚠️ VERSION 0.1.139: Enhanced flicker diagnostics with mount/unmount and render tracking
 // - Added logMount() and logUnmount() methods to flickerDiagnostics
 // - Enhanced useTranslations to track every render, mount, unmount, and effect lifecycle
@@ -24,4 +33,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.139";
+export const APP_VERSION = "0.1.141";

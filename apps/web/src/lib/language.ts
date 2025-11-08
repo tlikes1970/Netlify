@@ -93,6 +93,7 @@ export function useTranslations() {
   const diagnostics = typeof window !== 'undefined' ? (window as any).flickerDiagnostics : null;
   const renderCountRef = React.useRef(0);
   const mountIdRef = React.useRef<string | null>(null);
+  const prevTranslationsRef = React.useRef(languageManager.getTranslations());
   
   // Track every render
   renderCountRef.current += 1;
@@ -132,10 +133,19 @@ export function useTranslations() {
     
     const unsubscribe = languageManager.subscribe(() => {
       const newTranslations = languageManager.getTranslations();
-      if (diagnostics) {
-        diagnostics.logStateChange('useTranslations', 'translations', translations, newTranslations);
+      
+      // Only update if translations actually changed (prevent unnecessary re-renders)
+      // Compare by reference since TRANSLATIONS[language] returns constant objects
+      if (newTranslations !== prevTranslationsRef.current) {
+        if (diagnostics) {
+          diagnostics.logStateChange('useTranslations', 'translations', prevTranslationsRef.current, newTranslations);
+        }
+        prevTranslationsRef.current = newTranslations;
+        setTranslations(newTranslations);
+      } else if (diagnostics) {
+        // Log when we skip an update to track unnecessary notifications
+        diagnostics.log('useTranslations', 'SKIP_UPDATE', { reason: 'translations unchanged' });
       }
-      setTranslations(newTranslations);
     });
     
     return () => {
