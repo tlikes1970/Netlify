@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, useEffect } from 'react';
+import { useState, lazy, Suspense, useEffect, useRef } from 'react';
 import { useTranslations } from '@/lib/language';
 import FlickWordStats from './games/FlickWordStats';
 import TriviaStats from './games/TriviaStats';
@@ -33,15 +33,32 @@ export default function CommunityPanel() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
   const [postsError, setPostsError] = useState<string | null>(null);
+  const fetchingRef = useRef(false);
+  const hasFetchedRef = useRef(false);
 
   // Fetch posts from API
   const fetchPosts = async () => {
+    // Prevent multiple simultaneous fetches
+    if (fetchingRef.current) {
+      return;
+    }
+
+    // Determine API URL - check for environment variable or use default
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+    
+    // Skip fetch in production if API URL is localhost (backend not available)
+    if (!import.meta.env.DEV && apiUrl.includes('localhost')) {
+      setPostsLoading(false);
+      setPostsError('Community features require a backend server.');
+      setPosts([]);
+      hasFetchedRef.current = true;
+      return;
+    }
+
     try {
+      fetchingRef.current = true;
       setPostsLoading(true);
       setPostsError(null);
-      
-      // Determine API URL - check for environment variable or use default
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
       
       const response = await fetch(`${apiUrl}/api/v1/posts?page=1&pageSize=5&sort=newest`);
       
@@ -51,6 +68,7 @@ export default function CommunityPanel() {
       
       const data = await response.json();
       setPosts(data.posts || []);
+      hasFetchedRef.current = true;
     } catch (error) {
       console.error('[CommunityPanel] Error fetching posts:', error);
       // More user-friendly error message
@@ -60,17 +78,23 @@ export default function CommunityPanel() {
         setPostsError(error instanceof Error ? error.message : 'Failed to load posts');
       }
       setPosts([]);
+      hasFetchedRef.current = true; // Mark as fetched even on error to prevent retry loop
     } finally {
       setPostsLoading(false);
+      fetchingRef.current = false;
     }
   };
 
   useEffect(() => {
-    fetchPosts();
+    // Only fetch once on mount
+    if (!hasFetchedRef.current) {
+      fetchPosts();
+    }
   }, []);
 
   const handlePostCreated = () => {
     // Refresh posts list after new post is created
+    hasFetchedRef.current = false; // Allow refetch after post creation
     fetchPosts();
   };
 
