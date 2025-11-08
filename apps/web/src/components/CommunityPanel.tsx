@@ -4,6 +4,7 @@ import FlickWordStats from './games/FlickWordStats';
 import TriviaStats from './games/TriviaStats';
 import CommunityPlayer from './CommunityPlayer';
 import NewPostModal from './NewPostModal';
+import { flickerDiagnostics } from '@/lib/flickerDiagnostics';
 
 // Lazy load game modals
 const FlickWordModal = lazy(() => import('./games/FlickWordModal'));
@@ -26,6 +27,8 @@ interface Post {
 }
 
 export default function CommunityPanel() {
+  flickerDiagnostics.logRender('CommunityPanel', { timestamp: Date.now() });
+  
   const translations = useTranslations();
   const [flickWordModalOpen, setFlickWordModalOpen] = useState(false);
   const [triviaModalOpen, setTriviaModalOpen] = useState(false);
@@ -35,6 +38,9 @@ export default function CommunityPanel() {
   const [postsError, setPostsError] = useState<string | null>(null);
   const fetchingRef = useRef(false);
   const hasFetchedRef = useRef(false);
+  const prevPostsRef = useRef<Post[]>([]);
+  const prevLoadingRef = useRef(true);
+  const prevErrorRef = useRef<string | null>(null);
 
   // Fetch posts from API
   const fetchPosts = async () => {
@@ -67,25 +73,35 @@ export default function CommunityPanel() {
       }
       
       const data = await response.json();
-      setPosts(data.posts || []);
+      const newPosts = data.posts || [];
+      flickerDiagnostics.logStateChange('CommunityPanel', 'posts', prevPostsRef.current.length, newPosts.length);
+      prevPostsRef.current = newPosts;
+      setPosts(newPosts);
       hasFetchedRef.current = true;
     } catch (error) {
       console.error('[CommunityPanel] Error fetching posts:', error);
       // More user-friendly error message
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        setPostsError('Unable to connect to server. The backend may not be running.');
-      } else {
-        setPostsError(error instanceof Error ? error.message : 'Failed to load posts');
-      }
+      const errorMsg = error instanceof TypeError && error.message.includes('fetch')
+        ? 'Unable to connect to server. The backend may not be running.'
+        : (error instanceof Error ? error.message : 'Failed to load posts');
+      
+      flickerDiagnostics.logStateChange('CommunityPanel', 'postsError', prevErrorRef.current, errorMsg);
+      flickerDiagnostics.logStateChange('CommunityPanel', 'posts', prevPostsRef.current.length, 0);
+      prevErrorRef.current = errorMsg;
+      prevPostsRef.current = [];
+      setPostsError(errorMsg);
       setPosts([]);
       hasFetchedRef.current = true; // Mark as fetched even on error to prevent retry loop
     } finally {
+      flickerDiagnostics.logStateChange('CommunityPanel', 'postsLoading', prevLoadingRef.current, false);
+      prevLoadingRef.current = false;
       setPostsLoading(false);
       fetchingRef.current = false;
     }
   };
 
   useEffect(() => {
+    flickerDiagnostics.logEffect('CommunityPanel', 'mount', []);
     // Only fetch once on mount
     if (!hasFetchedRef.current) {
       fetchPosts();

@@ -490,9 +490,18 @@ export const Library = {
 };
 
 export function useLibrary(list: ListName) {
+  // Get diagnostics from window if available (avoids circular dependency)
+  const getDiagnostics = () => {
+    if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
+      return (window as any).flickerDiagnostics;
+    }
+    return null;
+  };
+  
   const [items, setItems] = React.useState(() => {
     const initialItems = Library.getByList(list);
     console.log(`🔍 useLibrary(${list}) initial state:`, initialItems.length, 'items');
+    getDiagnostics()?.logSubscription(`useLibrary(${list})`, 'initial', { count: initialItems.length });
     return initialItems;
   });
   
@@ -502,11 +511,13 @@ export function useLibrary(list: ListName) {
     if (newItems.length > 0) {
       console.log(`🔍 First item:`, { title: newItems[0].title, list: newItems[0].list });
     }
+    getDiagnostics()?.logSubscription(`useLibrary(${list})`, 'effect', { count: newItems.length });
     setItems(newItems);
     
     const unsub = Library.subscribe(() => {
       const updatedItems = Library.getByList(list);
       console.log(`🔔 Library.subscribe(${list}) triggered:`, updatedItems.length, 'items');
+      getDiagnostics()?.logSubscription(`useLibrary(${list})`, 'subscribe', { count: updatedItems.length });
       if (updatedItems.length > 0) {
         console.log(`🔔 First item:`, { title: updatedItems[0].title, list: updatedItems[0].list });
       }
