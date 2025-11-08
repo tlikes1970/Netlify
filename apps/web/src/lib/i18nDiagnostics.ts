@@ -6,7 +6,26 @@
  */
 
 import { APP_VERSION } from '../version';
-import { languageManager } from './language';
+
+// Lazy access to languageManager to avoid circular dependency
+// Access it from the module after initialization
+function getLanguageManager() {
+  // Access via dynamic import to break circular dependency
+  // This will be called after modules are initialized (via setTimeout)
+  try {
+    // In ES modules, we can't use require, so we'll access it from window
+    // or use a getter that's set after initialization
+    if (typeof window !== 'undefined' && (window as any).__languageManager) {
+      return (window as any).__languageManager;
+    }
+    // Fallback: try to import dynamically (async, but we'll handle it)
+    // For now, we'll set this up in language.ts
+    return null;
+  } catch (e) {
+    console.warn('[I18N Diagnostics] Could not access languageManager:', e);
+    return null;
+  }
+}
 
 // Feature flag - enable via localStorage or URL param
 const I18N_DIAGNOSTICS_ENABLED = 
@@ -103,11 +122,14 @@ class I18NDiagnosticsCollector {
   constructor() {
     if (!this.enabled) return;
     
-    // Track provider identity
-    this.trackProviderIdentity();
-    
-    // Auto-generate report after 60 seconds or on manual trigger
+    // Delay provider identity tracking to avoid circular dependency
+    // Wait for next tick so all modules are initialized
     if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        this.trackProviderIdentity();
+      }, 0);
+      
+      // Auto-generate report after 60 seconds or on manual trigger
       setTimeout(() => this.generateReport(), 60000);
       
       // Also expose manual trigger
@@ -117,6 +139,13 @@ class I18NDiagnosticsCollector {
   
   private trackProviderIdentity() {
     if (!this.enabled) return;
+    
+    // Lazy access to avoid circular dependency
+    const languageManager = getLanguageManager();
+    if (!languageManager) {
+      console.warn('[I18N Diagnostics] languageManager not available yet, skipping provider identity tracking');
+      return;
+    }
     
     let lastRef = languageManager.getTranslations();
     let lastLanguage = languageManager.getLanguage();

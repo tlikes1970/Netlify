@@ -71,6 +71,11 @@ class LanguageManager {
 
 export const languageManager = new LanguageManager();
 
+// Expose to window for i18nDiagnostics to access (breaks circular dependency)
+if (typeof window !== 'undefined') {
+  (window as any).__languageManager = languageManager;
+}
+
 // React hook for language
 export function useLanguage() {
   const [language, setLanguage] = useState(languageManager.getLanguage());
