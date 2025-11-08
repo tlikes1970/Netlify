@@ -7,6 +7,7 @@
 
 import { APP_VERSION } from '../version';
 import { isI18nContainmentEnabled, isI18nDiagnosticsEnabled, getI18nDiagnosticsDuration } from '../i18n/featureFlags';
+import { mode as getTranslationBusMode } from '../i18n/translationBus';
 
 // Lazy access to languageManager to avoid circular dependency
 // Access it from the module after initialization
@@ -364,7 +365,7 @@ class I18NDiagnosticsCollector {
       },
       containment: {
         enabled: this.containmentEnabled,
-        mode: this.containmentEnabled ? 'raf' : 'off',
+        mode: getTranslationBusMode(), // Get actual mode from translation bus
         stats: this.containmentStats,
         // deltas would be populated if we had before/after comparison
         // For now, this is a single run
@@ -380,8 +381,8 @@ class I18NDiagnosticsCollector {
     // Download as JSON file
     this.downloadReport(report);
     
-    const containmentStatus = this.containmentEnabled ? 'on' : 'off';
-    console.info(`[I18N] Diagnostics complete (containment=${containmentStatus}). Report at localStorage["i18n:diagnosticsReport"].`);
+    const actualMode = getTranslationBusMode();
+    console.info(`[I18N] Diagnostics complete (mode=${actualMode}). Report written.`);
     
     return report;
   }

@@ -41,7 +41,12 @@ export function createRafBatcher<T>(emit: (payloads: T[]) => void): RafBatcher<T
     if (scheduled) return;
     
     scheduled = true;
-    rafId = requestAnimationFrame(() => {
+    // SSR-safe: fallback to setTimeout if requestAnimationFrame unavailable
+    const rAF = typeof requestAnimationFrame === 'function' 
+      ? requestAnimationFrame 
+      : (cb: FrameRequestCallback) => setTimeout(() => cb(performance.now()), 16);
+    
+    rafId = rAF(() => {
       flush();
     });
   };

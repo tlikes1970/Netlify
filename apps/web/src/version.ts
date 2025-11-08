@@ -1,5 +1,13 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.144: i18n: bind real notify() to rAF batcher via runtime flag; normalize batched payloads; diagnostics prove mode
+// - Made translationBus the SINGLE SOURCE OF TRUTH (removed duplicate subscribers from LanguageManager)
+// - LanguageManager.emitChange() now ONLY calls translationBus.notify() - no legacy path
+// - useTranslations now ONLY subscribes to translationBus - no legacy subscription
+// - notify() checks containment flag on EVERY call to honor runtime toggles
+// - Added dev logs: [i18n] notify mode=raf|off to prove actual path
+// - Diagnostics now use actual mode from translationBus.mode()
+// - SSR-safe: localStorage checks, rAF fallback
 // ⚠️ VERSION 0.1.143: i18n rAF-batched update containment w/ runtime flags + diagnostics
 // - Added i18n/featureFlags.ts for runtime toggles (localStorage-based)
 // - Added i18n/rafBatcher.ts for requestAnimationFrame batching
@@ -47,4 +55,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.143";
+export const APP_VERSION = "0.1.144";

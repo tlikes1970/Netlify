@@ -10,7 +10,7 @@ const KEY = 'flicklet.language.v2';
 // Language state management
 class LanguageManager {
   private currentLanguage: Language;
-  private subscribers: Set<() => void> = new Set();
+  // Removed private subscribers - translationBus is now the single source of truth
 
   constructor() {
     this.currentLanguage = this.loadLanguage();
@@ -36,19 +36,17 @@ class LanguageManager {
   private emitChange(): void {
     // Track notification for diagnostics
     if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
-      (window as any).flickerDiagnostics.logSubscription('LanguageManager', 'notify', { subscriberCount: this.subscribers.size });
+      (window as any).flickerDiagnostics.logSubscription('LanguageManager', 'notify', {});
     }
     
-    // Notify via translation bus (supports batching when containment enabled)
+    // SINGLE SOURCE OF TRUTH: Only notify via translation bus
+    // This is the ONLY notification path - no legacy subscribers
     const update = {
       translations: this.getTranslations(),
       language: this.currentLanguage,
       timestamp: Date.now()
     };
     translationBus.notify(update);
-    
-    // Also notify legacy subscribers directly (for backward compatibility)
-    this.subscribers.forEach(callback => callback());
   }
 
   getLanguage(): Language {
@@ -66,13 +64,25 @@ class LanguageManager {
     }
   }
 
+  /**
+   * @deprecated Use translationBus.subscribe() instead
+   * This is kept for backward compatibility but routes through translationBus
+   */
   subscribe(callback: () => void): () => void {
-    this.subscribers.add(callback);
+    // Route through translation bus to maintain single source of truth
+    const listener = (payload: any) => {
+      // Legacy callbacks don't expect payload, just call them
+      callback();
+    };
+    
+    const unsubscribe = translationBus.subscribe(listener);
+    
     // Track subscription for diagnostics
     if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
       (window as any).flickerDiagnostics.logSubscription('LanguageManager', 'subscribe', {});
     }
-    return () => this.subscribers.delete(callback);
+    
+    return unsubscribe;
   }
 
   getTranslations() {
@@ -172,12 +182,14 @@ export function useTranslations() {
       });
     }
     
-    // Subscribe to translation bus (supports batched updates when containment enabled)
+    // SINGLE SOURCE OF TRUTH: Subscribe ONLY to translation bus
+    // No legacy subscriptions - translationBus is the canonical bus
     const handleTranslationUpdate = (payload: TranslationUpdate | TranslationUpdate[]) => {
       // Normalize: if array (batched), use the last update (most recent)
       // If single, use it directly
-      const update = Array.isArray(payload) ? payload[payload.length - 1] : payload;
-      const newTranslations = update.translations;
+      const updates = Array.isArray(payload) ? payload : [payload];
+      const last = updates[updates.length - 1];
+      const newTranslations = last.translations;
       
       // I18N Diagnostics - track provider identity changes
       if (i18nDiagnostics) {
@@ -198,24 +210,8 @@ export function useTranslations() {
       }
     };
     
-    // Subscribe to translation bus
-    const unsubscribeBus = translationBus.subscribe(handleTranslationUpdate);
-    
-    // Also subscribe to legacy languageManager for backward compatibility
-    const unsubscribeLegacy = languageManager.subscribe(() => {
-      const newTranslations = languageManager.getTranslations();
-      handleTranslationUpdate({
-        translations: newTranslations,
-        language: languageManager.getLanguage(),
-        timestamp: Date.now()
-      });
-    });
-    
-    // Return combined unsubscribe
-    const unsubscribe = () => {
-      unsubscribeBus();
-      unsubscribeLegacy();
-    };
+    // Subscribe ONLY to translation bus (single source of truth)
+    const unsubscribe = translationBus.subscribe(handleTranslationUpdate);
     
     return () => {
       // I18N Diagnostics tracking

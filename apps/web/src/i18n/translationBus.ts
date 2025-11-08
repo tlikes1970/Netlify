@@ -1,11 +1,12 @@
 /**
- * Translation Bus - Centralized translation update notification system
+ * Translation Bus - SINGLE SOURCE OF TRUTH for translation notifications
  * 
- * Wraps LanguageManager to provide batching via rAF when containment is enabled.
+ * All translation updates flow through this bus. When containment is enabled,
+ * notifications are batched via rAF. When disabled, notifications are immediate.
  */
 
 import { isI18nContainmentEnabled } from './featureFlags';
-import { createRafBatcher, RafBatcher } from './rafBatcher';
+import { createRafBatcher } from './rafBatcher';
 
 export type TranslationUpdate = {
   translations: any; // The translations object
@@ -15,119 +16,96 @@ export type TranslationUpdate = {
 
 export type Listener = (payload: TranslationUpdate | TranslationUpdate[]) => void;
 
-class TranslationBus {
-  private listeners: Set<Listener> = new Set();
-  private batcher: RafBatcher<TranslationUpdate> | null = null;
-  private containmentEnabled = false;
-  
-  constructor() {
-    this.updateContainmentState();
-  }
-  
-  /**
-   * Update containment state (call when flag changes)
-   */
-  updateContainmentState() {
-    const wasEnabled = this.containmentEnabled;
-    this.containmentEnabled = isI18nContainmentEnabled();
-    
-    // If containment state changed, recreate batcher
-    if (this.containmentEnabled !== wasEnabled) {
-      if (this.containmentEnabled) {
-        // Create batcher that emits arrays
-        this.batcher = createRafBatcher<TranslationUpdate>((payloads) => {
-          // Emit array to all listeners
-          this.listeners.forEach(listener => {
-            try {
-              listener(payloads);
-            } catch (e) {
-              console.error('[TranslationBus] Listener error:', e);
-            }
-          });
-        });
-      } else {
-        // Disable batching
-        if (this.batcher) {
-          this.batcher.flushNow();
-        }
-        this.batcher = null;
+// Single source of truth - only one Set of listeners
+const listeners = new Set<Listener>();
+
+// Emit function that calls all listeners
+function emitToAll(payload: TranslationUpdate | TranslationUpdate[]) {
+  for (const listener of listeners) {
+    try {
+      listener(payload);
+    } catch (e) {
+      // Optional: dev warn (but don't break in production)
+      if (import.meta.env.DEV) {
+        console.warn('[TranslationBus] Listener error:', e);
       }
     }
   }
-  
-  /**
-   * Subscribe to translation updates
-   */
-  subscribe(listener: Listener): () => void {
-    this.listeners.add(listener);
-    
-    // Update containment state in case it changed
-    this.updateContainmentState();
-    
-    return () => {
-      this.listeners.delete(listener);
-    };
-  }
-  
-  /**
-   * Unsubscribe a listener
-   */
-  unsubscribe(listener: Listener): void {
-    this.listeners.delete(listener);
-  }
-  
-  /**
-   * Notify all listeners of a translation update
-   */
-  notify(update: TranslationUpdate): void {
-    if (this.containmentEnabled && this.batcher) {
-      // Queue for batching
-      this.batcher.queue(update);
-    } else {
-      // Immediate notification (existing behavior)
-      this.listeners.forEach(listener => {
-        try {
-          listener(update);
-        } catch (e) {
-          console.error('[TranslationBus] Listener error:', e);
-        }
-      });
+}
+
+// Create batcher that emits arrays
+const batcher = createRafBatcher<TranslationUpdate>((items) => {
+  emitToAll(items);
+});
+
+// Current mode (updated on each notify to honor runtime flips)
+let currentMode: 'off' | 'raf' = 'off';
+
+function recomputeMode() {
+  currentMode = isI18nContainmentEnabled() ? 'raf' : 'off';
+}
+
+// Initialize mode
+recomputeMode();
+
+/**
+ * Subscribe to translation updates
+ */
+export function subscribe(listener: Listener): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+/**
+ * Unsubscribe a listener
+ */
+export function unsubscribe(listener: Listener): void {
+  listeners.delete(listener);
+}
+
+/**
+ * Notify all listeners of a translation update
+ * 
+ * Checks the containment flag on EVERY call to honor runtime toggles.
+ * When containment is ON, queues to rAF batcher.
+ * When containment is OFF, emits immediately.
+ */
+export function notify(update: TranslationUpdate): void {
+  // Check flag on every call (runtime toggle support)
+  const m = isI18nContainmentEnabled() ? 'raf' : 'off';
+  if (m !== currentMode) {
+    // If switching from raf to off, flush any pending batched updates
+    if (currentMode === 'raf' && m === 'off') {
+      batcher.flushNow();
     }
+    currentMode = m;
   }
   
-  /**
-   * Force flush any pending batched updates
-   */
-  flush(): void {
-    if (this.batcher) {
-      this.batcher.flushNow();
+  if (currentMode === 'raf') {
+    // Dev sanity log to prove we're using the batcher
+    if (import.meta.env.DEV) {
+      console.log('[i18n] notify mode=raf', performance.now());
     }
-  }
-  
-  /**
-   * Get current containment state
-   */
-  isContainmentEnabled(): boolean {
-    return this.containmentEnabled;
+    batcher.queue(update);
+  } else {
+    // Dev sanity log to prove we're using direct emit
+    if (import.meta.env.DEV) {
+      console.log('[i18n] notify mode=off', performance.now());
+    }
+    emitToAll(update);
   }
 }
 
-// Singleton instance
-export const translationBus = new TranslationBus();
-
-// Update containment state when localStorage changes (for runtime toggling)
-if (typeof window !== 'undefined') {
-  // Listen for storage events (from other tabs)
-  window.addEventListener('storage', (e) => {
-    if (e.key === 'i18n:containment') {
-      translationBus.updateContainmentState();
-    }
-  });
-  
-  // Also check periodically in case flag changed in same tab
-  // (storage event only fires for other tabs)
-  setInterval(() => {
-    translationBus.updateContainmentState();
-  }, 1000);
+/**
+ * Get current mode
+ */
+export function mode(): 'off' | 'raf' {
+  return currentMode;
 }
 
+/**
+ * Force flush any pending batched updates
+ */
+export function flush(): void {
+  batcher.flushNow();
+}

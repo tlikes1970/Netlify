@@ -8,44 +8,42 @@
  * Check if i18n diagnostics auto-run is enabled
  */
 export function isI18nDiagnosticsEnabled(): boolean {
-  if (typeof window === 'undefined') return false;
-  
   try {
-    // Check localStorage first (runtime override)
-    const localStorageValue = localStorage.getItem('i18n:diagnostics:autoRun');
-    if (localStorageValue === 'true') return true;
-    if (localStorageValue === 'false') return false;
-    
-    // Fallback to env var (build-time default)
-    if (import.meta.env.VITE_I18N_DIAGNOSTICS === 'true') return true;
-    
-    return false;
+    // Check localStorage first (runtime override) - SSR-safe
+    const ls = typeof localStorage !== 'undefined' ? localStorage.getItem('i18n:diagnostics:autoRun') : null;
+    if (ls) {
+      const value = ls.toLowerCase();
+      if (value === 'true') return true;
+      if (value === 'false') return false;
+    }
   } catch (e) {
-    // localStorage unavailable, default to false
-    return false;
+    // localStorage unavailable, continue to env fallback
   }
+  
+  // Fallback to env var (build-time default)
+  const env = (import.meta as any)?.env?.VITE_I18N_DIAGNOSTICS;
+  return String(env).toLowerCase() === 'true';
 }
 
 /**
  * Check if i18n containment (rAF batching) is enabled
  */
 export function isI18nContainmentEnabled(): boolean {
-  if (typeof window === 'undefined') return false;
-  
   try {
-    // Check localStorage first (runtime override)
-    const localStorageValue = localStorage.getItem('i18n:containment');
-    if (localStorageValue === 'on') return true;
-    if (localStorageValue === 'off') return false;
-    
-    // Fallback to env var (build-time default)
-    if (import.meta.env.VITE_I18N_CONTAINMENT === 'true') return true;
-    
-    return false;
+    // Check localStorage first (runtime override) - SSR-safe
+    const ls = typeof localStorage !== 'undefined' ? localStorage.getItem('i18n:containment') : null;
+    if (ls) {
+      const value = ls.toLowerCase();
+      if (value === 'on') return true;
+      if (value === 'off') return false;
+    }
   } catch (e) {
-    // localStorage unavailable, default to false
-    return false;
+    // localStorage unavailable, continue to env fallback
   }
+  
+  // Fallback to env var (build-time default)
+  const env = (import.meta as any)?.env?.VITE_I18N_CONTAINMENT;
+  return String(env).toLowerCase() === 'true';
 }
 
 /**
