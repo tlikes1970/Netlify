@@ -70,7 +70,7 @@ class LanguageManager {
    */
   subscribe(callback: () => void): () => void {
     // Route through translation bus to maintain single source of truth
-    const listener = (payload: any) => {
+    const listener = (_payload: any) => {
       // Legacy callbacks don't expect payload, just call them
       callback();
     };

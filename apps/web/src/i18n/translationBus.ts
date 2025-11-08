@@ -109,3 +109,12 @@ export function mode(): 'off' | 'raf' {
 export function flush(): void {
   batcher.flushNow();
 }
+
+// Export singleton instance for direct access if needed
+export const translationBus = {
+  subscribe,
+  unsubscribe,
+  notify,
+  mode,
+  flush
+};
