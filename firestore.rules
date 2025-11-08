@@ -108,6 +108,28 @@ service cloud.firestore {
         && userId == request.auth.uid;
     }
 
+    // ===== USERNAME CLAIMING RULES (TestFlight unblock) =====
+
+    // 1. Authenticated users can read ANY username doc (availability check)
+    match /usernames/{handle} {
+      allow read: if request.auth != null;
+      
+      // 2. Authenticated users can CLAIM a username (uid must match, one-time create)
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid
+                    && !exists(/databases/$(database)/documents/usernames/$(handle));
+      
+      // 3. Users can RELEASE their own username
+      allow delete: if request.auth != null
+                    && resource.data.uid == request.auth.uid;
+    }
+
+    // 4. Users can read/write their OWN settings sub-collection (username, prompted flag, etc.)
+    match /users/{userId}/settings/{doc=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    // ===== END USERNAME RULES =====
+
     // Admin rules - allow read/write for admin role (catch-all for any unmatched paths)
     match /{document=**} {
       allow read, write: if request.auth.token.role == 'admin';

@@ -1,3 +1,61 @@
+# Sign-On Process - Complete Code Reference
+
+## Plain Language Explanation
+
+**How Sign-On Works:**
+
+1. **App Starts**: When the app loads, it initializes Firebase and checks if you're already signed in.
+
+2. **Sign-In Screen**: If you're not signed in, the app shows a sign-in screen with options for Google, Apple, or Email.
+
+3. **Google Sign-In**: 
+   - On localhost: Opens a popup window, you sign in with Google, popup closes, you're signed in.
+   - On production: Redirects you to Google's sign-in page, you sign in, Google redirects you back to the app.
+
+4. **Apple Sign-In**: Always uses redirect - sends you to Apple, you sign in, Apple sends you back.
+
+5. **Email Sign-In**: You enter your email and password, the app checks with Firebase, and you're signed in.
+
+6. **After Sign-In**: 
+   - Firebase creates or updates your user account
+   - The app creates a document in Firestore with your information
+   - Your display name comes from Google/Apple (shown on the sign-in button)
+   - If you haven't chosen a username yet, you'll be prompted to pick one
+   - Your username is stored separately and used in greetings
+
+7. **Username Prompt**: 
+   - Shows after sign-in if you haven't set a username
+   - You can enter a username or skip
+   - Only shown once per account
+
+---
+
+## Issues (Not Fixed)
+
+### Issue 1: Slow Sign-On Screen Initialization
+- **Symptom**: Takes 10+ seconds to show the sign-on screen
+- **Location**: `auth.ts` - `onAuthStateChanged` not firing immediately
+- **Evidence**: Logs show `[AuthManager] Force initializing after timeout` and `[App] Auth initialization timeout - authInitialized still false after 10 seconds`
+
+### Issue 2: Username Prompt Not Showing After Sign-In
+- **Symptom**: After successful sign-in, username prompt modal does not appear
+- **Location**: `useUsername.ts` - username loading logic
+- **Evidence**: Logs show `⏸️ Skipping loadUsername from auth subscription {skipInProgress: false, initialLoadComplete: true, isLoading: true}` - loading state stuck
+
+### Issue 3: Display Name Overwritten with Stale Data
+- **Symptom**: After sign-in, display name shows old value (e.g., "sivarT") instead of current Google display name (e.g., "Travis Likes")
+- **Location**: `auth.ts` - `ensureUserDocument()` and `convertFirebaseUser()`
+- **Evidence**: User verified display name is "Travis Likes" in Google and Firebase, but app shows "sivarT"
+
+---
+
+## Complete Code Files
+
+**Note:** Due to file size limitations, the complete code is available in the following files. All code shown below is the exact content from the codebase.
+
+### File 1: apps/web/src/main.tsx
+
+```1:366:apps/web/src/main.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
@@ -341,7 +399,7 @@ import('./utils/debug-auth').then(m => {
       </React.StrictMode>
     );
   } catch (error) {
-    console.error('[Boot] bootstrapApp threw - still rendering', error);
+    console.error('[Boot] Failed to bootstrap app:', error);
     // Still render app even if Firebase bootstrap fails (graceful degradation)
     ReactDOM.createRoot(document.getElementById('root')!).render(
       <React.StrictMode>
@@ -352,7 +410,6 @@ import('./utils/debug-auth').then(m => {
         </QueryClientProvider>
       </React.StrictMode>
     );
-    console.log('[Boot] Emergency render finished');
   }
 })();
 
@@ -364,3 +421,24 @@ if (import.meta.env.DEV) {
 }
 
 registerServiceWorker();
+```
+
+**Note:** The remaining files are too large to include inline. Please see the individual files in the codebase:
+- `apps/web/src/lib/authFlow.ts`
+- `apps/web/src/lib/authLogin.ts`
+- `apps/web/src/lib/auth.ts`
+- `apps/web/src/components/AuthModal.tsx`
+- `apps/web/src/hooks/useAuth.ts`
+- `apps/web/src/hooks/useUsername.ts`
+- `apps/web/src/components/UsernamePromptModal.tsx`
+- `apps/web/src/components/FlickletHeader.tsx` (lines 50-72 for username prompt logic)
+- `apps/web/src/lib/firebaseBootstrap.ts`
+- `apps/web/src/lib/authGuard.ts`
+- `apps/web/src/lib/persistence.ts`
+- `apps/web/src/features/username/usernameFlow.ts`
+- `apps/web/src/lib/auth.types.ts`
+- `apps/web/src/lib/authDebug.ts`
+- `apps/web/src/lib/authBroadcast.ts`
+- `apps/web/src/lib/authLog.ts`
+- `apps/web/src/App.tsx` (lines 46-48, 152, 175, 198-234, 936-953 for auth-related code)
+

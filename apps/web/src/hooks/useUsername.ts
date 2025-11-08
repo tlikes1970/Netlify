@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { updateProfile } from "firebase/auth";
 import { getFirebaseAuth, firebaseReady } from "../lib/firebaseBootstrap";
 import { authManager } from "../lib/auth";
 // import type { UserSettings } from '../lib/auth.types'; // Unused
@@ -13,10 +12,11 @@ class UsernameStateManager {
   private subscribers: Set<() => void> = new Set();
 
   getState() {
+    // Always return a valid state object, never null
     return {
-      username: this.username,
-      usernamePrompted: this.usernamePrompted,
-      loading: this.loading,
+      username: this.username || "",
+      usernamePrompted: this.usernamePrompted ?? false,
+      loading: this.loading ?? true,
     };
   }
 
@@ -54,34 +54,50 @@ export function useUsername() {
     firebaseReady.then(() => setFirebaseIsReady(true));
   }, []);
 
-  if (!firebaseIsReady) {
-    return { 
-      loading: true, 
-      username: "", 
-      usernamePrompted: false, 
-      needsUsernamePrompt: () => false,
-      updateUsername: async () => {},
-      skipUsernamePrompt: async () => {},
-      user: null,
-    };
-  }
-
-  const [state, setState] = useState(() => usernameStateManager.getState());
+  // ⚠️ CRITICAL: All hooks must be called before any early returns
+  // This ensures hooks are called in the same order on every render
+  const [state, setState] = useState(() => {
+    try {
+      return usernameStateManager.getState();
+    } catch (e) {
+      console.error('[useUsername] Error getting initial state:', e);
+      return { username: "", usernamePrompted: false, loading: true };
+    }
+  });
+  
   const auth = getFirebaseAuth();
-  const [firebaseUser, setFirebaseUser] = useState(auth.currentUser);
+  const [firebaseUser, setFirebaseUser] = useState(() => {
+    try {
+      return auth.currentUser;
+    } catch (e) {
+      return null;
+    }
+  });
 
   useEffect(() => {
+    // Only subscribe if Firebase is ready
+    if (!firebaseIsReady) return;
+    
     const unsubscribe = usernameStateManager.subscribe(() => {
-      setState(usernameStateManager.getState());
+      try {
+        const newState = usernameStateManager.getState();
+        if (newState) {
+          setState(newState);
+        }
+      } catch (e) {
+        console.error('[useUsername] Error updating state:', e);
+      }
     });
     return () => {
       unsubscribe();
     };
-  }, []);
+  }, [firebaseIsReady]);
 
-  const { username, usernamePrompted, loading } = state;
-
+  // ⚠️ CRITICAL: This useEffect must be called before any early return
+  // It's guarded internally to only run when firebaseIsReady is true
   useEffect(() => {
+    // Only run if Firebase is ready
+    if (!firebaseIsReady) return;
     let isLoading = false; // Track if loadUsername is currently running
     
     const loadUsername = async () => {
@@ -116,7 +132,27 @@ export function useUsername() {
 
       try {
         const loadStartTime = performance.now();
-        const settings = await authManager.getUserSettings(currentUser.uid);
+        
+        // ⚠️ FIXED: Add retry logic for race condition
+        // Document might not be readable immediately after creation (Firestore eventual consistency)
+        let settings = null;
+        let retries = 0;
+        const maxRetries = 3;
+        const retryDelay = 200; // ms
+        
+        while (!settings && retries < maxRetries) {
+          settings = await authManager.getUserSettings(currentUser.uid);
+          
+          if (!settings && retries < maxRetries - 1) {
+            // Document might not exist yet - wait and retry
+            console.log(`⏳ Settings not found, retrying... (${retries + 1}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            retries++;
+          } else {
+            break;
+          }
+        }
+        
         const loadTime = performance.now() - loadStartTime;
         
         if (settings) {
@@ -133,6 +169,7 @@ export function useUsername() {
               username: usernameValue,
               prompted: promptedValue,
               loadTimeMs: Math.round(loadTime),
+              retries,
               timestamp: new Date().toISOString(),
               environment: window.location.hostname === 'localhost' ? 'localhost' : 'production',
             };
@@ -151,7 +188,13 @@ export function useUsername() {
             console.log("⏸️ Skipping state update - skip in progress");
           }
         } else {
-          console.warn("⚠️ No settings found for user:", currentUser.uid);
+          // Document still doesn't exist after retries - might be a new user
+          // Set defaults: no username, not prompted yet
+          console.warn("⚠️ No settings found for user after retries:", currentUser.uid);
+          if (!usernameStateManager.skipInProgress) {
+            usernameStateManager.setUsername("");
+            usernameStateManager.setUsernamePrompted(false);
+          }
         }
       } catch (error) {
         console.error("Failed to load username:", error);
@@ -174,12 +217,9 @@ export function useUsername() {
       }
     };
 
-    // Track if initial load has completed to avoid duplicate calls
-    let initialLoadComplete = false;
-    
+    // Do initial load
     const doInitialLoad = async () => {
       await loadUsername();
-      initialLoadComplete = true;
     };
     
     doInitialLoad();
@@ -193,16 +233,24 @@ export function useUsername() {
       setFirebaseUser(auth.currentUser);
       if (user?.uid) {
         // User logged in - reload username
-        // But skip if skip is in progress (prevents loop after skipUsernamePrompt)
-        // Also skip if initial load hasn't completed yet (prevents duplicate calls on page load)
-        if (!usernameStateManager.skipInProgress && initialLoadComplete && !isLoading) {
-          loadUsername();
+        // ⚠️ FIXED: Always reload username after sign-in, even if initial load is in progress
+        // The initial load might be for a different user (or no user), so we need to reload
+        if (!usernameStateManager.skipInProgress) {
+          // Use a small delay to ensure Firestore document is created after sign-in
+          setTimeout(() => {
+            if (!isLoading) {
+              loadUsername();
+            } else {
+              // If still loading, wait a bit more and try again
+              setTimeout(() => {
+                if (!isLoading) {
+                  loadUsername();
+                }
+              }, 500);
+            }
+          }, 200);
         } else {
-          console.log("⏸️ Skipping loadUsername from auth subscription", {
-            skipInProgress: usernameStateManager.skipInProgress,
-            initialLoadComplete,
-            isLoading,
-          });
+          console.log("⏸️ Skipping loadUsername from auth subscription - skip in progress");
         }
       } else {
         // User logged out - reset state
@@ -210,12 +258,44 @@ export function useUsername() {
         usernameStateManager.setUsernamePrompted(false);
         usernameStateManager.setLoading(false);
         setFirebaseUser(null);
-        initialLoadComplete = false;
       }
     });
 
     return unsubscribe;
-  }, []);
+  }, [firebaseIsReady]);
+
+  // Safely destructure with fallback values
+  const { username, usernamePrompted, loading } = state || { username: "", usernamePrompted: false, loading: true };
+
+  // ⚠️ CRITICAL: useCallback is a hook and must be called before any early return
+  const needsUsernamePrompt = useCallback((): boolean => {
+    if (!firebaseIsReady) return false;
+    const currentUser = authManager.getCurrentUser();
+    const result = !!(currentUser?.uid && !username && !usernamePrompted);
+    console.log("🎯 needsUsernamePrompt check:", {
+      hasUser: !!currentUser?.uid,
+      username,
+      usernamePrompted,
+      result,
+      currentUser: currentUser
+        ? { uid: currentUser.uid, email: currentUser.email }
+        : null,
+    });
+    return result;
+  }, [firebaseIsReady, username, usernamePrompted]);
+
+  // Early return AFTER all hooks are called
+  if (!firebaseIsReady) {
+    return { 
+      loading: true, 
+      username: "", 
+      usernamePrompted: false, 
+      needsUsernamePrompt,
+      updateUsername: async () => {},
+      skipUsernamePrompt: async () => {},
+      user: null,
+    };
+  }
 
   const updateUsername = async (newUsername: string): Promise<void> => {
     const currentUser = authManager.getCurrentUser();
@@ -223,23 +303,9 @@ export function useUsername() {
       throw new Error("No authenticated user");
     }
 
-    // Get Firebase Auth user object for updateProfile
-    const firebaseUser = auth.currentUser;
-    if (!firebaseUser) {
-      throw new Error("No Firebase Auth user");
-    }
-
     try {
-      // Update Firebase Auth profile first (this updates user.displayName)
-      await updateProfile(firebaseUser, {
-        displayName: newUsername,
-      });
-      console.log(
-        "✅ Firebase Auth profile updated with displayName:",
-        newUsername
-      );
-
-      // Then update Firestore settings
+      // ⚠️ CRITICAL: Only update Firestore settings.username
+      // Do NOT touch Firebase Auth displayName - that comes from Google and should never be changed
       await authManager.updateUserSettings(currentUser.uid, {
         username: newUsername,
         usernamePrompted: true,
@@ -298,21 +364,6 @@ export function useUsername() {
       throw error;
     }
   };
-
-  const needsUsernamePrompt = useCallback((): boolean => {
-    const currentUser = authManager.getCurrentUser();
-    const result = !!(currentUser?.uid && !username && !usernamePrompted);
-    console.log("🎯 needsUsernamePrompt check:", {
-      hasUser: !!currentUser?.uid,
-      username,
-      usernamePrompted,
-      result,
-      currentUser: currentUser
-        ? { uid: currentUser.uid, email: currentUser.email }
-        : null,
-    });
-    return result;
-  }, [username, usernamePrompted]);
 
   return {
     username,

@@ -44,7 +44,22 @@ export function useAuth() {
       }
     });
 
-    return unsubscribe;
+    // Safety timeout: if auth never initializes, force it after 12 seconds
+    // This is a last resort to prevent infinite loading
+    const forceInitTimeout = setTimeout(() => {
+      if (!authManager.isAuthStateInitialized()) {
+        console.warn('[useAuth] Auth initialization timeout - this should not happen if authManager is working correctly');
+        // We can't force authManager to initialize from here, but we can at least
+        // stop the loading state to prevent infinite loading
+        setLoading(false);
+        setAuthInitialized(true); // Force it locally to unblock UI
+      }
+    }, 12000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(forceInitTimeout);
+    };
   }, []);
 
   const signInWithProvider = async (provider: AuthProvider) => {

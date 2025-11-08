@@ -229,8 +229,19 @@ export async function googleLogin() {
     logger.log(
       "Localhost detected - using popup mode to avoid Firebase redirect issues"
     );
-    await firebaseSignInWithPopup(auth, googleProvider);
-    logger.log("Popup sign-in successful");
+    const result = await firebaseSignInWithPopup(auth, googleProvider);
+    logger.log("Popup sign-in successful", { user: result.user?.email });
+    
+    // ⚠️ CRITICAL: After popup login, manually check auth state
+    // Sometimes onAuthStateChanged doesn't fire immediately, so we check manually
+    if (result.user) {
+      logger.log("Popup returned user, checking auth state...");
+      // Give Firebase a moment to update internal state
+      await new Promise(resolve => setTimeout(resolve, 200));
+      // Manually trigger auth manager to check state
+      await authManager.checkAuthState();
+      logger.log("Manual auth state check completed after popup");
+    }
     return;
   }
 
@@ -298,8 +309,19 @@ export async function googleLogin() {
       });
     }
     
-    await firebaseSignInWithPopup(auth, googleProvider);
-    logger.log("Popup sign-in successful");
+    const result = await firebaseSignInWithPopup(auth, googleProvider);
+    logger.log("Popup sign-in successful", { user: result.user?.email });
+    
+    // ⚠️ CRITICAL: After popup login, manually check auth state
+    // Sometimes onAuthStateChanged doesn't fire immediately, so we check manually
+    if (result.user) {
+      logger.log("Popup returned user, checking auth state...");
+      // Give Firebase a moment to update internal state
+      await new Promise(resolve => setTimeout(resolve, 200));
+      // Manually trigger auth manager to check state
+      await authManager.checkAuthState();
+      logger.log("Manual auth state check completed after popup");
+    }
     
     // Debug logging
     if (isAuthDebug()) {

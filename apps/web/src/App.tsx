@@ -721,12 +721,40 @@ export default function App() {
   }
 
   // Show loading screen until auth state is initialized
+  // Add timeout to prevent infinite loading
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  useEffect(() => {
+    if (!authInitialized) {
+      const timer = setTimeout(() => {
+        setLoadingTimeout(true);
+        console.error('[App] Auth initialization timeout - authInitialized still false after 10 seconds');
+      }, 10000); // 10 second timeout
+      return () => clearTimeout(timer);
+    } else {
+      setLoadingTimeout(false);
+    }
+  }, [authInitialized]);
+
   if (!authInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading...</p>
+          {loadingTimeout && (
+            <div className="mt-4 p-3 rounded border" style={{ backgroundColor: 'var(--btn)', borderColor: 'var(--line)' }}>
+              <p className="text-xs mb-2" style={{ color: 'var(--muted)' }}>
+                Loading is taking longer than expected.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-3 py-1.5 text-xs rounded transition-colors"
+                style={{ backgroundColor: 'var(--accent)', color: 'var(--text)' }}
+              >
+                Reload Page
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );

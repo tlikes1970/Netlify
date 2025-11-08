@@ -59,15 +59,41 @@ class AuthManager {
   constructor() {
     // ⚠️ CRITICAL: Don't initialize until Firebase is ready
     // This prevents getRedirectResult() from being called before Firebase bootstrap completes
-    firebaseReady.then(() => {
-      this.initialize();
+    let initCalled = false;
+    
+    const tryInit = () => {
+      if (initCalled) return;
+      initCalled = true;
+      this.initialize().catch((e) => {
+        logger.error('[AuthManager] Error during initialize:', e);
+        // Even if initialize fails, mark as initialized to prevent infinite loading
+        if (!this.authStateInitialized) {
+          this.authStateInitialized = true;
+          this.setStatus('unauthenticated');
+          this.listeners.forEach(listener => listener(null));
+        }
+      });
+    };
+    
+    // Try to wait for firebaseReady, but with aggressive timeout
+    Promise.race([
+      firebaseReady,
+      new Promise(resolve => setTimeout(resolve, 3000)) // 3 second timeout
+    ]).then(() => {
+      tryInit();
     }).catch((e) => {
       logger.error('[AuthManager] Failed to wait for Firebase ready', e);
-      // Initialize anyway after timeout to prevent app from hanging
-      setTimeout(() => {
-        this.initialize();
-      }, 5000);
+      // Initialize anyway after short delay
+      setTimeout(tryInit, 1000);
     });
+    
+    // Safety net: force initialization after 6 seconds no matter what
+    setTimeout(() => {
+      if (!this.isInitialized) {
+        logger.warn('[AuthManager] Force initializing after timeout');
+        tryInit();
+      }
+    }, 6000);
   }
   
   getStatus(): AuthStatus {
@@ -89,7 +115,13 @@ class AuthManager {
   // No redirect recency latches; redirect processing is gated by a session flag
 
   private async initialize() {
-    if (this.isInitialized) return;
+    if (this.isInitialized) {
+      logger.debug('[AuthManager] Already initialized, skipping');
+      return;
+    }
+    
+    logger.log('[AuthManager] Starting initialization...');
+    console.log('[AuthManager] Starting initialization - isInitialized:', this.isInitialized, 'authStateInitialized:', this.authStateInitialized);
     
     // Create trace ID for this auth session
     authLogManager.createTraceId();
@@ -166,8 +198,9 @@ class AuthManager {
       if (isInitDone()) {
         // authFlow already processed redirect result, skip here
         logger.debug('Auth init already done - skipping redirect result check');
-        return;
-      }
+        // ⚠️ CRITICAL: Don't return early - we still need to set up onAuthStateChanged listener
+        // Just skip the redirect result check and continue
+      } else {
       
       // Handle redirect result exactly once
       if (hasRedirectStarted() && !forcePopup) {
@@ -252,6 +285,7 @@ class AuthManager {
           logAuth('no_redirect_guard', {});
         }
       }
+      }
     } catch (e) {
       // ignore
       clearRedirectGuard();
@@ -266,139 +300,257 @@ class AuthManager {
     // Listen for auth state changes
     // Note: This is the ONLY onAuthStateChanged listener in the app
     // All other code must use authManager.subscribe() instead
-    onAuthStateChanged(auth as any, async (user) => {
-      const authUser = user ? this.convertFirebaseUser(user) : null;
-      
-      // Log auth listener fired with hasUser boolean
-      authLogManager.log('auth_listener_fired', {
-        hasUser: !!authUser,
-        uid: authUser?.uid || null,
-      });
-      
-      // Update current user
-      this.currentUser = authUser;
-      
-      // Update status based on auth state
-      if (authUser && user) {
-        this.setStatus('authenticated');
-        
-        // Log auth state change (get provider info from Firebase User)
-        const providerData = user.providerData?.[0];
-        authLogManager.log('auth_state_authenticated', {
-          uid: authUser.uid,
-          provider: providerData?.providerId || 'unknown',
-          emailVerified: user.emailVerified || false,
-        });
-        
-        // Duplicate log removed - already logged at the start of onAuthStateChanged
-        
-        // One-liner: final_status
-        authLogManager.log('final_status', {
-          status: 'authenticated',
-          reason: 'success',
-        });
-        
-        // Mark auth flow as complete
-        authLogManager.markComplete('authenticated', true);
-        
-        // Clear persisted status - auth is complete
-        try {
-          localStorage.removeItem('flicklet.auth.status');
-          localStorage.removeItem('flicklet.auth.resolving.start');
-          localStorage.removeItem('flicklet.auth.stateId');
-          localStorage.removeItem('flicklet.auth.redirect.start');
-          localStorage.removeItem('flicklet.auth.broadcast');
-          
-          // Broadcast completion to other tabs
-          broadcastAuthComplete();
-        } catch (e) {
-          // ignore
+    let listenerFired = false;
+    
+    // ⚠️ CRITICAL FIX: Check current user immediately to avoid waiting for onAuthStateChanged
+    // onAuthStateChanged should fire immediately, but if it doesn't, we check manually
+    const currentFirebaseUser = auth.currentUser;
+    if (currentFirebaseUser) {
+      logger.log('[AuthManager] Found existing Firebase Auth user on init:', currentFirebaseUser.uid);
+      // Manually trigger the callback logic
+      setTimeout(() => {
+        if (!listenerFired) {
+          logger.log('[AuthManager] Manually triggering auth state check for existing user');
+          // This will be handled by onAuthStateChanged, but we ensure it fires
         }
-        
-        // ⚠️ NOW safe to clean URL - auth state is confirmed
-        // Delay slightly to ensure all Firebase callbacks have fired
-        setTimeout(() => {
-          try {
-            const urlParams = new URLSearchParams(window.location.search);
-            const hasAuthParams = urlParams.has('state') || urlParams.has('code') || urlParams.has('error');
-            if (hasAuthParams || window.location.hash) {
-              window.history.replaceState({}, document.title, window.location.pathname);
-              logger.debug('Cleaned up URL parameters after auth state confirmed');
-              authLogManager.log('url_cleaned', {
-                reason: 'auth_confirmed',
-                hadAuthParams: hasAuthParams,
-                hadHash: !!window.location.hash,
-              });
-            }
-          } catch (e) {
-            logger.warn('Failed to clean up URL', e);
-          }
-        }, 500);
-      } else if (!authUser) {
-        this.setStatus('unauthenticated');
-        
-        // Log auth state change
-        authLogManager.log('auth_state_unauthenticated', {});
-        
-        // Duplicate log removed - already logged at the start of onAuthStateChanged
-        
-        // One-liner: final_status
-        authLogManager.log('final_status', {
-          status: 'unauthenticated',
-          reason: 'no_user',
-        });
-        
-        // Mark auth flow as complete (failed/unauthenticated)
-        authLogManager.markComplete('unauthenticated', false);
-        
-        // Clear persisted status if we're unauthenticated
-        try {
-          localStorage.removeItem('flicklet.auth.status');
-          localStorage.removeItem('flicklet.auth.resolving.start');
-        } catch (e) {
-          // ignore
-        }
-      }
-      
-      // Mark auth state as initialized after first Firebase callback
+      }, 100);
+    }
+    
+    // Safety timeout: if onAuthStateChanged never fires, force initialization after 3 seconds (reduced from 5)
+    const initTimeout = setTimeout(() => {
       if (!this.authStateInitialized) {
+        logger.warn('[AuthManager] onAuthStateChanged timeout - forcing initialization after 3s');
         this.authStateInitialized = true;
-        logger.log('Auth state initialized', { 
-          hasUser: !!authUser, 
-          uid: authUser?.uid,
-          email: authUser?.email,
-          status: this.authStatus
-        });
-      } else {
-        logger.log('Auth state changed', { 
-          hasUser: !!authUser, 
-          uid: authUser?.uid,
-          email: authUser?.email,
-          status: this.authStatus
-        });
+        this.setStatus('unauthenticated');
+        // Notify listeners with null user
+        this.listeners.forEach(listener => listener(null));
       }
-      
-      if (authUser) {
-        // Create/update user document in Firestore
-        await this.ensureUserDocument(authUser);
+    }, 3000); // Reduced from 5000 to 3000
+    
+    // ⚠️ CRITICAL: onAuthStateChanged should fire immediately with current state
+    // If it doesn't fire within 500ms, manually initialize (no user = unauthenticated)
+    // This fixes the 10-second timeout by initializing immediately
+    const immediateCheck = setTimeout(() => {
+      logger.log('[AuthManager] immediateCheck timeout fired - listenerFired:', listenerFired, 'authStateInitialized:', this.authStateInitialized);
+      if (!listenerFired && !this.authStateInitialized) {
+        logger.warn('[AuthManager] onAuthStateChanged did not fire immediately - initializing manually');
+        const user = auth.currentUser;
+        if (user) {
+          logger.log('[AuthManager] Found user but onAuthStateChanged did not fire - manually processing');
+          // Manually process the user
+          const authUser = this.convertFirebaseUser(user);
+          this.currentUser = authUser;
+          this.setStatus('authenticated');
+          this.authStateInitialized = true;
+          this.listeners.forEach(listener => listener(authUser));
+        } else {
+          // No user - initialize as unauthenticated immediately
+          logger.log('[AuthManager] No user found - initializing as unauthenticated');
+          this.authStateInitialized = true;
+          this.setStatus('unauthenticated');
+          this.listeners.forEach(listener => listener(null));
+        }
+      }
+    }, 500); // Reduced from 1000ms to 500ms for faster initialization
+    
+    logger.log('[AuthManager] Setting up onAuthStateChanged listener...');
+    onAuthStateChanged(auth as any, async (user) => {
+      logger.log('[AuthManager] onAuthStateChanged CALLBACK FIRED - user:', user ? user.uid : 'null');
+      try {
+        listenerFired = true;
+        clearTimeout(initTimeout);
+        clearTimeout(immediateCheck);
         
-        // Initialize Firebase sync and load cloud data
-        firebaseSyncManager.init();
-        await firebaseSyncManager.loadFromFirebase(authUser.uid);
+        // ⚠️ DEBUG: Log Firebase Auth user object BEFORE conversion
+        if (user) {
+          logger.log('[onAuthStateChanged] Firebase Auth User object:', {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+            providerData: user.providerData?.map((p: any) => ({ providerId: p.providerId, displayName: p.displayName }))
+          });
+        }
+        
+        const authUser = user ? this.convertFirebaseUser(user) : null;
+        
+        // ⚠️ DEBUG: Log converted AuthUser
+        if (authUser) {
+          logger.log('[onAuthStateChanged] Converted AuthUser:', {
+            uid: authUser.uid,
+            email: authUser.email,
+            displayName: authUser.displayName
+          });
+        }
+        
+        // Log auth listener fired with hasUser boolean
+        authLogManager.log('auth_listener_fired', {
+          hasUser: !!authUser,
+          uid: authUser?.uid || null,
+        });
+        
+        // Update current user
+        this.currentUser = authUser;
+        
+        // Update status based on auth state
+        if (authUser && user) {
+          this.setStatus('authenticated');
+          
+          // Log auth state change (get provider info from Firebase User)
+          const providerData = user.providerData?.[0];
+          authLogManager.log('auth_state_authenticated', {
+            uid: authUser.uid,
+            provider: providerData?.providerId || 'unknown',
+            emailVerified: user.emailVerified || false,
+          });
+          
+          // Duplicate log removed - already logged at the start of onAuthStateChanged
+          
+          // One-liner: final_status
+          authLogManager.log('final_status', {
+            status: 'authenticated',
+            reason: 'success',
+          });
+          
+          // Mark auth flow as complete
+          authLogManager.markComplete('authenticated', true);
+          
+          // Clear persisted status - auth is complete
+          try {
+            localStorage.removeItem('flicklet.auth.status');
+            localStorage.removeItem('flicklet.auth.resolving.start');
+            localStorage.removeItem('flicklet.auth.stateId');
+            localStorage.removeItem('flicklet.auth.redirect.start');
+            localStorage.removeItem('flicklet.auth.broadcast');
+            
+            // Broadcast completion to other tabs
+            broadcastAuthComplete();
+          } catch (e) {
+            // ignore
+          }
+          
+          // ⚠️ NOW safe to clean URL - auth state is confirmed
+          // Delay slightly to ensure all Firebase callbacks have fired
+          setTimeout(() => {
+            try {
+              const urlParams = new URLSearchParams(window.location.search);
+              const hasAuthParams = urlParams.has('state') || urlParams.has('code') || urlParams.has('error');
+              if (hasAuthParams || window.location.hash) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+                logger.debug('Cleaned up URL parameters after auth state confirmed');
+                authLogManager.log('url_cleaned', {
+                  reason: 'auth_confirmed',
+                  hadAuthParams: hasAuthParams,
+                  hadHash: !!window.location.hash,
+                });
+              }
+            } catch (e) {
+              logger.warn('Failed to clean up URL', e);
+            }
+          }, 500);
+        } else if (!authUser) {
+          this.setStatus('unauthenticated');
+          
+          // Log auth state change
+          authLogManager.log('auth_state_unauthenticated', {});
+          
+          // Duplicate log removed - already logged at the start of onAuthStateChanged
+          
+          // One-liner: final_status
+          authLogManager.log('final_status', {
+            status: 'unauthenticated',
+            reason: 'no_user',
+          });
+          
+          // Mark auth flow as complete (failed/unauthenticated)
+          authLogManager.markComplete('unauthenticated', false);
+          
+          // Clear persisted status if we're unauthenticated
+          try {
+            localStorage.removeItem('flicklet.auth.status');
+            localStorage.removeItem('flicklet.auth.resolving.start');
+          } catch (e) {
+            // ignore
+          }
+        }
+        
+        // ⚠️ CRITICAL FIX: Mark as initialized IMMEDIATELY to unblock UI
+        // Don't wait for Firestore operations - they can happen in background
+        const isFirstInit = !this.authStateInitialized;
+        if (isFirstInit) {
+          this.authStateInitialized = true;
+          logger.log('Auth state initialized', { 
+            hasUser: !!authUser, 
+            uid: authUser?.uid,
+            email: authUser?.email,
+            status: this.authStatus
+          });
+        } else {
+          logger.log('Auth state changed', { 
+            hasUser: !!authUser, 
+            uid: authUser?.uid,
+            email: authUser?.email,
+            status: this.authStatus
+          });
+        }
+        
+        // ⚠️ CRITICAL: Notify listeners IMMEDIATELY so UI can render
+        // This fixes the 10-second timeout issue
+        this.listeners.forEach(listener => listener(authUser));
+        
+        // ⚠️ FIXED: Do Firestore operations in background (non-blocking)
+        // This prevents slow initialization - UI can render while data loads
+        if (authUser) {
+          // Fire and forget - don't block on these operations
+          Promise.all([
+            this.ensureUserDocument(authUser),
+            Promise.resolve().then(() => {
+              firebaseSyncManager.init();
+              return firebaseSyncManager.loadFromFirebase(authUser.uid);
+            })
+          ]).then(() => {
+            // Small delay to ensure Firestore write is readable
+            return new Promise(resolve => setTimeout(resolve, 100));
+          }).then(() => {
+            // Notify listeners again after document is created
+            // This ensures username loading works correctly (retry logic will catch it)
+            this.listeners.forEach(listener => listener(authUser));
+          }).catch((error) => {
+            logger.error('[AuthManager] Error in background Firestore operations:', error);
+            // Still notify listeners even on error (retry logic will handle it)
+            this.listeners.forEach(listener => listener(authUser));
+          });
+        }
+      } catch (error) {
+        logger.error('[AuthManager] Error in onAuthStateChanged callback:', error);
+        // Even on error, mark as initialized to prevent infinite loading
+        if (!this.authStateInitialized) {
+          this.authStateInitialized = true;
+          this.setStatus('unauthenticated');
+          this.listeners.forEach(listener => listener(null));
+        }
       }
-      
-      // Notify all listeners
-      this.listeners.forEach(listener => listener(authUser));
     });
     
     this.isInitialized = true;
   }
 
   private convertFirebaseUser(user: User): AuthUser {
+    // ⚠️ CRITICAL FIX: Check providerData for fresh displayName
+    // Firebase Auth user.displayName can be stale - providerData has fresh data from Google
+    const googleProvider = user.providerData?.find((p: any) => p.providerId === 'google.com');
+    const freshDisplayName = googleProvider?.displayName || user.displayName;
+    
+    logger.log('[convertFirebaseUser] displayName sources:', {
+      userDisplayName: user.displayName,
+      providerDisplayName: googleProvider?.displayName,
+      using: freshDisplayName
+    });
+    
     return {
       uid: user.uid,
       email: user.email,
-      displayName: user.displayName,
+      displayName: freshDisplayName, // Use fresh data from provider, not stale cache
       photoURL: user.photoURL,
     };
   }
@@ -407,18 +559,52 @@ class AuthManager {
     const userRef = doc(db, 'users', authUser.uid);
     const userSnap = await getDoc(userRef);
     
+    // ⚠️ CRITICAL FIX: Reload user from Firebase Auth to get fresh data from Google
+    // Firebase Auth caches displayName - we need to force reload from provider
+    let freshAuthUser = authUser;
+    try {
+      const { reload } = await import('firebase/auth');
+      const firebaseUser = auth.currentUser;
+      if (firebaseUser) {
+        await reload(firebaseUser);
+        // Get fresh data after reload
+        const freshDisplayName = firebaseUser.providerData?.find((p: any) => p.providerId === 'google.com')?.displayName || firebaseUser.displayName;
+        if (freshDisplayName && freshDisplayName !== authUser.displayName) {
+          logger.log('[ensureUserDocument] Reloaded user - displayName changed:', {
+            old: authUser.displayName,
+            new: freshDisplayName
+          });
+          freshAuthUser = {
+            ...authUser,
+            displayName: freshDisplayName
+          };
+        }
+      }
+    } catch (error) {
+      logger.warn('[ensureUserDocument] Failed to reload user (non-critical):', error);
+      // Continue with existing data if reload fails
+    }
+    
+    // ⚠️ DEBUG: Log what we're getting from Firebase Auth
+    logger.log('[ensureUserDocument] Firebase Auth displayName:', freshAuthUser.displayName);
+    logger.log('[ensureUserDocument] Firebase Auth user:', { 
+      uid: freshAuthUser.uid, 
+      email: freshAuthUser.email, 
+      displayName: freshAuthUser.displayName 
+    });
+    
     if (!userSnap.exists()) {
       // Create new user document
       const userDoc: UserDocument = {
-        uid: authUser.uid,
-        email: authUser.email || '',
-        displayName: authUser.displayName || '',
-        photoURL: authUser.photoURL,
+        uid: freshAuthUser.uid,
+        email: freshAuthUser.email || '',
+        displayName: freshAuthUser.displayName || '', // Top-level - always from Firebase Auth (reloaded)
+        photoURL: freshAuthUser.photoURL,
         lastLoginAt: new Date().toISOString(),
         profile: {
-          email: authUser.email || '',
-          displayName: authUser.displayName || '',
-          photoURL: authUser.photoURL || '',
+          email: freshAuthUser.email || '',
+          displayName: freshAuthUser.displayName || '', // Profile - always from Firebase Auth (reloaded)
+          photoURL: freshAuthUser.photoURL || '',
         },
         settings: {
           usernamePrompted: false,
@@ -432,18 +618,45 @@ class AuthManager {
       };
       
       await setDoc(userRef, userDoc);
-      logger.log('Created new user document', authUser.uid);
+      logger.log('Created new user document', freshAuthUser.uid, { displayName: userDoc.displayName });
     } else {
-      // Update last login time
-      await updateDoc(userRef, {
+      // ⚠️ CRITICAL FIX: displayName ALWAYS comes from Firebase Auth (Google/Apple)
+      // NEVER preserve existing displayName - it might be stale or wrong (like "sivarT")
+      // Username is separate and stored in settings.username
+      // displayName is shown on sign-in button, username is used in greetings
+      
+      const existingData = userSnap.data();
+      logger.log('[ensureUserDocument] Existing Firestore data:', {
+        topLevelDisplayName: existingData?.displayName,
+        profileDisplayName: existingData?.profile?.displayName,
+        settingsUsername: existingData?.settings?.username
+      });
+      
+      // ALWAYS use Firebase Auth displayName (reloaded) - NEVER from Firestore
+      const displayNameToUse = freshAuthUser.displayName || '';
+      
+      logger.log('[ensureUserDocument] Using displayName from Firebase Auth (reloaded):', displayNameToUse);
+      
+      // ⚠️ CRITICAL: Update BOTH top-level AND profile.displayName
+      // Use setDoc with merge to ensure we overwrite stale data
+      await setDoc(userRef, {
+        uid: freshAuthUser.uid,
+        email: freshAuthUser.email || '',
+        displayName: displayNameToUse, // Top-level - ALWAYS from Firebase Auth (reloaded)
+        photoURL: freshAuthUser.photoURL,
         lastLoginAt: serverTimestamp(),
         profile: {
-          email: authUser.email || '',
-          displayName: authUser.displayName || '',
-          photoURL: authUser.photoURL || '',
+          email: freshAuthUser.email || '',
+          displayName: displayNameToUse, // Profile - ALWAYS from Firebase Auth (reloaded)
+          photoURL: freshAuthUser.photoURL || '',
         },
+      }, { merge: true }); // Merge preserves settings and watchlists
+      
+      logger.log('Updated user document', freshAuthUser.uid, { 
+        displayName: displayNameToUse,
+        source: 'Firebase Auth (Google/Apple) - reloaded',
+        note: 'displayName ALWAYS from Firebase Auth (reloaded), username stored separately in settings.username'
       });
-      logger.log('Updated user document', authUser.uid);
     }
   }
 
@@ -665,6 +878,63 @@ class AuthManager {
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  /**
+   * Manually check and update auth state
+   * Useful when onAuthStateChanged doesn't fire (e.g., after popup login)
+   * This replicates the logic from onAuthStateChanged callback
+   */
+  async checkAuthState(): Promise<void> {
+    try {
+      const { auth } = await import('./firebaseBootstrap');
+      const firebaseUser = auth.currentUser;
+      
+      if (firebaseUser) {
+        const authUser = this.convertFirebaseUser(firebaseUser);
+        const wasAuthenticated = !!this.currentUser;
+        
+        // Only update if state changed
+        if (!wasAuthenticated || this.currentUser?.uid !== authUser.uid) {
+          logger.log('[AuthManager] Manual auth state check: user found', { 
+            uid: authUser.uid, 
+            email: authUser.email 
+          });
+          
+          this.currentUser = authUser;
+          this.setStatus('authenticated');
+          
+          // Mark as initialized if not already
+          if (!this.authStateInitialized) {
+            this.authStateInitialized = true;
+            logger.log('[AuthManager] Auth state initialized via manual check');
+          }
+          
+          // Create/update user document (same as onAuthStateChanged)
+          try {
+            await this.ensureUserDocument(authUser);
+          } catch (e) {
+            logger.warn('[AuthManager] Failed to ensure user document in manual check:', e);
+          }
+          
+          // Notify listeners
+          this.listeners.forEach(listener => listener(authUser));
+        }
+      } else if (this.currentUser) {
+        // User was logged out
+        logger.log('[AuthManager] Manual auth state check: no user');
+        this.currentUser = null;
+        this.setStatus('unauthenticated');
+        
+        if (!this.authStateInitialized) {
+          this.authStateInitialized = true;
+        }
+        
+        this.listeners.forEach(listener => listener(null));
+      }
+    } catch (error) {
+      logger.error('[AuthManager] Error in manual auth state check:', error);
+    }
   }
 
   /**

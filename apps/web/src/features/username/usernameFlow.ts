@@ -51,14 +51,22 @@ export async function ensureUsernameChosen(
 
     const handleRef = doc(db, 'usernames', candidate.toLowerCase());
     await runTransaction(db, async (tx) => {
+      // ⚠️ CRITICAL: Firestore transactions require ALL reads before ANY writes
+      // Read 1: Check if username is taken
       const h = await tx.get(handleRef);
       if (h.exists())
         throw Object.assign(new Error('USERNAME_TAKEN'), { code: 'USERNAME_TAKEN' });
-      tx.set(handleRef, { uid: user.uid, createdAt: new Date().toISOString() });
-      // Update settings.username to match existing structure
+      
+      // Read 2: Get current user profile data (must happen before any writes)
       const profSnap = await tx.get(profileRef);
       const currentData = profSnap.exists() ? profSnap.data() : {};
       const currentSettings = currentData.settings || {};
+      
+      // Now all reads are complete - perform all writes
+      // Write 1: Claim the username
+      tx.set(handleRef, { uid: user.uid, createdAt: new Date().toISOString() });
+      
+      // Write 2: Update user settings with username
       tx.set(profileRef, {
         ...currentData,
         settings: {

@@ -32,8 +32,20 @@ export default class PersonalityErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
-      const settings = settingsManager.getSettings();
-      const errorMessage = getPersonalityText('errorGeneric', settings.personalityLevel);
+      // Safely get settings with fallback
+      let errorMessage = "Something went wrong. Please try again.";
+      try {
+        const settings = settingsManager.getSettings();
+        errorMessage = getPersonalityText('errorGeneric', settings.personalityLevel);
+      } catch (e) {
+        // If settings manager fails, use default message
+        console.warn('Error boundary: Could not get settings:', e);
+      }
+
+      // Display error details in dev mode
+      const errorDetails = import.meta.env.DEV && this.state.error 
+        ? this.state.error.message 
+        : null;
 
       return (
         <div className="flex flex-col items-center justify-center min-h-[200px] p-8 text-center">
@@ -58,6 +70,11 @@ export default class PersonalityErrorBoundary extends Component<Props, State> {
           <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
             {errorMessage}
           </p>
+          {errorDetails && (
+            <p className="text-xs mb-4 font-mono p-2 bg-red-50 dark:bg-red-900/20 rounded" style={{ color: 'var(--muted)', maxWidth: '600px', wordBreak: 'break-word' }}>
+              {errorDetails}
+            </p>
+          )}
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 rounded-lg transition-colors"

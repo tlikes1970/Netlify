@@ -19,9 +19,21 @@ export default function UsernamePromptModal({ isOpen, onClose }: UsernamePromptM
   const { updateUsername, skipUsernamePrompt } = useUsername();
   const translations = useTranslations();
   const [username, setUsername] = useState('');
-  const [state, setState] = useState<ModalState>('working');
+  // ⚠️ FIXED: Initialize state as 'done' (ready for input) instead of 'working' (spinner)
+  // 'working' should only be used when actively saving, not when modal first opens
+  const [state, setState] = useState<ModalState>('done');
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  
+  // ⚠️ FIXED: Reset state when modal opens to ensure it's ready for input
+  useEffect(() => {
+    if (isOpen) {
+      setState('done'); // Ready for input, not 'working'
+      setError(null);
+      setErrorCode(null);
+      setUsername(''); // Reset username input
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -197,21 +209,39 @@ export default function UsernamePromptModal({ isOpen, onClose }: UsernamePromptM
               </div>
             )}
 
-            {state === 'done' && (
+            {state === 'done' && username.trim() && (
               <div className="p-3 rounded-lg text-sm" 
                    style={{ backgroundColor: '#d4edda', color: '#155724', borderColor: '#c3e6cb', border: '1px solid' }}>
                 ✓ Username saved successfully!
               </div>
             )}
 
-            <div className="flex gap-3">
-              {state !== 'error' && (
+            {/* Hide buttons when success message is shown (modal will auto-close) */}
+            {!(state === 'done' && username.trim()) && (
+              <div className="flex gap-3">
+                {state !== 'error' && (
+                  <button
+                    type="button"
+                    onClick={handleSkip}
+                    disabled={state === 'working'}
+                    className="flex-1 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+                  >
+                    {state === 'working' ? (
+                      <div className="flex items-center justify-center">
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
+                        {translations.saving || 'Saving...'}
+                      </div>
+                    ) : (
+                      translations.skip || 'Skip'
+                    )}
+                  </button>
+                )}
                 <button
-                  type="button"
-                  onClick={handleSkip}
-                  disabled={state === 'working' || state === 'done'}
+                  type="submit"
+                  disabled={state === 'working' || !username.trim()}
                   className="flex-1 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+                  style={{ backgroundColor: 'var(--accent)', color: 'white' }}
                 >
                   {state === 'working' ? (
                     <div className="flex items-center justify-center">
@@ -219,26 +249,11 @@ export default function UsernamePromptModal({ isOpen, onClose }: UsernamePromptM
                       {translations.saving || 'Saving...'}
                     </div>
                   ) : (
-                    translations.skip || 'Skip'
+                    translations.save || 'Save'
                   )}
                 </button>
-              )}
-              <button
-                type="submit"
-                disabled={state === 'working' || state === 'done' || !username.trim()}
-                className="flex-1 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-              >
-                {state === 'working' ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
-                    {translations.saving || 'Saving...'}
-                  </div>
-                ) : (
-                  translations.save || 'Save'
-                )}
-              </button>
-            </div>
+              </div>
+            )}
           </form>
         </div>
       </div>
