@@ -41,6 +41,7 @@ import './components/cards/button-pro.css';
 import { installCompactMobileGate, installActionsSplitGate } from './lib/flags';
 import { initFlags } from './lib/mobileFlags';
 import { logAuthOriginHint } from './lib/authLogin';
+import { runFirstFrameBoot } from './boot/bootCoordinator';
 // Import scroll feature flags and logger to ensure window exposure
 import './utils/scrollFeatureFlags';
 import './utils/scrollLogger';
@@ -140,18 +141,29 @@ logAuthOriginHint();
 // Set density to compact (required for compact mobile gate)
 document.documentElement.dataset.density = 'compact';
 
-// Initialize mobile flags with defaults
-initFlags({
-  'compact-mobile-v1': false,
-  'actions-split': false,
-  'debug-logging': false
-});
-
-// Install compact mobile gate
-installCompactMobileGate();
-
-// Install actions split gate
-installActionsSplitGate();
+// Group boot initializers into single frame to prevent initialization burst
+runFirstFrameBoot([
+  () => {
+    // Initialize mobile flags with defaults
+    initFlags({
+      'compact-mobile-v1': false,
+      'actions-split': false,
+      'debug-logging': false
+    });
+  },
+  () => {
+    // Install compact mobile gate
+    installCompactMobileGate();
+  },
+  () => {
+    // Install actions split gate
+    installActionsSplitGate();
+  },
+  () => {
+    // Log auth origin hint (lightweight, affects text/layout)
+    logAuthOriginHint();
+  }
+]);
 
 // Install dev diagnostics
 if (import.meta.env.DEV) {

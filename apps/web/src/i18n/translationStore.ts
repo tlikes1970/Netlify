@@ -123,6 +123,12 @@ export function queueUpdate(u: Update) {
   if (u.type === 'dict' && u.dict === current.dict) return;
   if (u.type === 'locale' && u.locale === current.locale) return;
   if (u.type === 'patch' && Object.keys(u.patch).length === 0) return;
+  
+  // Drop redundant first-paint dict update (if initial dict equals current and version is 0)
+  if (u.type === 'dict' && u.dict === current.dict && current.version === 0) {
+    return; // redundant initial dict
+  }
+  
   queued.push(u);
   schedule();
 }

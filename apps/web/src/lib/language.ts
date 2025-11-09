@@ -5,6 +5,7 @@ import TRANSLATIONS from './translations';
 import { i18nDiagnostics } from './i18nDiagnostics';
 import { translationBus, type TranslationUpdate } from '../i18n/translationBus';
 import { queueUpdate, useTranslationSelector, initializeStore, type Dict } from '../i18n/translationStore';
+import { stageBootDict, stageBootLocale } from '../i18n/bootCollector';
 
 const KEY = 'flicklet.language.v2';
 
@@ -114,10 +115,19 @@ class LanguageManager {
 
 export const languageManager = new LanguageManager();
 
-// Initialize store with current translations synchronously
+// Stage boot data for coordinated first-frame emission
+// This prevents initialization burst by collecting dict and locale separately
 if (typeof window !== 'undefined') {
   const initialTranslations = languageManager.getTranslations();
-  initializeStore(initialTranslations, languageManager.getLanguage());
+  const initialLocale = languageManager.getLanguage();
+  
+  // Initialize store synchronously for immediate reads
+  initializeStore(initialTranslations, initialLocale);
+  
+  // Stage for boot collector (will emit once both are ready, but they already are)
+  // This ensures consistent behavior if async loading is added later
+  stageBootDict(initialTranslations);
+  stageBootLocale(initialLocale);
 }
 
 // Expose to window for i18nDiagnostics to access (breaks circular dependency)
@@ -228,11 +238,27 @@ export function useTranslations() {
   // Use frame-coalesced store via useSyncExternalStore
   // This ensures at most one render per frame with stable identity
   const prevDictRef = React.useRef<Dict | null>(null);
+  const armedRef = React.useRef(false);
+  
+  // Arm subscription after first microtask to ignore pre-armed boot updates
+  React.useEffect(() => {
+    Promise.resolve().then(() => {
+      armedRef.current = true;
+    });
+  }, []);
+  
   const translations = useTranslationSelector(
     (s) => s.dict,
     (a, b) => {
       // Hard no-op guard: only re-render if dict reference actually changed
       if (a === b) return true;
+      
+      // Suppress reactions until armed (ignore pre-armed boot burst)
+      if (!armedRef.current) {
+        prevDictRef.current = a;
+        return true; // Return true to prevent re-render during boot
+      }
+      
       // Store previous for diagnostics
       prevDictRef.current = a;
       return false;

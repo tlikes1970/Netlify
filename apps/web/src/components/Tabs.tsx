@@ -41,7 +41,7 @@ export default function Tabs({ current, onChange }: TabsProps) {
               <button
                 aria-current={current === 'home' ? 'page' : undefined}
                 onClick={() => onChange('home')}
-                className="px-6 py-3 rounded-xl text-base font-semibold transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md shadow-sm flex-1 justify-center"
+                className="px-6 py-3 rounded-xl text-base font-semibold transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md shadow-sm flex-1 justify-center min-w-[4rem]"
                 style={{
                   backgroundColor: current === 'home' ? 'var(--accent)' : 'var(--card)',
                   color: current === 'home' ? 'white' : 'var(--text)',
@@ -58,7 +58,7 @@ export default function Tabs({ current, onChange }: TabsProps) {
                   role="tab"
                   aria-selected={current === t.id}
                   onClick={() => onChange(t.id)}
-                  className="px-6 py-3 rounded-xl text-base font-semibold transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md shadow-sm flex items-center justify-center min-w-0 flex-1"
+                  className="px-6 py-3 rounded-xl text-base font-semibold transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md shadow-sm flex items-center justify-center min-w-[5rem] flex-1"
                   style={{
                     backgroundColor: current === t.id ? 'var(--accent)' : 'var(--card)',
                     color: current === t.id ? 'white' : 'var(--text)',
