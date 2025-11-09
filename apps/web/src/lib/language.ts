@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import * as React from 'react';
 import type { Language } from './language.types';
 import TRANSLATIONS from './translations';
 import { i18nDiagnostics } from './i18nDiagnostics';
 import { translationBus, type TranslationUpdate } from '../i18n/translationBus';
+import { queueUpdate, useTranslationSelector, initializeStore, type Dict } from '../i18n/translationStore';
 
 const KEY = 'flicklet.language.v2';
 
@@ -37,14 +38,9 @@ class LanguageManager {
   private __lastPayload: { translations: any; language: string } | null = null;
 
   private emitChange(): void {
-    // SINGLE SOURCE OF TRUTH: Only notify via translation bus
-    // This is the ONLY notification path - no legacy subscribers
+    // SINGLE SOURCE OF TRUTH: Queue updates to frame-coalesced store
+    // This ensures at most one render per frame with last-write-wins coalescing
     const translations = this.getTranslations();
-    const update = {
-      translations,
-      language: this.currentLanguage,
-      timestamp: Date.now()
-    };
     
     // Equality guard: drop repeats of the exact same payload
     if (this.__lastPayload && 
@@ -62,6 +58,16 @@ class LanguageManager {
       (window as any).flickerDiagnostics.logSubscription('LanguageManager', 'notify', {});
     }
     
+    // Queue to frame-coalesced store (replaces direct notify)
+    queueUpdate({ type: 'dict', dict: translations });
+    queueUpdate({ type: 'locale', locale: this.currentLanguage });
+    
+    // Also notify translationBus for backward compatibility with existing listeners
+    const update = {
+      translations,
+      language: this.currentLanguage,
+      timestamp: Date.now()
+    };
     translationBus.notify(update);
   }
 
@@ -108,6 +114,12 @@ class LanguageManager {
 
 export const languageManager = new LanguageManager();
 
+// Initialize store with current translations synchronously
+if (typeof window !== 'undefined') {
+  const initialTranslations = languageManager.getTranslations();
+  initializeStore(initialTranslations, languageManager.getLanguage());
+}
+
 // Expose to window for i18nDiagnostics to access (breaks circular dependency)
 if (typeof window !== 'undefined') {
   (window as any).__languageManager = languageManager;
@@ -137,12 +149,48 @@ export function useLanguage() {
   return language;
 }
 
-// React hook for translations
+/**
+ * Slice-selector hook for translations
+ * Components subscribe to only the keys they need and re-render only when those keys change.
+ * 
+ * @param keys - Array of translation keys to subscribe to. If null/undefined, subscribes to entire dict (not recommended).
+ * @returns Translation getter function
+ */
+export function useT(keys?: string[] | null) {
+  // Select only what caller needs; default whole dict read is allowed but not encouraged
+  const slice = useTranslationSelector(
+    (s) => {
+      if (!keys || keys.length === 0) return s.dict;
+      const out: Record<string, any> = {};
+      for (const k of keys) out[k] = s.dict[k];
+      return out;
+    },
+    // shallow equality for slices
+    (a, b) => {
+      if (a === b) return true;
+      const ak = Object.keys(a), bk = Object.keys(b);
+      if (ak.length !== bk.length) return false;
+      for (let i = 0; i < ak.length; i++) {
+        const k = ak[i];
+        if (a[k] !== (b as any)[k]) return false;
+      }
+      return true;
+    }
+  );
+
+  // Return a simple getter
+  const t = useMemo(() => {
+    return (k: string) => (slice as any)[k];
+  }, [slice, Array.isArray(keys) ? keys.join('|') : 'ALL']);
+
+  return t;
+}
+
+// React hook for translations (backward compatible, now uses frame-coalesced store)
 export function useTranslations() {
   const diagnostics = typeof window !== 'undefined' ? (window as any).flickerDiagnostics : null;
   const renderCountRef = React.useRef(0);
   const mountIdRef = React.useRef<string | null>(null);
-  const prevTranslationsRef = React.useRef(languageManager.getTranslations());
   
   // Track every render
   renderCountRef.current += 1;
@@ -177,8 +225,28 @@ export function useTranslations() {
     }
   }
   
-  const [translations, setTranslations] = useState(languageManager.getTranslations());
+  // Use frame-coalesced store via useSyncExternalStore
+  // This ensures at most one render per frame with stable identity
+  const prevDictRef = React.useRef<Dict | null>(null);
+  const translations = useTranslationSelector(
+    (s) => s.dict,
+    (a, b) => {
+      // Hard no-op guard: only re-render if dict reference actually changed
+      if (a === b) return true;
+      // Store previous for diagnostics
+      prevDictRef.current = a;
+      return false;
+    }
+  );
 
+  // Track state change for diagnostics
+  useEffect(() => {
+    if (diagnostics && prevDictRef.current !== translations) {
+      diagnostics.logStateChange('useTranslations', 'translations', prevDictRef.current, translations);
+    }
+  }, [translations, diagnostics]);
+
+  // Also subscribe to translationBus for backward compatibility diagnostics
   useEffect(() => {
     const mountId = mountIdRef.current;
     const subscriptionTime = Date.now();
@@ -198,35 +266,14 @@ export function useTranslations() {
       });
     }
     
-    // SINGLE SOURCE OF TRUTH: Subscribe ONLY to translation bus
-    // No legacy subscriptions - translationBus is the canonical bus
-    const handleTranslationUpdate = (payload: TranslationUpdate | TranslationUpdate[]) => {
-      // Normalize: if array (batched), use the last update (most recent)
-      // If single, use it directly
-      const updates = Array.isArray(payload) ? payload : [payload];
-      const last = updates[updates.length - 1];
-      const newTranslations = last.translations;
-      
+    // Subscribe to translationBus for diagnostics only (store is primary source)
+    const handleTranslationUpdate = (_payload: TranslationUpdate | TranslationUpdate[]) => {
       // I18N Diagnostics - track provider identity changes
       if (i18nDiagnostics) {
         i18nDiagnostics.logEvent('provider-notify');
       }
-      
-      // Only update if translations actually changed (prevent unnecessary re-renders)
-      // Compare by reference since TRANSLATIONS[language] returns constant objects
-      if (newTranslations !== prevTranslationsRef.current) {
-        if (diagnostics) {
-          diagnostics.logStateChange('useTranslations', 'translations', prevTranslationsRef.current, newTranslations);
-        }
-        prevTranslationsRef.current = newTranslations;
-        setTranslations(newTranslations);
-      } else if (diagnostics) {
-        // Log when we skip an update to track unnecessary notifications
-        diagnostics.log('useTranslations', 'SKIP_UPDATE', { reason: 'translations unchanged' });
-      }
     };
     
-    // Subscribe ONLY to translation bus (single source of truth)
     const unsubscribe = translationBus.subscribe(handleTranslationUpdate);
     
     return () => {

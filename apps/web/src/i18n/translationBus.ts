@@ -183,6 +183,6 @@ export const translationBus = {
 
 // Dev-only: Attach leaderboard dumper to window for easy access
 if (import.meta.env.DEV && typeof window !== 'undefined') {
-  // @ts-ignore
+  // @ts-expect-error - attaching debug utility to window
   window.__i18nDump = __dumpI18nNotifyLeaderboard;
 }

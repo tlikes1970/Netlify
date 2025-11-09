@@ -1,0 +1,884 @@
+{
+  "header": {
+    "repositoryRoot": "C:\\Users\\likes\\Side Projects\\TV Tracker\\Netlify",
+    "auditTimestamp": "2025-01-11T00:00:00.000Z",
+    "method": "Static code/config scan only. No history, no runtime, no inference."
+  },
+  "summary": {
+    "totalEnvironmentDependentSites": 47,
+    "byCategory": {
+      "buildTimeDefines": 3,
+      "hostnameUrlGates": 12,
+      "serviceWorkerPwaGates": 5,
+      "analyticsMonitoringToggles": 1,
+      "securityCspCookieDifferences": 0,
+      "storageLocalStorageIdbDifferences": 0,
+      "oauthRedirectOriginDifferences": 8,
+      "schedulingTimingDifferences": 0,
+      "cssTailwindPostcssPurgeDifferences": 0,
+      "apiUrlProxyDifferences": 3,
+      "debugLoggingDifferences": 15,
+      "other": 0
+    }
+  },
+  "findings": [
+    {
+      "index": 1,
+      "who": "sw-register.ts - registerServiceWorker function",
+      "what": "Disables service worker registration in development mode",
+      "when": "if (import.meta.env.DEV)",
+      "where": {
+        "file": "apps/web/src/sw-register.ts",
+        "start": 55,
+        "end": 58
+      },
+      "why": "Comment states \"Vite truth: only register in production builds.\"",
+      "issueIdentified": "none stated",
+      "code": "// Vite truth: only register in production builds.\nif (import.meta.env.DEV) {\n  console.info('[SW] Disabled in dev via import.meta.env.DEV');\n  return;\n}"
+    },
+    {
+      "index": 2,
+      "who": "sw-dev-kill.ts - module-level code",
+      "what": "Continuously unregisters all service workers every 2 seconds in development",
+      "when": "if (import.meta.env.DEV && 'serviceWorker' in navigator)",
+      "where": {
+        "file": "apps/web/src/sw-dev-kill.ts",
+        "start": 2,
+        "end": 8
+      },
+      "why": "Comment states \"Nuclear safety net: unregister any SW that appears during dev\"",
+      "issueIdentified": "none stated",
+      "code": "// Nuclear safety net: unregister any SW that appears during dev\nif (import.meta.env.DEV && 'serviceWorker' in navigator) {\n  setInterval(() => {\n    navigator.serviceWorker.getRegistrations()\n      .then(regs => Promise.all(regs.map(r => r.unregister())))\n      .catch(() => {});\n  }, 2000);\n}"
+    },
+    {
+      "index": 3,
+      "who": "main.tsx - bootstrap code",
+      "what": "Unregisters all service workers in development mode at app boot",
+      "when": "if (import.meta.env.DEV)",
+      "where": {
+        "file": "apps/web/src/main.tsx",
+        "start": 360,
+        "end": 363
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "// Kill any leftover SWs during dev, before app boot.\nif (import.meta.env.DEV) {\n  devUnregisterAllSW().catch(() => {});\n  // Nuclear safety net: kill any SW that appears (side-effect import)\n  import('./sw-dev-kill').catch(() => {});\n}"
+    },
+    {
+      "index": 4,
+      "who": "useServiceWorker.ts - useServiceWorker hook",
+      "what": "Skips service worker registration in development mode",
+      "when": "if (import.meta.env.DEV) return;",
+      "where": {
+        "file": "apps/web/src/hooks/useServiceWorker.ts",
+        "start": 160,
+        "end": 160
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "// Don't register in dev mode\nif (import.meta.env.DEV) return;"
+    },
+    {
+      "index": 5,
+      "who": "main.tsx - Sentry initialization",
+      "what": "Initializes Sentry error tracking only in production builds when DSN is present",
+      "when": "if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN)",
+      "where": {
+        "file": "apps/web/src/main.tsx",
+        "start": 6,
+        "end": 22
+      },
+      "why": "Comment states \"Initialize Sentry for error tracking (only in production with DSN)\"",
+      "issueIdentified": "none stated",
+      "code": "// Initialize Sentry for error tracking (only in production with DSN)\nif (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {\n  import('@sentry/react').then((Sentry) => {\n    Sentry.init({\n      dsn: import.meta.env.VITE_SENTRY_DSN,\n      environment: import.meta.env.MODE || 'production',\n      integrations: [\n        Sentry.browserTracingIntegration(),\n        Sentry.replayIntegration(),\n      ],\n      tracesSampleRate: 0.1,\n      replaysSessionSampleRate: 0.1,\n      replaysOnErrorSampleRate: 1.0,\n    });\n  }).catch(() => {\n    // Sentry not available, continue without it\n  });\n}"
+    },
+    {
+      "index": 6,
+      "who": "main.tsx - compact gate diagnostics",
+      "what": "Loads compact gate diagnostics module only in development",
+      "when": "if (import.meta.env.DEV)",
+      "where": {
+        "file": "apps/web/src/main.tsx",
+        "start": 157,
+        "end": 161
+      },
+      "why": "Comment states \"Install dev diagnostics\"",
+      "issueIdentified": "none stated",
+      "code": "// Install dev diagnostics\nif (import.meta.env.DEV) {\n  import('./debug/compactGateDiagnostics')\n    .then(m => m.installDiagnostics?.())\n    .catch(() => {});\n}"
+    },
+    {
+      "index": 7,
+      "who": "PostDetail.tsx - API URL selection",
+      "what": "Uses relative URL (Vite proxy) in dev, environment variable in production",
+      "when": "import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:4000')",
+      "where": {
+        "file": "apps/web/src/components/PostDetail.tsx",
+        "start": 52,
+        "end": 54
+      },
+      "why": "Comment states \"Use relative URL in dev (goes through Vite proxy) or env var in production\"",
+      "issueIdentified": "none stated",
+      "code": "// Use relative URL in dev (goes through Vite proxy) or env var in production\nconst apiUrl = import.meta.env.DEV \n  ? '' // Relative URL - Vite proxy will forward to backend\n  : (import.meta.env.VITE_API_URL || 'http://localhost:4000');"
+    },
+    {
+      "index": 8,
+      "who": "CommunityPanel.tsx - API URL selection and fetch skip",
+      "what": "Uses relative URL in dev, environment variable in production; skips fetch if production URL is localhost",
+      "when": "import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:4000') and if (!import.meta.env.DEV && apiUrl.includes('localhost'))",
+      "where": {
+        "file": "apps/web/src/components/CommunityPanel.tsx",
+        "start": 56,
+        "end": 61
+      },
+      "why": "Comments state \"In dev mode, use relative URL to go through Vite proxy to backend\" and \"Skip fetch in production if API URL is localhost (backend not available)\"",
+      "issueIdentified": "none stated",
+      "code": "// Determine API URL - use relative URL in dev (goes through Vite proxy) or env var\n// In dev mode, use relative URL to go through Vite proxy to backend\n// In production, use VITE_API_URL or skip if pointing to localhost\nconst apiUrl = import.meta.env.DEV \n  ? '' // Relative URL - Vite proxy will forward to backend\n  : (import.meta.env.VITE_API_URL || 'http://localhost:4000');\n\n// Skip fetch in production if API URL is localhost (backend not available)\nif (!import.meta.env.DEV && apiUrl.includes('localhost')) {\n  setPostsLoading(false);\n  setPostsError('Community features require a backend server.');\n  setPosts([]);\n  return;\n}"
+    },
+    {
+      "index": 9,
+      "who": "vite.config.ts - HMR configuration",
+      "what": "Configures HMR client port differently based on NETLIFY_DEV environment or port detection",
+      "when": "process.env.NETLIFY_DEV || process.argv.some(arg => arg.includes('4173'))",
+      "where": {
+        "file": "apps/web/vite.config.ts",
+        "start": 52,
+        "end": 54
+      },
+      "why": "Comment states \"Configure HMR to work through Netlify dev proxy\" and \"When running through netlify dev (port 8888), HMR should connect through the proxy\"",
+      "issueIdentified": "none stated",
+      "code": "// Configure HMR to work through Netlify dev proxy\n// When running through netlify dev (port 8888), HMR should connect through the proxy\n// netlify dev sets NETLIFY_DEV=true, or we detect by checking if port 4173 is in args\nhmr: process.env.NETLIFY_DEV || process.argv.some(arg => arg.includes('4173'))\n  ? { clientPort: 8888 }\n  : undefined,"
+    },
+    {
+      "index": 10,
+      "who": "vite.config.ts - API proxy configuration",
+      "what": "Configures proxy to backend server (localhost:4000) in dev mode only",
+      "when": "Server proxy configuration (active in dev mode)",
+      "where": {
+        "file": "apps/web/vite.config.ts",
+        "start": 42,
+        "end": 47
+      },
+      "why": "Comment states \"Proxy API requests to backend server in dev mode\"",
+      "issueIdentified": "none stated",
+      "code": "// Proxy API requests to backend server in dev mode\nproxy: {\n  '/api/v1': {\n    target: 'http://localhost:4000',\n    changeOrigin: true,\n    secure: false,\n  }\n},"
+    },
+    {
+      "index": 11,
+      "who": "authLogin.ts - googleLogin function",
+      "what": "Uses popup mode on localhost to avoid Firebase redirect issues",
+      "when": "if (isLocalhost) where isLocalhost = typeof window !== \"undefined\" && window.location.hostname === \"localhost\"",
+      "where": {
+        "file": "apps/web/src/lib/authLogin.ts",
+        "start": 205,
+        "end": 246
+      },
+      "why": "Comment states \"LOCALHOST WORKAROUND: Use popup mode even if webview would use redirect. This avoids Firebase's redirect handler issues with localhost\"",
+      "issueIdentified": "none stated",
+      "code": "const isLocalhost =\n  typeof window !== \"undefined\" && window.location.hostname === \"localhost\";\n\n// LOCALHOST WORKAROUND: Use popup mode even if webview would use redirect\n// This avoids Firebase's redirect handler issues with localhost\nif (isLocalhost) {\n  logger.log(\n    \"Localhost detected - using popup mode to avoid Firebase redirect issues\"\n  );\n  const result = await firebaseSignInWithPopup(auth, googleProvider);\n  // ... rest of popup handling\n  return;\n}"
+    },
+    {
+      "index": 12,
+      "who": "authLogin.ts - googleLogin function",
+      "what": "Logs different auth method based on localhost detection",
+      "when": "isLocalhost ? \"popup\" : \"redirect\"",
+      "where": {
+        "file": "apps/web/src/lib/authLogin.ts",
+        "start": 210,
+        "end": 221
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "const logData = {\n  method: isLocalhost ? \"popup\" : \"redirect\",\n  origin: window.location.origin,\n  fullUrl: window.location.href,\n  timestamp: new Date().toISOString(),\n  isIOS: false,\n  isLocalhost,\n};\n\nlogger.log(\n  \"Google sign-in method\",\n  isLocalhost ? \"popup (localhost)\" : \"redirect (desktop/Android)\"\n);"
+    },
+    {
+      "index": 13,
+      "who": "authLogin.ts - validateOAuthOrigin function",
+      "what": "Validates origin against hardcoded list including localhost variants",
+      "when": "Function called during auth flow",
+      "where": {
+        "file": "apps/web/src/lib/authLogin.ts",
+        "start": 393,
+        "end": 435
+      },
+      "why": "Comment states \"Validates the current origin against allowed OAuth origins\"",
+      "issueIdentified": "none stated",
+      "code": "// Known allowed origins (canonical form, no www)\nconst allowedOrigins = new Set([\n  \"http://localhost\",\n  \"http://localhost:8888\",\n  \"http://127.0.0.1:8888\",\n  \"http://192.168.50.56:8888\",\n  \"https://flicklet.netlify.app\",\n  \"https://flicklet-71dff.web.app\",\n  \"https://flicklet-71dff.firebaseapp.com\",\n]);"
+    },
+    {
+      "index": 14,
+      "who": "authLogin.ts - validateOAuthOrigin function",
+      "what": "Allows any netlify.app subdomain for preview deployments",
+      "when": "Function called during auth flow",
+      "where": {
+        "file": "apps/web/src/lib/authLogin.ts",
+        "start": 410,
+        "end": 416
+      },
+      "why": "Comment states \"Also allow any netlify.app subdomain (for preview deployments)\"",
+      "issueIdentified": "none stated",
+      "code": "// Also allow any netlify.app subdomain (for preview deployments)\nconst isNetlifyApp =\n  normalized.includes(\".netlify.app\") || normalized.includes(\".netlify.com\");\n\n// Normalize and check\nconst normalizedAllowed = Array.from(allowedOrigins).map(normalizeOrigin);\nconst isAllowed = normalizedAllowed.includes(normalized) || isNetlifyApp;"
+    },
+    {
+      "index": 15,
+      "who": "firebaseBootstrap.ts - verifyAuthEnvironment function",
+      "what": "Recommends popup flow when not on canonical production/staging origin",
+      "when": "Function called during auth flow",
+      "where": {
+        "file": "apps/web/src/lib/firebaseBootstrap.ts",
+        "start": 91,
+        "end": 119
+      },
+      "why": "Comment states \"If we're not on the canonical prod/staging origin, recommend popup flow\" and \"Redirect requires the return origin to be authorized; we can't guarantee that on previews\"",
+      "issueIdentified": "none stated",
+      "code": "const here = window.location.origin;\nconst authDomain = firebaseConfig.authDomain;\nconst prod = BASE_URL;\n\n// If we're not on the canonical prod/staging origin, recommend popup flow\nconst recommendPopup = !!prod && here !== prod;\n\n// Redirect requires the return origin to be authorized; we can't guarantee that on previews\nif (recommendPopup) {\n  return { ok: true, recommendPopup: true }; // ok, but popup flow only\n}"
+    },
+    {
+      "index": 16,
+      "who": "authFlow.ts - initAuthOnLoad function",
+      "what": "Prefers popup mode in production when VITE_AUTH_DEFAULT_POPUP is set",
+      "when": "import.meta.env.PROD && import.meta.env.VITE_AUTH_DEFAULT_POPUP === '1'",
+      "where": {
+        "file": "apps/web/src/lib/authFlow.ts",
+        "start": 30,
+        "end": 30
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "const preferPopup = import.meta.env.PROD && import.meta.env.VITE_AUTH_DEFAULT_POPUP === '1';"
+    },
+    {
+      "index": 17,
+      "who": "useUsername.ts - username logging",
+      "what": "Sets environment field to 'localhost' or 'production' based on hostname",
+      "when": "window.location.hostname === 'localhost' ? 'localhost' : 'production'",
+      "where": {
+        "file": "apps/web/src/hooks/useUsername.ts",
+        "start": 189,
+        "end": 189
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "environment: window.location.hostname === 'localhost' ? 'localhost' : 'production',"
+    },
+    {
+      "index": 18,
+      "who": "usernameDiagnostics.ts - environment detection",
+      "what": "Detects localhost environment based on hostname patterns",
+      "when": "Function called during diagnostics",
+      "where": {
+        "file": "apps/web/src/utils/usernameDiagnostics.ts",
+        "start": 48,
+        "end": 52
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "const isLocalhost = window.location.hostname === 'localhost' || \n                    window.location.hostname === '127.0.0.1' ||\n                    window.location.hostname.startsWith('192.168.');\nconst environment = isLocalhost ? 'localhost' : \n                    window.location.hostname.includes('netlify') ? 'production' : 'unknown';"
+    },
+    {
+      "index": 19,
+      "who": "translationBus.ts - dev-only warnings",
+      "what": "Logs warnings and rapid-notify detection only in development",
+      "when": "if (import.meta.env.DEV)",
+      "where": {
+        "file": "apps/web/src/i18n/translationBus.ts",
+        "start": 29,
+        "end": 118
+      },
+      "why": "Comment states \"Optional: dev warn (but don't break in production)\" and \"Dev-only rapid-notify detector\"",
+      "issueIdentified": "none stated",
+      "code": "Multiple instances of if (import.meta.env.DEV) checks for logging"
+    },
+    {
+      "index": 20,
+      "who": "translationBus.ts - leaderboard function",
+      "what": "Restricts leaderboard dumper to development mode only",
+      "when": "if (!import.meta.env.DEV)",
+      "where": {
+        "file": "apps/web/src/i18n/translationBus.ts",
+        "start": 159,
+        "end": 161
+      },
+      "why": "Comment states \"Dev-only: Dump the top 10 callers of notify() for debugging\"",
+      "issueIdentified": "none stated",
+      "code": "// Dev-only: Dump the top 10 callers of notify() for debugging\nif (!import.meta.env.DEV) {\n  console.warn('[i18n] Leaderboard only available in dev mode');\n  return;\n}"
+    },
+    {
+      "index": 21,
+      "who": "translationBus.ts - window attachment",
+      "what": "Attaches leaderboard dumper to window object only in development",
+      "when": "if (import.meta.env.DEV && typeof window !== 'undefined')",
+      "where": {
+        "file": "apps/web/src/i18n/translationBus.ts",
+        "start": 185,
+        "end": 185
+      },
+      "why": "Comment states \"Dev-only: Attach leaderboard dumper to window for easy access\"",
+      "issueIdentified": "none stated",
+      "code": "// Dev-only: Attach leaderboard dumper to window for easy access\nif (import.meta.env.DEV && typeof window !== 'undefined') {\n  (window as any).__dumpI18nNotifyLeaderboard = dumpLeaderboard;\n}"
+    },
+    {
+      "index": 22,
+      "who": "storage.ts - reorder logging",
+      "what": "Logs reorder operations only in development",
+      "when": "if (import.meta.env.DEV)",
+      "where": {
+        "file": "apps/web/src/lib/storage.ts",
+        "start": 127,
+        "end": 358
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "Multiple instances of if (import.meta.env.DEV) checks for logging"
+    },
+    {
+      "index": 23,
+      "who": "PersonalityErrorBoundary.tsx - error details",
+      "what": "Shows error details only in development",
+      "when": "import.meta.env.DEV && this.state.error",
+      "where": {
+        "file": "apps/web/src/components/PersonalityErrorBoundary.tsx",
+        "start": 46,
+        "end": 46
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "const errorDetails = import.meta.env.DEV && this.state.error \n  ? this.state.error.toString() \n  : null;"
+    },
+    {
+      "index": 24,
+      "who": "authDebug.ts - debug mode check",
+      "what": "Checks for auth debug mode via environment variable",
+      "when": "import.meta.env.FLK_AUTH_DEBUG === '1'",
+      "where": {
+        "file": "apps/web/src/lib/authDebug.ts",
+        "start": 21,
+        "end": 31
+      },
+      "why": "Comment states \"Enabled via: URL param: ?debug=auth, Build-time env: FLK_AUTH_DEBUG=1\"",
+      "issueIdentified": "none stated",
+      "code": "// Check build-time env\nreturn import.meta.env.FLK_AUTH_DEBUG === '1';"
+    },
+    {
+      "index": 25,
+      "who": "authDebug.ts - authorized domains",
+      "what": "Gets authorized domains from environment variable with fallback",
+      "when": "Function called",
+      "where": {
+        "file": "apps/web/src/lib/authDebug.ts",
+        "start": 139,
+        "end": 139
+      },
+      "why": "Comment states \"Checks build env first, falls back to hardcoded list\"",
+      "issueIdentified": "none stated",
+      "code": "// Check build-time env\nconst envDomains = import.meta.env.VITE_AUTHORIZED_DOMAINS;\nif (envDomains) {\n  return envDomains.split(',').map((d: string) => d.trim());\n}"
+    },
+    {
+      "index": 26,
+      "who": "scrollFeatureFlags.ts - scroll logger",
+      "what": "Enables scroll logger only in development",
+      "when": "if (import.meta.env.DEV)",
+      "where": {
+        "file": "apps/web/src/utils/scrollFeatureFlags.ts",
+        "start": 63,
+        "end": 152
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "Multiple instances of if (import.meta.env.DEV) checks"
+    },
+    {
+      "index": 27,
+      "who": "scrollLogger.ts - logger initialization",
+      "what": "Initializes scroll logger only in development",
+      "when": "if (typeof window !== 'undefined' && import.meta.env.DEV)",
+      "where": {
+        "file": "apps/web/src/utils/scrollLogger.ts",
+        "start": 26,
+        "end": 131
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "Multiple instances of if (typeof window !== 'undefined' && import.meta.env.DEV) checks"
+    },
+    {
+      "index": 28,
+      "who": "touchEventGuidelines.ts - touch event logging",
+      "what": "Logs touch event guidelines only in development",
+      "when": "if (import.meta.env.DEV)",
+      "where": {
+        "file": "apps/web/src/utils/touchEventGuidelines.ts",
+        "start": 79,
+        "end": 79
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "if (import.meta.env.DEV) { /* ... logging */ }"
+    },
+    {
+      "index": 29,
+      "who": "touchEventAudit.ts - touch event audit",
+      "what": "Performs touch event audit only in development",
+      "when": "if (import.meta.env.DEV)",
+      "where": {
+        "file": "apps/web/src/utils/touchEventAudit.ts",
+        "start": 213,
+        "end": 213
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "if (import.meta.env.DEV) { /* ... audit */ }"
+    },
+    {
+      "index": 30,
+      "who": "ProviderBadge.tsx - provider badge logging",
+      "what": "Logs provider badge information only in development",
+      "when": "if (import.meta.env.DEV)",
+      "where": {
+        "file": "apps/web/src/components/cards/ProviderBadge.tsx",
+        "start": 114,
+        "end": 124
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "Multiple instances of if (import.meta.env.DEV) checks"
+    },
+    {
+      "index": 31,
+      "who": "ListPage.tsx - list page logging",
+      "what": "Logs list page operations only in development",
+      "when": "if (import.meta.env.DEV)",
+      "where": {
+        "file": "apps/web/src/pages/ListPage.tsx",
+        "start": 402,
+        "end": 402
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "if (import.meta.env.DEV) { /* ... logging */ }"
+    },
+    {
+      "index": 32,
+      "who": "usePullToRefresh.ts - pull to refresh logging",
+      "what": "Logs pull to refresh events only in development",
+      "when": "if (import.meta.env.DEV && pullRefreshEnabled)",
+      "where": {
+        "file": "apps/web/src/hooks/usePullToRefresh.ts",
+        "start": 171,
+        "end": 183
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "Multiple instances of if (import.meta.env.DEV && pullRefreshEnabled) checks"
+    },
+    {
+      "index": 33,
+      "who": "compactGateDiagnostics.ts - diagnostics",
+      "what": "Returns early if not in development mode",
+      "when": "if (!import.meta.env.DEV) return;",
+      "where": {
+        "file": "apps/web/src/debug/compactGateDiagnostics.ts",
+        "start": 150,
+        "end": 150
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "if (!import.meta.env.DEV) return;"
+    },
+    {
+      "index": 34,
+      "who": "AuthDebugPage.tsx - production check",
+      "what": "Checks if environment is production",
+      "when": "const isProd = import.meta.env.PROD;",
+      "where": {
+        "file": "apps/web/src/debug/AuthDebugPage.tsx",
+        "start": 233,
+        "end": 233
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "const isProd = import.meta.env.PROD;"
+    },
+    {
+      "index": 35,
+      "who": "featureFlags.ts - i18n diagnostics",
+      "what": "Checks environment variable for i18n diagnostics flag",
+      "when": "Function called",
+      "where": {
+        "file": "apps/web/src/i18n/featureFlags.ts",
+        "start": 24,
+        "end": 24
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "const env = (import.meta as any)?.env?.VITE_I18N_DIAGNOSTICS;"
+    },
+    {
+      "index": 36,
+      "who": "featureFlags.ts - i18n containment",
+      "what": "Checks environment variable for i18n containment flag",
+      "when": "Function called",
+      "where": {
+        "file": "apps/web/src/i18n/featureFlags.ts",
+        "start": 45,
+        "end": 45
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "const env = (import.meta as any)?.env?.VITE_I18N_CONTAINMENT;"
+    },
+    {
+      "index": 37,
+      "who": "vite.config.ts - TMDB key define",
+      "what": "Defines VITE_TMDB_KEY at build time",
+      "when": "Build-time define",
+      "where": {
+        "file": "apps/web/vite.config.ts",
+        "start": 31,
+        "end": 31
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "define: {\n  'import.meta.env.VITE_TMDB_KEY': JSON.stringify((env.VITE_TMDB_KEY || '').trim())\n}"
+    },
+    {
+      "index": 38,
+      "who": "tmdb-proxy.cjs - production check",
+      "what": "Checks if environment is production for error response details",
+      "when": "const isProd = process.env.NODE_ENV === 'production';",
+      "where": {
+        "file": "apps/web/netlify/functions/tmdb-proxy.cjs",
+        "start": 14,
+        "end": 14
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "const isProd = process.env.NODE_ENV === 'production';"
+    },
+    {
+      "index": 39,
+      "who": "tmdb-proxy.cjs - error response",
+      "what": "Includes proxied URL in error response only in non-production",
+      "when": "...(isProd ? {} : { proxied_url: url.toString() })",
+      "where": {
+        "file": "apps/web/netlify/functions/tmdb-proxy.cjs",
+        "start": 94,
+        "end": 94
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "...(isProd ? {} : { proxied_url: url.toString() })"
+    },
+    {
+      "index": 40,
+      "who": "send-email.cjs - context logging",
+      "what": "Logs Netlify context environment variable",
+      "when": "Function called",
+      "where": {
+        "file": "apps/web/netlify/functions/send-email.cjs",
+        "start": 11,
+        "end": 11
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "ctx: process.env.CONTEXT"
+    },
+    {
+      "index": 41,
+      "who": "firebaseBootstrap.ts - Firebase config",
+      "what": "Uses environment variables for Firebase configuration with fallback defaults",
+      "when": "Module initialization",
+      "where": {
+        "file": "apps/web/src/lib/firebaseBootstrap.ts",
+        "start": 24,
+        "end": 42
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "const config = {\n  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || \"AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM\",\n  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || \"flicklet-71dff.firebaseapp.com\",\n  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || \"flicklet-71dff\",\n  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || \"flicklet-71dff.appspot.com\",\n  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || \"1034923556763\",\n  appId: import.meta.env.VITE_FIREBASE_APP_ID || \"1:1034923556763:web:bba5489cd1d9412c9c2b3e\",\n  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || \"G-YL4TJ4FHJC\",\n};"
+    },
+    {
+      "index": 42,
+      "who": "firebaseBootstrap.ts - base URL",
+      "what": "Gets base URL from environment variable",
+      "when": "Module initialization",
+      "where": {
+        "file": "apps/web/src/lib/firebaseBootstrap.ts",
+        "start": 49,
+        "end": 50
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "const BASE_URL = import.meta.env.VITE_PUBLIC_BASE_URL?.replace(/\\/$/, \"\") || null;"
+    },
+    {
+      "index": 43,
+      "who": "firebase-messaging.ts - VAPID key",
+      "what": "Gets VAPID key from environment variable",
+      "when": "Module initialization",
+      "where": {
+        "file": "apps/web/src/firebase-messaging.ts",
+        "start": 14,
+        "end": 14
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "const VAPID_KEY = import.meta.env.VITE_FCM_VAPID_KEY || '';"
+    },
+    {
+      "index": 44,
+      "who": "config.ts - API keys",
+      "what": "Gets YouTube and TMDB API keys from environment variables",
+      "when": "Module initialization",
+      "where": {
+        "file": "apps/web/src/lib/extras/config.ts",
+        "start": 16,
+        "end": 21
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "youtube: {\n  apiKey: import.meta.env.VITE_YOUTUBE_API_KEY || '',\n},\ntmdb: {\n  apiKey: import.meta.env.VITE_TMDB_KEY || '',\n},"
+    },
+    {
+      "index": 45,
+      "who": "authDiagnostics.ts - Firebase config fallbacks",
+      "what": "Uses environment variables with hardcoded fallback values for diagnostics",
+      "when": "Function called",
+      "where": {
+        "file": "apps/web/src/lib/authDiagnostics.ts",
+        "start": 52,
+        "end": 54
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "const apiKey = import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyDEiqf8cxQJ11URcQeE8jqq5EMa5M6zAXM';\nconst authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'flicklet.netlify.app';\nconst projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || 'flicklet-71dff';"
+    },
+    {
+      "index": 46,
+      "who": "playwright.config.ts - base URL",
+      "what": "Uses environment variable for E2E base URL with localhost fallback",
+      "when": "Test configuration",
+      "where": {
+        "file": "apps/web/playwright.config.ts",
+        "start": 5,
+        "end": 5
+      },
+      "why": "not stated",
+      "issueIdentified": "none stated",
+      "code": "baseURL: process.env.E2E_BASE_URL || 'http://localhost:8888',"
+    },
+    {
+      "index": 47,
+      "who": "vite.config.js - sourcemap configuration",
+      "what": "Sets sourcemap to 'hidden' in production, true in development",
+      "when": "Build configuration",
+      "where": {
+        "file": "vite.config.js",
+        "start": 34,
+        "end": 34
+      },
+      "why": "Comment states \"Source maps for debugging - enabled for development and staging\"",
+      "issueIdentified": "none stated",
+      "code": "// Source maps for debugging - enabled for development and staging\nsourcemap: process.env.NODE_ENV === 'production' ? 'hidden' : true,"
+    }
+  ],
+  "appendixAKeys": [
+    {
+      "key": "VITE_TMDB_KEY",
+      "locations": [
+        { "file": "apps/web/vite.config.ts", "line": 31 },
+        { "file": "apps/web/src/lib/extras/config.ts", "line": 21 },
+        { "file": "apps/web/src/main.tsx", "line": 215 }
+      ]
+    },
+    {
+      "key": "VITE_FIREBASE_API_KEY",
+      "locations": [
+        { "file": "apps/web/src/lib/firebaseBootstrap.ts", "line": 25 },
+        { "file": "apps/web/src/lib/authDiagnostics.ts", "line": 52 }
+      ]
+    },
+    {
+      "key": "VITE_FIREBASE_AUTH_DOMAIN",
+      "locations": [
+        { "file": "apps/web/src/lib/firebaseBootstrap.ts", "line": 31 },
+        { "file": "apps/web/src/lib/authDiagnostics.ts", "line": 53 }
+      ]
+    },
+    {
+      "key": "VITE_FIREBASE_PROJECT_ID",
+      "locations": [
+        { "file": "apps/web/src/lib/firebaseBootstrap.ts", "line": 33 },
+        { "file": "apps/web/src/lib/authDiagnostics.ts", "line": 54 }
+      ]
+    },
+    {
+      "key": "VITE_FIREBASE_STORAGE_BUCKET",
+      "locations": [
+        { "file": "apps/web/src/lib/firebaseBootstrap.ts", "line": 35 }
+      ]
+    },
+    {
+      "key": "VITE_FIREBASE_MESSAGING_SENDER_ID",
+      "locations": [
+        { "file": "apps/web/src/lib/firebaseBootstrap.ts", "line": 38 }
+      ]
+    },
+    {
+      "key": "VITE_FIREBASE_APP_ID",
+      "locations": [
+        { "file": "apps/web/src/lib/firebaseBootstrap.ts", "line": 40 }
+      ]
+    },
+    {
+      "key": "VITE_FIREBASE_MEASUREMENT_ID",
+      "locations": [
+        { "file": "apps/web/src/lib/firebaseBootstrap.ts", "line": 42 }
+      ]
+    },
+    {
+      "key": "VITE_PUBLIC_BASE_URL",
+      "locations": [
+        { "file": "apps/web/src/lib/firebaseBootstrap.ts", "line": 50 }
+      ]
+    },
+    {
+      "key": "VITE_API_URL",
+      "locations": [
+        { "file": "apps/web/src/components/PostDetail.tsx", "line": 54 },
+        { "file": "apps/web/src/components/CommunityPanel.tsx", "line": 58 }
+      ]
+    },
+    {
+      "key": "VITE_SENTRY_DSN",
+      "locations": [
+        { "file": "apps/web/src/main.tsx", "line": 6 },
+        { "file": "apps/web/src/main.tsx", "line": 9 }
+      ]
+    },
+    {
+      "key": "VITE_AUTH_DEFAULT_POPUP",
+      "locations": [
+        { "file": "apps/web/src/lib/authFlow.ts", "line": 30 }
+      ]
+    },
+    {
+      "key": "VITE_AUTHORIZED_DOMAINS",
+      "locations": [
+        { "file": "apps/web/src/lib/authDebug.ts", "line": 139 }
+      ]
+    },
+    {
+      "key": "VITE_I18N_DIAGNOSTICS",
+      "locations": [
+        { "file": "apps/web/src/i18n/featureFlags.ts", "line": 24 }
+      ]
+    },
+    {
+      "key": "VITE_I18N_CONTAINMENT",
+      "locations": [
+        { "file": "apps/web/src/i18n/featureFlags.ts", "line": 45 }
+      ]
+    },
+    {
+      "key": "VITE_YOUTUBE_API_KEY",
+      "locations": [
+        { "file": "apps/web/src/lib/extras/config.ts", "line": 16 }
+      ]
+    },
+    {
+      "key": "VITE_FCM_VAPID_KEY",
+      "locations": [
+        { "file": "apps/web/src/firebase-messaging.ts", "line": 14 }
+      ]
+    },
+    {
+      "key": "FLK_AUTH_DEBUG",
+      "locations": [
+        { "file": "apps/web/src/lib/authDebug.ts", "line": 21 },
+        { "file": "apps/web/src/lib/authDebug.ts", "line": 31 }
+      ]
+    },
+    {
+      "key": "NETLIFY_DEV",
+      "locations": [
+        { "file": "apps/web/vite.config.ts", "line": 52 }
+      ]
+    },
+    {
+      "key": "NODE_ENV",
+      "locations": [
+        { "file": "apps/web/netlify/functions/tmdb-proxy.cjs", "line": 14 },
+        { "file": "vite.config.js", "line": 34 }
+      ]
+    },
+    {
+      "key": "TMDB_TOKEN",
+      "locations": [
+        { "file": "apps/web/netlify/functions/tmdb-proxy.cjs", "line": 25 }
+      ]
+    },
+    {
+      "key": "SENDGRID_API_KEY",
+      "locations": [
+        { "file": "apps/web/netlify/functions/send-email.cjs", "line": 10 },
+        { "file": "apps/web/netlify/functions/send-email.cjs", "line": 54 },
+        { "file": "apps/web/netlify/functions/send-email.cjs", "line": 78 }
+      ]
+    },
+    {
+      "key": "SENDGRID_FROM",
+      "locations": [
+        { "file": "apps/web/netlify/functions/send-email.cjs", "line": 65 }
+      ]
+    },
+    {
+      "key": "SENDGRID_REPLY_TO",
+      "locations": [
+        { "file": "apps/web/netlify/functions/send-email.cjs", "line": 76 }
+      ]
+    },
+    {
+      "key": "CONTEXT",
+      "locations": [
+        { "file": "apps/web/netlify/functions/send-email.cjs", "line": 11 }
+      ]
+    },
+    {
+      "key": "E2E_BASE_URL",
+      "locations": [
+        { "file": "apps/web/playwright.config.ts", "line": 5 }
+      ]
+    },
+    {
+      "key": "WORDNIK_API_KEY",
+      "locations": [
+        { "file": "apps/web/netlify/functions/wordnik-proxy.cjs", "line": 28 }
+      ]
+    }
+  ],
+  "appendixBAssets": {
+    "serviceWorker": {
+      "registration": "Disabled in dev mode (see Finding #1, #2, #3, #4)",
+      "cacheName": "app-assets-v2",
+      "version": "v4",
+      "envGating": "Registration is env-gated, cache name/version are not"
+    },
+    "prefetchPreload": "No prefetch/preload directives found gated by environment"
+  },
+  "appendixCOAuth": {
+    "authorizedRedirectUris": [
+      "http://localhost",
+      "http://localhost:8888",
+      "http://127.0.0.1:8888",
+      "http://192.168.50.56:8888",
+      "https://flicklet.netlify.app",
+      "https://flicklet-71dff.web.app",
+      "https://flicklet-71dff.firebaseapp.com",
+      "Any .netlify.app subdomain (dynamic check)",
+      "Any .netlify.com subdomain (dynamic check)"
+    ],
+    "originChecks": "window.location.origin used throughout auth flow",
+    "postMessageTargetOrigin": "None found with explicit targetOrigin gating by environment"
+  }
+}
+
