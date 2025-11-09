@@ -3,6 +3,8 @@
  * 
  * All translation updates are queued and applied once per frame using last-write-wins.
  * Components subscribe via useSyncExternalStore for optimal React rendering.
+ * 
+ * Hard no-op guards prevent runaway updates by checking both reference and content hash.
  */
 
 import { useSyncExternalStore, useRef, useMemo } from 'react';
@@ -16,20 +18,39 @@ export type Update =
 
 type Listener = () => void;
 
+/**
+ * Fast stable hash for dict content comparison
+ */
+function hashDict(d: Record<string, any>): string {
+  // Fast-ish stable hash
+  let h = 0;
+  const s = JSON.stringify(d);
+  for (let i = 0; i < s.length; i++) {
+    h = (h * 31 + s.charCodeAt(i)) | 0;
+  }
+  return String(h);
+}
+
 // Initialize with empty dict - will be set by LanguageManager on module load
-let current: { dict: Dict; locale: string; version: number } = {
+let current: { dict: Dict; dictHash: string; locale: string; version: number } = {
   dict: Object.freeze({}),
+  dictHash: hashDict({}),
   locale: 'en',
   version: 0,
 };
+
+// Track app start time for settle window
+const startTs = typeof performance !== 'undefined' ? performance.now() : Date.now();
 
 /**
  * Initialize store synchronously (called during module load)
  * This should be called once with initial translations
  */
 export function initializeStore(dict: Dict, locale: string) {
+  const dictHash = hashDict(dict);
   current = {
     dict: Object.isFrozen(dict) ? dict : Object.freeze(dict),
+    dictHash,
     locale,
     version: 1,
   };
@@ -41,6 +62,10 @@ const listeners = new Set<Listener>();
 let lastFrame = -1;
 let emitsThisFrame = 0;
 
+// Dev-only: commits per minute tracking
+let commitsThisMinute = 0;
+let minuteStart = typeof performance !== 'undefined' ? performance.now() : Date.now();
+
 function emit() {
   // Dev-only: verify at most one emit per frame
   if (import.meta.env.DEV) {
@@ -51,6 +76,16 @@ function emit() {
       // eslint-disable-next-line no-console
       console.warn('[i18n] more than one emit in a frame');
     }
+    
+    // Track commits per minute
+    commitsThisMinute++;
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (now - minuteStart > 60000) {
+      // eslint-disable-next-line no-console
+      console.info('[i18n] commits/min:', commitsThisMinute);
+      commitsThisMinute = 0;
+      minuteStart = now;
+    }
   }
 
   for (const l of listeners) l();
@@ -59,6 +94,26 @@ function emit() {
 let queued: Update[] = [];
 let scheduled = false;
 let microtaskQueued = false;
+
+/**
+ * Commit changes with strict no-op guards (reference + hash equality)
+ */
+function commit(nextDict: Dict, nextLocale: string) {
+  const nextHash = hashDict(nextDict);
+  
+  // Hard no-op guard: both identity and content equal
+  if (current.dict === nextDict && current.locale === nextLocale) return;
+  if (current.dictHash === nextHash && current.locale === nextLocale) return;
+
+  const frozen = Object.isFrozen(nextDict) ? nextDict : Object.freeze(nextDict);
+  current = {
+    dict: frozen,
+    dictHash: nextHash,
+    locale: nextLocale,
+    version: current.version + 1,
+  };
+  emit();
+}
 
 function schedule() {
   if (scheduled) return;
@@ -75,44 +130,34 @@ function schedule() {
         scheduled = false;
         if (queued.length === 0) return;
 
-        // last-write-wins coalescing
-        let nextDict = current.dict;
-        let nextLocale = current.locale;
-        let changed = false;
+        // last-write-wins coalescing: collapse to final snapshot
+        let lastDict = current.dict;
+        let lastLocale = current.locale;
 
         for (const u of queued) {
           if (u.type === 'dict') {
-            if (nextDict !== u.dict) {
-              nextDict = u.dict;
-              changed = true;
-            }
+            lastDict = u.dict;
           } else if (u.type === 'patch') {
             // shallow merge patch
-            const merged = { ...nextDict, ...u.patch };
-            if (nextDict !== merged) {
-              nextDict = merged;
-              changed = true;
-            }
+            lastDict = { ...lastDict, ...u.patch };
           } else if (u.type === 'locale') {
-            if (nextLocale !== u.locale) {
-              nextLocale = u.locale;
-              changed = true;
-            }
+            lastLocale = u.locale;
           }
         }
 
         queued = [];
 
-        if (changed) {
-          // freeze for identity stability
-          const frozen = (Object.isFrozen(nextDict) ? nextDict : Object.freeze(nextDict));
-          current = {
-            dict: frozen,
-            locale: nextLocale,
-            version: current.version + 1,
-          };
-          emit();
+        // One-time settle window: ignore redundant updates during first 1000ms
+        const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const redundant = hashDict(lastDict) === current.dictHash && lastLocale === current.locale;
+
+        if (now - startTs < 1000 && redundant) {
+          // ignore redundant startup "updates"
+          return;
         }
+
+        // Commit exactly once per frame with final snapshot
+        commit(lastDict, lastLocale);
       });
     });
   }
@@ -127,6 +172,12 @@ export function queueUpdate(u: Update) {
   // Drop redundant first-paint dict update (if initial dict equals current and version is 0)
   if (u.type === 'dict' && u.dict === current.dict && current.version === 0) {
     return; // redundant initial dict
+  }
+  
+  // Hash-based guard: drop if content hash matches (catches object recreation with same content)
+  if (u.type === 'dict') {
+    const hash = hashDict(u.dict);
+    if (hash === current.dictHash) return;
   }
   
   queued.push(u);

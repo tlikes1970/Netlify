@@ -4,7 +4,7 @@ import type { Language } from './language.types';
 import TRANSLATIONS from './translations';
 import { i18nDiagnostics } from './i18nDiagnostics';
 import { translationBus, type TranslationUpdate } from '../i18n/translationBus';
-import { queueUpdate, useTranslationSelector, initializeStore, type Dict } from '../i18n/translationStore';
+import { queueUpdate, useTranslationSelector, initializeStore, getSnapshot, type Dict } from '../i18n/translationStore';
 import { stageBootDict, stageBootLocale } from '../i18n/bootCollector';
 
 const KEY = 'flicklet.language.v2';
@@ -43,6 +43,13 @@ class LanguageManager {
     // This ensures at most one render per frame with last-write-wins coalescing
     const translations = this.getTranslations();
     
+    // Hard guard: check store's current state before queuing
+    const snapshot = getSnapshot();
+    if (snapshot.dict === translations && snapshot.locale === this.currentLanguage) {
+      // Store already has these exact values, skip entirely
+      return;
+    }
+    
     // Equality guard: drop repeats of the exact same payload
     if (this.__lastPayload && 
         this.__lastPayload.translations === translations && 
@@ -60,6 +67,7 @@ class LanguageManager {
     }
     
     // Queue to frame-coalesced store (replaces direct notify)
+    // Store's hash guard will catch any remaining redundant updates
     queueUpdate({ type: 'dict', dict: translations });
     queueUpdate({ type: 'locale', locale: this.currentLanguage });
     
@@ -109,6 +117,8 @@ class LanguageManager {
   }
 
   getTranslations() {
+    // Return direct reference - never synthesize new objects
+    // TRANSLATIONS is a constant object, so this is safe
     return TRANSLATIONS[this.currentLanguage];
   }
 }
@@ -168,14 +178,18 @@ export function useLanguage() {
  */
 export function useT(keys?: string[] | null) {
   // Select only what caller needs; default whole dict read is allowed but not encouraged
+  // Use memoized keys string to prevent unnecessary selector recreation
+  const keysStr = useMemo(() => Array.isArray(keys) ? keys.join('|') : 'ALL', [keys]);
+  
   const slice = useTranslationSelector(
     (s) => {
       if (!keys || keys.length === 0) return s.dict;
+      // Create minimal slice - only selected keys
       const out: Record<string, any> = {};
       for (const k of keys) out[k] = s.dict[k];
       return out;
     },
-    // shallow equality for slices
+    // shallow equality for slices - prevents re-render when slice content unchanged
     (a, b) => {
       if (a === b) return true;
       const ak = Object.keys(a), bk = Object.keys(b);
@@ -188,10 +202,10 @@ export function useT(keys?: string[] | null) {
     }
   );
 
-  // Return a simple getter
+  // Return a simple getter - memoized to prevent recreation
   const t = useMemo(() => {
     return (k: string) => (slice as any)[k];
-  }, [slice, Array.isArray(keys) ? keys.join('|') : 'ALL']);
+  }, [slice, keysStr]);
 
   return t;
 }

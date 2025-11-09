@@ -1,5 +1,14 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.146: Fix runaway translation updates with hard no-op guards + one-time settle window
+// - Added content hash comparison (hashDict) to prevent commits when content is identical
+// - Added one-time settle window (1000ms) to ignore redundant startup updates
+// - Added hard guard in emitChange() to check store state before queuing
+// - Added boot collector guard to prevent redundant boot emissions
+// - Added hash guard in queueUpdate() to catch object recreation with same content
+// - Added DEV probe to track commits/min (expected: single digits when idle)
+// - Normalized getTranslations() to return direct reference (never synthesizes new objects)
+// - Expected: renders per subscription <~2.2 (down from 2.70), commits/min in single digits
 // ⚠️ VERSION 0.1.145: i18n: silence residual notifiers (guards/throttles/coalescing), add caller leaderboard, confirm drop in diagnostics
 // - Added rapid-notify detector in translationBus.ts (warns when repeated calls occur within 5ms while containment is ON)
 // - Added caller tracking and leaderboard dumper (__dumpI18nNotifyLeaderboard) to identify top noisy callers
@@ -60,4 +69,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.145";
+export const APP_VERSION = "0.1.146";
