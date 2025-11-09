@@ -1,5 +1,10 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.145: i18n: silence residual notifiers (guards/throttles/coalescing), add caller leaderboard, confirm drop in diagnostics
+// - Added rapid-notify detector in translationBus.ts (warns when repeated calls occur within 5ms while containment is ON)
+// - Added caller tracking and leaderboard dumper (__dumpI18nNotifyLeaderboard) to identify top noisy callers
+// - Added equality guard in LanguageManager.emitChange() to drop repeats of the exact same payload
+// - Updated i18n-batching.md with leaderboard instructions and pass criteria (<200 bursts, <50 maxEventsIn50ms)
 // ⚠️ VERSION 0.1.144: i18n: bind real notify() to rAF batcher via runtime flag; normalize batched payloads; diagnostics prove mode
 // - Made translationBus the SINGLE SOURCE OF TRUTH (removed duplicate subscribers from LanguageManager)
 // - LanguageManager.emitChange() now ONLY calls translationBus.notify() - no legacy path
@@ -55,4 +60,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.144";
+export const APP_VERSION = "0.1.145";

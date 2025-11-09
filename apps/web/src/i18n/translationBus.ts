@@ -59,8 +59,11 @@ function recomputeMode() {
 // Initialize mode
 recomputeMode();
 
-// Bypass detector: track rapid notify() calls when mode is raf
-let lastNotifyTs = 0;
+// Dev-only rapid-notify detector: track rapid notify() calls when containment is ON
+let __lastNotifyTs = 0;
+
+// Dev-only caller tracking: aggregate and rank callers
+const __callerCounts: Record<string, number> = {};
 
 /**
  * Subscribe to translation updates
@@ -89,11 +92,19 @@ export function notify(update: TranslationUpdate): void {
   const m = isI18nContainmentEnabled() ? 'raf' : 'off';
   const now = performance.now();
   
-  // Bypass detector: warn about rapid notify() calls when mode is raf
-  if (m === 'raf' && import.meta.env.DEV && now - lastNotifyTs < 5) {
-    console.warn('[i18n] rapid notify() (<5ms) while mode=raf — caller should be batched', new Error().stack);
+  // Dev-only: rapid-notify detector (warn when repeated calls occur within 5ms while containment is ON)
+  if (import.meta.env.DEV && isI18nContainmentEnabled() && now - __lastNotifyTs < 5) {
+    // eslint-disable-next-line no-console
+    console.warn('[i18n] rapid notify (<5ms)', new Error().stack);
   }
-  lastNotifyTs = now;
+  __lastNotifyTs = now;
+  
+  // Dev-only: aggregate and rank callers (tally caller site on every notify)
+  if (import.meta.env.DEV) {
+    const stack = (new Error().stack || '');
+    const sig = stack.split('\n')[2]?.trim() ?? 'unknown';
+    __callerCounts[sig] = (__callerCounts[sig] || 0) + 1;
+  }
   
   if (m !== currentMode) {
     // If switching from raf to off, flush any pending batched updates
@@ -136,6 +147,31 @@ export function flush(): void {
   batcher.flushNow();
 }
 
+/**
+ * Dev-only: Dump the top 10 callers of notify() for debugging
+ * 
+ * Usage: After ~60 seconds of problematic flow with containment ON, run:
+ *   window.__i18nDump && window.__i18nDump();
+ * 
+ * Displays a table with the top 10 caller stack signatures and counts.
+ */
+export function __dumpI18nNotifyLeaderboard() {
+  if (!import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.warn('[i18n] Leaderboard only available in dev mode');
+    return [];
+  }
+  
+  const rows = Object.entries(__callerCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([sig, count]) => ({ count, sig }));
+  
+  // eslint-disable-next-line no-console
+  console.table(rows);
+  return rows;
+}
+
 // Export singleton instance for direct access if needed
 export const translationBus = {
   subscribe,
@@ -144,3 +180,9 @@ export const translationBus = {
   mode,
   flush
 };
+
+// Dev-only: Attach leaderboard dumper to window for easy access
+if (import.meta.env.DEV && typeof window !== 'undefined') {
+  // @ts-ignore
+  window.__i18nDump = __dumpI18nNotifyLeaderboard;
+}

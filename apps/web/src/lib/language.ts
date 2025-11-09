@@ -33,19 +33,35 @@ class LanguageManager {
     this.emitChange();
   }
 
+  // Equality guard: track last payload to drop repeats of the exact same payload
+  private __lastPayload: { translations: any; language: string } | null = null;
+
   private emitChange(): void {
+    // SINGLE SOURCE OF TRUTH: Only notify via translation bus
+    // This is the ONLY notification path - no legacy subscribers
+    const translations = this.getTranslations();
+    const update = {
+      translations,
+      language: this.currentLanguage,
+      timestamp: Date.now()
+    };
+    
+    // Equality guard: drop repeats of the exact same payload
+    if (this.__lastPayload && 
+        this.__lastPayload.translations === translations && 
+        this.__lastPayload.language === this.currentLanguage) {
+      // Skip duplicate notification
+      return;
+    }
+    
+    // Update last payload
+    this.__lastPayload = { translations, language: this.currentLanguage };
+    
     // Track notification for diagnostics
     if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
       (window as any).flickerDiagnostics.logSubscription('LanguageManager', 'notify', {});
     }
     
-    // SINGLE SOURCE OF TRUTH: Only notify via translation bus
-    // This is the ONLY notification path - no legacy subscribers
-    const update = {
-      translations: this.getTranslations(),
-      language: this.currentLanguage,
-      timestamp: Date.now()
-    };
     translationBus.notify(update);
   }
 

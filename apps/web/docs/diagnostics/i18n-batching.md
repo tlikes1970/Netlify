@@ -87,6 +87,63 @@ JSON.parse(localStorage.getItem('i18n:diagnosticsReport'))
 - Automatically downloads as `i18n-diagnostics-report-{timestamp}.json`
 - Check your browser's download folder
 
+## Identifying Noisy Callers (Leaderboard)
+
+When containment is enabled but you still see rapid notifications, use the leaderboard to identify the top offenders:
+
+### Step 1: Enable Containment and Diagnostics
+
+```javascript
+localStorage.setItem('i18n:containment', 'on');
+localStorage.setItem('i18n:diagnostics:autoRun', 'true');
+location.reload();
+```
+
+### Step 2: Use the App for ~60 Seconds
+
+Interact with the app normally, especially the flow that causes flicker.
+
+### Step 3: Dump the Leaderboard
+
+In the browser console:
+
+```javascript
+window.__i18nDump && window.__i18nDump();
+```
+
+This displays a table with the top 10 caller stack signatures and their call counts. The top 1–3 entries identify the hot call sites that need fixing.
+
+### Step 4: Fix Top Offenders
+
+Common fixes:
+- **Equality guard**: Drop repeats of the exact same payload
+- **Throttle**: For noisy loops (intervals, observers, scroll)
+- **Coalesce**: Last-write-wins within the same tick
+
+After fixes, re-run the leaderboard to confirm counts drop.
+
+## Pass Criteria for Diagnostics Report
+
+After running diagnostics with containment ON, check the report at `/apps/web/public/diagnostics/i18n-diagnostics-report.json` or in localStorage.
+
+### Pass Criteria
+
+All of the following must be met:
+
+- `containment.mode` = `"raf"` (confirms containment is active)
+- `containment.stats.burstsDetected` < **200** (sharp reduction from baseline)
+- `containment.stats.maxEventsIn50ms` < **50** (low double digits)
+- `containment.stats.totalEventsInBursts` sharply down vs last run
+- `subscriberSummary.rendersPerSubscription` same or lower than before
+- **Visual flicker is not observable** in the same flow
+
+### If Metrics Miss
+
+1. Dump the leaderboard again: `window.__i18nDump && window.__i18nDump()`
+2. Fix the next top offender
+3. Re-run diagnostics for ~60 seconds
+4. Two loops should be sufficient to meet all criteria
+
 ## Expected Metrics
 
 ### Before Containment (OFF)
@@ -97,14 +154,15 @@ Typical values when flicker is present:
 - `batchingSummary.burstsDetected`: 400-500+
 - `batchingSummary.maxEventsIn50ms`: 200-500+
 
-### After Containment (ON)
+### After Containment (ON) with Fixes
 
-Expected improvements:
-- `containment.stats.burstsDetected`: <50 (order of magnitude reduction)
-- `containment.stats.maxEventsIn50ms`: <20 (low double digits)
-- `batchingSummary.burstsDetected`: <50
-- `batchingSummary.maxEventsIn50ms`: <20
+Expected improvements (after silencing top offenders):
+- `containment.stats.burstsDetected`: <200 (pass criteria: <200)
+- `containment.stats.maxEventsIn50ms`: <50 (pass criteria: <50)
+- `batchingSummary.burstsDetected`: <200
+- `batchingSummary.maxEventsIn50ms`: <50
 - `subscriberSummary.totalRenders`: Equal or lower (no increase)
+- `subscriberSummary.rendersPerSubscription`: Same or lower than before
 
 ### Report Structure
 
