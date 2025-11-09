@@ -115,6 +115,18 @@ class AuthManager {
   // No redirect recency latches; redirect processing is gated by a session flag
 
   private async initialize() {
+    // Kill switch: Firebase Auth disabled
+    const { isOff } = await import('../runtime/switches');
+    if (isOff('iauth')) {
+      logger.info('[AuthManager] Disabled via kill switch (iauth:off)');
+      // Provide stable "signed out" state to dependents
+      this.currentUser = null;
+      this.setStatus('unauthenticated');
+      this.isInitialized = true;
+      this.listeners.forEach(listener => listener(null));
+      return;
+    }
+    
     if (this.isInitialized) {
       logger.debug('[AuthManager] Already initialized, skipping');
       return;

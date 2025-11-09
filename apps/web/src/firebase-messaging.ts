@@ -19,6 +19,13 @@ let messaging: ReturnType<typeof getMessaging> | null = null;
  * Initialize Firebase Messaging
  */
 export async function initializeMessaging() {
+  // Kill switch: FCM/messaging disabled
+  const { isOff } = await import('./runtime/switches');
+  if (isOff('imsg')) {
+    console.info('[FCM] Disabled via kill switch (imsg:off)');
+    return null;
+  }
+  
   if (typeof window === 'undefined' || !('Notification' in window)) {
     console.log('[FCM] Notifications not supported');
     return null;
@@ -54,6 +61,13 @@ export async function initializeMessaging() {
  * Request notification permission and get FCM token
  */
 export async function getFCMToken(): Promise<string | null> {
+  // Kill switch: FCM/messaging disabled
+  const { isOff } = await import('./runtime/switches');
+  if (isOff('imsg')) {
+    console.info('[FCM] Disabled via kill switch (imsg:off)');
+    return null;
+  }
+  
   if (!messaging) {
     const initialized = await initializeMessaging();
     if (!initialized) return null;
@@ -101,21 +115,29 @@ export async function getFCMToken(): Promise<string | null> {
  * Set up foreground message handler (shows toast)
  */
 export function setupForegroundMessageHandler(onNotification: (payload: any) => void) {
-  if (!messaging) {
-    initializeMessaging().then((m) => {
-      if (m) {
-        onMessage(m, (payload) => {
-          console.log('[FCM] Foreground message received:', payload);
-          onNotification(payload);
-        });
-      }
-    });
-    return;
-  }
+  // Kill switch: FCM/messaging disabled
+  import('./runtime/switches').then(({ isOff }) => {
+    if (isOff('imsg')) {
+      console.info('[FCM] Disabled via kill switch (imsg:off)');
+      return;
+    }
+    
+    if (!messaging) {
+      initializeMessaging().then((m) => {
+        if (m) {
+          onMessage(m, (payload) => {
+            console.log('[FCM] Foreground message received:', payload);
+            onNotification(payload);
+          });
+        }
+      });
+      return;
+    }
 
-  onMessage(messaging, (payload) => {
-    console.log('[FCM] Foreground message received:', payload);
-    onNotification(payload);
+    onMessage(messaging, (payload) => {
+      console.log('[FCM] Foreground message received:', payload);
+      onNotification(payload);
+    });
   });
 }
 

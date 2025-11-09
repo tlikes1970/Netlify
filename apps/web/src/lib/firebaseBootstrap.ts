@@ -151,6 +151,21 @@ export async function bootstrapFirebase(): Promise<void> {
   const startTime = Date.now();
 
   try {
+    // Kill switch: Firebase Auth disabled
+    // Import dynamically to avoid circular dependency
+    const { isOff } = await import('../runtime/switches');
+    if (isOff('iauth')) {
+      console.info('[FirebaseBootstrap] Auth disabled via kill switch (iauth:off)');
+      // Resolve immediately without setting up auth listeners
+      readyResolved = true;
+      readyResolvedAt = new Date().toISOString();
+      if (firebaseReadyResolver) {
+        firebaseReadyResolver(readyResolvedAt);
+        firebaseReadyResolver = null;
+      }
+      return;
+    }
+
     // Persistence is already set above (non-blocking), but ensure it's complete before listeners
     // Safari requires persistence to be set BEFORE any redirect or sign-in call
     try {

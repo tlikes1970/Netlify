@@ -1,3 +1,5 @@
+import { isOff } from './runtime/switches';
+
 export async function devUnregisterAllSW() {
   if (!('serviceWorker' in navigator)) return;
   const regs = await navigator.serviceWorker.getRegistrations();
@@ -10,6 +12,12 @@ export async function devUnregisterAllSW() {
 }
 
 export function registerServiceWorker() {
+  // Kill switch: Service Worker disabled
+  if (isOff('isw')) {
+    console.info('[SW] Disabled via kill switch (isw:off)');
+    return;
+  }
+  
   if (!('serviceWorker' in navigator)) return;
 
   // Check for ?sw=skip or ?sw=hardreset param (debug mode only)

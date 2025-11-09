@@ -1,5 +1,14 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.147: Runtime subsystem kill switch harness for binary isolation
+// - Added runtime/switches.ts with isOff() helper for kill switch checking
+// - Added runtime/overlay.ts for dev-only visual switch state display
+// - Added runtime/firestoreWrapper.ts helper for Firestore listener wrapping
+// - Wired kill switches: Service Worker (isw:off), Firebase Auth (iauth:off), Firestore (ifire:off)
+// - Wired kill switches: API client (iapiclient:off), FCM (imsg:off), Feature flags (ircfg:off), Analytics (ianalytics:off)
+// - Added docs/isolation/README.md with usage instructions and test order
+// - Purpose: Binary isolation to identify which subsystem causes UI flicker
+// - Usage: Set localStorage keys (e.g., 'isw:off'='1') to disable subsystems at runtime
 // ⚠️ VERSION 0.1.146: Fix runaway translation updates with hard no-op guards + one-time settle window
 // - Added content hash comparison (hashDict) to prevent commits when content is identical
 // - Added one-time settle window (1000ms) to ignore redundant startup updates
@@ -69,4 +78,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.146";
+export const APP_VERSION = "0.1.147";

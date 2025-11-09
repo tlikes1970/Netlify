@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { isOff } from '../runtime/switches';
 
 interface ServiceWorkerState {
   isSupported: boolean;
@@ -20,6 +21,12 @@ export function useServiceWorker() {
 
   // Register service worker
   const register = useCallback(async () => {
+    // Kill switch: Service Worker disabled
+    if (isOff('isw')) {
+      console.info('[SW] Disabled via kill switch (isw:off)');
+      return;
+    }
+    
     if (!state.isSupported) {
       setState(prev => ({ ...prev, error: 'Service Worker not supported' }));
       return;
@@ -156,6 +163,9 @@ export function useServiceWorker() {
 
   // Auto-register on mount (disabled in dev)
   useEffect(() => {
+    // Kill switch: Service Worker disabled
+    if (isOff('isw')) return;
+    
     // Don't register in dev mode
     if (import.meta.env.DEV) return;
     

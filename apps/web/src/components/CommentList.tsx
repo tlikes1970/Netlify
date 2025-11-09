@@ -39,38 +39,54 @@ export default function CommentList({ postId, postAuthorId }: CommentListProps) 
       return;
     }
 
-    const commentsRef = collection(db, 'posts', postId, 'comments');
-    const q = query(commentsRef, orderBy('createdAt', 'asc'));
+    let unsubscribe: (() => void) | null = null;
 
-    // Real-time listener
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const commentsData: Comment[] = [];
-        
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          commentsData.push({
-            id: doc.id,
-            authorId: data.authorId || '',
-            authorName: data.authorName || 'Anonymous',
-            authorAvatar: data.authorAvatar || '',
-            body: data.body || '',
-            createdAt: data.createdAt,
-            updatedAt: data.updatedAt,
-          });
-        });
-
-        setComments(commentsData);
+    // Kill switch: Firestore listeners disabled
+    import('../runtime/switches').then(({ isOff }) => {
+      if (isOff('ifire')) {
+        console.info('[CommentList] Firestore disabled via kill switch (ifire:off)');
         setLoading(false);
-      },
-      (error) => {
-        console.error('Error listening to comments:', error);
-        setLoading(false);
+        return;
       }
-    );
+      
+      const commentsRef = collection(db, 'posts', postId, 'comments');
+      const q = query(commentsRef, orderBy('createdAt', 'asc'));
 
-    return () => unsubscribe();
+      // Real-time listener
+      unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const commentsData: Comment[] = [];
+          
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            commentsData.push({
+              id: doc.id,
+              authorId: data.authorId || '',
+              authorName: data.authorName || 'Anonymous',
+              authorAvatar: data.authorAvatar || '',
+              body: data.body || '',
+              createdAt: data.createdAt,
+              updatedAt: data.updatedAt,
+            });
+          });
+
+          setComments(commentsData);
+          setLoading(false);
+        },
+        (error) => {
+          console.error('Error listening to comments:', error);
+          setLoading(false);
+        }
+      );
+    });
+    
+    // Cleanup function
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [postId]);
 
   const handleDelete = async (commentId: string, commentAuthorId: string) => {

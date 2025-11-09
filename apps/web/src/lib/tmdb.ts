@@ -75,6 +75,14 @@ export function debugTmdbSource() {
 }
 
 export async function get(endpoint: string, params: Record<string, string | number> = {}) {
+  // Kill switch: API client disabled
+  const { isOff } = await import('../runtime/switches');
+  if (isOff('iapiclient')) {
+    console.info('[TMDB] Disabled via kill switch (iapiclient:off)');
+    // Return empty response
+    return { results: [] };
+  }
+  
   // Use /api/tmdb-proxy which redirects to /.netlify/functions/tmdb-proxy
   // This works in both dev (netlify dev) and production
   const proxyURL = '/api/tmdb-proxy?' + new URLSearchParams({ endpoint, ...params } as Record<string, string>);

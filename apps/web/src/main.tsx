@@ -4,20 +4,28 @@ import App from './App';
 
 // Initialize Sentry for error tracking (only in production with DSN)
 if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
-  import('@sentry/react').then((Sentry) => {
-    Sentry.init({
-      dsn: import.meta.env.VITE_SENTRY_DSN,
-      environment: import.meta.env.MODE || 'production',
-      integrations: [
-        Sentry.browserTracingIntegration(),
-        Sentry.replayIntegration(),
-      ],
-      tracesSampleRate: 0.1,
-      replaysSessionSampleRate: 0.1,
-      replaysOnErrorSampleRate: 1.0,
+  import('./runtime/switches').then(({ isOff }) => {
+    // Kill switch: Analytics/Perf disabled
+    if (isOff('ianalytics')) {
+      console.info('[Sentry] Disabled via kill switch (ianalytics:off)');
+      return;
+    }
+    
+    import('@sentry/react').then((Sentry) => {
+      Sentry.init({
+        dsn: import.meta.env.VITE_SENTRY_DSN,
+        environment: import.meta.env.MODE || 'production',
+        integrations: [
+          Sentry.browserTracingIntegration(),
+          Sentry.replayIntegration(),
+        ],
+        tracesSampleRate: 0.1,
+        replaysSessionSampleRate: 0.1,
+        replaysOnErrorSampleRate: 1.0,
+      });
+    }).catch(() => {
+      // Sentry not available, continue without it
     });
-  }).catch(() => {
-    // Sentry not available, continue without it
   });
 }
 import { FlagsProvider } from './lib/flags';
@@ -45,6 +53,8 @@ import { runFirstFrameBoot } from './boot/bootCoordinator';
 // Import scroll feature flags and logger to ensure window exposure
 import './utils/scrollFeatureFlags';
 import './utils/scrollLogger';
+// Install kill switch overlay (dev only)
+import { installKillSwitchOverlay } from './runtime/overlay';
 // ⚠️ CRITICAL: Don't import authManager here - it triggers constructor
 // Import it AFTER firebaseReady resolves to prevent race condition
 // import { authManager } from './lib/auth'; // Moved to after firebaseReady
@@ -164,6 +174,11 @@ runFirstFrameBoot([
     logAuthOriginHint();
   }
 ]);
+
+// Install kill switch overlay (dev only)
+if (import.meta.env.DEV) {
+  installKillSwitchOverlay();
+}
 
 // Install dev diagnostics
 if (import.meta.env.DEV) {

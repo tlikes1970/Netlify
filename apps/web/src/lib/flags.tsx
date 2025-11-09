@@ -25,7 +25,15 @@ export function useFlag(name: keyof Flags | string): boolean {
 }
 
 export function flag(name: string): boolean {
+  // Kill switch: Remote Config/Feature flags disabled
+  // Check synchronously to avoid async issues
   try {
+    const killSwitch = localStorage.getItem('ircfg:off');
+    if (killSwitch === '1' || killSwitch === 'true') {
+      console.info('[Flags] Disabled via kill switch (ircfg:off)');
+      return false; // Return default (disabled) for all flags
+    }
+    
     const v = localStorage.getItem('flag:' + name);
     if (v !== null) return v === 'true';
   } catch {
