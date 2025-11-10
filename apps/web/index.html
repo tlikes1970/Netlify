@@ -13,8 +13,29 @@
     
     <!-- TMDB API Key for local development -->
     <meta name="tmdb-api-key" content="b7247bb415b50f25b5e35e2566430b96" />
+    
+    <!-- First-Paint Gate CSS: kills transitions while gated -->
+    <style id="fp-gate-css">
+      html.fp-gate * { transition: none !important; animation: none !important; }
+      html.fp-gate body { visibility: hidden; }
+      /* if you have a splash, you can show it instead of hiding body */
+      html.fp-gate .app-splash { visibility: visible; }
+    </style>
+    
+    <!-- Mark the page as gated as early as possible -->
+    <script>
+      try {
+        if (localStorage.getItem('app:primed') !== '1') {
+          document.documentElement.classList.add('fp-gate');
+        }
+      } catch {}
+    </script>
   </head>
   <body>
+    <!-- Optional: tiny splash so users don't see a blank -->
+    <div class="app-splash" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;visibility:hidden;">
+      <div style="font: 600 14px/1.2 system-ui, sans-serif;opacity:.7;">Loading…</div>
+    </div>
     <div id="root"></div>
     
     <!-- Hidden form for Netlify Forms detection -->

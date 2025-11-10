@@ -1,6 +1,66 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { getSnapshot } from './i18n/translationStore';
+
+/**
+ * First-Paint Gate: Prevents intermediate paints during cold load
+ * Waits for DOM, stylesheets, fonts, and i18n snapshot before revealing app
+ */
+
+function allStylesLoaded(): Promise<void> {
+  const links = Array.from(document.querySelectorAll('link[rel="stylesheet"][href]')) as HTMLLinkElement[];
+  const waits = links.map(l => l.sheet ? Promise.resolve() : new Promise<void>(res => {
+    l.addEventListener('load', () => res(), { once: true });
+    l.addEventListener('error', () => res(), { once: true });
+  }));
+  return Promise.all(waits).then(() => {});
+}
+
+function fontsReadyOrTimeout(ms = 800): Promise<void> {
+  const p = (document as any).fonts?.ready || Promise.resolve();
+  return Promise.race([p as Promise<any>, new Promise(res => setTimeout(res, ms))]).then(() => {});
+}
+
+function i18nFirstSnapshotOrTimeout(ms = 400): Promise<void> {
+  // Poll until i18n snapshot version > 0 (initialized)
+  const start = Date.now();
+  return new Promise<void>(res => {
+    const check = () => {
+      try {
+        const snapshot = getSnapshot();
+        if (snapshot.version > 0 || Date.now() - start >= ms) {
+          res();
+        } else {
+          setTimeout(check, 10);
+        }
+      } catch {
+        res();
+      }
+    };
+    check();
+  });
+}
+
+async function releaseFirstPaintGate(timeoutMs = 1200) {
+  const deadline = new Promise(res => setTimeout(res, timeoutMs));
+  await Promise.race([
+    (async () => {
+      if (document.readyState === 'loading') {
+        await new Promise<void>(r => document.addEventListener('DOMContentLoaded', () => r(), { once: true }));
+      }
+      await allStylesLoaded();
+      await fontsReadyOrTimeout(800);
+      await i18nFirstSnapshotOrTimeout(400);
+    })(),
+    deadline
+  ]);
+
+  try { localStorage.setItem('app:primed', '1'); } catch {}
+  document.documentElement.classList.remove('fp-gate');
+  const gateCss = document.getElementById('fp-gate-css');
+  if (gateCss && gateCss.parentNode) gateCss.parentNode.removeChild(gateCss);
+}
 
 // Initialize Sentry for error tracking (only in production with DSN)
 if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
@@ -367,6 +427,9 @@ import('./utils/debug-auth').then(m => {
         </QueryClientProvider>
       </React.StrictMode>
     );
+    
+    // Release first-paint gate after React mount
+    releaseFirstPaintGate();
   } catch (error) {
     console.error('[Boot] bootstrapApp threw - still rendering', error);
     // Still render app even if Firebase bootstrap fails (graceful degradation)
@@ -380,6 +443,9 @@ import('./utils/debug-auth').then(m => {
       </React.StrictMode>
     );
     console.log('[Boot] Emergency render finished');
+    
+    // Release first-paint gate even in error path
+    releaseFirstPaintGate();
   }
 })();
 
