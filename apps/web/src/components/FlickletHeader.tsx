@@ -56,7 +56,6 @@ export default function FlickletHeader({
     usernamePrompted,
     loading: usernameLoading,
   } = useUsername();
-  const canInstall = useCanInstallPWA();
   const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
 
   // Non-blocking prompt check
