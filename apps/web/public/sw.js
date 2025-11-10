@@ -99,6 +99,14 @@ self.addEventListener("fetch", (e) => {
   }
 
   if (req.mode === "navigate") {
+    // ⚠️ CRITICAL: Check for auth params in navigate requests BEFORE handling
+    // OAuth redirects return with ?code= and ?state= params that must bypass SW
+    if (isAuthRequest(fullUrl)) {
+      console.log("[SW] Auth navigate detected - bypassing SW:", fullUrl);
+      e.respondWith(fetch(req, { cache: "no-store" }));
+      return;
+    }
+    
     // ⚠️ FIXED: Network-first for HTML to prevent serving stale content during updates
     // This prevents flicker caused by serving cached HTML that conflicts with new HTML
     e.respondWith(

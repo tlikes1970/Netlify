@@ -169,8 +169,10 @@ class AuthManager {
           const now = Date.now();
           const timeSince = now - startTime;
           
-          // If stuck in redirecting/resolving for >60s, reset to checking
-          if (timeSince > 60000) {
+          // ⚠️ FIXED: Reduced timeout from 60s to 10s to clear stuck redirecting state faster
+          // If stuck in redirecting/resolving for >10s, reset to checking
+          // This prevents users from being stuck on "redirecting to sign in" message
+          if (timeSince > 10000) {
             logger.warn(`Auth stuck in ${persistedStatus} for ${timeSince}ms - resetting to checking`);
             this.setStatus('checking');
             try {
