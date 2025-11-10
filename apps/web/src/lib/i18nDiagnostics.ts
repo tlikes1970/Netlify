@@ -415,8 +415,21 @@ class I18NDiagnosticsCollector {
       localStorage.setItem('i18n:diagnosticsReport', JSON.stringify(report, null, 2));
     }
     
-    // Download as JSON file
-    this.downloadReport(report);
+    // Download as JSON file (opt-in via flag)
+    const shouldDownload = typeof window !== 'undefined' && 
+      localStorage.getItem('i18n:diagnostics:autoDownload') === '1';
+    
+    if (shouldDownload) {
+      this.downloadReport(report);
+    } else {
+      // No download; expose for dev access
+      if (typeof window !== 'undefined') {
+        (window as any).__i18nDiagLast = report;
+      }
+      if (import.meta.env.DEV) {
+        console.info('[i18n:diag] captured (no download)', report);
+      }
+    }
     
     const actualMode = getTranslationBusMode();
     console.info(`[I18N] Diagnostics complete (mode=${actualMode}). Report written.`);

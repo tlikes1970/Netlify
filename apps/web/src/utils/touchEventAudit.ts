@@ -211,8 +211,10 @@ if (typeof window !== 'undefined') {
   (window as any).touchEventAuditor = touchEventAuditor;
   
   if (import.meta.env.DEV) {
-    console.log('🔧 Touch event auditor available: window.touchEventAuditor');
-    console.log('Usage: window.touchEventAuditor.enable()');
+    import('../diagnostics/debugGate').then(({ dlog }) => {
+      dlog('🔧 Touch event auditor available: window.touchEventAuditor');
+      dlog('Usage: window.touchEventAuditor.enable()');
+    }).catch(() => {});
   }
 }
 

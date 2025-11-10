@@ -114,9 +114,11 @@ export function notify(update: TranslationUpdate): void {
     currentMode = m;
   }
   
-  // Dev sanity log to confirm active path
+  // Dev sanity log to confirm active path (gated behind debug:verbose)
   if (import.meta.env.DEV) {
-    console.log('[i18n] notify mode=', currentMode, performance.now());
+    import('../diagnostics/debugGate').then(({ dlog }) => {
+      dlog('[i18n] notify mode=', currentMode, performance.now());
+    }).catch(() => {});
   }
   
   if (currentMode === 'raf') {

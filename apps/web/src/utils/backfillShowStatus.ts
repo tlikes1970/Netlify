@@ -1,11 +1,12 @@
 // Backfill show status for existing TV shows in the library
 import { Library } from '../lib/storage';
 import { fetchShowStatus } from '../tmdb/tv';
+import { dlog } from '../diagnostics/debugGate';
 
-console.log('🔄 backfillShowStatus module loaded');
+dlog('🔄 backfillShowStatus module loaded');
 
 export async function backfillShowStatus() {
-  console.log('🔄 Starting show status backfill...');
+  dlog('🔄 Starting show status backfill...');
   
   // Get all items from the library state
   const watchingItems = Library.getByList('watching');
@@ -73,6 +74,6 @@ export async function backfillShowStatus() {
     }
   }
   
-  console.log('✅ Show status backfill completed');
+  dlog('✅ Show status backfill completed');
 }
 

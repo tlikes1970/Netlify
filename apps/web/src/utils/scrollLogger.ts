@@ -6,6 +6,8 @@
  * Dependencies: None
  */
 
+import { dlog } from '../diagnostics/debugGate';
+
 type LogLevel = 'none' | 'error' | 'warn' | 'info' | 'debug';
 
 interface ScrollLogEntry {
@@ -130,7 +132,7 @@ export const scrollLogger = new ScrollLogger();
 // Expose to window for debugging (dev mode only)
 if (typeof window !== 'undefined' && import.meta.env.DEV) {
   (window as any).scrollLogger = scrollLogger;
-  console.log('🔧 Scroll logger available: window.scrollLogger');
-  console.log('Usage: window.scrollLogger.setLevel("debug")');
+  dlog('🔧 Scroll logger available: window.scrollLogger');
+  dlog('Usage: window.scrollLogger.setLevel("debug")');
 }
 
