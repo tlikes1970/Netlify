@@ -11,11 +11,9 @@
  * Enable in production by adding ?diagnostics=flicker to URL or setting localStorage flag
  */
 
-const ENABLED = 
-  typeof window !== 'undefined' && (
-    new URLSearchParams(window.location.search).get('diagnostics') === 'flicker' ||
-    localStorage.getItem('flicker-diagnostics') === 'enabled'
-  );
+// ⚠️ DISABLED: Flicker Diagnostics completely disabled
+// All diagnostic functionality removed per user request
+const ENABLED = false;
 
 const logs: Array<{
   timestamp: number;
@@ -293,36 +291,9 @@ export const flickerDiagnostics = {
   }
 };
 
-// Auto-export to window for easy access
-if (typeof window !== 'undefined') {
-  (window as any).flickerDiagnostics = flickerDiagnostics;
-  
-  // Track ALL custom events that could cause re-renders
-  const eventsToTrack = [
-    'library:updated',
-    'library:changed',
-    'auth:changed',
-    'auth:ready',
-    'customLists:updated',
-    'force-refresh',
-    'pushstate',
-    'cards:changed',
-    'library:reloaded',
-  ];
-  
-  eventsToTrack.forEach(eventName => {
-    window.addEventListener(eventName, (e: any) => {
-      flickerDiagnostics.logEvent(eventName, e.detail || {});
-    });
-  });
-  
-  // Also track pushstate events (history changes)
-  const originalPushState = window.history.pushState;
-  window.history.pushState = function(...args) {
-    flickerDiagnostics.logEvent('history:pushstate', { url: args[2] });
-    return originalPushState.apply(window.history, args);
-  };
-}
+// ⚠️ DISABLED: Auto-export and event tracking disabled
+// Diagnostics completely disabled per user request
+// Event tracking and window exports removed
 
 
 

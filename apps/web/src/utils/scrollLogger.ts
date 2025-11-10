@@ -6,7 +6,7 @@
  * Dependencies: None
  */
 
-import { dlog } from '../diagnostics/debugGate';
+// ⚠️ REMOVED: debugGate diagnostics disabled
 
 type LogLevel = 'none' | 'error' | 'warn' | 'info' | 'debug';
 
@@ -132,7 +132,6 @@ export const scrollLogger = new ScrollLogger();
 // Expose to window for debugging (dev mode only)
 if (typeof window !== 'undefined' && import.meta.env.DEV) {
   (window as any).scrollLogger = scrollLogger;
-  dlog('🔧 Scroll logger available: window.scrollLogger');
-  dlog('Usage: window.scrollLogger.setLevel("debug")');
+  // ⚠️ REMOVED: debugGate diagnostics disabled
 }
 

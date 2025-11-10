@@ -69,10 +69,7 @@ class CustomListManager {
   }
 
   private emitChange(): void {
-    // Track notification for diagnostics
-    if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
-      (window as any).flickerDiagnostics.logSubscription('CustomListManager', 'notify', { subscriberCount: this.subscribers.size });
-    }
+    // ⚠️ REMOVED: flickerDiagnostics logging disabled
     this.subscribers.forEach(callback => callback());
   }
 
@@ -260,11 +257,7 @@ export function useCustomLists(): UserLists {
   const prevListsRef = React.useRef(userLists);
 
   useEffect(() => {
-    // Track subscription for diagnostics
-    if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
-      (window as any).flickerDiagnostics.logSubscription('useCustomLists', 'subscribe', {});
-    }
-    
+    // ⚠️ REMOVED: flickerDiagnostics logging disabled
     setUserLists(customListManager.getUserLists());
     const unsubscribe = customListManager.subscribe(() => {
       const newLists = customListManager.getUserLists();
@@ -279,10 +272,7 @@ export function useCustomLists(): UserLists {
         );
       
       if (hasChanged) {
-        // Track state change for diagnostics - only when actually changed
-        if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
-          (window as any).flickerDiagnostics.logStateChange('useCustomLists', 'userLists', prevLength, newLength);
-        }
+        // ⚠️ REMOVED: flickerDiagnostics logging disabled
         prevListsRef.current = newLists;
         setUserLists(newLists);
       }

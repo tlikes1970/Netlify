@@ -210,11 +210,6 @@ export const touchEventAuditor = new TouchEventAuditor();
 if (typeof window !== 'undefined') {
   (window as any).touchEventAuditor = touchEventAuditor;
   
-  if (import.meta.env.DEV) {
-    import('../diagnostics/debugGate').then(({ dlog }) => {
-      dlog('🔧 Touch event auditor available: window.touchEventAuditor');
-      dlog('Usage: window.touchEventAuditor.enable()');
-    }).catch(() => {});
-  }
+  // ⚠️ REMOVED: debugGate diagnostics disabled
 }
 

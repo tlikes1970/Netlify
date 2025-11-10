@@ -250,12 +250,7 @@ if (import.meta.env.DEV) {
   installKillSwitchOverlay();
 }
 
-// Install dev diagnostics
-if (import.meta.env.DEV) {
-  import('./debug/compactGateDiagnostics')
-    .then(m => m.installDiagnostics?.())
-    .catch(() => {});
-}
+// ⚠️ REMOVED: Dev diagnostics disabled
 
 declare global {
   interface Window {
@@ -482,21 +477,4 @@ import('./pwa/installSignal').then(({ initInstallSignal }) => {
   initInstallSignal();
 }).catch(() => {});
 
-// Cold-start recorder (opt-in via localStorage flag)
-(function maybeStartColdProbe() {
-  try {
-    const on = localStorage.getItem('cold:probe') === '1';
-    if (!on) return;
-    
-    const label = localStorage.getItem('cold:label') || '';
-    const dl = localStorage.getItem('cold:download') === '1';
-    
-    import('./diagnostics/coldStartRecorder').then(({ startColdStartRecorder }) => {
-      startColdStartRecorder({ durationMs: 5000, download: dl, label });
-    }).catch(() => {
-      // Silently fail if module can't be loaded
-    });
-  } catch {
-    // Silently fail if localStorage is unavailable
-  }
-})();
+// ⚠️ REMOVED: Cold-start recorder disabled

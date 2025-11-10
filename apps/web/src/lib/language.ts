@@ -2,7 +2,8 @@ import { useEffect, useState, useMemo } from 'react';
 import * as React from 'react';
 import type { Language } from './language.types';
 import TRANSLATIONS from './translations';
-import { i18nDiagnostics } from './i18nDiagnostics';
+// ⚠️ REMOVED: i18nDiagnostics import disabled
+// const i18nDiagnostics = null; // Disabled
 import { translationBus, type TranslationUpdate } from '../i18n/translationBus';
 import { queueUpdate, useTranslationSelector, initializeStore, getSnapshot, type Dict } from '../i18n/translationStore';
 import { stageBootDict, stageBootLocale } from '../i18n/bootCollector';
@@ -61,10 +62,7 @@ class LanguageManager {
     // Update last payload
     this.__lastPayload = { translations, language: this.currentLanguage };
     
-    // Track notification for diagnostics
-    if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
-      (window as any).flickerDiagnostics.logSubscription('LanguageManager', 'notify', {});
-    }
+    // ⚠️ REMOVED: flickerDiagnostics logging disabled
     
     // Queue to frame-coalesced store (replaces direct notify)
     // Store's hash guard will catch any remaining redundant updates
@@ -85,14 +83,10 @@ class LanguageManager {
   }
 
   setLanguage(language: Language): void {
-    const changed = this.currentLanguage !== language;
     this.currentLanguage = language;
     this.saveLanguage();
     
-    // I18N Diagnostics - track language changes
-    if (changed && i18nDiagnostics) {
-      i18nDiagnostics.logEvent('language-change');
-    }
+    // ⚠️ REMOVED: I18N Diagnostics tracking disabled
   }
 
   /**
@@ -108,10 +102,7 @@ class LanguageManager {
     
     const unsubscribe = translationBus.subscribe(listener);
     
-    // Track subscription for diagnostics
-    if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
-      (window as any).flickerDiagnostics.logSubscription('LanguageManager', 'subscribe', {});
-    }
+    // ⚠️ REMOVED: flickerDiagnostics logging disabled
     
     return unsubscribe;
   }
@@ -150,17 +141,11 @@ export function useLanguage() {
   const [language, setLanguage] = useState(languageManager.getLanguage());
 
   useEffect(() => {
-    // Track subscription for diagnostics
-    if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
-      (window as any).flickerDiagnostics.logSubscription('useLanguage', 'subscribe', {});
-    }
+    // ⚠️ REMOVED: flickerDiagnostics logging disabled
     
     const unsubscribe = languageManager.subscribe(() => {
       const newLanguage = languageManager.getLanguage();
-      // Track state change for diagnostics
-      if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
-        (window as any).flickerDiagnostics.logStateChange('useLanguage', 'language', language, newLanguage);
-      }
+      // ⚠️ REMOVED: flickerDiagnostics logging disabled
       setLanguage(newLanguage);
     });
     return unsubscribe;
@@ -212,7 +197,7 @@ export function useT(keys?: string[] | null) {
 
 // React hook for translations (backward compatible, now uses frame-coalesced store)
 export function useTranslations() {
-  const diagnostics = typeof window !== 'undefined' ? (window as any).flickerDiagnostics : null;
+  // ⚠️ REMOVED: flickerDiagnostics disabled
   const renderCountRef = React.useRef(0);
   const mountIdRef = React.useRef<string | null>(null);
   
@@ -225,29 +210,7 @@ export function useTranslations() {
     mountIdRef.current = `useTranslations-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
   
-  // I18N Diagnostics tracking
-  if (i18nDiagnostics && mountIdRef.current) {
-    if (isFirstRender) {
-      i18nDiagnostics.logMount(mountIdRef.current);
-    } else {
-      i18nDiagnostics.logRender(mountIdRef.current);
-    }
-  }
-  
-  if (diagnostics) {
-    if (isFirstRender) {
-      diagnostics.logMount('useTranslations', { 
-        renderCount: renderCountRef.current,
-        mountId: mountIdRef.current 
-      });
-    } else {
-      diagnostics.logRender('useTranslations', { 
-        renderCount: renderCountRef.current, 
-        isReRender: true,
-        mountId: mountIdRef.current
-      });
-    }
-  }
+  // ⚠️ REMOVED: I18N Diagnostics and flickerDiagnostics tracking disabled
   
   // Use frame-coalesced store via useSyncExternalStore
   // This ensures at most one render per frame with stable identity
@@ -279,56 +242,23 @@ export function useTranslations() {
     }
   );
 
-  // Track state change for diagnostics
-  useEffect(() => {
-    if (diagnostics && prevDictRef.current !== translations) {
-      diagnostics.logStateChange('useTranslations', 'translations', prevDictRef.current, translations);
-    }
-  }, [translations, diagnostics]);
+  // ⚠️ REMOVED: flickerDiagnostics tracking disabled
 
-  // Also subscribe to translationBus for backward compatibility diagnostics
+  // Also subscribe to translationBus for backward compatibility
   useEffect(() => {
-    const mountId = mountIdRef.current;
-    const subscriptionTime = Date.now();
-    
-    // I18N Diagnostics tracking
-    if (i18nDiagnostics && mountId) {
-      i18nDiagnostics.logSubscription(mountId, subscriptionTime);
-      i18nDiagnostics.logEvent('subscription');
-    }
-    
-    // Track subscription for diagnostics
-    if (diagnostics) {
-      diagnostics.logEffect('useTranslations', 'effect-mount', []);
-      diagnostics.logSubscription('useTranslations', 'subscribe', { 
-        renderCount: renderCountRef.current,
-        mountId: mountIdRef.current
-      });
-    }
+    // ⚠️ REMOVED: I18N Diagnostics and flickerDiagnostics tracking disabled
     
     // Subscribe to translationBus for diagnostics only (store is primary source)
     const handleTranslationUpdate = (_payload: TranslationUpdate | TranslationUpdate[]) => {
-      // I18N Diagnostics - track provider identity changes
-      if (i18nDiagnostics) {
-        i18nDiagnostics.logEvent('provider-notify');
-      }
+      // ⚠️ REMOVED: I18N Diagnostics tracking disabled
     };
     
     const unsubscribe = translationBus.subscribe(handleTranslationUpdate);
     
     return () => {
-      // I18N Diagnostics tracking
-      if (i18nDiagnostics && mountId) {
-        i18nDiagnostics.logUnmount(mountId);
-      }
+      // ⚠️ REMOVED: I18N Diagnostics tracking disabled
       
-      if (diagnostics) {
-        diagnostics.logEffect('useTranslations', 'effect-unmount', []);
-        diagnostics.logUnmount('useTranslations', { 
-          renderCount: renderCountRef.current,
-          mountId: mountIdRef.current
-        });
-      }
+      // ⚠️ REMOVED: flickerDiagnostics logging disabled
       unsubscribe();
     };
   }, []);

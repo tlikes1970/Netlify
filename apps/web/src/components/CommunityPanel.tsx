@@ -4,7 +4,7 @@ import FlickWordStats from './games/FlickWordStats';
 import TriviaStats from './games/TriviaStats';
 import CommunityPlayer from './CommunityPlayer';
 import NewPostModal from './NewPostModal';
-import { flickerDiagnostics } from '@/lib/flickerDiagnostics';
+// ⚠️ REMOVED: flickerDiagnostics import disabled
 
 // Lazy load game modals
 const FlickWordModal = lazy(() => import('./games/FlickWordModal'));
@@ -28,7 +28,7 @@ interface Post {
 
 // ⚠️ FIXED: Memoize component to prevent unnecessary re-renders from parent
 const CommunityPanel = memo(function CommunityPanel() {
-  flickerDiagnostics.logRender('CommunityPanel', { timestamp: Date.now() });
+  // ⚠️ REMOVED: flickerDiagnostics logging disabled
   
   const translations = useTranslations();
   const [flickWordModalOpen, setFlickWordModalOpen] = useState(false);
@@ -79,7 +79,7 @@ const CommunityPanel = memo(function CommunityPanel() {
       
       const data = await response.json();
       const newPosts = data.posts || [];
-      flickerDiagnostics.logStateChange('CommunityPanel', 'posts', prevPostsRef.current.length, newPosts.length);
+      // ⚠️ REMOVED: flickerDiagnostics logging disabled
       prevPostsRef.current = newPosts;
       setPosts(newPosts);
       hasFetchedRef.current = true;
@@ -90,15 +90,14 @@ const CommunityPanel = memo(function CommunityPanel() {
         ? 'Unable to connect to server. The backend may not be running.'
         : (error instanceof Error ? error.message : 'Failed to load posts');
       
-      flickerDiagnostics.logStateChange('CommunityPanel', 'postsError', prevErrorRef.current, errorMsg);
-      flickerDiagnostics.logStateChange('CommunityPanel', 'posts', prevPostsRef.current.length, 0);
+      // ⚠️ REMOVED: flickerDiagnostics logging disabled
       prevErrorRef.current = errorMsg;
       prevPostsRef.current = [];
       setPostsError(errorMsg);
       setPosts([]);
       hasFetchedRef.current = true; // Mark as fetched even on error to prevent retry loop
     } finally {
-      flickerDiagnostics.logStateChange('CommunityPanel', 'postsLoading', prevLoadingRef.current, false);
+      // ⚠️ REMOVED: flickerDiagnostics logging disabled
       prevLoadingRef.current = false;
       setPostsLoading(false);
       fetchingRef.current = false;
@@ -106,7 +105,7 @@ const CommunityPanel = memo(function CommunityPanel() {
   };
 
   useEffect(() => {
-    flickerDiagnostics.logEffect('CommunityPanel', 'mount', []);
+    // ⚠️ REMOVED: flickerDiagnostics logging disabled
     // Only fetch once on mount
     if (!hasFetchedRef.current) {
       fetchPosts();

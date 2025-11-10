@@ -3,13 +3,7 @@ import { getFirebaseAuth, firebaseReady } from "../lib/firebaseBootstrap";
 import { authManager } from "../lib/auth";
 // import type { UserSettings } from '../lib/auth.types'; // Unused
 
-// Get diagnostics from window if available (avoids circular dependency)
-const getDiagnostics = () => {
-  if (typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
-    return (window as any).flickerDiagnostics;
-  }
-  return null;
-};
+// ⚠️ REMOVED: Diagnostics disabled
 
 // Create a simple state manager for username
 class UsernameStateManager {
@@ -112,7 +106,7 @@ export function useUsername() {
       // Don't reload if skip is in progress (prevents overwriting optimistic state)
       if (usernameStateManager.skipInProgress) {
         console.log("⏸️ Skipping loadUsername - skip in progress");
-        getDiagnostics()?.log('useUsername', 'LOAD_SKIPPED', { reason: 'skipInProgress' });
+        // ⚠️ REMOVED: Diagnostics disabled
         // Still set loading to false so modal can show if needed
         usernameStateManager.setLoading(false);
         return;
@@ -121,13 +115,13 @@ export function useUsername() {
       // Prevent concurrent calls using shared flag (prevents multiple instances from loading simultaneously)
       if (usernameStateManager.isLoading) {
         console.log("⏸️ Skipping loadUsername - already loading");
-        getDiagnostics()?.log('useUsername', 'LOAD_SKIPPED', { reason: 'alreadyLoading' });
+        // ⚠️ REMOVED: Diagnostics disabled
         return;
       }
 
       usernameStateManager.isLoading = true;
       usernameStateManager.setLoading(true);
-      getDiagnostics()?.log('useUsername', 'LOAD_START', { timestamp: Date.now() });
+      // ⚠️ REMOVED: Diagnostics disabled
 
       const currentUser = authManager.getCurrentUser();
       console.log("🔄 Loading username for user:", currentUser?.uid);
@@ -172,12 +166,10 @@ export function useUsername() {
 
           // Only update if skip is not in progress (skip sets optimistic state)
           if (!usernameStateManager.skipInProgress) {
-            const oldUsername = usernameStateManager.getState().username;
             usernameStateManager.setUsernamePrompted(promptedValue);
             usernameStateManager.setUsername(usernameValue);
             
-            // Track username state change for diagnostics
-            getDiagnostics()?.logStateChange('useUsername', 'username', oldUsername, usernameValue);
+            // ⚠️ REMOVED: Diagnostics disabled
             
             // Enhanced logging for investigation
             const logData = {
@@ -189,7 +181,7 @@ export function useUsername() {
               environment: window.location.hostname === 'localhost' ? 'localhost' : 'production',
             };
             console.log("✅ Username loaded:", logData);
-            getDiagnostics()?.log('useUsername', 'LOAD_SUCCESS', logData);
+            // ⚠️ REMOVED: Diagnostics disabled
             
             // Store in localStorage for investigation (production-safe, limited size)
             try {

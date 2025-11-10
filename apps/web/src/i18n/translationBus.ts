@@ -114,12 +114,7 @@ export function notify(update: TranslationUpdate): void {
     currentMode = m;
   }
   
-  // Dev sanity log to confirm active path (gated behind debug:verbose)
-  if (import.meta.env.DEV) {
-    import('../diagnostics/debugGate').then(({ dlog }) => {
-      dlog('[i18n] notify mode=', currentMode, performance.now());
-    }).catch(() => {});
-  }
+  // ⚠️ REMOVED: debugGate diagnostics disabled
   
   if (currentMode === 'raf') {
     batcher.queue(update);

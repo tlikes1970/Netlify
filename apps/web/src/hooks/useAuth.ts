@@ -35,13 +35,7 @@ export function useAuth() {
     const unsubscribe = authManager.subscribe((authUser) => {
       // Only log state change if user actually changed (not subscription callback)
       // Subscription logging is already handled at AuthManager level
-      const prevUser = prevUserRef.current;
-      const userChanged = prevUser?.uid !== authUser?.uid;
-      
-      if (userChanged && typeof window !== 'undefined' && (window as any).flickerDiagnostics) {
-        (window as any).flickerDiagnostics.logStateChange('useAuth', 'user', prevUser?.uid || null, authUser?.uid || null);
-      }
-      
+      // ⚠️ REMOVED: flickerDiagnostics logging disabled
       prevUserRef.current = authUser;
       setUser(authUser);
       

@@ -6,7 +6,8 @@
  */
 
 import { APP_VERSION } from '../version';
-import { isI18nContainmentEnabled, isI18nDiagnosticsEnabled, getI18nDiagnosticsDuration } from '../i18n/featureFlags';
+// ⚠️ REMOVED: Diagnostic imports disabled
+import { isI18nContainmentEnabled, getI18nDiagnosticsDuration } from '../i18n/featureFlags';
 import { mode as getTranslationBusMode } from '../i18n/translationBus';
 
 // Lazy access to languageManager to avoid circular dependency
@@ -29,14 +30,9 @@ function getLanguageManager() {
   }
 }
 
-// Feature flag - enable via localStorage or URL param
-// Now uses centralized feature flags
-const I18N_DIAGNOSTICS_ENABLED = 
-  typeof window !== 'undefined' && (
-    isI18nDiagnosticsEnabled() ||
-    new URLSearchParams(window.location.search).get('i18n-diagnostics') === 'true' ||
-    localStorage.getItem('i18n-diagnostics') === 'enabled'
-  );
+// ⚠️ DISABLED: I18N Diagnostics completely disabled
+// All diagnostic functionality removed per user request
+const I18N_DIAGNOSTICS_ENABLED = false;
 
 // Report structure
 interface I18NDiagnosticsReport {
@@ -415,13 +411,9 @@ class I18NDiagnosticsCollector {
       localStorage.setItem('i18n:diagnosticsReport', JSON.stringify(report, null, 2));
     }
     
-    // Download as JSON file (opt-in via flag)
-    const shouldDownload = typeof window !== 'undefined' && 
-      localStorage.getItem('i18n:diagnostics:autoDownload') === '1';
-    
-    if (shouldDownload) {
-      this.downloadReport(report);
-    } else {
+    // ⚠️ REMOVED: Auto-download functionality disabled
+    // Diagnostics are now disabled - no downloads
+    {
       // No download; expose for dev access
       if (typeof window !== 'undefined') {
         (window as any).__i18nDiagLast = report;
@@ -437,22 +429,8 @@ class I18NDiagnosticsCollector {
     return report;
   }
   
-  private downloadReport(report: I18NDiagnosticsReport) {
-    if (typeof window === 'undefined') return;
-    
-    const json = JSON.stringify(report, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `i18n-diagnostics-report-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    console.info('[I18N] Diagnostics report downloaded as JSON file');
-  }
+  // ⚠️ REMOVED: downloadReport method disabled (no auto-download)
+  // Method removed to prevent JSON file downloads
 }
 
 // Singleton instance

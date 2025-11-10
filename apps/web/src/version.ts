@@ -1,5 +1,14 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.149: Removed all diagnostic, triage, and troubleshooting tools
+// - Disabled flickerDiagnostics (no logging, no event tracking, no exports)
+// - Disabled i18nDiagnostics (no auto-download, no JSON file generation)
+// - Removed all diagnostic calls from components and hooks
+// - Removed debugGate diagnostic imports and calls
+// - Removed coldStartRecorder and compactGateDiagnostics from main.tsx
+// - All diagnostic systems are now no-ops (disabled but code remains for rollback)
+// - This prevents any automatic JSON file downloads or diagnostic overhead
+// - Rollback: Revert this commit to restore diagnostic functionality
 // ⚠️ VERSION 0.1.148: Fixed production flicker caused by Service Worker aggressive activation loop
 // - Fixed sw.js: Made clients.claim() and skipWaiting() conditional to prevent aggressive takeover
 // - Fixed sw-register.ts: Removed automatic reg.update() on activation to prevent update loop
@@ -89,4 +98,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.148";
+export const APP_VERSION = "0.1.149";

@@ -3,7 +3,7 @@ import { useUsername } from '../hooks/useUsername';
 import { useSettings, getPersonalityText } from '../lib/settings';
 import { useAuth } from '../hooks/useAuth';
 import { openSettingsSheet } from './settings/SettingsSheet';
-import { flickerDiagnostics } from '../lib/flickerDiagnostics';
+// ⚠️ REMOVED: flickerDiagnostics import disabled
 
 export default function SnarkDisplay() {
   const { username } = useUsername();
@@ -14,14 +14,12 @@ export default function SnarkDisplay() {
   const prevUsernameRef = useRef<string | undefined>(username);
   const prevIsAuthenticatedRef = useRef<boolean>(isAuthenticated);
   
-  // Only log state changes when values actually change
+  // ⚠️ REMOVED: flickerDiagnostics logging disabled
   useEffect(() => {
     if (prevUsernameRef.current !== username) {
-      flickerDiagnostics.logStateChange('SnarkDisplay', 'username', prevUsernameRef.current || '', username || '');
       prevUsernameRef.current = username;
     }
     if (prevIsAuthenticatedRef.current !== isAuthenticated) {
-      flickerDiagnostics.logStateChange('SnarkDisplay', 'isAuthenticated', prevIsAuthenticatedRef.current, isAuthenticated);
       prevIsAuthenticatedRef.current = isAuthenticated;
     }
   }, [username, isAuthenticated]);
