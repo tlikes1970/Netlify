@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getTheatersNearLocation, getLocationFromIP, Theater } from '@/lib/tmdb';
+import { makeGeoResolver } from '@/utils/geoClient';
 
 export interface LocationData {
   latitude: number;
@@ -13,6 +14,7 @@ export interface LocationData {
 export function useLocation() {
   const [location, setLocation] = useState<LocationData | null>(null);
   const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | 'loading'>('loading');
+  const geoResolverRef = useRef<(() => Promise<any>) | null>(null);
 
   useEffect(() => {
     const getLocation = async () => {
@@ -23,21 +25,29 @@ export function useLocation() {
             async (position) => {
               const { latitude, longitude } = position.coords;
               
-              // Get city info from coordinates (reverse geocoding)
+              // Get city info from coordinates (reverse geocoding) - single-flight + cache
               try {
-                const response = await fetch(
-                  `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-                );
-                const data = await response.json();
+                // Create resolver once per session for these coordinates
+                if (!geoResolverRef.current) {
+                  geoResolverRef.current = makeGeoResolver(latitude, longitude);
+                }
+                const data = await geoResolverRef.current();
                 
-                setLocation({
-                  latitude,
-                  longitude,
-                  city: data.city || 'Unknown',
-                  region: data.principalSubdivision || 'Unknown',
-                  country: data.countryName || 'Unknown'
-                });
-                setLocationPermission('granted');
+                if (data) {
+                  setLocation({
+                    latitude,
+                    longitude,
+                    city: data.city || 'Unknown',
+                    region: data.principalSubdivision || 'Unknown',
+                    country: data.countryName || 'Unknown'
+                  });
+                  setLocationPermission('granted');
+                } else {
+                  // Fallback to IP-based location
+                  const ipLocation = await getLocationFromIP();
+                  setLocation(ipLocation);
+                  setLocationPermission('granted');
+                }
               } catch (error) {
                 console.error('Failed to get city info:', error);
                 // Fallback to IP-based location

@@ -1,4 +1,5 @@
 import { getOptimalImageSize } from '../hooks/useImageOptimization';
+import { makeGeoResolver } from '../utils/geoClient';
 
 // const BASE = 'https://api.themoviedb.org/3'; // Unused
 
@@ -424,13 +425,22 @@ function generateTheaterName(chain: string, index: number): string {
   return `${chain} ${suffix}`;
 }
 
+// Module-level resolver cache for generateRealisticAddress
+const geoResolverCache = new Map<string, () => Promise<any>>();
+
 async function generateRealisticAddress(latitude: number, longitude: number, index: number): Promise<string> {
   try {
-    // Try to get real addresses near the user's location using reverse geocoding
-    const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
-
-    if (response.ok) {
-      const data = await response.json();
+    // Use single-flight + cache for reverse geocoding
+    const cacheKey = `${latitude.toFixed(3)},${longitude.toFixed(3)}`;
+    let resolver = geoResolverCache.get(cacheKey);
+    if (!resolver) {
+      resolver = makeGeoResolver(latitude, longitude);
+      geoResolverCache.set(cacheKey, resolver);
+    }
+    
+    const data = await resolver();
+    
+    if (data) {
       const city = data.city || 'Unknown City';
       const region = data.principalSubdivision || 'Unknown State';
 

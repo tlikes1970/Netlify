@@ -458,6 +458,11 @@ if (import.meta.env.DEV) {
 
 registerServiceWorker();
 
+// Initialize PWA install signal (stable state, no header jump)
+import('./pwa/installSignal').then(({ initInstallSignal }) => {
+  initInstallSignal();
+}).catch(() => {});
+
 // Cold-start recorder (opt-in via localStorage flag)
 (function maybeStartColdProbe() {
   try {

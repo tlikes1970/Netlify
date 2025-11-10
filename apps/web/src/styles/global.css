@@ -8,6 +8,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scrollbar-gutter: stable;
+}
+
 :root {
   /* ensures sticky offset respects notches / iOS safe areas */
   --safe-top: env(safe-area-inset-top, 0px);

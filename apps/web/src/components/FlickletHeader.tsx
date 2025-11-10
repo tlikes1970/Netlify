@@ -5,7 +5,8 @@ import AccountButton from "./AccountButton";
 import SnarkDisplay from "./SnarkDisplay";
 import UsernamePromptModal from "./UsernamePromptModal";
 import { useUsername } from "../hooks/useUsername";
-import { useInstallPrompt } from "../hooks/useInstallPrompt";
+import { useCanInstallPWA } from "../pwa/useInstall";
+import { promptInstall } from "../pwa/installSignal";
 import { authManager } from "../lib/auth";
 import SearchSuggestions, { addSearchToHistory } from "./SearchSuggestions";
 import VoiceSearch from "./VoiceSearch";
@@ -55,7 +56,7 @@ export default function FlickletHeader({
     usernamePrompted,
     loading: usernameLoading,
   } = useUsername();
-  const { isInstallable, promptInstall } = useInstallPrompt();
+  const canInstall = useCanInstallPWA();
   const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
 
   // Non-blocking prompt check
@@ -94,18 +95,8 @@ export default function FlickletHeader({
               >
                 v{APP_VERSION}
               </span>
-              {/* Install Button */}
-              {isInstallable && (
-                <button
-                  onClick={promptInstall}
-                  className="rounded-full border border-gray-300 dark:border-gray-600 px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-[11px] leading-none text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                  aria-label="Install app"
-                  title="Install Flicklet"
-                  data-testid="install-button"
-                >
-                  Install
-                </button>
-              )}
+              {/* Install Button Slot - stable width to prevent header jump */}
+              <InstallButtonSlot />
               {/* Help Button */}
               <button
                 onClick={() => {
@@ -164,6 +155,34 @@ function AppTitle({ text }: { text: string }) {
         {text}
       </span>
     </h1>
+  );
+}
+
+function InstallButtonSlot() {
+  const can = useCanInstallPWA();
+  
+  // Reserve space: match the button width so header doesn't shift
+  const style: React.CSSProperties = {
+    display: 'inline-block',
+    width: '64px',
+    textAlign: 'center',
+  };
+  
+  if (!can) {
+    return <span style={style} aria-hidden="true"></span>;
+  }
+  
+  return (
+    <button
+      onClick={() => promptInstall()}
+      style={style}
+      className="rounded-full border border-gray-300 dark:border-gray-600 px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-[11px] leading-none text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+      aria-label="Install app"
+      title="Install Flicklet"
+      data-testid="install-button"
+    >
+      Install
+    </button>
   );
 }
 
