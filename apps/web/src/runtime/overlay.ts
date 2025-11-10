@@ -63,6 +63,14 @@ export function installKillSwitchOverlay() {
   // Only in dev mode
   if (import.meta.env.PROD) return;
   
+  // Opt-in via localStorage flag (default: hidden)
+  try {
+    const showOverlay = localStorage.getItem('flag:show-kill-switches') === 'true';
+    if (!showOverlay) return;
+  } catch {
+    return;
+  }
+  
   // Create overlay
   overlayElement = createOverlay();
   document.body.appendChild(overlayElement);

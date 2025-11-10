@@ -297,7 +297,22 @@ export function unlockScroll(): void {
   // Safety check: prevent unlock when not locked
   if (safetyEnabled) {
     if (!scrollLockData && lockCount === 0) {
-      logScrollLock('unlock', window.scrollY, 'Attempted to unlock scroll when not locked');
+      // Suppress warnings - this is a harmless condition that can occur during normal operation
+      // (e.g., when a modal closes but scroll was never locked, or during cleanup)
+      // Only log if scrollLogger is explicitly set to 'debug' level for detailed debugging
+      if (typeof window !== 'undefined' && (window as any).scrollLogger) {
+        try {
+          const logger = (window as any).scrollLogger;
+          // Access private level via exposed method if available, otherwise check shouldLog
+          const shouldLogWarn = logger.shouldLog ? logger.shouldLog('warn') : false;
+          // Only log if explicitly in debug mode (not default dev 'info' level)
+          if (shouldLogWarn && logger.level === 'debug') {
+            logScrollLock('unlock', window.scrollY, 'Attempted to unlock scroll when not locked');
+          }
+        } catch {
+          // Ignore logger errors - silently return
+        }
+      }
       return;
     }
     

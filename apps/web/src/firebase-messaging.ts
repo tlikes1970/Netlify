@@ -74,7 +74,10 @@ export async function getFCMToken(): Promise<string | null> {
   }
 
   if (!VAPID_KEY) {
-    console.warn('[FCM] VAPID_KEY not configured');
+    // Only warn in production - suppress in dev to reduce console noise
+    if (import.meta.env.PROD) {
+      console.warn('[FCM] VAPID_KEY not configured');
+    }
     return null;
   }
 
