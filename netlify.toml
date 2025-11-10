@@ -72,3 +72,24 @@
     # Allow popup windows for Firebase Auth (same-origin-allow-popups)
     # This prevents "Cross-Origin-Opener-Policy policy would block" errors
     Cross-Origin-Opener-Policy = "same-origin-allow-popups"
+    # Default for everything (safe baseline)
+    Cache-Control = "no-cache, must-revalidate, max-age=0"
+
+# Always revalidate the shell so you never run "old HTML + new JS"
+# Make sure any HTML path also revalidates (some routers serve other .html files)
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate, max-age=0"
+
+# Let fingerprinted build assets live forever (they have content hashes)
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# If your app emits other hashed bundles (adjust paths as needed)
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
