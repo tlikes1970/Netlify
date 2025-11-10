@@ -1,5 +1,11 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.150: Fixed Apple login redirect loop and email login username prompt
+// - Created appleLogin() helper similar to googleLogin() with redirect loop prevention
+// - Apple login now uses popup on iOS/Safari and redirect guards to prevent loops
+// - Fixed username prompt not showing after email login - ensures usernamePrompted is set
+// - Apple login now has same safeguards as Google login (environment checks, guards, error handling)
+// - Rollback: Revert this commit to restore previous Apple login behavior
 // ⚠️ VERSION 0.1.149: Removed all diagnostic, triage, and troubleshooting tools
 // - Disabled flickerDiagnostics (no logging, no event tracking, no exports)
 // - Disabled i18nDiagnostics (no auto-download, no JSON file generation)
@@ -98,4 +104,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.149";
+export const APP_VERSION = "0.1.150";

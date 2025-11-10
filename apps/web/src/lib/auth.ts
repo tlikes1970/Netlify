@@ -1,5 +1,4 @@
 import { 
-  signInWithRedirect, 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -15,7 +14,7 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { logger } from './logger';
-import { auth, db, appleProvider, firebaseReady, firebaseConfig } from './firebaseBootstrap';
+import { auth, db, firebaseReady, firebaseConfig } from './firebaseBootstrap';
 import { firebaseSyncManager } from './firebaseSync';
 import type { AuthUser, UserDocument, UserSettings, AuthProvider, AuthStatus } from './auth.types';
 import { broadcastAuthComplete } from './authBroadcast';
@@ -25,28 +24,8 @@ import { clearRedirectGuard, hasRedirectStarted } from './authGuard';
 
 // Removed: isBlockedOAuthContext function (unused after removing signInWithGoogle method)
 
-// Track recent auth attempts to prevent loops
-const AUTH_ATTEMPT_KEY = 'flicklet.auth.attempt.timestamp';
-const AUTH_ATTEMPT_WINDOW = 30000; // 30 seconds - prevents rapid retries
-
-function shouldBlockAuthAttempt(): boolean {
-  const lastAttempt = localStorage.getItem(AUTH_ATTEMPT_KEY);
-  if (!lastAttempt) return false;
-  
-  const timeSince = Date.now() - parseInt(lastAttempt);
-  const blocked = timeSince < AUTH_ATTEMPT_WINDOW;
-  
-  if (blocked) {
-    logger.warn(`Auth attempt blocked - last attempt ${timeSince}ms ago (${AUTH_ATTEMPT_WINDOW}ms window)`);
-  }
-  
-  return blocked;
-}
-
-function recordAuthAttempt(): void {
-  localStorage.setItem(AUTH_ATTEMPT_KEY, Date.now().toString());
-  logger.debug('Recorded auth attempt timestamp');
-}
+// ⚠️ REMOVED: shouldBlockAuthAttempt and recordAuthAttempt
+// These are no longer needed since appleLogin() helper handles redirect guards via authGuard.ts
 
 class AuthManager {
   private currentUser: AuthUser | null = null;
@@ -657,7 +636,9 @@ class AuthManager {
       
       // ⚠️ CRITICAL: Update BOTH top-level AND profile.displayName
       // Use setDoc with merge to ensure we overwrite stale data
-      await setDoc(userRef, {
+      // ⚠️ CRITICAL: Ensure usernamePrompted exists in settings (defaults to false if missing)
+      const existingSettings = existingData?.settings || {};
+      const updateData: any = {
         uid: freshAuthUser.uid,
         email: freshAuthUser.email || '',
         displayName: displayNameToUse, // Top-level - ALWAYS from Firebase Auth (reloaded)
@@ -668,7 +649,18 @@ class AuthManager {
           displayName: displayNameToUse, // Profile - ALWAYS from Firebase Auth (reloaded)
           photoURL: freshAuthUser.photoURL || '',
         },
-      }, { merge: true }); // Merge preserves settings and watchlists
+      };
+      
+      // ⚠️ FIX: Ensure usernamePrompted is set if missing (for email login users)
+      // If usernamePrompted is undefined/null, set it to false to trigger prompt
+      if (existingSettings.usernamePrompted === undefined || existingSettings.usernamePrompted === null) {
+        updateData.settings = {
+          ...existingSettings,
+          usernamePrompted: false, // Trigger username prompt if never set
+        };
+      }
+      
+      await setDoc(userRef, updateData, { merge: true }); // Merge preserves settings and watchlists
       
       logger.log('Updated user document', freshAuthUser.uid, { 
         displayName: displayNameToUse,
@@ -717,33 +709,9 @@ class AuthManager {
           return;
         }
         case 'apple': {
-          // ⚠️ TODO: Create appleLogin() helper similar to googleLogin()
-          // For now, using basic redirect (no iOS popup fallback yet)
-          logger.warn('Apple sign-in via signInWithProvider is deprecated - will be migrated to appleLogin() helper');
-          
-          // Ensure persistence before sign-in
-          const { setPersistence, browserLocalPersistence } = await import('firebase/auth');
-          await setPersistence(auth, browserLocalPersistence);
-          
-          // Clean URL of debug params before redirect
-          const urlParams = new URLSearchParams(window.location.search);
-          if (urlParams.has('debugAuth')) {
-            urlParams.delete('debugAuth');
-            const cleanUrl = window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : '') + window.location.hash;
-            window.history.replaceState({}, document.title, cleanUrl);
-            logger.debug('Removed debugAuth param from URL before redirect');
-          }
-          
-          // Check if we should block this auth attempt to prevent loops
-          if (shouldBlockAuthAttempt()) {
-            throw new Error('Authentication attempted too frequently. Please wait a moment and try again.');
-          }
-          
-          // Record this auth attempt to prevent rapid retries
-          recordAuthAttempt();
-          
-          await signInWithRedirect(auth, appleProvider);
-          break;
+          const { appleLogin } = await import('./authLogin');
+          await appleLogin();
+          return;
         }
         case 'email':
           this.setStatus('unauthenticated');

@@ -1,4 +1,4 @@
-import { auth, googleProvider, verifyAuthEnvironment, signInWithRedirect as firebaseSignInWithRedirect, signInWithPopup as firebaseSignInWithPopup } from "./firebaseBootstrap";
+import { auth, googleProvider, appleProvider, verifyAuthEnvironment, signInWithRedirect as firebaseSignInWithRedirect, signInWithPopup as firebaseSignInWithPopup } from "./firebaseBootstrap";
 import { logger } from "./logger";
 import { authManager } from "./auth";
 import { markAuthInFlight } from "./authBroadcast";
@@ -364,6 +364,332 @@ export async function googleLogin() {
     ) {
       logger.warn("Popup blocked, falling back to redirect (allowed on canonical domain)");
       return firebaseSignInWithRedirect(auth, googleProvider);
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Apple sign-in helper that uses environment-aware flow selection
+ * - Redirect on canonical prod/staging domains
+ * - Popup on preview/unknown domains (avoids domain whitelisting issues)
+ * - Popup on iOS/Safari (better compatibility)
+ * - Prevents redirect loops with guards
+ */
+export async function appleLogin() {
+  // Check for authMode override from query param
+  const authModeOverride = getAuthMode();
+  
+  // Debug logging
+  if (isAuthDebug()) {
+    logAuth('apple_login_start', {
+      origin: safeOrigin(),
+      authModeOverride,
+    });
+  }
+  
+  // Check environment first (primary factor)
+  const env = verifyAuthEnvironment();
+  
+  // Reliable UA checks (secondary factor for iOS/Safari)
+  const ua = navigator.userAgent || "";
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  const isSafari =
+    /Safari/i.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS|Android/i.test(ua);
+  const disableRedirect = (() => {
+    try {
+      return localStorage.getItem("flag:disable_redirect") === "1";
+    } catch {
+      return false;
+    }
+  })();
+  
+  // If authMode override is set, use it (for this session only)
+  if (authModeOverride === 'popup') {
+    if (isAuthDebug()) {
+      logAuth('auth_mode_override', { mode: 'popup', reason: 'query param', provider: 'apple' });
+    }
+    clearRedirectGuard(); // Clear any stale guard
+    await firebaseSignInWithPopup(auth, appleProvider);
+    return;
+  } else if (authModeOverride === 'redirect') {
+    if (isAuthDebug()) {
+      logAuth('auth_mode_override', { mode: 'redirect', reason: 'query param', provider: 'apple' });
+    }
+    // Check guard to prevent loops
+    if (hasRedirectStarted()) {
+      if (isAuthDebug()) {
+        logAuth('redirect_blocked_by_guard', { provider: 'apple' });
+      }
+      logger.warn('[AuthLogin] Apple redirect blocked - guard already set');
+      return;
+    }
+    markRedirectStarted();
+    await firebaseSignInWithRedirect(auth, appleProvider);
+    return;
+  }
+
+  // Environment check failed - show error and use popup as fallback
+  if (!env.ok) {
+    logger.error("[AuthLogin] Environment verification failed for Apple login:", env.reason);
+    // Still try popup as fallback
+    await firebaseSignInWithPopup(auth, appleProvider);
+    return;
+  }
+
+  // iOS or Safari: always use popup (better compatibility)
+  if (isIOS || isSafari) {
+    await firebaseSignInWithPopup(auth, appleProvider);
+    return;
+  }
+
+  // Minimal UI/logging allowed before popup opens (within user gesture)
+  try {
+    authLogManager.log("tap_started", { user_gesture: true, provider: 'apple' });
+    authLogManager.log("popup_open_in_user_gesture", {
+      popup_open_in_user_gesture: true,
+      provider: 'apple',
+    });
+  } catch (e) {
+    logger.debug("[AuthLogin] Failed to log popup_open_in_user_gesture", e);
+  }
+
+  // ANDROID/DESKTOP: If redirects are disabled (by flag) open popup immediately
+  if (!isIOS && disableRedirect) {
+    await firebaseSignInWithPopup(auth, appleProvider);
+    return;
+  }
+
+  // Ensure persistence before sign-in
+  await ensurePersistenceBeforeAuth();
+
+  // Auto-clear redirecting sticky if page doesn't actually leave within 5s
+  try {
+    const startedAt = Date.now();
+    setTimeout(() => {
+      try {
+        const persisted = localStorage.getItem("flicklet.auth.status");
+        const elapsed = Date.now() - startedAt;
+        const pageHidden = document.visibilityState === "hidden";
+        if (persisted === "redirecting" && !pageHidden) {
+          localStorage.removeItem("flicklet.auth.status");
+          authLogManager.log("redirect_label_cleared", {
+            elapsedMs: elapsed,
+            reason: "no_pagehide_in_5s",
+            provider: 'apple',
+          });
+          logger.warn(
+            "[AuthLogin] Cleared stale redirecting label after 5s (page never left)"
+          );
+        }
+      } catch (e) {
+        // ignore
+      }
+    }, 5000);
+  } catch (e) {
+    // ignore
+  }
+
+  // ⚠️ CRITICAL: Clean URL of debug params before redirect
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has("debugAuth")) {
+    urlParams.delete("debugAuth");
+    const cleanUrl =
+      window.location.pathname +
+      (urlParams.toString() ? `?${urlParams.toString()}` : "") +
+      window.location.hash;
+    window.history.replaceState({}, document.title, cleanUrl);
+    logger.debug("Removed debugAuth param from URL before redirect");
+  }
+
+  // Mark redirecting only if redirects are enabled
+  if (!disableRedirect && !(isIOS || isSafari)) {
+    authManager.setStatus("redirecting");
+  }
+
+  // Generate unique state ID for integrity check
+  const stateId = `auth_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+  // Persist status only if redirect is enabled
+  if (!disableRedirect && !(isIOS || isSafari)) {
+    try {
+      localStorage.setItem("flicklet.auth.status", "redirecting");
+      localStorage.setItem("flicklet.auth.stateId", stateId);
+      localStorage.setItem(
+        "flicklet.auth.redirect.start",
+        Date.now().toString()
+      );
+      logger.debug(`Set status to redirecting with stateId: ${stateId}`);
+      // Broadcast to other tabs
+      markAuthInFlight("redirecting");
+    } catch (e) {
+      logger.warn("Failed to persist auth status", e);
+    }
+  }
+
+  // Validate origin before proceeding
+  try {
+    validateOAuthOrigin();
+  } catch (error: any) {
+    logger.warn("[AUTH] Origin validation warning", error?.message || error);
+  }
+
+  const isLocalhost =
+    typeof window !== "undefined" && window.location.hostname === "localhost";
+
+  // Log and save to localStorage before redirect
+  const logData = {
+    method: isLocalhost ? "popup" : "redirect",
+    origin: window.location.origin,
+    fullUrl: window.location.href,
+    timestamp: new Date().toISOString(),
+    isIOS: false, // iOS path already handled above
+    isLocalhost,
+    provider: 'apple',
+  };
+
+  logger.log(
+    "Apple sign-in method",
+    isLocalhost ? "popup (localhost)" : "redirect (desktop/Android)"
+  );
+
+  try {
+    // LOCALHOST WORKAROUND: Use popup mode even if webview would use redirect
+    if (isLocalhost) {
+      logger.log(
+        "Localhost detected - using popup mode to avoid Firebase redirect issues"
+      );
+      const result = await firebaseSignInWithPopup(auth, appleProvider);
+      logger.log("Popup sign-in successful", { user: result.user?.email });
+      
+      // ⚠️ CRITICAL: After popup login, manually check auth state
+      if (result.user) {
+        logger.log("Popup returned user, checking auth state...");
+        await new Promise(resolve => setTimeout(resolve, 200));
+        await authManager.checkAuthState();
+        logger.log("Manual auth state check completed after popup");
+      }
+      return;
+    }
+
+    // Flow selection based on environment check
+    const useRedirect = !env.recommendPopup && !disableRedirect && isWebView();
+    
+    if (useRedirect) {
+      // Check guard to prevent loops
+      if (hasRedirectStarted()) {
+        if (isAuthDebug()) {
+          logAuth('redirect_blocked_by_guard', { provider: 'apple' });
+        }
+        logger.warn('[AuthLogin] Apple redirect blocked - guard already set');
+        return;
+      }
+      
+      logger.log("Starting redirect sign-in (canonical domain, webview/Android)");
+      
+      // Debug logging
+      if (isAuthDebug()) {
+        logAuth('redirect_start', {
+          origin: safeOrigin(),
+          redirectURI: window.location.href,
+          authDomain: (auth as any).app?.options?.authDomain || 'unknown',
+          provider: 'apple',
+        });
+      }
+      
+      // Mark redirect started using guard
+      markRedirectStarted();
+
+      // Save to localStorage before redirect
+      try {
+        const existingLogs = JSON.parse(
+          localStorage.getItem("auth-debug-logs") || "[]"
+        );
+        existingLogs.push({ type: "redirect-start", ...logData });
+        localStorage.setItem(
+          "auth-debug-logs",
+          JSON.stringify(existingLogs.slice(-10))
+        );
+        logger.debug("Saved debug log to localStorage");
+      } catch (e) {
+        logger.error("Failed to save debug log", e);
+      }
+
+      await firebaseSignInWithRedirect(auth, appleProvider);
+      logger.log("Redirect initiated - user will be redirected to Apple");
+    } else {
+      const reason = env.recommendPopup 
+        ? "preview/unknown domain (popup recommended)" 
+        : disableRedirect 
+          ? "redirect disabled by flag" 
+          : "desktop browser";
+      logger.log(`Starting popup sign-in (${reason})`);
+      
+      // Clear any stale redirect guard when using popup
+      clearRedirectGuard();
+      
+      // Debug logging
+      if (isAuthDebug()) {
+        logAuth('popup_start', {
+          origin: safeOrigin(),
+          reason,
+          provider: 'apple',
+        });
+      }
+      
+      const result = await firebaseSignInWithPopup(auth, appleProvider);
+      logger.log("Popup sign-in successful", { user: result.user?.email });
+      
+      // ⚠️ CRITICAL: After popup login, manually check auth state
+      if (result.user) {
+        logger.log("Popup returned user, checking auth state...");
+        await new Promise(resolve => setTimeout(resolve, 200));
+        await authManager.checkAuthState();
+        logger.log("Manual auth state check completed after popup");
+      }
+      
+      // Debug logging
+      if (isAuthDebug()) {
+        logAuth('popup_success', { provider: 'apple' });
+      }
+    }
+  } catch (error: any) {
+    logger.error("Apple sign-in failed", error);
+    logger.debug("Error code", error.code);
+    logger.debug("Error message", error.message);
+
+    // Save error to localStorage
+    try {
+      const existingLogs = JSON.parse(
+        localStorage.getItem("auth-debug-logs") || "[]"
+      );
+      existingLogs.push({
+        type: "error",
+        errorCode: error.code,
+        errorMessage: error.message,
+        timestamp: new Date().toISOString(),
+        provider: 'apple',
+      });
+      localStorage.setItem(
+        "auth-debug-logs",
+        JSON.stringify(existingLogs.slice(-10))
+      );
+    } catch (e) {
+      // ignore
+    }
+
+    // If popup fails with blocked error, fallback to redirect only when allowed and on canonical domain
+    const envCheck = verifyAuthEnvironment();
+    if (
+      (error.code === "auth/popup-blocked" ||
+        error.code === "auth/popup-closed-by-user") &&
+      !disableRedirect &&
+      !(isIOS || isSafari) &&
+      !envCheck.recommendPopup
+    ) {
+      logger.warn("Popup blocked, falling back to redirect (allowed on canonical domain)");
+      return firebaseSignInWithRedirect(auth, appleProvider);
     }
 
     throw error;
