@@ -14,7 +14,7 @@ export async function backfillShowStatus() {
   const watchedItems = Library.getByList('watched');
   const notItems = Library.getByList('not');
   
-  console.log('📊 Library contents:', {
+  dlog('📊 Library contents:', {
     watching: watchingItems.length,
     wishlist: wishlistItems.length,
     watched: watchedItems.length,
@@ -23,9 +23,9 @@ export async function backfillShowStatus() {
   
   const allItems = watchingItems.concat(wishlistItems).concat(watchedItems).concat(notItems);
   
-  // Debug: Log all TV shows and their showStatus
+  // Debug: Log all TV shows and their showStatus (gated)
   const allTvShows = allItems.filter(item => item.mediaType === 'tv');
-  console.log('📺 All TV shows in library:', allTvShows.map(show => ({
+  dlog('📺 All TV shows in library:', allTvShows.map(show => ({
     title: show.title,
     showStatus: show.showStatus,
     hasShowStatus: show.showStatus !== undefined,
@@ -33,24 +33,24 @@ export async function backfillShowStatus() {
     id: show.id,
     mediaType: show.mediaType
   })));
-  
-  // Debug: Log first few shows in detail
+
+  // Debug: Log first few shows in detail (gated)
   const firstThree = allTvShows.slice(0, 3);
-  console.log('🔍 First 3 TV shows detailed:', firstThree);
-  console.log('🔍 First show showStatus:', firstThree[0]?.showStatus);
-  console.log('🔍 First show showStatus type:', typeof firstThree[0]?.showStatus);
-  console.log('🔍 First show showStatus === undefined:', firstThree[0]?.showStatus === undefined);
+  dlog('🔍 First 3 TV shows detailed:', firstThree);
+  dlog('🔍 First show showStatus:', firstThree[0]?.showStatus);
+  dlog('🔍 First show showStatus type:', typeof firstThree[0]?.showStatus);
+  dlog('🔍 First show showStatus === undefined:', firstThree[0]?.showStatus === undefined);
   
   const tvShows = allItems.filter(item => 
     item.mediaType === 'tv' && 
     (!item.showStatus || item.showStatus === undefined)
   );
   
-  console.log(`📺 Found ${tvShows.length} TV shows without show status`);
+  dlog(`📺 Found ${tvShows.length} TV shows without show status`);
   
   for (const show of tvShows) {
     try {
-      console.log(`🔍 Fetching status for: ${show.title}`);
+      dlog(`🔍 Fetching status for: ${show.title}`);
       const statusData = await fetchShowStatus(Number(show.id));
       
       if (statusData) {
@@ -61,9 +61,9 @@ export async function backfillShowStatus() {
           lastAirDate: statusData.lastAirDate || undefined
         }, show.list);
         
-        console.log(`✅ Updated ${show.title}: ${statusData.status}`);
+        dlog(`✅ Updated ${show.title}: ${statusData.status}`);
       } else {
-        console.log(`❌ No status data for ${show.title}`);
+        dlog(`❌ No status data for ${show.title}`);
       }
       
       // Small delay to avoid overwhelming TMDB API

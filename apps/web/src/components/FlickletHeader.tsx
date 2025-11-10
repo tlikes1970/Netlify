@@ -91,6 +91,7 @@ export default function FlickletHeader({
                 className="select-none text-[10px] md:text-[11px] leading-none text-muted-foreground"
                 title="App version"
                 data-testid="app-version"
+                data-role="version"
               >
                 v{APP_VERSION}
               </span>
@@ -111,6 +112,7 @@ export default function FlickletHeader({
                 aria-label="Open help"
                 title="Help & Support"
                 data-testid="help-button"
+                data-role="help"
               >
                 ?
               </button>
@@ -168,11 +170,13 @@ function InstallButtonSlot() {
   };
   
   if (!can) {
-    return <span style={style} aria-hidden="true"></span>;
+    return <span id="install-slot" data-role="install" style={style} aria-hidden="true"></span>;
   }
   
   return (
     <button
+      id="install-slot"
+      data-role="install"
       onClick={() => promptInstall()}
       style={style}
       className="rounded-full border border-gray-300 dark:border-gray-600 px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-[11px] leading-none text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
@@ -374,6 +378,7 @@ function SearchRow({
     <div
       className="flex items-stretch gap-0 rounded-2xl border bg-background p-0"
       data-testid="search-row"
+      data-role="searchbar"
       ref={searchContainerRef}
     >
       {/* Filters Dropdown Button - LEFT SIDE */}

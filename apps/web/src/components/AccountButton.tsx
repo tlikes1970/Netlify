@@ -52,6 +52,8 @@ export default function AccountButton() {
             ? `${translations.signedInAs || 'Signed in as'} ${user?.email}. ${translations.clickToSignOut || 'Click to sign out'}.`
             : (translations.clickToSignIn || 'Click to sign in')
           }
+          data-testid="account-button"
+          data-role="avatar"
         >
           <span className="block md:hidden">👤</span>
           <span className="hidden md:block">{isAuthenticated ? `👤 ${getDisplayName()}` : getDisplayName()}</span>
