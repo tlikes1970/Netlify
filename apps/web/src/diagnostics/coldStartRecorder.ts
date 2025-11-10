@@ -106,9 +106,10 @@ export function startColdStartRecorder(opts?: {
   const mutationObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       const target = mutation.target;
+      const targetElement = target as Element;
       const targetName = target === document.documentElement ? 'html' :
                          target === document.body ? 'body' :
-                         target.id === 'root' || target.id === 'app' ? `#${target.id}` :
+                         (targetElement.id === 'root' || targetElement.id === 'app') ? `#${targetElement.id}` :
                          null;
 
       if (targetName && mutation.type === 'attributes') {
