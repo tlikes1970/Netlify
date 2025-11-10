@@ -161,18 +161,10 @@ export function useServiceWorker() {
     };
   }, []);
 
-  // Auto-register on mount (disabled in dev)
-  useEffect(() => {
-    // Kill switch: Service Worker disabled
-    if (isOff('isw')) return;
-    
-    // Don't register in dev mode
-    if (import.meta.env.DEV) return;
-    
-    if (state.isSupported && !state.isRegistered && !state.error) {
-      register();
-    }
-  }, [state.isSupported, state.isRegistered, state.error, register]);
+  // ⚠️ FIXED: Removed auto-registration to prevent duplicate registration
+  // SW is already registered in main.tsx before React render
+  // This hook is now only for managing existing registration state
+  // Auto-registration removed to prevent conflicts with main.tsx registration
 
   return {
     ...state,

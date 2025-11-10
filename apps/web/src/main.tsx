@@ -42,7 +42,17 @@ function i18nFirstSnapshotOrTimeout(ms = 400): Promise<void> {
   });
 }
 
+// ⚠️ FIXED: Guard to prevent multiple calls to releaseFirstPaintGate()
+// This prevents the gate from toggling visibility multiple times during SW updates
+let gateReleased = false;
+
 async function releaseFirstPaintGate(timeoutMs = 1200) {
+  // Guard: only release once
+  if (gateReleased) {
+    return;
+  }
+  gateReleased = true;
+  
   const deadline = new Promise(res => setTimeout(res, timeoutMs));
   await Promise.race([
     (async () => {
@@ -418,14 +428,18 @@ import('./utils/debug-auth').then(m => {
     void authManager; // Force module load and initialization
     
     // Now render React app
+    // ⚠️ FIXED: Remove React.StrictMode in production to prevent extra render cycles
+    // StrictMode intentionally double-invokes effects, which can cause flicker with SW updates
+    const AppWrapper = (
+      <QueryClientProvider client={queryClient}>
+        <FlagsProvider>
+          <App />
+        </FlagsProvider>
+      </QueryClientProvider>
+    );
+    
     ReactDOM.createRoot(document.getElementById('root')!).render(
-      <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <FlagsProvider>
-            <App />
-          </FlagsProvider>
-        </QueryClientProvider>
-      </React.StrictMode>
+      import.meta.env.DEV ? <React.StrictMode>{AppWrapper}</React.StrictMode> : AppWrapper
     );
     
     // Release first-paint gate after React mount
@@ -433,14 +447,17 @@ import('./utils/debug-auth').then(m => {
   } catch (error) {
     console.error('[Boot] bootstrapApp threw - still rendering', error);
     // Still render app even if Firebase bootstrap fails (graceful degradation)
+    // ⚠️ FIXED: Remove React.StrictMode in production
+    const AppWrapper = (
+      <QueryClientProvider client={queryClient}>
+        <FlagsProvider>
+          <App />
+        </FlagsProvider>
+      </QueryClientProvider>
+    );
+    
     ReactDOM.createRoot(document.getElementById('root')!).render(
-      <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <FlagsProvider>
-            <App />
-          </FlagsProvider>
-        </QueryClientProvider>
-      </React.StrictMode>
+      import.meta.env.DEV ? <React.StrictMode>{AppWrapper}</React.StrictMode> : AppWrapper
     );
     console.log('[Boot] Emergency render finished');
     
@@ -449,14 +466,16 @@ import('./utils/debug-auth').then(m => {
   }
 })();
 
+// ⚠️ FIXED: Register Service Worker BEFORE React render to prevent mid-render takeover
+// This prevents SW from claiming clients during React initialization
+registerServiceWorker();
+
 // Kill any leftover SWs during dev, before app boot.
 if (import.meta.env.DEV) {
   devUnregisterAllSW().catch(() => {});
   // Nuclear safety net: kill any SW that appears (side-effect import)
   import('./sw-dev-kill').catch(() => {});
 }
-
-registerServiceWorker();
 
 // Initialize PWA install signal (stable state, no header jump)
 import('./pwa/installSignal').then(({ initInstallSignal }) => {

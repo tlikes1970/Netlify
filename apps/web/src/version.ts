@@ -1,5 +1,16 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.148: Fixed production flicker caused by Service Worker aggressive activation loop
+// - Fixed sw.js: Made clients.claim() and skipWaiting() conditional to prevent aggressive takeover
+// - Fixed sw-register.ts: Removed automatic reg.update() on activation to prevent update loop
+// - Fixed sw-register.ts: Added controller change handling and update debouncing (5s)
+// - Fixed main.tsx: Guarded releaseFirstPaintGate() to run only once (prevents gate toggling)
+// - Fixed main.tsx: Moved SW registration before React render to prevent mid-render takeover
+// - Fixed main.tsx: Removed React.StrictMode in production to prevent extra render cycles
+// - Fixed sw.js: Changed navigate mode to network-first for HTML (prevents stale content)
+// - Fixed useServiceWorker.ts: Removed duplicate auto-registration (SW registered in main.tsx)
+// - All fixes address the continuous page flicker in production until hard refresh
+// - Rollback: Revert this commit to restore previous behavior
 // ⚠️ VERSION 0.1.147: Runtime subsystem kill switch harness for binary isolation
 // - Added runtime/switches.ts with isOff() helper for kill switch checking
 // - Added runtime/overlay.ts for dev-only visual switch state display
@@ -78,4 +89,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.147";
+export const APP_VERSION = "0.1.148";

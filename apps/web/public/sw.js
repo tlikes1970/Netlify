@@ -1,11 +1,25 @@
 /* eslint-disable no-restricted-globals */
-// Skip-waiting + clients-claim on install/activate
+// ⚠️ FIXED: Conditional skip-waiting and clients-claim to prevent aggressive takeover
+// Only claim clients if no existing controller (prevents mid-render takeover)
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
+  // Only skip waiting if no controller exists (first install)
+  // This prevents aggressive activation during updates
+  if (!self.registration.active && !self.registration.waiting) {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    (async () => {
+      // Only claim clients if no controller exists (prevents takeover of loaded pages)
+      // This prevents the flicker loop caused by immediate client claiming
+      // Check if we're the first SW (no existing controller)
+      if (!navigator.serviceWorker.controller) {
+        await self.clients.claim();
+      }
+    })()
+  );
 });
 
 const CACHE_NAME = "app-assets-v2";
@@ -85,11 +99,30 @@ self.addEventListener("fetch", (e) => {
   }
 
   if (req.mode === "navigate") {
-    // Offline fallback page
+    // ⚠️ FIXED: Network-first for HTML to prevent serving stale content during updates
+    // This prevents flicker caused by serving cached HTML that conflicts with new HTML
     e.respondWith(
-      fetch(req).catch(() => {
-        return caches.match("/offline.html") || new Response("Offline", { status: 503 });
-      })
+      (async () => {
+        try {
+          // Try network first
+          const networkResponse = await fetch(req);
+          if (networkResponse.ok) {
+            // Cache the fresh response for offline use
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(req, networkResponse.clone()).catch(() => {});
+            return networkResponse;
+          }
+        } catch (error) {
+          // Network failed, try cache as fallback
+          const cached = await caches.match(req);
+          if (cached) return cached;
+          
+          // Last resort: offline page
+          const offlinePage = await caches.match("/offline.html");
+          if (offlinePage) return offlinePage;
+        }
+        return new Response("Offline", { status: 503 });
+      })()
     );
     return;
   }

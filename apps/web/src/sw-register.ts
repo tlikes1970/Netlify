@@ -65,38 +65,71 @@ export function registerServiceWorker() {
     return;
   }
 
-  // Register immediately (don't wait for load event) so Lighthouse can detect it
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      navigator.serviceWorker
-        .register('/sw.js', { scope: '/' })
-        .then(reg => {
-          console.info('[SW] registered:', reg.scope);
-          // Ensure service worker is active for Lighthouse
-          if (reg.installing) {
-            reg.installing.addEventListener('statechange', () => {
-              if (reg.installing?.state === 'activated') {
-                reg.update();
-              }
-            });
-          }
-        })
-        .catch(err => console.error('[SW] registration failed:', err));
-    });
-  } else {
-    // DOM already loaded, register immediately
+  // ⚠️ FIXED: Removed automatic reg.update() on activation to prevent update loop
+  // Added controller change handling to prevent unexpected reloads
+  // Debounce update checks to prevent rapid update cycles
+  
+  let updateCheckDebounce: ReturnType<typeof setTimeout> | null = null;
+  const DEBOUNCE_MS = 5000; // 5 second debounce for update checks
+  
+  const handleControllerChange = () => {
+    // Controller changed - this can happen when SW activates
+    // Don't reload immediately, let the page continue normally
+    console.info('[SW] Controller changed - SW activated');
+  };
+  
+  // Listen for controller changes
+  if (navigator.serviceWorker) {
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+  }
+  
+  const registerSW = () => {
     navigator.serviceWorker
       .register('/sw.js', { scope: '/' })
       .then(reg => {
         console.info('[SW] registered:', reg.scope);
-        if (reg.installing) {
-          reg.installing.addEventListener('statechange', () => {
-            if (reg.installing?.state === 'activated') {
-              reg.update();
-            }
-          });
-        }
+        
+        // ⚠️ FIXED: Removed automatic reg.update() on activation
+        // The browser will check for updates naturally, we don't need to force it
+        // This prevents the update loop: activate → update → install → activate
+        
+        // Only listen for updates, don't trigger them automatically
+        reg.addEventListener('updatefound', () => {
+          console.info('[SW] Update found');
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'activated') {
+                console.info('[SW] New version activated');
+                // Don't call reg.update() here - let browser handle updates naturally
+              }
+            });
+          }
+        });
+        
+        // Debounced update check (only if no recent check)
+        const checkForUpdates = () => {
+          if (updateCheckDebounce) {
+            clearTimeout(updateCheckDebounce);
+          }
+          updateCheckDebounce = setTimeout(() => {
+            reg.update().catch(() => {
+              // Ignore update errors (SW might be updating already)
+            });
+          }, DEBOUNCE_MS);
+        };
+        
+        // Check for updates on registration (debounced)
+        checkForUpdates();
       })
       .catch(err => console.error('[SW] registration failed:', err));
+  };
+  
+  // Register immediately (don't wait for load event) so Lighthouse can detect it
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', registerSW);
+  } else {
+    // DOM already loaded, register immediately
+    registerSW();
   }
 }
