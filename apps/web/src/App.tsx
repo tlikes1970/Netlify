@@ -381,6 +381,18 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
+  // Listen for custom event to open SettingsPage (e.g., from SnarkDisplay)
+  useEffect(() => {
+    const handleOpenSettingsPage = () => {
+      setShowSettings(true);
+    };
+
+    window.addEventListener('settings:open-page', handleOpenSettingsPage);
+    return () => {
+      window.removeEventListener('settings:open-page', handleOpenSettingsPage);
+    };
+  }, []);
+
   // Expose game functions globally for compatibility with legacy code
   useEffect(() => {
     (window as any).openFlickWordModal = () => {

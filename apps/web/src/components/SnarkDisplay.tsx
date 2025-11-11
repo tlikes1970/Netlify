@@ -2,7 +2,6 @@ import { useRef, useEffect } from 'react';
 import { useUsername } from '../hooks/useUsername';
 import { useSettings, getPersonalityText } from '../lib/settings';
 import { useAuth } from '../hooks/useAuth';
-import { openSettingsSheet } from './settings/SettingsSheet';
 // ⚠️ REMOVED: flickerDiagnostics import disabled
 
 export default function SnarkDisplay() {
@@ -26,10 +25,15 @@ export default function SnarkDisplay() {
 
   // If user is authenticated but has no username, show link to set username
   if (isAuthenticated && !username) {
+    const handleOpenSettings = () => {
+      // Dispatch custom event to open SettingsPage
+      window.dispatchEvent(new CustomEvent('settings:open-page'));
+    };
+
     return (
       <div className="text-xs md:text-sm truncate max-w-[100px] md:max-w-none" style={{ color: 'var(--muted)' }}>
         <button
-          onClick={() => openSettingsSheet()}
+          onClick={handleOpenSettings}
           className="underline hover:no-underline transition-all"
           style={{ color: 'var(--accent)' }}
         >
