@@ -1,5 +1,5 @@
 import { ActionItem, ActionContext, getPrimaryAction } from './actionsMap';
-import type { CardActionHandlers, MediaItem } from '../../components/cards/card.types';
+import type { CardActionHandlers } from '../../components/cards/card.types';
 import { isCompactMobileV1, isActionsSplit } from '../../lib/mobileFlags';
 
 interface CompactPrimaryActionProps {

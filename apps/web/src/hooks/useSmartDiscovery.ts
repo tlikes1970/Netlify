@@ -22,7 +22,7 @@ export function useSmartDiscovery() {
   const [recommendations, setRecommendations] = useState<RecommendationScore[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [ratingVersion, setRatingVersion] = useState(0);
+  const [_ratingVersion, setRatingVersion] = useState(0);
   const lastUpdateRef = useRef<{ itemKey: string; rating: number; timestamp: number } | null>(null);
   const isFetchingRef = useRef(false);
   const lastLibraryHashRef = useRef<string>('');

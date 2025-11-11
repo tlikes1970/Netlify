@@ -56,8 +56,6 @@ export function analyzeUserPreferences(
     // Collect user ratings with recency weighting
     if (item.userRating !== undefined && item.userRating !== null) {
       const timestamp = item.ratingUpdatedAt || item.addedAt || now;
-      const age = now - timestamp;
-      const recencyWeight = Math.exp(-age / RECENCY_HALFLIFE_MS); // Exponential decay
       userRatings.push({ rating: item.userRating, timestamp });
     }
   });

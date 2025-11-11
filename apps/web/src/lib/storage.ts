@@ -449,7 +449,7 @@ export const Library = {
   getEntry(id: string | number, mediaType: MediaType): LibraryEntry | null {
     return state[k(id, mediaType)] || null;
   },
-  updateRating(id: string | number, mediaType: MediaType, rating: number, origin: 'user' | 'sync' | 'discovery' = 'user', useBatch: boolean = false) {
+  updateRating(id: string | number, mediaType: MediaType, rating: number, origin: 'user' | 'sync' | 'discovery' = 'user') {
     const key = k(id, mediaType);
     const entry = state[key];
     if (!entry) return;
@@ -485,38 +485,19 @@ export const Library = {
       save(state);
       emit();
       
-      // Batch mode: collect updates and send single event
-      if (useBatch && origin !== 'sync') {
-        // Remove any existing pending update for this item
-        pendingRatingUpdates = pendingRatingUpdates.filter(
-          u => !(u.id === id && u.mediaType === mediaType)
-        );
-        
-        // Add to batch
-        pendingRatingUpdates.push({ id, mediaType, rating: normalizedRating, origin });
-        
-        // Clear existing timeout
-        if (batchTimeout) {
-          clearTimeout(batchTimeout);
-        }
-        
-        // Set new timeout
-        batchTimeout = setTimeout(flushRatingBatch, BATCH_DELAY_MS);
-      } else {
-        // Immediate mode: send event right away
-        const currentUser = getCurrentFirebaseUser();
-        if (currentUser && origin !== 'sync') {
-          window.dispatchEvent(new CustomEvent('library:changed', { 
-            detail: { 
-              uid: currentUser.uid, 
-              operation: 'rating',
-              origin: 'storage', // Mark as coming from storage, not discovery
-              itemId: id,
-              mediaType,
-              rating: normalizedRating
-            } 
-          }));
-        }
+      // Send event right away
+      const currentUser = getCurrentFirebaseUser();
+      if (currentUser && origin !== 'sync') {
+        window.dispatchEvent(new CustomEvent('library:changed', { 
+          detail: { 
+            uid: currentUser.uid, 
+            operation: 'rating',
+            origin: 'storage', // Mark as coming from storage, not discovery
+            itemId: id,
+            mediaType,
+            rating: normalizedRating
+          } 
+        }));
       }
     }
   },
