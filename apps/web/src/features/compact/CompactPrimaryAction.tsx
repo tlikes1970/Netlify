@@ -1,12 +1,14 @@
 import { ActionItem, ActionContext, getPrimaryAction } from './actionsMap';
+import type { CardActionHandlers, MediaItem } from '../../components/cards/card.types';
 import { isCompactMobileV1, isActionsSplit } from '../../lib/mobileFlags';
 
 interface CompactPrimaryActionProps {
   item: ActionItem;
   context: ActionContext;
+  actions?: CardActionHandlers;
 }
 
-export function CompactPrimaryAction({ item, context }: CompactPrimaryActionProps) {
+export function CompactPrimaryAction({ item, context, actions }: CompactPrimaryActionProps) {
   const gate = isCompactMobileV1();
   const flagEnabled = isActionsSplit();
   
@@ -14,7 +16,7 @@ export function CompactPrimaryAction({ item, context }: CompactPrimaryActionProp
     return null;
   }
 
-  const primaryAction = getPrimaryAction(item, context);
+  const primaryAction = getPrimaryAction(item, context, actions);
   
   if (!primaryAction) {
     return null;

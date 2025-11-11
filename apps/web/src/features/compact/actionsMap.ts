@@ -1,6 +1,7 @@
 import { flag } from '../../lib/flags';
 import { isCompactMobileV1 } from '../../lib/mobileFlags';
 import { dlog } from '../../lib/log';
+import type { CardActionHandlers, MediaItem } from '../../components/cards/card.types';
 
 export interface ActionDescriptor {
   id: string;
@@ -21,7 +22,7 @@ export type ActionContext = 'home' | 'tab' | 'tab-watching' | 'tab-want' | 'tab-
  * Get the primary action for an item based on context
  * Uses existing handlers - no new business logic
  */
-export function getPrimaryAction(item: ActionItem, context: ActionContext): ActionDescriptor | null {
+export function getPrimaryAction(item: ActionItem, context: ActionContext, actions?: CardActionHandlers): ActionDescriptor | null {
   void context; // keep signature stable, mute TS6133
   // Check if the actions split feature is enabled
   const gate = isCompactMobileV1();
@@ -33,6 +34,7 @@ export function getPrimaryAction(item: ActionItem, context: ActionContext): Acti
 
   // Determine primary action based on current status and context
   const currentStatus = item.status || 'none';
+  const mediaItem = item as unknown as MediaItem;
   
   switch (currentStatus) {
     case 'watching':
@@ -40,9 +42,11 @@ export function getPrimaryAction(item: ActionItem, context: ActionContext): Acti
         id: 'mark-watched',
         label: 'Mark Watched',
         onClick: () => {
-          // Call existing handler - this would be wired to the actual handler
-          dlog('Mark as watched:', item.id);
-          // In real implementation, this would call the existing markAsWatched handler
+          if (actions?.onWatched) {
+            actions.onWatched(mediaItem);
+          } else {
+            dlog('Mark as watched (no handler):', item.id);
+          }
         }
       };
     
@@ -52,8 +56,14 @@ export function getPrimaryAction(item: ActionItem, context: ActionContext): Acti
         id: 'mark-watching',
         label: 'Start Watching',
         onClick: () => {
-          dlog('Start watching:', item.id);
-          // In real implementation, this would call the existing addToWatching handler
+          if (actions?.onWatching) {
+            actions.onWatching(mediaItem);
+          } else if (actions?.onWant) {
+            // Fallback: if onWatching not available, use onWant
+            actions.onWant(mediaItem);
+          } else {
+            dlog('Start watching (no handler):', item.id);
+          }
         }
       };
     
@@ -62,8 +72,11 @@ export function getPrimaryAction(item: ActionItem, context: ActionContext): Acti
         id: 'mark-want',
         label: 'Want to Watch',
         onClick: () => {
-          dlog('Add to want list:', item.id);
-          // In real implementation, this would call the existing addToWishlist handler
+          if (actions?.onWant) {
+            actions.onWant(mediaItem);
+          } else {
+            dlog('Add to want list (no handler):', item.id);
+          }
         }
       };
     
@@ -73,8 +86,11 @@ export function getPrimaryAction(item: ActionItem, context: ActionContext): Acti
         id: 'mark-want',
         label: 'Want to Watch',
         onClick: () => {
-          dlog('Add to want list:', item.id);
-          // In real implementation, this would call the existing addToWishlist handler
+          if (actions?.onWant) {
+            actions.onWant(mediaItem);
+          } else {
+            dlog('Add to want list (no handler):', item.id);
+          }
         }
       };
   }

@@ -575,6 +575,42 @@ function LayoutTab({ settings }: { settings: any }) {
         </div>
       </div>
 
+      {/* Discovery Limit */}
+      <div>
+        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text)' }}>
+          Discovery Recommendations
+        </label>
+        <div className="space-y-2">
+          <p className="text-sm" style={{ color: 'var(--muted)' }}>
+            Number of recommendations to show in Discovery
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            {[25, 50, 75, 100].map((limit) => (
+              <label
+                key={limit}
+                className="flex items-center space-x-2 cursor-pointer px-4 py-2 rounded-lg transition-colors"
+                style={{
+                  backgroundColor: settings.layout.discoveryLimit === limit ? 'var(--accent)' : 'var(--btn)',
+                  color: settings.layout.discoveryLimit === limit ? 'white' : 'var(--text)',
+                  border: '1px solid',
+                  borderColor: settings.layout.discoveryLimit === limit ? 'var(--accent)' : 'var(--line)'
+                }}
+              >
+                <input
+                  type="radio"
+                  name="discoveryLimit"
+                  value={limit}
+                  checked={settings.layout.discoveryLimit === limit}
+                  onChange={() => settingsManager.updateDiscoveryLimit(limit as 25 | 50 | 75 | 100)}
+                  className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 focus:ring-blue-500"
+                />
+                <span className="font-medium">{limit}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* My Lists Management */}
       <div>
         <div className="flex items-center justify-between mb-3">

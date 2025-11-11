@@ -72,20 +72,34 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
   };
 
   return createPortal(
-    <div className="fixed inset-0 backdrop-blur-sm flex items-start justify-center pt-48 p-4" 
-         style={{ 
-           backgroundColor: 'rgba(0,0,0,0.8)', 
-           zIndex: '2147483647 !important',
-           position: 'fixed' as const
-         }}>
-      <div className="rounded-xl w-full max-w-md p-6" 
-           style={{ 
-             backgroundColor: 'var(--card)', 
-             borderColor: 'var(--line)', 
-             border: '1px solid', 
-             zIndex: '2147483647 !important',
-             position: 'relative' as const
-           }}>
+    <div 
+      className="fixed inset-0 backdrop-blur-sm flex items-start justify-center pt-48 p-4" 
+      style={{ 
+        backgroundColor: 'rgba(0,0,0,0.8)', 
+        zIndex: '2147483647 !important',
+        position: 'fixed' as const
+      }}
+      onClick={(e) => {
+        // Close modal when clicking backdrop
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div 
+        className="rounded-xl w-full max-w-md p-6" 
+        style={{ 
+          backgroundColor: 'var(--card)', 
+          borderColor: 'var(--line)', 
+          border: '1px solid', 
+          zIndex: '2147483647 !important',
+          position: 'relative' as const
+        }}
+        onClick={(e) => {
+          // Prevent clicks inside modal from bubbling to backdrop
+          e.stopPropagation();
+        }}
+      >
         
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>
@@ -120,6 +134,15 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
                 backgroundColor: selectedListId === list.id ? 'var(--accent)' : 'var(--btn)',
                 color: 'var(--text)'
               }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setSelectedListId(list.id);
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
               onMouseEnter={(e) => {
                 if (selectedListId !== list.id) {
                   e.currentTarget.style.backgroundColor = 'var(--card)';
@@ -136,7 +159,16 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
                 name="list"
                 value={list.id}
                 checked={selectedListId === list.id}
-                onChange={() => setSelectedListId(list.id)}
+                onChange={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSelectedListId(list.id);
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSelectedListId(list.id);
+                }}
                 className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 focus:ring-blue-500"
               />
               <div className="flex-1">

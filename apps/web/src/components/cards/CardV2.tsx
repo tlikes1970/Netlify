@@ -147,7 +147,8 @@ export default function CardV2({ item, context, actions, compact, showRating = t
         <div className="compact-actions-container" style={{ padding: 'var(--space-1, 4px)' }}>
           <CompactPrimaryAction 
             item={item as any} 
-            context={context === 'home' || context === 'tab-foryou' || context === 'search' ? 'home' : 'tab'} 
+            context={context === 'home' || context === 'tab-foryou' || context === 'search' ? 'home' : 'tab'}
+            actions={actions}
           />
           {!disableOverflow && (
             <CompactOverflowMenu 

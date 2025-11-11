@@ -39,6 +39,7 @@ function getCurrentFirebaseUser() {
 export interface LibraryEntry extends MediaItem {
   list: ListName;
   addedAt: number; // epoch ms
+  ratingUpdatedAt?: number; // epoch ms - timestamp when userRating was last updated (for conflict resolution)
 }
 
 // Migration function to convert old data format
@@ -448,20 +449,74 @@ export const Library = {
   getEntry(id: string | number, mediaType: MediaType): LibraryEntry | null {
     return state[k(id, mediaType)] || null;
   },
-  updateRating(id: string | number, mediaType: MediaType, rating: number) {
+  updateRating(id: string | number, mediaType: MediaType, rating: number, origin: 'user' | 'sync' | 'discovery' = 'user', useBatch: boolean = false) {
     const key = k(id, mediaType);
     const entry = state[key];
-    if (entry) {
-      state[key] = { ...entry, userRating: rating };
+    if (!entry) return;
+    
+    // Normalize rating to 1-5 integer (consistent scale)
+    const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
+    
+    // Check if rating actually changed
+    if (entry.userRating === normalizedRating) {
+      // Rating unchanged, but update timestamp if this is a sync (for conflict resolution)
+      if (origin === 'sync') {
+        const now = Date.now();
+        const existingTimestamp = entry.ratingUpdatedAt || 0;
+        // Only update if this sync is newer
+        if (now > existingTimestamp) {
+          state[key] = { ...entry, ratingUpdatedAt: now };
+          save(state);
+        }
+      }
+      return; // No change, skip event
+    }
+    
+    const now = Date.now();
+    const existingTimestamp = entry.ratingUpdatedAt || 0;
+    
+    // Last-write-wins: only update if this is newer or from user action
+    if (origin === 'user' || now > existingTimestamp) {
+      state[key] = { 
+        ...entry, 
+        userRating: normalizedRating,
+        ratingUpdatedAt: now
+      };
       save(state);
       emit();
       
-      // Trigger Firebase sync via event
-      const currentUser = getCurrentFirebaseUser();
-      if (currentUser) {
-        window.dispatchEvent(new CustomEvent('library:changed', { 
-          detail: { uid: currentUser.uid, operation: 'rating' } 
-        }));
+      // Batch mode: collect updates and send single event
+      if (useBatch && origin !== 'sync') {
+        // Remove any existing pending update for this item
+        pendingRatingUpdates = pendingRatingUpdates.filter(
+          u => !(u.id === id && u.mediaType === mediaType)
+        );
+        
+        // Add to batch
+        pendingRatingUpdates.push({ id, mediaType, rating: normalizedRating, origin });
+        
+        // Clear existing timeout
+        if (batchTimeout) {
+          clearTimeout(batchTimeout);
+        }
+        
+        // Set new timeout
+        batchTimeout = setTimeout(flushRatingBatch, BATCH_DELAY_MS);
+      } else {
+        // Immediate mode: send event right away
+        const currentUser = getCurrentFirebaseUser();
+        if (currentUser && origin !== 'sync') {
+          window.dispatchEvent(new CustomEvent('library:changed', { 
+            detail: { 
+              uid: currentUser.uid, 
+              operation: 'rating',
+              origin: 'storage', // Mark as coming from storage, not discovery
+              itemId: id,
+              mediaType,
+              rating: normalizedRating
+            } 
+          }));
+        }
       }
     }
   },

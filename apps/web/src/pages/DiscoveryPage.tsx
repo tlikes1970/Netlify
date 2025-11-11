@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useSearch } from '@/hooks/useSearch';
 import { useSmartDiscovery } from '@/hooks/useSmartDiscovery';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,12 +12,32 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
   const { recommendations, isLoading: discoveryLoading, error: discoveryError } = useSmartDiscovery();
   const { isAuthenticated } = useAuth();
   
+  // Track library changes to filter items immediately
+  const [libraryVersion, setLibraryVersion] = useState(0);
+  
+  useEffect(() => {
+    const handleLibraryChange = () => {
+      setLibraryVersion(prev => prev + 1);
+    };
+    
+    window.addEventListener('library:changed', handleLibraryChange);
+    return () => window.removeEventListener('library:changed', handleLibraryChange);
+  }, []);
+
   const items = useMemo(() => {
     // If user is searching, use search results
     if (query.trim()) {
       const all = searchResults.results ?? [];
-      if (!genreId) return all;
-      return all.filter((it: any) => Array.isArray(it.genre_ids) && it.genre_ids.includes(genreId));
+      const filtered = !genreId 
+        ? all 
+        : all.filter((it: any) => Array.isArray(it.genre_ids) && it.genre_ids.includes(genreId));
+      
+      // Filter out items already in library
+      return filtered.filter((it: any) => {
+        const mediaType = it.kind || it.mediaType;
+        const id = it.id;
+        return !Library.has(id, mediaType);
+      });
     }
     
     // For discovery without search, only show recommendations if authenticated
@@ -26,17 +46,20 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
     }
     
     // For authenticated users, use smart recommendations
-    return recommendations.map(rec => ({
-      id: rec.item.id,
-      mediaType: rec.item.kind,
-      title: rec.item.title,
-      posterUrl: rec.item.poster,
-      year: rec.item.year?.toString(),
-      genre_ids: [], // Will be populated by TMDB data
-      score: rec.score,
-      reasons: rec.reasons
-    }));
-  }, [query, genreId, searchResults.results, recommendations, isAuthenticated]);
+    // Filter out items already in library (should already be filtered by hook, but double-check)
+    return recommendations
+      .map(rec => ({
+        id: rec.item.id,
+        mediaType: rec.item.kind,
+        title: rec.item.title,
+        posterUrl: rec.item.poster,
+        year: rec.item.year?.toString(),
+        genre_ids: [], // Will be populated by TMDB data
+        score: rec.score,
+        reasons: rec.reasons
+      }))
+      .filter((it: any) => !Library.has(it.id, it.mediaType));
+  }, [query, genreId, searchResults.results, recommendations, isAuthenticated, libraryVersion]);
 
   const isLoading = query.trim() ? searchResults.loading : discoveryLoading;
   const hasError = query.trim() ? searchResults.error : discoveryError;
@@ -44,7 +67,10 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
   // Action handlers using Library.upsert
   const actions = {
     onWant: (item: MediaItem) => {
+      console.log('🎬 Discovery onWant called:', item);
       if (item.id && item.mediaType) {
+        // Get existing entry to preserve rating if it exists
+        const existing = Library.getEntry(item.id, item.mediaType);
         Library.upsert({ 
           id: item.id, 
           mediaType: item.mediaType, 
@@ -54,12 +80,41 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           voteAverage: item.voteAverage,
           showStatus: item.showStatus,
           lastAirDate: item.lastAirDate,
-          synopsis: item.synopsis
+          synopsis: item.synopsis,
+          userRating: existing?.userRating || item.userRating // Preserve existing rating
         }, 'wishlist');
+        // Trigger library change to update UI immediately
+        setLibraryVersion(prev => prev + 1);
+        console.log('✅ Item added to wishlist, libraryVersion updated');
+      } else {
+        console.warn('⚠️ onWant: missing id or mediaType', item);
+      }
+    },
+    onWatching: (item: MediaItem) => {
+      if (item.id && item.mediaType) {
+        // Get existing entry to preserve rating if it exists
+        const existing = Library.getEntry(item.id, item.mediaType);
+        Library.upsert({ 
+          id: item.id, 
+          mediaType: item.mediaType, 
+          title: item.title,
+          posterUrl: item.posterUrl,
+          year: item.year,
+          voteAverage: item.voteAverage,
+          showStatus: item.showStatus,
+          lastAirDate: item.lastAirDate,
+          synopsis: item.synopsis,
+          userRating: existing?.userRating || item.userRating // Preserve existing rating
+        }, 'watching');
+        // Trigger library change to update UI immediately
+        setLibraryVersion(prev => prev + 1);
       }
     },
     onWatched: (item: MediaItem) => {
+      console.log('🎬 Discovery onWatched called:', item);
       if (item.id && item.mediaType) {
+        // Get existing entry to preserve rating if it exists
+        const existing = Library.getEntry(item.id, item.mediaType);
         Library.upsert({ 
           id: item.id, 
           mediaType: item.mediaType, 
@@ -69,12 +124,20 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           voteAverage: item.voteAverage,
           showStatus: item.showStatus,
           lastAirDate: item.lastAirDate,
-          synopsis: item.synopsis
+          synopsis: item.synopsis,
+          userRating: existing?.userRating || item.userRating // Preserve existing rating
         }, 'watched');
+        // Trigger library change to update UI immediately
+        setLibraryVersion(prev => prev + 1);
+        console.log('✅ Item added to watched, libraryVersion updated');
+      } else {
+        console.warn('⚠️ onWatched: missing id or mediaType', item);
       }
     },
     onNotInterested: (item: MediaItem) => {
       if (item.id && item.mediaType) {
+        // Get existing entry to preserve rating if it exists
+        const existing = Library.getEntry(item.id, item.mediaType);
         Library.upsert({ 
           id: item.id, 
           mediaType: item.mediaType, 
@@ -84,8 +147,11 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           voteAverage: item.voteAverage,
           showStatus: item.showStatus,
           lastAirDate: item.lastAirDate,
-          synopsis: item.synopsis
+          synopsis: item.synopsis,
+          userRating: existing?.userRating || item.userRating // Preserve existing rating
         }, 'not');
+        // Trigger library change to update UI immediately
+        setLibraryVersion(prev => prev + 1);
       }
     }
   };
@@ -156,17 +222,28 @@ export default function DiscoveryPage({ query, genreId }:{ query: string; genreI
           }}>
             <div className="grid grid-cols-[repeat(auto-fill,154px)] gap-3">
               {items.map((it: any, index: number) => {
+                // Normalize mediaType - ensure it's 'movie' or 'tv'
+                const mediaType = (it.kind || it.mediaType || 'movie') as 'movie' | 'tv';
+                const normalizedMediaType = mediaType === 'tv' ? 'tv' : 'movie';
+                
                 const mediaItem: MediaItem = {
-                  id: it.id,
-                  mediaType: it.kind,
-                  title: it.title,
+                  id: String(it.id), // Ensure id is string
+                  mediaType: normalizedMediaType,
+                  title: it.title || 'Untitled',
                   posterUrl: it.posterUrl || it.poster, // Use posterUrl if available, fallback to poster
                   year: it.year,
                   voteAverage: it.voteAverage,
                 };
                 
+                console.log('🎬 Rendering discovery card:', { 
+                  id: mediaItem.id, 
+                  mediaType: mediaItem.mediaType, 
+                  title: mediaItem.title,
+                  hasActions: !!actions 
+                });
+                
                 return (
-                  <div key={`${it.kind}-${it.id}-${index}`} className="relative">
+                  <div key={`${normalizedMediaType}-${it.id}-${index}`} className="relative">
                     <CardV2 
                       item={mediaItem} 
                       context="tab-foryou"

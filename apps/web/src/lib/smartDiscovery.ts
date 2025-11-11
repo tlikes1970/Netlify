@@ -26,11 +26,15 @@ export function analyzeUserPreferences(
 ): UserPreferences {
   const allItems = [...watching, ...wishlist, ...watched];
   
+  // Cold start: use priors when sample size is too small
+  const MIN_SAMPLE_SIZE = 5;
+  const usePriors = allItems.length < MIN_SAMPLE_SIZE;
+  
   if (allItems.length === 0) {
     return {
       favoriteGenres: {},
       preferredMediaTypes: { movie: 0.5, tv: 0.5 },
-      averageRating: 3.0,
+      averageRating: 3.0, // Prior: neutral rating
       ratingVariance: 0,
       notInterestedIds: new Set(notInterested.map(item => `${item.mediaType}:${item.id}`))
     };
@@ -40,20 +44,22 @@ export function analyzeUserPreferences(
   // const genreCounts: Record<number, number> = {}; // Unused
   // const genreRatings: Record<number, number[]> = {}; // Unused
   const mediaTypeCounts = { movie: 0, tv: 0 };
-  const userRatings: number[] = [];
+  const userRatings: Array<{ rating: number; timestamp: number }> = [];
+  const now = Date.now();
+  const RECENCY_HALFLIFE_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
 
   allItems.forEach(item => {
     // Count media types
     if (item.mediaType === 'movie') mediaTypeCounts.movie++;
     else if (item.mediaType === 'tv') mediaTypeCounts.tv++;
 
-    // Collect user ratings
-    if (item.userRating !== undefined) {
-      userRatings.push(item.userRating);
+    // Collect user ratings with recency weighting
+    if (item.userRating !== undefined && item.userRating !== null) {
+      const timestamp = item.ratingUpdatedAt || item.addedAt || now;
+      const age = now - timestamp;
+      const recencyWeight = Math.exp(-age / RECENCY_HALFLIFE_MS); // Exponential decay
+      userRatings.push({ rating: item.userRating, timestamp });
     }
-
-    // Analyze genres (we'll need to fetch this from TMDB for each item)
-    // For now, we'll use a simplified approach based on the item's properties
   });
 
   // Calculate genre preferences based on user ratings and frequency
@@ -66,13 +72,36 @@ export function analyzeUserPreferences(
     tv: totalItems > 0 ? mediaTypeCounts.tv / totalItems : 0.5
   };
 
-  // Calculate average rating and variance
-  const averageRating = userRatings.length > 0 
-    ? userRatings.reduce((sum, rating) => sum + rating, 0) / userRatings.length 
-    : 3.0;
+  // Calculate average rating with recency weighting and cold start priors
+  let averageRating: number;
+  if (userRatings.length === 0) {
+    averageRating = 3.0; // Prior: neutral
+  } else if (usePriors) {
+    // Cold start: blend user ratings with prior (3.0)
+    const userAvg = userRatings.reduce((sum, r) => sum + r.rating, 0) / userRatings.length;
+    const priorWeight = (MIN_SAMPLE_SIZE - userRatings.length) / MIN_SAMPLE_SIZE;
+    const userWeight = userRatings.length / MIN_SAMPLE_SIZE;
+    averageRating = (priorWeight * 3.0) + (userWeight * userAvg);
+  } else {
+    // Normal: recency-weighted average
+    const totalWeight = userRatings.reduce((sum, r) => {
+      const age = now - r.timestamp;
+      const weight = Math.exp(-age / RECENCY_HALFLIFE_MS);
+      return sum + weight;
+    }, 0);
+    
+    const weightedSum = userRatings.reduce((sum, r) => {
+      const age = now - r.timestamp;
+      const weight = Math.exp(-age / RECENCY_HALFLIFE_MS);
+      return sum + (r.rating * weight);
+    }, 0);
+    
+    averageRating = totalWeight > 0 ? weightedSum / totalWeight : 3.0;
+  }
   
+  // Calculate variance (simple version for now)
   const ratingVariance = userRatings.length > 1
-    ? userRatings.reduce((sum, rating) => sum + Math.pow(rating - averageRating, 2), 0) / userRatings.length
+    ? userRatings.reduce((sum, r) => sum + Math.pow(r.rating - averageRating, 2), 0) / userRatings.length
     : 0;
 
   return {
@@ -103,9 +132,17 @@ export function scoreRecommendation(
   }
 
   if (tmdbData?.popularity) {
-    const popularityScore = Math.min(tmdbData.popularity / 100, 1); // Normalize popularity
-    score += popularityScore * 0.15; // 15% weight to popularity
+    // Cap popularity influence to prevent overweighting blockbusters
+    const rawPopularity = Math.min(tmdbData.popularity / 100, 1);
+    const cappedPopularity = Math.min(rawPopularity, 0.7); // Cap at 70% of max
+    score += cappedPopularity * 0.12; // Reduced from 15% to 12% weight
     reasons.push(`Popular content`);
+    
+    // Variety boost: slightly boost less popular items to encourage diversity
+    if (rawPopularity < 0.5) {
+      score += 0.05; // Small boost for niche content
+      reasons.push(`Niche favorite`);
+    }
   }
 
   // Media type preference based on user's rated content
@@ -115,14 +152,16 @@ export function scoreRecommendation(
     reasons.push(`Matches your ${item.kind} preference`);
   }
 
-  // Enhanced genre preferences based on user ratings
+  // Enhanced genre preferences based on user ratings (with validation)
   if (tmdbData?.genre_ids && Array.isArray(tmdbData.genre_ids)) {
     let genreScore = 0;
     let matchingGenres = 0;
     
-    tmdbData.genre_ids.forEach((genreId: number) => {
-      if (preferences.favoriteGenres[genreId]) {
-        genreScore += preferences.favoriteGenres[genreId];
+    tmdbData.genre_ids.forEach((genreId: any) => {
+      // Validate genre ID before using
+      const validGenreId = typeof genreId === 'number' && genreId > 0 ? genreId : null;
+      if (validGenreId && preferences.favoriteGenres[validGenreId]) {
+        genreScore += preferences.favoriteGenres[validGenreId];
         matchingGenres++;
       }
     });
@@ -162,11 +201,38 @@ export function scoreRecommendation(
 /**
  * Gets smart recommendations based on user preferences
  */
+// User-specific recommendation cache (prevents multi-audience contamination)
+const recommendationCache = new Map<string, { 
+  recommendations: RecommendationScore[]; 
+  timestamp: number; 
+  userId: string;
+  preferencesHash: string;
+}>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+function hashPreferences(prefs: UserPreferences): string {
+  return JSON.stringify({
+    avgRating: Math.round(prefs.averageRating * 100) / 100,
+    genres: Object.keys(prefs.favoriteGenres).sort().join(','),
+    mediaTypes: `${prefs.preferredMediaTypes.movie.toFixed(2)}:${prefs.preferredMediaTypes.tv.toFixed(2)}`
+  });
+}
+
 export async function getSmartRecommendations(
   preferences: UserPreferences,
   limit: number = 20,
-  tmdbApi: (path: string, params?: any) => Promise<any> = () => Promise.resolve({})
+  tmdbApi: (path: string, params?: any) => Promise<any> = () => Promise.resolve({}),
+  userId: string = 'anonymous'
 ): Promise<RecommendationScore[]> {
+  // Check cache (user-specific)
+  const prefsHash = hashPreferences(preferences);
+  const cacheKey = `${userId}:${prefsHash}`;
+  const cached = recommendationCache.get(cacheKey);
+  const now = Date.now();
+  
+  if (cached && cached.userId === userId && (now - cached.timestamp) < CACHE_TTL_MS) {
+    return cached.recommendations;
+  }
   try {
     // Fetch candidate content from TMDB
     const [trendingData, popularMoviesData, popularTvData] = await Promise.all([
@@ -248,7 +314,24 @@ export async function getSmartRecommendations(
     // Sort by score (highest first) and return top results
     scoredItems.sort((a, b) => b.score - a.score);
     
-    return scoredItems.slice(0, limit);
+    const results = scoredItems.slice(0, limit);
+    
+    // Cache results (user-specific)
+    recommendationCache.set(cacheKey, {
+      recommendations: results,
+      timestamp: now,
+      userId,
+      preferencesHash: prefsHash
+    });
+    
+    // Clean up old cache entries
+    for (const [key, value] of recommendationCache.entries()) {
+      if (value.userId !== userId || (now - value.timestamp) >= CACHE_TTL_MS) {
+        recommendationCache.delete(key);
+      }
+    }
+    
+    return results;
   } catch (error) {
     console.error('Failed to get smart recommendations:', error);
     return [];
@@ -260,32 +343,61 @@ export async function getSmartRecommendations(
  */
 export async function analyzeGenrePreferences(
   items: LibraryEntry[],
-  tmdbApi: (path: string, params?: any) => Promise<any>
+  tmdbApi: (path: string, params?: any) => Promise<any>,
+  timeoutMs: number = 10000 // 10 second timeout
 ): Promise<Record<number, number>> {
   const genreCounts: Record<number, number> = {};
   const genreRatings: Record<number, number[]> = {};
+  
+  // Create abort controller for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  // Fetch genre data for each item
+  // Fetch genre data for each item (with timeout protection)
   for (const item of items) {
     try {
+      // Check if aborted
+      if (controller.signal.aborted) {
+        // Silent timeout (expected behavior)
+        break;
+      }
+      
       const path = item.mediaType === 'movie' ? `/movie/${item.id}` : `/tv/${item.id}`;
       const data = await tmdbApi(path);
       
       if (data?.genres && Array.isArray(data.genres)) {
         data.genres.forEach((genre: any) => {
-          const genreId = genre.id;
+          // Validate genre ID (must be positive integer)
+          const genreId = typeof genre.id === 'number' && genre.id > 0 ? genre.id : null;
+          if (!genreId) {
+            // Silent skip for invalid genres (data quality issue, not an error)
+            return; // Skip invalid genres
+          }
+          
           genreCounts[genreId] = (genreCounts[genreId] || 0) + 1;
           
-          if (item.userRating !== undefined) {
+          // Only include ratings that are valid (1-5, not null/undefined)
+          if (item.userRating !== undefined && item.userRating !== null && 
+              item.userRating >= 1 && item.userRating <= 5) {
             if (!genreRatings[genreId]) genreRatings[genreId] = [];
             genreRatings[genreId].push(item.userRating);
           }
         });
       }
     } catch (error) {
-      console.warn(`Failed to fetch genre data for ${item.mediaType}:${item.id}`, error);
+      if (controller.signal.aborted) {
+        // Silent abort on timeout (expected behavior)
+        break;
+      }
+      // Only log unexpected errors (not network timeouts or aborts)
+      if (error instanceof Error && !error.message.includes('abort') && !error.message.includes('timeout')) {
+        console.warn(`Failed to fetch genre data for ${item.mediaType}:${item.id}`, error);
+      }
     }
   }
+  
+  // Clear timeout
+  clearTimeout(timeoutId);
 
   // Calculate preference scores
   const preferences: Record<number, number> = {};

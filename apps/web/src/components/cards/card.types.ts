@@ -31,6 +31,7 @@ export type CardContext =
 
 export interface CardActionHandlers {
   onWant?: (item: MediaItem) => void;
+  onWatching?: (item: MediaItem) => void;     // add to currently watching list
   onWatched?: (item: MediaItem) => void;
   onNotInterested?: (item: MediaItem) => void;
   onDelete?: (item: MediaItem) => void;

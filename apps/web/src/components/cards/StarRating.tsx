@@ -31,7 +31,9 @@ export default function StarRating({
   
   const handleClick = (rating: number) => {
     if (!readOnly && onChange) {
-      onChange(rating);
+      // Ensure rating is 1-5 integer (consistent scale)
+      const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
+      onChange(normalizedRating);
     }
   };
   

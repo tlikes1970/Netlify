@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import type { CardActionHandlers, MediaItem } from "./card.types";
 import { useTranslations } from "../../lib/language";
 import { useSettings } from "../../lib/settings";
@@ -58,15 +58,39 @@ export default function TabCard({
     mediaType: item.mediaType,
     hasOnNotificationToggle: !!actions?.onNotificationToggle,
   });
+  
+  // Get latest rating from library to ensure we have the most up-to-date value
+  const [currentRating, setCurrentRating] = useState(item.userRating);
+  
+  // Subscribe to library changes to update rating immediately
+  useEffect(() => {
+    const updateRating = () => {
+      const latestEntry = Library.getEntry(item.id, item.mediaType);
+      if (latestEntry?.userRating !== undefined) {
+        setCurrentRating(latestEntry.userRating);
+      }
+    };
+    
+    // Update immediately
+    updateRating();
+    
+    // Subscribe to library changes
+    const unsubscribe = Library.subscribe(updateRating);
+    
+    return () => {
+      unsubscribe();
+    };
+  }, [item.id, item.mediaType]);
+  
   const {
     title,
     year,
     posterUrl,
     voteAverage,
-    userRating,
     synopsis,
     mediaType,
   } = item;
+  const userRating = currentRating; // Use the latest rating
   const rating =
     typeof voteAverage === "number"
       ? Math.round(voteAverage * 10) / 10

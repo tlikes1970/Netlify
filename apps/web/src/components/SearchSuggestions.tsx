@@ -1,6 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import { fetchAutocomplete, type AutocompleteSuggestion } from '../search/autocomplete';
+import { fetchEnhancedAutocomplete } from '../search/enhancedAutocomplete';
+import type { MediaItem } from './cards/card.types';
 // import { useTranslations } from '../lib/language'; // Unused
+
+// Type for display format (compatible with existing UI)
+type AutocompleteSuggestion = {
+  title: string;
+  subtitle?: string;
+  type: 'movie' | 'tv' | 'person';
+  id: number | string;
+};
 
 export type SearchSuggestionsProps = {
   query: string;
@@ -124,7 +133,7 @@ export default function SearchSuggestions({
     setSearchHistory(getSearchHistory());
   }, []);
   
-  // Fetch TMDB autocomplete suggestions
+  // Fetch TMDB autocomplete suggestions with enhanced relevance scoring
   useEffect(() => {
     if (!query.trim() || query.length < 2) {
       setTmdbSuggestions([]);
@@ -139,11 +148,32 @@ export default function SearchSuggestions({
 
     const fetchSuggestions = async () => {
       try {
-        const suggestions = await fetchAutocomplete(query, abortControllerRef.current?.signal);
+        // Use enhanced autocomplete with relevance scoring
+        // Fetches 100 candidates, ranks them, returns top 10
+        const mediaItems = await fetchEnhancedAutocomplete(
+          query, 
+          abortControllerRef.current?.signal,
+          [] // enabledProviders - empty for now, can be enhanced later
+        );
+        
+        // Convert MediaItem[] to AutocompleteSuggestion[] format
+        const suggestions: AutocompleteSuggestion[] = mediaItems.map((item: MediaItem) => {
+          const subtitle = item.year 
+            ? `${item.mediaType === 'tv' ? 'TV Show' : 'Movie'} • ${item.year}`
+            : `${item.mediaType === 'tv' ? 'TV Show' : 'Movie'}`;
+          
+          return {
+            title: item.title || 'Untitled',
+            subtitle,
+            type: item.mediaType === 'person' ? 'person' : item.mediaType,
+            id: item.id,
+          };
+        });
+        
         setTmdbSuggestions(suggestions);
       } catch (error) {
         if (error instanceof Error && error.name !== 'AbortError') {
-          console.warn('Failed to fetch autocomplete:', error);
+          console.warn('Failed to fetch enhanced autocomplete:', error);
         }
         setTmdbSuggestions([]);
       }
@@ -185,19 +215,21 @@ export default function SearchSuggestions({
     setSelectedIndex(-1);
   }, [query, searchHistory]);
   
-  // Handle keyboard navigation
+  // Handle keyboard navigation across all suggestion sections
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const hasHistory = searchHistory.length > 0;
-      const maxIndex = (hasHistory ? 3 : 0) + tmdbSuggestions.length + filteredSuggestions.length;
+      const historyCount = Math.min(searchHistory.length, 3);
+      const tmdbCount = tmdbSuggestions.length;
+      const popularCount = filteredSuggestions.length;
+      const maxIndex = historyCount + tmdbCount + popularCount - 1;
       
-      if (!isVisible || maxIndex === 0) return;
+      if (!isVisible || maxIndex < 0) return;
       
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
           setSelectedIndex(prev => 
-            prev < filteredSuggestions.length - 1 ? prev + 1 : prev
+            prev < maxIndex ? prev + 1 : prev
           );
           break;
         case 'ArrowUp':
@@ -206,8 +238,20 @@ export default function SearchSuggestions({
           break;
         case 'Enter':
           e.preventDefault();
-          if (selectedIndex >= 0 && selectedIndex < filteredSuggestions.length) {
-            handleSuggestionClick(filteredSuggestions[selectedIndex]);
+          if (selectedIndex >= 0) {
+            // Determine which section the selected index belongs to
+            if (selectedIndex < historyCount) {
+              // History section
+              handleSuggestionClick(searchHistory[selectedIndex]);
+            } else if (selectedIndex < historyCount + tmdbCount) {
+              // TMDB section
+              const tmdbIndex = selectedIndex - historyCount;
+              handleSuggestionClick(tmdbSuggestions[tmdbIndex].title);
+            } else {
+              // Popular section
+              const popularIndex = selectedIndex - historyCount - tmdbCount;
+              handleSuggestionClick(filteredSuggestions[popularIndex]);
+            }
           }
           break;
         case 'Escape':
@@ -219,7 +263,7 @@ export default function SearchSuggestions({
     
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isVisible, filteredSuggestions, selectedIndex, onClose]);
+  }, [isVisible, searchHistory, tmdbSuggestions, filteredSuggestions, selectedIndex, onClose]);
   
   const handleSuggestionClick = (suggestion: string) => {
     onSuggestionClick(suggestion);
@@ -269,36 +313,39 @@ export default function SearchSuggestions({
             </div>
             
             <div className="space-y-1">
-              {searchHistory.slice(0, 3).map((item, index) => (
-                <button
-                  key={`history-${item}`}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleSuggestionClick(item);
-                  }}
-                  className={`
-                    w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer
-                    ${selectedIndex === index
-                      ? 'bg-accent text-accent-foreground'
-                      : 'hover:bg-muted text-foreground'
-                    }
-                  `}
-                  style={{
-                    backgroundColor: selectedIndex === index ? 'var(--accent)' : 'transparent',
-                    color: selectedIndex === index ? 'var(--accent-foreground)' : 'var(--foreground)'
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs">🕒</span>
-                    <span>{item}</span>
-                  </div>
-                </button>
-              ))}
+              {searchHistory.slice(0, 3).map((item, index) => {
+                const adjustedIndex = index; // History items are 0-2
+                return (
+                  <button
+                    key={`history-${item}`}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSuggestionClick(item);
+                    }}
+                    className={`
+                      w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer
+                      ${selectedIndex === adjustedIndex
+                        ? 'bg-accent text-accent-foreground'
+                        : 'hover:bg-muted text-foreground'
+                      }
+                    `}
+                    style={{
+                      backgroundColor: selectedIndex === adjustedIndex ? 'var(--accent)' : 'transparent',
+                      color: selectedIndex === adjustedIndex ? 'var(--accent-foreground)' : 'var(--foreground)'
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">🕒</span>
+                      <span>{item}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -312,7 +359,8 @@ export default function SearchSuggestions({
             
             <div className="space-y-1">
               {tmdbSuggestions.map((suggestion, index) => {
-                const adjustedIndex = index;
+                const historyCount = Math.min(searchHistory.length, 3);
+                const adjustedIndex = historyCount + index; // TMDB items come after history
                 
                 return (
                   <button

@@ -29,6 +29,7 @@ export interface Settings {
     forYouGenres: string[];
     episodeTracking: boolean;
     themePack?: string; // Pro feature
+    discoveryLimit: 25 | 50 | 75 | 100; // Number of discovery recommendations
   };
   
   // Pro
@@ -61,6 +62,7 @@ const DEFAULT_SETTINGS: Settings = {
     homePageLists: ['currently-watching', 'up-next', 'community', 'for-you-drama', 'for-you-comedy', 'for-you-horror', 'in-theaters', 'feedback'],
     forYouGenres: ['drama', 'comedy', 'horror'],
     episodeTracking: false,
+    discoveryLimit: 25, // Default to 25 recommendations
   },
   
   pro: {
@@ -150,6 +152,11 @@ class SettingsManager {
 
   toggleEpisodeTracking(): void {
     this.settings.layout.episodeTracking = !this.settings.layout.episodeTracking;
+    this.saveSettings();
+  }
+
+  updateDiscoveryLimit(limit: 25 | 50 | 75 | 100): void {
+    this.settings.layout.discoveryLimit = limit;
     this.saveSettings();
   }
 
