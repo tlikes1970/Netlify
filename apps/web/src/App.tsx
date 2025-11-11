@@ -322,9 +322,7 @@ export default function App() {
     
     // Trigger show status backfill after a short delay
     const backfillTimer = setTimeout(() => {
-      import('./diagnostics/debugGate').then(({ dlog }) => {
-        dlog('🔄 App.tsx triggering show status backfill...');
-      }).catch(() => {});
+      // ⚠️ REMOVED: debugGate diagnostics disabled
       backfillShowStatus();
     }, 3000); // Wait 3 seconds after app loads
     

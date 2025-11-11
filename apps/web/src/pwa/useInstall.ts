@@ -12,3 +12,4 @@ export function useCanInstallPWA() {
   return useSyncExternalStore(onInstallChange, getCanInstall, getCanInstall);
 }
 
+

@@ -1,64 +1,120 @@
 /**
- * FlickWord Game Styles - Enhanced Version
- * Optimized for mobile 375px width without horizontal scroll
- * Features: CSS Custom Properties, Enhanced Animations, Accessibility, Theme Support
+ * FlickWord Game Styles - Wordle-like Design
+ * Unified layout system for mobile and desktop
+ * Matches Wordle's clean, minimal aesthetic
  */
 
 /* ============================================
    CSS CUSTOM PROPERTIES (Design System)
    ============================================ */
 :root {
-  /* Color Palette - Light Mode (default) */
+  /* Wordle Color Palette - Light Theme */
   --fw-color-correct: #6aaa64;
   --fw-color-present: #c9b458;
   --fw-color-absent: #787c7e;
-  --fw-color-bg: var(--card, #1a1a1a);
-  --fw-color-text: var(--text, #ffffff);
-  --fw-color-border: var(--line, #333333);
-  --fw-color-btn: var(--btn, #333333);
-  --fw-color-btn-hover: var(--btn-hover, #444444);
-  --fw-color-accent: var(--accent, #007AFF);
-  
+  --fw-color-bg: #ffffff;
+  --fw-color-text: #000000;
+  --fw-color-border: #d3d6da;
+  --fw-color-btn: #818384;
+  --fw-color-btn-hover: #6b6d70;
+  --fw-color-accent: #007aff;
+
   /* Notification Colors */
   --fw-notification-success: #6aaa64;
   --fw-notification-error: #e74c3c;
   --fw-notification-info: var(--fw-color-accent);
   --fw-notification-warning: #f7c23c;
-  
+
   /* Spacing System */
   --fw-spacing-xs: 4px;
   --fw-spacing-sm: 8px;
   --fw-spacing-md: 16px;
   --fw-spacing-lg: 24px;
   --fw-spacing-xl: 32px;
-  
+
   /* Typography */
-  --fw-font-size-tile: clamp(22px, 4.5vw, 32px);
-  --fw-font-size-key: clamp(16px, 3.8vw, 20px);
+  --fw-font-size-tile: clamp(24px, 5vw, 36px);
+  --fw-font-size-key: clamp(14px, 3.5vw, 16px);
   --fw-font-weight-normal: 400;
   --fw-font-weight-medium: 500;
   --fw-font-weight-bold: 700;
-  
-  /* Border Radius */
-  --fw-radius-sm: 6px;
-  --fw-radius-md: 8px;
-  --fw-radius-lg: 12px;
-  
+
+  /* Border Radius - Minimal like Wordle */
+  --fw-radius-sm: 4px;
+  --fw-radius-md: 4px;
+  --fw-radius-lg: 6px;
+
   /* Shadows */
-  --fw-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --fw-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
-  --fw-shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.2);
-  
+  --fw-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --fw-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --fw-shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.15);
+
   /* Animation Timing */
   --fw-animation-fast: 150ms;
   --fw-animation-normal: 300ms;
   --fw-animation-slow: 500ms;
   --fw-animation-timing: cubic-bezier(0.4, 0, 0.2, 1);
-  
-  /* Container Constraints */
-  --fw-grid-gap: clamp(4px, 1.2vw, 6px);
-  --fw-tile-size: clamp(52px, 18vw, 72px);
-  --fw-keyboard-max-width: 420px;
+}
+
+/* ============================================
+   UNIFIED TILE SIZING SYSTEM
+   ============================================ */
+.flickword-game,
+[data-fw-root] {
+  /* Unified tile size - square tiles like Wordle */
+  --fw-tile-size: clamp(50px, 13vw, 60px);
+  --fw-tile-gap: 5px; /* Wordle-like spacing */
+
+  /* Keyboard sizing */
+  --fw-key-h: 58px;
+  --fw-key-gap: 6px; /* Wordle-like row spacing */
+  --fw-key-padding: 4px; /* Side padding */
+}
+
+/* Mobile breakpoints */
+@media (max-width: 480px) {
+  .flickword-game,
+  [data-fw-root] {
+    --fw-tile-size: 60px;
+    --fw-tile-gap: 5px;
+    --fw-key-h: 58px;
+    --fw-key-gap: 6px;
+    --fw-key-padding: 4px;
+  }
+}
+
+@media (max-width: 375px) {
+  .flickword-game,
+  [data-fw-root] {
+    --fw-tile-size: 60px;
+    --fw-tile-gap: 5px;
+    --fw-key-h: 56px;
+    --fw-key-gap: 5px;
+    --fw-key-padding: 3px;
+  }
+}
+
+@media (max-width: 320px) {
+  .flickword-game,
+  [data-fw-root] {
+    --fw-tile-size: 54px;
+    --fw-tile-gap: 5px;
+    --fw-key-h: 52px;
+    --fw-key-gap: 5px;
+    --fw-key-padding: 2px;
+  }
+}
+
+/* Desktop sizing */
+@media (min-width: 769px) {
+  .flickword-game,
+  [data-fw-root] {
+    --fw-tile-size: 60px;
+    --fw-tile-gap: 5px;
+    --fw-key-h: 58px;
+    --fw-key-gap: 6px;
+    --fw-key-padding: 6px;
+  }
 }
 
 /* Reduced Motion Support */
@@ -86,16 +142,18 @@
 /* ============================================
    BASE GAME CONTAINER
    ============================================ */
-.flickword-game {
+.flickword-game,
+[data-fw-root] {
   display: flex;
   flex-direction: column;
   gap: var(--fw-spacing-md);
-  padding: var(--fw-spacing-lg);
+  padding: var(--fw-spacing-md);
   width: 100%;
-  max-width: 520px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
   box-sizing: border-box;
-  contain: layout style paint;
+  background-color: var(--fw-color-bg);
+  color: var(--fw-color-text);
 }
 
 /* Game Header */
@@ -109,7 +167,7 @@
 .fw-header h3 {
   font-size: 18px;
   font-weight: bold;
-  color: var(--text, #ffffff);
+  color: var(--fw-color-text);
   margin: 0;
 }
 
@@ -117,10 +175,11 @@
   display: flex;
   gap: 12px;
   font-size: 12px;
-  color: var(--muted, #888888);
+  color: var(--fw-color-absent);
 }
 
-.fw-streak, .fw-timer {
+.fw-streak,
+.fw-timer {
   font-weight: 500;
 }
 
@@ -136,59 +195,93 @@
 .fw-spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--line, #333333);
-  border-top: 3px solid var(--accent, #007AFF);
+  border: 3px solid var(--fw-color-border);
+  border-top: 3px solid var(--fw-color-accent);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .fw-loading p {
-  color: var(--muted, #888888);
+  color: var(--fw-color-absent);
   font-size: 14px;
   margin: 0;
 }
 
-/* Game Grid */
-.fw-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--fw-grid-gap);
-  width: fit-content; /* center by content width */
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 0 var(--fw-spacing-sm); /* small side padding for visual breathing room */
-  box-sizing: border-box;
-  contain: layout style;
+/* ============================================
+   GAME GRID - Unified Flex System
+   ============================================ */
+.fw-playfield,
+[data-fw-root] [data-fw-el="playfield"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--fw-spacing-md);
+  padding: var(--fw-spacing-sm);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-.fw-tile {
+.fw-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fw-tile-gap);
+  align-items: center;
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Tile rows - each row is a grid */
+.fw-grid [data-fw-el="tile-row"],
+.fw-grid .fw-row {
+  display: grid;
+  grid-template-columns: repeat(5, var(--fw-tile-size));
+  gap: var(--fw-tile-gap);
+  width: fit-content;
+  justify-content: center;
+}
+
+.fw-tile,
+[data-fw-el="tile"] {
   aspect-ratio: 1;
+  width: var(--fw-tile-size);
+  height: var(--fw-tile-size);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: var(--fw-font-size-tile);
   font-weight: var(--fw-font-weight-bold);
   border: 2px solid var(--fw-color-border);
-  border-radius: var(--fw-radius-md);
+  border-radius: var(--fw-radius-sm);
   background-color: var(--fw-color-bg);
   color: var(--fw-color-text);
-  width: var(--fw-tile-size);
-  min-width: var(--fw-tile-size);
-  max-width: var(--fw-tile-size);
   box-sizing: border-box;
-  contain: layout style paint;
   position: relative;
-  transition: 
+  transition:
     background-color var(--fw-animation-normal) var(--fw-animation-timing),
     border-color var(--fw-animation-normal) var(--fw-animation-timing),
     color var(--fw-animation-normal) var(--fw-animation-timing),
     transform var(--fw-animation-normal) var(--fw-animation-timing);
   overflow: hidden;
+  outline: none;
+}
+
+.fw-tile:focus-visible {
+  outline: 3px solid var(--fw-color-accent);
+  outline-offset: 2px;
+  border-color: var(--fw-color-accent);
+  z-index: 1;
 }
 
 /* Letter pop-in animation */
@@ -240,27 +333,42 @@
 }
 
 @keyframes tileShake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-  20%, 40%, 60%, 80% { transform: translateX(4px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
+  }
 }
 
 /* Reduced motion overrides */
 @media (prefers-reduced-motion: reduce) {
   .fw-tile {
-    transition: background-color var(--fw-animation-normal), 
-                border-color var(--fw-animation-normal), 
-                color var(--fw-animation-normal);
+    transition:
+      background-color var(--fw-animation-normal),
+      border-color var(--fw-animation-normal),
+      color var(--fw-animation-normal);
   }
-  
+
   .fw-tile:not(:empty),
   .fw-tile-revealing,
   .fw-tile-shake {
     animation: none;
   }
-  
+
   .fw-tile-revealing {
-    transform: none !important;
+    transform: none;
   }
 }
 
@@ -338,55 +446,58 @@
   }
 }
 
-/* Keyboard */
-.fw-keyboard {
+/* ============================================
+   KEYBOARD - Wordle-like Layout
+   ============================================ */
+.fw-keyboard,
+[data-fw-root] [data-fw-el="keyboard"] {
   display: flex;
   flex-direction: column;
-  gap: clamp(6px, 1.5vw, 8px);
-  --kb-gap: clamp(4px, 1.2vw, 8px);
-  width: 100%;              /* fill modal content width */
-  max-width: 420px;         /* ensure it never exceeds grid width visually */
-  margin: 12px auto 0;      /* center below grid */
-  padding: 0 12px;          /* symmetric side padding to avoid clipping */
+  gap: var(--fw-key-gap);
+  width: 100%;
+  max-width: 100%;
+  margin: var(--fw-spacing-sm) auto 0;
+  padding: 0 var(--fw-key-padding);
+  padding-bottom: env(safe-area-inset-bottom);
   box-sizing: border-box;
-  transform: none;          /* no shifts — stable on mobile & desktop */
+  flex: 0 0 auto;
 }
 
-/* Mobile-specific alignment tweaks only */
-@media (min-width: 768px) {
-  .fw-keyboard { max-width: 360px; padding: 0 6px; }
-  .fw-grid { gap: 6px; }
-  .fw-tile { width: 56px; min-width: 56px; font-size: 22px; border-radius: 8px; }
-  .fw-kb-wrap { gap: 6px; }
-  .fw-key { min-width: 38px; height: 48px; font-size: 13px; }
-  .fw-key-back, .fw-key-enter { min-width: 56px; font-size: 12px; }
-  /* Force visible change via scale to ensure no upstream size rules mask adjustments */
-  .fw-keyboard { transform: scale(0.75); transform-origin: center bottom; }
+/* Keyboard rows - flex for variable column counts */
+.fw-kb-row,
+[data-fw-root] [data-fw-el="key-row"] {
+  display: flex;
+  justify-content: center;
+  gap: var(--fw-key-gap);
+  width: 100%;
 }
 
-.fw-kb-row { display: flex; justify-content: center; }
-.fw-kb-wrap { display: flex; gap: var(--kb-gap); }
+.fw-kb-wrap {
+  display: flex;
+  gap: var(--fw-key-gap);
+  width: 100%;
+}
 
-.fw-key {
-  min-width: clamp(36px, 7.5vw, 56px);
-  height: clamp(48px, 9vw, 64px);
-  padding: 0 clamp(8px, 2vw, 12px);
+.fw-key,
+[data-fw-root] [data-fw-el="key"] {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: var(--fw-key-h);
+  padding: 0;
   font-size: var(--fw-font-size-key);
   font-weight: var(--fw-font-weight-bold);
   border: none;
-  border-radius: var(--fw-radius-md);
+  border-radius: var(--fw-radius-sm);
   background-color: var(--fw-color-btn);
-  color: var(--fw-color-text);
+  color: white;
   cursor: pointer;
-  transition: 
+  transition:
     background-color var(--fw-animation-fast) var(--fw-animation-timing),
-    transform var(--fw-animation-fast) var(--fw-animation-timing),
-    box-shadow var(--fw-animation-fast) var(--fw-animation-timing);
+    transform var(--fw-animation-fast) var(--fw-animation-timing);
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  contain: layout style paint;
   position: relative;
   touch-action: manipulation;
   user-select: none;
@@ -394,17 +505,17 @@
 
 .fw-key:hover:not(:disabled) {
   background-color: var(--fw-color-btn-hover);
-  box-shadow: var(--fw-shadow-sm);
 }
 
 .fw-key:active:not(:disabled) {
-  transform: scale(0.95);
+  transform: scale(0.96);
 }
 
 .fw-key:focus-visible {
-  outline: 2px solid var(--fw-color-accent);
+  outline: 3px solid var(--fw-color-accent);
   outline-offset: 2px;
   border-radius: var(--fw-radius-sm);
+  z-index: 1;
 }
 
 .fw-key:disabled {
@@ -450,9 +561,11 @@
   }
 }
 
-.fw-key-back, .fw-key-enter {
-  min-width: clamp(64px, 12vw, 90px);
-  font-size: clamp(14px, 3.4vw, 18px);
+.fw-key-back,
+.fw-key-enter {
+  flex: 1.5 1 auto;
+  min-width: 0;
+  font-size: clamp(12px, 3vw, 14px);
 }
 
 /* Actions */
@@ -460,7 +573,7 @@
   display: flex;
   gap: 12px;
   justify-content: center;
-  margin-top: 16px;
+  margin-top: var(--fw-spacing-md);
 }
 
 .fw-btn {
@@ -474,21 +587,21 @@
 }
 
 .fw-btn.fw-new-game {
-  background-color: var(--accent, #007AFF);
+  background-color: var(--fw-color-accent);
   color: white;
 }
 
 .fw-btn.fw-new-game:hover {
-  background-color: var(--accent-hover, #0056CC);
+  background-color: var(--fw-color-btn-hover);
 }
 
 .fw-btn.fw-close {
-  background-color: var(--btn, #333333);
-  color: var(--text, #ffffff);
+  background-color: var(--fw-color-btn);
+  color: white;
 }
 
 .fw-btn.fw-close:hover {
-  background-color: var(--btn-hover, #444444);
+  background-color: var(--fw-color-btn-hover);
 }
 
 /* ============================================
@@ -517,7 +630,8 @@
   font-weight: var(--fw-font-weight-medium);
   box-shadow: var(--fw-shadow-lg);
   pointer-events: auto;
-  animation: notificationSlideIn var(--fw-animation-normal) var(--fw-animation-timing) forwards;
+  animation: notificationSlideIn var(--fw-animation-normal)
+    var(--fw-animation-timing) forwards;
   position: relative;
   backdrop-filter: blur(8px);
 }
@@ -590,9 +704,9 @@
   }
 }
 
-/* Notification exit animation */
 .fw-notification[data-exiting] {
-  animation: notificationSlideOut var(--fw-animation-fast) var(--fw-animation-timing) forwards;
+  animation: notificationSlideOut var(--fw-animation-fast)
+    var(--fw-animation-timing) forwards;
 }
 
 @keyframes notificationSlideOut {
@@ -613,23 +727,68 @@
   }
 }
 
+/* Error Banner */
+.fw-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: rgba(231, 76, 60, 0.15);
+  border: 1px solid var(--fw-notification-error);
+  border-radius: var(--fw-radius-md);
+  color: var(--fw-notification-error);
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.fw-error-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.fw-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.fw-error h3 {
+  color: var(--fw-notification-error);
+  margin: 0;
+  font-size: 18px;
+}
+
+.fw-error p {
+  color: var(--fw-color-text);
+  margin: 0;
+}
+
 /* Word Info */
 .fw-word-info {
-  background-color: var(--card, #1a1a1a);
-  border: 1px solid var(--line, #333333);
+  background-color: var(--fw-color-bg);
+  border: 1px solid var(--fw-color-border);
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 16px;
+  outline: none;
+}
+
+.fw-word-info:focus-visible {
+  outline: 2px solid var(--fw-color-accent);
+  outline-offset: 2px;
 }
 
 .fw-word-info p {
   margin: 0;
   font-size: 14px;
-  color: var(--text, #ffffff);
+  color: var(--fw-color-text);
 }
 
 .fw-word-info strong {
-  color: var(--accent, #007AFF);
+  color: var(--fw-color-accent);
 }
 
 /* Game Stats View */
@@ -648,7 +807,7 @@
 
 .btn-primary {
   padding: 8px 16px;
-  background-color: var(--accent, #007AFF);
+  background-color: var(--fw-color-accent);
   color: white;
   border: none;
   border-radius: 6px;
@@ -659,13 +818,13 @@
 }
 
 .btn-primary:hover {
-  background-color: var(--accent-hover, #0056CC);
+  background-color: var(--fw-color-btn-hover);
 }
 
 .btn-secondary {
   padding: 8px 16px;
-  background-color: var(--btn, #333333);
-  color: var(--text, #ffffff);
+  background-color: var(--fw-color-btn);
+  color: white;
   border: none;
   border-radius: 6px;
   font-size: 14px;
@@ -675,67 +834,36 @@
 }
 
 .btn-secondary:hover {
-  background-color: var(--btn-hover, #444444);
+  background-color: var(--fw-color-btn-hover);
 }
 
-/* Responsive adjustments for very small screens */
-@media (max-width: 480px) {
-  .flickword-game {
-    max-width: 400px;
-    padding: 20px;
-  }
-  
-  .fw-grid {
-    max-width: 320px;
-    gap: 3px;
-  }
-  
-  .fw-tile {
-    font-size: 22px;
-    min-height: 45px;
-    min-width: 45px;
-  }
-  
-  .fw-keyboard {
-    max-width: 360px;
-  }
-  
-  .fw-key {
-    min-width: 32px;
-    height: 42px;
-    font-size: 14px;
-  }
-  
-  .fw-key-back, .fw-key-enter {
-    min-width: 50px;
-    font-size: 12px;
-  }
+/* Pro Upsell */
+.fw-pro-upsell {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background-color: rgba(0, 122, 255, 0.1);
+  border: 1px solid var(--fw-color-accent);
+  border-radius: var(--fw-radius-md);
+  text-align: center;
 }
 
-@media (max-width: 320px) {
-  .fw-grid {
-    max-width: 280px;
-    gap: 2px;
-  }
-  
-  .fw-tile {
-    font-size: 20px;
-    min-height: 40px;
-    min-width: 40px;
-  }
-  
-  .fw-keyboard {
-    max-width: 300px;
-  }
-  
-  .fw-key {
-    min-width: 28px;
-    height: 38px;
-    font-size: 12px;
-  }
-  
-  .fw-key-back, .fw-key-enter {
-    min-width: 45px;
-    font-size: 11px;
-  }
+.fw-pro-upsell p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--fw-color-text);
+}
+
+.fw-games-limit {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background-color: rgba(106, 170, 100, 0.1);
+  border: 1px solid var(--fw-color-correct);
+  border-radius: var(--fw-radius-md);
+  text-align: center;
+}
+
+.fw-games-limit p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--fw-color-text);
 }

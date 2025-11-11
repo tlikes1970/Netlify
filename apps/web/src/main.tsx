@@ -1,7 +1,7 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import { getSnapshot } from './i18n/translationStore';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import { getSnapshot } from "./i18n/translationStore";
 
 /**
  * First-Paint Gate: Prevents intermediate paints during cold load
@@ -9,23 +9,32 @@ import { getSnapshot } from './i18n/translationStore';
  */
 
 function allStylesLoaded(): Promise<void> {
-  const links = Array.from(document.querySelectorAll('link[rel="stylesheet"][href]')) as HTMLLinkElement[];
-  const waits = links.map(l => l.sheet ? Promise.resolve() : new Promise<void>(res => {
-    l.addEventListener('load', () => res(), { once: true });
-    l.addEventListener('error', () => res(), { once: true });
-  }));
+  const links = Array.from(
+    document.querySelectorAll('link[rel="stylesheet"][href]')
+  ) as HTMLLinkElement[];
+  const waits = links.map((l) =>
+    l.sheet
+      ? Promise.resolve()
+      : new Promise<void>((res) => {
+          l.addEventListener("load", () => res(), { once: true });
+          l.addEventListener("error", () => res(), { once: true });
+        })
+  );
   return Promise.all(waits).then(() => {});
 }
 
 function fontsReadyOrTimeout(ms = 800): Promise<void> {
   const p = (document as any).fonts?.ready || Promise.resolve();
-  return Promise.race([p as Promise<any>, new Promise(res => setTimeout(res, ms))]).then(() => {});
+  return Promise.race([
+    p as Promise<any>,
+    new Promise((res) => setTimeout(res, ms)),
+  ]).then(() => {});
 }
 
 function i18nFirstSnapshotOrTimeout(ms = 400): Promise<void> {
   // Poll until i18n snapshot version > 0 (initialized)
   const start = Date.now();
-  return new Promise<void>(res => {
+  return new Promise<void>((res) => {
     const check = () => {
       try {
         const snapshot = getSnapshot();
@@ -52,95 +61,112 @@ async function releaseFirstPaintGate(timeoutMs = 1200) {
     return;
   }
   gateReleased = true;
-  
-  const deadline = new Promise(res => setTimeout(res, timeoutMs));
+
+  const deadline = new Promise((res) => setTimeout(res, timeoutMs));
   await Promise.race([
     (async () => {
-      if (document.readyState === 'loading') {
-        await new Promise<void>(r => document.addEventListener('DOMContentLoaded', () => r(), { once: true }));
+      if (document.readyState === "loading") {
+        await new Promise<void>((r) =>
+          document.addEventListener("DOMContentLoaded", () => r(), {
+            once: true,
+          })
+        );
       }
       await allStylesLoaded();
       await fontsReadyOrTimeout(800);
       await i18nFirstSnapshotOrTimeout(400);
     })(),
-    deadline
+    deadline,
   ]);
 
-  try { localStorage.setItem('app:primed', '1'); } catch {}
-  document.documentElement.classList.remove('fp-gate');
-  const gateCss = document.getElementById('fp-gate-css');
+  try {
+    localStorage.setItem("app:primed", "1");
+  } catch {}
+  document.documentElement.classList.remove("fp-gate");
+  const gateCss = document.getElementById("fp-gate-css");
   if (gateCss && gateCss.parentNode) gateCss.parentNode.removeChild(gateCss);
 }
 
 // Initialize Sentry for error tracking (only in production with DSN)
 if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
-  import('./runtime/switches').then(({ isOff }) => {
+  import("./runtime/switches").then(({ isOff }) => {
     // Kill switch: Analytics/Perf disabled
-    if (isOff('ianalytics')) {
-      console.info('[Sentry] Disabled via kill switch (ianalytics:off)');
+    if (isOff("ianalytics")) {
+      console.info("[Sentry] Disabled via kill switch (ianalytics:off)");
       return;
     }
-    
-    import('@sentry/react').then((Sentry) => {
-      Sentry.init({
-        dsn: import.meta.env.VITE_SENTRY_DSN,
-        environment: import.meta.env.MODE || 'production',
-        integrations: [
-          Sentry.browserTracingIntegration(),
-          Sentry.replayIntegration(),
-        ],
-        tracesSampleRate: 0.1,
-        replaysSessionSampleRate: 0.1,
-        replaysOnErrorSampleRate: 1.0,
+
+    import("@sentry/react")
+      .then((Sentry) => {
+        Sentry.init({
+          dsn: import.meta.env.VITE_SENTRY_DSN,
+          environment: import.meta.env.MODE || "production",
+          integrations: [
+            Sentry.browserTracingIntegration(),
+            Sentry.replayIntegration(),
+          ],
+          tracesSampleRate: 0.1,
+          replaysSessionSampleRate: 0.1,
+          replaysOnErrorSampleRate: 1.0,
+        });
+      })
+      .catch(() => {
+        // Sentry not available, continue without it
       });
-    }).catch(() => {
-      // Sentry not available, continue without it
-    });
   });
 }
-import { FlagsProvider } from './lib/flags';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from './lib/query';
-import { debugTmdbSource } from './lib/tmdb';
-import { HOME_RAILS, TABS } from './config/structure';
-import { registerServiceWorker, devUnregisterAllSW } from './sw-register';
-import './styles/global.css';
-import './styles/header-marquee.css';
-import './styles/tokens-compact-mobile.css';
-import './styles/compact-home.css';
-import './styles/settings-sheet.css';
-import './styles/compact-actions.css';
-import './styles/compact-lists.css';
-import './styles/compact-a11y-perf.css';
-import './styles/compact-cleanup.css';
-import './styles/cards-mobile.css';
-import './styles/cards.css';
-import './components/cards/button-pro.css';
-import { installCompactMobileGate, installActionsSplitGate } from './lib/flags';
-import { initFlags } from './lib/mobileFlags';
-import { logAuthOriginHint } from './lib/authLogin';
-import { runFirstFrameBoot } from './boot/bootCoordinator';
+import { FlagsProvider } from "./lib/flags";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/query";
+import { debugTmdbSource } from "./lib/tmdb";
+import { HOME_RAILS, TABS } from "./config/structure";
+import { registerServiceWorker, devUnregisterAllSW } from "./sw-register";
+import "./styles/global.css";
+import "./styles/header-marquee.css";
+import "./styles/tokens-compact-mobile.css";
+import "./styles/compact-home.css";
+import "./styles/settings-sheet.css";
+import "./styles/compact-actions.css";
+import "./styles/compact-lists.css";
+import "./styles/compact-a11y-perf.css";
+import "./styles/compact-cleanup.css";
+import "./styles/cards-mobile.css";
+import "./styles/cards.css";
+import "./components/cards/button-pro.css";
+// FlickWord mobile override - must be imported LAST to ensure cascade order wins
+// See flickword-mobile.css for documentation on why this file loads last
+import "./styles/flickword-mobile.css";
+import { installCompactMobileGate, installActionsSplitGate } from "./lib/flags";
+import { initFlags } from "./lib/mobileFlags";
+import { logAuthOriginHint } from "./lib/authLogin";
+import { runFirstFrameBoot } from "./boot/bootCoordinator";
 // Import scroll feature flags and logger to ensure window exposure
-import './utils/scrollFeatureFlags';
-import './utils/scrollLogger';
+import "./utils/scrollFeatureFlags";
+import "./utils/scrollLogger";
 // Install kill switch overlay (dev only)
-import { installKillSwitchOverlay } from './runtime/overlay';
+import { installKillSwitchOverlay } from "./runtime/overlay";
 // ⚠️ CRITICAL: Don't import authManager here - it triggers constructor
 // Import it AFTER firebaseReady resolves to prevent race condition
 // import { authManager } from './lib/auth'; // Moved to after firebaseReady
-import { logger } from './lib/logger';
-import { authLogManager } from './lib/authLog';
-import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './lib/firebaseBootstrap';
+import { logger } from "./lib/logger";
+import { authLogManager } from "./lib/authLog";
+import {
+  bootstrapFirebase,
+  firebaseReady,
+  getFirebaseReadyTimestamp,
+} from "./lib/firebaseBootstrap";
 
 // Install auth debug bridge globally when ?debug=auth is present.
 // This avoids route/lazy-load/treeshake issues.
 (function installAuthBridgeGlobally() {
   const params = new URLSearchParams(location.search);
-  if (params.get('debug') !== 'auth') return;
-  
-  import('./debug/authDebugBridge')
-    .then(m => m.installAuthDebugBridge && m.installAuthDebugBridge())
-    .catch(() => { /* ignore */ });
+  if (params.get("debug") !== "auth") return;
+
+  import("./debug/authDebugBridge")
+    .then((m) => m.installAuthDebugBridge && m.installAuthDebugBridge())
+    .catch(() => {
+      /* ignore */
+    });
 })();
 
 // ⚠️ CRITICAL: Log page entry params BEFORE Firebase runs
@@ -151,29 +177,32 @@ import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './l
     // ⚠️ CRITICAL: Check URL params at the very top of bootstrap
     // This must run before ANY Firebase code or router logic
     const params = new URLSearchParams(window.location.search);
-    const hasCode = params.has('code');
-    const hasState = params.has('state');
-    
+    const hasCode = params.has("code");
+    const hasState = params.has("state");
+
     // Also check hash params (Firebase sometimes uses hash fragments)
     let hasCodeInHash = false;
     let hasStateInHash = false;
     if (window.location.hash) {
       try {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        hasCodeInHash = hashParams.has('code');
-        hasStateInHash = hashParams.has('state');
+        const hashParams = new URLSearchParams(
+          window.location.hash.substring(1)
+        );
+        hasCodeInHash = hashParams.has("code");
+        hasStateInHash = hashParams.has("state");
       } catch (e) {
         // ignore
       }
     }
-    
+
     const finalHasCode = hasCode || hasCodeInHash;
     const finalHasState = hasState || hasStateInHash;
-    
-    const bootTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
-    
+
+    const bootTime =
+      typeof performance !== "undefined" ? performance.now() : Date.now();
+
     // Log to HUD
-    authLogManager.log('page_entry_params', {
+    authLogManager.log("page_entry_params", {
       hasCode: finalHasCode,
       hasState: finalHasState,
       hasCodeInSearch: hasCode,
@@ -184,15 +213,16 @@ import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './l
       hash: window.location.hash,
       href: window.location.href,
     });
-    
+
     // Phase B: Enhanced boot URL log
-    authLogManager.log('url_check', {
+    authLogManager.log("url_check", {
       href: window.location.href,
       search: window.location.search,
       hash: window.location.hash,
       pathname: window.location.pathname,
       origin: window.location.origin,
-      visibilityState: typeof document !== 'undefined' ? document.visibilityState : 'unknown',
+      visibilityState:
+        typeof document !== "undefined" ? document.visibilityState : "unknown",
       bootTime: bootTime,
       timestamp: new Date().toISOString(),
     });
@@ -205,30 +235,35 @@ import { bootstrapFirebase, firebaseReady, getFirebaseReadyTimestamp } from './l
 // ⚠️ CRITICAL: Bootstrap Firebase BEFORE anything else
 // This ensures persistence is set and auth state is initialized before any auth operations
 // Note: Bootstrap happens asynchronously - firebaseReady promise blocks render
-logger.log('[Boot] Starting Firebase bootstrap...');
-bootstrapFirebase().then(() => {
-  const readyTimestamp = getFirebaseReadyTimestamp();
-  logger.log('[Boot] Firebase bootstrap complete', readyTimestamp ? `at ${readyTimestamp}` : '');
-  
-  // Log firebaseReady resolution (this happens in bootstrapApp after await)
-}).catch((e) => {
-  logger.error('[Boot] Firebase bootstrap failed', e);
-});
+logger.log("[Boot] Starting Firebase bootstrap...");
+bootstrapFirebase()
+  .then(() => {
+    const readyTimestamp = getFirebaseReadyTimestamp();
+    logger.log(
+      "[Boot] Firebase bootstrap complete",
+      readyTimestamp ? `at ${readyTimestamp}` : ""
+    );
+
+    // Log firebaseReady resolution (this happens in bootstrapApp after await)
+  })
+  .catch((e) => {
+    logger.error("[Boot] Firebase bootstrap failed", e);
+  });
 
 // Log auth origin for OAuth verification
 logAuthOriginHint();
 
 // Set density to compact (required for compact mobile gate)
-document.documentElement.dataset.density = 'compact';
+document.documentElement.dataset.density = "compact";
 
 // Group boot initializers into single frame to prevent initialization burst
 runFirstFrameBoot([
   () => {
     // Initialize mobile flags with defaults
     initFlags({
-      'compact-mobile-v1': false,
-      'actions-split': false,
-      'debug-logging': false
+      "compact-mobile-v1": false,
+      "actions-split": false,
+      "debug-logging": false,
     });
   },
   () => {
@@ -242,7 +277,7 @@ runFirstFrameBoot([
   () => {
     // Log auth origin hint (lightweight, affects text/layout)
     logAuthOriginHint();
-  }
+  },
 ]);
 
 // Install kill switch overlay (dev only)
@@ -261,61 +296,66 @@ declare global {
 
 function attachDebug() {
   window.debugRails = () => {
-    const rails = Array.from(document.querySelectorAll('[data-rail]'));
-    return rails.map(el => {
-      const id = el.getAttribute('data-rail') || '';
-      const title = el.getAttribute('aria-label') || '';
-      const cardsWrap = el.querySelector('[data-cards]') as HTMLElement | null;
+    const rails = Array.from(document.querySelectorAll("[data-rail]"));
+    return rails.map((el) => {
+      const id = el.getAttribute("data-rail") || "";
+      const title = el.getAttribute("aria-label") || "";
+      const cardsWrap = el.querySelector("[data-cards]") as HTMLElement | null;
       const csWrap = cardsWrap ? getComputedStyle(cardsWrap) : null;
       return {
         id,
         title,
-        enabled: getComputedStyle(el).display !== 'none',
-        scrollX: csWrap?.overflowX || 'n/a'
+        enabled: getComputedStyle(el).display !== "none",
+        scrollX: csWrap?.overflowX || "n/a",
       };
     });
   };
 
   window.debugCards = () => {
-    const cards = Array.from(document.querySelectorAll('[data-card]')).slice(0, 24);
+    const cards = Array.from(document.querySelectorAll("[data-card]")).slice(
+      0,
+      24
+    );
     return cards.map((c, i) => {
-      const rail = c.closest('[data-rail]') as HTMLElement | null;
-      const railId = rail?.getAttribute('data-rail') || '';
-      const poster = c.querySelector('[data-poster]') as HTMLElement | null;
-      const actions = c.querySelector('[data-actions]') as HTMLElement | null;
+      const rail = c.closest("[data-rail]") as HTMLElement | null;
+      const railId = rail?.getAttribute("data-rail") || "";
+      const poster = c.querySelector("[data-poster]") as HTMLElement | null;
+      const actions = c.querySelector("[data-actions]") as HTMLElement | null;
       const csP = poster ? getComputedStyle(poster) : null;
       const csA = actions ? getComputedStyle(actions) : null;
       return {
         i,
         railId,
-        posterAR: csP?.aspectRatio || 'n/a',
-        actionsDisplay: csA?.display || 'n/a',
-        actionsCols: csA?.gridTemplateColumns || 'n/a'
+        posterAR: csP?.aspectRatio || "n/a",
+        actionsDisplay: csA?.display || "n/a",
+        actionsCols: csA?.gridTemplateColumns || "n/a",
       };
     });
   };
 }
 
 // Attach debug functions after DOM is ready
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   attachDebug();
 }
 
 // Debug env + react-query state + raw TMDB fetch
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).debugEnv = () => ({
-  hasViteTmdbKey: Boolean(import.meta.env.VITE_TMDB_KEY)
+  hasViteTmdbKey: Boolean(import.meta.env.VITE_TMDB_KEY),
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).debugQueries = () =>
   Array.from((queryClient as any).getQueryCache().getAll()).map((q: any) => ({
-    key: q.queryKey?.join('/') ?? 'unknown',
+    key: q.queryKey?.join("/") ?? "unknown",
     status: q.state.status,
     error: q.state.error?.message ?? null,
-    dataLen:
-      Array.isArray(q.state.data) ? q.state.data.length :
-      (q.state.data ? 1 : 0)
+    dataLen: Array.isArray(q.state.data)
+      ? q.state.data.length
+      : q.state.data
+        ? 1
+        : 0,
   }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -328,28 +368,48 @@ if (typeof window !== 'undefined') {
 (window as any).debugLists = () => {
   try {
     // Check new Library system
-    const newData = JSON.parse(localStorage.getItem('flicklet.library.v2') || '{}');
-    const newCounts = Object.values(newData).reduce((m: any, x: any) => ((m[x.list] = (m[x.list]||0)+1), m), {});
-    
+    const newData = JSON.parse(
+      localStorage.getItem("flicklet.library.v2") || "{}"
+    );
+    const newCounts = Object.values(newData).reduce(
+      (m: any, x: any) => ((m[x.list] = (m[x.list] || 0) + 1), m),
+      {}
+    );
+
     // Check old system for comparison
-    const oldData = JSON.parse(localStorage.getItem('flicklet:v2:saved') || '[]');
-    const oldCounts = oldData.reduce((m: any, x: any) => ((m[x.status] = (m[x.status]||0)+1), m), {});
-    
-    return { 
-      new: { total: Object.keys(newData).length, ...(newCounts as Record<string, number>) },
-      old: { total: oldData.length, ...oldCounts }
+    const oldData = JSON.parse(
+      localStorage.getItem("flicklet:v2:saved") || "[]"
+    );
+    const oldCounts = oldData.reduce(
+      (m: any, x: any) => ((m[x.status] = (m[x.status] || 0) + 1), m),
+      {}
+    );
+
+    return {
+      new: {
+        total: Object.keys(newData).length,
+        ...(newCounts as Record<string, number>),
+      },
+      old: { total: oldData.length, ...oldCounts },
     };
-  } catch { return { new: { total: 0 }, old: { total: 0 } }; }
+  } catch {
+    return { new: { total: 0 }, old: { total: 0 } };
+  }
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).debugTabs = () => [...document.querySelectorAll('header button,[role="tab"]')].map(x=>x.textContent?.trim()).filter(Boolean);
+(window as any).debugTabs = () =>
+  [...document.querySelectorAll('header button,[role="tab"]')]
+    .map((x) => x.textContent?.trim())
+    .filter(Boolean);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).debugCardButtons = (railId: string) => {
   const rail = document.querySelector(`[data-rail="${railId}"]`);
-  const first = rail?.querySelector('[data-card]');
-  return [...(first?.querySelectorAll('[data-actions] button')||[])].map(b=>b.textContent?.trim());
+  const first = rail?.querySelector("[data-card]");
+  return [...(first?.querySelectorAll("[data-actions] button") || [])].map(
+    (b) => b.textContent?.trim()
+  );
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -361,15 +421,17 @@ if (typeof window !== 'undefined') {
       // wishlist: Library.getByList('wishlist').length,
       // watched: Library.getByList('watched').length,
       // not: Library.getByList('not').length,
-      message: 'Library debug function disabled in browser environment'
+      message: "Library debug function disabled in browser environment",
     };
-  } catch { return { watching: 0, wishlist: 0, watched: 0, not: 0 }; }
+  } catch {
+    return { watching: 0, wishlist: 0, watched: 0, not: 0 };
+  }
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).debugAuthLogs = () => {
   try {
-    const logs = JSON.parse(localStorage.getItem('auth-debug-logs') || '[]');
+    const logs = JSON.parse(localStorage.getItem("auth-debug-logs") || "[]");
     // Return logs without console output
     return logs;
   } catch (e) {
@@ -379,10 +441,9 @@ if (typeof window !== 'undefined') {
 };
 
 // Import and expose Firebase auth debug utility
-import('./utils/debug-auth').then(m => {
+import("./utils/debug-auth").then((m) => {
   (window as any).debugFirebaseAuth = m.debugFirebaseAuth;
 });
-
 
 // ⚠️ CRITICAL: Don't block UI on auth - wait for first auth tick or timeout
 // This ensures app renders even if auth state takes time to initialize
@@ -391,37 +452,37 @@ import('./utils/debug-auth').then(m => {
     // Wait for Firebase bootstrap to complete (with timeout)
     await Promise.race([
       firebaseReady,
-      new Promise(resolve => setTimeout(resolve, 4000))
+      new Promise((resolve) => setTimeout(resolve, 4000)),
     ]);
     const readyTimestamp = getFirebaseReadyTimestamp();
-    
+
     // Log firebaseReady resolution
     if (readyTimestamp) {
-      authLogManager.log('firebaseReady_resolved_at', {
+      authLogManager.log("firebaseReady_resolved_at", {
         timestamp: readyTimestamp,
         iso: readyTimestamp,
       });
-      
-      authLogManager.log('app_render_after_firebaseReady', {
+
+      authLogManager.log("app_render_after_firebaseReady", {
         firebaseReadyTimestamp: readyTimestamp,
       });
     }
-    
+
     // Initialize auth flow in background - don't block render
     // ⚠️ FIXED: Removed duplicate getRedirectResult() call - authFlow.ts handles it
     // This was causing triple calls and consuming redirect result incorrectly
-    logger.log('[Boot] Initializing auth flow...');
-    const { initAuthOnLoad } = await import('./lib/authFlow');
-    
+    logger.log("[Boot] Initializing auth flow...");
+    const { initAuthOnLoad } = await import("./lib/authFlow");
+
     // Initialize auth flow (non-blocking)
     // authFlow.ts will call getRedirectResult() exactly once
     initAuthOnLoad(); // call once at boot; ensure no other calls elsewhere
-    
+
     // Also initialize auth manager for existing hooks
-    logger.log('[Boot] Initializing Firebase auth manager...');
-    const { authManager } = await import('./lib/auth');
+    logger.log("[Boot] Initializing Firebase auth manager...");
+    const { authManager } = await import("./lib/auth");
     void authManager; // Force module load and initialization
-    
+
     // Now render React app
     // ⚠️ FIXED: Remove React.StrictMode in production to prevent extra render cycles
     // StrictMode intentionally double-invokes effects, which can cause flicker with SW updates
@@ -432,15 +493,19 @@ import('./utils/debug-auth').then(m => {
         </FlagsProvider>
       </QueryClientProvider>
     );
-    
-    ReactDOM.createRoot(document.getElementById('root')!).render(
-      import.meta.env.DEV ? <React.StrictMode>{AppWrapper}</React.StrictMode> : AppWrapper
+
+    ReactDOM.createRoot(document.getElementById("root")!).render(
+      import.meta.env.DEV ? (
+        <React.StrictMode>{AppWrapper}</React.StrictMode>
+      ) : (
+        AppWrapper
+      )
     );
-    
+
     // Release first-paint gate after React mount
     releaseFirstPaintGate();
   } catch (error) {
-    console.error('[Boot] bootstrapApp threw - still rendering', error);
+    console.error("[Boot] bootstrapApp threw - still rendering", error);
     // Still render app even if Firebase bootstrap fails (graceful degradation)
     // ⚠️ FIXED: Remove React.StrictMode in production
     const AppWrapper = (
@@ -450,12 +515,16 @@ import('./utils/debug-auth').then(m => {
         </FlagsProvider>
       </QueryClientProvider>
     );
-    
-    ReactDOM.createRoot(document.getElementById('root')!).render(
-      import.meta.env.DEV ? <React.StrictMode>{AppWrapper}</React.StrictMode> : AppWrapper
+
+    ReactDOM.createRoot(document.getElementById("root")!).render(
+      import.meta.env.DEV ? (
+        <React.StrictMode>{AppWrapper}</React.StrictMode>
+      ) : (
+        AppWrapper
+      )
     );
-    console.log('[Boot] Emergency render finished');
-    
+    console.log("[Boot] Emergency render finished");
+
     // Release first-paint gate even in error path
     releaseFirstPaintGate();
   }
@@ -469,12 +538,14 @@ registerServiceWorker();
 if (import.meta.env.DEV) {
   devUnregisterAllSW().catch(() => {});
   // Nuclear safety net: kill any SW that appears (side-effect import)
-  import('./sw-dev-kill').catch(() => {});
+  import("./sw-dev-kill").catch(() => {});
 }
 
 // Initialize PWA install signal (stable state, no header jump)
-import('./pwa/installSignal').then(({ initInstallSignal }) => {
-  initInstallSignal();
-}).catch(() => {});
+import("./pwa/installSignal")
+  .then(({ initInstallSignal }) => {
+    initInstallSignal();
+  })
+  .catch(() => {});
 
 // ⚠️ REMOVED: Cold-start recorder disabled

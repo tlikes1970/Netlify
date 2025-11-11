@@ -1,0 +1,136 @@
+/**
+ * flickword-mobile.css
+ * 
+ * IMPORTANT: This file must be imported LAST in the stylesheet cascade.
+ * 
+ * Mobile-optimized FlickWord layout - Wordle-like design
+ * Extends base flickword.css with modal-specific layout fixes
+ */
+
+/* ============================================
+   MODAL LAYOUT STRUCTURE
+   ============================================ */
+
+/* Modal dialog - full height on mobile */
+.gm-dialog {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+}
+
+@media (min-width: 769px) {
+  .gm-dialog {
+    height: min(90vh, 750px);
+    max-height: min(90vh, 750px);
+  }
+}
+
+.gm-header {
+  flex: 0 0 auto;
+}
+
+/* Modal body - unified padding system */
+.gm-body.flickword,
+.gm-body[data-fw-root] {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Playfield - scrollable area for grid */
+.fw-playfield,
+[data-fw-root] [data-fw-el="playfield"] {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--fw-spacing-md);
+  padding: var(--fw-spacing-sm);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Grid container - prevent compression */
+.fw-playfield .fw-grid,
+.gm-body .fw-grid {
+  flex-shrink: 0;
+  min-height: fit-content;
+}
+
+/* Remove accidental spacing */
+.gm-body.flickword > *,
+.gm-body[data-fw-root] > * {
+  margin-top: 0;
+}
+
+/* ============================================
+   KEYBOARD LAYOUT - Bottom Anchored
+   ============================================ */
+
+.fw-keyboard,
+[data-fw-root] [data-fw-el="keyboard"] {
+  flex: 0 0 auto;
+  width: 100%;
+  padding: 0 var(--fw-key-padding);
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  flex-direction: column;
+  gap: var(--fw-key-gap);
+  box-sizing: border-box;
+}
+
+/* Keyboard rows - flex layout for variable columns */
+.fw-kb-row,
+[data-fw-root] [data-fw-el="key-row"] {
+  display: flex;
+  justify-content: center;
+  gap: var(--fw-key-gap);
+  width: 100%;
+}
+
+/* Actions footer */
+.fw-actions {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  padding: var(--fw-spacing-sm) 0;
+  margin: 0;
+}
+
+.fw-actions .fw-close,
+.fw-actions .fw-btn {
+  margin: 0;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+/* Very small screens */
+@media (max-width: 320px) {
+  .fw-playfield {
+    padding: var(--fw-spacing-xs);
+  }
+
+  .fw-keyboard {
+    padding: 0 var(--fw-key-padding);
+  }
+}
+
+/* Desktop adjustments */
+@media (min-width: 769px) {
+  .fw-playfield {
+    padding: var(--fw-spacing-md);
+  }
+
+  .fw-keyboard {
+    max-width: 500px;
+    margin: var(--fw-spacing-md) auto 0;
+  }
+}

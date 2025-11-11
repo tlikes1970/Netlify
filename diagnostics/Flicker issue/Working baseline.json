@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "timestamp": "2025-11-10T17:26:40.663Z",
+    "version": "0.1.147",
+    "strictMode": true,
+    "duration": 60.007
+  },
+  "strictModeSummary": {
+    "mounts": 420,
+    "unmounts": 144,
+    "mountUnmountPairs": 0
+  },
+  "providerIdentitySummary": {
+    "changesWhileIdle": 0,
+    "languageChanges": 0,
+    "identityChanges": 0,
+    "lastProviderRef": null
+  },
+  "subscriberSummary": {
+    "totalSubscriptions": 420,
+    "totalRenders": 1190,
+    "rendersPerSubscription": 2.8333333333333335,
+    "uniqueMountIds": 420,
+    "subscriptionToRenderPairs": 629,
+    "averageTimeBetweenSubscriptionAndRender": 33.98410174880763
+  },
+  "multipleProviders": {
+    "count": 0,
+    "locations": []
+  },
+  "keyViolations": [],
+  "batchingSummary": {
+    "burstsDetected": 1592,
+    "maxEventsIn50ms": 424,
+    "totalEventsInBursts": 383881
+  },
+  "containmentResults": {
+    "flagEnabled": false,
+    "impact": "not_tested",
+    "rendersBefore": 0,
+    "rendersAfter": 0,
+    "improvement": 0
+  },
+  "containment": {
+    "enabled": false,
+    "mode": "off",
+    "stats": {
+      "burstsDetected": 1592,
+      "maxEventsIn50ms": 424,
+      "totalEventsInBursts": 383881,
+      "emitCallsPerSecond": 0,
+      "framesWithMultipleEmits": 0
+    }
+  }
+}

@@ -1,4 +1,5 @@
 # Production Flicker Forensic Report
+
 ## Deep Line-by-Line Analysis
 
 **Issue**: Entire page flickers continuously in production (milliseconds, repeating) until hard refresh. No errors. Happens even when not on that page.
@@ -22,12 +23,14 @@ self.addEventListener('activate', (event) => {
 });
 ```
 
-**Problem**: 
+**Problem**:
+
 - `skipWaiting()` forces immediate activation without waiting for existing clients to close
 - `clients.claim()` immediately takes control of ALL pages, including ones already loaded
 - This causes the page to be "claimed" by the SW mid-render, triggering a reload/flicker cycle
 
 **Why it flickers**:
+
 1. Page loads → React renders
 2. SW activates → `clients.claim()` fires
 3. Browser reloads page to apply SW control
@@ -53,13 +56,15 @@ if (reg.installing) {
 }
 ```
 
-**Problem**: 
+**Problem**:
+
 - When SW activates, it immediately calls `reg.update()`
 - This checks for a new SW version
 - If a new version exists (even if it's the same), it triggers another install cycle
 - Creates infinite update loop: activate → update → install → activate → update...
 
 **Why it flickers**:
+
 - Each SW update cycle can cause the page to reload or re-render
 - Combined with `clients.claim()`, this creates a continuous flicker
 
@@ -102,12 +107,14 @@ async function releaseFirstPaintGate(timeoutMs = 1200) {
 ```
 
 **Problem**:
+
 - Gate CSS sets `body { visibility: hidden; }` when `fp-gate` class is present
 - If SW serves stale HTML, the gate check might run multiple times
 - If `releaseFirstPaintGate()` is called multiple times (see Issue #4), the gate toggles visibility
 - Each toggle causes a visible flicker
 
 **Why it flickers**:
+
 1. Page loads with `fp-gate` → body hidden
 2. `releaseFirstPaintGate()` removes `fp-gate` → body visible
 3. SW update triggers → page reloads
@@ -155,12 +162,14 @@ releaseFirstPaintGate();
 ```
 
 **Problem**:
+
 - `ReactDOM.createRoot().render()` is called in both success and error paths
 - If `bootstrapApp()` is called multiple times (e.g., by SW reload), React tries to render multiple times
 - Each render calls `releaseFirstPaintGate()`, toggling the gate
 - React 18's `createRoot` can handle multiple renders, but combined with gate toggling, causes flicker
 
 **Why it flickers**:
+
 - Multiple renders = multiple gate releases = visibility toggles = flicker
 
 ---
@@ -174,11 +183,13 @@ registerServiceWorker();
 ```
 
 **Problem**:
+
 - SW registration happens AFTER React render (line 421) but BEFORE gate release (line 432)
 - If an existing SW is already active, `clients.claim()` might fire during the render
 - This can cause the page to reload mid-initialization
 
 **Why it flickers**:
+
 - SW takes control during React render → page reloads → render starts again → SW takes control → loop
 
 ---
@@ -188,12 +199,14 @@ registerServiceWorker();
 ### Location: `apps/web/src/sw-register.ts` lines 68-101
 
 **Problem**:
+
 - No listener for `controllerchange` event
 - When SW activates and claims clients, the `navigator.serviceWorker.controller` changes
 - This can cause the page to reload, but the code doesn't handle this gracefully
 - The `useServiceWorker` hook (line 58) reloads on update, but registration code doesn't
 
 **Why it flickers**:
+
 - Controller changes → page might reload → SW registration runs again → controller changes → loop
 
 ---
@@ -207,6 +220,7 @@ registerServiceWorker();
 ```
 
 **Problem**:
+
 - React StrictMode is enabled in production
 - StrictMode intentionally double-invokes effects and renders in development
 - While it shouldn't double-invoke in production, having it enabled can cause issues with:
@@ -215,6 +229,7 @@ registerServiceWorker();
   - Component lifecycle (mount/unmount cycles)
 
 **Why it flickers**:
+
 - Combined with SW updates, StrictMode can cause additional render cycles
 - Each render cycle can trigger gate toggles
 
@@ -236,12 +251,14 @@ function allStylesLoaded(): Promise<void> {
 ```
 
 **Problem**:
+
 - `allStylesLoaded()` waits for all stylesheets to load
 - If SW serves cached CSS that conflicts with new CSS, styles might load in wrong order
 - If CSS loads from cache (instant) but then SW updates and serves different CSS, styles toggle
 - This causes visual flicker as styles change
 
 **Why it flickers**:
+
 1. Page loads → CSS loads from SW cache (old version)
 2. SW updates → serves new CSS
 3. Browser applies new CSS → styles change → flicker
@@ -266,11 +283,13 @@ if (req.mode === "navigate") {
 ```
 
 **Problem**:
+
 - SW intercepts ALL navigation requests
 - If SW is updating, it might serve stale HTML from cache
 - This causes the page to load old HTML, then new HTML, causing flicker
 
 **Why it flickers**:
+
 - Navigate request → SW serves cached HTML → page renders
 - SW updates → serves new HTML → page re-renders → flicker
 
@@ -281,6 +300,7 @@ if (req.mode === "navigate") {
 ### Location: `apps/web/src/sw-register.ts` (called from main.tsx) + `apps/web/src/hooks/useServiceWorker.ts` line 173
 
 **Problem**:
+
 - SW is registered in `main.tsx` line 459
 - `useServiceWorker` hook also registers SW in `App.tsx` (if used)
 - Two registrations can cause conflicts:
@@ -289,6 +309,7 @@ if (req.mode === "navigate") {
   - Loop repeats
 
 **Why it flickers**:
+
 - Multiple registrations → multiple update checks → multiple reloads → flicker
 
 ---
@@ -311,42 +332,52 @@ if (req.mode === "navigate") {
 ## Recommended Fixes (Priority Order)
 
 ### 1. Remove `clients.claim()` or make it conditional
+
 - Only claim clients if no existing controller
 - Prevents immediate takeover of loaded pages
 
 ### 2. Remove automatic `reg.update()` on activation
+
 - Let browser handle updates naturally
 - Prevents update loop
 
 ### 3. Add controller change listener
+
 - Handle SW controller changes gracefully
 - Prevent unexpected reloads
 
 ### 4. Guard `releaseFirstPaintGate()` to run only once
+
 - Use a flag to prevent multiple calls
 - Prevents gate toggling
 
 ### 5. Register SW before React render
+
 - Move registration earlier in bootstrap
 - Prevents mid-render takeover
 
 ### 6. Remove React StrictMode in production
+
 - Use environment check to disable in prod
 - Reduces render cycles
 
 ### 7. Add CSS versioning/cache busting
+
 - Ensure CSS loads in correct order
 - Prevents style toggles
 
 ### 8. Consolidate SW registration
+
 - Remove duplicate registrations
 - Single source of truth
 
 ### 9. Add SW update debouncing
+
 - Prevent rapid update checks
 - Break update loop
 
 ### 10. Handle navigate requests more carefully
+
 - Don't serve stale HTML during updates
 - Use network-first for HTML
 
@@ -375,4 +406,3 @@ if (req.mode === "navigate") {
 ---
 
 **End of Report**
-

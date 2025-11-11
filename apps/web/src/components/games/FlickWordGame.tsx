@@ -7,8 +7,10 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useSettings } from "@/lib/settings";
 import { getTodaysWord } from "../../lib/dailyWordApi";
 import { validateWord } from "../../lib/words/validateWord";
+import FlickWordTileSizeTool from "./FlickWordTileSizeTool";
 
 // Game configuration
 const KEYBOARD_ROWS = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
@@ -147,6 +149,7 @@ export default function FlickWordGame({
   onClose,
   onGameComplete,
 }: FlickWordGameProps) {
+  const settings = useSettings();
   const [game, setGame] = useState<GameState>({
     target: "",
     guesses: [],
@@ -161,8 +164,67 @@ export default function FlickWordGame({
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInvalidInput, setIsInvalidInput] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isProUser, setIsProUser] = useState(false);
+  const [gamesCompletedToday, setGamesCompletedToday] = useState(0);
   const gridRef = useRef<HTMLDivElement>(null);
   const notificationTimeoutRef = useRef<number | null>(null);
+  const tileRefs = useRef<(HTMLDivElement | null)[][]>([]);
+
+  // Dev tool: Show tile size tool (toggle with 'T' key)
+  const [showTileTool, setShowTileTool] = useState(false);
+
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Press 'T' to toggle tile size tool
+      if (e.key === "t" || e.key === "T") {
+        if (
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement
+        ) {
+          return; // Don't toggle if typing in an input
+        }
+        setShowTileTool((prev) => !prev);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, []);
+
+  // Game limits: 1 for regular, 3 for Pro
+  const MAX_GAMES_FREE = 1;
+  const MAX_GAMES_PRO = 3;
+
+  // Get games completed today for FlickWord
+  const getGamesCompletedToday = (): number => {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const key = `flickword:games-completed:${today}`;
+      const count = parseInt(localStorage.getItem(key) || "0", 10);
+      return count;
+    } catch {
+      return 0;
+    }
+  };
+
+  // Save games completed today
+  const saveGamesCompletedToday = (count: number): void => {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const key = `flickword:games-completed:${today}`;
+      localStorage.setItem(key, String(count));
+    } catch {
+      // Ignore errors
+    }
+  };
+
+  // Check if user is Pro and initialize games completed
+  useEffect(() => {
+    setIsProUser(settings.pro.isPro);
+    const completed = getGamesCompletedToday();
+    setGamesCompletedToday(completed);
+  }, [settings.pro]);
 
   // Check for reduced motion preference
   const prefersReducedMotion = useMemo(() => {
@@ -235,6 +297,7 @@ export default function FlickWordGame({
         }
       } catch (error) {
         console.error("❌ Failed to load daily word:", error);
+        setErrorMessage("Failed to load today's word. Using backup word.");
         // Fallback to a static word if API fails
         const fallbackWord = "HOUSE";
         console.log("🔄 Using fallback word:", fallbackWord);
@@ -264,8 +327,13 @@ export default function FlickWordGame({
     []
   );
 
-  // TEMPORARY: Force load new word (for testing)
-  const handleNewWord = useCallback(async () => {
+  // Force load new word (for testing - only in dev mode)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _handleNewWord = useCallback(async () => {
+    // Reserved for future dev testing feature
+    void _handleNewWord;
+    // Only allow in development mode
+    if (import.meta.env.PROD) return;
     try {
       setIsLoading(true);
       console.log("🔄 Loading new word for testing...");
@@ -579,6 +647,10 @@ export default function FlickWordGame({
               clearGameState();
               return completedState;
             });
+            // Update games completed today
+            const newGamesCompleted = gamesCompletedToday + 1;
+            setGamesCompletedToday(newGamesCompleted);
+            saveGamesCompletedToday(newGamesCompleted);
             onGameComplete?.(true, newGuesses.length);
           }, animationDelay);
         } else if (newGuesses.length === prev.maxGuesses) {
@@ -597,6 +669,10 @@ export default function FlickWordGame({
               clearGameState();
               return completedState;
             });
+            // Update games completed today
+            const newGamesCompleted = gamesCompletedToday + 1;
+            setGamesCompletedToday(newGamesCompleted);
+            saveGamesCompletedToday(newGamesCompleted);
             onGameComplete?.(false, newGuesses.length);
           }, animationDelay);
         } else {
@@ -646,11 +722,16 @@ export default function FlickWordGame({
 
   // Render game grid with enhanced accessibility and animations
   const renderGrid = () => {
-    const tiles = [];
+    const rows = [];
     const currentRowIndex = game.guesses.length;
     const isRevealingRow =
       game.animationState === "revealing" &&
       currentRowIndex === game.guesses.length - 1;
+
+    // Initialize tile refs array if needed
+    if (!tileRefs.current[currentRowIndex]) {
+      tileRefs.current[currentRowIndex] = [];
+    }
 
     for (let i = 0; i < game.maxGuesses; i++) {
       const guess =
@@ -658,22 +739,42 @@ export default function FlickWordGame({
       const isCurrentRow = i === currentRowIndex && !game.done;
       const rowStatus = i < game.guesses.length ? game.lastResults[i] : null;
 
+      const rowTiles = [];
       for (let j = 0; j < 5; j++) {
         const letter = guess[j] || "";
         const status = rowStatus ? rowStatus[j] : "";
         const animationDelay =
           isRevealingRow && rowStatus ? j * ANIMATION_DELAY_BASE : 0;
 
-        tiles.push(
+        let ariaLabel = letter
+          ? `${letter}, ${status || "empty"}`
+          : "Empty tile";
+        if (status === "correct") {
+          ariaLabel = `${letter}, correct position`;
+        } else if (status === "present") {
+          ariaLabel = `${letter}, present but wrong position`;
+        } else if (status === "absent") {
+          ariaLabel = `${letter}, not in word`;
+        }
+
+        rowTiles.push(
           <div
             key={`${i}-${j}`}
+            ref={(el) => {
+              if (isCurrentRow) {
+                if (!tileRefs.current[i]) {
+                  tileRefs.current[i] = [];
+                }
+                tileRefs.current[i][j] = el;
+              }
+            }}
             className={`fw-tile ${status} ${isCurrentRow ? "fw-tile-current" : ""} ${isRevealingRow && rowStatus ? "fw-tile-revealing" : ""} ${isInvalidInput && isCurrentRow ? "fw-tile-shake" : ""}`}
+            data-fw-el="tile"
             role="gridcell"
-            aria-label={
-              letter ? `${letter}, ${status || "empty"}` : "Empty tile"
-            }
+            aria-label={ariaLabel}
             aria-colindex={j + 1}
             aria-rowindex={i + 1}
+            tabIndex={isCurrentRow && j === game.current.length ? 0 : -1}
             style={
               prefersReducedMotion
                 ? {}
@@ -687,8 +788,13 @@ export default function FlickWordGame({
           </div>
         );
       }
+      rows.push(
+        <div key={`row-${i}`} data-fw-el="tile-row">
+          {rowTiles}
+        </div>
+      );
     }
-    return tiles;
+    return rows;
   };
 
   // Render keyboard
@@ -703,6 +809,7 @@ export default function FlickWordGame({
         <button
           key={letter}
           className={`fw-key ${status}`}
+          data-fw-el="key"
           onClick={() => handleKeyInput(letter)}
           disabled={game.done || isLoading}
           aria-label={`Key ${letter}${status ? `, ${status}` : ""}`}
@@ -713,8 +820,15 @@ export default function FlickWordGame({
       );
     }
     rows.push(
-      <div key="row1" className="fw-kb-row">
-        <div className="fw-kb-wrap">{row1}</div>
+      <div
+        key="row1"
+        className="fw-kb-row"
+        data-fw-el="key-row"
+        style={
+          { ["--cols" as string]: String(row1.length) } as React.CSSProperties
+        }
+      >
+        {row1}
       </div>
     );
 
@@ -726,6 +840,7 @@ export default function FlickWordGame({
         <button
           key={letter}
           className={`fw-key ${status}`}
+          data-fw-el="key"
           onClick={() => handleKeyInput(letter)}
           disabled={game.done || isLoading}
           aria-label={`Key ${letter}${status ? `, ${status}` : ""}`}
@@ -736,8 +851,15 @@ export default function FlickWordGame({
       );
     }
     rows.push(
-      <div key="row2" className="fw-kb-row">
-        <div className="fw-kb-wrap">{row2}</div>
+      <div
+        key="row2"
+        className="fw-kb-row"
+        data-fw-el="key-row"
+        style={
+          { ["--cols" as string]: String(row2.length) } as React.CSSProperties
+        }
+      >
+        {row2}
       </div>
     );
 
@@ -746,6 +868,8 @@ export default function FlickWordGame({
       <button
         key="enter"
         className="fw-key fw-key-enter"
+        data-fw-el="key"
+        data-fw-key="enter"
         onClick={handleSubmit}
         disabled={game.done || isLoading || game.current.length !== 5}
         aria-label="Submit guess"
@@ -759,6 +883,7 @@ export default function FlickWordGame({
         <button
           key={letter}
           className={`fw-key ${status}`}
+          data-fw-el="key"
           onClick={() => handleKeyInput(letter)}
           disabled={game.done || isLoading}
           aria-label={`Key ${letter}${status ? `, ${status}` : ""}`}
@@ -772,6 +897,8 @@ export default function FlickWordGame({
       <button
         key="backspace"
         className="fw-key fw-key-back"
+        data-fw-el="key"
+        data-fw-key="backspace"
         onClick={handleBackspace}
         disabled={game.done || isLoading || !game.current}
         aria-label="Delete letter"
@@ -780,8 +907,15 @@ export default function FlickWordGame({
       </button>
     );
     rows.push(
-      <div key="row3" className="fw-kb-row">
-        <div className="fw-kb-wrap">{row3}</div>
+      <div
+        key="row3"
+        className="fw-kb-row"
+        data-fw-el="key-row"
+        style={
+          { ["--cols" as string]: String(row3.length) } as React.CSSProperties
+        }
+      >
+        {row3}
       </div>
     );
 
@@ -790,36 +924,45 @@ export default function FlickWordGame({
 
   if (isLoading) {
     return (
-      <div className="flickword-game">
+      <div
+        className="flickword-game"
+        data-fw-root
+        role="status"
+        aria-live="polite"
+        aria-label="Loading FlickWord game"
+      >
         <div className="fw-header">
-          {/* TEMPORARY: Small testing button above title */}
-          <button
-            onClick={handleNewWord}
-            aria-label="Load new word (testing)"
-            style={{
-              backgroundColor: "#f7c23c",
-              color: "#000",
-              fontSize: "10px",
-              fontWeight: "600",
-              padding: "4px 8px",
-              border: "1px solid #000",
-              borderRadius: "4px",
-              cursor: "pointer",
-              marginBottom: "4px",
-              lineHeight: "1",
-            }}
-            title="Load new word"
-          >
-            🧪
-          </button>
           <h3>🎯 FlickWord</h3>
           <div className="fw-stats">
-            <span className="fw-streak">Loading...</span>
+            <span className="fw-streak" aria-hidden="true">
+              Loading...
+            </span>
           </div>
         </div>
         <div className="fw-loading">
-          <div className="fw-spinner"></div>
+          <div className="fw-spinner" aria-hidden="true"></div>
           <p>Loading today&apos;s word...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (errorMessage && !game.target) {
+    return (
+      <div className="flickword-game" data-fw-root role="alert">
+        <div className="fw-error">
+          <h3>Error Loading Game</h3>
+          <p>{errorMessage}</p>
+          <button
+            className="fw-btn fw-new-game"
+            onClick={() => {
+              setErrorMessage(null);
+              initializeGame();
+            }}
+            aria-label="Try loading game again"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -828,10 +971,12 @@ export default function FlickWordGame({
   return (
     <div
       className="flickword-game"
+      data-fw-root
       role="application"
       aria-label="FlickWord game"
       aria-describedby="flickword-description"
     >
+      <FlickWordTileSizeTool isVisible={showTileTool} />
       {/* Hidden description for screen readers */}
       <div id="flickword-description" className="sr-only">
         Word guessing game. Guess the 5-letter word in {game.maxGuesses}{" "}
@@ -878,44 +1023,94 @@ export default function FlickWordGame({
         ))}
       </div>
 
-      {/* Word Info (if available) - Hidden by default */}
-      {game.wordInfo?.definition && game.showHint && (
-        <div className="fw-word-info" role="region" aria-label="Word hint">
-          <p>
-            <strong>Hint:</strong> {game.wordInfo.definition}
-          </p>
-        </div>
-      )}
+      {/* Playfield wrapper for mobile layout (grid + stats) */}
+      <div className="fw-playfield" data-fw-el="playfield">
+        {/* Error banner */}
+        {errorMessage && (
+          <div
+            className="fw-error-banner"
+            role="alert"
+            aria-live="polite"
+            aria-label="Warning message"
+          >
+            <span className="fw-error-icon" aria-hidden="true">
+              ⚠️
+            </span>
+            <span>{errorMessage}</span>
+          </div>
+        )}
 
-      {/* Game Grid */}
-      <div
-        ref={gridRef}
-        className="fw-grid"
-        aria-label="FlickWord board"
-        role="grid"
-        aria-rowcount={game.maxGuesses}
-        aria-colcount={5}
-      >
-        {renderGrid()}
+        {/* Word Info (if available) - Hidden by default */}
+        {game.wordInfo?.definition && game.showHint && (
+          <div
+            className="fw-word-info"
+            role="region"
+            aria-label="Word hint"
+            tabIndex={0}
+          >
+            <p>
+              <strong>Hint:</strong> {game.wordInfo.definition}
+            </p>
+          </div>
+        )}
+
+        {/* Game Grid */}
+        <div
+          ref={gridRef}
+          className="fw-grid"
+          aria-label={`FlickWord board. ${game.guesses.length} of ${game.maxGuesses} guesses used. ${game.done ? (game.guesses[game.guesses.length - 1] === game.target ? "Game won!" : "Game lost.") : "Enter a 5-letter word."}`}
+          role="grid"
+          aria-rowcount={game.maxGuesses}
+          aria-colcount={5}
+          aria-live="polite"
+          aria-atomic="false"
+        >
+          {renderGrid()}
+        </div>
+
+        {/* Pro Upsell Message - Show when game is done or when limit reached */}
+        {!isProUser && gamesCompletedToday >= MAX_GAMES_FREE && (
+          <div className="fw-pro-upsell">
+            <p>
+              🔒 Get Pro for 2 more games! Upgrade to play 3 games per day
+              instead of 1.
+            </p>
+          </div>
+        )}
+        {isProUser && gamesCompletedToday >= MAX_GAMES_PRO && (
+          <div className="fw-games-limit">
+            <p>
+              ✅ You&apos;ve completed all 3 games today! Come back tomorrow for
+              more!
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Keyboard */}
-      <div className="fw-keyboard" aria-label="Virtual keyboard" role="group">
+      <div
+        className="fw-keyboard"
+        data-fw-el="keyboard"
+        aria-label="Virtual keyboard"
+        role="group"
+      >
         {renderKeyboard()}
       </div>
 
-      {/* Actions */}
-      <div className="fw-actions">
-        {onClose && (
-          <button
-            className="fw-btn fw-close"
-            onClick={onClose}
-            aria-label="Close game"
-          >
-            Close
-          </button>
-        )}
-      </div>
+      {/* Actions - Hidden to match Wordle's minimal design (close via header only) */}
+      {false && (
+        <div className="fw-actions">
+          {onClose && (
+            <button
+              className="fw-btn fw-close"
+              onClick={onClose}
+              aria-label="Close FlickWord game"
+            >
+              Close
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

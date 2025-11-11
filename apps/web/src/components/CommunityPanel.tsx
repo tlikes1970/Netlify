@@ -1,14 +1,14 @@
-import { useState, lazy, Suspense, useEffect, useRef, memo } from 'react';
-import { useTranslations } from '@/lib/language';
-import FlickWordStats from './games/FlickWordStats';
-import TriviaStats from './games/TriviaStats';
-import CommunityPlayer from './CommunityPlayer';
-import NewPostModal from './NewPostModal';
+import { useState, lazy, Suspense, useEffect, useRef, memo } from "react";
+import { useTranslations } from "@/lib/language";
+import FlickWordStats from "./games/FlickWordStats";
+import TriviaStats from "./games/TriviaStats";
+import CommunityPlayer from "./CommunityPlayer";
+import NewPostModal from "./NewPostModal";
 // ⚠️ REMOVED: flickerDiagnostics import disabled
 
 // Lazy load game modals
-const FlickWordModal = lazy(() => import('./games/FlickWordModal'));
-const TriviaModal = lazy(() => import('./games/TriviaModal'));
+const FlickWordModal = lazy(() => import("./games/FlickWordModal"));
+const TriviaModal = lazy(() => import("./games/TriviaModal"));
 
 interface Post {
   id: string;
@@ -29,7 +29,7 @@ interface Post {
 // ⚠️ FIXED: Memoize component to prevent unnecessary re-renders from parent
 const CommunityPanel = memo(function CommunityPanel() {
   // ⚠️ REMOVED: flickerDiagnostics logging disabled
-  
+
   const translations = useTranslations();
   const [flickWordModalOpen, setFlickWordModalOpen] = useState(false);
   const [triviaModalOpen, setTriviaModalOpen] = useState(false);
@@ -53,14 +53,14 @@ const CommunityPanel = memo(function CommunityPanel() {
     // Determine API URL - use relative URL in dev (goes through Vite proxy) or env var
     // In dev mode, use relative URL to go through Vite proxy to backend
     // In production, use VITE_API_URL or skip if pointing to localhost
-    const apiUrl = import.meta.env.DEV 
-      ? '' // Relative URL - Vite proxy will forward to backend
-      : (import.meta.env.VITE_API_URL || 'http://localhost:4000');
-    
+    const apiUrl = import.meta.env.DEV
+      ? "" // Relative URL - Vite proxy will forward to backend
+      : import.meta.env.VITE_API_URL || "http://localhost:4000";
+
     // Skip fetch in production if API URL is localhost (backend not available)
-    if (!import.meta.env.DEV && apiUrl.includes('localhost')) {
+    if (!import.meta.env.DEV && apiUrl.includes("localhost")) {
       setPostsLoading(false);
-      setPostsError('Community features require a backend server.');
+      setPostsError("Community features require a backend server.");
       setPosts([]);
       hasFetchedRef.current = true;
       return;
@@ -70,13 +70,15 @@ const CommunityPanel = memo(function CommunityPanel() {
       fetchingRef.current = true;
       setPostsLoading(true);
       setPostsError(null);
-      
-      const response = await fetch(`${apiUrl}/api/v1/posts?page=1&pageSize=5&sort=newest`);
-      
+
+      const response = await fetch(
+        `${apiUrl}/api/v1/posts?page=1&pageSize=5&sort=newest`
+      );
+
       if (!response.ok) {
         throw new Error(`Failed to fetch posts: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       const newPosts = data.posts || [];
       // ⚠️ REMOVED: flickerDiagnostics logging disabled
@@ -84,12 +86,15 @@ const CommunityPanel = memo(function CommunityPanel() {
       setPosts(newPosts);
       hasFetchedRef.current = true;
     } catch (error) {
-      console.error('[CommunityPanel] Error fetching posts:', error);
+      console.error("[CommunityPanel] Error fetching posts:", error);
       // More user-friendly error message
-      const errorMsg = error instanceof TypeError && error.message.includes('fetch')
-        ? 'Unable to connect to server. The backend may not be running.'
-        : (error instanceof Error ? error.message : 'Failed to load posts');
-      
+      const errorMsg =
+        error instanceof TypeError && error.message.includes("fetch")
+          ? "Unable to connect to server. The backend may not be running."
+          : error instanceof Error
+            ? error.message
+            : "Failed to load posts";
+
       // ⚠️ REMOVED: flickerDiagnostics logging disabled
       prevErrorRef.current = errorMsg;
       prevPostsRef.current = [];
@@ -120,7 +125,7 @@ const CommunityPanel = memo(function CommunityPanel() {
 
   // Use global game functions if available
   const openFlickWord = () => {
-    if (typeof (window as any).openFlickWordModal === 'function') {
+    if (typeof (window as any).openFlickWordModal === "function") {
       (window as any).openFlickWordModal();
     } else {
       setFlickWordModalOpen(true);
@@ -128,13 +133,16 @@ const CommunityPanel = memo(function CommunityPanel() {
   };
 
   const handlePostClick = (slug: string) => {
-    window.history.pushState({}, '', `/posts/${slug}`);
-    window.dispatchEvent(new Event('pushstate'));
+    window.history.pushState({}, "", `/posts/${slug}`);
+    window.dispatchEvent(new Event("pushstate"));
   };
 
   return (
     <div className="relative">
-      <div data-rail="community" className="grid md:grid-cols-3 gap-4 items-stretch">
+      <div
+        data-rail="community"
+        className="grid md:grid-cols-3 gap-4 items-stretch"
+      >
         {/* Left: Player (spans 1 column) */}
         <div className="md:col-span-1">
           <CommunityPlayer />
@@ -143,53 +151,82 @@ const CommunityPanel = memo(function CommunityPanel() {
         {/* Middle: Stacked Games (spans 1 column) */}
         <div className="grid grid-rows-[1fr_1fr] gap-4 h-full">
           {/* FlickWord Game Card */}
-          <div 
+          <div
             className="rounded-2xl bg-neutral-900 border border-white/5 p-4 flex flex-col justify-between cursor-pointer hover:bg-neutral-800 transition-colors"
             onClick={openFlickWord}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                openFlickWord();
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Play FlickWord game"
           >
             <div className="w-full">
               <h3 className="text-sm font-semibold text-neutral-200 mb-2">
-                {translations.flickword || 'FlickWord'}
+                {translations.flickword || "FlickWord"}
               </h3>
               <p className="text-xs text-neutral-400 mb-3">
-                {translations.flickword_tagline || 'Wordle-style daily word play'}
+                {translations.flickword_tagline ||
+                  "Wordle-style daily word play"}
               </p>
             </div>
-            
+
             {/* Stats Display */}
-            <div className="mt-auto">
+            <div
+              className="mt-auto"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
               <FlickWordStats />
             </div>
-            
+
             <div className="mt-3">
-              <button 
+              <button
                 className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   openFlickWord();
                 }}
+                aria-label="Play FlickWord now"
               >
-                {translations.play_now || 'Play Now'}
+                {translations.play_now || "Play Now"}
               </button>
             </div>
           </div>
 
           {/* Trivia Game Card */}
           <div
-            className="rounded-2xl bg-neutral-900 border border-white/5 p-4 flex flex-col justify-between cursor-pointer hover:bg-neutral-800 transition-colors"
+            className="rounded-2xl bg-neutral-900 border border-white/5 p-4 flex flex-col justify-between"
+            role="button"
+            tabIndex={0}
+            aria-label="Daily Trivia game card. Click to play."
             onClick={() => setTriviaModalOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setTriviaModalOpen(true);
+              }
+            }}
           >
             <div className="w-full">
               <h3 className="text-sm font-semibold text-neutral-200 mb-2">
-                {translations.daily_trivia || 'Daily Trivia'}
+                {translations.daily_trivia || "Daily Trivia"}
               </h3>
               <p className="text-xs text-neutral-400 mb-3">
-                {translations.daily_trivia_tagline || 'Fresh question, new bragging rights'}
+                {translations.daily_trivia_tagline ||
+                  "Fresh question, new bragging rights"}
               </p>
             </div>
 
             {/* Stats Display */}
-            <div className="mt-auto mb-3">
+            <div
+              className="mt-auto mb-3"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
               <TriviaStats />
             </div>
 
@@ -200,8 +237,9 @@ const CommunityPanel = memo(function CommunityPanel() {
                   e.stopPropagation();
                   setTriviaModalOpen(true);
                 }}
+                aria-label="Play Daily Trivia now"
               >
-                {translations.play_now || 'Play Now'}
+                {translations.play_now || "Play Now"}
               </button>
             </div>
           </div>
@@ -211,21 +249,21 @@ const CommunityPanel = memo(function CommunityPanel() {
         <div className="rounded-2xl bg-neutral-900 border border-white/5 p-4 flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-neutral-200">
-              {'Recent Posts'}
+              {"Recent Posts"}
             </h3>
             <button
               onClick={() => setNewPostModalOpen(true)}
               className="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors"
               style={{
-                backgroundColor: 'var(--accent-primary)',
-                color: '#fff',
+                backgroundColor: "var(--accent-primary)",
+                color: "#fff",
               }}
               aria-label="Create new post"
             >
               Post
             </button>
           </div>
-          
+
           {postsLoading ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-xs text-neutral-400">Loading posts...</div>
@@ -242,12 +280,12 @@ const CommunityPanel = memo(function CommunityPanel() {
             <div className="flex-1 space-y-3 overflow-y-auto">
               {posts.map((post) => {
                 const publishDate = post.publishedAt
-                  ? new Date(post.publishedAt).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
+                  ? new Date(post.publishedAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
                     })
                   : null;
-                
+
                 return (
                   <div
                     key={post.id}
@@ -263,7 +301,11 @@ const CommunityPanel = memo(function CommunityPanel() {
                       </p>
                     )}
                     <div className="flex items-center gap-2 text-xs text-neutral-500">
-                      <span>{post.author?.username || post.author?.name || 'Unknown'}</span>
+                      <span>
+                        {post.author?.username ||
+                          post.author?.name ||
+                          "Unknown"}
+                      </span>
                       {publishDate && (
                         <>
                           <span>·</span>
@@ -280,7 +322,9 @@ const CommunityPanel = memo(function CommunityPanel() {
       </div>
 
       {/* FlickWord Modal - Now rendered via Portal */}
-      <Suspense fallback={<div className="loading-spinner">Loading FlickWord...</div>}>
+      <Suspense
+        fallback={<div className="loading-spinner">Loading FlickWord...</div>}
+      >
         <FlickWordModal
           isOpen={flickWordModalOpen}
           onClose={() => setFlickWordModalOpen(false)}
@@ -288,7 +332,9 @@ const CommunityPanel = memo(function CommunityPanel() {
       </Suspense>
 
       {/* Trivia Modal - Now rendered via Portal */}
-      <Suspense fallback={<div className="loading-spinner">Loading Trivia...</div>}>
+      <Suspense
+        fallback={<div className="loading-spinner">Loading Trivia...</div>}
+      >
         <TriviaModal
           isOpen={triviaModalOpen}
           onClose={() => setTriviaModalOpen(false)}

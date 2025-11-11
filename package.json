@@ -1,6 +1,6 @@
 {
   "name": "flicklet-tv-tracker",
-  "version": "28.163.0",
+  "version": "28.164.0",
   "description": "Flicklet - TV & Movie Tracker",
   "main": "www/index.html",
   "scripts": {
@@ -35,7 +35,7 @@
     "@playwright/test": "^1.55.0",
     "dotenv": "^16.3.1",
     "firebase": "^10.14.1",
-    "netlify-cli": "^23.9.5",
+    "netlify-cli": "^23.10.0",
     "playwright": "^1.55.0"
   },
   "devDependencies": {

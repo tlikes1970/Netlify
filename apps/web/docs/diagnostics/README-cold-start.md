@@ -159,3 +159,4 @@ These logs are suppressed by default to keep the console clean.
 - All diagnostics are opt-in only - they never run unless explicitly enabled
 - Data is always captured when enabled, but downloads are opt-in separately
 
+
