@@ -372,26 +372,29 @@
   }
 }
 
-.fw-tile.correct {
-  background-color: var(--fw-color-correct);
-  border-color: var(--fw-color-correct);
-  color: white;
+.fw-tile.correct,
+[data-fw-el="tile"].correct {
+  background-color: var(--fw-color-correct) !important;
+  border-color: var(--fw-color-correct) !important;
+  color: white !important;
   animation: correctReveal 0.6s var(--fw-animation-timing) forwards;
   animation-delay: var(--reveal-delay, 0ms);
 }
 
-.fw-tile.present {
-  background-color: var(--fw-color-present);
-  border-color: var(--fw-color-present);
-  color: white;
+.fw-tile.present,
+[data-fw-el="tile"].present {
+  background-color: var(--fw-color-present) !important;
+  border-color: var(--fw-color-present) !important;
+  color: white !important;
   animation: presentReveal 0.6s var(--fw-animation-timing) forwards;
   animation-delay: var(--reveal-delay, 0ms);
 }
 
-.fw-tile.absent {
-  background-color: var(--fw-color-absent);
-  border-color: var(--fw-color-absent);
-  color: white;
+.fw-tile.absent,
+[data-fw-el="tile"].absent {
+  background-color: var(--fw-color-absent) !important;
+  border-color: var(--fw-color-absent) !important;
+  color: white !important;
   animation: absentReveal 0.6s var(--fw-animation-timing) forwards;
   animation-delay: var(--reveal-delay, 0ms);
 }
@@ -601,6 +604,238 @@
 }
 
 .fw-btn.fw-close:hover {
+  background-color: var(--fw-color-btn-hover);
+}
+
+/* ============================================
+   PRO CHIP (Purple, Non-Annoying)
+   ============================================ */
+.fw-pro-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fw-spacing-sm);
+  padding: var(--fw-spacing-md) var(--fw-spacing-lg);
+  margin: var(--fw-spacing-md) auto 0;
+  max-width: 100%;
+  background: linear-gradient(135deg, #9b59b4 0%, #8e44ad 100%); /* Purple gradient */
+  color: white;
+  border-radius: var(--fw-radius-md);
+  box-shadow: 0 4px 12px rgba(155, 89, 180, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.fw-pro-chip p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: var(--fw-font-weight-medium);
+  letter-spacing: 0.3px;
+}
+
+.fw-pro-chip p strong {
+  font-weight: var(--fw-font-weight-bold);
+}
+
+.fw-pro-chip-dismiss {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color var(--fw-animation-fast);
+}
+
+.fw-pro-chip-dismiss:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.fw-pro-chip-dismiss:active {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   LOST SCREEN
+   ============================================ */
+.fw-lost-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: var(--fw-spacing-md);
+}
+
+.fw-lost-content {
+  background-color: var(--fw-color-bg);
+  border-radius: var(--fw-radius-lg);
+  padding: var(--fw-spacing-xl);
+  max-width: 400px;
+  width: 100%;
+  box-shadow: var(--fw-shadow-lg);
+  text-align: center;
+}
+
+.fw-lost-content h2 {
+  margin: 0 0 var(--fw-spacing-md) 0;
+  font-size: 24px;
+  font-weight: var(--fw-font-weight-bold);
+  color: var(--fw-color-text);
+}
+
+.fw-lost-word {
+  margin: 0 0 var(--fw-spacing-lg) 0;
+  font-size: 18px;
+  color: var(--fw-color-text);
+}
+
+.fw-lost-word strong {
+  color: var(--fw-color-correct);
+  font-size: 20px;
+}
+
+.fw-lost-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fw-spacing-sm);
+  margin-top: var(--fw-spacing-lg);
+}
+
+.fw-btn-explore {
+  background-color: var(--fw-color-accent);
+  color: white;
+}
+
+.fw-btn-explore:hover {
+  background-color: var(--fw-color-btn-hover);
+}
+
+.fw-btn-share {
+  background-color: var(--fw-color-correct);
+  color: white;
+}
+
+.fw-btn-share:hover {
+  background-color: #5a8a54;
+}
+
+.fw-btn-stats {
+  background-color: var(--fw-color-accent);
+  color: white;
+}
+
+.fw-btn-stats:hover {
+  background-color: var(--fw-color-btn-hover);
+}
+
+/* ============================================
+   SHARE MODAL
+   ============================================ */
+.fw-share-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: var(--fw-spacing-md);
+}
+
+.fw-share-content {
+  background-color: var(--fw-color-bg);
+  border-radius: var(--fw-radius-lg);
+  padding: var(--fw-spacing-xl);
+  max-width: 400px;
+  width: 100%;
+  box-shadow: var(--fw-shadow-lg);
+  text-align: center;
+}
+
+.fw-share-content h2 {
+  margin: 0 0 var(--fw-spacing-md) 0;
+  font-size: 24px;
+  font-weight: var(--fw-font-weight-bold);
+  color: var(--fw-color-text);
+}
+
+.fw-share-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fw-spacing-xs);
+  margin: var(--fw-spacing-lg) 0;
+  align-items: center;
+}
+
+.fw-share-row {
+  display: flex;
+  gap: var(--fw-spacing-xs);
+}
+
+.fw-share-tile {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  border-radius: var(--fw-radius-sm);
+  background-color: var(--fw-color-bg);
+  border: 2px solid var(--fw-color-border);
+}
+
+.fw-share-tile.correct {
+  background-color: var(--fw-color-correct);
+  border-color: var(--fw-color-correct);
+}
+
+.fw-share-tile.present {
+  background-color: var(--fw-color-present);
+  border-color: var(--fw-color-present);
+}
+
+.fw-share-tile.absent {
+  background-color: var(--fw-color-absent);
+  border-color: var(--fw-color-absent);
+}
+
+.fw-share-actions {
+  display: flex;
+  gap: var(--fw-spacing-sm);
+  justify-content: center;
+  margin-top: var(--fw-spacing-lg);
+}
+
+.fw-btn-primary {
+  background-color: var(--fw-color-accent);
+  color: white;
+}
+
+.fw-btn-primary:hover {
+  background-color: var(--fw-color-btn-hover);
+}
+
+.fw-btn-secondary {
+  background-color: var(--fw-color-btn);
+  color: white;
+}
+
+.fw-btn-secondary:hover {
   background-color: var(--fw-color-btn-hover);
 }
 

@@ -10,7 +10,6 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSettings } from "@/lib/settings";
 import { getTodaysWord } from "../../lib/dailyWordApi";
 import { validateWord } from "../../lib/words/validateWord";
-import FlickWordTileSizeTool from "./FlickWordTileSizeTool";
 
 // Game configuration
 const KEYBOARD_ROWS = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
@@ -49,6 +48,7 @@ interface GameState {
 interface FlickWordGameProps {
   onClose?: () => void;
   onGameComplete?: (won: boolean, guesses: number) => void;
+  onShowStats?: () => void;
 }
 
 // Saved game state (excludes transient animation state)
@@ -148,6 +148,7 @@ function clearGameState(): void {
 export default function FlickWordGame({
   onClose,
   onGameComplete,
+  onShowStats,
 }: FlickWordGameProps) {
   const settings = useSettings();
   const [game, setGame] = useState<GameState>({
@@ -167,30 +168,13 @@ export default function FlickWordGame({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isProUser, setIsProUser] = useState(false);
   const [gamesCompletedToday, setGamesCompletedToday] = useState(0);
+  const [showLostScreen, setShowLostScreen] = useState(false);
+  const [showWinScreen, setShowWinScreen] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showProChip, setShowProChip] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
   const notificationTimeoutRef = useRef<number | null>(null);
   const tileRefs = useRef<(HTMLDivElement | null)[][]>([]);
-
-  // Dev tool: Show tile size tool (toggle with 'T' key)
-  const [showTileTool, setShowTileTool] = useState(false);
-
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      // Press 'T' to toggle tile size tool
-      if (e.key === "t" || e.key === "T") {
-        if (
-          e.target instanceof HTMLInputElement ||
-          e.target instanceof HTMLTextAreaElement
-        ) {
-          return; // Don't toggle if typing in an input
-        }
-        setShowTileTool((prev) => !prev);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
-  }, []);
 
   // Game limits: 1 for regular, 3 for Pro
   const MAX_GAMES_FREE = 1;
@@ -214,8 +198,9 @@ export default function FlickWordGame({
       const today = new Date().toISOString().slice(0, 10);
       const key = `flickword:games-completed:${today}`;
       localStorage.setItem(key, String(count));
-    } catch {
+    } catch (e) {
       // Ignore errors
+      void e;
     }
   };
 
@@ -328,10 +313,10 @@ export default function FlickWordGame({
   );
 
   // Force load new word (for testing - only in dev mode)
+  // Reserved for future dev testing feature
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _handleNewWord = useCallback(async () => {
-    // Reserved for future dev testing feature
-    void _handleNewWord;
+    void _handleNewWord; // Suppress unused warning
     // Only allow in development mode
     if (import.meta.env.PROD) return;
     try {
@@ -652,13 +637,17 @@ export default function FlickWordGame({
             setGamesCompletedToday(newGamesCompleted);
             saveGamesCompletedToday(newGamesCompleted);
             onGameComplete?.(true, newGuesses.length);
+            // Show win screen after animation
+            setTimeout(() => {
+              setShowWinScreen(true);
+              // Show Pro chip if free user and limit reached
+              if (!isProUser && newGamesCompleted >= MAX_GAMES_FREE) {
+                setShowProChip(true);
+              }
+            }, 500);
           }, animationDelay);
         } else if (newGuesses.length === prev.maxGuesses) {
           setTimeout(() => {
-            showNotification(
-              `Game over! The word was: ${currentTarget}`,
-              "error"
-            );
             setGame((p) => {
               const completedState = {
                 ...p,
@@ -674,6 +663,14 @@ export default function FlickWordGame({
             setGamesCompletedToday(newGamesCompleted);
             saveGamesCompletedToday(newGamesCompleted);
             onGameComplete?.(false, newGuesses.length);
+            // Show lost screen after animation
+            setTimeout(() => {
+              setShowLostScreen(true);
+              // Show Pro chip if free user and limit reached
+              if (!isProUser && newGamesCompleted >= MAX_GAMES_FREE) {
+                setShowProChip(true);
+              }
+            }, 500);
           }, animationDelay);
         } else {
           setTimeout(() => {
@@ -719,6 +716,85 @@ export default function FlickWordGame({
   useEffect(() => {
     initializeGame();
   }, [initializeGame]);
+
+  // Handle explore shows button - navigate to search with word
+  const handleExploreShows = useCallback(() => {
+    setShowLostScreen(false);
+    // Dispatch custom event to trigger search in App
+    window.dispatchEvent(new CustomEvent('flickword:explore', {
+      detail: { word: game.target }
+    }));
+    // Also try to set search via localStorage for App to pick up
+    try {
+      localStorage.setItem('flickword:search-word', game.target);
+    } catch (e) {
+      console.warn('Failed to set search word:', e);
+    }
+    // Close modal and navigate
+    if (onClose) {
+      onClose();
+    }
+    // Navigate to discovery/search view
+    window.history.pushState({}, '', '/');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    window.dispatchEvent(new CustomEvent('pushstate'));
+  }, [game.target, onClose]);
+
+  // Generate share text (Wordle-style grid)
+  const generateShareText = useCallback(() => {
+    const lines: string[] = [];
+    lines.push(`FlickWord ${new Date().toISOString().slice(0, 10)}`);
+    lines.push('');
+    
+    for (let i = 0; i < game.guesses.length; i++) {
+      const result = game.lastResults[i] || [];
+      const line = result.map(status => {
+        if (status === 'correct') return '🟩';
+        if (status === 'present') return '🟨';
+        return '⬜';
+      }).join('');
+      lines.push(line);
+    }
+    
+    lines.push('');
+    lines.push('Play FlickWord at flicklet.app');
+    
+    return lines.join('\n');
+  }, [game.guesses, game.lastResults]);
+
+  // Handle share
+  const handleShare = useCallback(async () => {
+    const shareText = generateShareText();
+    const shareUrl = `${window.location.origin}/?game=flickword`;
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'FlickWord',
+          text: shareText,
+          url: shareUrl
+        });
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
+        showNotification('Share text copied to clipboard!', 'success');
+      }
+      setShowShareModal(false);
+    } catch (error) {
+      // User cancelled or error
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('Share failed:', error);
+        // Fallback to clipboard
+        try {
+          await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
+          showNotification('Share text copied to clipboard!', 'success');
+          setShowShareModal(false);
+        } catch (_clipboardError) {
+          showNotification('Failed to share', 'error');
+        }
+      }
+    }
+  }, [generateShareText, showNotification]);
 
   // Render game grid with enhanced accessibility and animations
   const renderGrid = () => {
@@ -976,7 +1052,6 @@ export default function FlickWordGame({
       aria-label="FlickWord game"
       aria-describedby="flickword-description"
     >
-      <FlickWordTileSizeTool isVisible={showTileTool} />
       {/* Hidden description for screen readers */}
       <div id="flickword-description" className="sr-only">
         Word guessing game. Guess the 5-letter word in {game.maxGuesses}{" "}
@@ -1068,16 +1143,20 @@ export default function FlickWordGame({
           {renderGrid()}
         </div>
 
-        {/* Pro Upsell Message - Show when game is done or when limit reached */}
-        {!isProUser && gamesCompletedToday >= MAX_GAMES_FREE && (
-          <div className="fw-pro-upsell">
-            <p>
-              🔒 Get Pro for 2 more games! Upgrade to play 3 games per day
-              instead of 1.
-            </p>
+        {/* Pro Chip - Purple, shows only after game ends */}
+        {showProChip && game.done && (
+          <div className="fw-pro-chip">
+            <p><strong>Unlock 2 more rounds</strong> – Go Pro</p>
+            <button
+              className="fw-pro-chip-dismiss"
+              onClick={() => setShowProChip(false)}
+              aria-label="Dismiss Pro upgrade message"
+            >
+              ×
+            </button>
           </div>
         )}
-        {isProUser && gamesCompletedToday >= MAX_GAMES_PRO && (
+        {isProUser && gamesCompletedToday >= MAX_GAMES_PRO && game.done && (
           <div className="fw-games-limit">
             <p>
               ✅ You&apos;ve completed all 3 games today! Come back tomorrow for
@@ -1109,6 +1188,121 @@ export default function FlickWordGame({
               Close
             </button>
           )}
+        </div>
+      )}
+
+      {/* Win Screen Modal */}
+      {showWinScreen && (
+        <div className="fw-lost-screen">
+          <div className="fw-lost-content">
+            <h2>🎉 Congratulations!</h2>
+            <p className="fw-lost-word">You guessed it in <strong>{game.guesses.length}</strong> {game.guesses.length === 1 ? 'guess' : 'guesses'}!</p>
+            <p className="fw-lost-word">The word was: <strong>{game.target}</strong></p>
+            <div className="fw-lost-actions">
+              <button
+                className="fw-btn fw-btn-share"
+                onClick={() => {
+                  setShowShareModal(true);
+                  setShowWinScreen(false);
+                }}
+              >
+                Share
+              </button>
+              {onShowStats && (
+                <button
+                  className="fw-btn fw-btn-stats"
+                  onClick={() => {
+                    setShowWinScreen(false);
+                    onShowStats();
+                  }}
+                >
+                  View Stats
+                </button>
+              )}
+              <button
+                className="fw-btn fw-btn-close"
+                onClick={() => setShowWinScreen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lost Screen Modal */}
+      {showLostScreen && (
+        <div className="fw-lost-screen">
+          <div className="fw-lost-content">
+            <h2>Game Over!</h2>
+            <p className="fw-lost-word">The word was: <strong>{game.target}</strong></p>
+            <div className="fw-lost-actions">
+              <button
+                className="fw-btn fw-btn-explore"
+                onClick={handleExploreShows}
+              >
+                Explore shows titled &quot;{game.target}&quot;
+              </button>
+              <button
+                className="fw-btn fw-btn-share"
+                onClick={() => {
+                  setShowShareModal(true);
+                  setShowLostScreen(false);
+                }}
+              >
+                Share
+              </button>
+              <button
+                className="fw-btn fw-btn-close"
+                onClick={() => setShowLostScreen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fw-share-modal">
+          <div className="fw-share-content">
+            <h2>Share Your Results</h2>
+            <div className="fw-share-grid">
+              {game.guesses.map((guess, i) => {
+                const result = game.lastResults[i] || [];
+                return (
+                  <div key={i} className="fw-share-row">
+                    {result.map((status, j) => (
+                      <div
+                        key={j}
+                        className={`fw-share-tile ${status}`}
+                        aria-label={`${guess[j]}, ${status}`}
+                      >
+                        {status === 'correct' && '🟩'}
+                        {status === 'present' && '🟨'}
+                        {status === 'absent' && '⬜'}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="fw-share-actions">
+              <button
+                className="fw-btn fw-btn-primary"
+                onClick={handleShare}
+              >
+                Share
+              </button>
+              <button
+                className="fw-btn fw-btn-secondary"
+                onClick={() => setShowShareModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

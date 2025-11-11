@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ExtrasVideo } from '../lib/extras/types';
 import { extrasProvider } from '../lib/extras/extrasProvider';
+import { useSettings, settingsManager } from '../lib/settings';
 
 interface UGCSubmission {
   id: string;
@@ -22,12 +23,33 @@ interface UGCSubmission {
  */
 
 export default function AdminExtrasPage() {
+  const settings = useSettings();
   const [videos, setVideos] = useState<ExtrasVideo[]>([]);
   const [ugcSubmissions, setUgcSubmissions] = useState<UGCSubmission[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedShow, setSelectedShow] = useState<string>('');
   const [showId, setShowId] = useState<number>(0);
-  const [activeTab, setActiveTab] = useState<'content' | 'comments' | 'videos'>('content');
+  const [activeTab, setActiveTab] = useState<'content' | 'comments' | 'videos' | 'pro'>('content');
+  
+  // Pro status
+  const isPro = settings.pro?.isPro ?? false;
+  
+  const handleTogglePro = () => {
+    const newProStatus = !isPro;
+    settingsManager.updateSettings({
+      pro: {
+        ...settings.pro,
+        isPro: newProStatus,
+        features: {
+          advancedNotifications: newProStatus,
+          themePacks: newProStatus,
+          socialFeatures: newProStatus,
+          bloopersAccess: newProStatus,
+          extrasAccess: newProStatus,
+        },
+      },
+    });
+  };
 
   const handleFetchVideos = async () => {
     if (!showId) return;
@@ -149,6 +171,16 @@ export default function AdminExtrasPage() {
             }`}
           >
             Video Submissions ({pendingUGC})
+          </button>
+          <button
+            onClick={() => setActiveTab('pro')}
+            className={`px-4 py-2 font-medium ${
+              activeTab === 'pro'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            Pro Status
           </button>
         </div>
         
@@ -386,6 +418,72 @@ export default function AdminExtrasPage() {
                 No video submissions found.
               </div>
             )}
+          </div>
+        )}
+
+        {/* Pro Status Tab */}
+        {activeTab === 'pro' && (
+          <div className="space-y-6">
+            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
+              <h2 className="text-2xl font-bold mb-4">Pro Status Management</h2>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-1">Pro Status</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Current status: <strong className={isPro ? 'text-green-600' : 'text-gray-500'}>
+                        {isPro ? 'Pro Enabled' : 'Pro Disabled'}
+                      </strong>
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isPro}
+                      onChange={handleTogglePro}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                {isPro && (
+                  <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                    <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">Pro Features Enabled:</h4>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-green-700 dark:text-green-300">
+                      <li>Advanced Notifications</li>
+                      <li>Theme Packs</li>
+                      <li>Social Features</li>
+                      <li>Bloopers Access</li>
+                      <li>Extras Access</li>
+                      <li>3 FlickWord games per day (vs 1 for free)</li>
+                      <li>50 Trivia questions (vs 10 for free)</li>
+                    </ul>
+                  </div>
+                )}
+
+                {!isPro && (
+                  <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Free Tier Limitations:</h4>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                      <li>1 FlickWord game per day</li>
+                      <li>10 Trivia questions per day</li>
+                      <li>No advanced notifications</li>
+                      <li>No theme packs</li>
+                      <li>No social features</li>
+                      <li>No bloopers/extras access</li>
+                    </ul>
+                  </div>
+                )}
+
+                <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    <strong>Note:</strong> This toggle controls Pro status for the current user. Changes are saved immediately to localStorage and will persist across sessions.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

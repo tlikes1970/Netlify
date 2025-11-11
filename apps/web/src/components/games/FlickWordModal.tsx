@@ -259,10 +259,9 @@ export default function FlickWordModal({
       ).handleFlickWordGameComplete(won, guesses);
     }
 
-    // Show stats after a brief delay
-    setTimeout(() => {
-      setShowStats(true);
-    }, 1500);
+    // Don't auto-show stats - let the win/lost screens stay visible
+    // Stats can be accessed via the win/lost screen buttons if needed
+    // This prevents the stats modal from replacing the game component and hiding the completion screens
   }, []);
 
   // Reset stats view when modal opens
@@ -367,6 +366,7 @@ export default function FlickWordModal({
               <FlickWordGame
                 onClose={onClose}
                 onGameComplete={handleGameComplete}
+                onShowStats={() => setShowStats(true)}
               />
             )}
           </main>

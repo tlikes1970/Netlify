@@ -275,6 +275,25 @@ export default function App() {
 
   const handleClear = () => setSearch({ q: '', genre: null, type: 'all' });
 
+  // Listen for FlickWord explore event
+  useEffect(() => {
+    const handleFlickWordExplore = (e: Event) => {
+      const customEvent = e as CustomEvent<{ word: string }>;
+      const word = customEvent.detail?.word;
+      if (word) {
+        // Set search and switch to discovery view
+        const nextQ = word.trim();
+        setSearch({ q: nextQ, genre: null, type: 'all' });
+        setView('discovery');
+      }
+    };
+
+    window.addEventListener('flickword:explore', handleFlickWordExplore);
+    return () => {
+      window.removeEventListener('flickword:explore', handleFlickWordExplore);
+    };
+  }, []);
+
   // For You configuration from settings
   const forYouRows = useForYouRows();
   const forYouContent = useForYouContent(forYouRows);
