@@ -100,3 +100,4 @@ None - all changes are backward compatible.
 3. Test on real devices (iOS, Android)
 4. Run accessibility audit (axe DevTools)
 5. Verify in all target browsers
+

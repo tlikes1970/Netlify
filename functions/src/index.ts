@@ -36,3 +36,6 @@ export { weeklyDigest } from "./weeklyDigest";
 
 // Export unsubscribe from separate file
 export { unsubscribe } from "./unsubscribe";
+
+// Export syncPostToPrisma from separate file
+export { syncPostToPrisma } from "./syncPostToPrisma";

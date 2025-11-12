@@ -98,8 +98,8 @@ export async function getPosts(request, res, next) {
         .filter(Boolean), // Filter out any null/undefined tags
     }));
 
-    // Firestore fallback: on page 1, always try to fill the page with Firestore if Prisma can't fill it
-    // (ignores total count - ensures new Firestore posts appear even if Prisma has many posts)
+    // Firestore fallback: on page 1, always check Firestore for new posts
+    // This ensures newly created posts appear immediately, even if Prisma is full
     if (page === 1) {
       try {
         const database = await getFirestore();
@@ -108,6 +108,7 @@ export async function getPosts(request, res, next) {
           const prismaSlugs = new Set(transformedPosts.map((p) => p.slug));
 
           // Query Firestore for additional posts
+          // Always fetch at least pageSize posts to ensure we catch new ones
           let firestoreQuery = database
             .collection("posts")
             .orderBy("publishedAt", "desc");
@@ -121,11 +122,14 @@ export async function getPosts(request, res, next) {
             );
           }
 
-          // Get enough to fill remaining slots (fetch a few extra to account for duplicates)
-          const neededCount = pageSize - transformedPosts.length;
+          // Always fetch enough to check for new posts (at least pageSize, or more if needed)
+          const neededCount = Math.max(pageSize - transformedPosts.length, pageSize);
+          console.log(`[getPosts] Querying Firestore: limit=${neededCount * 2}, Prisma posts=${transformedPosts.length}`);
           const firestoreSnapshot = await firestoreQuery
             .limit(neededCount * 2)
             .get();
+
+          console.log(`[getPosts] Firestore returned ${firestoreSnapshot.docs.length} documents`);
 
           // Transform Firestore docs to match Prisma post shape
           const firestorePosts = firestoreSnapshot.docs
@@ -163,6 +167,8 @@ export async function getPosts(request, res, next) {
 
           // Concatenate: Prisma posts first, then Firestore posts
           transformedPosts = [...transformedPosts, ...firestorePosts];
+
+          console.log(`[getPosts] Combined results: ${transformedPosts.length} total posts (${transformedPosts.length - firestorePosts.length} Prisma + ${firestorePosts.length} Firestore)`);
 
           // Update total count (add Firestore posts count to Prisma count)
           // Approximate: add number of Firestore posts fetched (simplified for performance)
@@ -290,9 +296,34 @@ export async function getPostBySlug(request, res, next) {
       return res.status(404).json({ error: "Not found" });
     }
 
+    // For Prisma posts, look up Firestore ID (needed for comments)
+    let firestoreId = null;
+    try {
+      const database = await getFirestore();
+      if (database) {
+        const postsReference = database.collection("posts");
+        const snapshot = await postsReference
+          .where("slug", "==", slug)
+          .limit(1)
+          .get();
+        if (!snapshot.empty) {
+          firestoreId = snapshot.docs[0].id;
+        }
+      }
+    } catch (firestoreError) {
+      // Log but don't fail - comments won't work if Firestore ID not found
+      console.error(
+        "[getPostBySlug] Error looking up Firestore ID:",
+        firestoreError.message
+      );
+    }
+
     // Transform tags array (for Prisma posts)
     const transformedPost = {
       ...post,
+      // Use Firestore ID if available (for comments), otherwise use Prisma ID
+      id: firestoreId || post.id,
+      firestoreId: firestoreId, // Also include as separate field for reference
       tags: post.tags.map((pt) => pt.tag || pt), // Handle both Prisma and Firestore formats
     };
 

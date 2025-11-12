@@ -2,7 +2,8 @@ import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { getPosts, getPostBySlug, getPostComments } from "./routes/posts.js";
 import { getUserByUsername } from "./routes/users.js";
-import { getTags } from "./routes/tags.js";
+import { getTags, createOrGetTags } from "./routes/tags.js";
+import { syncPost } from "./routes/sync.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { rateLimit } from "./middleware/rateLimit.js";
 
@@ -67,6 +68,8 @@ app.get("/api/v1/posts/:slug", getPostBySlug);
 app.get("/api/v1/posts/:slug/comments", getPostComments);
 app.get("/api/v1/users/:username", getUserByUsername);
 app.get("/api/v1/tags", getTags);
+app.post("/api/v1/tags", createOrGetTags);
+app.post("/api/v1/sync/post", syncPost);
 // Alias for testing: /api/feed maps to /api/v1/posts
 app.get("/api/feed", getPosts);
 

@@ -35,6 +35,14 @@
   to   = "/.netlify/functions/dict-proxy"
   status = 200
 
+# Backend API proxy (for localhost development)
+# Must be before SPA fallback to work correctly
+[[redirects]]
+  from = "/api/v1/*"
+  to   = "http://localhost:4000/api/v1/:splat"
+  status = 200
+  force = true
+
 # Hide a path
 [[redirects]]
   from = "/emails"

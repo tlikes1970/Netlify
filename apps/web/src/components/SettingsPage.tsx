@@ -3,6 +3,7 @@ import { useSettings, settingsManager, PersonalityLevel, getPersonalityText } fr
 import { useTranslations, useLanguage, changeLanguage } from '../lib/language';
 import { useCustomLists, customListManager } from '../lib/customLists';
 import { useUsername } from '../hooks/useUsername';
+import { useAuth } from '../hooks/useAuth';
 import { useLibrary, Library } from '../lib/storage';
 import type { MediaItem } from '../components/cards/card.types';
 import type { ListName } from '../state/library.types';
@@ -368,9 +369,57 @@ function GeneralTab({ settings, translations, currentLanguage, onShowNotInterest
 // Notifications Tab Component
 function NotificationsTab({ onOpenSettings, onOpenCenter }: { onOpenSettings: () => void; onOpenCenter: () => void }) {
   const settings = useSettings();
+  const { isAuthenticated, user } = useAuth();
+  const [emailSubscribed, setEmailSubscribed] = useState<boolean | null>(null);
+  const [updatingEmailSub, setUpdatingEmailSub] = useState(false);
   
   // Check if user is Pro (simplified check)
   const isProUser = settings.pro || false;
+
+  // Fetch email subscription status
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchEmailSubscriptionStatus();
+    }
+  }, [isAuthenticated, user]);
+
+  const fetchEmailSubscriptionStatus = async () => {
+    try {
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('../lib/firebaseBootstrap');
+      const userRef = doc(db, 'users', user!.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        setEmailSubscribed(data.emailSubscriber === true);
+      } else {
+        setEmailSubscribed(false);
+      }
+    } catch (err) {
+      console.error('Failed to fetch email subscription status:', err);
+      setEmailSubscribed(false);
+    }
+  };
+
+  const handleEmailSubscriptionToggle = async (enabled: boolean) => {
+    if (!isAuthenticated || !user || updatingEmailSub) return;
+    
+    setUpdatingEmailSub(true);
+    try {
+      const { doc, updateDoc } = await import('firebase/firestore');
+      const { db } = await import('../lib/firebaseBootstrap');
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        emailSubscriber: enabled,
+      });
+      setEmailSubscribed(enabled);
+    } catch (err) {
+      console.error('Failed to update email subscription:', err);
+      alert('Failed to update email subscription. Please try again.');
+    } finally {
+      setUpdatingEmailSub(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -423,6 +472,38 @@ function NotificationsTab({ onOpenSettings, onOpenCenter }: { onOpenSettings: ()
           </div>
         </button>
       </div>
+
+      {/* Email Subscription Toggle */}
+      {isAuthenticated && (
+        <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', border: '1px solid' }}>
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h4 className="text-lg font-medium mb-1" style={{ color: 'var(--text)' }}>📧 Weekly Email Digest</h4>
+              <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
+                Receive a weekly email with top posts, new comments, and mentions from the community hub.
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={emailSubscribed === true}
+                onChange={(e) => handleEmailSubscriptionToggle(e.target.checked)}
+                disabled={updatingEmailSub || emailSubscribed === null}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+          {emailSubscribed === null && (
+            <p className="text-xs mt-2" style={{ color: 'var(--muted)' }}>Loading...</p>
+          )}
+          {emailSubscribed === true && (
+            <p className="text-xs mt-2" style={{ color: 'var(--muted)' }}>
+              ✓ You'll receive weekly emails every Friday at 9 AM UTC
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Current Settings Summary */}
       <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', border: '1px solid' }}>
@@ -1835,7 +1916,7 @@ function SharingModal({ onClose }: { onClose: () => void }) {
     
     text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     text += `📱 Track your shows and movies with Flicklet!\n`;
-    text += `🔗 https://flicklet.app\n`;
+    text += `🔗 https://flicklet.netlify.app\n`;
     
     return text;
   };

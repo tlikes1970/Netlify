@@ -81,7 +81,15 @@ const CommunityPanel = memo(function CommunityPanel() {
 
       const data = await response.json();
       const newPosts = data.posts || [];
-      // ⚠️ REMOVED: flickerDiagnostics logging disabled
+      console.log("[CommunityPanel] Fetched posts:", {
+        count: newPosts.length,
+        total: data.total,
+        posts: newPosts.map((p: Post) => ({
+          id: p.id,
+          title: p.title,
+          slug: p.slug,
+        })),
+      });
       prevPostsRef.current = newPosts;
       setPosts(newPosts);
       hasFetchedRef.current = true;
@@ -118,9 +126,16 @@ const CommunityPanel = memo(function CommunityPanel() {
   }, []);
 
   const handlePostCreated = () => {
-    // Refresh posts list after new post is created
+    // Refresh posts list immediately after new post is created
+    console.log(
+      "[CommunityPanel] Post created callback triggered, refreshing posts..."
+    );
     hasFetchedRef.current = false; // Allow refetch after post creation
-    fetchPosts();
+    // Small delay to ensure Firestore write is complete
+    setTimeout(() => {
+      console.log("[CommunityPanel] Fetching posts after delay...");
+      fetchPosts();
+    }, 300);
   };
 
   // Use global game functions if available
@@ -277,7 +292,7 @@ const CommunityPanel = memo(function CommunityPanel() {
               <div className="text-xs text-neutral-400">No posts yet</div>
             </div>
           ) : (
-            <div className="flex-1 space-y-3 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto">
               {posts.map((post) => {
                 const publishDate = post.publishedAt
                   ? new Date(post.publishedAt).toLocaleDateString("en-US", {
@@ -290,7 +305,10 @@ const CommunityPanel = memo(function CommunityPanel() {
                   <div
                     key={post.id}
                     onClick={() => handlePostClick(post.slug)}
-                    className="cursor-pointer hover:bg-neutral-800/50 rounded-lg p-2 transition-colors"
+                    className="cursor-pointer hover:bg-neutral-800/50 rounded-lg p-3 transition-colors border border-neutral-800/50 hover:border-neutral-700/50 mb-3 last:mb-0"
+                    style={{
+                      backgroundColor: "rgba(0, 0, 0, 0.2)",
+                    }}
                   >
                     <h4 className="text-xs font-semibold text-neutral-200 mb-1 line-clamp-2">
                       {post.title}

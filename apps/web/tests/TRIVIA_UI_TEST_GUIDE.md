@@ -230,3 +230,4 @@ npx playwright install
 3. Update manual checklist with results
 4. Document any edge cases found
 5. Commit changes if all tests pass
+

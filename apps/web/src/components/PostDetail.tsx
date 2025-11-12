@@ -6,10 +6,12 @@
  * Dependencies: VoteBar, useAuth for user display
  */
 
-import { useEffect, useState } from 'react';
-import VoteBar from './VoteBar';
-import { useAuth } from '@/hooks/useAuth';
-import FlickletHeader from './FlickletHeader';
+import { useEffect, useState } from "react";
+import VoteBar from "./VoteBar";
+import { useAuth } from "@/hooks/useAuth";
+import FlickletHeader from "./FlickletHeader";
+import CommentComposer from "./CommentComposer";
+import CommentList from "./CommentList";
 
 interface PostDetailProps {
   slug: string;
@@ -47,26 +49,26 @@ export default function PostDetail({ slug }: PostDetailProps) {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Use relative URL in dev (goes through Vite proxy) or env var in production
-        const apiUrl = import.meta.env.DEV 
-          ? '' // Relative URL - Vite proxy will forward to backend
-          : (import.meta.env.VITE_API_URL || 'http://localhost:4000');
+        const apiUrl = import.meta.env.DEV
+          ? "" // Relative URL - Vite proxy will forward to backend
+          : import.meta.env.VITE_API_URL || "http://localhost:4000";
         const response = await fetch(`${apiUrl}/api/v1/posts/${slug}`);
-        
+
         if (!response.ok) {
           if (response.status === 404) {
-            setError('Post not found');
+            setError("Post not found");
           } else {
             setError(`Failed to load post: ${response.statusText}`);
           }
           return;
         }
-        
+
         const data = await response.json();
         setPost(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load post');
+        setError(err instanceof Error ? err.message : "Failed to load post");
       } finally {
         setLoading(false);
       }
@@ -76,13 +78,16 @@ export default function PostDetail({ slug }: PostDetailProps) {
   }, [slug]);
 
   const handleBack = () => {
-    window.history.pushState({}, '', '/');
-    window.dispatchEvent(new Event('pushstate'));
+    window.history.pushState({}, "", "/");
+    window.dispatchEvent(new Event("pushstate"));
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+      <div
+        className="min-h-screen"
+        style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
+      >
         <FlickletHeader
           appName="Flicklet"
           onSearch={() => {}}
@@ -91,7 +96,9 @@ export default function PostDetail({ slug }: PostDetailProps) {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading post...</p>
+            <p className="text-sm" style={{ color: "var(--muted)" }}>
+              Loading post...
+            </p>
           </div>
         </div>
       </div>
@@ -100,7 +107,10 @@ export default function PostDetail({ slug }: PostDetailProps) {
 
   if (error || !post) {
     return (
-      <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+      <div
+        className="min-h-screen"
+        style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
+      >
         <FlickletHeader
           appName="Flicklet"
           onSearch={() => {}}
@@ -109,8 +119,8 @@ export default function PostDetail({ slug }: PostDetailProps) {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center px-4">
             <h2 className="text-xl font-semibold mb-2">Error</h2>
-            <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
-              {error || 'Post not found'}
+            <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
+              {error || "Post not found"}
             </p>
             <button
               onClick={handleBack}
@@ -125,23 +135,26 @@ export default function PostDetail({ slug }: PostDetailProps) {
   }
 
   const publishDate = post.publishedAt
-    ? new Date(post.publishedAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+    ? new Date(post.publishedAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       })
-    : '';
+    : "";
 
-  const content = post.content || post.body || '';
+  const content = post.content || post.body || "";
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+    <div
+      className="min-h-screen"
+      style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
+    >
       <FlickletHeader
         appName="Flicklet"
         onSearch={() => {}}
         onClear={() => {}}
       />
-      
+
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Back Button */}
         <button
@@ -168,7 +181,9 @@ export default function PostDetail({ slug }: PostDetailProps) {
 
               {/* Author and Date */}
               <div className="flex items-center gap-2 mb-4 text-sm text-secondary">
-                <span>{post.author?.username || post.author?.name || 'Unknown'}</span>
+                <span>
+                  {post.author?.username || post.author?.name || "Unknown"}
+                </span>
                 {publishDate && (
                   <>
                     <span>·</span>
@@ -184,7 +199,10 @@ export default function PostDetail({ slug }: PostDetailProps) {
                     <span
                       key={tag.slug}
                       className="px-3 py-1 rounded-full text-xs font-medium bg-base"
-                      style={{ color: 'var(--muted)', border: '1px solid var(--line)' }}
+                      style={{
+                        color: "var(--muted)",
+                        border: "1px solid var(--line)",
+                      }}
                     >
                       {tag.name || tag.slug}
                     </span>
@@ -195,22 +213,40 @@ export default function PostDetail({ slug }: PostDetailProps) {
           </div>
 
           {/* Post Body */}
-          <div 
+          <div
             className="prose prose-invert max-w-none"
-            style={{ 
-              color: 'var(--text)',
+            style={{
+              color: "var(--text)",
             }}
           >
-            <div 
+            <div
               className="whitespace-pre-wrap text-secondary leading-relaxed"
-              style={{ 
-                color: 'var(--text-secondary)',
+              style={{
+                color: "var(--text-secondary)",
               }}
             >
               {content}
             </div>
           </div>
         </article>
+
+        {/* Comments Section */}
+        <div className="mt-8 bg-layer rounded-lg p-6 border border-line">
+          <h2
+            className="text-xl font-semibold mb-4"
+            style={{ color: "var(--text)" }}
+          >
+            Comments
+          </h2>
+
+          {/* Comment List - displays existing comments and replies */}
+          <div className="mb-6">
+            <CommentList postId={post.id} postAuthorId={post.author?.id} />
+          </div>
+
+          {/* Comment Composer - for writing new comments (at bottom) */}
+          <CommentComposer postId={post.id} />
+        </div>
       </main>
     </div>
   );
