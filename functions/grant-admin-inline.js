@@ -1,16 +1,20 @@
 // Run this in Firebase functions shell:
-// const { getAuth } = require('firebase-admin/auth');
-// const u = await getAuth().getUserByEmail('pprowten@gmail.com');
-// await getAuth().setCustomUserClaims(u.uid, { role: 'admin' });
-// console.log({ message: 'Admin role granted' });
+// firebase functions:shell
+// Then paste these commands:
 
-const { getAuth } = require('firebase-admin/auth');
+const { initializeApp } = require("firebase-admin/app");
+const { getAuth } = require("firebase-admin/auth");
 
-async function grantAdmin() {
-  const u = await getAuth().getUserByEmail('pprowten@gmail.com');
-  await getAuth().setCustomUserClaims(u.uid, { role: 'admin' });
-  return { message: 'Admin role granted' };
-}
+// Initialize with project ID (shell handles credentials)
+const app = initializeApp({ projectId: "flicklet-71dff" });
+const auth = getAuth(app);
 
-grantAdmin().then(console.log).catch(console.error);
-
+// Grant admin role
+const email = "likes.travis@gmail.com";
+const user = await auth.getUserByEmail(email);
+await auth.setCustomUserClaims(user.uid, { role: "admin" });
+console.log("✅ Admin role granted to", user.email);
+console.log("   User ID:", user.uid);
+console.log(
+  "\n⚠️  Note: User must sign out and sign back in for changes to take effect."
+);

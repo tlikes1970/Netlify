@@ -6,11 +6,19 @@
  * Dependencies: firebaseBootstrap, useAuth, ReplyList
  */
 
-import { useState, useEffect } from 'react';
-import { collection, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../lib/firebaseBootstrap';
-import { useAuth } from '../hooks/useAuth';
-import { ReplyList } from './ReplyList';
+import { useState, useEffect } from "react";
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+import { db } from "../lib/firebaseBootstrap";
+import { useAuth } from "../hooks/useAuth";
+import { useAdminRole } from "../hooks/useAdminRole";
+import { ReplyList } from "./ReplyList";
 
 interface Comment {
   id: string;
@@ -27,8 +35,12 @@ interface CommentListProps {
   postAuthorId?: string;
 }
 
-export default function CommentList({ postId, postAuthorId }: CommentListProps) {
+export default function CommentList({
+  postId,
+  postAuthorId,
+}: CommentListProps) {
   const { isAuthenticated, user } = useAuth();
+  const { isAdmin } = useAdminRole();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showReplyBox, setShowReplyBox] = useState<Record<string, boolean>>({});
@@ -42,30 +54,32 @@ export default function CommentList({ postId, postAuthorId }: CommentListProps) 
     let unsubscribe: (() => void) | null = null;
 
     // Kill switch: Firestore listeners disabled
-    import('../runtime/switches').then(({ isOff }) => {
-      if (isOff('ifire')) {
-        console.info('[CommentList] Firestore disabled via kill switch (ifire:off)');
+    import("../runtime/switches").then(({ isOff }) => {
+      if (isOff("ifire")) {
+        console.info(
+          "[CommentList] Firestore disabled via kill switch (ifire:off)"
+        );
         setLoading(false);
         return;
       }
-      
-      const commentsRef = collection(db, 'posts', postId, 'comments');
-      const q = query(commentsRef, orderBy('createdAt', 'asc'));
+
+      const commentsRef = collection(db, "posts", postId, "comments");
+      const q = query(commentsRef, orderBy("createdAt", "asc"));
 
       // Real-time listener
       unsubscribe = onSnapshot(
         q,
         (snapshot) => {
           const commentsData: Comment[] = [];
-          
+
           snapshot.forEach((doc) => {
             const data = doc.data();
             commentsData.push({
               id: doc.id,
-              authorId: data.authorId || '',
-              authorName: data.authorName || 'Anonymous',
-              authorAvatar: data.authorAvatar || '',
-              body: data.body || '',
+              authorId: data.authorId || "",
+              authorName: data.authorName || "Anonymous",
+              authorAvatar: data.authorAvatar || "",
+              body: data.body || "",
               createdAt: data.createdAt,
               updatedAt: data.updatedAt,
             });
@@ -75,12 +89,12 @@ export default function CommentList({ postId, postAuthorId }: CommentListProps) 
           setLoading(false);
         },
         (error) => {
-          console.error('Error listening to comments:', error);
+          console.error("Error listening to comments:", error);
           setLoading(false);
         }
       );
     });
-    
+
     // Cleanup function
     return () => {
       if (unsubscribe) {
@@ -92,25 +106,26 @@ export default function CommentList({ postId, postAuthorId }: CommentListProps) 
   const handleDelete = async (commentId: string, commentAuthorId: string) => {
     if (!isAuthenticated || !user) return;
 
-    // Check if user can delete (author or admin - admin check would go here)
-    const canDelete = user.uid === commentAuthorId || user.uid === postAuthorId;
-    
+    // Check if user can delete (comment author, post author, or admin)
+    const canDelete =
+      user.uid === commentAuthorId || user.uid === postAuthorId || isAdmin;
+
     if (!canDelete) {
-      alert('You can only delete your own comments');
+      alert("You can only delete your own comments or comments on your posts");
       return;
     }
 
-    if (!confirm('Are you sure you want to delete this comment?')) {
+    if (!confirm("Are you sure you want to delete this comment?")) {
       return;
     }
 
     try {
-      const commentRef = doc(db, 'posts', postId, 'comments', commentId);
+      const commentRef = doc(db, "posts", postId, "comments", commentId);
       await deleteDoc(commentRef);
       // Comment count will be updated automatically by Cloud Function
     } catch (error: any) {
-      console.error('Failed to delete comment:', error);
-      alert('Failed to delete comment. Please try again.');
+      console.error("Failed to delete comment:", error);
+      alert("Failed to delete comment. Please try again.");
     }
   };
 
@@ -124,7 +139,7 @@ export default function CommentList({ postId, postAuthorId }: CommentListProps) 
 
   if (comments.length === 0) {
     return (
-      <p className="text-sm py-4" style={{ color: 'var(--muted)' }}>
+      <p className="text-sm py-4" style={{ color: "var(--muted)" }}>
         No comments yet. Be the first to comment!
       </p>
     );
@@ -134,23 +149,27 @@ export default function CommentList({ postId, postAuthorId }: CommentListProps) 
     <div className="space-y-4">
       {comments.map((comment) => {
         const commentDate = comment.createdAt?.toDate
-          ? comment.createdAt.toDate().toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit',
+          ? comment.createdAt.toDate().toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
             })
           : comment.createdAt
-          ? new Date(comment.createdAt).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })
-          : '';
+            ? new Date(comment.createdAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
+            : "";
 
-        const canDelete = isAuthenticated && user && 
-          (user.uid === comment.authorId || user.uid === postAuthorId);
+        const canDelete =
+          isAuthenticated &&
+          user &&
+          (user.uid === comment.authorId ||
+            user.uid === postAuthorId ||
+            isAdmin);
 
         return (
           <div
@@ -167,14 +186,20 @@ export default function CommentList({ postId, postAuthorId }: CommentListProps) 
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>
+                  <span
+                    className="font-medium text-sm"
+                    style={{ color: "var(--text)" }}
+                  >
                     {comment.authorName}
                   </span>
-                  <span className="text-xs" style={{ color: 'var(--muted)' }}>
+                  <span className="text-xs" style={{ color: "var(--muted)" }}>
                     {commentDate}
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text)' }}>
+                <p
+                  className="text-sm leading-relaxed whitespace-pre-wrap"
+                  style={{ color: "var(--text)" }}
+                >
                   {comment.body}
                 </p>
               </div>
@@ -190,11 +215,16 @@ export default function CommentList({ postId, postAuthorId }: CommentListProps) 
             <div className="flex items-center gap-4 mt-2">
               {isAuthenticated && user && (
                 <button
-                  onClick={() => setShowReplyBox((s) => ({ ...s, [comment.id]: !s[comment.id] }))}
+                  onClick={() =>
+                    setShowReplyBox((s) => ({
+                      ...s,
+                      [comment.id]: !s[comment.id],
+                    }))
+                  }
                   className="text-sm hover:underline"
-                  style={{ color: 'var(--accent-primary)' }}
+                  style={{ color: "var(--accent-primary)" }}
                 >
-                  {showReplyBox[comment.id] ? 'Cancel' : 'Reply'}
+                  {showReplyBox[comment.id] ? "Cancel" : "Reply"}
                 </button>
               )}
 
@@ -202,7 +232,7 @@ export default function CommentList({ postId, postAuthorId }: CommentListProps) 
                 <button
                   onClick={() => handleDelete(comment.id, comment.authorId)}
                   className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 text-xs rounded hover:bg-red-500/10"
-                  style={{ color: 'var(--muted)' }}
+                  style={{ color: "var(--muted)" }}
                   title="Delete comment"
                 >
                   Delete
@@ -215,5 +245,3 @@ export default function CommentList({ postId, postAuthorId }: CommentListProps) 
     </div>
   );
 }
-
-

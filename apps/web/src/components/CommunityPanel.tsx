@@ -1,4 +1,6 @@
 import { useState, lazy, Suspense, useEffect, useRef, memo } from "react";
+import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
+import { db } from "../lib/firebaseBootstrap";
 import { useTranslations } from "@/lib/language";
 import FlickWordStats from "./games/FlickWordStats";
 import TriviaStats from "./games/TriviaStats";
@@ -43,26 +45,10 @@ const CommunityPanel = memo(function CommunityPanel() {
   const prevLoadingRef = useRef(true);
   const prevErrorRef = useRef<string | null>(null);
 
-  // Fetch posts from API
+  // Fetch posts from Firestore
   const fetchPosts = async () => {
     // Prevent multiple simultaneous fetches
     if (fetchingRef.current) {
-      return;
-    }
-
-    // Determine API URL - use relative URL in dev (goes through Vite proxy) or env var
-    // In dev mode, use relative URL to go through Vite proxy to backend
-    // In production, use VITE_API_URL or skip if pointing to localhost
-    const apiUrl = import.meta.env.DEV
-      ? "" // Relative URL - Vite proxy will forward to backend
-      : import.meta.env.VITE_API_URL || "http://localhost:4000";
-
-    // Skip fetch in production if API URL is localhost (backend not available)
-    if (!import.meta.env.DEV && apiUrl.includes("localhost")) {
-      setPostsLoading(false);
-      setPostsError("Community features require a backend server.");
-      setPosts([]);
-      hasFetchedRef.current = true;
       return;
     }
 
@@ -71,19 +57,38 @@ const CommunityPanel = memo(function CommunityPanel() {
       setPostsLoading(true);
       setPostsError(null);
 
-      const response = await fetch(
-        `${apiUrl}/api/v1/posts?page=1&pageSize=5&sort=newest`
+      // Query Firestore for recent posts
+      const postsRef = collection(db, "posts");
+      const postsQuery = query(
+        postsRef,
+        orderBy("publishedAt", "desc"),
+        limit(5)
       );
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch posts: ${response.statusText}`);
-      }
+      const snapshot = await getDocs(postsQuery);
+      const newPosts: Post[] = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          slug: data.slug || "",
+          title: data.title || "Untitled",
+          excerpt: data.excerpt,
+          publishedAt:
+            data.publishedAt?.toDate?.()?.toISOString() ||
+            new Date().toISOString(),
+          author: {
+            username: data.authorName,
+            name: data.authorName,
+          },
+          tags: (data.tagSlugs || []).map((slug: string) => ({
+            slug,
+            name: slug,
+          })),
+        };
+      });
 
-      const data = await response.json();
-      const newPosts = data.posts || [];
-      console.log("[CommunityPanel] Fetched posts:", {
+      console.log("[CommunityPanel] Fetched posts from Firestore:", {
         count: newPosts.length,
-        total: data.total,
         posts: newPosts.map((p: Post) => ({
           id: p.id,
           title: p.title,
@@ -95,22 +100,15 @@ const CommunityPanel = memo(function CommunityPanel() {
       hasFetchedRef.current = true;
     } catch (error) {
       console.error("[CommunityPanel] Error fetching posts:", error);
-      // More user-friendly error message
       const errorMsg =
-        error instanceof TypeError && error.message.includes("fetch")
-          ? "Unable to connect to server. The backend may not be running."
-          : error instanceof Error
-            ? error.message
-            : "Failed to load posts";
+        error instanceof Error ? error.message : "Failed to load posts";
 
-      // ⚠️ REMOVED: flickerDiagnostics logging disabled
       prevErrorRef.current = errorMsg;
       prevPostsRef.current = [];
       setPostsError(errorMsg);
       setPosts([]);
-      hasFetchedRef.current = true; // Mark as fetched even on error to prevent retry loop
+      hasFetchedRef.current = true;
     } finally {
-      // ⚠️ REMOVED: flickerDiagnostics logging disabled
       prevLoadingRef.current = false;
       setPostsLoading(false);
       fetchingRef.current = false;

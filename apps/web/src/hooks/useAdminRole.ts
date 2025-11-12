@@ -6,9 +6,9 @@
  * Dependencies: firebaseBootstrap (auth), useAuth (user)
  */
 
-import { useState, useEffect } from 'react';
-import { auth } from '../lib/firebaseBootstrap';
-import { useAuth } from './useAuth';
+import { useState, useEffect } from "react";
+import { auth } from "../lib/firebaseBootstrap";
+import { useAuth } from "./useAuth";
 
 export function useAdminRole() {
   const { user, loading: authLoading } = useAuth();
@@ -32,15 +32,24 @@ export function useAdminRole() {
       try {
         const currentUser = auth.currentUser;
         if (!currentUser) {
+          console.log("[useAdminRole] No current user");
           setIsAdmin(false);
           setLoading(false);
           return;
         }
 
+        console.log(
+          "[useAdminRole] Checking admin role for user:",
+          currentUser.uid
+        );
         const token = await currentUser.getIdTokenResult();
-        setIsAdmin(token.claims.role === 'admin');
+        console.log("[useAdminRole] Token claims:", token.claims);
+        console.log("[useAdminRole] Role claim:", token.claims.role);
+        const isAdminUser = token.claims.role === "admin";
+        console.log("[useAdminRole] Is admin?", isAdminUser);
+        setIsAdmin(isAdminUser);
       } catch (error) {
-        console.error('Error checking admin role:', error);
+        console.error("[useAdminRole] Error checking admin role:", error);
         setIsAdmin(false);
       } finally {
         setLoading(false);
@@ -52,4 +61,3 @@ export function useAdminRole() {
 
   return { isAdmin, loading };
 }
-

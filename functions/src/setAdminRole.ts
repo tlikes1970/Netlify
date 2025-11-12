@@ -6,19 +6,21 @@
  * Dependencies: firebase-admin/auth
  */
 
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getAuth } from 'firebase-admin/auth';
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { getAuth } from "firebase-admin/auth";
 
 export const setAdminRole = onCall(
-  { cors: true },
-  async (req) => {
-    if (!req.auth) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated');
+  {
+    cors: true,
+    region: "us-central1",
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    await getAuth().setCustomUserClaims(req.auth.uid, { role: 'admin' });
+    await getAuth().setCustomUserClaims(request.auth.uid, { role: "admin" });
 
-    return { message: 'Admin role granted' };
+    return { message: "Admin role granted" };
   }
 );
-

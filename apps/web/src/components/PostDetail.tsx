@@ -1,12 +1,14 @@
 /**
  * Process: Post Detail Component
  * Purpose: Display full post content with author, metadata, and tags
- * Data Source: API endpoint /api/v1/posts/:slug
+ * Data Source: Firestore posts collection (queried by slug)
  * Update Path: N/A - display component
  * Dependencies: VoteBar, useAuth for user display
  */
 
 import { useEffect, useState } from "react";
+import { collection, query, where, limit, getDocs } from "firebase/firestore";
+import { db } from "../lib/firebaseBootstrap";
 import VoteBar from "./VoteBar";
 import { useAuth } from "@/hooks/useAuth";
 import FlickletHeader from "./FlickletHeader";
@@ -50,24 +52,45 @@ export default function PostDetail({ slug }: PostDetailProps) {
         setLoading(true);
         setError(null);
 
-        // Use relative URL in dev (goes through Vite proxy) or env var in production
-        const apiUrl = import.meta.env.DEV
-          ? "" // Relative URL - Vite proxy will forward to backend
-          : import.meta.env.VITE_API_URL || "http://localhost:4000";
-        const response = await fetch(`${apiUrl}/api/v1/posts/${slug}`);
+        // Query Firestore for post by slug
+        const postsRef = collection(db, "posts");
+        const postsQuery = query(postsRef, where("slug", "==", slug), limit(1));
 
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError("Post not found");
-          } else {
-            setError(`Failed to load post: ${response.statusText}`);
-          }
+        const snapshot = await getDocs(postsQuery);
+
+        if (snapshot.empty) {
+          setError("Post not found");
+          setLoading(false);
           return;
         }
 
-        const data = await response.json();
-        setPost(data);
+        const doc = snapshot.docs[0];
+        const data = doc.data();
+
+        const postData: Post = {
+          id: doc.id,
+          slug: data.slug || "",
+          title: data.title || "Untitled",
+          content: data.body || data.content || "",
+          body: data.body || "",
+          excerpt: data.excerpt,
+          publishedAt:
+            data.publishedAt?.toDate?.()?.toISOString() ||
+            new Date().toISOString(),
+          author: {
+            id: data.authorId,
+            name: data.authorName,
+            username: data.authorName,
+          },
+          tags: (data.tagSlugs || []).map((slug: string) => ({
+            slug,
+            name: slug,
+          })),
+        };
+
+        setPost(postData);
       } catch (err) {
+        console.error("[PostDetail] Error fetching post:", err);
         setError(err instanceof Error ? err.message : "Failed to load post");
       } finally {
         setLoading(false);

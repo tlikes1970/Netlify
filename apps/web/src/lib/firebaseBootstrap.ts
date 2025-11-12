@@ -16,7 +16,7 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { getFirestore, serverTimestamp } from "firebase/firestore";
-import { getFunctions } from "firebase/functions";
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { GoogleAuthProvider, OAuthProvider } from "firebase/auth";
 
 // Firebase configuration
@@ -119,6 +119,20 @@ export function verifyAuthEnvironment(): {
 }
 
 export const functions = getFunctions(app);
+
+// Connect to Functions emulator in development
+if (import.meta.env.DEV && typeof window !== "undefined") {
+  try {
+    connectFunctionsEmulator(functions, "localhost", 5001);
+    console.log("[FirebaseBootstrap] Connected to Functions emulator");
+  } catch (error) {
+    // Emulator already connected or not available
+    console.log(
+      "[FirebaseBootstrap] Functions emulator connection skipped:",
+      error
+    );
+  }
+}
 export { serverTimestamp };
 
 // Auth providers
@@ -153,9 +167,11 @@ export async function bootstrapFirebase(): Promise<void> {
   try {
     // Kill switch: Firebase Auth disabled
     // Import dynamically to avoid circular dependency
-    const { isOff } = await import('../runtime/switches');
-    if (isOff('iauth')) {
-      console.info('[FirebaseBootstrap] Auth disabled via kill switch (iauth:off)');
+    const { isOff } = await import("../runtime/switches");
+    if (isOff("iauth")) {
+      console.info(
+        "[FirebaseBootstrap] Auth disabled via kill switch (iauth:off)"
+      );
       // Resolve immediately without setting up auth listeners
       readyResolved = true;
       readyResolvedAt = new Date().toISOString();
