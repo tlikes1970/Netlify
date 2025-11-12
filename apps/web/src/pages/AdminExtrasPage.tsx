@@ -702,20 +702,81 @@ export default function AdminExtrasPage() {
                     <button
                       onClick={async () => {
                         try {
-                          const { httpsCallable } = await import(
-                            "firebase/functions"
-                          );
-                          const { functions } = await import(
+                          const { auth } = await import(
                             "../lib/firebaseBootstrap"
                           );
-                          const setAdminRole = httpsCallable(
-                            functions,
-                            "setAdminRole"
-                          );
+                          if (!auth.currentUser) {
+                            alert("You must be signed in to grant admin role");
+                            return;
+                          }
+
+                          // Get the ID token
+                          const token = await auth.currentUser.getIdToken();
+
+                          // Call the HTTP function
+                          const functionUrl = import.meta.env.DEV
+                            ? "http://localhost:5001/flicklet-71dff/us-central1/setAdminRole"
+                            : "https://us-central1-flicklet-71dff.cloudfunctions.net/setAdminRole";
+
                           console.log(
                             "[AdminExtrasPage] Calling setAdminRole function..."
                           );
-                          const result = await setAdminRole();
+
+                          const response = await fetch(functionUrl, {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            credentials: "include",
+                          });
+
+                          console.log(
+                            "[AdminExtrasPage] Response status:",
+                            response.status,
+                            response.statusText
+                          );
+                          console.log(
+                            "[AdminExtrasPage] Response headers:",
+                            Object.fromEntries(response.headers.entries())
+                          );
+
+                          const responseText = await response.text();
+                          console.log(
+                            "[AdminExtrasPage] Response text:",
+                            responseText
+                          );
+
+                          if (!response.ok) {
+                            let errorData;
+                            try {
+                              errorData = JSON.parse(responseText);
+                            } catch {
+                              errorData = {
+                                error:
+                                  responseText || `HTTP ${response.status}`,
+                              };
+                            }
+                            throw new Error(
+                              errorData.error || `HTTP ${response.status}`
+                            );
+                          }
+
+                          let result;
+                          try {
+                            result = JSON.parse(responseText);
+                          } catch (e) {
+                            console.error(
+                              "[AdminExtrasPage] Failed to parse JSON:",
+                              e,
+                              "Response text:",
+                              responseText
+                            );
+                            throw new Error(
+                              "Invalid response format from server"
+                            );
+                          }
+
                           console.log(
                             "[AdminExtrasPage] setAdminRole result:",
                             result
@@ -728,20 +789,15 @@ export default function AdminExtrasPage() {
                             "[AdminExtrasPage] Failed to set admin role:",
                             error
                           );
-                          if (error.code === "functions/not-found") {
-                            alert(
-                              "setAdminRole function not found. Please deploy your Cloud Functions."
-                            );
-                          } else if (
+                          if (
                             error.message?.includes("CORS") ||
-                            error.code === "internal"
+                            error.message?.includes("Failed to fetch")
                           ) {
                             alert(
-                              "CORS error: Cannot call Cloud Function from localhost.\n\n" +
-                                "Options:\n" +
-                                "1. Run Firebase Functions emulator: 'firebase emulators:start --only functions'\n" +
-                                "2. Or use Firebase Console/Admin SDK to set admin role directly\n" +
-                                "3. Or deploy and test from production URL"
+                              "CORS error: Cannot call Cloud Function.\n\n" +
+                                "The function may need to be redeployed. Please try:\n" +
+                                "1. Redeploy functions: 'firebase deploy --only functions'\n" +
+                                "2. Or use Firebase Console to set admin role directly"
                             );
                           } else {
                             alert(
