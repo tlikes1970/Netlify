@@ -165,7 +165,19 @@ const CommunityPanel = memo(function CommunityPanel() {
         <div className="grid grid-rows-[1fr_1fr] gap-4 h-full">
           {/* FlickWord Game Card */}
           <div
-            className="rounded-2xl bg-neutral-900 border border-white/5 p-4 flex flex-col justify-between cursor-pointer hover:bg-neutral-800 transition-colors"
+            className="rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-colors"
+            style={{
+              backgroundColor: "var(--card)",
+              borderColor: "var(--line)",
+              borderWidth: "1px",
+              borderStyle: "solid",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--btn)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--card)";
+            }}
             onClick={openFlickWord}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
@@ -178,10 +190,13 @@ const CommunityPanel = memo(function CommunityPanel() {
             aria-label="Play FlickWord game"
           >
             <div className="w-full">
-              <h3 className="text-sm font-semibold text-neutral-200 mb-2">
+              <h3
+                className="text-sm font-semibold mb-2"
+                style={{ color: "var(--text)" }}
+              >
                 {translations.flickword || "FlickWord"}
               </h3>
-              <p className="text-xs text-neutral-400 mb-3">
+              <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
                 {translations.flickword_tagline ||
                   "Wordle-style daily word play"}
               </p>
@@ -212,7 +227,19 @@ const CommunityPanel = memo(function CommunityPanel() {
 
           {/* Trivia Game Card */}
           <div
-            className="rounded-2xl bg-neutral-900 border border-white/5 p-4 flex flex-col justify-between"
+            className="rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-colors"
+            style={{
+              backgroundColor: "var(--card)",
+              borderColor: "var(--line)",
+              borderWidth: "1px",
+              borderStyle: "solid",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--btn)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--card)";
+            }}
             role="button"
             tabIndex={0}
             aria-label="Daily Trivia game card. Click to play."
@@ -225,10 +252,13 @@ const CommunityPanel = memo(function CommunityPanel() {
             }}
           >
             <div className="w-full">
-              <h3 className="text-sm font-semibold text-neutral-200 mb-2">
+              <h3
+                className="text-sm font-semibold mb-2"
+                style={{ color: "var(--text)" }}
+              >
                 {translations.daily_trivia || "Daily Trivia"}
               </h3>
-              <p className="text-xs text-neutral-400 mb-3">
+              <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
                 {translations.daily_trivia_tagline ||
                   "Fresh question, new bragging rights"}
               </p>
@@ -259,9 +289,20 @@ const CommunityPanel = memo(function CommunityPanel() {
         </div>
 
         {/* Right: Recent Posts (spans 1 column) */}
-        <div className="rounded-2xl bg-neutral-900 border border-white/5 p-4 flex flex-col">
+        <div
+          className="rounded-2xl p-4 flex flex-col"
+          style={{
+            backgroundColor: "var(--card)",
+            borderColor: "var(--line)",
+            borderWidth: "1px",
+            borderStyle: "solid",
+          }}
+        >
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-neutral-200">
+            <h3
+              className="text-sm font-semibold"
+              style={{ color: "var(--text)" }}
+            >
               {"Recent Posts"}
             </h3>
             <button
@@ -279,15 +320,21 @@ const CommunityPanel = memo(function CommunityPanel() {
 
           {postsLoading ? (
             <div className="flex-1 flex items-center justify-center">
-              <div className="text-xs text-neutral-400">Loading posts...</div>
+              <div className="text-xs" style={{ color: "var(--muted)" }}>
+                Loading posts...
+              </div>
             </div>
           ) : postsError ? (
             <div className="flex-1 flex items-center justify-center">
-              <div className="text-xs text-neutral-400">{postsError}</div>
+              <div className="text-xs" style={{ color: "var(--muted)" }}>
+                {postsError}
+              </div>
             </div>
           ) : posts.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
-              <div className="text-xs text-neutral-400">No posts yet</div>
+              <div className="text-xs" style={{ color: "var(--muted)" }}>
+                No posts yet
+              </div>
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto">
@@ -303,20 +350,38 @@ const CommunityPanel = memo(function CommunityPanel() {
                   <div
                     key={post.id}
                     onClick={() => handlePostClick(post.slug)}
-                    className="cursor-pointer hover:bg-neutral-800/50 rounded-lg p-3 transition-colors border border-neutral-800/50 hover:border-neutral-700/50 mb-3 last:mb-0"
+                    className="cursor-pointer rounded-lg p-3 transition-colors mb-3 last:mb-0"
                     style={{
-                      backgroundColor: "rgba(0, 0, 0, 0.2)",
+                      backgroundColor: "var(--btn2)",
+                      borderColor: "var(--line)",
+                      borderWidth: "1px",
+                      borderStyle: "solid",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "var(--btn)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "var(--btn2)";
                     }}
                   >
-                    <h4 className="text-xs font-semibold text-neutral-200 mb-1 line-clamp-2">
+                    <h4
+                      className="text-xs font-semibold mb-1 line-clamp-2"
+                      style={{ color: "var(--text)" }}
+                    >
                       {post.title}
                     </h4>
                     {post.excerpt && (
-                      <p className="text-xs text-neutral-400 mb-2 line-clamp-2">
+                      <p
+                        className="text-xs mb-2 line-clamp-2"
+                        style={{ color: "var(--muted)" }}
+                      >
                         {post.excerpt}
                       </p>
                     )}
-                    <div className="flex items-center gap-2 text-xs text-neutral-500">
+                    <div
+                      className="flex items-center gap-2 text-xs"
+                      style={{ color: "var(--muted)" }}
+                    >
                       <span>
                         {post.author?.username ||
                           post.author?.name ||

@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import * as React from 'react';
-import type { CustomList, UserLists, ListName } from '../state/library.types';
+import { useEffect, useState } from "react";
+import * as React from "react";
+import type { CustomList, UserLists, ListName } from "../state/library.types";
 
-const CUSTOM_LISTS_KEY = 'flicklet.customLists.v2';
+const CUSTOM_LISTS_KEY = "flicklet.customLists.v2";
 
 const DEFAULT_USER_LISTS: UserLists = {
   customLists: [],
@@ -19,26 +19,26 @@ class CustomListManager {
   constructor() {
     this.userLists = this.loadUserLists();
     // Initialize last synced counts
-    this.userLists.customLists.forEach(list => {
+    this.userLists.customLists.forEach((list) => {
       this.lastSyncedCounts.set(list.id, list.itemCount);
     });
-    
+
     // Listen for Firebase sync updates
-    window.addEventListener('customLists:updated', () => {
+    window.addEventListener("customLists:updated", () => {
       this.userLists = this.loadUserLists();
       this.emitChange();
     });
-    
+
     // Listen for library cleared events (when user signs out)
-    window.addEventListener('library:cleared', () => {
+    window.addEventListener("library:cleared", () => {
       this.userLists = DEFAULT_USER_LISTS;
       this.saveUserLists();
       this.emitChange();
-      console.log('🧹 Custom lists cleared for privacy');
+      console.log("🧹 Custom lists cleared for privacy");
     });
-    
+
     // Listen for library updates to sync counts - debounced to prevent cascade
-    window.addEventListener('library:updated', () => {
+    window.addEventListener("library:updated", () => {
       // Clear any pending debounce
       if (this.syncDebounceTimeout) {
         clearTimeout(this.syncDebounceTimeout);
@@ -58,7 +58,7 @@ class CustomListManager {
         return { ...DEFAULT_USER_LISTS, ...JSON.parse(stored) };
       }
     } catch (e) {
-      console.error('Failed to load custom lists from localStorage', e);
+      console.error("Failed to load custom lists from localStorage", e);
     }
     return DEFAULT_USER_LISTS;
   }
@@ -70,7 +70,7 @@ class CustomListManager {
 
   private emitChange(): void {
     // ⚠️ REMOVED: flickerDiagnostics logging disabled
-    this.subscribers.forEach(callback => callback());
+    this.subscribers.forEach((callback) => callback());
   }
 
   getUserLists(): UserLists {
@@ -103,8 +103,13 @@ class CustomListManager {
     return newList;
   }
 
-  updateList(id: string, updates: Partial<Pick<CustomList, 'name' | 'description' | 'color'>>): CustomList | null {
-    const listIndex = this.userLists.customLists.findIndex(list => list.id === id);
+  updateList(
+    id: string,
+    updates: Partial<Pick<CustomList, "name" | "description" | "color">>
+  ): CustomList | null {
+    const listIndex = this.userLists.customLists.findIndex(
+      (list) => list.id === id
+    );
     if (listIndex === -1) return null;
 
     const updatedList = {
@@ -120,24 +125,34 @@ class CustomListManager {
   }
 
   deleteList(id: string): boolean {
-    const listIndex = this.userLists.customLists.findIndex(list => list.id === id);
+    const listIndex = this.userLists.customLists.findIndex(
+      (list) => list.id === id
+    );
     if (listIndex === -1) return false;
 
     // Don't allow deleting the default list if it's the only one
-    if (this.userLists.customLists[listIndex].isDefault && this.userLists.customLists.length === 1) {
-      throw new Error('Cannot delete the only remaining list');
+    if (
+      this.userLists.customLists[listIndex].isDefault &&
+      this.userLists.customLists.length === 1
+    ) {
+      throw new Error("Cannot delete the only remaining list");
     }
 
     this.userLists.customLists.splice(listIndex, 1);
 
     // If we deleted the selected list, select the default list
     if (this.userLists.selectedListId === id) {
-      const defaultList = this.userLists.customLists.find(list => list.isDefault);
+      const defaultList = this.userLists.customLists.find(
+        (list) => list.isDefault
+      );
       this.userLists.selectedListId = defaultList?.id;
     }
 
     // If we deleted the default list, make the first remaining list the default
-    if (this.userLists.customLists.length > 0 && !this.userLists.customLists.some(list => list.isDefault)) {
+    if (
+      this.userLists.customLists.length > 0 &&
+      !this.userLists.customLists.some((list) => list.isDefault)
+    ) {
       this.userLists.customLists[0].isDefault = true;
     }
 
@@ -146,7 +161,7 @@ class CustomListManager {
   }
 
   setSelectedList(id: string): boolean {
-    const list = this.userLists.customLists.find(list => list.id === id);
+    const list = this.userLists.customLists.find((list) => list.id === id);
     if (!list) return false;
 
     this.userLists.selectedListId = id;
@@ -157,17 +172,21 @@ class CustomListManager {
   getSelectedList(): CustomList | null {
     if (!this.userLists.selectedListId) {
       // Return default list if no selection
-      return this.userLists.customLists.find(list => list.isDefault) || null;
+      return this.userLists.customLists.find((list) => list.isDefault) || null;
     }
-    return this.userLists.customLists.find(list => list.id === this.userLists.selectedListId) || null;
+    return (
+      this.userLists.customLists.find(
+        (list) => list.id === this.userLists.selectedListId
+      ) || null
+    );
   }
 
   getListById(id: string): CustomList | null {
-    return this.userLists.customLists.find(list => list.id === id) || null;
+    return this.userLists.customLists.find((list) => list.id === id) || null;
   }
 
   updateItemCount(listId: string, delta: number): void {
-    const list = this.userLists.customLists.find(list => list.id === listId);
+    const list = this.userLists.customLists.find((list) => list.id === listId);
     if (list) {
       list.itemCount = Math.max(0, list.itemCount + delta);
       this.saveUserLists();
@@ -176,38 +195,40 @@ class CustomListManager {
 
   // Reset all custom list counts to zero
   resetAllCounts(): void {
-    this.userLists.customLists.forEach(list => {
+    this.userLists.customLists.forEach((list) => {
       list.itemCount = 0;
     });
     this.saveUserLists();
     this.emitChange();
-    console.log('🔄 Reset all custom list counts to zero');
+    console.log("🔄 Reset all custom list counts to zero");
   }
 
   // Sync counts from Library data - only if counts actually changed
   private syncCountsFromLibrary(): void {
     try {
       // Get Library data from localStorage
-      const libraryData = JSON.parse(localStorage.getItem('flicklet.library.v2') || '{}');
-      
+      const libraryData = JSON.parse(
+        localStorage.getItem("flicklet.library.v2") || "{}"
+      );
+
       // Calculate new counts
       const newCounts = new Map<string, number>();
-      this.userLists.customLists.forEach(list => {
+      this.userLists.customLists.forEach((list) => {
         newCounts.set(list.id, 0);
       });
-      
+
       // Count items in each custom list
       Object.values(libraryData).forEach((item: any) => {
-        if (item.list && item.list.startsWith('custom:')) {
-          const listId = item.list.replace('custom:', '');
+        if (item.list && item.list.startsWith("custom:")) {
+          const listId = item.list.replace("custom:", "");
           const currentCount = newCounts.get(listId) || 0;
           newCounts.set(listId, currentCount + 1);
         }
       });
-      
+
       // Check if any counts actually changed
       let hasChanges = false;
-      this.userLists.customLists.forEach(list => {
+      this.userLists.customLists.forEach((list) => {
         const newCount = newCounts.get(list.id) || 0;
         const oldCount = this.lastSyncedCounts.get(list.id) || 0;
         if (newCount !== oldCount) {
@@ -216,33 +237,33 @@ class CustomListManager {
           this.lastSyncedCounts.set(list.id, newCount);
         }
       });
-      
+
       // Only save and emit if counts actually changed
       if (hasChanges) {
         this.saveUserLists();
         this.emitChange();
-        console.log('🔄 Synced custom list counts from Library');
+        console.log("🔄 Synced custom list counts from Library");
       }
     } catch (error) {
-      console.error('Failed to sync counts from Library:', error);
+      console.error("Failed to sync counts from Library:", error);
     }
   }
 
   // Helper to get list name from ListName
   getListName(listName: ListName): string {
-    if (listName.startsWith('custom:')) {
-      const listId = listName.replace('custom:', '');
+    if (listName.startsWith("custom:")) {
+      const listId = listName.replace("custom:", "");
       const list = this.getListById(listId);
-      return list?.name || 'Unknown List';
+      return list?.name || "Unknown List";
     }
-    
+
     const standardNames: Record<string, string> = {
-      watching: 'Currently Watching',
-      wishlist: 'Want to Watch',
-      watched: 'Watched',
-      not: 'Not Interested',
+      watching: "Currently Watching",
+      wishlist: "Want to Watch",
+      watched: "Watched",
+      not: "Not Interested",
     };
-    
+
     return standardNames[listName] || listName;
   }
 }
@@ -261,16 +282,25 @@ export function useCustomLists(): UserLists {
     setUserLists(customListManager.getUserLists());
     const unsubscribe = customListManager.subscribe(() => {
       const newLists = customListManager.getUserLists();
-      
+
       // Only log and update if value actually changed
       const prevLength = prevListsRef.current.customLists.length;
       const newLength = newLists.customLists.length;
-      const hasChanged = prevLength !== newLength || 
-        newLists.customLists.some((list, idx) => 
-          list.id !== prevListsRef.current.customLists[idx]?.id ||
-          list.itemCount !== prevListsRef.current.customLists[idx]?.itemCount
-        );
-      
+      const hasChanged =
+        prevLength !== newLength ||
+        newLists.customLists.some((list, idx) => {
+          const prevList = prevListsRef.current.customLists[idx];
+          if (!prevList) return true;
+          return (
+            list.id !== prevList.id ||
+            list.name !== prevList.name ||
+            list.description !== prevList.description ||
+            list.color !== prevList.color ||
+            list.itemCount !== prevList.itemCount ||
+            list.isDefault !== prevList.isDefault
+          );
+        });
+
       if (hasChanged) {
         // ⚠️ REMOVED: flickerDiagnostics logging disabled
         prevListsRef.current = newLists;
@@ -285,7 +315,9 @@ export function useCustomLists(): UserLists {
 
 // Helper hook for selected list
 export function useSelectedList(): CustomList | null {
-  const [selectedList, setSelectedList] = useState(customListManager.getSelectedList());
+  const [selectedList, setSelectedList] = useState(
+    customListManager.getSelectedList()
+  );
 
   useEffect(() => {
     setSelectedList(customListManager.getSelectedList());

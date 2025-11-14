@@ -7,6 +7,8 @@ import {
   onSnapshot,
   deleteDoc,
   doc,
+  getDoc,
+  setDoc,
 } from "firebase/firestore";
 import { db } from "../lib/firebaseBootstrap";
 import { ExtrasVideo } from "../lib/extras/types";
@@ -42,8 +44,29 @@ export default function AdminExtrasPage() {
   const [selectedShow, setSelectedShow] = useState<string>("");
   const [showId, setShowId] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<
-    "content" | "comments" | "videos" | "pro" | "community"
+    "content" | "comments" | "videos" | "pro" | "community" | "admin"
   >("content");
+
+  // Admin management state
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminUserId, setAdminUserId] = useState("");
+  const [adminManagementLoading, setAdminManagementLoading] = useState(false);
+
+  // Digest config state
+  const [digestConfig, setDigestConfig] = useState({
+    title: "",
+    intro: "",
+    productPulseChanged: "",
+    productPulseNext: "",
+    productPulseHowTo: "",
+    productPulseBonus: "",
+    tipHeadline: "",
+    tipBody: "",
+    footerNote: "",
+    isActive: false,
+  });
+  const [digestConfigLoading, setDigestConfigLoading] = useState(false);
+  const [digestConfigSaving, setDigestConfigSaving] = useState(false);
 
   // Community content state
   const [posts, setPosts] = useState<any[]>([]);
@@ -234,6 +257,69 @@ export default function AdminExtrasPage() {
     return () => unsubscribe();
   }, [selectedPostId, activeTab]);
 
+  // Load digest config when admin tab is active
+  useEffect(() => {
+    if (activeTab !== "admin" || !isAdmin) {
+      return;
+    }
+
+    const loadDigestConfig = async () => {
+      setDigestConfigLoading(true);
+      try {
+        const configDoc = await getDoc(doc(db, "digestConfig", "current"));
+        if (configDoc.exists()) {
+          const data = configDoc.data();
+          setDigestConfig({
+            title: data.title || "",
+            intro: data.intro || "",
+            productPulseChanged: data.productPulseChanged || "",
+            productPulseNext: data.productPulseNext || "",
+            productPulseHowTo: data.productPulseHowTo || "",
+            productPulseBonus: data.productPulseBonus || "",
+            tipHeadline: data.tipHeadline || "",
+            tipBody: data.tipBody || "",
+            footerNote: data.footerNote || "",
+            isActive: data.isActive !== undefined ? data.isActive : false,
+          });
+        } else {
+          // Set defaults if no config exists
+          setDigestConfig({
+            title: "🎬 Flicklet Weekly — We actually shipped things.",
+            intro: "Here's your Flicklet update in under a minute.",
+            productPulseChanged: "Ratings now stick between sessions.",
+            productPulseNext: "• Smarter discovery rails • Swipe gestures that don't argue with gravity",
+            productPulseHowTo: "Tap ★ once. It remembers now.",
+            productPulseBonus: "Library loads faster so you spend less time staring at spinners.",
+            tipHeadline: "The One Thing You Didn't Know You Needed",
+            tipBody: "Hold your finger on a card to reorder your list. Saves 10 clicks and a small piece of your soul.",
+            footerNote: "Was this worth your 42 seconds?",
+            isActive: false,
+          });
+        }
+      } catch (error) {
+        console.error("Error loading digest config:", error);
+        alert("Failed to load digest config: " + (error instanceof Error ? error.message : String(error)));
+      } finally {
+        setDigestConfigLoading(false);
+      }
+    };
+
+    loadDigestConfig();
+  }, [activeTab, isAdmin]);
+
+  const handleSaveDigestConfig = async () => {
+    setDigestConfigSaving(true);
+    try {
+      await setDoc(doc(db, "digestConfig", "current"), digestConfig);
+      alert("Digest config saved successfully!");
+    } catch (error) {
+      console.error("Error saving digest config:", error);
+      alert("Failed to save digest config: " + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setDigestConfigSaving(false);
+    }
+  };
+
   const handleDeletePost = async (postId: string) => {
     console.log("[AdminExtrasPage] Delete post clicked:", {
       postId,
@@ -396,6 +482,18 @@ export default function AdminExtrasPage() {
           >
             Community Content
           </button>
+          {isAdmin && (
+            <button
+              onClick={() => setActiveTab("admin")}
+              className={`px-4 py-2 font-medium ${
+                activeTab === "admin"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+              }`}
+            >
+              Admin Management
+            </button>
+          )}
         </div>
 
         {/* Tab Content */}
@@ -1054,6 +1152,412 @@ export default function AdminExtrasPage() {
                     <strong>Note:</strong> This toggle controls Pro status for
                     the current user. Changes are saved immediately to
                     localStorage and will persist across sessions.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Admin Management Tab */}
+        {activeTab === "admin" && isAdmin && (
+          <div className="space-y-6">
+            {/* Weekly Digest Config */}
+            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
+              <h2 className="text-2xl font-bold mb-4">
+                Weekly Digest Email Configuration
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Configure the content for the weekly digest email sent to subscribers.
+              </p>
+
+              {digestConfigLoading ? (
+                <div className="text-center py-4">Loading config...</div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="flex items-center gap-2 mb-2">
+                      <input
+                        type="checkbox"
+                        checked={digestConfig.isActive}
+                        onChange={(e) =>
+                          setDigestConfig({
+                            ...digestConfig,
+                            isActive: e.target.checked,
+                          })
+                        }
+                        className="w-4 h-4"
+                      />
+                      <span className="font-medium">
+                        Active (emails will be sent when enabled)
+                      </span>
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Email Subject / Title
+                    </label>
+                    <input
+                      type="text"
+                      value={digestConfig.title}
+                      onChange={(e) =>
+                        setDigestConfig({ ...digestConfig, title: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      placeholder="🎬 Flicklet Weekly — We actually shipped things."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Intro Text
+                    </label>
+                    <textarea
+                      value={digestConfig.intro}
+                      onChange={(e) =>
+                        setDigestConfig({ ...digestConfig, intro: e.target.value })
+                      }
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      placeholder="Here's your Flicklet update in under a minute."
+                    />
+                  </div>
+
+                  <div className="border-t border-gray-300 dark:border-gray-600 pt-4">
+                    <h3 className="font-semibold mb-3">Product Pulse Section</h3>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          What Changed (🔧)
+                        </label>
+                        <input
+                          type="text"
+                          value={digestConfig.productPulseChanged}
+                          onChange={(e) =>
+                            setDigestConfig({
+                              ...digestConfig,
+                              productPulseChanged: e.target.value,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          placeholder="Ratings now stick between sessions."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          What's Next (👀)
+                        </label>
+                        <input
+                          type="text"
+                          value={digestConfig.productPulseNext}
+                          onChange={(e) =>
+                            setDigestConfig({
+                              ...digestConfig,
+                              productPulseNext: e.target.value,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          placeholder="• Smarter discovery rails • Swipe gestures that don't argue with gravity"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          How to Use It
+                        </label>
+                        <input
+                          type="text"
+                          value={digestConfig.productPulseHowTo}
+                          onChange={(e) =>
+                            setDigestConfig({
+                              ...digestConfig,
+                              productPulseHowTo: e.target.value,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          placeholder="Tap ★ once. It remembers now."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Hidden Bonus
+                        </label>
+                        <input
+                          type="text"
+                          value={digestConfig.productPulseBonus}
+                          onChange={(e) =>
+                            setDigestConfig({
+                              ...digestConfig,
+                              productPulseBonus: e.target.value,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          placeholder="Library loads faster so you spend less time staring at spinners."
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-300 dark:border-gray-600 pt-4">
+                    <h3 className="font-semibold mb-3">Tip Section</h3>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Tip Headline
+                        </label>
+                        <input
+                          type="text"
+                          value={digestConfig.tipHeadline}
+                          onChange={(e) =>
+                            setDigestConfig({
+                              ...digestConfig,
+                              tipHeadline: e.target.value,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          placeholder="The One Thing You Didn't Know You Needed"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Tip Body
+                        </label>
+                        <textarea
+                          value={digestConfig.tipBody}
+                          onChange={(e) =>
+                            setDigestConfig({
+                              ...digestConfig,
+                              tipBody: e.target.value,
+                            })
+                          }
+                          rows={3}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          placeholder="Hold your finger on a card to reorder your list. Saves 10 clicks and a small piece of your soul."
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Footer Note
+                    </label>
+                    <input
+                      type="text"
+                      value={digestConfig.footerNote}
+                      onChange={(e) =>
+                        setDigestConfig({
+                          ...digestConfig,
+                          footerNote: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      placeholder="Was this worth your 42 seconds?"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleSaveDigestConfig}
+                    disabled={digestConfigSaving}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {digestConfigSaving ? "Saving..." : "Save Digest Config"}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Admin Role Management */}
+            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
+              <h2 className="text-2xl font-bold mb-4">
+                Grant Admin Role to Other Users
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Enter a user's email address or user ID to grant or revoke admin
+                role.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="adminEmail"
+                    className="block text-sm font-medium mb-2"
+                  >
+                    User Email
+                  </label>
+                  <input
+                    id="adminEmail"
+                    type="email"
+                    value={adminEmail}
+                    onChange={(e) => setAdminEmail(e.target.value)}
+                    placeholder="user@example.com"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  />
+                </div>
+
+                <div className="text-center text-gray-500 dark:text-gray-400">
+                  OR
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="adminUserId"
+                    className="block text-sm font-medium mb-2"
+                  >
+                    User ID (Firebase UID)
+                  </label>
+                  <input
+                    id="adminUserId"
+                    type="text"
+                    value={adminUserId}
+                    onChange={(e) => setAdminUserId(e.target.value)}
+                    placeholder="M48zRZYH4AbPu79JMxtYVO1w4vo2"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      if (!adminEmail && !adminUserId) {
+                        alert("Please enter either an email or user ID");
+                        return;
+                      }
+
+                      setAdminManagementLoading(true);
+                      try {
+                        const { httpsCallable } = await import(
+                          "firebase/functions"
+                        );
+                        const { functions } = await import(
+                          "../lib/firebaseBootstrap"
+                        );
+                        const manageAdminRole = httpsCallable(
+                          functions,
+                          "manageAdminRole"
+                        );
+
+                        // First, get user ID from email if needed
+                        if (adminEmail && !adminUserId) {
+                          // For email, we need to look up the user ID
+                          // Since we can't do this directly from client, we'll need to
+                          // modify the function to accept email, or use Admin SDK
+                          // For now, let's require user ID for email lookup
+                          alert(
+                            "Please use User ID for now, or use Firebase Console to grant by email."
+                          );
+                          setAdminManagementLoading(false);
+                          return;
+                        }
+
+                        if (!adminUserId) {
+                          alert("Please enter a user ID");
+                          setAdminManagementLoading(false);
+                          return;
+                        }
+
+                        const result = await manageAdminRole({
+                          userId: adminUserId,
+                          grant: true,
+                        });
+
+                        console.log(
+                          "[AdminExtrasPage] Admin role granted:",
+                          result.data
+                        );
+                        alert(
+                          `Admin role granted to user ${adminUserId}. They need to sign out and sign back in for it to take effect.`
+                        );
+                        setAdminEmail("");
+                        setAdminUserId("");
+                      } catch (error: any) {
+                        console.error(
+                          "[AdminExtrasPage] Failed to grant admin role:",
+                          error
+                        );
+                        alert(
+                          "Failed to grant admin role: " +
+                            (error.message || String(error))
+                        );
+                      } finally {
+                        setAdminManagementLoading(false);
+                      }
+                    }}
+                    disabled={adminManagementLoading}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {adminManagementLoading
+                      ? "Granting..."
+                      : "Grant Admin Role"}
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      if (!adminUserId) {
+                        alert("Please enter a user ID to revoke admin role");
+                        return;
+                      }
+
+                      setAdminManagementLoading(true);
+                      try {
+                        const { httpsCallable } = await import(
+                          "firebase/functions"
+                        );
+                        const { functions } = await import(
+                          "../lib/firebaseBootstrap"
+                        );
+                        const manageAdminRole = httpsCallable(
+                          functions,
+                          "manageAdminRole"
+                        );
+
+                        const result = await manageAdminRole({
+                          userId: adminUserId,
+                          grant: false,
+                        });
+
+                        console.log(
+                          "[AdminExtrasPage] Admin role revoked:",
+                          result.data
+                        );
+                        alert(
+                          `Admin role revoked from user ${adminUserId}. They need to sign out and sign back in for it to take effect.`
+                        );
+                        setAdminEmail("");
+                        setAdminUserId("");
+                      } catch (error: any) {
+                        console.error(
+                          "[AdminExtrasPage] Failed to revoke admin role:",
+                          error
+                        );
+                        alert(
+                          "Failed to revoke admin role: " +
+                            (error.message || String(error))
+                        );
+                      } finally {
+                        setAdminManagementLoading(false);
+                      }
+                    }}
+                    disabled={adminManagementLoading || !adminUserId}
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {adminManagementLoading
+                      ? "Revoking..."
+                      : "Revoke Admin Role"}
+                  </button>
+                </div>
+
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    <strong>Note:</strong> Users must sign out and sign back in
+                    for admin role changes to take effect. You can find user IDs
+                    in Firebase Console → Authentication.
                   </p>
                 </div>
               </div>

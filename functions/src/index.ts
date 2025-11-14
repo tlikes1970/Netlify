@@ -34,6 +34,9 @@ export { manageAdminRole } from "./manageAdminRole";
 // Export weeklyDigest from separate file
 export { weeklyDigest } from "./weeklyDigest";
 
+// Export digestPreview from separate file
+export { digestPreview } from "./weeklyDigest";
+
 // Export unsubscribe from separate file
 export { unsubscribe } from "./unsubscribe";
 

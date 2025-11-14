@@ -7,7 +7,6 @@
  */
 
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
-import { db } from "./admin";
 
 /**
  * Cloud Function triggered when a post is created in Firestore
