@@ -1,6 +1,6 @@
 {
   "name": "flicklet-tv-tracker",
-  "version": "28.165.4",
+  "version": "28.165.5",
   "description": "Flicklet - TV & Movie Tracker",
   "main": "www/index.html",
   "scripts": {

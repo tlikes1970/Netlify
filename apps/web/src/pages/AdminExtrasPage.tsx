@@ -508,14 +508,25 @@ export default function AdminExtrasPage() {
         <h1 className="text-3xl font-bold mb-6">Admin - Content Management</h1>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+        <div className="flex border-b mb-6" style={{ borderColor: "var(--line)" }}>
           <button
             onClick={() => setActiveTab("content")}
             className={`px-4 py-2 font-medium ${
               activeTab === "content"
                 ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                : "text-gray-500 hover:text-gray-700"
             }`}
+            style={activeTab !== "content" ? { color: "var(--muted)" } : undefined}
+            onMouseEnter={(e) => {
+              if (activeTab !== "content") {
+                e.currentTarget.style.color = "var(--text)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeTab !== "content") {
+                e.currentTarget.style.color = "var(--muted)";
+              }
+            }}
           >
             Auto Content
           </button>
@@ -524,8 +535,19 @@ export default function AdminExtrasPage() {
             className={`px-4 py-2 font-medium ${
               activeTab === "comments"
                 ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                : "text-gray-500 hover:text-gray-700"
             }`}
+            style={activeTab !== "comments" ? { color: "var(--muted)" } : undefined}
+            onMouseEnter={(e) => {
+              if (activeTab !== "comments") {
+                e.currentTarget.style.color = "var(--text)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeTab !== "comments") {
+                e.currentTarget.style.color = "var(--muted)";
+              }
+            }}
           >
             Marquee Comments ({pendingUGC})
           </button>
@@ -534,8 +556,19 @@ export default function AdminExtrasPage() {
             className={`px-4 py-2 font-medium ${
               activeTab === "videos"
                 ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                : "text-gray-500 hover:text-gray-700"
             }`}
+            style={activeTab !== "videos" ? { color: "var(--muted)" } : undefined}
+            onMouseEnter={(e) => {
+              if (activeTab !== "videos") {
+                e.currentTarget.style.color = "var(--text)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeTab !== "videos") {
+                e.currentTarget.style.color = "var(--muted)";
+              }
+            }}
           >
             Video Submissions ({pendingUGC})
           </button>
@@ -544,8 +577,19 @@ export default function AdminExtrasPage() {
             className={`px-4 py-2 font-medium ${
               activeTab === "pro"
                 ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                : "text-gray-500 hover:text-gray-700"
             }`}
+            style={activeTab !== "pro" ? { color: "var(--muted)" } : undefined}
+            onMouseEnter={(e) => {
+              if (activeTab !== "pro") {
+                e.currentTarget.style.color = "var(--text)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeTab !== "pro") {
+                e.currentTarget.style.color = "var(--muted)";
+              }
+            }}
           >
             Pro Status
           </button>
@@ -554,8 +598,19 @@ export default function AdminExtrasPage() {
             className={`px-4 py-2 font-medium ${
               activeTab === "community"
                 ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                : "text-gray-500 hover:text-gray-700"
             }`}
+            style={activeTab !== "community" ? { color: "var(--muted)" } : undefined}
+            onMouseEnter={(e) => {
+              if (activeTab !== "community") {
+                e.currentTarget.style.color = "var(--text)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeTab !== "community") {
+                e.currentTarget.style.color = "var(--muted)";
+              }
+            }}
           >
             Community Content
           </button>
@@ -565,8 +620,19 @@ export default function AdminExtrasPage() {
               className={`px-4 py-2 font-medium ${
                 activeTab === "admin"
                   ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
+              style={activeTab !== "admin" ? { color: "var(--muted)" } : undefined}
+              onMouseEnter={(e) => {
+                if (activeTab !== "admin") {
+                  e.currentTarget.style.color = "var(--text)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeTab !== "admin") {
+                  e.currentTarget.style.color = "var(--muted)";
+                }
+              }}
             >
               Admin Management
             </button>
@@ -577,7 +643,7 @@ export default function AdminExtrasPage() {
         {activeTab === "content" && (
           <>
             {/* Controls */}
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 mb-6">
+            <div className="bg-gray-100 rounded-lg p-4 mb-6" style={{ backgroundColor: "var(--card)" }}>
               <div className="flex items-center gap-4 mb-4">
                 <input
                   type="text"
@@ -635,10 +701,10 @@ export default function AdminExtrasPage() {
                   key={video.id}
                   className={`border rounded-lg p-4 ${
                     video.status === "approved"
-                      ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                      ? "border-green-500 bg-green-50"
                       : video.status === "rejected"
-                        ? "border-red-500 bg-red-50 dark:bg-red-900/20"
-                        : "border-gray-300 dark:border-gray-600"
+                        ? "border-red-500 bg-red-50"
+                        : "border-gray-300"
                   }`}
                 >
                   <img
@@ -714,16 +780,16 @@ export default function AdminExtrasPage() {
                   key={submission.id}
                   className={`border rounded-lg p-4 ${
                     submission.status === "approved"
-                      ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                      ? "border-green-500 bg-green-50"
                       : submission.status === "rejected"
-                        ? "border-red-500 bg-red-50 dark:bg-red-900/20"
-                        : "border-gray-300 dark:border-gray-600"
+                        ? "border-red-500 bg-red-50"
+                        : "border-gray-300"
                   }`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h3 className="font-medium">{submission.showName}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-gray-600" style={{ color: "var(--muted)" }}>
                         By {submission.submittedBy} •{" "}
                         {new Date(submission.submittedAt).toLocaleDateString()}
                       </p>
@@ -787,16 +853,16 @@ export default function AdminExtrasPage() {
                   key={submission.id}
                   className={`border rounded-lg p-4 ${
                     submission.status === "approved"
-                      ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                      ? "border-green-500 bg-green-50"
                       : submission.status === "rejected"
-                        ? "border-red-500 bg-red-50 dark:bg-red-900/20"
-                        : "border-gray-300 dark:border-gray-600"
+                        ? "border-red-500 bg-red-50"
+                        : "border-gray-300"
                   }`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h3 className="font-medium">{submission.showName}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-gray-600" style={{ color: "var(--muted)" }}>
                         By {submission.submittedBy} •{" "}
                         {new Date(submission.submittedAt).toLocaleDateString()}
                       </p>
@@ -851,24 +917,24 @@ export default function AdminExtrasPage() {
         {/* Community Content Tab */}
         {activeTab === "community" && (
           <div className="space-y-6">
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
+            <div className="bg-gray-100 rounded-lg p-6" style={{ backgroundColor: "var(--card)" }}>
               <h2 className="text-2xl font-bold mb-4">
                 Community Content Management
               </h2>
               {adminLoading ? (
-                <p className="text-sm text-yellow-600 dark:text-yellow-400 mb-4">
+                <p className="text-sm text-yellow-600 mb-4" style={{ color: "var(--muted)" }}>
                   ⏳ Verifying admin status...
                 </p>
               ) : isAdmin ? (
-                <p className="text-sm text-green-600 dark:text-green-400 mb-4">
+                <p className="text-sm text-green-600 mb-4" style={{ color: "var(--text)" }}>
                   ✓ Admin verified. You can delete any post or comment.
                 </p>
               ) : (
-                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
-                  <p className="text-sm text-red-600 dark:text-red-400 mb-2">
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded" style={{ backgroundColor: "var(--card)", borderColor: "var(--line)" }}>
+                  <p className="text-sm text-red-600 mb-2" style={{ color: "var(--text)" }}>
                     ⚠️ Admin status not verified. Delete actions are disabled.
                   </p>
-                  <p className="text-xs text-red-500 dark:text-red-400 mb-3">
+                  <p className="text-xs text-red-500 mb-3" style={{ color: "var(--muted)" }}>
                     Your Firebase Auth token does not have the admin role claim.
                     This needs to be set via a Cloud Function or Firebase
                     Console.
@@ -1068,7 +1134,8 @@ export default function AdminExtrasPage() {
                   {posts.map((post) => (
                     <div
                       key={post.id}
-                      className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700"
+                      className="flex items-center justify-between p-3 bg-white rounded border border-gray-200"
+                      style={{ backgroundColor: "var(--card)", borderColor: "var(--line)" }}
                     >
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium truncate">
@@ -1124,14 +1191,15 @@ export default function AdminExtrasPage() {
                     {postComments.map((comment) => (
                       <div
                         key={comment.id}
-                        className="p-3 bg-white dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700"
+                        className="p-3 bg-white rounded border border-gray-200"
+                        style={{ backgroundColor: "var(--card)", borderColor: "var(--line)" }}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium">
                               {comment.authorName || "Anonymous"}
                             </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-wrap">
+                            <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap" style={{ color: "var(--text)" }}>
                               {comment.body}
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
@@ -1164,14 +1232,14 @@ export default function AdminExtrasPage() {
         {/* Pro Status Tab */}
         {activeTab === "pro" && (
           <div className="space-y-6">
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
+            <div className="bg-gray-100 rounded-lg p-6" style={{ backgroundColor: "var(--card)" }}>
               <h2 className="text-2xl font-bold mb-4">Pro Status Management</h2>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200" style={{ backgroundColor: "var(--card)", borderColor: "var(--line)" }}>
                   <div>
-                    <h3 className="text-lg font-semibold mb-1">Pro Status</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <h3 className="text-lg font-semibold mb-1" style={{ color: "var(--text)" }}>Pro Status</h3>
+                    <p className="text-sm text-gray-600" style={{ color: "var(--muted)" }}>
                       Current status:{" "}
                       <strong
                         className={isPro ? "text-green-600" : "text-gray-500"}
@@ -1187,16 +1255,16 @@ export default function AdminExtrasPage() {
                       onChange={handleTogglePro}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" style={{ backgroundColor: "var(--btn)", borderColor: "var(--line)" }}></div>
                   </label>
                 </div>
 
                 {isPro && (
-                  <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                    <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">
+                  <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200" style={{ backgroundColor: "var(--card)", borderColor: "var(--line)" }}>
+                    <h4 className="font-semibold text-green-800 mb-2" style={{ color: "var(--text)" }}>
                       Pro Features Enabled:
                     </h4>
-                    <ul className="list-disc list-inside space-y-1 text-sm text-green-700 dark:text-green-300">
+                    <ul className="list-disc list-inside space-y-1 text-sm text-green-700" style={{ color: "var(--text)" }}>
                       <li>Advanced Notifications</li>
                       <li>Theme Packs</li>
                       <li>Social Features</li>
@@ -1209,11 +1277,11 @@ export default function AdminExtrasPage() {
                 )}
 
                 {!isPro && (
-                  <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200" style={{ backgroundColor: "var(--card)", borderColor: "var(--line)" }}>
+                    <h4 className="font-semibold text-gray-800 mb-2" style={{ color: "var(--text)" }}>
                       Free Tier Limitations:
                     </h4>
-                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-700" style={{ color: "var(--text)" }}>
                       <li>1 FlickWord game per day</li>
                       <li>10 Trivia questions per day</li>
                       <li>No advanced notifications</li>
@@ -1224,8 +1292,8 @@ export default function AdminExtrasPage() {
                   </div>
                 )}
 
-                <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200" style={{ backgroundColor: "var(--card)", borderColor: "var(--line)" }}>
+                  <p className="text-sm text-blue-800" style={{ color: "var(--text)" }}>
                     <strong>Note:</strong> This toggle controls Pro status for
                     the current user. Changes are saved immediately to
                     localStorage and will persist across sessions.
@@ -1240,11 +1308,11 @@ export default function AdminExtrasPage() {
         {activeTab === "admin" && isAdmin && (
           <div className="space-y-6">
             {/* Weekly Digest Config */}
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
+            <div className="bg-gray-100 rounded-lg p-6" style={{ backgroundColor: "var(--card)" }}>
               <h2 className="text-2xl font-bold mb-4">
                 Weekly Digest Email Configuration
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-sm text-gray-600 mb-4" style={{ color: "var(--muted)" }}>
                 Configure the content for the weekly digest email sent to subscribers.
               </p>
 
@@ -1271,7 +1339,7 @@ export default function AdminExtrasPage() {
                     </label>
                   </div>
 
-                  <div className="border-t border-gray-300 dark:border-gray-600 pt-4">
+                  <div className="border-t border-gray-300 pt-4" style={{ borderColor: "var(--line)" }}>
                     <h3 className="font-semibold mb-3">Automatic Send Settings</h3>
 
                     <div className="space-y-3">
@@ -1307,7 +1375,8 @@ export default function AdminExtrasPage() {
                             })
                           }
                           disabled={!digestConfig.autoSendEnabled}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ borderColor: "var(--line)", backgroundColor: "var(--card)", color: "var(--text)" }}
                         >
                           <option value="monday">Monday</option>
                           <option value="tuesday">Tuesday</option>
@@ -1333,11 +1402,12 @@ export default function AdminExtrasPage() {
                             })
                           }
                           disabled={!digestConfig.autoSendEnabled}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ borderColor: "var(--line)", backgroundColor: "var(--card)", color: "var(--text)" }}
                         />
                       </div>
 
-                      <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+                      <p className="text-xs text-gray-500 italic" style={{ color: "var(--muted)" }}>
                         Current backend schedule still uses a fixed cron trigger; this day/time is stored in config and will be fully honored in a later update. The On/Off toggle is effective now: when off, the automatic send is skipped.
                       </p>
                     </div>
@@ -1353,7 +1423,8 @@ export default function AdminExtrasPage() {
                       onChange={(e) =>
                         setDigestConfig({ ...digestConfig, title: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      className="w-full px-3 py-2 border border-gray-300 rounded"
+                      style={{ borderColor: "var(--line)", backgroundColor: "var(--card)", color: "var(--text)" }}
                       placeholder="🎬 Flicklet Weekly — We actually shipped things."
                     />
                   </div>
@@ -1368,12 +1439,13 @@ export default function AdminExtrasPage() {
                         setDigestConfig({ ...digestConfig, intro: e.target.value })
                       }
                       rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      className="w-full px-3 py-2 border border-gray-300 rounded"
+                      style={{ borderColor: "var(--line)", backgroundColor: "var(--card)", color: "var(--text)" }}
                       placeholder="Here's your Flicklet update in under a minute."
                     />
                   </div>
 
-                  <div className="border-t border-gray-300 dark:border-gray-600 pt-4">
+                  <div className="border-t border-gray-300 pt-4" style={{ borderColor: "var(--line)" }}>
                     <h3 className="font-semibold mb-3">Product Pulse Section</h3>
 
                     <div className="space-y-3">
@@ -1390,7 +1462,8 @@ export default function AdminExtrasPage() {
                               productPulseChanged: e.target.value,
                             })
                           }
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          className="w-full px-3 py-2 border border-gray-300 rounded"
+                      style={{ borderColor: "var(--line)", backgroundColor: "var(--card)", color: "var(--text)" }}
                           placeholder="Ratings now stick between sessions."
                         />
                       </div>
@@ -1408,7 +1481,8 @@ export default function AdminExtrasPage() {
                               productPulseNext: e.target.value,
                             })
                           }
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          className="w-full px-3 py-2 border border-gray-300 rounded"
+                      style={{ borderColor: "var(--line)", backgroundColor: "var(--card)", color: "var(--text)" }}
                           placeholder="• Smarter discovery rails • Swipe gestures that don't argue with gravity"
                         />
                       </div>
@@ -1426,7 +1500,8 @@ export default function AdminExtrasPage() {
                               productPulseHowTo: e.target.value,
                             })
                           }
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          className="w-full px-3 py-2 border border-gray-300 rounded"
+                      style={{ borderColor: "var(--line)", backgroundColor: "var(--card)", color: "var(--text)" }}
                           placeholder="Tap ★ once. It remembers now."
                         />
                       </div>
@@ -1444,14 +1519,15 @@ export default function AdminExtrasPage() {
                               productPulseBonus: e.target.value,
                             })
                           }
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          className="w-full px-3 py-2 border border-gray-300 rounded"
+                      style={{ borderColor: "var(--line)", backgroundColor: "var(--card)", color: "var(--text)" }}
                           placeholder="Library loads faster so you spend less time staring at spinners."
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="border-t border-gray-300 dark:border-gray-600 pt-4">
+                  <div className="border-t border-gray-300 pt-4" style={{ borderColor: "var(--line)" }}>
                     <h3 className="font-semibold mb-3">Tip Section</h3>
 
                     <div className="space-y-3">
@@ -1468,7 +1544,8 @@ export default function AdminExtrasPage() {
                               tipHeadline: e.target.value,
                             })
                           }
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          className="w-full px-3 py-2 border border-gray-300 rounded"
+                      style={{ borderColor: "var(--line)", backgroundColor: "var(--card)", color: "var(--text)" }}
                           placeholder="The One Thing You Didn't Know You Needed"
                         />
                       </div>
@@ -1486,7 +1563,8 @@ export default function AdminExtrasPage() {
                             })
                           }
                           rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          className="w-full px-3 py-2 border border-gray-300 rounded"
+                      style={{ borderColor: "var(--line)", backgroundColor: "var(--card)", color: "var(--text)" }}
                           placeholder="Hold your finger on a card to reorder your list. Saves 10 clicks and a small piece of your soul."
                         />
                       </div>
@@ -1506,7 +1584,8 @@ export default function AdminExtrasPage() {
                           footerNote: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      className="w-full px-3 py-2 border border-gray-300 rounded"
+                      style={{ borderColor: "var(--line)", backgroundColor: "var(--card)", color: "var(--text)" }}
                       placeholder="Was this worth your 42 seconds?"
                     />
                   </div>
@@ -1533,23 +1612,23 @@ export default function AdminExtrasPage() {
                     <div
                       className={`mt-4 p-3 rounded ${
                         digestSendNowResult.ok
-                          ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
-                          : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+                          ? "bg-green-50 border border-green-200"
+                          : "bg-red-50 border border-red-200"
                       }`}
                     >
                       {digestSendNowResult.ok ? (
-                        <p className="text-sm text-green-800 dark:text-green-200">
+                        <p className="text-sm text-green-800" style={{ color: "var(--text)" }}>
                           Manual send completed: {digestSendNowResult.sentCount} emails sent to {digestSendNowResult.distinctEmails} unique addresses.
                         </p>
                       ) : (
-                        <p className="text-sm text-red-800 dark:text-red-200">
+                        <p className="text-sm text-red-800" style={{ color: "var(--text)" }}>
                           Error: {digestSendNowResult.error || "Unknown error"}
                         </p>
                       )}
                     </div>
                   )}
 
-                  <div className="border-t border-gray-300 dark:border-gray-600 pt-4 mt-4">
+                  <div className="border-t border-gray-300 pt-4 mt-4" style={{ borderColor: "var(--line)" }}>
                     <h3 className="font-semibold mb-3">Send Summary</h3>
                     <div className="space-y-2 text-sm">
                       <div>
@@ -1585,11 +1664,11 @@ export default function AdminExtrasPage() {
             </div>
 
             {/* Admin Role Management */}
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
+            <div className="bg-gray-100 rounded-lg p-6" style={{ backgroundColor: "var(--card)" }}>
               <h2 className="text-2xl font-bold mb-4">
                 Grant Admin Role to Other Users
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-sm text-gray-600 mb-4" style={{ color: "var(--muted)" }}>
                 Enter a user's email address or user ID to grant or revoke admin
                 role.
               </p>
@@ -1608,11 +1687,12 @@ export default function AdminExtrasPage() {
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
                     placeholder="user@example.com"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    style={{ borderColor: "var(--line)", backgroundColor: "var(--card)", color: "var(--text)" }}
                   />
                 </div>
 
-                <div className="text-center text-gray-500 dark:text-gray-400">
+                <div className="text-center text-gray-500" style={{ color: "var(--muted)" }}>
                   OR
                 </div>
 
@@ -1629,7 +1709,8 @@ export default function AdminExtrasPage() {
                     value={adminUserId}
                     onChange={(e) => setAdminUserId(e.target.value)}
                     placeholder="M48zRZYH4AbPu79JMxtYVO1w4vo2"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    style={{ borderColor: "var(--line)", backgroundColor: "var(--card)", color: "var(--text)" }}
                   />
                 </div>
 
@@ -1764,8 +1845,8 @@ export default function AdminExtrasPage() {
                   </button>
                 </div>
 
-                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200" style={{ backgroundColor: "var(--card)", borderColor: "var(--line)" }}>
+                  <p className="text-sm text-blue-800" style={{ color: "var(--text)" }}>
                     <strong>Note:</strong> Users must sign out and sign back in
                     for admin role changes to take effect. You can find user IDs
                     in Firebase Console → Authentication.

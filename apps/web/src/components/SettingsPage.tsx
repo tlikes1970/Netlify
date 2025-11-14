@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import {
   useSettings,
   settingsManager,
@@ -53,6 +53,25 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
   const translations = useTranslations();
   const currentLanguage = useLanguage();
 
+  // Resizable modal state
+  const modalRef = useRef<HTMLDivElement>(null);
+  const resizeHandleRef = useRef<HTMLDivElement>(null);
+  const resizeStartRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [isResizing, setIsResizing] = useState(false);
+  const [modalSize, setModalSize] = useState(() => {
+    // Load saved size from localStorage
+    const saved = localStorage.getItem('settings-modal-size');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return { width: parsed.width || 1024, height: parsed.height || 600 };
+      } catch {
+        // Fallback to defaults if parse fails
+      }
+    }
+    return { width: 1024, height: 600 };
+  });
+
   // Lock scroll when settings modal is open
   useEffect(() => {
     lockScroll();
@@ -60,6 +79,64 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
       unlockScroll();
     };
   }, []);
+
+  // Handle resize
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!modalRef.current || !resizeStartRef.current) return;
+
+      const deltaX = e.clientX - resizeStartRef.current.x;
+      const deltaY = e.clientY - resizeStartRef.current.y;
+
+      const newWidth = Math.max(600, Math.min(window.innerWidth - 40, resizeStartRef.current.width + deltaX));
+      const newHeight = Math.max(400, Math.min(window.innerHeight - 100, resizeStartRef.current.height + deltaY));
+
+      setModalSize({ width: newWidth, height: newHeight });
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      resizeStartRef.current = null;
+      // Save size to localStorage
+      if (modalRef.current) {
+        const currentSize = { 
+          width: modalRef.current.offsetWidth, 
+          height: modalRef.current.offsetHeight 
+        };
+        localStorage.setItem('settings-modal-size', JSON.stringify(currentSize));
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'nwse-resize';
+    document.body.style.userSelect = 'none';
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (modalRef.current) {
+      const rect = modalRef.current.getBoundingClientRect();
+      resizeStartRef.current = {
+        x: e.clientX,
+        y: e.clientY,
+        width: rect.width,
+        height: rect.height,
+      };
+      setIsResizing(true);
+    }
+  };
 
   const tabs = [
     { id: "general" as const, label: translations.general },
@@ -79,11 +156,18 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
       style={{ backgroundColor: "rgba(0,0,0,0.8)" }}
     >
       <div
-        className="rounded-xl w-full max-w-4xl h-[80vh] flex overflow-hidden"
+        ref={modalRef}
+        className="rounded-xl flex overflow-hidden relative"
         style={{
           backgroundColor: "var(--card)",
           borderColor: "var(--line)",
           border: "1px solid",
+          width: `${modalSize.width}px`,
+          height: `${modalSize.height}px`,
+          minWidth: '600px',
+          minHeight: '400px',
+          maxWidth: '95vw',
+          maxHeight: '95vh',
         }}
       >
         {/* Left sidebar - Tabs */}
@@ -191,6 +275,34 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
             </Suspense>
           )}
           {activeTab === "about" && <AboutTab />}
+        </div>
+
+        {/* Resize handle */}
+        <div
+          ref={resizeHandleRef}
+          onMouseDown={handleResizeStart}
+          className="absolute bottom-0 right-0 w-6 h-6 cursor-nwse-resize flex items-end justify-end p-1 z-10"
+          style={{
+            backgroundColor: "transparent",
+          }}
+          aria-label="Resize settings modal"
+          title="Drag to resize"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            style={{ color: "var(--muted)", pointerEvents: "none" }}
+          >
+            <path
+              d="M6 10L10 6M10 10L14 6M2 14L14 2"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
       </div>
 
