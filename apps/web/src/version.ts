@@ -1,5 +1,10 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.153: Improved weekly digest error messages for better debugging
+// - Separated error messages for missing config vs inactive config
+// - Clear instructions in error messages directing users to Admin panel
+// - Helps diagnose whether config needs to be created or just activated
+// - Rollback: Revert this commit to restore previous error messages
 // ⚠️ VERSION 0.1.152: Fixed weekly digest email content not appearing in emails
 // - Fixed loadDigestConfig() to use nullish coalescing (??) instead of logical OR (||)
 // - Fixed buildEmailTemplate() to preserve empty strings and use saved content correctly
@@ -120,4 +125,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.152";
+export const APP_VERSION = "0.1.153";
