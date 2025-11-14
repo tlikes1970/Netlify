@@ -4,7 +4,7 @@ import type { MediaItem } from '../components/cards/card.types';
 import { cachedSearchMulti } from './cache';
 import { smartSearch } from './smartSearch';
 import { emit } from '../lib/events';
-import { addToListWithConfirmation } from '../lib/storage';
+import { addToListWithConfirmation, Library } from '../lib/storage';
 import { fetchNextAirDate, fetchShowStatus } from '../tmdb/tv';
 import { useTranslations } from '../lib/language';
 import { useSettings, getPersonalityText } from '../lib/settings';
@@ -12,6 +12,8 @@ import MyListToggle from '../components/MyListToggle';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { fetchNetworkInfo } from './api';
 import { searchTagsLocal } from '../lib/libraryIndex';
+import { isMobileNow } from '../lib/isMobile';
+import Portal from '../components/Portal';
 
 type SearchResultWithPagination = {
   items: MediaItem[];
@@ -152,6 +154,14 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
   const { posterUrl, mediaType, synopsis } = item;
   const [pressedButtons, setPressedButtons] = React.useState<Set<string>>(new Set());
   const [networkInfo, setNetworkInfo] = React.useState<{ networks?: string[]; productionCompanies?: string[] }>({});
+  const [showMoreMenu, setShowMoreMenu] = React.useState(false);
+  const moreMenuRef = React.useRef<HTMLDivElement>(null);
+  const moreButtonRef = React.useRef<HTMLButtonElement>(null);
+  const isMobile = isMobileNow();
+  
+  // Check if item is already in a list to determine primary action
+  const currentList = Library.getCurrentList(item.id, item.mediaType);
+  const isInList = !!currentList;
   
   // Fetch network information when component mounts
   React.useEffect(() => {
@@ -184,6 +194,28 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
     return genreMap[firstGenre] || 'Genre TBA';
   };
   
+  // Close more menu when clicking outside
+  React.useEffect(() => {
+    if (!showMoreMenu) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (
+        moreMenuRef.current &&
+        !moreMenuRef.current.contains(target) &&
+        moreButtonRef.current &&
+        !moreButtonRef.current.contains(target)
+      ) {
+        setShowMoreMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [showMoreMenu]);
+
   // Handle person results differently
   if (mediaType === 'person') {
     return <PersonCard item={item} />;
@@ -399,16 +431,174 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
         </div>
         
         {/* Actions */}
-        <div className="mt-auto flex flex-wrap gap-2 justify-between items-center">
-          <div className="flex flex-wrap gap-2 p-2 rounded-lg" style={{ borderColor: 'var(--line)', border: '1px dashed' }}>
-            {createButton('want', translations.wantToWatchAction)}
-            {createButton('currently-watching', translations.currentlyWatchingAction)}
-            {createButton('watched', translations.watchedAction)}
-            {createButton('not-interested', translations.notInterestedAction)}
-            <MyListToggle item={item} />
+        {isMobile ? (
+          // Mobile: Compact actions with primary button + More menu
+          <div className="mt-auto flex gap-2 items-center">
+            {/* Primary Action Button */}
+            {!isInList ? (
+              <button
+                onClick={() => handleAction('want')}
+                className="flex-1 px-4 py-3 text-sm font-medium rounded-lg bg-accent text-white hover:opacity-90 transition-opacity min-h-[44px] flex items-center justify-center"
+                disabled={pressedButtons.has(`want-${item.id}`)}
+              >
+                {pressedButtons.has(`want-${item.id}`) ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    <span>Adding...</span>
+                  </div>
+                ) : (
+                  `+ ${translations.wantToWatchAction || 'Add'}`
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={() => handleAction('currently-watching')}
+                className="flex-1 px-4 py-3 text-sm font-medium rounded-lg bg-accent text-white hover:opacity-90 transition-opacity min-h-[44px] flex items-center justify-center"
+                disabled={pressedButtons.has(`currently-watching-${item.id}`)}
+              >
+                {pressedButtons.has(`currently-watching-${item.id}`) ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    <span>Adding...</span>
+                  </div>
+                ) : (
+                  `+ ${translations.currentlyWatchingAction || 'Watching'}`
+                )}
+              </button>
+            )}
+            
+            {/* More Menu Button */}
+            <div className="relative">
+              <button
+                ref={moreButtonRef}
+                onClick={() => setShowMoreMenu(!showMoreMenu)}
+                className="px-4 py-3 text-sm font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                style={{ color: 'var(--text)' }}
+                aria-label="More actions"
+                aria-haspopup="menu"
+                aria-expanded={showMoreMenu}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+              </button>
+              
+              {/* More Menu Dropdown */}
+              {showMoreMenu && (
+                <Portal>
+                  <div
+                    ref={moreMenuRef}
+                    role="menu"
+                    className="fixed rounded-lg border shadow-2xl"
+                    style={{
+                      zIndex: 10003,
+                      backgroundColor: 'var(--card)',
+                      borderColor: 'var(--line)',
+                      bottom: moreButtonRef.current ? `${window.innerHeight - moreButtonRef.current.getBoundingClientRect().top + 8}px` : '80px',
+                      right: moreButtonRef.current ? `${window.innerWidth - moreButtonRef.current.getBoundingClientRect().right}px` : '16px',
+                      minWidth: '160px',
+                      maxWidth: '90vw',
+                    }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                  >
+                    <div className="py-2">
+                      {!isInList && (
+                        <>
+                          <button
+                            onClick={() => {
+                              handleAction('currently-watching');
+                              setShowMoreMenu(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                            style={{ color: 'var(--text)' }}
+                          >
+                            {translations.currentlyWatchingAction}
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleAction('watched');
+                              setShowMoreMenu(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                            style={{ color: 'var(--text)' }}
+                          >
+                            {translations.watchedAction}
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleAction('not-interested');
+                              setShowMoreMenu(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                            style={{ color: 'var(--text)' }}
+                          >
+                            {translations.notInterestedAction}
+                          </button>
+                          <div className="h-px bg-line my-1" style={{ backgroundColor: 'var(--line)' }}></div>
+                        </>
+                      )}
+                      {isInList && (
+                        <>
+                          <button
+                            onClick={() => {
+                              handleAction('want');
+                              setShowMoreMenu(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                            style={{ color: 'var(--text)' }}
+                          >
+                            {translations.wantToWatchAction}
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleAction('watched');
+                              setShowMoreMenu(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                            style={{ color: 'var(--text)' }}
+                          >
+                            {translations.watchedAction}
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleAction('not-interested');
+                              setShowMoreMenu(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                            style={{ color: 'var(--text)' }}
+                          >
+                            {translations.notInterestedAction}
+                          </button>
+                          <div className="h-px bg-line my-1" style={{ backgroundColor: 'var(--line)' }}></div>
+                        </>
+                      )}
+                      <div className="px-4 py-2">
+                        <MyListToggle item={item} />
+                      </div>
+                    </div>
+                  </div>
+                  {/* Backdrop */}
+                  <div
+                    className="fixed inset-0"
+                    onClick={() => setShowMoreMenu(false)}
+                    style={{ zIndex: 10002 }}
+                  />
+                </Portal>
+              )}
+            </div>
           </div>
-          
-        </div>
+        ) : (
+          // Desktop: Full action buttons
+          <div className="mt-auto flex flex-wrap gap-2 justify-between items-center">
+            <div className="flex flex-wrap gap-2 p-2 rounded-lg" style={{ borderColor: 'var(--line)', border: '1px dashed' }}>
+              {createButton('want', translations.wantToWatchAction)}
+              {createButton('currently-watching', translations.currentlyWatchingAction)}
+              {createButton('watched', translations.watchedAction)}
+              {createButton('not-interested', translations.notInterestedAction)}
+              <MyListToggle item={item} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

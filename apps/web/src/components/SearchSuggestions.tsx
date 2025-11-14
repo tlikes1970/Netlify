@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { fetchEnhancedAutocomplete } from '../search/enhancedAutocomplete';
 import type { MediaItem } from './cards/card.types';
+import { isMobileNow } from '../lib/isMobile';
 // import { useTranslations } from '../lib/language'; // Unused
 
 // Type for display format (compatible with existing UI)
@@ -127,6 +128,7 @@ export default function SearchSuggestions({
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isMobile = isMobileNow();
   
   // Load search history on mount
   useEffect(() => {
@@ -209,18 +211,21 @@ export default function SearchSuggestions({
     );
     
     // Combine and deduplicate (history first, then popular)
+    // On mobile, limit popular suggestions to reduce clutter
     const combined = [...matchingHistory, ...matchingPopular.filter(p => !matchingHistory.includes(p))];
     
-    setFilteredSuggestions(combined.slice(0, 8)); // Limit to 8 suggestions
+    // Mobile: limit to 5 popular suggestions, desktop: 8
+    const limit = isMobile ? 5 : 8;
+    setFilteredSuggestions(combined.slice(0, limit));
     setSelectedIndex(-1);
-  }, [query, searchHistory]);
+  }, [query, searchHistory, isMobile]);
   
   // Handle keyboard navigation across all suggestion sections
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const historyCount = Math.min(searchHistory.length, 3);
       const tmdbCount = tmdbSuggestions.length;
-      const popularCount = filteredSuggestions.length;
+      const popularCount = isMobile ? 0 : filteredSuggestions.length; // No popular on mobile
       const maxIndex = historyCount + tmdbCount + popularCount - 1;
       
       if (!isVisible || maxIndex < 0) return;
@@ -263,7 +268,7 @@ export default function SearchSuggestions({
     
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isVisible, searchHistory, tmdbSuggestions, filteredSuggestions, selectedIndex, onClose]);
+  }, [isVisible, searchHistory, tmdbSuggestions, filteredSuggestions, selectedIndex, onClose, isMobile]);
   
   const handleSuggestionClick = (suggestion: string) => {
     onSuggestionClick(suggestion);
@@ -275,24 +280,32 @@ export default function SearchSuggestions({
     localStorage.setItem('searchHistory', JSON.stringify([]));
   };
   
-  const totalSuggestions = tmdbSuggestions.length + filteredSuggestions.length;
+  // Mobile: Show only Recent History + TMDB (hide Popular)
+  // Desktop: Show all three sections
+  const showPopularSuggestions = !isMobile && filteredSuggestions.length > 0;
+  const totalSuggestions = (isMobile ? 0 : filteredSuggestions.length) + tmdbSuggestions.length + (searchHistory.length > 0 ? Math.min(searchHistory.length, 3) : 0);
   
   if (!isVisible || totalSuggestions === 0) {
     return null;
   }
+  
+  // Mobile: max height ~65vh, Desktop: max-h-80 (320px)
+  const maxHeight = isMobile ? '65vh' : '320px';
   
   return (
     <div 
       ref={suggestionsRef}
       className={`
         absolute top-full left-0 right-0 mt-1 bg-card border border-line rounded-xl shadow-lg
-        max-h-80 overflow-y-auto
+        overflow-y-auto
         ${className}
       `}
       style={{ 
         backgroundColor: 'var(--card)', 
         borderColor: 'var(--line)',
-        zIndex: 9999
+        zIndex: 10002, // Above mobile nav (9999) and filter sheet (10001)
+        maxHeight,
+        WebkitOverflowScrolling: 'touch',
       }}
     >
       <div className="p-2">
@@ -402,8 +415,8 @@ export default function SearchSuggestions({
           </div>
         )}
 
-        {/* Suggestions Section */}
-        {filteredSuggestions.length > 0 && (
+        {/* Popular Suggestions Section - Hidden on mobile to reduce clutter */}
+        {showPopularSuggestions && (
           <div>
             <div className="text-xs font-medium mb-2" style={{ color: 'var(--muted)' }}>
               Popular

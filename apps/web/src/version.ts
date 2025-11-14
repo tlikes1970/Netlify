@@ -1,5 +1,14 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.151: Mobile search redesign and suggestion relevance improvements
+// - Phase A: Simplified mobile search bar - inline clear button, improved spacing
+// - Phase B: Mobile-friendly filter sheet with Apply/Reset buttons
+// - Phase C: Tidied search suggestions - hide Popular on mobile, improved spacing
+// - Phase D: Simplified search result card actions on mobile (primary + More menu)
+// - Phase E: Fixed tab switching to preserve search, pull-to-refresh behavior
+// - Enhanced suggestion relevance: multi-endpoint fetching, improved substring matching
+// - Fixed "bat" → "batman" relevance by boosting word-starting substring matches
+// - Rollback: Revert this commit to restore previous mobile search behavior
 // ⚠️ VERSION 0.1.150: Fixed Apple login redirect loop and email login username prompt
 // - Created appleLogin() helper similar to googleLogin() with redirect loop prevention
 // - Apple login now uses popup on iOS/Safari and redirect guards to prevent loops
@@ -104,4 +113,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.150";
+export const APP_VERSION = "0.1.151";

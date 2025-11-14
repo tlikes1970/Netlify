@@ -11,6 +11,7 @@ import { authManager } from "../lib/auth";
 import SearchSuggestions, { addSearchToHistory } from "./SearchSuggestions";
 import VoiceSearch from "./VoiceSearch";
 import Portal from "./Portal";
+import { isMobileNow } from "../lib/isMobile";
 
 const POPULAR_GENRES = [
   { id: null, name: "All Genres" },
@@ -226,11 +227,62 @@ function SearchRow({
   const [isComposing, setIsComposing] = React.useState(false);
   const [showFiltersDropdown, setShowFiltersDropdown] = React.useState(false);
   const [showAllGenres, setShowAllGenres] = React.useState(false);
+  const [hasVoiceSearch, setHasVoiceSearch] = React.useState(false);
+  // Mobile filter sheet: temporary state for applying filters
+  const [pendingFilters, setPendingFilters] = React.useState<{
+    mode: "title" | "tag";
+    type: "all" | "movies-tv" | "people";
+    genre: number | null;
+  }>({ mode: searchMode, type: searchType, genre: g });
   const searchContainerRef = React.useRef<HTMLDivElement>(null);
   const filtersDropdownRef = React.useRef<HTMLDivElement>(null);
   const menuRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const voiceSearchRef = React.useRef<HTMLDivElement>(null);
   const debounceTimerRef = React.useRef<number | null>(null);
+  const isMobile = isMobileNow();
+  
+  // Detect if voice search is actually rendered (for mobile padding calculation)
+  React.useEffect(() => {
+    if (!isMobile || !voiceSearchRef.current) {
+      setHasVoiceSearch(false);
+      return;
+    }
+    // Check if VoiceSearch component rendered (it returns null when disabled)
+    const hasRendered = voiceSearchRef.current.children.length > 0;
+    setHasVoiceSearch(hasRendered);
+  }, [isMobile]);
+
+  // Sync pending filters when dropdown opens
+  React.useEffect(() => {
+    if (showFiltersDropdown) {
+      setPendingFilters({ mode: searchMode, type: searchType, genre: g });
+    }
+  }, [showFiltersDropdown, searchMode, searchType, g]);
+
+  // Lock body scroll when mobile filter sheet is open
+  React.useEffect(() => {
+    if (!isMobile || !showFiltersDropdown) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isMobile, showFiltersDropdown]);
+
+  // Apply filters (mobile sheet)
+  const applyFilters = () => {
+    setSearchMode(pendingFilters.mode);
+    setSearchType(pendingFilters.type);
+    setG(pendingFilters.genre);
+    setShowFiltersDropdown(false);
+    setShowAllGenres(false);
+  };
+
+  // Reset filters to defaults
+  const resetFilters = () => {
+    setPendingFilters({ mode: "title", type: "all", genre: null });
+  };
 
   const submit = () => {
     if (isComposing) return; // Don't submit during IME composition
@@ -386,7 +438,9 @@ function SearchRow({
         <button
           type="button"
           onClick={() => setShowFiltersDropdown(!showFiltersDropdown)}
-          className="rounded-l-2xl border-r-0 px-2 py-2 md:px-3 md:py-3 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-all h-full"
+          className={`rounded-l-2xl border-r-0 px-2 py-2 md:px-3 md:py-3 font-semibold hover:bg-accent hover:text-accent-foreground transition-all h-full ${
+            isMobile ? 'text-sm' : 'text-xs'
+          }`}
           aria-haspopup="menu"
           aria-expanded={showFiltersDropdown}
           aria-label={`Filters: ${getFiltersSummary()}`}
@@ -396,156 +450,310 @@ function SearchRow({
           <span className="ml-1">▾</span>
         </button>
 
-        {/* Dropdown Menu - Portal to escape stacking contexts */}
+        {/* Filter Menu - Mobile Sheet or Desktop Dropdown */}
         {showFiltersDropdown && filtersDropdownRef.current && (
           <Portal>
-            <>
-              <div
-                ref={menuRef}
-                role="menu"
-                className="fixed rounded-lg border shadow-2xl bg-white text-black"
-                onPointerDown={(e) => e.stopPropagation()}
-                style={{
-                  zIndex: 1000,
-                  top: `${filtersDropdownRef.current.getBoundingClientRect().bottom + 8}px`,
-                  left: `${filtersDropdownRef.current.getBoundingClientRect().left}px`,
-                  width: "320px",
-                  maxWidth: "90vw",
-                  maxHeight: "70vh",
-                  overflowY: "auto",
-                  padding: "12px",
-                }}
-              >
-                <div className="space-y-2">
-                  {/* Title */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchMode("title");
-                      setShowFiltersDropdown(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-xs font-medium rounded transition-colors text-black ${
-                      searchMode === "title"
-                        ? "bg-blue-500 text-white"
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    Title
-                  </button>
-
-                  {/* Tag */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchMode("tag");
-                      setShowFiltersDropdown(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-xs font-medium rounded transition-colors text-black ${
-                      searchMode === "tag"
-                        ? "bg-blue-500 text-white"
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    Tag
-                  </button>
-
-                  {/* Divider */}
-                  <div className="h-px bg-gray-300 my-1"></div>
-
-                  {/* All */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchType("all");
-                      setShowFiltersDropdown(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-xs font-medium rounded transition-colors text-black ${
-                      searchType === "all"
-                        ? "bg-blue-500 text-white"
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    All
-                  </button>
-
-                  {/* Movies/TV */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchType("movies-tv");
-                      setShowFiltersDropdown(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-xs font-medium rounded transition-colors text-black ${
-                      searchType === "movies-tv"
-                        ? "bg-blue-500 text-white"
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    Movies/TV
-                  </button>
-
-                  {/* People */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchType("people");
-                      setShowFiltersDropdown(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-xs font-medium rounded transition-colors text-black ${
-                      searchType === "people"
-                        ? "bg-blue-500 text-white"
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    People
-                  </button>
-
-                  {/* Divider */}
-                  <div className="h-px bg-gray-300 my-1"></div>
-
-                  {/* Genres */}
-                  {(showAllGenres
-                    ? POPULAR_GENRES
-                    : POPULAR_GENRES.slice(0, 8)
-                  ).map((genre) => (
+            {isMobile ? (
+              // Mobile: Bottom Sheet
+              <>
+                {/* Backdrop */}
+                <div
+                  className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+                  onClick={() => setShowFiltersDropdown(false)}
+                  style={{ zIndex: 10000 }}
+                />
+                {/* Sheet */}
+                <div
+                  ref={menuRef}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Search Filters"
+                  className="fixed left-0 right-0 bottom-0 rounded-t-2xl border-t border-l border-r shadow-2xl"
+                  style={{
+                    zIndex: 10001,
+                    backgroundColor: 'var(--card)',
+                    borderColor: 'var(--line)',
+                    maxHeight: '80vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  {/* Sheet Header */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--line)' }}>
+                    <h3 className="text-base font-semibold" style={{ color: 'var(--text)' }}>Filters</h3>
                     <button
-                      key={genre.id ?? "all"}
+                      type="button"
+                      onClick={() => setShowFiltersDropdown(false)}
+                      className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+                      aria-label="Close filters"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text)' }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Scrollable Content */}
+                  <div className="flex-1 overflow-y-auto px-4 py-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+                    {/* Search Mode Section */}
+                    <div className="mb-6">
+                      <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--muted)' }}>Search Mode</h4>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setPendingFilters(p => ({ ...p, mode: "title" }))}
+                          className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                            pendingFilters.mode === "title"
+                              ? "bg-accent text-white"
+                              : "bg-muted hover:bg-muted/80"
+                          }`}
+                          style={{
+                            backgroundColor: pendingFilters.mode === "title" ? 'var(--accent)' : 'var(--muted)',
+                            color: pendingFilters.mode === "title" ? 'white' : 'var(--text)',
+                          }}
+                        >
+                          Title
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPendingFilters(p => ({ ...p, mode: "tag" }))}
+                          className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                            pendingFilters.mode === "tag"
+                              ? "bg-accent text-white"
+                              : "bg-muted hover:bg-muted/80"
+                          }`}
+                          style={{
+                            backgroundColor: pendingFilters.mode === "tag" ? 'var(--accent)' : 'var(--muted)',
+                            color: pendingFilters.mode === "tag" ? 'white' : 'var(--text)',
+                          }}
+                        >
+                          Tag
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Search Type Section */}
+                    <div className="mb-6">
+                      <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--muted)' }}>Search In</h4>
+                      <div className="space-y-2">
+                        {(["all", "movies-tv", "people"] as const).map((type) => (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => setPendingFilters(p => ({ ...p, type }))}
+                            className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                              pendingFilters.type === type
+                                ? "bg-accent text-white"
+                                : "bg-muted hover:bg-muted/80"
+                            }`}
+                            style={{
+                              backgroundColor: pendingFilters.type === type ? 'var(--accent)' : 'var(--muted)',
+                              color: pendingFilters.type === type ? 'white' : 'var(--text)',
+                            }}
+                          >
+                            {type === "all" ? "All" : type === "movies-tv" ? "Movies/TV" : "People"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Genres Section */}
+                    <div className="mb-6">
+                      <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--muted)' }}>Genre</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {POPULAR_GENRES.map((genre) => (
+                          <button
+                            key={genre.id ?? "all"}
+                            type="button"
+                            onClick={() => setPendingFilters(p => ({ ...p, genre: genre.id }))}
+                            className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${
+                              pendingFilters.genre === genre.id
+                                ? "bg-accent text-white"
+                                : "bg-muted hover:bg-muted/80"
+                            }`}
+                            style={{
+                              backgroundColor: pendingFilters.genre === genre.id ? 'var(--accent)' : 'var(--muted)',
+                              color: pendingFilters.genre === genre.id ? 'white' : 'var(--text)',
+                            }}
+                          >
+                            {genre.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sheet Footer with Actions */}
+                  <div className="px-4 py-3 border-t flex gap-2" style={{ borderColor: 'var(--line)' }}>
+                    <button
+                      type="button"
+                      onClick={resetFilters}
+                      className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+                      style={{ color: 'var(--text)' }}
+                    >
+                      Reset
+                    </button>
+                    <button
+                      type="button"
+                      onClick={applyFilters}
+                      className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-accent text-white hover:opacity-90 transition-opacity"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              // Desktop: Dropdown Menu
+              <>
+                <div
+                  ref={menuRef}
+                  role="menu"
+                  className="fixed rounded-lg border shadow-2xl bg-white text-black"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  style={{
+                    zIndex: 1000,
+                    top: `${filtersDropdownRef.current.getBoundingClientRect().bottom + 8}px`,
+                    left: `${filtersDropdownRef.current.getBoundingClientRect().left}px`,
+                    width: "320px",
+                    maxWidth: "90vw",
+                    maxHeight: "70vh",
+                    overflowY: "auto",
+                    padding: "12px",
+                  }}
+                >
+                  <div className="space-y-2">
+                    {/* Title */}
+                    <button
                       type="button"
                       onClick={() => {
-                        setG(genre.id);
+                        setSearchMode("title");
                         setShowFiltersDropdown(false);
                       }}
-                      className={`w-full text-left px-3 py-2.5 text-xs font-medium rounded transition-colors leading-normal whitespace-normal ${
-                        g === genre.id
+                      className={`w-full text-left px-3 py-2 text-xs font-medium rounded transition-colors text-black ${
+                        searchMode === "title"
                           ? "bg-blue-500 text-white"
-                          : "hover:bg-gray-100 text-black"
+                          : "hover:bg-gray-100"
                       }`}
                     >
-                      {genre.name}
+                      Title
                     </button>
-                  ))}
 
-                  {POPULAR_GENRES.length > 8 && (
+                    {/* Tag */}
                     <button
                       type="button"
-                      onClick={() => setShowAllGenres((v) => !v)}
-                      className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded bg-gray-50 hover:bg-gray-100 text-gray-700"
+                      onClick={() => {
+                        setSearchMode("tag");
+                        setShowFiltersDropdown(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs font-medium rounded transition-colors text-black ${
+                        searchMode === "tag"
+                          ? "bg-blue-500 text-white"
+                          : "hover:bg-gray-100"
+                      }`}
                     >
-                      {showAllGenres ? "Show fewer" : "Show more"}
+                      Tag
                     </button>
-                  )}
-                </div>
-              </div>
 
-              {/* Backdrop to close dropdown - behind the menu */}
-              <div
-                className="fixed inset-0"
-                onClick={() => setShowFiltersDropdown(false)}
-                style={{
-                  zIndex: 999,
-                }}
-              />
-            </>
+                    {/* Divider */}
+                    <div className="h-px bg-gray-300 my-1"></div>
+
+                    {/* All */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchType("all");
+                        setShowFiltersDropdown(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs font-medium rounded transition-colors text-black ${
+                        searchType === "all"
+                          ? "bg-blue-500 text-white"
+                          : "hover:bg-gray-100"
+                      }`}
+                    >
+                      All
+                    </button>
+
+                    {/* Movies/TV */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchType("movies-tv");
+                        setShowFiltersDropdown(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs font-medium rounded transition-colors text-black ${
+                        searchType === "movies-tv"
+                          ? "bg-blue-500 text-white"
+                          : "hover:bg-gray-100"
+                      }`}
+                    >
+                      Movies/TV
+                    </button>
+
+                    {/* People */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchType("people");
+                        setShowFiltersDropdown(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs font-medium rounded transition-colors text-black ${
+                        searchType === "people"
+                          ? "bg-blue-500 text-white"
+                          : "hover:bg-gray-100"
+                      }`}
+                    >
+                      People
+                    </button>
+
+                    {/* Divider */}
+                    <div className="h-px bg-gray-300 my-1"></div>
+
+                    {/* Genres */}
+                    {(showAllGenres
+                      ? POPULAR_GENRES
+                      : POPULAR_GENRES.slice(0, 8)
+                    ).map((genre) => (
+                      <button
+                        key={genre.id ?? "all"}
+                        type="button"
+                        onClick={() => {
+                          setG(genre.id);
+                          setShowFiltersDropdown(false);
+                        }}
+                        className={`w-full text-left px-3 py-2.5 text-xs font-medium rounded transition-colors leading-normal whitespace-normal ${
+                          g === genre.id
+                            ? "bg-blue-500 text-white"
+                            : "hover:bg-gray-100 text-black"
+                        }`}
+                      >
+                        {genre.name}
+                      </button>
+                    ))}
+
+                    {POPULAR_GENRES.length > 8 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllGenres((v) => !v)}
+                        className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded bg-gray-50 hover:bg-gray-100 text-gray-700"
+                      >
+                        {showAllGenres ? "Show fewer" : "Show more"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Backdrop to close dropdown - behind the menu */}
+                <div
+                  className="fixed inset-0"
+                  onClick={() => setShowFiltersDropdown(false)}
+                  style={{
+                    zIndex: 999,
+                  }}
+                />
+              </>
+            )}
           </Portal>
         )}
       </div>
@@ -577,12 +785,48 @@ function SearchRow({
               onKeyDown={handleKeyDown}
               onCompositionStart={() => setIsComposing(true)}
               onCompositionEnd={() => setIsComposing(false)}
-              className="w-full rounded-none border-l-0 border-r-0 border-y-0 px-2 py-2 md:px-4 md:py-3 pr-8 md:pr-12 text-xs md:text-sm outline-none ring-0 focus:border-primary"
+              className={`w-full rounded-none border-l-0 border-r-0 border-y-0 py-2 md:py-3 outline-none ring-0 focus:border-primary ${
+                isMobile
+                  ? `px-3 text-sm ${q.length > 0 ? (hasVoiceSearch ? 'pr-20' : 'pr-10') : (hasVoiceSearch ? 'pr-10' : 'pr-3')}`
+                  : 'px-4 pr-12 text-sm'
+              }`}
               spellCheck="true"
             />
 
+            {/* Inline Clear Button (Mobile) */}
+            {isMobile && q.length > 0 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setQ("");
+                  setShowSuggestions(false);
+                  inputRef.current?.focus();
+                }}
+                className="absolute right-1 flex items-center justify-center w-8 h-8 rounded-full hover:bg-muted transition-colors"
+                aria-label="Clear search"
+                style={{ right: hasVoiceSearch ? '40px' : '4px' }}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  style={{ color: 'var(--muted)' }}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            )}
+
             {/* Voice Search Button */}
-            <div className="absolute right-1 md:right-2">
+            <div ref={voiceSearchRef} className="absolute right-1 md:right-2">
               <VoiceSearch
                 onVoiceResult={(text) => {
                   setQ(text);
@@ -618,18 +862,23 @@ function SearchRow({
       <div className="flex">
         <button
           type="submit"
-          className="rounded-r-2xl rounded-l-none border-l-0 border-r-0 px-2 py-2 md:px-3 md:py-3 text-xs font-semibold hover:bg-accent hover:text-accent-foreground transition-all duration-150 ease-out"
+          className={`rounded-r-2xl rounded-l-none border-l-0 border-r-0 px-3 py-2 md:px-3 md:py-3 font-semibold hover:bg-accent hover:text-accent-foreground transition-all duration-150 ease-out ${
+            isMobile ? 'text-sm' : 'text-xs'
+          }`}
           onClick={submit}
         >
           {translations.search}
         </button>
-        <button
-          type="button"
-          className="rounded-r-2xl rounded-l-none border-l-0 px-2 py-2 md:px-3 md:py-3 text-xs font-semibold hover:bg-muted transition-all duration-150 ease-out"
-          onClick={clear}
-        >
-          {translations.clear}
-        </button>
+        {/* Clear button - hidden on mobile (replaced by inline clear icon) */}
+        {!isMobile && (
+          <button
+            type="button"
+            className="rounded-r-2xl rounded-l-none border-l-0 px-2 py-2 md:px-3 md:py-3 text-xs font-semibold hover:bg-muted transition-all duration-150 ease-out"
+            onClick={clear}
+          >
+            {translations.clear}
+          </button>
+        )}
       </div>
     </div>
   );

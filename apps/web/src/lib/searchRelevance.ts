@@ -143,9 +143,13 @@ export function scoreCandidate(
   
   let score = 0;
   
-  // w_exact: exact normalized title match (+6.0)
+  // Check if query is a single word (like "bat") vs multi-word (like "bat man")
+  const isSingleWordQuery = queryTokens.length === 1 && normalizedQuery.length <= 10;
+  
+  // w_exact: exact normalized title match
+  // For single-word queries, reduce exact match weight to allow substring matches to compete
   if (normalizedTitle === normalizedQuery) {
-    score += 6.0;
+    score += isSingleWordQuery ? 4.0 : 6.0;
   }
   
   // w_prefix: title startsWith first token (+3.0)
@@ -156,9 +160,38 @@ export function scoreCandidate(
     }
   }
   
+  // w_substring: title contains query as substring
+  // This handles cases like "bat" matching "batman" or "super" matching "superman"
+  // Increased weight to prioritize substring matches over generic "battle" matches
+  if (normalizedTitle.includes(normalizedQuery) && normalizedTitle !== normalizedQuery) {
+    // Extra boost if the substring match is at the start of a word (e.g., "bat" in "batman")
+    const startsWord = normalizedTitle.startsWith(normalizedQuery) || 
+                       normalizedTitle.includes(` ${normalizedQuery}`) ||
+                       titleTokens.some(t => t.startsWith(normalizedQuery));
+    
+    // For single-word queries, heavily boost word-starting substring matches
+    // This ensures "batman" outranks "bat" when searching "bat"
+    if (isSingleWordQuery && startsWord) {
+      score += 5.5; // Higher than exact match for single words
+    } else if (startsWord) {
+      score += 4.0;
+    } else {
+      score += 2.5;
+    }
+  }
+  
   // w_token_intersection: Jaccard of query tokens vs title tokens (+2.0 * J)
   const jaccard = jaccardSimilarity(queryTokens, titleTokens);
   score += 2.0 * jaccard;
+  
+  // w_partial_token: any title token contains query token as substring (+1.5)
+  // Handles cases where query token is embedded in a longer title token
+  if (queryTokens.length > 0) {
+    const firstToken = queryTokens[0];
+    if (titleTokens.some(t => t.includes(firstToken) && t !== firstToken)) {
+      score += 1.5;
+    }
+  }
   
   // w_popularity: min-max of vote_count or popularity (+0..+1.5)
   const voteCount = (candidate as any).vote_count || 0;
@@ -233,17 +266,24 @@ export function rankCandidates(
   
   const deduped = Array.from(seen.values());
   
-  // Ensure at least one exact/prefix match in top-3 if present
+  // Ensure at least one exact/prefix/substring match in top-3 if present
   const exactOrPrefix = deduped.filter((entry, idx) => {
     if (idx >= 3) return false;
     const normalizedQuery = normalizeTitle(query);
     const normalizedTitle = normalizeTitle(entry.item.title || '');
     const queryTokens = tokenize(query);
+    const firstToken = queryTokens.length > 0 ? queryTokens[0] : '';
+    
+    // Check for exact match, prefix match, or word-starting substring match
     return normalizedTitle === normalizedQuery || 
-           (queryTokens.length > 0 && normalizedTitle.startsWith(queryTokens[0]));
+           (firstToken && normalizedTitle.startsWith(firstToken)) ||
+           (normalizedTitle.includes(normalizedQuery) && 
+            (normalizedTitle.startsWith(normalizedQuery) || 
+             normalizedTitle.includes(` ${normalizedQuery}`) ||
+             tokenize(entry.item.title || '').some(t => t.startsWith(normalizedQuery))));
   });
   
-  // If exact/prefix exists but not in top-3, promote highest one
+  // If exact/prefix/substring exists but not in top-3, promote highest one
   if (exactOrPrefix.length > 0 && deduped.indexOf(exactOrPrefix[0]) >= 3) {
     const toPromote = exactOrPrefix[0];
     const index = deduped.indexOf(toPromote);

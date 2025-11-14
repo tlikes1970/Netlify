@@ -554,8 +554,8 @@ export default function App() {
         {/* Mobile Tabs - mobile only */}
         <div className="block md:hidden">
           <MobileTabs current={view} onChange={(tab) => { 
-            // Clear search when switching tabs
-            handleClear();
+            // Phase E: Do NOT auto-clear search on mobile tab switch
+            // User can manually clear search if needed
             setView(tab); 
           }} />
         </div>
@@ -877,8 +877,8 @@ export default function App() {
         {/* Mobile Tabs - mobile only */}
         <div className="block md:hidden">
           <MobileTabs current={view} onChange={(tab) => { 
-            // Clear search when switching tabs
-            handleClear();
+            // Phase E: Do NOT auto-clear search on mobile tab switch
+            // User can manually clear search if needed
             setView(tab); 
           }} />
         </div>
