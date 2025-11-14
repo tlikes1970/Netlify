@@ -1,5 +1,12 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.152: Fixed weekly digest email content not appearing in emails
+// - Fixed loadDigestConfig() to use nullish coalescing (??) instead of logical OR (||)
+// - Fixed buildEmailTemplate() to preserve empty strings and use saved content correctly
+// - Fixed buildPlainTextTemplate() to preserve empty strings and use saved content correctly
+// - Root cause: || operator treated empty strings as falsy, causing fallback to defaults
+// - Now uses ?? which only falls back when value is null/undefined, preserving user-entered content
+// - Rollback: Revert this commit to restore previous digest template behavior
 // ⚠️ VERSION 0.1.151: Mobile search redesign and suggestion relevance improvements
 // - Phase A: Simplified mobile search bar - inline clear button, improved spacing
 // - Phase B: Mobile-friendly filter sheet with Apply/Reset buttons
@@ -113,4 +120,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.151";
+export const APP_VERSION = "0.1.152";

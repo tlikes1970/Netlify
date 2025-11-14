@@ -62,25 +62,26 @@ async function loadDigestConfig(): Promise<DigestConfig | null> {
       return null;
     }
     // Map Firestore data to DigestConfig, with fallbacks for missing fields
+    // Use nullish coalescing (??) instead of || to preserve empty strings
     return {
-      title: data.title || '🎬 Flicklet Weekly — We actually shipped things.',
-      intro: data.intro || "Here's your Flicklet update in under a minute.",
-      productPulseChanged: data.productPulseChanged || 'Ratings now stick between sessions.',
-      productPulseNext: data.productPulseNext || '• Smarter discovery rails • Swipe gestures that don\'t argue with gravity',
-      productPulseHowTo: data.productPulseHowTo || 'Tap ★ once. It remembers now.',
-      productPulseBonus: data.productPulseBonus || 'Library loads faster so you spend less time staring at spinners.',
-      tipHeadline: data.tipHeadline || 'The One Thing You Didn\'t Know You Needed',
-      tipBody: data.tipBody || 'Hold your finger on a card to reorder your list. Saves 10 clicks and a small piece of your soul.',
-      footerNote: data.footerNote || 'Was this worth your 42 seconds?',
+      title: data.title ?? '🎬 Flicklet Weekly — We actually shipped things.',
+      intro: data.intro ?? "Here's your Flicklet update in under a minute.",
+      productPulseChanged: data.productPulseChanged ?? 'Ratings now stick between sessions.',
+      productPulseNext: data.productPulseNext ?? '• Smarter discovery rails • Swipe gestures that don\'t argue with gravity',
+      productPulseHowTo: data.productPulseHowTo ?? 'Tap ★ once. It remembers now.',
+      productPulseBonus: data.productPulseBonus ?? 'Library loads faster so you spend less time staring at spinners.',
+      tipHeadline: data.tipHeadline ?? 'The One Thing You Didn\'t Know You Needed',
+      tipBody: data.tipBody ?? 'Hold your finger on a card to reorder your list. Saves 10 clicks and a small piece of your soul.',
+      footerNote: data.footerNote ?? 'Was this worth your 42 seconds?',
       isActive: data.isActive !== undefined ? data.isActive : false,
       // New fields with defaults
       autoSendEnabled: data.autoSendEnabled !== undefined ? data.autoSendEnabled : false,
-      autoSendDay: data.autoSendDay || 'friday',
-      autoSendTime: data.autoSendTime || '09:00',
-      lastAutoSentAt: data.lastAutoSentAt || null,
-      lastManualSentAt: data.lastManualSentAt || null,
-      lastAutoSentCount: data.lastAutoSentCount || 0,
-      lastManualSentCount: data.lastManualSentCount || 0,
+      autoSendDay: data.autoSendDay ?? 'friday',
+      autoSendTime: data.autoSendTime ?? '09:00',
+      lastAutoSentAt: data.lastAutoSentAt ?? null,
+      lastManualSentAt: data.lastManualSentAt ?? null,
+      lastAutoSentCount: data.lastAutoSentCount ?? 0,
+      lastManualSentCount: data.lastManualSentCount ?? 0,
     };
   } catch (error) {
     console.error('[weeklyDigest] Error reading digest config:', error);
@@ -533,7 +534,7 @@ function buildEmailTemplate({
                 Hi ${subscriberName || 'there'},
               </p>
               <p style="margin:0 0 30px 0;font-size:14px;color:#666666;line-height:1.5;">
-                ${config.intro || "Here's your Flicklet update in under a minute."}
+                ${config.intro ?? "Here's your Flicklet update in under a minute."}
               </p>
 
               <h2 style="margin:30px 0 15px 0;font-size:18px;color:#333333;font-weight:bold;">
@@ -542,22 +543,22 @@ function buildEmailTemplate({
               <table role="presentation" style="width:100%;border-collapse:collapse;margin-bottom:20px;">
                 <tr>
                   <td style="padding:8px 0;font-size:14px;color:#333333;">
-                    <strong>What changed (🔧)</strong> — ${config.productPulseChanged || 'Ratings now stick between sessions.'}
+                    <strong>What changed (🔧)</strong> — ${config.productPulseChanged ?? 'Ratings now stick between sessions.'}
                   </td>
                 </tr>
                 <tr>
                   <td style="padding:8px 0;font-size:14px;color:#333333;">
-                    <strong>What's next (👀)</strong> — ${config.productPulseNext || '• Smarter discovery rails • Swipe gestures that don\'t argue with gravity'}
+                    <strong>What's next (👀)</strong> — ${config.productPulseNext ?? '• Smarter discovery rails • Swipe gestures that don\'t argue with gravity'}
                   </td>
                 </tr>
                 <tr>
                   <td style="padding:8px 0;font-size:14px;color:#333333;">
-                    <strong>How to use it</strong> — ${config.productPulseHowTo || 'Tap ★ once. It remembers now.'}
+                    <strong>How to use it</strong> — ${config.productPulseHowTo ?? 'Tap ★ once. It remembers now.'}
                   </td>
                 </tr>
                 <tr>
                   <td style="padding:8px 0;font-size:14px;color:#333333;">
-                    <strong>Hidden bonus</strong> — ${config.productPulseBonus || 'Library loads faster so you spend less time staring at spinners.'}
+                    <strong>Hidden bonus</strong> — ${config.productPulseBonus ?? 'Library loads faster so you spend less time staring at spinners.'}
                   </td>
                 </tr>
               </table>
@@ -570,14 +571,14 @@ function buildEmailTemplate({
               </table>
 
               <h2 style="margin:30px 0 15px 0;font-size:18px;color:#333333;font-weight:bold;">
-                3. ${config.tipHeadline || 'The One Thing You Didn\'t Know You Needed'}
+                3. ${config.tipHeadline ?? 'The One Thing You Didn\'t Know You Needed'}
               </h2>
               <p style="margin:0 0 30px 0;font-size:14px;color:#333333;line-height:1.5;">
-                ${config.tipBody || 'Hold your finger on a card to reorder your list. Saves 10 clicks and a small piece of your soul.'}
+                ${config.tipBody ?? 'Hold your finger on a card to reorder your list. Saves 10 clicks and a small piece of your soul.'}
               </p>
 
               <p style="margin:30px 0 20px 0;font-size:14px;color:#333333;line-height:1.5;">
-                ${config.footerNote || 'Was this worth your 42 seconds?'}
+                ${config.footerNote ?? 'Was this worth your 42 seconds?'}
               </p>
 
               <div style="margin-top:40px;padding-top:20px;border-top:1px solid #e0e0e0;">
@@ -631,30 +632,30 @@ function buildPlainTextTemplate({
   }
 
   return `
-${config.title || '🎬 Flicklet Weekly — We actually shipped things.'}
+${config.title ?? '🎬 Flicklet Weekly — We actually shipped things.'}
 
 Hi ${subscriberName || 'there'},
-${config.intro || "Here's your Flicklet update in under a minute."}
+${config.intro ?? "Here's your Flicklet update in under a minute."}
 
 1. Product Pulse
 
-What changed (🔧): ${config.productPulseChanged || 'Ratings now stick between sessions.'}
+What changed (🔧): ${config.productPulseChanged ?? 'Ratings now stick between sessions.'}
 
-What's next (👀): ${config.productPulseNext || 'Smarter discovery rails; swipe gestures that don\'t argue with gravity.'}
+What's next (👀): ${config.productPulseNext ?? 'Smarter discovery rails; swipe gestures that don\'t argue with gravity.'}
 
-How to use it: ${config.productPulseHowTo || 'Tap ★ once. It remembers now.'}
+How to use it: ${config.productPulseHowTo ?? 'Tap ★ once. It remembers now.'}
 
-Hidden bonus: ${config.productPulseBonus || 'Library loads faster so you spend less time staring at spinners.'}
+Hidden bonus: ${config.productPulseBonus ?? 'Library loads faster so you spend less time staring at spinners.'}
 
 2. The Cafeteria Table
 
 ${cafeteriaTableLines}
 
-3. ${config.tipHeadline || 'The One Thing You Didn\'t Know You Needed'}
+3. ${config.tipHeadline ?? 'The One Thing You Didn\'t Know You Needed'}
 
-${config.tipBody || 'Hold your finger on a card to reorder your list. Saves 10 clicks and a small piece of your soul.'}
+${config.tipBody ?? 'Hold your finger on a card to reorder your list. Saves 10 clicks and a small piece of your soul.'}
 
-${config.footerNote || 'Was this worth your 42 seconds?'}
+${config.footerNote ?? 'Was this worth your 42 seconds?'}
 
 Sent by Flicklet.
 ${unsubscribeUrl ? `To unsubscribe, visit: ${unsubscribeUrl}` : ''}

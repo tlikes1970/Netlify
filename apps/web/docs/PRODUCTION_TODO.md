@@ -62,36 +62,6 @@ This document tracks open items that need to be addressed before production depl
 - [ ] Document CSS variable usage patterns
 - [ ] Create style guide for future theme-aware components
 
-## Weekly Email Digest
-
-### 📋 Remaining Steps
-
-- [ ] Install Firebase Extension `firestore-send-email` in production
-  - Run: `firebase ext:install firebase/firestore-send-email --project=flicklet-71dff`
-  - Configure SMTP_CONNECTION_URI with SendGrid API key
-  - Set DEFAULT_FROM to `noreply@flicklet.app`
-- [ ] Set up SendGrid API key in Firebase Functions config
-  - Add `SENDGRID_API_KEY` to environment variables
-  - Verify email sender domain authentication in SendGrid
-- [ ] Deploy weeklyDigest and unsubscribe functions
-  - Deploy: `firebase deploy --only functions:weeklyDigest,functions:unsubscribe`
-- [ ] Create unsubscribe page/route (`/unsubscribe`)
-  - Implement token verification UI
-  - Handle unsubscribe requests via callable function
-  - Show confirmation message after unsubscribe
-- [ ] Test email digest end-to-end
-  - Trigger test digest manually
-  - Verify email delivery
-  - Test unsubscribe flow
-  - Verify email template renders correctly in various email clients
-- [ ] Set up monitoring for scheduled function
-  - Configure alerts for function failures
-  - Set up logging for email delivery tracking
-- [ ] Add user preference UI for email subscriptions
-  - Add toggle in Settings page for email digest subscription
-  - Store preference in user document (`emailSubscriber` field)
-  - Verify email is verified before allowing subscription
-
 ## Community Player Queue
 
 ### 📋 Open Items
@@ -425,9 +395,95 @@ This document tracks open items that need to be addressed before production depl
 
 ---
 
+## Summary of Remaining Items
+
+**Theme & UI Issues:** 7 items
+
+- Community section verification and testing
+- Component audit for hardcoded colors
+- Accessibility and responsive design testing
+
+**Code Quality:** 5 items
+
+- Fix linter warnings
+- TypeScript type improvements
+- Error boundary additions
+
+**Testing:** 6 items
+
+- Component tests
+- Cross-browser and accessibility testing
+
+**Performance:** 4 items
+
+- Bundle optimization
+- Memory leak checks
+- Loading optimizations
+
+**Documentation:** 3 items
+
+- Component documentation updates
+- Style guide creation
+
+**Community Player Queue:** 7 items
+
+- Queue UI/UX design and implementation
+- Queue management features
+- Film metadata display
+
+**Settings Page Redesign:** 11 items
+
+- Desktop layout improvements
+- Mobile optimization
+- Additional features (search, export/import)
+
+**Pro System Validation:** 8 items
+
+- Feature gating validation
+- Bloopers/extras testing
+- Content moderation
+
+**Payment Method & Process:** 9 items
+
+- Stripe integration
+- Subscription management
+- Payment security and compliance
+
+**First Visit Intro / Onboarding:** 10 items
+
+- Onboarding flow design and implementation
+- Intro content creation
+- Analytics integration
+
+**"Where Am I Watching This" Feature:** 7 items
+
+- Platform tracking UI/UX
+- Data model implementation
+- Library integration
+
+**Search & UI Improvements:** 5 items
+
+- Search state management fixes
+- Readability improvements
+- Scroll arrow additions
+- Mobile interaction fixes
+- Game answer deduplication
+
+**Deployment:** 6 items
+
+- Environment configuration
+- Production readiness checks
+- Monitoring and analytics setup
+
+**Total Open Items: 88**
+
+---
+
 ## Notes
 
-- Last updated: 2024-11-XX
+- Last updated: 2024-12-XX
+- Email Digest section removed (completed)
+- Mobile Search redesign completed (v0.1.151)
 - This list should be updated as new issues are identified
 - Items should be moved to "Completed" section when finished
 - Use checkboxes to track progress
