@@ -8,25 +8,25 @@
 
 ## Mobile Search – File Index
 
-| Area | File path | Role in mobile search | Notes (mobile specifics) |
-|------|-----------|----------------------|------------------------|
-| **Entry Point** | `apps/web/src/App.tsx` | Main app component that renders search | Lines 877-884: Mobile tabs (`block md:hidden`) clear search on tab change. Lines 564-568: Content area padding adjusts for iOS keyboard viewport offset. Lines 886-889: SearchResults wrapped in PullToRefreshWrapper on mobile. |
-| **Search Header** | `apps/web/src/components/FlickletHeader.tsx` | Sticky search bar component | Lines 126-137: Sticky search bar with mobile padding (`px-2 py-1.5 md:px-4 md:py-2`). Lines 210-636: SearchRow component with mobile-specific styling (`px-2 py-2 md:px-4 md:py-3`, `text-xs md:text-sm`). Line 580: Mobile input padding reduced, voice button positioned `right-1 md:right-2`. |
-| **Search Input** | `apps/web/src/components/FlickletHeader.tsx` (SearchRow) | Search input field and controls | Lines 562-582: Input with mobile breakpoints for padding, font size, right padding for voice button. Lines 300-307: Blur handler with 300ms delay to allow suggestion clicks. Lines 278-290: Input change debounced 150ms for suggestions. |
-| **Search Suggestions** | `apps/web/src/components/SearchSuggestions.tsx` | Autocomplete dropdown | Lines 285-296: Absolute positioning with `zIndex: 9999`, `max-h-80` for mobile scrolling. Lines 321-328: `onMouseDown` prevents blur before click (touch-friendly). Lines 219-266: Keyboard navigation (ArrowUp/Down, Enter, Escape) works on mobile keyboards. |
-| **Voice Search** | `apps/web/src/components/VoiceSearch.tsx` | Voice input button | Lines 250-256: Touch-friendly button size (`w-10 h-10`), `active:scale-95` for touch feedback. Lines 59-61: Feature flag check (disabled by default). Line 236-238: Returns null if disabled/unsupported. |
-| **Search Results** | `apps/web/src/search/SearchResults.tsx` | Results display component | Line 107: Mobile padding `px-3 sm:px-4` (12px mobile, 16px tablet+). Lines 128-135: Card spacing `space-y-6` (24px vertical gap). Lines 335-414: SearchResultCard with mobile-friendly layout (flex, responsive poster `w-24 h-36`). Lines 43-65: IntersectionObserver for infinite scroll on mobile. |
-| **Search Logic** | `apps/web/src/search/smartSearch.ts` | Search algorithm | No mobile-specific logic, but affects all search results. |
-| **Autocomplete API** | `apps/web/src/search/enhancedAutocomplete.ts` | TMDB autocomplete fetching | No mobile-specific logic, but powers SearchSuggestions dropdown. |
-| **Relevance Scoring** | `apps/web/src/lib/searchRelevance.ts` | Autocomplete ranking | No mobile-specific logic, but affects suggestion order. |
-| **Mobile Detection** | `apps/web/src/lib/isMobile.ts` | Mobile viewport detection | Line 10: Breakpoint `(max-width: 768px)`. Used by components to conditionally render mobile UI. |
-| **Mobile Flags** | `apps/web/src/lib/mobileFlags.ts` | Feature flags for mobile | No direct search usage, but may affect card rendering in search results. |
-| **Mobile Tabs** | `apps/web/src/components/MobileTabs.tsx` | Bottom navigation | Lines 23-154: Visual Viewport API handling for iOS keyboard. Line 210: Dynamic `bottom` position based on `viewportOffset`. Lines 81-118: Throttled viewport change handler (50ms) to detect keyboard. |
-| **Portal Component** | `apps/web/src/components/Portal.tsx` | Portal for dropdowns | Used by FlickletHeader filter dropdown to escape z-index stacking contexts. |
-| **Pull to Refresh** | `apps/web/src/components/PullToRefreshWrapper.tsx` | Pull-to-refresh wrapper | Wraps SearchResults on mobile (line 887 App.tsx). |
-| **Global Styles** | `apps/web/src/styles/global.css` | Base styles | Lines 89-127: Mobile nav positioning (`@media (max-width: 1024px)`). Lines 84-86: `--mobile-nav-height: 80px` CSS variable. Lines 954-976: Touch action utilities for swipe handling. |
-| **Test Files** | `apps/web/src/components/__tests__/SearchBar.test.tsx` | SearchBar component tests | Tests search functionality but not mobile-specific behavior. |
-| **Test Files** | `apps/web/tests/search-smart.spec.ts` | E2E search tests | Playwright tests for search functionality, includes mobile viewport scenarios. |
+| Area                   | File path                                                | Role in mobile search                  | Notes (mobile specifics)                                                                                                                                                                                                                                                                              |
+| ---------------------- | -------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Entry Point**        | `apps/web/src/App.tsx`                                   | Main app component that renders search | Lines 877-884: Mobile tabs (`block md:hidden`) clear search on tab change. Lines 564-568: Content area padding adjusts for iOS keyboard viewport offset. Lines 886-889: SearchResults wrapped in PullToRefreshWrapper on mobile.                                                                      |
+| **Search Header**      | `apps/web/src/components/FlickletHeader.tsx`             | Sticky search bar component            | Lines 126-137: Sticky search bar with mobile padding (`px-2 py-1.5 md:px-4 md:py-2`). Lines 210-636: SearchRow component with mobile-specific styling (`px-2 py-2 md:px-4 md:py-3`, `text-xs md:text-sm`). Line 580: Mobile input padding reduced, voice button positioned `right-1 md:right-2`.      |
+| **Search Input**       | `apps/web/src/components/FlickletHeader.tsx` (SearchRow) | Search input field and controls        | Lines 562-582: Input with mobile breakpoints for padding, font size, right padding for voice button. Lines 300-307: Blur handler with 300ms delay to allow suggestion clicks. Lines 278-290: Input change debounced 150ms for suggestions.                                                            |
+| **Search Suggestions** | `apps/web/src/components/SearchSuggestions.tsx`          | Autocomplete dropdown                  | Lines 285-296: Absolute positioning with `zIndex: 9999`, `max-h-80` for mobile scrolling. Lines 321-328: `onMouseDown` prevents blur before click (touch-friendly). Lines 219-266: Keyboard navigation (ArrowUp/Down, Enter, Escape) works on mobile keyboards.                                       |
+| **Voice Search**       | `apps/web/src/components/VoiceSearch.tsx`                | Voice input button                     | Lines 250-256: Touch-friendly button size (`w-10 h-10`), `active:scale-95` for touch feedback. Lines 59-61: Feature flag check (disabled by default). Line 236-238: Returns null if disabled/unsupported.                                                                                             |
+| **Search Results**     | `apps/web/src/search/SearchResults.tsx`                  | Results display component              | Line 107: Mobile padding `px-3 sm:px-4` (12px mobile, 16px tablet+). Lines 128-135: Card spacing `space-y-6` (24px vertical gap). Lines 335-414: SearchResultCard with mobile-friendly layout (flex, responsive poster `w-24 h-36`). Lines 43-65: IntersectionObserver for infinite scroll on mobile. |
+| **Search Logic**       | `apps/web/src/search/smartSearch.ts`                     | Search algorithm                       | No mobile-specific logic, but affects all search results.                                                                                                                                                                                                                                             |
+| **Autocomplete API**   | `apps/web/src/search/enhancedAutocomplete.ts`            | TMDB autocomplete fetching             | No mobile-specific logic, but powers SearchSuggestions dropdown.                                                                                                                                                                                                                                      |
+| **Relevance Scoring**  | `apps/web/src/lib/searchRelevance.ts`                    | Autocomplete ranking                   | No mobile-specific logic, but affects suggestion order.                                                                                                                                                                                                                                               |
+| **Mobile Detection**   | `apps/web/src/lib/isMobile.ts`                           | Mobile viewport detection              | Line 10: Breakpoint `(max-width: 768px)`. Used by components to conditionally render mobile UI.                                                                                                                                                                                                       |
+| **Mobile Flags**       | `apps/web/src/lib/mobileFlags.ts`                        | Feature flags for mobile               | No direct search usage, but may affect card rendering in search results.                                                                                                                                                                                                                              |
+| **Mobile Tabs**        | `apps/web/src/components/MobileTabs.tsx`                 | Bottom navigation                      | Lines 23-154: Visual Viewport API handling for iOS keyboard. Line 210: Dynamic `bottom` position based on `viewportOffset`. Lines 81-118: Throttled viewport change handler (50ms) to detect keyboard.                                                                                                |
+| **Portal Component**   | `apps/web/src/components/Portal.tsx`                     | Portal for dropdowns                   | Used by FlickletHeader filter dropdown to escape z-index stacking contexts.                                                                                                                                                                                                                           |
+| **Pull to Refresh**    | `apps/web/src/components/PullToRefreshWrapper.tsx`       | Pull-to-refresh wrapper                | Wraps SearchResults on mobile (line 887 App.tsx).                                                                                                                                                                                                                                                     |
+| **Global Styles**      | `apps/web/src/styles/global.css`                         | Base styles                            | Lines 89-127: Mobile nav positioning (`@media (max-width: 1024px)`). Lines 84-86: `--mobile-nav-height: 80px` CSS variable. Lines 954-976: Touch action utilities for swipe handling.                                                                                                                 |
+| **Test Files**         | `apps/web/src/components/__tests__/SearchBar.test.tsx`   | SearchBar component tests              | Tests search functionality but not mobile-specific behavior.                                                                                                                                                                                                                                          |
+| **Test Files**         | `apps/web/tests/search-smart.spec.ts`                    | E2E search tests                       | Playwright tests for search functionality, includes mobile viewport scenarios.                                                                                                                                                                                                                        |
 
 ---
 
@@ -35,6 +35,7 @@
 ### File: apps/web/src/App.tsx
 
 <!-- RELEVANT TO MOBILE SEARCH START -->
+
 ```tsx
 // Lines 268-278: Search state management
 const [search, setSearch] = useState<SearchState>({ q: '', genre: null, type: 'all' });
@@ -61,27 +62,27 @@ const handleClear = () => setSearch({ q: '', genre: null, type: 'all' });
 // Lines 545-561: Desktop vs Mobile tabs
 {/* Desktop Tabs - tablet and above */}
 <div className="hidden md:block">
-  <Tabs current={view} onChange={(tab) => { 
+  <Tabs current={view} onChange={(tab) => {
     // Clear search when switching tabs
     handleClear();
-    setView(tab); 
+    setView(tab);
   }} />
 </div>
 
 {/* Mobile Tabs - mobile only */}
 <div className="block md:hidden">
-  <MobileTabs current={view} onChange={(tab) => { 
+  <MobileTabs current={view} onChange={(tab) => {
     // Clear search when switching tabs
     handleClear();
-    setView(tab); 
+    setView(tab);
   }} />
 </div>
 
 // Lines 563-568: Content area with iOS keyboard offset
-<div className="pb-20 lg:pb-0" style={{ 
-  paddingBottom: viewportOffset > 0 && window.visualViewport?.offsetTop === 0 
-    ? `${80 + viewportOffset}px` 
-    : undefined 
+<div className="pb-20 lg:pb-0" style={{
+  paddingBottom: viewportOffset > 0 && window.visualViewport?.offsetTop === 0
+    ? `${80 + viewportOffset}px`
+    : undefined
 }}>
   {searchActive ? (
     <SearchResults query={search.q} genre={search.genre} searchType={search.type} />
@@ -107,11 +108,13 @@ const handleClear = () => setSearch({ q: '', genre: null, type: 'all' });
   // ... view content
 )}
 ```
+
 <!-- RELEVANT TO MOBILE SEARCH END -->
 
 ### File: apps/web/src/components/FlickletHeader.tsx (SearchRow component)
 
 <!-- RELEVANT TO MOBILE SEARCH START -->
+
 ```tsx
 // Lines 126-137: Sticky search bar container with mobile padding
 <div
@@ -138,6 +141,7 @@ const handleClear = () => setSearch({ q: '', genre: null, type: 'all' });
 // Line 278-290: Input change debounced 150ms
 // Line 361-375: Global pointerdown listener (works for touch)
 ```
+
 <!-- RELEVANT TO MOBILE SEARCH END -->
 
 ### File: apps/web/src/components/SearchSuggestions.tsx
@@ -145,15 +149,15 @@ const handleClear = () => setSearch({ q: '', genre: null, type: 'all' });
 ```tsx
 // Full file contents - all relevant to mobile search
 // Lines 285-296: Mobile positioning and scrolling
-<div 
+<div
   ref={suggestionsRef}
   className={`
     absolute top-full left-0 right-0 mt-1 bg-card border border-line rounded-xl shadow-lg
     max-h-80 overflow-y-auto
     ${className}
   `}
-  style={{ 
-    backgroundColor: 'var(--card)', 
+  style={{
+    backgroundColor: 'var(--card)',
     borderColor: 'var(--line)',
     zIndex: 9999
   }}
@@ -189,9 +193,9 @@ useEffect(() => {
 // Lines 127-135: Card spacing
 <div className="space-y-6">
   {items.map(item => (
-    <SearchResultCard 
-      key={`${item.mediaType}:${item.id}`} 
-      item={item} 
+    <SearchResultCard
+      key={`${item.mediaType}:${item.id}`}
+      item={item}
       onRemove={() => setItems(prev => prev.filter(i => i.id !== item.id))}
     />
   ))}
@@ -230,16 +234,16 @@ useEffect(() => {
   className={`
     flex items-center justify-center w-10 h-10 rounded-lg border transition-all duration-200 ease-out
     hover:scale-105 active:scale-95
-    ${isListening 
-      ? 'bg-red-500 text-white border-red-500 animate-pulse' 
+    ${isListening
+      ? 'bg-red-500 text-white border-red-500 animate-pulse'
       : 'bg-card text-muted-foreground border-line hover:bg-muted hover:text-foreground'
     }
   `}
 >
 
 // Lines 59-61: Feature flag check (disabled by default)
-const isVoiceSearchDisabled = typeof window !== 'undefined' && 
-  (localStorage.getItem('flag:voice_search_disabled') === 'true' || 
+const isVoiceSearchDisabled = typeof window !== 'undefined' &&
+  (localStorage.getItem('flag:voice_search_disabled') === 'true' ||
    localStorage.getItem('flag:voice_search_enabled') !== 'true');
 ```
 
@@ -254,18 +258,18 @@ useEffect(() => {
     // Fallback for browsers without Visual Viewport API
     // Uses resize/orientationchange events
   }
-  
+
   const handleViewportChange = () => {
     // Throttled (50ms) to prevent rapid fires
     // Filters out toolbar animations (>50px offsetTop changes)
     // Only applies offset if significant (>50px)
   };
-  
+
   window.visualViewport.addEventListener('resize', handleViewportChange);
 }, []);
 
 // Line 210: Dynamic bottom position for keyboard
-style={{ 
+style={{
   bottom: `${viewportOffset}px`, // Adjusts when keyboard opens
   // ... other styles
 }}
@@ -275,11 +279,12 @@ style={{
 
 ```tsx
 // Line 10: Mobile breakpoint definition
-export const isMobileQuery = '(max-width: 768px)';
+export const isMobileQuery = "(max-width: 768px)";
 
 // Lines 16-19: Mobile detection function
 export function isMobileNow(): boolean {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function")
+    return false;
   return window.matchMedia(isMobileQuery).matches;
 }
 ```
@@ -355,7 +360,8 @@ export function isMobileNow(): boolean {
 ### Search Header / Controls
 
 **Visible Controls (left to right):**
-1. **Filters Button** (left side): 
+
+1. **Filters Button** (left side):
    - Shows "Filters", genre name, or search type
    - Opens dropdown menu with: Title/Tag mode, All/Movies-TV/People type, Genre list (8 visible, expandable)
    - Mobile padding: `px-2 py-2` (8px horizontal, 8px vertical)
@@ -387,11 +393,13 @@ export function isMobileNow(): boolean {
 ### Layout Behavior
 
 **Mobile Breakpoints:**
+
 - Default (mobile): `< 768px` (no prefix)
 - Tablet+: `md:` prefix = `≥ 768px`
 - Desktop: `lg:` prefix = `≥ 1024px`
 
 **Mobile-Specific Layout Changes:**
+
 1. **Search bar padding**: Reduced from `px-4 py-2` to `px-2 py-1.5` (50% reduction)
 2. **Input font size**: `text-xs` (12px) vs `md:text-sm` (14px) - 14% smaller
 3. **Button padding**: All buttons use `px-2 py-2` mobile vs `md:px-3 md:py-3` desktop
@@ -402,6 +410,7 @@ export function isMobileNow(): boolean {
 8. **iOS keyboard handling**: Content area padding adjusts dynamically using `viewportOffset` from MobileTabs
 
 **Z-Index Layering:**
+
 - Search suggestions: `9999` (highest)
 - Filter dropdown menu: `1000`
 - Filter dropdown backdrop: `999`
@@ -411,11 +420,13 @@ export function isMobileNow(): boolean {
 ### Gestures / Swipe
 
 **No swipe gestures directly in search:**
+
 - Search input, suggestions, and results do not use swipe gestures
 - Filter dropdown uses click/tap only
 - Search results cards may inherit swipe behavior from card components, but no search-specific swipe logic found
 
 **Touch Event Handling:**
+
 - `pointerdown` events used for closing dropdowns (works for touch)
 - `onMouseDown` prevents blur before click in suggestions (touch-friendly)
 - No `useSwipe` hook usage in search components
@@ -468,4 +479,3 @@ export function isMobileNow(): boolean {
 ---
 
 **End of Forensic Audit Report**
-
