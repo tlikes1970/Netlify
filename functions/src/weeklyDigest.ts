@@ -119,8 +119,11 @@ async function runWeeklyDigestOnce(options: { trigger: 'auto' | 'manual' }): Pro
 
   // Load digest configuration from Firestore
   const digestConfig = await loadDigestConfig();
-  if (!digestConfig || digestConfig.isActive !== true) {
-    throw new Error('No active digest config');
+  if (!digestConfig) {
+    throw new Error('No digest config found. Please save a digest configuration in the Admin panel first.');
+  }
+  if (digestConfig.isActive !== true) {
+    throw new Error('Digest config is not active. Please enable the "Active" checkbox in the Admin panel and save the configuration.');
   }
 
   // 1. Fetch top 5 posts from last 7 days (by voteCount)
@@ -325,8 +328,11 @@ export const sendDigestNow = functions.https.onCall(async (data, context) => {
   try {
     // Load digest configuration from Firestore
     const digestConfig = await loadDigestConfig();
-    if (!digestConfig || digestConfig.isActive !== true) {
-      throw new HttpsError('failed-precondition', 'No active digest config');
+    if (!digestConfig) {
+      throw new HttpsError('failed-precondition', 'No digest config found. Please save a digest configuration in the Admin panel first.');
+    }
+    if (digestConfig.isActive !== true) {
+      throw new HttpsError('failed-precondition', 'Digest config is not active. Please enable the "Active" checkbox in the Admin panel and save the configuration.');
     }
 
     const result = await runWeeklyDigestOnce({ trigger: 'manual' });
