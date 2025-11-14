@@ -64,9 +64,23 @@ export default function AdminExtrasPage() {
     tipBody: "",
     footerNote: "",
     isActive: false,
+    autoSendEnabled: false,
+    autoSendDay: "friday",
+    autoSendTime: "09:00",
+    lastAutoSentAt: null as any,
+    lastAutoSentCount: null as number | null,
+    lastManualSentAt: null as any,
+    lastManualSentCount: null as number | null,
   });
   const [digestConfigLoading, setDigestConfigLoading] = useState(false);
   const [digestConfigSaving, setDigestConfigSaving] = useState(false);
+  const [digestSendNowBusy, setDigestSendNowBusy] = useState(false);
+  const [digestSendNowResult, setDigestSendNowResult] = useState<{
+    ok: boolean;
+    sentCount?: number;
+    distinctEmails?: number;
+    error?: string;
+  } | null>(null);
 
   // Community content state
   const [posts, setPosts] = useState<any[]>([]);
@@ -280,6 +294,13 @@ export default function AdminExtrasPage() {
             tipBody: data.tipBody || "",
             footerNote: data.footerNote || "",
             isActive: data.isActive !== undefined ? data.isActive : false,
+            autoSendEnabled: data.autoSendEnabled !== undefined ? data.autoSendEnabled : false,
+            autoSendDay: data.autoSendDay || "friday",
+            autoSendTime: data.autoSendTime || "09:00",
+            lastAutoSentAt: data.lastAutoSentAt || null,
+            lastAutoSentCount: data.lastAutoSentCount || null,
+            lastManualSentAt: data.lastManualSentAt || null,
+            lastManualSentCount: data.lastManualSentCount || null,
           });
         } else {
           // Set defaults if no config exists
@@ -294,6 +315,13 @@ export default function AdminExtrasPage() {
             tipBody: "Hold your finger on a card to reorder your list. Saves 10 clicks and a small piece of your soul.",
             footerNote: "Was this worth your 42 seconds?",
             isActive: false,
+            autoSendEnabled: false,
+            autoSendDay: "friday",
+            autoSendTime: "09:00",
+            lastAutoSentAt: null,
+            lastAutoSentCount: null,
+            lastManualSentAt: null,
+            lastManualSentCount: null,
           });
         }
       } catch (error) {
@@ -317,6 +345,55 @@ export default function AdminExtrasPage() {
       alert("Failed to save digest config: " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setDigestConfigSaving(false);
+    }
+  };
+
+  const handleSendDigestNow = async () => {
+    if (!digestConfig.isActive) {
+      alert("Digest must be active to send. Please enable 'Active' first.");
+      return;
+    }
+
+    setDigestSendNowBusy(true);
+    setDigestSendNowResult(null);
+    try {
+      const { httpsCallable } = await import("firebase/functions");
+      const { functions } = await import("../lib/firebaseBootstrap");
+      const sendDigestNow = httpsCallable(functions, "sendDigestNow");
+
+      const result = await sendDigestNow({});
+      const data = result.data as { ok: boolean; sentCount?: number; distinctEmails?: number };
+
+      if (data.ok) {
+        setDigestSendNowResult({
+          ok: true,
+          sentCount: data.sentCount,
+          distinctEmails: data.distinctEmails,
+        });
+        // Reload config to get updated stats
+        const configDoc = await getDoc(doc(db, "digestConfig", "current"));
+        if (configDoc.exists()) {
+          const configData = configDoc.data();
+          setDigestConfig((prev) => ({
+            ...prev,
+            lastManualSentAt: configData.lastManualSentAt || null,
+            lastManualSentCount: configData.lastManualSentCount || null,
+          }));
+        }
+      } else {
+        setDigestSendNowResult({
+          ok: false,
+          error: "Unknown error",
+        });
+      }
+    } catch (error: any) {
+      console.error("[AdminExtrasPage] Failed to send digest:", error);
+      setDigestSendNowResult({
+        ok: false,
+        error: error.message || String(error),
+      });
+    } finally {
+      setDigestSendNowBusy(false);
     }
   };
 
@@ -1194,6 +1271,78 @@ export default function AdminExtrasPage() {
                     </label>
                   </div>
 
+                  <div className="border-t border-gray-300 dark:border-gray-600 pt-4">
+                    <h3 className="font-semibold mb-3">Automatic Send Settings</h3>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="flex items-center gap-2 mb-2">
+                          <input
+                            type="checkbox"
+                            checked={digestConfig.autoSendEnabled}
+                            onChange={(e) =>
+                              setDigestConfig({
+                                ...digestConfig,
+                                autoSendEnabled: e.target.checked,
+                              })
+                            }
+                            className="w-4 h-4"
+                          />
+                          <span className="font-medium">
+                            Automatic weekly send enabled
+                          </span>
+                        </label>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Day of week (for weekly send)
+                        </label>
+                        <select
+                          value={digestConfig.autoSendDay}
+                          onChange={(e) =>
+                            setDigestConfig({
+                              ...digestConfig,
+                              autoSendDay: e.target.value,
+                            })
+                          }
+                          disabled={!digestConfig.autoSendEnabled}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <option value="monday">Monday</option>
+                          <option value="tuesday">Tuesday</option>
+                          <option value="wednesday">Wednesday</option>
+                          <option value="thursday">Thursday</option>
+                          <option value="friday">Friday</option>
+                          <option value="saturday">Saturday</option>
+                          <option value="sunday">Sunday</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Time of day
+                        </label>
+                        <input
+                          type="time"
+                          value={digestConfig.autoSendTime}
+                          onChange={(e) =>
+                            setDigestConfig({
+                              ...digestConfig,
+                              autoSendTime: e.target.value,
+                            })
+                          }
+                          disabled={!digestConfig.autoSendEnabled}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                      </div>
+
+                      <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+                        Current backend schedule still uses a fixed cron trigger; this day/time is stored in config and will be fully honored in a later update. The On/Off toggle is effective now: when off, the automatic send is skipped.
+                      </p>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium mb-2">
                       Email Subject / Title
@@ -1362,13 +1511,75 @@ export default function AdminExtrasPage() {
                     />
                   </div>
 
-                  <button
-                    onClick={handleSaveDigestConfig}
-                    disabled={digestConfigSaving}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {digestConfigSaving ? "Saving..." : "Save Digest Config"}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveDigestConfig}
+                      disabled={digestConfigSaving}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {digestConfigSaving ? "Saving..." : "Save Digest Config"}
+                    </button>
+
+                    <button
+                      onClick={handleSendDigestNow}
+                      disabled={digestSendNowBusy || !digestConfig.isActive}
+                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                    >
+                      {digestSendNowBusy ? "Sending..." : "Send digest now"}
+                    </button>
+                  </div>
+
+                  {digestSendNowResult && (
+                    <div
+                      className={`mt-4 p-3 rounded ${
+                        digestSendNowResult.ok
+                          ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+                          : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+                      }`}
+                    >
+                      {digestSendNowResult.ok ? (
+                        <p className="text-sm text-green-800 dark:text-green-200">
+                          Manual send completed: {digestSendNowResult.sentCount} emails sent to {digestSendNowResult.distinctEmails} unique addresses.
+                        </p>
+                      ) : (
+                        <p className="text-sm text-red-800 dark:text-red-200">
+                          Error: {digestSendNowResult.error || "Unknown error"}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="border-t border-gray-300 dark:border-gray-600 pt-4 mt-4">
+                    <h3 className="font-semibold mb-3">Send Summary</h3>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <strong>Last automatic send:</strong>
+                        <br />
+                        Time:{" "}
+                        {digestConfig.lastAutoSentAt
+                          ? new Date(
+                              digestConfig.lastAutoSentAt.toMillis?.() ||
+                                digestConfig.lastAutoSentAt.seconds * 1000
+                            ).toLocaleString()
+                          : "never"}
+                        <br />
+                        Sent to: {digestConfig.lastAutoSentCount ?? 0} unique email(s)
+                      </div>
+                      <div>
+                        <strong>Last manual send:</strong>
+                        <br />
+                        Time:{" "}
+                        {digestConfig.lastManualSentAt
+                          ? new Date(
+                              digestConfig.lastManualSentAt.toMillis?.() ||
+                                digestConfig.lastManualSentAt.seconds * 1000
+                            ).toLocaleString()
+                          : "never"}
+                        <br />
+                        Sent to: {digestConfig.lastManualSentCount ?? 0} unique email(s)
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

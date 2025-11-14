@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Unsubscribe Flow</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .test-section {
+      background: #f5f5f5;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+    }
+    button {
+      background: #007AFF;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    code {
+      background: #e0e0e0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+    .result {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Unsubscribe Flow Test</h1>
+  
+  <div class="test-section">
+    <h2>Step 1: Get Current User UID</h2>
+    <p>Make sure you're signed in to the app, then click the button below.</p>
+    <button onclick="getUserUID()">Get User UID</button>
+    <div id="uid-result" class="result" style="display:none;"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Step 2: Generate Test Token</h2>
+    <p>Enter a user UID and generate a test unsubscribe token:</p>
+    <input type="text" id="uid-input" placeholder="Enter user UID" style="width: 300px; padding: 8px; margin-right: 10px;">
+    <button onclick="generateToken()">Generate Token</button>
+    <div id="token-result" class="result" style="display:none;"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Step 3: Test Unsubscribe Page</h2>
+    <p>Click the button to open the unsubscribe page with the generated token:</p>
+    <button onclick="openUnsubscribePage()">Open Unsubscribe Page</button>
+    <div id="page-result" class="result" style="display:none;"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Step 4: Verify in Firestore</h2>
+    <p>After unsubscribing, check if the user document was updated:</p>
+    <input type="text" id="verify-uid" placeholder="Enter user UID" style="width: 300px; padding: 8px; margin-right: 10px;">
+    <button onclick="verifyUnsubscribe()">Verify Status</button>
+    <div id="verify-result" class="result" style="display:none;"></div>
+  </div>
+
+  <script>
+    let generatedToken = null;
+    let testUID = null;
+
+    async function getUserUID() {
+      try {
+        // Try to get UID from Firebase Auth
+        const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+        // This won't work directly - need to use the app's auth
+        document.getElementById('uid-result').style.display = 'block';
+        document.getElementById('uid-result').innerHTML = `
+          <p><strong>Note:</strong> To get your UID, open the app's browser console and run:</p>
+          <code>firebase.auth().currentUser?.uid</code>
+          <p>Or check Firebase Console → Authentication</p>
+        `;
+      } catch (e) {
+        document.getElementById('uid-result').style.display = 'block';
+        document.getElementById('uid-result').innerHTML = `
+          <p><strong>To get your UID:</strong></p>
+          <ol>
+            <li>Open the app in another tab</li>
+            <li>Open browser console (F12)</li>
+            <li>Run: <code>firebase.auth().currentUser?.uid</code></li>
+            <li>Copy the UID and paste it in Step 2</li>
+          </ol>
+        `;
+      }
+    }
+
+    function generateToken() {
+      const uid = document.getElementById('uid-input').value.trim();
+      if (!uid) {
+        alert('Please enter a user UID');
+        return;
+      }
+
+      testUID = uid;
+      
+      // Generate token (same logic as weeklyDigest.ts)
+      const payload = {
+        uid: uid,
+        type: "unsubscribe",
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30, // 30 days
+      };
+      
+      // Base64url encode
+      const json = JSON.stringify(payload);
+      const base64 = btoa(json).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+      generatedToken = base64;
+
+      const localUrl = `http://localhost:8888/unsubscribe?token=${generatedToken}`;
+      const prodUrl = `https://flicklet.app/unsubscribe?token=${generatedToken}`;
+
+      document.getElementById('token-result').style.display = 'block';
+      document.getElementById('token-result').innerHTML = `
+        <p><strong>✅ Token Generated:</strong></p>
+        <p><code>${generatedToken.substring(0, 50)}...</code></p>
+        <p><strong>Local URL:</strong></p>
+        <p><a href="${localUrl}" target="_blank">${localUrl}</a></p>
+        <p><strong>Production URL:</strong></p>
+        <p><a href="${prodUrl}" target="_blank">${prodUrl}</a></p>
+      `;
+    }
+
+    function openUnsubscribePage() {
+      if (!generatedToken) {
+        alert('Please generate a token first (Step 2)');
+        return;
+      }
+
+      const url = `http://localhost:8888/unsubscribe?token=${generatedToken}`;
+      window.open(url, '_blank');
+      
+      document.getElementById('page-result').style.display = 'block';
+      document.getElementById('page-result').innerHTML = `
+        <p class="success">✅ Opened unsubscribe page in new tab</p>
+        <p>Check the new tab to see if unsubscribe works correctly.</p>
+      `;
+    }
+
+    async function verifyUnsubscribe() {
+      const uid = document.getElementById('verify-uid').value.trim() || testUID;
+      if (!uid) {
+        alert('Please enter a user UID');
+        return;
+      }
+
+      document.getElementById('verify-result').style.display = 'block';
+      document.getElementById('verify-result').innerHTML = '<p>Checking...</p>';
+
+      try {
+        // Note: This requires Firebase SDK - for manual verification
+        document.getElementById('verify-result').innerHTML = `
+          <p><strong>To verify manually:</strong></p>
+          <ol>
+            <li>Go to Firebase Console → Firestore Database</li>
+            <li>Navigate to <code>users/${uid}</code></li>
+            <li>Check the <code>emailSubscriber</code> field</li>
+            <li>Should be <code>false</code> after unsubscribe</li>
+          </ol>
+          <p><strong>Or use browser console in the app:</strong></p>
+          <code>
+            const { doc, getDoc } = await import('./lib/firebaseBootstrap');<br>
+            const userRef = doc(db, 'users', '${uid}');<br>
+            const userDoc = await getDoc(userRef);<br>
+            console.log('emailSubscriber:', userDoc.data()?.emailSubscriber);
+          </code>
+        `;
+      } catch (e) {
+        document.getElementById('verify-result').innerHTML = `
+          <p class="error">Error: ${e.message}</p>
+          <p>Use Firebase Console to verify manually.</p>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>
+

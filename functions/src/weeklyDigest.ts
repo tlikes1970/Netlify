@@ -7,8 +7,9 @@
  */
 
 import * as functions from 'firebase-functions/v1';
+import { HttpsError } from 'firebase-functions/v1/https';
 import { db, auth } from "./admin";
-import { Timestamp } from "firebase-admin/firestore";
+import { Timestamp, FieldValue } from "firebase-admin/firestore";
 import sgMail from '@sendgrid/mail';
 
 /**
@@ -26,19 +27,37 @@ interface DigestConfig {
   tipBody: string;
   footerNote: string;
   isActive: boolean;
+  // Auto-send configuration
+  autoSendEnabled?: boolean;
+  autoSendDay?: string | null;  // e.g. 'monday', 'tuesday', etc.
+  autoSendTime?: string | null; // 'HH:mm' in 24h, e.g. '09:00'
+  // Statistics
+  lastAutoSentAt?: Timestamp | null;
+  lastManualSentAt?: Timestamp | null;
+  lastAutoSentCount?: number;
+  lastManualSentCount?: number;
 }
 
 /**
- * Get the current digest configuration from Firestore
- * Returns null if the document doesn't exist or cannot be read
+ * Result of running a digest send
  */
-async function getCurrentDigestConfig(): Promise<DigestConfig | null> {
+interface DigestRunResult {
+  sentCount: number;
+  distinctEmails: number;
+}
+
+/**
+ * Load the digest configuration from Firestore
+ * Returns null if the document doesn't exist or cannot be read
+ * Fills in missing fields with sensible defaults
+ */
+async function loadDigestConfig(): Promise<DigestConfig | null> {
   try {
-    const doc = await db.doc('digestConfig/current').get();
-    if (!doc.exists) {
+    const docSnapshot = await db.collection('digestConfig').doc('current').get();
+    if (!docSnapshot.exists) {
       return null;
     }
-    const data = doc.data();
+    const data = docSnapshot.data();
     if (!data) {
       return null;
     }
@@ -54,6 +73,14 @@ async function getCurrentDigestConfig(): Promise<DigestConfig | null> {
       tipBody: data.tipBody || 'Hold your finger on a card to reorder your list. Saves 10 clicks and a small piece of your soul.',
       footerNote: data.footerNote || 'Was this worth your 42 seconds?',
       isActive: data.isActive !== undefined ? data.isActive : false,
+      // New fields with defaults
+      autoSendEnabled: data.autoSendEnabled !== undefined ? data.autoSendEnabled : false,
+      autoSendDay: data.autoSendDay || 'friday',
+      autoSendTime: data.autoSendTime || '09:00',
+      lastAutoSentAt: data.lastAutoSentAt || null,
+      lastManualSentAt: data.lastManualSentAt || null,
+      lastAutoSentCount: data.lastAutoSentCount || 0,
+      lastManualSentCount: data.lastManualSentCount || 0,
     };
   } catch (error) {
     console.error('[weeklyDigest] Error reading digest config:', error);
@@ -78,165 +105,253 @@ function ensureSendGridReady() {
   return sgMail;
 }
 
+/**
+ * Core logic to run weekly digest once
+ * Extracted to be reusable by both scheduled and manual triggers
+ */
+async function runWeeklyDigestOnce(options: { trigger: 'auto' | 'manual' }): Promise<DigestRunResult> {
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const sevenDaysAgoTimestamp = Timestamp.fromDate(sevenDaysAgo);
+
+  console.log(`[runWeeklyDigestOnce] Starting ${options.trigger} digest for week ending ${now.toISOString()}`);
+
+  // Load digest configuration from Firestore
+  const digestConfig = await loadDigestConfig();
+  if (!digestConfig || digestConfig.isActive !== true) {
+    throw new Error('No active digest config');
+  }
+
+  // 1. Fetch top 5 posts from last 7 days (by voteCount)
+  const postsSnapshot = await db
+    .collection("posts")
+    .where("publishedAt", ">=", sevenDaysAgoTimestamp)
+    .orderBy("publishedAt", "desc")
+    .limit(100)
+    .get();
+
+  const posts: { id: string; title: string; slug: string; voteCount: number }[] =
+    postsSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as any));
+
+  const topPosts = posts
+    .sort((a, b) => (b.voteCount || 0) - (a.voteCount || 0))
+    .slice(0, 5);
+
+  console.log(`[runWeeklyDigestOnce] Found ${topPosts.length} top posts`);
+
+  // 2. Fetch new comments from last 7 days, grouped by post
+  const commentsByPost: Record<string, any[]> = {};
+  
+  const allPostsSnapshot = await db
+    .collection("posts")
+    .where("publishedAt", ">=", sevenDaysAgoTimestamp)
+    .get();
+
+  for (const postDoc of allPostsSnapshot.docs) {
+    const postId = postDoc.id;
+    const commentsSnapshot = await db
+      .collection(`posts/${postId}/comments`)
+      .where("createdAt", ">=", sevenDaysAgoTimestamp)
+      .orderBy("createdAt", "desc")
+      .limit(10)
+      .get();
+
+    if (!commentsSnapshot.empty) {
+      commentsByPost[postId] = commentsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        postId,
+      }));
+    }
+  }
+
+  console.log(`[runWeeklyDigestOnce] Found comments in ${Object.keys(commentsByPost).length} posts`);
+
+  // 3. Get all subscribers (users with emailSubscriber=true and emailVerified=true)
+  const usersSnapshot = await db
+    .collection("users")
+    .where("emailSubscriber", "==", true)
+    .get();
+
+  const subscribers: Array<{ uid: string; email: string; displayName?: string }> = [];
+
+  for (const userDoc of usersSnapshot.docs) {
+    const userData = userDoc.data();
+    const uid = userDoc.id;
+
+    // Check if email is verified via Firebase Auth
+    try {
+      const authUser = await auth.getUser(uid);
+      if (authUser.emailVerified && authUser.email) {
+        subscribers.push({
+          uid,
+          email: authUser.email,
+          displayName: userData.displayName || userData.profile?.displayName,
+        });
+      }
+    } catch (error) {
+      console.warn(`[runWeeklyDigestOnce] Failed to verify email for user ${uid}:`, error);
+    }
+  }
+
+  console.log(`[runWeeklyDigestOnce] Found ${subscribers.length} subscribers`);
+
+  // Track unique emails
+  const uniqueEmails = new Set<string>();
+
+  // 4. For each subscriber, find mentions and build personalized email
+  const emailPromises = subscribers.map(async (subscriber) => {
+    // Find mentions (@username) in comments
+    const mentions: any[] = [];
+    const subscriberUsername = subscriber.displayName?.toLowerCase() || "";
+
+    for (const [postId, comments] of Object.entries(commentsByPost)) {
+      for (const comment of comments) {
+        const body = (comment.body || "").toLowerCase();
+        // Check for @ mentions (simple pattern match)
+        if (
+          subscriberUsername &&
+          body.includes(`@${subscriberUsername}`)
+        ) {
+          mentions.push({
+            ...comment,
+            postTitle: topPosts.find((p) => p.id === postId)?.title || "Unknown Post",
+            postSlug: topPosts.find((p) => p.id === postId)?.slug,
+          });
+        }
+      }
+    }
+
+    // Generate unsubscribe token
+    const unsubscribeToken = await generateUnsubscribeToken(subscriber.uid);
+
+    // Build unsubscribe URL for plain text template
+    const unsubscribeUrl = `https://flicklet.app/unsubscribe?token=${unsubscribeToken}`;
+
+    // Build email HTML
+    const emailHtml = buildEmailTemplate({
+      subscriberName: subscriber.displayName || "there",
+      posts: topPosts,
+      commentsByPost,
+      mentions,
+      unsubscribeToken,
+      config: digestConfig,
+    });
+
+    // Send email via SendGrid
+    await sendDigestEmail({
+      to: subscriber.email,
+      subject: digestConfig.title,
+      html: emailHtml,
+      text: buildPlainTextTemplate({
+        subscriberName: subscriber.displayName || 'there',
+        posts: topPosts,
+        commentsByPost,
+        mentions,
+        unsubscribeUrl,
+        config: digestConfig,
+      }),
+    });
+
+    uniqueEmails.add(subscriber.email);
+    console.log(`[runWeeklyDigestOnce] sent to ${subscriber.email}`);
+  });
+
+  await Promise.all(emailPromises);
+
+  const result: DigestRunResult = {
+    sentCount: subscribers.length,
+    distinctEmails: uniqueEmails.size,
+  };
+
+  console.log(`[runWeeklyDigestOnce] ${options.trigger} run completed`, result);
+  return result;
+}
+
 // 1st Gen scheduled function – no Event, no generic
 export const weeklyDigest = functions.pubsub.schedule('0 9 * * 5')
   .timeZone('UTC')
   .onRun(async () => {
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const sevenDaysAgoTimestamp = Timestamp.fromDate(sevenDaysAgo);
-
-    console.log(`Starting weekly digest for week ending ${now.toISOString()}`);
+    console.log('[weeklyDigest] Scheduled trigger fired');
 
     // Load digest configuration from Firestore
-    const config = await getCurrentDigestConfig();
-    if (!config || config.isActive === false) {
-      console.log('[weeklyDigest] No active digest config found; skipping send.');
+    const digestConfig = await loadDigestConfig();
+    if (!digestConfig || digestConfig.isActive !== true) {
+      console.log('[weeklyDigest] no active digest config, skipping send');
+      return;
+    }
+
+    if (digestConfig.autoSendEnabled !== true) {
+      console.log('[weeklyDigest] auto send disabled in config, skipping send');
       return;
     }
 
     try {
-      // 1. Fetch top 5 posts from last 7 days (by voteCount)
-      const postsSnapshot = await db
-        .collection("posts")
-        .where("publishedAt", ">=", sevenDaysAgoTimestamp)
-        .orderBy("publishedAt", "desc")
-        .limit(100)
-        .get();
+      const result = await runWeeklyDigestOnce({ trigger: 'auto' });
+      console.log('[weeklyDigest] auto run completed', result);
 
-      // 1. after the map, cast to the real shape
-      const posts: { id: string; title: string; slug: string; voteCount: number }[] =
-        postsSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as any));
+      // Update stats in digestConfig
+      await db.collection('digestConfig').doc('current').set({
+        lastAutoSentAt: FieldValue.serverTimestamp(),
+        lastAutoSentCount: result.distinctEmails,
+      }, { merge: true });
 
-      // 2. sort uses voteCount, not score
-      const topPosts = posts
-        .sort((a, b) => (b.voteCount || 0) - (a.voteCount || 0))
-        .slice(0, 5);
-
-      console.log(`Found ${topPosts.length} top posts`);
-
-      // 2. Fetch new comments from last 7 days, grouped by post
-      const commentsByPost: Record<string, any[]> = {};
-      
-      // Get all posts to check comments
-      const allPostsSnapshot = await db
-        .collection("posts")
-        .where("publishedAt", ">=", sevenDaysAgoTimestamp)
-        .get();
-
-      for (const postDoc of allPostsSnapshot.docs) {
-        const postId = postDoc.id;
-        const commentsSnapshot = await db
-          .collection(`posts/${postId}/comments`)
-          .where("createdAt", ">=", sevenDaysAgoTimestamp)
-          .orderBy("createdAt", "desc")
-          .limit(10)
-          .get();
-
-        if (!commentsSnapshot.empty) {
-          commentsByPost[postId] = commentsSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-            postId,
-          }));
-        }
-      }
-
-      console.log(`Found comments in ${Object.keys(commentsByPost).length} posts`);
-
-      // 3. Get all subscribers (users with emailSubscriber=true and emailVerified=true)
-      const usersSnapshot = await db
-        .collection("users")
-        .where("emailSubscriber", "==", true)
-        .get();
-
-      const subscribers: Array<{ uid: string; email: string; displayName?: string }> = [];
-
-      for (const userDoc of usersSnapshot.docs) {
-        const userData = userDoc.data();
-        const uid = userDoc.id;
-
-        // Check if email is verified via Firebase Auth
-        try {
-          const authUser = await auth.getUser(uid);
-          if (authUser.emailVerified && authUser.email) {
-            subscribers.push({
-              uid,
-              email: authUser.email,
-              displayName: userData.displayName || userData.profile?.displayName,
-            });
-          }
-        } catch (error) {
-          console.warn(`Failed to verify email for user ${uid}:`, error);
-        }
-      }
-
-      console.log(`Found ${subscribers.length} subscribers`);
-
-      // 4. For each subscriber, find mentions and build personalized email
-      const emailPromises = subscribers.map(async (subscriber) => {
-        // Find mentions (@username) in comments
-        const mentions: any[] = [];
-        const subscriberUsername = subscriber.displayName?.toLowerCase() || "";
-
-        for (const [postId, comments] of Object.entries(commentsByPost)) {
-          for (const comment of comments) {
-            const body = (comment.body || "").toLowerCase();
-            // Check for @ mentions (simple pattern match)
-            if (
-              subscriberUsername &&
-              body.includes(`@${subscriberUsername}`)
-            ) {
-              mentions.push({
-                ...comment,
-                postTitle: topPosts.find((p) => p.id === postId)?.title || "Unknown Post",
-                postSlug: topPosts.find((p) => p.id === postId)?.slug,
-              });
-            }
-          }
-        }
-
-        // Generate unsubscribe token
-        const unsubscribeToken = await generateUnsubscribeToken(subscriber.uid);
-
-        // Build unsubscribe URL for plain text template
-        const unsubscribeUrl = `https://flicklet.app/unsubscribe?token=${unsubscribeToken}`;
-
-        // Build email HTML
-        const emailHtml = buildEmailTemplate({
-          subscriberName: subscriber.displayName || "there",
-          posts: topPosts,
-          commentsByPost,
-          mentions,
-          unsubscribeToken,
-          config,
-        });
-
-        // Send email via SendGrid
-        await sendDigestEmail({
-          to: subscriber.email,
-          subject: config.title || '🎬 Flicklet Weekly — We actually shipped things.',
-          html: emailHtml,
-          text: buildPlainTextTemplate({
-            subscriberName: subscriber.displayName || 'there',
-            posts: topPosts,
-            commentsByPost,
-            mentions,
-            unsubscribeUrl,
-            config,
-          }),
-        });
-
-        console.log('[weeklyDigest] sent', { to: subscriber.email });
-      });
-
-      await Promise.all(emailPromises);
-      console.log(`Weekly digest completed. Sent ${subscribers.length} emails.`);
+      console.log('[weeklyDigest] stats updated');
     } catch (error) {
-      console.error("Error in weekly digest:", error);
+      console.error('[weeklyDigest] error:', error);
       throw error;
     }
   });
+
+/**
+ * Callable function to manually trigger digest send (admin only)
+ */
+export const sendDigestNow = functions.https.onCall(async (data, context) => {
+  // Check caller is authenticated
+  if (!context.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  // Check caller is admin by verifying their token claims
+  const callerRole = context.auth.token?.role;
+  if (callerRole !== 'admin') {
+    throw new HttpsError('permission-denied', 'Only admins can trigger digest send');
+  }
+
+  const uid = context.auth.uid;
+  console.log(`[sendDigestNow] manual trigger started by ${uid}`);
+
+  try {
+    // Load digest configuration from Firestore
+    const digestConfig = await loadDigestConfig();
+    if (!digestConfig || digestConfig.isActive !== true) {
+      throw new HttpsError('failed-precondition', 'No active digest config');
+    }
+
+    const result = await runWeeklyDigestOnce({ trigger: 'manual' });
+    console.log('[sendDigestNow] manual run completed', result);
+
+    // Update stats in digestConfig
+    await db.collection('digestConfig').doc('current').set({
+      lastManualSentAt: FieldValue.serverTimestamp(),
+      lastManualSentCount: result.distinctEmails,
+    }, { merge: true });
+
+    console.log('[sendDigestNow] stats updated');
+
+    return {
+      ok: true,
+      sentCount: result.sentCount,
+      distinctEmails: result.distinctEmails,
+    };
+  } catch (error: any) {
+    console.error('[sendDigestNow] error:', error);
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+    throw new HttpsError('internal', 'Failed to send digest');
+  }
+});
 
 /**
  * HTTP test function to preview digest email
@@ -255,9 +370,8 @@ export const digestPreview = functions.https.onRequest(async (req, res) => {
 
   try {
     // Load digest configuration from Firestore
-    const config = await getCurrentDigestConfig();
-    if (!config || config.isActive === false) {
-      console.error('[digestPreview] No active digest config; refusing to send preview.');
+    const digestConfig = await loadDigestConfig();
+    if (!digestConfig || digestConfig.isActive !== true) {
       res.status(400).json({ error: 'No active digest config' });
       return;
     }
@@ -277,7 +391,7 @@ export const digestPreview = functions.https.onRequest(async (req, res) => {
       commentsByPost,
       mentions,
       unsubscribeToken,
-      config,
+      config: digestConfig,
     });
 
     const emailText = buildPlainTextTemplate({
@@ -286,12 +400,12 @@ export const digestPreview = functions.https.onRequest(async (req, res) => {
       commentsByPost,
       mentions,
       unsubscribeUrl,
-      config,
+      config: digestConfig,
     });
 
     await sendDigestEmail({
       to,
-      subject: config.title || '🎬 Flicklet Weekly — We actually shipped things.',
+      subject: digestConfig.title,
       html: emailHtml,
       text: emailText,
     });
