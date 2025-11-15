@@ -14,11 +14,18 @@ type AutocompleteSuggestion = {
 
 export type SearchSuggestionsProps = {
   query: string;
-  onSuggestionClick: (suggestion: string) => void;
+  onSuggestionClick: (suggestion: string, itemId?: string, mediaType?: 'movie' | 'tv' | 'person') => void;
   onClose: () => void;
   isVisible: boolean;
   className?: string;
 };
+
+// Helper to extract year from subtitle (format: "TV Show • 2022" or "Movie • 2022")
+function extractYearFromSubtitle(subtitle?: string): string | null {
+  if (!subtitle) return null;
+  const match = subtitle.match(/\b(19|20)\d{2}\b/);
+  return match ? match[0] : null;
+}
 
 // Popular search suggestions
 const POPULAR_SUGGESTIONS = [
@@ -249,9 +256,13 @@ export default function SearchSuggestions({
               // History section
               handleSuggestionClick(searchHistory[selectedIndex]);
             } else if (selectedIndex < historyCount + tmdbCount) {
-              // TMDB section
+              // TMDB section - pass ID and mediaType for precise matching
               const tmdbIndex = selectedIndex - historyCount;
-              handleSuggestionClick(tmdbSuggestions[tmdbIndex].title);
+              const tmdbSuggestion = tmdbSuggestions[tmdbIndex];
+              // Include year in search query for more precise results
+              const year = extractYearFromSubtitle(tmdbSuggestion.subtitle);
+              const searchQuery = year ? `${tmdbSuggestion.title} ${year}` : tmdbSuggestion.title;
+              handleSuggestionClick(searchQuery, String(tmdbSuggestion.id), tmdbSuggestion.type);
             } else {
               // Popular section
               const popularIndex = selectedIndex - historyCount - tmdbCount;
@@ -270,8 +281,8 @@ export default function SearchSuggestions({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isVisible, searchHistory, tmdbSuggestions, filteredSuggestions, selectedIndex, onClose, isMobile]);
   
-  const handleSuggestionClick = (suggestion: string) => {
-    onSuggestionClick(suggestion);
+  const handleSuggestionClick = (suggestion: string, itemId?: string, mediaType?: 'movie' | 'tv' | 'person') => {
+    onSuggestionClick(suggestion, itemId, mediaType);
     onClose();
   };
   
@@ -303,7 +314,9 @@ export default function SearchSuggestions({
       style={{ 
         backgroundColor: 'var(--card)', 
         borderColor: 'var(--line)',
-        zIndex: 10002, // Above mobile nav (9999) and filter sheet (10001)
+        // Z-index hierarchy: Above mobile nav (9999) and filter sheet (10001)
+        // Below more menu dropdown (10003) from SearchResults
+        zIndex: 10002,
         maxHeight,
         WebkitOverflowScrolling: 'touch',
       }}
@@ -332,13 +345,17 @@ export default function SearchSuggestions({
                   <button
                     key={`history-${item}`}
                     onMouseDown={(e) => {
-                      e.preventDefault();
+                      e.preventDefault(); // Prevent input blur
                       e.stopPropagation();
                     }}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       handleSuggestionClick(item);
+                    }}
+                    onPointerDown={(e) => {
+                      e.preventDefault(); // Also prevent on pointer events
+                      e.stopPropagation();
                     }}
                     className={`
                       w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer
@@ -379,13 +396,20 @@ export default function SearchSuggestions({
                   <button
                     key={`tmdb-${suggestion.type}-${suggestion.id}`}
                     onMouseDown={(e) => {
-                      e.preventDefault();
+                      e.preventDefault(); // Prevent input blur
                       e.stopPropagation();
                     }}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      handleSuggestionClick(suggestion.title);
+                      // Include year in search query for more precise results
+                      const year = extractYearFromSubtitle(suggestion.subtitle);
+                      const searchQuery = year ? `${suggestion.title} ${year}` : suggestion.title;
+                      handleSuggestionClick(searchQuery, String(suggestion.id), suggestion.type);
+                    }}
+                    onPointerDown={(e) => {
+                      e.preventDefault(); // Also prevent on pointer events
+                      e.stopPropagation();
                     }}
                     className={`
                       w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer
@@ -431,13 +455,17 @@ export default function SearchSuggestions({
                   <button
                     key={`suggestion-${suggestion}`}
                     onMouseDown={(e) => {
-                      e.preventDefault();
+                      e.preventDefault(); // Prevent input blur
                       e.stopPropagation();
                     }}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       handleSuggestionClick(suggestion);
+                    }}
+                    onPointerDown={(e) => {
+                      e.preventDefault(); // Also prevent on pointer events
+                      e.stopPropagation();
                     }}
                     className={`
                       w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer

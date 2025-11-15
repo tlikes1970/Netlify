@@ -1,5 +1,12 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.154: Fixed search suggestion click behavior - suggestions now properly fill search bar and perform search
+// - Fixed blur handler interfering with suggestion clicks by adding click tracking flag
+// - Added suggestionsContainerRef to properly detect clicks inside suggestions dropdown
+// - Updated handleSuggestionClick to set flag and prevent blur from clearing query
+// - Added onPointerDown handlers to all suggestion buttons to prevent input blur
+// - Fixed issue where clicking "Slow Horses" would reset search bar to just "S"
+// - Rollback: Revert this commit to restore previous suggestion click behavior
 // ⚠️ VERSION 0.1.153: Improved weekly digest error messages for better debugging
 // - Separated error messages for missing config vs inactive config
 // - Clear instructions in error messages directing users to Admin panel
@@ -125,4 +132,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.153";
+export const APP_VERSION = "0.1.154";

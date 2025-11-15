@@ -284,14 +284,15 @@ export async function smartSearch(
     const exactIndex = ranked.indexOf(highestExact);
     
     if (exactIndex > 0) {
-      if (debugMode) {
-        console.log(`📌 PINNED: "${highestExact.item.title}" (${highestExact.item.year}) to rank 1 (was rank ${exactIndex + 1})`);
-      }
+      console.log(`📌 PINNED: "${highestExact.item.title}" (${highestExact.item.year}) to rank 1 (was rank ${exactIndex + 1})`);
       ranked.splice(exactIndex, 1);
       ranked.unshift(highestExact);
-    } else if (debugMode) {
+    } else {
       console.log(`✅ "${highestExact.item.title}" already at rank 1`);
     }
+  } else {
+    // Log when no exact match found (might indicate search query doesn't match any titles exactly)
+    console.log(`⚠️ No exact title match found for query: "${query}"`);
   }
 
   const finalRanked = ranked.map(x => x.item);
