@@ -12,7 +12,7 @@ import MyListToggle from '../components/MyListToggle';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { fetchNetworkInfo } from './api';
 import { searchTagsLocal } from '../lib/libraryIndex';
-import { isMobileNow } from '../lib/isMobile';
+import { isMobileNow, onMobileChange } from '../lib/isMobile';
 import Portal from '../components/Portal';
 
 type SearchResultWithPagination = {
@@ -22,8 +22,13 @@ type SearchResultWithPagination = {
 };
 
 export default function SearchResults({
-  query, genre, searchType = 'all'
-}: { query: string; genre?: number | null; searchType?: 'all'|'movies-tv'|'people' }) {
+  query, genre, searchType = 'all', mediaTypeFilter
+}: { 
+  query: string; 
+  genre?: number | null; 
+  searchType?: 'all'|'movies-tv'|'people';
+  mediaTypeFilter?: 'tv' | 'movie' | null;
+}) {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -40,7 +45,7 @@ export default function SearchResults({
     setItems([]); setCurrentPage(1); setTotalPages(1); setError(null);
     void fetchPage(1, true);
     // eslint-disable-next-line
-  }, [query, genre, searchType]);
+  }, [query, genre, searchType, mediaTypeFilter]);
 
   // Setup intersection observer for infinite scroll
   useEffect(() => {
@@ -93,7 +98,13 @@ export default function SearchResults({
         result = searchResult;
       }
 
-      setItems(prev => replace ? result.items : [...prev, ...result.items]);
+      // Filter by mediaType if specified
+      let filteredItems = result.items;
+      if (mediaTypeFilter && searchType === 'movies-tv') {
+        filteredItems = result.items.filter(item => item.mediaType === mediaTypeFilter);
+      }
+
+      setItems(prev => replace ? filteredItems : [...prev, ...filteredItems]);
       setCurrentPage(result.page);
       setTotalPages(result.totalPages);
     } catch (err: any) {
@@ -149,6 +160,13 @@ export default function SearchResults({
   );
 }
 
+/**
+ * Process: Mobile Search Result Card Actions
+ * Purpose: Simplify card actions on mobile to reduce visual clutter - show one primary CTA (Add button or status pill) plus More menu
+ * Data Source: Library.getCurrentList() determines if item is in a list
+ * Update Path: Mobile actions in SearchResultCard component (lines 434-589)
+ * Dependencies: Library storage, isMobileNow() detection, More menu dropdown (z-index 10003)
+ */
 function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () => void }) {
   const translations = useTranslations();
   const { posterUrl, mediaType, synopsis } = item;
@@ -157,7 +175,12 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
   const [showMoreMenu, setShowMoreMenu] = React.useState(false);
   const moreMenuRef = React.useRef<HTMLDivElement>(null);
   const moreButtonRef = React.useRef<HTMLButtonElement>(null);
-  const isMobile = isMobileNow();
+  const [isMobile, setIsMobile] = React.useState(isMobileNow());
+  
+  // Make mobile detection reactive to viewport changes
+  React.useEffect(() => {
+    return onMobileChange(setIsMobile);
+  }, []);
   
   // Check if item is already in a list to determine primary action
   const currentList = Library.getCurrentList(item.id, item.mediaType);
@@ -364,13 +387,13 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
   };
 
   return (
-    <div className="relative flex bg-card border border-line rounded-xl overflow-hidden shadow-lg hover:transform hover:-translate-y-0.5 transition-transform">
+    <div className={`relative flex bg-card border border-line rounded-xl overflow-hidden shadow-lg ${!isMobile ? 'hover:transform hover:-translate-y-0.5 transition-transform' : ''}`}>
       {/* Poster - proper size */}
       <a 
         href={`https://www.themoviedb.org/${mediaType}/${item.id}`} 
         target="_blank" 
         rel="noopener noreferrer"
-        className="flex-shrink-0 w-24 h-36 bg-muted cursor-pointer"
+        className={`flex-shrink-0 bg-muted cursor-pointer ${isMobile ? 'w-20 h-28' : 'w-24 h-36'}`}
         title={translations.opensInTmdb}
       >
         {posterUrl ? (
@@ -389,52 +412,70 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
       </a>
 
       {/* Content - proper spacing and sizing */}
-      <div className="flex-1 p-4 flex flex-col relative">
+      <div className={`flex-1 flex flex-col relative ${isMobile ? 'p-3' : 'p-4'}`}>
         {/* Title */}
-        <div className="font-bold text-lg mb-1">{title}</div>
+        <div className={`font-bold ${isMobile ? 'text-base' : 'text-lg'} mb-1`}>{title}</div>
         
         {/* Meta */}
-        <div className="text-muted-foreground text-sm mb-1">{genre} • {mediaTypeLabel}</div>
+        <div className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'} mb-1`}>
+          {genre} • {mediaTypeLabel}
+        </div>
         
         {/* Streaming Info - only show when we have real data */}
         {getStreamingInfo() && (
-          <div className="text-accent text-sm mb-2">{getStreamingInfo()}</div>
+          <div className={`text-accent ${isMobile ? 'text-xs' : 'text-sm'} mb-2`}>
+            {getStreamingInfo()}
+          </div>
         )}
         
-        {/* Synopsis */}
-        <div className="text-muted-foreground text-sm mb-2 max-h-12 overflow-hidden">
-          {synopsis || translations.noSynopsisAvailable}
-        </div>
+        {/* Synopsis - hide on mobile or show very truncated */}
+        {!isMobile && (
+          <div className="text-muted-foreground text-sm mb-2 max-h-12 overflow-hidden">
+            {synopsis || translations.noSynopsisAvailable}
+          </div>
+        )}
         
-        {/* Badges */}
-        <div className="flex gap-2 mb-2">
-          {badges.map(badge => (
-            <span key={badge} className="border border-line rounded px-2 py-0.5 text-xs text-muted-foreground">
-              {badge}
-            </span>
-          ))}
-        </div>
+        {/* Badges - hide on mobile */}
+        {!isMobile && (
+          <div className="flex gap-2 mb-2">
+            {badges.map(badge => (
+              <span key={badge} className="border border-line rounded px-2 py-0.5 text-xs text-muted-foreground">
+                {badge}
+              </span>
+            ))}
+          </div>
+        )}
         
-        {/* Rating */}
-        <div className="flex items-center gap-1 mb-4">
-          <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
-          <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
-          <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
-          <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
-          <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
-          <span className="text-muted-foreground text-xs ml-2">(Your rating)</span>
-          {item.voteAverage && (
-            <span className="text-muted-foreground text-xs ml-4">
-              TMDB: {item.voteAverage.toFixed(1)}/10
-            </span>
-          )}
-        </div>
+        {/* Rating - simplified on mobile */}
+        {isMobile ? (
+          // Mobile: Just show TMDB rating if available
+          item.voteAverage && (
+            <div className="text-muted-foreground text-xs mb-3">
+              ⭐ {item.voteAverage.toFixed(1)}/10
+            </div>
+          )
+        ) : (
+          // Desktop: Full rating section
+          <div className="flex items-center gap-1 mb-4">
+            <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
+            <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
+            <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
+            <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
+            <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
+            <span className="text-muted-foreground text-xs ml-2">(Your rating)</span>
+            {item.voteAverage && (
+              <span className="text-muted-foreground text-xs ml-4">
+                TMDB: {item.voteAverage.toFixed(1)}/10
+              </span>
+            )}
+          </div>
+        )}
         
         {/* Actions */}
         {isMobile ? (
           // Mobile: Compact actions with primary button + More menu
           <div className="mt-auto flex gap-2 items-center">
-            {/* Primary Action Button */}
+            {/* Primary Action Button or Status Pill */}
             {!isInList ? (
               <button
                 onClick={() => handleAction('want')}
@@ -451,20 +492,13 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
                 )}
               </button>
             ) : (
-              <button
-                onClick={() => handleAction('currently-watching')}
-                className="flex-1 px-4 py-3 text-sm font-medium rounded-lg bg-accent text-white hover:opacity-90 transition-opacity min-h-[44px] flex items-center justify-center"
-                disabled={pressedButtons.has(`currently-watching-${item.id}`)}
-              >
-                {pressedButtons.has(`currently-watching-${item.id}`) ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    <span>Adding...</span>
-                  </div>
-                ) : (
-                  `+ ${translations.currentlyWatchingAction || 'Watching'}`
-                )}
-              </button>
+              // Show status pill if already in list
+              <div className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-muted min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>
+                {currentList === 'watching' ? (translations.currentlyWatchingAction || 'Watching') :
+                 currentList === 'wishlist' ? (translations.wantToWatchAction || 'Want') :
+                 currentList === 'watched' ? (translations.watchedAction || 'Watched') :
+                 'In List'}
+              </div>
             )}
             
             {/* More Menu Button */}
