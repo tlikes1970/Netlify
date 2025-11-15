@@ -1,5 +1,11 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.156: Improved mobile search result card layout - better use of space
+// - Moved rating inline with title on mobile for better space utilization
+// - Made action buttons smaller (36px height instead of 44px) for more compact design
+// - Added back synopsis description (2-line truncated) to fill white space
+// - Better visual balance and information density on mobile cards
+// - Rollback: Revert this commit to restore previous mobile card layout
 // ⚠️ VERSION 0.1.155: Fixed mobile search result cards - made mobile detection reactive to viewport changes
 // - Changed isMobile from one-time check to reactive useState with onMobileChange listener
 // - Mobile cards now properly update when viewport size changes
@@ -137,4 +143,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.155";
+export const APP_VERSION = "0.1.156";

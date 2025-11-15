@@ -413,8 +413,15 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
 
       {/* Content - proper spacing and sizing */}
       <div className={`flex-1 flex flex-col relative ${isMobile ? 'p-3' : 'p-4'}`}>
-        {/* Title */}
-        <div className={`font-bold ${isMobile ? 'text-base' : 'text-lg'} mb-1`}>{title}</div>
+        {/* Title with Rating inline on mobile */}
+        <div className={`font-bold ${isMobile ? 'text-base' : 'text-lg'} mb-1 flex items-center gap-2 flex-wrap`}>
+          <span>{title}</span>
+          {isMobile && item.voteAverage && (
+            <span className="text-muted-foreground text-xs font-normal">
+              ⭐ {item.voteAverage.toFixed(1)}/10
+            </span>
+          )}
+        </div>
         
         {/* Meta */}
         <div className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'} mb-1`}>
@@ -428,8 +435,14 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
           </div>
         )}
         
-        {/* Synopsis - hide on mobile or show very truncated */}
-        {!isMobile && (
+        {/* Synopsis - show truncated on mobile, full on desktop */}
+        {isMobile ? (
+          synopsis && (
+            <div className="text-muted-foreground text-xs mb-2 line-clamp-2">
+              {synopsis}
+            </div>
+          )
+        ) : (
           <div className="text-muted-foreground text-sm mb-2 max-h-12 overflow-hidden">
             {synopsis || translations.noSynopsisAvailable}
           </div>
@@ -446,16 +459,8 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
           </div>
         )}
         
-        {/* Rating - simplified on mobile */}
-        {isMobile ? (
-          // Mobile: Just show TMDB rating if available
-          item.voteAverage && (
-            <div className="text-muted-foreground text-xs mb-3">
-              ⭐ {item.voteAverage.toFixed(1)}/10
-            </div>
-          )
-        ) : (
-          // Desktop: Full rating section
+        {/* Rating - desktop only (mobile shows inline with title) */}
+        {!isMobile && (
           <div className="flex items-center gap-1 mb-4">
             <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
             <span className="text-muted-foreground text-lg cursor-pointer">☆</span>
@@ -479,13 +484,13 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
             {!isInList ? (
               <button
                 onClick={() => handleAction('want')}
-                className="flex-1 px-4 py-3 text-sm font-medium rounded-lg bg-accent text-white hover:opacity-90 transition-opacity min-h-[44px] flex items-center justify-center"
+                className="flex-1 px-3 py-2 text-xs font-medium rounded-lg bg-accent text-white hover:opacity-90 transition-opacity min-h-[36px] flex items-center justify-center"
                 disabled={pressedButtons.has(`want-${item.id}`)}
               >
                 {pressedButtons.has(`want-${item.id}`) ? (
                   <div className="flex items-center justify-center">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    <span>Adding...</span>
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1.5"></div>
+                    <span className="text-xs">Adding...</span>
                   </div>
                 ) : (
                   `+ ${translations.wantToWatchAction || 'Add'}`
@@ -493,7 +498,7 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
               </button>
             ) : (
               // Show status pill if already in list
-              <div className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-muted min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>
+              <div className="flex-1 px-3 py-2 text-xs font-medium rounded-lg bg-muted min-h-[36px] flex items-center justify-center" style={{ color: 'var(--text)' }}>
                 {currentList === 'watching' ? (translations.currentlyWatchingAction || 'Watching') :
                  currentList === 'wishlist' ? (translations.wantToWatchAction || 'Want') :
                  currentList === 'watched' ? (translations.watchedAction || 'Watched') :
@@ -506,7 +511,7 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
               <button
                 ref={moreButtonRef}
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
-                className="px-4 py-3 text-sm font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="px-3 py-2 text-xs font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
                 style={{ color: 'var(--text)' }}
                 aria-label="More actions"
                 aria-haspopup="menu"
