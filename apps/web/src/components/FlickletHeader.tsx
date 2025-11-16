@@ -328,11 +328,18 @@ function SearchRow({
     if (isComposing) return; // Don't submit during IME composition
 
     const trimmed = q.trim();
-    if (trimmed) {
+    // Allow submission if there's a query OR a genre selected (for genre-only search)
+    if (trimmed || g != null) {
       // Pass mediaTypeFilter separately
-      const effectiveSearchType = mediaTypeFilter 
+      // If genre is selected, ensure searchType is 'movies-tv' (genres only apply to movies/TV)
+      let effectiveSearchType = mediaTypeFilter 
         ? (searchType === "movies-tv" ? searchType : "movies-tv")
         : searchType;
+      
+      // For genre-only searches, force searchType to 'movies-tv'
+      if (g != null && !trimmed) {
+        effectiveSearchType = "movies-tv";
+      }
       
       if (searchMode === "tag") {
         onSearch?.(`tag:${trimmed}`, g, effectiveSearchType, mediaTypeFilter);
@@ -340,8 +347,10 @@ function SearchRow({
         onSearch?.(trimmed, g, effectiveSearchType, mediaTypeFilter);
       }
 
-      // Add to search history
-      addSearchToHistory(trimmed);
+      // Add to search history only if there's a query
+      if (trimmed) {
+        addSearchToHistory(trimmed);
+      }
     }
 
     setShowSuggestions(false);

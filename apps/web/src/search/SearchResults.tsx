@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import type { MediaItem } from '../components/cards/card.types';
 import { cachedSearchMulti } from './cache';
 import { smartSearch } from './smartSearch';
+import { discoverByGenre } from './api';
 import { emit } from '../lib/events';
 import { addToListWithConfirmation, Library } from '../lib/storage';
 import { fetchNextAirDate, fetchShowStatus } from '../tmdb/tv';
@@ -90,6 +91,10 @@ export default function SearchResults({
           page: 1,
           totalPages: 1 // Tag search is single page
         };
+      } else if (!query.trim() && genre != null && searchType === 'movies-tv') {
+        // Genre-only search: no text query, genre selected
+        const searchResult = await discoverByGenre(genre, nextPage, { signal: ac.signal });
+        result = searchResult;
       } else {
         const useSmart = searchType !== 'people';
         const searchResult = useSmart
@@ -115,7 +120,8 @@ export default function SearchResults({
     }
   }
 
-  if (!query) return null;
+  // Allow rendering if there's a query OR a genre selected (for genre-only search)
+  if (!query && !genre) return null;
 
   const isMobile = isMobileNow();
 
@@ -154,6 +160,8 @@ export default function SearchResults({
       <h2 id="search-results-heading" className="text-base font-semibold mb-6">
         {query.startsWith('tag:') 
           ? `Tag search results for "${query.substring(4)}"`
+          : !query.trim() && genre != null
+          ? `Genre results`
           : `Search results for "${query}"`
         }
       </h2>

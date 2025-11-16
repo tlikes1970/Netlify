@@ -1,6 +1,7 @@
 import type { MediaItem } from '../components/cards/card.types';
 import { get } from '../lib/tmdb';
 import { normalizeQuery } from '../lib/string';
+import { computeSearchScore } from './rank';
 
 
 export type SearchResult = MediaItem;
@@ -85,8 +86,12 @@ export async function searchMulti(
   const totalPages = json.total_pages ?? 1;
 
   let filtered = results;
-  if (searchType === 'movies-tv') filtered = results.filter((r: any) => r?.media_type === 'movie' || r?.media_type === 'tv');
-  if (searchType === 'people')    filtered = results.filter((r: any) => r?.media_type === 'person' || r?.known_for);
+  if (searchType === 'movies-tv') {
+    filtered = results.filter((r: any) => r?.media_type === 'movie' || r?.media_type === 'tv');
+  }
+  if (searchType === 'people') {
+    filtered = results.filter((r: any) => r?.media_type === 'person');
+  }
 
   const mapped = filtered.map(mapTMDBToMediaItem).filter(Boolean) as SearchResult[];
 
@@ -151,4 +156,90 @@ export function mapTMDBToMediaItem(r: any): MediaItem {
   (item as any).genre_ids = r.genre_ids;
   
   return item;
+}
+
+export async function discoverByGenre(
+  genre: number,
+  page = 1,
+  opts?: { signal?: AbortSignal; language?: string; region?: string }
+): Promise<SearchResultWithPagination> {
+  const language = opts?.language ?? 'en-US';
+  const region = opts?.region ?? 'US';
+
+  const qsBase = (params: Record<string, any>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== undefined && v !== null && v !== '') p.set(k, String(v));
+    }
+    return p.toString();
+  };
+
+  const fetchTMDB = async (path: string, params: Record<string, any>) => {
+    const res = await fetch(`/api/tmdb-proxy?${qsBase({ path, ...params })}`, {
+      signal: opts?.signal,
+    });
+    if (!res.ok) throw new Error(`${path} failed: ${res.status}`);
+    return res.json();
+  };
+
+  // Fetch movies and TV for the given genre using discover endpoints
+  const [movieJson, tvJson] = await Promise.all([
+    fetchTMDB('discover/movie', {
+      with_genres: genre,
+      page,
+      include_adult: false,
+      sort_by: 'popularity.desc',
+      language,
+      region,
+    }),
+    fetchTMDB('discover/tv', {
+      with_genres: genre,
+      page,
+      include_adult: false,
+      sort_by: 'popularity.desc',
+      language,
+      region,
+    }),
+  ]);
+
+  const raw: any[] = [
+    ...(Array.isArray(movieJson.results) ? movieJson.results.map((r: any) => ({ ...r, media_type: 'movie' })) : []),
+    ...(Array.isArray(tvJson.results) ? tvJson.results.map((r: any) => ({ ...r, media_type: 'tv' })) : []),
+  ];
+
+  const mapped = raw
+    .map(mapTMDBToMediaItem)
+    .filter(Boolean) as SearchResult[];
+
+  // For genre-only search we have no user text query, so pass empty string into computeSearchScore
+  // and let popularity/recency/votes drive ranking.
+  const ranked = mapped
+    .map(item => {
+      const scored = computeSearchScore('', {
+        title: item.title || '',
+        overview: item.synopsis,
+        popularity: item.voteAverage ? item.voteAverage * 10 : undefined,
+        voteAverage: item.voteAverage,
+        voteCount: item.voteCount,
+        releaseYear: item.year ? parseInt(item.year) : undefined,
+        releaseDate: item.releaseDate || undefined,
+        mediaType: item.mediaType as 'movie' | 'tv',
+        originalLanguage: undefined,
+        collectionName: undefined,
+      });
+      return { item, score: scored.score };
+    })
+    .sort((a, b) => b.score - a.score)
+    .map(x => x.item);
+
+  const totalPages = Math.max(
+    movieJson.total_pages ?? 1,
+    tvJson.total_pages ?? 1
+  );
+
+  return {
+    items: ranked,
+    page,
+    totalPages,
+  };
 }

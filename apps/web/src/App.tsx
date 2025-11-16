@@ -267,7 +267,8 @@ export default function App() {
 
   // Search state
   const [search, setSearch] = useState<SearchState>({ q: '', genre: null, type: 'all' });
-  const searchActive = !!search.q.trim();
+  // Search is active if there's a query OR a genre selected (for genre-only search)
+  const searchActive = !!search.q.trim() || search.genre != null;
 
   // Search handlers
   const handleSearch = (q: string, genre: number | null, type: SearchType, mediaTypeFilter?: 'tv' | 'movie' | null) => {

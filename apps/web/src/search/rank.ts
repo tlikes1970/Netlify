@@ -102,7 +102,7 @@ export function computeSearchScore(
   const popularityBonus = Math.min(10 * popLog / 3.0, 10);
 
   // Recency bonus: small positive if ≤5yrs, soft negative after, capped [-6, +8]
-  // Use release date if available for more precise calculation, otherwise fall back to year
+  // Newer titles get higher bonus inside the window.
   let age: number;
   if (features.releaseDate) {
     const ageDays = (Date.now() - new Date(features.releaseDate).getTime()) / 864e5;
@@ -113,9 +113,23 @@ export function computeSearchScore(
   } else {
     age = 50;
   }
-  const recencyBonus = age <= 5 
-    ? Math.min(age * 1.6, SCORE.RECENCY_MAX) 
-    : Math.max(SCORE.RECENCY_MIN, -(age - 5) * 0.3); // Very gentle negative curve
+
+  let recencyBonus: number;
+  if (!features.releaseYear && !features.releaseDate) {
+    // Unknown date → stay neutral
+    recencyBonus = 0;
+  } else if (age <= 5) {
+    // age = 0 → ~SCORE.RECENCY_MAX
+    // age = 5 → ~0
+    recencyBonus = SCORE.RECENCY_MAX - (SCORE.RECENCY_MAX / 5) * age;
+  } else {
+    // Soft negative after 5 years
+    const extra = age - 5;
+    recencyBonus = Math.max(
+      SCORE.RECENCY_MIN,
+      -extra * 0.3
+    );
+  }
 
   // Test patch: don't halve bonuses for exact matches
   const finalPopBonus = popularityBonus;
@@ -287,7 +301,7 @@ export function tieBreak(
     if (vc) return vc;
     
     // Final tie-breaker: preference order
-    const va = (bMeta.voteAverage ?? 0) - (aMeta.voteAverage ?? 0);
+    const va = (aMeta.voteAverage ?? 0) - (bMeta.voteAverage ?? 0);
     if (va) return va;
   }
 

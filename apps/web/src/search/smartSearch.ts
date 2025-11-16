@@ -228,6 +228,9 @@ export async function smartSearch(
     .map(mapTMDBToMediaItem)
     .filter(Boolean) as MediaItem[];
 
+  // Drop person results from the candidate set (people search already returned above)
+  allItems = allItems.filter(item => item.mediaType !== 'person');
+
   // Also search TV and Movie endpoints for better coverage (cached for page 1)
   if (page === 1) {
     try {
@@ -298,6 +301,39 @@ export async function smartSearch(
     });
   }
 
+  // Demotion step: reduce score for duplicate single-word exact matches
+  // Check if query is single-word (reused later for sorting logic)
+  const isSingleWord = tokensLower(query).length === 1;
+  if (isSingleWord) {
+    const qNorm = tokensLower(query).join(' ');
+    
+    const exactSameTitle = allWithMeta.filter(entry => {
+      const title = entry.item.title || '';
+      const titleNorm = tokensLower(title).join(' ');
+      return entry.titleSig.tier === 'exact' && titleNorm === qNorm;
+    });
+    
+    if (exactSameTitle.length > 1) {
+      // Pick the canonical exact as the one with highest score
+      const canonical = exactSameTitle.reduce((best, entry) =>
+        entry.score > best.score ? entry : best,
+        exactSameTitle[0]
+      );
+      
+      for (const entry of exactSameTitle) {
+        if (entry === canonical) continue;
+        // Apply a strong penalty so these drop below top leading matches
+        entry.score -= 40;
+        // Mark them as demoted for debugging
+        (entry.meta as any).demotedDuplicateExact = true;
+      }
+      
+      if (debugMode) {
+        console.log(`📉 Demoted ${exactSameTitle.length - 1} duplicate exact matches for "${query}" (kept canonical: "${canonical.item.title}")`);
+      }
+    }
+  }
+
   // Dedupe keeping highest-scored duplicate - preserve all metadata
   const deduped = dedupeWithAllMeta(allWithMeta);
   
@@ -362,6 +398,11 @@ export async function smartSearch(
           });
           
           deduped.push(...extrasWithMeta);
+          // Re-dedupe after adding extras to avoid duplicate titles
+          const dedupedWithExtras = dedupeWithAllMeta(deduped);
+          // Replace deduped with the re-deduped version for the rest of the function
+          deduped.length = 0;
+          deduped.push(...dedupedWithExtras);
         } catch {
           // Extras are optional
         }
@@ -370,7 +411,7 @@ export async function smartSearch(
   }
   
   // Sort by score with tie-breaking - canonical pinning built into comparator
-  const isSingleWord = tokensLower(query).length === 1;
+  // isSingleWord already declared above for demotion step
   
   // Find highest-scoring exact match for pinning
   const exactCandidates = deduped.filter(x => x.titleSig.tier === 'exact' && x.score > 0);
@@ -486,4 +527,72 @@ export async function smartSearch(
     page,
     totalPages: multiJson.total_pages ?? 1
   };
+}
+
+export async function debugSmartSearch(query: string) {
+  const result = await smartSearch(query, 1, 'movies-tv', { debugSearch: true });
+  
+  // Re-compute scores for each item to get debug info
+  const rows = result.items.slice(0, 20).map((item, index) => {
+      const scored = computeSearchScore(query, {
+        title: item.title || '',
+        originalTitle: undefined,
+        aliases: [],
+        overview: item.synopsis,
+        popularity: item.voteAverage ? item.voteAverage * 10 : undefined,
+        voteAverage: item.voteAverage,
+        voteCount: item.voteCount,
+        releaseYear: item.year ? parseInt(item.year) : undefined,
+        releaseDate: item.releaseDate || undefined,
+        mediaType: item.mediaType,
+        originalLanguage: undefined,
+        collectionName: undefined
+      }, {
+        preferType: 'all',
+        debugSearch: true
+      });
+      
+      // Calculate age for display
+      let age: number | string = '?';
+      if (item.releaseDate) {
+        const ageDays = (Date.now() - new Date(item.releaseDate).getTime()) / 864e5;
+        age = (ageDays / 365.25).toFixed(1);
+      } else if (item.year) {
+        const now = new Date().getFullYear();
+        age = (now - parseInt(item.year)).toFixed(1);
+      }
+      
+      const debug = scored.debug || {};
+      
+      return {
+        rank: index + 1,
+        title: item.title || 'Untitled',
+        year: item.year || '?',
+        mediaType: item.mediaType,
+        tier: scored.titleSig.tier,
+        score: scored.score.toFixed(2),
+        voteAverage: item.voteAverage?.toFixed(1) || '?',
+        voteCount: item.voteCount || 0,
+        releaseDate: item.releaseDate || item.year || '?',
+        age: age,
+        recencyBonus: debug.recencyBonus?.toFixed(2) || '?',
+        popBonus: debug.popBonus?.toFixed(2) || '?',
+        bm25: debug.bm25?.toFixed(2) || '?',
+        titleExact: debug.titleExact || 0,
+        titleLeading: debug.titleLeading || 0,
+        titlePrefix: debug.titlePrefix || 0,
+        titleWord: debug.titleWord || 0,
+        titleContains: debug.titleContains || 0,
+        yearMatch: debug.yearMatch || 0,
+        voteSig: typeof debug.voteSig === 'number' ? debug.voteSig.toFixed(3) : '?'
+      };
+  });
+  
+  console.table(rows);
+  return rows;
+}
+
+// Expose debug helper in dev
+if (typeof window !== 'undefined') {
+  (window as any).__debugSmartSearch = debugSmartSearch;
 }
