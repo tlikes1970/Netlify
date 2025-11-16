@@ -7,5 +7,18 @@ export default defineConfig({
     serviceWorkers: 'block',
     ignoreHTTPSErrors: true,
   },
-  reporter: [['list']]
+  reporter: [['list']],
+  // Prevent Vitest from interfering with Playwright
+  testDir: './tests',
+  testMatch: /.*\.spec\.ts$/,
+  // Exclude Vitest test files and config
+  testIgnore: [
+    '**/node_modules/**',
+    '**/src/**/*.test.ts',
+    '**/src/**/*.test.tsx',
+    '**/src/**/*.spec.ts',
+    '**/src/**/*.spec.tsx',
+    '**/vitest.config.ts',
+    '**/src/test-setup.ts',
+  ],
 });

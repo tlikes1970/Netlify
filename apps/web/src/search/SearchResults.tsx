@@ -22,12 +22,13 @@ type SearchResultWithPagination = {
 };
 
 export default function SearchResults({
-  query, genre, searchType = 'all', mediaTypeFilter
+  query, genre, searchType = 'all', mediaTypeFilter, onBackToHome
 }: { 
   query: string; 
   genre?: number | null; 
   searchType?: 'all'|'movies-tv'|'people';
   mediaTypeFilter?: 'tv' | 'movie' | null;
+  onBackToHome?: () => void;
 }) {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -116,8 +117,40 @@ export default function SearchResults({
 
   if (!query) return null;
 
+  const isMobile = isMobileNow();
+
   return (
     <section className="mx-auto w-full max-w-7xl px-3 sm:px-4 py-3" aria-labelledby="search-results-heading">
+      {/* Mobile Back to Home Button */}
+      {isMobile && onBackToHome && (
+        <button
+          onClick={onBackToHome}
+          className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+          style={{ 
+            backgroundColor: 'var(--btn)', 
+            color: 'var(--text)',
+            border: '1px solid var(--line)'
+          }}
+          aria-label="Back to home"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+          <span className="text-sm font-medium">Back to Home</span>
+        </button>
+      )}
+      
       <h2 id="search-results-heading" className="text-base font-semibold mb-6">
         {query.startsWith('tag:') 
           ? `Tag search results for "${query.substring(4)}"`

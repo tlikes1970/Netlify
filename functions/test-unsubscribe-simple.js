@@ -48,3 +48,5 @@ console.log(`   3. Verify the unsubscribe page loads and processes the token`);
 console.log(`   4. Check Firestore to confirm emailSubscriber is now false`);
 console.log(`\n✅ Token expires in 30 days\n`);
 
+
+

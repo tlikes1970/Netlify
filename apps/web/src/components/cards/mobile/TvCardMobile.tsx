@@ -46,7 +46,7 @@ export interface TvCardMobileProps {
 }
 
 export function TvCardMobile({ item, actions, tabKey = 'watching', index = 0, onDragStart, onDragEnd, onKeyboardReorder, isDragging }: TvCardMobileProps) {
-  const { title, year, posterUrl, showStatus, userRating } = item;
+  const { title, year, posterUrl, showStatus, userRating, synopsis } = item;
   
   // Get TV-specific meta information
   const getMetaText = () => {
@@ -161,6 +161,11 @@ export function TvCardMobile({ item, actions, tabKey = 'watching', index = 0, on
               <ProviderBadges providers={item.networks} maxVisible={2} mediaType="tv" />
             )}
           </header>
+
+          {/* Synopsis */}
+          {synopsis && (
+            <div className="synopsis">{synopsis}</div>
+          )}
 
           <div className="mobile-actions-row" style={{ marginTop: '12px' }}>
             <StarRating

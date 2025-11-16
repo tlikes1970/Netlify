@@ -355,6 +355,25 @@ This document tracks open items that need to be addressed before production depl
 
 ## Search & UI Improvements
 
+### ✅ Completed
+
+- [x] Mobile Search Redesign (2025-01-XX)
+  - ✅ Phase A: Simplified mobile search bar (Filter pill, Input, Search button, inline clear icon)
+  - ✅ Phase B: Mobile filter sheet with Apply/Reset buttons (z-index 10001)
+  - ✅ Phase C: Optimized search suggestions for mobile (Recent + TMDB only, max 65vh height)
+  - ✅ Phase D: Simplified search result card actions (primary CTA + More menu on mobile)
+  - ✅ Phase E: Tab switching clears search consistently (mobile matches desktop)
+  - ✅ Phase F: Added component tests for mobile search behaviors
+  - **Version:** v0.1.83+
+  - **Files Modified:**
+    - `apps/web/src/components/FlickletHeader.tsx` (SearchRow)
+    - `apps/web/src/components/SearchSuggestions.tsx`
+    - `apps/web/src/search/SearchResults.tsx`
+    - `apps/web/src/App.tsx` (tab switching)
+  - **Tests Added:**
+    - `apps/web/src/components/__tests__/SearchRow.mobile.test.tsx`
+    - `apps/web/src/components/__tests__/SearchSuggestions.mobile.test.tsx`
+
 ### 📋 Open Items
 
 - [ ] Fix search issue
@@ -475,15 +494,51 @@ This document tracks open items that need to be addressed before production depl
 - Production readiness checks
 - Monitoring and analytics setup
 
-**Total Open Items: 88**
+## Alpha Ship Log Items (TestFlight Prep)
+
+### 📋 Day 1: Post-Merge P0 Fixes
+
+- [ ] Fix comments on PostDetail (add CommentComposer & CommentList)
+- [ ] Fix Firestore security rule (users collection read access)
+
+### 📋 Day 2-3: Personality Injection
+
+- [ ] Add snarky empty states to CommunityPanel
+- [ ] Add snarky loading messages
+- [ ] Spanish translation review for humor
+
+### 📋 Day 4-5: Pro Infrastructure
+
+- [ ] Stripe MVP integration
+- [ ] Pro feature gating (email notifications, advanced trivia)
+
+### 📋 Day 6-7: Analytics
+
+- [ ] PostHog integration
+- [ ] Track core funnel: app_opened → rated → posted → commented → pro_purchased
+
+### 📋 Day 8-9: Platform Builds
+
+- [ ] iOS TestFlight build
+- [ ] Android Internal Track build
+
+### 📋 Day 10: Alpha Launch
+
+- [ ] Distribute to 10-20 testers
+- [ ] Send onboarding email
+- [ ] Monitor PostHog funnel
+
+---
+
+**Total Open Items: 95**
 
 ---
 
 ## Notes
 
-- Last updated: 2024-12-XX
+- Last updated: 2025-01-XX
 - Email Digest section removed (completed)
-- Mobile Search redesign completed (v0.1.151)
-- This list should be updated as new issues are identified
+- Mobile Search redesign completed (v0.1.83+)
+- This list combines Production TODO and Alpha Ship Log items
 - Items should be moved to "Completed" section when finished
 - Use checkboxes to track progress

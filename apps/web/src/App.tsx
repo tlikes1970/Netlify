@@ -58,7 +58,7 @@ import { googleLogin } from '@/lib/authLogin';
 
 type View = 'home'|'watching'|'want'|'watched'|'returning'|'mylists'|'discovery';
 type SearchType = 'all' | 'movies-tv' | 'people';
-type SearchState = { q: string; genre: number | null; type: SearchType };
+type SearchState = { q: string; genre: number | null; type: SearchType; mediaTypeFilter?: 'tv' | 'movie' | null };
 
 export default function App() {
   // Computed smart views
@@ -270,12 +270,12 @@ export default function App() {
   const searchActive = !!search.q.trim();
 
   // Search handlers
-  const handleSearch = (q: string, genre: number | null, type: SearchType) => {
+  const handleSearch = (q: string, genre: number | null, type: SearchType, mediaTypeFilter?: 'tv' | 'movie' | null) => {
     const nextQ = q.trim();
-    setSearch({ q: nextQ, genre, type });
+    setSearch({ q: nextQ, genre, type, mediaTypeFilter });
   };
 
-  const handleClear = () => setSearch({ q: '', genre: null, type: 'all' });
+  const handleClear = () => setSearch({ q: '', genre: null, type: 'all', mediaTypeFilter: null });
 
   // Listen for FlickWord explore event
   useEffect(() => {
@@ -285,7 +285,7 @@ export default function App() {
       if (word) {
         // Set search and switch to discovery view
         const nextQ = word.trim();
-        setSearch({ q: nextQ, genre: null, type: 'all' });
+        setSearch({ q: nextQ, genre: null, type: 'all', mediaTypeFilter: null });
         setView('discovery');
       }
     };
@@ -534,7 +534,7 @@ export default function App() {
         
         <FlickletHeader
           appName="Flicklet"
-          onSearch={(q, g, t) => handleSearch(q, g ?? null, (t as SearchType) ?? 'all')}
+          onSearch={(q, g, t, m) => handleSearch(q, g ?? null, (t as SearchType) ?? 'all', m)}
           onClear={handleClear}
           onHelpOpen={() => {
             console.log('❓ App.tsx onHelpOpen prop called');
@@ -554,9 +554,13 @@ export default function App() {
         {/* Mobile Tabs - mobile only */}
         <div className="block md:hidden">
           <MobileTabs current={view} onChange={(tab) => { 
-            // Phase E: Do NOT auto-clear search on mobile tab switch
-            // User can manually clear search if needed
-            setView(tab); 
+            // Clear search when switching tabs (consistent with desktop behavior)
+            // Use setTimeout to ensure clear happens before view change on iOS
+            handleClear();
+            // Small delay to ensure state updates properly on iOS Safari
+            setTimeout(() => {
+              setView(tab);
+            }, 0);
           }} />
         </div>
         
@@ -567,7 +571,16 @@ export default function App() {
             : undefined 
         }}>
           {searchActive ? (
-            <SearchResults query={search.q} genre={search.genre} searchType={search.type} />
+            <SearchResults 
+              query={search.q} 
+              genre={search.genre} 
+              searchType={search.type} 
+              mediaTypeFilter={search.mediaTypeFilter}
+              onBackToHome={() => {
+                handleClear();
+                setView('home');
+              }}
+            />
           ) : (
             <>
               {(view as View) === 'home' && (
@@ -860,7 +873,7 @@ export default function App() {
       <main className="min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)', minHeight: '100lvh' }}>
         <FlickletHeader
           appName="Flicklet"
-          onSearch={(q, g, t) => handleSearch(q, g ?? null, (t as SearchType) ?? 'all')}
+          onSearch={(q, g, t, m) => handleSearch(q, g ?? null, (t as SearchType) ?? 'all', m)}
           onClear={handleClear}
           onHelpOpen={handleHelpOpen}
         />
@@ -877,15 +890,24 @@ export default function App() {
         {/* Mobile Tabs - mobile only */}
         <div className="block md:hidden">
           <MobileTabs current={view} onChange={(tab) => { 
-            // Phase E: Do NOT auto-clear search on mobile tab switch
-            // User can manually clear search if needed
+            // Clear search when switching tabs (consistent with desktop behavior)
+            handleClear();
             setView(tab); 
           }} />
         </div>
         
         {searchActive ? (
           <PullToRefreshWrapper onRefresh={handleRefresh}>
-            <SearchResults query={search.q} genre={search.genre} searchType={search.type} />
+            <SearchResults 
+              query={search.q} 
+              genre={search.genre} 
+              searchType={search.type} 
+              mediaTypeFilter={search.mediaTypeFilter}
+              onBackToHome={() => {
+                handleClear();
+                setView('home');
+              }}
+            />
           </PullToRefreshWrapper>
         ) : (
           <PullToRefreshWrapper onRefresh={handleRefresh}>

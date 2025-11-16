@@ -45,7 +45,7 @@ export interface MovieCardMobileProps {
 }
 
 export function MovieCardMobile({ item, actions, tabKey = 'watching', index = 0, onDragStart, onDragEnd, onKeyboardReorder, isDragging }: MovieCardMobileProps) {
-  const { title, year, posterUrl, userRating } = item;
+  const { title, year, posterUrl, userRating, synopsis } = item;
   
   // Get Movie-specific meta information
   const getMetaText = () => {
@@ -136,6 +136,11 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching', index = 0,
               <ProviderBadges providers={item.networks} maxVisible={2} mediaType="movie" />
             )}
           </header>
+
+          {/* Synopsis */}
+          {synopsis && (
+            <div className="synopsis">{synopsis}</div>
+          )}
 
           <div className="mobile-actions-row" style={{ marginTop: '12px' }}>
             <StarRating

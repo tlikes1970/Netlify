@@ -1,5 +1,6 @@
 import type { MediaItem } from '../components/cards/card.types';
 import { get } from '../lib/tmdb';
+import { normalizeQuery } from '../lib/string';
 
 
 export type SearchResult = MediaItem;
@@ -100,14 +101,7 @@ export async function searchMulti(
   };
 }
 
-function normalizeQuery(q: string): string {
-  return q
-    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '') // strip diacritics
-    .replace(/[''']/g, "'").replace(/["""]/g, '"')       // smart quotes
-    .replace(/[–—]/g, '-')                             // dashes
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+// normalizeQuery is now imported from '../lib/string'
 
 export function mapTMDBToMediaItem(r: any): MediaItem {
   const mediaType = r.media_type ?? (r.first_air_date ? 'tv' : r.release_date ? 'movie' : r.known_for ? 'person' : 'movie');
@@ -136,18 +130,23 @@ export function mapTMDBToMediaItem(r: any): MediaItem {
   
   const date  = mediaType === 'movie' ? r.release_date : r.first_air_date;
   const year  = date ? String(date).slice(0, 4) : undefined;
+  const releaseDate = date || undefined; // Store full ISO date string for precise recency calculation
   const posterUrl = r.poster_path ? `https://image.tmdb.org/t/p/w342${r.poster_path}` : undefined;
 
-  return {
+  const item: MediaItem = {
     id: r.id,
     mediaType,
     title: safeTitle,
     year,
+    releaseDate, // Add releaseDate for precise recency calculation
     posterUrl,
     voteAverage: typeof r.vote_average === 'number' ? r.vote_average : undefined,
+    voteCount: typeof r.vote_count === 'number' ? r.vote_count : undefined,
     genre_ids: r.genre_ids,
     synopsis: r.overview || '',
     showStatus: mediaType === 'tv' ? r.status : undefined,
     lastAirDate: mediaType === 'tv' ? r.last_air_date : undefined,
-  } as MediaItem;
+  };
+  
+  return item;
 }

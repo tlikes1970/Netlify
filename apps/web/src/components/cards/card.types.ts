@@ -5,8 +5,10 @@ export interface MediaItem {
   mediaType: MediaType;
   title: string;         // movie title or TV name
   year?: string;         // release year
+  releaseDate?: string;  // ISO date string (release_date or first_air_date) for precise recency calculation
   posterUrl?: string;    // 2:3 image url; can be undefined
   voteAverage?: number;  // 0..10 (TMDB rating)
+  voteCount?: number;    // Number of votes (TMDB vote_count)
   userRating?: number;   // 0..5 (user's personal rating)
   runtimeMins?: number;  // optional
   synopsis?: string;     // plot overview from TMDB

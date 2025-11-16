@@ -260,9 +260,8 @@ export default function SearchSuggestions({
               const tmdbIndex = selectedIndex - historyCount;
               const tmdbSuggestion = tmdbSuggestions[tmdbIndex];
               // Include year in search query for more precise results
-              const year = extractYearFromSubtitle(tmdbSuggestion.subtitle);
-              const searchQuery = year ? `${tmdbSuggestion.title} ${year}` : tmdbSuggestion.title;
-              handleSuggestionClick(searchQuery, String(tmdbSuggestion.id), tmdbSuggestion.type);
+              // Use title only - don't add year to search query
+              handleSuggestionClick(tmdbSuggestion.title, String(tmdbSuggestion.id), tmdbSuggestion.type);
             } else {
               // Popular section
               const popularIndex = selectedIndex - historyCount - tmdbCount;
@@ -402,10 +401,8 @@ export default function SearchSuggestions({
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      // Include year in search query for more precise results
-                      const year = extractYearFromSubtitle(suggestion.subtitle);
-                      const searchQuery = year ? `${suggestion.title} ${year}` : suggestion.title;
-                      handleSuggestionClick(searchQuery, String(suggestion.id), suggestion.type);
+                      // Use title only - don't add year to search query
+                      handleSuggestionClick(suggestion.title, String(suggestion.id), suggestion.type);
                     }}
                     onPointerDown={(e) => {
                       e.preventDefault(); // Also prevent on pointer events

@@ -97,15 +97,17 @@ function getListPenalty(item: MediaItem): number {
 /**
  * Check if item is available on user-enabled providers
  */
-function getProviderBoost(item: MediaItem, enabledProviders: string[]): number {
-  if (enabledProviders.length === 0) return 0;
+function getProviderBoost(item: MediaItem, enabledProvidersLower: Set<string>): number {
+  if (enabledProvidersLower.size === 0) return 0;
   if (!item.networks || item.networks.length === 0) return 0;
   
   // Check if any of the item's networks match enabled providers
-  const itemProviders = item.networks.map(n => n.toLowerCase());
-  const hasMatch = enabledProviders.some(provider => 
-    itemProviders.some(itemProvider => itemProvider.includes(provider.toLowerCase()))
-  );
+  const hasMatch = item.networks.some(network => {
+    const networkLower = network.toLowerCase();
+    return Array.from(enabledProvidersLower).some(provider => 
+      networkLower.includes(provider)
+    );
+  });
   
   return hasMatch ? 1.0 : 0;
 }
@@ -139,7 +141,10 @@ export function scoreCandidate(
   const normalizedQuery = normalizeTitle(query);
   const normalizedTitle = normalizeTitle(candidate.title || '');
   const queryTokens = tokenize(query);
+  // Cache tokenize result for performance
   const titleTokens = tokenize(candidate.title || '');
+  // Pre-compute enabled providers set for performance
+  const enabledProvidersLower = new Set(enabledProviders.map(p => p.toLowerCase()));
   
   let score = 0;
   
@@ -147,9 +152,9 @@ export function scoreCandidate(
   const isSingleWordQuery = queryTokens.length === 1 && normalizedQuery.length <= 10;
   
   // w_exact: exact normalized title match
-  // For single-word queries, reduce exact match weight to allow substring matches to compete
+  // Ensure exact match >= 6.0, never let substring > exact
   if (normalizedTitle === normalizedQuery) {
-    score += isSingleWordQuery ? 4.0 : 6.0;
+    score += 6.0; // Always at least 6.0 for exact matches
   }
   
   // w_prefix: title startsWith first token (+3.0)
@@ -162,17 +167,16 @@ export function scoreCandidate(
   
   // w_substring: title contains query as substring
   // This handles cases like "bat" matching "batman" or "super" matching "superman"
-  // Increased weight to prioritize substring matches over generic "battle" matches
+  // Ensure substring <= 5.9 so exact matches always win
   if (normalizedTitle.includes(normalizedQuery) && normalizedTitle !== normalizedQuery) {
     // Extra boost if the substring match is at the start of a word (e.g., "bat" in "batman")
     const startsWord = normalizedTitle.startsWith(normalizedQuery) || 
                        normalizedTitle.includes(` ${normalizedQuery}`) ||
                        titleTokens.some(t => t.startsWith(normalizedQuery));
     
-    // For single-word queries, heavily boost word-starting substring matches
-    // This ensures "batman" outranks "bat" when searching "bat"
+    // For single-word queries, boost word-starting substring matches but keep below exact (6.0)
     if (isSingleWordQuery && startsWord) {
-      score += 5.5; // Higher than exact match for single words
+      score += 5.9; // High but still below exact match (6.0)
     } else if (startsWord) {
       score += 4.0;
     } else {
@@ -214,7 +218,7 @@ export function scoreCandidate(
   }
   
   // w_providerBoost: +1.0 if available on any user-enabled provider
-  score += getProviderBoost(candidate, enabledProviders);
+  score += getProviderBoost(candidate, enabledProvidersLower);
   
   // w_listPenalty: -2.0 if in "Watched", -0.5 if in "Watching"
   score += getListPenalty(candidate);

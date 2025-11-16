@@ -338,8 +338,23 @@ export default function AdminExtrasPage() {
   const handleSaveDigestConfig = async () => {
     setDigestConfigSaving(true);
     try {
-      await setDoc(doc(db, "digestConfig", "current"), digestConfig);
-      alert("Digest config saved successfully!");
+      // Ensure isActive is explicitly set (not undefined)
+      const configToSave = {
+        ...digestConfig,
+        isActive: digestConfig.isActive === true,
+      };
+      
+      await setDoc(doc(db, "digestConfig", "current"), configToSave);
+      
+      // Verify it was saved correctly
+      const verifyDoc = await getDoc(doc(db, "digestConfig", "current"));
+      if (verifyDoc.exists()) {
+        const savedData = verifyDoc.data();
+        console.log("[AdminExtrasPage] Config saved. isActive:", savedData.isActive);
+        alert(`Digest config saved successfully! Active: ${savedData.isActive ? 'Yes' : 'No'}`);
+      } else {
+        alert("Warning: Config was saved but could not be verified. Please try again.");
+      }
     } catch (error) {
       console.error("Error saving digest config:", error);
       alert("Failed to save digest config: " + (error instanceof Error ? error.message : String(error)));
@@ -349,6 +364,19 @@ export default function AdminExtrasPage() {
   };
 
   const handleSendDigestNow = async () => {
+    // Verify config exists and is active before attempting to send
+    const configDoc = await getDoc(doc(db, "digestConfig", "current"));
+    if (!configDoc.exists()) {
+      alert("No digest config found. Please save a digest configuration first.");
+      return;
+    }
+    
+    const configData = configDoc.data();
+    if (configData.isActive !== true) {
+      alert("Digest config is not active. Please enable the 'Active' checkbox and save the configuration first.");
+      return;
+    }
+
     if (!digestConfig.isActive) {
       alert("Digest must be active to send. Please enable 'Active' first.");
       return;
@@ -371,13 +399,13 @@ export default function AdminExtrasPage() {
           distinctEmails: data.distinctEmails,
         });
         // Reload config to get updated stats
-        const configDoc = await getDoc(doc(db, "digestConfig", "current"));
-        if (configDoc.exists()) {
-          const configData = configDoc.data();
+        const updatedConfigDoc = await getDoc(doc(db, "digestConfig", "current"));
+        if (updatedConfigDoc.exists()) {
+          const updatedConfigData = updatedConfigDoc.data();
           setDigestConfig((prev) => ({
             ...prev,
-            lastManualSentAt: configData.lastManualSentAt || null,
-            lastManualSentCount: configData.lastManualSentCount || null,
+            lastManualSentAt: updatedConfigData.lastManualSentAt || null,
+            lastManualSentCount: updatedConfigData.lastManualSentCount || null,
           }));
         }
       } else {
@@ -388,10 +416,15 @@ export default function AdminExtrasPage() {
       }
     } catch (error: any) {
       console.error("[AdminExtrasPage] Failed to send digest:", error);
+      const errorMessage = error.message || String(error);
       setDigestSendNowResult({
         ok: false,
-        error: error.message || String(error),
+        error: errorMessage,
       });
+      // Show alert with helpful message
+      if (errorMessage.includes("No active digest config") || errorMessage.includes("No digest config")) {
+        alert("Error: " + errorMessage + "\n\nPlease ensure:\n1. The 'Active' checkbox is checked\n2. You have clicked 'Save Digest Config'\n3. The save was successful");
+      }
     } finally {
       setDigestSendNowBusy(false);
     }
