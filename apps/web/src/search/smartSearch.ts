@@ -9,7 +9,7 @@
 import type { MediaItem } from '../components/cards/card.types';
 import type { SearchResult, SearchResultWithPagination } from './api';
 import { mapTMDBToMediaItem } from './api';
-import { computeSearchScore, tieBreak, SCORE, tokensLower } from './rank';
+import { computeSearchScore, tieBreak, tokensLower } from './rank';
 import { normalizeQuery } from '../lib/string';
 
 type SearchType = 'all' | 'movies-tv' | 'people';
@@ -240,8 +240,9 @@ export async function smartSearch(
       const movieItems = ((movieJson.results ?? []) as any[]).map(mapTMDBToMediaItem).filter(Boolean) as MediaItem[];
       
       allItems = [...allItems, ...tvItems, ...movieItems];
-    } catch {
-      // Fallback to multi-only
+    } catch (err) {
+      // Fallback to multi-only if TV/Movie endpoints fail
+      console.warn('TV/Movie search endpoints failed, using multi-only:', err);
     }
   }
 

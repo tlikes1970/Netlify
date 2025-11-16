@@ -142,11 +142,13 @@ export function mapTMDBToMediaItem(r: any): MediaItem {
     posterUrl,
     voteAverage: typeof r.vote_average === 'number' ? r.vote_average : undefined,
     voteCount: typeof r.vote_count === 'number' ? r.vote_count : undefined,
-    genre_ids: r.genre_ids,
     synopsis: r.overview || '',
     showStatus: mediaType === 'tv' ? r.status : undefined,
     lastAirDate: mediaType === 'tv' ? r.last_air_date : undefined,
   };
+  
+  // Store genre_ids separately (not part of MediaItem type but used for filtering)
+  (item as any).genre_ids = r.genre_ids;
   
   return item;
 }

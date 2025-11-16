@@ -21,11 +21,7 @@ export type SearchSuggestionsProps = {
 };
 
 // Helper to extract year from subtitle (format: "TV Show • 2022" or "Movie • 2022")
-function extractYearFromSubtitle(subtitle?: string): string | null {
-  if (!subtitle) return null;
-  const match = subtitle.match(/\b(19|20)\d{2}\b/);
-  return match ? match[0] : null;
-}
+// Removed - no longer used after removing year from search query
 
 // Popular search suggestions
 const POPULAR_SUGGESTIONS = [
