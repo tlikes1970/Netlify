@@ -1,5 +1,13 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.158: Community v1 - Complete implementation with topics, spoilers, Pro badges, sorting, filtering, infinite scroll, and daily limits
+// - Added Pro badges, spoiler handling, topic selection and following
+// - Implemented sorting (Newest, Oldest, Top, Hot, Trending) with Pro gating
+// - Added topic filtering (single-select Free, multi-select Pro)
+// - Implemented infinite scroll with cursor-based pagination
+// - Added daily posting/commenting limits (3/10 for Free, 100/500 for Pro)
+// - Fixed CommunityPanel scrolling and game card sizing
+// - Rollback: Revert this commit to restore previous community behavior
 // ⚠️ VERSION 0.1.157: Fixed all 23 FlickWord and Trivia game issues - comprehensive game improvements
 // - Fixed game state restoration, race conditions, localStorage quota handling
 // - Added cache versioning, centralized cache keys, API retry logic
@@ -149,4 +157,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.157";
+export const APP_VERSION = "0.1.158";
