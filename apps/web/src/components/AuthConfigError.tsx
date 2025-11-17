@@ -82,6 +82,7 @@ export default function AuthConfigError() {
     const url = new URL(window.location.href);
     url.searchParams.set('authMode', 'popup');
     window.location.href = url.toString();
+    // Function intentionally has side effect (navigation)
   };
 
   if (!showPopup || (!error && !originMismatch && !redirectEmpty)) {

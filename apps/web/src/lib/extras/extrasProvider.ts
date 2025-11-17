@@ -560,7 +560,7 @@ class ExtrasProviderImpl implements ExtrasProvider {
 
   // Fallback content hierarchy (deprecated - bloopers now use Goofs)
   // This method is kept for backward compatibility but is not currently used
-  // @ts-ignore - Method is deprecated and unused
+  // @ts-expect-error - Method is deprecated and unused
   private async getFallbackBloopers(
     showId: number,
     showTitle: string,
