@@ -84,7 +84,7 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
 
   // Listen for navigation to Pro tab (from startProUpgrade)
   useEffect(() => {
-    const handleNavigateToPro = (e: Event) => {
+    const handleNavigateToPro = () => {
       setActiveTab('pro');
     };
     
@@ -1870,7 +1870,6 @@ function DataTab({
 }
 
 function ProTab() {
-  const settings = useSettings();
   const proStatus = useProStatus();
   const isProUser = proStatus.isPro;
 
