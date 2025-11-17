@@ -189,14 +189,12 @@ const CommunityPanel = memo(function CommunityPanel() {
       const errorMsg =
         error instanceof Error ? error.message : "Failed to load posts";
 
-      prevErrorRef.current = errorMsg;
       setPostsError(errorMsg);
       if (reset) {
         setPosts([]);
       }
       hasFetchedRef.current = true;
     } finally {
-      prevLoadingRef.current = false;
       setPostsLoading(false);
       setLoadingMore(false);
       fetchingRef.current = false;
