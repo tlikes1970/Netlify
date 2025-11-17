@@ -39,8 +39,8 @@ class ExtrasProviderImpl implements ExtrasProvider {
   }
 
   async fetchBloopers(
-    showId: number,
-    showTitle: string,
+    _showId: number,
+    _showTitle: string,
     _mediaType: "movie" | "tv" = "tv"
   ): Promise<ProviderResult> {
     // Note: Bloopers functionality is deprecated in favor of Goofs
@@ -559,6 +559,8 @@ class ExtrasProviderImpl implements ExtrasProvider {
   }
 
   // Fallback content hierarchy (deprecated - bloopers now use Goofs)
+  // This method is kept for backward compatibility but is not currently used
+  // @ts-ignore - Method is deprecated and unused
   private async getFallbackBloopers(
     showId: number,
     showTitle: string,
