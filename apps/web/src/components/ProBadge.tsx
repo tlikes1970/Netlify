@@ -11,7 +11,7 @@ interface ProBadgeProps {
   compact?: boolean;
 }
 
-export default function ProBadge({ isPro, compact = false }: ProBadgeProps) {
+export default function ProBadge({ isPro, compact: _compact = false }: ProBadgeProps) {
   if (!isPro) return null;
 
   return (

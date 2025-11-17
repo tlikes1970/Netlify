@@ -61,9 +61,6 @@ const CommunityPanel = memo(function CommunityPanel() {
   const fetchingRef = useRef(false);
   const hasFetchedRef = useRef(false);
   const lastDocRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
-  const prevPostsRef = useRef<Post[]>([]);
-  const prevLoadingRef = useRef(true);
-  const prevErrorRef = useRef<string | null>(null);
 
   // Fetch posts from Firestore with filtering, sorting, and infinite scroll
   const fetchPosts = useCallback(async (reset: boolean = false) => {

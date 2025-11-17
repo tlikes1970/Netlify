@@ -155,7 +155,7 @@ export default function CommentComposer({ postId, onCommentAdded }: CommentCompo
           </span>
           <button
             type="submit"
-            disabled={submitting || !body.trim() || (limitCheck && !limitCheck.canCreate)}
+            disabled={submitting || !body.trim() || (limitCheck ? !limitCheck.canCreate : false)}
             className="px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               backgroundColor: 'var(--accent-primary)',

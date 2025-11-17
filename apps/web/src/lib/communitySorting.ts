@@ -10,9 +10,9 @@ export type SortMode = 'newest' | 'oldest' | 'top' | 'top-week' | 'hot' | 'trend
 
 export interface PostForSorting {
   id: string;
-  score: number;
-  voteCount: number;
-  commentCount: number;
+  score?: number;
+  voteCount?: number;
+  commentCount?: number;
   publishedAt: string | Date;
 }
 
@@ -30,7 +30,7 @@ function calculateHotScore(post: PostForSorting, gravity: number = 1.5): number 
   
   // Prevent division by zero and handle very new posts
   const denominator = Math.pow(ageInHours + 2, gravity);
-  return post.score / denominator;
+  return (post.score || 0) / denominator;
 }
 
 /**
@@ -48,7 +48,7 @@ function calculateTrendingScore(post: PostForSorting): number {
   const recencyBoost = ageInHours < 24 ? 1.5 : 1.0;
   
   // Combine score, vote count, and comment count with recency
-  return (post.score + post.voteCount * 0.5 + post.commentCount * 0.3) * recencyBoost;
+  return ((post.score || 0) + (post.voteCount || 0) * 0.5 + (post.commentCount || 0) * 0.3) * recencyBoost;
 }
 
 /**
@@ -76,9 +76,9 @@ export function sortPosts<T extends PostForSorting>(
       });
 
     case 'top':
-      return sorted.sort((a, b) => b.score - a.score); // Highest score first
+      return sorted.sort((a, b) => (b.score || 0) - (a.score || 0)); // Highest score first
 
-    case 'top-week':
+    case 'top-week': {
       // Filter to last 7 days, then sort by score
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
@@ -90,7 +90,8 @@ export function sortPosts<T extends PostForSorting>(
             : post.publishedAt;
           return publishedAt >= weekAgo;
         })
-        .sort((a, b) => b.score - a.score);
+        .sort((a, b) => (b.score || 0) - (a.score || 0));
+    }
 
     case 'hot':
       return sorted.sort((a, b) => {
