@@ -21,12 +21,16 @@ service cloud.firestore {
       allow read: if true;
       
       // Only authenticated users can create posts
+      // New fields: containsSpoilers (optional bool), authorIsPro (optional bool), topics (optional array)
       allow create: if isAuthenticated() 
         && request.resource.data.authorId == request.auth.uid
         && request.resource.data.keys().hasAll(['title', 'excerpt', 'body', 'slug', 'authorId', 'authorName', 'tagSlugs', 'publishedAt', 'updatedAt', 'score', 'voteCount', 'commentCount'])
         && request.resource.data.score == 0
         && request.resource.data.voteCount == 0
-        && request.resource.data.commentCount == 0;
+        && request.resource.data.commentCount == 0
+        && (!('containsSpoilers' in request.resource.data) || request.resource.data.containsSpoilers is bool)
+        && (!('authorIsPro' in request.resource.data) || request.resource.data.authorIsPro is bool)
+        && (!('topics' in request.resource.data) || request.resource.data.topics is list);
       
       // Only post author can update their own post, or admin
       // Also allow Cloud Functions to update score and voteCount
@@ -54,12 +58,15 @@ service cloud.firestore {
         allow read: if true;
         
         // Authenticated users can create comments
+        // New fields: containsSpoilers (optional bool), authorIsPro (optional bool)
         allow create: if isAuthenticated()
           && request.resource.data.authorId == request.auth.uid
           && request.resource.data.keys().hasAll(['authorId', 'authorName', 'authorAvatar', 'body', 'createdAt', 'updatedAt'])
           && request.resource.data.body is string
           && request.resource.data.body.size() > 0
-          && request.resource.data.body.size() <= 5000;
+          && request.resource.data.body.size() <= 5000
+          && (!('containsSpoilers' in request.resource.data) || request.resource.data.containsSpoilers is bool)
+          && (!('authorIsPro' in request.resource.data) || request.resource.data.authorIsPro is bool);
         
         // Comment authors can update their own comments
         allow update: if isAuthenticated()
@@ -76,12 +83,14 @@ service cloud.firestore {
         // Replies sub-collection
         match /replies/{replyId} {
           allow read: if true;
+          // New fields: authorIsPro (optional bool)
           allow create: if isAuthenticated()
             && request.resource.data.authorId == request.auth.uid
             && request.resource.data.keys().hasAll(['authorId', 'authorName', 'authorAvatar', 'body', 'createdAt'])
             && request.resource.data.body is string
             && request.resource.data.body.size() > 0
-            && request.resource.data.body.size() <= 500;
+            && request.resource.data.body.size() <= 500
+            && (!('authorIsPro' in request.resource.data) || request.resource.data.authorIsPro is bool);
           allow update, delete: if isAuthenticated()
             && request.auth.uid == resource.data.authorId;
         }

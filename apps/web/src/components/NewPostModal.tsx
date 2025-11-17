@@ -18,6 +18,8 @@ import {
 import { db } from "../lib/firebaseBootstrap";
 import { useAuth } from "../hooks/useAuth";
 import { trackCommunityPostCreate } from "../lib/analytics";
+import { useSettings } from "../lib/settings";
+import { TOPICS, extractTopicsFromTags } from "../lib/communityTopics";
 
 interface NewPostModalProps {
   isOpen: boolean;
@@ -34,6 +36,7 @@ export default function NewPostModal({
   onPostCreated,
 }: NewPostModalProps) {
   const { isAuthenticated, user } = useAuth();
+  const settings = useSettings();
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +44,8 @@ export default function NewPostModal({
     Array<{ slug: string; name: string }>
   >([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [containsSpoilers, setContainsSpoilers] = useState(false);
   const [newTagInput, setNewTagInput] = useState("");
   const [loadingTags, setLoadingTags] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -111,6 +116,8 @@ export default function NewPostModal({
       setError(null);
       setSubmitting(false);
       setSelectedTags([]);
+      setSelectedTopics([]);
+      setContainsSpoilers(false);
       setNewTagInput("");
     }
   }, [isOpen]);
@@ -146,7 +153,7 @@ export default function NewPostModal({
     try {
       // Process tags: convert tag names to slugs
       // Tags are stored as slugs (lowercase, hyphenated) in the tagSlugs array
-      let tagSlugs: string[] = [...selectedTags];
+      let tagSlugs: string[] = [...selectedTags, ...selectedTopics];
 
       // If user entered new tags, convert them to slugs
       if (newTagInput.trim()) {
@@ -166,6 +173,12 @@ export default function NewPostModal({
         tagSlugs = [...new Set([...tagSlugs, ...newSlugs])]; // Remove duplicates
       }
 
+      // Extract topics from tagSlugs (topics are a subset of tags)
+      const topics = extractTopicsFromTags(tagSlugs);
+      
+      // Get user's Pro status
+      const authorIsPro = settings.pro.isPro || false;
+
       // Generate slug from content
       const title = trimmedContent.slice(0, 100).trim() || "Untitled Post";
       const slug =
@@ -177,7 +190,7 @@ export default function NewPostModal({
       const postsRef = collection(db, "posts");
 
       // Create post in Firestore (matches Firestore rules structure)
-      const postData = {
+      const postData: any = {
         title,
         excerpt: trimmedContent.slice(0, 200).trim(),
         body: trimmedContent,
@@ -192,7 +205,14 @@ export default function NewPostModal({
         score: 0,
         voteCount: 0,
         commentCount: 0,
+        containsSpoilers: containsSpoilers,
+        authorIsPro: authorIsPro,
       };
+      
+      // Add topics field if there are any topics
+      if (topics.length > 0) {
+        postData.topics = topics;
+      }
 
       console.log("[NewPostModal] Creating post in Firestore:", {
         slug,
@@ -360,6 +380,65 @@ export default function NewPostModal({
               </div>
             </div>
 
+            {/* Topic Selection */}
+            <div className="mb-4">
+              <label
+                className="block text-sm font-medium mb-2"
+                style={{ color: "var(--text)" }}
+              >
+                Topic(s) (optional)
+              </label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {TOPICS.map((topic) => {
+                  const isSelected = selectedTopics.includes(topic.slug);
+                  return (
+                    <button
+                      key={topic.slug}
+                      type="button"
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedTopics((prev) =>
+                            prev.filter((t) => t !== topic.slug)
+                          );
+                        } else {
+                          setSelectedTopics((prev) => [...prev, topic.slug]);
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-full text-xs font-medium transition"
+                      style={{
+                        backgroundColor: isSelected
+                          ? "var(--accent-primary)"
+                          : "var(--layer)",
+                        color: isSelected ? "#fff" : "var(--text)",
+                        border: `1px solid ${
+                          isSelected ? "var(--accent-primary)" : "var(--line)"
+                        }`,
+                      }}
+                    >
+                      {topic.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Spoiler Toggle */}
+            <div className="mb-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={containsSpoilers}
+                  onChange={(e) => setContainsSpoilers(e.target.checked)}
+                  disabled={submitting}
+                  className="w-4 h-4 rounded"
+                  style={{ accentColor: "var(--accent-primary)" }}
+                />
+                <span className="text-sm" style={{ color: "var(--text)" }}>
+                  Contains spoilers
+                </span>
+              </label>
+            </div>
+
             {/* Tag Selection */}
             <div className="mb-4">
               <label
@@ -367,7 +446,7 @@ export default function NewPostModal({
                 className="block text-sm font-medium mb-2"
                 style={{ color: "var(--text)" }}
               >
-                Tags (optional)
+                Additional Tags (optional)
               </label>
 
               {/* Selected Tags */}

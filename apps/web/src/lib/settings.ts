@@ -43,6 +43,11 @@ export interface Settings {
       extrasAccess: boolean;
     };
   };
+  
+  // Community
+  community: {
+    followedTopics: string[]; // Array of topic slugs user follows
+  };
 }
 
 // Default settings
@@ -74,6 +79,10 @@ const DEFAULT_SETTINGS: Settings = {
       bloopersAccess: true,
       extrasAccess: true,
     },
+  },
+  
+  community: {
+    followedTopics: [],
   },
 };
 
@@ -157,6 +166,21 @@ class SettingsManager {
 
   updateDiscoveryLimit(limit: 25 | 50 | 75 | 100): void {
     this.settings.layout.discoveryLimit = limit;
+    this.saveSettings();
+  }
+
+  updateFollowedTopics(topics: string[]): void {
+    this.settings.community.followedTopics = topics;
+    this.saveSettings();
+  }
+
+  toggleFollowTopic(topicSlug: string): void {
+    const current = this.settings.community.followedTopics;
+    if (current.includes(topicSlug)) {
+      this.settings.community.followedTopics = current.filter(t => t !== topicSlug);
+    } else {
+      this.settings.community.followedTopics = [...current, topicSlug];
+    }
     this.saveSettings();
   }
 

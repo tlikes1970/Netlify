@@ -8,6 +8,8 @@
 
 import VoteBar from './VoteBar';
 import { useAuth } from '../hooks/useAuth';
+import ProBadge from './ProBadge';
+import SpoilerWrapper from './SpoilerWrapper';
 
 export interface PostCardProps {
   post: {
@@ -24,6 +26,8 @@ export interface PostCardProps {
       email?: string;
     };
     tags?: Array<{ slug: string; name: string }>;
+    containsSpoilers?: boolean;
+    authorIsPro?: boolean;
   };
   onClick?: (slug: string) => void;
   compact?: boolean;
@@ -66,13 +70,16 @@ export default function PostCard({ post, onClick, compact = false }: PostCardPro
         <div className="flex-1 min-w-0">
           <h4 className="text-primary font-medium truncate mb-1">{post.title}</h4>
           {!compact && previewText && (
-            <p className="text-secondary text-sm mt-1 line-clamp-2 mb-2">
-              {previewText}
-              {previewText.length >= 100 ? '...' : ''}
-            </p>
+            <SpoilerWrapper containsSpoilers={post.containsSpoilers || false}>
+              <p className="text-secondary text-sm mt-1 line-clamp-2 mb-2">
+                {previewText}
+                {previewText.length >= 100 ? '...' : ''}
+              </p>
+            </SpoilerWrapper>
           )}
           <div className="flex items-center gap-2 mt-2 text-xs text-secondary">
             <span>{post.author?.username || post.author?.name || 'Unknown'}</span>
+            <ProBadge isPro={post.authorIsPro} />
             {publishDate && (
               <>
                 <span>·</span>

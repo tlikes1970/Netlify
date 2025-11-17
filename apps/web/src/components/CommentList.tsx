@@ -19,6 +19,8 @@ import { db } from "../lib/firebaseBootstrap";
 import { useAuth } from "../hooks/useAuth";
 import { useAdminRole } from "../hooks/useAdminRole";
 import { ReplyList } from "./ReplyList";
+import ProBadge from "./ProBadge";
+import SpoilerWrapper from "./SpoilerWrapper";
 
 interface Comment {
   id: string;
@@ -28,6 +30,8 @@ interface Comment {
   body: string;
   createdAt: any; // Firestore timestamp
   updatedAt?: any;
+  containsSpoilers?: boolean;
+  authorIsPro?: boolean;
 }
 
 interface CommentListProps {
@@ -82,6 +86,8 @@ export default function CommentList({
               body: data.body || "",
               createdAt: data.createdAt,
               updatedAt: data.updatedAt,
+              containsSpoilers: data.containsSpoilers || false,
+              authorIsPro: data.authorIsPro || false,
             });
           });
 
@@ -192,16 +198,19 @@ export default function CommentList({
                   >
                     {comment.authorName}
                   </span>
+                  <ProBadge isPro={comment.authorIsPro} />
                   <span className="text-xs" style={{ color: "var(--muted)" }}>
                     {commentDate}
                   </span>
                 </div>
-                <p
-                  className="text-sm leading-relaxed whitespace-pre-wrap"
-                  style={{ color: "var(--text)" }}
-                >
-                  {comment.body}
-                </p>
+                <SpoilerWrapper containsSpoilers={comment.containsSpoilers || false}>
+                  <p
+                    className="text-sm leading-relaxed whitespace-pre-wrap"
+                    style={{ color: "var(--text)" }}
+                  >
+                    {comment.body}
+                  </p>
+                </SpoilerWrapper>
               </div>
             </div>
 

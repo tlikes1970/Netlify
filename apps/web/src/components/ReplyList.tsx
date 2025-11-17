@@ -10,6 +10,8 @@ import React, { useState, useEffect } from 'react';
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebaseBootstrap';
 import { useAuth } from '../hooks/useAuth';
+import { useSettings } from '../lib/settings';
+import ProBadge from './ProBadge';
 
 interface Reply {
   id: string;
@@ -18,6 +20,7 @@ interface Reply {
   authorAvatar: string;
   body: string;
   createdAt: any;
+  authorIsPro?: boolean;
 }
 
 interface ReplyListProps {
@@ -27,6 +30,7 @@ interface ReplyListProps {
 
 export function ReplyList({ postId, commentId }: ReplyListProps) {
   const { isAuthenticated, user } = useAuth();
+  const settings = useSettings();
   const [replies, setReplies] = useState<Reply[]>([]);
   const [body, setBody] = useState('');
 
@@ -48,6 +52,7 @@ export function ReplyList({ postId, commentId }: ReplyListProps) {
             authorAvatar: data.authorAvatar || '',
             body: data.body || '',
             createdAt: data.createdAt,
+            authorIsPro: data.authorIsPro || false,
           };
         });
         setReplies(repliesData);
@@ -64,11 +69,14 @@ export function ReplyList({ postId, commentId }: ReplyListProps) {
     e.preventDefault();
     if (!body.trim() || !isAuthenticated || !user) return;
 
+    const authorIsPro = settings.pro.isPro || false;
+
     addDoc(collection(db, 'posts', postId, 'comments', commentId, 'replies'), {
       authorId: user.uid,
       authorName: user.displayName || 'Anonymous',
       authorAvatar: user.photoURL || '',
       body: body.trim(),
+      authorIsPro: authorIsPro,
       createdAt: serverTimestamp(),
     });
     setBody('');
@@ -104,6 +112,7 @@ export function ReplyList({ postId, commentId }: ReplyListProps) {
                 />
               )}
               <span className="text-sm" style={{ color: 'var(--text)' }}>{r.authorName}</span>
+              <ProBadge isPro={r.authorIsPro} />
               <span className="text-xs" style={{ color: 'var(--muted)' }}>{replyDate}</span>
             </div>
             <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--text)' }}>{r.body}</p>

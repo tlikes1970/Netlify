@@ -14,6 +14,8 @@ import { useAuth } from "@/hooks/useAuth";
 import FlickletHeader from "./FlickletHeader";
 import CommentComposer from "./CommentComposer";
 import CommentList from "./CommentList";
+import ProBadge from "./ProBadge";
+import SpoilerWrapper from "./SpoilerWrapper";
 
 interface PostDetailProps {
   slug: string;
@@ -38,6 +40,8 @@ interface Post {
     };
   };
   tags?: Array<{ slug: string; name: string }>;
+  containsSpoilers?: boolean;
+  authorIsPro?: boolean;
 }
 
 export default function PostDetail({ slug }: PostDetailProps) {
@@ -86,6 +90,8 @@ export default function PostDetail({ slug }: PostDetailProps) {
             slug,
             name: slug,
           })),
+          containsSpoilers: data.containsSpoilers || false,
+          authorIsPro: data.authorIsPro || false,
         };
 
         setPost(postData);
@@ -207,6 +213,7 @@ export default function PostDetail({ slug }: PostDetailProps) {
                 <span>
                   {post.author?.username || post.author?.name || "Unknown"}
                 </span>
+                <ProBadge isPro={post.authorIsPro} />
                 {publishDate && (
                   <>
                     <span>·</span>
@@ -236,21 +243,23 @@ export default function PostDetail({ slug }: PostDetailProps) {
           </div>
 
           {/* Post Body */}
-          <div
-            className="prose prose-invert max-w-none"
-            style={{
-              color: "var(--text)",
-            }}
-          >
+          <SpoilerWrapper containsSpoilers={post.containsSpoilers || false} title="Post">
             <div
-              className="whitespace-pre-wrap text-secondary leading-relaxed"
+              className="prose prose-invert max-w-none"
               style={{
-                color: "var(--text-secondary)",
+                color: "var(--text)",
               }}
             >
-              {content}
+              <div
+                className="whitespace-pre-wrap text-secondary leading-relaxed"
+                style={{
+                  color: "var(--text-secondary)",
+                }}
+              >
+                {content}
+              </div>
             </div>
-          </div>
+          </SpoilerWrapper>
         </article>
 
         {/* Comments Section */}
