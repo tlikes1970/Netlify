@@ -152,13 +152,15 @@
   flex-direction: column;
   gap: var(--fw-spacing-md);
   padding: var(--fw-spacing-md);
-  padding-bottom: 0; /* Let keyboard handle its own bottom spacing */
+  padding-bottom: var(--fw-spacing-md); /* Add bottom padding for completion message */
   width: 100%;
   max-width: 100%;
   margin: 0;
   box-sizing: border-box;
   background-color: var(--fw-color-bg);
   color: var(--fw-color-text);
+  min-height: 0; /* Allow flex shrinking */
+  overflow: hidden; /* Prevent container from growing */
 }
 
 /* Game Header */
@@ -233,8 +235,7 @@
   padding: var(--fw-spacing-xs) var(--fw-spacing-xs) 0;
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden; /* No scrolling - content must fit */
 }
 
 .fw-grid {
@@ -628,6 +629,7 @@
 .trivia-game-header {
   display: flex;
   align-items: center;
+  flex-shrink: 0; /* Prevent compression */
   justify-content: center;
   gap: var(--fw-spacing-xs);
   padding: 2px var(--fw-spacing-xs);
@@ -1130,12 +1132,16 @@
 }
 
 .fw-games-limit {
-  margin-top: 16px;
+  margin-top: var(--fw-spacing-sm);
   padding: 12px 16px;
   background-color: rgba(106, 170, 100, 0.1);
   border: 1px solid var(--fw-color-correct);
   border-radius: var(--fw-radius-md);
   text-align: center;
+  flex-shrink: 0; /* Prevent compression */
+  min-height: fit-content; /* Allow natural height */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .fw-games-limit p {

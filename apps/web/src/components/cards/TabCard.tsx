@@ -15,6 +15,8 @@ import { dlog } from "../../lib/log";
 import { TvCardMobile } from "./mobile/TvCardMobile";
 import { MovieCardMobile } from "./mobile/MovieCardMobile";
 import { ProviderBadges } from "./ProviderBadge";
+import { startProUpgrade } from "../../lib/proUpgrade";
+import { useProStatus } from "../../lib/proStatus";
 
 export type TabCardProps = {
   item: MediaItem;
@@ -53,6 +55,9 @@ export default function TabCard({
   onDrop,
   onKeyboardReorder,
 }: TabCardProps) {
+  const proStatus = useProStatus();
+  const isPro = proStatus.isPro;
+  
   dlog("🔔 TabCard render:", {
     title: item.title,
     mediaType: item.mediaType,
@@ -776,12 +781,15 @@ export default function TabCard({
           {!isCondensed && (
             <div className="pro-buttons-row">
               <button
-                onClick={() => actions?.onBloopersOpen?.(item)}
-                disabled={
-                  !settings.pro.isPro || !settings.pro.features.bloopersAccess
-                }
+                onClick={() => {
+                  if (isPro && settings.pro.features.bloopersAccess) {
+                    actions?.onBloopersOpen?.(item);
+                  } else {
+                    startProUpgrade();
+                  }
+                }}
                 title={
-                  settings.pro.isPro && settings.pro.features.bloopersAccess
+                  isPro && settings.pro.features.bloopersAccess
                     ? "View bloopers and outtakes"
                     : "Pro feature - upgrade to unlock"
                 }
@@ -792,20 +800,24 @@ export default function TabCard({
                   borderColor: "var(--line)",
                   border: "1px solid",
                   opacity:
-                    settings.pro.isPro && settings.pro.features.bloopersAccess
+                    isPro && settings.pro.features.bloopersAccess
                       ? 1
                       : 0.65,
+                  cursor: "pointer",
                 }}
               >
                 Bloopers
               </button>
               <button
-                onClick={() => actions?.onExtrasOpen?.(item)}
-                disabled={
-                  !settings.pro.isPro || !settings.pro.features.extrasAccess
-                }
+                onClick={() => {
+                  if (isPro && settings.pro.features.extrasAccess) {
+                    actions?.onExtrasOpen?.(item);
+                  } else {
+                    startProUpgrade();
+                  }
+                }}
                 title={
-                  settings.pro.isPro && settings.pro.features.extrasAccess
+                  isPro && settings.pro.features.extrasAccess
                     ? "View behind-the-scenes content"
                     : "Pro feature - upgrade to unlock"
                 }
@@ -816,18 +828,24 @@ export default function TabCard({
                   borderColor: "var(--line)",
                   border: "1px solid",
                   opacity:
-                    settings.pro.isPro && settings.pro.features.extrasAccess
+                    isPro && settings.pro.features.extrasAccess
                       ? 1
                       : 0.65,
+                  cursor: "pointer",
                 }}
               >
                 Extras
               </button>
               <button
-                onClick={() => actions?.onNotificationToggle?.(item)}
-                disabled={!settings.pro.isPro}
+                onClick={() => {
+                  if (isPro) {
+                    actions?.onNotificationToggle?.(item);
+                  } else {
+                    startProUpgrade();
+                  }
+                }}
                 title={
-                  settings.pro.isPro
+                  isPro
                     ? "Advanced notifications with custom timing"
                     : "Pro feature - upgrade to unlock"
                 }
@@ -837,7 +855,8 @@ export default function TabCard({
                   color: "var(--text)",
                   borderColor: "var(--line)",
                   border: "1px solid",
-                  opacity: settings.pro.isPro ? 1 : 0.65,
+                  opacity: isPro ? 1 : 0.65,
+                  cursor: "pointer",
                 }}
               >
                 Advanced Notifications

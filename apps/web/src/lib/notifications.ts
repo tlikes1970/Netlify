@@ -339,9 +339,10 @@ class NotificationManager {
   }
 
   isProUser(): boolean {
-    // This should check against your Pro user system
-    // For now, return false - implement based on your auth system
-    return false;
+    // Use centralized Pro status helper
+    const { getProStatus } = require('./proStatus');
+    const proStatus = getProStatus();
+    return proStatus.isPro;
   }
 
   getAvailableTimingOptions(): Array<{ value: string; label: string; proOnly?: boolean }> {

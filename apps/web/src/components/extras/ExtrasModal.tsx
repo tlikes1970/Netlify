@@ -4,6 +4,8 @@ import { BloopersSearchAssist } from '../../lib/extras/bloopersSearchAssist';
 import { EXTRAS_COPY } from '../../lib/copy/extras';
 import { flag } from '../../lib/flags';
 import { YouTubePlayer } from './YouTubePlayer';
+import { useProStatus } from '../../lib/proStatus';
+import { startProUpgrade } from '../../lib/proUpgrade';
 
 interface ExtrasModalProps {
   isOpen: boolean;
@@ -30,6 +32,9 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
 }) => {
   console.log('🎭 ExtrasModal render:', { isOpen, showId, showTitle });
   
+  const proStatus = useProStatus();
+  const isPro = proStatus.isPro;
+  
   const [activeTab, setActiveTab] = useState<TabType>('bloopers');
   const [extrasVideos, setExtrasVideos] = useState<ExtrasVideo[]>([]);
   const [bloopersResults, setBloopersResults] = useState<BloopersSearchResult[]>([]);
@@ -40,6 +45,18 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
 
   // Check if search assist is enabled
   const searchAssistEnabled = flag('EXTRAS_BLOOPERS_SEARCH_ASSIST');
+  
+  // Pro gating: Don't fetch content if not Pro
+  useEffect(() => {
+    if (isOpen && !isPro) {
+      // Don't load extras/bloopers if not Pro
+      return;
+    }
+    if (isOpen && isPro) {
+      loadData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, showId, activeTab, isPro]);
 
   // Focus management
   useEffect(() => {
@@ -80,11 +97,6 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadData();
-    }
-  }, [isOpen, showId, activeTab]);
 
   const loadData = async () => {
     setLoading(true);
@@ -476,7 +488,27 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
             id="extras-modal-description"
             className="p-4 overflow-y-auto max-h-96"
           >
-            {loading ? (
+            {!isPro ? (
+              <div className="text-center py-12">
+                <div className="text-4xl mb-4">💎</div>
+                <h3 className="text-xl font-semibold mb-2" style={{ color: "var(--text)" }}>
+                  Extras are a Pro feature
+                </h3>
+                <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>
+                  Upgrade in Settings → Pro to unlock bloopers and behind-the-scenes content.
+                </p>
+                <button
+                  onClick={() => {
+                    onClose();
+                    startProUpgrade();
+                  }}
+                  className="px-6 py-3 rounded-lg font-medium transition-colors"
+                  style={{ backgroundColor: "var(--accent)", color: "white" }}
+                >
+                  Go to Pro settings
+                </button>
+              </div>
+            ) : loading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 <span className="ml-2 text-gray-600 dark:text-gray-400">

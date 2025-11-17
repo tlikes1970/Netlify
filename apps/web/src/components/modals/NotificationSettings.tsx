@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { notificationManager } from '../../lib/notifications';
 import { useSettings } from '../../lib/settings';
+import { startProUpgrade } from '../../lib/proUpgrade';
 
 interface NotificationSettingsProps {
   isOpen: boolean;
@@ -237,8 +238,10 @@ export function NotificationSettings({ isOpen, onClose }: NotificationSettingsPr
                     Get precise timing control, email notifications, and advanced features
                   </p>
                 </div>
-                <button className="px-4 py-2 rounded text-sm font-medium transition-colors"
-                        style={{ backgroundColor: 'var(--accent)', color: 'white' }}>
+                <button 
+                  onClick={startProUpgrade}
+                  className="px-4 py-2 rounded text-sm font-medium transition-colors"
+                  style={{ backgroundColor: 'var(--accent)', color: 'white' }}>
                   Upgrade
                 </button>
               </div>

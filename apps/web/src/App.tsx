@@ -384,7 +384,7 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Listen for custom event to open SettingsPage (e.g., from SnarkDisplay)
+  // Listen for custom event to open SettingsPage (e.g., from SnarkDisplay or startProUpgrade)
   useEffect(() => {
     const handleOpenSettingsPage = () => {
       setShowSettings(true);

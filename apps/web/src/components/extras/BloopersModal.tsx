@@ -4,6 +4,8 @@ import { BloopersSearchAssist } from '../../lib/extras/bloopersSearchAssist';
 import { EXTRAS_COPY } from '../../lib/copy/extras';
 import { flag } from '../../lib/flags';
 import { YouTubePlayer } from './YouTubePlayer';
+import { useProStatus } from '../../lib/proStatus';
+import { startProUpgrade } from '../../lib/proUpgrade';
 
 interface BloopersModalProps {
   isOpen: boolean;
@@ -27,6 +29,9 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
   showTitle
 }) => {
   console.log('🎬 BloopersModal render:', { isOpen, showId, showTitle });
+  
+  const proStatus = useProStatus();
+  const isPro = proStatus.isPro;
   
   const [officialVideos, setOfficialVideos] = useState<ExtrasVideo[]>([]);
   const [searchResults, setSearchResults] = useState<BloopersSearchResult[]>([]);
@@ -76,12 +81,6 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
-
-  useEffect(() => {
-    if (isOpen) {
-      loadBloopers();
-    }
-  }, [isOpen, showId]);
 
   const loadBloopers = async () => {
     setLoading(true);
@@ -141,6 +140,21 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
       setLoading(false);
     }
   };
+
+  // Pro gating: Load bloopers only if Pro
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!isPro) {
+      // Don't load bloopers if not Pro
+      setOfficialVideos([]);
+      setSearchResults([]);
+      setLoading(false);
+      return;
+    }
+    // Load bloopers if Pro
+    loadBloopers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, showId, isPro]);
 
   const handleSearchResultClick = (result: BloopersSearchResult) => {
     if (result.embeddable) {
@@ -252,7 +266,27 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
             id="bloopers-modal-description"
             className="p-4 overflow-y-auto max-h-96"
           >
-            {loading ? (
+            {!isPro ? (
+              <div className="text-center py-12">
+                <div className="text-4xl mb-4">💎</div>
+                <h3 className="text-xl font-semibold mb-2" style={{ color: "var(--text)" }}>
+                  Bloopers are a Pro feature
+                </h3>
+                <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>
+                  Upgrade in Settings → Pro to unlock bloopers and behind-the-scenes content.
+                </p>
+                <button
+                  onClick={() => {
+                    onClose();
+                    startProUpgrade();
+                  }}
+                  className="px-6 py-3 rounded-lg font-medium transition-colors"
+                  style={{ backgroundColor: "var(--accent)", color: "white" }}
+                >
+                  Go to Pro settings
+                </button>
+              </div>
+            ) : loading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 <span className="ml-2 text-gray-600 dark:text-gray-400">Loading bloopers...</span>

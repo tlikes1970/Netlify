@@ -1195,14 +1195,6 @@ export default function FlickWordGame({
             </button>
           </div>
         )}
-        {gamesCompletedToday >= MAX_GAMES_FREE && game.done && (
-          <div className="fw-games-limit">
-            <p>
-              ✅ You&apos;ve completed all 3 games today! Come back tomorrow for
-              more!
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Keyboard */}
@@ -1214,6 +1206,16 @@ export default function FlickWordGame({
       >
         {renderKeyboard()}
       </div>
+
+      {/* Completion message - moved outside playfield to prevent overflow */}
+      {gamesCompletedToday >= MAX_GAMES_FREE && game.done && (
+        <div className="fw-games-limit">
+          <p>
+            ✅ You&apos;ve completed all 3 games today! Come back tomorrow for
+            more!
+          </p>
+        </div>
+      )}
 
       {/* Actions - Hidden to match Wordle's minimal design (close via header only) */}
       {false && (

@@ -71,13 +71,13 @@ const DEFAULT_SETTINGS: Settings = {
   },
   
   pro: {
-    isPro: true,
+    isPro: false, // Default OFF - users must explicitly enable Pro (Alpha/testing) or purchase
     features: {
-      advancedNotifications: true,
-      themePacks: true,
-      socialFeatures: true,
-      bloopersAccess: true,
-      extrasAccess: true,
+      advancedNotifications: false,
+      themePacks: false,
+      socialFeatures: false,
+      bloopersAccess: false,
+      extrasAccess: false,
     },
   },
   
@@ -181,6 +181,19 @@ class SettingsManager {
     } else {
       this.settings.community.followedTopics = [...current, topicSlug];
     }
+    this.saveSettings();
+  }
+
+  updateProStatus(isPro: boolean): void {
+    this.settings.pro.isPro = isPro;
+    // Update feature flags based on Pro status
+    this.settings.pro.features = {
+      advancedNotifications: isPro,
+      themePacks: isPro,
+      socialFeatures: isPro,
+      bloopersAccess: isPro,
+      extrasAccess: isPro,
+    };
     this.saveSettings();
   }
 

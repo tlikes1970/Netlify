@@ -5,6 +5,8 @@ import {
   PersonalityLevel,
   getPersonalityText,
 } from "../lib/settings";
+import { useProStatus } from "../lib/proStatus";
+import { startProUpgrade } from "../lib/proUpgrade";
 import { useTranslations, useLanguage, changeLanguage } from "../lib/language";
 import { useCustomLists, customListManager } from "../lib/customLists";
 import { useUsername } from "../hooks/useUsername";
@@ -77,6 +79,18 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
     lockScroll();
     return () => {
       unlockScroll();
+    };
+  }, []);
+
+  // Listen for navigation to Pro tab (from startProUpgrade)
+  useEffect(() => {
+    const handleNavigateToPro = (e: Event) => {
+      setActiveTab('pro');
+    };
+    
+    window.addEventListener('navigate-to-pro-settings', handleNavigateToPro as EventListener);
+    return () => {
+      window.removeEventListener('navigate-to-pro-settings', handleNavigateToPro as EventListener);
     };
   }, []);
 
@@ -1857,9 +1871,8 @@ function DataTab({
 
 function ProTab() {
   const settings = useSettings();
-
-  // Check if user is Pro
-  const isProUser = settings.pro || false;
+  const proStatus = useProStatus();
+  const isProUser = proStatus.isPro;
 
   return (
     <div className="space-y-6">
@@ -1882,6 +1895,7 @@ function ProTab() {
         </p>
         {!isProUser && (
           <button
+            onClick={startProUpgrade}
             className="px-6 py-3 rounded-lg font-medium transition-colors"
             style={{ backgroundColor: "var(--accent)", color: "white" }}
           >
@@ -1890,14 +1904,67 @@ function ProTab() {
         )}
       </div>
 
-      {/* Planned Pro Features */}
+      {/* Alpha/Testing Toggle */}
+      <div
+        className="p-4 rounded-lg border"
+        style={{ backgroundColor: "var(--bg)", borderColor: "var(--line)" }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h4
+              className="text-sm font-medium mb-1"
+              style={{ color: "var(--text)" }}
+            >
+              Treat this device as Pro (Alpha / Testing)
+            </h4>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>
+              This is for testing only and is not a real purchase. Toggle this to test Pro features.
+            </p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer ml-4">
+            <input
+              type="checkbox"
+              checked={isProUser}
+              onChange={(e) => {
+                settingsManager.updateProStatus(e.target.checked);
+              }}
+              className="sr-only peer"
+            />
+            <div
+              className="w-11 h-6 rounded-full peer transition-colors"
+              style={{
+                backgroundColor: isProUser ? "var(--accent)" : "var(--line)",
+              }}
+            >
+              <div
+                className="w-5 h-5 rounded-full transition-transform peer-checked:translate-x-5"
+                style={{
+                  backgroundColor: "#fff",
+                  transform: isProUser ? "translateX(1.25rem)" : "translateX(0.125rem)",
+                  marginTop: "0.125rem",
+                }}
+              />
+            </div>
+          </label>
+        </div>
+      </div>
+
+      {/* Pro Features */}
       <div>
         <h4
           className="text-lg font-medium mb-4"
           style={{ color: "var(--text)" }}
         >
-          Planned Pro Features
+          Pro Features
         </h4>
+        
+        <div className="mb-6">
+          <h5
+            className="text-sm font-medium mb-3"
+            style={{ color: "var(--text)" }}
+          >
+            Available Now
+          </h5>
 
         <div className="space-y-4">
           {/* Existing Pro Features on Cards */}
@@ -2000,7 +2067,18 @@ function ProTab() {
               </div>
             </div>
           </div>
+        </div>
+        </div>
 
+        {/* Coming Soon Section */}
+        <div className="mt-8">
+          <h5
+            className="text-sm font-medium mb-3"
+            style={{ color: "var(--text)" }}
+          >
+            Coming Soon
+          </h5>
+          <div className="space-y-4">
           {/* Smart Notifications */}
           <div
             className="p-4 rounded-lg border"
@@ -2194,6 +2272,7 @@ function ProTab() {
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
