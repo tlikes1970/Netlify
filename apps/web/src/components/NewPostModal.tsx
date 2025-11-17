@@ -20,6 +20,7 @@ import { useAuth } from "../hooks/useAuth";
 import { trackCommunityPostCreate } from "../lib/analytics";
 import { useSettings } from "../lib/settings";
 import { TOPICS, extractTopicsFromTags } from "../lib/communityTopics";
+import { checkCanCreatePost } from "../lib/communityLimitsCheck";
 
 interface NewPostModalProps {
   isOpen: boolean;
@@ -48,6 +49,7 @@ export default function NewPostModal({
   const [containsSpoilers, setContainsSpoilers] = useState(false);
   const [newTagInput, setNewTagInput] = useState("");
   const [loadingTags, setLoadingTags] = useState(false);
+  const [limitCheck, setLimitCheck] = useState<{ canCreate: boolean; remaining: number; message?: string } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const announcementRef = useRef<HTMLDivElement>(null);
 
@@ -55,14 +57,22 @@ export default function NewPostModal({
   const canSubmit =
     content.trim().length >= MIN_LENGTH &&
     content.trim().length <= MAX_LENGTH &&
-    !submitting;
+    !submitting &&
+    (limitCheck?.canCreate ?? true); // Block if limit reached
 
-  // Fetch available tags from Firestore when modal opens
+  // Fetch available tags and check limits when modal opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && isAuthenticated && user) {
       fetchTags();
+      checkLimits();
     }
-  }, [isOpen]);
+  }, [isOpen, isAuthenticated, user]);
+
+  const checkLimits = async () => {
+    if (!isAuthenticated || !user) return;
+    const result = await checkCanCreatePost(user.uid, settings.pro.isPro);
+    setLimitCheck(result);
+  };
 
   // Focus textarea when modal opens
   useEffect(() => {
@@ -131,6 +141,9 @@ export default function NewPostModal({
     }
 
     if (!canSubmit) {
+      if (limitCheck && !limitCheck.canCreate) {
+        setError(limitCheck.message || "Daily post limit reached");
+      }
       return;
     }
 
@@ -373,11 +386,21 @@ export default function NewPostModal({
                   }}
                 >
                   {remainingChars} characters remaining
+                  {limitCheck && (
+                    <span className="ml-2">
+                      · {limitCheck.remaining} posts remaining today
+                    </span>
+                  )}
                 </span>
                 <span className="text-xs" style={{ color: "var(--muted)" }}>
                   Press Cmd/Ctrl+Enter to submit, Esc to close
                 </span>
               </div>
+              {limitCheck && !limitCheck.canCreate && (
+                <div className="mt-2 text-xs" style={{ color: "#ef4444" }}>
+                  {limitCheck.message}
+                </div>
+              )}
             </div>
 
             {/* Topic Selection */}

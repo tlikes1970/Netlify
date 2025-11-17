@@ -6,11 +6,12 @@
  * Dependencies: firebaseBootstrap, authManager, serverTimestamp
  */
 
-import { useState, FormEvent } from 'react';
+import React, { useState, FormEvent } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebaseBootstrap';
 import { useAuth } from '../hooks/useAuth';
 import { useSettings } from '../lib/settings';
+import { checkCanCreateComment } from '../lib/communityLimitsCheck';
 
 interface CommentComposerProps {
   postId: string;
@@ -24,6 +25,14 @@ export default function CommentComposer({ postId, onCommentAdded }: CommentCompo
   const [containsSpoilers, setContainsSpoilers] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [limitCheck, setLimitCheck] = useState<{ canCreate: boolean; remaining: number; message?: string } | null>(null);
+
+  // Check limits when component mounts or user changes
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      checkCanCreateComment(user.uid, settings.pro.isPro).then(setLimitCheck);
+    }
+  }, [isAuthenticated, user, settings.pro.isPro]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -35,6 +44,12 @@ export default function CommentComposer({ postId, onCommentAdded }: CommentCompo
 
     if (!body.trim()) {
       setError('Comment cannot be empty');
+      return;
+    }
+
+    // Check limits before submitting
+    if (limitCheck && !limitCheck.canCreate) {
+      setError(limitCheck.message || 'Daily comment limit reached');
       return;
     }
 
@@ -132,10 +147,15 @@ export default function CommentComposer({ postId, onCommentAdded }: CommentCompo
         <div className="flex items-center justify-between mt-3">
           <span className="text-xs" style={{ color: 'var(--muted)' }}>
             Comments are automatically filtered
+            {limitCheck && (
+              <span className="ml-2">
+                · {limitCheck.remaining} comments remaining today
+              </span>
+            )}
           </span>
           <button
             type="submit"
-            disabled={submitting || !body.trim()}
+            disabled={submitting || !body.trim() || (limitCheck && !limitCheck.canCreate)}
             className="px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               backgroundColor: 'var(--accent-primary)',

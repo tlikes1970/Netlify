@@ -19,6 +19,7 @@
 ## Test Suite A: Pro Badge Display
 
 ### A1. Pro Badge on New Posts
+
 - [ ] **Steps:**
   1. Sign in as Pro user
   2. Create a new post
@@ -29,6 +30,7 @@
   - PostDetail (full view)
 
 ### A2. Pro Badge on Comments
+
 - [ ] **Steps:**
   1. Sign in as Pro user
   2. Create a comment on any post
@@ -36,6 +38,7 @@
 - [ ] **Expected:** Gold "PRO" badge appears next to your username in CommentList
 
 ### A3. Pro Badge on Replies
+
 - [ ] **Steps:**
   1. Sign in as Pro user
   2. Reply to a comment
@@ -43,6 +46,7 @@
 - [ ] **Expected:** Gold "PRO" badge appears next to your username in ReplyList
 
 ### A4. No Badge for Free Users
+
 - [ ] **Steps:**
   1. Sign in as Free user (or set Pro to false)
   2. Create a post, comment, and reply
@@ -50,6 +54,7 @@
 - [ ] **Expected:** No PRO badge appears
 
 ### A5. Legacy Content (No authorIsPro field)
+
 - [ ] **Steps:**
   1. View an old post/comment created before this update
 - [ ] **Expected:** No PRO badge appears (graceful handling of missing field)
@@ -59,6 +64,7 @@
 ## Test Suite B: Spoiler Handling
 
 ### B1. Spoiler Flag on Posts
+
 - [ ] **Steps:**
   1. Create a new post
   2. Check "Contains spoilers" checkbox
@@ -72,6 +78,7 @@
   - Spoiler badge/warning visible
 
 ### B2. Spoiler Flag on Comments
+
 - [ ] **Steps:**
   1. Create a comment
   2. Check "Contains spoilers" checkbox
@@ -84,12 +91,14 @@
   - Clicking reveals comment text
 
 ### B3. Non-Spoiler Content
+
 - [ ] **Steps:**
   1. Create post/comment WITHOUT checking spoiler box
   2. View content
 - [ ] **Expected:** Content displays normally, no blur or reveal button
 
 ### B4. Spoiler Title Visibility
+
 - [ ] **Steps:**
   1. Create a post with spoiler flag
   2. View in list (PostCard)
@@ -100,6 +109,7 @@
 ## Test Suite C: Topics Selection
 
 ### C1. Topic Selection in NewPostModal
+
 - [ ] **Steps:**
   1. Open NewPostModal
   2. View "Topic(s)" section
@@ -111,12 +121,14 @@
   - Topics are saved with post
 
 ### C2. Topic Display
+
 - [ ] **Steps:**
   1. Create post with topics
   2. View post in PostDetail
 - [ ] **Expected:** Topics appear as tags/chips on the post
 
 ### C3. Topics vs Tags
+
 - [ ] **Steps:**
   1. Create post with:
      - Selected topics (e.g., "TV Shows")
@@ -125,6 +137,7 @@
 - [ ] **Expected:** Both topics and additional tags appear
 
 ### C4. Curated Topic List
+
 - [ ] **Steps:**
   1. Open NewPostModal
   2. Check available topics
@@ -135,6 +148,7 @@
 ## Test Suite D: Data Model & Firestore
 
 ### D1. Post Fields in Firestore
+
 - [ ] **Steps:**
   1. Create a post with topics and spoiler flag as Pro user
   2. Check Firestore console (or use browser DevTools Network tab)
@@ -145,6 +159,7 @@
   - `tagSlugs: [...]` (includes topics + additional tags)
 
 ### D2. Comment Fields in Firestore
+
 - [ ] **Steps:**
   1. Create a comment with spoiler flag as Pro user
   2. Check Firestore
@@ -153,6 +168,7 @@
   - `authorIsPro: true`
 
 ### D3. Reply Fields in Firestore
+
 - [ ] **Steps:**
   1. Create a reply as Pro user
   2. Check Firestore
@@ -160,6 +176,7 @@
   - `authorIsPro: true`
 
 ### D4. Settings Storage
+
 - [ ] **Steps:**
   1. Follow/unfollow topics (when UI is implemented)
   2. Check localStorage or settings
@@ -170,6 +187,7 @@
 ## Test Suite E: UI/UX
 
 ### E1. NewPostModal Layout
+
 - [ ] **Steps:**
   1. Open NewPostModal
   2. Check form layout
@@ -181,6 +199,7 @@
   - Submit button works
 
 ### E2. Pro Badge Styling
+
 - [ ] **Steps:**
   1. View Pro badge in various contexts
 - [ ] **Expected:**
@@ -190,6 +209,7 @@
   - Doesn't break layout
 
 ### E3. Spoiler Wrapper Styling
+
 - [ ] **Steps:**
   1. View spoiler content
 - [ ] **Expected:**
@@ -199,6 +219,7 @@
   - Warning badge visible
 
 ### E4. Responsive Design
+
 - [ ] **Steps:**
   1. Test on mobile viewport (DevTools responsive mode)
   2. Test on desktop
@@ -209,6 +230,7 @@
 ## Test Suite F: Error Handling
 
 ### F1. Missing Fields (Legacy Content)
+
 - [ ] **Steps:**
   1. View old posts/comments created before v1
 - [ ] **Expected:** No errors, graceful fallback:
@@ -217,12 +239,14 @@
   - Content displays normally
 
 ### F2. Invalid Data
+
 - [ ] **Steps:**
   1. Try to create post with empty content
   2. Try to create post exceeding character limit
 - [ ] **Expected:** Validation errors display, post not created
 
 ### F3. Network Errors
+
 - [ ] **Steps:**
   1. Disconnect internet
   2. Try to create post/comment
@@ -233,6 +257,7 @@
 ## Test Suite G: Console Errors
 
 ### G1. No JavaScript Errors
+
 - [ ] **Steps:**
   1. Open browser DevTools Console
   2. Perform all above tests
@@ -245,6 +270,7 @@
   - TypeScript type errors
 
 ### G2. Firestore Errors
+
 - [ ] **Steps:**
   1. Check console for Firestore permission errors
 - [ ] **Expected:** No permission denied errors for new fields
@@ -288,6 +314,7 @@ These features are **NOT** implemented yet - don't test for them:
 ## Reporting Issues
 
 If you find bugs, note:
+
 1. **Test case** (e.g., "B1 - Spoiler Flag on Posts")
 2. **Steps to reproduce**
 3. **Expected vs Actual behavior**
@@ -299,7 +326,7 @@ If you find bugs, note:
 ## Next Steps After Testing
 
 Once core features are verified:
+
 1. Implement remaining features (filtering, sorting, infinite scroll)
 2. Add daily limits enforcement
 3. Create comprehensive documentation
-
