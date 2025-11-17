@@ -291,7 +291,7 @@ const CommunityPanel = memo(function CommunityPanel() {
     <div className="relative">
       <div
         data-rail="community"
-        className="grid md:grid-cols-3 gap-4 items-stretch"
+        className="grid md:grid-cols-3 gap-4 items-start"
       >
         {/* Left: Player (spans 1 column) */}
         <div className="md:col-span-1">
@@ -299,7 +299,13 @@ const CommunityPanel = memo(function CommunityPanel() {
         </div>
 
         {/* Middle: Stacked Games (spans 1 column) */}
-        <div className="grid grid-rows-[1fr_1fr] gap-4 h-full">
+        <div 
+          className="grid grid-rows-[1fr_1fr] gap-4" 
+          style={{ 
+            height: "750px", // Match CommunityPlayer height
+            maxHeight: "750px",
+          }}
+        >
           {/* FlickWord Game Card */}
           <div
             className="rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-colors"
@@ -433,6 +439,9 @@ const CommunityPanel = memo(function CommunityPanel() {
             borderColor: "var(--line)",
             borderWidth: "1px",
             borderStyle: "solid",
+            height: "calc(100vh - 200px)", // Fixed height for scrollable container
+            maxHeight: "calc(100vh - 200px)",
+            minHeight: "400px",
           }}
         >
           <div className="flex items-center justify-between mb-3">
@@ -554,7 +563,10 @@ const CommunityPanel = memo(function CommunityPanel() {
             </div>
           ) : (
             <div 
-              className="flex-1 overflow-y-auto"
+              className="flex-1 overflow-y-auto min-h-0"
+              style={{
+                maxHeight: "100%",
+              }}
               onScroll={(e) => {
                 const target = e.currentTarget;
                 const scrollBottom = target.scrollHeight - target.scrollTop - target.clientHeight;

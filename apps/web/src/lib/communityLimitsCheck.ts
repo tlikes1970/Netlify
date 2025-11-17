@@ -6,7 +6,7 @@
  * Dependencies: communityLimits, firebaseBootstrap
  */
 
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp, orderBy, limit } from 'firebase/firestore';
 import { db } from './firebaseBootstrap';
 import { canCreatePost, canCreateComment, getRemainingPosts, getRemainingComments } from './communityLimits';
 
@@ -42,35 +42,73 @@ export async function countPostsToday(userId: string): Promise<number> {
 
 /**
  * Count comments created by user today (UTC)
+ * 
+ * Note: For v1, we use a simplified approach that checks comments in recent posts only.
+ * This avoids requiring Firestore composite indexes. For production scale, consider:
+ * - Using collection group queries with proper indexes
+ * - Cloud Function to maintain a daily comment count per user
+ * - Or accept this as a reasonable approximation
  */
 export async function countCommentsToday(userId: string): Promise<number> {
   try {
     const todayStart = getTodayStart();
     let totalCount = 0;
     
-    // Get all posts to check their comments sub-collections
-    // Note: This is not ideal but Firestore doesn't support collection group queries easily
-    // For v1, we'll use a simpler approach: count from recent posts only
+    // Simplified approach: Check comments in recent posts (last 7 days, max 100 posts)
+    // This avoids needing composite indexes while still being reasonably accurate
     const postsRef = collection(db, 'posts');
-    const recentPostsQuery = query(postsRef, where('publishedAt', '>=', Timestamp.fromDate(todayStart)));
+    const sevenDaysAgo = new Date(todayStart);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const recentPostsQuery = query(
+      postsRef,
+      where('publishedAt', '>=', Timestamp.fromDate(sevenDaysAgo)),
+      orderBy('publishedAt', 'desc'),
+      limit(100) // Limit to recent 100 posts to avoid performance issues
+    );
+    
     const postsSnapshot = await getDocs(recentPostsQuery);
     
     // Check comments in each post
+    // Query all comments, then filter by authorId and createdAt in memory
+    // This completely avoids any Firestore index requirements
     for (const postDoc of postsSnapshot.docs) {
-      const commentsRef = collection(db, 'posts', postDoc.id, 'comments');
-      const commentsQuery = query(
-        commentsRef,
-        where('authorId', '==', userId),
-        where('createdAt', '>=', Timestamp.fromDate(todayStart))
-      );
-      const commentsSnapshot = await getDocs(commentsQuery);
-      totalCount += commentsSnapshot.size;
+      try {
+        const commentsRef = collection(db, 'posts', postDoc.id, 'comments');
+        // Get all comments (no where clause = no index needed)
+        // Limit to reasonable number to avoid performance issues
+        const commentsQuery = query(commentsRef, limit(1000));
+        const commentsSnapshot = await getDocs(commentsQuery);
+        
+        // Filter by authorId and createdAt in memory (avoids all index requirements)
+        commentsSnapshot.forEach((doc) => {
+          const data = doc.data();
+          const createdAt = data.createdAt?.toDate?.() || new Date(data.createdAt);
+          
+          // Check if comment is by this user and created today
+          if (data.authorId === userId && createdAt >= todayStart) {
+            totalCount++;
+          }
+        });
+      } catch (postError: any) {
+        // Skip posts that fail - this is acceptable for v1 approximation
+        console.warn(`Error checking comments in post ${postDoc.id}:`, postError);
+        continue;
+      }
     }
     
     return totalCount;
-  } catch (error) {
-    console.error('Error counting comments today:', error);
-    return 0; // Fail open - allow creation if we can't count
+  } catch (error: any) {
+    // If the main query fails (e.g., missing index), fail gracefully
+    console.warn('Error counting comments today (using fallback):', error);
+    
+    // Fallback: Return 0 and allow creation (fail open)
+    // In production, you might want to track this differently
+    if (error.code === 'failed-precondition') {
+      console.warn('Firestore index required for comment counting. For now, allowing creation.');
+    }
+    
+    return 0; // Fail open - allow creation if we can't count accurately
   }
 }
 
