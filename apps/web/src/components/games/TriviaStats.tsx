@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from '@/lib/language';
+import { getTriviaStatsKey } from '../../lib/cacheKeys';
 
 interface TriviaStats {
   games: number;
@@ -25,7 +26,7 @@ const TriviaStats: React.FC = () => {
 
   const loadStats = () => {
     try {
-      const storedStats = JSON.parse(localStorage.getItem('trivia:stats') || '{}');
+      const storedStats = JSON.parse(localStorage.getItem(getTriviaStatsKey()) || '{}');
       const triviaStats = storedStats.trivia || storedStats || {};
       setStats({
         games: triviaStats.games || 0,

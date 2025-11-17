@@ -11,12 +11,13 @@ import { useSettings } from "@/lib/settings";
 import { getTodaysWord } from "../../lib/dailyWordApi";
 import { validateWord } from "../../lib/words/validateWord";
 import { getDailySeedDate } from "../../lib/dailySeed";
+import { getFlickWordGameStateKey, getFlickWordGamesCompletedKey, getFlickWordDailyKey } from '../../lib/cacheKeys';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 
 // Game configuration
 const KEYBOARD_ROWS = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
 const NOTIFICATION_DURATION = 3000;
 const ANIMATION_DELAY_BASE = 100; // Base delay for tile animations
-const GAME_STATE_KEY = "flicklet:flickword-game-state"; // localStorage key for game state
 
 // Types
 type TileStatus = "correct" | "present" | "absent" | "";
@@ -67,12 +68,13 @@ interface SavedGameState {
   };
   showHint: boolean;
   date: string; // Date when this game state was saved
+  gameNumber?: number; // Game number (1-3 for Pro users, 1 for Regular)
 }
 
 /**
  * Save game state to localStorage
  */
-function saveGameState(game: GameState, date: string): void {
+function saveGameState(game: GameState, date: string, gameNumber?: number): void {
   try {
     const savedState: SavedGameState = {
       target: game.target,
@@ -85,51 +87,61 @@ function saveGameState(game: GameState, date: string): void {
       wordInfo: game.wordInfo,
       showHint: game.showHint,
       date,
+      gameNumber,
     };
-    localStorage.setItem(GAME_STATE_KEY, JSON.stringify(savedState));
+    localStorage.setItem(getFlickWordGameStateKey(), JSON.stringify(savedState));
     console.log("💾 Game state saved:", {
       target: game.target,
       guesses: game.guesses.length,
       date,
+      gameNumber,
     });
   } catch (error) {
-    console.warn("Failed to save game state:", error);
+    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+      console.error("❌ localStorage quota exceeded. Cannot save game state.");
+      // Could show user notification here
+    } else {
+      console.warn("Failed to save game state:", error);
+    }
   }
 }
 
 /**
  * Restore game state from localStorage
- * Returns null if no saved state or state is for a different day
+ * Returns null if no saved state or state is for a different day/game
  */
-function restoreGameState(currentDate: string): SavedGameState | null {
+function restoreGameState(currentDate: string, currentGameNumber: number): SavedGameState | null {
   try {
-    const saved = localStorage.getItem(GAME_STATE_KEY);
+    const saved = localStorage.getItem(getFlickWordGameStateKey());
     if (!saved) return null;
 
     const savedState: SavedGameState = JSON.parse(saved);
 
-    // Only restore if it's for today's word and game isn't completed
+    // Only restore if it's for today's word, same game number, and game isn't completed
+    const savedGameNumber = savedState.gameNumber ?? 1; // Default to 1 for legacy saves
     if (
       savedState.date === currentDate &&
+      savedGameNumber === currentGameNumber &&
       !savedState.done &&
       savedState.target
     ) {
       console.log("📂 Game state restored:", {
         target: savedState.target,
         guesses: savedState.guesses.length,
+        gameNumber: savedGameNumber,
       });
       return savedState;
-    } else if (savedState.date !== currentDate) {
-      // Clear old game state from different day
-      localStorage.removeItem(GAME_STATE_KEY);
-      console.log("🗑️ Cleared game state from different day");
+    } else if (savedState.date !== currentDate || savedGameNumber !== currentGameNumber) {
+      // Clear old game state from different day or game number
+      localStorage.removeItem(getFlickWordGameStateKey());
+      console.log("🗑️ Cleared game state from different day/game");
     }
 
     return null;
   } catch (error) {
     console.warn("Failed to restore game state:", error);
     // Clear corrupted state
-    localStorage.removeItem(GAME_STATE_KEY);
+    localStorage.removeItem(getFlickWordGameStateKey());
     return null;
   }
 }
@@ -139,7 +151,7 @@ function restoreGameState(currentDate: string): SavedGameState | null {
  */
 function clearGameState(): void {
   try {
-    localStorage.removeItem(GAME_STATE_KEY);
+    localStorage.removeItem(getFlickWordGameStateKey());
     console.log("🗑️ Game state cleared");
   } catch (error) {
     console.warn("Failed to clear game state:", error);
@@ -177,16 +189,18 @@ export default function FlickWordGame({
   const gridRef = useRef<HTMLDivElement>(null);
   const notificationTimeoutRef = useRef<number | null>(null);
   const tileRefs = useRef<(HTMLDivElement | null)[][]>([]);
+  const isSubmittingRef = useRef<boolean>(false); // Guard against concurrent submissions
+  const isOnline = useOnlineStatus();
 
-  // Game limits: 1 for regular, 3 for Pro
-  const MAX_GAMES_FREE = 1;
+  // Game limits: ALL users get 3 words per day (same for everyone)
+  const MAX_GAMES_FREE = 3; // Changed: Regular users now get 3 games per day too
   const MAX_GAMES_PRO = 3;
 
   // Get games completed today for FlickWord (uses UTC date for consistency)
   const getGamesCompletedToday = (): number => {
     try {
       const today = getDailySeedDate(); // UTC-based date
-      const key = `flickword:games-completed:${today}`;
+      const key = getFlickWordGamesCompletedKey(today);
       const count = parseInt(localStorage.getItem(key) || "0", 10);
       return count;
     } catch {
@@ -198,35 +212,34 @@ export default function FlickWordGame({
   const saveGamesCompletedToday = (count: number): void => {
     try {
       const today = getDailySeedDate(); // UTC-based date
-      const key = `flickword:games-completed:${today}`;
+      const key = getFlickWordGamesCompletedKey(today);
       localStorage.setItem(key, String(count));
     } catch (e) {
-      // Ignore errors
-      void e;
+      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+        console.error("❌ localStorage quota exceeded. Cannot save games completed count.");
+        showNotification("Storage full. Game progress may not be saved.", "warning");
+      } else {
+        console.warn("Failed to save games completed:", e);
+      }
     }
   };
 
-  // Check if user is Pro and initialize games completed
+  // Initialize games completed - ALL users get 3 games per day
   useEffect(() => {
-    setIsProUser(settings.pro.isPro);
+    setIsProUser(settings.pro.isPro); // Keep Pro status for other features
     const completed = getGamesCompletedToday();
     setGamesCompletedToday(completed);
-    // Set current game to next game to play (completed + 1, or 1 if not pro)
-    if (settings.pro.isPro) {
-      const nextGame = Math.min(completed + 1, MAX_GAMES_PRO);
-      setCurrentGame(nextGame);
-      console.log(
-        "🎯 Pro user status:",
-        settings.pro.isPro,
-        "Games completed today:",
-        completed,
-        "Starting game:",
-        nextGame
-      );
-    } else {
-      setCurrentGame(1);
-      console.log("🎯 Regular user, starting game 1");
-    }
+    // Set current game to next game to play (all users get 3 games per day)
+    const nextGame = Math.min(completed + 1, MAX_GAMES_FREE); // All users use MAX_GAMES_FREE (now 3)
+    setCurrentGame(nextGame);
+    console.log(
+      "🎯 User games status:",
+      "Games completed today:",
+      completed,
+      "Starting game:",
+      nextGame,
+      "(All users get 3 games per day)"
+    );
   }, [settings.pro]);
 
   // Check for reduced motion preference
@@ -242,7 +255,12 @@ export default function FlickWordGame({
     async (forceNew: boolean = false, restoreState: boolean = true) => {
       try {
         setIsLoading(true);
-        const gameNumber = isProUser ? currentGame : 1;
+        // Validate and clamp game number to valid range (1-3)
+        let gameNumber = isProUser ? currentGame : 1;
+        if (gameNumber < 1 || gameNumber > 3) {
+          console.warn(`Invalid game number ${gameNumber}, clamping to valid range`);
+          gameNumber = Math.max(1, Math.min(3, gameNumber));
+        }
         console.log(`🔄 Loading today's word for game ${gameNumber}...`);
 
         // Get today's date (UTC-based for consistent daily content)
@@ -250,7 +268,7 @@ export default function FlickWordGame({
 
         // If forcing new word, clear cache first
         if (forceNew) {
-          const gameCacheKey = gameNumber === 1 ? "flicklet:daily-word" : `flicklet:daily-word:game${gameNumber}`;
+          const gameCacheKey = getFlickWordDailyKey(gameNumber);
           localStorage.removeItem(gameCacheKey);
           clearGameState(); // Also clear game state when forcing new word
           console.log("🗑️ Cleared word cache for new word");
@@ -259,7 +277,7 @@ export default function FlickWordGame({
         // Try to restore saved game state first (if not forcing new)
         // Only restore if it's for the same game number
         if (restoreState && !forceNew) {
-          const savedState = restoreGameState(today);
+          const savedState = restoreGameState(today, gameNumber);
           if (savedState && savedState.target) {
             // Restore game state (including keyboard status)
             setGame({
@@ -276,8 +294,11 @@ export default function FlickWordGame({
         const wordData = await getTodaysWord(gameNumber);
         console.log(`📦 Daily word data received for game ${gameNumber}:`, wordData);
 
-        // Validate that we got a proper word
-        if (wordData && wordData.word && wordData.word.length === 5) {
+        // Validate that we got a proper word (comprehensive validation)
+        if (wordData && wordData.word && 
+            typeof wordData.word === 'string' &&
+            wordData.word.length === 5 &&
+            /^[a-zA-Z]{5}$/.test(wordData.word)) {
           // Reset keyboard status when starting a new game
           const newGameState = {
             target: wordData.word.toUpperCase(),
@@ -298,7 +319,7 @@ export default function FlickWordGame({
           setGame(newGameState);
 
           // Save initial state
-          saveGameState(newGameState, today);
+          saveGameState(newGameState, today, gameNumber);
 
           console.log(`✅ Game target set to: ${wordData.word.toUpperCase()} (game ${gameNumber})`);
         } else {
@@ -307,12 +328,16 @@ export default function FlickWordGame({
       } catch (error) {
         console.error("❌ Failed to load daily word:", error);
         setErrorMessage("Failed to load today's word. Using backup word.");
-        // Fallback to different words for different game numbers
+        // Fallback to different words for different game numbers (deterministic based on date + game number)
         const fallbackWords = ["HOUSE", "CRANE", "BLISS"];
         const gameNumber = isProUser ? currentGame : 1;
-        const fallbackWord = fallbackWords[(gameNumber - 1) % fallbackWords.length];
-        console.log(`🔄 Using fallback word for game ${gameNumber}:`, fallbackWord);
+        // Use date + game number for deterministic fallback selection
         const fallbackDate = getDailySeedDate(); // UTC-based date
+        const dateSeed = parseInt(fallbackDate.replace(/-/g, ''), 10);
+        const combinedSeed = dateSeed + (gameNumber - 1) * 1000;
+        const fallbackIndex = combinedSeed % fallbackWords.length;
+        const fallbackWord = fallbackWords[fallbackIndex];
+        console.log(`🔄 Using fallback word for game ${gameNumber}:`, fallbackWord);
         const fallbackState = {
           target: fallbackWord,
           guesses: [],
@@ -329,7 +354,7 @@ export default function FlickWordGame({
           animationState: "idle" as AnimationState,
         };
         setGame(fallbackState);
-        saveGameState(fallbackState, fallbackDate);
+        saveGameState(fallbackState, fallbackDate, gameNumber);
       } finally {
         setIsLoading(false);
         console.log("🏁 Word loading complete");
@@ -338,109 +363,8 @@ export default function FlickWordGame({
     [isProUser, currentGame]
   );
 
-  // Force load new word (for testing - only in dev mode)
-  // Reserved for future dev testing feature
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _handleNewWord = useCallback(async () => {
-    void _handleNewWord; // Suppress unused warning
-    // Only allow in development mode
-    if (import.meta.env.PROD) return;
-    try {
-      setIsLoading(true);
-      console.log("🔄 Loading new word for testing...");
-
-      // Clear cache first
-      localStorage.removeItem("flicklet:daily-word");
-
-      // Get a random word from common words list
-      const { getCommonWordsArray } = await import(
-        "../../lib/words/commonWords"
-      );
-      const commonWords = getCommonWordsArray();
-
-      if (commonWords && commonWords.length > 0) {
-        // Get current target
-        const currentTarget = game.target;
-
-        // Pick a random word different from current
-        let newWord;
-        let attempts = 0;
-        do {
-          const randomIndex = Math.floor(Math.random() * commonWords.length);
-          newWord = commonWords[randomIndex].toUpperCase();
-          attempts++;
-        } while (newWord === currentTarget && attempts < 10); // Avoid same word
-
-        console.log("🎲 Selected random word:", newWord);
-
-        const testDate = getDailySeedDate(); // UTC-based date
-        const newGameState = {
-          target: newWord,
-          guesses: [],
-          current: "",
-          maxGuesses: 6,
-          done: false,
-          status: {},
-          lastResults: [],
-          wordInfo: {
-            definition: undefined,
-            difficulty: "medium",
-          },
-          showHint: false,
-          animationState: "idle" as AnimationState,
-        };
-        setGame(newGameState);
-        // Clear old game state and save new one
-        clearGameState();
-        saveGameState(newGameState, testDate);
-
-        // Cache the new word with today's date for consistency
-        const cacheData = {
-          word: newWord.toLowerCase(),
-          date: testDate,
-          definition: undefined,
-          difficulty: "medium",
-          timestamp: Date.now(),
-        };
-        localStorage.setItem("flicklet:daily-word", JSON.stringify(cacheData));
-
-        // Show notification using the notification system
-        const notificationId = `notification-${Date.now()}-${Math.random()}`;
-        const notification = {
-          id: notificationId,
-          message: `New word loaded: ${newWord}`,
-          type: "info" as NotificationType,
-          timestamp: Date.now(),
-        };
-        setNotifications((prev) => [...prev, notification]);
-
-        // Auto-dismiss
-        setTimeout(() => {
-          setNotifications((prev) =>
-            prev.filter((n) => n.id !== notificationId)
-          );
-        }, 3000);
-      } else {
-        throw new Error("Common words list not available");
-      }
-    } catch (error) {
-      console.error("❌ Failed to load new word:", error);
-      // Show error notification
-      const notificationId = `notification-${Date.now()}-${Math.random()}`;
-      const notification = {
-        id: notificationId,
-        message: "Failed to load new word",
-        type: "error" as NotificationType,
-        timestamp: Date.now(),
-      };
-      setNotifications((prev) => [...prev, notification]);
-      setTimeout(() => {
-        setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-      }, 3000);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [game.target]);
+  // Note: Removed unused _handleNewWord function to reduce code complexity
+  // If dev testing feature is needed in future, implement proper dev mode testing interface
 
   // Score guess
   const scoreGuess = useCallback(
@@ -507,12 +431,15 @@ export default function FlickWordGame({
     []
   );
 
-  // Clear notifications on unmount
+  // Clear notifications on unmount and ensure all timeouts are cleared
   useEffect(() => {
     return () => {
       if (notificationTimeoutRef.current) {
         clearTimeout(notificationTimeoutRef.current);
+        notificationTimeoutRef.current = null;
       }
+      // Clear any pending notifications
+      setNotifications([]);
     };
   }, []);
 
@@ -521,14 +448,16 @@ export default function FlickWordGame({
     loadTodaysWord();
   }, [loadTodaysWord]);
 
-  // Start next game (for pro users with games remaining)
+  // Start next game (all users get 3 games per day)
   const handleNextGame = useCallback(() => {
-    if (isProUser && gamesCompletedToday < MAX_GAMES_PRO) {
-      const nextGame = gamesCompletedToday + 1;
-      setCurrentGame(nextGame);
+    if (gamesCompletedToday < MAX_GAMES_FREE) { // All users use MAX_GAMES_FREE (now 3)
+      const nextGame = Math.min(gamesCompletedToday + 1, MAX_GAMES_FREE);
+      // Validate game number bounds
+      const validatedGame = Math.max(1, Math.min(3, nextGame));
+      setCurrentGame(validatedGame);
       setShowWinScreen(false);
       setShowLostScreen(false);
-      // Reset game state for new game
+      // Reset game state for new game (including keyboard status)
       setGame({
         target: "",
         guesses: [],
@@ -541,11 +470,13 @@ export default function FlickWordGame({
         showHint: false,
         animationState: "idle" as AnimationState,
       });
+      // Clear tile refs to prevent unbounded growth
+      tileRefs.current = [];
       clearGameState();
       // Load new word for next game
       loadTodaysWord(false, false); // Don't restore state, force new game
     }
-  }, [isProUser, gamesCompletedToday, loadTodaysWord]);
+  }, [gamesCompletedToday, loadTodaysWord]);
 
   // Handle key input
   const handleKeyInput = useCallback((letter: string) => {
@@ -557,10 +488,11 @@ export default function FlickWordGame({
       };
       // Save state after input
       const today = getDailySeedDate(); // UTC-based date
-      saveGameState(newState, today);
+      const gameNumber = isProUser ? currentGame : 1;
+      saveGameState(newState, today, gameNumber);
       return newState;
     });
-  }, []);
+  }, [isProUser, currentGame]);
 
   // Handle backspace
   const handleBackspace = useCallback(() => {
@@ -572,22 +504,33 @@ export default function FlickWordGame({
       };
       // Save state after backspace
       const today = getDailySeedDate(); // UTC-based date
-      saveGameState(newState, today);
+      const gameNumber = isProUser ? currentGame : 1;
+      saveGameState(newState, today, gameNumber);
       return newState;
     });
-  }, []);
+  }, [isProUser, currentGame]);
 
   // Handle submit
   const handleSubmit = useCallback(async () => {
+    // Guard against concurrent submissions
+    if (isSubmittingRef.current) {
+      console.log("❌ Submit blocked: already submitting");
+      return;
+    }
+
     setGame((prev) => {
       // Check if can submit
-      if (prev.done || prev.current.length !== 5) {
+      if (prev.done || prev.current.length !== 5 || isSubmittingRef.current) {
         console.log("❌ Submit blocked:", {
           done: prev.done,
           length: prev.current.length,
+          isSubmitting: isSubmittingRef.current,
         });
         return prev;
       }
+
+      // Set submitting flag
+      isSubmittingRef.current = true;
 
       // Validate word synchronously and process
       (async () => {
@@ -617,6 +560,20 @@ export default function FlickWordGame({
             () => {
               setIsInvalidInput(false);
               setGame((p) => ({ ...p, current: "" }));
+              isSubmittingRef.current = false; // Reset submitting flag
+            },
+            prefersReducedMotion ? 300 : 600
+          );
+          return;
+        }
+
+        // Check if word has already been guessed
+        if (prev.guesses.includes(currentWord)) {
+          showNotification("You already tried that word!", "error");
+          setTimeout(
+            () => {
+              setGame((p) => ({ ...p, current: "" }));
+              isSubmittingRef.current = false; // Reset submitting flag
             },
             prefersReducedMotion ? 300 : 600
           );
@@ -650,6 +607,7 @@ export default function FlickWordGame({
         const newGuesses = [...prev.guesses, currentWord];
         const newLastResults = [...prev.lastResults, result];
         const saveDate = getDailySeedDate(); // UTC-based date
+        const gameNumber = isProUser ? currentGame : 1;
 
         // Start reveal animation
         setGame((p) => {
@@ -661,7 +619,7 @@ export default function FlickWordGame({
             status: newStatus,
           };
           // Save state after submitting guess (before reveal animation)
-          saveGameState(revealingState, saveDate);
+          saveGameState(revealingState, saveDate, gameNumber);
           return revealingState;
         });
 
@@ -695,13 +653,11 @@ export default function FlickWordGame({
             setGamesCompletedToday(newGamesCompleted);
             saveGamesCompletedToday(newGamesCompleted);
             onGameComplete?.(true, newGuesses.length);
+            isSubmittingRef.current = false; // Reset submitting flag
             // Show win screen after animation
             setTimeout(() => {
               setShowWinScreen(true);
-              // Show Pro chip if Regular user and limit reached
-              if (!isProUser && newGamesCompleted >= MAX_GAMES_FREE) {
-                setShowProChip(true);
-              }
+              // Note: All users get 3 games per day, so no Pro chip needed
             }, 500);
           }, animationDelay);
         } else if (newGuesses.length === prev.maxGuesses) {
@@ -721,13 +677,11 @@ export default function FlickWordGame({
             setGamesCompletedToday(newGamesCompleted);
             saveGamesCompletedToday(newGamesCompleted);
             onGameComplete?.(false, newGuesses.length);
+            isSubmittingRef.current = false; // Reset submitting flag
             // Show lost screen after animation
             setTimeout(() => {
               setShowLostScreen(true);
-              // Show Pro chip if Regular user and limit reached
-              if (!isProUser && newGamesCompleted >= MAX_GAMES_FREE) {
-                setShowProChip(true);
-              }
+              // Note: All users get 3 games per day, so no Pro chip needed
             }, 500);
           }, animationDelay);
         } else {
@@ -738,7 +692,9 @@ export default function FlickWordGame({
                 animationState: "idle" as AnimationState,
               };
               // Save state after guess (before animation completes)
-              saveGameState(newState, saveDate);
+              const gameNumber = isProUser ? currentGame : 1;
+              saveGameState(newState, saveDate, gameNumber);
+              isSubmittingRef.current = false; // Reset submitting flag
               return newState;
             });
           }, animationDelay);
@@ -747,7 +703,7 @@ export default function FlickWordGame({
 
       return prev;
     });
-  }, [scoreGuess, showNotification, onGameComplete, prefersReducedMotion]);
+  }, [scoreGuess, showNotification, onGameComplete, prefersReducedMotion, isProUser, currentGame, gamesCompletedToday]);
 
   // Keyboard event handling
   useEffect(() => {
@@ -801,7 +757,9 @@ export default function FlickWordGame({
   // Generate share text (Wordle-style grid)
   const generateShareText = useCallback(() => {
     const lines: string[] = [];
-    lines.push(`FlickWord ${getDailySeedDate()}`); // UTC-based date
+    const gameNumber = isProUser ? currentGame : 1;
+    const gameLabel = isProUser ? `Game ${gameNumber}` : '';
+    lines.push(`FlickWord ${getDailySeedDate()}${gameLabel ? ` ${gameLabel}` : ''}`); // UTC-based date + game number for Pro
     lines.push('');
     
     for (let i = 0; i < game.guesses.length; i++) {
@@ -818,7 +776,7 @@ export default function FlickWordGame({
     lines.push('Play FlickWord at flicklet.app');
     
     return lines.join('\n');
-  }, [game.guesses, game.lastResults]);
+  }, [game.guesses, game.lastResults, isProUser, currentGame]);
 
   // Handle share
   const handleShare = useCallback(async () => {
@@ -1110,21 +1068,26 @@ export default function FlickWordGame({
         aria-label="FlickWord game"
         aria-describedby="flickword-description"
       >
-        {/* Game progress indicator (for pro users) */}
-        {isProUser && (
-          <div
-            className="fw-game-header"
-            aria-label={`Game ${currentGame} of ${MAX_GAMES_PRO}`}
-          >
-            <span className="game-indicator">Game {currentGame} of {MAX_GAMES_PRO}</span>
-            {gamesCompletedToday > 0 && (
-              <span
-                className="games-completed"
-                aria-label={`${gamesCompletedToday} games completed today`}
-              >
-                ({gamesCompletedToday} completed)
-              </span>
-            )}
+        {/* Game progress indicator (all users) */}
+        <div
+          className="fw-game-header"
+          aria-label={`Game ${currentGame} of ${MAX_GAMES_FREE}`}
+        >
+          <span className="game-indicator">Game {currentGame} of {MAX_GAMES_FREE}</span>
+          {gamesCompletedToday > 0 && (
+            <span
+              className="games-completed"
+              aria-label={`${gamesCompletedToday} games completed today`}
+            >
+              ({gamesCompletedToday} completed)
+            </span>
+          )}
+        </div>
+
+        {/* Offline indicator */}
+        {!isOnline && (
+          <div className="fw-notification fw-notification-info" role="alert" aria-live="polite">
+            📡 You&apos;re offline. Using cached word if available.
           </div>
         )}
 
@@ -1232,7 +1195,7 @@ export default function FlickWordGame({
             </button>
           </div>
         )}
-        {isProUser && gamesCompletedToday >= MAX_GAMES_PRO && game.done && (
+        {gamesCompletedToday >= MAX_GAMES_FREE && game.done && (
           <div className="fw-games-limit">
             <p>
               ✅ You&apos;ve completed all 3 games today! Come back tomorrow for

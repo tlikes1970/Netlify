@@ -1,5 +1,11 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.157: Fixed all 23 FlickWord and Trivia game issues - comprehensive game improvements
+// - Fixed game state restoration, race conditions, localStorage quota handling
+// - Added cache versioning, centralized cache keys, API retry logic
+// - Added offline detection, duplicate prevention, proper null checks
+// - Improved keyboard color contrast (absent keys now clearly visible)
+// - All 23 audit issues resolved, games now production-ready
 // ⚠️ VERSION 0.1.156: Improved mobile search result card layout - better use of space
 // - Moved rating inline with title on mobile for better space utilization
 // - Made action buttons smaller (36px height instead of 44px) for more compact design
@@ -143,4 +149,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.156";
+export const APP_VERSION = "0.1.157";

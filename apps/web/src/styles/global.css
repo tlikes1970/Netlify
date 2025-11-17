@@ -255,6 +255,8 @@ input:focus-visible {
 .gm-body.flickword,
 .gm-body[data-fw-root] {
   padding: 0;
+  padding-bottom: var(--fw-spacing-lg); /* Ensure space for keyboard */
+  overflow: hidden; /* Prevent scrolling */
 }
 
 /* Scroll to top arrow animation */

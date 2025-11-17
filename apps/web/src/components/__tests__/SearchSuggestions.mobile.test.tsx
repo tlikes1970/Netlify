@@ -139,3 +139,5 @@ describe('SearchSuggestions Mobile Behavior', () => {
   });
 });
 
+
+

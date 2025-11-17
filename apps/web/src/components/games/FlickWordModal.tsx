@@ -3,6 +3,7 @@ import FlickWordGame from "./FlickWordGame";
 import FlickWordStats from "./FlickWordStats";
 import Portal from "../Portal";
 import { lockScroll, unlockScroll } from "../../utils/scrollLock";
+import { getFlickWordStatsKey } from '../../lib/cacheKeys';
 
 interface FlickWordModalProps {
   isOpen: boolean;
@@ -144,7 +145,7 @@ export default function FlickWordModal({
     const loadHeaderStats = () => {
       try {
         const stored =
-          localStorage.getItem("flickword:stats") ||
+          localStorage.getItem(getFlickWordStatsKey()) ||
           localStorage.getItem("flicklet-data");
         if (stored) {
           const data = JSON.parse(stored);
@@ -161,22 +162,26 @@ export default function FlickWordModal({
 
     const getNextWordTime = () => {
       const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
-      const hours = Math.floor(
-        (tomorrow.getTime() - now.getTime()) / (1000 * 60 * 60)
-      );
-      const minutes = Math.floor(
-        ((tomorrow.getTime() - now.getTime()) % (1000 * 60 * 60)) / (1000 * 60)
-      );
+      // Calculate next UTC midnight (when daily content resets)
+      const tomorrowUTC = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() + 1,
+        0, 0, 0, 0
+      ));
+      
+      const diffMs = tomorrowUTC.getTime() - now.getTime();
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      
       return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
     };
 
     loadHeaderStats();
+    // Update timer every second for accuracy
     const interval = setInterval(() => {
       setHeaderStats((prev) => ({ ...prev, nextWordTime: getNextWordTime() }));
-    }, 60000); // Update every minute
+    }, 1000); // Update every second for accurate countdown
 
     const handleStatsUpdate = () => loadHeaderStats();
     const handleCustomEvent = () => loadHeaderStats();
@@ -229,13 +234,18 @@ export default function FlickWordModal({
       };
 
       localStorage.setItem("flicklet-data", JSON.stringify(updatedData));
-      localStorage.setItem("flickword:stats", JSON.stringify(newStats));
+      localStorage.setItem(getFlickWordStatsKey(), JSON.stringify(newStats));
       console.log("💾 FlickWord stats saved:", newStats);
 
       // Update header stats
       setHeaderStats((prev) => ({ ...prev, streak: newStats.streak }));
     } catch (error) {
-      console.error("Failed to save FlickWord stats:", error);
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.error("❌ localStorage quota exceeded. Cannot save FlickWord stats.");
+        // Could show user notification here
+      } else {
+        console.error("Failed to save FlickWord stats:", error);
+      }
     }
 
     // Notify listeners in this tab that stats changed
@@ -327,9 +337,10 @@ export default function FlickWordModal({
               </span>
               <span
                 className="fw-timer"
-                aria-label={`Next word in: ${headerStats.nextWordTime}`}
+                aria-label={`Next word in: ${headerStats.nextWordTime} (UTC)`}
+                title="Time until next daily word (UTC)"
               >
-                Next: {headerStats.nextWordTime}
+                Next: {headerStats.nextWordTime} UTC
               </span>
             </div>
             <button

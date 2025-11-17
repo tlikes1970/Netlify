@@ -1,16 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSettings } from "@/lib/settings";
 import { getCachedTrivia } from "../../lib/triviaApi";
-
-interface TriviaQuestion {
-  id: string;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation?: string;
-  category: string;
-  difficulty: "easy" | "medium" | "hard";
-}
+import { getDailySeedDate } from "../../lib/dailySeed";
+import { SAMPLE_TRIVIA_QUESTIONS, type TriviaQuestion } from "../../lib/triviaQuestions";
+import { getTriviaGamesCompletedKey, getTriviaStatsKey } from '../../lib/cacheKeys';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 
 interface TriviaGameProps {
   onClose?: () => void;
@@ -34,6 +28,7 @@ export default function TriviaGame({
   const [currentGame, setCurrentGame] = useState(1);
   const [gamesCompletedToday, setGamesCompletedToday] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const isOnline = useOnlineStatus();
   const [focusedOptionIndex, setFocusedOptionIndex] = useState<number | null>(
     null
   );
@@ -41,636 +36,83 @@ export default function TriviaGame({
   const nextButtonRef = useRef<HTMLButtonElement | null>(null);
   const explanationRef = useRef<HTMLDivElement | null>(null);
 
-  // Sample trivia questions (in a real app, these would come from an API)
-  const sampleQuestions: TriviaQuestion[] = [
-    {
-      id: "1",
-      question: "Which movie won the Academy Award for Best Picture in 2023?",
-      options: [
-        "Everything Everywhere All at Once",
-        "The Banshees of Inisherin",
-        "Top Gun: Maverick",
-        "Avatar: The Way of Water",
-      ],
-      correctAnswer: 0,
-      explanation:
-        "Everything Everywhere All at Once won Best Picture at the 95th Academy Awards.",
-      category: "Awards",
-      difficulty: "medium",
-    },
-    {
-      id: "2",
-      question: "What is the highest-grossing movie of all time?",
-      options: [
-        "Avatar",
-        "Avengers: Endgame",
-        "Titanic",
-        "Star Wars: The Force Awakens",
-      ],
-      correctAnswer: 0,
-      explanation:
-        "Avatar (2009) holds the record for highest-grossing movie worldwide.",
-      category: "Box Office",
-      difficulty: "easy",
-    },
-    {
-      id: "3",
-      question: 'Which streaming service produced "Stranger Things"?',
-      options: ["Hulu", "Netflix", "Amazon Prime", "Disney+"],
-      correctAnswer: 1,
-      explanation: "Stranger Things is a Netflix original series.",
-      category: "Streaming",
-      difficulty: "easy",
-    },
-    {
-      id: "4",
-      question: 'Who directed "The Dark Knight"?',
-      options: [
-        "Christopher Nolan",
-        "Zack Snyder",
-        "Tim Burton",
-        "Martin Scorsese",
-      ],
-      correctAnswer: 0,
-      explanation: "Christopher Nolan directed The Dark Knight (2008).",
-      category: "Directors",
-      difficulty: "medium",
-    },
-    {
-      id: "5",
-      question: 'What year was the first "Star Wars" movie released?',
-      options: ["1975", "1977", "1979", "1981"],
-      correctAnswer: 1,
-      explanation: "Star Wars: Episode IV - A New Hope was released in 1977.",
-      category: "History",
-      difficulty: "medium",
-    },
-    {
-      id: "6",
-      question: 'Which actor played Jack in "Titanic"?',
-      options: ["Brad Pitt", "Leonardo DiCaprio", "Matt Damon", "Ryan Gosling"],
-      correctAnswer: 1,
-      explanation: "Leonardo DiCaprio played Jack Dawson in Titanic (1997).",
-      category: "Actors",
-      difficulty: "easy",
-    },
-    {
-      id: "7",
-      question: 'What is the name of the main character in "The Matrix"?',
-      options: ["Neo", "Morpheus", "Trinity", "Agent Smith"],
-      correctAnswer: 0,
-      explanation:
-        "Neo (played by Keanu Reeves) is the main character in The Matrix.",
-      category: "Characters",
-      difficulty: "easy",
-    },
-    {
-      id: "8",
-      question: 'Which movie features the quote "May the Force be with you"?',
-      options: [
-        "Star Trek",
-        "Star Wars",
-        "Guardians of the Galaxy",
-        "Blade Runner",
-      ],
-      correctAnswer: 1,
-      explanation: "This iconic quote is from the Star Wars franchise.",
-      category: "Quotes",
-      difficulty: "easy",
-    },
-    {
-      id: "9",
-      question: 'Who composed the music for "Jaws"?',
-      options: [
-        "John Williams",
-        "Hans Zimmer",
-        "Danny Elfman",
-        "Alan Silvestri",
-      ],
-      correctAnswer: 0,
-      explanation: "John Williams composed the iconic Jaws theme.",
-      category: "Music",
-      difficulty: "medium",
-    },
-    {
-      id: "10",
-      question: "What is the highest-rated movie on IMDb?",
-      options: [
-        "The Godfather",
-        "The Shawshank Redemption",
-        "The Dark Knight",
-        "Pulp Fiction",
-      ],
-      correctAnswer: 1,
-      explanation:
-        "The Shawshank Redemption currently holds the #1 spot on IMDb.",
-      category: "Ratings",
-      difficulty: "medium",
-    },
-    {
-      id: "11",
-      question: "Which movie won Best Picture in 2020?",
-      options: ["1917", "Joker", "Parasite", "Once Upon a Time in Hollywood"],
-      correctAnswer: 2,
-      explanation:
-        "Parasite became the first non-English language film to win Best Picture.",
-      category: "Awards",
-      difficulty: "medium",
-    },
-    {
-      id: "12",
-      question: 'What is the name of the dinosaur in "Jurassic Park"?',
-      options: ["Rex", "T-Rex", "Rexy", "Tyrannosaurus"],
-      correctAnswer: 2,
-      explanation:
-        'The T-Rex in Jurassic Park is affectionately called "Rexy".',
-      category: "Characters",
-      difficulty: "easy",
-    },
-    {
-      id: "13",
-      question: 'Which director made "Inception"?',
-      options: [
-        "Steven Spielberg",
-        "Christopher Nolan",
-        "Martin Scorsese",
-        "Quentin Tarantino",
-      ],
-      correctAnswer: 1,
-      explanation: "Christopher Nolan directed Inception (2010).",
-      category: "Directors",
-      difficulty: "easy",
-    },
-    {
-      id: "14",
-      question: 'What year was "The Lion King" (animated) released?',
-      options: ["1992", "1994", "1996", "1998"],
-      correctAnswer: 1,
-      explanation: "The animated Lion King was released in 1994.",
-      category: "History",
-      difficulty: "medium",
-    },
-    {
-      id: "15",
-      question: "Which movie features the character Tony Stark?",
-      options: ["Batman", "Iron Man", "Superman", "Spider-Man"],
-      correctAnswer: 1,
-      explanation: "Tony Stark is the alter ego of Iron Man.",
-      category: "Characters",
-      difficulty: "easy",
-    },
-    {
-      id: "16",
-      question: "What is the highest-grossing movie franchise?",
-      options: [
-        "Marvel Cinematic Universe",
-        "Star Wars",
-        "Harry Potter",
-        "Fast & Furious",
-      ],
-      correctAnswer: 0,
-      explanation:
-        "The Marvel Cinematic Universe is the highest-grossing movie franchise.",
-      category: "Box Office",
-      difficulty: "medium",
-    },
-    {
-      id: "17",
-      question: "Which actor played Wolverine in the X-Men movies?",
-      options: [
-        "Ryan Reynolds",
-        "Hugh Jackman",
-        "Chris Evans",
-        "Robert Downey Jr.",
-      ],
-      correctAnswer: 1,
-      explanation: "Hugh Jackman played Wolverine in the X-Men franchise.",
-      category: "Actors",
-      difficulty: "easy",
-    },
-    {
-      id: "18",
-      question: 'What year was "The Matrix" released?',
-      options: ["1997", "1999", "2001", "2003"],
-      correctAnswer: 1,
-      explanation: "The Matrix was released in 1999.",
-      category: "History",
-      difficulty: "medium",
-    },
-    {
-      id: "19",
-      question: "Which movie won Best Picture in 2019?",
-      options: [
-        "Black Panther",
-        "Bohemian Rhapsody",
-        "Green Book",
-        "A Star Is Born",
-      ],
-      correctAnswer: 2,
-      explanation: "Green Book won Best Picture at the 91st Academy Awards.",
-      category: "Awards",
-      difficulty: "medium",
-    },
-    {
-      id: "20",
-      question: 'What is the name of the main character in "Forrest Gump"?',
-      options: ["Forrest Gump", "Tom Hanks", "Jenny", "Bubba"],
-      correctAnswer: 0,
-      explanation: "Forrest Gump is the title character played by Tom Hanks.",
-      category: "Characters",
-      difficulty: "easy",
-    },
-    {
-      id: "21",
-      question: 'Which streaming service produced "The Crown"?',
-      options: ["Netflix", "Amazon Prime", "Disney+", "HBO Max"],
-      correctAnswer: 0,
-      explanation: "The Crown is a Netflix original series.",
-      category: "Streaming",
-      difficulty: "easy",
-    },
-    {
-      id: "22",
-      question: 'Who directed "Pulp Fiction"?',
-      options: [
-        "Martin Scorsese",
-        "Quentin Tarantino",
-        "Steven Spielberg",
-        "Christopher Nolan",
-      ],
-      correctAnswer: 1,
-      explanation: "Quentin Tarantino directed Pulp Fiction (1994).",
-      category: "Directors",
-      difficulty: "medium",
-    },
-    {
-      id: "23",
-      question: "What is the highest-rated TV show on IMDb?",
-      options: ["Breaking Bad", "The Wire", "Game of Thrones", "The Sopranos"],
-      correctAnswer: 0,
-      explanation:
-        "Breaking Bad currently holds the #1 spot for TV shows on IMDb.",
-      category: "Ratings",
-      difficulty: "medium",
-    },
-    {
-      id: "24",
-      question: 'Which movie features the quote "I\'ll be back"?',
-      options: ["Terminator", "Predator", "Total Recall", "Commando"],
-      correctAnswer: 0,
-      explanation: "This iconic quote is from The Terminator (1984).",
-      category: "Quotes",
-      difficulty: "easy",
-    },
-    {
-      id: "25",
-      question: 'What year was "Jurassic Park" released?',
-      options: ["1991", "1993", "1995", "1997"],
-      correctAnswer: 1,
-      explanation: "Jurassic Park was released in 1993.",
-      category: "History",
-      difficulty: "medium",
-    },
-    {
-      id: "26",
-      question:
-        'Which actor played Jack Nicholson\'s character in "The Shining"?',
-      options: [
-        "Jack Nicholson",
-        "Shelley Duvall",
-        "Danny Lloyd",
-        "Scatman Crothers",
-      ],
-      correctAnswer: 0,
-      explanation: "Jack Nicholson played Jack Torrance in The Shining.",
-      category: "Actors",
-      difficulty: "easy",
-    },
-    {
-      id: "27",
-      question: 'What is the name of the main character in "Casablanca"?',
-      options: ["Rick Blaine", "Ilsa Lund", "Victor Laszlo", "Captain Renault"],
-      correctAnswer: 0,
-      explanation:
-        "Rick Blaine (played by Humphrey Bogart) is the main character.",
-      category: "Characters",
-      difficulty: "medium",
-    },
-    {
-      id: "28",
-      question: "Which movie won Best Picture in 2018?",
-      options: [
-        "The Shape of Water",
-        "Three Billboards Outside Ebbing, Missouri",
-        "Dunkirk",
-        "Get Out",
-      ],
-      correctAnswer: 0,
-      explanation:
-        "The Shape of Water won Best Picture at the 90th Academy Awards.",
-      category: "Awards",
-      difficulty: "medium",
-    },
-    {
-      id: "29",
-      question: "What is the highest-grossing animated movie franchise?",
-      options: ["Toy Story", "Shrek", "Despicable Me", "Frozen"],
-      correctAnswer: 2,
-      explanation:
-        "The Despicable Me franchise (including Minions) is the highest-grossing animated franchise.",
-      category: "Box Office",
-      difficulty: "medium",
-    },
-    {
-      id: "30",
-      question: 'Which streaming service produced "The Mandalorian"?',
-      options: ["Netflix", "Disney+", "Amazon Prime", "HBO Max"],
-      correctAnswer: 1,
-      explanation: "The Mandalorian is a Disney+ original series.",
-      category: "Streaming",
-      difficulty: "easy",
-    },
-    {
-      id: "31",
-      question: 'Who composed the music for "Star Wars"?',
-      options: [
-        "John Williams",
-        "Hans Zimmer",
-        "Danny Elfman",
-        "Alan Silvestri",
-      ],
-      correctAnswer: 0,
-      explanation: "John Williams composed the iconic Star Wars theme.",
-      category: "Music",
-      difficulty: "easy",
-    },
-    {
-      id: "32",
-      question: 'What year was "Titanic" released?',
-      options: ["1995", "1997", "1999", "2001"],
-      correctAnswer: 1,
-      explanation: "Titanic was released in 1997.",
-      category: "History",
-      difficulty: "easy",
-    },
-    {
-      id: "33",
-      question: "Which movie features the character Hannibal Lecter?",
-      options: [
-        "Silence of the Lambs",
-        "Hannibal",
-        "Red Dragon",
-        "All of the above",
-      ],
-      correctAnswer: 3,
-      explanation: "Hannibal Lecter appears in all three movies.",
-      category: "Characters",
-      difficulty: "medium",
-    },
-    {
-      id: "34",
-      question: 'What is the name of the main character in "Goodfellas"?',
-      options: ["Henry Hill", "Jimmy Conway", "Tommy DeVito", "Paul Cicero"],
-      correctAnswer: 0,
-      explanation: "Henry Hill (played by Ray Liotta) is the main character.",
-      category: "Characters",
-      difficulty: "medium",
-    },
-    {
-      id: "35",
-      question: "Which movie won Best Picture in 2017?",
-      options: ["La La Land", "Moonlight", "Arrival", "Hidden Figures"],
-      correctAnswer: 1,
-      explanation: "Moonlight won Best Picture at the 89th Academy Awards.",
-      category: "Awards",
-      difficulty: "medium",
-    },
-    {
-      id: "36",
-      question: "What is the highest-grossing R-rated movie?",
-      options: ["Deadpool", "Joker", "It", "The Matrix"],
-      correctAnswer: 1,
-      explanation: "Joker (2019) is the highest-grossing R-rated movie.",
-      category: "Box Office",
-      difficulty: "medium",
-    },
-    {
-      id: "37",
-      question: 'Which streaming service produced "Stranger Things"?',
-      options: ["Netflix", "Amazon Prime", "Disney+", "HBO Max"],
-      correctAnswer: 0,
-      explanation: "Stranger Things is a Netflix original series.",
-      category: "Streaming",
-      difficulty: "easy",
-    },
-    {
-      id: "38",
-      question: 'Who directed "The Godfather"?',
-      options: [
-        "Martin Scorsese",
-        "Francis Ford Coppola",
-        "Steven Spielberg",
-        "Alfred Hitchcock",
-      ],
-      correctAnswer: 1,
-      explanation: "Francis Ford Coppola directed The Godfather (1972).",
-      category: "Directors",
-      difficulty: "medium",
-    },
-    {
-      id: "39",
-      question: 'What year was "The Lion King" (live-action) released?',
-      options: ["2017", "2019", "2021", "2023"],
-      correctAnswer: 1,
-      explanation: "The live-action Lion King was released in 2019.",
-      category: "History",
-      difficulty: "easy",
-    },
-    {
-      id: "40",
-      question: "Which movie features the character Rocky Balboa?",
-      options: ["Rocky", "Rambo", "Creed", "Both Rocky and Creed"],
-      correctAnswer: 3,
-      explanation:
-        "Rocky Balboa appears in both the Rocky and Creed franchises.",
-      category: "Characters",
-      difficulty: "medium",
-    },
-    {
-      id: "41",
-      question: 'What is the name of the main character in "The Godfather"?',
-      options: [
-        "Vito Corleone",
-        "Michael Corleone",
-        "Sonny Corleone",
-        "Fredo Corleone",
-      ],
-      correctAnswer: 1,
-      explanation:
-        "Michael Corleone (played by Al Pacino) is the main character.",
-      category: "Characters",
-      difficulty: "medium",
-    },
-    {
-      id: "42",
-      question: "Which movie won Best Picture in 2016?",
-      options: ["La La Land", "Moonlight", "Arrival", "Hidden Figures"],
-      correctAnswer: 0,
-      explanation:
-        "La La Land won Best Picture at the 89th Academy Awards (though Moonlight was the actual winner).",
-      category: "Awards",
-      difficulty: "hard",
-    },
-    {
-      id: "43",
-      question: "What is the highest-grossing movie of 2023?",
-      options: [
-        "Barbie",
-        "Oppenheimer",
-        "Spider-Man: Across the Spider-Verse",
-        "Guardians of the Galaxy Vol. 3",
-      ],
-      correctAnswer: 0,
-      explanation: "Barbie was the highest-grossing movie of 2023.",
-      category: "Box Office",
-      difficulty: "easy",
-    },
-    {
-      id: "44",
-      question: 'Which streaming service produced "The Queen\'s Gambit"?',
-      options: ["Netflix", "Amazon Prime", "Disney+", "HBO Max"],
-      correctAnswer: 0,
-      explanation: "The Queen's Gambit is a Netflix original series.",
-      category: "Streaming",
-      difficulty: "easy",
-    },
-    {
-      id: "45",
-      question: 'Who directed "Inception"?',
-      options: [
-        "Christopher Nolan",
-        "Steven Spielberg",
-        "Martin Scorsese",
-        "Quentin Tarantino",
-      ],
-      correctAnswer: 0,
-      explanation: "Christopher Nolan directed Inception (2010).",
-      category: "Directors",
-      difficulty: "easy",
-    },
-    {
-      id: "46",
-      question: 'What year was "Avatar" released?',
-      options: ["2007", "2009", "2011", "2013"],
-      correctAnswer: 1,
-      explanation: "Avatar was released in 2009.",
-      category: "History",
-      difficulty: "easy",
-    },
-    {
-      id: "47",
-      question: "Which movie features the character Indiana Jones?",
-      options: [
-        "Raiders of the Lost Ark",
-        "Indiana Jones and the Temple of Doom",
-        "Indiana Jones and the Last Crusade",
-        "All of the above",
-      ],
-      correctAnswer: 3,
-      explanation: "Indiana Jones appears in all three original movies.",
-      category: "Characters",
-      difficulty: "medium",
-    },
-    {
-      id: "48",
-      question: 'What is the name of the main character in "Casino"?',
-      options: [
-        "Sam Rothstein",
-        "Nicky Santoro",
-        "Ginger McKenna",
-        "Lester Diamond",
-      ],
-      correctAnswer: 0,
-      explanation:
-        "Sam Rothstein (played by Robert De Niro) is the main character.",
-      category: "Characters",
-      difficulty: "medium",
-    },
-    {
-      id: "49",
-      question: "Which movie won Best Picture in 2015?",
-      options: ["Birdman", "Boyhood", "The Grand Budapest Hotel", "Whiplash"],
-      correctAnswer: 0,
-      explanation: "Birdman won Best Picture at the 87th Academy Awards.",
-      category: "Awards",
-      difficulty: "medium",
-    },
-    {
-      id: "50",
-      question: "What is the highest-grossing movie of all time (unadjusted)?",
-      options: [
-        "Avatar",
-        "Avengers: Endgame",
-        "Titanic",
-        "Star Wars: The Force Awakens",
-      ],
-      correctAnswer: 0,
-      explanation:
-        "Avatar (2009) holds the record for highest-grossing movie worldwide.",
-      category: "Box Office",
-      difficulty: "easy",
-    },
-  ];
+  // Note: Hardcoded questions moved to module level (triviaQuestions.ts) to prevent recreation
+  // Using imported constant instead
+  const sampleQuestions = SAMPLE_TRIVIA_QUESTIONS;
 
-  // Get today's date in YYYY-MM-DD format
-  const getTodayString = () => {
-    return new Date().toISOString().slice(0, 10);
-  };
-
-  // Get today's questions based on date (deterministic rotation)
-  // For pro users: returns 10 questions for the current game (game 1-5)
-  // For free users: returns 5 questions (single game)
+  // Get today's questions based on UTC date (deterministic rotation)
+  // Regular: 10 questions per day (game 1 only)
+  // Pro: 30 questions per day (games 1-3, 10 questions each)
+  // ALL users get the same questions in the same order (Regular gets first 10, Pro gets all 30)
+  // Questions rotate on a 180-day (6 month) cycle to prevent repeats
+  // Uses UTC date so all users globally share the same daily content
   const getTodaysQuestions = (
     isPro: boolean = false,
     gameNumber: number = 1
   ) => {
-    const today = getTodayString();
-    const dateSeed = today.split("-").join("");
-    const seedNumber = parseInt(dateSeed, 10);
+    const today = getDailySeedDate(); // UTC-based date for consistent daily content
+    
+    // Calculate days since epoch (Jan 1, 2000) for 180-day cycle
+    const epochDate = new Date('2000-01-01');
+    const currentDate = new Date(today + 'T00:00:00Z');
+    const daysSinceEpoch = Math.floor((currentDate.getTime() - epochDate.getTime()) / (1000 * 60 * 60 * 24));
+    const cycleDay = daysSinceEpoch % 180; // 180-day (6 month) cycle
 
-    // Use a simpler rotation - cycle through questions every 3 days
-    const daysSinceEpoch = Math.floor(seedNumber / 10000); // Roughly days since 2000
-    const cycleDay = daysSinceEpoch % 3; // 0, 1, or 2
+    // Regular: 10 questions per day (1 game)
+    // Pro: 30 questions per day (3 games of 10 questions each)
+    const questionsPerGame = 10;
+    const totalQuestionsPerDay = 30; // Pro users get 30, Regular gets first 10
 
-    // Pro users: 10 questions per game (3 games = 30 total)
-    // Free users: 5 questions per day
-    const questionsPerGame = isPro ? 10 : 5;
-    const totalQuestionsPerDay = isPro ? 50 : 5;
-
-    const todaysQuestions = [];
+    const todaysQuestions: TriviaQuestion[] = [];
+    const usedQuestionIds = new Set<string>(); // Track used questions to prevent duplicates within this game
     // Calculate starting index for this game
+    // Regular: gameNumber = 1, startIndex = 0 (questions 0-9)
+    // Pro: gameNumber 1-3, startIndex = (gameNumber - 1) * 10 (questions 0-9, 10-19, 20-29)
     const startIndex = isPro ? (gameNumber - 1) * 10 : 0;
 
     for (let i = 0; i < questionsPerGame; i++) {
       const globalIndex = startIndex + i;
-      const questionIndex =
-        (cycleDay * totalQuestionsPerDay + globalIndex) %
-        sampleQuestions.length;
-      todaysQuestions.push(sampleQuestions[questionIndex]);
+      // Calculate base index deterministically: cycleDay * 30 (questions per day) + globalIndex
+      // This ensures all users get the same 30 questions per day, and no repeats for 180 days
+      const baseIndex = (cycleDay * totalQuestionsPerDay + globalIndex) % sampleQuestions.length;
+      
+      // Find next available question that hasn't been used in this game
+      let questionIndex = baseIndex;
+      let attempts = 0;
+      const maxAttempts = sampleQuestions.length; // Safety limit - should never need more than total questions
+      
+      while (usedQuestionIds.has(sampleQuestions[questionIndex].id) && attempts < maxAttempts) {
+        // Try next question in sequence, wrapping around
+        questionIndex = (questionIndex + 1) % sampleQuestions.length;
+        attempts++;
+      }
+      
+      // If we've exhausted all questions (shouldn't happen with 50 questions and 10 per game)
+      if (attempts >= maxAttempts) {
+        console.warn(`⚠️ Could not find unique question after ${attempts} attempts. Using question at index ${questionIndex}`);
+        // Reset and try again from start - this should never happen but provides safety
+        usedQuestionIds.clear();
+        questionIndex = baseIndex;
+      }
+      
+      const selectedQuestion = sampleQuestions[questionIndex];
+      todaysQuestions.push(selectedQuestion);
+      usedQuestionIds.add(selectedQuestion.id);
     }
 
+    const totalForUser = isPro ? 30 : 10;
     console.log(
-      `🎯 Game ${gameNumber} questions (${isPro ? "Pro" : "Free"} user, cycle day ${cycleDay}):`,
+      `🎯 Game ${gameNumber} questions (${isPro ? "Pro" : "Regular"} user, cycle day ${cycleDay}, questions ${startIndex + 1}-${startIndex + questionsPerGame} of ${totalForUser}):`,
       todaysQuestions.map((q) => q.id)
     );
     return todaysQuestions;
   };
 
-  // Get games completed today from localStorage
+  // Get games completed today from localStorage (uses UTC date for consistency)
   const getGamesCompletedToday = (): number => {
     try {
-      const today = getTodayString();
-      const key = `flicklet:trivia:games:${today}`;
+      const today = getDailySeedDate(); // UTC-based date
+      const key = getTriviaGamesCompletedKey(today);
       const completed = localStorage.getItem(key);
       return completed ? parseInt(completed, 10) : 0;
     } catch {
@@ -678,14 +120,19 @@ export default function TriviaGame({
     }
   };
 
-  // Save games completed today to localStorage
+  // Save games completed today to localStorage (uses UTC date for consistency)
   const saveGamesCompletedToday = (count: number): void => {
     try {
-      const today = getTodayString();
-      const key = `flicklet:trivia:games:${today}`;
+      const today = getDailySeedDate(); // UTC-based date
+      const key = getTriviaGamesCompletedKey(today);
       localStorage.setItem(key, String(count));
     } catch (error) {
-      console.warn("Failed to save games completed:", error);
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.error("❌ localStorage quota exceeded. Cannot save games completed count.");
+        setErrorMessage("Storage full. Game progress may not be saved.");
+      } else {
+        console.warn("Failed to save games completed:", error);
+      }
     }
   };
 
@@ -730,136 +177,194 @@ export default function TriviaGame({
       };
 
       localStorage.setItem("flicklet-data", JSON.stringify(updatedData));
-      localStorage.setItem("trivia:stats", JSON.stringify(newStats));
+      localStorage.setItem(getTriviaStatsKey(), JSON.stringify(newStats));
 
       // Notify listeners
       window.dispatchEvent(new CustomEvent("trivia:statsUpdated"));
 
       console.log("💾 Trivia stats saved:", newStats);
     } catch (error) {
-      console.error("Failed to save trivia stats:", error);
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.error("❌ localStorage quota exceeded. Cannot save trivia stats.");
+        setErrorMessage("Storage full. Stats may not be saved.");
+      } else {
+        console.error("Failed to save trivia stats:", error);
+      }
     }
   };
 
-  // Check if user is Pro and initialize games completed
+  // Initialize games completed - Regular: 1 game (10 questions), Pro: 3 games (30 questions)
+  // Combined with question loading to avoid race condition
   useEffect(() => {
-    setIsProUser(settings.pro.isPro);
-    const completed = getGamesCompletedToday();
-    setGamesCompletedToday(completed);
-    // Set current game to next game to play (completed + 1, or 1 if not pro)
-    if (settings.pro.isPro) {
-      const nextGame = Math.min(completed + 1, 3); // Max 3 games for Pro
-      setCurrentGame(nextGame);
-      console.log(
-        "🎯 Pro user status:",
-        settings.pro.isPro,
-        "Games completed today:",
-        completed,
-        "Starting game:",
-        nextGame
-      );
-    } else {
-      setCurrentGame(1);
-      console.log("🎯 Free user, starting game 1");
-    }
-  }, [settings.pro]);
-
-  // Load questions from API (with fresh content for testing)
-  // For pro users: loads 10 questions for the current game
-  // For free users: loads 5 questions
-  useEffect(() => {
-    const loadQuestions = async () => {
-      try {
-        const gameNumber = isProUser ? currentGame : 1;
+    const initializeAndLoad = async () => {
+      setIsProUser(settings.pro.isPro);
+      const completed = getGamesCompletedToday();
+      setGamesCompletedToday(completed);
+      
+      // Set current game to next game to play
+      // Regular: 1 game per day (10 questions)
+      // Pro: 3 games per day (30 questions)
+      let gameNumber: number;
+      if (settings.pro.isPro) {
+        gameNumber = Math.min(completed + 1, 3); // Max 3 games for Pro
+        setCurrentGame(gameNumber);
         console.log(
-          `🧠 Loading trivia questions for ${isProUser ? "Pro" : "Free"} user, Game ${gameNumber}...`
+          "🎯 Pro user status:",
+          "Games completed today:",
+          completed,
+          "Starting game:",
+          gameNumber,
+          "(Pro: 3 games per day - 30 questions total)"
         );
+      } else {
+        gameNumber = 1; // Regular users get 1 game per day
+        setCurrentGame(gameNumber);
+        console.log(
+          "🎯 Regular user status:",
+          "Games completed today:",
+          completed,
+          "Starting game:",
+          gameNumber,
+          "(Regular: 1 game per day - 10 questions)"
+        );
+      }
 
-        // Use cached trivia to avoid rate limits
-        const apiQuestions = await getCachedTrivia();
-
-        let formattedQuestions;
-        const questionsNeeded = isProUser ? 10 : 5;
-
-        if (apiQuestions && apiQuestions.length > 0) {
-          // Convert API format to our format
-          // For pro users, take 10 questions starting from the appropriate offset for this game
-          const startIndex = isProUser
-            ? ((gameNumber - 1) * 10) % apiQuestions.length
-            : 0;
-          const selectedApiQuestions = apiQuestions.slice(
-            startIndex,
-            startIndex + questionsNeeded
+      // Load questions immediately after setting game number
+      if (gameState === "loading") {
+        try {
+          console.log(
+            `🧠 Loading trivia questions for Game ${gameNumber} (${settings.pro.isPro ? "Pro: 30 questions/day" : "Regular: 10 questions/day"})...`
           );
 
-          formattedQuestions = selectedApiQuestions.map((q, index) => ({
-            id: `fresh_${startIndex + index}`,
-            question: q.question,
-            options: q.options,
-            correctAnswer: q.correctAnswer,
-            explanation: q.explanation || undefined,
-            category: q.category,
-            difficulty: q.difficulty,
-          }));
+          // Use cached trivia - Regular gets 10 questions, Pro gets 30 questions
+          // All users get the same questions (Regular gets first 10, Pro gets all 30)
+          const apiQuestions = await getCachedTrivia(gameNumber, settings.pro.isPro);
 
-          // If we don't have enough from API, supplement with hardcoded questions
-          if (formattedQuestions.length < questionsNeeded) {
-            const additionalNeeded =
-              questionsNeeded - formattedQuestions.length;
-            const additionalQuestions = getTodaysQuestions(
-              isProUser,
-              gameNumber
-            )
-              .slice(
-                formattedQuestions.length,
-                formattedQuestions.length + additionalNeeded
-              )
+          let formattedQuestions: TriviaQuestion[] = [];
+          const questionsNeeded = 10; // 10 questions per game
+
+          if (apiQuestions && apiQuestions.length > 0) {
+            // Convert API format to our format
+            // Regular users (gameNumber = 1): use questions 0-9
+            // Pro users: gameNumber 1-3, use questions 0-9, 10-19, 20-29 respectively
+            const startIndex = settings.pro.isPro ? (gameNumber - 1) * 10 : 0;
+            const endIndex = startIndex + questionsNeeded;
+            formattedQuestions = apiQuestions.slice(startIndex, endIndex).map((q, index) => ({
+              id: `api_${gameNumber}_${index}`,
+              question: q.question,
+              options: q.options,
+              correctAnswer: q.correctAnswer,
+              explanation: q.explanation || undefined,
+              category: q.category,
+              difficulty: q.difficulty,
+            }));
+
+            // If we don't have enough from API, supplement with hardcoded questions
+            if (formattedQuestions.length < questionsNeeded) {
+              const additionalNeeded =
+                questionsNeeded - formattedQuestions.length;
+              
+              // Track used question text to prevent duplicates
+              const usedQuestionTexts = new Set(
+                formattedQuestions.map(q => q.question.toLowerCase().trim())
+              );
+              
+              // Get hardcoded questions for this game (same questions for all users)
+              const allHardcodedQuestions = getTodaysQuestions(settings.pro.isPro, gameNumber);
+              
+              // Filter out questions that match API questions by text content
+              const availableHardcoded = allHardcodedQuestions.filter(
+                q => !usedQuestionTexts.has(q.question.toLowerCase().trim())
+              );
+              
+              // Take only what we need
+              const additionalQuestions = availableHardcoded
+                .slice(0, additionalNeeded)
+                .map((q) => ({
+                  ...q,
+                  explanation: q.explanation || undefined,
+                }));
+              
+              formattedQuestions.push(...additionalQuestions);
+              
+              // If still not enough, fill with any remaining hardcoded questions (shouldn't happen)
+              if (formattedQuestions.length < questionsNeeded) {
+                const stillNeeded = questionsNeeded - formattedQuestions.length;
+                const remaining = allHardcodedQuestions
+                  .filter(q => !formattedQuestions.some(fq => fq.question.toLowerCase().trim() === q.question.toLowerCase().trim()))
+                  .slice(0, stillNeeded);
+                formattedQuestions.push(...remaining.map(q => ({
+                  ...q,
+                  explanation: q.explanation || undefined,
+                })));
+              }
+            }
+          } else {
+            // No API questions available, use fallback (same questions for all users)
+            console.log("📚 Using fallback trivia questions");
+            formattedQuestions = getTodaysQuestions(settings.pro.isPro, gameNumber)
+              .slice(0, questionsNeeded)
               .map((q) => ({
                 ...q,
                 explanation: q.explanation || undefined,
               }));
-            formattedQuestions.push(...additionalQuestions);
           }
-        } else {
-          // No API questions available, use fallback
-          console.log("📚 Using fallback trivia questions");
-          formattedQuestions = getTodaysQuestions(isProUser, gameNumber).map(
-            (q) => ({
+          
+          // Final duplicate check - ensure no duplicates in final list
+          const finalQuestions: TriviaQuestion[] = [];
+          const seenQuestions = new Set<string>();
+          for (const q of formattedQuestions) {
+            const questionKey = q.question.toLowerCase().trim();
+            if (!seenQuestions.has(questionKey)) {
+              seenQuestions.add(questionKey);
+              finalQuestions.push(q);
+            }
+          }
+          
+          // If we lost questions due to duplicates, fill from hardcoded pool
+          if (finalQuestions.length < questionsNeeded) {
+            const allHardcoded = getTodaysQuestions(settings.pro.isPro, gameNumber);
+            const needed = questionsNeeded - finalQuestions.length;
+            const additional = allHardcoded
+              .filter(q => !seenQuestions.has(q.question.toLowerCase().trim()))
+              .slice(0, needed);
+            finalQuestions.push(...additional.map(q => ({
               ...q,
               explanation: q.explanation || undefined,
-            })
-          );
-        }
+            })));
+          }
+          
+          formattedQuestions = finalQuestions.slice(0, questionsNeeded);
 
-        console.log(
-          `✅ Loaded ${formattedQuestions.length} trivia questions for Game ${gameNumber} (${isProUser ? "Pro" : "Free"} user)`
-        );
-        setQuestions(formattedQuestions);
-        setGameState("playing");
-        setErrorMessage(null);
-        // Initialize option refs array
-        optionRefs.current = new Array(
-          formattedQuestions[0]?.options.length || 4
-        ).fill(null);
-      } catch (error) {
-        console.error("❌ Failed to load trivia questions:", error);
-        setErrorMessage(
-          "Failed to load questions from server. Using backup questions."
-        );
-        // Fallback to hardcoded questions
-        const fallbackQuestions = getTodaysQuestions(isProUser, currentGame);
-        setQuestions(fallbackQuestions);
-        setGameState("playing");
-        optionRefs.current = new Array(
-          fallbackQuestions[0]?.options.length || 4
-        ).fill(null);
+          console.log(
+            `✅ Loaded ${formattedQuestions.length} trivia questions for Game ${gameNumber} (${settings.pro.isPro ? "Pro: 30 questions/day" : "Regular: 10 questions/day"})`
+          );
+          setQuestions(formattedQuestions);
+          setGameState("playing");
+          setErrorMessage(null);
+          // Initialize option refs array
+          optionRefs.current = new Array(
+            formattedQuestions[0]?.options.length || 4
+          ).fill(null);
+        } catch (error) {
+          console.error("❌ Failed to load trivia questions:", error);
+          setErrorMessage(
+            "Failed to load questions from server. Using backup questions."
+          );
+          // Fallback to hardcoded questions (same questions for all users)
+          const fallbackQuestions = getTodaysQuestions(settings.pro.isPro, gameNumber)
+            .slice(0, 10); // Always 10 questions per game
+          setQuestions(fallbackQuestions);
+          setGameState("playing");
+          optionRefs.current = new Array(
+            fallbackQuestions[0]?.options.length || 4
+          ).fill(null);
+        }
       }
     };
 
-    if (gameState === "loading") {
-      loadQuestions();
-    }
-  }, [gameState, isProUser, currentGame]);
+    initializeAndLoad();
+  }, [settings.pro, gameState]); // Include settings.pro to react to Pro status changes
 
   const handleAnswerSelect = useCallback(
     (answerIndex: number) => {
@@ -893,7 +398,10 @@ export default function TriviaGame({
         optionRefs.current[0]?.focus();
       }, 100);
     } else {
-      // Game completed - update stats
+      // Game completed - set state first, then update stats
+      setGameState("completed");
+      
+      // Update stats after state is set to completed
       updateTriviaStats(score, questions.length);
 
       // Increment games completed today
@@ -901,7 +409,6 @@ export default function TriviaGame({
       setGamesCompletedToday(newGamesCompleted);
       saveGamesCompletedToday(newGamesCompleted);
 
-      setGameState("completed");
       onGameComplete?.(score, questions.length);
     }
   }, [
@@ -972,7 +479,9 @@ export default function TriviaGame({
 
   // Start next game (for pro users with games remaining)
   const handleNextGame = useCallback(() => {
-    if (isProUser && gamesCompletedToday < 3) {
+    // Pro users get 3 games per day, Regular users get 1 game per day
+    const maxGames = isProUser ? 3 : 1;
+    if (gamesCompletedToday < maxGames) {
       const nextGame = gamesCompletedToday + 1;
       setCurrentGame(nextGame);
       setCurrentQuestionIndex(0);
@@ -1026,15 +535,15 @@ export default function TriviaGame({
 
   if (gameState === "completed") {
     const percentage = Math.round((score / questions.length) * 100);
-    const canPlayNextGame = isProUser && gamesCompletedToday < 3;
+    const canPlayNextGame = isProUser && gamesCompletedToday < 3; // Only Pro users can play multiple games
     const gamesRemaining = isProUser ? 3 - gamesCompletedToday : 0;
 
     return (
       <div className="trivia-game" role="region" aria-label="Game completed">
         <div className="trivia-completed">
-          <h3>🎉 Game {gamesCompletedToday} Complete!</h3>
+          <h3>🎉 Game {currentGame} Complete!</h3>
           {isProUser && (
-            <p className="game-progress">Game {gamesCompletedToday} of 3</p>
+            <p className="game-progress">Game {currentGame} of 3</p>
           )}
           <div className="score-display">
             <div
@@ -1104,7 +613,7 @@ export default function TriviaGame({
           {!isProUser && (
             <div className="pro-upsell">
               <p>
-                🔒 Get Pro for 2 more games! Upgrade to play 3 games per day
+                🔒 Get Pro for 2 more games! Upgrade to play 3 games per day (10 questions each)
                 instead of 1.
               </p>
             </div>
@@ -1141,6 +650,13 @@ export default function TriviaGame({
 
   return (
     <div className="trivia-game" role="main" aria-label="Trivia game">
+      {/* Offline indicator */}
+      {!isOnline && (
+        <div className="trivia-error-banner" role="alert" aria-live="polite">
+          <span className="error-icon" aria-hidden="true">📡</span>
+          <span>You&apos;re offline. Using cached questions if available.</span>
+        </div>
+      )}
       {/* Error message banner */}
       {errorMessage && (
         <div className="trivia-error-banner" role="alert" aria-live="polite">
@@ -1151,7 +667,7 @@ export default function TriviaGame({
         </div>
       )}
 
-      {/* Game progress indicator (for pro users) */}
+      {/* Game progress indicator (Pro users only) */}
       {isProUser && (
         <div
           className="trivia-game-header"

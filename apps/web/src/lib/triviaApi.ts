@@ -3,6 +3,7 @@
 // Daily content is keyed off UTC date so users share the same daily content globally
 
 import { getDailySeedDate } from './dailySeed';
+import { getTriviaDailyKey, CACHE_VERSIONS } from './cacheKeys';
 
 interface TriviaApiResponse {
   question: string;
@@ -13,8 +14,14 @@ interface TriviaApiResponse {
   difficulty: 'easy' | 'medium' | 'hard';
 }
 
+interface CachedTrivia {
+  date: string;
+  questions: TriviaApiResponse[];
+  version?: string; // Cache version for invalidation
+}
+
 // Cache key for localStorage
-const CACHE_KEY = 'flicklet:daily-trivia';
+// Cache key is now centralized in cacheKeys.ts
 
 /**
  * Deterministic shuffle using seed
@@ -205,7 +212,7 @@ async function fetchTriviaFromApi(seed?: number): Promise<TriviaApiResponse[]> {
  */
 export function clearTriviaCache(): void {
   try {
-    localStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem(getTriviaDailyKey());
     console.log('🗑️ Cleared trivia cache');
   } catch (error) {
     console.warn('Failed to clear trivia cache:', error);
@@ -217,31 +224,48 @@ export function clearTriviaCache(): void {
  * Daily content is keyed off UTC date so users share the same daily content globally
  * @param gameNumber Optional game number (1-3) for Pro users to get deterministic question sets
  */
-export async function getCachedTrivia(gameNumber?: number): Promise<TriviaApiResponse[]> {
+export async function getCachedTrivia(gameNumber?: number, isPro?: boolean): Promise<TriviaApiResponse[]> {
   const today = getDailySeedDate(); // UTC-based date for consistent daily content
   
   try {
     // Try to get from cache
-    const cached = localStorage.getItem(CACHE_KEY);
+    const cached = localStorage.getItem(getTriviaDailyKey());
     if (cached) {
-      const parsed = JSON.parse(cached);
+      const parsed: CachedTrivia = JSON.parse(cached);
       const cacheDate = parsed.date;
       
-      // Use cache if it's from today
+      // Use cache if it's from today and has at least 30 questions
       if (cacheDate === today) {
-        console.log('✅ Using cached trivia questions');
-        const questions = parsed.questions || [];
-        
-        // For Pro users with gameNumber, return specific slice
-        if (gameNumber !== undefined && gameNumber >= 1 && gameNumber <= 3) {
-          const startIndex = (gameNumber - 1) * 10;
-          const endIndex = startIndex + 10;
-          const gameQuestions = questions.slice(startIndex, endIndex);
-          console.log(`🎯 Returning questions for game ${gameNumber}: ${gameQuestions.length} questions`);
-          return gameQuestions;
+        // Validate cache version
+        if (parsed.version !== CACHE_VERSIONS.TRIVIA_DAILY_QUESTIONS) {
+          console.warn('🔄 Cache version mismatch, clearing old cache...');
+          localStorage.removeItem(getTriviaDailyKey());
+          // Fall through to refetch
+        } else {
+          const questions = parsed.questions || [];
+          
+          // Validate cache has at least 30 questions (all users need 30 per day)
+          if (questions.length >= 30) {
+          console.log(`✅ Using cached trivia questions (${questions.length} questions)`);
+          
+          // Regular users: 10 questions (gameNumber = 1, questions 0-9)
+          // Pro users: 30 questions (gameNumber 1-3, questions 0-9, 10-19, 20-29)
+          // All users get the same questions (Regular gets first 10, Pro gets all 30)
+          if (gameNumber !== undefined && gameNumber >= 1 && gameNumber <= 3) {
+            const startIndex = isPro ? (gameNumber - 1) * 10 : 0; // Regular always starts at 0
+            const endIndex = startIndex + 10;
+            const gameQuestions = questions.slice(startIndex, endIndex);
+            console.log(`🎯 Returning questions for game ${gameNumber} (${isPro ? "Pro" : "Regular"}): ${gameQuestions.length} questions`);
+            return gameQuestions;
+          }
+          
+          // Return questions based on Pro status if no gameNumber specified
+          return isPro ? questions.slice(0, 30) : questions.slice(0, 10);
+          } else {
+            console.warn(`⚠️ Cached trivia has only ${questions.length} questions, need 30. Refetching...`);
+            // Cache has insufficient questions, will refetch below
+          }
         }
-        
-        return questions;
       }
     }
   } catch (error) {
@@ -250,12 +274,57 @@ export async function getCachedTrivia(gameNumber?: number): Promise<TriviaApiRes
   
   // Cache miss or expired - fetch from API
   // Use UTC date as seed for deterministic question ordering (ensures global consistency)
+  // ALL users get 30 questions per day (same for everyone)
   const dateSeed = parseInt(today.replace(/-/g, ''), 10);
   console.log('🔄 Fetching trivia from API with UTC seed:', dateSeed);
   
-  // Fetch from multiple endpoints to get 30 questions (3 games × 10 questions for Pro users)
+  // Fetch from multiple endpoints to get 30 questions (all users get 30 questions per day)
   const allApiQuestions: TriviaApiResponse[] = [];
-  const questionsNeeded = 30; // Max needed for Pro users
+  const questionsNeeded = 30; // All users get 30 questions per day
+  
+  /**
+   * Fetch with retry logic (exponential backoff)
+   * @param url API URL
+   * @param maxRetries Maximum number of retry attempts
+   * @param initialDelay Initial delay in milliseconds
+   */
+  const fetchWithRetry = async (url: string, maxRetries: number = 3, initialDelay: number = 1000): Promise<Response> => {
+    let lastError: Error | null = null;
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Flicklet/1.0'
+          }
+        });
+
+        if (!response.ok) {
+          // Don't retry on 4xx errors (client errors)
+          if (response.status >= 400 && response.status < 500) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          // Retry on 5xx errors (server errors) and network errors
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        return response;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        
+        // Don't retry on last attempt
+        if (attempt < maxRetries) {
+          const delay = initialDelay * Math.pow(2, attempt); // Exponential backoff
+          console.warn(`⚠️ API request failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+    
+    throw lastError || new Error('Failed to fetch after retries');
+  };
   
   // Try each API endpoint and accumulate questions until we have enough
   for (const api of TRIVIA_APIS) {
@@ -263,18 +332,7 @@ export async function getCachedTrivia(gameNumber?: number): Promise<TriviaApiRes
     
     try {
       console.log(`🧠 Trying ${api.name} for additional questions...`);
-      const response = await fetch(api.url, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Flicklet/1.0'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
+      const response = await fetchWithRetry(api.url);
       const data = await response.json();
       const questions = api.parser(data, dateSeed);
       
@@ -289,7 +347,7 @@ export async function getCachedTrivia(gameNumber?: number): Promise<TriviaApiRes
         console.log(`✅ Added ${questions.length} questions from ${api.name}, total: ${allApiQuestions.length}`);
       }
     } catch (error) {
-      console.warn(`❌ ${api.name} failed:`, error);
+      console.warn(`❌ ${api.name} failed after retries:`, error);
     }
   }
   
@@ -297,31 +355,43 @@ export async function getCachedTrivia(gameNumber?: number): Promise<TriviaApiRes
   
   if (apiQuestions && apiQuestions.length > 0) {
     if (apiQuestions.length < questionsNeeded) {
-      console.warn(`⚠️ Only got ${apiQuestions.length} questions, need ${questionsNeeded} for Pro users`);
+      console.warn(`⚠️ Only got ${apiQuestions.length} questions, need ${questionsNeeded} for all users`);
       // Will supplement with fallback questions if needed
     }
     
-    // Save to cache
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify({
-        date: today,
-        questions: apiQuestions
-      }));
-      console.log('💾 Cached trivia questions');
-    } catch (error) {
-      console.warn('Failed to cache trivia:', error);
+    // Save to cache (only cache if we have at least 30 questions)
+    if (apiQuestions.length >= 30) {
+      try {
+        localStorage.setItem(getTriviaDailyKey(), JSON.stringify({
+          date: today,
+          questions: apiQuestions.slice(0, 30), // Ensure exactly 30 questions cached
+          version: CACHE_VERSIONS.TRIVIA_DAILY_QUESTIONS
+        }));
+        console.log('💾 Cached trivia questions (30 questions for all users)');
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+          console.error("❌ localStorage quota exceeded. Cannot cache trivia questions.");
+        } else {
+          console.warn('Failed to cache trivia:', error);
+        }
+      }
+    } else {
+      console.warn(`⚠️ Only have ${apiQuestions.length} questions, not caching (need 30)`);
     }
     
-    // For Pro users with gameNumber, return specific slice
+    // Regular users: 10 questions (gameNumber = 1, questions 0-9)
+    // Pro users: 30 questions (gameNumber 1-3, questions 0-9, 10-19, 20-29)
+    // All users get the same questions (Regular gets first 10, Pro gets all 30)
     if (gameNumber !== undefined && gameNumber >= 1 && gameNumber <= 3) {
-      const startIndex = (gameNumber - 1) * 10;
+      const startIndex = isPro ? (gameNumber - 1) * 10 : 0; // Regular always starts at 0
       const endIndex = startIndex + 10;
       const gameQuestions = apiQuestions.slice(startIndex, endIndex);
-      console.log(`🎯 Returning questions for game ${gameNumber}: ${gameQuestions.length} questions`);
+      console.log(`🎯 Returning questions for game ${gameNumber} (${isPro ? "Pro" : "Regular"}): ${gameQuestions.length} questions`);
       return gameQuestions;
     }
     
-    return apiQuestions;
+    // Return questions based on Pro status if no gameNumber specified
+    return isPro ? apiQuestions.slice(0, 30) : apiQuestions.slice(0, 10);
   }
   
   console.warn('⚠️ API returned no questions, falling back to hardcoded questions');

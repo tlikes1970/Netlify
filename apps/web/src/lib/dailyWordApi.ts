@@ -3,6 +3,7 @@
 // Daily content is keyed off UTC date so users share the same daily content globally
 
 import { getDailySeedDate } from './dailySeed';
+import { getFlickWordDailyKey, CACHE_VERSIONS } from './cacheKeys';
 
 interface WordApiResponse {
   word: string;
@@ -17,12 +18,10 @@ interface CachedWord {
   definition?: string;
   difficulty?: string;
   timestamp: number;
+  version?: string; // Cache version for invalidation
 }
 
 // Module-level cache for accepted words list (deprecated - using commonWords.ts now)
-
-// Cache key for localStorage
-const CACHE_KEY = 'flicklet:daily-word';
 
 // API endpoints to try (in order of preference)
 const WORD_APIS: Array<{
@@ -70,7 +69,7 @@ export async function getTodaysWord(gameNumber: number = 1): Promise<WordApiResp
   }
   
   // Cache key includes game number for Pro users (uses UTC date for consistency)
-  const gameCacheKey = gameNumber === 1 ? CACHE_KEY : `${CACHE_KEY}:game${gameNumber}`;
+  const gameCacheKey = getFlickWordDailyKey(gameNumber);
   
   // Check cache first, but validate it's not excluded
   try {
@@ -78,27 +77,29 @@ export async function getTodaysWord(gameNumber: number = 1): Promise<WordApiResp
     if (cached) {
       const parsedCache: CachedWord = JSON.parse(cached);
       if (isCachedWordValid(parsedCache)) {
-        // Validate cached word is not in exclusion list
-        const { isExcluded } = await import('./words/excludedWords');
-        const cachedWordLower = parsedCache.word.toLowerCase();
-        
-        if (isExcluded(cachedWordLower)) {
-          console.warn(`🚫 Cached word "${parsedCache.word}" is now excluded, clearing cache...`);
+        // Validate cache version
+        if (parsedCache.version !== CACHE_VERSIONS.FLICKWORD_DAILY_WORD) {
+          console.warn('🔄 Cache version mismatch, clearing old cache...');
           localStorage.removeItem(gameCacheKey);
           // Fall through to get a new word
-        } else if (!parsedCache.date || typeof parsedCache.word !== 'string' || parsedCache.word.length !== 5) {
-          // MIGRATION: If cache has old format or invalid data, clear it
-          console.warn('🔄 Invalid cache format detected, clearing...');
-          localStorage.removeItem(gameCacheKey);
-          // Fall through to get a new word
-        } else {
-          console.log(`📦 Using cached word for ${today}, game ${gameNumber}: ${parsedCache.word}`);
-          return {
-            word: parsedCache.word,
-            date: parsedCache.date,
-            definition: parsedCache.definition,
-            difficulty: parsedCache.difficulty as any
-          };
+        } else if (parsedCache.date && typeof parsedCache.word === 'string' && parsedCache.word.length === 5) {
+          // Validate cached word is not in exclusion list
+          const { isExcluded } = await import('./words/excludedWords');
+          const cachedWordLower = parsedCache.word.toLowerCase();
+          
+          if (isExcluded(cachedWordLower)) {
+            console.warn(`🚫 Cached word "${parsedCache.word}" is now excluded, clearing cache...`);
+            localStorage.removeItem(gameCacheKey);
+            // Fall through to get a new word
+          } else {
+            console.log(`📦 Using cached word for ${today}, game ${gameNumber}: ${parsedCache.word}`);
+            return {
+              word: parsedCache.word,
+              date: parsedCache.date,
+              definition: parsedCache.definition,
+              difficulty: parsedCache.difficulty as any
+            };
+          }
         }
       }
     }
@@ -170,11 +171,19 @@ async function getDeterministicWord(date: string, gameNumber: number = 1): Promi
       if (validWords.length > 0) {
         // Use UTC date + gameNumber as seed for deterministic word selection
         // This ensures different words for each game number on the same UTC day
-        const dateSeed = date.split('-').join('');
-        const seedNumber = parseInt(dateSeed, 10);
-        // Add gameNumber to seed to get different words for each game
-        const combinedSeed = seedNumber + (gameNumber - 1) * 1000;
-        const wordIndex = combinedSeed % validWords.length;
+        // All users get the same 3 words per day (gameNumber 1, 2, 3)
+        // Words rotate on a 180-day (6 month) cycle to prevent repeats
+        
+        // Calculate days since epoch (Jan 1, 2000) for 180-day cycle
+        const epochDate = new Date('2000-01-01');
+        const currentDate = new Date(date + 'T00:00:00Z');
+        const daysSinceEpoch = Math.floor((currentDate.getTime() - epochDate.getTime()) / (1000 * 60 * 60 * 24));
+        const cycleDay = daysSinceEpoch % 180; // 180-day (6 month) cycle
+        
+        // Calculate word index: cycleDay * 3 (for 3 words per day) + gameNumber - 1
+        // This ensures all users get the same 3 words per day, and no repeats for 180 days
+        const dailyWordIndex = cycleDay * 3 + (gameNumber - 1);
+        const wordIndex = dailyWordIndex % validWords.length;
         const selectedWord = validWords[wordIndex].toUpperCase();
         
         // Double-check the selected word is not excluded (safety check)
@@ -212,13 +221,20 @@ async function getDeterministicWord(date: string, gameNumber: number = 1): Promi
       
       if (validWords.length > 0) {
         // Use UTC date + gameNumber as seed for deterministic word selection
-        const dateSeed = date.split('-').join('');
-        const seedNumber = parseInt(dateSeed, 10);
-        // Add gameNumber to seed to get different words for each game
-        const combinedSeed = seedNumber + (gameNumber - 1) * 1000;
-        const wordIndex = combinedSeed % validWords.length;
+        // All users get the same 3 words per day (gameNumber 1, 2, 3)
+        // Words rotate on a 180-day (6 month) cycle to prevent repeats
+        
+        // Calculate days since epoch (Jan 1, 2000) for 180-day cycle
+        const epochDate = new Date('2000-01-01');
+        const currentDate = new Date(date + 'T00:00:00Z');
+        const daysSinceEpoch = Math.floor((currentDate.getTime() - epochDate.getTime()) / (1000 * 60 * 60 * 24));
+        const cycleDay = daysSinceEpoch % 180; // 180-day (6 month) cycle
+        
+        // Calculate word index: cycleDay * 3 (for 3 words per day) + gameNumber - 1
+        const dailyWordIndex = cycleDay * 3 + (gameNumber - 1);
+        const wordIndex = dailyWordIndex % validWords.length;
         const selectedWord = validWords[wordIndex].toUpperCase();
-        console.log(`📚 Selected from accepted.json, game ${gameNumber}, index ${wordIndex}: ${selectedWord}`);
+        console.log(`📚 Selected from accepted.json, game ${gameNumber}, cycle day ${cycleDay}, index ${wordIndex}: ${selectedWord}`);
         return selectedWord;
       }
     }
@@ -288,7 +304,7 @@ async function fetchWordFromApi(): Promise<WordApiResponse | null> {
  */
 export function getWordStats(): { cached: boolean; date: string; word?: string } {
   try {
-    const cached = localStorage.getItem(CACHE_KEY);
+    const cached = localStorage.getItem(getFlickWordDailyKey(1));
     if (cached) {
       const parsed: CachedWord = JSON.parse(cached);
       return {
@@ -312,7 +328,10 @@ export function getWordStats(): { cached: boolean; date: string; word?: string }
  */
 export function clearWordCache(): void {
   try {
-    localStorage.removeItem(CACHE_KEY);
+    // Clear all game cache keys (1-3)
+    for (let i = 1; i <= 3; i++) {
+      localStorage.removeItem(getFlickWordDailyKey(i));
+    }
     console.log('🗑️ Cleared word cache');
   } catch (error) {
     console.warn('Failed to clear word cache:', error);

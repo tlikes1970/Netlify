@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from '@/lib/language';
+import { getFlickWordStatsKey } from '../../lib/cacheKeys';
 
 interface FlickWordStats {
   games: number;
@@ -28,7 +29,7 @@ export default function FlickWordStats(_props: FlickWordStatsProps) {
     const loadStats = () => {
       try {
         // Try multiple possible keys
-        const stored = localStorage.getItem('flickword:stats') || 
+        const stored = localStorage.getItem(getFlickWordStatsKey()) || 
                       localStorage.getItem('flicklet-data') ||
                       localStorage.getItem('flicklet:stats');
         
@@ -54,7 +55,7 @@ export default function FlickWordStats(_props: FlickWordStatsProps) {
     
     // Refresh on cross-tab storage and same-tab custom event
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'flickword:stats' || e.key === 'flicklet-data') {
+      if (e.key === getFlickWordStatsKey() || e.key === 'flicklet-data') {
         loadStats();
       }
     };
