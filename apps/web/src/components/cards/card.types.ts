@@ -45,6 +45,7 @@ export interface CardActionHandlers {
   onEpisodeTracking?: (item: MediaItem) => void; // open episode tracking modal
   onNotificationToggle?: (item: MediaItem) => void; // toggle notifications for show
   onSimpleReminder?: (item: MediaItem) => void; // set simple reminder for show
-  onBloopersOpen?: (item: MediaItem) => void; // open bloopers modal
+  onBloopersOpen?: (item: MediaItem) => void; // open bloopers modal (deprecated - use onGoofsOpen)
+  onGoofsOpen?: (item: MediaItem) => void; // open goofs modal
   onExtrasOpen?: (item: MediaItem) => void; // open extras modal
 }

@@ -43,6 +43,7 @@ export default function ListPage({
   onNotificationToggle,
   onSimpleReminder,
   onBloopersOpen,
+  onGoofsOpen,
   onExtrasOpen,
 }: {
   title: string;
@@ -53,6 +54,7 @@ export default function ListPage({
   onNotificationToggle?: (item: MediaItem) => void;
   onSimpleReminder?: (item: MediaItem) => void;
   onBloopersOpen?: (item: MediaItem) => void;
+  onGoofsOpen?: (item: MediaItem) => void;
   onExtrasOpen?: (item: MediaItem) => void;
 }) {
   const settings = useSettings();
@@ -762,6 +764,7 @@ export default function ListPage({
     onNotificationToggle: onNotificationToggle,
     onSimpleReminder: onSimpleReminder,
     onBloopersOpen: onBloopersOpen,
+    onGoofsOpen: onGoofsOpen,
     onExtrasOpen: onExtrasOpen,
   };
 

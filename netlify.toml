@@ -35,6 +35,11 @@
   to   = "/.netlify/functions/dict-proxy"
   status = 200
 
+[[redirects]]
+  from = "/api/goofs-fetch"
+  to   = "/.netlify/functions/goofs-fetch"
+  status = 200
+
 # Backend API proxy
 # In production: uses Netlify function (requires BACKEND_API_URL env var)
 # In development (netlify dev): redirects to localhost:4000

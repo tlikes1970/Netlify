@@ -6,6 +6,7 @@ import { CompactOverflowMenu } from '../../../features/compact/CompactOverflowMe
 import StarRating from '../StarRating';
 import { ProviderBadges } from '../ProviderBadge';
 import { DragHandle } from '../DragHandle';
+import MyListToggle from '../../MyListToggle';
 
 // neutral 112x168 poster placeholder (SVG data URI)
 const POSTER_PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
@@ -135,7 +136,7 @@ export function TvCardMobile({ item, actions, tabKey = 'watching', index = 0, on
         )}
         
         {/* Poster Column */}
-        <div className="poster-col">
+        <div className="poster-col" style={{ position: 'relative' }}>
           <OptimizedImage
             src={posterUrl || ''}
             alt={`${title} poster`}
@@ -144,6 +145,8 @@ export function TvCardMobile({ item, actions, tabKey = 'watching', index = 0, on
             className="poster-image"
             loading="lazy"
           />
+          {/* My List + button */}
+          <MyListToggle item={item} />
         </div>
 
         {/* Info Column */}

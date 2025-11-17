@@ -1,0 +1,287 @@
+import React, { useState, useEffect, useRef } from "react";
+import {
+  getGoofsForTitle,
+  subscribeToGoofs,
+  GoofSet,
+} from "../../lib/goofs/goofsStore";
+import { useProStatus } from "../../lib/proStatus";
+import { startProUpgrade } from "../../lib/proUpgrade";
+
+interface GoofsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  tmdbId: number | string | null;
+  title?: string;
+}
+
+/**
+ * Process: Goofs Modal
+ * Purpose: Displays goofs and slip-ups for a specific show/movie
+ * Data Source: Local goofs store (manually seeded or admin-curated)
+ * Update Path: TabCard Goofs button clicks
+ * Dependencies: goofsStore, Pro settings
+ */
+
+export const GoofsModal: React.FC<GoofsModalProps> = ({
+  isOpen,
+  onClose,
+  tmdbId,
+  title,
+}) => {
+  console.log("🎭 GoofsModal render:", { isOpen, tmdbId, title });
+
+  const proStatus = useProStatus();
+  const isPro = proStatus.isPro;
+
+  const [goofs, setGoofs] = useState<GoofSet | null>(null);
+  const [loading, setLoading] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const firstGoofRef = useRef<HTMLDivElement>(null);
+
+  // Load goofs when modal opens
+  useEffect(() => {
+    if (!isOpen || !tmdbId) {
+      setGoofs(null);
+      return;
+    }
+
+    if (!isPro) {
+      // Don't load if not Pro
+      if (import.meta.env.DEV) {
+        console.log("🎭 GoofsModal: User is not Pro, skipping load");
+      }
+      return;
+    }
+
+    if (import.meta.env.DEV) {
+      console.log(`🎭 GoofsModal: Loading goofs for TMDB ID ${tmdbId}`);
+    }
+
+    setLoading(true);
+
+    // Use subscribe for real-time updates (though currently just reads from cache)
+    const unsubscribe = subscribeToGoofs(tmdbId, (goofSet) => {
+      if (import.meta.env.DEV) {
+        console.log(
+          `🎭 GoofsModal: Subscription callback received:`,
+          goofSet ? `${goofSet.items.length} items` : "null"
+        );
+      }
+      setGoofs(goofSet);
+      setLoading(false);
+    });
+
+    // Fallback: also try direct fetch
+    getGoofsForTitle(tmdbId).then((goofSet) => {
+      if (import.meta.env.DEV) {
+        console.log(
+          `🎭 GoofsModal: Direct fetch result:`,
+          goofSet ? `${goofSet.items.length} items` : "null"
+        );
+      }
+      if (goofSet) {
+        setGoofs(goofSet);
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [isOpen, tmdbId, isPro]);
+
+  // Focus management
+  useEffect(() => {
+    if (isOpen && firstGoofRef.current) {
+      firstGoofRef.current.focus();
+    }
+  }, [isOpen, goofs]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+
+      if (e.key === "Escape") {
+        onClose();
+      } else if (e.key === "Tab") {
+        // Focus trap - let browser handle tab navigation within modal
+        const modal = modalRef.current;
+        if (modal) {
+          const focusableElements = modal.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          const firstElement = focusableElements[0] as HTMLElement;
+          const lastElement = focusableElements[
+            focusableElements.length - 1
+          ] as HTMLElement;
+
+          if (e.shiftKey && document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          } else if (!e.shiftKey && document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  const getTypeLabel = (type: GoofSet["items"][0]["type"]): string => {
+    const labels: Record<string, string> = {
+      continuity: "Continuity",
+      prop: "Prop",
+      crew: "Crew Visible",
+      logic: "Logic Error",
+      other: "Other",
+    };
+    return labels[type] || type;
+  };
+
+  const getTypeColor = (type: GoofSet["items"][0]["type"]): string => {
+    const colors: Record<string, string> = {
+      continuity:
+        "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200",
+      prop: "bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200",
+      crew: "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200",
+      logic: "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200",
+      other: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200",
+    };
+    return colors[type] || colors.other;
+  };
+
+  const renderGoofsContent = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-2 text-gray-600 dark:text-gray-400">
+            Loading goofs...
+          </span>
+        </div>
+      );
+    }
+
+    if (!goofs || goofs.items.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <div className="text-gray-500 dark:text-gray-400 mb-4">
+            <h3 className="text-lg font-medium mb-2">No goofs found</h3>
+            <p className="text-sm">
+              We don't have any goofs for this one yet. They'll start appearing
+              as we expand Flicklet Pro extras.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {goofs.items.map((goof, index) => (
+          <div
+            key={goof.id}
+            ref={index === 0 ? firstGoofRef : null}
+            className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow"
+            tabIndex={0}
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <span
+                  className={`text-xs px-2 py-1 rounded font-medium ${getTypeColor(goof.type)}`}
+                >
+                  {getTypeLabel(goof.type)}
+                </span>
+                {goof.subtlety && (
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                    {goof.subtlety === "blink"
+                      ? "👁️ Easy to miss"
+                      : "👀 Obvious"}
+                  </span>
+                )}
+              </div>
+            </div>
+            <p className="text-sm text-gray-900 dark:text-white leading-relaxed">
+              {goof.text}
+            </p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      <div
+        className="fixed inset-0 z-40 bg-black bg-opacity-50"
+        onClick={onClose}
+      />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pt-32">
+        <div
+          ref={modalRef}
+          className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-3xl max-h-[75vh] overflow-hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="goofs-modal-title"
+          aria-describedby="goofs-modal-description"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2
+              id="goofs-modal-title"
+              className="text-xl font-semibold text-gray-900 dark:text-white"
+            >
+              {title ? `${title} - Goofs` : "Goofs & Slip-Ups"}
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
+              aria-label="Close modal"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Content */}
+          <div
+            id="goofs-modal-description"
+            className="p-4 overflow-y-auto max-h-96"
+          >
+            {!isPro ? (
+              <div className="text-center py-12">
+                <div className="text-4xl mb-4">💎</div>
+                <h3
+                  className="text-xl font-semibold mb-2"
+                  style={{ color: "var(--text)" }}
+                >
+                  Goofs are a Pro feature
+                </h3>
+                <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>
+                  Upgrade in Settings → Pro to unlock goofs and slip-ups.
+                </p>
+                <button
+                  onClick={() => {
+                    onClose();
+                    startProUpgrade();
+                  }}
+                  className="px-6 py-3 rounded-lg font-medium transition-colors"
+                  style={{ backgroundColor: "var(--accent)", color: "white" }}
+                >
+                  Go to Pro settings
+                </button>
+              </div>
+            ) : (
+              renderGoofsContent()
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};

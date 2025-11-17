@@ -174,10 +174,14 @@ export default function GenreRowConfig({ row, onUpdate, onRemove, canRemove }: G
   };
 
   return (
-    <div className="p-4 rounded-lg border" style={{ 
-      backgroundColor: 'var(--card)', 
-      borderColor: 'var(--line)' 
-    }}>
+    <div 
+      id={row.id === '1' ? 'for-you-row-1' : undefined}
+      className="p-4 rounded-lg border" 
+      style={{ 
+        backgroundColor: 'var(--card)', 
+        borderColor: 'var(--line)' 
+      }}
+    >
       <div className="flex items-center justify-between mb-3">
         <h4 className="font-medium" style={{ color: 'var(--text)' }}>
           Row {row.id}

@@ -58,11 +58,16 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
   // Resizable modal state
   const modalRef = useRef<HTMLDivElement>(null);
   const resizeHandleRef = useRef<HTMLDivElement>(null);
-  const resizeStartRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
+  const resizeStartRef = useRef<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const [isResizing, setIsResizing] = useState(false);
   const [modalSize, setModalSize] = useState(() => {
     // Load saved size from localStorage
-    const saved = localStorage.getItem('settings-modal-size');
+    const saved = localStorage.getItem("settings-modal-size");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -85,12 +90,36 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
   // Listen for navigation to Pro tab (from startProUpgrade)
   useEffect(() => {
     const handleNavigateToPro = () => {
-      setActiveTab('pro');
+      setActiveTab("pro");
     };
-    
-    window.addEventListener('navigate-to-pro-settings', handleNavigateToPro as EventListener);
+
+    window.addEventListener(
+      "navigate-to-pro-settings",
+      handleNavigateToPro as EventListener
+    );
     return () => {
-      window.removeEventListener('navigate-to-pro-settings', handleNavigateToPro as EventListener);
+      window.removeEventListener(
+        "navigate-to-pro-settings",
+        handleNavigateToPro as EventListener
+      );
+    };
+  }, []);
+
+  // Listen for navigation to Layout tab (from For You section)
+  useEffect(() => {
+    const handleNavigateToLayout = () => {
+      setActiveTab("layout");
+    };
+
+    window.addEventListener(
+      "navigate-to-layout-settings",
+      handleNavigateToLayout as EventListener
+    );
+    return () => {
+      window.removeEventListener(
+        "navigate-to-layout-settings",
+        handleNavigateToLayout as EventListener
+      );
     };
   }, []);
 
@@ -104,8 +133,17 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
       const deltaX = e.clientX - resizeStartRef.current.x;
       const deltaY = e.clientY - resizeStartRef.current.y;
 
-      const newWidth = Math.max(600, Math.min(window.innerWidth - 40, resizeStartRef.current.width + deltaX));
-      const newHeight = Math.max(400, Math.min(window.innerHeight - 100, resizeStartRef.current.height + deltaY));
+      const newWidth = Math.max(
+        600,
+        Math.min(window.innerWidth - 40, resizeStartRef.current.width + deltaX)
+      );
+      const newHeight = Math.max(
+        400,
+        Math.min(
+          window.innerHeight - 100,
+          resizeStartRef.current.height + deltaY
+        )
+      );
 
       setModalSize({ width: newWidth, height: newHeight });
     };
@@ -115,31 +153,34 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
       resizeStartRef.current = null;
       // Save size to localStorage
       if (modalRef.current) {
-        const currentSize = { 
-          width: modalRef.current.offsetWidth, 
-          height: modalRef.current.offsetHeight 
+        const currentSize = {
+          width: modalRef.current.offsetWidth,
+          height: modalRef.current.offsetHeight,
         };
-        localStorage.setItem('settings-modal-size', JSON.stringify(currentSize));
+        localStorage.setItem(
+          "settings-modal-size",
+          JSON.stringify(currentSize)
+        );
       }
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    document.body.style.cursor = 'nwse-resize';
-    document.body.style.userSelect = 'none';
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    document.body.style.cursor = "nwse-resize";
+    document.body.style.userSelect = "none";
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
     };
   }, [isResizing]);
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (modalRef.current) {
       const rect = modalRef.current.getBoundingClientRect();
       resizeStartRef.current = {
@@ -178,10 +219,10 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
           border: "1px solid",
           width: `${modalSize.width}px`,
           height: `${modalSize.height}px`,
-          minWidth: '600px',
-          minHeight: '400px',
-          maxWidth: '95vw',
-          maxHeight: '95vh',
+          minWidth: "600px",
+          minHeight: "400px",
+          maxWidth: "95vw",
+          maxHeight: "95vh",
         }}
       >
         {/* Left sidebar - Tabs */}
@@ -1331,22 +1372,27 @@ function LayoutTab({ settings }: { settings: any }) {
 
           <div className="space-y-1">
             <label
-              className={`flex items-center space-x-3 ${settings.layout.condensedView ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+              className={`flex items-center space-x-3 ${settings.layout.condensedView && !settings.pro.isPro ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
             >
               <input
                 type="checkbox"
                 checked={settings.layout.episodeTracking}
                 onChange={() => settingsManager.toggleEpisodeTracking()}
-                disabled={settings.layout.condensedView}
+                disabled={settings.layout.condensedView && !settings.pro.isPro}
                 className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 rounded focus:ring-blue-500"
               />
               <span style={{ color: "var(--text)" }}>
                 {translations.enableEpisodeTracking}
               </span>
             </label>
-            {settings.layout.condensedView && (
+            {settings.layout.condensedView && !settings.pro.isPro && (
               <p className="text-xs ml-7" style={{ color: "var(--muted)" }}>
                 Episode tracking is disabled in condensed view
+              </p>
+            )}
+            {settings.layout.condensedView && settings.pro.isPro && (
+              <p className="text-xs ml-7" style={{ color: "var(--muted)" }}>
+                Pro users can enable episode tracking even in condensed view
               </p>
             )}
           </div>
@@ -1917,7 +1963,8 @@ function ProTab() {
               Treat this device as Pro (Alpha / Testing)
             </h4>
             <p className="text-xs" style={{ color: "var(--muted)" }}>
-              This is for testing only and is not a real purchase. Toggle this to test Pro features.
+              This is for testing only and is not a real purchase. Toggle this
+              to test Pro features.
             </p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer ml-4">
@@ -1939,7 +1986,9 @@ function ProTab() {
                 className="w-5 h-5 rounded-full transition-transform peer-checked:translate-x-5"
                 style={{
                   backgroundColor: "#fff",
-                  transform: isProUser ? "translateX(1.25rem)" : "translateX(0.125rem)",
+                  transform: isProUser
+                    ? "translateX(1.25rem)"
+                    : "translateX(0.125rem)",
                   marginTop: "0.125rem",
                 }}
               />
@@ -1956,7 +2005,7 @@ function ProTab() {
         >
           Pro Features
         </h4>
-        
+
         <div className="mb-6">
           <h5
             className="text-sm font-medium mb-3"
@@ -1965,108 +2014,123 @@ function ProTab() {
             Available Now
           </h5>
 
-        <div className="space-y-4">
-          {/* Existing Pro Features on Cards */}
-          <div
-            className="p-4 rounded-lg border"
-            style={{ backgroundColor: "var(--bg)", borderColor: "var(--line)" }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">🎬</div>
-              <div className="flex-1">
-                <h5
-                  className="font-medium mb-1"
-                  style={{ color: "var(--text)" }}
-                >
-                  Bloopers & Behind-the-Scenes
-                </h5>
-                <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
-                  Access to bloopers, extras, and behind-the-scenes content on
-                  movie and TV show cards
-                </p>
-                <div className="flex items-center gap-2">
-                  <span
-                    className="px-2 py-1 text-xs rounded-full"
-                    style={{ backgroundColor: "var(--accent)", color: "white" }}
+          <div className="space-y-4">
+            {/* Existing Pro Features on Cards */}
+            <div
+              className="p-4 rounded-lg border"
+              style={{
+                backgroundColor: "var(--bg)",
+                borderColor: "var(--line)",
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">🎬</div>
+                <div className="flex-1">
+                  <h5
+                    className="font-medium mb-1"
+                    style={{ color: "var(--text)" }}
                   >
-                    PRO
-                  </span>
-                  <span className="text-xs" style={{ color: "var(--muted)" }}>
-                    Available Now
-                  </span>
+                    Bloopers & Behind-the-Scenes
+                  </h5>
+                  <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
+                    Access to bloopers, extras, and behind-the-scenes content on
+                    movie and TV show cards
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="px-2 py-1 text-xs rounded-full"
+                      style={{
+                        backgroundColor: "var(--accent)",
+                        color: "white",
+                      }}
+                    >
+                      PRO
+                    </span>
+                    <span className="text-xs" style={{ color: "var(--muted)" }}>
+                      Available Now
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div
-            className="p-4 rounded-lg border"
-            style={{ backgroundColor: "var(--bg)", borderColor: "var(--line)" }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">🔔</div>
-              <div className="flex-1">
-                <h5
-                  className="font-medium mb-1"
-                  style={{ color: "var(--text)" }}
-                >
-                  Advanced Notifications
-                </h5>
-                <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
-                  Customizable episode notifications with multiple methods,
-                  custom timing, and per-show settings
-                </p>
-                <div className="flex items-center gap-2">
-                  <span
-                    className="px-2 py-1 text-xs rounded-full"
-                    style={{ backgroundColor: "var(--accent)", color: "white" }}
+            <div
+              className="p-4 rounded-lg border"
+              style={{
+                backgroundColor: "var(--bg)",
+                borderColor: "var(--line)",
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">🔔</div>
+                <div className="flex-1">
+                  <h5
+                    className="font-medium mb-1"
+                    style={{ color: "var(--text)" }}
                   >
-                    PRO
-                  </span>
-                  <span className="text-xs" style={{ color: "var(--muted)" }}>
-                    Available Now
-                  </span>
+                    Advanced Notifications
+                  </h5>
+                  <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
+                    Customizable episode notifications with multiple methods,
+                    custom timing, and per-show settings
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="px-2 py-1 text-xs rounded-full"
+                      style={{
+                        backgroundColor: "var(--accent)",
+                        color: "white",
+                      }}
+                    >
+                      PRO
+                    </span>
+                    <span className="text-xs" style={{ color: "var(--muted)" }}>
+                      Available Now
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Simple Reminder - Free Feature */}
-          <div
-            className="p-4 rounded-lg border"
-            style={{ backgroundColor: "var(--bg)", borderColor: "var(--line)" }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">⏰</div>
-              <div className="flex-1">
-                <h5
-                  className="font-medium mb-1"
-                  style={{ color: "var(--text)" }}
-                >
-                  Simple Reminder
-                </h5>
-                <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
-                  Basic reminder notifications 24 hours before episodes air
-                  (in-app only)
-                </p>
-                <div className="flex items-center gap-2">
-                  <span
-                    className="px-2 py-1 text-xs rounded-full"
-                    style={{
-                      backgroundColor: "var(--success)",
-                      color: "white",
-                    }}
+            {/* Simple Reminder - Free Feature */}
+            <div
+              className="p-4 rounded-lg border"
+              style={{
+                backgroundColor: "var(--bg)",
+                borderColor: "var(--line)",
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">⏰</div>
+                <div className="flex-1">
+                  <h5
+                    className="font-medium mb-1"
+                    style={{ color: "var(--text)" }}
                   >
-                    FREE
-                  </span>
-                  <span className="text-xs" style={{ color: "var(--muted)" }}>
-                    Available Now
-                  </span>
+                    Simple Reminder
+                  </h5>
+                  <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
+                    Basic reminder notifications 24 hours before episodes air
+                    (in-app only)
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="px-2 py-1 text-xs rounded-full"
+                      style={{
+                        backgroundColor: "var(--success)",
+                        color: "white",
+                      }}
+                    >
+                      FREE
+                    </span>
+                    <span className="text-xs" style={{ color: "var(--muted)" }}>
+                      Available Now
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
         </div>
 
         {/* Coming Soon Section */}
@@ -2078,200 +2142,236 @@ function ProTab() {
             Coming Soon
           </h5>
           <div className="space-y-4">
-          {/* Smart Notifications */}
-          <div
-            className="p-4 rounded-lg border"
-            style={{ backgroundColor: "var(--bg)", borderColor: "var(--line)" }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">🔔</div>
-              <div className="flex-1">
-                <h5
-                  className="font-medium mb-1"
-                  style={{ color: "var(--text)" }}
-                >
-                  Smart Notifications
-                </h5>
-                <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
-                  Customizable episode notifications with advanced scheduling
-                  and timing options
-                </p>
-                <div className="flex items-center gap-2">
-                  <span
-                    className="px-2 py-1 text-xs rounded-full"
-                    style={{ backgroundColor: "var(--accent)", color: "white" }}
+            {/* Smart Notifications */}
+            <div
+              className="p-4 rounded-lg border"
+              style={{
+                backgroundColor: "var(--bg)",
+                borderColor: "var(--line)",
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">🔔</div>
+                <div className="flex-1">
+                  <h5
+                    className="font-medium mb-1"
+                    style={{ color: "var(--text)" }}
                   >
-                    PRO
-                  </span>
-                  <span className="text-xs" style={{ color: "var(--muted)" }}>
-                    Coming Soon
-                  </span>
+                    Smart Notifications
+                  </h5>
+                  <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
+                    Customizable episode notifications with advanced scheduling
+                    and timing options
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="px-2 py-1 text-xs rounded-full"
+                      style={{
+                        backgroundColor: "var(--accent)",
+                        color: "white",
+                      }}
+                    >
+                      PRO
+                    </span>
+                    <span className="text-xs" style={{ color: "var(--muted)" }}>
+                      Coming Soon
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Advanced Analytics */}
-          <div
-            className="p-4 rounded-lg border"
-            style={{ backgroundColor: "var(--bg)", borderColor: "var(--line)" }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">📊</div>
-              <div className="flex-1">
-                <h5
-                  className="font-medium mb-1"
-                  style={{ color: "var(--text)" }}
-                >
-                  Advanced Analytics
-                </h5>
-                <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
-                  Detailed watching statistics and viewing journey insights
-                </p>
-                <div className="flex items-center gap-2">
-                  <span
-                    className="px-2 py-1 text-xs rounded-full"
-                    style={{ backgroundColor: "var(--accent)", color: "white" }}
+            {/* Advanced Analytics */}
+            <div
+              className="p-4 rounded-lg border"
+              style={{
+                backgroundColor: "var(--bg)",
+                borderColor: "var(--line)",
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">📊</div>
+                <div className="flex-1">
+                  <h5
+                    className="font-medium mb-1"
+                    style={{ color: "var(--text)" }}
                   >
-                    PRO
-                  </span>
-                  <span className="text-xs" style={{ color: "var(--muted)" }}>
-                    Coming Soon
-                  </span>
+                    Advanced Analytics
+                  </h5>
+                  <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
+                    Detailed watching statistics and viewing journey insights
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="px-2 py-1 text-xs rounded-full"
+                      style={{
+                        backgroundColor: "var(--accent)",
+                        color: "white",
+                      }}
+                    >
+                      PRO
+                    </span>
+                    <span className="text-xs" style={{ color: "var(--muted)" }}>
+                      Coming Soon
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Premium Themes */}
-          <div
-            className="p-4 rounded-lg border"
-            style={{ backgroundColor: "var(--bg)", borderColor: "var(--line)" }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">🎨</div>
-              <div className="flex-1">
-                <h5
-                  className="font-medium mb-1"
-                  style={{ color: "var(--text)" }}
-                >
-                  Premium Themes
-                </h5>
-                <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
-                  Access to premium theme packs and advanced customization
-                  options
-                </p>
-                <div className="flex items-center gap-2">
-                  <span
-                    className="px-2 py-1 text-xs rounded-full"
-                    style={{ backgroundColor: "var(--accent)", color: "white" }}
+            {/* Premium Themes */}
+            <div
+              className="p-4 rounded-lg border"
+              style={{
+                backgroundColor: "var(--bg)",
+                borderColor: "var(--line)",
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">🎨</div>
+                <div className="flex-1">
+                  <h5
+                    className="font-medium mb-1"
+                    style={{ color: "var(--text)" }}
                   >
-                    PRO
-                  </span>
-                  <span className="text-xs" style={{ color: "var(--muted)" }}>
-                    Coming Soon
-                  </span>
+                    Premium Themes
+                  </h5>
+                  <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
+                    Access to premium theme packs and advanced customization
+                    options
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="px-2 py-1 text-xs rounded-full"
+                      style={{
+                        backgroundColor: "var(--accent)",
+                        color: "white",
+                      }}
+                    >
+                      PRO
+                    </span>
+                    <span className="text-xs" style={{ color: "var(--muted)" }}>
+                      Coming Soon
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Extra Trivia Content */}
-          <div
-            className="p-4 rounded-lg border"
-            style={{ backgroundColor: "var(--bg)", borderColor: "var(--line)" }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">🧠</div>
-              <div className="flex-1">
-                <h5
-                  className="font-medium mb-1"
-                  style={{ color: "var(--text)" }}
-                >
-                  Extra Trivia Content
-                </h5>
-                <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
-                  Access to additional trivia questions and behind-the-scenes
-                  content
-                </p>
-                <div className="flex items-center gap-2">
-                  <span
-                    className="px-2 py-1 text-xs rounded-full"
-                    style={{ backgroundColor: "var(--accent)", color: "white" }}
+            {/* Extra Trivia Content */}
+            <div
+              className="p-4 rounded-lg border"
+              style={{
+                backgroundColor: "var(--bg)",
+                borderColor: "var(--line)",
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">🧠</div>
+                <div className="flex-1">
+                  <h5
+                    className="font-medium mb-1"
+                    style={{ color: "var(--text)" }}
                   >
-                    PRO
-                  </span>
-                  <span className="text-xs" style={{ color: "var(--muted)" }}>
-                    Coming Soon
-                  </span>
+                    Extra Trivia Content
+                  </h5>
+                  <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
+                    Access to additional trivia questions and behind-the-scenes
+                    content
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="px-2 py-1 text-xs rounded-full"
+                      style={{
+                        backgroundColor: "var(--accent)",
+                        color: "white",
+                      }}
+                    >
+                      PRO
+                    </span>
+                    <span className="text-xs" style={{ color: "var(--muted)" }}>
+                      Coming Soon
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* CSV Export */}
-          <div
-            className="p-4 rounded-lg border"
-            style={{ backgroundColor: "var(--bg)", borderColor: "var(--line)" }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">📊</div>
-              <div className="flex-1">
-                <h5
-                  className="font-medium mb-1"
-                  style={{ color: "var(--text)" }}
-                >
-                  CSV Export
-                </h5>
-                <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
-                  Export your lists to CSV format for use in spreadsheets
-                </p>
-                <div className="flex items-center gap-2">
-                  <span
-                    className="px-2 py-1 text-xs rounded-full"
-                    style={{ backgroundColor: "var(--accent)", color: "white" }}
+            {/* CSV Export */}
+            <div
+              className="p-4 rounded-lg border"
+              style={{
+                backgroundColor: "var(--bg)",
+                borderColor: "var(--line)",
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">📊</div>
+                <div className="flex-1">
+                  <h5
+                    className="font-medium mb-1"
+                    style={{ color: "var(--text)" }}
                   >
-                    PRO
-                  </span>
-                  <span className="text-xs" style={{ color: "var(--muted)" }}>
-                    Coming Soon
-                  </span>
+                    CSV Export
+                  </h5>
+                  <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
+                    Export your lists to CSV format for use in spreadsheets
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="px-2 py-1 text-xs rounded-full"
+                      style={{
+                        backgroundColor: "var(--accent)",
+                        color: "white",
+                      }}
+                    >
+                      PRO
+                    </span>
+                    <span className="text-xs" style={{ color: "var(--muted)" }}>
+                      Coming Soon
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Priority Support */}
-          <div
-            className="p-4 rounded-lg border"
-            style={{ backgroundColor: "var(--bg)", borderColor: "var(--line)" }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">🚀</div>
-              <div className="flex-1">
-                <h5
-                  className="font-medium mb-1"
-                  style={{ color: "var(--text)" }}
-                >
-                  Priority Support
-                </h5>
-                <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
-                  Faster help when you need it with priority customer support
-                </p>
-                <div className="flex items-center gap-2">
-                  <span
-                    className="px-2 py-1 text-xs rounded-full"
-                    style={{ backgroundColor: "var(--accent)", color: "white" }}
+            {/* Priority Support */}
+            <div
+              className="p-4 rounded-lg border"
+              style={{
+                backgroundColor: "var(--bg)",
+                borderColor: "var(--line)",
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">🚀</div>
+                <div className="flex-1">
+                  <h5
+                    className="font-medium mb-1"
+                    style={{ color: "var(--text)" }}
                   >
-                    PRO
-                  </span>
-                  <span className="text-xs" style={{ color: "var(--muted)" }}>
-                    Coming Soon
-                  </span>
+                    Priority Support
+                  </h5>
+                  <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
+                    Faster help when you need it with priority customer support
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="px-2 py-1 text-xs rounded-full"
+                      style={{
+                        backgroundColor: "var(--accent)",
+                        color: "white",
+                      }}
+                    >
+                      PRO
+                    </span>
+                    <span className="text-xs" style={{ color: "var(--muted)" }}>
+                      Coming Soon
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
           </div>
         </div>
       </div>

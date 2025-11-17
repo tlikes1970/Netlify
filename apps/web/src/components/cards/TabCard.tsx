@@ -57,16 +57,16 @@ export default function TabCard({
 }: TabCardProps) {
   const proStatus = useProStatus();
   const isPro = proStatus.isPro;
-  
+
   dlog("🔔 TabCard render:", {
     title: item.title,
     mediaType: item.mediaType,
     hasOnNotificationToggle: !!actions?.onNotificationToggle,
   });
-  
+
   // Get latest rating from library to ensure we have the most up-to-date value
   const [currentRating, setCurrentRating] = useState(item.userRating);
-  
+
   // Subscribe to library changes to update rating immediately
   useEffect(() => {
     const updateRating = () => {
@@ -75,26 +75,19 @@ export default function TabCard({
         setCurrentRating(latestEntry.userRating);
       }
     };
-    
+
     // Update immediately
     updateRating();
-    
+
     // Subscribe to library changes
     const unsubscribe = Library.subscribe(updateRating);
-    
+
     return () => {
       unsubscribe();
     };
   }, [item.id, item.mediaType]);
-  
-  const {
-    title,
-    year,
-    posterUrl,
-    voteAverage,
-    synopsis,
-    mediaType,
-  } = item;
+
+  const { title, year, posterUrl, voteAverage, synopsis, mediaType } = item;
   const userRating = currentRating; // Use the latest rating
   const rating =
     typeof voteAverage === "number"
@@ -758,16 +751,22 @@ export default function TabCard({
                 className={buttonClass}
                 style={{
                   backgroundColor: "var(--btn)",
-                  color: settings.layout.episodeTracking
-                    ? "var(--text)"
-                    : "var(--muted)",
+                  color:
+                    settings.layout.episodeTracking || settings.pro.isPro
+                      ? "var(--text)"
+                      : "var(--muted)",
                   borderColor: "var(--line)",
                   border: "1px solid",
-                  opacity: settings.layout.episodeTracking ? 1 : 0.6,
+                  opacity:
+                    settings.layout.episodeTracking || settings.pro.isPro
+                      ? 1
+                      : 0.6,
                 }}
-                disabled={!settings.layout.episodeTracking}
+                disabled={
+                  !settings.layout.episodeTracking && !settings.pro.isPro
+                }
                 title={
-                  settings.layout.episodeTracking
+                  settings.layout.episodeTracking || settings.pro.isPro
                     ? "Track episode progress"
                     : "Enable episode tracking in settings"
                 }
@@ -783,14 +782,14 @@ export default function TabCard({
               <button
                 onClick={() => {
                   if (isPro && settings.pro.features.bloopersAccess) {
-                    actions?.onBloopersOpen?.(item);
+                    actions?.onGoofsOpen?.(item);
                   } else {
                     startProUpgrade();
                   }
                 }}
                 title={
                   isPro && settings.pro.features.bloopersAccess
-                    ? "View bloopers and outtakes"
+                    ? "View goofs and slip-ups"
                     : "Pro feature - upgrade to unlock"
                 }
                 className={buttonClass}
@@ -800,13 +799,11 @@ export default function TabCard({
                   borderColor: "var(--line)",
                   border: "1px solid",
                   opacity:
-                    isPro && settings.pro.features.bloopersAccess
-                      ? 1
-                      : 0.65,
+                    isPro && settings.pro.features.bloopersAccess ? 1 : 0.65,
                   cursor: "pointer",
                 }}
               >
-                Bloopers
+                Goofs
               </button>
               <button
                 onClick={() => {
@@ -828,9 +825,7 @@ export default function TabCard({
                   borderColor: "var(--line)",
                   border: "1px solid",
                   opacity:
-                    isPro && settings.pro.features.extrasAccess
-                      ? 1
-                      : 0.65,
+                    isPro && settings.pro.features.extrasAccess ? 1 : 0.65,
                   cursor: "pointer",
                 }}
               >
