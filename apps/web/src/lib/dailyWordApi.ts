@@ -1,5 +1,8 @@
 // Daily Word API Service
 // Provides the same word for all players each day
+// Daily content is keyed off UTC date so users share the same daily content globally
+
+import { getDailySeedDate } from './dailySeed';
 
 interface WordApiResponse {
   word: string;
@@ -47,30 +50,31 @@ const WORD_APIS: Array<{
   }
 ];
 
-/**
- * Get today's date in YYYY-MM-DD format (LOCAL timezone, not UTC)
- */
-function getTodayString(): string {
-  const now = new Date();
-  // Use local timezone, not UTC
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
 // Note: Legacy function removed as part of cleanup
 // Use getFreshWord() for testing with cache busting
 
 /**
- * Get today's word (same for all players, rotates daily)
+ * Get today's word(s) - deterministic based on UTC date and game number
+ * Regular: 1 word per day (gameNumber = 1)
+ * Pro: 3 words per day (gameNumber = 1, 2, or 3)
+ * Daily content is keyed off UTC date so users share the same daily content globally
+ * @param gameNumber Optional game number (1-3) for Pro users. Defaults to 1 for Regular users.
  */
-export async function getTodaysWord(): Promise<WordApiResponse> {
-  const today = getTodayString();
+export async function getTodaysWord(gameNumber: number = 1): Promise<WordApiResponse> {
+  const today = getDailySeedDate(); // UTC-based date for consistent daily content
+  
+  // Validate gameNumber
+  if (gameNumber < 1 || gameNumber > 3) {
+    console.warn(`Invalid gameNumber ${gameNumber}, defaulting to 1`);
+    gameNumber = 1;
+  }
+  
+  // Cache key includes game number for Pro users (uses UTC date for consistency)
+  const gameCacheKey = gameNumber === 1 ? CACHE_KEY : `${CACHE_KEY}:game${gameNumber}`;
   
   // Check cache first, but validate it's not excluded
   try {
-    const cached = localStorage.getItem(CACHE_KEY);
+    const cached = localStorage.getItem(gameCacheKey);
     if (cached) {
       const parsedCache: CachedWord = JSON.parse(cached);
       if (isCachedWordValid(parsedCache)) {
@@ -80,15 +84,15 @@ export async function getTodaysWord(): Promise<WordApiResponse> {
         
         if (isExcluded(cachedWordLower)) {
           console.warn(`🚫 Cached word "${parsedCache.word}" is now excluded, clearing cache...`);
-          localStorage.removeItem(CACHE_KEY);
+          localStorage.removeItem(gameCacheKey);
           // Fall through to get a new word
         } else if (!parsedCache.date || typeof parsedCache.word !== 'string' || parsedCache.word.length !== 5) {
           // MIGRATION: If cache has old format or invalid data, clear it
           console.warn('🔄 Invalid cache format detected, clearing...');
-          localStorage.removeItem(CACHE_KEY);
+          localStorage.removeItem(gameCacheKey);
           // Fall through to get a new word
         } else {
-          console.log(`📦 Using cached word for ${today}: ${parsedCache.word}`);
+          console.log(`📦 Using cached word for ${today}, game ${gameNumber}: ${parsedCache.word}`);
           return {
             word: parsedCache.word,
             date: parsedCache.date,
@@ -102,9 +106,9 @@ export async function getTodaysWord(): Promise<WordApiResponse> {
     console.warn('Failed to read cached word:', error);
   }
 
-  // PRIMARY: Use deterministic word based on date (same for all players)
-  const deterministicWord = await getDeterministicWord(today);
-  console.log(`🎯 Using deterministic word for ${today}: ${deterministicWord}`);
+  // PRIMARY: Use deterministic word based on date + game number
+  const deterministicWord = await getDeterministicWord(today, gameNumber);
+  console.log(`🎯 Using deterministic word for ${today}, game ${gameNumber}: ${deterministicWord}`);
   
   const wordData: WordApiResponse = {
     word: deterministicWord,
@@ -123,7 +127,7 @@ export async function getTodaysWord(): Promise<WordApiResponse> {
   };
   
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+    localStorage.setItem(gameCacheKey, JSON.stringify(cacheData));
   } catch (error) {
     console.warn('Failed to cache word:', error);
   }
@@ -134,10 +138,13 @@ export async function getTodaysWord(): Promise<WordApiResponse> {
 }
 
 /**
- * Get deterministic word based on date (same word for all players each day)
+ * Get deterministic word based on UTC date and game number
+ * Regular users: gameNumber = 1 (same word for all Regular users globally)
+ * Pro users: gameNumber = 1, 2, or 3 (3 different words, same for all Pro users globally)
  * Uses commonWords list to ensure only familiar, everyday words are selected
+ * Daily content is keyed off UTC date so users share the same daily content globally
  */
-async function getDeterministicWord(date: string): Promise<string> {
+async function getDeterministicWord(date: string, gameNumber: number = 1): Promise<string> {
   // Import exclusion list and common words
   const { isExcluded } = await import('./words/excludedWords');
   const { getCommonWordsArray } = await import('./words/commonWords');
@@ -161,10 +168,13 @@ async function getDeterministicWord(date: string): Promise<string> {
       console.log(`✅ After filtering excluded words: ${validWords.length} valid common words`);
       
       if (validWords.length > 0) {
-        // Use date as seed for deterministic word selection
-        const seed = date.split('-').join('');
-        const seedNumber = parseInt(seed, 10);
-        const wordIndex = seedNumber % validWords.length;
+        // Use UTC date + gameNumber as seed for deterministic word selection
+        // This ensures different words for each game number on the same UTC day
+        const dateSeed = date.split('-').join('');
+        const seedNumber = parseInt(dateSeed, 10);
+        // Add gameNumber to seed to get different words for each game
+        const combinedSeed = seedNumber + (gameNumber - 1) * 1000;
+        const wordIndex = combinedSeed % validWords.length;
         const selectedWord = validWords[wordIndex].toUpperCase();
         
         // Double-check the selected word is not excluded (safety check)
@@ -177,7 +187,7 @@ async function getDeterministicWord(date: string): Promise<string> {
           return fallbackWord;
         }
         
-        console.log(`📚 Selected from ${validWords.length} common words, index ${wordIndex}: ${selectedWord}`);
+        console.log(`📚 Selected from ${validWords.length} common words, game ${gameNumber}, index ${wordIndex}: ${selectedWord}`);
         return selectedWord;
       }
     }
@@ -201,11 +211,14 @@ async function getDeterministicWord(date: string): Promise<string> {
       console.log(`✅ After filtering excluded words: ${validWords.length} valid words`);
       
       if (validWords.length > 0) {
-        const seed = date.split('-').join('');
-        const seedNumber = parseInt(seed, 10);
-        const wordIndex = seedNumber % validWords.length;
+        // Use UTC date + gameNumber as seed for deterministic word selection
+        const dateSeed = date.split('-').join('');
+        const seedNumber = parseInt(dateSeed, 10);
+        // Add gameNumber to seed to get different words for each game
+        const combinedSeed = seedNumber + (gameNumber - 1) * 1000;
+        const wordIndex = combinedSeed % validWords.length;
         const selectedWord = validWords[wordIndex].toUpperCase();
-        console.log(`📚 Selected from accepted.json, index ${wordIndex}: ${selectedWord}`);
+        console.log(`📚 Selected from accepted.json, game ${gameNumber}, index ${wordIndex}: ${selectedWord}`);
         return selectedWord;
       }
     }
@@ -213,16 +226,18 @@ async function getDeterministicWord(date: string): Promise<string> {
     console.warn('⚠️ Failed to load words:', error);
   }
   
-  // Final fallback
-  console.warn('⚠️ Using fallback word');
-  return 'HOUSE';
+  // Final fallback - different words for different game numbers
+  const fallbackWords = ['HOUSE', 'CRANE', 'BLISS'];
+  const fallbackWord = fallbackWords[(gameNumber - 1) % fallbackWords.length];
+  console.warn(`⚠️ Using fallback word for game ${gameNumber}: ${fallbackWord}`);
+  return fallbackWord;
 }
 
 /**
  * Check if cached word is for today
  */
 function isCachedWordValid(cached: CachedWord): boolean {
-  return cached.date === getTodayString();
+  return cached.date === getDailySeedDate();
 }
 
 /**
@@ -251,7 +266,7 @@ async function fetchWordFromApi(): Promise<WordApiResponse | null> {
         console.log(`✅ Successfully fetched word from ${api.name}: ${parsed.word}`);
         return {
           word: parsed.word,
-          date: getTodayString(),
+          date: getDailySeedDate(),
           definition: parsed.definition,
           difficulty: parsed.difficulty as 'easy' | 'medium' | 'hard' | undefined
         };
@@ -288,7 +303,7 @@ export function getWordStats(): { cached: boolean; date: string; word?: string }
 
   return {
     cached: false,
-    date: getTodayString()
+    date: getDailySeedDate()
   };
 }
 
@@ -328,7 +343,7 @@ export async function getFreshWord(): Promise<WordApiResponse> {
   console.log('🔄 Using random test word:', testWord);
   return {
     word: testWord,
-    date: getTodayString(),
+    date: getDailySeedDate(),
     definition: `A test word for ${testWord.toLowerCase()}`,
     difficulty: 'medium'
   };
