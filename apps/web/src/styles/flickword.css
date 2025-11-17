@@ -69,6 +69,10 @@
   --fw-key-h: 58px;
   --fw-key-gap: 6px; /* Wordle-like row spacing */
   --fw-key-padding: 4px; /* Side padding */
+  
+  /* Ensure bottom spacing */
+  padding-bottom: 0;
+  margin-bottom: 0;
 }
 
 /* Mobile breakpoints */
@@ -148,6 +152,7 @@
   flex-direction: column;
   gap: var(--fw-spacing-md);
   padding: var(--fw-spacing-md);
+  padding-bottom: 0; /* Let keyboard handle its own bottom spacing */
   width: 100%;
   max-width: 100%;
   margin: 0;
@@ -224,8 +229,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--fw-spacing-md);
-  padding: var(--fw-spacing-sm);
+  gap: var(--fw-spacing-xs);
+  padding: var(--fw-spacing-xs) var(--fw-spacing-xs) 0;
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
@@ -459,9 +464,9 @@
   gap: var(--fw-key-gap);
   width: 100%;
   max-width: 100%;
-  margin: var(--fw-spacing-sm) auto 0;
+  margin: var(--fw-spacing-xs) auto 0;
   padding: 0 var(--fw-key-padding);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: calc(var(--fw-spacing-lg) + env(safe-area-inset-bottom));
   box-sizing: border-box;
   flex: 0 0 auto;
 }
@@ -506,7 +511,7 @@
   user-select: none;
 }
 
-.fw-key:hover:not(:disabled) {
+.fw-key:hover:not(:disabled):not(.correct):not(.present):not(.absent) {
   background-color: var(--fw-color-btn-hover);
 }
 
@@ -526,6 +531,7 @@
   cursor: not-allowed;
 }
 
+/* Status classes - must come after hover to override */
 .fw-key.correct {
   background-color: var(--fw-color-correct);
   color: white;
@@ -542,6 +548,13 @@
   background-color: var(--fw-color-absent);
   color: white;
   animation: keyReveal var(--fw-animation-normal) var(--fw-animation-timing);
+}
+
+.fw-key.correct:hover:not(:disabled),
+.fw-key.present:hover:not(:disabled),
+.fw-key.absent:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: scale(0.98);
 }
 
 @keyframes keyReveal {
@@ -605,6 +618,33 @@
 
 .fw-btn.fw-close:hover {
   background-color: var(--fw-color-btn-hover);
+}
+
+/* ============================================
+   GAME INDICATOR (Pro Users)
+   ============================================ */
+.fw-game-header,
+.trivia-game-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--fw-spacing-xs);
+  padding: 2px var(--fw-spacing-xs);
+  margin: 0;
+  font-size: 13px;
+  font-weight: var(--fw-font-weight-medium);
+  color: var(--fw-color-text);
+}
+
+.game-indicator {
+  font-weight: var(--fw-font-weight-bold);
+  color: var(--fw-color-text);
+}
+
+.games-completed {
+  color: var(--fw-color-btn);
+  font-size: 12px;
+  opacity: 0.7;
 }
 
 /* ============================================
