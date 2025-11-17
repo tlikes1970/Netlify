@@ -1,3 +1,5 @@
+import { getProStatus } from './proStatus';
+
 export interface NotificationSettings {
   // Global settings
   globalEnabled: boolean;
@@ -340,7 +342,6 @@ class NotificationManager {
 
   isProUser(): boolean {
     // Use centralized Pro status helper
-    const { getProStatus } = await import('./proStatus');
     const proStatus = getProStatus();
     return proStatus.isPro;
   }
