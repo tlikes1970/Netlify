@@ -110,7 +110,7 @@ export default function FlickWordReview({ onClose }: FlickWordReviewProps) {
         try {
           await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
           alert('Share text copied to clipboard!');
-        } catch {
+        } catch (_clipboardError) {
           alert('Failed to share');
         }
       }
