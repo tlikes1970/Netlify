@@ -18,6 +18,7 @@ interface TriviaReviewProps {
 export default function TriviaReview({ onClose }: TriviaReviewProps) {
   const settings = useSettings();
   const [completedGames, setCompletedGames] = useState<CompletedTriviaGame[]>([]);
+  const [selectedGame, setSelectedGame] = useState<number | null>(null);
 
   useEffect(() => {
     const games = getCompletedTriviaGames();
@@ -26,8 +27,6 @@ export default function TriviaReview({ onClose }: TriviaReviewProps) {
     // Track review view
     trackGameReview('trivia', null);
   }, []);
-
-  const isProUser = settings.pro.isPro;
 
   if (completedGames.length === 0) {
     return (

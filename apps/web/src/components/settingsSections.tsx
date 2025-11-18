@@ -1336,7 +1336,6 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
 }
 
 function DataSection({ onShowSharingModal }: SettingsSectionProps) {
-  const translations = useTranslations();
   const [showSharingModal, setShowSharingModal] = useState(false);
 
   const handleBackup = async () => {

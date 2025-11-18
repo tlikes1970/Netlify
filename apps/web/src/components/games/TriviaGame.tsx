@@ -238,14 +238,15 @@ export default function TriviaGame({
           // Set up state to show completion screen with last game's data
           setScore(lastGame.score);
           // Convert completed game questions back to TriviaQuestion format for display
+          // Note: CompletedTriviaGame only stores basic question data, so we provide defaults
           const displayQuestions: TriviaQuestion[] = lastGame.questions.map((q, idx) => ({
             id: `completed_${lastGame.gameNumber}_${idx}`,
             question: q.question,
             options: [], // Not needed for completion screen
             correctAnswer: q.correctAnswer,
-            explanation: q.explanation,
-            category: q.category || 'General',
-            difficulty: q.difficulty || 'medium',
+            explanation: undefined,
+            category: 'General',
+            difficulty: 'medium',
           }));
           setQuestions(displayQuestions);
           setGameState("completed");
