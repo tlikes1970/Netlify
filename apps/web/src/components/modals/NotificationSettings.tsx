@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { notificationManager } from '../../lib/notifications';
 import { useSettings } from '../../lib/settings';
-import { startProUpgrade } from '../../lib/proUpgrade';
+import { UpgradeToProCTA } from '../UpgradeToProCTA';
 
 interface NotificationSettingsProps {
   isOpen: boolean;
@@ -228,25 +228,7 @@ export function NotificationSettings({ isOpen, onClose }: NotificationSettingsPr
           </div>
 
           {/* Pro Upgrade Banner */}
-          {!isProUser && (
-            <div className="p-4 rounded-lg border" style={{ backgroundColor: 'var(--btn)', borderColor: 'var(--line)' }}>
-              <div className="flex items-center gap-3">
-                <div className="text-2xl">💎</div>
-                <div className="flex-1">
-                  <h4 className="font-semibold">Upgrade to Pro</h4>
-                  <p className="text-sm" style={{ color: 'var(--muted)' }}>
-                    Get precise timing control, email notifications, and advanced features
-                  </p>
-                </div>
-                <button 
-                  onClick={startProUpgrade}
-                  className="px-4 py-2 rounded text-sm font-medium transition-colors"
-                  style={{ backgroundColor: 'var(--accent)', color: 'white' }}>
-                  Upgrade
-                </button>
-              </div>
-            </div>
-          )}
+          <UpgradeToProCTA variant="panel" />
         </div>
 
         {/* Footer */}

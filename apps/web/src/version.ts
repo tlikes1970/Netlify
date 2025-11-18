@@ -1,5 +1,14 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.159: B2 - Settings Architecture Consolidation
+// - Centralized Pro features config (settingsProConfig.ts) - single source of truth for all Pro features
+// - Created unified UpgradeToProCTA component with 4 variants (banner, panel, inline, button)
+// - Replaced scattered upgrade CTAs across Settings sections with unified component
+// - Added Community settings section/tab with Weekly Email Digest and topic following
+// - Moved community-related settings from NotificationsSection to dedicated CommunitySection
+// - Verified stats are not duplicated (Account stats only in AccountSection)
+// - All changes incremental, follow existing patterns, TypeScript passes
+// - Rollback: Revert this commit to restore previous Settings architecture
 // ⚠️ VERSION 0.1.91: Added comment counter and NEW badge to community posts
 // - Added clickable reply counter with show/hide thread functionality in comments
 // - Added comment count display on post cards with standout accent styling
@@ -163,4 +172,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.91";
+export const APP_VERSION = "0.1.159";

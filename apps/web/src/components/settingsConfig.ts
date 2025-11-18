@@ -10,6 +10,7 @@ export type SettingsSectionId =
   | 'account'
   | 'notifications'
   | 'display'
+  | 'community'
   | 'pro'
   | 'data'
   | 'about'
@@ -26,6 +27,7 @@ export const SETTINGS_SECTIONS: SettingsSectionConfig[] = [
   { id: 'account', label: 'Account & Profile' },
   { id: 'notifications', label: 'Notifications' },
   { id: 'display', label: 'Display & Layout' },
+  { id: 'community', label: 'Community' },
   { id: 'pro', label: 'Pro' },
   { id: 'data', label: 'Data & Backups' },
   { id: 'about', label: 'About' },
