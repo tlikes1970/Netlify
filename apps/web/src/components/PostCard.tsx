@@ -28,6 +28,7 @@ export interface PostCardProps {
     tags?: Array<{ slug: string; name: string }>;
     containsSpoilers?: boolean;
     authorIsPro?: boolean;
+    commentCount?: number;
   };
   onClick?: (slug: string) => void;
   compact?: boolean;
@@ -54,6 +55,11 @@ export default function PostCard({ post, onClick, compact = false }: PostCardPro
         day: 'numeric',
       })
     : '';
+  
+  // Check if post is new (within last 24 hours)
+  const isNew = post.publishedAt
+    ? (Date.now() - new Date(post.publishedAt).getTime()) < 24 * 60 * 60 * 1000
+    : false;
 
   return (
     <article
@@ -68,7 +74,20 @@ export default function PostCard({ post, onClick, compact = false }: PostCardPro
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <h4 className="text-primary font-medium truncate mb-1">{post.title}</h4>
+          <div className="flex items-center gap-2 mb-1">
+            <h4 className="text-primary font-medium truncate flex-1">{post.title}</h4>
+            {isNew && (
+              <span
+                className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide flex-shrink-0"
+                style={{
+                  backgroundColor: 'var(--accent-primary)',
+                  color: 'var(--text)',
+                }}
+              >
+                New
+              </span>
+            )}
+          </div>
           {!compact && previewText && (
             <SpoilerWrapper containsSpoilers={post.containsSpoilers || false}>
               <p className="text-secondary text-sm mt-1 line-clamp-2 mb-2">
@@ -84,6 +103,17 @@ export default function PostCard({ post, onClick, compact = false }: PostCardPro
               <>
                 <span>·</span>
                 <span>{publishDate}</span>
+              </>
+            )}
+            {post.commentCount !== undefined && post.commentCount > 0 && (
+              <>
+                <span>·</span>
+                <span
+                  className="font-semibold"
+                  style={{ color: 'var(--accent-primary)' }}
+                >
+                  {post.commentCount} {post.commentCount === 1 ? 'comment' : 'comments'}
+                </span>
               </>
             )}
           </div>

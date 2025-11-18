@@ -579,6 +579,11 @@ const CommunityPanel = memo(function CommunityPanel() {
                     })
                   : null;
 
+                // Check if post is new (within last 24 hours)
+                const isNew = post.publishedAt
+                  ? (Date.now() - new Date(post.publishedAt).getTime()) < 24 * 60 * 60 * 1000
+                  : false;
+
                 return (
                   <div
                     key={post.id}
@@ -597,12 +602,25 @@ const CommunityPanel = memo(function CommunityPanel() {
                       e.currentTarget.style.backgroundColor = "var(--btn2)";
                     }}
                   >
-                    <h4
-                      className="text-xs font-semibold mb-1 line-clamp-2"
-                      style={{ color: "var(--text)" }}
-                    >
-                      {post.title}
-                    </h4>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4
+                        className="text-xs font-semibold line-clamp-2 flex-1"
+                        style={{ color: "var(--text)" }}
+                      >
+                        {post.title}
+                      </h4>
+                      {isNew && (
+                        <span
+                          className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide flex-shrink-0"
+                          style={{
+                            backgroundColor: "var(--accent-primary)",
+                            color: "var(--text)",
+                          }}
+                        >
+                          New
+                        </span>
+                      )}
+                    </div>
                     {post.excerpt && (
                       <p
                         className="text-xs mb-2 line-clamp-2"
@@ -653,6 +671,17 @@ const CommunityPanel = memo(function CommunityPanel() {
                         <>
                           <span>·</span>
                           <span>Score: {post.score}</span>
+                        </>
+                      )}
+                      {post.commentCount !== undefined && post.commentCount > 0 && (
+                        <>
+                          <span>·</span>
+                          <span
+                            className="font-semibold"
+                            style={{ color: "var(--accent-primary)" }}
+                          >
+                            {post.commentCount} {post.commentCount === 1 ? "comment" : "comments"}
+                          </span>
                         </>
                       )}
                     </div>

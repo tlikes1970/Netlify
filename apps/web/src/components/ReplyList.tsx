@@ -26,9 +26,10 @@ interface Reply {
 interface ReplyListProps {
   postId: string;
   commentId: string;
+  showComposer?: boolean;
 }
 
-export function ReplyList({ postId, commentId }: ReplyListProps) {
+export function ReplyList({ postId, commentId, showComposer = false }: ReplyListProps) {
   const { isAuthenticated, user } = useAuth();
   const settings = useSettings();
   const [replies, setReplies] = useState<Reply[]>([]);
@@ -84,43 +85,49 @@ export function ReplyList({ postId, commentId }: ReplyListProps) {
 
   return (
     <div className="mt-3 ml-4 border-l-2 pl-4 space-y-3" style={{ borderColor: 'var(--line)' }}>
-      {replies.map((r) => {
-        const replyDate = r.createdAt?.toDate
-          ? r.createdAt.toDate().toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit',
-            })
-          : r.createdAt
-          ? new Date(r.createdAt).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })
-          : '';
+      {replies.length === 0 && !showComposer ? (
+        <p className="text-xs py-2" style={{ color: 'var(--muted)' }}>
+          No replies yet.
+        </p>
+      ) : (
+        replies.map((r) => {
+          const replyDate = r.createdAt?.toDate
+            ? r.createdAt.toDate().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+              })
+            : r.createdAt
+            ? new Date(r.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              })
+            : '';
 
-        return (
-          <div key={r.id} className="rounded-lg p-3" style={{ backgroundColor: 'var(--layer)' }}>
-            <div className="flex items-center gap-2 mb-1">
-              {r.authorAvatar && (
-                <img
-                  src={r.authorAvatar}
-                  alt={r.authorName}
-                  className="w-6 h-6 rounded-full"
-                />
-              )}
-              <span className="text-sm" style={{ color: 'var(--text)' }}>{r.authorName}</span>
-              <ProBadge isPro={r.authorIsPro} />
-              <span className="text-xs" style={{ color: 'var(--muted)' }}>{replyDate}</span>
+          return (
+            <div key={r.id} className="rounded-lg p-3" style={{ backgroundColor: 'var(--layer)' }}>
+              <div className="flex items-center gap-2 mb-1">
+                {r.authorAvatar && (
+                  <img
+                    src={r.authorAvatar}
+                    alt={r.authorName}
+                    className="w-6 h-6 rounded-full"
+                  />
+                )}
+                <span className="text-sm" style={{ color: 'var(--text)' }}>{r.authorName}</span>
+                <ProBadge isPro={r.authorIsPro} />
+                <span className="text-xs" style={{ color: 'var(--muted)' }}>{replyDate}</span>
+              </div>
+              <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--text)' }}>{r.body}</p>
             </div>
-            <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--text)' }}>{r.body}</p>
-          </div>
-        );
-      })}
+          );
+        })
+      )}
 
-      {isAuthenticated && user && (
+      {isAuthenticated && user && showComposer && (
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             type="text"

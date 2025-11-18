@@ -32,6 +32,7 @@ interface Comment {
   updatedAt?: any;
   containsSpoilers?: boolean;
   authorIsPro?: boolean;
+  replyCount?: number;
 }
 
 interface CommentListProps {
@@ -48,6 +49,7 @@ export default function CommentList({
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showReplyBox, setShowReplyBox] = useState<Record<string, boolean>>({});
+  const [showThread, setShowThread] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!postId) {
@@ -88,6 +90,7 @@ export default function CommentList({
               updatedAt: data.updatedAt,
               containsSpoilers: data.containsSpoilers || false,
               authorIsPro: data.authorIsPro || false,
+              replyCount: data.replyCount || 0,
             });
           });
 
@@ -214,22 +217,56 @@ export default function CommentList({
               </div>
             </div>
 
-            {/* Reply List - appears directly under comment body when Reply button is clicked */}
-            {showReplyBox[comment.id] && (
+            {/* Reply Thread - shows when thread is expanded */}
+            {showThread[comment.id] && (
               <div className="mt-3">
-                <ReplyList postId={postId} commentId={comment.id} />
+                <ReplyList 
+                  postId={postId} 
+                  commentId={comment.id}
+                  showComposer={showReplyBox[comment.id] || false}
+                />
               </div>
             )}
 
             <div className="flex items-center gap-4 mt-2">
-              {isAuthenticated && user && (
+              {/* Reply Counter - clickable to show/hide thread */}
+              {comment.replyCount && comment.replyCount > 0 && (
                 <button
                   onClick={() =>
-                    setShowReplyBox((s) => ({
+                    setShowThread((s) => ({
                       ...s,
                       [comment.id]: !s[comment.id],
                     }))
                   }
+                  className="text-sm font-medium hover:underline transition-colors"
+                  style={{ 
+                    color: "var(--accent-primary)",
+                    cursor: "pointer"
+                  }}
+                >
+                  {showThread[comment.id] 
+                    ? `Hide ${comment.replyCount} ${comment.replyCount === 1 ? 'reply' : 'replies'}`
+                    : `Show ${comment.replyCount} ${comment.replyCount === 1 ? 'reply' : 'replies'}`
+                  }
+                </button>
+              )}
+
+              {/* Reply Button - opens composer */}
+              {isAuthenticated && user && (
+                <button
+                  onClick={() => {
+                    setShowReplyBox((s) => ({
+                      ...s,
+                      [comment.id]: !s[comment.id],
+                    }));
+                    // Auto-expand thread when clicking Reply if it's collapsed
+                    if (!showThread[comment.id]) {
+                      setShowThread((s) => ({
+                        ...s,
+                        [comment.id]: true,
+                      }));
+                    }
+                  }}
                   className="text-sm hover:underline"
                   style={{ color: "var(--accent-primary)" }}
                 >
