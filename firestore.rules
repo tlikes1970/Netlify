@@ -34,8 +34,10 @@ service cloud.firestore {
       
       // Only post author can update their own post, or admin
       // Also allow Cloud Functions to update score and voteCount
+      // Admins can set hidden field for moderation
       allow update: if (isOwner(resource.data.authorId) || isAdmin())
-        && request.resource.data.authorId == resource.data.authorId; // authorId cannot be changed
+        && request.resource.data.authorId == resource.data.authorId // authorId cannot be changed
+        && (!('hidden' in request.resource.data) || isAdmin() || resource.data.hidden == request.resource.data.hidden); // Only admins can change hidden status
       
       // Only post author can delete their own post, or admin
       allow delete: if isOwner(resource.data.authorId) || isAdmin();
@@ -68,13 +70,14 @@ service cloud.firestore {
           && (!('containsSpoilers' in request.resource.data) || request.resource.data.containsSpoilers is bool)
           && (!('authorIsPro' in request.resource.data) || request.resource.data.authorIsPro is bool);
         
-        // Comment authors can update their own comments
-        allow update: if isAuthenticated()
-          && resource.data.authorId == request.auth.uid
-          && request.resource.data.authorId == resource.data.authorId // authorId cannot be changed
+        // Comment authors can update their own comments, or admin for moderation
+        // Admins can set hidden field for moderation
+        allow update: if (isAuthenticated() && resource.data.authorId == request.auth.uid && request.resource.data.authorId == resource.data.authorId // authorId cannot be changed
           && request.resource.data.body is string
           && request.resource.data.body.size() > 0
-          && request.resource.data.body.size() <= 5000;
+          && request.resource.data.body.size() <= 5000
+          && (!('hidden' in request.resource.data) || resource.data.hidden == request.resource.data.hidden)) // Authors cannot change hidden status
+          || (isAdmin() && request.resource.data.authorId == resource.data.authorId); // Admins can update hidden status
         
         // Comment authors or post authors can delete comments, or admin
         allow delete: if isAuthenticated()
@@ -115,6 +118,24 @@ service cloud.firestore {
       // Users can delete their own document
       allow delete: if isAuthenticated()
         && userId == request.auth.uid;
+    }
+
+    // Reports collection - moderation reports
+    match /reports/{reportId} {
+      // Users can create reports (any authenticated user)
+      allow create: if isAuthenticated()
+        && request.resource.data.reportedBy == request.auth.uid
+        && request.resource.data.keys().hasAll(['itemId', 'itemType', 'reportedBy', 'createdAt', 'status'])
+        && request.resource.data.itemType in ['post', 'comment']
+        && request.resource.data.status == 'pending'
+        && (!('reason' in request.resource.data) || request.resource.data.reason is string || request.resource.data.reason == null);
+      
+      // Users cannot update or delete reports
+      // Only admins can read and update reports
+      allow read, update: if isAdmin();
+      
+      // No delete allowed (reports are kept for audit trail)
+      allow delete: if false;
     }
 
     // ===== USERNAME CLAIMING RULES (TestFlight unblock) =====

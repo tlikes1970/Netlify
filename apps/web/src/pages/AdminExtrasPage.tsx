@@ -9,6 +9,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  getDocs,
 } from "firebase/firestore";
 import { db } from "../lib/firebaseBootstrap";
 import { ExtrasVideo } from "../lib/extras/types";
@@ -16,6 +17,7 @@ import { extrasProvider } from "../lib/extras/extrasProvider";
 import { useSettings, settingsManager } from "../lib/settings";
 import { useAdminRole } from "../hooks/useAdminRole";
 import { isMobileNow } from "../lib/isMobile";
+import { getAllReports, updateReportStatus, toggleItemHidden, toggleCommentHidden, type Report } from "../lib/communityReports";
 
 interface UGCSubmission {
   id: string;
@@ -36,6 +38,274 @@ interface UGCSubmission {
  * Dependencies: ExtrasProvider, admin authentication, email processing
  */
 
+interface ModerationQueueProps {
+  reports: Report[];
+  reportsLoading: boolean;
+  processingReport: string | null;
+  onLoadReports: () => Promise<void>;
+  onUpdateStatus: (reportId: string, status: "pending" | "reviewed" | "dismissed") => Promise<void>;
+  onToggleHidden: (report: Report) => Promise<void>;
+}
+
+function ModerationQueue({
+  reports,
+  reportsLoading,
+  processingReport,
+  onLoadReports,
+  onUpdateStatus,
+  onToggleHidden,
+}: ModerationQueueProps) {
+  const [itemPreviews, setItemPreviews] = useState<Record<string, { text: string; hidden: boolean }>>({});
+  const [loadingPreviews, setLoadingPreviews] = useState<Record<string, boolean>>({});
+
+  // Load reports on mount
+  useEffect(() => {
+    onLoadReports();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Load item previews
+  useEffect(() => {
+    const loadPreviews = async () => {
+      for (const report of reports) {
+        if (itemPreviews[report.id]) continue; // Already loaded
+        
+        setLoadingPreviews((prev) => ({ ...prev, [report.id]: true }));
+        try {
+          if (report.itemType === "post") {
+            const postRef = doc(db, "posts", report.itemId);
+            const postSnap = await getDoc(postRef);
+            if (postSnap.exists()) {
+              const data = postSnap.data();
+              const preview = (data.body || data.excerpt || data.title || "").slice(0, 100);
+              setItemPreviews((prev) => ({
+                ...prev,
+                [report.id]: { text: preview, hidden: data.hidden || false },
+              }));
+            }
+          } else {
+            // For comments, find the post
+            const postsRef = collection(db, "posts");
+            const postsSnapshot = await getDocs(postsRef);
+            for (const postDoc of postsSnapshot.docs) {
+              const commentRef = doc(db, "posts", postDoc.id, "comments", report.itemId);
+              const commentSnap = await getDoc(commentRef);
+              if (commentSnap.exists()) {
+                const data = commentSnap.data();
+                const preview = (data.body || "").slice(0, 100);
+                setItemPreviews((prev) => ({
+                  ...prev,
+                  [report.id]: { text: preview, hidden: data.hidden || false },
+                }));
+                break;
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`Failed to load preview for report ${report.id}:`, error);
+        } finally {
+          setLoadingPreviews((prev) => ({ ...prev, [report.id]: false }));
+        }
+      }
+    };
+    
+    if (reports.length > 0) {
+      loadPreviews();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reports]);
+
+  const formatDate = (timestamp: any) => {
+    if (!timestamp) return "Unknown";
+    if (timestamp.toDate) {
+      return timestamp.toDate().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    }
+    return new Date(timestamp).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div
+        className="bg-gray-100 rounded-lg p-6"
+        style={{ backgroundColor: "var(--card)" }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold">Moderation Queue</h2>
+          <button
+            onClick={onLoadReports}
+            disabled={reportsLoading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {reportsLoading ? "Loading..." : "Refresh"}
+          </button>
+        </div>
+
+        {reportsLoading ? (
+          <div className="text-center py-6 text-sm" style={{ color: "var(--muted)" }}>Loading reports...</div>
+        ) : reports.length === 0 ? (
+          <div className="text-center py-6 text-sm" style={{ color: "var(--muted)" }}>
+            No reports pending review
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {reports.map((report) => {
+              const preview = itemPreviews[report.id];
+              const isProcessing = processingReport === report.id;
+              
+              return (
+                <div
+                  key={report.id}
+                  className="p-3 rounded-lg border"
+                  style={{
+                    backgroundColor: "var(--card)",
+                    borderColor: "var(--line)",
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span
+                          className="px-2 py-1 text-xs rounded-full font-medium"
+                          style={{
+                            backgroundColor:
+                              report.itemType === "post"
+                                ? "var(--accent-primary)"
+                                : "var(--accent)",
+                            color: "white",
+                          }}
+                        >
+                          {report.itemType === "post" ? "Post" : "Comment"}
+                        </span>
+                        <span
+                          className="px-2 py-1 text-xs rounded-full"
+                          style={{
+                            backgroundColor:
+                              report.status === "pending"
+                                ? "#fbbf24"
+                                : report.status === "reviewed"
+                                ? "#10b981"
+                                : "#6b7280",
+                            color: "white",
+                          }}
+                        >
+                          {report.status}
+                        </span>
+                        {preview?.hidden && (
+                          <span
+                            className="px-2 py-1 text-xs rounded-full font-semibold"
+                            style={{
+                              backgroundColor: "#ef4444",
+                              color: "white",
+                            }}
+                          >
+                            [HIDDEN]
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="text-sm mb-2" style={{ color: "var(--text)" }}>
+                        <div>
+                          <strong>Item ID:</strong> {report.itemId}
+                        </div>
+                        <div>
+                          <strong>Reported by:</strong> {report.reportedBy}
+                        </div>
+                        <div>
+                          <strong>Date:</strong> {formatDate(report.createdAt)}
+                        </div>
+                        {report.reason && (
+                          <div>
+                            <strong>Reason:</strong> {report.reason}
+                          </div>
+                        )}
+                      </div>
+
+                      {loadingPreviews[report.id] ? (
+                        <div className="text-xs" style={{ color: "var(--muted)" }}>
+                          Loading preview...
+                        </div>
+                      ) : preview ? (
+                        <div
+                          className="text-sm mt-2 p-2 rounded"
+                          style={{
+                            backgroundColor: "var(--card)",
+                            color: "var(--muted)",
+                          }}
+                        >
+                          {preview.text}
+                          {preview.text.length >= 100 && "..."}
+                        </div>
+                      ) : (
+                        <div className="text-xs" style={{ color: "var(--muted)" }}>
+                          Preview unavailable
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => onToggleHidden(report)}
+                        disabled={isProcessing}
+                        className="px-3 py-1.5 text-xs rounded transition-colors"
+                        style={{
+                          backgroundColor: preview?.hidden
+                            ? "#10b981"
+                            : "#ef4444",
+                          color: "white",
+                        }}
+                      >
+                        {isProcessing
+                          ? "Processing..."
+                          : preview?.hidden
+                          ? "Unhide"
+                          : "Hide"}
+                      </button>
+                      <button
+                        onClick={() => onUpdateStatus(report.id, "reviewed")}
+                        disabled={isProcessing || report.status === "reviewed"}
+                        className="px-3 py-1.5 text-xs rounded transition-colors disabled:opacity-50"
+                        style={{
+                          backgroundColor: "#10b981",
+                          color: "white",
+                        }}
+                      >
+                        Mark Reviewed
+                      </button>
+                      <button
+                        onClick={() => onUpdateStatus(report.id, "dismissed")}
+                        disabled={isProcessing || report.status === "dismissed"}
+                        className="px-3 py-1.5 text-xs rounded transition-colors disabled:opacity-50"
+                        style={{
+                          backgroundColor: "#6b7280",
+                          color: "white",
+                        }}
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?: boolean } = {}) {
   const settings = useSettings();
   const { isAdmin, loading: adminLoading } = useAdminRole();
@@ -52,7 +322,8 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
     | "community"
     | "admin"
     | "insights"
-  >("content");
+    | "moderation"
+  >("community");
   
   // Use prop if provided, otherwise fall back to isMobileNow()
   const isMobile = isMobileProp ?? isMobileNow();
@@ -112,6 +383,14 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
   const [posts, setPosts] = useState<any[]>([]);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [postComments, setPostComments] = useState<any[]>([]);
+
+  // Moderation queue state
+  const [reports, setReports] = useState<Report[]>([]);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [processingReport, setProcessingReport] = useState<string | null>(null);
+  
+  // Calculate pending reports count
+  const pendingReportsCount = reports.filter(r => r.status === "pending").length;
 
   // Pro status
   const isPro = settings.pro?.isPro ?? false;
@@ -670,47 +949,44 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
           color: var(--text);
         }
 
-        /* Kill the card on narrow viewports */
+        /* Mobile: no padding when inside Settings */
         @media (max-width: 900px) {
           .admin-extras-root {
             background: transparent;
             box-shadow: none;
             border-radius: 0;
-            padding: 0.75rem 1rem 1.25rem;
-            border: none;
-          }
-          
-          .settings-sheet .admin-extras-root {
-            background: transparent;
-            box-shadow: none;
-            border-radius: 0;
-            padding: 0.75rem 1rem 1.25rem;
+            padding: 0;
             border: none;
           }
         }
 
-        /* Desktop: lighter card, reduced padding */
+        /* Desktop: no padding when inside Settings */
         @media (min-width: 901px) {
           .admin-extras-root {
-            padding: 20px 24px;
+            padding: 0;
           }
         }
 
         /* Tabs - Real pills */
         .admin-extras-tabs {
           display: flex;
-          flex-wrap: nowrap;
-          overflow-x: auto;
+          flex-wrap: wrap;
           gap: 0.5rem;
           padding: 0.5rem 0 0.75rem 0;
           margin-bottom: 0.75rem;
-          margin-left: -0.25rem;
-          margin-right: -0.25rem;
-          padding-left: 0.25rem;
-          padding-right: 0.25rem;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
+          /* Prevent tabs from extending past container */
+          min-width: 0;
+          /* Ensure container respects parent boundaries and clips overflow */
+          position: relative;
+          contain: layout style;
+        }
+        
+        /* Ensure tabs don't overflow parent container */
+        .admin-extras-tabs button {
+          flex-shrink: 0;
         }
 
         .admin-extras-tabs::-webkit-scrollbar {
@@ -728,6 +1004,7 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
           cursor: pointer;
           transition: all 0.2s ease;
           flex-shrink: 0;
+          max-width: fit-content;
         }
 
         .admin-extras-tab:hover {
@@ -735,15 +1012,16 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
         }
 
         .admin-extras-tab--active {
-          border-color: var(--accent, #3b82f6);
-          background: var(--accent, #3b82f6);
+          border-color: var(--accent-primary, #3b82f6);
+          background: var(--accent-primary, #3b82f6);
           color: #fff;
           font-weight: 600;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .admin-extras-tab--active:hover {
-          background: var(--accent, #3b82f6);
-          opacity: 0.9;
+          background: var(--accent-primary, #3b82f6);
+          opacity: 0.95;
         }
 
         /* Compact sections */
@@ -849,22 +1127,60 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
           }
         }
       `}</style>
-      <div className="admin-extras-root">
+      <div className="admin-extras-root" style={{ width: "100%", overflow: "hidden", padding: "0" }}>
         <div
           className="w-full"
           style={{
             minWidth: 0,
-            maxWidth: isMobile ? "100%" : "1280px",
+            maxWidth: "100%",
             margin: "0 auto",
-            padding: isMobile ? "0" : "0 1rem", // Add horizontal padding to prevent cutoff
+            padding: "0",
+            boxSizing: "border-box",
+            overflow: "hidden",
+            width: "100%",
+            position: "relative",
           }}
         >
           <h1
             className="font-bold admin-extras-header"
-            style={{ marginBottom: isMobile ? "0.75rem" : "1.5rem" }}
+            style={{ marginBottom: isMobile ? "0.75rem" : "1rem" }}
           >
-            Admin - Content Management
+            {activeTab === "community"
+              ? "Community Content Management"
+              : activeTab === "moderation"
+              ? "Moderation Queue"
+              : activeTab === "content"
+              ? "Auto Content"
+              : activeTab === "insights"
+              ? "Insights & Easter Eggs"
+              : activeTab === "comments"
+              ? "Marquee Comments"
+              : activeTab === "videos"
+              ? "Video Submissions"
+              : activeTab === "pro"
+              ? "Pro Status"
+              : activeTab === "admin"
+              ? "Admin Management"
+              : "Admin"}
           </h1>
+          
+          {/* Helper text based on active tab */}
+          {activeTab === "community" && (
+            <p
+              className="text-sm mb-3"
+              style={{ color: "var(--muted)", marginBottom: "0.75rem" }}
+            >
+              Manage all community posts and comments. This is not limited to reported content.
+            </p>
+          )}
+          {activeTab === "moderation" && (
+            <p
+              className="text-sm mb-3"
+              style={{ color: "var(--muted)", marginBottom: "0.75rem" }}
+            >
+              Items hidden here are removed from Community for regular users. Use this to review reports and hide/unhide content.
+            </p>
+          )}
 
           {/* Tabs - Dropdown on mobile, horizontal pills on desktop */}
           {isMobile ? (
@@ -890,16 +1206,37 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
                 paddingRight: "32px",
               }}
             >
+              <option value="community">Community Content</option>
+              {isAdmin && <option value="moderation">Moderation{pendingReportsCount > 0 ? ` (${pendingReportsCount})` : ""}</option>}
               <option value="content">Auto Content</option>
               <option value="insights">Insights & Easter Eggs</option>
               <option value="comments">Marquee Comments ({pendingUGC})</option>
               <option value="videos">Video Submissions ({pendingUGC})</option>
               <option value="pro">Pro Status</option>
-              <option value="community">Community Content</option>
               {isAdmin && <option value="admin">Admin Management</option>}
             </select>
           ) : (
-            <div className="admin-extras-tabs">
+            <div className="admin-extras-tabs" style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", position: "relative" }}>
+              <button
+                onClick={() => setActiveTab("community")}
+                className={`admin-extras-tab ${activeTab === "community" ? "admin-extras-tab--active" : ""}`}
+                title="Community Content"
+              >
+                Community Content
+              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => setActiveTab("moderation")}
+                  className={`admin-extras-tab ${activeTab === "moderation" ? "admin-extras-tab--active" : ""}`}
+                  title="Moderation Queue"
+                >
+                  Moderation{pendingReportsCount > 0 && (
+                    <span style={{ marginLeft: "0.25rem", fontWeight: "bold" }}>
+                      ({pendingReportsCount})
+                    </span>
+                  )}
+                </button>
+              )}
               <button
                 onClick={() => setActiveTab("content")}
                 className={`admin-extras-tab ${activeTab === "content" ? "admin-extras-tab--active" : ""}`}
@@ -934,13 +1271,6 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
                 title="Pro Status"
               >
                 Pro Status
-              </button>
-              <button
-                onClick={() => setActiveTab("community")}
-                className={`admin-extras-tab ${activeTab === "community" ? "admin-extras-tab--active" : ""}`}
-                title="Community Content"
-              >
-                Community Content
               </button>
               {isAdmin && (
                 <button
@@ -1458,14 +1788,14 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
 
           {/* Community Content Tab */}
           {activeTab === "community" && (
-            <div className="space-y-6">
+            <div className="space-y-4" style={{ marginTop: "0.5rem" }}>
               <div
-                className="bg-gray-100 rounded-lg p-6"
-                style={{ backgroundColor: "var(--card)" }}
+                className="rounded-lg"
+                style={{ 
+                  backgroundColor: isMobile ? "transparent" : "var(--card)",
+                  padding: isMobile ? "0" : "16px",
+                }}
               >
-                <h2 className="text-2xl font-bold mb-4">
-                  Community Content Management
-                </h2>
                 {adminLoading ? (
                   <p
                     className="text-sm text-yellow-600 mb-4"
@@ -1691,11 +2021,11 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
                 )}
 
                 {/* Posts List */}
-                <div className="mb-6">
-                  <h3 className="text-xl font-semibold mb-4">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold mb-3" style={{ color: "var(--text)" }}>
                     Posts ({posts.length})
                   </h3>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                  <div className="space-y-2">
                     {posts.map((post) => (
                       <div
                         key={post.id}
@@ -1752,11 +2082,11 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
 
                 {/* Comments for Selected Post */}
                 {selectedPostId && (
-                  <div>
-                    <h3 className="text-xl font-semibold mb-4">
+                  <div className="mt-4">
+                    <h3 className="text-lg font-semibold mb-3" style={{ color: "var(--text)" }}>
                       Comments ({postComments.length})
                     </h3>
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                    <div className="space-y-2">
                       {postComments.map((comment) => (
                         <div
                           key={comment.id}
@@ -1935,6 +2265,87 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Moderation Queue Tab */}
+          {activeTab === "moderation" && isAdmin && (
+            <ModerationQueue
+              reports={reports}
+              reportsLoading={reportsLoading}
+              processingReport={processingReport}
+              onLoadReports={async () => {
+                setReportsLoading(true);
+                try {
+                  const allReports = await getAllReports();
+                  setReports(allReports);
+                } catch (error) {
+                  console.error("Failed to load reports:", error);
+                  alert("Failed to load reports. Please try again.");
+                } finally {
+                  setReportsLoading(false);
+                }
+              }}
+              onUpdateStatus={async (reportId, status) => {
+                setProcessingReport(reportId);
+                try {
+                  await updateReportStatus(reportId, status);
+                  // Reload reports
+                  const allReports = await getAllReports();
+                  setReports(allReports);
+                } catch (error) {
+                  console.error("Failed to update report status:", error);
+                  alert("Failed to update report status. Please try again.");
+                } finally {
+                  setProcessingReport(null);
+                }
+              }}
+              onToggleHidden={async (report) => {
+                setProcessingReport(report.id);
+                try {
+                  if (report.itemType === "post") {
+                    // Get current hidden state
+                    const postRef = doc(db, "posts", report.itemId);
+                    const postSnap = await getDoc(postRef);
+                    const currentHidden = postSnap.data()?.hidden || false;
+                    await toggleItemHidden(report.itemId, "post", !currentHidden);
+                  } else {
+                    // For comments, we need to find the postId
+                    // This is a limitation - we'll need to store postId in reports or query for it
+                    // For now, let's add a helper to find postId from commentId
+                    const postsRef = collection(db, "posts");
+                    const postsSnapshot = await getDocs(postsRef);
+                    let foundPostId: string | null = null;
+                    
+                    for (const postDoc of postsSnapshot.docs) {
+                      const commentsRef = collection(db, "posts", postDoc.id, "comments");
+                      const commentDoc = doc(commentsRef, report.itemId);
+                      const commentSnap = await getDoc(commentDoc);
+                      if (commentSnap.exists()) {
+                        foundPostId = postDoc.id;
+                        break;
+                      }
+                    }
+                    
+                    if (foundPostId) {
+                      const commentRef = doc(db, "posts", foundPostId, "comments", report.itemId);
+                      const commentSnap = await getDoc(commentRef);
+                      const currentHidden = commentSnap.data()?.hidden || false;
+                      await toggleCommentHidden(foundPostId, report.itemId, !currentHidden);
+                    } else {
+                      throw new Error("Could not find post for comment");
+                    }
+                  }
+                  // Reload reports
+                  const allReports = await getAllReports();
+                  setReports(allReports);
+                } catch (error) {
+                  console.error("Failed to toggle hidden status:", error);
+                  alert("Failed to toggle hidden status. Please try again.");
+                } finally {
+                  setProcessingReport(null);
+                }
+              }}
+            />
           )}
 
           {/* Admin Management Tab */}

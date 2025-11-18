@@ -391,7 +391,7 @@ export default function App() {
   const theaters = useInTheaters();
 
   // Mobile Settings breakpoint - use sheet below this width
-  const MOBILE_SETTINGS_BREAKPOINT = 900;
+  const MOBILE_SETTINGS_BREAKPOINT = 744;
 
   /**
    * Helper to determine if mobile SettingsSheet should be used instead of desktop SettingsPage
@@ -399,13 +399,13 @@ export default function App() {
    */
   function shouldUseMobileSettings(): boolean {
     // Guard for SSR
-    if (typeof window === 'undefined') return false;
+    if (typeof window === "undefined") return false;
 
     const width = window.innerWidth;
 
     // Check existing gate / flag checks
     const isCompact = isCompactMobileV1 ? isCompactMobileV1() : false;
-    const flagEnabled = flag ? flag('settings_mobile_sheet_v1') : true;
+    const flagEnabled = flag ? flag("settings_mobile_sheet_v1") : true;
 
     // If flag is disabled, always use desktop
     if (!flagEnabled) return false;
@@ -419,12 +419,12 @@ export default function App() {
 
   // Handle settings click - route mobile to SettingsSheet, desktop to SettingsPage
   const handleSettingsClick = () => {
-    console.log('🔧 handleSettingsClick called');
+    console.log("🔧 handleSettingsClick called");
     if (shouldUseMobileSettings()) {
-      console.log('🔧 Opening SettingsSheet');
+      console.log("🔧 Opening SettingsSheet");
       openSettingsSheet();
     } else {
-      console.log('🔧 Opening SettingsPage');
+      console.log("🔧 Opening SettingsPage");
       setShowSettings(true);
     }
   };
@@ -454,10 +454,18 @@ export default function App() {
       const hash = window.location.hash;
       if (hash.startsWith("#settings/")) {
         const sectionId = hash.replace("#settings/", "").toLowerCase();
-        
+
         // Valid section IDs from settingsConfig
-        const validSections = ["account", "notifications", "display", "pro", "data", "about", "admin"];
-        
+        const validSections = [
+          "account",
+          "notifications",
+          "display",
+          "pro",
+          "data",
+          "about",
+          "admin",
+        ];
+
         if (shouldUseMobileSettings()) {
           // On mobile, open SettingsSheet with the section
           if (validSections.includes(sectionId)) {
@@ -469,9 +477,11 @@ export default function App() {
           // On desktop, open SettingsPage and navigate to section
           setShowSettings(true);
           // Dispatch event to navigate to section (SettingsPage listens for this)
-          window.dispatchEvent(new CustomEvent("navigate-to-settings-section", { 
-            detail: { sectionId } 
-          }));
+          window.dispatchEvent(
+            new CustomEvent("navigate-to-settings-section", {
+              detail: { sectionId },
+            })
+          );
         }
       } else if (hash === "#games/flickword") {
         setShowFlickWordModal(true);

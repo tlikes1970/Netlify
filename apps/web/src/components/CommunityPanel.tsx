@@ -3,6 +3,8 @@ import { collection, query, orderBy, limit, getDocs, startAfter, DocumentData, Q
 import { db } from "../lib/firebaseBootstrap";
 import { useTranslations } from "@/lib/language";
 import { useSettings, settingsManager } from "../lib/settings";
+import { useAdminRole } from "../hooks/useAdminRole";
+import { useAuth } from "../hooks/useAuth";
 import FlickWordStats from "./games/FlickWordStats";
 import TriviaStats from "./games/TriviaStats";
 import CommunityPlayer from "./CommunityPlayer";
@@ -10,6 +12,7 @@ import NewPostModal from "./NewPostModal";
 import { TOPICS, getTopicBySlug } from "../lib/communityTopics";
 import { SortMode, sortPosts, isProSortMode, getAvailableSortModes, getSortModeLabel } from "../lib/communitySorting";
 import ProBadge from "./ProBadge";
+import { reportPostOrComment } from "../lib/communityReports";
 // ⚠️ REMOVED: flickerDiagnostics import disabled
 
 // Lazy load game modals
@@ -43,9 +46,12 @@ const CommunityPanel = memo(function CommunityPanel() {
   // ⚠️ REMOVED: flickerDiagnostics logging disabled
 
   const translations = useTranslations();
+  const { isAdmin } = useAdminRole();
+  const { isAuthenticated, user } = useAuth();
   const settings = useSettings();
   const isPro = settings.pro.isPro || false;
   const followedTopics = settings.community.followedTopics || [];
+  const [reportingPosts, setReportingPosts] = useState<Record<string, boolean>>({});
   
   const [flickWordModalOpen, setFlickWordModalOpen] = useState(false);
   const [triviaModalOpen, setTriviaModalOpen] = useState(false);
@@ -54,9 +60,21 @@ const CommunityPanel = memo(function CommunityPanel() {
   const [postsLoading, setPostsLoading] = useState(true);
   const [postsError, setPostsError] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('newest');
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]); // Multi-select for Pro, single for Free
+  // Persist selectedTopics to localStorage
+  const [selectedTopics, setSelectedTopics] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const saved = localStorage.getItem('flicklet.community.selectedTopics');
+    return saved ? JSON.parse(saved) : [];
+  }); // Multi-select for Pro, single for Free
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  
+  // Persist selectedTopics to localStorage when it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('flicklet.community.selectedTopics', JSON.stringify(selectedTopics));
+    }
+  }, [selectedTopics]);
   
   const fetchingRef = useRef(false);
   const hasFetchedRef = useRef(false);
@@ -68,6 +86,9 @@ const CommunityPanel = memo(function CommunityPanel() {
     if (fetchingRef.current) {
       return;
     }
+    
+    // Capture isAdmin from component scope
+    const adminStatus = isAdmin;
 
     try {
       fetchingRef.current = true;
@@ -108,8 +129,17 @@ const CommunityPanel = memo(function CommunityPanel() {
 
       const snapshot = await getDocs(postsQuery);
       
-      // Map to Post objects
-      let newPosts: Post[] = snapshot.docs.map((doc) => {
+      // Map to Post objects and filter out hidden posts (unless admin)
+      let newPosts: Post[] = snapshot.docs
+        .filter((doc) => {
+          const data = doc.data();
+          // Show hidden posts only to admins
+          if (data.hidden === true && !adminStatus) {
+            return false;
+          }
+          return true;
+        })
+        .map((doc) => {
         const data = doc.data();
         return {
           id: doc.id,
@@ -199,7 +229,7 @@ const CommunityPanel = memo(function CommunityPanel() {
       setLoadingMore(false);
       fetchingRef.current = false;
     }
-  }, [sortMode, selectedTopics, followedTopics]);
+  }, [sortMode, selectedTopics, followedTopics, isAdmin]);
 
   // Fetch posts on mount
   useEffect(() => {
@@ -280,6 +310,25 @@ const CommunityPanel = memo(function CommunityPanel() {
   const handlePostClick = (slug: string) => {
     window.history.pushState({}, "", `/posts/${slug}`);
     window.dispatchEvent(new Event("pushstate"));
+  };
+
+  const handleReportPost = async (postId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated || !user || reportingPosts[postId]) return;
+
+    if (!confirm("Report this post? This will notify moderators for review.")) {
+      return;
+    }
+
+    setReportingPosts((prev) => ({ ...prev, [postId]: true }));
+    try {
+      await reportPostOrComment(postId, "post", user.uid);
+      alert("Post reported. Thank you for helping keep the community safe.");
+    } catch (error: any) {
+      alert(error.message || "Failed to report post. Please try again.");
+    } finally {
+      setReportingPosts((prev) => ({ ...prev, [postId]: false }));
+    }
   };
 
   return (
@@ -459,30 +508,39 @@ const CommunityPanel = memo(function CommunityPanel() {
             </button>
           </div>
 
-          {/* Sort Controls */}
-          <div className="mb-3">
-            <select
-              value={sortMode}
-              onChange={(e) => handleSortChange(e.target.value as SortMode)}
-              className="w-full px-2 py-1.5 text-xs rounded-lg"
-              style={{
-                backgroundColor: "var(--bg)",
-                color: "var(--text)",
-                border: "1px solid var(--line)",
-              }}
-            >
-              {getAvailableSortModes(isPro).map(mode => (
-                <option key={mode} value={mode}>
-                  {getSortModeLabel(mode)}
-                  {isProSortMode(mode) && " ⭐"}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Sort Controls & Topic Filters - Sticky Header */}
+          <div 
+            className="sticky top-0 z-10 mb-3 pb-2"
+            style={{
+              backgroundColor: "var(--card)",
+              paddingTop: "0.5rem",
+              marginTop: "-0.5rem",
+            }}
+          >
+            {/* Sort Controls */}
+            <div className="mb-3">
+              <select
+                value={sortMode}
+                onChange={(e) => handleSortChange(e.target.value as SortMode)}
+                className="w-full px-2 py-1.5 text-xs rounded-lg"
+                style={{
+                  backgroundColor: "var(--bg)",
+                  color: "var(--text)",
+                  border: "1px solid var(--line)",
+                }}
+              >
+                {getAvailableSortModes(isPro).map(mode => (
+                  <option key={mode} value={mode}>
+                    {getSortModeLabel(mode)}
+                    {isProSortMode(mode) && " ⭐"}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* Topic Filters */}
-          <div className="mb-3">
-            <div className="flex flex-wrap gap-1.5">
+            {/* Topic Filters */}
+            <div className="mb-3">
+              <div className="flex flex-wrap gap-1.5">
               {TOPICS.map(topic => {
                 const isSelected = selectedTopics.includes(topic.slug);
                 const isFollowed = followedTopics.includes(topic.slug);
@@ -536,6 +594,7 @@ const CommunityPanel = memo(function CommunityPanel() {
                 Pro users can filter by multiple topics
               </p>
             )}
+            </div>
           </div>
 
           {postsLoading ? (
@@ -588,7 +647,7 @@ const CommunityPanel = memo(function CommunityPanel() {
                   <div
                     key={post.id}
                     onClick={() => handlePostClick(post.slug)}
-                    className="cursor-pointer rounded-lg p-3 transition-colors mb-3 last:mb-0"
+                    className="cursor-pointer rounded-lg p-3 transition-colors mb-3 last:mb-0 relative group"
                     style={{
                       backgroundColor: "var(--btn2)",
                       borderColor: "var(--line)",
@@ -611,10 +670,11 @@ const CommunityPanel = memo(function CommunityPanel() {
                       </h4>
                       {isNew && (
                         <span
-                          className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide flex-shrink-0"
+                          className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide flex-shrink-0 relative z-0"
                           style={{
                             backgroundColor: "var(--accent-primary)",
                             color: "var(--text)",
+                            zIndex: 0,
                           }}
                         >
                           New
@@ -685,6 +745,19 @@ const CommunityPanel = memo(function CommunityPanel() {
                         </>
                       )}
                     </div>
+
+                    {/* Report Button - appears on hover */}
+                    {isAuthenticated && user && (
+                      <button
+                        onClick={(e) => handleReportPost(post.id, e)}
+                        disabled={reportingPosts[post.id]}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-2 right-2 px-2 py-1 text-xs rounded hover:bg-red-500/10 z-10"
+                        style={{ color: "var(--muted)", zIndex: 10 }}
+                        title="Report post"
+                      >
+                        {reportingPosts[post.id] ? "Reporting..." : "Report"}
+                      </button>
+                    )}
                   </div>
                 );
               })}

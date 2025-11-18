@@ -21,6 +21,7 @@ import { useAdminRole } from "../hooks/useAdminRole";
 import { ReplyList } from "./ReplyList";
 import ProBadge from "./ProBadge";
 import SpoilerWrapper from "./SpoilerWrapper";
+import { reportPostOrComment } from "../lib/communityReports";
 
 interface Comment {
   id: string;
@@ -50,6 +51,7 @@ export default function CommentList({
   const [loading, setLoading] = useState(true);
   const [showReplyBox, setShowReplyBox] = useState<Record<string, boolean>>({});
   const [showThread, setShowThread] = useState<Record<string, boolean>>({});
+  const [reporting, setReporting] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!postId) {
@@ -80,6 +82,10 @@ export default function CommentList({
 
           snapshot.forEach((doc) => {
             const data = doc.data();
+            // Filter out hidden comments (unless admin)
+            if (data.hidden === true && !isAdmin) {
+              return;
+            }
             commentsData.push({
               id: doc.id,
               authorId: data.authorId || "",
@@ -111,6 +117,25 @@ export default function CommentList({
       }
     };
   }, [postId]);
+
+  const handleReport = async (commentId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated || !user || reporting[commentId]) return;
+
+    if (!confirm("Report this comment? This will notify moderators for review.")) {
+      return;
+    }
+
+    setReporting((prev) => ({ ...prev, [commentId]: true }));
+    try {
+      await reportPostOrComment(commentId, "comment", user.uid);
+      alert("Comment reported. Thank you for helping keep the community safe.");
+    } catch (error: any) {
+      alert(error.message || "Failed to report comment. Please try again.");
+    } finally {
+      setReporting((prev) => ({ ...prev, [commentId]: false }));
+    }
+  };
 
   const handleDelete = async (commentId: string, commentAuthorId: string) => {
     if (!isAuthenticated || !user) return;
@@ -274,6 +299,17 @@ export default function CommentList({
                 </button>
               )}
 
+              {isAuthenticated && user && (
+                <button
+                  onClick={(e) => handleReport(comment.id, e)}
+                  disabled={reporting[comment.id]}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 text-xs rounded hover:bg-red-500/10"
+                  style={{ color: "var(--muted)" }}
+                  title="Report comment"
+                >
+                  {reporting[comment.id] ? "Reporting..." : "Report"}
+                </button>
+              )}
               {canDelete && (
                 <button
                   onClick={() => handleDelete(comment.id, comment.authorId)}

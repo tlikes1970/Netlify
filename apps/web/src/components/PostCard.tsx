@@ -6,10 +6,12 @@
  * Dependencies: VoteBar, useAuth for user display
  */
 
+import { useState } from 'react';
 import VoteBar from './VoteBar';
 import { useAuth } from '../hooks/useAuth';
 import ProBadge from './ProBadge';
 import SpoilerWrapper from './SpoilerWrapper';
+import { reportPostOrComment } from '../lib/communityReports';
 
 export interface PostCardProps {
   post: {
@@ -35,7 +37,27 @@ export interface PostCardProps {
 }
 
 export default function PostCard({ post, onClick, compact = false }: PostCardProps) {
-  const { isAuthenticated: _isAuthenticated } = useAuth(); // Reserved for future use
+  const { isAuthenticated, user } = useAuth();
+  const [reporting, setReporting] = useState(false);
+
+  const handleReport = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated || !user || reporting) return;
+
+    if (!confirm("Report this post? This will notify moderators for review.")) {
+      return;
+    }
+
+    setReporting(true);
+    try {
+      await reportPostOrComment(post.id, "post", user.uid);
+      alert("Post reported. Thank you for helping keep the community safe.");
+    } catch (error: any) {
+      alert(error.message || "Failed to report post. Please try again.");
+    } finally {
+      setReporting(false);
+    }
+  };
 
   const handleClick = (e: React.MouseEvent) => {
     e?.preventDefault?.();
@@ -63,7 +85,7 @@ export default function PostCard({ post, onClick, compact = false }: PostCardPro
 
   return (
     <article
-      className="bg-layer rounded-lg p-3 hover:ring-2 hover:ring-accent-primary transition cursor-pointer border border-line"
+      className="bg-layer rounded-lg p-3 hover:ring-2 hover:ring-accent-primary transition cursor-pointer border border-line relative group"
       onClick={handleClick}
     >
       <div className="flex gap-3">
@@ -134,6 +156,19 @@ export default function PostCard({ post, onClick, compact = false }: PostCardPro
           )}
         </div>
       </div>
+
+      {/* Report Button - appears on hover */}
+      {isAuthenticated && user && (
+        <button
+          onClick={handleReport}
+          disabled={reporting}
+          className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2 px-2 py-1 text-xs rounded hover:bg-red-500/10"
+          style={{ color: 'var(--muted)' }}
+          title="Report post"
+        >
+          {reporting ? 'Reporting...' : 'Report'}
+        </button>
+      )}
     </article>
   );
 }
