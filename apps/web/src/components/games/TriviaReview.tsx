@@ -7,7 +7,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useSettings } from '@/lib/settings';
 import { getCompletedTriviaGames, type CompletedTriviaGame } from '../../lib/gameReview';
 import { trackGameReview } from '../../lib/analytics';
 
