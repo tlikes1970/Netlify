@@ -153,20 +153,21 @@ export async function loadGameStatsFromFirebase(uid: string): Promise<boolean> {
   }
 }
 
+// Module-level timeout for debouncing
+let syncTimeout: ReturnType<typeof setTimeout> | null = null;
+
 /**
  * Sync game stats to Firebase (called after stats update)
  */
 export async function syncGameStats(uid: string): Promise<void> {
   // Debounce sync calls
-  if (syncGameStats.timeout) {
-    clearTimeout(syncGameStats.timeout);
+  if (syncTimeout) {
+    clearTimeout(syncTimeout);
   }
 
-  syncGameStats.timeout = setTimeout(async () => {
+  syncTimeout = setTimeout(async () => {
     await saveGameStatsToFirebase(uid);
+    syncTimeout = null;
   }, 1000); // 1 second debounce
 }
-
-// Add timeout property to function
-(syncGameStats as any).timeout = null as NodeJS.Timeout | null;
 

@@ -19,9 +19,6 @@ interface FlickWordReviewProps {
 export default function FlickWordReview({ onClose }: FlickWordReviewProps) {
   const settings = useSettings();
   const [completedGames, setCompletedGames] = useState<CompletedFlickWordGame[]>([]);
-  const [selectedGame, setSelectedGame] = useState<number | null>(null);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [shareType, setShareType] = useState<'single' | 'all'>('single');
 
   useEffect(() => {
     const games = getCompletedFlickWordGames();
@@ -32,7 +29,6 @@ export default function FlickWordReview({ onClose }: FlickWordReviewProps) {
   }, []);
 
   const isProUser = settings.pro.isPro;
-  const maxGames = isProUser ? 3 : 1;
 
   // Generate share text for a single game
   const generateSingleShareText = (game: CompletedFlickWordGame): string => {
@@ -85,7 +81,6 @@ export default function FlickWordReview({ onClose }: FlickWordReviewProps) {
 
   const handleShare = async (gameNumber?: number) => {
     let shareText = '';
-    const type = gameNumber ? 'single' : 'all';
     
     if (gameNumber) {
       const game = completedGames.find(g => g.gameNumber === gameNumber);

@@ -6,7 +6,9 @@ import { SAMPLE_TRIVIA_QUESTIONS, type TriviaQuestion } from "../../lib/triviaQu
 import { getTriviaGamesCompletedKey, getTriviaStatsKey } from '../../lib/cacheKeys';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 import { saveCompletedTriviaGame, getCompletedTriviaGames } from '../../lib/gameReview';
-import { trackTriviaGameStart, trackTriviaGameComplete, trackTriviaAnswer, trackGameError, trackGameReview } from '../../lib/analytics';
+import { trackTriviaGameStart, trackTriviaGameComplete, trackTriviaAnswer, trackGameError } from '../../lib/analytics';
+import { authManager } from '../../lib/auth';
+import { syncGameStats } from '../../lib/gameStatsSync';
 
 interface TriviaGameProps {
   onClose?: () => void;
@@ -241,9 +243,9 @@ export default function TriviaGame({
             question: q.question,
             options: [], // Not needed for completion screen
             correctAnswer: q.correctAnswer,
-            explanation: undefined,
-            category: undefined,
-            difficulty: undefined,
+            explanation: q.explanation,
+            category: q.category || 'General',
+            difficulty: q.difficulty || 'medium',
           }));
           setQuestions(displayQuestions);
           setGameState("completed");

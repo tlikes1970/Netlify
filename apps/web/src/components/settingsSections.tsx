@@ -23,11 +23,9 @@ import { useLibrary } from "../lib/storage";
 import { useAdminRole } from "../hooks/useAdminRole";
 import PersonalityExamples from "./PersonalityExamples";
 import ForYouGenreConfig from "./ForYouGenreConfig";
-import NotInterestedModal from "./modals/NotInterestedModal";
 import type { Language } from "../lib/language.types";
 import type { SettingsSectionId } from "./settingsConfig";
 import type { ListName } from "../state/library.types";
-import type { MediaItem } from "./cards/card.types";
 import { lazy, Suspense } from "react";
 
 // Lazy load heavy components
@@ -376,7 +374,6 @@ function NotificationsSection({
   onShowNotificationSettings,
   onShowNotificationCenter,
 }: SettingsSectionProps) {
-  const settings = useSettings();
   const { isAuthenticated, user } = useAuth();
   const [emailSubscribed, setEmailSubscribed] = useState<boolean | null>(null);
   const [updatingEmailSub, setUpdatingEmailSub] = useState(false);
@@ -626,7 +623,7 @@ function NotificationsSection({
   );
 }
 
-function DisplaySection({ isMobile }: SettingsSectionProps) {
+function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
   const settings = useSettings();
   const translations = useTranslations();
   const userLists = useCustomLists();
@@ -1101,7 +1098,7 @@ function DisplaySection({ isMobile }: SettingsSectionProps) {
   );
 }
 
-function ProSection({ isMobile }: SettingsSectionProps) {
+function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
   const proStatus = useProStatus();
   const isProUser = proStatus.isPro;
   const { isAdmin } = useAdminRole();
@@ -1822,7 +1819,7 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
   );
 }
 
-function AboutSection(props: SettingsSectionProps) {
+function AboutSection(_props: SettingsSectionProps) {
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold" style={{ color: "var(--text)" }}>

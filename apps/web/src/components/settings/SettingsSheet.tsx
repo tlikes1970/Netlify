@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { useFocusTrap } from '../../lib/a11y/useFocusTrap';
 import { useInertOutside } from '../../lib/a11y/useInertOutside';
-import { SETTINGS_SECTIONS, getVisibleSections, type SettingsSectionId } from '../settingsConfig';
+import { getVisibleSections, type SettingsSectionId } from '../settingsConfig';
 import { renderSettingsSection } from '../settingsSections';
 import { useAdminRole } from '../../hooks/useAdminRole';
 import { isMobileNow } from '../../lib/isMobile';
@@ -145,7 +145,6 @@ export default function SettingsSheet() {
   
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
-  const firstFocusable = useRef<HTMLButtonElement | null>(null);
 
   // Prevent background scroll with layout stabilization
   useEffect(() => {

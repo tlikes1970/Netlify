@@ -3,7 +3,7 @@ import { useTranslations } from "../lib/language";
 import { useAdminRole } from "../hooks/useAdminRole";
 import { lockScroll, unlockScroll } from "../utils/scrollLock";
 import NotInterestedModal from "./modals/NotInterestedModal";
-import { SETTINGS_SECTIONS, getVisibleSections, type SettingsSectionId } from "./settingsConfig";
+import { getVisibleSections, type SettingsSectionId } from "./settingsConfig";
 import { renderSettingsSection } from "./settingsSections";
 import { isMobileNow } from "../lib/isMobile";
 import { useUsername } from "../hooks/useUsername";
@@ -115,7 +115,7 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
   // Listen for navigation to Pro tab (from startProUpgrade)
   useEffect(() => {
     const handleNavigateToPro = () => {
-      setActiveTab("pro");
+      setActiveSection("pro");
     };
 
     window.addEventListener(
@@ -133,7 +133,7 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
   // Listen for navigation to Layout tab (from For You section)
   useEffect(() => {
     const handleNavigateToLayout = () => {
-      setActiveTab("layout");
+      setActiveSection("display");
     };
 
     window.addEventListener(

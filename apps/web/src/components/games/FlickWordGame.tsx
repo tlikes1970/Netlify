@@ -676,13 +676,20 @@ export default function FlickWordGame({
         const today = getDailySeedDate();
         
         // Save completed game for review
+        // Convert TileStatus[][] to Array<'correct' | 'present' | 'absent'>[]
+        // scoreGuess always returns valid statuses (never empty strings in practice)
+        const convertedResults: Array<'correct' | 'present' | 'absent'>[] = newLastResults.map(row =>
+          row.filter((status): status is 'correct' | 'present' | 'absent' => 
+            status !== ''
+          ) as Array<'correct' | 'present' | 'absent'>
+        );
         saveCompletedFlickWordGame({
           date: today,
           gameNumber,
           target: currentTarget,
           guesses: newGuesses,
           won: true,
-          lastResults: newLastResults,
+          lastResults: convertedResults,
           completedAt: Date.now(),
         });
         
@@ -717,13 +724,20 @@ export default function FlickWordGame({
         const today = getDailySeedDate();
         
         // Save completed game for review
+        // Convert TileStatus[][] to Array<'correct' | 'present' | 'absent'>[]
+        // scoreGuess always returns valid statuses (never empty strings in practice)
+        const convertedResults: Array<'correct' | 'present' | 'absent'>[] = newLastResults.map(row =>
+          row.filter((status): status is 'correct' | 'present' | 'absent' => 
+            status !== ''
+          ) as Array<'correct' | 'present' | 'absent'>
+        );
         saveCompletedFlickWordGame({
           date: today,
           gameNumber,
           target: currentTarget,
           guesses: newGuesses,
           won: false,
-          lastResults: newLastResults,
+          lastResults: convertedResults,
           completedAt: Date.now(),
         });
         

@@ -9,7 +9,6 @@
 import { useState, useEffect } from 'react';
 import { useSettings } from '@/lib/settings';
 import { getCompletedTriviaGames, type CompletedTriviaGame } from '../../lib/gameReview';
-import { getDailySeedDate } from '../../lib/dailySeed';
 import { trackGameReview } from '../../lib/analytics';
 
 interface TriviaReviewProps {
@@ -19,7 +18,6 @@ interface TriviaReviewProps {
 export default function TriviaReview({ onClose }: TriviaReviewProps) {
   const settings = useSettings();
   const [completedGames, setCompletedGames] = useState<CompletedTriviaGame[]>([]);
-  const [selectedGame, setSelectedGame] = useState<number | null>(null);
 
   useEffect(() => {
     const games = getCompletedTriviaGames();
@@ -30,7 +28,6 @@ export default function TriviaReview({ onClose }: TriviaReviewProps) {
   }, []);
 
   const isProUser = settings.pro.isPro;
-  const maxGames = isProUser ? 3 : 1;
 
   if (completedGames.length === 0) {
     return (

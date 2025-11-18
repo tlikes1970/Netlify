@@ -17,7 +17,6 @@ import { openSettingsSheet } from "@/components/settings/SettingsSheet";
 import SettingsSheet from "@/components/settings/SettingsSheet";
 import { flag } from "@/lib/flags";
 import { isCompactMobileV1 } from "@/lib/mobileFlags";
-import { isMobileNow } from "@/lib/isMobile";
 
 // Lazy load heavy components
 const SettingsPage = lazy(() => import("@/components/SettingsPage"));
