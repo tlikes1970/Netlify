@@ -244,8 +244,8 @@ export default function FlickWordModal({
       // Sync to Firebase if user is authenticated
       const currentUser = authManager.getCurrentUser();
       if (currentUser?.uid) {
-        syncGameStats(currentUser.uid).catch((error) => {
-          console.warn("Failed to sync game stats to cloud:", error);
+        syncGameStats(currentUser.uid).catch((_syncError) => {
+          console.warn("Failed to sync game stats to cloud:", _syncError);
         });
       }
 
