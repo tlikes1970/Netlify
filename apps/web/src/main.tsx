@@ -81,7 +81,9 @@ async function releaseFirstPaintGate(timeoutMs = 1200) {
 
   try {
     localStorage.setItem("app:primed", "1");
-  } catch {}
+  } catch {
+    // Ignore localStorage errors (quota exceeded, etc.)
+  }
   document.documentElement.classList.remove("fp-gate");
   const gateCss = document.getElementById("fp-gate-css");
   if (gateCss && gateCss.parentNode) gateCss.parentNode.removeChild(gateCss);

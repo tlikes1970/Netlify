@@ -55,7 +55,7 @@ export async function initLocalWords(): Promise<void> {
         BLOOM = new TinyBloom(json);
         return;
       }
-    } catch (error) {
+    } catch (_error) {
       // Silently ignore 404s and other fetch errors, fall back to Set
       // This is expected if accepted.bloom doesn't exist
     }
