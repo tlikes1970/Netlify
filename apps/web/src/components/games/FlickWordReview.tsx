@@ -105,13 +105,11 @@ export default function FlickWordReview({ onClose }: FlickWordReviewProps) {
         await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
         alert('Share text copied to clipboard!');
       }
-      setShowShareModal(false);
-    } catch (error) {
-      if (error instanceof Error && error.name !== 'AbortError') {
+    } catch (_error) {
+      if (_error instanceof Error && _error.name !== 'AbortError') {
         try {
           await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
           alert('Share text copied to clipboard!');
-          setShowShareModal(false);
         } catch {
           alert('Failed to share');
         }

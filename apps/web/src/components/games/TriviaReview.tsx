@@ -16,7 +16,6 @@ interface TriviaReviewProps {
 }
 
 export default function TriviaReview({ onClose }: TriviaReviewProps) {
-  const settings = useSettings();
   const [completedGames, setCompletedGames] = useState<CompletedTriviaGame[]>([]);
   const [selectedGame, setSelectedGame] = useState<number | null>(null);
 
