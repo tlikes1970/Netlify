@@ -1,5 +1,13 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.160: Admin Tab Restructure - Community Content and Moderation First
+// - Changed default Admin tab from Auto Content to Community Content
+// - Reordered tabs: Community Content first, Moderation second, then other tools
+// - Updated tab CSS to allow wrapping on desktop (flex-wrap: wrap)
+// - Added specific headings for each tab matching tab labels
+// - Updated helper text for Community Content and Moderation tabs
+// - Improved tab visibility - Community Content and Moderation are now immediately visible
+// - Rollback: Revert this commit to restore previous Admin tab order and default
 // ⚠️ VERSION 0.1.159: B2 - Settings Architecture Consolidation
 // - Centralized Pro features config (settingsProConfig.ts) - single source of truth for all Pro features
 // - Created unified UpgradeToProCTA component with 4 variants (banner, panel, inline, button)
@@ -172,4 +180,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.159";
+export const APP_VERSION = "0.1.160";
