@@ -1,13 +1,42 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { MOBILE_NAV_HEIGHT, useViewportOffset } from './MobileTabs';
 
 // Settings FAB (COG icon) - Bottom left
 export function SettingsFAB({ onClick }: { onClick: () => void }) {
   const [isPressed, setIsPressed] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { viewportOffset } = useViewportOffset();
   
   // Cap viewportOffset at 0 if <50px to avoid toolbar micro-shifts
   const effectiveOffset = useMemo(() => Math.max(0, viewportOffset - 50), [viewportOffset]);
+
+  // Check if settings sheet is open
+  useEffect(() => {
+    const checkSettingsOpen = () => {
+      const isOpen = document.documentElement.getAttribute('data-settings-sheet') === 'true';
+      setIsSettingsOpen(isOpen);
+    };
+    
+    // Check immediately
+    checkSettingsOpen();
+    
+    // Watch for changes
+    const observer = new MutationObserver(checkSettingsOpen);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-settings-sheet'],
+    });
+    
+    // Also listen for custom events
+    window.addEventListener('settings:open', checkSettingsOpen);
+    window.addEventListener('settings:close', checkSettingsOpen);
+    
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('settings:open', checkSettingsOpen);
+      window.removeEventListener('settings:close', checkSettingsOpen);
+    };
+  }, []);
 
   const handleClick = () => {
     setIsPressed(true);
@@ -15,7 +44,12 @@ export function SettingsFAB({ onClick }: { onClick: () => void }) {
     setTimeout(() => setIsPressed(false), 200);
   };
 
-  console.log('🔧 SettingsFAB rendered');
+  console.log('🔧 SettingsFAB rendered', { isSettingsOpen });
+
+  // Hide FAB when settings is open
+  if (isSettingsOpen) {
+    return null;
+  }
 
   return (
     <button
@@ -64,10 +98,39 @@ export function SettingsFAB({ onClick }: { onClick: () => void }) {
 // Theme Toggle FAB (Moon/Sun icon) - Bottom right
 export function ThemeToggleFAB({ theme, onToggle }: { theme: 'light' | 'dark'; onToggle: () => void }) {
   const [isPressed, setIsPressed] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { viewportOffset } = useViewportOffset();
   
   // Cap viewportOffset at 0 if <50px to avoid toolbar micro-shifts
   const effectiveOffset = useMemo(() => Math.max(0, viewportOffset - 50), [viewportOffset]);
+
+  // Check if settings sheet is open
+  useEffect(() => {
+    const checkSettingsOpen = () => {
+      const isOpen = document.documentElement.getAttribute('data-settings-sheet') === 'true';
+      setIsSettingsOpen(isOpen);
+    };
+    
+    // Check immediately
+    checkSettingsOpen();
+    
+    // Watch for changes
+    const observer = new MutationObserver(checkSettingsOpen);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-settings-sheet'],
+    });
+    
+    // Also listen for custom events
+    window.addEventListener('settings:open', checkSettingsOpen);
+    window.addEventListener('settings:close', checkSettingsOpen);
+    
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('settings:open', checkSettingsOpen);
+      window.removeEventListener('settings:close', checkSettingsOpen);
+    };
+  }, []);
 
   const handleClick = () => {
     setIsPressed(true);
@@ -75,7 +138,12 @@ export function ThemeToggleFAB({ theme, onToggle }: { theme: 'light' | 'dark'; o
     setTimeout(() => setIsPressed(false), 200);
   };
 
-  console.log('🌙 ThemeToggleFAB rendered');
+  console.log('🌙 ThemeToggleFAB rendered', { isSettingsOpen });
+
+  // Hide FAB when settings is open
+  if (isSettingsOpen) {
+    return null;
+  }
 
   return (
     <button

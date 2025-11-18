@@ -6,12 +6,12 @@ import { smartSearch } from './smartSearch';
 import { discoverByGenre } from './api';
 import { emit } from '../lib/events';
 import { addToListWithConfirmation, Library } from '../lib/storage';
+import { fetchFullMediaMetadata, fetchNetworkInfo } from './api';
 import { fetchNextAirDate, fetchShowStatus } from '../tmdb/tv';
 import { useTranslations } from '../lib/language';
 import { useSettings, getPersonalityText } from '../lib/settings';
 import MyListToggle from '../components/MyListToggle';
 import { OptimizedImage } from '../components/OptimizedImage';
-import { fetchNetworkInfo } from './api';
 import { searchTagsLocal } from '../lib/libraryIndex';
 import { isMobileNow, onMobileChange } from '../lib/isMobile';
 import Portal from '../components/Portal';
@@ -312,12 +312,17 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
     try {
       switch (action) {
         case 'want': {
-          // Include network data if available
-          const networks = networkInfo.networks || item.networks;
-          const productionCompanies = networkInfo.productionCompanies || item.productionCompanies;
+          // Fetch full metadata to ensure all fields are populated
+          const fullMetadata = await fetchFullMediaMetadata(item);
+          
+          // Merge full metadata with item, prioritizing fetched metadata
+          // Include network data if available (from fetchFullMediaMetadata or networkInfo)
+          const networks = fullMetadata.networks || networkInfo.networks || item.networks;
+          const productionCompanies = fullMetadata.productionCompanies || networkInfo.productionCompanies || item.productionCompanies;
           
           addToListWithConfirmation({ 
             ...item,
+            ...fullMetadata, // Full metadata from TMDB (title, year, synopsis, poster, etc.)
             networks: networks, // ✅ Save network data
             productionCompanies: productionCompanies // ✅ Save production companies
           }, 'wishlist', () => {
@@ -327,6 +332,9 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
           break;
         }
         case 'currently-watching': {
+          // Fetch full metadata to ensure all fields are populated
+          const fullMetadata = await fetchFullMediaMetadata(item);
+          
           // Fetch next air date and show status for TV shows
           let nextAirDate: string | null = null;
           let showStatus: string | undefined = undefined;
@@ -341,15 +349,17 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
             }
           }
           
-          // Include network data if available
-          const networks = networkInfo.networks || item.networks;
-          const productionCompanies = networkInfo.productionCompanies || item.productionCompanies;
+          // Merge full metadata with item, prioritizing fetched metadata
+          // Include network data if available (from fetchFullMediaMetadata or networkInfo)
+          const networks = fullMetadata.networks || networkInfo.networks || item.networks;
+          const productionCompanies = fullMetadata.productionCompanies || networkInfo.productionCompanies || item.productionCompanies;
           
           addToListWithConfirmation({ 
-            ...item, 
-            nextAirDate,
-            showStatus: showStatus as 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned' | undefined,
-            lastAirDate,
+            ...item,
+            ...fullMetadata, // Full metadata from TMDB (title, year, synopsis, poster, etc.)
+            nextAirDate: nextAirDate || item.nextAirDate, // Preserve existing nextAirDate if already set
+            showStatus: (showStatus || fullMetadata.showStatus) as 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned' | undefined,
+            lastAirDate: lastAirDate || fullMetadata.lastAirDate,
             networks: networks, // ✅ Save network data
             productionCompanies: productionCompanies // ✅ Save production companies
           }, 'watching', () => {
@@ -358,12 +368,17 @@ function SearchResultCard({ item, onRemove }: { item: MediaItem; onRemove: () =>
           break;
         }
         case 'watched': {
-          // Include network data if available
-          const networks = networkInfo.networks || item.networks;
-          const productionCompanies = networkInfo.productionCompanies || item.productionCompanies;
+          // Fetch full metadata to ensure all fields are populated
+          const fullMetadata = await fetchFullMediaMetadata(item);
+          
+          // Merge full metadata with item, prioritizing fetched metadata
+          // Include network data if available (from fetchFullMediaMetadata or networkInfo)
+          const networks = fullMetadata.networks || networkInfo.networks || item.networks;
+          const productionCompanies = fullMetadata.productionCompanies || networkInfo.productionCompanies || item.productionCompanies;
           
           addToListWithConfirmation({ 
             ...item,
+            ...fullMetadata, // Full metadata from TMDB (title, year, synopsis, poster, etc.)
             networks: networks, // ✅ Save network data
             productionCompanies: productionCompanies // ✅ Save production companies
           }, 'watched', () => {

@@ -14,8 +14,10 @@ import ScrollToTopArrow from "@/components/ScrollToTopArrow";
 import { lazy, Suspense } from "react";
 import PostDetail from "@/components/PostDetail";
 import { openSettingsSheet } from "@/components/settings/SettingsSheet";
+import SettingsSheet from "@/components/settings/SettingsSheet";
 import { flag } from "@/lib/flags";
 import { isCompactMobileV1 } from "@/lib/mobileFlags";
+import { isMobileNow } from "@/lib/isMobile";
 
 // Lazy load heavy components
 const SettingsPage = lazy(() => import("@/components/SettingsPage"));
@@ -389,14 +391,41 @@ export default function App() {
   // Data rails
   const theaters = useInTheaters();
 
-  // Handle settings click - check gate and flag conditions
-  const handleSettingsClick = () => {
-    const gate = isCompactMobileV1();
-    const flagEnabled = flag("settings_mobile_sheet_v1");
+  // Mobile Settings breakpoint - use sheet below this width
+  const MOBILE_SETTINGS_BREAKPOINT = 900;
 
-    if (gate && flagEnabled) {
+  /**
+   * Helper to determine if mobile SettingsSheet should be used instead of desktop SettingsPage
+   * Checks viewport width, compact mobile gate, and feature flag
+   */
+  function shouldUseMobileSettings(): boolean {
+    // Guard for SSR
+    if (typeof window === 'undefined') return false;
+
+    const width = window.innerWidth;
+
+    // Check existing gate / flag checks
+    const isCompact = isCompactMobileV1 ? isCompactMobileV1() : false;
+    const flagEnabled = flag ? flag('settings_mobile_sheet_v1') : true;
+
+    // If flag is disabled, always use desktop
+    if (!flagEnabled) return false;
+
+    // Use mobile sheet if viewport is narrow OR compact mobile is enabled
+    if (width <= MOBILE_SETTINGS_BREAKPOINT) return true;
+    if (isCompact) return true;
+
+    return false;
+  }
+
+  // Handle settings click - route mobile to SettingsSheet, desktop to SettingsPage
+  const handleSettingsClick = () => {
+    console.log('🔧 handleSettingsClick called');
+    if (shouldUseMobileSettings()) {
+      console.log('🔧 Opening SettingsSheet');
       openSettingsSheet();
     } else {
+      console.log('🔧 Opening SettingsPage');
       setShowSettings(true);
     }
   };
@@ -425,17 +454,25 @@ export default function App() {
     const handleHashChange = () => {
       const hash = window.location.hash;
       if (hash.startsWith("#settings/")) {
-        const tab = hash.replace("#settings/", "").toLowerCase();
-        const gate = isCompactMobileV1();
-        const flagEnabled = flag("settings_mobile_sheet_v1");
-
-        if (gate && flagEnabled) {
-          // Validate tab is a valid TabId before passing to openSettingsSheet
-          if (["account", "display", "advanced"].includes(tab)) {
-            openSettingsSheet(tab as "account" | "display" | "advanced");
+        const sectionId = hash.replace("#settings/", "").toLowerCase();
+        
+        // Valid section IDs from settingsConfig
+        const validSections = ["account", "notifications", "display", "pro", "data", "about", "admin"];
+        
+        if (shouldUseMobileSettings()) {
+          // On mobile, open SettingsSheet with the section
+          if (validSections.includes(sectionId)) {
+            openSettingsSheet(sectionId as any);
           } else {
-            openSettingsSheet(); // Use default tab
+            openSettingsSheet(); // Default to section list
           }
+        } else {
+          // On desktop, open SettingsPage and navigate to section
+          setShowSettings(true);
+          // Dispatch event to navigate to section (SettingsPage listens for this)
+          window.dispatchEvent(new CustomEvent("navigate-to-settings-section", { 
+            detail: { sectionId } 
+          }));
         }
       } else if (hash === "#games/flickword") {
         setShowFlickWordModal(true);
@@ -453,7 +490,11 @@ export default function App() {
   // Listen for custom event to open SettingsPage (e.g., from SnarkDisplay or startProUpgrade)
   useEffect(() => {
     const handleOpenSettingsPage = () => {
-      setShowSettings(true);
+      if (shouldUseMobileSettings()) {
+        openSettingsSheet();
+      } else {
+        setShowSettings(true);
+      }
     };
 
     window.addEventListener("settings:open-page", handleOpenSettingsPage);
@@ -894,7 +935,7 @@ export default function App() {
             }
           />
 
-          {/* Settings Modal */}
+          {/* Settings Modal (Desktop) */}
           {showSettings && (
             <Suspense
               fallback={
@@ -904,6 +945,9 @@ export default function App() {
               <SettingsPage onClose={() => setShowSettings(false)} />
             </Suspense>
           )}
+
+          {/* Settings Sheet (Mobile) */}
+          <SettingsSheet />
 
           {/* Notes and Tags Modal */}
           {showNotesModal && notesModalItem && (
@@ -1286,11 +1330,7 @@ export default function App() {
                         (
                         <button
                           onClick={() => {
-                            const gate = isCompactMobileV1();
-                            const flagEnabled = flag(
-                              "settings_mobile_sheet_v1"
-                            );
-                            if (gate && flagEnabled) {
+                            if (shouldUseMobileSettings()) {
                               openSettingsSheet("display");
                               // Scroll to row 1 after a delay
                               setTimeout(() => {
@@ -1397,7 +1437,7 @@ export default function App() {
           }
         />
 
-        {/* Settings Modal */}
+        {/* Settings Modal (Desktop) */}
         {showSettings && (
           <Suspense
             fallback={
@@ -1407,6 +1447,9 @@ export default function App() {
             <SettingsPage onClose={() => setShowSettings(false)} />
           </Suspense>
         )}
+
+        {/* Settings Sheet (Mobile) */}
+        <SettingsSheet />
 
         {/* Notes and Tags Modal */}
         {showNotesModal && notesModalItem && (

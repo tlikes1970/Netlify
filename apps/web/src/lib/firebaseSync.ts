@@ -217,6 +217,12 @@ export class FirebaseSyncManager {
 
       // Merge cloud data with local Library
       await this.mergeCloudData(cloudData.watchlists);
+      
+      // Load game stats from Firebase
+      if (cloudData.gameStats) {
+        const { loadGameStatsFromFirebase } = await import('./gameStatsSync');
+        await loadGameStatsFromFirebase(uid);
+      }
 
       console.log('✅ Firebase data loaded and merged');
       return true;

@@ -171,7 +171,7 @@ input:focus-visible {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   width: min(90vw, 500px);
   max-width: 500px;
-  max-height: 90vh;
+  max-height: 100vh;
   overflow: hidden;
   animation: modalFadeIn 0.3s ease-out;
   user-select: none;
@@ -255,8 +255,7 @@ input:focus-visible {
 .gm-body.flickword,
 .gm-body[data-fw-root] {
   padding: 0;
-  padding-bottom: var(--fw-spacing-lg); /* Ensure space for keyboard */
-  overflow: hidden; /* Prevent scrolling */
+  overflow: hidden;
 }
 
 /* Scroll to top arrow animation */

@@ -5,21 +5,26 @@ import { getDailySeedDate } from "../../lib/dailySeed";
 import { SAMPLE_TRIVIA_QUESTIONS, type TriviaQuestion } from "../../lib/triviaQuestions";
 import { getTriviaGamesCompletedKey, getTriviaStatsKey } from '../../lib/cacheKeys';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import { saveCompletedTriviaGame, getCompletedTriviaGames } from '../../lib/gameReview';
+import { trackTriviaGameStart, trackTriviaGameComplete, trackTriviaAnswer, trackGameError, trackGameReview } from '../../lib/analytics';
 
 interface TriviaGameProps {
   onClose?: () => void;
   onGameComplete?: (score: number, total: number) => void;
+  onShowReview?: () => void;
 }
 
 export default function TriviaGame({
   onClose,
   onGameComplete,
+  onShowReview,
 }: TriviaGameProps) {
   const settings = useSettings();
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [score, setScore] = useState(0);
+  const [questionAnswers, setQuestionAnswers] = useState<Array<{ questionIndex: number; selectedAnswer: number; isCorrect: boolean }>>([]);
   const [gameState, setGameState] = useState<
     "loading" | "playing" | "completed" | "error"
   >("loading");
@@ -114,7 +119,10 @@ export default function TriviaGame({
       const today = getDailySeedDate(); // UTC-based date
       const key = getTriviaGamesCompletedKey(today);
       const completed = localStorage.getItem(key);
-      return completed ? parseInt(completed, 10) : 0;
+      const count = completed ? parseInt(completed, 10) : 0;
+      // Cap to max games to prevent invalid counts
+      const maxGames = settings.pro.isPro ? 3 : 1;
+      return Math.min(count, maxGames);
     } catch {
       return 0;
     }
@@ -179,6 +187,14 @@ export default function TriviaGame({
       localStorage.setItem("flicklet-data", JSON.stringify(updatedData));
       localStorage.setItem(getTriviaStatsKey(), JSON.stringify(newStats));
 
+      // Sync to Firebase if user is authenticated
+      const currentUser = authManager.getCurrentUser();
+      if (currentUser?.uid) {
+        syncGameStats(currentUser.uid).catch((error) => {
+          console.warn("Failed to sync game stats to cloud:", error);
+        });
+      }
+
       // Notify listeners
       window.dispatchEvent(new CustomEvent("trivia:statsUpdated"));
 
@@ -204,8 +220,55 @@ export default function TriviaGame({
       // Set current game to next game to play
       // Regular: 1 game per day (10 questions)
       // Pro: 3 games per day (30 questions)
+      // Don't start a new game if limit is reached
+      const maxGames = settings.pro.isPro ? 3 : 1;
       let gameNumber: number;
-      if (settings.pro.isPro) {
+      if (completed >= maxGames) {
+        // All games completed - load last completed game's data for display
+        gameNumber = maxGames;
+        setCurrentGame(gameNumber);
+        
+        // Load last completed game to show its results
+        const completedGames = getCompletedTriviaGames();
+        const lastGame = completedGames.find(g => g.gameNumber === maxGames) || completedGames[completedGames.length - 1];
+        
+        if (lastGame) {
+          // Set up state to show completion screen with last game's data
+          setScore(lastGame.score);
+          // Convert completed game questions back to TriviaQuestion format for display
+          const displayQuestions: TriviaQuestion[] = lastGame.questions.map((q, idx) => ({
+            id: `completed_${lastGame.gameNumber}_${idx}`,
+            question: q.question,
+            options: [], // Not needed for completion screen
+            correctAnswer: q.correctAnswer,
+            explanation: undefined,
+            category: undefined,
+            difficulty: undefined,
+          }));
+          setQuestions(displayQuestions);
+          setGameState("completed");
+          console.log(
+            "🎯 All games completed:",
+            "Games completed today:",
+            completed,
+            "Max games:",
+            maxGames,
+            "Showing completion screen with last game data"
+          );
+        } else {
+          // No completed game data found, just show completion message
+          setGameState("completed");
+          console.log(
+            "🎯 All games completed:",
+            "Games completed today:",
+            completed,
+            "Max games:",
+            maxGames,
+            "No completed game data found"
+          );
+        }
+        return; // Exit early, don't load new questions
+      } else if (settings.pro.isPro) {
         gameNumber = Math.min(completed + 1, 3); // Max 3 games for Pro
         setCurrentGame(gameNumber);
         console.log(
@@ -342,12 +405,16 @@ export default function TriviaGame({
           setQuestions(formattedQuestions);
           setGameState("playing");
           setErrorMessage(null);
+          
+          // Track game start analytics
+          trackTriviaGameStart(gameNumber, settings.pro.isPro);
           // Initialize option refs array
           optionRefs.current = new Array(
             formattedQuestions[0]?.options.length || 4
           ).fill(null);
         } catch (error) {
           console.error("❌ Failed to load trivia questions:", error);
+          trackGameError('trivia', 'load_questions_failed', { error: String(error) });
           setErrorMessage(
             "Failed to load questions from server. Using backup questions."
           );
@@ -370,11 +437,26 @@ export default function TriviaGame({
     (answerIndex: number) => {
       if (selectedAnswer !== null) return;
 
+      const isCorrect = answerIndex === questions[currentQuestionIndex].correctAnswer;
+      
+      // Track answer analytics
+      trackTriviaAnswer(currentQuestionIndex, isCorrect);
+      
+      // Save answer for review
+      setQuestionAnswers((prev) => [
+        ...prev,
+        {
+          questionIndex: currentQuestionIndex,
+          selectedAnswer: answerIndex,
+          isCorrect,
+        },
+      ]);
+
       setSelectedAnswer(answerIndex);
       setShowExplanation(true);
       setFocusedOptionIndex(null);
 
-      if (answerIndex === questions[currentQuestionIndex].correctAnswer) {
+      if (isCorrect) {
         setScore((prev) => prev + 1);
       }
 
@@ -401,11 +483,39 @@ export default function TriviaGame({
       // Game completed - set state first, then update stats
       setGameState("completed");
       
+      const today = getDailySeedDate();
+      const percentage = Math.round((score / questions.length) * 100);
+      
+      // Save completed game for review
+      const completedQuestionAnswers = questions.map((q, idx) => {
+        const answerData = questionAnswers.find(a => a.questionIndex === idx);
+        return {
+          question: q.question,
+          selectedAnswer: answerData?.selectedAnswer ?? -1,
+          correctAnswer: q.correctAnswer,
+          isCorrect: answerData?.isCorrect ?? false,
+        };
+      });
+      
+      saveCompletedTriviaGame({
+        date: today,
+        gameNumber: currentGame,
+        score,
+        total: questions.length,
+        percentage,
+        questions: completedQuestionAnswers,
+        completedAt: Date.now(),
+      });
+      
+      // Track analytics
+      trackTriviaGameComplete(score, questions.length, percentage, currentGame, isProUser);
+      
       // Update stats after state is set to completed
       updateTriviaStats(score, questions.length);
 
-      // Increment games completed today
-      const newGamesCompleted = gamesCompletedToday + 1;
+      // Increment games completed today (cap to max games)
+      const maxGames = isProUser ? 3 : 1;
+      const newGamesCompleted = Math.min(gamesCompletedToday + 1, maxGames);
       setGamesCompletedToday(newGamesCompleted);
       saveGamesCompletedToday(newGamesCompleted);
 
@@ -418,6 +528,9 @@ export default function TriviaGame({
     onGameComplete,
     gamesCompletedToday,
     questions,
+    currentGame,
+    isProUser,
+    selectedAnswer,
   ]);
 
   // Keyboard navigation handler
@@ -474,6 +587,7 @@ export default function TriviaGame({
     setSelectedAnswer(null);
     setScore(0);
     setShowExplanation(false);
+    setQuestionAnswers([]);
     setGameState("loading");
   }, []);
 
@@ -488,6 +602,7 @@ export default function TriviaGame({
       setSelectedAnswer(null);
       setScore(0);
       setShowExplanation(false);
+      setQuestionAnswers([]);
       setGameState("loading");
     }
   }, [isProUser, gamesCompletedToday]);
@@ -534,7 +649,8 @@ export default function TriviaGame({
   }
 
   if (gameState === "completed") {
-    const percentage = Math.round((score / questions.length) * 100);
+    // Handle case where questions might be empty (all games completed on load)
+    const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
     const canPlayNextGame = isProUser && gamesCompletedToday < 3; // Only Pro users can play multiple games
     const gamesRemaining = isProUser ? 3 - gamesCompletedToday : 0;
 
@@ -549,7 +665,7 @@ export default function TriviaGame({
             <div
               className="score-circle"
               role="img"
-              aria-label={`Score: ${score} out of ${questions.length} correct, ${percentage} percent`}
+              aria-label={`Score: ${score} out of ${questions.length || 10} correct, ${percentage} percent`}
             >
               <span
                 className={`score-percentage ${getScoreColor(percentage)}`}
@@ -558,7 +674,7 @@ export default function TriviaGame({
                 {percentage}%
               </span>
               <span className="score-fraction" aria-hidden="true">
-                {score}/{questions.length}
+                {score}/{questions.length || 10}
               </span>
             </div>
           </div>
@@ -599,6 +715,17 @@ export default function TriviaGame({
                 Play Again
               </button>
             )}
+            {onShowReview && (
+              <button
+                className="btn-secondary"
+                onClick={() => {
+                  onShowReview();
+                }}
+                aria-label="Review completed games"
+              >
+                Review Games
+              </button>
+            )}
             {onClose && (
               <button
                 className="btn-secondary"
@@ -613,16 +740,17 @@ export default function TriviaGame({
           {!isProUser && (
             <div className="pro-upsell">
               <p>
-                🔒 Get Pro for 2 more games! Upgrade to play 3 games per day (10 questions each)
-                instead of 1.
+                ✅ You&apos;ve completed your game today! Come back tomorrow for the next game!
+              </p>
+              <p>
+                🔒 Want more games? Upgrade to Pro for 3 games per day (10 questions each)!
               </p>
             </div>
           )}
           {isProUser && gamesCompletedToday >= 3 && (
             <div className="games-limit">
               <p>
-                ✅ You&apos;ve completed all 3 games today! Come back tomorrow
-                for more!
+                ✅ You&apos;ve completed all 3 games today! Come back tomorrow for the next games!
               </p>
             </div>
           )}

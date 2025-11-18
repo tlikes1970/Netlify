@@ -239,11 +239,29 @@ export const Library = {
       Object.entries(item).filter(([_, value]) => value !== undefined)
     ) as Partial<MediaItem>;
     
-    // Preserve existing data when updating
-    // Only update fields that are explicitly provided (and not undefined)
+    // User data fields that should always be preserved from oldEntry if they exist
+    // These are user-generated content that shouldn't be overwritten by metadata refresh
+    const userDataFields: (keyof MediaItem)[] = ['userRating', 'userNotes', 'tags'];
+    
+    // Preserve user data from oldEntry
+    const preservedUserData: Partial<MediaItem> = {};
+    if (oldEntry) {
+      for (const field of userDataFields) {
+        if (oldEntry[field] !== undefined) {
+          preservedUserData[field] = oldEntry[field] as any;
+        }
+      }
+      // Preserve nextAirDate if it was already set (user might have tracking data)
+      if (oldEntry.nextAirDate && !filteredItem.nextAirDate) {
+        preservedUserData.nextAirDate = oldEntry.nextAirDate;
+      }
+    }
+    
+    // Merge: new metadata first, then preserved user data, then always-set fields
     state[key] = {
-      ...(oldEntry || {}), // Keep all existing data
-      ...filteredItem,      // Apply only defined fields from new item
+      ...(oldEntry || {}), // Start with old entry for any fields we don't explicitly set
+      ...filteredItem,      // Apply new metadata (this will overwrite old metadata)
+      ...preservedUserData, // Restore preserved user data (this overwrites any conflicts)
       id: item.id,          // Always use current id and mediaType
       mediaType: item.mediaType,
       list,
@@ -253,8 +271,11 @@ export const Library = {
     console.log(`📦 Library.upsert stored:`, {
       id: item.id,
       title: item.title,
+      year: item.year,
       posterUrl: item.posterUrl,
       synopsis: state[key].synopsis ? 'present' : 'missing',
+      hasUserRating: !!state[key].userRating,
+      hasUserNotes: !!state[key].userNotes,
       list: list
     });
     

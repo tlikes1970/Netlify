@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import TriviaGame from "./TriviaGame";
+import TriviaReview from "./TriviaReview";
 import Portal from "../Portal";
 import { lockScroll, unlockScroll } from "../../utils/scrollLock";
 
@@ -9,6 +10,7 @@ interface TriviaModalProps {
 }
 
 export default function TriviaModal({ isOpen, onClose }: TriviaModalProps) {
+  const [showReview, setShowReview] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const modalRef = useRef<HTMLDivElement>(null);
@@ -132,6 +134,7 @@ export default function TriviaModal({ isOpen, onClose }: TriviaModalProps) {
   // Reset modal state when opening
   useEffect(() => {
     if (isOpen) {
+      setShowReview(false);
       setModalPosition({ x: 0, y: 0 });
     }
   }, [isOpen]);
@@ -192,7 +195,25 @@ export default function TriviaModal({ isOpen, onClose }: TriviaModalProps) {
             </button>
           </header>
           <main className="gm-body">
-            <TriviaGame onClose={onClose} />
+            {showReview ? (
+              <div className="game-review-view">
+                <TriviaReview onClose={() => setShowReview(false)} />
+                <div className="review-actions">
+                  <button
+                    className="btn-primary"
+                    onClick={() => setShowReview(false)}
+                    aria-label="Back to game"
+                  >
+                    Back to Game
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <TriviaGame 
+                onClose={onClose} 
+                onShowReview={() => setShowReview(true)}
+              />
+            )}
           </main>
         </div>
       </div>

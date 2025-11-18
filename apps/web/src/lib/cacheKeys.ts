@@ -72,6 +72,24 @@ export function getTriviaStatsKey(): string {
 }
 
 /**
+ * Generate cache key for completed FlickWord games (for review)
+ * @param date Optional date string (defaults to today's UTC date)
+ */
+export function getFlickWordCompletedGamesKey(date?: string): string {
+  const today = date || getDailySeedDate();
+  return `flickword:completed-games:${today}`;
+}
+
+/**
+ * Generate cache key for completed Trivia games (for review)
+ * @param date Optional date string (defaults to today's UTC date)
+ */
+export function getTriviaCompletedGamesKey(date?: string): string {
+  const today = date || getDailySeedDate();
+  return `trivia:completed-games:${today}`;
+}
+
+/**
  * Generate cache key with version for cache invalidation
  * @param baseKey Base cache key
  * @param version Version string

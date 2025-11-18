@@ -61,27 +61,27 @@
    ============================================ */
 .flickword-game,
 [data-fw-root] {
-  /* Unified tile size - square tiles like Wordle */
-  --fw-tile-size: clamp(50px, 13vw, 60px);
-  --fw-tile-gap: 5px; /* Wordle-like spacing */
+  /* Unified tile size - responsive to fit all 6 rows + keyboard */
+  --fw-tile-size: clamp(50px, 12vw, 60px);
+  --fw-tile-gap: 5px; /* Standard spacing */
 
   /* Keyboard sizing */
-  --fw-key-h: 58px;
-  --fw-key-gap: 6px; /* Wordle-like row spacing */
-  --fw-key-padding: 4px; /* Side padding */
+  --fw-key-h: clamp(50px, 10vw, 58px);
+  --fw-key-gap: 6px; /* Standard row spacing */
+  --fw-key-padding: 4px; /* Standard side padding */
   
   /* Ensure bottom spacing */
   padding-bottom: 0;
   margin-bottom: 0;
 }
 
-/* Mobile breakpoints */
+/* Mobile breakpoints - larger tiles for better visibility and tap targets */
 @media (max-width: 480px) {
   .flickword-game,
   [data-fw-root] {
-    --fw-tile-size: 60px;
+    --fw-tile-size: clamp(50px, 12vw, 58px);
     --fw-tile-gap: 5px;
-    --fw-key-h: 58px;
+    --fw-key-h: clamp(48px, 10vw, 54px);
     --fw-key-gap: 6px;
     --fw-key-padding: 4px;
   }
@@ -90,9 +90,9 @@
 @media (max-width: 375px) {
   .flickword-game,
   [data-fw-root] {
-    --fw-tile-size: 60px;
+    --fw-tile-size: clamp(46px, 11vw, 54px);
     --fw-tile-gap: 5px;
-    --fw-key-h: 56px;
+    --fw-key-h: clamp(46px, 9vw, 52px);
     --fw-key-gap: 5px;
     --fw-key-padding: 3px;
   }
@@ -101,11 +101,11 @@
 @media (max-width: 320px) {
   .flickword-game,
   [data-fw-root] {
-    --fw-tile-size: 54px;
-    --fw-tile-gap: 5px;
-    --fw-key-h: 52px;
+    --fw-tile-size: clamp(42px, 10vw, 50px);
+    --fw-tile-gap: 4px;
+    --fw-key-h: clamp(44px, 8vw, 48px);
     --fw-key-gap: 5px;
-    --fw-key-padding: 2px;
+    --fw-key-padding: 3px;
   }
 }
 
@@ -150,17 +150,17 @@
 [data-fw-root] {
   display: flex;
   flex-direction: column;
-  gap: var(--fw-spacing-md);
-  padding: var(--fw-spacing-md);
-  padding-bottom: var(--fw-spacing-md); /* Add bottom padding for completion message */
+  gap: var(--fw-spacing-xs);
+  padding: var(--fw-spacing-sm);
   width: 100%;
   max-width: 100%;
   margin: 0;
   box-sizing: border-box;
   background-color: var(--fw-color-bg);
   color: var(--fw-color-text);
-  min-height: 0; /* Allow flex shrinking */
-  overflow: hidden; /* Prevent container from growing */
+  min-height: 0;
+  flex: 1 1 0;
+  overflow: hidden;
 }
 
 /* Game Header */
@@ -168,7 +168,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
+  padding: var(--fw-spacing-xs) 0;
+  flex-shrink: 0;
 }
 
 .fw-header h3 {
@@ -231,11 +232,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: var(--fw-spacing-xs);
-  padding: var(--fw-spacing-xs) var(--fw-spacing-xs) 0;
-  flex: 1 1 auto;
+  padding: var(--fw-spacing-xs);
+  flex: 1 1 0;
   min-height: 0;
-  overflow: hidden; /* No scrolling - content must fit */
+  overflow: hidden;
 }
 
 .fw-grid {
@@ -243,9 +245,14 @@
   flex-direction: column;
   gap: var(--fw-tile-gap);
   align-items: center;
-  flex-shrink: 0;
+  justify-content: center;
+  flex-shrink: 1;
+  flex-grow: 0;
   width: 100%;
   max-width: 100%;
+  min-height: 0;
+  /* Prevent tiles from getting too small - ensure minimum readable size */
+  min-width: calc(5 * var(--fw-tile-size) + 4 * var(--fw-tile-gap));
 }
 
 /* Tile rows - each row is a grid */
@@ -465,9 +472,9 @@
   gap: var(--fw-key-gap);
   width: 100%;
   max-width: 100%;
-  margin: var(--fw-spacing-xs) auto 0;
+  margin: var(--fw-spacing-xs) 0 0;
   padding: 0 var(--fw-key-padding);
-  padding-bottom: calc(var(--fw-spacing-lg) + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--fw-spacing-sm) + env(safe-area-inset-bottom));
   box-sizing: border-box;
   flex: 0 0 auto;
 }
@@ -629,12 +636,12 @@
 .trivia-game-header {
   display: flex;
   align-items: center;
-  flex-shrink: 0; /* Prevent compression */
+  flex-shrink: 0;
   justify-content: center;
   gap: var(--fw-spacing-xs);
-  padding: 2px var(--fw-spacing-xs);
-  margin: 0;
-  font-size: 13px;
+  padding: var(--fw-spacing-xs);
+  margin: 0 0 var(--fw-spacing-xs) 0;
+  font-size: 12px;
   font-weight: var(--fw-font-weight-medium);
   color: var(--fw-color-text);
 }
@@ -797,37 +804,98 @@
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  padding: var(--fw-spacing-md);
+  padding: var(--fw-spacing-xl);
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .fw-share-content {
   background-color: var(--fw-color-bg);
   border-radius: var(--fw-radius-lg);
-  padding: var(--fw-spacing-xl);
+  padding: var(--fw-spacing-md);
   max-width: 400px;
   width: 100%;
+  max-height: calc(100vh - 2 * var(--fw-spacing-xl));
   box-shadow: var(--fw-shadow-lg);
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin: var(--fw-spacing-xl) auto var(--fw-spacing-xl);
+  min-height: 0;
+  box-sizing: border-box;
+  position: relative;
 }
 
-.fw-share-content h2 {
-  margin: 0 0 var(--fw-spacing-md) 0;
+.fw-share-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--fw-spacing-sm);
+  padding-bottom: var(--fw-spacing-xs);
+  flex-shrink: 0;
+  min-height: 36px;
+}
+
+.fw-share-header h2 {
+  margin: 0;
   font-size: 24px;
   font-weight: var(--fw-font-weight-bold);
   color: var(--fw-color-text);
+  flex: 1;
+  text-align: left;
+}
+
+.fw-share-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--fw-color-text);
+  padding: var(--fw-spacing-xs);
+  margin-left: var(--fw-spacing-md);
+  border-radius: var(--fw-radius-sm);
+  transition: background-color var(--fw-animation-fast) var(--fw-animation-timing);
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fw-share-close:hover {
+  background-color: var(--fw-color-border);
+}
+
+.fw-share-close:active {
+  background-color: var(--fw-color-btn-hover);
 }
 
 .fw-share-grid {
   display: flex;
   flex-direction: column;
   gap: var(--fw-spacing-xs);
-  margin: var(--fw-spacing-lg) 0;
+  margin: 0;
+  padding: var(--fw-spacing-sm) 0;
   align-items: center;
+  justify-content: flex-start;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding: var(--fw-spacing-xs);
 }
 
 .fw-share-row {
   display: flex;
   gap: var(--fw-spacing-xs);
+  flex-shrink: 0;
+  width: 100%;
+  justify-content: center;
 }
 
 .fw-share-tile {
@@ -859,9 +927,24 @@
 
 .fw-share-actions {
   display: flex;
+  flex-direction: column;
   gap: var(--fw-spacing-sm);
   justify-content: center;
-  margin-top: var(--fw-spacing-lg);
+  margin-top: var(--fw-spacing-sm);
+  padding-top: var(--fw-spacing-xs);
+  flex-shrink: 0;
+  min-height: fit-content;
+}
+
+.fw-share-actions .fw-btn {
+  width: 100%;
+  padding: var(--fw-spacing-md);
+  font-size: 16px;
+  font-weight: var(--fw-font-weight-medium);
+  border: none;
+  border-radius: var(--fw-radius-md);
+  cursor: pointer;
+  transition: background-color var(--fw-animation-fast) var(--fw-animation-timing);
 }
 
 .fw-btn-primary {
@@ -870,16 +953,24 @@
 }
 
 .fw-btn-primary:hover {
-  background-color: var(--fw-color-btn-hover);
+  background-color: #0066cc;
+}
+
+.fw-btn-primary:active {
+  background-color: #0052a3;
 }
 
 .fw-btn-secondary {
   background-color: var(--fw-color-btn);
-  color: white;
+  color: var(--fw-color-text);
 }
 
 .fw-btn-secondary:hover {
   background-color: var(--fw-color-btn-hover);
+}
+
+.fw-btn-secondary:active {
+  background-color: #9ca3af;
 }
 
 /* ============================================

@@ -50,13 +50,14 @@ export async function initLocalWords(): Promise<void> {
   bloomInitPromise = (async () => {
     try {
       const res = await fetch('/words/accepted.bloom', { cache: 'force-cache' });
-      if (res.ok) {
+      if (res.ok && res.status === 200) {
         const json = (await res.json()) as BloomSerialized;
         BLOOM = new TinyBloom(json);
         return;
       }
-    } catch {
-      // Ignore fetch errors, fall back to Set
+    } catch (error) {
+      // Silently ignore 404s and other fetch errors, fall back to Set
+      // This is expected if accepted.bloom doesn't exist
     }
     // Fallback Set (dev or shipped JSON)
     ACCEPT_SET = new Set<string>(DEV_SEED);

@@ -722,3 +722,4 @@ The voting system is **fully functional** and can serve as a model for implement
 5. Add sorting UI (Hot/Top algorithms)
 6. Add pagination or increase limits
 7. Add spoiler handling (if needed)
+

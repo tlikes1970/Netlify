@@ -55,6 +55,70 @@ export async function fetchNetworkInfo(id: number, mediaType: 'movie' | 'tv'): P
   return {};
 }
 
+/**
+ * Fetch full metadata from TMDB for a media item
+ * This ensures all metadata fields are populated when adding from search
+ */
+export async function fetchFullMediaMetadata(item: MediaItem): Promise<Partial<MediaItem>> {
+  try {
+    const id = typeof item.id === 'string' ? parseInt(item.id) : item.id;
+    if (!id || !item.mediaType || item.mediaType === 'person') {
+      return {};
+    }
+
+    const endpoint = item.mediaType === 'movie' ? `/movie/${id}` : `/tv/${id}`;
+    const data = await get(endpoint);
+
+    // Extract common fields
+    const title = item.mediaType === 'movie' ? data.title : data.name;
+    const date = item.mediaType === 'movie' ? data.release_date : data.first_air_date;
+    const year = date ? String(date).slice(0, 4) : undefined;
+    const posterUrl = data.poster_path ? `https://image.tmdb.org/t/p/w342${data.poster_path}` : undefined;
+
+    const metadata: Partial<MediaItem> = {
+      title: title || item.title,
+      year: year || item.year,
+      releaseDate: date || item.releaseDate,
+      posterUrl: posterUrl || item.posterUrl,
+      voteAverage: typeof data.vote_average === 'number' ? data.vote_average : item.voteAverage,
+      voteCount: typeof data.vote_count === 'number' ? data.vote_count : item.voteCount,
+      synopsis: data.overview || item.synopsis || '',
+      runtimeMins: data.runtime || item.runtimeMins,
+    };
+
+    // TV-specific fields
+    if (item.mediaType === 'tv') {
+      metadata.showStatus = data.status as 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned' | undefined;
+      metadata.lastAirDate = data.last_air_date || item.lastAirDate;
+      
+      // Get networks
+      const networks = data.networks?.map((network: any) => network.name).filter(Boolean) || [];
+      if (networks.length > 0) {
+        metadata.networks = networks;
+      }
+    } else {
+      // Movie-specific fields
+      const productionCompanies = data.production_companies?.map((company: any) => company.name).filter(Boolean) || [];
+      if (productionCompanies.length > 0) {
+        metadata.productionCompanies = productionCompanies;
+      }
+    }
+
+    console.log(`✅ Fetched full metadata for ${item.mediaType}:${id}`, {
+      title: metadata.title,
+      year: metadata.year,
+      hasSynopsis: !!metadata.synopsis,
+      hasPoster: !!metadata.posterUrl,
+    });
+
+    return metadata;
+  } catch (error) {
+    console.warn(`⚠️ Failed to fetch full metadata for ${item.mediaType}:${item.id}:`, error);
+    // Return empty object on error - will use existing item data
+    return {};
+  }
+}
+
 export async function searchMulti(
   query: string,
   page = 1,

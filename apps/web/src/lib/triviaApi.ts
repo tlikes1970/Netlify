@@ -288,7 +288,7 @@ export async function getCachedTrivia(gameNumber?: number, isPro?: boolean): Pro
    * @param maxRetries Maximum number of retry attempts
    * @param initialDelay Initial delay in milliseconds
    */
-  const fetchWithRetry = async (url: string, maxRetries: number = 3, initialDelay: number = 1000): Promise<Response> => {
+  const fetchWithRetry = async (url: string, maxRetries: number = 2, initialDelay: number = 2000): Promise<Response> => {
     let lastError: Error | null = null;
     
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -302,7 +302,19 @@ export async function getCachedTrivia(gameNumber?: number, isPro?: boolean): Pro
         });
 
         if (!response.ok) {
-          // Don't retry on 4xx errors (client errors)
+          // Handle 429 (Too Many Requests) with longer backoff
+          if (response.status === 429) {
+            const retryAfter = response.headers.get('Retry-After');
+            const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : initialDelay * Math.pow(4, attempt); // Longer backoff for rate limits
+            if (attempt < maxRetries) {
+              console.warn(`⚠️ Rate limited (429), waiting ${delay}ms before retry ${attempt + 1}/${maxRetries + 1}...`);
+              await new Promise(resolve => setTimeout(resolve, delay));
+              continue; // Retry
+            }
+            throw new Error(`HTTP 429: Too Many Requests`);
+          }
+          
+          // Don't retry on other 4xx errors (client errors)
           if (response.status >= 400 && response.status < 500) {
             throw new Error(`HTTP ${response.status}`);
           }
@@ -314,11 +326,13 @@ export async function getCachedTrivia(gameNumber?: number, isPro?: boolean): Pro
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
         
-        // Don't retry on last attempt
-        if (attempt < maxRetries) {
+        // Don't retry on last attempt or if it's a 4xx error (except 429)
+        if (attempt < maxRetries && (!lastError.message.includes('HTTP 4') || lastError.message.includes('429'))) {
           const delay = initialDelay * Math.pow(2, attempt); // Exponential backoff
           console.warn(`⚠️ API request failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
+        } else {
+          break;
         }
       }
     }
@@ -327,9 +341,16 @@ export async function getCachedTrivia(gameNumber?: number, isPro?: boolean): Pro
   };
   
   // Try each API endpoint and accumulate questions until we have enough
-  for (const api of TRIVIA_APIS) {
+  // Add delay between API calls to avoid rate limiting
+  for (let i = 0; i < TRIVIA_APIS.length; i++) {
     if (allApiQuestions.length >= questionsNeeded) break;
     
+    // Add delay between API calls (except first one)
+    if (i > 0) {
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay between API calls
+    }
+    
+    const api = TRIVIA_APIS[i];
     try {
       console.log(`🧠 Trying ${api.name} for additional questions...`);
       const response = await fetchWithRetry(api.url);
@@ -348,6 +369,11 @@ export async function getCachedTrivia(gameNumber?: number, isPro?: boolean): Pro
       }
     } catch (error) {
       console.warn(`❌ ${api.name} failed after retries:`, error);
+      // If we get rate limited, stop trying more APIs
+      if (error instanceof Error && error.message.includes('429')) {
+        console.warn('⚠️ Rate limited, stopping API calls to avoid further rate limits');
+        break;
+      }
     }
   }
   

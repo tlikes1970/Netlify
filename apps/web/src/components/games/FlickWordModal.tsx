@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import FlickWordGame from "./FlickWordGame";
 import FlickWordStats from "./FlickWordStats";
+import FlickWordReview from "./FlickWordReview";
 import Portal from "../Portal";
 import { lockScroll, unlockScroll } from "../../utils/scrollLock";
 import { getFlickWordStatsKey } from '../../lib/cacheKeys';
+import { syncGameStats } from '../../lib/gameStatsSync';
+import { authManager } from '../../lib/auth';
 
 interface FlickWordModalProps {
   isOpen: boolean;
@@ -15,6 +18,7 @@ export default function FlickWordModal({
   onClose,
 }: FlickWordModalProps) {
   const [showStats, setShowStats] = useState(false);
+  const [showReview, setShowReview] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const modalRef = useRef<HTMLDivElement>(null);
@@ -237,6 +241,14 @@ export default function FlickWordModal({
       localStorage.setItem(getFlickWordStatsKey(), JSON.stringify(newStats));
       console.log("💾 FlickWord stats saved:", newStats);
 
+      // Sync to Firebase if user is authenticated
+      const currentUser = authManager.getCurrentUser();
+      if (currentUser?.uid) {
+        syncGameStats(currentUser.uid).catch((error) => {
+          console.warn("Failed to sync game stats to cloud:", error);
+        });
+      }
+
       // Update header stats
       setHeaderStats((prev) => ({ ...prev, streak: newStats.streak }));
     } catch (error) {
@@ -274,10 +286,11 @@ export default function FlickWordModal({
     // This prevents the stats modal from replacing the game component and hiding the completion screens
   }, []);
 
-  // Reset stats view when modal opens
+  // Reset views when modal opens
   useEffect(() => {
     if (isOpen) {
       setShowStats(false);
+      setShowReview(false);
       setModalPosition({ x: 0, y: 0 });
     }
   }, [isOpen]);
@@ -290,7 +303,8 @@ export default function FlickWordModal({
     left: "50%",
     transform: `translate(-50%, -50%) translate(${modalPosition.x}px, ${modalPosition.y}px)`,
     width: "min(90vw, 500px)",
-    height: "min(90vh, 750px)",
+    height: "min(100vh, 750px)",
+    maxHeight: "100vh",
     cursor: isDragging ? "grabbing" : "default",
     zIndex: "var(--z-modal, 9999)",
   };
@@ -366,10 +380,43 @@ export default function FlickWordModal({
                   </button>
                   <button
                     className="btn-secondary"
+                    onClick={() => {
+                      setShowStats(false);
+                      setShowReview(true);
+                    }}
+                    aria-label="Review completed games"
+                  >
+                    Review Games
+                  </button>
+                  <button
+                    className="btn-secondary"
                     onClick={onClose}
                     aria-label="Close FlickWord game"
                   >
                     Close
+                  </button>
+                </div>
+              </div>
+            ) : showReview ? (
+              <div className="game-review-view">
+                <FlickWordReview onClose={() => setShowReview(false)} />
+                <div className="review-actions">
+                  <button
+                    className="btn-primary"
+                    onClick={() => {
+                      setShowReview(false);
+                      setShowStats(true);
+                    }}
+                    aria-label="View stats"
+                  >
+                    View Stats
+                  </button>
+                  <button
+                    className="btn-secondary"
+                    onClick={() => setShowReview(false)}
+                    aria-label="Back to game"
+                  >
+                    Back to Game
                   </button>
                 </div>
               </div>
@@ -378,6 +425,7 @@ export default function FlickWordModal({
                 onClose={onClose}
                 onGameComplete={handleGameComplete}
                 onShowStats={() => setShowStats(true)}
+                onShowReview={() => setShowReview(true)}
               />
             )}
           </main>

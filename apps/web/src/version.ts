@@ -1,5 +1,11 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.91: Added comment counter and NEW badge to community posts
+// - Added clickable reply counter with show/hide thread functionality in comments
+// - Added comment count display on post cards with standout accent styling
+// - Added NEW badge indicator for posts published within 24 hours
+// - Comment counters encourage engagement by showing discussion activity
+// - Rollback: Revert this commit to restore previous post/comment display
 // ⚠️ VERSION 0.1.158: Community v1 - Complete implementation with topics, spoilers, Pro badges, sorting, filtering, infinite scroll, and daily limits
 // - Added Pro badges, spoiler handling, topic selection and following
 // - Implemented sorting (Newest, Oldest, Top, Hot, Trending) with Pro gating
@@ -157,4 +163,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.90";
+export const APP_VERSION = "0.1.91";
