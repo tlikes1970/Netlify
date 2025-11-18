@@ -14,7 +14,6 @@ import {
   getPersonalityText,
 } from "../lib/settings";
 import { useProStatus } from "../lib/proStatus";
-import { startProUpgrade } from "../lib/proUpgrade";
 import { useTranslations, useLanguage, changeLanguage } from "../lib/language";
 import { PRO_FEATURES_AVAILABLE, PRO_FEATURES_COMING_SOON } from "./settingsProConfig";
 import { UpgradeToProCTA } from "./UpgradeToProCTA";
