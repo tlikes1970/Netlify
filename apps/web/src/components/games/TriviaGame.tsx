@@ -125,7 +125,7 @@ export default function TriviaGame({
       // Cap to max games to prevent invalid counts
       const maxGames = settings.pro.isPro ? 3 : 1;
       return Math.min(count, maxGames);
-    } catch {
+    } catch (_e) {
       return 0;
     }
   };
