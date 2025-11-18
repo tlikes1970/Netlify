@@ -2921,12 +2921,47 @@ function SharingModal({ onClose }: { onClose: () => void }) {
   const watchingItems = useLibrary("watching");
   const wishlistItems = useLibrary("wishlist");
   const watchedItems = useLibrary("watched");
+  const userLists = useCustomLists();
 
-  const [selectedTabs, setSelectedTabs] = useState({
-    watching: true,
-    wishlist: true,
-    watched: true,
-  });
+  // Initialize selectedTabs with custom lists
+  const [selectedTabs, setSelectedTabs] = useState<Record<string, boolean>>(
+    () => {
+      const initial: Record<string, boolean> = {
+        watching: true,
+        wishlist: true,
+        watched: true,
+      };
+      // Add custom lists, default to false (not selected)
+      userLists.customLists.forEach((list) => {
+        initial[`custom:${list.id}`] = false;
+      });
+      return initial;
+    }
+  );
+
+  // Update selectedTabs when custom lists change
+  useEffect(() => {
+    setSelectedTabs((prev) => {
+      const updated = { ...prev };
+      // Add any new custom lists that don't exist yet
+      userLists.customLists.forEach((list) => {
+        const listKey = `custom:${list.id}`;
+        if (!(listKey in updated)) {
+          updated[listKey] = false;
+        }
+      });
+      // Remove custom lists that no longer exist
+      Object.keys(updated).forEach((key) => {
+        if (key.startsWith("custom:")) {
+          const listId = key.replace("custom:", "");
+          if (!userLists.customLists.some((list) => list.id === listId)) {
+            delete updated[key];
+          }
+        }
+      });
+      return updated;
+    });
+  }, [userLists.customLists]);
 
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [contentOptions, setContentOptions] = useState({
@@ -2941,10 +2976,22 @@ function SharingModal({ onClose }: { onClose: () => void }) {
 
   // Get all items from selected tabs
   const getAllItems = () => {
-    const items = [];
+    const items: MediaItem[] = [];
     if (selectedTabs.watching) items.push(...watchingItems);
     if (selectedTabs.wishlist) items.push(...wishlistItems);
     if (selectedTabs.watched) items.push(...watchedItems);
+
+    // Add items from selected custom lists
+    userLists.customLists.forEach((list) => {
+      const listKey = `custom:${list.id}`;
+      if (selectedTabs[listKey]) {
+        const customListItems = Library.getByList(
+          `custom:${list.id}` as ListName
+        );
+        items.push(...customListItems);
+      }
+    });
+
     return items;
   };
 
@@ -2980,7 +3027,7 @@ function SharingModal({ onClose }: { onClose: () => void }) {
     );
   };
 
-  const handleTabToggle = (tab: keyof typeof selectedTabs) => {
+  const handleTabToggle = (tab: string) => {
     setSelectedTabs((prev) => ({ ...prev, [tab]: !prev[tab] }));
   };
 
@@ -3075,6 +3122,32 @@ function SharingModal({ onClose }: { onClose: () => void }) {
       });
       text += "\n";
     }
+
+    // Add custom lists
+    userLists.customLists.forEach((list) => {
+      const listKey = `custom:${list.id}`;
+      if (selectedTabs[listKey]) {
+        const customListItems = Library.getByList(
+          `custom:${list.id}` as ListName
+        );
+        const customItemsToShare = itemsToShare.filter((item) =>
+          customListItems.some((c) => c.id === item.id)
+        );
+        if (customItemsToShare.length > 0) {
+          text += `📋 ${list.name}\n`;
+          text += `${"─".repeat(30)}\n`;
+          customItemsToShare.forEach((item) => {
+            const icon = item.mediaType === "movie" ? "🎬" : "📺";
+            const rating =
+              contentOptions.includeRatings && item.voteAverage
+                ? ` ⭐ ${item.voteAverage.toFixed(1)}`
+                : "";
+            text += `${icon} ${item.title}${rating}\n`;
+          });
+          text += "\n";
+        }
+      }
+    });
 
     text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     text += `📱 Track your shows and movies with Flicklet!\n`;
@@ -3216,10 +3289,8 @@ function SharingModal({ onClose }: { onClose: () => void }) {
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
-                        checked={selectedTabs[key as keyof typeof selectedTabs]}
-                        onChange={() =>
-                          handleTabToggle(key as keyof typeof selectedTabs)
-                        }
+                        checked={selectedTabs[key] || false}
+                        onChange={() => handleTabToggle(key)}
                         className="w-4 h-4"
                       />
                       <span className="text-gray-900 dark:text-gray-100">
@@ -3231,6 +3302,52 @@ function SharingModal({ onClose }: { onClose: () => void }) {
                     </span>
                   </label>
                 ))}
+
+                {/* Custom Lists */}
+                {userLists.customLists.length > 0 && (
+                  <>
+                    <div
+                      className="pt-2 mt-2 border-t"
+                      style={{ borderColor: "var(--line)" }}
+                    >
+                      <h5 className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                        📋 Custom Lists
+                      </h5>
+                    </div>
+                    {userLists.customLists.map((list) => {
+                      const listKey = `custom:${list.id}`;
+                      const customListItems = Library.getByList(
+                        `custom:${list.id}` as ListName
+                      );
+                      return (
+                        <label
+                          key={list.id}
+                          className="flex items-center justify-between p-3 rounded-lg cursor-pointer"
+                          style={{
+                            backgroundColor: "var(--btn)",
+                            borderColor: "var(--line)",
+                            border: "1px solid",
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={selectedTabs[listKey] || false}
+                              onChange={() => handleTabToggle(listKey)}
+                              className="w-4 h-4"
+                            />
+                            <span className="text-gray-900 dark:text-gray-100">
+                              📋 {list.name}
+                            </span>
+                          </div>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {customListItems.length} items
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </>
+                )}
               </div>
             </div>
 
