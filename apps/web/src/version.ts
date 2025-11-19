@@ -1,5 +1,10 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.162: Added debug logging for onboarding component
+// - Added comprehensive debug logging to diagnose why onboarding doesn't appear in production
+// - Logs hook initialization, localStorage checks, component mount, and early returns
+// - Added window.__onboardingDebug object for easy inspection in browser console
+// - Helps identify if component is mounting, what step is initialized, and why it might return null
 // ⚠️ VERSION 0.1.161: Onboarding Walkthrough with Coachmarks
 // - Added complete onboarding flow with 4 steps: welcome, search, addShow, homeDone, help
 // - Implemented coachmark bubbles with arrows pointing to UI elements
@@ -189,4 +194,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.161";
+export const APP_VERSION = "0.1.162";
