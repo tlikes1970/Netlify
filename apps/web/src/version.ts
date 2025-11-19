@@ -1,5 +1,14 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.161: Onboarding Walkthrough with Coachmarks
+// - Added complete onboarding flow with 4 steps: welcome, search, addShow, homeDone, help
+// - Implemented coachmark bubbles with arrows pointing to UI elements
+// - Added action-oriented language encouraging user interaction
+// - Delayed login modal and location permission requests until onboarding completes
+// - Added fallback mechanisms to ensure login/location still work if onboarding is skipped
+// - Implemented automatic scrolling to show relevant sections during onboarding
+// - Added SearchTip component for additional guidance during addShow step
+// - Rollback: Revert this commit to remove onboarding and restore immediate login/location prompts
 // ⚠️ VERSION 0.1.160: Admin Tab Restructure - Community Content and Moderation First
 // - Changed default Admin tab from Auto Content to Community Content
 // - Reordered tabs: Community Content first, Moderation second, then other tools
@@ -180,4 +189,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.160";
+export const APP_VERSION = "0.1.161";
