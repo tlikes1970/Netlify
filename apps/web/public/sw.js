@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-globals */
 // ⚠️ FIXED: Conditional skip-waiting and clients-claim to prevent aggressive takeover
 // Only claim clients if no existing controller (prevents mid-render takeover)
-self.addEventListener('install', (event) => {
+self.addEventListener("install", (event) => {
   // Only skip waiting if no controller exists (first install)
   // This prevents aggressive activation during updates
   if (!self.registration.active && !self.registration.waiting) {
@@ -9,13 +9,22 @@ self.addEventListener('install', (event) => {
   }
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       // Only claim clients if no controller exists (prevents takeover of loaded pages)
       // This prevents the flicker loop caused by immediate client claiming
       // Check if we're the first SW (no existing controller)
-      if (!navigator.serviceWorker.controller) {
+      // Note: navigator.serviceWorker is undefined in SW context, so we can't check .controller
+      // Use registration state instead - only claim if this is the first activation
+      // Check if there was a previous active SW before us
+      // Note: In SW context, navigator.serviceWorker is undefined, so we can't check .controller
+      // Use registration state: if active exists and isn't us, there was a previous SW
+      // However, during activation, active will be us, so check waiting state instead
+      const isFirstInstall = !self.registration.active;
+      const isUpdate = self.registration.waiting === self;
+      if (isFirstInstall || isUpdate) {
+        // First install or update - claim clients to take control
         await self.clients.claim();
       }
     })()
@@ -70,9 +79,11 @@ self.addEventListener("fetch", (e) => {
         const cached = await cache.match(req);
         if (cached) {
           // Return cached version and update in background
-          fetch(req).then((response) => {
-            if (response.ok) cache.put(req, response.clone());
-          }).catch(() => {});
+          fetch(req)
+            .then((response) => {
+              if (response.ok) cache.put(req, response.clone());
+            })
+            .catch(() => {});
           return cached;
         }
         const response = await fetch(req);
@@ -106,7 +117,7 @@ self.addEventListener("fetch", (e) => {
       e.respondWith(fetch(req, { cache: "no-store" }));
       return;
     }
-    
+
     // ⚠️ FIXED: Network-first for HTML to prevent serving stale content during updates
     // This prevents flicker caused by serving cached HTML that conflicts with new HTML
     e.respondWith(
@@ -124,7 +135,7 @@ self.addEventListener("fetch", (e) => {
           // Network failed, try cache as fallback
           const cached = await caches.match(req);
           if (cached) return cached;
-          
+
           // Last resort: offline page
           const offlinePage = await caches.match("/offline.html");
           if (offlinePage) return offlinePage;
