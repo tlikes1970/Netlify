@@ -123,13 +123,14 @@ export function useLocation() {
 
       window.addEventListener("onboarding:completed", eventHandler);
 
-      // Fallback: if onboarding doesn't complete within 30 seconds, proceed anyway
+      // Fallback: if onboarding doesn't complete within 3 minutes, proceed anyway
+      // This gives users plenty of time to complete the onboarding flow
       fallbackTimeoutId = setTimeout(() => {
         if (eventHandler) {
           window.removeEventListener("onboarding:completed", eventHandler);
         }
         requestLocation();
-      }, 30000);
+      }, 180000); // 3 minutes
     }
 
     // Cleanup

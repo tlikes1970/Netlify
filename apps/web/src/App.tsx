@@ -352,13 +352,14 @@ export default function App() {
 
         window.addEventListener("onboarding:completed", eventHandler);
 
-        // Fallback: if onboarding doesn't complete within 30 seconds, show auth modal anyway
+        // Fallback: if onboarding doesn't complete within 3 minutes, show auth modal anyway
+        // This gives users plenty of time to complete the onboarding flow
         fallbackTimeoutId = setTimeout(() => {
           if (eventHandler) {
             window.removeEventListener("onboarding:completed", eventHandler);
           }
           setShowAuthModal(true);
-        }, 30000);
+        }, 180000); // 3 minutes
       };
 
       // Small delay to ensure the app has fully loaded
