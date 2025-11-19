@@ -51,7 +51,7 @@ export default function HomeUpNextRail() {
   }, [watching]);
 
   return (
-    <div>
+    <div data-onboarding-id="up-next-section">
       <h3 className="text-base font-semibold mb-3" style={{ color: 'var(--text)' }}>{translations.upNext}</h3>
       {items.length > 0 ? (
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">

@@ -10,9 +10,17 @@ import {
 import type { OnboardingStep } from "@/lib/onboarding.types";
 
 export function useOnboardingCoachmarks() {
-  const [step, setStep] = useState<OnboardingStep>(() =>
-    getOnboardingCompleted() ? "none" : "welcome"
-  );
+  const [step, setStep] = useState<OnboardingStep>(() => {
+    const completed = getOnboardingCompleted();
+    const initialStep = completed ? "none" : "welcome";
+    console.log(
+      "[Onboarding] Hook initialized, completed:",
+      completed,
+      "step:",
+      initialStep
+    );
+    return initialStep;
+  });
 
   const completeOnboarding = useCallback(() => {
     setOnboardingCompleted();

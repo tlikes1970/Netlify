@@ -13,6 +13,27 @@ import { useOnboardingCoachmarks } from "@/hooks/useOnboardingCoachmarks";
 export default function OnboardingCoachmarks() {
   const { step, setStep, completeOnboarding, skipOnboarding, isActive } =
     useOnboardingCoachmarks();
+
+  // Debug logging - always log on mount
+  useEffect(() => {
+    const localStorageValue =
+      typeof window !== "undefined"
+        ? localStorage.getItem("flicklet.onboardingCompleted")
+        : "no window";
+    console.log(
+      "[Onboarding] Component mounted, step:",
+      step,
+      "isActive:",
+      isActive,
+      "localStorage:",
+      localStorageValue
+    );
+    // Also log to window for easier debugging
+    if (typeof window !== "undefined") {
+      (window as any).__onboardingDebug = { step, isActive, localStorageValue };
+    }
+  }, [step, isActive]);
+
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
   const [currentlyWatchingRect, setCurrentlyWatchingRect] =
     useState<DOMRect | null>(null);
@@ -391,7 +412,14 @@ export default function OnboardingCoachmarks() {
     );
   }
 
-  if (!isActive || !anchorRect) {
+  // Debug logging before early return
+  if (!isActive) {
+    console.log("[Onboarding] Not active, step:", step);
+    return null;
+  }
+
+  if (!anchorRect) {
+    console.log("[Onboarding] No anchorRect found for step:", step);
     return null;
   }
 
@@ -500,7 +528,10 @@ export default function OnboardingCoachmarks() {
   };
 
   const content = renderStepContent();
-  if (!content) return null;
+  if (!content) {
+    console.log("[Onboarding] No content for step:", step, "returning null");
+    return null;
+  }
 
   const bubbleStyle = getBubbleStyle();
   const arrowDirection = bubbleStyle.arrowDirection || "up";

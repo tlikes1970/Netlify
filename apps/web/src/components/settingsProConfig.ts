@@ -61,3 +61,4 @@ export function getProFeaturesByStatus(comingSoon: boolean): ProFeature[] {
   return comingSoon ? PRO_FEATURES_COMING_SOON : PRO_FEATURES_AVAILABLE;
 }
 
+

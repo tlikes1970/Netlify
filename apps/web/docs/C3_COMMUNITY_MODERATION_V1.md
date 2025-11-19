@@ -136,3 +136,4 @@ Implemented a complete moderation system for community posts and comments, inclu
 - Admin visibility of hidden items is partially implemented (filtered out for now)
 - Report UI uses simple `confirm()` dialogs - can be enhanced with modal components
 
+

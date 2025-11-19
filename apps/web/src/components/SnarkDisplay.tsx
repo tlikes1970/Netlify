@@ -1,18 +1,18 @@
-import { useRef, useEffect } from 'react';
-import { useUsername } from '../hooks/useUsername';
-import { useSettings, getPersonalityText } from '../lib/settings';
-import { useAuth } from '../hooks/useAuth';
+import { useRef, useEffect } from "react";
+import { useUsername } from "../hooks/useUsername";
+import { useSettings, getPersonalityText } from "../lib/settings";
+import { useAuth } from "../hooks/useAuth";
 // ⚠️ REMOVED: flickerDiagnostics import disabled
 
 export default function SnarkDisplay() {
   const { username } = useUsername();
   const settings = useSettings();
   const { isAuthenticated } = useAuth();
-  
+
   // Use refs to track previous values for accurate logging
   const prevUsernameRef = useRef<string | undefined>(username);
   const prevIsAuthenticatedRef = useRef<boolean>(isAuthenticated);
-  
+
   // ⚠️ REMOVED: flickerDiagnostics logging disabled
   useEffect(() => {
     if (prevUsernameRef.current !== username) {
@@ -27,22 +27,22 @@ export default function SnarkDisplay() {
   if (isAuthenticated && !username) {
     const handleOpenSettings = () => {
       // Dispatch custom event to open SettingsPage
-      window.dispatchEvent(new CustomEvent('settings:open-page'));
+      window.dispatchEvent(new CustomEvent("settings:open-page"));
     };
 
     return (
-      <div 
-        className="text-xs md:text-sm md:truncate md:max-w-none" 
-        style={{ 
-          color: 'var(--muted)',
-          maxWidth: '100%',
-          wordBreak: 'break-word'
+      <div
+        className="text-xs md:text-sm md:truncate md:max-w-none"
+        style={{
+          color: "var(--muted)",
+          maxWidth: "100%",
+          wordBreak: "break-word",
         }}
       >
         <button
           onClick={handleOpenSettings}
           className="underline hover:no-underline transition-all"
-          style={{ color: 'var(--accent)' }}
+          style={{ color: "var(--accent)" }}
         >
           Click here to set a username
         </button>
@@ -56,16 +56,18 @@ export default function SnarkDisplay() {
   }
 
   // Show welcome message when username exists
-  const snarkText = getPersonalityText('welcome', settings.personalityLevel, { username });
+  const snarkText = getPersonalityText("welcome", settings.personalityLevel, {
+    username,
+  });
 
   return (
-    <div 
-      className="text-xs md:text-sm md:truncate md:max-w-none" 
-      style={{ 
-        color: 'var(--muted)',
-        maxWidth: '100%',
-        wordBreak: 'break-word',
-        lineHeight: '1.4'
+    <div
+      className="text-xs md:text-sm md:truncate md:max-w-none"
+      style={{
+        color: "var(--muted)",
+        maxWidth: "100%",
+        wordBreak: "break-word",
+        lineHeight: "1.4",
       }}
     >
       {snarkText}

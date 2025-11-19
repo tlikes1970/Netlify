@@ -1595,7 +1595,10 @@ export default function App() {
         <AuthConfigError />
 
         {/* Onboarding Coachmarks */}
-        <OnboardingCoachmarks />
+        {(() => {
+          console.log("[App] Rendering OnboardingCoachmarks component");
+          return <OnboardingCoachmarks />;
+        })()}
 
         {/* Debug HUD */}
         {showDebugHUD && (
