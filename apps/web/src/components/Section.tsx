@@ -22,6 +22,11 @@ export default function Section({
           <h2
             className="text-lg font-semibold"
             style={{ color: "var(--text)" }}
+            data-onboarding-id={
+              typeof title === "string" && title === "Your Shows"
+                ? "home-your-shows"
+                : undefined
+            }
           >
             {inlineHeaderAction && headerAction ? (
               <>

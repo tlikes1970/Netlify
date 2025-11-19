@@ -1,7 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { getTheatersNearLocation, getLocationFromIP, Theater } from '@/lib/tmdb';
-import { makeGeoResolver } from '@/utils/geoClient';
+import { useState, useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  getTheatersNearLocation,
+  getLocationFromIP,
+  Theater,
+} from "@/lib/tmdb";
+import { makeGeoResolver } from "@/utils/geoClient";
+import { getOnboardingCompleted } from "@/lib/onboarding";
 
 export interface LocationData {
   latitude: number;
@@ -13,18 +18,23 @@ export interface LocationData {
 
 export function useLocation() {
   const [location, setLocation] = useState<LocationData | null>(null);
-  const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | 'loading'>('loading');
+  const [locationPermission, setLocationPermission] = useState<
+    "granted" | "denied" | "prompt" | "loading"
+  >("loading");
   const geoResolverRef = useRef<(() => Promise<any>) | null>(null);
 
   useEffect(() => {
-    const getLocation = async () => {
+    let eventHandler: (() => void) | null = null;
+    let fallbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const requestLocation = () => {
       try {
         // Try to get precise location first
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             async (position) => {
               const { latitude, longitude } = position.coords;
-              
+
               // Get city info from coordinates (reverse geocoding) - single-flight + cache
               try {
                 // Create resolver once per session for these coordinates
@@ -32,72 +42,109 @@ export function useLocation() {
                   geoResolverRef.current = makeGeoResolver(latitude, longitude);
                 }
                 const data = await geoResolverRef.current();
-                
+
                 if (data) {
                   setLocation({
                     latitude,
                     longitude,
-                    city: data.city || 'Unknown',
-                    region: data.principalSubdivision || 'Unknown',
-                    country: data.countryName || 'Unknown'
+                    city: data.city || "Unknown",
+                    region: data.principalSubdivision || "Unknown",
+                    country: data.countryName || "Unknown",
                   });
-                  setLocationPermission('granted');
+                  setLocationPermission("granted");
                 } else {
                   // Fallback to IP-based location
                   const ipLocation = await getLocationFromIP();
                   setLocation(ipLocation);
-                  setLocationPermission('granted');
+                  setLocationPermission("granted");
                 }
               } catch (error) {
-                console.error('Failed to get city info:', error);
+                console.error("Failed to get city info:", error);
                 // Fallback to IP-based location
                 const ipLocation = await getLocationFromIP();
                 setLocation(ipLocation);
-                setLocationPermission('granted');
+                setLocationPermission("granted");
               }
             },
-            async (error) => {
-              console.log('Geolocation denied or failed:', error);
-              setLocationPermission('denied');
-              
+            (error) => {
+              console.log("Geolocation denied or failed:", error);
+              setLocationPermission("denied");
+
               // Fallback to IP-based location
-              try {
-                const ipLocation = await getLocationFromIP();
-                setLocation(ipLocation);
-              } catch (ipError) {
-                console.error('Failed to get IP location:', ipError);
-                setLocation(null);
-              }
+              getLocationFromIP()
+                .then((ipLocation) => {
+                  setLocation(ipLocation);
+                })
+                .catch((ipError) => {
+                  console.error("Failed to get IP location:", ipError);
+                  setLocation(null);
+                });
             },
             {
               enableHighAccuracy: true,
               timeout: 10000,
-              maximumAge: 300000 // 5 minutes
+              maximumAge: 300000, // 5 minutes
             }
           );
         } else {
           // Browser doesn't support geolocation, use IP
-          try {
-            const ipLocation = await getLocationFromIP();
-            setLocation(ipLocation);
-            setLocationPermission('granted');
-          } catch (error) {
-            console.error('Failed to get IP location:', error);
-            setLocation(null);
-            setLocationPermission('denied');
-          }
+          getLocationFromIP()
+            .then((ipLocation) => {
+              setLocation(ipLocation);
+              setLocationPermission("granted");
+            })
+            .catch((error) => {
+              console.error("Failed to get IP location:", error);
+              setLocation(null);
+              setLocationPermission("denied");
+            });
         }
       } catch (error) {
-        console.error('Location setup failed:', error);
-        setLocationPermission('denied');
+        console.error("Location setup failed:", error);
+        setLocationPermission("denied");
       }
     };
 
-    getLocation();
+    // Wait for onboarding to complete before requesting location permission
+    // If onboarding is already completed, proceed immediately
+    if (getOnboardingCompleted()) {
+      requestLocation();
+    } else {
+      // Otherwise, wait for onboarding completion event
+      eventHandler = () => {
+        requestLocation();
+        if (eventHandler) {
+          window.removeEventListener("onboarding:completed", eventHandler);
+        }
+        if (fallbackTimeoutId) {
+          clearTimeout(fallbackTimeoutId);
+        }
+      };
+
+      window.addEventListener("onboarding:completed", eventHandler);
+
+      // Fallback: if onboarding doesn't complete within 30 seconds, proceed anyway
+      fallbackTimeoutId = setTimeout(() => {
+        if (eventHandler) {
+          window.removeEventListener("onboarding:completed", eventHandler);
+        }
+        requestLocation();
+      }, 30000);
+    }
+
+    // Cleanup
+    return () => {
+      if (eventHandler) {
+        window.removeEventListener("onboarding:completed", eventHandler);
+      }
+      if (fallbackTimeoutId) {
+        clearTimeout(fallbackTimeoutId);
+      }
+    };
   }, []);
 
   const requestLocationPermission = () => {
-    setLocationPermission('prompt');
+    setLocationPermission("prompt");
     // This will trigger the geolocation prompt again
     window.location.reload();
   };
@@ -106,21 +153,25 @@ export function useLocation() {
     location,
     locationPermission,
     requestLocationPermission,
-    isLoading: locationPermission === 'loading'
+    isLoading: locationPermission === "loading",
   };
 }
 
 export function useTheaters(radius: number = 10) {
   const { location } = useLocation();
-  
+
   return useQuery<Theater[]>({
-    queryKey: ['theaters', location?.latitude, location?.longitude, radius],
+    queryKey: ["theaters", location?.latitude, location?.longitude, radius],
     queryFn: () => {
       if (!location) return [];
-      return getTheatersNearLocation(location.latitude, location.longitude, radius);
+      return getTheatersNearLocation(
+        location.latitude,
+        location.longitude,
+        radius
+      );
     },
     enabled: !!location,
     staleTime: 300_000, // 5 minutes
-    retry: 2
+    retry: 2,
   });
 }

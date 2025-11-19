@@ -12,6 +12,7 @@ import HomeUpNextRail from "@/components/rails/HomeUpNextRail";
 import HomeMarquee from "@/components/HomeMarquee";
 import { HOME_MARQUEE_MESSAGES } from "@/config/homeMarqueeMessages";
 import { SettingsFAB, ThemeToggleFAB } from "@/components/FABs";
+import OnboardingCoachmarks from "@/components/onboarding/OnboardingCoachmarks";
 import ScrollToTopArrow from "@/components/ScrollToTopArrow";
 import { lazy, Suspense } from "react";
 import PostDetail from "@/components/PostDetail";
@@ -41,7 +42,7 @@ import PullToRefreshWrapper from "@/components/PullToRefreshWrapper";
 import { useForYouRows } from "@/hooks/useForYouRows";
 import { useForYouContent } from "@/hooks/useGenreContent";
 import { useServiceWorker } from "@/hooks/useServiceWorker";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { flushSync } from "react-dom";
 import { Library, useLibrary } from "@/lib/storage";
 import { mountActionBridge, setToastCallback } from "@/state/actions";
@@ -59,6 +60,7 @@ import {
 import AuthModal from "@/components/AuthModal";
 import AuthConfigError from "@/components/AuthConfigError";
 import { isAuthInFlightInOtherTab } from "@/lib/authBroadcast";
+import { getOnboardingCompleted } from "@/lib/onboarding";
 import "@/styles/flickword.css";
 import { backfillShowStatus } from "@/utils/backfillShowStatus";
 import DebugAuthHUD from "@/components/DebugAuthHUD";
@@ -176,6 +178,64 @@ export default function App() {
   // Toast system
   const { toasts, addToast, removeToast } = useToast();
 
+  // Search state
+  const [search, setSearch] = useState<SearchState>({
+    q: "",
+    genre: null,
+    type: "all",
+  });
+
+  // Search handlers (defined early for use in onboarding effects)
+  const handleSearch = useCallback(
+    (
+      q: string,
+      genre: number | null,
+      type: SearchType,
+      mediaTypeFilter?: "tv" | "movie" | null
+    ) => {
+      const nextQ = q.trim();
+      setSearch({ q: nextQ, genre, type, mediaTypeFilter });
+    },
+    []
+  );
+
+  // Handle onboarding navigation to search
+  useEffect(() => {
+    const handleNavigateToSearch = () => {
+      // Trigger search view by setting an empty query (will show search input)
+      handleSearch("", null, "all");
+    };
+
+    window.addEventListener(
+      "onboarding:navigate-to-search",
+      handleNavigateToSearch
+    );
+    return () => {
+      window.removeEventListener(
+        "onboarding:navigate-to-search",
+        handleNavigateToSearch
+      );
+    };
+  }, [handleSearch]);
+
+  // Handle first show added event (from onboarding)
+  useEffect(() => {
+    const handleFirstShowAdded = () => {
+      addToast("Added to Your Shows", "success");
+      // Navigate to home (onboarding step advancement handled by OnboardingCoachmarks)
+      setView("home");
+      setSearch({ q: "", genre: null, type: "all", mediaTypeFilter: null });
+    };
+
+    window.addEventListener("onboarding:firstShowAdded", handleFirstShowAdded);
+    return () => {
+      window.removeEventListener(
+        "onboarding:firstShowAdded",
+        handleFirstShowAdded
+      );
+    };
+  }, [addToast]);
+
   // Auth state
   const {
     loading: authLoading,
@@ -267,12 +327,52 @@ export default function App() {
       otherTabBlocking;
 
     if (!authLoading && authInitialized && !isAuthenticated && !shouldBlock) {
+      // Check if onboarding is completed before showing auth modal
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
+      let eventHandler: (() => void) | null = null;
+      let fallbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+      const showAuthModalIfReady = () => {
+        // If onboarding is already completed, show auth modal immediately
+        if (getOnboardingCompleted()) {
+          setShowAuthModal(true);
+          return;
+        }
+
+        // Otherwise, wait for onboarding completion event
+        eventHandler = () => {
+          setShowAuthModal(true);
+          if (eventHandler) {
+            window.removeEventListener("onboarding:completed", eventHandler);
+          }
+          if (fallbackTimeoutId) {
+            clearTimeout(fallbackTimeoutId);
+          }
+        };
+
+        window.addEventListener("onboarding:completed", eventHandler);
+
+        // Fallback: if onboarding doesn't complete within 30 seconds, show auth modal anyway
+        fallbackTimeoutId = setTimeout(() => {
+          if (eventHandler) {
+            window.removeEventListener("onboarding:completed", eventHandler);
+          }
+          setShowAuthModal(true);
+        }, 30000);
+      };
+
       // Small delay to ensure the app has fully loaded
-      const timer = setTimeout(() => {
-        setShowAuthModal(true);
+      timeoutId = setTimeout(() => {
+        showAuthModalIfReady();
       }, 1000);
 
-      return () => clearTimeout(timer);
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        if (eventHandler) {
+          window.removeEventListener("onboarding:completed", eventHandler);
+        }
+        if (fallbackTimeoutId) clearTimeout(fallbackTimeoutId);
+      };
     }
   }, [authLoading, authInitialized, isAuthenticated, status]);
 
@@ -319,25 +419,8 @@ export default function App() {
     await new Promise((resolve) => setTimeout(resolve, 1000));
   };
 
-  // Search state
-  const [search, setSearch] = useState<SearchState>({
-    q: "",
-    genre: null,
-    type: "all",
-  });
   // Search is active if there's a query OR a genre selected (for genre-only search)
   const searchActive = !!search.q.trim() || search.genre != null;
-
-  // Search handlers
-  const handleSearch = (
-    q: string,
-    genre: number | null,
-    type: SearchType,
-    mediaTypeFilter?: "tv" | "movie" | null
-  ) => {
-    const nextQ = q.trim();
-    setSearch({ q: nextQ, genre, type, mediaTypeFilter });
-  };
 
   const handleClear = () =>
     setSearch({ q: "", genre: null, type: "all", mediaTypeFilter: null });
@@ -1331,6 +1414,10 @@ export default function App() {
                   <Section title={translations.yourShows}>
                     <div className="space-y-4">
                       <HomeYourShowsRail />
+                      <div
+                        data-onboarding-id="home-your-shows-between"
+                        className="h-4"
+                      />
                       <HomeUpNextRail />
                     </div>
                   </Section>
@@ -1506,6 +1593,9 @@ export default function App() {
 
         {/* Auth Config Error Surface */}
         <AuthConfigError />
+
+        {/* Onboarding Coachmarks */}
+        <OnboardingCoachmarks />
 
         {/* Debug HUD */}
         {showDebugHUD && (
