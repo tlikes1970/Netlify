@@ -31,7 +31,14 @@ export default function SnarkDisplay() {
     };
 
     return (
-      <div className="text-xs md:text-sm truncate max-w-[100px] md:max-w-none" style={{ color: 'var(--muted)' }}>
+      <div 
+        className="text-xs md:text-sm md:truncate md:max-w-none" 
+        style={{ 
+          color: 'var(--muted)',
+          maxWidth: '100%',
+          wordBreak: 'break-word'
+        }}
+      >
         <button
           onClick={handleOpenSettings}
           className="underline hover:no-underline transition-all"
@@ -52,7 +59,15 @@ export default function SnarkDisplay() {
   const snarkText = getPersonalityText('welcome', settings.personalityLevel, { username });
 
   return (
-    <div className="text-xs md:text-sm truncate max-w-[100px] md:max-w-none" style={{ color: 'var(--muted)' }}>
+    <div 
+      className="text-xs md:text-sm md:truncate md:max-w-none" 
+      style={{ 
+        color: 'var(--muted)',
+        maxWidth: '100%',
+        wordBreak: 'break-word',
+        lineHeight: '1.4'
+      }}
+    >
       {snarkText}
     </div>
   );

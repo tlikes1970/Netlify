@@ -134,6 +134,7 @@ export default function FlickletHeader({
           zIndex: "var(--z-overlay)",
           backgroundColor: "var(--bg)",
           borderColor: "var(--line)",
+          minHeight: "48px", // Stable height to prevent jumpiness
         }}
       >
         <div className="mx-auto w-full max-w-screen-2xl px-2 py-1.5 md:px-4 md:py-2">

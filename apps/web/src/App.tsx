@@ -811,20 +811,22 @@ export default function App() {
                       </div>
                     }
                   >
-                    <div data-page="lists" data-list="watching">
-                      <ListPage
-                        title="Currently Watching"
-                        items={watchingVisible}
-                        mode="watching"
-                        onNotesEdit={handleNotesEdit}
-                        onTagsEdit={handleTagsEdit}
-                        onNotificationToggle={handleNotificationToggle}
-                        onSimpleReminder={handleSimpleReminder}
-                        onBloopersOpen={handleBloopersOpen}
-                        onGoofsOpen={handleGoofsOpen}
-                        onExtrasOpen={handleExtrasOpen}
-                      />
-                    </div>
+                    <PullToRefreshWrapper onRefresh={handleRefresh}>
+                      <div data-page="lists" data-list="watching">
+                        <ListPage
+                          title="Currently Watching"
+                          items={watchingVisible}
+                          mode="watching"
+                          onNotesEdit={handleNotesEdit}
+                          onTagsEdit={handleTagsEdit}
+                          onNotificationToggle={handleNotificationToggle}
+                          onSimpleReminder={handleSimpleReminder}
+                          onBloopersOpen={handleBloopersOpen}
+                          onGoofsOpen={handleGoofsOpen}
+                          onExtrasOpen={handleExtrasOpen}
+                        />
+                      </div>
+                    </PullToRefreshWrapper>
                   </Suspense>
                 )}
                 {view === "want" && (
@@ -833,20 +835,22 @@ export default function App() {
                       <div className="loading-spinner">Loading wishlist...</div>
                     }
                   >
-                    <div data-page="lists" data-list="wishlist">
-                      <ListPage
-                        title="Want to Watch"
-                        items={wishlist}
-                        mode="want"
-                        onNotesEdit={handleNotesEdit}
-                        onTagsEdit={handleTagsEdit}
-                        onNotificationToggle={handleNotificationToggle}
-                        onSimpleReminder={handleSimpleReminder}
-                        onBloopersOpen={handleBloopersOpen}
-                        onGoofsOpen={handleGoofsOpen}
-                        onExtrasOpen={handleExtrasOpen}
-                      />
-                    </div>
+                    <PullToRefreshWrapper onRefresh={handleRefresh}>
+                      <div data-page="lists" data-list="wishlist">
+                        <ListPage
+                          title="Want to Watch"
+                          items={wishlist}
+                          mode="want"
+                          onNotesEdit={handleNotesEdit}
+                          onTagsEdit={handleTagsEdit}
+                          onNotificationToggle={handleNotificationToggle}
+                          onSimpleReminder={handleSimpleReminder}
+                          onBloopersOpen={handleBloopersOpen}
+                          onGoofsOpen={handleGoofsOpen}
+                          onExtrasOpen={handleExtrasOpen}
+                        />
+                      </div>
+                    </PullToRefreshWrapper>
                   </Suspense>
                 )}
                 {view === "watched" && (
@@ -857,20 +861,22 @@ export default function App() {
                       </div>
                     }
                   >
-                    <div data-page="lists" data-list="watched">
-                      <ListPage
-                        title="Watched"
-                        items={watched}
-                        mode="watched"
-                        onNotesEdit={handleNotesEdit}
-                        onTagsEdit={handleTagsEdit}
-                        onNotificationToggle={handleNotificationToggle}
-                        onSimpleReminder={handleSimpleReminder}
-                        onBloopersOpen={handleBloopersOpen}
-                        onGoofsOpen={handleGoofsOpen}
-                        onExtrasOpen={handleExtrasOpen}
-                      />
-                    </div>
+                    <PullToRefreshWrapper onRefresh={handleRefresh}>
+                      <div data-page="lists" data-list="watched">
+                        <ListPage
+                          title="Watched"
+                          items={watched}
+                          mode="watched"
+                          onNotesEdit={handleNotesEdit}
+                          onTagsEdit={handleTagsEdit}
+                          onNotificationToggle={handleNotificationToggle}
+                          onSimpleReminder={handleSimpleReminder}
+                          onBloopersOpen={handleBloopersOpen}
+                          onGoofsOpen={handleGoofsOpen}
+                          onExtrasOpen={handleExtrasOpen}
+                        />
+                      </div>
+                    </PullToRefreshWrapper>
                   </Suspense>
                 )}
                 {view === "returning" && (
@@ -881,20 +887,22 @@ export default function App() {
                       </div>
                     }
                   >
-                    <div data-page="lists" data-list="returning">
-                      <ListPage
-                        title="Returning"
-                        items={returning as any}
-                        mode="returning"
-                        onNotesEdit={handleNotesEdit}
-                        onTagsEdit={handleTagsEdit}
-                        onNotificationToggle={handleNotificationToggle}
-                        onSimpleReminder={handleSimpleReminder}
-                        onBloopersOpen={handleBloopersOpen}
-                        onGoofsOpen={handleGoofsOpen}
-                        onExtrasOpen={handleExtrasOpen}
-                      />
-                    </div>
+                    <PullToRefreshWrapper onRefresh={handleRefresh}>
+                      <div data-page="lists" data-list="returning">
+                        <ListPage
+                          title="Returning"
+                          items={returning as any}
+                          mode="returning"
+                          onNotesEdit={handleNotesEdit}
+                          onTagsEdit={handleTagsEdit}
+                          onNotificationToggle={handleNotificationToggle}
+                          onSimpleReminder={handleSimpleReminder}
+                          onBloopersOpen={handleBloopersOpen}
+                          onGoofsOpen={handleGoofsOpen}
+                          onExtrasOpen={handleExtrasOpen}
+                        />
+                      </div>
+                    </PullToRefreshWrapper>
                   </Suspense>
                 )}
                 {view === "mylists" && (

@@ -247,6 +247,18 @@ const CommunityPanel = memo(function CommunityPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortMode, selectedTopics]);
 
+  // Listen for force-refresh event from pull-to-refresh
+  useEffect(() => {
+    const handleForceRefresh = () => {
+      console.log("[CommunityPanel] Force refresh triggered, refreshing posts...");
+      fetchPosts(true);
+    };
+    window.addEventListener("force-refresh", handleForceRefresh);
+    return () => {
+      window.removeEventListener("force-refresh", handleForceRefresh);
+    };
+  }, [fetchPosts]);
+
   const handlePostCreated = () => {
     // Refresh posts list immediately after new post is created
     console.log(

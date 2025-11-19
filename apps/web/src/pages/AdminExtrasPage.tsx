@@ -941,45 +941,23 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
   return (
     <>
       <style>{`
-        /* Aggressive mobile-first Admin styling */
+        /* Root container - SettingsPage provides padding, so no padding here */
         .admin-extras-root {
-          min-height: 100vh;
+          min-height: auto;
           width: 100%;
-          background: var(--bg);
+          background: transparent;
           color: var(--text);
         }
 
-        /* Mobile: no padding when inside Settings */
-        @media (max-width: 900px) {
-          .admin-extras-root {
-            background: transparent;
-            box-shadow: none;
-            border-radius: 0;
-            padding: 0;
-            border: none;
-          }
-        }
-
-        /* Desktop: no padding when inside Settings */
-        @media (min-width: 901px) {
-          .admin-extras-root {
-            padding: 0;
-          }
-        }
-
-        /* Tabs - Real pills */
+        /* Tabs - Real pills - normalized spacing */
         .admin-extras-tabs {
           display: flex;
           flex-wrap: wrap;
           gap: 0.5rem;
-          padding: 0.5rem 0 0.75rem 0;
-          margin-bottom: 0.75rem;
           width: 100%;
           max-width: 100%;
           box-sizing: border-box;
-          /* Prevent tabs from extending past container */
           min-width: 0;
-          /* Ensure container respects parent boundaries and clips overflow */
           position: relative;
           contain: layout style;
         }
@@ -1075,24 +1053,12 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
           text-align: center;
         }
 
-        /* Compact header */
-        @media (max-width: 900px) {
-          .admin-extras-header {
-            font-size: 1.25rem;
-            margin-bottom: 0.75rem;
-          }
-        }
 
         /* Mobile: Touch-friendly buttons and prevent horizontal scroll */
         @media (max-width: 900px) {
           .admin-extras-root {
             overflow-x: hidden;
-            max-width: 100vw;
-          }
-          
-          .admin-extras-root * {
             max-width: 100%;
-            box-sizing: border-box;
           }
           
           /* Ensure all buttons are touch-friendly (minimum 44px height) */
@@ -1123,100 +1089,77 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
           /* Ensure content wraps instead of scrolling horizontally */
           .admin-extras-counts-row {
             flex-wrap: wrap;
-            overflow-x: visible;
           }
         }
       `}</style>
-      <div className="admin-extras-root" style={{ width: "100%", overflow: "hidden", padding: "0" }}>
-        <div
-          className="w-full"
-          style={{
-            minWidth: 0,
-            maxWidth: "100%",
-            margin: "0 auto",
-            padding: "0",
-            boxSizing: "border-box",
-            overflow: "hidden",
-            width: "100%",
-            position: "relative",
-          }}
-        >
-          <h1
-            className="font-bold admin-extras-header"
-            style={{ marginBottom: isMobile ? "0.75rem" : "1rem" }}
-          >
-            {activeTab === "community"
-              ? "Community Content Management"
-              : activeTab === "moderation"
-              ? "Moderation Queue"
-              : activeTab === "content"
-              ? "Auto Content"
-              : activeTab === "insights"
-              ? "Insights & Easter Eggs"
-              : activeTab === "comments"
-              ? "Marquee Comments"
-              : activeTab === "videos"
-              ? "Video Submissions"
-              : activeTab === "pro"
-              ? "Pro Status"
-              : activeTab === "admin"
-              ? "Admin Management"
-              : "Admin"}
-          </h1>
-          
-          {/* Helper text based on active tab */}
-          {activeTab === "community" && (
-            <p
-              className="text-sm mb-3"
-              style={{ color: "var(--muted)", marginBottom: "0.75rem" }}
-            >
-              Manage all community posts and comments. This is not limited to reported content.
-            </p>
-          )}
-          {activeTab === "moderation" && (
-            <p
-              className="text-sm mb-3"
-              style={{ color: "var(--muted)", marginBottom: "0.75rem" }}
-            >
-              Items hidden here are removed from Community for regular users. Use this to review reports and hide/unhide content.
-            </p>
-          )}
+      <div className="admin-extras-root space-y-6">
+        {/* Main heading - matches other Settings sections */}
+        <h3 className="text-xl font-semibold" style={{ color: "var(--text)" }}>
+          {activeTab === "community"
+            ? "Community Content Management"
+            : activeTab === "moderation"
+            ? "Moderation Queue"
+            : activeTab === "content"
+            ? "Auto Content"
+            : activeTab === "insights"
+            ? "Insights & Easter Eggs"
+            : activeTab === "comments"
+            ? "Marquee Comments"
+            : activeTab === "videos"
+            ? "Video Submissions"
+            : activeTab === "pro"
+            ? "Pro Status"
+            : activeTab === "admin"
+            ? "Admin Management"
+            : "Admin"}
+        </h3>
+        
+        {/* Helper text based on active tab */}
+        {activeTab === "community" && (
+          <p className="text-sm" style={{ color: "var(--muted)" }}>
+            Manage all community posts and comments. This is not limited to reported content.
+          </p>
+        )}
+        {activeTab === "moderation" && (
+          <p className="text-sm" style={{ color: "var(--muted)" }}>
+            Items hidden here are removed from Community for regular users. Use this to review reports and hide/unhide content.
+          </p>
+        )}
 
-          {/* Tabs - Dropdown on mobile, horizontal pills on desktop */}
-          {isMobile ? (
-            <select
-              value={activeTab}
-              onChange={(e) => setActiveTab(e.target.value as typeof activeTab)}
-              style={{
-                width: "100%",
-                maxWidth: "240px", // Constrain dropdown popup width
-                padding: "8px 12px",
-                fontSize: "15px",
-                borderRadius: "8px",
-                backgroundColor: "var(--card)",
-                border: "1px solid var(--line)",
-                color: "var(--text)",
-                marginBottom: "0.75rem",
-                minHeight: "40px", // Touch-friendly but more compact
-                WebkitAppearance: "none",
-                appearance: "none",
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 10px center",
-                paddingRight: "32px",
-              }}
-            >
-              <option value="community">Community Content</option>
-              {isAdmin && <option value="moderation">Moderation{pendingReportsCount > 0 ? ` (${pendingReportsCount})` : ""}</option>}
-              <option value="content">Auto Content</option>
-              <option value="insights">Insights & Easter Eggs</option>
-              <option value="comments">Marquee Comments ({pendingUGC})</option>
-              <option value="videos">Video Submissions ({pendingUGC})</option>
-              <option value="pro">Pro Status</option>
-              {isAdmin && <option value="admin">Admin Management</option>}
-            </select>
-          ) : (
-            <div className="admin-extras-tabs" style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", position: "relative" }}>
+        {/* Tabs - Dropdown on mobile, horizontal pills on desktop */}
+        {isMobile ? (
+          <select
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value as typeof activeTab)}
+            style={{
+              width: "100%",
+              maxWidth: "240px",
+              padding: "8px 12px",
+              fontSize: "15px",
+              borderRadius: "8px",
+              backgroundColor: "var(--card)",
+              border: "1px solid var(--line)",
+              color: "var(--text)",
+              minHeight: "40px",
+              WebkitAppearance: "none",
+              appearance: "none",
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "right 10px center",
+              paddingRight: "32px",
+            }}
+          >
+            <option value="community">Community Content</option>
+            {isAdmin && <option value="moderation">Moderation{pendingReportsCount > 0 ? ` (${pendingReportsCount})` : ""}</option>}
+            <option value="content">Auto Content</option>
+            <option value="insights">Insights & Easter Eggs</option>
+            <option value="comments">Marquee Comments ({pendingUGC})</option>
+            <option value="videos">Video Submissions ({pendingUGC})</option>
+            <option value="pro">Pro Status</option>
+            {isAdmin && <option value="admin">Admin Management</option>}
+          </select>
+        ) : (
+          <div className="admin-extras-tabs" style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
               <button
                 onClick={() => setActiveTab("community")}
                 className={`admin-extras-tab ${activeTab === "community" ? "admin-extras-tab--active" : ""}`}
@@ -1286,33 +1229,18 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
 
           {/* Tab Content */}
           {activeTab === "insights" && (
-            <div
-              className="admin-extras-section"
-              style={{ marginTop: "0.5rem" }}
-            >
+            <div className="space-y-6">
               <div
-                className="rounded-lg"
+                className="rounded-lg p-4"
                 style={{
-                  backgroundColor: isMobile ? "transparent" : "var(--card)",
-                  padding: isMobile ? "0" : "16px",
+                  backgroundColor: "var(--card)",
+                  border: "1px solid var(--line)",
                 }}
               >
-                <h2
-                  className="font-bold"
-                  style={{
-                    fontSize: isMobile ? "1.125rem" : "1.375rem",
-                    marginBottom: isMobile ? "0.5rem" : "0.75rem",
-                  }}
-                >
+                <h4 className="text-lg font-medium mb-3" style={{ color: "var(--text)" }}>
                   Generate Insights & Easter Eggs
-                </h2>
-                <p
-                  className="text-sm"
-                  style={{
-                    color: "var(--muted)",
-                    marginBottom: isMobile ? "0.75rem" : "1rem",
-                  }}
-                >
+                </h4>
+                <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
                   Generate original &quot;Insights &amp; Easter Eggs&quot;
                   content from title metadata. Content is generated using
                   templates + metadata, NOT from external copyrighted sources.
@@ -1485,7 +1413,7 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
           )}
 
           {activeTab === "content" && (
-            <>
+            <div className="space-y-6">
               {/* Controls */}
               <div className="admin-extras-section admin-extras-section--auto">
                 <div className="admin-extras-fields">
@@ -1533,10 +1461,7 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
 
               {/* Bulk Actions */}
               {videos.length > 0 && (
-                <div
-                  className={`flex gap-2 ${isMobile ? "flex-col" : ""}`}
-                  style={{ marginTop: "0.75rem", marginBottom: "0.75rem" }}
-                >
+                <div className={`flex gap-2 ${isMobile ? "flex-col" : ""}`}>
                   <button
                     onClick={handleBulkApprove}
                     className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
@@ -1553,10 +1478,7 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
               )}
 
               {/* Videos List */}
-              <div
-                className={`grid grid-cols-1 ${isMobile ? "" : "md:grid-cols-2 lg:grid-cols-3"} gap-3`}
-                style={{ gap: isMobile ? "0.75rem" : "1rem" }}
-              >
+              <div className={`grid grid-cols-1 ${isMobile ? "" : "md:grid-cols-2 lg:grid-cols-3"} gap-4`}>
                 {videos.map((video) => (
                   <div
                     key={video.id}
@@ -1625,15 +1547,12 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
                   started.
                 </div>
               )}
-            </>
+            </div>
           )}
 
           {/* Marquee Comments Tab */}
           {activeTab === "comments" && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold mb-4">
-                Marquee Comment Submissions
-              </h2>
+            <div className="space-y-6">
               {ugcSubmissions
                 .filter((s) => s.type === "comment")
                 .map((submission) => (
@@ -1710,8 +1629,7 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
 
           {/* Video Submissions Tab */}
           {activeTab === "videos" && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold mb-4">Video Submissions</h2>
+            <div className="space-y-6">
               {ugcSubmissions
                 .filter((s) => s.type === "video")
                 .map((submission) => (
@@ -1788,12 +1706,12 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
 
           {/* Community Content Tab */}
           {activeTab === "community" && (
-            <div className="space-y-4" style={{ marginTop: "0.5rem" }}>
+            <div className="space-y-6">
               <div
-                className="rounded-lg"
+                className="rounded-lg p-4"
                 style={{ 
-                  backgroundColor: isMobile ? "transparent" : "var(--card)",
-                  padding: isMobile ? "0" : "16px",
+                  backgroundColor: "var(--card)",
+                  border: "1px solid var(--line)",
                 }}
               >
                 {adminLoading ? (
@@ -3020,7 +2938,6 @@ export default function AdminExtrasPage({ isMobile: isMobileProp }: { isMobile?:
               </div>
             </div>
           )}
-        </div>
       </div>
     </>
   );
