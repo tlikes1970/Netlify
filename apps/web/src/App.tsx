@@ -9,6 +9,8 @@ import FeedbackPanel from "@/components/FeedbackPanel";
 import SearchResults from "@/search/SearchResults";
 import HomeYourShowsRail from "@/components/rails/HomeYourShowsRail";
 import HomeUpNextRail from "@/components/rails/HomeUpNextRail";
+import HomeMarquee from "@/components/HomeMarquee";
+import { HOME_MARQUEE_MESSAGES } from "@/config/homeMarqueeMessages";
 import { SettingsFAB, ThemeToggleFAB } from "@/components/FABs";
 import ScrollToTopArrow from "@/components/ScrollToTopArrow";
 import { lazy, Suspense } from "react";
@@ -1322,6 +1324,9 @@ export default function App() {
                         : undefined,
                   }}
                 >
+                  {/* Home Marquee - between tabs and Your Shows */}
+                  <HomeMarquee messages={HOME_MARQUEE_MESSAGES} />
+
                   {/* Your Shows container with both rails */}
                   <Section title={translations.yourShows}>
                     <div className="space-y-4">
