@@ -45,3 +45,6 @@ export { unsubscribe } from "./unsubscribe";
 
 // Export syncPostToPrisma from separate file
 export { syncPostToPrisma } from "./syncPostToPrisma";
+
+// Export ingestGoofs from separate file
+export { ingestGoofs } from "./ingestGoofs";

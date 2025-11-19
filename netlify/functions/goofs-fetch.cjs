@@ -5,17 +5,33 @@
  * Content is generated using templates + metadata (title, type, genres, runtime, etc.),
  * NOT from external copyrighted sources.
  *
+ * SECURITY: Admin-only function. Requires x-admin-token header matching GOOFS_INGESTION_ADMIN_TOKEN env var.
+ *
  * Query Parameters (GET):
  * - tmdbId: TMDB ID of the movie/show (required)
  *
  * Body Parameters (POST):
  * - tmdbId: TMDB ID (required)
  * - metadata: Object containing title metadata (title, mediaType, genres, year, runtime, etc.)
+ * - bulk: Optional boolean. If true, processes multiple titles (for bulk ingestion)
+ * - titles: Optional array of title objects for bulk ingestion
  *
  * Returns: JSON with generated InsightsSet and summary
  *
  * NOTE: This feature generates original content from Flicklet's own metadata + templates.
  * No external copyrighted blooper/goof text is used.
+ *
+ * DATA FLOW:
+ * - Admin triggers ingestion via Admin UI (Firebase callable function wrapper)
+ * - Function validates admin token, fetches/transforms data, writes to Firestore
+ * - Clients read only from Firestore via goofsStore.ts (no direct external API calls)
+ *
+ * FUTURE AUTOMATION:
+ * - This function is idempotent (safe to run multiple times with merge: true)
+ * - Can be scheduled via Netlify Scheduled Functions or Cloud Scheduler
+ * - To schedule: Create a Netlify scheduled function that calls this endpoint with admin token
+ * - Example: Run nightly/weekly to refresh insights for popular titles
+ * - Environment variable GOOFS_INGESTION_ADMIN_TOKEN must be set in Netlify
  */
 
 // Initialize Firebase Admin (lazy)
@@ -55,10 +71,35 @@ function initFirebase() {
 
 const cors = (contentType = "application/json") => ({
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Authorization, x-admin-token, X-Admin-Token",
   "Content-Type": contentType,
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 });
+
+/**
+ * Admin token authentication
+ * Validates x-admin-token header against GOOFS_INGESTION_ADMIN_TOKEN env var
+ */
+const ADMIN_TOKEN = process.env.GOOFS_INGESTION_ADMIN_TOKEN;
+
+function isAuthorized(event) {
+  if (!ADMIN_TOKEN) {
+    console.warn(
+      "[goofs-fetch] GOOFS_INGESTION_ADMIN_TOKEN not set - allowing all requests (INSECURE)"
+    );
+    // In production, this should return false, but for backward compatibility during migration:
+    return true;
+  }
+
+  const header =
+    event.headers?.["x-admin-token"] || event.headers?.["X-Admin-Token"];
+  if (!header) {
+    return false;
+  }
+
+  return header === ADMIN_TOKEN;
+}
 
 /**
  * Generate Insights & Easter Eggs from metadata using templates
@@ -253,6 +294,21 @@ exports.handler = async function handler(event) {
     return { statusCode: 204, headers: cors("text/plain"), body: "" };
   }
 
+  // Admin authentication check
+  if (!isAuthorized(event)) {
+    console.warn(
+      "[goofs-fetch] Unauthorized request - missing or invalid admin token"
+    );
+    return {
+      statusCode: 401,
+      headers: cors(),
+      body: JSON.stringify({
+        error: "Unauthorized",
+        message: "Admin token required",
+      }),
+    };
+  }
+
   const { admin: adminInstance, db: firestore } = initFirebase();
 
   // Parse request
@@ -349,13 +405,19 @@ exports.handler = async function handler(event) {
       items: items,
     };
 
-    // Write to Firestore
+    // Write to Firestore (idempotent - using merge: true to allow safe re-runs)
     if (firestore) {
       try {
         await firestore
           .collection("insights")
           .doc(tmdbIdString)
-          .set(insightsSet, { merge: false });
+          .set(
+            {
+              ...insightsSet,
+              updatedAt: adminInstance.firestore.FieldValue.serverTimestamp(),
+            },
+            { merge: true } // Idempotent: safe to run multiple times
+          );
         console.log(
           `[goofs-fetch] Wrote ${items.length} insights to Firestore for TMDB ID ${tmdbIdString}`
         );
