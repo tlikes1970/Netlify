@@ -1,5 +1,9 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.163: Increased onboarding timeout for better UX
+// - Increased fallback timeout from 30 seconds to 3 minutes (180 seconds) for login modal and location permission
+// - Gives users plenty of time to complete the onboarding flow without rushing
+// - Login modal and location requests still wait for onboarding completion event, with longer fallback
 // ⚠️ VERSION 0.1.162: Added debug logging for onboarding component
 // - Added comprehensive debug logging to diagnose why onboarding doesn't appear in production
 // - Logs hook initialization, localStorage checks, component mount, and early returns
@@ -194,4 +198,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.162";
+export const APP_VERSION = "0.1.163";
