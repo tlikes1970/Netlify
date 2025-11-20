@@ -118,7 +118,7 @@ export function verifyAuthEnvironment(): {
   return { ok: true, recommendPopup: false };
 }
 
-export const functions = getFunctions(app);
+export const functions = getFunctions(app, "us-central1");
 
 // Connect to Functions emulator in development
 if (import.meta.env.DEV && typeof window !== "undefined") {

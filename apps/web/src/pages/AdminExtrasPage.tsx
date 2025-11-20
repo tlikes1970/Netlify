@@ -11,7 +11,7 @@ import {
   setDoc,
   getDocs,
 } from "firebase/firestore";
-import { db } from "../lib/firebaseBootstrap";
+import { db, functions } from "../lib/firebaseBootstrap";
 import { ExtrasVideo } from "../lib/extras/types";
 import { extrasProvider } from "../lib/extras/extrasProvider";
 import { useSettings, settingsManager } from "../lib/settings";
@@ -898,10 +898,7 @@ export default function AdminExtrasPage({
       };
 
       // Call Firebase callable function (which securely calls Netlify function)
-      const { getFunctions, httpsCallable } = await import(
-        "firebase/functions"
-      );
-      const functions = getFunctions();
+      const { httpsCallable } = await import("firebase/functions");
       const ingestGoofs = httpsCallable(functions, "ingestGoofs");
 
       const result = await ingestGoofs({
@@ -947,10 +944,7 @@ export default function AdminExtrasPage({
     setBulkIngestionResult(null);
 
     try {
-      const { getFunctions, httpsCallable } = await import(
-        "firebase/functions"
-      );
-      const functions = getFunctions();
+      const { httpsCallable } = await import("firebase/functions");
       const ingestGoofs = httpsCallable(functions, "ingestGoofs");
 
       const result = await ingestGoofs({

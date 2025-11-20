@@ -25,13 +25,20 @@
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { db as database } from "./admin";
+import { getTitlesForGoofs } from "./titlesRepository";
 
 const NETLIFY_FUNCTION_URL =
   process.env.NETLIFY_FUNCTION_URL ||
   "https://flicklet.netlify.app/.netlify/functions/goofs-fetch";
-const ADMIN_TOKEN = process.env.GOOFS_INGESTION_ADMIN_TOKEN;
 
-export const ingestGoofs = onCall({ cors: true }, async (request) => {
+export const ingestGoofs = onCall(
+  {
+    region: "us-central1",
+  },
+  async (request) => {
+  // Log function invocation from admin UI
+  console.log("[ingestGoofs] Function invoked by admin user:", request.auth?.uid);
+
   // Check caller is authenticated
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");
@@ -47,10 +54,12 @@ export const ingestGoofs = onCall({ cors: true }, async (request) => {
     );
   }
 
-  if (!ADMIN_TOKEN) {
+  // Get admin token from environment variable (v2 functions use env vars, not functions.config())
+  const token = process.env.GOOFS_INGESTION_ADMIN_TOKEN || "";
+  if (!token) {
     throw new HttpsError(
       "internal",
-      "Server configuration error: GOOFS_INGESTION_ADMIN_TOKEN not set"
+      "Server configuration error: GOOFS_INGESTION_ADMIN_TOKEN environment variable not set. Please set it in Firebase Console → Functions → Configuration → Environment Variables"
     );
   }
 
@@ -59,25 +68,66 @@ export const ingestGoofs = onCall({ cors: true }, async (request) => {
 
   // Validate request
   if (mode === "bulk") {
-    // True bulk mode: fetch titles automatically from Firestore
+    /**
+     * CURRENT TITLES DATA FLOW (as of migration to canonical /titles collection):
+     * 
+     * PRIMARY SOURCE: Firestore `/titles` collection
+     * - Query `/titles` where `enabledForGoofs == true`
+     * - Each title doc must have: tmdbId (required), title, mediaType
+     * - Titles without tmdbId are skipped (logged as warnings)
+     * 
+     * FALLBACK (bootstrap-only, deprecated):
+     * - If `/titles` collection is empty, fall back to aggregating from users' watchlists
+     * - This fallback is intended only for initial migration/bootstrap
+     * - After seeding `/titles` via seedTitles.ts script, this fallback should rarely be used
+     * 
+     * FUTURE: Remove watchlist fallback once `/titles` is fully populated and stable
+     */
     const titlesList = [];
 
     try {
       console.log("[ingestGoofs] Starting bulk ingestion mode");
 
-      // First, try to fetch from a titles collection if it exists
-      const titlesSnapshot = await database
-        .collection("titles")
-        .limit(1000)
-        .get();
+      // PRIMARY SOURCE: Fetch titles from canonical Firestore `/titles` collection
+      const firestoreTitles = await getTitlesForGoofs();
 
-      const titlesCount = titlesSnapshot.empty ? 0 : titlesSnapshot.size;
-      console.log(
-        `[ingestGoofs] Titles collection query result: ${titlesSnapshot.empty ? "empty" : `${titlesCount} documents`}`
-      );
+      if (firestoreTitles.length > 0) {
+        // Use canonical titles collection
+        console.log(
+          `[ingestGoofs] Using canonical /titles collection: ${firestoreTitles.length} titles enabled for goofs`
+        );
 
-      if (titlesSnapshot.empty) {
-        // Fallback: aggregate titles from all users' watchlists
+        // Transform TitleDoc[] to ingestion format
+        for (const titleDoc of firestoreTitles) {
+          // Skip titles without tmdbId (shouldn't happen due to repository validation, but double-check)
+          if (!titleDoc.tmdbId) {
+            console.warn(
+              `[ingestGoofs] Skipping title "${titleDoc.title}" - missing tmdbId`
+            );
+            continue;
+          }
+
+          titlesList.push({
+            tmdbId: titleDoc.tmdbId,
+            metadata: {
+              tmdbId: titleDoc.tmdbId,
+              id: titleDoc.tmdbId,
+              title: titleDoc.title,
+              mediaType: titleDoc.mediaType,
+              genres: titleDoc.genres || [],
+              year: titleDoc.year || null,
+            },
+          });
+        }
+      } else {
+        // FALLBACK: Aggregate from users' watchlists (bootstrap-only, deprecated)
+        console.warn(
+          "[ingestGoofs] /titles collection is empty. Falling back to watchlists aggregation (bootstrap mode)."
+        );
+        console.warn(
+          "[ingestGoofs] Consider running seedTitles.ts script to populate /titles collection."
+        );
+
         const usersSnapshot = await database
           .collection("users")
           .limit(500)
@@ -125,25 +175,6 @@ export const ingestGoofs = onCall({ cors: true }, async (request) => {
         }
 
         titlesList.push(...uniqueTitles.values());
-      } else {
-        // Use titles collection
-        for (const document_ of titlesSnapshot.docs) {
-          const data = document_.data();
-          titlesList.push({
-            tmdbId: data.tmdbId || data.id || data.tmdb_id || document_.id,
-            metadata: {
-              tmdbId: data.tmdbId || data.id || data.tmdb_id || document_.id,
-              id: data.tmdbId || data.id || data.tmdb_id || document_.id,
-              title: data.title,
-              mediaType: data.mediaType || data.media_type || "movie",
-              genres: data.genres || [],
-              year: data.year || data.release_date?.slice(0, 4) || null,
-              runtimeMins: data.runtimeMins || data.runtime || null,
-              episodeCount: data.episodeCount || null,
-              seasonCount: data.seasonCount || null,
-            },
-          });
-        }
       }
 
       console.log(`[ingestGoofs] Found ${titlesList.length} titles to process`);
@@ -151,7 +182,7 @@ export const ingestGoofs = onCall({ cors: true }, async (request) => {
       if (titlesList.length === 0) {
         throw new HttpsError(
           "not-found",
-          "No titles found in Firestore. Please ensure titles collection exists or users have watchlists."
+          "No titles found for goofs ingestion in Firestore `/titles` collection. Please ensure titles collection exists and contains titles with `enabledForGoofs == true`, or run seedTitles.ts script to bootstrap the collection."
         );
       }
 
@@ -168,7 +199,7 @@ export const ingestGoofs = onCall({ cors: true }, async (request) => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-admin-token": ADMIN_TOKEN,
+              "x-admin-token": token,
             },
             body: JSON.stringify({
               tmdbId: title.tmdbId,
@@ -182,21 +213,69 @@ export const ingestGoofs = onCall({ cors: true }, async (request) => {
               tmdbId: title.tmdbId,
               itemsGenerated: result.itemsGenerated || 0,
             });
+            console.log(
+              `[ingestGoofs] ✅ Successfully ingested title ${title.tmdbId}: ${title.metadata.title}`
+            );
           } else {
-            const errorData = await response.json().catch(() => ({}));
+            const errorText = await response.text().catch(() => "");
+            let errorData;
+            try {
+              errorData = JSON.parse(errorText);
+            } catch {
+              // If response is HTML (like error pages), extract meaningful info
+              const isHtml = errorText.trim().startsWith("<!DOCTYPE") || errorText.trim().startsWith("<html");
+              if (isHtml) {
+                // Try to extract title or meaningful text from HTML
+                const titleMatch = errorText.match(/<title[^>]*>([^<]+)<\/title>/i);
+                const errorTitle = titleMatch ? titleMatch[1] : "Netlify Error Page";
+                errorData = { 
+                  message: `Netlify function returned HTML error page (HTTP ${response.status}): ${errorTitle}. Check function deployment and NETLIFY_FUNCTION_URL.`,
+                  status: response.status,
+                  url: NETLIFY_FUNCTION_URL
+                };
+              } else {
+                errorData = { message: errorText || `HTTP ${response.status}` };
+              }
+            }
+            const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}`;
+            console.error(
+              `[ingestGoofs] ❌ Failed to ingest title ${title.tmdbId} (${title.metadata.title}): ${errorMessage}`
+            );
+            // Log first error with full details for debugging
+            if (errors.length === 0) {
+              console.error(
+                `[ingestGoofs] First error details - Status: ${response.status}, URL: ${NETLIFY_FUNCTION_URL}, Response preview: ${errorText.substring(0, 200)}`
+              );
+            }
             errors.push({
               tmdbId: title.tmdbId,
-              error: errorData.message || `HTTP ${response.status}`,
+              error: errorMessage,
             });
           }
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
+          console.error(
+            `[ingestGoofs] ❌ Exception ingesting title ${title.tmdbId} (${title.metadata.title}): ${errorMessage}`
+          );
           errors.push({
             tmdbId: title.tmdbId,
             error: errorMessage,
           });
         }
+      }
+
+      // Log summary
+      console.log(
+        `[ingestGoofs] Bulk ingestion complete: ${results.length} succeeded, ${errors.length} failed out of ${titlesList.length} total`
+      );
+      
+      // Log first few errors for debugging
+      if (errors.length > 0) {
+        console.error(
+          `[ingestGoofs] First 5 errors:`,
+          errors.slice(0, 5).map((e) => `${e.tmdbId}: ${e.error}`)
+        );
       }
 
       return {
@@ -207,7 +286,10 @@ export const ingestGoofs = onCall({ cors: true }, async (request) => {
         failed: errors.length,
         count: results.length,
         results,
-        errors: errors.length > 0 ? errors : undefined,
+        errors: errors.length > 0 ? errors.slice(0, 10) : undefined, // Return first 10 errors to avoid response size limits
+        errorSummary: errors.length > 10 
+          ? `${errors.length} total errors (showing first 10). Check Firebase logs for full details.`
+          : undefined,
       };
     } catch (error) {
       console.error("[ingestGoofs] Bulk ingestion error:", error);
@@ -242,10 +324,10 @@ export const ingestGoofs = onCall({ cors: true }, async (request) => {
       try {
         const response = await fetch(NETLIFY_FUNCTION_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-admin-token": ADMIN_TOKEN,
-          },
+            headers: {
+              "Content-Type": "application/json",
+              "x-admin-token": token,
+            },
           body: JSON.stringify({
             tmdbId: title.tmdbId || title.tmdb_id,
             metadata: title.metadata || title,
@@ -304,10 +386,10 @@ export const ingestGoofs = onCall({ cors: true }, async (request) => {
     try {
       const response = await fetch(NETLIFY_FUNCTION_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-token": ADMIN_TOKEN,
-        },
+            headers: {
+              "Content-Type": "application/json",
+              "x-admin-token": token,
+            },
         body: JSON.stringify({
           tmdbId,
           metadata,
