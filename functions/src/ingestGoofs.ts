@@ -34,6 +34,7 @@ const NETLIFY_FUNCTION_URL =
 export const ingestGoofs = onCall(
   {
     region: "us-central1",
+    timeoutSeconds: 540, // 9 minutes - maximum for 2nd gen callable functions
   },
   async (request) => {
   // Log function invocation from admin UI
@@ -179,95 +180,161 @@ export const ingestGoofs = onCall(
 
       console.log(`[ingestGoofs] Found ${titlesList.length} titles to process`);
 
-      if (titlesList.length === 0) {
+      // TEST MODE: Limit to first 5 titles for debugging (remove after fixing duplicate issue)
+      // OPTION 1: Temporarily hardcode to true (easiest for testing)
+      // OPTION 2: Set via Firebase CLI: firebase functions:secrets:set INGEST_GOOFS_TEST_MODE
+      // OPTION 3: Add to .env file in functions directory
+      const TEST_MODE = true; // TODO: Change back to false after testing, or use: process.env.INGEST_GOOFS_TEST_MODE === "true"
+      const titlesToProcess = TEST_MODE 
+        ? titlesList.slice(0, 5)
+        : titlesList;
+      
+      if (TEST_MODE) {
+        console.log(`[ingestGoofs] ⚠️ TEST MODE: Processing only first 5 titles (${titlesToProcess.length} total)`);
+      }
+
+      if (titlesToProcess.length === 0) {
         throw new HttpsError(
           "not-found",
           "No titles found for goofs ingestion in Firestore `/titles` collection. Please ensure titles collection exists and contains titles with `enabledForGoofs == true`, or run seedTitles.ts script to bootstrap the collection."
         );
       }
 
-      // Process each title
+      // Process titles in parallel batches for faster execution
       const results = [];
       const errors = [];
+      const BATCH_SIZE = 10; // Process 10 titles in parallel
       console.log(
-        `[ingestGoofs] Starting to process ${titlesList.length} titles...`
+        `[ingestGoofs] Starting to process ${titlesToProcess.length} titles in batches of ${BATCH_SIZE}...`
       );
 
-      for (const title of titlesList) {
-        try {
-          const response = await fetch(NETLIFY_FUNCTION_URL, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-admin-token": token,
-            },
-            body: JSON.stringify({
+      // Process titles in batches
+      for (let i = 0; i < titlesToProcess.length; i += BATCH_SIZE) {
+        const batch = titlesToProcess.slice(i, i + BATCH_SIZE);
+        console.log(
+          `[ingestGoofs] Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(titlesToProcess.length / BATCH_SIZE)} (${batch.length} titles)...`
+        );
+
+        // Process batch in parallel
+        const batchPromises = batch.map(async (title) => {
+          try {
+            // Debug logging: Log what we're sending for this title
+            console.log("[ingestGoofs] Processing title", {
+              titleId: title.tmdbId,
+              titleName: title.metadata?.title || "Unknown",
+              metadataTmdbId: title.metadata?.tmdbId,
+              metadataId: title.metadata?.id,
+              metadataGenres: title.metadata?.genres,
+              metadataMediaType: title.metadata?.mediaType,
+            });
+
+            const requestPayload = {
               tmdbId: title.tmdbId,
               metadata: title.metadata,
-            }),
-          });
+            };
 
-          if (response.ok) {
-            const result = await response.json();
-            results.push({
-              tmdbId: title.tmdbId,
-              itemsGenerated: result.itemsGenerated || 0,
+            const response = await fetch(NETLIFY_FUNCTION_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-admin-token": token,
+              },
+              body: JSON.stringify(requestPayload),
             });
-            console.log(
-              `[ingestGoofs] ✅ Successfully ingested title ${title.tmdbId}: ${title.metadata.title}`
-            );
-          } else {
-            const errorText = await response.text().catch(() => "");
-            let errorData;
-            try {
-              errorData = JSON.parse(errorText);
-            } catch {
-              // If response is HTML (like error pages), extract meaningful info
-              const isHtml = errorText.trim().startsWith("<!DOCTYPE") || errorText.trim().startsWith("<html");
-              if (isHtml) {
-                // Try to extract title or meaningful text from HTML
-                const titleMatch = errorText.match(/<title[^>]*>([^<]+)<\/title>/i);
-                const errorTitle = titleMatch ? titleMatch[1] : "Netlify Error Page";
-                errorData = { 
-                  message: `Netlify function returned HTML error page (HTTP ${response.status}): ${errorTitle}. Check function deployment and NETLIFY_FUNCTION_URL.`,
-                  status: response.status,
-                  url: NETLIFY_FUNCTION_URL
-                };
-              } else {
-                errorData = { message: errorText || `HTTP ${response.status}` };
-              }
-            }
-            const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}`;
-            console.error(
-              `[ingestGoofs] ❌ Failed to ingest title ${title.tmdbId} (${title.metadata.title}): ${errorMessage}`
-            );
-            // Log first error with full details for debugging
-            if (errors.length === 0) {
-              console.error(
-                `[ingestGoofs] First error details - Status: ${response.status}, URL: ${NETLIFY_FUNCTION_URL}, Response preview: ${errorText.substring(0, 200)}`
+
+            if (response.ok) {
+              const result = await response.json();
+              
+              // Debug logging: Log a preview of what was returned
+              const firstInsight = result.insights?.items?.[0];
+              console.log(
+                `[ingestGoofs] ✅ Successfully ingested title ${title.tmdbId}: ${title.metadata.title}`,
+                {
+                  itemsGenerated: result.itemsGenerated || 0,
+                  resultTmdbId: result.tmdbId,
+                  firstInsightPreview: firstInsight?.text?.slice(0, 80) || null,
+                  firstInsightId: firstInsight?.id || null,
+                }
               );
+              
+              return {
+                success: true,
+                tmdbId: title.tmdbId,
+                itemsGenerated: result.itemsGenerated || 0,
+              };
+            } else {
+              const errorText = await response.text().catch(() => "");
+              let errorData;
+              try {
+                errorData = JSON.parse(errorText);
+              } catch {
+                // If response is HTML (like error pages), extract meaningful info
+                const isHtml = errorText.trim().startsWith("<!DOCTYPE") || errorText.trim().startsWith("<html");
+                if (isHtml) {
+                  // Try to extract title or meaningful text from HTML
+                  const titleMatch = errorText.match(/<title[^>]*>([^<]+)<\/title>/i);
+                  const errorTitle = titleMatch ? titleMatch[1] : "Netlify Error Page";
+                  errorData = { 
+                    message: `Netlify function returned HTML error page (HTTP ${response.status}): ${errorTitle}. Check function deployment and NETLIFY_FUNCTION_URL.`,
+                    status: response.status,
+                    url: NETLIFY_FUNCTION_URL
+                  };
+                } else {
+                  errorData = { message: errorText || `HTTP ${response.status}` };
+                }
+              }
+              const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}`;
+              console.error(
+                `[ingestGoofs] ❌ Failed to ingest title ${title.tmdbId} (${title.metadata.title}): ${errorMessage}`
+              );
+              // Log first error with full details for debugging
+              if (errors.length === 0) {
+                console.error(
+                  `[ingestGoofs] First error details - Status: ${response.status}, URL: ${NETLIFY_FUNCTION_URL}, Response preview: ${errorText.substring(0, 200)}`
+                );
+              }
+              return {
+                success: false,
+                tmdbId: title.tmdbId,
+                error: errorMessage,
+              };
             }
-            errors.push({
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+            console.error(
+              `[ingestGoofs] ❌ Exception ingesting title ${title.tmdbId} (${title.metadata.title}): ${errorMessage}`
+            );
+            return {
+              success: false,
               tmdbId: title.tmdbId,
               error: errorMessage,
+            };
+          }
+        });
+
+        // Wait for batch to complete
+        const batchResults = await Promise.all(batchPromises);
+        
+        // Separate successes and errors
+        for (const result of batchResults) {
+          if (result.success) {
+            results.push({
+              tmdbId: result.tmdbId,
+              itemsGenerated: result.itemsGenerated,
+            });
+          } else {
+            errors.push({
+              tmdbId: result.tmdbId,
+              error: result.error,
             });
           }
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          console.error(
-            `[ingestGoofs] ❌ Exception ingesting title ${title.tmdbId} (${title.metadata.title}): ${errorMessage}`
-          );
-          errors.push({
-            tmdbId: title.tmdbId,
-            error: errorMessage,
-          });
         }
       }
 
       // Log summary
       console.log(
-        `[ingestGoofs] Bulk ingestion complete: ${results.length} succeeded, ${errors.length} failed out of ${titlesList.length} total`
+        `[ingestGoofs] Bulk ingestion complete: ${results.length} succeeded, ${errors.length} failed out of ${titlesToProcess.length} total`
       );
       
       // Log first few errors for debugging
@@ -281,10 +348,11 @@ export const ingestGoofs = onCall(
       return {
         success: true,
         mode: "bulk",
-        total: titlesList.length,
+        total: titlesToProcess.length,
         succeeded: results.length,
         failed: errors.length,
         count: results.length,
+        testMode: TEST_MODE,
         results,
         errors: errors.length > 0 ? errors.slice(0, 10) : undefined, // Return first 10 errors to avoid response size limits
         errorSummary: errors.length > 10 

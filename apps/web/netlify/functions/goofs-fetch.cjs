@@ -46,10 +46,66 @@ function initFirebase() {
 
     // Check if already initialized
     if (admin.apps.length === 0) {
-      // Try to initialize with service account JSON from env
+      // Try to initialize with service account JSON from env (full JSON or individual fields)
       const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+      let serviceAccount = null;
+
       if (serviceAccountJson) {
-        const serviceAccount = JSON.parse(serviceAccountJson);
+        // Try parsing as full JSON string
+        try {
+          serviceAccount = JSON.parse(serviceAccountJson);
+        } catch (e) {
+          // If parsing fails, try building from individual environment variables
+          if (process.env.FIREBASE_TYPE && process.env.FIREBASE_PROJECT_ID) {
+            serviceAccount = {
+              type: process.env.FIREBASE_TYPE,
+              project_id: process.env.FIREBASE_PROJECT_ID,
+              private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+              private_key: (process.env.FIREBASE_PRIVATE_KEY || "").replace(
+                /\\n/g,
+                "\n"
+              ),
+              client_email: process.env.FIREBASE_CLIENT_EMAIL,
+              client_id: process.env.FIREBASE_CLIENT_ID,
+              auth_uri:
+                process.env.FIREBASE_AUTH_URI ||
+                "https://accounts.google.com/o/oauth2/auth",
+              token_uri:
+                process.env.FIREBASE_TOKEN_URI ||
+                "https://oauth2.googleapis.com/token",
+              auth_provider_x509_cert_url:
+                process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL ||
+                "https://www.googleapis.com/oauth2/v1/certs",
+              client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
+            };
+          }
+        }
+      } else if (process.env.FIREBASE_TYPE && process.env.FIREBASE_PROJECT_ID) {
+        // Build from individual environment variables
+        serviceAccount = {
+          type: process.env.FIREBASE_TYPE,
+          project_id: process.env.FIREBASE_PROJECT_ID,
+          private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+          private_key: (process.env.FIREBASE_PRIVATE_KEY || "").replace(
+            /\\n/g,
+            "\n"
+          ),
+          client_email: process.env.FIREBASE_CLIENT_EMAIL,
+          client_id: process.env.FIREBASE_CLIENT_ID,
+          auth_uri:
+            process.env.FIREBASE_AUTH_URI ||
+            "https://accounts.google.com/o/oauth2/auth",
+          token_uri:
+            process.env.FIREBASE_TOKEN_URI ||
+            "https://oauth2.googleapis.com/token",
+          auth_provider_x509_cert_url:
+            process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL ||
+            "https://www.googleapis.com/oauth2/v1/certs",
+          client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
+        };
+      }
+
+      if (serviceAccount) {
         admin.initializeApp({
           credential: admin.credential.cert(serviceAccount),
         });
@@ -66,7 +122,10 @@ function initFirebase() {
   } catch (error) {
     console.error("[goofs-fetch] ❌ Firebase Admin init error:", error.message);
     console.error("[goofs-fetch] Stack:", error.stack);
-    console.error("[goofs-fetch] FIREBASE_SERVICE_ACCOUNT_JSON present:", !!process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+    console.error(
+      "[goofs-fetch] FIREBASE_SERVICE_ACCOUNT_JSON present:",
+      !!process.env.FIREBASE_SERVICE_ACCOUNT_JSON
+    );
     console.error("[goofs-fetch] GCLOUD_PROJECT:", process.env.GCLOUD_PROJECT);
     return { admin: null, db: null };
   }
@@ -222,7 +281,7 @@ function buildInsightsForTitle(meta) {
         id: `insight-epic-${tmdbId}-${Date.now()}`,
         kind: "insight",
         type: "style",
-        text: `Epic-length films often use extended sequences to build atmosphere—notice how pacing and visual composition contribute to the overall experience.`,
+        text: `Epic-length films like ${title} often use extended sequences to build atmosphere—notice how pacing and visual composition contribute to the overall experience.`,
         subtlety: "obvious",
       });
     } else if (runtime < 90) {
@@ -230,21 +289,28 @@ function buildInsightsForTitle(meta) {
         id: `insight-tight-${tmdbId}-${Date.now()}`,
         kind: "insight",
         type: "style",
-        text: `Shorter films often pack a lot into each scene—watch for efficient storytelling and visual economy.`,
+        text: `Shorter films such as ${title} often pack a lot into each scene—watch for efficient storytelling and visual economy.`,
         subtlety: "obvious",
       });
     }
   }
 
-  // Year-based insights (decade patterns)
+  // Year-based insights (decade patterns) - make them title-specific
   if (year) {
     const decade = Math.floor(Number.parseInt(year) / 10) * 10;
     if (decade >= 2020) {
+      // Create variation based on title name and tmdbId to avoid identical insights
+      const variation = (tmdbId.charCodeAt(0) + title.length) % 3;
+      const modernInsights = [
+        `Modern productions like ${title} often blend practical and digital effects seamlessly—see if you can spot where real sets transition to digital environments.`,
+        `Contemporary films such as ${title} use advanced cinematography techniques—watch for how lighting and camera movement enhance the storytelling.`,
+        `Recent productions including ${title} leverage both traditional and digital filmmaking—notice how practical effects combine with CGI for immersive experiences.`,
+      ];
       items.push({
         id: `insight-modern-${tmdbId}-${Date.now()}`,
         kind: "insight",
         type: "style",
-        text: `Modern productions often blend practical and digital effects seamlessly—see if you can spot where real sets transition to digital environments.`,
+        text: modernInsights[variation],
         subtlety: "blink",
       });
     } else if (decade >= 2000 && decade < 2020) {
@@ -252,7 +318,7 @@ function buildInsightsForTitle(meta) {
         id: `insight-2000s-${tmdbId}-${Date.now()}`,
         kind: "easterEgg",
         type: "style",
-        text: `Early 2000s productions often have distinctive visual styles—notice the color grading and camera work characteristic of this era.`,
+        text: `Early 2000s productions like ${title} often have distinctive visual styles—notice the color grading and camera work characteristic of this era.`,
         subtlety: "blink",
       });
     }
@@ -269,13 +335,38 @@ function buildInsightsForTitle(meta) {
     });
   }
 
-  // Ensure we have at least 3-5 items, add generic ones if needed
+  // Ensure we have at least 3-5 items, add title-specific generic ones if needed
   if (items.length < 3) {
+    // Use title name and tmdbId to create unique variations
+    const titleHash =
+      (tmdbId.charCodeAt(0) + tmdbId.charCodeAt(tmdbId.length - 1)) % 4;
+
+    const genericInsights = [
+      {
+        text: `Pay attention to how scenes transition in ${title}—editing choices often reveal narrative priorities and emotional beats.`,
+        type: "style",
+      },
+      {
+        text: `Background details in ${title} often tell their own stories—keep an eye on props, set decoration, and background action for hidden layers.`,
+        type: "world",
+      },
+      {
+        text: `The visual language of ${title} communicates through composition and framing—notice how camera angles emphasize key moments.`,
+        type: "style",
+      },
+      {
+        text: `Watch for recurring motifs in ${title}—objects, colors, or locations that appear multiple times often carry symbolic meaning.`,
+        type: "world",
+      },
+    ];
+
+    const selectedInsight = genericInsights[titleHash];
+
     items.push({
       id: `insight-generic-1-${tmdbId}-${Date.now()}`,
       kind: "insight",
-      type: "style",
-      text: `Pay attention to how scenes transition—editing choices often reveal narrative priorities and emotional beats.`,
+      type: selectedInsight.type,
+      text: selectedInsight.text,
       subtlety: "obvious",
     });
 
@@ -283,7 +374,7 @@ function buildInsightsForTitle(meta) {
       id: `easter-egg-generic-${tmdbId}-${Date.now()}`,
       kind: "easterEgg",
       type: "world",
-      text: `Background details often tell their own stories—keep an eye on props, set decoration, and background action for hidden layers.`,
+      text: genericInsights[(titleHash + 1) % 4].text,
       subtlety: "blink",
     });
   }
@@ -313,11 +404,15 @@ exports.handler = async function handler(event) {
   }
 
   const { admin: adminInstance, db: firestore } = initFirebase();
-  
+
   // Log Firestore initialization status for debugging
   if (!firestore) {
-    console.error("[goofs-fetch] ⚠️ Firestore not initialized - writes will fail!");
-    console.error("[goofs-fetch] Check FIREBASE_SERVICE_ACCOUNT_JSON environment variable in Netlify");
+    console.error(
+      "[goofs-fetch] ⚠️ Firestore not initialized - writes will fail!"
+    );
+    console.error(
+      "[goofs-fetch] Check FIREBASE_SERVICE_ACCOUNT_JSON environment variable in Netlify"
+    );
   } else {
     console.log("[goofs-fetch] ✅ Firestore initialized successfully");
   }
@@ -366,6 +461,17 @@ exports.handler = async function handler(event) {
   try {
     const tmdbIdString = String(tmdbId);
 
+    // Debug logging: Log what we received
+    console.log("[goofs-fetch] Received request", {
+      tmdbId: tmdbId,
+      tmdbIdString: tmdbIdString,
+      metadataProvided: !!metadata,
+      metadataTmdbId: metadata?.tmdbId,
+      metadataId: metadata?.id,
+      metadataTitle: metadata?.title,
+      metadataGenres: metadata?.genres,
+    });
+
     // If metadata not provided, try to read from Firestore (if we have a titles collection)
     // For now, we require metadata to be passed in
     if (!metadata) {
@@ -406,8 +512,25 @@ exports.handler = async function handler(event) {
     metadata.tmdbId = metadata.tmdbId || tmdbId;
     metadata.id = metadata.id || tmdbId;
 
+    // Debug logging: Log what we're using to generate insights
+    console.log("[goofs-fetch] Generating insights with metadata", {
+      tmdbId: metadata.tmdbId,
+      id: metadata.id,
+      title: metadata.title,
+      mediaType: metadata.mediaType,
+      genres: metadata.genres,
+      year: metadata.year,
+    });
+
     // Generate insights
     const items = buildInsightsForTitle(metadata);
+
+    // Debug logging: Log what was generated
+    console.log("[goofs-fetch] Generated insights", {
+      itemCount: items.length,
+      firstItemId: items[0]?.id || null,
+      firstItemText: items[0]?.text?.slice(0, 80) || null,
+    });
 
     const insightsSet = {
       tmdbId: tmdbIdString,
@@ -419,6 +542,14 @@ exports.handler = async function handler(event) {
     // Write to Firestore (idempotent - using merge: true to allow safe re-runs)
     if (firestore) {
       try {
+        const docPath = `insights/${tmdbIdString}`;
+        console.log("[goofs-fetch] Writing to Firestore", {
+          docPath: docPath,
+          tmdbId: tmdbIdString,
+          itemCount: items.length,
+          insightsSetTmdbId: insightsSet.tmdbId,
+        });
+
         await firestore
           .collection("insights")
           .doc(tmdbIdString)
@@ -430,7 +561,7 @@ exports.handler = async function handler(event) {
             { merge: true } // Idempotent: safe to run multiple times
           );
         console.log(
-          `[goofs-fetch] Wrote ${items.length} insights to Firestore for TMDB ID ${tmdbIdString}`
+          `[goofs-fetch] ✅ Wrote ${items.length} insights to Firestore for TMDB ID ${tmdbIdString} at path ${docPath}`
         );
 
         // Update lastIngestedAt timestamp in /titles collection
@@ -461,8 +592,12 @@ exports.handler = async function handler(event) {
         // Continue anyway - return the generated insights even if Firestore write fails
       }
     } else {
-      console.error("[goofs-fetch] ❌ Firestore not available - insights were NOT written to database!");
-      console.error("[goofs-fetch] This means insights were generated but not saved. Check Firebase Admin initialization.");
+      console.error(
+        "[goofs-fetch] ❌ Firestore not available - insights were NOT written to database!"
+      );
+      console.error(
+        "[goofs-fetch] This means insights were generated but not saved. Check Firebase Admin initialization."
+      );
     }
 
     return {

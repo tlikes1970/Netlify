@@ -1,5 +1,12 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.165: Fixed duplicate goofs issue - made insights title-specific with variation
+// - Updated buildInsightsForTitle to include title names in all insights
+// - Added variation logic based on tmdbId to prevent identical insights for similar metadata
+// - Fixed duplicate goofs being written for all titles with same genres/decade
+// - Added comprehensive debug logging to track ingestion pipeline
+// - Added test mode to limit bulk ingestion to 5 titles for safe testing
+// - Rollback: Revert this commit to restore previous generic insights behavior
 // ⚠️ VERSION 0.1.164: Fixed goofs-fetch Netlify function deployment - moved to correct location
 // - Moved goofs-fetch.cjs from netlify/functions/ to apps/web/netlify/functions/
 // - Function now deploys correctly since build base is apps/web
@@ -203,4 +210,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.164";
+export const APP_VERSION = "0.1.165";
