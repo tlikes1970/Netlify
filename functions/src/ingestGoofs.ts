@@ -184,7 +184,7 @@ export const ingestGoofs = onCall(
       // OPTION 1: Temporarily hardcode to true (easiest for testing)
       // OPTION 2: Set via Firebase CLI: firebase functions:secrets:set INGEST_GOOFS_TEST_MODE
       // OPTION 3: Add to .env file in functions directory
-      const TEST_MODE = true; // TODO: Change back to false after testing, or use: process.env.INGEST_GOOFS_TEST_MODE === "true"
+      const TEST_MODE = false; // Set to true for testing with limited titles
       const titlesToProcess = TEST_MODE 
         ? titlesList.slice(0, 5)
         : titlesList;
