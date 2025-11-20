@@ -1,5 +1,10 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.164: Fixed goofs-fetch Netlify function deployment - moved to correct location
+// - Moved goofs-fetch.cjs from netlify/functions/ to apps/web/netlify/functions/
+// - Function now deploys correctly since build base is apps/web
+// - Fixes 404 errors during bulk ingestion - function now accessible at /.netlify/functions/goofs-fetch
+// - Rollback: Revert this commit to restore previous function location
 // ⚠️ VERSION 0.1.163: Increased onboarding timeout for better UX
 // - Increased fallback timeout from 30 seconds to 3 minutes (180 seconds) for login modal and location permission
 // - Gives users plenty of time to complete the onboarding flow without rushing
@@ -198,4 +203,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.163";
+export const APP_VERSION = "0.1.164";
