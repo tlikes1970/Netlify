@@ -64,7 +64,10 @@ function initFirebase() {
     database = admin.firestore();
     return { admin, db: database };
   } catch (error) {
-    console.error("[goofs-fetch] Firebase Admin init error:", error.message);
+    console.error("[goofs-fetch] ❌ Firebase Admin init error:", error.message);
+    console.error("[goofs-fetch] Stack:", error.stack);
+    console.error("[goofs-fetch] FIREBASE_SERVICE_ACCOUNT_JSON present:", !!process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+    console.error("[goofs-fetch] GCLOUD_PROJECT:", process.env.GCLOUD_PROJECT);
     return { admin: null, db: null };
   }
 }
@@ -310,6 +313,14 @@ exports.handler = async function handler(event) {
   }
 
   const { admin: adminInstance, db: firestore } = initFirebase();
+  
+  // Log Firestore initialization status for debugging
+  if (!firestore) {
+    console.error("[goofs-fetch] ⚠️ Firestore not initialized - writes will fail!");
+    console.error("[goofs-fetch] Check FIREBASE_SERVICE_ACCOUNT_JSON environment variable in Netlify");
+  } else {
+    console.log("[goofs-fetch] ✅ Firestore initialized successfully");
+  }
 
   // Parse request
   let tmdbId = null;
@@ -450,7 +461,8 @@ exports.handler = async function handler(event) {
         // Continue anyway - return the generated insights even if Firestore write fails
       }
     } else {
-      console.warn("[goofs-fetch] Firestore not available, skipping write");
+      console.error("[goofs-fetch] ❌ Firestore not available - insights were NOT written to database!");
+      console.error("[goofs-fetch] This means insights were generated but not saved. Check Firebase Admin initialization.");
     }
 
     return {
