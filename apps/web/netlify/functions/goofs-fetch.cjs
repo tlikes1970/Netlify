@@ -395,57 +395,59 @@ function extractAntagonistType(overview, genres, title = "") {
   }
 
   // Horror/thriller patterns (also check if we inferred horror from title)
-  if (genreSet.has("horror") || genreSet.has("thriller") || titleLower.includes("strangers")) {
-    if (
-      searchText.match(/\b(masked|strangers|intruders|home.?invasion)\b/)
-    ) {
+  if (
+    genreSet.has("horror") ||
+    genreSet.has("thriller") ||
+    titleLower.includes("strangers")
+  ) {
+    if (searchText.match(/\b(masked|strangers|intruders|home.?invasion)\b/)) {
       return "masked intruders";
     }
-    if (overviewLower.match(/\b(killer|murderer|slasher|serial killer)\b/)) {
+    if (searchText.match(/\b(killer|murderer|slasher|serial killer)\b/)) {
       return "killer";
     }
-    if (overviewLower.match(/\b(stalker|pursuer|hunter)\b/)) {
+    if (searchText.match(/\b(stalker|pursuer|hunter)\b/)) {
       return "stalker";
     }
     if (
-      overviewLower.match(
+      searchText.match(
         /\b(creature|monster|entity|demon|ghost|spirit|haunting)\b/
       )
     ) {
       return "creature";
     }
-    if (overviewLower.match(/\b(cult|cultists)\b/)) {
+    if (searchText.match(/\b(cult|cultists)\b/)) {
       return "cult";
     }
   }
 
   // Crime patterns
   if (genreSet.has("crime")) {
-    if (overviewLower.match(/\b(cartel|gang|mafia|mob|syndicate)\b/)) {
+    if (searchText.match(/\b(cartel|gang|mafia|mob|syndicate)\b/)) {
       return "criminal organization";
     }
-    if (overviewLower.match(/\b(corrupt|crooked)\s+(cop|police|officer)\b/)) {
+    if (searchText.match(/\b(corrupt|crooked)\s+(cop|police|officer)\b/)) {
       return "corrupt cop";
     }
-    if (overviewLower.match(/\b(assassin|hitman|contract killer)\b/)) {
+    if (searchText.match(/\b(assassin|hitman|contract killer)\b/)) {
       return "assassin";
     }
   }
 
   // Sci-fi patterns
   if (genreSet.has("sci-fi") || genreSet.has("science fiction")) {
-    if (overviewLower.match(/\b(alien|extraterrestrial|entity)\b/)) {
+    if (searchText.match(/\b(alien|extraterrestrial|entity)\b/)) {
       return "alien";
     }
     if (
-      overviewLower.match(/\b(android|robot|cyborg|artificial intelligence)\b/)
+      searchText.match(/\b(android|robot|cyborg|artificial intelligence)\b/)
     ) {
       return "android";
     }
   }
 
   // Generic fallback
-  if (overviewLower.match(/\b(villain|antagonist|enemy|foe|threat)\b/)) {
+  if (searchText.match(/\b(villain|antagonist|enemy|foe|threat)\b/)) {
     return "threat";
   }
 
