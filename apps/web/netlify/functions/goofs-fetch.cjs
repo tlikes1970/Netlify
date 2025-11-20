@@ -167,220 +167,1218 @@ function isAuthorized(event) {
  * Generate Insights & Easter Eggs from metadata using templates
  * All content is original, generated from metadata - no external copyrighted text
  */
+
+// Helper: Get primary genre from genre array (prioritizes more distinctive genres)
+function getPrimaryGenre(genres = []) {
+  if (!Array.isArray(genres) || genres.length === 0) return null;
+
+  const genreMap = genres.map((g) => {
+    const name = typeof g === "string" ? g : g.name || "";
+    return name.toLowerCase().trim();
+  });
+
+  // Normalize common variations
+  const normalizedGenres = genreMap.map((g) => {
+    if (g.includes("sci") || g.includes("science")) return "sci-fi";
+    if (g.includes("thriller")) return "thriller";
+    if (g.includes("horror")) return "horror";
+    if (g.includes("comedy")) return "comedy";
+    if (g.includes("drama")) return "drama";
+    if (g.includes("fantasy")) return "fantasy";
+    if (g.includes("crime")) return "crime";
+    if (g.includes("mystery")) return "crime"; // Treat mystery as crime for template purposes
+    if (g.includes("action")) return "action";
+    return g;
+  });
+
+  // Priority order: more distinctive genres first
+  const priorityGenres = [
+    "horror",
+    "thriller",
+    "sci-fi",
+    "fantasy",
+    "crime",
+    "comedy",
+    "action",
+    "drama",
+  ];
+
+  for (const priority of priorityGenres) {
+    if (normalizedGenres.includes(priority)) return priority;
+  }
+
+  // Return first normalized genre if no priority match
+  return normalizedGenres[0] || null;
+}
+
+// Helper: Classify runtime into buckets
+function getRuntimeBucket(runtimeMinutes) {
+  if (!runtimeMinutes || typeof runtimeMinutes !== "number") return null;
+  if (runtimeMinutes < 90) return "short";
+  if (runtimeMinutes <= 120) return "standard";
+  return "long";
+}
+
+// Helper: Get decade string from year
+function getDecade(year) {
+  if (!year) return null;
+  const yearNum =
+    typeof year === "number" ? year : Number.parseInt(String(year));
+  if (isNaN(yearNum)) return null;
+  const decade = Math.floor(yearNum / 10) * 10;
+  return `${decade}s`;
+}
+
+// Helper: Deterministic shuffle for stable but varied selection
+function selectTemplates(templates, count, seed) {
+  if (templates.length === 0) return [];
+  if (templates.length <= count) return templates;
+
+  // Use seed to create deterministic but varied selection
+  const selected = [];
+  const used = new Set();
+  let currentSeed = seed;
+
+  for (let i = 0; i < count && selected.length < templates.length; i++) {
+    currentSeed = (currentSeed * 1103515245 + 12345) & 0x7fffffff; // Simple LCG
+    const index = currentSeed % templates.length;
+
+    if (!used.has(index)) {
+      used.add(index);
+      selected.push(templates[index]);
+    } else {
+      // If already used, find next available
+      for (let j = 0; j < templates.length; j++) {
+        const nextIndex = (index + j) % templates.length;
+        if (!used.has(nextIndex)) {
+          used.add(nextIndex);
+          selected.push(templates[nextIndex]);
+          break;
+        }
+      }
+    }
+  }
+
+  return selected;
+}
+
+// Helper: Extract protagonist name from cast or overview
+function extractProtagonistName(cast, overview) {
+  // Try cast first - prefer first billed character name
+  if (Array.isArray(cast) && cast.length > 0) {
+    for (const castMember of cast) {
+      if (typeof castMember === "string") {
+        // If it's a simple string, assume it's a character name
+        return castMember.split(" ")[0]; // Take first name only
+      }
+      if (castMember && typeof castMember === "object") {
+        // Prefer character name over actor name
+        const characterName = castMember.character || castMember.name;
+        if (characterName && typeof characterName === "string") {
+          // Extract first name only (clean up "Maya" from "Maya (as herself)" or "Maya - Protagonist")
+          const cleanName = characterName.split(/[\s\-\(]/)[0].trim();
+          if (cleanName.length > 1 && cleanName.length < 20) {
+            return cleanName;
+          }
+        }
+      }
+    }
+  }
+
+  // Fallback: extract first proper noun from overview
+  if (typeof overview === "string" && overview.length > 0) {
+    // Look for capitalized words at start of sentences (likely character names)
+    const sentences = overview.split(/[.!?]\s+/);
+    const commonWords = new Set([
+      "The",
+      "A",
+      "An",
+      "When",
+      "After",
+      "Before",
+      "During",
+      "While",
+      "This",
+      "That",
+      "These",
+      "Those",
+      "In",
+      "On",
+      "At",
+      "For",
+      "With",
+    ]);
+
+    for (const sentence of sentences) {
+      const words = sentence.trim().split(/\s+/);
+      if (words.length > 0) {
+        const firstWord = words[0].replace(/[^\w]/g, ""); // Remove punctuation
+        // If it's capitalized and looks like a name
+        if (
+          firstWord[0] === firstWord[0].toUpperCase() &&
+          firstWord.length > 2 &&
+          firstWord.length < 20 &&
+          !commonWords.has(firstWord)
+        ) {
+          return firstWord;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+// Helper: Extract antagonist type from overview
+function extractAntagonistType(overview, genres) {
+  if (typeof overview !== "string" || overview.length === 0) return null;
+
+  const overviewLower = overview.toLowerCase();
+  const genreSet = new Set(
+    (genres || []).map((g) =>
+      typeof g === "string" ? g.toLowerCase() : (g.name || "").toLowerCase()
+    )
+  );
+
+  // Horror/thriller patterns
+  if (genreSet.has("horror") || genreSet.has("thriller")) {
+    if (
+      overviewLower.match(/\b(masked|strangers|intruders|home.?invasion)\b/)
+    ) {
+      return "masked intruders";
+    }
+    if (overviewLower.match(/\b(killer|murderer|slasher|serial killer)\b/)) {
+      return "killer";
+    }
+    if (overviewLower.match(/\b(stalker|pursuer|hunter)\b/)) {
+      return "stalker";
+    }
+    if (
+      overviewLower.match(
+        /\b(creature|monster|entity|demon|ghost|spirit|haunting)\b/
+      )
+    ) {
+      return "creature";
+    }
+    if (overviewLower.match(/\b(cult|cultists)\b/)) {
+      return "cult";
+    }
+  }
+
+  // Crime patterns
+  if (genreSet.has("crime")) {
+    if (overviewLower.match(/\b(cartel|gang|mafia|mob|syndicate)\b/)) {
+      return "criminal organization";
+    }
+    if (overviewLower.match(/\b(corrupt|crooked)\s+(cop|police|officer)\b/)) {
+      return "corrupt cop";
+    }
+    if (overviewLower.match(/\b(assassin|hitman|contract killer)\b/)) {
+      return "assassin";
+    }
+  }
+
+  // Sci-fi patterns
+  if (genreSet.has("sci-fi") || genreSet.has("science fiction")) {
+    if (overviewLower.match(/\b(alien|extraterrestrial|entity)\b/)) {
+      return "alien";
+    }
+    if (
+      overviewLower.match(/\b(android|robot|cyborg|artificial intelligence)\b/)
+    ) {
+      return "android";
+    }
+  }
+
+  // Generic fallback
+  if (overviewLower.match(/\b(villain|antagonist|enemy|foe|threat)\b/)) {
+    return "threat";
+  }
+
+  return null;
+}
+
+// Helper: Extract setting from overview
+function extractSetting(overview, keywords) {
+  if (typeof overview !== "string" || overview.length === 0) {
+    // Try keywords
+    if (Array.isArray(keywords) && keywords.length > 0) {
+      const keywordStr = keywords.join(" ").toLowerCase();
+      if (
+        keywordStr.match(
+          /\b(cabin|house|mansion|apartment|motel|hotel|woods|forest|desert|island|spaceship|compound|small town)\b/
+        )
+      ) {
+        return keywordStr.match(
+          /\b(cabin|house|mansion|apartment|motel|hotel|woods|forest|desert|island|spaceship|compound|small town)\b/
+        )[0];
+      }
+    }
+    return null;
+  }
+
+  const overviewLower = overview.toLowerCase();
+
+  // Common setting patterns
+  const settingPatterns = [
+    {
+      pattern: /\b(secluded|isolated|remote)\s+(cabin|house|mansion)\b/,
+      extract: "secluded cabin",
+    },
+    { pattern: /\b(cabin|house|mansion)\b/, extract: "cabin" },
+    {
+      pattern: /\b(apartment|apartment complex|building)\b/,
+      extract: "apartment",
+    },
+    { pattern: /\b(motel|hotel|inn)\b/, extract: "motel" },
+    { pattern: /\b(woods|forest|wilderness)\b/, extract: "woods" },
+    { pattern: /\b(desert|wasteland)\b/, extract: "desert" },
+    { pattern: /\b(island|tropical)\b/, extract: "island" },
+    { pattern: /\b(spaceship|space station|vessel)\b/, extract: "spaceship" },
+    { pattern: /\b(compound|facility|base)\b/, extract: "compound" },
+    { pattern: /\b(small town|village|town)\b/, extract: "small town" },
+    { pattern: /\b(city|urban|metropolis)\b/, extract: "city" },
+  ];
+
+  for (const { pattern, extract } of settingPatterns) {
+    if (pattern.test(overviewLower)) {
+      return extract;
+    }
+  }
+
+  return null;
+}
+
+// Helper: Extract conflict verb from overview
+function extractConflictVerb(overview, genres) {
+  if (typeof overview !== "string" || overview.length === 0) return null;
+
+  const overviewLower = overview.toLowerCase();
+  const genreSet = new Set(
+    (genres || []).map((g) =>
+      typeof g === "string" ? g.toLowerCase() : (g.name || "").toLowerCase()
+    )
+  );
+
+  // Horror/thriller conflict patterns
+  if (genreSet.has("horror") || genreSet.has("thriller")) {
+    if (overviewLower.match(/\b(trapped|stuck|stranded|isolated|locked)\b/)) {
+      return "trapped";
+    }
+    if (overviewLower.match(/\b(hunted|pursued|chased|stalked)\b/)) {
+      return "hunted";
+    }
+    if (overviewLower.match(/\b(haunted|possessed)\b/)) {
+      return "haunted";
+    }
+    if (overviewLower.match(/\b(surviving|fighting for survival)\b/)) {
+      return "surviving";
+    }
+  }
+
+  // Crime conflict patterns
+  if (genreSet.has("crime")) {
+    if (
+      overviewLower.match(/\b(framed|set up|wrongly accused|falsely accused)\b/)
+    ) {
+      return "framed";
+    }
+    if (overviewLower.match(/\b(on the run|fugitive|escaping|running)\b/)) {
+      return "on the run";
+    }
+    if (
+      overviewLower.match(/\b(investigating|solving|uncovering|searching)\b/)
+    ) {
+      return "investigating";
+    }
+    if (overviewLower.match(/\b(protecting|defending|guarding)\b/)) {
+      return "protecting";
+    }
+  }
+
+  // Generic patterns
+  if (overviewLower.match(/\b(fighting|battling|struggling|warring)\b/)) {
+    return "fighting";
+  }
+  if (overviewLower.match(/\b(escaping|fleeing|running away)\b/)) {
+    return "escaping";
+  }
+  if (overviewLower.match(/\b(hiding|concealing|evading)\b/)) {
+    return "hiding";
+  }
+
+  return null;
+}
+
+// Helper: Extract context from metadata
+function extractContext(meta) {
+  const overview = meta.overview || meta.synopsis || "";
+  const cast = meta.cast || meta.characters || null;
+  const keywords = meta.keywords || meta.tags || null;
+  const genres = meta.genres || [];
+
+  return {
+    protagonistName: extractProtagonistName(cast, overview),
+    antagonistType: extractAntagonistType(overview, genres),
+    setting: extractSetting(overview, keywords),
+    conflictVerb: extractConflictVerb(overview, genres),
+  };
+}
+
 function buildInsightsForTitle(meta) {
   const items = [];
   const tmdbId = String(meta.tmdbId || meta.id);
   const mediaType = meta.mediaType || meta.type || "movie";
   const genres = Array.isArray(meta.genres) ? meta.genres : [];
-  const genreNames = new Set(
-    genres.map((g) =>
-      typeof g === "string" ? g.toLowerCase() : (g.name || "").toLowerCase()
-    )
-  );
   const year = meta.year || meta.releaseDate?.slice(0, 4) || null;
   const runtime = meta.runtimeMins || meta.runtime || null;
   const episodeCount = meta.episodeCount || null;
   const seasonCount = meta.seasonCount || null;
   const title = meta.title || "this title";
 
-  // Genre-based insights
-  if (genreNames.has("comedy")) {
-    items.push({
-      id: `insight-comedy-${tmdbId}-${Date.now()}`,
-      kind: "insight",
-      type: "style",
-      text: `This comedy often hides jokes in the background—pay attention to signs, props, and extras for subtle humor.`,
-      subtlety: "blink",
-    });
-  }
+  // Extract context from metadata
+  const ctx = extractContext(meta);
 
-  if (genreNames.has("drama")) {
-    items.push({
-      id: `insight-drama-${tmdbId}-${Date.now()}`,
-      kind: "insight",
-      type: "style",
-      text: `Dramatic moments are often built through careful pacing—notice how scenes linger before key revelations.`,
-      subtlety: "obvious",
-    });
-  }
+  // Derive metadata helpers
+  const primaryGenre = getPrimaryGenre(genres);
+  const decade = getDecade(year);
+  const runtimeBucket = getRuntimeBucket(runtime);
+  const isMovie = mediaType === "movie";
+  const isTV = mediaType === "tv";
 
-  if (genreNames.has("sci-fi") || genreNames.has("science fiction")) {
-    items.push({
-      id: `insight-scifi-${tmdbId}-${Date.now()}`,
-      kind: "easterEgg",
-      type: "world",
-      text: `Science fiction world-building often includes subtle visual details that hint at larger lore—keep an eye on background elements and set design.`,
-      subtlety: "blink",
-    });
-  }
+  // Create seed from tmdbId for deterministic but varied selection
+  const seed = tmdbId
+    .split("")
+    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
 
-  if (genreNames.has("horror")) {
-    items.push({
-      id: `insight-horror-${tmdbId}-${Date.now()}`,
-      kind: "insight",
-      type: "style",
-      text: `Horror often uses sound design and framing to build tension—listen for recurring musical themes or visual patterns that signal important moments.`,
-      subtlety: "obvious",
-    });
-  }
+  // Intro stems for varied phrasing (deterministic selection)
+  const introStems = [
+    (text) => text, // No intro
+    (text) => `Whenever ${text}`,
+    (text) => `One sneaky thing the film keeps doing is ${text}`,
+    (text) => `If you watch closely, you'll see ${text}`,
+    (text) => `On a rewatch, it's hard to miss that ${text}`,
+    (text) => `The movie has a tell: ${text}`,
+    (text) => `Once you spot this pattern, it's everywhere: ${text}`,
+    (text) => `Here's the thing: ${text}`,
+    (text) => `This is wild: ${text}`,
+    (text) => `Pay attention to ${text}`,
+  ];
 
-  if (genreNames.has("fantasy")) {
-    items.push({
-      id: `insight-fantasy-${tmdbId}-${Date.now()}`,
-      kind: "easterEgg",
-      type: "world",
-      text: `Fantasy worlds often have consistent rules and symbols—watch for recurring motifs, objects, or locations that carry deeper meaning.`,
-      subtlety: "blink",
-    });
-  }
+  // Helper to get intro stem deterministically
+  const getIntroStem = (index) => {
+    const stemIndex = (seed + index * 7) % introStems.length;
+    return introStems[stemIndex];
+  };
 
-  if (genreNames.has("crime") || genreNames.has("thriller")) {
-    items.push({
-      id: `insight-crime-${tmdbId}-${Date.now()}`,
-      kind: "pattern",
-      type: "logic",
-      text: `Crime and thriller narratives often plant clues early—pay attention to seemingly minor details that might become important later.`,
-      subtlety: "blink",
-    });
-  }
+  // Helper to create template text with varied intros
+  const createTemplate = (baseText, templateIndex, highEnergy = false) => {
+    const stem = getIntroStem(templateIndex);
+    let text = baseText;
 
-  // Media type insights
-  if (mediaType === "tv" && episodeCount && episodeCount > 10) {
-    items.push({
-      id: `pattern-series-${tmdbId}-${Date.now()}`,
-      kind: "pattern",
-      type: "logic",
-      text: `Across the season, you may notice certain character habits or locations repeating as quiet callbacks to earlier episodes.`,
-      subtlety: "blink",
-    });
-
-    if (seasonCount && seasonCount > 1) {
-      items.push({
-        id: `pattern-multi-season-${tmdbId}-${Date.now()}`,
-        kind: "insight",
-        type: "logic",
-        text: `Multi-season shows often develop recurring visual motifs—watch for objects, colors, or settings that appear across different seasons.`,
-        subtlety: "blink",
-      });
+    // Replace context placeholders
+    if (ctx.protagonistName) {
+      text = text.replace(/\{protagonistName\}/g, ctx.protagonistName);
+      text = text.replace(/\{protagonist\}/g, ctx.protagonistName);
     }
-  }
-
-  if (mediaType === "tv" && episodeCount && episodeCount <= 10) {
-    items.push({
-      id: `insight-limited-${tmdbId}-${Date.now()}`,
-      kind: "insight",
-      type: "style",
-      text: `Limited series often have tighter narrative arcs—each episode likely contributes to a larger story, so pay attention to how scenes connect.`,
-      subtlety: "obvious",
-    });
-  }
-
-  if (mediaType === "movie" && runtime) {
-    if (runtime > 150) {
-      items.push({
-        id: `insight-epic-${tmdbId}-${Date.now()}`,
-        kind: "insight",
-        type: "style",
-        text: `Epic-length films like ${title} often use extended sequences to build atmosphere—notice how pacing and visual composition contribute to the overall experience.`,
-        subtlety: "obvious",
-      });
-    } else if (runtime < 90) {
-      items.push({
-        id: `insight-tight-${tmdbId}-${Date.now()}`,
-        kind: "insight",
-        type: "style",
-        text: `Shorter films such as ${title} often pack a lot into each scene—watch for efficient storytelling and visual economy.`,
-        subtlety: "obvious",
-      });
+    if (ctx.antagonistType) {
+      text = text.replace(/\{antagonistType\}/g, ctx.antagonistType);
+      text = text.replace(/\{threat\}/g, ctx.antagonistType);
     }
-  }
+    if (ctx.setting) {
+      text = text.replace(/\{setting\}/g, ctx.setting);
+      text = text.replace(/\{location\}/g, ctx.setting);
+    }
+    if (ctx.conflictVerb) {
+      text = text.replace(/\{conflictVerb\}/g, ctx.conflictVerb);
+    }
 
-  // Year-based insights (decade patterns) - make them title-specific
-  if (year) {
-    const decade = Math.floor(Number.parseInt(year) / 10) * 10;
-    if (decade >= 2020) {
-      // Create variation based on title name and tmdbId to avoid identical insights
-      const variation = (tmdbId.charCodeAt(0) + title.length) % 3;
-      const modernInsights = [
-        `Modern productions like ${title} often blend practical and digital effects seamlessly—see if you can spot where real sets transition to digital environments.`,
-        `Contemporary films such as ${title} use advanced cinematography techniques—watch for how lighting and camera movement enhance the storytelling.`,
-        `Recent productions including ${title} leverage both traditional and digital filmmaking—notice how practical effects combine with CGI for immersive experiences.`,
-      ];
-      items.push({
-        id: `insight-modern-${tmdbId}-${Date.now()}`,
-        kind: "insight",
+    // Fallback replacements
+    text = text.replace(/\{protagonistName\}/g, "the protagonist");
+    text = text.replace(/\{protagonist\}/g, "the protagonist");
+    text = text.replace(/\{antagonistType\}/g, "the threat");
+    text = text.replace(/\{threat\}/g, "the threat");
+    text = text.replace(/\{setting\}/g, "the main location");
+    text = text.replace(/\{location\}/g, "the main location");
+    text = text.replace(/\{conflictVerb\}/g, "struggling");
+
+    // Apply intro stem (only if text doesn't already start with a capital letter indicating it's a complete sentence)
+    if (!text.match(/^[A-Z]/) && !highEnergy) {
+      text = stem(text);
+    }
+
+    return text;
+  };
+
+  // Genre-specific template pools - spicy, specific, character-aware
+  // Templates use base text that gets processed with context and intro stems
+  const genreTemplates = {
+    horror: [
+      {
         type: "style",
-        text: modernInsights[variation],
+        kind: "insight",
         subtlety: "blink",
-      });
-    } else if (decade >= 2000 && decade < 2020) {
-      items.push({
-        id: `insight-2000s-${tmdbId}-${Date.now()}`,
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `{protagonistName}'s pauses are basically horror alarms—any time they hesitate, brace yourself. It's the film's way of poking you in the ribs.`
+          : `the protagonist's pauses are basically horror alarms—any time they hesitate, brace yourself. It's the film's way of poking you in the ribs.`,
+      },
+      {
+        type: "world",
+        kind: "pattern",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: ctx.antagonistType
+          ? `the {antagonistType} show up in places that feel physically impossible. Your brain keeps insisting "nobody should be there" and the movie keeps proving you wrong.`
+          : `the threat shows up in places that feel physically impossible. Your brain keeps insisting "nobody should be there" and the movie keeps proving you wrong.`,
+      },
+      {
+        type: "style",
+        kind: "insight",
+        subtlety: "obvious",
+        highEnergy: true,
+        baseText: `silence is a weapon here. The moment the sound design drops out, ${title} is about to land something heavy. Once you notice this pattern, you can't unsee it.`,
+      },
+      {
+        type: "world",
         kind: "easterEgg",
-        type: "style",
-        text: `Early 2000s productions like ${title} often have distinctive visual styles—notice the color grading and camera work characteristic of this era.`,
         subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.setting
+          ? `the {setting} layout starts gaslighting you—doorways suddenly connect to rooms they shouldn't. It's not a mistake, it's the film messing with your sense of space.`
+          : `the main location's layout starts gaslighting you—doorways suddenly connect to rooms they shouldn't. It's not a mistake, it's the film messing with your sense of space.`,
+      },
+      {
+        type: "logic",
+        kind: "pattern",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `{protagonistName} has the worst poker face in horror. Any time they pause just a second too long, something awful is about to happen. The film is basically using them as a warning system.`
+          : `the protagonist has the worst poker face in horror. Any time they pause just a second too long, something awful is about to happen. The film is basically using them as a warning system.`,
+      },
+      {
+        type: "world",
+        kind: "insight",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText:
+          ctx.antagonistType && ctx.setting
+            ? `the way the {antagonistType} use the {setting} is half the tension. Watch which doorways or windows the movie uses as pressure points—it's not random.`
+            : `the way the threat uses the space is half the tension. Watch which doorways or windows the movie uses as pressure points—it's not random.`,
+      },
+      {
+        type: "style",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: `dark corners and single light sources create natural hiding spots where ${ctx.antagonistType || "threats"} can emerge from anywhere. The lighting is basically a cheat code for scares.`,
+      },
+      {
+        type: "world",
+        kind: "pattern",
+        subtlety: "obvious",
+        highEnergy: true,
+        baseText:
+          ctx.conflictVerb === "trapped" && ctx.setting
+            ? `the {setting} becomes a cage. After the second act, the film quietly changes which rooms connect—you can spot the continuity tricks if you watch door placement closely. This is the film gaslighting you on purpose.`
+            : ctx.setting
+              ? `the {setting} becomes a weapon. After the second act, the film quietly changes which rooms connect—you can spot the continuity tricks if you watch door placement closely. This is the film gaslighting you on purpose.`
+              : `the location becomes a weapon. After the second act, the film quietly changes which rooms connect—you can spot the continuity tricks if you watch door placement closely. This is the film gaslighting you on purpose.`,
+      },
+    ],
+    thriller: [
+      {
+        type: "logic",
+        kind: "pattern",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `when {protagonistName} shrugs off details in early scenes, the film is daring you to notice what they don't. Those throwaway objects or conversations? They're coming back.`
+          : `when the protagonist shrugs off details in early scenes, the film is daring you to notice what they don't. Those throwaway objects or conversations? They're coming back.`,
+      },
+      {
+        type: "style",
+        kind: "insight",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: `${title} uses editing rhythm to control your pulse—quick cuts during action, longer takes when building suspense. Each choice is designed to keep you on edge.`,
+      },
+      {
+        type: "world",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: `background details matter here—newspaper headlines, TV news in the background, or photos on walls often hint at the bigger picture. The film isn't subtle about it either.`,
+      },
+      {
+        type: "logic",
+        kind: "insight",
+        subtlety: "obvious",
+        highEnergy: true,
+        baseText: ctx.protagonistName
+          ? `${title} plays with perspective—watch for scenes where you know more than {protagonistName}, or moments where the camera shows you something they can't see yet. It's the movie's way of daring you to keep up.`
+          : `${title} plays with perspective—watch for scenes where you know more than the characters, or moments where the camera shows you something they can't see yet. It's the movie's way of daring you to keep up.`,
+      },
+      {
+        type: "world",
+        kind: "pattern",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.antagonistType
+          ? `the way the {antagonistType} appear is the real game. Half the tension is guessing which doorway or window becomes a threat next.`
+          : `the way the threat appears is the real game. Half the tension is guessing which doorway or window becomes a threat next.`,
+      },
+      {
+        type: "style",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText:
+          ctx.conflictVerb === "investigating" && ctx.protagonistName
+            ? `every time {protagonistName} finds a clue, the film shows you three things they're not looking at. It's not an accident—it's the movie messing with you.`
+            : `every time the protagonist finds a clue, the film shows you three things they're not looking at. It's not an accident—it's the movie messing with you.`,
+      },
+      {
+        type: "world",
+        kind: "insight",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: ctx.setting
+          ? `the {setting} acts like a pressure cooker. Every location where secrets sit starts to feel claustrophobic. Once you notice it, you can't unsee it.`
+          : `the setting acts like a pressure cooker. Every location where secrets sit starts to feel claustrophobic. Once you notice it, you can't unsee it.`,
+      },
+      {
+        type: "logic",
+        kind: "pattern",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `{protagonistName} keeps missing things right in front of them. The film shows you what they're not seeing, and it's kind of infuriating in a fun way.`
+          : `the protagonist keeps missing things right in front of them. The film shows you what they're not seeing, and it's kind of infuriating in a fun way.`,
+      },
+    ],
+    comedy: [
+      {
+        type: "style",
+        kind: "insight",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `{protagonistName} fires off lines that sound throwaway, but half of them are setups for jokes 20 minutes later. The film is playing the long game and it's kind of brilliant.`
+          : `the protagonist fires off lines that sound throwaway, but half of them are setups for jokes 20 minutes later. The film is playing the long game and it's kind of brilliant.`,
+      },
+      {
+        type: "world",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: `visual callbacks are everywhere. Watch for objects, locations, or even camera angles that reappear to underline a running joke. The film is winking at you.`,
+      },
+      {
+        type: "style",
+        kind: "pattern",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: `the timing here is everything. Notice how the editing creates comedic rhythm—letting jokes breathe or cutting away at the perfect moment for maximum impact.`,
+      },
+      {
+        type: "world",
+        kind: "insight",
+        subtlety: "blink",
+        highEnergy: true,
+        baseText: ctx.setting
+          ? `the {setting} acts like a comedy stage. You can watch entire jokes play out in the background while the main cast talks. Once you notice it, it's everywhere.`
+          : `the setting acts like a comedy stage. You can watch entire jokes play out in the background while the main cast talks. Once you notice it, it's everywhere.`,
+      },
+      {
+        type: "style",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: `watch the background actors. They're doing their own comedy routine while the main characters talk, and it's often funnier than what's happening in the foreground.`,
+      },
+      {
+        type: "world",
+        kind: "pattern",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: ctx.setting
+          ? `the {setting} isn't just a location—it's a character with its own comedic timing. Notice how the space itself becomes part of the joke.`
+          : `the setting isn't just a location—it's a character with its own comedic timing. Notice how the space itself becomes part of the joke.`,
+      },
+      {
+        type: "style",
+        kind: "insight",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: `${title} hides jokes everywhere—background signs, prop placement, and even extras' reactions can deliver punchlines you'll miss if you're not watching closely.`,
+      },
+      {
+        type: "logic",
+        kind: "pattern",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `what seems like a throwaway line when {protagonistName} says it early on often becomes a setup for a bigger payoff later. The film is basically setting up dominoes.`
+          : `what seems like a throwaway line early on often becomes a setup for a bigger payoff later. The film is basically setting up dominoes.`,
+      },
+    ],
+    drama: [
+      {
+        type: "style",
+        kind: "insight",
+        subtlety: "obvious",
+        highEnergy: true,
+        baseText: ctx.protagonistName
+          ? `when {protagonistName}'s face lingers on screen after an argument, the film is forcing you to sit in the fallout with them. It's uncomfortable and that's the point.`
+          : `when the protagonist's face lingers on screen after an argument, the film is forcing you to sit in the fallout with them. It's uncomfortable and that's the point.`,
+      },
+      {
+        type: "world",
+        kind: "pattern",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.setting
+          ? `the {setting} changes as the story progresses. It's not just a backdrop—it's telling you how the characters feel. Once you notice it, you can't unsee it.`
+          : `the setting changes as the story progresses. It's not just a backdrop—it's telling you how the characters feel. Once you notice it, you can't unsee it.`,
+      },
+      {
+        type: "style",
+        kind: "insight",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: `color and lighting tell you how to feel—warm tones for comfort, cool tones for distance. The film is manipulating your mood and it's not subtle about it.`,
+      },
+      {
+        type: "world",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `little objects—photos, props, outfits—keep reappearing as emotional markers once you notice them. The way {protagonistName} interacts with them tells you everything.`
+          : `little objects—photos, props, outfits—keep reappearing as emotional markers once you notice them. The way characters interact with them tells you everything.`,
+      },
+      {
+        type: "logic",
+        kind: "pattern",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText:
+          ctx.conflictVerb && ctx.protagonistName
+            ? `the way {protagonistName} handles being {conflictVerb} tells you everything about who they really are. The film shows, it doesn't tell.`
+            : `the way the protagonist handles their situation tells you everything about who they really are. The film shows, it doesn't tell.`,
+      },
+      {
+        type: "style",
+        kind: "pattern",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `${title} lets moments breathe. Watch how the camera holds on {protagonistName}'s face after big revelations, giving you space to process the emotional weight.`
+          : `${title} lets moments breathe. Watch how the camera holds on characters' faces after big revelations, giving you space to process the emotional weight.`,
+      },
+      {
+        type: "world",
+        kind: "insight",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: ctx.setting
+          ? `the {setting} isn't just where things happen—it's part of the emotional landscape. Pay attention to how it shifts with the story's mood.`
+          : `the setting isn't just where things happen—it's part of the emotional landscape. Pay attention to how it shifts with the story's mood.`,
+      },
+      {
+        type: "logic",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `small details carry big meaning—family photos, personal items, or even the way {protagonistName} dresses can reveal backstory. The film trusts you to notice.`
+          : `small details carry big meaning—family photos, personal items, or even the way characters dress can reveal backstory. The film trusts you to notice.`,
+      },
+    ],
+    "sci-fi": [
+      {
+        type: "world",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: `${title} builds its world in the background—screens, signage, and tech details you might miss on first watch actually establish the rules. It's all there if you look.`,
+      },
+      {
+        type: "world",
+        kind: "pattern",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: ctx.setting
+          ? `the {setting} uses visual consistency to sell its reality. Watch for recurring design elements, tech interfaces, or architectural details that make the world feel lived-in.`
+          : `visual consistency sells the reality. Watch for recurring design elements, tech interfaces, or architectural details that make the world feel lived-in.`,
+      },
+      {
+        type: "style",
+        kind: "insight",
+        subtlety: "blink",
+        highEnergy: true,
+        baseText: ctx.protagonistName
+          ? `{protagonistName}'s quiet moments do as much world-building as any big effects shot. Watch how they react to the {setting} like it's alive.`
+          : `the protagonist's quiet moments do as much world-building as any big effects shot. Watch how they react to the environment like it's alive.`,
+      },
+      {
+        type: "world",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.antagonistType
+          ? `the tech isn't just set dressing—pay attention to how interfaces, displays, and gadgets actually function. Especially when the {antagonistType} use them.`
+          : `the tech isn't just set dressing—pay attention to how interfaces, displays, and gadgets actually function. The film plays fair with its rules.`,
+      },
+      {
+        type: "logic",
+        kind: "pattern",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: ctx.antagonistType
+          ? `the rules of how the {antagonistType} work are shown, not told. Watch for how they behave consistently—once you notice it, you can't unsee it.`
+          : `the rules of this universe are shown, not told. Watch for how things behave consistently—once you notice it, you can't unsee it.`,
+      },
+      {
+        type: "world",
+        kind: "insight",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.setting
+          ? `the {setting} has its own logic. Pay attention to how the space itself functions—it's not just a backdrop, it's part of the story.`
+          : `the setting has its own logic. Pay attention to how the space itself functions—it's not just a backdrop, it's part of the story.`,
+      },
+      {
+        type: "style",
+        kind: "pattern",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `${title} balances spectacle with intimacy. Notice how big sci-fi concepts are often explored through small moments with {protagonistName} that ground the story.`
+          : `${title} balances spectacle with intimacy. Notice how big sci-fi concepts are often explored through small, human moments that ground the story.`,
+      },
+      {
+        type: "logic",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: `the film establishes what's possible early on, then sticks to those rules. Watch for how technology and physics behave consistently—it's the movie's way of playing fair.`,
+      },
+    ],
+    fantasy: [
+      {
+        type: "world",
+        kind: "pattern",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `watch for recurring symbols, colors, or objects that signal how {protagonistName}'s powers work. The film establishes its magic system through visual consistency.`
+          : `watch for recurring symbols, colors, or objects that signal how the fantasy elements work. The film establishes its magic system through visual consistency.`,
+      },
+      {
+        type: "world",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.setting
+          ? `the {setting} hides lore in plain sight. Background details, architecture, and even costume choices often hint at deeper mythology. It's all there if you know where to look.`
+          : `lore hides in plain sight. Background details, architecture, and even costume choices often hint at deeper mythology. It's all there if you know where to look.`,
+      },
+      {
+        type: "style",
+        kind: "insight",
+        subtlety: "obvious",
+        highEnergy: true,
+        baseText: `visual language distinguishes the ordinary from the magical. Notice how camera movement and color grading shift when fantasy elements appear—the film is literally changing its language.`,
+      },
+      {
+        type: "world",
+        kind: "pattern",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: `the rules of this world are shown, not told. Watch for how magic, creatures, or fantastical elements behave consistently—once you notice it, you can't unsee it.`,
+      },
+      {
+        type: "logic",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.antagonistType
+          ? `the way the {antagonistType} use magic tells you everything about how the system works. Pay attention to the details—they're not just for show.`
+          : `the way magic is used tells you everything about how the system works. Pay attention to the details—they're not just for show.`,
+      },
+      {
+        type: "world",
+        kind: "insight",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: ctx.setting
+          ? `the {setting} isn't just a backdrop—it's part of the magic system. Watch how the space itself responds to fantastical elements.`
+          : `the setting isn't just a backdrop—it's part of the magic system. Watch how the space itself responds to fantastical elements.`,
+      },
+      {
+        type: "style",
+        kind: "pattern",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `{protagonistName}'s reactions to magic tell you everything. Watch how they interact with fantastical elements—it's the film's way of showing you the rules.`
+          : `the protagonist's reactions to magic tell you everything. Watch how they interact with fantastical elements—it's the film's way of showing you the rules.`,
+      },
+      {
+        type: "logic",
+        kind: "pattern",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: `the film establishes what's possible early on, then sticks to those rules. Watch for how magic behaves consistently—it's the movie's way of playing fair.`,
+      },
+    ],
+    crime: [
+      {
+        type: "logic",
+        kind: "pattern",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `${title} plays fair with its clues—everything {protagonistName} needs to solve the mystery is there, but it's hidden in plain sight among red herrings.`
+          : `${title} plays fair with its clues—everything you need to solve the mystery is there, but it's hidden in plain sight among red herrings.`,
+      },
+      {
+        type: "world",
+        kind: "insight",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: ctx.setting
+          ? `the {setting} is a character. The places where crimes happen, investigations occur, or secrets are kept all tell their own stories.`
+          : `location is a character. The places where crimes happen, investigations occur, or secrets are kept all tell their own stories.`,
+      },
+      {
+        type: "logic",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `pay attention to what {protagonistName} notices (or doesn't notice). The details that catch their eye often reveal their expertise or hidden knowledge.`
+          : `pay attention to what characters notice (or don't notice). The details that catch someone's eye often reveal their expertise or hidden knowledge.`,
+      },
+      {
+        type: "style",
+        kind: "pattern",
+        subtlety: "obvious",
+        highEnergy: true,
+        baseText: `${title} uses editing to control information. Watch how it reveals clues, misdirects attention, or shows you multiple perspectives of the same moment. The film is playing you and it's kind of brilliant.`,
+      },
+      {
+        type: "world",
+        kind: "pattern",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.antagonistType
+          ? `the way the {antagonistType} operate tells you everything about the stakes. Pay attention to their methods—they're not random.`
+          : `the way the criminals operate tells you everything about the stakes. Pay attention to their methods—they're not random.`,
+      },
+      {
+        type: "logic",
+        kind: "insight",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText:
+          ctx.conflictVerb === "investigating" && ctx.protagonistName
+            ? `every scene where {protagonistName} investigates shows you three things they're not looking at. It's not an accident—it's the movie messing with you.`
+            : `every scene shows you three things the characters aren't looking at. It's not an accident—it's the movie messing with you.`,
+      },
+      {
+        type: "world",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.setting
+          ? `the {setting} acts like a pressure cooker. Every location where secrets sit starts to feel claustrophobic. Once you notice it, you can't unsee it.`
+          : `the setting acts like a pressure cooker. Every location where secrets sit starts to feel claustrophobic. Once you notice it, you can't unsee it.`,
+      },
+      {
+        type: "style",
+        kind: "pattern",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `{protagonistName} keeps missing things right in front of them. The film shows you what they're not seeing, and it's kind of infuriating in a fun way.`
+          : `the protagonist keeps missing things right in front of them. The film shows you what they're not seeing, and it's kind of infuriating in a fun way.`,
+      },
+    ],
+    action: [
+      {
+        type: "style",
+        kind: "insight",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `${title} choreographs its action like a dance. Watch how camera movement, editing rhythm, and {protagonistName}'s positioning create clear spatial geography even in chaos.`
+          : `${title} choreographs its action like a dance. Watch how camera movement, editing rhythm, and character positioning create clear spatial geography even in chaos.`,
+      },
+      {
+        type: "world",
+        kind: "pattern",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: `the first action sequence sets up the rules. Pay attention to how it establishes what's physically possible for the rest of the story—the film plays fair.`,
+      },
+      {
+        type: "style",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: true,
+        baseText: `practical effects and stunts are used strategically. See if you can spot where real stunts transition to CGI, or where the camera work hides the seams. It's a game and once you notice it, it's everywhere.`,
+      },
+      {
+        type: "world",
+        kind: "insight",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText:
+          ctx.antagonistType && ctx.protagonistName
+            ? `the action isn't just spectacle. Each set piece advances character or plot. Watch how {protagonistName} handles the {antagonistType} to reveal something new.`
+            : `the action isn't just spectacle. Each set piece advances character or plot, so watch for how fights and chases reveal something new.`,
+      },
+      {
+        type: "logic",
+        kind: "pattern",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: ctx.setting
+          ? `the {setting} becomes a weapon. After the midpoint, notice how the action sequences start using the environment itself as part of the choreography.`
+          : `the environment becomes a weapon. After the midpoint, notice how the action sequences start using the space itself as part of the choreography.`,
+      },
+      {
+        type: "style",
+        kind: "pattern",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: ctx.protagonistName
+          ? `{protagonistName}'s fighting style tells you everything about who they are. Watch how they move—it's the film's way of showing character through action.`
+          : `the protagonist's fighting style tells you everything about who they are. Watch how they move—it's the film's way of showing character through action.`,
+      },
+      {
+        type: "world",
+        kind: "easterEgg",
+        subtlety: "blink",
+        highEnergy: false,
+        baseText: `the film establishes what's physically possible early on, then sticks to those rules. Watch for how stunts and physics behave consistently—it's the movie's way of playing fair.`,
+      },
+      {
+        type: "logic",
+        kind: "insight",
+        subtlety: "obvious",
+        highEnergy: false,
+        baseText: ctx.setting
+          ? `the {setting} isn't just a backdrop—it's part of the action choreography. Notice how the space itself becomes a weapon or obstacle.`
+          : `the setting isn't just a backdrop—it's part of the action choreography. Notice how the space itself becomes a weapon or obstacle.`,
+      },
+    ],
+  };
+
+  // Select templates based on primary genre
+  if (primaryGenre && genreTemplates[primaryGenre]) {
+    const templates = genreTemplates[primaryGenre];
+    const selected = selectTemplates(templates, 4, seed);
+
+    // Ensure at least one high-energy insight
+    const hasHighEnergy = selected.some((t) => t.highEnergy);
+    if (!hasHighEnergy && templates.length > selected.length) {
+      const highEnergyTemplates = templates.filter((t) => t.highEnergy);
+      if (highEnergyTemplates.length > 0) {
+        // Replace one selected template with a high-energy one
+        const highEnergyTemplate = selectTemplates(
+          highEnergyTemplates,
+          1,
+          seed + 500
+        )[0];
+        selected[0] = highEnergyTemplate;
+      }
+    }
+
+    selected.forEach((template, idx) => {
+      // Process template text with context and intro stems
+      let finalText = template.baseText || template.text || "";
+      if (template.baseText) {
+        finalText = createTemplate(template.baseText, idx, template.highEnergy);
+      }
+
+      items.push({
+        id: `insight-${primaryGenre}-${idx}-${tmdbId}`,
+        type: template.type,
+        kind: template.kind,
+        subtlety: template.subtlety,
+        text: finalText,
+      });
+    });
+  }
+
+  // Also check for secondary genres (thriller often pairs with horror, etc.)
+  const genreSet = new Set(
+    genres.map((g) =>
+      typeof g === "string"
+        ? g.toLowerCase().trim()
+        : (g.name || "").toLowerCase().trim()
+    )
+  );
+
+  if (
+    genreSet.has("thriller") &&
+    primaryGenre !== "thriller" &&
+    genreTemplates.thriller
+  ) {
+    const selected = selectTemplates(genreTemplates.thriller, 1, seed + 100);
+    selected.forEach((template) => {
+      items.push({
+        id: `insight-thriller-secondary-${tmdbId}`,
+        ...template,
+      });
+    });
+  }
+
+  // Media type and runtime-specific insights
+  if (isMovie && runtimeBucket) {
+    if (runtimeBucket === "short") {
+      items.push({
+        id: `insight-short-runtime-${tmdbId}`,
+        type: "style",
+        kind: "insight",
+        subtlety: "obvious",
+        text: `${title} packs a lot into its runtime—watch for how it uses visual shorthand, efficient editing, and tight pacing to tell a complete story quickly.`,
+      });
+    } else if (runtimeBucket === "long") {
+      items.push({
+        id: `insight-long-runtime-${tmdbId}`,
+        type: "style",
+        kind: "insight",
+        subtlety: "obvious",
+        text: `${title} takes its time—notice how extended sequences and slower pacing let atmosphere and character development breathe, building to bigger moments.`,
       });
     }
   }
 
-  // Ensemble cast insight (if we can infer from episode count or other signals)
-  if (mediaType === "tv" && episodeCount && episodeCount > 20) {
-    items.push({
-      id: `insight-ensemble-${tmdbId}-${Date.now()}`,
-      kind: "insight",
-      type: "style",
-      text: `Long-running series often use ensemble storytelling—watch how different characters take turns driving the narrative forward.`,
-      subtlety: "obvious",
-    });
+  if (isTV) {
+    if (episodeCount && episodeCount <= 10) {
+      items.push({
+        id: `insight-limited-series-${tmdbId}`,
+        type: "style",
+        kind: "pattern",
+        subtlety: "obvious",
+        text: `As a limited series, ${title} has a clear endgame—each episode likely builds toward a specific conclusion, so watch for how threads introduced early pay off later.`,
+      });
+    } else if (
+      episodeCount &&
+      episodeCount > 20 &&
+      seasonCount &&
+      seasonCount > 1
+    ) {
+      items.push({
+        id: `insight-multi-season-${tmdbId}`,
+        type: "world",
+        kind: "pattern",
+        subtlety: "blink",
+        text: `Long-running shows like ${title} develop visual vocabulary over time—watch for recurring locations, props, or camera techniques that become signature elements.`,
+      });
+    }
   }
 
-  // Ensure we have at least 3-5 items, add title-specific generic ones if needed
-  if (items.length < 3) {
-    // Use title name and tmdbId to create unique variations
-    const titleHash =
-      (tmdbId.charCodeAt(0) + tmdbId.charCodeAt(tmdbId.length - 1)) % 4;
+  // Decade-specific insights (only if we don't have enough genre-specific ones)
+  if (items.length < 3 && decade) {
+    if (decade === "2020s") {
+      items.push({
+        id: `insight-modern-${tmdbId}`,
+        type: "style",
+        kind: "insight",
+        subtlety: "blink",
+        text: `${title} reflects modern filmmaking techniques—notice how it blends practical and digital effects, or uses contemporary camera and editing styles.`,
+      });
+    }
+  }
 
-    const genericInsights = [
+  // Fallback: Only use generic templates if we truly have minimal metadata
+  if (items.length < 3 && !primaryGenre && !decade) {
+    const fallbackTemplates = [
       {
-        text: `Pay attention to how scenes transition in ${title}—editing choices often reveal narrative priorities and emotional beats.`,
         type: "style",
+        kind: "insight",
+        subtlety: "obvious",
+        text: ctx.protagonistName
+          ? `Pay attention to how ${ctx.protagonistName} moves through the frame—the composition tells you everything about their state of mind.`
+          : `${title} uses visual storytelling—pay attention to how composition, color, and camera movement enhance the narrative without words.`,
       },
       {
-        text: `Background details in ${title} often tell their own stories—keep an eye on props, set decoration, and background action for hidden layers.`,
         type: "world",
+        kind: "pattern",
+        subtlety: "blink",
+        text: ctx.setting
+          ? `The ${ctx.setting} isn't just a backdrop—watch how it changes as the story progresses. It's telling its own story.`
+          : `Watch for recurring elements in ${title}—objects, locations, or visual motifs that appear multiple times often carry deeper meaning.`,
       },
       {
-        text: `The visual language of ${title} communicates through composition and framing—notice how camera angles emphasize key moments.`,
-        type: "style",
-      },
-      {
-        text: `Watch for recurring motifs in ${title}—objects, colors, or locations that appear multiple times often carry symbolic meaning.`,
-        type: "world",
+        type: "logic",
+        kind: "easterEgg",
+        subtlety: "blink",
+        text: ctx.antagonistType
+          ? `The way the ${ctx.antagonistType} operate isn't random—pay attention to their patterns. The film is showing you how they work.`
+          : `Pay attention to patterns—the way things happen isn't random. The film is showing you how it works.`,
       },
     ];
 
-    const selectedInsight = genericInsights[titleHash];
-
-    items.push({
-      id: `insight-generic-1-${tmdbId}-${Date.now()}`,
-      kind: "insight",
-      type: selectedInsight.type,
-      text: selectedInsight.text,
-      subtlety: "obvious",
-    });
-
-    items.push({
-      id: `easter-egg-generic-${tmdbId}-${Date.now()}`,
-      kind: "easterEgg",
-      type: "world",
-      text: genericInsights[(titleHash + 1) % 4].text,
-      subtlety: "blink",
+    const selected = selectTemplates(
+      fallbackTemplates,
+      Math.min(2, 3 - items.length),
+      seed
+    );
+    selected.forEach((template, idx) => {
+      items.push({
+        id: `insight-fallback-${idx}-${tmdbId}`,
+        ...template,
+      });
     });
   }
 
-  // Limit to 8 items max
-  return items.slice(0, 8);
+  // Ensure we have at least 3 items, but limit to 5 for quality
+  while (items.length < 3 && items.length < 5) {
+    // If we still don't have enough, add one more generic but title-specific insight
+    const genericVariants = [
+      {
+        type: "style",
+        kind: "insight",
+        subtlety: "obvious",
+        text: ctx.protagonistName
+          ? `${title} tells its story through both what you see and what you hear—notice how sound design and visuals work together, especially when ${ctx.protagonistName} is on screen.`
+          : `${title} tells its story through both what you see and what you hear—notice how sound design and visuals work together.`,
+      },
+      {
+        type: "world",
+        kind: "pattern",
+        subtlety: "blink",
+        text: ctx.setting
+          ? `Background details in the ${ctx.setting} often reward close attention—props, set decoration, and background action can add layers to the story.`
+          : `Background details in ${title} often reward close attention—props, set decoration, and background action can add layers to the story.`,
+      },
+      {
+        type: "logic",
+        kind: "easterEgg",
+        subtlety: "blink",
+        text: ctx.antagonistType
+          ? `The way the ${ctx.antagonistType} move through the frame tells you everything. Pay attention to their patterns—it's not random.`
+          : `The way things move through the frame tells you everything. Pay attention to the patterns—it's not random.`,
+      },
+    ];
+
+    const variantIndex = items.length % genericVariants.length;
+    items.push({
+      id: `insight-generic-${items.length}-${tmdbId}`,
+      ...genericVariants[variantIndex],
+    });
+  }
+
+  // Limit to 5 items max for quality over quantity
+  return items.slice(0, 5);
 }
 
 exports.handler = async function handler(event) {

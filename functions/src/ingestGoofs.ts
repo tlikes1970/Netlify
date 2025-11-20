@@ -108,6 +108,34 @@ export const ingestGoofs = onCall(
             continue;
           }
 
+          // Try to read additional fields from Firestore if they exist
+          let runtimeMins = null;
+          let episodeCount = null;
+          let seasonCount = null;
+          let overview = null;
+          let synopsis = null;
+          let cast = null;
+          let keywords = null;
+          try {
+            const titleDocRef = database
+              .collection("titles")
+              .doc(String(titleDoc.tmdbId));
+            const titleDocSnapshot = await titleDocRef.get();
+            if (titleDocSnapshot.exists) {
+              const titleData = titleDocSnapshot.data();
+              runtimeMins = titleData?.runtimeMinutes || titleData?.runtimeMins || titleData?.runtime || null;
+              episodeCount = titleData?.episodeCount || null;
+              seasonCount = titleData?.seasonCount || null;
+              overview = titleData?.overview || titleData?.synopsis || null;
+              synopsis = titleData?.synopsis || titleData?.overview || null;
+              cast = titleData?.cast || titleData?.characters || null;
+              keywords = titleData?.keywords || titleData?.tags || null;
+            }
+          } catch (error) {
+            // Silently continue if we can't read additional fields
+            // This is optional metadata, so ingestion should continue
+          }
+
           titlesList.push({
             tmdbId: titleDoc.tmdbId,
             metadata: {
@@ -117,6 +145,13 @@ export const ingestGoofs = onCall(
               mediaType: titleDoc.mediaType,
               genres: titleDoc.genres || [],
               year: titleDoc.year || null,
+              runtimeMins: runtimeMins,
+              episodeCount: episodeCount,
+              seasonCount: seasonCount,
+              overview: overview,
+              synopsis: synopsis,
+              cast: cast,
+              keywords: keywords,
             },
           });
         }
