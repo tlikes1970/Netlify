@@ -944,12 +944,15 @@ export default function AdminExtrasPage({
     setBulkIngestionResult(null);
 
     try {
+      console.log("[AdminExtrasPage] Starting bulk ingestion via Firebase callable function");
       const { httpsCallable } = await import("firebase/functions");
       const ingestGoofs = httpsCallable(functions, "ingestGoofs");
 
+      console.log("[AdminExtrasPage] Calling ingestGoofs callable function...");
       const result = await ingestGoofs({
         mode: "bulk",
       });
+      console.log("[AdminExtrasPage] Bulk ingestion callable returned:", result);
 
       const data = result.data as any;
       setBulkIngestionResult({
