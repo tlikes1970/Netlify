@@ -1231,10 +1231,19 @@ function buildInsightsForTitle(meta) {
     genreTemplates.thriller
   ) {
     const selected = selectTemplates(genreTemplates.thriller, 1, seed + 100);
-    selected.forEach((template) => {
+    selected.forEach((template, idx) => {
+      // Process template text with context and intro stems
+      let finalText = template.baseText || template.text || "";
+      if (template.baseText) {
+        finalText = createTemplate(template.baseText, items.length + idx, template.highEnergy);
+      }
+      
       items.push({
         id: `insight-thriller-secondary-${tmdbId}`,
-        ...template,
+        type: template.type,
+        kind: template.kind,
+        subtlety: template.subtlety,
+        text: finalText,
       });
     });
   }
@@ -1293,8 +1302,13 @@ function buildInsightsForTitle(meta) {
         type: "style",
         kind: "insight",
         subtlety: "blink",
-        text: `${title} reflects modern filmmaking techniques—notice how it blends practical and digital effects, or uses contemporary camera and editing styles.`,
+        highEnergy: false,
+        baseText: `${title} blends practical and digital effects in ways that feel seamless. See if you can spot where real sets transition to digital environments—it's a game.`,
       });
+      // Process the baseText
+      const finalText = createTemplate(items[items.length - 1].baseText, items.length - 1, false);
+      items[items.length - 1].text = finalText;
+      delete items[items.length - 1].baseText;
     }
   }
 
