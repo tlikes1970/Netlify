@@ -169,46 +169,78 @@ function isAuthorized(event) {
  */
 
 // Helper: Get primary genre from genre array (prioritizes more distinctive genres)
-function getPrimaryGenre(genres = []) {
-  if (!Array.isArray(genres) || genres.length === 0) return null;
+function getPrimaryGenre(genres = [], overview = "", title = "") {
+  // First try to get from genres array
+  if (Array.isArray(genres) && genres.length > 0) {
+    const genreMap = genres.map((g) => {
+      const name = typeof g === "string" ? g : g.name || "";
+      return name.toLowerCase().trim();
+    });
 
-  const genreMap = genres.map((g) => {
-    const name = typeof g === "string" ? g : g.name || "";
-    return name.toLowerCase().trim();
-  });
+    // Normalize common variations
+    const normalizedGenres = genreMap.map((g) => {
+      if (g.includes("sci") || g.includes("science")) return "sci-fi";
+      if (g.includes("thriller")) return "thriller";
+      if (g.includes("horror")) return "horror";
+      if (g.includes("comedy")) return "comedy";
+      if (g.includes("drama")) return "drama";
+      if (g.includes("fantasy")) return "fantasy";
+      if (g.includes("crime")) return "crime";
+      if (g.includes("mystery")) return "crime"; // Treat mystery as crime for template purposes
+      if (g.includes("action")) return "action";
+      return g;
+    });
 
-  // Normalize common variations
-  const normalizedGenres = genreMap.map((g) => {
-    if (g.includes("sci") || g.includes("science")) return "sci-fi";
-    if (g.includes("thriller")) return "thriller";
-    if (g.includes("horror")) return "horror";
-    if (g.includes("comedy")) return "comedy";
-    if (g.includes("drama")) return "drama";
-    if (g.includes("fantasy")) return "fantasy";
-    if (g.includes("crime")) return "crime";
-    if (g.includes("mystery")) return "crime"; // Treat mystery as crime for template purposes
-    if (g.includes("action")) return "action";
-    return g;
-  });
+    // Priority order: more distinctive genres first
+    const priorityGenres = [
+      "horror",
+      "thriller",
+      "sci-fi",
+      "fantasy",
+      "crime",
+      "comedy",
+      "action",
+      "drama",
+    ];
 
-  // Priority order: more distinctive genres first
-  const priorityGenres = [
-    "horror",
-    "thriller",
-    "sci-fi",
-    "fantasy",
-    "crime",
-    "comedy",
-    "action",
-    "drama",
-  ];
+    for (const priority of priorityGenres) {
+      if (normalizedGenres.includes(priority)) return priority;
+    }
 
-  for (const priority of priorityGenres) {
-    if (normalizedGenres.includes(priority)) return priority;
+    // Return first normalized genre if no priority match
+    if (normalizedGenres[0]) return normalizedGenres[0];
   }
-
-  // Return first normalized genre if no priority match
-  return normalizedGenres[0] || null;
+  
+  // Fallback: Try to infer from overview or title if genres are missing
+  const searchText = `${overview} ${title}`.toLowerCase();
+  
+  // Horror patterns in title/overview (check title first for "The Strangers" etc.)
+  if (title.toLowerCase().match(/\b(strangers|horror|scary|frightening|terrifying|haunted|ghost|demon|killer|murder|slasher|intruders)\b/) ||
+      searchText.match(/\b(horror|scary|frightening|terrifying|haunted|ghost|demon|killer|murder|slasher|strangers|intruders|home invasion|masked|terror)\b/)) {
+    return "horror";
+  }
+  
+  // Thriller patterns
+  if (searchText.match(/\b(thriller|suspense|mystery|investigation|detective|crime|murder)\b/)) {
+    return "thriller";
+  }
+  
+  // Comedy patterns
+  if (searchText.match(/\b(comedy|funny|humor|comic|joke)\b/)) {
+    return "comedy";
+  }
+  
+  // Sci-fi patterns
+  if (searchText.match(/\b(sci-fi|science fiction|alien|space|future|robot|android|cyberpunk)\b/)) {
+    return "sci-fi";
+  }
+  
+  // Action patterns
+  if (searchText.match(/\b(action|fight|battle|war|explosion|chase|stunt)\b/)) {
+    return "action";
+  }
+  
+  return null;
 }
 
 // Helper: Classify runtime into buckets
@@ -540,11 +572,22 @@ function buildInsightsForTitle(meta) {
   const ctx = extractContext(meta);
 
   // Derive metadata helpers
-  const primaryGenre = getPrimaryGenre(genres);
+  const overview = meta.overview || meta.synopsis || "";
+  const primaryGenre = getPrimaryGenre(genres, overview, title);
   const decade = getDecade(year);
   const runtimeBucket = getRuntimeBucket(runtime);
   const isMovie = mediaType === "movie";
   const isTV = mediaType === "tv";
+  
+  // Debug logging for genre detection
+  console.log("[buildInsightsForTitle] Genre detection", {
+    genres: genres,
+    genresLength: genres.length,
+    primaryGenre: primaryGenre,
+    title: title,
+    overviewPreview: overview.substring(0, 100),
+    ctx: ctx,
+  });
 
   // Create seed from tmdbId for deterministic but varied selection
   const seed = tmdbId
@@ -1235,9 +1278,13 @@ function buildInsightsForTitle(meta) {
       // Process template text with context and intro stems
       let finalText = template.baseText || template.text || "";
       if (template.baseText) {
-        finalText = createTemplate(template.baseText, items.length + idx, template.highEnergy);
+        finalText = createTemplate(
+          template.baseText,
+          items.length + idx,
+          template.highEnergy
+        );
       }
-      
+
       items.push({
         id: `insight-thriller-secondary-${tmdbId}`,
         type: template.type,
@@ -1306,7 +1353,11 @@ function buildInsightsForTitle(meta) {
         baseText: `${title} blends practical and digital effects in ways that feel seamless. See if you can spot where real sets transition to digital environments—it's a game.`,
       });
       // Process the baseText
-      const finalText = createTemplate(items[items.length - 1].baseText, items.length - 1, false);
+      const finalText = createTemplate(
+        items[items.length - 1].baseText,
+        items.length - 1,
+        false
+      );
       items[items.length - 1].text = finalText;
       delete items[items.length - 1].baseText;
     }
@@ -1531,11 +1582,22 @@ exports.handler = async function handler(event) {
       title: metadata.title,
       mediaType: metadata.mediaType,
       genres: metadata.genres,
+      genresType: Array.isArray(metadata.genres) ? "array" : typeof metadata.genres,
+      genresLength: Array.isArray(metadata.genres) ? metadata.genres.length : "N/A",
       year: metadata.year,
+      overview: metadata.overview ? `${metadata.overview.substring(0, 50)}...` : "none",
     });
 
     // Generate insights
     const items = buildInsightsForTitle(metadata);
+    
+    // Debug logging: Log what was generated
+    console.log("[goofs-fetch] Generated insights", {
+      itemCount: items.length,
+      firstItemId: items[0]?.id || null,
+      firstItemText: items[0]?.text?.slice(0, 80) || null,
+      allItemIds: items.map(i => i.id),
+    });
 
     // Debug logging: Log what was generated
     console.log("[goofs-fetch] Generated insights", {
