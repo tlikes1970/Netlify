@@ -210,36 +210,52 @@ function getPrimaryGenre(genres = [], overview = "", title = "") {
     // Return first normalized genre if no priority match
     if (normalizedGenres[0]) return normalizedGenres[0];
   }
-  
+
   // Fallback: Try to infer from overview or title if genres are missing
   const searchText = `${overview} ${title}`.toLowerCase();
-  
+
   // Horror patterns in title/overview (check title first for "The Strangers" etc.)
-  if (title.toLowerCase().match(/\b(strangers|horror|scary|frightening|terrifying|haunted|ghost|demon|killer|murder|slasher|intruders)\b/) ||
-      searchText.match(/\b(horror|scary|frightening|terrifying|haunted|ghost|demon|killer|murder|slasher|strangers|intruders|home invasion|masked|terror)\b/)) {
+  if (
+    title
+      .toLowerCase()
+      .match(
+        /\b(strangers|horror|scary|frightening|terrifying|haunted|ghost|demon|killer|murder|slasher|intruders)\b/
+      ) ||
+    searchText.match(
+      /\b(horror|scary|frightening|terrifying|haunted|ghost|demon|killer|murder|slasher|strangers|intruders|home invasion|masked|terror)\b/
+    )
+  ) {
     return "horror";
   }
-  
+
   // Thriller patterns
-  if (searchText.match(/\b(thriller|suspense|mystery|investigation|detective|crime|murder)\b/)) {
+  if (
+    searchText.match(
+      /\b(thriller|suspense|mystery|investigation|detective|crime|murder)\b/
+    )
+  ) {
     return "thriller";
   }
-  
+
   // Comedy patterns
   if (searchText.match(/\b(comedy|funny|humor|comic|joke)\b/)) {
     return "comedy";
   }
-  
+
   // Sci-fi patterns
-  if (searchText.match(/\b(sci-fi|science fiction|alien|space|future|robot|android|cyberpunk)\b/)) {
+  if (
+    searchText.match(
+      /\b(sci-fi|science fiction|alien|space|future|robot|android|cyberpunk)\b/
+    )
+  ) {
     return "sci-fi";
   }
-  
+
   // Action patterns
   if (searchText.match(/\b(action|fight|battle|war|explosion|chase|stunt)\b/)) {
     return "action";
   }
-  
+
   return null;
 }
 
@@ -362,20 +378,26 @@ function extractProtagonistName(cast, overview) {
 }
 
 // Helper: Extract antagonist type from overview
-function extractAntagonistType(overview, genres) {
-  if (typeof overview !== "string" || overview.length === 0) return null;
+function extractAntagonistType(overview, genres, title = "") {
+  const searchText = `${overview || ""} ${title || ""}`.toLowerCase();
+  if (searchText.trim().length === 0) return null;
 
-  const overviewLower = overview.toLowerCase();
   const genreSet = new Set(
     (genres || []).map((g) =>
       typeof g === "string" ? g.toLowerCase() : (g.name || "").toLowerCase()
     )
   );
 
-  // Horror/thriller patterns
-  if (genreSet.has("horror") || genreSet.has("thriller")) {
+  // Check title first for "The Strangers" pattern
+  const titleLower = (title || "").toLowerCase();
+  if (titleLower.match(/\b(strangers)\b/)) {
+    return "masked intruders";
+  }
+
+  // Horror/thriller patterns (also check if we inferred horror from title)
+  if (genreSet.has("horror") || genreSet.has("thriller") || titleLower.includes("strangers")) {
     if (
-      overviewLower.match(/\b(masked|strangers|intruders|home.?invasion)\b/)
+      searchText.match(/\b(masked|strangers|intruders|home.?invasion)\b/)
     ) {
       return "masked intruders";
     }
@@ -549,9 +571,10 @@ function extractContext(meta) {
   const keywords = meta.keywords || meta.tags || null;
   const genres = meta.genres || [];
 
+  const title = meta.title || "";
   return {
     protagonistName: extractProtagonistName(cast, overview),
-    antagonistType: extractAntagonistType(overview, genres),
+    antagonistType: extractAntagonistType(overview, genres, title),
     setting: extractSetting(overview, keywords),
     conflictVerb: extractConflictVerb(overview, genres),
   };
@@ -578,7 +601,7 @@ function buildInsightsForTitle(meta) {
   const runtimeBucket = getRuntimeBucket(runtime);
   const isMovie = mediaType === "movie";
   const isTV = mediaType === "tv";
-  
+
   // Debug logging for genre detection
   console.log("[buildInsightsForTitle] Genre detection", {
     genres: genres,
@@ -647,7 +670,16 @@ function buildInsightsForTitle(meta) {
 
     // Apply intro stem (only if text doesn't already start with a capital letter indicating it's a complete sentence)
     if (!text.match(/^[A-Z]/) && !highEnergy) {
-      text = stem(text);
+      const stemmed = stem(text);
+      // If stem actually changed the text, use it; otherwise just capitalize
+      if (stemmed !== text) {
+        text = stemmed;
+      }
+      // Always capitalize first letter
+      text = text.charAt(0).toUpperCase() + text.slice(1);
+    } else if (text.match(/^[a-z]/)) {
+      // If it starts with lowercase but didn't get stemmed, capitalize it
+      text = text.charAt(0).toUpperCase() + text.slice(1);
     }
 
     return text;
@@ -1582,21 +1614,27 @@ exports.handler = async function handler(event) {
       title: metadata.title,
       mediaType: metadata.mediaType,
       genres: metadata.genres,
-      genresType: Array.isArray(metadata.genres) ? "array" : typeof metadata.genres,
-      genresLength: Array.isArray(metadata.genres) ? metadata.genres.length : "N/A",
+      genresType: Array.isArray(metadata.genres)
+        ? "array"
+        : typeof metadata.genres,
+      genresLength: Array.isArray(metadata.genres)
+        ? metadata.genres.length
+        : "N/A",
       year: metadata.year,
-      overview: metadata.overview ? `${metadata.overview.substring(0, 50)}...` : "none",
+      overview: metadata.overview
+        ? `${metadata.overview.substring(0, 50)}...`
+        : "none",
     });
 
     // Generate insights
     const items = buildInsightsForTitle(metadata);
-    
+
     // Debug logging: Log what was generated
     console.log("[goofs-fetch] Generated insights", {
       itemCount: items.length,
       firstItemId: items[0]?.id || null,
       firstItemText: items[0]?.text?.slice(0, 80) || null,
-      allItemIds: items.map(i => i.id),
+      allItemIds: items.map((i) => i.id),
     });
 
     // Debug logging: Log what was generated
