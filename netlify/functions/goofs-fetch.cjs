@@ -421,6 +421,27 @@ exports.handler = async function handler(event) {
         console.log(
           `[goofs-fetch] Wrote ${items.length} insights to Firestore for TMDB ID ${tmdbIdString}`
         );
+
+        // Update lastIngestedAt timestamp in /titles collection
+        // This tracks when a title was last successfully ingested
+        try {
+          const titleReference = firestore
+            .collection("titles")
+            .doc(tmdbIdString);
+          await titleReference.update({
+            lastIngestedAt:
+              adminInstance.firestore.FieldValue.serverTimestamp(),
+          });
+          console.log(
+            `[goofs-fetch] Updated lastIngestedAt for title ${tmdbIdString}`
+          );
+        } catch (titleUpdateError) {
+          // Don't fail ingestion if title update fails - log and continue
+          console.warn(
+            `[goofs-fetch] Could not update lastIngestedAt for ${tmdbIdString}:`,
+            titleUpdateError.message
+          );
+        }
       } catch (firestoreError) {
         console.error(
           "[goofs-fetch] Firestore write error:",
