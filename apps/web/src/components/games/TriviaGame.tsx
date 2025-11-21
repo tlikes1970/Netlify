@@ -138,7 +138,6 @@ export default function TriviaGame({
   ): Set<string> => {
     const recentIds = new Set<string>();
     const today = new Date(getDailySeedDate() + 'T00:00:00Z');
-    const questionsPerGame = 10;
     const totalQuestionsPerDay = 30;
     
     for (let i = 1; i <= days; i++) {
