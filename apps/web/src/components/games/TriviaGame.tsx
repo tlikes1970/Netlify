@@ -72,6 +72,7 @@ export default function TriviaGame({
 
     // Regular: 10 questions per day (1 game)
     // Pro: 30 questions per day (3 games of 10 questions each)
+    const questionsPerGame = 10;
     const totalQuestionsPerDay = 30; // Pro users get 30, Regular gets first 10
 
     // Get recently used question IDs (last 14 days) to avoid repeats
