@@ -2,40 +2,62 @@
 
 /* Drag Handle Styles */
 .tab-card .handle {
-  opacity: 0.3; /* Partially visible by default for better discoverability */
+  opacity: 0.4; /* More visible by default for better discoverability */
   transition:
     opacity 0.2s ease,
-    transform 0.15s ease-out;
+    transform 0.15s ease-out,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
   pointer-events: auto; /* Always allow pointer events */
 }
 
 .tab-card:hover .handle,
 .tab-card:focus-within .handle,
-.tab-card:focus-visible .handle,
-.tab-card.is-dragging .handle {
+.tab-card:focus-visible .handle {
   opacity: 1; /* Fully visible on hover/interaction */
   pointer-events: auto;
 }
 
-/* Low Priority: Hover effects on drag handle */
+/* Enhanced hover effects on drag handle */
 .tab-card .handle:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
   transition:
     transform 0.15s ease-out,
-    opacity 0.2s ease;
+    opacity 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 }
 
-/* Low Priority: Active state animation */
+/* Active state animation */
 .tab-card .handle:active {
-  transform: scale(0.95);
+  transform: scale(0.98);
   transition: transform 0.1s ease-out;
+}
+
+/* Drag state - handle becomes more prominent */
+.tab-card .handle.is-dragging,
+.tab-card.is-dragging .handle {
+  opacity: 1;
+  border-color: var(--accent) !important;
+  background-color: color-mix(in srgb, var(--accent) 15%, transparent) !important;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .tab-card .handle:focus-visible {
   opacity: 1;
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
+}
+
+/* Fallback for browsers without color-mix support */
+@supports not (color-mix: srgb) {
+  .tab-card .handle.is-dragging,
+  .tab-card.is-dragging .handle {
+    background-color: rgba(77, 163, 255, 0.15) !important;
+    box-shadow: 0 2px 8px rgba(77, 163, 255, 0.3);
+  }
 }
 
 /* Card focus outline: subtle, tight, focus-only */
@@ -381,6 +403,8 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
   animation: dragStartAnimation 0.2s ease-out forwards;
   z-index: 9999 !important; /* High z-index during drag */
   position: relative !important; /* Ensure z-index works */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--accent);
+  border-color: var(--accent) !important;
 }
 
 @keyframes dragStartAnimation {
@@ -389,8 +413,8 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
     opacity: 1;
   }
   100% {
-    transform: scale(1.05) rotate(3deg);
-    opacity: 0.9;
+    transform: scale(1.02) rotate(2deg);
+    opacity: 0.95;
   }
 }
 

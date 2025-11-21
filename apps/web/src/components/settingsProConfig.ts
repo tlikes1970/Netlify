@@ -16,6 +16,9 @@ export interface ProFeature {
 
 /**
  * All Pro features available now
+ * 
+ * NOTE: Only include features that are actually implemented and working.
+ * If a feature is referenced but not fully implemented, mark it as comingSoon: true.
  */
 export const PRO_FEATURES_AVAILABLE: ProFeature[] = [
   {
@@ -28,8 +31,15 @@ export const PRO_FEATURES_AVAILABLE: ProFeature[] = [
   {
     id: 'advanced-notifications',
     title: 'Advanced Notifications',
-    description: 'Customizable episode notifications with multiple methods, custom timing, and per-show settings',
+    description: 'Customizable episode notifications with precise timing control (1-24 hours), email notifications, and per-show settings',
     icon: '🔔',
+    comingSoon: false,
+  },
+  {
+    id: 'episode-tracking-condensed',
+    title: 'Episode Tracking in Condensed View',
+    description: 'Enable episode tracking even when using condensed view mode',
+    icon: '📺',
     comingSoon: false,
   },
 ];

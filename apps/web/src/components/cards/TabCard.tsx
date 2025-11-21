@@ -863,17 +863,32 @@ export default function TabCard({
         {/* Drag handle - Desktop only, shows on hover/focus */}
         {isDesktop && (
           <div
-            className={`handle absolute top-1/4 right-2 transform -translate-y-1/2 cursor-grab text-lg transition-all duration-200 hover:scale-110 ${
+            className={`handle absolute top-1/4 right-2 transform -translate-y-1/2 cursor-grab text-lg transition-all duration-200 ${
               isDragging ? "cursor-grabbing" : "cursor-grab"
             } ${isBeingDragged ? "is-dragging" : ""}`}
             style={{
-              color: isDragging ? "var(--accent)" : "var(--muted)",
-              width: "32px",
-              height: "32px",
+              color: isBeingDragged ? "var(--accent)" : "var(--muted)",
+              width: "36px",
+              height: "36px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              borderRadius: "4px",
+              borderRadius: "6px",
+              border: "1px solid transparent",
+              backgroundColor: "transparent",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              if (!isBeingDragged) {
+                e.currentTarget.style.borderColor = "var(--line)";
+                e.currentTarget.style.backgroundColor = "color-mix(in srgb, var(--accent) 10%, transparent)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isBeingDragged) {
+                e.currentTarget.style.borderColor = "transparent";
+                e.currentTarget.style.backgroundColor = "transparent";
+              }
             }}
             title="Drag to reorder (Arrow Up/Down to move with keyboard)"
             aria-label="Drag to reorder. Press Arrow Up or Down to move with keyboard."
@@ -896,7 +911,7 @@ export default function TabCard({
             role="button"
             aria-grabbed={isBeingDragged}
           >
-            <span style={{ fontSize: "24px", lineHeight: "1" }}>⋮⋮</span>
+            <span style={{ fontSize: "20px", lineHeight: "1", fontWeight: "600", letterSpacing: "-0.5px" }}>⋮⋮</span>
           </div>
         )}
 

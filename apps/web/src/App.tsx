@@ -14,6 +14,7 @@ import { HOME_MARQUEE_MESSAGES } from "@/config/homeMarqueeMessages";
 import { SettingsFAB, ThemeToggleFAB } from "@/components/FABs";
 import OnboardingCoachmarks from "@/components/onboarding/OnboardingCoachmarks";
 import ScrollToTopArrow from "@/components/ScrollToTopArrow";
+import HomeDownArrow from "@/components/HomeDownArrow";
 import { lazy, Suspense } from "react";
 import PostDetail from "@/components/PostDetail";
 import { openSettingsSheet } from "@/components/settings/SettingsSheet";
@@ -42,7 +43,7 @@ import PullToRefreshWrapper from "@/components/PullToRefreshWrapper";
 import { useForYouRows } from "@/hooks/useForYouRows";
 import { useForYouContent } from "@/hooks/useGenreContent";
 import { useServiceWorker } from "@/hooks/useServiceWorker";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { flushSync } from "react-dom";
 import { Library, useLibrary } from "@/lib/storage";
 import { mountActionBridge, setToastCallback } from "@/state/actions";
@@ -85,6 +86,11 @@ type SearchState = {
 };
 
 export default function App() {
+  // Content anchor ref for Home down-arrow scroll target
+  // This marks where the main content starts (first rail / main feed)
+  // Config: Home down-arrow - scroll target anchor
+  const homeContentAnchorRef = useRef<HTMLDivElement | null>(null);
+  
   // Computed smart views
   const returning = useReturningShows();
   const [view, setView] = useState<View>("home");
@@ -926,40 +932,8 @@ export default function App() {
               />
             ) : (
               <>
-                {(view as View) === "home" && (
-                  <div className="min-h-screen" data-page="home">
-                    {/* Home Page Content */}
-                    <div className="px-4 py-6">
-                      <h1
-                        className="text-2xl font-bold mb-6"
-                        style={{ color: "var(--text)" }}
-                      >
-                        Welcome to Flicklet
-                      </h1>
-                      <div className="grid gap-6">
-                        {/* Your Shows Rail */}
-                        <HomeYourShowsRail />
-
-                        {/* Up Next Rail */}
-                        <HomeUpNextRail />
-
-                        {/* For You Content */}
-                        {forYouContent.map((row, index) => (
-                          <Rail key={index} id={row.rowId} {...row} />
-                        ))}
-
-                        {/* Community Panel */}
-                        <CommunityPanel />
-
-                        {/* Theater Info */}
-                        <TheaterInfo />
-
-                        {/* Feedback Panel */}
-                        <FeedbackPanel />
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* Old home block removed - using newer layout with HomeMarquee and Section components below */}
+                {/* The canonical homeContentAnchorRef is now in the newer home layout */}
                 {view === "watching" && (
                   <Suspense
                     fallback={
@@ -1482,6 +1456,14 @@ export default function App() {
                   {/* Home Marquee - between tabs and Your Shows */}
                   <HomeMarquee messages={HOME_MARQUEE_MESSAGES} />
 
+                  {/* Content anchor - scroll target for down-arrow */}
+                  {/* This marks where the main content starts (first rail / main feed) */}
+                  <div 
+                    ref={homeContentAnchorRef}
+                    id="home-content-anchor"
+                    style={{ scrollMarginTop: '100px' }} // Account for sticky header
+                  />
+
                   {/* Your Shows container with both rails */}
                   <Section title={translations.yourShows}>
                     <div className="space-y-4">
@@ -1597,6 +1579,11 @@ export default function App() {
                     <FeedbackPanel />
                   </Section>
 
+                  {/* Home down-arrow - scrolls to content anchor (only on Home page) */}
+                  {view === "home" && (
+                    <HomeDownArrow contentAnchorRef={homeContentAnchorRef} />
+                  )}
+                  
                   {/* Scroll to top arrow - appears when scrolled down */}
                   <ScrollToTopArrow threshold={400} />
                 </div>
