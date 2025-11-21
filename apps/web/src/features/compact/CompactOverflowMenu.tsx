@@ -6,6 +6,7 @@ import type {
 } from "../../components/cards/card.types";
 import { Portal } from "../../components/overlay/Portal";
 import { useSettings } from "../../lib/settings";
+import { useProStatus } from "../../lib/proStatus";
 
 interface CompactOverflowMenuProps {
   item: ActionItem;
@@ -35,6 +36,7 @@ export function CompactOverflowMenu({
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const settings = useSettings();
+  const proStatus = useProStatus();
 
   // Calculate menu position
   const calculatePosition = () => {
@@ -45,9 +47,10 @@ export function CompactOverflowMenu({
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
 
-    // Default: position below button
-    let top = buttonRect.bottom;
-    let left = buttonRect.left;
+    // Default: position below button, aligned to right edge (top-end / bottom-end)
+    // This avoids covering card content (poster, title, buttons)
+    let top = buttonRect.bottom + 4; // Small gap
+    let left = buttonRect.right - menuRect.width; // Align to right edge
     let direction: "up" | "down" = "down";
 
     // Check if menu would overflow bottom
@@ -56,16 +59,21 @@ export function CompactOverflowMenu({
       buttonRect.top > menuRect.height
     ) {
       // Flip up if there's space above
-      top = buttonRect.top - menuRect.height;
+      top = buttonRect.top - menuRect.height - 4; // Small gap
       direction = "up";
     }
 
-    // Keep within viewport width
+    // Keep within viewport width (prefer right alignment, but adjust if needed)
     if (left + menuRect.width > viewportWidth) {
       left = viewportWidth - menuRect.width - 8;
     }
     if (left < 8) {
       left = 8;
+    }
+    
+    // Ensure menu doesn't go above viewport
+    if (top < 8) {
+      top = 8;
     }
 
     setMenuPosition({ top, left, direction });
@@ -157,6 +165,15 @@ export function CompactOverflowMenu({
   };
 
   const handleActionClick = (action: any) => {
+    // If Pro-only and user is not Pro, show upgrade prompt
+    if (action.proOnly && !proStatus.isPro) {
+      // Import startProUpgrade dynamically to avoid circular deps
+      import("../../lib/proUpgrade").then(({ startProUpgrade }) => {
+        startProUpgrade();
+      });
+      setIsOpen(false);
+      return;
+    }
     action.onClick(item);
     setIsOpen(false);
   };
@@ -171,17 +188,25 @@ export function CompactOverflowMenu({
       id: string;
       label: string;
       onClick: (item: MediaItem) => void;
+      proOnly?: boolean;
     }> = [];
 
     // Check if item is a TV show (for episode tracking)
     const isTVShow = (_item as any)?.mediaType === "tv";
     // Only show episode tracking if enabled in settings OR if user is Pro
     const episodeTrackingEnabled =
-      settings.layout.episodeTracking || settings.pro.isPro;
+      settings.layout.episodeTracking || proStatus.isPro;
 
     // Add context-appropriate actions
     switch (context) {
       case "tab-watching":
+        // Open Details - always first
+        if (handlers.onOpen)
+          menuItems.push({
+            id: "open",
+            label: "Open Details",
+            onClick: handlers.onOpen,
+          });
         if (handlers.onWant)
           menuItems.push({
             id: "want",
@@ -206,23 +231,33 @@ export function CompactOverflowMenu({
             label: "Notes & Tags",
             onClick: handlers.onNotesEdit,
           });
+        // Simple Reminder for TV shows
+        if (isTVShow && handlers.onSimpleReminder)
+          menuItems.push({
+            id: "reminder",
+            label: "Remind Me",
+            onClick: handlers.onSimpleReminder,
+          });
         if (handlers.onGoofsOpen)
           menuItems.push({
             id: "goofs",
             label: "Goofs",
             onClick: handlers.onGoofsOpen,
+            proOnly: !proStatus.isPro,
           });
         if (handlers.onExtrasOpen)
           menuItems.push({
             id: "extras",
             label: "Extras",
             onClick: handlers.onExtrasOpen,
+            proOnly: !proStatus.isPro,
           });
         if (handlers.onNotificationToggle)
           menuItems.push({
             id: "notifications",
             label: "Advanced Notifications",
             onClick: handlers.onNotificationToggle,
+            proOnly: !proStatus.isPro,
           });
         if (handlers.onDelete)
           menuItems.push({
@@ -233,6 +268,13 @@ export function CompactOverflowMenu({
         break;
 
       case "tab-watched":
+        // Open Details - always first
+        if (handlers.onOpen)
+          menuItems.push({
+            id: "open",
+            label: "Open Details",
+            onClick: handlers.onOpen,
+          });
         if (handlers.onWant)
           menuItems.push({
             id: "want",
@@ -257,23 +299,33 @@ export function CompactOverflowMenu({
             label: "Notes & Tags",
             onClick: handlers.onNotesEdit,
           });
+        // Simple Reminder for TV shows
+        if (isTVShow && handlers.onSimpleReminder)
+          menuItems.push({
+            id: "reminder",
+            label: "Remind Me",
+            onClick: handlers.onSimpleReminder,
+          });
         if (handlers.onGoofsOpen)
           menuItems.push({
             id: "goofs",
             label: "Goofs",
             onClick: handlers.onGoofsOpen,
+            proOnly: !proStatus.isPro,
           });
         if (handlers.onExtrasOpen)
           menuItems.push({
             id: "extras",
             label: "Extras",
             onClick: handlers.onExtrasOpen,
+            proOnly: !proStatus.isPro,
           });
         if (handlers.onNotificationToggle)
           menuItems.push({
             id: "notifications",
             label: "Advanced Notifications",
             onClick: handlers.onNotificationToggle,
+            proOnly: !proStatus.isPro,
           });
         if (handlers.onDelete)
           menuItems.push({
@@ -284,6 +336,13 @@ export function CompactOverflowMenu({
         break;
 
       case "tab-want":
+        // Open Details - always first
+        if (handlers.onOpen)
+          menuItems.push({
+            id: "open",
+            label: "Open Details",
+            onClick: handlers.onOpen,
+          });
         if (handlers.onWatched)
           menuItems.push({
             id: "watched",
@@ -308,23 +367,33 @@ export function CompactOverflowMenu({
             label: "Notes & Tags",
             onClick: handlers.onNotesEdit,
           });
+        // Simple Reminder for TV shows
+        if (isTVShow && handlers.onSimpleReminder)
+          menuItems.push({
+            id: "reminder",
+            label: "Remind Me",
+            onClick: handlers.onSimpleReminder,
+          });
         if (handlers.onGoofsOpen)
           menuItems.push({
             id: "goofs",
             label: "Goofs",
             onClick: handlers.onGoofsOpen,
+            proOnly: !proStatus.isPro,
           });
         if (handlers.onExtrasOpen)
           menuItems.push({
             id: "extras",
             label: "Extras",
             onClick: handlers.onExtrasOpen,
+            proOnly: !proStatus.isPro,
           });
         if (handlers.onNotificationToggle)
           menuItems.push({
             id: "notifications",
             label: "Advanced Notifications",
             onClick: handlers.onNotificationToggle,
+            proOnly: !proStatus.isPro,
           });
         if (handlers.onDelete)
           menuItems.push({
@@ -337,6 +406,13 @@ export function CompactOverflowMenu({
       case "home":
       case "search":
       case "tab-foryou":
+        // Open Details - always first
+        if (handlers.onOpen)
+          menuItems.push({
+            id: "open",
+            label: "Open Details",
+            onClick: handlers.onOpen,
+          });
         if (handlers.onWant)
           menuItems.push({
             id: "want",
@@ -349,10 +425,63 @@ export function CompactOverflowMenu({
             label: "Mark Watched",
             onClick: handlers.onWatched,
           });
+        if (handlers.onNotInterested)
+          menuItems.push({
+            id: "not-interested",
+            label: "Not Interested",
+            onClick: handlers.onNotInterested,
+          });
+        if (handlers.onNotesEdit)
+          menuItems.push({
+            id: "notes",
+            label: "Notes & Tags",
+            onClick: handlers.onNotesEdit,
+          });
+        // Episodes for TV shows
+        if (isTVShow && episodeTrackingEnabled && handlers.onEpisodeTracking)
+          menuItems.push({
+            id: "episodes",
+            label: "Episodes",
+            onClick: handlers.onEpisodeTracking,
+          });
+        // Simple Reminder for TV shows
+        if (isTVShow && handlers.onSimpleReminder)
+          menuItems.push({
+            id: "reminder",
+            label: "Remind Me",
+            onClick: handlers.onSimpleReminder,
+          });
+        if (handlers.onGoofsOpen)
+          menuItems.push({
+            id: "goofs",
+            label: "Goofs",
+            onClick: handlers.onGoofsOpen,
+            proOnly: !proStatus.isPro,
+          });
+        if (handlers.onExtrasOpen)
+          menuItems.push({
+            id: "extras",
+            label: "Extras",
+            onClick: handlers.onExtrasOpen,
+            proOnly: !proStatus.isPro,
+          });
+        if (handlers.onNotificationToggle)
+          menuItems.push({
+            id: "notifications",
+            label: "Advanced Notifications",
+            onClick: handlers.onNotificationToggle,
+            proOnly: !proStatus.isPro,
+          });
         break;
 
       default:
-        // Generic fallback - always include delete
+        // Generic fallback - include common actions
+        if (handlers.onOpen)
+          menuItems.push({
+            id: "open",
+            label: "Open Details",
+            onClick: handlers.onOpen,
+          });
         if (handlers.onDelete)
           menuItems.push({
             id: "delete",
@@ -377,26 +506,31 @@ export function CompactOverflowMenu({
           padding: "var(--space-2, 8px)",
           borderRadius: "var(--radius, 12px)",
           fontSize: "var(--font-sm, 13px)",
-          backgroundColor: "var(--muted, #f5f5f5)",
-          color: "var(--text, #000000)",
-          border: "none",
+          backgroundColor: "var(--muted, rgba(255, 255, 255, 0.1))",
+          color: "var(--text, #ffffff)",
+          border: "1px solid var(--line, rgba(255, 255, 255, 0.1))",
           cursor: "pointer",
-          width: showText ? "100%" : "44px",
-          height: showText ? "auto" : "44px",
-          minWidth: showText ? "auto" : "44px",
-          minHeight: showText ? "auto" : "44px",
+          width: showText ? "100%" : "36px",
+          height: showText ? "auto" : "36px",
+          minWidth: showText ? "auto" : "36px",
+          minHeight: showText ? "auto" : "36px",
           marginTop: "var(--space-2, 8px)",
           transition: "all 0.2s ease",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           gap: "var(--space-1, 4px)",
+          opacity: 0.7,
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "var(--muted-hover, #e5e5e5)";
+          e.currentTarget.style.backgroundColor = "var(--muted-hover, rgba(255, 255, 255, 0.15))";
+          e.currentTarget.style.borderColor = "var(--accent, #4da3ff)";
+          e.currentTarget.style.opacity = "1";
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "var(--muted, #f5f5f5)";
+          e.currentTarget.style.backgroundColor = "var(--muted, rgba(255, 255, 255, 0.1))";
+          e.currentTarget.style.borderColor = "var(--line, rgba(255, 255, 255, 0.1))";
+          e.currentTarget.style.opacity = "0.7";
         }}
       >
         {showText ? (
@@ -449,10 +583,10 @@ export function CompactOverflowMenu({
               maxWidth: "min(90vw, 320px)",
               maxHeight: "min(56vh, 420px)",
               overflowY: "auto",
-              backgroundColor: "var(--bg, #ffffff)",
-              border: "1px solid var(--line, #e0e0e0)",
+              backgroundColor: "var(--surface-elevated, var(--card, #1a1d24))",
+              border: "1px solid var(--line, rgba(255, 255, 255, 0.1))",
               borderRadius: "var(--radius-lg, 12px)",
-              boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)",
               transformOrigin:
                 menuPosition.direction === "up" ? "bottom left" : "top left",
             }}
@@ -470,25 +604,40 @@ export function CompactOverflowMenu({
                   padding: "var(--space-2, 8px) var(--space-3, 12px)",
                   border: 0,
                   background: "transparent",
-                  color: "var(--text, #000000)",
+                  color: action.proOnly && !proStatus.isPro 
+                    ? "var(--muted, rgba(255, 255, 255, 0.5))" 
+                    : "var(--text, #ffffff)",
                   fontSize: "var(--font-sm, 13px)",
                   textAlign: "left",
-                  cursor: "pointer",
+                  cursor: action.proOnly && !proStatus.isPro ? "not-allowed" : "pointer",
                   borderBottom:
                     index < menuActions.length - 1
-                      ? "1px solid var(--line, #e0e0e0)"
+                      ? "1px solid var(--line, rgba(255, 255, 255, 0.1))"
                       : "none",
                   transition: "background-color 0.2s ease",
+                  opacity: action.proOnly && !proStatus.isPro ? 0.6 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    "var(--muted, #f5f5f5)";
+                  if (!(action.proOnly && !proStatus.isPro)) {
+                    e.currentTarget.style.backgroundColor =
+                      "var(--muted, rgba(255, 255, 255, 0.1))";
+                  }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = "transparent";
                 }}
               >
                 {action.label}
+                {action.proOnly && !proStatus.isPro && (
+                  <span style={{ 
+                    marginLeft: "auto", 
+                    fontSize: "10px", 
+                    color: "var(--accent, #4da3ff)",
+                    fontWeight: "600"
+                  }}>
+                    PRO
+                  </span>
+                )}
               </button>
             ))}
           </div>

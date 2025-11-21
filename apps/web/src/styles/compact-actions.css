@@ -85,6 +85,10 @@ html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-primary-
   
   /* Focus styles */
   outline: none;
+  
+  /* Improved visibility */
+  min-width: 32px;
+  min-height: 32px;
 }
 
 .compact-overflow-trigger:focus {
@@ -92,13 +96,22 @@ html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-primary-
   outline-offset: 2px;
 }
 
+.compact-overflow-trigger:hover {
+  opacity: 1 !important;
+}
+
 .compact-overflow-menu {
   /* Use compact tokens for spacing */
-  border-radius: var(--radius, 12px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  background-color: var(--surface-elevated, var(--card, #1a1d24));
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.1));
   
   /* Smooth animations */
   animation: compact-menu-fade-in 0.2s ease-out;
+  
+  /* Ensure good contrast */
+  color: var(--text, #ffffff);
 }
 
 .compact-overflow-menu button {
@@ -107,7 +120,14 @@ html[data-compact-mobile-v1="true"][data-actions-split="true"] .compact-primary-
   font-size: var(--font-sm, 13px);
   
   /* Smooth transitions */
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  
+  /* Ensure readable text */
+  color: var(--text, #ffffff);
+}
+
+.compact-overflow-menu button:hover {
+  background-color: var(--muted, rgba(255, 255, 255, 0.1)) !important;
 }
 
 @keyframes compact-menu-fade-in {

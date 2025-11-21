@@ -1,5 +1,11 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.168: Fixed Settings CTA navigation - opens directly to personalization section
+// - Created centralized openSettingsAtSection() helper in settingsNavigation.ts
+// - Updated "Click here to personalize these rows" CTA to use helper
+// - Works reliably on both desktop and mobile
+// - Opens Settings directly to "display" section (home rows/For You config)
+// - Rollback: Revert this commit to restore previous CTA behavior
 // ⚠️ VERSION 0.1.167: Fixed onboarding, FlickWord, and Trivia issues
 // - Onboarding: Fixed welcome box showing for returning users
 // - FlickWord: Fixed word repetition, same-letter patterns, and share deep-linking
@@ -224,4 +230,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.167";
+export const APP_VERSION = "0.1.168";
