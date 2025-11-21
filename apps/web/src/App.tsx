@@ -21,6 +21,7 @@ import { openSettingsSheet } from "@/components/settings/SettingsSheet";
 import SettingsSheet from "@/components/settings/SettingsSheet";
 import { flag } from "@/lib/flags";
 import { isCompactMobileV1 } from "@/lib/mobileFlags";
+import { openSettingsAtSection } from "@/lib/settingsNavigation";
 
 // Lazy load heavy components
 const SettingsPage = lazy(() => import("@/components/SettingsPage"));
@@ -1493,39 +1494,19 @@ export default function App() {
                         (
                         <button
                           onClick={() => {
-                            if (shouldUseMobileSettings()) {
-                              openSettingsSheet("display");
-                              // Scroll to row 1 after a delay
-                              setTimeout(() => {
-                                const row1 =
-                                  document.getElementById("for-you-row-1");
-                                if (row1) {
-                                  row1.scrollIntoView({
-                                    behavior: "smooth",
-                                    block: "start",
-                                  });
-                                }
-                              }, 300);
-                            } else {
-                              setShowSettings(true);
-                              // Navigate to layout tab after a short delay to ensure SettingsPage is mounted
-                              setTimeout(() => {
-                                window.dispatchEvent(
-                                  new CustomEvent("navigate-to-layout-settings")
-                                );
-                                // Scroll to row 1 after settings page is mounted
-                                setTimeout(() => {
-                                  const row1 =
-                                    document.getElementById("for-you-row-1");
-                                  if (row1) {
-                                    row1.scrollIntoView({
-                                      behavior: "smooth",
-                                      block: "start",
-                                    });
-                                  }
-                                }, 200);
-                              }, 100);
-                            }
+                            // CTA: Opens Settings directly to the personalization/home-rows section.
+                            openSettingsAtSection("display", setShowSettings);
+                            // Scroll to row 1 after a delay to ensure Settings is mounted
+                            setTimeout(() => {
+                              const row1 =
+                                document.getElementById("for-you-row-1");
+                              if (row1) {
+                                row1.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "start",
+                                });
+                              }
+                            }, 300);
                           }}
                           className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline font-normal"
                           aria-label="Configure For You section"
