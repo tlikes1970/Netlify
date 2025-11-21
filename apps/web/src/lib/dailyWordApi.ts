@@ -22,16 +22,6 @@ function getRecentWords(days: number, gameNumber: number, validWords: string[]):
   for (let i = 1; i <= days; i++) {
     const pastDate = new Date(today);
     pastDate.setUTCDate(pastDate.getUTCDate() - i);
-    const dateStr = pastDate.toISOString().split('T')[0];
-    
-    // Try to get actual word from cache first (most accurate)
-    try {
-      const cacheKey = getFlickWordDailyKey(gameNumber);
-      // Note: We can't easily get past dates' cache keys, so we derive the word
-      // This is a limitation but acceptable for the repeat-avoidance logic
-    } catch (e) {
-      // Ignore cache errors
-    }
     
     // Derive word for that date using the same deterministic base logic
     // This gives us the "intended" word for that day (even if it was skipped)

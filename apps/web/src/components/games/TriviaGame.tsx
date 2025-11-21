@@ -72,7 +72,6 @@ export default function TriviaGame({
 
     // Regular: 10 questions per day (1 game)
     // Pro: 30 questions per day (3 games of 10 questions each)
-    const questionsPerGame = 10;
     const totalQuestionsPerDay = 30; // Pro users get 30, Regular gets first 10
 
     // Get recently used question IDs (last 14 days) to avoid repeats
@@ -144,7 +143,6 @@ export default function TriviaGame({
     for (let i = 1; i <= days; i++) {
       const pastDate = new Date(today);
       pastDate.setUTCDate(pastDate.getUTCDate() - i);
-      const dateStr = pastDate.toISOString().split('T')[0];
       
       // Derive questions for that date using the same deterministic logic
       const epochDate = new Date('2000-01-01');
@@ -840,6 +838,13 @@ export default function TriviaGame({
                 Play Again
               </button>
             )}
+            <button
+              className="btn-secondary"
+              onClick={handleShare}
+              aria-label="Share trivia results"
+            >
+              Share Results
+            </button>
             {onShowReview && (
               <button
                 className="btn-secondary"

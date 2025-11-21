@@ -510,7 +510,7 @@ export async function getCachedTrivia(
   const apiQuestionCount = apiQuestions.length;
   
   // Supplement with fallback questions if needed
-  let finalQuestions = [...apiQuestions];
+  const finalQuestions = [...apiQuestions];
   let fallbackQuestionCount = 0;
   
   if (apiQuestionCount < questionsNeeded) {
