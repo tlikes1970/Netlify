@@ -1,5 +1,10 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.167: Fixed onboarding, FlickWord, and Trivia issues
+// - Onboarding: Fixed welcome box showing for returning users
+// - FlickWord: Fixed word repetition, same-letter patterns, and share deep-linking
+// - Trivia: Fixed question rotation, added share functionality, improved cache keys and fallback rotation
+// - Improved rate limit handling for Trivia API (429 errors)
 // ⚠️ VERSION 0.1.166: B3 - Final Pro-Gate Validation - Unified Pro config and consistent gating
 // - Created centralized Pro config (proConfig.ts) with list limits and helpers
 // - Fixed lists gating: Free (3 lists), Pro (unlimited) using dynamic Pro status
@@ -219,4 +224,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.166";
+export const APP_VERSION = "0.1.167";
