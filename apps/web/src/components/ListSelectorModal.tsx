@@ -5,6 +5,8 @@ import { Library, getListDisplayName } from '../lib/storage';
 import { emit } from '../lib/events';
 import type { MediaItem } from '../components/cards/card.types';
 import { useTranslations } from '../lib/language';
+import { UpgradeToProCTA } from './UpgradeToProCTA';
+import { useProStatus } from '../lib/proStatus';
 
 interface ListSelectorModalProps {
   isOpen: boolean;
@@ -18,6 +20,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
   const [existingListName, setExistingListName] = useState<string>('');
   const userLists = useCustomLists();
   const translations = useTranslations();
+  const proStatus = useProStatus();
 
   if (!isOpen) return null;
 
@@ -199,24 +202,12 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
           </div>
         )}
 
-        {userLists.customLists.length >= userLists.maxLists && (
-          <div className="text-center py-4 mb-4 p-4 rounded-lg" style={{ backgroundColor: 'var(--btn)', borderColor: 'var(--line)', border: '1px solid' }}>
-            <p className="text-sm mb-2" style={{ color: 'var(--text)' }}>
-              {translations.maxListsReached || 'Maximum lists reached'}
-            </p>
-            <p className="text-xs" style={{ color: 'var(--muted)' }}>
-              {translations.upgradeForMoreLists || 'Upgrade to Pro for more lists'}
-            </p>
-            <button
-              onClick={() => {
-                // TODO: Open Pro upgrade modal
-                alert(translations.proUpgradeComingSoon || 'Pro upgrade coming soon!');
-              }}
-              className="mt-2 px-3 py-1.5 rounded-lg text-xs transition-colors"
-              style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-            >
-              {translations.upgradeToPro || 'Upgrade to Pro'}
-            </button>
+        {!proStatus.isPro && userLists.customLists.length >= userLists.maxLists && (
+          <div className="mb-4">
+            <UpgradeToProCTA 
+              variant="panel" 
+              message="Upgrade to Pro for unlimited custom lists"
+            />
           </div>
         )}
 

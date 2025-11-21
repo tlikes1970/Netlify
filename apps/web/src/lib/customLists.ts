@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
 import type { CustomList, UserLists, ListName } from "../state/library.types";
+import { getMaxCustomLists } from "./proConfig";
 
 const CUSTOM_LISTS_KEY = "flicklet.customLists.v2";
 
 const DEFAULT_USER_LISTS: UserLists = {
   customLists: [],
   selectedListId: undefined,
-  maxLists: 3, // Start with 3, Pro can increase
+  maxLists: 3, // Default for free users, will be updated based on Pro status
 };
 
 class CustomListManager {
@@ -18,6 +19,8 @@ class CustomListManager {
 
   constructor() {
     this.userLists = this.loadUserLists();
+    // Update maxLists based on current Pro status
+    this.updateMaxLists();
     // Initialize last synced counts
     this.userLists.customLists.forEach((list) => {
       this.lastSyncedCounts.set(list.id, list.itemCount);
@@ -26,12 +29,14 @@ class CustomListManager {
     // Listen for Firebase sync updates
     window.addEventListener("customLists:updated", () => {
       this.userLists = this.loadUserLists();
+      this.updateMaxLists();
       this.emitChange();
     });
 
     // Listen for library cleared events (when user signs out)
     window.addEventListener("library:cleared", () => {
       this.userLists = DEFAULT_USER_LISTS;
+      this.updateMaxLists();
       this.saveUserLists();
       this.emitChange();
       console.log("🧹 Custom lists cleared for privacy");
@@ -49,6 +54,22 @@ class CustomListManager {
         this.syncDebounceTimeout = null;
       }, 100);
     });
+
+    // Listen for Pro status changes (via settings changes)
+    // Note: This is a simple approach - if Pro status changes, maxLists will update on next getUserLists() call
+    // For real-time updates, we'd need to subscribe to settings changes, but that's handled by React hooks
+  }
+
+  /**
+   * Update maxLists based on current Pro status
+   * Called when lists are loaded or Pro status might have changed
+   */
+  private updateMaxLists(): void {
+    const newMaxLists = getMaxCustomLists();
+    if (this.userLists.maxLists !== newMaxLists) {
+      this.userLists.maxLists = newMaxLists;
+      // Don't save here - maxLists is computed, not persisted
+    }
   }
 
   private loadUserLists(): UserLists {
@@ -74,6 +95,8 @@ class CustomListManager {
   }
 
   getUserLists(): UserLists {
+    // Always update maxLists based on current Pro status before returning
+    this.updateMaxLists();
     return { ...this.userLists };
   }
 
@@ -82,9 +105,18 @@ class CustomListManager {
     return () => this.subscribers.delete(callback);
   }
 
+  /**
+   * Pro gating: Custom list creation limit
+   * Free: 3 lists max (PRO_LIMITS.lists.free)
+   * Pro: Unlimited (PRO_LIMITS.lists.pro = Infinity)
+   * Config: proConfig.ts - getMaxCustomLists()
+   */
   createList(name: string, description?: string, color?: string): CustomList {
-    if (this.userLists.customLists.length >= this.userLists.maxLists) {
-      throw new Error(`Maximum ${this.userLists.maxLists} lists allowed`);
+    // Update maxLists to ensure we have the latest Pro status
+    this.updateMaxLists();
+    
+    if (this.userLists.maxLists !== Infinity && this.userLists.customLists.length >= this.userLists.maxLists) {
+      throw new Error(`Maximum ${this.userLists.maxLists} lists allowed. Upgrade to Pro for unlimited lists.`);
     }
 
     const id = `list_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

@@ -95,7 +95,27 @@ class NotificationManager {
     }
   }
 
+  /**
+   * Pro gating: Notification settings validation
+   * Pro-only features: email notifications, precise timing (1-24 hours)
+   * Config: proStatus.ts - getProStatus(), settingsProConfig.ts - PRO_FEATURES_AVAILABLE
+   */
   updateSettings(updates: Partial<NotificationSettings>): void {
+    // Validate Pro-only features
+    const isPro = this.isProUser();
+    
+    // If user is not Pro, prevent enabling Pro-only features
+    if (!isPro) {
+      // Disable email notifications if user tries to enable them
+      if (updates.methods?.email) {
+        updates.methods.email = false;
+      }
+      // Reset proTierTiming if user tries to set it
+      if (updates.proTierTiming !== undefined) {
+        delete updates.proTierTiming;
+      }
+    }
+    
     this.settings = { ...this.settings, ...updates };
     this.saveSettings();
   }

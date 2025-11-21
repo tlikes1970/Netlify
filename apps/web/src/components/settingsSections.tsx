@@ -1113,7 +1113,9 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
         <ForYouGenreConfig />
       </div>
 
-      {/* Pro Features */}
+      {/* Pro Features - Theme Packs */}
+      {/* Pro gating: Theme packs are Pro-only (future feature) */}
+      {/* Config: settings.pro.features.themePacks, settingsProConfig.ts - PRO_FEATURES_COMING_SOON */}
       {settings.pro.isPro && (
         <div>
           <h4

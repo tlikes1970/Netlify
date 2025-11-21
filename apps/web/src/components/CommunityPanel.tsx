@@ -20,6 +20,7 @@ import {
 import { db } from "../lib/firebaseBootstrap";
 import { useTranslations } from "@/lib/language";
 import { useSettings, settingsManager } from "../lib/settings";
+import { useProStatus } from "../lib/proStatus";
 import { useAdminRole } from "../hooks/useAdminRole";
 import { useAuth } from "../hooks/useAuth";
 import FlickWordStats from "./games/FlickWordStats";
@@ -72,7 +73,10 @@ const CommunityPanel = memo(function CommunityPanel() {
   const { isAdmin } = useAdminRole();
   const { isAuthenticated, user } = useAuth();
   const settings = useSettings();
-  const isPro = settings.pro.isPro || false;
+  // Pro gating: Use centralized Pro status helper
+  // Config: proStatus.ts - useProStatus()
+  const proStatus = useProStatus();
+  const isPro = proStatus.isPro;
   const followedTopics = settings.community.followedTopics || [];
   const [reportingPosts, setReportingPosts] = useState<Record<string, boolean>>(
     {}
@@ -131,6 +135,15 @@ const CommunityPanel = memo(function CommunityPanel() {
         }
         setPostsError(null);
 
+        // Pro gating: Sanitize sort mode - if free user has Pro sort mode, fall back to "newest"
+        // Config: communitySorting.ts - isProSortMode()
+        let effectiveSortMode = sortMode;
+        if (isProSortMode(sortMode) && !isPro) {
+          effectiveSortMode = "newest";
+          // Optionally reset the sort mode state to prevent UI inconsistency
+          setSortMode("newest");
+        }
+
         const postsRef = collection(db, "posts");
         const pageSize = 20; // Increased from 5 for infinite scroll
 
@@ -138,11 +151,14 @@ const CommunityPanel = memo(function CommunityPanel() {
         // For Firestore, we can only orderBy fields that exist, so we'll fetch and sort in memory for advanced modes
         let postsQuery;
 
-        if (sortMode === "newest" || sortMode === "oldest") {
+        if (effectiveSortMode === "newest" || effectiveSortMode === "oldest") {
           // Can use Firestore orderBy for these
           postsQuery = query(
             postsRef,
-            orderBy("publishedAt", sortMode === "newest" ? "desc" : "asc"),
+            orderBy(
+              "publishedAt",
+              effectiveSortMode === "newest" ? "desc" : "asc"
+            ),
             ...(lastDocRef.current && !reset
               ? [startAfter(lastDocRef.current)]
               : []),
@@ -208,8 +224,9 @@ const CommunityPanel = memo(function CommunityPanel() {
         }
 
         // Apply sorting (for modes that need in-memory sorting)
-        if (sortMode !== "newest" && sortMode !== "oldest") {
-          newPosts = sortPosts(newPosts, sortMode);
+        // Apply client-side sorting for Pro modes (top, hot, trending)
+        if (effectiveSortMode !== "newest" && effectiveSortMode !== "oldest") {
+          newPosts = sortPosts(newPosts, effectiveSortMode);
         }
 
         // Prioritize followed topics if user has followed topics
@@ -267,7 +284,7 @@ const CommunityPanel = memo(function CommunityPanel() {
         fetchingRef.current = false;
       }
     },
-    [sortMode, selectedTopics, followedTopics, isAdmin]
+    [sortMode, selectedTopics, followedTopics, isAdmin, isPro]
   );
 
   // Fetch posts on mount
@@ -335,9 +352,13 @@ const CommunityPanel = memo(function CommunityPanel() {
   };
 
   // Handle sort mode change with Pro gating
+  // Pro gating: Advanced sorts (top, top-week, hot, trending) are Pro-only
+  // Config: communitySorting.ts - isProSortMode()
   const handleSortChange = (newMode: SortMode) => {
     if (isProSortMode(newMode) && !isPro) {
-      // Show upgrade prompt (you can implement a modal/notification here)
+      // Pro-only sort mode attempted by free user
+      // Show upgrade prompt - user should use UpgradeToProCTA component
+      // For now, keep existing behavior but note it should be improved
       alert("Advanced sorting is a Pro feature. Upgrade in Settings → Pro.");
       return;
     }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { notificationManager } from '../../lib/notifications';
-import { useSettings } from '../../lib/settings';
+import { useProStatus } from '../../lib/proStatus';
 
 interface ShowNotificationSettingsModalProps {
   isOpen: boolean;
@@ -23,8 +23,10 @@ export function ShowNotificationSettingsModal({ isOpen, onClose, show }: ShowNot
   const [showSettings, setShowSettings] = useState(notificationManager.getShowSettings(show.id));
   const [globalSettings, setGlobalSettings] = useState(notificationManager.getSettings());
   const [pushPermission, setPushPermission] = useState<NotificationPermission>('default');
-  const settingsManager = useSettings();
-  const isProUser = Boolean(settingsManager.pro);
+  // Pro gating: Use centralized Pro status helper
+  // Config: proStatus.ts - useProStatus()
+  const proStatus = useProStatus();
+  const isProUser = proStatus.isPro;
 
   useEffect(() => {
     if (isOpen) {

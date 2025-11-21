@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { notificationManager } from '../../lib/notifications';
-import { useSettings } from '../../lib/settings';
+import { useProStatus } from '../../lib/proStatus';
 import { UpgradeToProCTA } from '../UpgradeToProCTA';
 
 interface NotificationSettingsProps {
@@ -12,18 +12,15 @@ export function NotificationSettings({ isOpen, onClose }: NotificationSettingsPr
   if (!isOpen) return null;
   const [settings, setSettings] = useState(notificationManager.getSettings());
   const [pushPermission, setPushPermission] = useState<NotificationPermission>('default');
-  const [isProUser, setIsProUser] = useState(false);
-  const settingsManager = useSettings();
+  const proStatus = useProStatus();
+  const isProUser = proStatus.isPro;
 
   useEffect(() => {
     // Check push notification permission
     if ('Notification' in window) {
       setPushPermission(Notification.permission);
     }
-
-    // Check if user is Pro (implement based on your auth system)
-    setIsProUser(Boolean(settingsManager.pro));
-  }, [settingsManager.pro]);
+  }, []);
 
   const handleSettingChange = (key: string, value: any) => {
     const newSettings = { ...settings, [key]: value };
@@ -135,8 +132,8 @@ export function NotificationSettings({ isOpen, onClose }: NotificationSettingsPr
                     </label>
                   ))}
                 </div>
-                <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                  Upgrade to Pro for precise timing control
+                <p className="text-xs mt-2" style={{ color: 'var(--muted)' }}>
+                  <UpgradeToProCTA variant="inline" message="Upgrade to Pro for precise timing control" />
                 </p>
               </div>
             )}
