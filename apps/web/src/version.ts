@@ -1,5 +1,14 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.166: B3 - Final Pro-Gate Validation - Unified Pro config and consistent gating
+// - Created centralized Pro config (proConfig.ts) with list limits and helpers
+// - Fixed lists gating: Free (3 lists), Pro (unlimited) using dynamic Pro status
+// - Replaced alert() with UpgradeToProCTA in ListSelectorModal
+// - Added backend validation in notifications to prevent free users enabling Pro features
+// - Added sanitization in CommunityPanel to block Pro sort modes for free users
+// - Replaced hardcoded isPro checks with centralized useProStatus() hook
+// - Added comprehensive Pro gating documentation comments throughout codebase
+// - Rollback: Revert this commit to restore previous Pro gating behavior
 // ⚠️ VERSION 0.1.165: Fixed duplicate goofs issue - made insights title-specific with variation
 // - Updated buildInsightsForTitle to include title names in all insights
 // - Added variation logic based on tmdbId to prevent identical insights for similar metadata
@@ -210,4 +219,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.165";
+export const APP_VERSION = "0.1.166";
