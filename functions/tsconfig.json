@@ -8,12 +8,21 @@
     "strict": true,
     "target": "es2017",
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "resolveJsonModule": true
   },
   "compileOnSave": true,
   "include": [
-    "src"
-  ]
+    "src",
+    "scripts"
+  ],
+  "ts-node": {
+    "esm": false,
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  }
 }
 
 
