@@ -166,19 +166,25 @@ export default function FlickWordModal({
 
     const getNextWordTime = () => {
       const now = new Date();
-      // Calculate next UTC midnight (when daily content resets)
-      const tomorrowUTC = new Date(Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate() + 1,
+      // Calculate next local midnight (display in user's local timezone)
+      // Note: Daily content still resets at UTC midnight, but we show local midnight for UX
+      const tomorrowLocal = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
         0, 0, 0, 0
-      ));
+      );
       
-      const diffMs = tomorrowUTC.getTime() - now.getTime();
+      const diffMs = tomorrowLocal.getTime() - now.getTime();
       const hours = Math.floor(diffMs / (1000 * 60 * 60));
       const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
       
-      return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+      // Format as "Xh Ym" for clarity (e.g., "4h 3m" instead of "4:03")
+      if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+      } else {
+        return `${minutes}m`;
+      }
     };
 
     loadHeaderStats();
@@ -351,10 +357,10 @@ export default function FlickWordModal({
               </span>
               <span
                 className="fw-timer"
-                aria-label={`Next word in: ${headerStats.nextWordTime} (UTC)`}
-                title="Time until next daily word (UTC)"
+                aria-label={`Next word in: ${headerStats.nextWordTime}`}
+                title="Time until next daily word (local time)"
               >
-                Next: {headerStats.nextWordTime} UTC
+                Next game: {headerStats.nextWordTime}
               </span>
             </div>
             <button

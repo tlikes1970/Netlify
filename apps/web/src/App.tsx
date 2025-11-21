@@ -574,8 +574,79 @@ export default function App() {
       }
     };
 
+      // Handle query parameters for FlickWord and Trivia share links
+    const handleQueryParams = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const gameParam = urlParams.get("game");
+      
+      if (gameParam === "flickword") {
+        // Open FlickWord modal
+        setShowFlickWordModal(true);
+        
+        // Store share link params for FlickWord to use
+        const date = urlParams.get("date");
+        const gameNumber = urlParams.get("gameNumber");
+        const mode = urlParams.get("mode"); // 'sharedResult' or 'play'
+        
+        if (date || gameNumber || mode) {
+          try {
+            localStorage.setItem("flickword:shareParams", JSON.stringify({
+              date: date || null,
+              gameNumber: gameNumber ? parseInt(gameNumber, 10) : null,
+              mode: mode || "play"
+            }));
+          } catch (e) {
+            console.warn("Failed to store share params:", e);
+          }
+        }
+        
+        // Clean up URL (remove query params after processing)
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete("game");
+        newUrl.searchParams.delete("date");
+        newUrl.searchParams.delete("gameNumber");
+        newUrl.searchParams.delete("mode");
+        window.history.replaceState({}, "", newUrl.toString());
+      } else if (gameParam === "trivia") {
+        // Open Trivia modal
+        // Dispatch event to open Trivia modal (similar to FlickWord)
+        window.dispatchEvent(new CustomEvent("open-trivia-modal"));
+        
+        // Store share link params for Trivia to use
+        const date = urlParams.get("date");
+        const gameNumber = urlParams.get("gameNumber");
+        const score = urlParams.get("score");
+        const mode = urlParams.get("mode"); // 'sharedResult' or 'play'
+        
+        if (date || gameNumber || score || mode) {
+          try {
+            localStorage.setItem("trivia:shareParams", JSON.stringify({
+              date: date || null,
+              gameNumber: gameNumber ? parseInt(gameNumber, 10) : null,
+              score: score ? parseInt(score, 10) : null,
+              mode: mode || "play"
+            }));
+          } catch (e) {
+            console.warn("Failed to store Trivia share params:", e);
+          }
+        }
+        
+        // Clean up URL (remove query params after processing)
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete("game");
+        newUrl.searchParams.delete("date");
+        newUrl.searchParams.delete("gameNumber");
+        newUrl.searchParams.delete("score");
+        newUrl.searchParams.delete("mode");
+        window.history.replaceState({}, "", newUrl.toString());
+      }
+    };
+
     // Check hash on load
     handleHashChange();
+    
+    // Check query params on load
+    handleQueryParams();
 
     // Listen for hash changes
     window.addEventListener("hashchange", handleHashChange);

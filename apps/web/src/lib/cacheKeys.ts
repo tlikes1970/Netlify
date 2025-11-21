@@ -27,9 +27,15 @@ export function getFlickWordDailyKey(gameNumber?: number): string {
 
 /**
  * Generate cache key for daily Trivia questions
+ * Cache key includes category and difficulty to avoid cross-contamination
+ * @param category Optional category (e.g., 'Film', 'Television', 'any')
+ * @param difficulty Optional difficulty (e.g., 'easy', 'medium', 'hard', 'any')
+ * @param mode Optional mode (e.g., 'daily', 'casual', defaults to 'daily')
  */
-export function getTriviaDailyKey(): string {
-  return 'flicklet:daily-trivia';
+export function getTriviaDailyKey(category?: string, difficulty?: string, mode: string = 'daily'): string {
+  const cat = category || 'any';
+  const diff = difficulty || 'any';
+  return `flicklet:trivia:${mode}:${cat}:${diff}`;
 }
 
 /**

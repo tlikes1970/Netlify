@@ -804,6 +804,31 @@ export default function FlickWordGame({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [game.done, isLoading, handleBackspace, handleSubmit, handleKeyInput]);
 
+  // Check for share link params on mount
+  useEffect(() => {
+    try {
+      const shareParamsStr = localStorage.getItem("flickword:shareParams");
+      if (shareParamsStr) {
+        const shareParams = JSON.parse(shareParamsStr);
+        console.log("[FlickWord] Share link params detected:", shareParams);
+        
+        // If mode is 'sharedResult', show review screen for that date/game
+        if (shareParams.mode === "sharedResult" && shareParams.date) {
+          // Navigate to review screen showing that specific game
+          // The review screen will filter by date/gameNumber
+          if (onShowReview) {
+            onShowReview();
+          }
+        }
+        
+        // Clear share params after processing
+        localStorage.removeItem("flickword:shareParams");
+      }
+    } catch (e) {
+      console.warn("Failed to process share params:", e);
+    }
+  }, [onShowReview]);
+
   // Initialize game on mount
   useEffect(() => {
     initializeGame();
@@ -885,14 +910,19 @@ export default function FlickWordGame({
   }, []);
 
   // Handle share - single game or all games
+  // Share link deep-linking: Includes date and gameNumber so link opens to correct game
+  // Config: App.tsx handles ?game=flickword&date=...&gameNumber=... query params
   const handleShare = useCallback(async (shareAll: boolean = false) => {
     const shareText = shareAll && isProUser 
       ? generateAllGamesShareText() 
       : generateShareText();
-    const shareUrl = `${window.location.origin}/?game=flickword`;
+    
+    // Build share URL with deep-link params
+    const gameNumber = isProUser ? currentGame : 1;
+    const today = getDailySeedDate();
+    const shareUrl = `${window.location.origin}/?game=flickword&date=${today}&gameNumber=${gameNumber}&mode=sharedResult`;
     
     // Track analytics
-    const gameNumber = isProUser ? currentGame : 1;
     trackFlickWordShare(shareAll ? null : gameNumber, shareAll ? 'all' : 'single');
     
     try {

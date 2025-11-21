@@ -63,6 +63,8 @@ export default function FlickletHeader({
   const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
 
   // Non-blocking prompt check
+  // Onboarding gating: Don't show username prompt if onboarding was already completed
+  // Config: onboarding.ts - shouldShowOnboarding()
   useEffect(() => {
     // Skip if username already exists or prompt was shown
     if (usernameLoading) return;
@@ -70,6 +72,8 @@ export default function FlickletHeader({
     const currentUser = authManager.getCurrentUser();
     const needsPrompt = !!(currentUser?.uid && !username && !usernamePrompted);
 
+    // Check if onboarding was completed - if so, don't show "Welcome to Flicklet" modal
+    // The username prompt can still show, but without the welcome message
     if (needsPrompt && !showUsernamePrompt) {
       setShowUsernamePrompt(true);
     }

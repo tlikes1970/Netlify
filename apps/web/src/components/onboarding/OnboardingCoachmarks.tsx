@@ -10,9 +10,18 @@ import { useState, useEffect } from "react";
 import Portal from "@/components/Portal";
 import { useOnboardingCoachmarks } from "@/hooks/useOnboardingCoachmarks";
 
+/**
+ * Onboarding gating: Only renders if shouldShowOnboarding() returns true
+ * Config: onboarding.ts - shouldShowOnboarding(), useOnboardingCoachmarks hook
+ */
 export default function OnboardingCoachmarks() {
   const { step, setStep, completeOnboarding, skipOnboarding, isActive } =
     useOnboardingCoachmarks();
+  
+  // Early return if onboarding should not be shown
+  if (!isActive) {
+    return null;
+  }
 
   // Debug logging - always log on mount
   useEffect(() => {

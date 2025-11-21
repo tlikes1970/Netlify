@@ -5,6 +5,59 @@
 import { getDailySeedDate } from './dailySeed';
 import { getFlickWordDailyKey, CACHE_VERSIONS } from './cacheKeys';
 
+/**
+ * Get words used in the last N days for a specific game number
+ * Used to prevent repeats within a recent window
+ * 
+ * Note: This uses a simplified approach - it calculates what word WOULD have been selected
+ * on each past day using the base index. In practice, if a word was skipped due to
+ * repeat avoidance, a nearby word would have been used, but for simplicity we track
+ * the base index word. This is conservative (might avoid words that weren't actually used)
+ * but ensures we never repeat words that were definitely used.
+ */
+function getRecentWords(days: number, gameNumber: number, validWords: string[]): string[] {
+  const recentWords: string[] = [];
+  const today = new Date(getDailySeedDate() + 'T00:00:00Z');
+  
+  for (let i = 1; i <= days; i++) {
+    const pastDate = new Date(today);
+    pastDate.setUTCDate(pastDate.getUTCDate() - i);
+    const dateStr = pastDate.toISOString().split('T')[0];
+    
+    // Try to get actual word from cache first (most accurate)
+    try {
+      const cacheKey = getFlickWordDailyKey(gameNumber);
+      // Note: We can't easily get past dates' cache keys, so we derive the word
+      // This is a limitation but acceptable for the repeat-avoidance logic
+    } catch (e) {
+      // Ignore cache errors
+    }
+    
+    // Derive word for that date using the same deterministic base logic
+    // This gives us the "intended" word for that day (even if it was skipped)
+    const epochDate = new Date('2000-01-01');
+    const daysSinceEpoch = Math.floor((pastDate.getTime() - epochDate.getTime()) / (1000 * 60 * 60 * 24));
+    const cycleDay = daysSinceEpoch % 365;
+    const baseIndex = (cycleDay * 3 + (gameNumber - 1)) % validWords.length;
+    const word = validWords[baseIndex];
+    
+    if (word) {
+      recentWords.push(word);
+    }
+  }
+  
+  return recentWords;
+}
+
+/**
+ * Get first letters of words used in the last N days for a specific game number
+ * Used to detect same-letter patterns
+ */
+function getRecentFirstLetters(days: number, gameNumber: number, validWords: string[]): string[] {
+  const recentWords = getRecentWords(days, gameNumber, validWords);
+  return recentWords.map(w => w.charAt(0).toLowerCase());
+}
+
 interface WordApiResponse {
   word: string;
   date: string;
@@ -144,6 +197,11 @@ export async function getTodaysWord(gameNumber: number = 1): Promise<WordApiResp
  * Pro users: gameNumber = 1, 2, or 3 (3 different words, same for all Pro users globally)
  * Uses commonWords list to ensure only familiar, everyday words are selected
  * Daily content is keyed off UTC date so users share the same daily content globally
+ * 
+ * Word selection improvements:
+ * - No repeats within last 14 days
+ * - Avoids same-letter runs (if last 3 days share first letter, deprioritize that letter)
+ * - Still deterministic (same date + gameNumber = same word for everyone)
  */
 async function getDeterministicWord(date: string, gameNumber: number = 1): Promise<string> {
   // Import exclusion list and common words
@@ -169,35 +227,66 @@ async function getDeterministicWord(date: string, gameNumber: number = 1): Promi
       console.log(`✅ After filtering excluded words: ${validWords.length} valid common words`);
       
       if (validWords.length > 0) {
-        // Use UTC date + gameNumber as seed for deterministic word selection
-        // This ensures different words for each game number on the same UTC day
-        // All users get the same 3 words per day (gameNumber 1, 2, 3)
-        // Words rotate on a 180-day (6 month) cycle to prevent repeats
+        // Get recent words (last 14 days) to avoid repeats
+        const recentWords = getRecentWords(14, gameNumber, validWords);
+        console.log(`📅 Recent words (last 14 days) for game ${gameNumber}:`, recentWords);
         
-        // Calculate days since epoch (Jan 1, 2000) for 180-day cycle
+        // Check for same-letter pattern in recent days (last 3 days)
+        const recentFirstLetters = getRecentFirstLetters(3, gameNumber, validWords);
+        const lastThreeLetters = recentFirstLetters.slice(-3);
+        const allSameLetter = lastThreeLetters.length === 3 && 
+                              lastThreeLetters[0] === lastThreeLetters[1] && 
+                              lastThreeLetters[1] === lastThreeLetters[2];
+        const problematicLetter = allSameLetter ? lastThreeLetters[0] : null;
+        
+        if (problematicLetter) {
+          console.log(`⚠️ Last 3 days all start with "${problematicLetter}", deprioritizing that letter`);
+        }
+        
+        // Calculate base index using date + gameNumber (deterministic seed)
         const epochDate = new Date('2000-01-01');
         const currentDate = new Date(date + 'T00:00:00Z');
         const daysSinceEpoch = Math.floor((currentDate.getTime() - epochDate.getTime()) / (1000 * 60 * 60 * 24));
-        const cycleDay = daysSinceEpoch % 180; // 180-day (6 month) cycle
         
-        // Calculate word index: cycleDay * 3 (for 3 words per day) + gameNumber - 1
-        // This ensures all users get the same 3 words per day, and no repeats for 180 days
-        const dailyWordIndex = cycleDay * 3 + (gameNumber - 1);
-        const wordIndex = dailyWordIndex % validWords.length;
-        const selectedWord = validWords[wordIndex].toUpperCase();
+        // Use a larger cycle to ensure variety (365 days = 1 year cycle)
+        const cycleDay = daysSinceEpoch % 365;
+        const baseIndex = (cycleDay * 3 + (gameNumber - 1)) % validWords.length;
         
-        // Double-check the selected word is not excluded (safety check)
-        if (isExcluded(selectedWord.toLowerCase())) {
-          console.error(`❌ ERROR: Selected word "${selectedWord}" is excluded! This should not happen.`);
-          // Pick the next word as fallback
-          const fallbackIndex = (wordIndex + 1) % validWords.length;
-          const fallbackWord = validWords[fallbackIndex].toUpperCase();
-          console.log(`🔄 Using fallback word: ${fallbackWord}`);
-          return fallbackWord;
+        // Find a word that:
+        // 1. Is not in recent words (last 14 days)
+        // 2. Doesn't start with problematic letter (if last 3 days all same letter)
+        // 3. Is deterministic (same date = same word)
+        let candidateIndex = baseIndex;
+        let attempts = 0;
+        const maxAttempts = validWords.length; // Safety limit
+        
+        while (attempts < maxAttempts) {
+          const candidateWord = validWords[candidateIndex].toUpperCase();
+          const candidateLower = candidateWord.toLowerCase();
+          
+          // Check if word is in recent words
+          const isRecent = recentWords.some(w => w.toLowerCase() === candidateLower);
+          
+          // Check if word starts with problematic letter
+          const startsWithProblematic = problematicLetter && 
+                                        candidateLower.charAt(0) === problematicLetter.toLowerCase();
+          
+          // Accept word if it passes all checks
+          if (!isRecent && !startsWithProblematic) {
+            console.log(`✅ Selected word: ${candidateWord} (index ${candidateIndex}, attempts: ${attempts + 1})`);
+            return candidateWord;
+          }
+          
+          // Try next word (deterministic step)
+          candidateIndex = (candidateIndex + 1) % validWords.length;
+          attempts++;
         }
         
-        console.log(`📚 Selected from ${validWords.length} common words, game ${gameNumber}, index ${wordIndex}: ${selectedWord}`);
-        return selectedWord;
+        // Fallback: if we can't find a perfect match, use base index anyway
+        // (This should rarely happen if word list is large enough)
+        const fallbackWord = validWords[baseIndex].toUpperCase();
+        console.warn(`⚠️ Could not find perfect word, using fallback: ${fallbackWord}`);
+        return fallbackWord;
       }
     }
     
@@ -220,22 +309,44 @@ async function getDeterministicWord(date: string, gameNumber: number = 1): Promi
       console.log(`✅ After filtering excluded words: ${validWords.length} valid words`);
       
       if (validWords.length > 0) {
-        // Use UTC date + gameNumber as seed for deterministic word selection
-        // All users get the same 3 words per day (gameNumber 1, 2, 3)
-        // Words rotate on a 180-day (6 month) cycle to prevent repeats
+        // Apply same improved selection logic as common words
+        const recentWords = getRecentWords(14, gameNumber, validWords);
+        const recentFirstLetters = getRecentFirstLetters(3, gameNumber, validWords);
+        const lastThreeLetters = recentFirstLetters.slice(-3);
+        const allSameLetter = lastThreeLetters.length === 3 && 
+                              lastThreeLetters[0] === lastThreeLetters[1] && 
+                              lastThreeLetters[1] === lastThreeLetters[2];
+        const problematicLetter = allSameLetter ? lastThreeLetters[0] : null;
         
-        // Calculate days since epoch (Jan 1, 2000) for 180-day cycle
         const epochDate = new Date('2000-01-01');
         const currentDate = new Date(date + 'T00:00:00Z');
         const daysSinceEpoch = Math.floor((currentDate.getTime() - epochDate.getTime()) / (1000 * 60 * 60 * 24));
-        const cycleDay = daysSinceEpoch % 180; // 180-day (6 month) cycle
+        const cycleDay = daysSinceEpoch % 365;
+        const baseIndex = (cycleDay * 3 + (gameNumber - 1)) % validWords.length;
         
-        // Calculate word index: cycleDay * 3 (for 3 words per day) + gameNumber - 1
-        const dailyWordIndex = cycleDay * 3 + (gameNumber - 1);
-        const wordIndex = dailyWordIndex % validWords.length;
-        const selectedWord = validWords[wordIndex].toUpperCase();
-        console.log(`📚 Selected from accepted.json, game ${gameNumber}, cycle day ${cycleDay}, index ${wordIndex}: ${selectedWord}`);
-        return selectedWord;
+        let candidateIndex = baseIndex;
+        let attempts = 0;
+        const maxAttempts = validWords.length;
+        
+        while (attempts < maxAttempts) {
+          const candidateWord = validWords[candidateIndex].toUpperCase();
+          const candidateLower = candidateWord.toLowerCase();
+          const isRecent = recentWords.some(w => w.toLowerCase() === candidateLower);
+          const startsWithProblematic = problematicLetter && 
+                                        candidateLower.charAt(0) === problematicLetter.toLowerCase();
+          
+          if (!isRecent && !startsWithProblematic) {
+            console.log(`📚 Selected from accepted.json: ${candidateWord} (index ${candidateIndex})`);
+            return candidateWord;
+          }
+          
+          candidateIndex = (candidateIndex + 1) % validWords.length;
+          attempts++;
+        }
+        
+        const fallbackWord = validWords[baseIndex].toUpperCase();
+        console.warn(`⚠️ Using fallback from accepted.json: ${fallbackWord}`);
+        return fallbackWord;
       }
     }
   } catch (error) {

@@ -84,6 +84,18 @@ const CommunityPanel = memo(function CommunityPanel() {
 
   const [flickWordModalOpen, setFlickWordModalOpen] = useState(false);
   const [triviaModalOpen, setTriviaModalOpen] = useState(false);
+
+  // Listen for custom event to open Trivia modal (e.g., from share links)
+  useEffect(() => {
+    const handleOpenTriviaModal = () => {
+      setTriviaModalOpen(true);
+    };
+
+    window.addEventListener("open-trivia-modal", handleOpenTriviaModal);
+    return () => {
+      window.removeEventListener("open-trivia-modal", handleOpenTriviaModal);
+    };
+  }, []);
   const [newPostModalOpen, setNewPostModalOpen] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);

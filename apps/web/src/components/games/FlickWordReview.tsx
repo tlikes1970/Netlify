@@ -92,7 +92,9 @@ export default function FlickWordReview({ onClose }: FlickWordReviewProps) {
       trackFlickWordShare(null, 'all');
     }
     
-    const shareUrl = `${window.location.origin}/?game=flickword`;
+    // Build share URL with deep-link params for the specific game
+    const gameDate = gameNumber ? completedGames.find(g => g.gameNumber === gameNumber)?.date : getDailySeedDate();
+    const shareUrl = `${window.location.origin}/?game=flickword&date=${gameDate || getDailySeedDate()}&gameNumber=${gameNumber || 1}&mode=sharedResult`;
     
     try {
       if (navigator.share) {

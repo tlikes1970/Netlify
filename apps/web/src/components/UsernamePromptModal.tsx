@@ -6,6 +6,7 @@ import ModalPortal from './ModalPortal';
 import { ensureUsernameChosen } from '../features/username/usernameFlow';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebaseBootstrap';
+import { getOnboardingCompleted, setOnboardingCompleted } from '../lib/onboarding';
 
 interface UsernamePromptModalProps {
   isOpen: boolean;
@@ -14,6 +15,10 @@ interface UsernamePromptModalProps {
 
 type ModalState = 'working' | 'error' | 'done';
 
+/**
+ * Onboarding gating: "Welcome to Flicklet" message only shows if onboarding not completed
+ * Config: onboarding.ts - getOnboardingCompleted()
+ */
 export default function UsernamePromptModal({ isOpen, onClose }: UsernamePromptModalProps) {
   const { user } = useAuth();
   const { updateUsername, skipUsernamePrompt } = useUsername();
@@ -24,6 +29,10 @@ export default function UsernamePromptModal({ isOpen, onClose }: UsernamePromptM
   const [state, setState] = useState<ModalState>('done');
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  
+  // Check if onboarding was completed - if so, don't show "Welcome to Flicklet" message
+  const onboardingCompleted = getOnboardingCompleted();
+  const showWelcomeMessage = !onboardingCompleted;
   
   // ⚠️ FIXED: Reset state when modal opens to ensure it's ready for input
   useEffect(() => {
@@ -63,6 +72,10 @@ export default function UsernamePromptModal({ isOpen, onClose }: UsernamePromptM
       await ensureUsernameChosen(async () => username.trim());
       // Also update the hook's state for consistency
       await updateUsername(username.trim());
+      // Mark onboarding as completed when username is set (user has completed initial setup)
+      if (!onboardingCompleted) {
+        setOnboardingCompleted();
+      }
       setState('done');
       setTimeout(() => onClose(), 300);
     } catch (error: any) {
@@ -81,6 +94,10 @@ export default function UsernamePromptModal({ isOpen, onClose }: UsernamePromptM
 
     try {
       await skipUsernamePrompt();
+      // Mark onboarding as completed when user skips (they've seen the prompt)
+      if (!onboardingCompleted) {
+        setOnboardingCompleted();
+      }
       setState('done');
       setTimeout(() => onClose(), 300);
     } catch (error: any) {
@@ -139,9 +156,11 @@ export default function UsernamePromptModal({ isOpen, onClose }: UsernamePromptM
         >
           
           <div className="text-center mb-6">
-            <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>
-              {translations.welcomeToFlicklet || 'Welcome to Flicklet!'}
-            </h3>
+            {showWelcomeMessage && (
+              <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>
+                {translations.welcomeToFlicklet || 'Welcome to Flicklet!'}
+              </h3>
+            )}
             <p className="text-sm" style={{ color: 'var(--muted)' }}>
               {translations.whatShouldWeCallYou || 'What should we call you?'}
             </p>

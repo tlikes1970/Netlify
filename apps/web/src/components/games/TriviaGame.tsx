@@ -51,24 +51,33 @@ export default function TriviaGame({
   // Regular: 10 questions per day (game 1 only)
   // Pro: 30 questions per day (games 1-3, 10 questions each)
   // ALL users get the same questions in the same order (Regular gets first 10, Pro gets all 30)
-  // Questions rotate on a 180-day (6 month) cycle to prevent repeats
+  // Questions rotate on a 365-day cycle with no-repeat window (last 14 days)
   // Uses UTC date so all users globally share the same daily content
+  // 
+  // Question rotation improvements:
+  // - No repeats within last 14 days
+  // - Deterministic selection (same date = same questions for everyone)
+  // - Config: Trivia question rotation - no-repeat window: 14 days
   const getTodaysQuestions = (
     isPro: boolean = false,
     gameNumber: number = 1
   ) => {
     const today = getDailySeedDate(); // UTC-based date for consistent daily content
     
-    // Calculate days since epoch (Jan 1, 2000) for 180-day cycle
+    // Calculate days since epoch (Jan 1, 2000) for 365-day cycle
     const epochDate = new Date('2000-01-01');
     const currentDate = new Date(today + 'T00:00:00Z');
     const daysSinceEpoch = Math.floor((currentDate.getTime() - epochDate.getTime()) / (1000 * 60 * 60 * 24));
-    const cycleDay = daysSinceEpoch % 180; // 180-day (6 month) cycle
+    const cycleDay = daysSinceEpoch % 365; // 365-day cycle for more variety
 
     // Regular: 10 questions per day (1 game)
     // Pro: 30 questions per day (3 games of 10 questions each)
     const questionsPerGame = 10;
     const totalQuestionsPerDay = 30; // Pro users get 30, Regular gets first 10
+
+    // Get recently used question IDs (last 14 days) to avoid repeats
+    const recentQuestionIds = getRecentTriviaQuestionIds(14, isPro, sampleQuestions);
+    console.log(`📅 Recent question IDs (last 14 days):`, Array.from(recentQuestionIds).slice(0, 10), `... (${recentQuestionIds.size} total)`);
 
     const todaysQuestions: TriviaQuestion[] = [];
     const usedQuestionIds = new Set<string>(); // Track used questions to prevent duplicates within this game
@@ -80,25 +89,29 @@ export default function TriviaGame({
     for (let i = 0; i < questionsPerGame; i++) {
       const globalIndex = startIndex + i;
       // Calculate base index deterministically: cycleDay * 30 (questions per day) + globalIndex
-      // This ensures all users get the same 30 questions per day, and no repeats for 180 days
+      // This ensures all users get the same 30 questions per day
       const baseIndex = (cycleDay * totalQuestionsPerDay + globalIndex) % sampleQuestions.length;
       
-      // Find next available question that hasn't been used in this game
+      // Find next available question that:
+      // 1. Hasn't been used in this game
+      // 2. Wasn't used in the last 14 days (no-repeat window)
       let questionIndex = baseIndex;
       let attempts = 0;
-      const maxAttempts = sampleQuestions.length; // Safety limit - should never need more than total questions
+      const maxAttempts = sampleQuestions.length * 2; // Allow more attempts since we're filtering by recent questions
       
-      while (usedQuestionIds.has(sampleQuestions[questionIndex].id) && attempts < maxAttempts) {
+      while (
+        (usedQuestionIds.has(sampleQuestions[questionIndex].id) || 
+         recentQuestionIds.has(sampleQuestions[questionIndex].id)) && 
+        attempts < maxAttempts
+      ) {
         // Try next question in sequence, wrapping around
         questionIndex = (questionIndex + 1) % sampleQuestions.length;
         attempts++;
       }
       
-      // If we've exhausted all questions (shouldn't happen with 50 questions and 10 per game)
+      // If we've exhausted all questions, fall back to base index (should be rare)
       if (attempts >= maxAttempts) {
-        console.warn(`⚠️ Could not find unique question after ${attempts} attempts. Using question at index ${questionIndex}`);
-        // Reset and try again from start - this should never happen but provides safety
-        usedQuestionIds.clear();
+        console.warn(`⚠️ Could not find question avoiding recent window after ${attempts} attempts. Using question at base index ${baseIndex}`);
         questionIndex = baseIndex;
       }
       
@@ -113,6 +126,45 @@ export default function TriviaGame({
       todaysQuestions.map((q) => q.id)
     );
     return todaysQuestions;
+  };
+
+  // Get question IDs used in the last N days for a specific user type
+  // Used to prevent repeats within a recent window
+  // Config: Trivia question rotation - no-repeat window: 14 days
+  const getRecentTriviaQuestionIds = (
+    days: number,
+    isPro: boolean,
+    allQuestions: TriviaQuestion[]
+  ): Set<string> => {
+    const recentIds = new Set<string>();
+    const today = new Date(getDailySeedDate() + 'T00:00:00Z');
+    const questionsPerGame = 10;
+    const totalQuestionsPerDay = 30;
+    
+    for (let i = 1; i <= days; i++) {
+      const pastDate = new Date(today);
+      pastDate.setUTCDate(pastDate.getUTCDate() - i);
+      const dateStr = pastDate.toISOString().split('T')[0];
+      
+      // Derive questions for that date using the same deterministic logic
+      const epochDate = new Date('2000-01-01');
+      const daysSinceEpoch = Math.floor((pastDate.getTime() - epochDate.getTime()) / (1000 * 60 * 60 * 24));
+      const cycleDay = daysSinceEpoch % 365;
+      
+      // Get all questions that would have been used that day
+      // Pro users: 30 questions (3 games), Regular: 10 questions (1 game)
+      const maxQuestions = isPro ? 30 : 10;
+      
+      for (let q = 0; q < maxQuestions; q++) {
+        const baseIndex = (cycleDay * totalQuestionsPerDay + q) % allQuestions.length;
+        const question = allQuestions[baseIndex];
+        if (question) {
+          recentIds.add(question.id);
+        }
+      }
+    }
+    
+    return recentIds;
   };
 
   // Get games completed today from localStorage (uses UTC date for consistency)
@@ -210,6 +262,31 @@ export default function TriviaGame({
       }
     }
   };
+
+  // Check for share link params on mount
+  useEffect(() => {
+    try {
+      const shareParamsStr = localStorage.getItem("trivia:shareParams");
+      if (shareParamsStr) {
+        const shareParams = JSON.parse(shareParamsStr);
+        console.log("[Trivia] Share link params detected:", shareParams);
+        
+        // If mode is 'sharedResult', show review screen for that date/game
+        if (shareParams.mode === "sharedResult" && shareParams.date) {
+          // Navigate to review screen showing that specific game
+          // The review screen will filter by date/gameNumber
+          if (onShowReview) {
+            onShowReview();
+          }
+        }
+        
+        // Clear share params after processing
+        localStorage.removeItem("trivia:shareParams");
+      }
+    } catch (e) {
+      console.warn("Failed to process Trivia share params:", e);
+    }
+  }, [onShowReview]);
 
   // Initialize games completed - Regular: 1 game (10 questions), Pro: 3 games (30 questions)
   // Combined with question loading to avoid race condition
@@ -615,6 +692,51 @@ export default function TriviaGame({
     if (percentage >= 60) return "text-yellow-400";
     return "text-red-400";
   };
+
+  // Generate share text for Trivia results
+  // Share link deep-linking: Includes date, gameNumber, and score so link opens to correct game
+  // Config: App.tsx handles ?game=trivia&date=...&gameNumber=...&score=... query params
+  const generateShareText = useCallback(() => {
+    const today = getDailySeedDate();
+    const gameLabel = isProUser ? ` Game ${currentGame}` : '';
+    const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
+    
+    return `🧠 Trivia ${today}${gameLabel}\n\nScore: ${score}/${questions.length} (${percentage}%)\n\nPlay Trivia at flicklet.app`;
+  }, [score, questions.length, isProUser, currentGame]);
+
+  // Handle share - single game results
+  const handleShare = useCallback(async () => {
+    const shareText = generateShareText();
+    const today = getDailySeedDate();
+    const shareUrl = `${window.location.origin}/?game=trivia&date=${today}&gameNumber=${currentGame}&score=${score}&mode=sharedResult`;
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Trivia Results',
+          text: shareText,
+          url: shareUrl
+        });
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
+        // Show a simple notification (you might want to use your notification system)
+        alert('Share text copied to clipboard!');
+      }
+    } catch (error) {
+      // User cancelled or error
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('Share failed:', error);
+        // Fallback to clipboard
+        try {
+          await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
+          alert('Share text copied to clipboard!');
+        } catch (_clipboardError) {
+          alert('Failed to share');
+        }
+      }
+    }
+  }, [generateShareText, currentGame, score]);
 
   if (gameState === "loading") {
     return (
