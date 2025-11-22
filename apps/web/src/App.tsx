@@ -69,6 +69,7 @@ import DebugAuthHUD from "@/components/DebugAuthHUD";
 import { useReturningShows } from "@/state/selectors/useReturningShows";
 import { trackTabOpenedReturning } from "@/lib/analytics";
 import { googleLogin } from "@/lib/authLogin";
+import { storageKeyFlickWordShareParams, type FlickWordShareParams } from "@/lib/games/flickwordShared";
 
 type View =
   | "home"
@@ -695,15 +696,17 @@ export default function App() {
         // Store share link params for FlickWord to use
         const date = urlParams.get("date");
         const gameNumber = urlParams.get("gameNumber");
-        const mode = urlParams.get("mode"); // 'sharedResult' or 'play'
+        const mode = urlParams.get("mode"); // 'sharedResult', 'sharedAll', or 'play'
         
-        if (date || gameNumber || mode) {
+        // Build properly typed share params object
+        if (date) {
           try {
-            localStorage.setItem("flickword:shareParams", JSON.stringify({
-              date: date || null,
+            const shareParams: FlickWordShareParams = {
+              date: date,
               gameNumber: gameNumber ? parseInt(gameNumber, 10) : null,
-              mode: mode || "play"
-            }));
+              mode: (mode === "sharedResult" || mode === "sharedAll" || mode === "play") ? mode : mode || "play",
+            };
+            localStorage.setItem(storageKeyFlickWordShareParams, JSON.stringify(shareParams));
           } catch (e) {
             console.warn("Failed to store share params:", e);
           }

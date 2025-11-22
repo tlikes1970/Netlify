@@ -1,5 +1,14 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.169: Fixed FlickWord share → review flow - links now correctly open intended games
+// - Created FlickWordShareParams type and parseFlickWordShareParams() helper for type-safe share params
+// - Fixed share params flow: App.tsx → localStorage → FlickWordGame → FlickWordModal → FlickWordReview
+// - Single game shares now show only the specific game (filtered by gameNumber)
+// - Share all games links now show all games for that date (sharedAll mode)
+// - Past date shares now correctly show games for the specified date, not today
+// - Review screen now properly filters by date and gameNumber from share params
+// - Fixed localStorage cleanup ownership (FlickWordReview clears params after reading)
+// - Rollback: Revert this commit to restore previous share behavior
 // ⚠️ VERSION 0.1.168: Fixed Settings CTA navigation - opens directly to personalization section
 // - Created centralized openSettingsAtSection() helper in settingsNavigation.ts
 // - Updated "Click here to personalize these rows" CTA to use helper
@@ -230,4 +239,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.168";
+export const APP_VERSION = "0.1.169";

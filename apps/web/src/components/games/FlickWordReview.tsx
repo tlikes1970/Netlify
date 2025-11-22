@@ -13,22 +13,56 @@ import { getDailySeedDate } from '../../lib/dailySeed';
 import { trackGameReview, trackFlickWordShare } from '../../lib/analytics';
 import { shareWithFallback } from '../../lib/shareLinks';
 import { getToastCallback } from '@/state/actions';
+import { type FlickWordShareParams, storageKeyFlickWordShareParams } from '../../lib/games/flickwordShared';
 
 interface FlickWordReviewProps {
   onClose?: () => void;
+  shareParams?: FlickWordShareParams | null;
 }
 
-export default function FlickWordReview({ onClose }: FlickWordReviewProps) {
+export default function FlickWordReview({ onClose, shareParams }: FlickWordReviewProps) {
   const settings = useSettings();
   const [completedGames, setCompletedGames] = useState<CompletedFlickWordGame[]>([]);
 
   useEffect(() => {
-    const games = getCompletedFlickWordGames();
+    // Share params flow: App.tsx → localStorage → FlickWordGame → FlickWordModal → FlickWordReview
+    // If shareParams provided, use its date; otherwise use today's date
+    // Mode and gameNumber are used to filter which games to show:
+    // - sharedResult + gameNumber: show only that specific game
+    // - sharedAll: show all games for that date
+    // - no shareParams: show all games for today (backward compatible)
+    
+    const targetDate = shareParams?.date || getDailySeedDate();
+    let games = getCompletedFlickWordGames(targetDate);
+    
+    // Filter by gameNumber if mode is sharedResult and gameNumber is provided
+    if (shareParams?.mode === "sharedResult" && shareParams.gameNumber !== null && shareParams.gameNumber !== undefined) {
+      const filtered = games.filter(g => g.gameNumber === shareParams.gameNumber);
+      if (filtered.length > 0) {
+        games = filtered;
+      } else {
+        // Game not found - log warning in dev but show all games for that date
+        if (import.meta.env.DEV) {
+          console.warn(`[FlickWordReview] Game ${shareParams.gameNumber} not found for date ${targetDate}, showing all games`);
+        }
+      }
+    }
+    // If mode is sharedAll or no shareParams, show all games (no additional filtering needed)
+    
     setCompletedGames(games);
     
     // Track review view
     trackGameReview('flickword', null);
-  }, []);
+    
+    // Clear share params from localStorage after reading (ownership: FlickWordReview clears them)
+    if (shareParams) {
+      try {
+        localStorage.removeItem(storageKeyFlickWordShareParams);
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+    }
+  }, [shareParams]);
 
   const isProUser = settings.pro.isPro;
 
@@ -147,10 +181,14 @@ export default function FlickWordReview({ onClose }: FlickWordReviewProps) {
     );
   }
 
+  const displayDate = shareParams?.date || getDailySeedDate();
+  const isToday = displayDate === getDailySeedDate();
+  const headerText = isToday ? "📊 Today's Games" : `📊 Games for ${displayDate}`;
+
   return (
     <div className="fw-review">
       <div className="fw-review-header">
-        <h3>📊 Today&apos;s Games</h3>
+        <h3>{headerText}</h3>
         {onClose && (
           <button className="fw-btn fw-btn-close" onClick={onClose}>
             ×

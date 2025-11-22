@@ -17,6 +17,7 @@ import { saveCompletedFlickWordGame, getCompletedFlickWordGames } from '../../li
 import { trackFlickWordGameStart, trackFlickWordGameComplete, trackFlickWordGuess, trackFlickWordShare, trackGameError } from '../../lib/analytics';
 import { shareWithFallback } from '../../lib/shareLinks';
 import { getToastCallback } from '@/state/actions';
+import { parseFlickWordShareParams, storageKeyFlickWordShareParams, type FlickWordShareParams } from '../../lib/games/flickwordShared';
 
 // Game configuration
 const KEYBOARD_ROWS = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
@@ -55,7 +56,7 @@ interface FlickWordGameProps {
   onClose?: () => void;
   onGameComplete?: (won: boolean, guesses: number) => void;
   onShowStats?: () => void;
-  onShowReview?: () => void;
+  onShowReview?: (params?: FlickWordShareParams | null) => void;
 }
 
 // Saved game state (excludes transient animation state)
@@ -807,27 +808,39 @@ export default function FlickWordGame({
   }, [game.done, isLoading, handleBackspace, handleSubmit, handleKeyInput]);
 
   // Check for share link params on mount
+  // Share params flow: App.tsx → localStorage → FlickWordGame → FlickWordModal → FlickWordReview
   useEffect(() => {
     try {
-      const shareParamsStr = localStorage.getItem("flickword:shareParams");
+      const shareParamsStr = localStorage.getItem(storageKeyFlickWordShareParams);
       if (shareParamsStr) {
-        const shareParams = JSON.parse(shareParamsStr);
-        console.log("[FlickWord] Share link params detected:", shareParams);
+        const raw = JSON.parse(shareParamsStr);
+        const shareParams = parseFlickWordShareParams(raw);
         
-        // If mode is 'sharedResult', show review screen for that date/game
-        if (shareParams.mode === "sharedResult" && shareParams.date) {
-          // Navigate to review screen showing that specific game
-          // The review screen will filter by date/gameNumber
-          if (onShowReview) {
-            onShowReview();
+        if (shareParams) {
+          console.log("[FlickWord] Share link params detected:", shareParams);
+          
+          // If mode is 'sharedResult' or 'sharedAll', show review screen
+          if ((shareParams.mode === "sharedResult" || shareParams.mode === "sharedAll") && shareParams.date) {
+            // Navigate to review screen with share params
+            // The review screen will filter by date/gameNumber based on mode
+            if (onShowReview) {
+              onShowReview(shareParams);
+            }
           }
+          // Note: We do NOT clear share params here - FlickWordReview will clear them after reading
+        } else {
+          // Invalid params, clear them
+          localStorage.removeItem(storageKeyFlickWordShareParams);
         }
-        
-        // Clear share params after processing
-        localStorage.removeItem("flickword:shareParams");
       }
     } catch (e) {
       console.warn("Failed to process share params:", e);
+      // Clear corrupted params
+      try {
+        localStorage.removeItem(storageKeyFlickWordShareParams);
+      } catch {
+        // Ignore cleanup errors
+      }
     }
   }, [onShowReview]);
 
@@ -1442,7 +1455,7 @@ export default function FlickWordGame({
                   className="fw-btn fw-btn-review"
                   onClick={() => {
                     setShowWinScreen(false);
-                    onShowReview();
+                    onShowReview(null);
                   }}
                 >
                   Review Games
@@ -1500,7 +1513,7 @@ export default function FlickWordGame({
                   className="fw-btn fw-btn-review"
                   onClick={() => {
                     setShowLostScreen(false);
-                    onShowReview();
+                    onShowReview(null);
                   }}
                 >
                   Review Games

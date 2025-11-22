@@ -7,6 +7,7 @@ import { lockScroll, unlockScroll } from "../../utils/scrollLock";
 import { getFlickWordStatsKey } from '../../lib/cacheKeys';
 import { syncGameStats } from '../../lib/gameStatsSync';
 import { authManager } from '../../lib/auth';
+import { type FlickWordShareParams } from '../../lib/games/flickwordShared';
 
 interface FlickWordModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export default function FlickWordModal({
 }: FlickWordModalProps) {
   const [showStats, setShowStats] = useState(false);
   const [showReview, setShowReview] = useState(false);
+  const [shareParams, setShareParams] = useState<FlickWordShareParams | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const modalRef = useRef<HTMLDivElement>(null);
@@ -297,6 +299,7 @@ export default function FlickWordModal({
     if (isOpen) {
       setShowStats(false);
       setShowReview(false);
+      setShareParams(null);
       setModalPosition({ x: 0, y: 0 });
     }
   }, [isOpen]);
@@ -405,7 +408,7 @@ export default function FlickWordModal({
               </div>
             ) : showReview ? (
               <div className="game-review-view">
-                <FlickWordReview onClose={() => setShowReview(false)} />
+                <FlickWordReview shareParams={shareParams} onClose={() => setShowReview(false)} />
                 <div className="review-actions">
                   <button
                     className="btn-primary"
@@ -431,7 +434,10 @@ export default function FlickWordModal({
                 onClose={onClose}
                 onGameComplete={handleGameComplete}
                 onShowStats={() => setShowStats(true)}
-                onShowReview={() => setShowReview(true)}
+                onShowReview={(params) => {
+                  setShareParams(params ?? null);
+                  setShowReview(true);
+                }}
               />
             )}
           </main>
