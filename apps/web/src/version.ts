@@ -1,5 +1,13 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.170: Fixed FlickWord Enter key lag and added validation feedback
+// - Added isSubmittingUI state to show visual feedback during word validation
+// - Wrapped handleSubmit in try/finally to guarantee guards never get stuck
+// - Disabled all keyboard input (physical and on-screen) during validation
+// - Enter button now shows "Checking..." with spinner during validation
+// - All submission paths (valid, invalid, error) properly reset flags
+// - Users now see immediate feedback when pressing Enter, eliminating "dead air" feeling
+// - Rollback: Revert this commit to restore previous submit behavior
 // ⚠️ VERSION 0.1.169: Fixed FlickWord share → review flow - links now correctly open intended games
 // - Created FlickWordShareParams type and parseFlickWordShareParams() helper for type-safe share params
 // - Fixed share params flow: App.tsx → localStorage → FlickWordGame → FlickWordModal → FlickWordReview
@@ -239,4 +247,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.169";
+export const APP_VERSION = "0.1.170";

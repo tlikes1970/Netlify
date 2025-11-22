@@ -113,6 +113,40 @@ function saveGameState(game: GameState, date: string, gameNumber?: number): void
 }
 
 /**
+ * Find in-progress game state for today (any game number)
+ * Returns the saved state and its gameNumber if found, null otherwise
+ * This is used during initialization to determine which game to restore
+ */
+function findInProgressGameState(currentDate: string): { state: SavedGameState; gameNumber: number } | null {
+  try {
+    const saved = localStorage.getItem(getFlickWordGameStateKey());
+    if (!saved) return null;
+
+    const savedState: SavedGameState = JSON.parse(saved);
+    const savedGameNumber = savedState.gameNumber ?? 1; // Default to 1 for legacy saves
+
+    // Check if it's for today and NOT done (in-progress)
+    if (
+      savedState.date === currentDate &&
+      savedState.done === false &&
+      savedState.target
+    ) {
+      console.log("📂 Found in-progress game state:", {
+        target: savedState.target,
+        guesses: savedState.guesses.length,
+        gameNumber: savedGameNumber,
+      });
+      return { state: savedState, gameNumber: savedGameNumber };
+    }
+
+    return null;
+  } catch (error) {
+    console.warn("Failed to find in-progress game state:", error);
+    return null;
+  }
+}
+
+/**
  * Restore game state from localStorage
  * Returns null if no saved state or state is for a different day/game
  */
@@ -194,6 +228,7 @@ export default function FlickWordGame({
   const [showWinScreen, setShowWinScreen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showProChip, setShowProChip] = useState(false);
+  const [isSubmittingUI, setIsSubmittingUI] = useState(false); // UI state for validation feedback
   const gridRef = useRef<HTMLDivElement>(null);
   const notificationTimeoutRef = useRef<number | null>(null);
   const tileRefs = useRef<(HTMLDivElement | null)[][]>([]);
@@ -235,23 +270,73 @@ export default function FlickWordGame({
     }
   };
 
-  // Initialize games completed - Regular: 1 game/day, Pro: 3 games/day
+  // Initialize games completed and current game
+  // FIXED: Check for in-progress games first, then calculate next game from completed count
+  // This prevents "Game 2" from showing when user just completed Game 1
   useEffect(() => {
     setIsProUser(settings.pro.isPro);
-    const completed = getGamesCompletedToday();
-    setGamesCompletedToday(completed);
-    // Set current game to next game to play based on user type
     const maxGames = settings.pro.isPro ? MAX_GAMES_PRO : MAX_GAMES_FREE;
-    const nextGame = Math.min(completed + 1, maxGames);
-    setCurrentGame(nextGame);
-    console.log(
-      "🎯 User games status:",
-      "Games completed today:",
-      completed,
-      "Starting game:",
-      nextGame,
-      `(${settings.pro.isPro ? "Pro" : "Regular"}: ${maxGames} ${maxGames === 1 ? "game" : "games"} per day)`
-    );
+    const today = getDailySeedDate();
+    
+    // Step 1: Check for in-progress game state first
+    const inProgressGame = findInProgressGameState(today);
+    
+    if (inProgressGame) {
+      // Found in-progress game - restore it immediately
+      const { state, gameNumber } = inProgressGame;
+      setCurrentGame(gameNumber);
+      
+      // Restore the game state directly (don't wait for loadTodaysWord)
+      setGame({
+        ...state,
+        animationState: "idle" as AnimationState,
+      });
+      setIsLoading(false);
+      
+      // Set gamesCompletedToday based on the in-progress game
+      // If gameNumber is 2, then at most 1 game is completed (gameNumber - 1)
+      const estimatedCompleted = Math.max(0, gameNumber - 1);
+      const completed = getGamesCompletedToday();
+      // Use the minimum to be safe (don't overcount)
+      const safeCompleted = Math.min(completed, estimatedCompleted);
+      setGamesCompletedToday(safeCompleted);
+      console.log(
+        "🎯 Found and restored in-progress game:",
+        "Game number:",
+        gameNumber,
+        "Estimated completed:",
+        safeCompleted,
+        `(${settings.pro.isPro ? "Pro" : "Regular"}: ${maxGames} ${maxGames === 1 ? "game" : "games"} per day)`
+      );
+    } else {
+      // Step 2: No in-progress game - calculate from completed count
+      const completed = getGamesCompletedToday();
+      // Clamp completed to valid range
+      const clampedCompleted = Math.min(Math.max(0, completed), maxGames);
+      setGamesCompletedToday(clampedCompleted);
+      
+      // Step 3: Determine currentGame
+      // If all games are completed, stay on the last game
+      // Otherwise, set to the next game to start
+      let nextGame: number;
+      if (clampedCompleted >= maxGames) {
+        // All games completed - stay on last game
+        nextGame = maxGames;
+      } else {
+        // Next game to start
+        nextGame = clampedCompleted + 1;
+      }
+      
+      setCurrentGame(nextGame);
+      console.log(
+        "🎯 User games status:",
+        "Games completed today:",
+        clampedCompleted,
+        "Starting game:",
+        nextGame,
+        `(${settings.pro.isPro ? "Pro" : "Regular"}: ${maxGames} ${maxGames === 1 ? "game" : "games"} per day)`
+      );
+    }
   }, [settings.pro]);
 
   // Check for reduced motion preference
@@ -459,9 +544,16 @@ export default function FlickWordGame({
   }, []);
 
   // Initialize game
+  // Only loads word if game state hasn't been restored yet
   const initializeGame = useCallback(() => {
+    // Check if we already have a game state loaded (from in-progress restore)
+    // If game.target exists and we're not loading, skip loading
+    if (game.target && !isLoading) {
+      console.log("✅ Game already initialized, skipping loadTodaysWord");
+      return;
+    }
     loadTodaysWord();
-  }, [loadTodaysWord]);
+  }, [loadTodaysWord, game.target, isLoading]);
 
   // Start next game - Regular: 1 game/day, Pro: 3 games/day
   const handleNextGame = useCallback(() => {
@@ -495,7 +587,9 @@ export default function FlickWordGame({
   }, [gamesCompletedToday, loadTodaysWord, isProUser]);
 
   // Handle key input
+  // FIXED: Disable input during validation
   const handleKeyInput = useCallback((letter: string) => {
+    if (isSubmittingUI) return; // Block input during validation
     setGame((prev) => {
       if (prev.done || prev.current.length >= 5) return prev;
       const newState = {
@@ -508,10 +602,12 @@ export default function FlickWordGame({
       saveGameState(newState, today, gameNumber);
       return newState;
     });
-  }, [isProUser, currentGame]);
+  }, [isProUser, currentGame, isSubmittingUI]);
 
   // Handle backspace
+  // FIXED: Disable input during validation
   const handleBackspace = useCallback(() => {
+    if (isSubmittingUI) return; // Block input during validation
     setGame((prev) => {
       if (prev.done || !prev.current) return prev;
       const newState = {
@@ -524,17 +620,19 @@ export default function FlickWordGame({
       saveGameState(newState, today, gameNumber);
       return newState;
     });
-  }, [isProUser, currentGame]);
+  }, [isProUser, currentGame, isSubmittingUI]);
 
   // Handle submit - fixed race condition by moving async outside setGame
+  // FIXED: Added try/finally to guarantee reset, added visual feedback during validation
   const handleSubmit = useCallback(async () => {
     // Guard against concurrent submissions
-    if (isSubmittingRef.current) {
+    if (isSubmittingRef.current || isSubmittingUI) {
       console.log("❌ Submit blocked: already submitting");
       return;
     }
 
     // Get current game state before async operations
+    let shouldProceed = false;
     setGame((prev) => {
       // Check if can submit
       if (prev.done || prev.current.length !== 5 || isSubmittingRef.current) {
@@ -547,9 +645,10 @@ export default function FlickWordGame({
         return prev;
       }
 
-      // Set submitting flag and capture state
+      // Set submitting flags and capture state
       isSubmittingRef.current = true;
       currentGameStateRef.current = prev;
+      shouldProceed = true;
       return prev; // Return unchanged state, we'll update it after validation
     });
 
@@ -558,238 +657,256 @@ export default function FlickWordGame({
 
     // Check if we have valid state
     const currentGameState = currentGameStateRef.current;
-    if (!currentGameState) {
+    if (!currentGameState || !shouldProceed) {
       console.error("❌ No game state available for validation");
       isSubmittingRef.current = false;
+      setIsSubmittingUI(false);
       return;
     }
+
+    // Set UI state to show validation feedback
+    setIsSubmittingUI(true);
 
     // Now do async validation outside of setGame callback
     const currentWord = currentGameState.current;
     const currentTarget = currentGameState.target;
 
-    console.log("🔍 Validating word:", currentWord);
-    const verdict = await validateWord(currentWord);
-    console.log("✅ Word validation result:", verdict);
+    try {
+      console.log("🔍 Validating word:", currentWord);
+      const verdict = await validateWord(currentWord);
+      console.log("✅ Word validation result:", verdict);
 
-    if (!verdict.valid) {
-      // Track validation error
-      trackGameError('flickword', 'invalid_word', { word: currentWord, reason: verdict.reason });
-      setIsInvalidInput(true);
+      if (!verdict.valid) {
+        // Track validation error
+        trackGameError('flickword', 'invalid_word', { word: currentWord, reason: verdict.reason });
+        setIsInvalidInput(true);
 
-      if (verdict.reason === "length") {
-        showNotification("Use 5 letters.", "error");
-      } else if (
-        verdict.reason === "charset" ||
-        verdict.reason === "format"
-      ) {
-        showNotification("Letters only.", "error");
-      } else {
-        showNotification("Not a valid word.", "error");
+        if (verdict.reason === "length") {
+          showNotification("Use 5 letters.", "error");
+        } else if (
+          verdict.reason === "charset" ||
+          verdict.reason === "format"
+        ) {
+          showNotification("Letters only.", "error");
+        } else {
+          showNotification("Not a valid word.", "error");
+        }
+
+        // Reset invalid state after animation
+        setTimeout(
+          () => {
+            setIsInvalidInput(false);
+            setGame((p) => ({ ...p, current: "" }));
+          },
+          prefersReducedMotion ? 300 : 600
+        );
+        return;
       }
 
-      // Reset invalid state after animation
-      setTimeout(
-        () => {
-          setIsInvalidInput(false);
-          setGame((p) => ({ ...p, current: "" }));
-          isSubmittingRef.current = false; // Reset submitting flag
-        },
-        prefersReducedMotion ? 300 : 600
-      );
+      // Check if word has already been guessed
+      if (currentGameState.guesses.includes(currentWord)) {
+        showNotification("You already tried that word!", "error");
+        setTimeout(
+          () => {
+            setGame((p) => ({ ...p, current: "" }));
+          },
+          prefersReducedMotion ? 300 : 600
+        );
       return;
     }
 
-    // Check if word has already been guessed
-    if (currentGameState.guesses.includes(currentWord)) {
-      showNotification("You already tried that word!", "error");
-      setTimeout(
-        () => {
-          setGame((p) => ({ ...p, current: "" }));
-          isSubmittingRef.current = false; // Reset submitting flag
-        },
-        prefersReducedMotion ? 300 : 600
-      );
-      return;
-    }
-
-    const result = scoreGuess(currentWord, currentTarget);
-    
-    // Track guess analytics
-    trackFlickWordGuess(currentWord, currentGameState.guesses.length + 1);
-    
-    const newStatus = { ...currentGameState.status };
-
-    // Update keyboard status - prioritize correct > present > absent
-    for (let i = 0; i < 5; i++) {
-      const letter = currentWord[i];
-      const currentStatus = newStatus[letter];
+      // Word is valid - proceed with scoring and animation
+      const result = scoreGuess(currentWord, currentTarget);
       
-      if (result[i] === "correct") {
-        // Always set correct (highest priority)
-        newStatus[letter] = "correct";
-      } else if (result[i] === "present") {
-        // Set present only if not already correct
-        if (currentStatus !== "correct") {
-          newStatus[letter] = "present";
-        }
-      } else if (result[i] === "absent") {
-        // Set absent only if no status exists yet (don't downgrade correct/present)
-        if (!currentStatus) {
-          newStatus[letter] = "absent";
+      // Track guess analytics
+      trackFlickWordGuess(currentWord, currentGameState.guesses.length + 1);
+      
+      const newStatus = { ...currentGameState.status };
+
+      // Update keyboard status - prioritize correct > present > absent
+      for (let i = 0; i < 5; i++) {
+        const letter = currentWord[i];
+        const currentStatus = newStatus[letter];
+        
+        if (result[i] === "correct") {
+          // Always set correct (highest priority)
+          newStatus[letter] = "correct";
+        } else if (result[i] === "present") {
+          // Set present only if not already correct
+          if (currentStatus !== "correct") {
+            newStatus[letter] = "present";
+          }
+        } else if (result[i] === "absent") {
+          // Set absent only if no status exists yet (don't downgrade correct/present)
+          if (!currentStatus) {
+            newStatus[letter] = "absent";
+          }
         }
       }
-    }
 
-    const newGuesses = [...currentGameState.guesses, currentWord];
-    const newLastResults = [...currentGameState.lastResults, result];
-    const saveDate = getDailySeedDate(); // UTC-based date
-    const gameNumber = isProUser ? currentGame : 1;
+      const newGuesses = [...currentGameState.guesses, currentWord];
+      const newLastResults = [...currentGameState.lastResults, result];
+      const saveDate = getDailySeedDate(); // UTC-based date
+      const gameNumber = isProUser ? currentGame : 1;
 
-    // Start reveal animation
-    setGame((p) => {
-      const revealingState = {
-        ...p,
-        animationState: "revealing" as AnimationState,
-        guesses: newGuesses,
-        lastResults: newLastResults,
-        status: newStatus,
-      };
-      // Save state after submitting guess (before reveal animation)
-      saveGameState(revealingState, saveDate, gameNumber);
-      return revealingState;
-    });
-
-    // Complete animation after delay
-    const animationDelay = prefersReducedMotion
-      ? 300
-      : ANIMATION_DELAY_BASE * 5;
-    setTimeout(() => {
-      setGame((p) => ({
-        ...p,
-        animationState: "revealed",
-        current: "",
-      }));
-    }, animationDelay);
-
-    if (currentWord === currentTarget) {
-      setTimeout(() => {
-        showNotification("🎉 Correct! Well done!", "success");
-        const gameNumber = isProUser ? currentGame : 1;
-        const today = getDailySeedDate();
-        
-        // Save completed game for review
-        // Convert TileStatus[][] to Array<'correct' | 'present' | 'absent'>[]
-        // scoreGuess always returns valid statuses (never empty strings in practice)
-        const convertedResults: Array<'correct' | 'present' | 'absent'>[] = newLastResults.map(row =>
-          row.filter((status): status is 'correct' | 'present' | 'absent' => 
-            status !== ''
-          ) as Array<'correct' | 'present' | 'absent'>
-        );
-        saveCompletedFlickWordGame({
-          date: today,
-          gameNumber,
-          target: currentTarget,
+      // Start reveal animation - clear UI submitting state once grid updates
+      setGame((p) => {
+        const revealingState = {
+          ...p,
+          animationState: "revealing" as AnimationState,
           guesses: newGuesses,
-          won: true,
-          lastResults: convertedResults,
-          completedAt: Date.now(),
-        });
-        
-        // Track analytics
-        trackFlickWordGameComplete(true, newGuesses.length, gameNumber, isProUser);
-        
-        setGame((p) => {
-          const completedState = {
-            ...p,
-            done: true,
-            animationState: "idle" as AnimationState,
-          };
-          // Save completed state so it can be restored later
-          saveGameState(completedState, today, gameNumber);
-          return completedState;
-        });
-        // Update games completed today (cap to max games)
-        const maxGames = isProUser ? MAX_GAMES_PRO : MAX_GAMES_FREE;
-        const newGamesCompleted = Math.min(gamesCompletedToday + 1, maxGames);
-        setGamesCompletedToday(newGamesCompleted);
-        saveGamesCompletedToday(newGamesCompleted);
-        onGameComplete?.(true, newGuesses.length);
-        isSubmittingRef.current = false; // Reset submitting flag
-        // Show win screen after animation
-        setTimeout(() => {
-          setShowWinScreen(true);
-        }, 500);
-      }, animationDelay);
-    } else if (newGuesses.length === currentGameState.maxGuesses) {
+          lastResults: newLastResults,
+          status: newStatus,
+        };
+        // Save state after submitting guess (before reveal animation)
+        saveGameState(revealingState, saveDate, gameNumber);
+        return revealingState;
+      });
+
+      // Clear UI submitting state now that grid has updated
+      setIsSubmittingUI(false);
+
+      // Complete animation after delay
+      const animationDelay = prefersReducedMotion
+        ? 300
+        : ANIMATION_DELAY_BASE * 5;
       setTimeout(() => {
-        const gameNumber = isProUser ? currentGame : 1;
-        const today = getDailySeedDate();
-        
-        // Save completed game for review
-        // Convert TileStatus[][] to Array<'correct' | 'present' | 'absent'>[]
-        // scoreGuess always returns valid statuses (never empty strings in practice)
-        const convertedResults: Array<'correct' | 'present' | 'absent'>[] = newLastResults.map(row =>
-          row.filter((status): status is 'correct' | 'present' | 'absent' => 
-            status !== ''
-          ) as Array<'correct' | 'present' | 'absent'>
-        );
-        saveCompletedFlickWordGame({
-          date: today,
-          gameNumber,
-          target: currentTarget,
-          guesses: newGuesses,
-          won: false,
-          lastResults: convertedResults,
-          completedAt: Date.now(),
-        });
-        
-        // Track analytics
-        trackFlickWordGameComplete(false, newGuesses.length, gameNumber, isProUser);
-        
-        setGame((p) => {
-          const completedState = {
-            ...p,
-            done: true,
-            animationState: "idle" as AnimationState,
-          };
-          // Save completed state so it can be restored later
-          saveGameState(completedState, today, gameNumber);
-          return completedState;
-        });
-        // Update games completed today (cap to max games)
-        const maxGames = isProUser ? MAX_GAMES_PRO : MAX_GAMES_FREE;
-        const newGamesCompleted = Math.min(gamesCompletedToday + 1, maxGames);
-        setGamesCompletedToday(newGamesCompleted);
-        saveGamesCompletedToday(newGamesCompleted);
-        onGameComplete?.(false, newGuesses.length);
-        isSubmittingRef.current = false; // Reset submitting flag
-        // Show lost screen after animation
-        setTimeout(() => {
-          setShowLostScreen(true);
-        }, 500);
+        setGame((p) => ({
+          ...p,
+          animationState: "revealed",
+          current: "",
+        }));
       }, animationDelay);
-    } else {
-      setTimeout(() => {
-        setGame((p) => {
-          const newState = {
-            ...p,
-            animationState: "idle" as AnimationState,
-          };
-          // Save state after guess (before animation completes)
+
+      if (currentWord === currentTarget) {
+        setTimeout(() => {
+          showNotification("🎉 Correct! Well done!", "success");
           const gameNumber = isProUser ? currentGame : 1;
-          saveGameState(newState, saveDate, gameNumber);
+          const today = getDailySeedDate();
+          
+          // Save completed game for review
+          // Convert TileStatus[][] to Array<'correct' | 'present' | 'absent'>[]
+          // scoreGuess always returns valid statuses (never empty strings in practice)
+          const convertedResults: Array<'correct' | 'present' | 'absent'>[] = newLastResults.map(row =>
+            row.filter((status): status is 'correct' | 'present' | 'absent' => 
+              status !== ''
+            ) as Array<'correct' | 'present' | 'absent'>
+          );
+          saveCompletedFlickWordGame({
+            date: today,
+            gameNumber,
+            target: currentTarget,
+            guesses: newGuesses,
+            won: true,
+            lastResults: convertedResults,
+            completedAt: Date.now(),
+          });
+          
+          // Track analytics
+          trackFlickWordGameComplete(true, newGuesses.length, gameNumber, isProUser);
+          
+          setGame((p) => {
+            const completedState = {
+              ...p,
+              done: true,
+              animationState: "idle" as AnimationState,
+            };
+            // Save completed state so it can be restored later
+            saveGameState(completedState, today, gameNumber);
+            return completedState;
+          });
+          // Update games completed today (cap to max games)
+          const maxGames = isProUser ? MAX_GAMES_PRO : MAX_GAMES_FREE;
+          const newGamesCompleted = Math.min(gamesCompletedToday + 1, maxGames);
+          setGamesCompletedToday(newGamesCompleted);
+          saveGamesCompletedToday(newGamesCompleted);
+          onGameComplete?.(true, newGuesses.length);
           isSubmittingRef.current = false; // Reset submitting flag
-          return newState;
-        });
-      }, animationDelay);
+          // Show win screen after animation
+          setTimeout(() => {
+            setShowWinScreen(true);
+          }, 500);
+        }, animationDelay);
+      } else if (newGuesses.length === currentGameState.maxGuesses) {
+        setTimeout(() => {
+          const gameNumber = isProUser ? currentGame : 1;
+          const today = getDailySeedDate();
+          
+          // Save completed game for review
+          // Convert TileStatus[][] to Array<'correct' | 'present' | 'absent'>[]
+          // scoreGuess always returns valid statuses (never empty strings in practice)
+          const convertedResults: Array<'correct' | 'present' | 'absent'>[] = newLastResults.map(row =>
+            row.filter((status): status is 'correct' | 'present' | 'absent' => 
+              status !== ''
+            ) as Array<'correct' | 'present' | 'absent'>
+          );
+          saveCompletedFlickWordGame({
+            date: today,
+            gameNumber,
+            target: currentTarget,
+            guesses: newGuesses,
+            won: false,
+            lastResults: convertedResults,
+            completedAt: Date.now(),
+          });
+          
+          // Track analytics
+          trackFlickWordGameComplete(false, newGuesses.length, gameNumber, isProUser);
+          
+          setGame((p) => {
+            const completedState = {
+              ...p,
+              done: true,
+              animationState: "idle" as AnimationState,
+            };
+            // Save completed state so it can be restored later
+            saveGameState(completedState, today, gameNumber);
+            return completedState;
+          });
+          // Update games completed today (cap to max games)
+          const maxGames = isProUser ? MAX_GAMES_PRO : MAX_GAMES_FREE;
+          const newGamesCompleted = Math.min(gamesCompletedToday + 1, maxGames);
+          setGamesCompletedToday(newGamesCompleted);
+          saveGamesCompletedToday(newGamesCompleted);
+          onGameComplete?.(false, newGuesses.length);
+          isSubmittingRef.current = false; // Reset submitting flag
+          // Show lost screen after animation
+          setTimeout(() => {
+            setShowLostScreen(true);
+          }, 500);
+        }, animationDelay);
+      } else {
+        setTimeout(() => {
+          setGame((p) => {
+            const newState = {
+              ...p,
+              animationState: "idle" as AnimationState,
+            };
+            // Save state after guess (before animation completes)
+            const gameNumber = isProUser ? currentGame : 1;
+            saveGameState(newState, saveDate, gameNumber);
+            isSubmittingRef.current = false; // Reset submitting flag
+            return newState;
+          });
+        }, animationDelay);
+      }
+    } catch (error) {
+      // Handle validation errors or network failures
+      console.error("❌ Error during word validation or submission:", error);
+      showNotification("Unable to validate word. Please try again.", "error");
+      setGame((p) => ({ ...p, current: "" }));
+    } finally {
+      // ALWAYS reset both flags, regardless of success or failure
+      isSubmittingRef.current = false;
+      setIsSubmittingUI(false);
     }
-  }, [scoreGuess, showNotification, onGameComplete, prefersReducedMotion, isProUser, currentGame, gamesCompletedToday]);
+  }, [scoreGuess, showNotification, onGameComplete, prefersReducedMotion, isProUser, currentGame, gamesCompletedToday, isSubmittingUI]);
 
   // Keyboard event handling
+  // FIXED: Disable input during validation to prevent spam and show clear feedback
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (game.done || isLoading) return;
+      if (game.done || isLoading || isSubmittingUI) return;
 
       if (e.key === "Backspace") {
         e.preventDefault();
@@ -805,7 +922,7 @@ export default function FlickWordGame({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [game.done, isLoading, handleBackspace, handleSubmit, handleKeyInput]);
+  }, [game.done, isLoading, isSubmittingUI, handleBackspace, handleSubmit, handleKeyInput]);
 
   // Check for share link params on mount
   // Share params flow: App.tsx → localStorage → FlickWordGame → FlickWordModal → FlickWordReview
@@ -1067,7 +1184,7 @@ export default function FlickWordGame({
           className={`fw-key ${status}`}
           data-fw-el="key"
           onClick={() => handleKeyInput(letter)}
-          disabled={game.done || isLoading}
+          disabled={game.done || isLoading || isSubmittingUI}
           aria-label={`Key ${letter}${status ? `, ${status}` : ""}`}
           aria-pressed={status ? "true" : "false"}
         >
@@ -1098,7 +1215,7 @@ export default function FlickWordGame({
           className={`fw-key ${status}`}
           data-fw-el="key"
           onClick={() => handleKeyInput(letter)}
-          disabled={game.done || isLoading}
+          disabled={game.done || isLoading || isSubmittingUI}
           aria-label={`Key ${letter}${status ? `, ${status}` : ""}`}
           aria-pressed={status ? "true" : "false"}
         >
@@ -1120,17 +1237,25 @@ export default function FlickWordGame({
     );
 
     // Row 3: Enter + ZXCVBNM + Backspace
+    // FIXED: Show visual feedback during validation
     const row3 = [
       <button
         key="enter"
-        className="fw-key fw-key-enter"
+        className={`fw-key fw-key-enter ${isSubmittingUI ? 'fw-key-submitting' : ''}`}
         data-fw-el="key"
         data-fw-key="enter"
         onClick={handleSubmit}
-        disabled={game.done || isLoading || game.current.length !== 5}
-        aria-label="Submit guess"
+        disabled={game.done || isLoading || game.current.length !== 5 || isSubmittingUI}
+        aria-label={isSubmittingUI ? "Validating word..." : "Submit guess"}
       >
-        Enter
+        {isSubmittingUI ? (
+          <span className="fw-submitting-indicator">
+            <span className="fw-spinner-small" aria-hidden="true"></span>
+            Checking...
+          </span>
+        ) : (
+          "Enter"
+        )}
       </button>,
     ];
     for (const letter of KEYBOARD_ROWS[2]) {
@@ -1141,7 +1266,7 @@ export default function FlickWordGame({
           className={`fw-key ${status}`}
           data-fw-el="key"
           onClick={() => handleKeyInput(letter)}
-          disabled={game.done || isLoading}
+          disabled={game.done || isLoading || isSubmittingUI}
           aria-label={`Key ${letter}${status ? `, ${status}` : ""}`}
           aria-pressed={status ? "true" : "false"}
         >
@@ -1156,7 +1281,7 @@ export default function FlickWordGame({
         data-fw-el="key"
         data-fw-key="backspace"
         onClick={handleBackspace}
-        disabled={game.done || isLoading || !game.current}
+        disabled={game.done || isLoading || !game.current || isSubmittingUI}
         aria-label="Delete letter"
       >
         ⌫
@@ -1236,9 +1361,9 @@ export default function FlickWordGame({
         {isProUser && (
           <div
             className="fw-game-header"
-            aria-label={`Game ${currentGame} of ${MAX_GAMES_PRO}`}
+            aria-label={`Game ${currentGame} of ${isProUser ? MAX_GAMES_PRO : MAX_GAMES_FREE}`}
           >
-            <span className="game-indicator">Game {currentGame} of {MAX_GAMES_PRO}</span>
+            <span className="game-indicator">Game {currentGame} of {isProUser ? MAX_GAMES_PRO : MAX_GAMES_FREE}</span>
             {gamesCompletedToday > 0 && (
               <span
                 className="games-completed"
