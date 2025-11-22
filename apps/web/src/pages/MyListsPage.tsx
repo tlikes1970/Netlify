@@ -5,6 +5,8 @@ import { Library } from '../lib/storage';
 import { useTranslations } from '../lib/language';
 import { useSettings, getPersonalityText } from '../lib/settings';
 import type { ListName } from '../state/library.types';
+import { shareListWithFallback } from '../lib/shareLinks';
+import { getToastCallback } from '../state/actions';
 
 export default function MyListsPage() {
   const userLists = useCustomLists();
@@ -24,6 +26,38 @@ export default function MyListsPage() {
       setSelectedListId(defaultList.id);
     }
   }, [selectedListId, userLists.customLists]);
+
+  // Handle deep link to select a specific list
+  React.useEffect(() => {
+    const handleSelectList = (e: CustomEvent<{ listId: string }>) => {
+      const listId = e.detail.listId;
+      const list = customListManager.getListById(listId);
+      if (list) {
+        setSelectedListId(listId);
+        customListManager.setSelectedList(listId);
+      }
+    };
+
+    // Check for share link params on mount
+    try {
+      const shareListId = localStorage.getItem("flicklet:shareListId");
+      if (shareListId) {
+        const list = customListManager.getListById(shareListId);
+        if (list) {
+          setSelectedListId(shareListId);
+          customListManager.setSelectedList(shareListId);
+        }
+        localStorage.removeItem("flicklet:shareListId");
+      }
+    } catch (e) {
+      console.warn("Failed to process share list params:", e);
+    }
+
+    window.addEventListener("flicklet:selectList", handleSelectList as EventListener);
+    return () => {
+      window.removeEventListener("flicklet:selectList", handleSelectList as EventListener);
+    };
+  }, []);
 
   const handleListChange = (listId: string) => {
     setSelectedListId(listId);
@@ -87,6 +121,61 @@ export default function MyListsPage() {
     
     if (confirmed) {
       customListManager.resetAllCounts();
+    }
+  };
+
+  // List share entry point – uses shareListWithFallback
+  const handleShareList = async (listId: string) => {
+    console.log("[MyListsPage] handleShareList called with listId:", listId);
+    const list = customListManager.getListById(listId);
+    if (!list) {
+      console.warn("[MyListsPage] List not found for listId:", listId);
+      return;
+    }
+
+    console.log("[MyListsPage] Sharing list:", list.name, list.id);
+    
+    // Check toast availability upfront for debugging
+    const toastCheck = getToastCallback();
+    console.log("[MyListsPage] Toast callback available:", !!toastCheck, typeof toastCheck);
+
+    try {
+      await shareListWithFallback(
+        { id: list.id, name: list.name },
+        {
+          onSuccess: () => {
+            console.log("[MyListsPage] Share successful - entering onSuccess callback");
+            // Get global toast callback (set by App.tsx) - retrieve fresh each time
+            const toast = getToastCallback();
+            console.log("[MyListsPage] Toast callback in onSuccess:", !!toast, typeof toast);
+            if (toast) {
+              console.log("[MyListsPage] Calling toast callback with message:", "Share link copied to clipboard!");
+              try {
+                toast("Share link copied to clipboard!", "success");
+                console.log("[MyListsPage] Toast callback executed successfully");
+              } catch (toastError) {
+                console.error("[MyListsPage] Error calling toast:", toastError);
+              }
+            } else {
+              console.warn("[MyListsPage] Toast callback not available - toasts won't show");
+            }
+          },
+          onError: (error) => {
+            console.error("[MyListsPage] Share failed:", error);
+            // Get global toast callback (set by App.tsx) - retrieve fresh each time
+            const toast = getToastCallback();
+            if (toast) {
+              toast("Unable to share – link copied instead", "error");
+            }
+          },
+        }
+      );
+    } catch (error) {
+      console.error("[MyListsPage] Unexpected error in handleShareList:", error);
+      const toast = getToastCallback();
+      if (toast) {
+        toast("Failed to share list", "error");
+      }
     }
   };
 
@@ -196,18 +285,29 @@ export default function MyListsPage() {
       {/* Items Display */}
       {selectedList ? (
         <>
-          <div className="mb-4">
-            <h2 className="text-lg font-medium" style={{ color: 'var(--text)' }}>
-              {selectedList.name}
-              {selectedList.description && (
-                <span className="text-sm font-normal ml-2" style={{ color: 'var(--muted)' }}>
-                  - {selectedList.description}
-                </span>
-              )}
-            </h2>
-            <p className="text-sm" style={{ color: 'var(--muted)' }}>
-              {items.length} {translations.items || 'items'}
-            </p>
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-medium" style={{ color: 'var(--text)' }}>
+                {selectedList.name}
+                {selectedList.description && (
+                  <span className="text-sm font-normal ml-2" style={{ color: 'var(--muted)' }}>
+                    - {selectedList.description}
+                  </span>
+                )}
+              </h2>
+              <p className="text-sm" style={{ color: 'var(--muted)' }}>
+                {items.length} {translations.items || 'items'}
+              </p>
+            </div>
+            <button
+              onClick={() => handleShareList(selectedListId)}
+              className="px-4 py-2 rounded-lg transition-colors text-sm flex items-center gap-2"
+              style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', border: '1px solid var(--line)' }}
+              title="Share this list"
+            >
+              <span>🔗</span>
+              <span>Share</span>
+            </button>
           </div>
 
           {items.length > 0 ? (

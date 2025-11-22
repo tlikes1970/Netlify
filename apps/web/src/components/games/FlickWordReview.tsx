@@ -11,6 +11,8 @@ import { useSettings } from '@/lib/settings';
 import { getCompletedFlickWordGames, type CompletedFlickWordGame } from '../../lib/gameReview';
 import { getDailySeedDate } from '../../lib/dailySeed';
 import { trackGameReview, trackFlickWordShare } from '../../lib/analytics';
+import { shareWithFallback } from '../../lib/shareLinks';
+import { getToastCallback } from '@/state/actions';
 
 interface FlickWordReviewProps {
   onClose?: () => void;
@@ -31,6 +33,7 @@ export default function FlickWordReview({ onClose }: FlickWordReviewProps) {
   const isProUser = settings.pro.isPro;
 
   // Generate share text for a single game
+  // Note: URL is NOT included here - it will be added by shareWithFallback
   const generateSingleShareText = (game: CompletedFlickWordGame): string => {
     const lines: string[] = [];
     const gameLabel = isProUser ? ` Game ${game.gameNumber}` : '';
@@ -54,6 +57,7 @@ export default function FlickWordReview({ onClose }: FlickWordReviewProps) {
   };
 
   // Generate share text for all games (Pro only)
+  // Note: URL is NOT included here - it will be added by shareWithFallback
   const generateAllShareText = (): string => {
     const lines: string[] = [];
     lines.push(`FlickWord ${getDailySeedDate()} - All Games`);
@@ -79,6 +83,7 @@ export default function FlickWordReview({ onClose }: FlickWordReviewProps) {
     return lines.join('\n');
   };
 
+  // Primary share handler for FlickWord Review
   const handleShare = async (gameNumber?: number) => {
     let shareText = '';
     
@@ -92,31 +97,38 @@ export default function FlickWordReview({ onClose }: FlickWordReviewProps) {
       trackFlickWordShare(null, 'all');
     }
     
-    // Build share URL with deep-link params for the specific game
-    const gameDate = gameNumber ? completedGames.find(g => g.gameNumber === gameNumber)?.date : getDailySeedDate();
-    const shareUrl = `${window.location.origin}/?game=flickword&date=${gameDate || getDailySeedDate()}&gameNumber=${gameNumber || 1}&mode=sharedResult`;
+    // Build share URL with deep-link params
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://flicklet.netlify.app";
+    let shareUrl: string;
     
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: 'FlickWord',
-          text: shareText,
-          url: shareUrl
-        });
-      } else {
-        await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
-        alert('Share text copied to clipboard!');
-      }
-    } catch (_error) {
-      if (_error instanceof Error && _error.name !== 'AbortError') {
-        try {
-          await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
-          alert('Share text copied to clipboard!');
-        } catch (_clipboardError) {
-          alert('Failed to share');
-        }
-      }
+    if (gameNumber) {
+      // Share single game: include gameNumber
+      const gameDate = completedGames.find(g => g.gameNumber === gameNumber)?.date || getDailySeedDate();
+      shareUrl = `${origin}/?game=flickword&date=${gameDate}&gameNumber=${gameNumber}&mode=sharedResult`;
+    } else {
+      // Share all games: use mode=sharedAll, no gameNumber
+      shareUrl = `${origin}/?game=flickword&date=${getDailySeedDate()}&mode=sharedAll`;
     }
+    
+    // Use unified share helper
+    await shareWithFallback({
+      title: 'FlickWord',
+      text: shareText,
+      url: shareUrl,
+      onSuccess: () => {
+        const toast = getToastCallback();
+        if (toast) {
+          toast('Share link copied to clipboard!', 'success');
+        }
+      },
+      onError: (error) => {
+        console.error('Share failed:', error);
+        const toast = getToastCallback();
+        if (toast) {
+          toast('Unable to share – link copied instead', 'error');
+        }
+      },
+    });
   };
 
   if (completedGames.length === 0) {

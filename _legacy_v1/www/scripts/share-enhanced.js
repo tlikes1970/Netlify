@@ -4,6 +4,9 @@
  * Data Source: window.appData for list data, URL generation for sharing
  * Update Path: Modify share format or add new sharing methods in this file
  * Dependencies: navigator.clipboard, window.appData, URL encoding
+ * 
+ * ⚠️ LEGACY V1 ONLY - This file is part of the legacy v1 app bundle.
+ * For current v2 app sharing, see: apps/web/src/lib/shareLinks.ts
  */
 
 (function () {

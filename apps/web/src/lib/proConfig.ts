@@ -74,3 +74,5 @@ export function getRemainingListSlots(currentListCount: number): number {
   return Math.max(0, maxLists - currentListCount);
 }
 
+
+

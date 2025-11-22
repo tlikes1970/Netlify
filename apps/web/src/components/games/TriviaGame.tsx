@@ -9,6 +9,8 @@ import { saveCompletedTriviaGame, getCompletedTriviaGames } from '../../lib/game
 import { trackTriviaGameStart, trackTriviaGameComplete, trackTriviaAnswer, trackGameError } from '../../lib/analytics';
 import { authManager } from '../../lib/auth';
 import { syncGameStats } from '../../lib/gameStatsSync';
+import { shareWithFallback } from '../../lib/shareLinks';
+import { getToastCallback } from '@/state/actions';
 
 interface TriviaGameProps {
   onClose?: () => void;
@@ -694,6 +696,7 @@ export default function TriviaGame({
   // Generate share text for Trivia results
   // Share link deep-linking: Includes date, gameNumber, and score so link opens to correct game
   // Config: App.tsx handles ?game=trivia&date=...&gameNumber=...&score=... query params
+  // Note: URL is NOT included here - it will be added by shareWithFallback
   const generateShareText = useCallback(() => {
     const today = getDailySeedDate();
     const gameLabel = isProUser ? ` Game ${currentGame}` : '';
@@ -702,38 +705,33 @@ export default function TriviaGame({
     return `🧠 Trivia ${today}${gameLabel}\n\nScore: ${score}/${questions.length} (${percentage}%)\n\nPlay Trivia at flicklet.app`;
   }, [score, questions.length, isProUser, currentGame]);
 
+  // Primary share handler for Trivia
   // Handle share - single game results
   const handleShare = useCallback(async () => {
     const shareText = generateShareText();
     const today = getDailySeedDate();
-    const shareUrl = `${window.location.origin}/?game=trivia&date=${today}&gameNumber=${currentGame}&score=${score}&mode=sharedResult`;
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://flicklet.netlify.app";
+    const shareUrl = `${origin}/?game=trivia&date=${today}&gameNumber=${currentGame}&score=${score}&mode=sharedResult`;
     
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: 'Trivia Results',
-          text: shareText,
-          url: shareUrl
-        });
-      } else {
-        // Fallback: copy to clipboard
-        await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
-        // Show a simple notification (you might want to use your notification system)
-        alert('Share text copied to clipboard!');
-      }
-    } catch (error) {
-      // User cancelled or error
-      if (error instanceof Error && error.name !== 'AbortError') {
-        console.error('Share failed:', error);
-        // Fallback to clipboard
-        try {
-          await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
-          alert('Share text copied to clipboard!');
-        } catch (_clipboardError) {
-          alert('Failed to share');
+    // Use unified share helper
+    await shareWithFallback({
+      title: 'Trivia Results',
+      text: shareText,
+      url: shareUrl,
+      onSuccess: () => {
+        const toast = getToastCallback();
+        if (toast) {
+          toast('Share link copied to clipboard!', 'success');
         }
-      }
-    }
+      },
+      onError: (error) => {
+        console.error('Share failed:', error);
+        const toast = getToastCallback();
+        if (toast) {
+          toast('Unable to share – link copied instead', 'error');
+        }
+      },
+    });
   }, [generateShareText, currentGame, score]);
 
   if (gameState === "loading") {

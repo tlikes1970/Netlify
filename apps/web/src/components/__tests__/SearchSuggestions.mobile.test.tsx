@@ -143,3 +143,5 @@ describe('SearchSuggestions Mobile Behavior', () => {
 
 
 
+
+

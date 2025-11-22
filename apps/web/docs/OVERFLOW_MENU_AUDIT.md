@@ -158,3 +158,5 @@ Current implementation: Uses `handlers.onGoofsOpen` etc. - need to verify Pro ch
 3. Test all contexts to ensure consistency
 4. Verify Pro gating works correctly
 
+
+

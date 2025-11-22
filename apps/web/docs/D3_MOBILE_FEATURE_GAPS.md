@@ -140,3 +140,5 @@ Completed mobile UX pass focused on pull-to-refresh, search bar stability, greet
    - Test on iPhone with notch (iPhone X and later)
    - Verify bottom nav doesn't collide with home indicator
    - Check SettingsSheet on devices with notches
+
+

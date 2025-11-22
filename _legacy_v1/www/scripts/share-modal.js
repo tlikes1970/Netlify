@@ -1,5 +1,8 @@
 /* ========== share-modal.js ==========
    Idempotent Share modal with Web Share fallback + a11y focus trap.
+   
+   ⚠️ LEGACY V1 ONLY - This file is part of the legacy v1 app bundle.
+   For current v2 app sharing, see: apps/web/src/lib/shareLinks.ts
 */
 (function () {
   if (window.__shareModalInit__) return; // idempotent init

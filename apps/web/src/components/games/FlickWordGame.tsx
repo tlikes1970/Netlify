@@ -15,6 +15,8 @@ import { getFlickWordGameStateKey, getFlickWordGamesCompletedKey, getFlickWordDa
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 import { saveCompletedFlickWordGame, getCompletedFlickWordGames } from '../../lib/gameReview';
 import { trackFlickWordGameStart, trackFlickWordGameComplete, trackFlickWordGuess, trackFlickWordShare, trackGameError } from '../../lib/analytics';
+import { shareWithFallback } from '../../lib/shareLinks';
+import { getToastCallback } from '@/state/actions';
 
 // Game configuration
 const KEYBOARD_ROWS = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
@@ -858,6 +860,7 @@ export default function FlickWordGame({
   }, [game.target, onClose]);
 
   // Generate share text (Wordle-style grid) - single game
+  // Note: URL is NOT included here - it will be added by shareWithFallback
   const generateShareText = useCallback((gameNumber?: number) => {
     const lines: string[] = [];
     const shareGameNumber = gameNumber ?? (isProUser ? currentGame : 1);
@@ -882,6 +885,7 @@ export default function FlickWordGame({
   }, [game.guesses, game.lastResults, isProUser, currentGame]);
   
   // Generate share text for all completed games (Pro only)
+  // Note: URL is NOT included here - it will be added by shareWithFallback
   const generateAllGamesShareText = useCallback(() => {
     const completedGames = getCompletedFlickWordGames();
     
@@ -909,6 +913,7 @@ export default function FlickWordGame({
     return lines.join('\n');
   }, []);
 
+  // Primary share handler for FlickWord
   // Handle share - single game or all games
   // Share link deep-linking: Includes date and gameNumber so link opens to correct game
   // Config: App.tsx handles ?game=flickword&date=...&gameNumber=... query params
@@ -918,41 +923,45 @@ export default function FlickWordGame({
       : generateShareText();
     
     // Build share URL with deep-link params
-    const gameNumber = isProUser ? currentGame : 1;
     const today = getDailySeedDate();
-    const shareUrl = `${window.location.origin}/?game=flickword&date=${today}&gameNumber=${gameNumber}&mode=sharedResult`;
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://flicklet.netlify.app";
+    
+    let shareUrl: string;
+    if (shareAll && isProUser) {
+      // Share all games: use mode=sharedAll, no gameNumber
+      shareUrl = `${origin}/?game=flickword&date=${today}&mode=sharedAll`;
+    } else {
+      // Share single game: include gameNumber
+      const gameNumber = isProUser ? currentGame : 1;
+      shareUrl = `${origin}/?game=flickword&date=${today}&gameNumber=${gameNumber}&mode=sharedResult`;
+    }
     
     // Track analytics
+    const gameNumber = isProUser ? currentGame : 1;
     trackFlickWordShare(shareAll ? null : gameNumber, shareAll ? 'all' : 'single');
     
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: 'FlickWord',
-          text: shareText,
-          url: shareUrl
-        });
-      } else {
-        // Fallback: copy to clipboard
-        await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
-        showNotification('Share text copied to clipboard!', 'success');
-      }
-      setShowShareModal(false);
-    } catch (error) {
-      // User cancelled or error
-      if (error instanceof Error && error.name !== 'AbortError') {
-        console.error('Share failed:', error);
-        // Fallback to clipboard
-        try {
-          await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
-          showNotification('Share text copied to clipboard!', 'success');
-          setShowShareModal(false);
-        } catch (_clipboardError) {
-          showNotification('Failed to share', 'error');
+    // Use unified share helper
+    await shareWithFallback({
+      title: 'FlickWord',
+      text: shareText,
+      url: shareUrl,
+      onSuccess: () => {
+        const toast = getToastCallback();
+        if (toast) {
+          toast('Share link copied to clipboard!', 'success');
         }
-      }
-    }
-  }, [generateShareText, generateAllGamesShareText, showNotification, isProUser, currentGame]);
+        setShowShareModal(false);
+      },
+      onError: (error) => {
+        console.error('Share failed:', error);
+        const toast = getToastCallback();
+        if (toast) {
+          toast('Unable to share – link copied instead', 'error');
+        }
+        // Don't close modal on error so user can try again
+      },
+    });
+  }, [generateShareText, generateAllGamesShareText, isProUser, currentGame]);
 
   // Render game grid with enhanced accessibility and animations
   const renderGrid = () => {

@@ -12,6 +12,10 @@ export function setToastCallback(callback: (message: string, type: 'success' | '
   toastCallback = callback;
 }
 
+export function getToastCallback(): ((message: string, type: 'success' | 'error' | 'info') => void) | null {
+  return toastCallback;
+}
+
 // Helper function to fetch title and year from TMDB API
 async function fetchMediaDataFromTMDB(id: string, mediaType: MediaType): Promise<{ title: string; year?: string; showStatus?: string; lastAirDate?: string }> {
   try {

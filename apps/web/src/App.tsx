@@ -185,6 +185,7 @@ export default function App() {
   // Toast system
   const { toasts, addToast, removeToast } = useToast();
 
+
   // Search state
   const [search, setSearch] = useState<SearchState>({
     q: "",
@@ -581,12 +582,113 @@ export default function App() {
       }
     };
 
-      // Handle query parameters for FlickWord and Trivia share links
-    const handleQueryParams = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const gameParam = urlParams.get("game");
-      
-      if (gameParam === "flickword") {
+      /**
+       * Deep-link handling for shared URLs from list/show/game sharing.
+       * 
+       * Supported deep-link formats:
+       * - ?view=list&listId=... - Opens list detail in My Lists view
+       * - ?view=title&tmdbId=... - Navigates to search/discovery for the show
+       * - ?view=title&titleId=... - Navigates to search/discovery for the show
+       * - ?game=flickword&date=...&gameNumber=... - Opens FlickWord game
+       * - ?game=trivia&date=...&gameNumber=... - Opens Trivia game
+       */
+      const handleQueryParams = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewParam = urlParams.get("view");
+        const gameParam = urlParams.get("game");
+        
+        // Handle list deep links - reuses same navigation as clicking a list in UI
+        if (viewParam === "list") {
+          const listId = urlParams.get("listId");
+          // Validate: only proceed if listId is present and not empty
+          if (listId && listId.trim() !== "") {
+            // Navigate to mylists view (same as clicking "My Lists" in UI)
+            setView("mylists");
+            // Store listId for MyListsPage to select (canonical way to open list detail)
+            try {
+              localStorage.setItem("flicklet:shareListId", listId);
+              // Dispatch event to notify MyListsPage (same event used by UI clicks)
+              window.dispatchEvent(
+                new CustomEvent("flicklet:selectList", { detail: { listId } })
+              );
+            } catch (e) {
+              console.warn("Failed to store list share params:", e);
+            }
+            
+            // Clean up URL
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete("view");
+            newUrl.searchParams.delete("listId");
+            window.history.replaceState({}, "", newUrl.toString());
+          }
+          // If listId is missing or empty, app boots normally (no deep-link action)
+        }
+        // Handle show deep links - navigates to appropriate view based on where show exists
+        // Note: There is no in-app detail modal, so we navigate to the tab where the show
+        // appears in the user's library, or to discovery if not found. This reuses the
+        // same navigation as clicking a card in the UI.
+        else if (viewParam === "title") {
+          const tmdbId = urlParams.get("tmdbId");
+          const titleId = urlParams.get("titleId");
+          
+          // Validate: proceed if at least one ID is present and not empty
+          const hasValidTmdbId = tmdbId && tmdbId.trim() !== "";
+          const hasValidTitleId = titleId && titleId.trim() !== "";
+          
+          if (hasValidTmdbId || hasValidTitleId) {
+            // Try to find the show in the user's library
+            // Check both tv and movie media types since we don't know which it is
+            let foundList: "watching" | "want" | "watched" | null = null;
+            const idToCheck = hasValidTmdbId ? tmdbId : titleId;
+            
+            if (idToCheck) {
+              // Try to find in library (check both tv and movie)
+              const numericId = hasValidTmdbId ? parseInt(idToCheck, 10) : idToCheck;
+              if (!isNaN(numericId as number) || typeof numericId === "string") {
+                const tvList = Library.getCurrentList(numericId, "tv");
+                const movieList = Library.getCurrentList(numericId, "movie");
+                
+                if (tvList === "watching" || tvList === "wishlist" || tvList === "watched") {
+                  foundList = tvList === "wishlist" ? "want" : tvList;
+                } else if (movieList === "watching" || movieList === "wishlist" || movieList === "watched") {
+                  foundList = movieList === "wishlist" ? "want" : movieList;
+                }
+              }
+            }
+            
+            // Navigate to the appropriate view
+            if (foundList) {
+              // Show is in user's library - navigate to that tab (same as clicking a card)
+              setView(foundList);
+            } else {
+              // Show not in library - navigate to discovery where user can find it
+              setView("discovery");
+            }
+            
+            // Store the ID in localStorage for potential use by search/discovery
+            // This allows search to potentially look up the show if needed
+            try {
+              if (hasValidTmdbId) {
+                localStorage.setItem("flicklet:shareTmdbId", tmdbId);
+              }
+              if (hasValidTitleId) {
+                localStorage.setItem("flicklet:shareTitleId", titleId);
+              }
+            } catch (e) {
+              console.warn("Failed to store title share params:", e);
+            }
+            
+            // Clean up URL
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete("view");
+            newUrl.searchParams.delete("tmdbId");
+            newUrl.searchParams.delete("titleId");
+            window.history.replaceState({}, "", newUrl.toString());
+          }
+          // If both IDs are missing or empty, app boots normally (no deep-link action)
+        }
+      // Handle game share links (existing)
+      else if (gameParam === "flickword") {
         // Open FlickWord modal
         setShowFlickWordModal(true);
         
@@ -1253,6 +1355,17 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {/* Toast Notifications */}
+        {toasts.map((toast) => (
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            personalityLevel={settings.personalityLevel}
+            onClose={() => removeToast(toast.id)}
+          />
+        ))}
       </>
     );
   }
