@@ -150,16 +150,30 @@ export default function FlickWordReview({ onClose, shareParams }: FlickWordRevie
       text: shareText,
       url: shareUrl,
       onSuccess: () => {
-        const toast = getToastCallback();
-        if (toast) {
-          toast('Share link copied to clipboard!', 'success');
-        }
+        // Small delay to ensure toast shows after native share sheet closes (if used)
+        setTimeout(() => {
+          const toast = getToastCallback();
+          if (toast) {
+            if (gameNumber) {
+              toast('Share link copied to clipboard!', 'success');
+            } else {
+              toast('All games copied to clipboard!', 'success');
+            }
+          } else {
+            // Fallback if toast system isn't available - use alert as last resort
+            alert(gameNumber 
+              ? 'Share link copied to clipboard!' 
+              : 'All games copied to clipboard!');
+          }
+        }, 100);
       },
       onError: (error) => {
         console.error('Share failed:', error);
         const toast = getToastCallback();
         if (toast) {
           toast('Unable to share – link copied instead', 'error');
+        } else {
+          alert('Unable to share – link copied instead');
         }
       },
     });
