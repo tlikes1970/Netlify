@@ -32,7 +32,7 @@ export default function HomeUpNextRail() {
         const airStatus = getNextAirStatus(rawDate);
         return { show, validatedDate, airStatus };
       })
-      .filter(({ validatedDate, airStatus }) => validatedDate !== null && airStatus !== 'tba')
+      .filter(({ validatedDate, airStatus: _airStatus }) => validatedDate !== null && _airStatus !== 'tba')
       .sort((a, b) => {
         // Sort by status: soon first, then future
         if (a.airStatus === 'soon' && b.airStatus !== 'soon') return -1;
