@@ -7,7 +7,6 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useSettings } from "@/lib/settings";
 import { useProStatus } from "../../lib/proStatus";
 import { getTodaysWord } from "../../lib/dailyWordApi";
 import { validateWord } from "../../lib/words/validateWord";

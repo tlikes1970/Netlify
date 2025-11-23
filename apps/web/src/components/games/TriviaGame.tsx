@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useSettings } from "@/lib/settings";
 import { useProStatus } from "../../lib/proStatus";
 import { getCachedTrivia } from "../../lib/triviaApi";
 import { getDailySeedDate } from "../../lib/dailySeed";
