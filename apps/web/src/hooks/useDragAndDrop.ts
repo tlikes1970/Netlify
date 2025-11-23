@@ -55,7 +55,7 @@ export function useDragAndDrop<T extends { id: string }>(
     // Do NOT apply inline transforms here to avoid conflict with CSS keyframe animation
   }, [items]);
 
-  const handleDragEnd = useCallback((e: React.DragEvent) => {
+  const handleDragEnd = useCallback((_e: React.DragEvent) => {
     // Prevent double calls
     if (isDragEndingRef.current) {
       console.log('[useDragAndDrop] drag end ignored - already processing');

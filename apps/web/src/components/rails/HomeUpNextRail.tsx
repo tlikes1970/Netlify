@@ -4,7 +4,7 @@ import { useLibrary } from '../../lib/storage';
 import { useTranslations } from '../../lib/language';
 import { useSettings, getPersonalityText } from '../../lib/settings';
 import { getShowStatusInfo } from '../../utils/showStatus';
-import { getNextAirDate, getValidatedNextAirDate, getNextAirStatus, type NextAirStatus } from '../../lib/constants/metadata';
+import { getNextAirDate, getValidatedNextAirDate, getNextAirStatus } from '../../lib/constants/metadata';
 
 export default function HomeUpNextRail() {
   const watching = useLibrary('watching');

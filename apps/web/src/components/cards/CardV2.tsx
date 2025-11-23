@@ -1,5 +1,6 @@
 import React from 'react';
 import type { CardContext, CardActionHandlers, MediaItem } from './card.types';
+import type { ListName } from '../../state/library.types';
 import { useTranslations } from '../../lib/language';
 import { useIsDesktop } from '../../hooks/useDeviceDetection';
 import SwipeableCard from '../SwipeableCard';
@@ -20,7 +21,7 @@ export type CardV2Props = {
   disableSwipe?: boolean;     // disable swipe actions for horizontal scrolling contexts
   disableOverflow?: boolean;  // hide overflow menu (e.g., home currently watching rail)
   // optional: override the list context derived from 'context' prop (useful for custom lists)
-  currentListContext?: import('../state/library.types').ListName;
+  currentListContext?: ListName;
 };
 
 /**
@@ -50,6 +51,21 @@ function shouldShowMembershipBadge(context: CardContext): boolean {
   ];
 
   return mixedContexts.includes(context);
+}
+
+function getListContextFromCardContext(context: CardContext): ListName | undefined {
+  switch (context) {
+    case 'tab-watching':
+      return 'watching';
+    case 'tab-want':
+      return 'wishlist';
+    case 'tab-watched':
+      return 'watched';
+    case 'tab-not':
+      return 'not';
+    default:
+      return undefined;
+  }
 }
 
 export default function CardV2({ item, context, actions, compact, showRating = true, disableSwipe = false, disableOverflow = false, currentListContext: propCurrentListContext }: CardV2Props) {
@@ -109,11 +125,7 @@ export default function CardV2({ item, context, actions, compact, showRating = t
                 // Use prop if provided (for custom lists), otherwise derive from context
                 propCurrentListContext !== undefined
                   ? propCurrentListContext
-                  : context === 'tab-watching' ? 'watching' :
-                    context === 'tab-want' ? 'wishlist' :
-                    context === 'tab-watched' ? 'watched' :
-                    context === 'tab-not' ? 'not' :
-                    undefined
+                  : getListContextFromCardContext(context)
               }
             />
           )}

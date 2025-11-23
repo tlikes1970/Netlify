@@ -9,12 +9,14 @@
 ## 1. Drag Libraries & Entry Points
 
 ### No External Drag Libraries
+
 - ❌ **No `@dnd-kit/*`** - Custom implementation
 - ❌ **No `react-beautiful-dnd`** - Custom implementation
 - ✅ **Native HTML5 Drag API** - Used for desktop drag
 - ✅ **Custom Touch Events** - Used for mobile drag
 
 ### Entry Points
+
 - **Desktop:** Native `draggable={true}` attribute on drag handle element
 - **Mobile:** Custom touch event handlers in `DragHandle.tsx` with touch-hold detection
 
@@ -27,6 +29,7 @@
 **Role:** Unified drag handle component for both desktop and mobile cards. Handles touch-hold detection, visual feedback, and drag state management.
 
 **Key Features:**
+
 - Desktop: Uses native HTML5 drag API (`draggable={true}`)
 - Mobile: Custom touch-hold (200ms default, 400ms if flag disabled) with haptic feedback
 - Manages drag state internally or accepts external `isDragging` prop
@@ -337,14 +340,14 @@ export function DragHandle({
         // Ensure card stays full-width and aligned
         wrapperElementRef.current.style.width = "100%";
         wrapperElementRef.current.style.maxWidth = "100%";
-        
+
         // Also ensure the SwipeableCard wrapper respects z-index
         const swipeableElement = wrapperElementRef.current.querySelector('.swipeable') as HTMLElement;
         if (swipeableElement) {
           swipeableElement.style.zIndex = "inherit";
           swipeableElement.style.position = "relative";
         }
-        
+
         // Also ensure the card-mobile element inside stays full-width
         const cardElement = wrapperElementRef.current.querySelector('.card-mobile') as HTMLElement;
         if (cardElement) {
@@ -410,14 +413,14 @@ export function DragHandle({
         // Reset width constraints (FLIP will handle positioning)
         wrapper.style.width = "";
         wrapper.style.maxWidth = "";
-        
+
         // Reset SwipeableCard z-index
         const swipeableElement = wrapper.querySelector('.swipeable') as HTMLElement;
         if (swipeableElement) {
           swipeableElement.style.zIndex = "";
           swipeableElement.style.position = "";
         }
-        
+
         // Reset card element width and z-index if we set it
         const cardElement = wrapper.querySelector('.card-mobile') as HTMLElement;
         if (cardElement) {
@@ -681,6 +684,7 @@ export function DragHandle({
 **Role:** Desktop card component that renders drag handle and passes drag handlers. Also conditionally renders mobile card components on mobile viewports.
 
 **Key Drag Features:**
+
 - Desktop drag handle: Inline element with `draggable={true}` (lines 909-928)
 - Passes `onDragStart`, `onDragEnd`, `onDragOver` handlers to parent
 - Applies `is-dragging` class based on `dragState.isDragging`
@@ -818,6 +822,7 @@ export function DragHandle({
 **Role:** Mobile TV card component that integrates DragHandle for touch-based drag.
 
 **Key Drag Features:**
+
 - Renders `DragHandle` component (lines 126-145)
 - Passes `onDragStart`, `onDragEnd`, `onKeyboardReorder`, `isDragging` props to DragHandle
 - Wraps content in `card-mobile` div with `data-item-index` attribute
@@ -838,8 +843,8 @@ export interface TvCardMobileProps {
 ```
 
 ```113:146:apps/web/src/components/cards/mobile/TvCardMobile.tsx
-      <div 
-        className="card-mobile" 
+      <div
+        className="card-mobile"
         style={{ position: 'relative', overflow: 'visible' }}
         data-item-index={index}
       >
@@ -890,8 +895,8 @@ export interface MovieCardMobileProps {
 ```
 
 ```88:121:apps/web/src/components/cards/mobile/MovieCardMobile.tsx
-      <div 
-        className="card-mobile" 
+      <div
+        className="card-mobile"
         style={{ position: 'relative', overflow: 'visible' }}
         data-item-index={index}
       >
@@ -927,6 +932,7 @@ export interface MovieCardMobileProps {
 **Role:** Main page component that manages drag state, reordering logic, FLIP animations, and persistence.
 
 **Key Drag Features:**
+
 - Uses `useDragAndDrop` hook for drag state management
 - Implements FLIP animation for smooth reorder transitions
 - Handles custom order persistence via `Library.reorder()`
@@ -1419,6 +1425,7 @@ export interface MovieCardMobileProps {
 **Role:** Custom hook that manages drag state and coordinates drag events.
 
 **Key Features:**
+
 - Tracks `draggedItem`, `draggedOverIndex`, `isDragging` state
 - Handles drag start/end/over/leave events
 - Applies visual feedback (opacity, transform) during drag
@@ -1459,7 +1466,7 @@ export function useDragAndDrop<T extends { id: string }>(
 
     console.log('[useDragAndDrop] drag start', { index, itemId: item.id });
     dragStartRef.current = index;
-    
+
     setDragState({
       draggedItem: { id: item.id, index },
       draggedOverIndex: null,
@@ -1483,13 +1490,13 @@ export function useDragAndDrop<T extends { id: string }>(
       console.log('[useDragAndDrop] drag end ignored - already processing');
       return;
     }
-    
+
     isDragEndingRef.current = true;
-    
-    console.log('[useDragAndDrop] drag end', { 
-      draggedItem: dragState.draggedItem, 
+
+    console.log('[useDragAndDrop] drag end', {
+      draggedItem: dragState.draggedItem,
       draggedOverIndex: dragState.draggedOverIndex,
-      dragStart: dragStartRef.current 
+      dragStart: dragStartRef.current
     });
 
     // Save state BEFORE resetting (in case we need it for FLIP)
@@ -1521,9 +1528,9 @@ export function useDragAndDrop<T extends { id: string }>(
       fromIndex !== null &&
       fromIndex !== draggedOverIndex
     ) {
-      console.log('[useDragAndDrop] reordering', { 
-        from: fromIndex, 
-        to: draggedOverIndex 
+      console.log('[useDragAndDrop] reordering', {
+        from: fromIndex,
+        to: draggedOverIndex
       });
       // Use setTimeout to ensure state reset completes before reorder
       // This allows FLIP to detect isDragging: false
@@ -1635,7 +1642,7 @@ export function useKeyboardReorder({
       if (newIndex !== currentIndex) {
         // Move item
         onReorder(currentIndex, newIndex);
-        
+
         // Announce change
         if (announceChange) {
           const item = items[currentIndex];
@@ -1681,6 +1688,7 @@ export function useKeyboardReorder({
 **Role:** CSS styles for drag states, animations, and visual feedback.
 
 **Key Drag Styles:**
+
 - `.tab-card.is-dragging` - Desktop drag animation (scale + rotate)
 - `.card-mobile.is-dragging` - Mobile drag styling (no rotation, flat)
 - `.is-drop-target` - Drop target highlight animation
@@ -1852,6 +1860,7 @@ export function useKeyboardReorder({
 **Role:** Library persistence layer that saves custom order to localStorage.
 
 **Key Functions:**
+
 - `Library.reorder(listName, fromIndex, toIndex)` - Reorders items and saves custom order
 - `Library.resetCustomOrder(listName)` - Clears custom order
 - `queueCustomOrderSave(tabKey, orderIds)` - Debounced custom order persistence
@@ -1930,12 +1939,14 @@ function queueCustomOrderSave(tabKey: string, orderIds: string[]) {
 ### How Drag is Started
 
 **Desktop:**
+
 1. User clicks and holds drag handle (`.handle` element in `TabCard.tsx`)
 2. Native `onDragStart` event fires (line 910-914 in `TabCard.tsx`)
 3. `handleDragStart` from `useDragAndDrop` hook sets `dragState.isDragging = true`
 4. Visual feedback: card opacity 0.5, rotate 2deg (inline styles in `useDragAndDrop.ts:46-48`)
 
 **Mobile:**
+
 1. User touches drag handle (`.drag-handle` element in `DragHandle.tsx`)
 2. Non-passive `touchstart` listener in capture phase prevents SwipeableCard from handling
 3. Touch-hold timer starts (200ms default, 400ms if flag disabled)
@@ -1945,11 +1956,13 @@ function queueCustomOrderSave(tabKey: string, orderIds: string[]) {
 ### How Item Position is Updated and Persisted
 
 **During Drag:**
+
 - **Desktop:** Browser handles drag ghost image, `onDragOver` events update `draggedOverIndex`
 - **Mobile:** `handleGlobalTouchMove` in `DragHandle.tsx` applies inline `transform: translate3d(0, ${deltaY}px, 0) scale(${scale})` to wrapper element
 - Drop target detection: `elementFromPoint()` finds card under touch point, dispatches `touchdragover` custom event
 
 **On Drop:**
+
 1. `handleDragEnd` in `useDragAndDrop.ts` resets drag state
 2. If valid drop target: calls `handleReorder(fromIndex, toIndex)` in `ListPage.tsx`
 3. `handleReorder` captures positions BEFORE reorder (for FLIP), calls `Library.reorder()`, switches to "Custom" sort mode
@@ -1959,6 +1972,7 @@ function queueCustomOrderSave(tabKey: string, orderIds: string[]) {
 ### Visual Changes During Drag
 
 **Desktop Cards (`.tab-card.is-dragging`):**
+
 - `z-index: 100` (via `--z-dragging` token)
 - `box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--accent)`
 - `border-color: var(--accent)`
@@ -1966,6 +1980,7 @@ function queueCustomOrderSave(tabKey: string, orderIds: string[]) {
 - Inline styles: `opacity: 0.5`, `transform: rotate(2deg)` (from `useDragAndDrop.ts`)
 
 **Mobile Cards (`.card-mobile.is-dragging`):**
+
 - `z-index: 100` (via `--z-dragging` token)
 - `box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--accent)`
 - `border-color: var(--accent)`
@@ -1975,12 +1990,14 @@ function queueCustomOrderSave(tabKey: string, orderIds: string[]) {
 - `width: 100%`, `max-width: 100%` to maintain full-width alignment
 
 **Drop Target (`.is-drop-target`):**
+
 - Animation: `dropTargetAnimation` (scale 1.02, blue glow shadow)
 - Applied to both `.tab-card` and `.card-mobile`
 
 ### Different Code Paths: Desktop vs Mobile
 
 **Desktop:**
+
 - Uses native HTML5 Drag API (`draggable={true}`)
 - Drag handle shows on hover/focus (opacity transition)
 - Browser provides drag ghost image
@@ -1988,6 +2005,7 @@ function queueCustomOrderSave(tabKey: string, orderIds: string[]) {
 - Visual feedback: rotation + scale animation
 
 **Mobile:**
+
 - Custom touch event handling (non-passive listeners in capture phase)
 - Touch-hold detection (200ms timer)
 - Haptic feedback on drag start
@@ -1998,6 +2016,7 @@ function queueCustomOrderSave(tabKey: string, orderIds: string[]) {
 - Handle always visible (dimmed 0.5 opacity, full on touch-hold)
 
 **Shared:**
+
 - Both use `useDragAndDrop` hook for state management
 - Both use FLIP animation after drop
 - Both persist custom order via `Library.reorder()`
@@ -2015,10 +2034,12 @@ function queueCustomOrderSave(tabKey: string, orderIds: string[]) {
 ## 5. Data Attributes & Classes
 
 **Data Attributes:**
+
 - `data-item-index` - Applied to wrapper div in `ListPage.tsx`, used for drop target detection
 - `data-drag-active="true"` - Applied to SwipeableCard wrapper during mobile drag to disable swipe
 
 **CSS Classes:**
+
 - `.is-dragging` - Applied to dragged card and wrapper
 - `.is-drop-target` - Applied to drop target card
 - `.drag-handle` - Drag handle element
@@ -2040,4 +2061,3 @@ function queueCustomOrderSave(tabKey: string, orderIds: string[]) {
 ---
 
 **End of Report**
-

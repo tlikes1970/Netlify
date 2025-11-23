@@ -299,7 +299,7 @@ export default function MyListsPage() {
                   item={item}
                   context="tab-watching"
                   actions={actions}
-                  currentListContext={listName}
+                  currentListContext={listName ?? undefined}
                 />
               ))}
             </div>
