@@ -5,6 +5,7 @@
 ### Phase 1: Standardized Pro Status Checks
 
 #### 1. FlickWordGame.tsx
+
 - **File**: `apps/web/src/components/games/FlickWordGame.tsx`
 - **Changes**:
   - Added `import { useProStatus } from "../../lib/proStatus";`
@@ -17,6 +18,7 @@
 - **Behavior**: Free = 1 game/day, Pro = 3 games/day (unchanged)
 
 #### 2. TriviaGame.tsx
+
 - **File**: `apps/web/src/components/games/TriviaGame.tsx`
 - **Changes**:
   - Added `import { useProStatus } from "../../lib/proStatus";`
@@ -28,6 +30,7 @@
 - **Behavior**: Free = 1 game/day (10 questions), Pro = 3 games/day (30 questions) (unchanged)
 
 #### 3. DisplaySection (Episode Tracking)
+
 - **File**: `apps/web/src/components/settingsSections.tsx`
 - **Changes**:
   - Added `const { isPro } = useProStatus();` in DisplaySection component
@@ -40,6 +43,7 @@
 ### Phase 2: Unified Upgrade CTAs
 
 #### 1. GoofsModal
+
 - **File**: `apps/web/src/components/extras/GoofsModal.tsx`
 - **Changes**:
   - Replaced `import { startProUpgrade } from "../../lib/proUpgrade";` with `import { UpgradeToProCTA } from "../UpgradeToProCTA";`
@@ -47,6 +51,7 @@
 - **Behavior**: Non-Pro users now see consistent upgrade panel instead of custom UI (unchanged functionality)
 
 #### 2. CommunityPanel (Sort Mode Gating)
+
 - **File**: `apps/web/src/components/CommunityPanel.tsx`
 - **Changes**:
   - Added `import { UpgradeToProCTA } from "./UpgradeToProCTA";`
@@ -60,6 +65,7 @@
 ### Phase 3: Custom List Limit Error Message
 
 #### 1. customLists.ts
+
 - **File**: `apps/web/src/lib/customLists.ts`
 - **Changes**:
   - Updated error message from:
@@ -82,6 +88,7 @@
 ### A. Pro Status + Games
 
 #### As a Free user:
+
 - [ ] Open FlickWord
   - [ ] Confirm only 1 game is available per day
   - [ ] Verify game behavior is unchanged (word guessing, stats, etc.)
@@ -90,6 +97,7 @@
   - [ ] Verify game behavior is unchanged (question answering, scoring, etc.)
 
 #### As a Pro user:
+
 - [ ] Open FlickWord
   - [ ] Confirm up to 3 games per day are available
   - [ ] Verify game indicator shows "Game X of 3"
@@ -102,12 +110,14 @@
 ### B. Episode Tracking in Condensed View
 
 #### As a Free user:
+
 - [ ] Go to Settings → Display
 - [ ] Enable "Condensed View" checkbox
 - [ ] Verify "Episode Tracking" checkbox is disabled (grayed out)
 - [ ] Verify inline upgrade CTA appears: "Episode tracking is disabled in condensed view. [Upgrade to Pro] to enable it."
 
 #### As a Pro user:
+
 - [ ] Go to Settings → Display
 - [ ] Enable "Condensed View" checkbox
 - [ ] Verify "Episode Tracking" checkbox is enabled and can be toggled
@@ -116,6 +126,7 @@
 ### C. GoofsModal
 
 #### As a Free user:
+
 - [ ] Open any title card that has Goofs/Insights button
 - [ ] Click the Goofs/Insights button
 - [ ] Verify modal opens and shows UpgradeToProCTA panel (not custom UI)
@@ -123,6 +134,7 @@
 - [ ] Click "Upgrade" button and verify it navigates to Settings → Pro
 
 #### As a Pro user:
+
 - [ ] Open the same title
 - [ ] Click the Goofs/Insights button
 - [ ] Verify actual goofs/insights content shows (not upgrade CTA)
@@ -131,6 +143,7 @@
 ### D. CommunityPanel Sort Modes
 
 #### As a Free user:
+
 - [ ] Open Community view
 - [ ] Locate the sort dropdown
 - [ ] Attempt to select a Pro-only sort mode (e.g., "Hot", "Top", "Trending" if available)
@@ -142,6 +155,7 @@
 - [ ] Verify upgrade CTA disappears
 
 #### As a Pro user:
+
 - [ ] Open Community view
 - [ ] Verify all sort modes are available in dropdown (including Pro-only modes)
 - [ ] Select each sort mode and verify:
@@ -152,6 +166,7 @@
 ### E. Custom List Limit
 
 #### As a Free user:
+
 - [ ] Go to Settings → Display → My Lists
 - [ ] Create custom lists until you reach the limit (3 lists)
 - [ ] Attempt to create a 4th list
@@ -168,4 +183,3 @@
 - All Pro status checks now use centralized `useProStatus()` hook in React components
 - All upgrade prompts now use unified `UpgradeToProCTA` component
 - Error messages are more explicit but maintain same error handling flow
-

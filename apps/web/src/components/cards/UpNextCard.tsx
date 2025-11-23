@@ -4,6 +4,7 @@ import { useTranslations } from '../../lib/language';
 import { OptimizedImage } from '../OptimizedImage';
 import { fetchCurrentEpisodeInfo } from '../../tmdb/tv';
 import { getShowStatusInfo, formatLastAirDate } from '../../utils/showStatus';
+import { getNextAirDate, getValidatedNextAirDate, getNextAirStatus, getHumanizedAirDate, formatUpNextDate } from '../../lib/constants/metadata';
 import { dlog } from '../../lib/log';
 
 export type UpNextCardProps = {
@@ -26,21 +27,10 @@ export default function UpNextCard({ item }: UpNextCardProps) {
   dlog(`🔍 UpNextCard ${title} received nextAirDate:`, nextAirDate);
   dlog(`🌍 Current timezone:`, Intl.DateTimeFormat().resolvedOptions().timeZone);
 
-  const formatAirDate = (dateString: string) => {
-    try {
-      // Parse the date string as UTC to avoid timezone issues
-      const date = new Date(dateString + 'T00:00:00Z'); // Force UTC interpretation
-      const formatted = date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric',
-        timeZone: 'UTC' // Ensure we're working in UTC
-      });
-      dlog(`📅 Formatting ${dateString} → ${formatted} (UTC)`);
-      return formatted;
-    } catch {
-      return dateString;
-    }
-  };
+  // Get validated date and status
+  const rawDate = getNextAirDate({ nextAirDate, next_episode_to_air: null });
+  const validatedDate = getValidatedNextAirDate(rawDate);
+  const airStatus = getNextAirStatus(rawDate);
 
   // Fetch actual episode info from TMDB
   useEffect(() => {
@@ -64,7 +54,7 @@ export default function UpNextCard({ item }: UpNextCardProps) {
   const statusInfo = getShowStatusInfo(showStatus);
   const isCompleted = statusInfo?.isCompleted || false;
 
-  // Get the appropriate message based on show status
+  // Get the appropriate message based on show status and validated date
   const getStatusMessage = () => {
     if (isCompleted) {
       if (showStatus === 'Ended') {
@@ -74,12 +64,19 @@ export default function UpNextCard({ item }: UpNextCardProps) {
       }
     }
     
-    // If we have a specific date, show it
-    if (nextAirDate) {
-      return `Up Next: ${formatAirDate(nextAirDate)}`;
+    // If we have a validated date, show it with appropriate formatting
+    if (validatedDate && airStatus !== 'tba') {
+      const humanized = getHumanizedAirDate(rawDate);
+      if (airStatus === 'soon') {
+        // For soon dates, use humanized format (Today, Tomorrow, In X days)
+        return `Up Next: ${humanized}`;
+      } else {
+        // For future dates, use formatted date (Jan 14)
+        return `Up Next: ${formatUpNextDate(rawDate)}`;
+      }
     }
     
-    // If no date but show is returning/in production/planned, show status
+    // If no valid date but show is returning/in production/planned, show status
     if (showStatus) {
       switch (showStatus) {
         case 'Returning Series':
@@ -101,8 +98,8 @@ export default function UpNextCard({ item }: UpNextCardProps) {
       return showStatus === 'Canceled' ? '#dc2626' : 'var(--muted)'; // red for cancelled, muted for ended
     }
     
-    // Different colors for shows without dates
-    if (!nextAirDate) {
+    // Different colors for shows without valid dates
+    if (!validatedDate || airStatus === 'tba') {
       switch (showStatus) {
         case 'Returning Series':
           return '#16a34a'; // green - same as badge
@@ -115,7 +112,12 @@ export default function UpNextCard({ item }: UpNextCardProps) {
       }
     }
     
-    return 'var(--accent)'; // default blue for shows with dates
+    // Color based on air status
+    if (airStatus === 'soon') {
+      return '#16a34a'; // green for soon dates
+    }
+    
+    return 'var(--accent)'; // default blue for future dates
   };
 
   return (

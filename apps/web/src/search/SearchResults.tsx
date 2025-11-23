@@ -17,6 +17,7 @@ import { isMobileNow, onMobileChange } from "../lib/isMobile";
 import Portal from "../components/Portal";
 import SearchTip from "../components/onboarding/SearchTip";
 import { getSearchTipDismissed } from "../lib/onboarding";
+import { ListMembershipBadge } from "../components/ListMembershipBadge";
 
 type SearchResultWithPagination = {
   items: MediaItem[];
@@ -613,9 +614,10 @@ function SearchResultCard({
 
         {/* Meta */}
         <div
-          className={`text-muted-foreground ${isMobile ? "text-xs" : "text-sm"} mb-1`}
+          className={`text-muted-foreground ${isMobile ? "text-xs" : "text-sm"} mb-1 flex items-center gap-2 flex-wrap`}
         >
-          {genre} • {mediaTypeLabel}
+          <span>{genre} • {mediaTypeLabel}</span>
+          <ListMembershipBadge item={item} />
         </div>
 
         {/* Streaming Info - only show when we have real data */}

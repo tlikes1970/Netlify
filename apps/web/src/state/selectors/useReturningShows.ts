@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { Library, type LibraryEntry } from '@/lib/storage';
-import { getDisplayAirDate, getNextAirDate, isReturning, RETURNING_STATUS } from '@/lib/constants/metadata';
+import { getDisplayAirDate, getNextAirDate, getValidatedNextAirDate, getNextAirStatus, isReturning, RETURNING_STATUS, type NextAirStatus } from '@/lib/constants/metadata';
 
 export interface ReturningShow extends LibraryEntry {
   displayAirDate: string; // formatted date or 'TBA'
@@ -34,23 +34,45 @@ export function useReturningShows(): ReturningShow[] {
   const all = useMemo(() => Library.getAll(), [version]);
 
   const returning = useMemo(() => {
+    // Filter to TV shows with "Returning Series" status
     const onlyReturning = all.filter(x => x.mediaType === 'tv' && isReturning(x));
 
-    const withDerived: ReturningShow[] = onlyReturning.map(x => ({
-      ...x,
-      displayAirDate: getDisplayAirDate(x)
-    }));
+    // Map to include validated dates and status
+    const withDerived: (ReturningShow & { validatedDate: Date | null; airStatus: NextAirStatus })[] = onlyReturning.map(x => {
+      const rawDate = getNextAirDate(x);
+      const validatedDate = getValidatedNextAirDate(rawDate);
+      const airStatus = getNextAirStatus(rawDate);
+      
+      return {
+        ...x,
+        displayAirDate: getDisplayAirDate(x),
+        validatedDate,
+        airStatus
+      };
+    });
 
-    const sorted = [...withDerived].sort((a, b) => {
-      const ad = getNextAirDate(a);
-      const bd = getNextAirDate(b);
-      if (ad && bd) return ad.getTime() - bd.getTime();
-      if (ad && !bd) return -1;
-      if (!ad && bd) return 1;
+    // Filter out shows with no valid date (TBA) - only include shows with confirmed dates
+    const withValidDates = withDerived.filter(x => x.airStatus !== 'tba');
+
+    // Sort: soon first, then future, then alphabetical
+    const sorted = [...withValidDates].sort((a, b) => {
+      // Priority: soon > future
+      if (a.airStatus === 'soon' && b.airStatus !== 'soon') return -1;
+      if (a.airStatus !== 'soon' && b.airStatus === 'soon') return 1;
+      
+      // Within same status, sort by date
+      if (a.validatedDate && b.validatedDate) {
+        return a.validatedDate.getTime() - b.validatedDate.getTime();
+      }
+      if (a.validatedDate && !b.validatedDate) return -1;
+      if (!a.validatedDate && b.validatedDate) return 1;
+      
+      // Fallback to alphabetical
       return (a.title || '').localeCompare(b.title || '');
     });
 
-    return sorted;
+    // Remove the temporary fields before returning
+    return sorted.map(({ validatedDate, airStatus, ...rest }) => rest);
   }, [all]);
 
   return returning;

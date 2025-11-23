@@ -1,5 +1,12 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.173: Improved drag-and-drop visuals - smoother desktop animations, better mobile floating effect
+// - Desktop: Removed redundant inline transforms from useDragAndDrop, simplified to single CSS animation
+// - Desktop: Reduced rotation from 2deg to 1deg for smoother feel
+// - Mobile: Enhanced shadow (layered shadows) for clearer floating effect above neighbors
+// - Mobile: Removed redundant inline width/maxWidth assignments, CSS handles constraints
+// - All drag functionality preserved: FLIP animations and custom order persistence unchanged
+// - Rollback: Revert this commit to restore previous drag visual behavior
 // ⚠️ VERSION 0.1.172: Pro-gating cleanup - Standardized Pro status checks, unified upgrade CTAs, improved error messages
 // - Replaced settings.pro.isPro with useProStatus() hook in games and settings components
 // - Replaced custom upgrade UIs with unified UpgradeToProCTA component (GoofsModal, CommunityPanel)
@@ -255,4 +262,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.172";
+export const APP_VERSION = "0.1.173";

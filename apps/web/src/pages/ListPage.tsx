@@ -605,8 +605,8 @@ export default function ListPage({
         el.style.transform = `translate(${dx}px, ${dy}px) rotateX(${rotationAngle}deg) scale(0.95)`;
         el.style.transition = "transform 0s, opacity 0s";
         el.style.opacity = "0.9";
-        // Ensure z-index is high during animation
-        el.style.zIndex = "9999";
+        // Ensure z-index is elevated during animation (below modals)
+        el.style.zIndex = "100"; // Matches --z-dragging token
         el.style.position = "relative";
         el.style.transformStyle = "preserve-3d";
 

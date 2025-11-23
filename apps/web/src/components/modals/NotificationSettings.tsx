@@ -202,7 +202,7 @@ export function NotificationSettings({ isOpen, onClose }: NotificationSettingsPr
                 <span>Email notifications</span>
                 <p className="text-xs" style={{ color: 'var(--muted)' }}>
                   {isProUser 
-                    ? 'Receive notifications via email' 
+                    ? 'Receive episode notifications via email' 
                     : 'Pro feature - upgrade to enable email notifications'
                   }
                 </p>

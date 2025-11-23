@@ -61,7 +61,7 @@ export function ShowNotificationSettingsModal({ isOpen, onClose, show }: ShowNot
 
   const sendTestNotification = async () => {
     // Get user email from settings or prompt
-    const userEmail = prompt('Enter your email address to test notifications:');
+    const userEmail = prompt('Enter your email address to receive a test notification:');
     if (!userEmail) return;
 
     try {
@@ -217,7 +217,7 @@ export function ShowNotificationSettingsModal({ isOpen, onClose, show }: ShowNot
                   <span>Email notifications</span>
                   <p className="text-xs" style={{ color: 'var(--muted)' }}>
                     {isProUser 
-                      ? 'Receive notifications via email' 
+                      ? 'Receive episode notifications via email' 
                       : 'Pro feature - upgrade to enable email notifications'
                     }
                   </p>
@@ -235,7 +235,7 @@ export function ShowNotificationSettingsModal({ isOpen, onClose, show }: ShowNot
           {/* Test Notification */}
           {showSettings.enabled && (
             <div className="space-y-3">
-              <h3 className="text-lg font-semibold">Test Notifications</h3>
+              <h3 className="text-lg font-semibold">Test Email Notification</h3>
               <button
                 onClick={sendTestNotification}
                 className="w-full px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
@@ -244,7 +244,7 @@ export function ShowNotificationSettingsModal({ isOpen, onClose, show }: ShowNot
                 📧 Send Test Email
               </button>
               <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                Test the email notification system to make sure it's working properly
+                Send a test email to verify your email notification settings are working correctly
               </p>
             </div>
           )}

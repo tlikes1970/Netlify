@@ -1,0 +1,56 @@
+{
+  "one_sentence_value_prop": "Flicklet is a modern TV and movie tracking web application with a Netflix-style interface that helps users discover, track, and manage their entertainment consumption across movies and TV shows, with personalized recommendations, daily games, and community features.",
+  "primary_audience": "TV and movie enthusiasts who want to track what they watch, discover new content, and organize their entertainment consumption",
+  "secondary_audience": "Casual viewers, students, and professionals who want a simple, organized way to manage their watchlists and discover personalized recommendations",
+  "core_workflow": "Users browse trending content and movies in theaters, add shows/movies to watchlists (Currently Watching, Want to Watch, Watched), track individual episodes, play daily games (FlickWord word-guessing, Trivia questions), discover personalized recommendations based on customizable genre preferences (3 rows with main+subgenre combinations), view theater showtimes near them, and manage custom lists. All data syncs across devices when signed in.",
+  "session_length_estimate": "3-5 min, 4× per week",
+  "asset_types": [
+    "TV shows",
+    "Movies",
+    "Poster images",
+    "Episode data",
+    "Theater showtimes",
+    "Video content (Community Player)",
+    "Game data (FlickWord words, Trivia questions)"
+  ],
+  "output_types": [
+    "Watchlists (Currently Watching, Want to Watch, Watched)",
+    "Custom lists (up to 3 for free, unlimited for Pro)",
+    "Game statistics (FlickWord accuracy, streaks; Trivia performance)",
+    "Personalized recommendation rows (3 customizable genre combinations)",
+    "Episode tracking with 'Up Next' section",
+    "Theater showtime listings",
+    "Data exports (JSON format, CSV coming for Pro)"
+  ],
+  "platforms": [
+    "PWA (Progressive Web App)",
+    "Web (Netlify hosting)",
+    "iOS (Capacitor)",
+    "Android (Capacitor)"
+  ],
+  "pricing_mentioned": "Free while in alpha/beta. Pro features available via testing toggle in Settings. Payment integration (Stripe, iOS App Store, Google Play) planned but not yet implemented. Pro features include: unlimited custom lists, advanced notifications (precise timing, email), extra trivia questions (30 vs 10), advanced community sorting, multi-topic filtering, bloopers/extras access, episode tracking in condensed view.",
+  "wait_list_size": "",
+  "tech_stack": [
+    "React 18",
+    "TypeScript",
+    "Vite",
+    "Firebase (Auth, Firestore, Storage)",
+    "Capacitor (iOS/Android)",
+    "Netlify (hosting)",
+    "TMDB API (movie/TV data)",
+    "Trivia API",
+    "Tailwind CSS",
+    "SendGrid (email notifications)"
+  ],
+  "roadmap_highlights": [
+    "Smart Notifications (Pro)",
+    "Advanced Analytics (Pro)",
+    "Premium Theme Packs (Pro)",
+    "Social Features - friend connections, shared watchlists, activity feed, recommendations (Coming Soon)",
+    "CSV Export (Pro)",
+    "Community-submitted content for Community Player"
+  ],
+  "founder_comments": "Pro features are currently in alpha/testing phase with a toggle in Settings → Pro tab. Payment integration framework is built (Stripe, iOS, Android) but not yet connected to real payment providers. Users can enable Pro via Settings toggle for testing. The app has a three-fold personality system (Regular, Semi-Sarcastic, Severely Sarcastic) and supports English and Spanish. Free users get: 3 custom lists, 1 FlickWord game/day, 10 Trivia questions/day, 3 community posts/day, 10 comments/day, basic notifications. Pro users get unlimited lists, 3 games/day, 30 trivia questions/day, advanced notifications, email notifications, precise timing controls, advanced community features.",
+  "repo_is_public": true,
+  "live_site_scraped_ok": false
+}

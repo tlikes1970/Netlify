@@ -19,6 +19,14 @@ export interface DragHandleProps {
  * Data Source: Card index and item ID
  * Update Path: Pass onDragStart/onDragEnd handlers from parent
  * Dependencies: useIsDesktop hook for responsive behavior
+ * 
+ * DRAG PATHS:
+ * - Desktop: Native HTML5 drag API (draggable={true}) → onDragStart fires → useDragAndDrop handles state
+ * - Mobile: Touch-hold (200ms) → custom touch listeners → inline transform on [data-item-index] wrapper
+ * 
+ * VISUAL TRANSFORM TARGETS:
+ * - Desktop: CSS animation on .tab-card.is-dragging (no inline transform from DragHandle)
+ * - Mobile: Inline transform on wrapperElementRef ([data-item-index] div) via translate3d + scale
  */
 
 // Touch hold duration: 200ms by default (improved), 400ms if explicitly disabled via flag
@@ -216,9 +224,10 @@ export function DragHandle({
           navigator.vibrate(15);
         }
 
-        // Set high z-index on wrapper during drag so it appears above other cards
+        // Set z-index on wrapper during drag so it appears above other cards but below modals
+        // Note: CSS variables don't work in inline styles, so we use the numeric value
         if (wrapperElementRef.current) {
-          wrapperElementRef.current.style.zIndex = "9999";
+          wrapperElementRef.current.style.zIndex = "100"; // Matches --z-dragging token
           wrapperElementRef.current.style.position = "relative";
         }
 
@@ -281,28 +290,31 @@ export function DragHandle({
       const deltaX = touch.clientX - touchStartRef.current.x;
       console.log("[DragHandle] touchmove deltaY=", deltaY, "deltaX=", deltaX);
 
-      // Calculate rotation based on movement (more rotation = more drag distance)
-      const rotationAngle = Math.min(Math.abs(deltaY) / 10, 8); // Max 8 degrees
-      const rotationDirection = deltaY > 0 ? rotationAngle : -rotationAngle;
-
       // Calculate scale based on drag distance (slight scale up as you drag)
       const dragDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-      const scale = Math.min(1 + dragDistance / 500, 1.08); // Max scale 1.08
+      const scale = Math.min(1 + dragDistance / 500, 1.02); // Max scale 1.02 (subtle lift)
 
-      // Move the card visually - apply enhanced transform with rotation and scale
-      // This ensures the drag transform and FLIP animation target the same element
+      // Move the card visually - apply flat transform (translate3d/scale only, no rotation)
+      // Use translate3d for better performance and to ensure proper composition
+      // Mobile drag should stay flat, full-width, and aligned
       if (wrapperElementRef.current) {
-        wrapperElementRef.current.style.transform = `translateY(${deltaY}px) rotate(${rotationDirection}deg) scale(${scale})`;
-        wrapperElementRef.current.style.opacity = "0.85";
-        wrapperElementRef.current.style.zIndex = "9999";
+        // Apply transform to wrapper - this is the [data-item-index] div from ListPage
+        wrapperElementRef.current.style.transform = `translate3d(0, ${deltaY}px, 0) scale(${scale})`;
+        wrapperElementRef.current.style.opacity = "0.9";
+        wrapperElementRef.current.style.zIndex = "100"; // Matches --z-dragging token
         wrapperElementRef.current.style.position = "relative"; // Ensure z-index works
         wrapperElementRef.current.style.transition = "none"; // Disable transition during drag
-        // Also ensure parent container has high z-index
-        const parent = wrapperElementRef.current.parentElement;
-        if (parent) {
-          parent.style.zIndex = "9999";
-          parent.style.position = "relative";
+        // Width/max-width handled by CSS [data-item-index].is-dragging - no need to set inline
+        
+        // Also ensure the SwipeableCard wrapper respects z-index
+        const swipeableElement = wrapperElementRef.current.querySelector('.swipeable') as HTMLElement;
+        if (swipeableElement) {
+          swipeableElement.style.zIndex = "inherit";
+          swipeableElement.style.position = "relative";
         }
+        
+        // Card element width handled by CSS - no need to set inline
+        // Don't apply transform to card itself - let wrapper handle it
       }
 
       // Check which card is under the touch point for drop target detection
@@ -356,7 +368,17 @@ export function DragHandle({
         wrapper.style.transition =
           "transform .2s ease-out, opacity .2s ease-out";
         wrapper.style.opacity = "1";
-        wrapper.style.transform = "translateY(0) rotate(0deg) scale(1)";
+        wrapper.style.transform = "translate3d(0, 0, 0) scale(1)";
+        // Width/max-width reset handled by CSS class removal - no need to clear inline
+        
+        // Reset SwipeableCard z-index
+        const swipeableElement = wrapper.querySelector('.swipeable') as HTMLElement;
+        if (swipeableElement) {
+          swipeableElement.style.zIndex = "";
+          swipeableElement.style.position = "";
+        }
+        
+        // Card element width reset handled by CSS - no need to clear inline
         // Keep z-index via CSS class (is-dragging class will be removed by parent)
         // Clear inline z-index after FLIP completes
         setTimeout(() => {
@@ -563,7 +585,7 @@ export function DragHandle({
         transition: "opacity 0.2s ease, transform 0.2s ease",
         opacity: isDesktop ? (shouldShow ? 1 : 0) : mobileOpacity,
         pointerEvents: "auto", // Always allow pointer events so touch-hold can work
-        zIndex: 1000, // Much higher z-index to ensure it's above SwipeableCard and other elements
+        zIndex: 1000, // Matches --z-nav token (handle should be above cards but below modals)
         touchAction: "none",
         backgroundColor: isDesktop ? "transparent" : "rgba(0, 0, 0, 0.2)", // More visible background on mobile
         padding: "4px",

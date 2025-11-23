@@ -114,15 +114,6 @@ export default function MyListsPage() {
     }
   };
 
-  const handleResetCounts = () => {
-    const confirmed = window.confirm(
-      'Are you sure you want to reset all custom list counts to zero? This will not delete the lists themselves, just reset their item counts.'
-    );
-    
-    if (confirmed) {
-      customListManager.resetAllCounts();
-    }
-  };
 
   // List share entry point – uses shareListWithFallback
   const handleShareList = async (listId: string) => {
@@ -211,16 +202,6 @@ export default function MyListsPage() {
         </h1>
         
         <div className="flex gap-2">
-          {userLists.customLists.length > 0 && (
-            <button
-              onClick={handleResetCounts}
-              className="px-3 py-2 rounded-lg transition-colors text-sm"
-              style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', border: '1px solid var(--line)' }}
-            >
-              Reset Counts
-            </button>
-          )}
-          
           {userLists.customLists.length < userLists.maxLists && (
             <button
               onClick={handleCreateList}
@@ -318,6 +299,7 @@ export default function MyListsPage() {
                   item={item}
                   context="tab-watching"
                   actions={actions}
+                  currentListContext={listName}
                 />
               ))}
             </div>

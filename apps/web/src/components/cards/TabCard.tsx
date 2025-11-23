@@ -41,6 +41,11 @@ export type TabCardProps = {
  * - Poster on left (160px wide, 2:3 aspect ratio)
  * - Content on right with title, meta, overview, actions
  * - Matches the design mockups exactly
+ * 
+ * Badge contexts:
+ * - TabCard does NOT render ListMembershipBadge (list-specific contexts)
+ * - Used in: Watching tab, Want to Watch tab, Watched tab, Returning tab, My Lists detail pages
+ * - MyListToggle button still shows current list membership via button text
  */
 export default function TabCard({
   item,
@@ -658,7 +663,15 @@ export default function TabCard({
         )}
 
         {/* My List + button */}
-        <MyListToggle item={item} />
+        <MyListToggle 
+          item={item} 
+          currentListContext={
+            tabType === "watching" ? "watching" :
+            tabType === "want" ? "wishlist" :
+            tabType === "watched" ? "watched" :
+            undefined
+          }
+        />
       </div>
 
       {/* Info Column */}

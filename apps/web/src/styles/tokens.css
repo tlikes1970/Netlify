@@ -15,6 +15,7 @@
   
   /* Z-index scale */
   --z-base: 0;
+  --z-dragging: 100; /* Dragged cards - above base content, below modals */
   --z-nav: 1000;
   --z-dropdown: 2000;
   --z-overlay: 3000;

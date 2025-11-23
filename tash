@@ -1,0 +1,184 @@
+[1mdiff --git a/docs/RESET_GAME_STATS_GUIDE.md b/docs/RESET_GAME_STATS_GUIDE.md[m
+[1mindex 224274c..d1305f1 100644[m
+[1m--- a/docs/RESET_GAME_STATS_GUIDE.md[m
+[1m+++ b/docs/RESET_GAME_STATS_GUIDE.md[m
+[36m@@ -7,11 +7,13 @@[m [mThis guide explains how to reset game statistics for a specific user profile.[m
+ ## Quick Reference[m
+ [m
+ **LocalStorage Keys:**[m
+[32m+[m
+ - FlickWord: `flickword:stats`[m
+ - Trivia: `trivia:stats`[m
+ - Legacy: `flicklet-data` (also contains stats)[m
+ [m
+ **Firebase Path:**[m
+[32m+[m
+ - `users/{uid}/gameStats`[m
+ [m
+ ---[m
+[36m@@ -26,21 +28,35 @@[m [mThis guide explains how to reset game statistics for a specific user profile.[m
+ [m
+ ```javascript[m
+ // Reset FlickWord stats[m
+[31m-localStorage.removeItem('flickword:stats');[m
+[31m-const flickletData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');[m
+[32m+[m[32mlocalStorage.removeItem("flickword:stats");[m
+[32m+[m[32mconst flickletData = JSON.parse(localStorage.getItem("flicklet-data") || "{}");[m
+ if (flickletData.flickword) delete flickletData.flickword;[m
+[31m-localStorage.setItem('flicklet-data', JSON.stringify(flickletData));[m
+[31m-localStorage.setItem('flickword:stats', JSON.stringify({games:0,wins:0,losses:0,streak:0,maxStreak:0}));[m
+[31m-window.dispatchEvent(new CustomEvent('flickword:stats-updated'));[m
+[31m-console.log('✅ FlickWord stats reset');[m
+[32m+[m[32mlocalStorage.setItem("flicklet-data", JSON.stringify(flickletData));[m
+[32m+[m[32mlocalStorage.setItem([m
+[32m+[m[32m  "flickword:stats",[m
+[32m+[m[32m  JSON.stringify({ games: 0, wins: 0, losses: 0, streak: 0, maxStreak: 0 })[m
+[32m+[m[32m);[m
+[32m+[m[32mwindow.dispatchEvent(new CustomEvent("flickword:stats-updated"));[m
+[32m+[m[32mconsole.log("✅ FlickWord stats reset");[m
+ [m
+ // Reset Trivia stats[m
+[31m-localStorage.removeItem('trivia:stats');[m
+[32m+[m[32mlocalStorage.removeItem("trivia:stats");[m
+ if (flickletData.trivia) delete flickletData.trivia;[m
+[31m-localStorage.setItem('flicklet-data', JSON.stringify(flickletData));[m
+[31m-localStorage.setItem('trivia:stats', JSON.stringify({games:0,wins:0,losses:0,correct:0,total:0,streak:0,maxStreak:0}));[m
+[31m-window.dispatchEvent(new CustomEvent('trivia:statsUpdated'));[m
+[31m-console.log('✅ Trivia stats reset');[m
+[32m+[m[32mlocalStorage.setItem("flicklet-data", JSON.stringify(flickletData));[m
+[32m+[m[32mlocalStorage.setItem([m
+[32m+[m[32m  "trivia:stats",[m
+[32m+[m[32m  JSON.stringify({[m
+[32m+[m[32m    games: 0,[m
+[32m+[m[32m    wins: 0,[m
+[32m+[m[32m    losses: 0,[m
+[32m+[m[32m    correct: 0,[m
+[32m+[m[32m    total: 0,[m
+[32m+[m[32m    streak: 0,[m
+[32m+[m[32m    maxStreak: 0,[m
+[32m+[m[32m  })[m
+[32m+[m[32m);[m
+[32m+[m[32mwindow.dispatchEvent(new CustomEvent("trivia:statsUpdated"));[m
+[32m+[m[32mconsole.log("✅ Trivia stats reset");[m
+ ```[m
+ [m
+ 4. Refresh the page to see updated stats[m
+[36m@@ -53,14 +69,14 @@[m [mconsole.log('✅ Trivia stats reset');[m
+ [m
+ ```javascript[m
+ // Load the reset utility script[m
+[31m-const script = document.createElement('script');[m
+[31m-script.src = '/tools/reset-game-stats.js';[m
+[32m+[m[32mconst script = document.createElement("script");[m
+[32m+[m[32mscript.src = "/tools/reset-game-stats.js";[m
+ document.head.appendChild(script);[m
+ [m
+ // Wait for script to load, then use it[m
+ setTimeout(() => {[m
+   // Reset all stats (local + cloud)[m
+[31m-  resetGameStats('all', true);[m
+[32m+[m[32m  resetGameStats("all", true);[m
+ }, 1000);[m
+ ```[m
+ [m
+[36m@@ -68,46 +84,79 @@[m [mOr use the simpler inline version:[m
+ [m
+ ```javascript[m
+ // Get current user[m
+[31m-const currentUser = window.authManager?.getCurrentUser() || window.firebase?.auth()?.currentUser;[m
+[32m+[m[32mconst currentUser =[m
+[32m+[m[32m  window.authManager?.getCurrentUser() || window.firebase?.auth()?.currentUser;[m
+ [m
+ // Reset local stats[m
+[31m-localStorage.removeItem('flickword:stats');[m
+[31m-localStorage.removeItem('trivia:stats');[m
+[31m-const flickletData = JSON.parse(localStorage.getItem('flicklet-data') || '{}');[m
+[32m+[m[32mlocalStorage.removeItem("flickword:stats");[m
+[32m+[m[32mlocalStorage.removeItem("trivia:stats");[m
+[32m+[m[32mconst flickletData = JSON.parse(localStorage.getItem("flicklet-data") || "{}");[m
+ delete flickletData.flickword;[m
+ delete flickletData.trivia;[m
+[31m-localStorage.setItem('flicklet-data', JSON.stringify(flickletData));[m
+[32m+[m[32mlocalStorage.setItem("flicklet-data", JSON.stringify(flickletData));[m
+ [m
+ // Reset to empty stats[m
+[31m-localStorage.setItem('flickword:stats', JSON.stringify({games:0,wins:0,losses:0,streak:0,maxStreak:0}));[m
+[31m-localStorage.setItem('trivia:stats', JSON.stringify({games:0,wins:0,losses:0,correct:0,total:0,streak:0,maxStreak:0}));[m
+[32m+[m[32mlocalStorage.setItem([m
+[32m+[m[32m  "flickword:stats",[m
+[32m+[m[32m  JSON.stringify({ games: 0, wins: 0, losses: 0, streak: 0, maxStreak: 0 })[m
+[32m+[m[32m);[m
+[32m+[m[32mlocalStorage.setItem([m
+[32m+[m[32m  "trivia:stats",[m
+[32m+[m[32m  JSON.stringify({[m
+[32m+[m[32m    games: 0,[m
+[32m+[m[32m    wins: 0,[m
+[32m+[m[32m    losses: 0,[m
+[32m+[m[32m    correct: 0,[m
+[32m+[m[32m    total: 0,[m
+[32m+[m[32m    streak: 0,[m
+[32m+[m[32m    maxStreak: 0,[m
+[32m+[m[32m  })[m
+[32m+[m[32m);[m
+ [m
+ // Update UI[m
+[31m-window.dispatchEvent(new CustomEvent('flickword:stats-updated'));[m
+[31m-window.dispatchEvent(new CustomEvent('trivia:statsUpdated'));[m
+[32m+[m[32mwindow.dispatchEvent(new CustomEvent("flickword:stats-updated"));[m
+[32m+[m[32mwindow.dispatchEvent(new CustomEvent("trivia:statsUpdated"));[m
+ [m
+ // Clear cloud stats (requires Firebase access)[m
+ if (currentUser?.uid) {[m
+   // Import Firebase functions[m
+[31m-  import('firebase/firestore').then(({ doc, setDoc, serverTimestamp }) => {[m
+[31m-    import('./firebaseBootstrap').then(({ db }) => {[m
+[32m+[m[32m  import("firebase/firestore").then(({ doc, setDoc, serverTimestamp }) => {[m
+[32m+[m[32m    import("./firebaseBootstrap").then(({ db }) => {[m
+       if (db) {[m
+[31m-        const userRef = doc(db, 'users', currentUser.uid);[m
+[31m-        setDoc(userRef, {[m
+[31m-          gameStats: {[m
+[31m-            flickword: {games:0,wins:0,losses:0,streak:0,maxStreak:0},[m
+[31m-            trivia: {games:0,wins:0,losses:0,correct:0,total:0,streak:0,maxStreak:0}[m
+[32m+[m[32m        const userRef = doc(db, "users", currentUser.uid);[m
+[32m+[m[32m        setDoc([m
+[32m+[m[32m          userRef,[m
+[32m+[m[32m          {[m
+[32m+[m[32m            gameStats: {[m
+[32m+[m[32m              flickword: {[m
+[32m+[m[32m                games: 0,[m
+[32m+[m[32m                wins: 0,[m
+[32m+[m[32m                losses: 0,[m
+[32m+[m[32m                streak: 0,[m
+[32m+[m[32m                maxStreak: 0,[m
+[32m+[m[32m              },[m
+[32m+[m[32m              trivia: {[m
+[32m+[m[32m                games: 0,[m
+[32m+[m[32m                wins: 0,[m
+[32m+[m[32m                losses: 0,[m
+[32m+[m[32m                correct: 0,[m
+[32m+[m[32m                total: 0,[m
+[32m+[m[32m                streak: 0,[m
+[32m+[m[32m                maxStreak: 0,[m
+[32m+[m[32m              },[m
+[32m+[m[32m            },[m
+[32m+[m[32m            gameStatsLastUpdated: serverTimestamp(),[m
+           },[m
+[31m-          gameStatsLastUpdated: serverTimestamp()[m
+[31m-        }, { merge: true }).then(() => {[m
+[31m-          console.log('✅ Cloud stats reset');[m
+[32m+[m[32m          { merge: true }[m
+[32m+[m[32m        ).then(() => {[m
+[32m+[m[32m          console.log("✅ Cloud stats reset");[m
+         });[m
+       }[m
+     });[m
+   });[m
+ }[m
+ [m
+[31m-console.log('✅ Stats reset complete');[m
+[32m+[m[32mconsole.log("✅ Stats reset complete");[m
+ ```[m
+ [m
+ ---[m
+[36m@@ -123,16 +172,16 @@[m [mconsole.log('✅ Stats re

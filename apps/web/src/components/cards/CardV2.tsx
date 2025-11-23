@@ -8,6 +8,7 @@ import { OptimizedImage } from '../OptimizedImage';
 import { CompactPrimaryAction } from '../../features/compact/CompactPrimaryAction';
 import { CompactOverflowMenu } from '../../features/compact/CompactOverflowMenu';
 import { EpisodeProgressDisplay } from '../EpisodeProgressDisplay';
+import { ListMembershipBadge } from '../ListMembershipBadge';
 
 export type CardV2Props = {
   item: MediaItem;
@@ -18,6 +19,8 @@ export type CardV2Props = {
   showRating?: boolean;       // default true where voteAverage exists
   disableSwipe?: boolean;     // disable swipe actions for horizontal scrolling contexts
   disableOverflow?: boolean;  // hide overflow menu (e.g., home currently watching rail)
+  // optional: override the list context derived from 'context' prop (useful for custom lists)
+  currentListContext?: import('../state/library.types').ListName;
 };
 
 /**
@@ -26,8 +29,30 @@ export type CardV2Props = {
  * - context-specific action bar
  * - optional Holiday + chip top-right (where relevant)
  * - SWIPE ONLY ON MOBILE: Desktop has zero swipe wrapper
+ * 
+ * Badge contexts:
+ * - ListMembershipBadge SHOWS in mixed contexts: 'home', 'search', 'tab-foryou', 'holiday'
+ * - ListMembershipBadge HIDES in list-specific contexts: 'tab-watching', 'tab-want', 'tab-watched', 'tab-not'
+ * - Usage: HomeYourShowsRail (tab-watching - hide), DiscoveryPage (tab-foryou - show), MyListsPage (tab-watching - hide)
  */
-export default function CardV2({ item, context, actions, compact, showRating = true, disableSwipe = false, disableOverflow = false }: CardV2Props) {
+/**
+ * Helper to determine if membership badge should be shown based on context.
+ * Badge shows in mixed contexts (where list membership is useful info).
+ * Badge hides in list-specific contexts (where tab/section already implies membership).
+ */
+function shouldShowMembershipBadge(context: CardContext): boolean {
+  // Mixed contexts where badge is useful (items from various lists mixed together)
+  const mixedContexts: CardContext[] = [
+    'home',
+    'search',
+    'tab-foryou',
+    'holiday',
+  ];
+
+  return mixedContexts.includes(context);
+}
+
+export default function CardV2({ item, context, actions, compact, showRating = true, disableSwipe = false, disableOverflow = false, currentListContext: propCurrentListContext }: CardV2Props) {
   const { title, year, posterUrl, voteAverage } = item;
   const rating = typeof voteAverage === 'number' ? Math.round(voteAverage * 10) / 10 : undefined;
   const translations = useTranslations();
@@ -78,7 +103,19 @@ export default function CardV2({ item, context, actions, compact, showRating = t
 
           {/* My List + */}
           {showMyListBtn && (
-            <MyListToggle item={item} />
+            <MyListToggle 
+              item={item} 
+              currentListContext={
+                // Use prop if provided (for custom lists), otherwise derive from context
+                propCurrentListContext !== undefined
+                  ? propCurrentListContext
+                  : context === 'tab-watching' ? 'watching' :
+                    context === 'tab-want' ? 'wishlist' :
+                    context === 'tab-watched' ? 'watched' :
+                    context === 'tab-not' ? 'not' :
+                    undefined
+              }
+            />
           )}
         </div>
 
@@ -128,6 +165,13 @@ export default function CardV2({ item, context, actions, compact, showRating = t
                 showId={typeof item.id === 'string' ? parseInt(item.id) : item.id}
                 compact={true}
               />
+            </div>
+          )}
+          
+          {/* List membership badge - only show in mixed contexts */}
+          {shouldShowMembershipBadge(context) && (
+            <div className="mb-1">
+              <ListMembershipBadge item={item} />
             </div>
           )}
           

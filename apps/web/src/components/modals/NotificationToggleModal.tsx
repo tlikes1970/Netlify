@@ -86,11 +86,11 @@ export function NotificationToggleModal({ isOpen, onClose, show }: NotificationT
 
     try {
       // Get user email from prompt
-      const userEmail = prompt('Enter your email address for testing:');
+      const userEmail = prompt('Enter your email address to receive a test notification:');
       if (!userEmail) {
         setMessage({
           type: 'error',
-          text: 'Email address is required for testing'
+          text: 'Email address is required to send a test notification'
         });
         return;
       }
@@ -295,11 +295,11 @@ export function NotificationToggleModal({ isOpen, onClose, show }: NotificationT
                 ? 'Sending...' 
                 : cooldownEndsAt 
                   ? `Test again in ${cooldownSeconds}s`
-                  : '🧪 Send Test Email'
+                  : '📧 Send Test Email'
               }
             </button>
             <p className="text-xs mt-2 text-center" style={{ color: 'var(--muted)' }}>
-              Test the email notification system
+              Send a test email to verify your notification settings
             </p>
           </div>
         </div>

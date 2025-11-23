@@ -398,13 +398,28 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 }
 
 /* Medium Priority: Animated drag start - smooth entrance */
-.tab-card.is-dragging,
-.card-mobile.is-dragging {
+.tab-card.is-dragging {
   animation: dragStartAnimation 0.2s ease-out forwards;
-  z-index: 9999 !important; /* High z-index during drag */
+  z-index: var(--z-dragging, 100) !important; /* Above base content, below modals */
   position: relative !important; /* Ensure z-index works */
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--accent);
   border-color: var(--accent) !important;
+}
+
+/* Mobile cards: flat drag (no rotation) */
+/* Note: Transform is handled by DragHandle inline styles during active drag */
+/* This rule only applies visual styling (shadow, z-index) without conflicting transforms */
+.card-mobile.is-dragging {
+  z-index: var(--z-dragging, 100) !important; /* Above base content, below modals */
+  position: relative !important; /* Ensure z-index works */
+  /* Enhanced shadow for clear floating effect */
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2), 0 0 0 1px var(--accent) !important;
+  border-color: var(--accent) !important;
+  /* Ensure card stays full-width and aligned */
+  width: 100% !important;
+  max-width: 100% !important;
+  /* Don't apply transform here - let DragHandle inline style handle it */
+  /* This prevents animation conflicts with the drag transform */
 }
 
 @keyframes dragStartAnimation {
@@ -413,7 +428,7 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
     opacity: 1;
   }
   100% {
-    transform: scale(1.02) rotate(2deg);
+    transform: scale(1.02) rotate(1deg); /* Reduced from 2deg for smoother feel */
     opacity: 0.95;
   }
 }
@@ -437,6 +452,23 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 
 /* Ensure wrapper div stays on top during drag */
 [data-item-index].is-dragging {
-  z-index: 9999 !important;
+  z-index: var(--z-dragging, 100) !important; /* Above base content, below modals */
   position: relative !important;
+  /* Ensure wrapper stays full-width and aligned during drag */
+  width: 100% !important;
+  max-width: 100% !important;
+  /* Enhanced shadow for clear floating effect - applied to wrapper so it elevates the entire card */
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2), 0 0 0 1px var(--accent) !important;
+  /* Don't apply transform here - DragHandle inline style handles it */
+  /* This prevents conflicts and ensures proper alignment */
+  /* Force isolation to ensure z-index works across stacking contexts */
+  isolation: isolate;
+}
+
+/* Ensure SwipeableCard and card-mobile inside dragged wrapper respect z-index */
+[data-item-index].is-dragging > *,
+[data-item-index].is-dragging .swipeable,
+[data-item-index].is-dragging .card-mobile {
+  position: relative;
+  z-index: inherit;
 }

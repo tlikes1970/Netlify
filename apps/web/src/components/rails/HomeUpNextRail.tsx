@@ -4,6 +4,7 @@ import { useLibrary } from '../../lib/storage';
 import { useTranslations } from '../../lib/language';
 import { useSettings, getPersonalityText } from '../../lib/settings';
 import { getShowStatusInfo } from '../../utils/showStatus';
+import { getNextAirDate, getValidatedNextAirDate, getNextAirStatus, type NextAirStatus } from '../../lib/constants/metadata';
 
 export default function HomeUpNextRail() {
   const watching = useLibrary('watching');
@@ -17,14 +18,41 @@ export default function HomeUpNextRail() {
     // Get all TV shows from watching list
     const tvShows = watching.filter(i => i.mediaType === 'tv');
     
-    // Separate shows with dates vs without dates
-    const showsWithDates = tvShows
-      .filter(i => !!i.nextAirDate)
-      .sort((a,b) => String(a.nextAirDate).localeCompare(String(b.nextAirDate)));
+    // Filter out completed shows (Ended/Canceled) - they shouldn't appear in Up Next
+    const activeShows = tvShows.filter(i => {
+      const statusInfo = getShowStatusInfo(i.showStatus);
+      return !statusInfo?.isCompleted;
+    });
     
-    const showsWithoutDates = tvShows
-      .filter(i => !i.nextAirDate && !getShowStatusInfo(i.showStatus)?.isCompleted)
-      .sort((a,b) => {
+    // Process shows with validated dates
+    const showsWithValidDates = activeShows
+      .map(show => {
+        const rawDate = getNextAirDate(show);
+        const validatedDate = getValidatedNextAirDate(rawDate);
+        const airStatus = getNextAirStatus(rawDate);
+        return { show, validatedDate, airStatus };
+      })
+      .filter(({ validatedDate, airStatus }) => validatedDate !== null && airStatus !== 'tba')
+      .sort((a, b) => {
+        // Sort by status: soon first, then future
+        if (a.airStatus === 'soon' && b.airStatus !== 'soon') return -1;
+        if (a.airStatus !== 'soon' && b.airStatus === 'soon') return 1;
+        // Within same status, sort by date
+        if (a.validatedDate && b.validatedDate) {
+          return a.validatedDate.getTime() - b.validatedDate.getTime();
+        }
+        return 0;
+      })
+      .map(({ show }) => show);
+    
+    // Shows without valid dates (TBA) - exclude completed shows
+    const showsWithoutDates = activeShows
+      .filter(i => {
+        const rawDate = getNextAirDate(i);
+        const validatedDate = getValidatedNextAirDate(rawDate);
+        return validatedDate === null; // No valid date
+      })
+      .sort((a, b) => {
         // Sort by status priority: Returning Series > In Production > Planned
         const statusPriority = (status: string) => {
           switch (status) {
@@ -37,14 +65,14 @@ export default function HomeUpNextRail() {
         return statusPriority(a.showStatus || '') - statusPriority(b.showStatus || '');
       });
     
-    // Combine: shows with dates first, then shows without dates
-    const combined = [...showsWithDates, ...showsWithoutDates].slice(0, 12);
+    // Combine: shows with valid dates first, then shows without dates
+    const combined = [...showsWithValidDates, ...showsWithoutDates].slice(0, 12);
     
     console.log('🔍 HomeUpNextRail items:', combined.map(item => ({
       title: item.title,
       nextAirDate: item.nextAirDate,
       showStatus: item.showStatus,
-      hasDate: !!item.nextAirDate
+      hasValidDate: getValidatedNextAirDate(getNextAirDate(item)) !== null
     })));
     
     return combined;

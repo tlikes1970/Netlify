@@ -100,6 +100,16 @@ export function TvCardMobile({ item, actions, tabKey = 'watching', index = 0, on
     }
   };
 
+  // Convert tabKey to currentListContext for MyListToggle (matches desktop TabCard behavior)
+  const getCurrentListContext = (tabKey: 'watching' | 'watched' | 'want'): 'watching' | 'wishlist' | 'watched' | undefined => {
+    switch (tabKey) {
+      case 'watching': return 'watching';
+      case 'want': return 'wishlist';
+      case 'watched': return 'watched';
+      default: return undefined;
+    }
+  };
+
   return (
     <SwipeableCard
       item={item}
@@ -108,7 +118,7 @@ export function TvCardMobile({ item, actions, tabKey = 'watching', index = 0, on
     >
       <div 
         className="card-mobile" 
-        style={{ position: 'relative', overflow: 'visible', zIndex: 'auto' }}
+        style={{ position: 'relative', overflow: 'visible' }}
         data-item-index={index}
       >
         {/* Drag Handle - Mobile (always visible, dimmed; full opacity on touch-hold) */}
@@ -146,7 +156,10 @@ export function TvCardMobile({ item, actions, tabKey = 'watching', index = 0, on
             loading="lazy"
           />
           {/* My List + button */}
-          <MyListToggle item={item} />
+          <MyListToggle 
+            item={item} 
+            currentListContext={getCurrentListContext(tabKey)}
+          />
         </div>
 
         {/* Info Column */}

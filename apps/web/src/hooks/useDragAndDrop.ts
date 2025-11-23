@@ -1,3 +1,13 @@
+/**
+ * DRAG PATHS:
+ * - Desktop: Native HTML5 drag API → handleDragStart sets state + minimal visual feedback
+ * - Mobile: Touch events handled in DragHandle.tsx → this hook only manages state
+ * 
+ * VISUAL TRANSFORM TARGETS:
+ * - Desktop: CSS animation on .tab-card.is-dragging handles visuals (this hook should NOT apply inline transforms)
+ * - Mobile: DragHandle.tsx applies inline transform to [data-item-index] wrapper
+ */
+
 import { useState, useCallback, useRef } from 'react';
 
 export interface DragItem {
@@ -41,11 +51,8 @@ export function useDragAndDrop<T extends { id: string }>(
     e.dataTransfer.setData('text/plain', item.id);
     e.dataTransfer.effectAllowed = 'move';
 
-    // Add visual feedback
-    if (e.currentTarget instanceof HTMLElement) {
-      e.currentTarget.style.opacity = '0.5';
-      e.currentTarget.style.transform = 'rotate(2deg)';
-    }
+    // Visual feedback is handled by CSS (.tab-card.is-dragging animation)
+    // Do NOT apply inline transforms here to avoid conflict with CSS keyframe animation
   }, [items]);
 
   const handleDragEnd = useCallback((e: React.DragEvent) => {
@@ -69,12 +76,8 @@ export function useDragAndDrop<T extends { id: string }>(
     const draggedOverIndex = dragState.draggedOverIndex;
     const fromIndex = dragStartRef.current;
 
-    // Reset visual feedback
-    if (e.currentTarget instanceof HTMLElement) {
-      e.currentTarget.style.opacity = '';
-      e.currentTarget.style.transform = '';
-      e.currentTarget.classList.remove('is-dragging');
-    }
+    // Visual feedback reset is handled by CSS class removal
+    // The .is-dragging class will be removed by parent component when dragState.isDragging becomes false
 
     // Reset state FIRST (before reorder) so FLIP can detect the change
     setDragState({

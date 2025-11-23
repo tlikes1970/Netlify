@@ -7,26 +7,14 @@
 }
 
 /* Compact Actions - Mobile Compact V2 */
-/* Hidden on desktop */
+/* Hidden by default - only show when gate and flag are enabled */
 .compact-actions-container {
   display: none;
 }
 
-/* Show only on mobile screens, but hide from tab cards */
-@media (max-width: 1023px) {
-  .compact-actions-container {
-    display: block;
-  }
-  
-  /* Hide compact actions on tab cards */
-  article[data-card-type="tab"] .compact-actions-container {
-    display: none !important;
-  }
-}
-
 /* Enhanced styling when both compact gate and actions split flag are enabled */
 html[data-compact-mobile-v1="true"][data-actions-split="true"] {
-  /* Hide existing action buttons when compact actions are shown */
+  /* Show compact actions container only when gate and flag are enabled */
   .compact-actions-container {
     display: block;
   }
@@ -34,6 +22,11 @@ html[data-compact-mobile-v1="true"][data-actions-split="true"] {
   /* Hide original actions when compact actions are present */
   .actions[data-testid="cardv2-actions"] {
     display: none;
+  }
+  
+  /* Hide compact actions on tab cards */
+  article[data-card-type="tab"] .compact-actions-container {
+    display: none !important;
   }
   
   .mobile-actions {
