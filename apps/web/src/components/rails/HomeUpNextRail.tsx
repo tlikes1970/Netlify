@@ -49,8 +49,8 @@ export default function HomeUpNextRail() {
     const showsWithoutDates = activeShows
       .filter(i => {
         const rawDate = getNextAirDate(i);
-        const validatedDate = getValidatedNextAirDate(rawDate);
-        return validatedDate === null; // No valid date
+        const _validatedDate = getValidatedNextAirDate(rawDate);
+        return _validatedDate === null; // No valid date
       })
       .sort((a, b) => {
         // Sort by status priority: Returning Series > In Production > Planned
