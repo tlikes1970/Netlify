@@ -430,7 +430,7 @@ export default function FlickWordGame({
         setErrorMessage("Failed to load today's word. Using backup word.");
         // Fallback to different words for different game numbers (deterministic based on date + game number)
         const fallbackWords = ["HOUSE", "CRANE", "BLISS"];
-        const gameNumber = isProUser ? currentGame : 1;
+        const gameNumber = isPro ? currentGame : 1;
         // Use date + game number for deterministic fallback selection
         const fallbackDate = getDailySeedDate(); // UTC-based date
         const dateSeed = parseInt(fallbackDate.replace(/-/g, ''), 10);
@@ -598,11 +598,11 @@ export default function FlickWordGame({
       };
       // Save state after input
       const today = getDailySeedDate(); // UTC-based date
-      const gameNumber = isProUser ? currentGame : 1;
+      const gameNumber = isPro ? currentGame : 1;
       saveGameState(newState, today, gameNumber);
       return newState;
     });
-  }, [isPro, currentGame, isSubmittingUI];
+  }, [isPro, currentGame, isSubmittingUI]);
 
   // Handle backspace
   // FIXED: Disable input during validation
@@ -616,11 +616,11 @@ export default function FlickWordGame({
       };
       // Save state after backspace
       const today = getDailySeedDate(); // UTC-based date
-      const gameNumber = isProUser ? currentGame : 1;
+      const gameNumber = isPro ? currentGame : 1;
       saveGameState(newState, today, gameNumber);
       return newState;
     });
-  }, [isPro, currentGame, isSubmittingUI];
+  }, [isPro, currentGame, isSubmittingUI]);
 
   // Handle submit - fixed race condition by moving async outside setGame
   // FIXED: Added try/finally to guarantee reset, added visual feedback during validation
@@ -747,7 +747,7 @@ export default function FlickWordGame({
       const newGuesses = [...currentGameState.guesses, currentWord];
       const newLastResults = [...currentGameState.lastResults, result];
       const saveDate = getDailySeedDate(); // UTC-based date
-      const gameNumber = isProUser ? currentGame : 1;
+      const gameNumber = isPro ? currentGame : 1;
 
       // Start reveal animation - clear UI submitting state once grid updates
       setGame((p) => {
@@ -781,7 +781,7 @@ export default function FlickWordGame({
       if (currentWord === currentTarget) {
         setTimeout(() => {
           showNotification("🎉 Correct! Well done!", "success");
-          const gameNumber = isProUser ? currentGame : 1;
+          const gameNumber = isPro ? currentGame : 1;
           const today = getDailySeedDate();
           
           // Save completed game for review
@@ -829,7 +829,7 @@ export default function FlickWordGame({
         }, animationDelay);
       } else if (newGuesses.length === currentGameState.maxGuesses) {
         setTimeout(() => {
-          const gameNumber = isProUser ? currentGame : 1;
+          const gameNumber = isPro ? currentGame : 1;
           const today = getDailySeedDate();
           
           // Save completed game for review
@@ -883,7 +883,7 @@ export default function FlickWordGame({
               animationState: "idle" as AnimationState,
             };
             // Save state after guess (before animation completes)
-            const gameNumber = isProUser ? currentGame : 1;
+            const gameNumber = isPro ? currentGame : 1;
             saveGameState(newState, saveDate, gameNumber);
             isSubmittingRef.current = false; // Reset submitting flag
             return newState;
@@ -1062,12 +1062,12 @@ export default function FlickWordGame({
       shareUrl = `${origin}/?game=flickword&date=${today}&mode=sharedAll`;
     } else {
       // Share single game: include gameNumber
-      const gameNumber = isProUser ? currentGame : 1;
+      const gameNumber = isPro ? currentGame : 1;
       shareUrl = `${origin}/?game=flickword&date=${today}&gameNumber=${gameNumber}&mode=sharedResult`;
     }
     
     // Track analytics
-    const gameNumber = isProUser ? currentGame : 1;
+    const gameNumber = isPro ? currentGame : 1;
     trackFlickWordShare(shareAll ? null : gameNumber, shareAll ? 'all' : 'single');
     
     // Use unified share helper
