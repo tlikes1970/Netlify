@@ -1,5 +1,10 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.172: Pro-gating cleanup - Standardized Pro status checks, unified upgrade CTAs, improved error messages
+// - Replaced settings.pro.isPro with useProStatus() hook in games and settings components
+// - Replaced custom upgrade UIs with unified UpgradeToProCTA component (GoofsModal, CommunityPanel)
+// - Improved custom list limit error message for better user guidance
+// - Rollback: Revert this commit to restore previous Pro status checks and upgrade flows
 // ⚠️ VERSION 0.1.171: Merged trivia-question-fixes branch with main
 // - Merged latest changes from main branch into trivia-question-fixes
 // - Rollback: Revert this commit to restore previous version
@@ -250,4 +255,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.171";
+export const APP_VERSION = "0.1.172";
