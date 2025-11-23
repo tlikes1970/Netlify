@@ -206,7 +206,6 @@ export default function FlickWordGame({
   onShowStats,
   onShowReview,
 }: FlickWordGameProps) {
-  const settings = useSettings();
   const { isPro } = useProStatus();
   const [game, setGame] = useState<GameState>({
     target: "",

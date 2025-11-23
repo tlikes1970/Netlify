@@ -24,7 +24,6 @@ export default function TriviaGame({
   onGameComplete,
   onShowReview,
 }: TriviaGameProps) {
-  const settings = useSettings();
   const { isPro } = useProStatus();
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -511,7 +510,7 @@ export default function TriviaGame({
     };
 
     initializeAndLoad();
-  }, [settings.pro, gameState]); // Include settings.pro to react to Pro status changes
+  }, [isPro, gameState]); // Include isPro to react to Pro status changes
 
   const handleAnswerSelect = useCallback(
     (answerIndex: number) => {
@@ -674,7 +673,7 @@ export default function TriviaGame({
   // Start next game (for pro users with games remaining)
   const handleNextGame = useCallback(() => {
     // Pro users get 3 games per day, Regular users get 1 game per day
-    const maxGames = isProUser ? 3 : 1;
+    const maxGames = isPro ? 3 : 1;
     if (gamesCompletedToday < maxGames) {
       const nextGame = gamesCompletedToday + 1;
       setCurrentGame(nextGame);
@@ -924,7 +923,7 @@ export default function TriviaGame({
       )}
 
       {/* Game progress indicator (Pro users only) */}
-      {isProUser && (
+      {isPro && (
         <div
           className="trivia-game-header"
           aria-label={`Game ${currentGame} of 3`}
