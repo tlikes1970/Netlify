@@ -666,6 +666,7 @@ function CommunitySection({ isMobile: _isMobile }: SettingsSectionProps) {
 function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
   const settings = useSettings();
   const translations = useTranslations();
+  const { isPro } = useProStatus();
   const userLists = useCustomLists();
   const [editingListId, setEditingListId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -1068,26 +1069,26 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
 
           <div className="space-y-1">
             <label
-              className={`flex items-center space-x-3 ${settings.layout.condensedView && !settings.pro.isPro ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+              className={`flex items-center space-x-3 ${settings.layout.condensedView && !isPro ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
             >
               <input
                 type="checkbox"
                 checked={settings.layout.episodeTracking}
                 onChange={() => settingsManager.toggleEpisodeTracking()}
-                disabled={settings.layout.condensedView && !settings.pro.isPro}
+                disabled={settings.layout.condensedView && !isPro}
                 className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 rounded focus:ring-blue-500"
               />
               <span style={{ color: "var(--text)" }}>
                 {translations.enableEpisodeTracking}
               </span>
             </label>
-            {settings.layout.condensedView && !settings.pro.isPro && (
+            {settings.layout.condensedView && !isPro && (
               <p className="text-xs ml-7" style={{ color: "var(--muted)" }}>
                 Episode tracking is disabled in condensed view.{" "}
                 <UpgradeToProCTA variant="inline" /> to enable it.
               </p>
             )}
-            {settings.layout.condensedView && settings.pro.isPro && (
+            {settings.layout.condensedView && isPro && (
               <p className="text-xs ml-7" style={{ color: "var(--muted)" }}>
                 Pro users can enable episode tracking even in condensed view
               </p>

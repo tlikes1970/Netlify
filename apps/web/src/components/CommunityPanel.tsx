@@ -36,6 +36,7 @@ import {
   getSortModeLabel,
 } from "../lib/communitySorting";
 import ProBadge from "./ProBadge";
+import { UpgradeToProCTA } from "./UpgradeToProCTA";
 import { reportPostOrComment } from "../lib/communityReports";
 // ⚠️ REMOVED: flickerDiagnostics import disabled
 
@@ -109,6 +110,7 @@ const CommunityPanel = memo(function CommunityPanel() {
   }); // Multi-select for Pro, single for Free
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [showSortUpgradeCTA, setShowSortUpgradeCTA] = useState(false);
 
   // Persist selectedTopics to localStorage when it changes
   useEffect(() => {
@@ -369,12 +371,12 @@ const CommunityPanel = memo(function CommunityPanel() {
   const handleSortChange = (newMode: SortMode) => {
     if (isProSortMode(newMode) && !isPro) {
       // Pro-only sort mode attempted by free user
-      // Show upgrade prompt - user should use UpgradeToProCTA component
-      // For now, keep existing behavior but note it should be improved
-      alert("Advanced sorting is a Pro feature. Upgrade in Settings → Pro.");
+      // Keep selection on current mode and show upgrade CTA
+      setShowSortUpgradeCTA(true);
       return;
     }
     setSortMode(newMode);
+    setShowSortUpgradeCTA(false);
   };
 
   // Load more posts (infinite scroll)
@@ -622,6 +624,11 @@ const CommunityPanel = memo(function CommunityPanel() {
                   </option>
                 ))}
               </select>
+              {showSortUpgradeCTA && (
+                <div className="mt-2">
+                  <UpgradeToProCTA variant="inline" message="Advanced sorting is a Pro feature" />
+                </div>
+              )}
             </div>
 
             {/* Topic Filters */}

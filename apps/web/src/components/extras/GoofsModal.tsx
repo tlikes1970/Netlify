@@ -5,7 +5,7 @@ import {
   GoofSet,
 } from "../../lib/goofs/goofsStore";
 import { useProStatus } from "../../lib/proStatus";
-import { startProUpgrade } from "../../lib/proUpgrade";
+import { UpgradeToProCTA } from "../UpgradeToProCTA";
 
 interface GoofsModalProps {
   isOpen: boolean;
@@ -280,28 +280,7 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
             className="p-4 overflow-y-auto max-h-96"
           >
             {!isPro ? (
-              <div className="text-center py-12">
-                <div className="text-4xl mb-4">💎</div>
-                <h3
-                  className="text-xl font-semibold mb-2"
-                  style={{ color: "var(--text)" }}
-                >
-                  Insights & Easter Eggs are a Pro feature
-                </h3>
-                <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>
-                  Upgrade in Settings → Pro to unlock insights and easter eggs.
-                </p>
-                <button
-                  onClick={() => {
-                    onClose();
-                    startProUpgrade();
-                  }}
-                  className="px-6 py-3 rounded-lg font-medium transition-colors"
-                  style={{ backgroundColor: "var(--accent)", color: "white" }}
-                >
-                  Go to Pro settings
-                </button>
-              </div>
+              <UpgradeToProCTA variant="panel" message="Unlock insights and easter eggs for this title" />
             ) : (
               renderGoofsContent()
             )}

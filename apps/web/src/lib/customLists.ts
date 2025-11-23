@@ -116,7 +116,7 @@ class CustomListManager {
     this.updateMaxLists();
     
     if (this.userLists.maxLists !== Infinity && this.userLists.customLists.length >= this.userLists.maxLists) {
-      throw new Error(`Maximum ${this.userLists.maxLists} lists allowed. Upgrade to Pro for unlimited lists.`);
+      throw new Error(`Maximum ${this.userLists.maxLists} custom lists allowed for free accounts. To upgrade to Pro and create unlimited lists, open Settings → Pro from the main menu.`);
     }
 
     const id = `list_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

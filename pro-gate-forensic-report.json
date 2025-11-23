@@ -1,0 +1,241 @@
+{
+  "proStatusFlow": {
+    "sourceOfTruth": "apps/web/src/lib/proStatus.ts - getProStatus() function and useProStatus() hook",
+    "helpers": [
+      "getProStatus() - non-React helper that returns { isPro: boolean, source: string | null }",
+      "useProStatus() - React hook that returns ProStatus and subscribes to settings changes"
+    ],
+    "propagationSummary": [
+      "Pro status stored in settingsManager (settings.pro.isPro) - localStorage-based",
+      "getProStatus() reads from settingsManager.getSettings() and getBillingStatus() (future integration)",
+      "useProStatus() hook subscribes to settingsManager changes via useEffect",
+      "Components import useProStatus() hook to get reactive Pro status",
+      "Future: billing.isPro will be integrated (currently placeholder returns false)"
+    ]
+  },
+  "listLimits": {
+    "free": {
+      "maxLists": 3,
+      "behaviorAtLimit": "Throws Error with message: 'Maximum 3 lists allowed. Upgrade to Pro for unlimited lists.' when createList() is called at limit"
+    },
+    "pro": {
+      "maxLists": null,
+      "behaviorAtLimit": "Unlimited (Infinity) - no limit enforced"
+    },
+    "enforcedInComponents": [
+      {
+        "component": "CustomListManager.createList()",
+        "file": "apps/web/src/lib/customLists.ts",
+        "lines": "114-120",
+        "notes": "Checks maxLists before creating, throws error if limit reached. Uses getMaxCustomLists() from proConfig.ts"
+      },
+      {
+        "component": "DisplaySection",
+        "file": "apps/web/src/components/settingsSections.tsx",
+        "lines": "856-864",
+        "notes": "Shows 'Create New List' button only when userLists.customLists.length < userLists.maxLists. Displays usage count: 'Lists used: X/Y'"
+      },
+      {
+        "component": "ListSelectorModal (referenced but not read)",
+        "file": "apps/web/src/components/ListSelectorModal.tsx",
+        "lines": "unknown",
+        "notes": "Mentioned in grep results, likely enforces limits when selecting lists"
+      }
+    ]
+  },
+  "gatedFeatures": [
+    {
+      "feature": "Custom Lists - Creation Limit",
+      "file": "apps/web/src/lib/customLists.ts",
+      "lines": "114-120",
+      "gatingMechanism": "Error thrown in createList() method when limit reached",
+      "scope": "free-only",
+      "usesCentralHelper": true,
+      "notes": "Uses getMaxCustomLists() from proConfig.ts which calls getProStatus()"
+    },
+    {
+      "feature": "Goofs / Insights Modal",
+      "file": "apps/web/src/components/extras/GoofsModal.tsx",
+      "lines": "36-57, 282-304",
+      "gatingMechanism": "Early return if !isPro - modal shows upgrade CTA instead of content",
+      "scope": "pro-only",
+      "usesCentralHelper": true,
+      "notes": "Uses useProStatus() hook. Shows upgrade message with button to startProUpgrade() if not Pro"
+    },
+    {
+      "feature": "Notification Timing - Precise Control (1-24 hours)",
+      "file": "apps/web/src/components/modals/NotificationSettings.tsx",
+      "lines": "96-115",
+      "gatingMechanism": "Conditional rendering - Pro users see dropdown (1-24 hours), Free users see radio buttons (vague options)",
+      "scope": "tiered",
+      "usesCentralHelper": true,
+      "notes": "Uses useProStatus() hook. Free users get '24 hours before', '12 hours before', etc. Pro users get exact hour selection"
+    },
+    {
+      "feature": "Notification Methods - Email",
+      "file": "apps/web/src/components/modals/NotificationSettings.tsx",
+      "lines": "192-216",
+      "gatingMechanism": "Checkbox disabled and opacity reduced for non-Pro users",
+      "scope": "pro-only",
+      "usesCentralHelper": true,
+      "notes": "Uses useProStatus() hook. Shows 'PRO' badge and 'Pro feature - upgrade to enable' message"
+    },
+    {
+      "feature": "Community Topic Filtering - Multi-select",
+      "file": "apps/web/src/components/CommunityPanel.tsx",
+      "lines": "344-359, 678-685",
+      "gatingMechanism": "handleTopicToggle() - Pro users can multi-select, Free users single-select only",
+      "scope": "tiered",
+      "usesCentralHelper": true,
+      "notes": "Uses useProStatus() hook. Shows hint text 'Pro users can filter by multiple topics' when Free user selects topic"
+    },
+    {
+      "feature": "Community Sorting - Advanced Modes (Hot/Top/Trending)",
+      "file": "apps/web/src/components/CommunityPanel.tsx",
+      "lines": "150-157, 369-378, 608-624",
+      "gatingMechanism": "isProSortMode() check in handleSortChange() and fetchPosts(). Free users get alert if attempting Pro sort",
+      "scope": "pro-only",
+      "usesCentralHelper": true,
+      "notes": "Uses useProStatus() hook. getAvailableSortModes(isPro) filters options. Free users see alert: 'Advanced sorting is a Pro feature. Upgrade in Settings → Pro.'"
+    },
+    {
+      "feature": "FlickWord Extra Games Per Day",
+      "file": "apps/web/src/components/games/FlickWordGame.tsx",
+      "lines": "240-241, 250, 224, 226",
+      "gatingMechanism": "MAX_GAMES_FREE = 1, MAX_GAMES_PRO = 3. Tracks gamesCompletedToday and currentGame (1-3 for Pro)",
+      "scope": "tiered",
+      "usesCentralHelper": false,
+      "notes": "Uses settings.pro.isPro directly (not useProStatus hook). Pro users can play 3 games per day, Free users 1 game per day"
+    },
+    {
+      "feature": "Trivia Extra Games Per Day",
+      "file": "apps/web/src/components/games/TriviaGame.tsx",
+      "lines": "36, 178, 351-373",
+      "gatingMechanism": "Tracks currentGame (1-3 for Pro, 1 for Free). Pro users get 30 questions (3 games × 10), Free users get 10 questions (1 game)",
+      "scope": "tiered",
+      "usesCentralHelper": false,
+      "notes": "Uses settings.pro.isPro directly (not useProStatus hook). Pro users can play 3 games per day, Free users 1 game per day"
+    },
+    {
+      "feature": "Episode Tracking in Condensed View",
+      "file": "apps/web/src/components/settingsSections.tsx",
+      "lines": "1071-1094",
+      "gatingMechanism": "Checkbox disabled when condensedView && !settings.pro.isPro",
+      "scope": "pro-only",
+      "usesCentralHelper": false,
+      "notes": "Uses settings.pro.isPro directly. Shows UpgradeToProCTA inline when disabled. Pro users can enable episode tracking even in condensed view"
+    },
+    {
+      "feature": "Theme Packs (Future Feature)",
+      "file": "apps/web/src/components/settingsSections.tsx",
+      "lines": "1116-1131",
+      "gatingMechanism": "Only rendered if settings.pro.isPro is true",
+      "scope": "pro-only",
+      "usesCentralHelper": false,
+      "notes": "Coming soon feature. Only visible to Pro users. Shows 'Theme packs coming soon' message"
+    }
+  ],
+  "upgradeCtas": [
+    {
+      "location": "NotificationsSection",
+      "file": "apps/web/src/components/settingsSections.tsx",
+      "lines": "488",
+      "trigger": "Always shown to non-Pro users",
+      "destination": "Settings → Pro section (via startProUpgrade())",
+      "consistencyIssues": "Uses variant='banner' - consistent with other banner CTAs"
+    },
+    {
+      "location": "NotificationSettings Modal",
+      "file": "apps/web/src/components/modals/NotificationSettings.tsx",
+      "lines": "136, 228",
+      "trigger": "Shown inline when Free user sees timing options, and as panel at bottom",
+      "destination": "Settings → Pro section (via startProUpgrade())",
+      "consistencyIssues": "Uses variant='inline' and variant='panel' - consistent"
+    },
+    {
+      "location": "DisplaySection - Episode Tracking",
+      "file": "apps/web/src/components/settingsSections.tsx",
+      "lines": "1087",
+      "trigger": "Shown when condensedView && !isPro",
+      "destination": "Settings → Pro section (via startProUpgrade())",
+      "consistencyIssues": "Uses variant='inline' - consistent"
+    },
+    {
+      "location": "GoofsModal",
+      "file": "apps/web/src/components/extras/GoofsModal.tsx",
+      "lines": "282-304",
+      "trigger": "Shown when modal opens and !isPro",
+      "destination": "Settings → Pro section (via startProUpgrade())",
+      "consistencyIssues": "Custom implementation, not using UpgradeToProCTA component - inconsistent"
+    },
+    {
+      "location": "ProSection",
+      "file": "apps/web/src/components/settingsSections.tsx",
+      "lines": "1160-1162",
+      "trigger": "Shown when !isProUser",
+      "destination": "Settings → Pro section (via startProUpgrade())",
+      "consistencyIssues": "Uses variant='button' - consistent"
+    },
+    {
+      "location": "CommunityPanel - Sort Mode Alert",
+      "file": "apps/web/src/components/CommunityPanel.tsx",
+      "lines": "374",
+      "trigger": "Alert shown when Free user attempts Pro sort mode",
+      "destination": "Settings → Pro section (mentioned in alert text)",
+      "consistencyIssues": "Uses alert() instead of UpgradeToProCTA component - inconsistent and poor UX"
+    }
+  ],
+  "inconsistencies": [
+    {
+      "type": "Pro status check method",
+      "description": "Some components use useProStatus() hook (centralized), others use settings.pro.isPro directly (decentralized). Games (FlickWordGame, TriviaGame) use settings.pro.isPro directly instead of hook.",
+      "file": "apps/web/src/components/games/FlickWordGame.tsx, apps/web/src/components/games/TriviaGame.tsx",
+      "lines": "224, 36"
+    },
+    {
+      "type": "Upgrade CTA component usage",
+      "description": "GoofsModal implements custom upgrade UI instead of using UpgradeToProCTA component. CommunityPanel uses alert() instead of UpgradeToProCTA for sort mode gating.",
+      "file": "apps/web/src/components/extras/GoofsModal.tsx, apps/web/src/components/CommunityPanel.tsx",
+      "lines": "282-304, 374"
+    },
+    {
+      "type": "Pro status source",
+      "description": "proStatus.ts mentions billing integration (future) but currently only uses settings.pro.isPro. Billing source is placeholder that always returns false.",
+      "file": "apps/web/src/lib/proStatus.ts",
+      "lines": "24, 31"
+    },
+    {
+      "type": "List limit error message",
+      "description": "Error message in customLists.ts says 'Upgrade to Pro for unlimited lists' but doesn't provide direct link to upgrade. User must navigate manually.",
+      "file": "apps/web/src/lib/customLists.ts",
+      "lines": "119"
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "high",
+      "description": "Standardize Pro status checks - all components should use useProStatus() hook instead of accessing settings.pro.isPro directly. This ensures consistent behavior and future billing integration."
+    },
+    {
+      "priority": "high",
+      "description": "Replace alert() in CommunityPanel.sortMode with UpgradeToProCTA component for consistent UX. Replace custom upgrade UI in GoofsModal with UpgradeToProCTA component."
+    },
+    {
+      "priority": "medium",
+      "description": "Add direct upgrade link/button in customLists.ts error message when list limit reached. Currently just throws error, user must navigate to Settings manually."
+    },
+    {
+      "priority": "medium",
+      "description": "Document Pro feature limits in proConfig.ts more comprehensively. Currently only lists, community posts/comments are defined. Games limits (FlickWord, Trivia) are hardcoded in components."
+    },
+    {
+      "priority": "low",
+      "description": "Consider adding Pro badge/indicator in UI where Pro features are gated (e.g., sort dropdown, topic filters) to make Pro benefits more visible."
+    },
+    {
+      "priority": "low",
+      "description": "Verify all Pro-gated features have corresponding entries in PRO_FEATURES_AVAILABLE or PRO_FEATURES_COMING_SOON in settingsProConfig.ts for consistency in ProSection display."
+    }
+  ]
+}
+

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSettings } from "@/lib/settings";
+import { useProStatus } from "../../lib/proStatus";
 import { getCachedTrivia } from "../../lib/triviaApi";
 import { getDailySeedDate } from "../../lib/dailySeed";
 import { SAMPLE_TRIVIA_QUESTIONS, type TriviaQuestion } from "../../lib/triviaQuestions";
@@ -24,6 +25,7 @@ export default function TriviaGame({
   onShowReview,
 }: TriviaGameProps) {
   const settings = useSettings();
+  const { isPro } = useProStatus();
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -33,7 +35,6 @@ export default function TriviaGame({
     "loading" | "playing" | "completed" | "error"
   >("loading");
   const [showExplanation, setShowExplanation] = useState(false);
-  const [isProUser, setIsProUser] = useState(false);
   const [currentGame, setCurrentGame] = useState(1);
   const [gamesCompletedToday, setGamesCompletedToday] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -175,7 +176,7 @@ export default function TriviaGame({
       const completed = localStorage.getItem(key);
       const count = completed ? parseInt(completed, 10) : 0;
       // Cap to max games to prevent invalid counts
-      const maxGames = settings.pro.isPro ? 3 : 1;
+      const maxGames = isPro ? 3 : 1;
       return Math.min(count, maxGames);
     } catch (_e) {
       return 0;
@@ -292,7 +293,6 @@ export default function TriviaGame({
   // Combined with question loading to avoid race condition
   useEffect(() => {
     const initializeAndLoad = async () => {
-      setIsProUser(settings.pro.isPro);
       const completed = getGamesCompletedToday();
       setGamesCompletedToday(completed);
       
@@ -300,7 +300,7 @@ export default function TriviaGame({
       // Regular: 1 game per day (10 questions)
       // Pro: 3 games per day (30 questions)
       // Don't start a new game if limit is reached
-      const maxGames = settings.pro.isPro ? 3 : 1;
+      const maxGames = isPro ? 3 : 1;
       let gameNumber: number;
       if (completed >= maxGames) {
         // All games completed - load last completed game's data for display
@@ -348,7 +348,7 @@ export default function TriviaGame({
           );
         }
         return; // Exit early, don't load new questions
-      } else if (settings.pro.isPro) {
+      } else if (isPro) {
         gameNumber = Math.min(completed + 1, 3); // Max 3 games for Pro
         setCurrentGame(gameNumber);
         console.log(
@@ -376,12 +376,12 @@ export default function TriviaGame({
       if (gameState === "loading") {
         try {
           console.log(
-            `🧠 Loading trivia questions for Game ${gameNumber} (${settings.pro.isPro ? "Pro: 30 questions/day" : "Regular: 10 questions/day"})...`
+            `🧠 Loading trivia questions for Game ${gameNumber} (${isPro ? "Pro: 30 questions/day" : "Regular: 10 questions/day"})...`
           );
 
           // Use cached trivia - Regular gets 10 questions, Pro gets 30 questions
           // All users get the same questions (Regular gets first 10, Pro gets all 30)
-          const apiQuestions = await getCachedTrivia(gameNumber, settings.pro.isPro);
+          const apiQuestions = await getCachedTrivia(gameNumber, isPro);
 
           let formattedQuestions: TriviaQuestion[] = [];
           const questionsNeeded = 10; // 10 questions per game
@@ -390,7 +390,7 @@ export default function TriviaGame({
             // Convert API format to our format
             // Regular users (gameNumber = 1): use questions 0-9
             // Pro users: gameNumber 1-3, use questions 0-9, 10-19, 20-29 respectively
-            const startIndex = settings.pro.isPro ? (gameNumber - 1) * 10 : 0;
+            const startIndex = isPro ? (gameNumber - 1) * 10 : 0;
             const endIndex = startIndex + questionsNeeded;
             formattedQuestions = apiQuestions.slice(startIndex, endIndex).map((q, index) => ({
               id: `api_${gameNumber}_${index}`,
@@ -413,7 +413,7 @@ export default function TriviaGame({
               );
               
               // Get hardcoded questions for this game (same questions for all users)
-              const allHardcodedQuestions = getTodaysQuestions(settings.pro.isPro, gameNumber);
+              const allHardcodedQuestions = getTodaysQuestions(isPro, gameNumber);
               
               // Filter out questions that match API questions by text content
               const availableHardcoded = allHardcodedQuestions.filter(
@@ -445,7 +445,7 @@ export default function TriviaGame({
           } else {
             // No API questions available, use fallback (same questions for all users)
             console.log("📚 Using fallback trivia questions");
-            formattedQuestions = getTodaysQuestions(settings.pro.isPro, gameNumber)
+            formattedQuestions = getTodaysQuestions(isPro, gameNumber)
               .slice(0, questionsNeeded)
               .map((q) => ({
                 ...q,
@@ -466,7 +466,7 @@ export default function TriviaGame({
           
           // If we lost questions due to duplicates, fill from hardcoded pool
           if (finalQuestions.length < questionsNeeded) {
-            const allHardcoded = getTodaysQuestions(settings.pro.isPro, gameNumber);
+            const allHardcoded = getTodaysQuestions(isPro, gameNumber);
             const needed = questionsNeeded - finalQuestions.length;
             const additional = allHardcoded
               .filter(q => !seenQuestions.has(q.question.toLowerCase().trim()))
@@ -480,14 +480,14 @@ export default function TriviaGame({
           formattedQuestions = finalQuestions.slice(0, questionsNeeded);
 
           console.log(
-            `✅ Loaded ${formattedQuestions.length} trivia questions for Game ${gameNumber} (${settings.pro.isPro ? "Pro: 30 questions/day" : "Regular: 10 questions/day"})`
+            `✅ Loaded ${formattedQuestions.length} trivia questions for Game ${gameNumber} (${isPro ? "Pro: 30 questions/day" : "Regular: 10 questions/day"})`
           );
           setQuestions(formattedQuestions);
           setGameState("playing");
           setErrorMessage(null);
           
           // Track game start analytics
-          trackTriviaGameStart(gameNumber, settings.pro.isPro);
+          trackTriviaGameStart(gameNumber, isPro);
           // Initialize option refs array
           optionRefs.current = new Array(
             formattedQuestions[0]?.options.length || 4
@@ -499,7 +499,7 @@ export default function TriviaGame({
             "Failed to load questions from server. Using backup questions."
           );
           // Fallback to hardcoded questions (same questions for all users)
-          const fallbackQuestions = getTodaysQuestions(settings.pro.isPro, gameNumber)
+          const fallbackQuestions = getTodaysQuestions(isPro, gameNumber)
             .slice(0, 10); // Always 10 questions per game
           setQuestions(fallbackQuestions);
           setGameState("playing");
@@ -588,13 +588,13 @@ export default function TriviaGame({
       });
       
       // Track analytics
-      trackTriviaGameComplete(score, questions.length, percentage, currentGame, isProUser);
+      trackTriviaGameComplete(score, questions.length, percentage, currentGame, isPro);
       
       // Update stats after state is set to completed
       updateTriviaStats(score, questions.length);
 
       // Increment games completed today (cap to max games)
-      const maxGames = isProUser ? 3 : 1;
+      const maxGames = isPro ? 3 : 1;
       const newGamesCompleted = Math.min(gamesCompletedToday + 1, maxGames);
       setGamesCompletedToday(newGamesCompleted);
       saveGamesCompletedToday(newGamesCompleted);
@@ -609,7 +609,7 @@ export default function TriviaGame({
     gamesCompletedToday,
     questions,
     currentGame,
-    isProUser,
+    isPro,
     selectedAnswer,
   ]);
 
@@ -685,7 +685,7 @@ export default function TriviaGame({
       setQuestionAnswers([]);
       setGameState("loading");
     }
-  }, [isProUser, gamesCompletedToday]);
+  }, [isPro, gamesCompletedToday]);
 
   const getScoreColor = (percentage: number) => {
     if (percentage >= 80) return "text-green-400";
@@ -699,11 +699,11 @@ export default function TriviaGame({
   // Note: URL is NOT included here - it will be added by shareWithFallback
   const generateShareText = useCallback(() => {
     const today = getDailySeedDate();
-    const gameLabel = isProUser ? ` Game ${currentGame}` : '';
+    const gameLabel = isPro ? ` Game ${currentGame}` : '';
     const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
     
     return `🧠 Trivia ${today}${gameLabel}\n\nScore: ${score}/${questions.length} (${percentage}%)\n\nPlay Trivia at flicklet.app`;
-  }, [score, questions.length, isProUser, currentGame]);
+  }, [score, questions.length, isPro, currentGame]);
 
   // Primary share handler for Trivia
   // Handle share - single game results
@@ -772,14 +772,14 @@ export default function TriviaGame({
   if (gameState === "completed") {
     // Handle case where questions might be empty (all games completed on load)
     const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
-    const canPlayNextGame = isProUser && gamesCompletedToday < 3; // Only Pro users can play multiple games
-    const gamesRemaining = isProUser ? 3 - gamesCompletedToday : 0;
+    const canPlayNextGame = isPro && gamesCompletedToday < 3; // Only Pro users can play multiple games
+    const gamesRemaining = isPro ? 3 - gamesCompletedToday : 0;
 
     return (
       <div className="trivia-game" role="region" aria-label="Game completed">
         <div className="trivia-completed">
           <h3>🎉 Game {currentGame} Complete!</h3>
-          {isProUser && (
+          {isPro && (
             <p className="game-progress">Game {currentGame} of 3</p>
           )}
           <div className="score-display">
@@ -865,7 +865,7 @@ export default function TriviaGame({
             )}
           </div>
 
-          {!isProUser && (
+          {!isPro && (
             <div className="pro-upsell">
               <p>
                 ✅ You&apos;ve completed your game today! Come back tomorrow for the next game!
@@ -875,7 +875,7 @@ export default function TriviaGame({
               </p>
             </div>
           )}
-          {isProUser && gamesCompletedToday >= 3 && (
+          {isPro && gamesCompletedToday >= 3 && (
             <div className="games-limit">
               <p>
                 ✅ You&apos;ve completed all 3 games today! Come back tomorrow for the next games!

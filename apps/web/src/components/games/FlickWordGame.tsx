@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSettings } from "@/lib/settings";
+import { useProStatus } from "../../lib/proStatus";
 import { getTodaysWord } from "../../lib/dailyWordApi";
 import { validateWord } from "../../lib/words/validateWord";
 import { getDailySeedDate } from "../../lib/dailySeed";
@@ -206,6 +207,7 @@ export default function FlickWordGame({
   onShowReview,
 }: FlickWordGameProps) {
   const settings = useSettings();
+  const { isPro } = useProStatus();
   const [game, setGame] = useState<GameState>({
     target: "",
     guesses: [],
@@ -221,7 +223,6 @@ export default function FlickWordGame({
   const [isLoading, setIsLoading] = useState(true);
   const [isInvalidInput, setIsInvalidInput] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isProUser, setIsProUser] = useState(false);
   const [gamesCompletedToday, setGamesCompletedToday] = useState(0);
   const [currentGame, setCurrentGame] = useState(1); // Track current game number (1-3 for Pro, 1 for Regular)
   const [showLostScreen, setShowLostScreen] = useState(false);
@@ -247,7 +248,7 @@ export default function FlickWordGame({
       const key = getFlickWordGamesCompletedKey(today);
       const count = parseInt(localStorage.getItem(key) || "0", 10);
       // Cap to max games to prevent invalid counts
-      const maxGames = settings.pro.isPro ? MAX_GAMES_PRO : MAX_GAMES_FREE;
+      const maxGames = isPro ? MAX_GAMES_PRO : MAX_GAMES_FREE;
       return Math.min(count, maxGames);
     } catch {
       return 0;
@@ -274,8 +275,7 @@ export default function FlickWordGame({
   // FIXED: Check for in-progress games first, then calculate next game from completed count
   // This prevents "Game 2" from showing when user just completed Game 1
   useEffect(() => {
-    setIsProUser(settings.pro.isPro);
-    const maxGames = settings.pro.isPro ? MAX_GAMES_PRO : MAX_GAMES_FREE;
+    const maxGames = isPro ? MAX_GAMES_PRO : MAX_GAMES_FREE;
     const today = getDailySeedDate();
     
     // Step 1: Check for in-progress game state first
@@ -306,7 +306,7 @@ export default function FlickWordGame({
         gameNumber,
         "Estimated completed:",
         safeCompleted,
-        `(${settings.pro.isPro ? "Pro" : "Regular"}: ${maxGames} ${maxGames === 1 ? "game" : "games"} per day)`
+        `(${isPro ? "Pro" : "Regular"}: ${maxGames} ${maxGames === 1 ? "game" : "games"} per day)`
       );
     } else {
       // Step 2: No in-progress game - calculate from completed count
@@ -334,10 +334,10 @@ export default function FlickWordGame({
         clampedCompleted,
         "Starting game:",
         nextGame,
-        `(${settings.pro.isPro ? "Pro" : "Regular"}: ${maxGames} ${maxGames === 1 ? "game" : "games"} per day)`
+        `(${isPro ? "Pro" : "Regular"}: ${maxGames} ${maxGames === 1 ? "game" : "games"} per day)`
       );
     }
-  }, [settings.pro]);
+  }, [isPro]);
 
   // Check for reduced motion preference
   const prefersReducedMotion = useMemo(() => {
@@ -353,7 +353,7 @@ export default function FlickWordGame({
       try {
         setIsLoading(true);
         // Validate and clamp game number to valid range (1-3)
-        let gameNumber = isProUser ? currentGame : 1;
+        let gameNumber = isPro ? currentGame : 1;
         if (gameNumber < 1 || gameNumber > 3) {
           console.warn(`Invalid game number ${gameNumber}, clamping to valid range`);
           gameNumber = Math.max(1, Math.min(3, gameNumber));
@@ -419,7 +419,7 @@ export default function FlickWordGame({
           saveGameState(newGameState, today, gameNumber);
           
           // Track game start analytics
-          trackFlickWordGameStart(gameNumber, isProUser);
+          trackFlickWordGameStart(gameNumber, isPro);
 
           console.log(`✅ Game target set to: ${wordData.word.toUpperCase()} (game ${gameNumber})`);
         } else {
@@ -460,7 +460,7 @@ export default function FlickWordGame({
         console.log("🏁 Word loading complete");
       }
     },
-    [isProUser, currentGame]
+    [isPro, currentGame]
   );
 
   // Note: Removed unused _handleNewWord function to reduce code complexity
@@ -557,7 +557,7 @@ export default function FlickWordGame({
 
   // Start next game - Regular: 1 game/day, Pro: 3 games/day
   const handleNextGame = useCallback(() => {
-    const maxGames = isProUser ? MAX_GAMES_PRO : MAX_GAMES_FREE;
+    const maxGames = isPro ? MAX_GAMES_PRO : MAX_GAMES_FREE;
     if (gamesCompletedToday < maxGames) {
       const nextGame = Math.min(gamesCompletedToday + 1, maxGames);
       // Validate game number bounds
@@ -584,7 +584,7 @@ export default function FlickWordGame({
       // Load new word for next game
       loadTodaysWord(false, false); // Don't restore state, force new game
     }
-  }, [gamesCompletedToday, loadTodaysWord, isProUser]);
+  }, [gamesCompletedToday, loadTodaysWord, isPro]);
 
   // Handle key input
   // FIXED: Disable input during validation
@@ -602,7 +602,7 @@ export default function FlickWordGame({
       saveGameState(newState, today, gameNumber);
       return newState;
     });
-  }, [isProUser, currentGame, isSubmittingUI]);
+  }, [isPro, currentGame, isSubmittingUI];
 
   // Handle backspace
   // FIXED: Disable input during validation
@@ -620,7 +620,7 @@ export default function FlickWordGame({
       saveGameState(newState, today, gameNumber);
       return newState;
     });
-  }, [isProUser, currentGame, isSubmittingUI]);
+  }, [isPro, currentGame, isSubmittingUI];
 
   // Handle submit - fixed race condition by moving async outside setGame
   // FIXED: Added try/finally to guarantee reset, added visual feedback during validation
@@ -803,7 +803,7 @@ export default function FlickWordGame({
           });
           
           // Track analytics
-          trackFlickWordGameComplete(true, newGuesses.length, gameNumber, isProUser);
+          trackFlickWordGameComplete(true, newGuesses.length, gameNumber, isPro);
           
           setGame((p) => {
             const completedState = {
@@ -816,7 +816,7 @@ export default function FlickWordGame({
             return completedState;
           });
           // Update games completed today (cap to max games)
-          const maxGames = isProUser ? MAX_GAMES_PRO : MAX_GAMES_FREE;
+          const maxGames = isPro ? MAX_GAMES_PRO : MAX_GAMES_FREE;
           const newGamesCompleted = Math.min(gamesCompletedToday + 1, maxGames);
           setGamesCompletedToday(newGamesCompleted);
           saveGamesCompletedToday(newGamesCompleted);
@@ -851,7 +851,7 @@ export default function FlickWordGame({
           });
           
           // Track analytics
-          trackFlickWordGameComplete(false, newGuesses.length, gameNumber, isProUser);
+          trackFlickWordGameComplete(false, newGuesses.length, gameNumber, isPro);
           
           setGame((p) => {
             const completedState = {
@@ -864,7 +864,7 @@ export default function FlickWordGame({
             return completedState;
           });
           // Update games completed today (cap to max games)
-          const maxGames = isProUser ? MAX_GAMES_PRO : MAX_GAMES_FREE;
+          const maxGames = isPro ? MAX_GAMES_PRO : MAX_GAMES_FREE;
           const newGamesCompleted = Math.min(gamesCompletedToday + 1, maxGames);
           setGamesCompletedToday(newGamesCompleted);
           saveGamesCompletedToday(newGamesCompleted);
@@ -900,7 +900,7 @@ export default function FlickWordGame({
       isSubmittingRef.current = false;
       setIsSubmittingUI(false);
     }
-  }, [scoreGuess, showNotification, onGameComplete, prefersReducedMotion, isProUser, currentGame, gamesCompletedToday, isSubmittingUI]);
+  }, [scoreGuess, showNotification, onGameComplete, prefersReducedMotion, isPro, currentGame, gamesCompletedToday, isSubmittingUI]);
 
   // Keyboard event handling
   // FIXED: Disable input during validation to prevent spam and show clear feedback
@@ -993,8 +993,8 @@ export default function FlickWordGame({
   // Note: URL is NOT included here - it will be added by shareWithFallback
   const generateShareText = useCallback((gameNumber?: number) => {
     const lines: string[] = [];
-    const shareGameNumber = gameNumber ?? (isProUser ? currentGame : 1);
-    const gameLabel = isProUser ? ` Game ${shareGameNumber}` : '';
+    const shareGameNumber = gameNumber ?? (isPro ? currentGame : 1);
+    const gameLabel = isPro ? ` Game ${shareGameNumber}` : '';
     lines.push(`FlickWord ${getDailySeedDate()}${gameLabel}`);
     lines.push('');
     
@@ -1012,7 +1012,7 @@ export default function FlickWordGame({
     lines.push('Play FlickWord at flicklet.app');
     
     return lines.join('\n');
-  }, [game.guesses, game.lastResults, isProUser, currentGame]);
+  }, [game.guesses, game.lastResults, isPro, currentGame]);
   
   // Generate share text for all completed games (Pro only)
   // Note: URL is NOT included here - it will be added by shareWithFallback
@@ -1048,7 +1048,7 @@ export default function FlickWordGame({
   // Share link deep-linking: Includes date and gameNumber so link opens to correct game
   // Config: App.tsx handles ?game=flickword&date=...&gameNumber=... query params
   const handleShare = useCallback(async (shareAll: boolean = false) => {
-    const shareText = shareAll && isProUser 
+    const shareText = shareAll && isPro 
       ? generateAllGamesShareText() 
       : generateShareText();
     
@@ -1057,7 +1057,7 @@ export default function FlickWordGame({
     const origin = typeof window !== "undefined" ? window.location.origin : "https://flicklet.netlify.app";
     
     let shareUrl: string;
-    if (shareAll && isProUser) {
+    if (shareAll && isPro) {
       // Share all games: use mode=sharedAll, no gameNumber
       shareUrl = `${origin}/?game=flickword&date=${today}&mode=sharedAll`;
     } else {
@@ -1091,7 +1091,7 @@ export default function FlickWordGame({
         // Don't close modal on error so user can try again
       },
     });
-  }, [generateShareText, generateAllGamesShareText, isProUser, currentGame]);
+  }, [generateShareText, generateAllGamesShareText, isPro, currentGame]);
 
   // Render game grid with enhanced accessibility and animations
   const renderGrid = () => {
@@ -1358,12 +1358,12 @@ export default function FlickWordGame({
         aria-describedby="flickword-description"
       >
         {/* Game progress indicator */}
-        {isProUser && (
+        {isPro && (
           <div
             className="fw-game-header"
-            aria-label={`Game ${currentGame} of ${isProUser ? MAX_GAMES_PRO : MAX_GAMES_FREE}`}
+            aria-label={`Game ${currentGame} of ${isPro ? MAX_GAMES_PRO : MAX_GAMES_FREE}`}
           >
-            <span className="game-indicator">Game {currentGame} of {isProUser ? MAX_GAMES_PRO : MAX_GAMES_FREE}</span>
+            <span className="game-indicator">Game {currentGame} of {isPro ? MAX_GAMES_PRO : MAX_GAMES_FREE}</span>
             {gamesCompletedToday > 0 && (
               <span
                 className="games-completed"
@@ -1500,14 +1500,14 @@ export default function FlickWordGame({
 
       {/* Completion message - moved outside playfield to prevent overflow */}
       {game.done && (() => {
-        const maxGames = isProUser ? MAX_GAMES_PRO : MAX_GAMES_FREE;
+        const maxGames = isPro ? MAX_GAMES_PRO : MAX_GAMES_FREE;
         if (gamesCompletedToday >= maxGames) {
           return (
             <div className="fw-games-limit">
               <p>
                 ✅ You&apos;ve completed all {maxGames} {maxGames === 1 ? "game" : "games"} today! Come back tomorrow for the next game!
               </p>
-              {!isProUser && (
+              {!isPro && (
                 <p className="fw-pro-upsell">
                   🔒 Want more games? Upgrade to Pro for 3 games per day!
                 </p>
@@ -1542,7 +1542,7 @@ export default function FlickWordGame({
             <p className="fw-lost-word">The word was: <strong>{game.target}</strong></p>
             <div className="fw-lost-actions">
               {(() => {
-                const maxGames = isProUser ? MAX_GAMES_PRO : MAX_GAMES_FREE;
+                const maxGames = isPro ? MAX_GAMES_PRO : MAX_GAMES_FREE;
                 if (gamesCompletedToday < maxGames) {
                   return (
                     <button
@@ -1605,7 +1605,7 @@ export default function FlickWordGame({
             <p className="fw-lost-word">The word was: <strong>{game.target}</strong></p>
             <div className="fw-lost-actions">
               {(() => {
-                const maxGames = isProUser ? MAX_GAMES_PRO : MAX_GAMES_FREE;
+                const maxGames = isPro ? MAX_GAMES_PRO : MAX_GAMES_FREE;
                 if (gamesCompletedToday < maxGames) {
                   return (
                     <button
@@ -1701,7 +1701,7 @@ export default function FlickWordGame({
               >
                 Share This Game
               </button>
-              {isProUser && (
+              {isPro && (
                 <button
                   className="fw-btn fw-btn-secondary"
                   onClick={() => handleShare(true)}
