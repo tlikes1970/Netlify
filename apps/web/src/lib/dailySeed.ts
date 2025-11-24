@@ -10,14 +10,18 @@
  * Get the canonical daily seed date string (YYYY-MM-DD) based on UTC time.
  * This ensures all users worldwide see the same daily content on the same UTC day.
  * 
+ * @param dateObj Optional Date object or date string. If not provided, uses current date.
  * @returns A date string in format 'YYYY-MM-DD' based on UTC date
  * 
  * @example
  * // If it's 2024-01-15 23:00 UTC (or 2024-01-16 01:00 in UTC+2)
  * getDailySeedDate() // Returns '2024-01-15'
+ * getDailySeedDate(new Date('2024-01-15')) // Returns '2024-01-15'
  */
-export function getDailySeedDate(): string {
-  const now = new Date();
+export function getDailySeedDate(dateObj?: Date | string): string {
+  const now = dateObj 
+    ? (typeof dateObj === 'string' ? new Date(dateObj + 'T00:00:00Z') : dateObj)
+    : new Date();
   // Use UTC methods to get date components
   const year = now.getUTCFullYear();
   const month = String(now.getUTCMonth() + 1).padStart(2, '0');

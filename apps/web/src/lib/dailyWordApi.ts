@@ -9,30 +9,31 @@ import { getFlickWordDailyKey, CACHE_VERSIONS } from './cacheKeys';
  * Get words used in the last N days for a specific game number
  * Used to prevent repeats within a recent window
  * 
- * Note: This uses a simplified approach - it calculates what word WOULD have been selected
- * on each past day using the base index. In practice, if a word was skipped due to
- * repeat avoidance, a nearby word would have been used, but for simplicity we track
- * the base index word. This is conservative (might avoid words that weren't actually used)
- * but ensures we never repeat words that were definitely used.
+ * FIXED: Now uses the same selection logic as getDeterministicWord() to ensure
+ * the recent words list matches what was actually selected (accounting for
+ * problematic letter filtering and other selection criteria).
  */
-function getRecentWords(days: number, gameNumber: number, validWords: string[]): string[] {
+function getRecentWords(days: number, gameNumber: number, validWords: string[], currentDate: string): string[] {
   const recentWords: string[] = [];
-  const today = new Date(getDailySeedDate() + 'T00:00:00Z');
+  const today = new Date(currentDate + 'T00:00:00Z');
   
+  // Build recent words list progressively, using previously selected words
+  // This ensures each day's selection accounts for previous days' selections
   for (let i = 1; i <= days; i++) {
     const pastDate = new Date(today);
     pastDate.setUTCDate(pastDate.getUTCDate() - i);
+    const pastDateStr = getDailySeedDate(pastDate);
     
-    // Derive word for that date using the same deterministic base logic
-    // This gives us the "intended" word for that day (even if it was skipped)
-    const epochDate = new Date('2000-01-01');
-    const daysSinceEpoch = Math.floor((pastDate.getTime() - epochDate.getTime()) / (1000 * 60 * 60 * 24));
-    const cycleDay = daysSinceEpoch % 365;
-    const baseIndex = (cycleDay * 3 + (gameNumber - 1)) % validWords.length;
-    const word = validWords[baseIndex];
+    // Use previously selected words as recent words (slice to get only words before this date)
+    // This ensures we're checking against what was actually selected, not recalculating
+    const wordsBeforeThisDate = recentWords.slice(); // Copy of words selected so far
+    
+    // Use the same selection logic, but with the words we've already selected
+    const word = getDeterministicWordForDate(pastDateStr, gameNumber, validWords, wordsBeforeThisDate);
     
     if (word) {
-      recentWords.push(word);
+      // Add to front of array (most recent first) so slice works correctly
+      recentWords.unshift(word);
     }
   }
   
@@ -40,14 +41,199 @@ function getRecentWords(days: number, gameNumber: number, validWords: string[]):
 }
 
 /**
+ * Core word selection logic - shared by getDeterministicWord() and getRecentWords()
+ * This ensures both functions use the exact same selection algorithm.
+ */
+function getDeterministicWordForDate(
+  date: string, 
+  gameNumber: number, 
+  validWords: string[], 
+  providedRecentWords: string[] | null = null
+): string {
+  // Use provided recent words if available, otherwise calculate them
+  // (This prevents infinite recursion when getRecentWords() calls this)
+  // Note: Empty array [] is valid and means no previous words (for first day in sequence)
+  const recentWords = providedRecentWords !== null 
+    ? providedRecentWords 
+    : getRecentWords(14, gameNumber, validWords, date);
+  
+  // CRITICAL: Determine most recent word for pattern checking
+  // When building with unshift() in getRecentWords(), order is [oldest, ..., newest]
+  // (because we iterate backwards in time: day N-14, then N-13, ..., then N-1)
+  // So most recent word is at the END (index length - 1)
+  // When providedRecentWords is passed from progressive building, it's already in this order
+  const mostRecentWord = recentWords.length > 0 
+    ? recentWords[recentWords.length - 1]  // Most recent is always at the end
+    : null;
+  
+  // For pattern detection, use chronological order (oldest to newest)
+  // recentWords from unshift() is already chronological (oldest first, newest last)
+  const chronologicalRecentWords = recentWords;
+  
+  // CRITICAL: Prevent ALL patterns to ensure game integrity
+  // 1. No repeated first letters (even once) - NEVER allow same first letter twice in a row
+  // 2. No alphabetical order patterns - Check if WORDS themselves are alphabetical
+  // 3. No predictable sequences
+  
+  const problematicLetters = new Set<string>();
+  const problematicWords = new Set<string>();
+  
+  // Rule 1: NEVER repeat the most recent word's first letter (even once)
+  if (mostRecentWord) {
+    const lastWordFirstLetter = mostRecentWord.charAt(0).toLowerCase();
+    problematicLetters.add(lastWordFirstLetter);
+  }
+  
+  // Rule 2: Detect alphabetical order patterns in WORDS (not just first letters)
+  // Check if last 3+ words are in alphabetical order
+  if (chronologicalRecentWords.length >= 3) {
+    const lastThree = chronologicalRecentWords.slice(-3).map(w => w.toLowerCase());
+    let isAlphabetical = true;
+    for (let i = 1; i < lastThree.length; i++) {
+      if (lastThree[i] <= lastThree[i - 1]) {
+        isAlphabetical = false;
+        break;
+      }
+    }
+    
+    if (isAlphabetical) {
+      // If words are in alphabetical order, prevent continuing the sequence
+      // Find words that would continue the alphabetical pattern
+      const lastWord = lastThree[lastThree.length - 1];
+      // Deprioritize words that come after last word alphabetically
+      // We'll check this in the selection loop
+      problematicWords.add(lastWord);
+    }
+  }
+  
+  // Rule 3: Check for alphabetical first letters pattern
+  if (chronologicalRecentWords.length >= 3) {
+    const lastThree = chronologicalRecentWords.slice(-3);
+    const lastThreeLetters = lastThree.map(w => w.charAt(0).toLowerCase());
+    let firstLettersAlphabetical = true;
+    for (let i = 1; i < lastThreeLetters.length; i++) {
+      if (lastThreeLetters[i] <= lastThreeLetters[i - 1]) {
+        firstLettersAlphabetical = false;
+        break;
+      }
+    }
+    
+    if (firstLettersAlphabetical) {
+      // Prevent continuing alphabetical first-letter sequence
+      const lastLetter = lastThreeLetters[lastThreeLetters.length - 1];
+      const nextLetter = String.fromCharCode(lastLetter.charCodeAt(0) + 1);
+      if (nextLetter <= 'z') {
+        problematicLetters.add(nextLetter);
+      }
+    }
+  }
+  
+  // Calculate base index using date + gameNumber (deterministic seed)
+  // CRITICAL FIX: Use a more complex seed to avoid sequential patterns
+  // The original formula created alphabetical patterns because validWords is sorted
+  const epochDate = new Date('2000-01-01');
+  const currentDate = new Date(date + 'T00:00:00Z');
+  const daysSinceEpoch = Math.floor((currentDate.getTime() - epochDate.getTime()) / (1000 * 60 * 60 * 24));
+  const cycleDay = daysSinceEpoch % 365;
+  
+  // Use a more complex seed that breaks sequential patterns
+  // Multiply by prime numbers and add gameNumber to create better distribution
+  const seed1 = cycleDay * 7919; // Large prime
+  const seed2 = (gameNumber - 1) * 9973; // Another large prime
+  const combinedSeed = (seed1 + seed2) % validWords.length;
+  const baseIndex = combinedSeed;
+  
+  // Find a word that passes all checks
+  let candidateIndex = baseIndex;
+  let attempts = 0;
+  const maxAttempts = validWords.length;
+  
+  while (attempts < maxAttempts) {
+    const candidateWord = validWords[candidateIndex].toUpperCase();
+    const candidateLower = candidateWord.toLowerCase();
+    const candidateFirstLetter = candidateLower.charAt(0);
+    
+    const isRecent = chronologicalRecentWords.some(w => w.toLowerCase() === candidateLower);
+    const startsWithProblematic = problematicLetters.has(candidateFirstLetter);
+    
+    // Check: prevent alphabetical word continuation
+    let continuesAlphabeticalWordPattern = false;
+    if (chronologicalRecentWords.length >= 2 && problematicWords.size > 0) {
+      const lastWord = chronologicalRecentWords[chronologicalRecentWords.length - 1].toLowerCase();
+      const secondLastWord = chronologicalRecentWords[chronologicalRecentWords.length - 2].toLowerCase();
+      
+      // Check if last two words are alphabetical and candidate continues it
+      if (secondLastWord < lastWord && lastWord < candidateLower) {
+        continuesAlphabeticalWordPattern = true;
+      }
+    }
+    
+    // Check: prevent alphabetical first-letter continuation
+    let continuesAlphabeticalLetterPattern = false;
+    if (chronologicalRecentWords.length >= 2 && !startsWithProblematic) {
+      const lastTwo = chronologicalRecentWords.slice(-2).map(w => w.charAt(0).toLowerCase());
+      const lastLetter = lastTwo[lastTwo.length - 1];
+      const secondLastLetter = lastTwo[lastTwo.length - 2];
+      
+      if (secondLastLetter < lastLetter && lastLetter < candidateFirstLetter) {
+        continuesAlphabeticalLetterPattern = true;
+      }
+    }
+    
+    if (!isRecent && !startsWithProblematic && !continuesAlphabeticalWordPattern && !continuesAlphabeticalLetterPattern) {
+      return candidateWord;
+    }
+    
+    candidateIndex = (candidateIndex + 1) % validWords.length;
+    attempts++;
+  }
+  
+  // Fallback: prioritize avoiding problematic letters and patterns
+  if (problematicLetters.size > 0 || problematicWords.size > 0) {
+    candidateIndex = baseIndex;
+    attempts = 0;
+    while (attempts < maxAttempts) {
+      const candidateWord = validWords[candidateIndex].toUpperCase();
+      const candidateLower = candidateWord.toLowerCase();
+      const candidateFirstLetter = candidateLower.charAt(0);
+      const startsWithProblematic = problematicLetters.has(candidateFirstLetter);
+      
+      let continuesAlphabeticalWordPattern = false;
+      if (chronologicalRecentWords.length >= 2 && problematicWords.size > 0) {
+        const lastWord = chronologicalRecentWords[chronologicalRecentWords.length - 1].toLowerCase();
+        const secondLastWord = chronologicalRecentWords[chronologicalRecentWords.length - 2].toLowerCase();
+        if (secondLastWord < lastWord && lastWord < candidateLower) {
+          continuesAlphabeticalWordPattern = true;
+        }
+      }
+      
+      let continuesAlphabeticalLetterPattern = false;
+      if (chronologicalRecentWords.length >= 2 && !startsWithProblematic) {
+        const lastTwo = chronologicalRecentWords.slice(-2).map(w => w.charAt(0).toLowerCase());
+        const lastLetter = lastTwo[lastTwo.length - 1];
+        const secondLastLetter = lastTwo[lastTwo.length - 2];
+        if (secondLastLetter < lastLetter && lastLetter < candidateFirstLetter) {
+          continuesAlphabeticalLetterPattern = true;
+        }
+      }
+      
+      if (!startsWithProblematic && !continuesAlphabeticalWordPattern && !continuesAlphabeticalLetterPattern) {
+        return candidateWord;
+      }
+      
+      candidateIndex = (candidateIndex + 1) % validWords.length;
+      attempts++;
+    }
+  }
+  
+  // Final fallback
+  return validWords[baseIndex].toUpperCase();
+}
+
+/**
  * Get first letters of words used in the last N days for a specific game number
  * Used to detect same-letter patterns
  */
-function getRecentFirstLetters(days: number, gameNumber: number, validWords: string[]): string[] {
-  const recentWords = getRecentWords(days, gameNumber, validWords);
-  return recentWords.map(w => w.charAt(0).toLowerCase());
-}
-
 interface WordApiResponse {
   word: string;
   date: string;
@@ -217,66 +403,10 @@ async function getDeterministicWord(date: string, gameNumber: number = 1): Promi
       console.log(`✅ After filtering excluded words: ${validWords.length} valid common words`);
       
       if (validWords.length > 0) {
-        // Get recent words (last 14 days) to avoid repeats
-        const recentWords = getRecentWords(14, gameNumber, validWords);
-        console.log(`📅 Recent words (last 14 days) for game ${gameNumber}:`, recentWords);
-        
-        // Check for same-letter pattern in recent days (last 3 days)
-        const recentFirstLetters = getRecentFirstLetters(3, gameNumber, validWords);
-        const lastThreeLetters = recentFirstLetters.slice(-3);
-        const allSameLetter = lastThreeLetters.length === 3 && 
-                              lastThreeLetters[0] === lastThreeLetters[1] && 
-                              lastThreeLetters[1] === lastThreeLetters[2];
-        const problematicLetter = allSameLetter ? lastThreeLetters[0] : null;
-        
-        if (problematicLetter) {
-          console.log(`⚠️ Last 3 days all start with "${problematicLetter}", deprioritizing that letter`);
-        }
-        
-        // Calculate base index using date + gameNumber (deterministic seed)
-        const epochDate = new Date('2000-01-01');
-        const currentDate = new Date(date + 'T00:00:00Z');
-        const daysSinceEpoch = Math.floor((currentDate.getTime() - epochDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        // Use a larger cycle to ensure variety (365 days = 1 year cycle)
-        const cycleDay = daysSinceEpoch % 365;
-        const baseIndex = (cycleDay * 3 + (gameNumber - 1)) % validWords.length;
-        
-        // Find a word that:
-        // 1. Is not in recent words (last 14 days)
-        // 2. Doesn't start with problematic letter (if last 3 days all same letter)
-        // 3. Is deterministic (same date = same word)
-        let candidateIndex = baseIndex;
-        let attempts = 0;
-        const maxAttempts = validWords.length; // Safety limit
-        
-        while (attempts < maxAttempts) {
-          const candidateWord = validWords[candidateIndex].toUpperCase();
-          const candidateLower = candidateWord.toLowerCase();
-          
-          // Check if word is in recent words
-          const isRecent = recentWords.some(w => w.toLowerCase() === candidateLower);
-          
-          // Check if word starts with problematic letter
-          const startsWithProblematic = problematicLetter && 
-                                        candidateLower.charAt(0) === problematicLetter.toLowerCase();
-          
-          // Accept word if it passes all checks
-          if (!isRecent && !startsWithProblematic) {
-            console.log(`✅ Selected word: ${candidateWord} (index ${candidateIndex}, attempts: ${attempts + 1})`);
-            return candidateWord;
-          }
-          
-          // Try next word (deterministic step)
-          candidateIndex = (candidateIndex + 1) % validWords.length;
-          attempts++;
-        }
-        
-        // Fallback: if we can't find a perfect match, use base index anyway
-        // (This should rarely happen if word list is large enough)
-        const fallbackWord = validWords[baseIndex].toUpperCase();
-        console.warn(`⚠️ Could not find perfect word, using fallback: ${fallbackWord}`);
-        return fallbackWord;
+        // Use shared selection logic
+        const selectedWord = getDeterministicWordForDate(date, gameNumber, validWords);
+        console.log(`✅ Selected word: ${selectedWord}`);
+        return selectedWord;
       }
     }
     
@@ -299,44 +429,10 @@ async function getDeterministicWord(date: string, gameNumber: number = 1): Promi
       console.log(`✅ After filtering excluded words: ${validWords.length} valid words`);
       
       if (validWords.length > 0) {
-        // Apply same improved selection logic as common words
-        const recentWords = getRecentWords(14, gameNumber, validWords);
-        const recentFirstLetters = getRecentFirstLetters(3, gameNumber, validWords);
-        const lastThreeLetters = recentFirstLetters.slice(-3);
-        const allSameLetter = lastThreeLetters.length === 3 && 
-                              lastThreeLetters[0] === lastThreeLetters[1] && 
-                              lastThreeLetters[1] === lastThreeLetters[2];
-        const problematicLetter = allSameLetter ? lastThreeLetters[0] : null;
-        
-        const epochDate = new Date('2000-01-01');
-        const currentDate = new Date(date + 'T00:00:00Z');
-        const daysSinceEpoch = Math.floor((currentDate.getTime() - epochDate.getTime()) / (1000 * 60 * 60 * 24));
-        const cycleDay = daysSinceEpoch % 365;
-        const baseIndex = (cycleDay * 3 + (gameNumber - 1)) % validWords.length;
-        
-        let candidateIndex = baseIndex;
-        let attempts = 0;
-        const maxAttempts = validWords.length;
-        
-        while (attempts < maxAttempts) {
-          const candidateWord = validWords[candidateIndex].toUpperCase();
-          const candidateLower = candidateWord.toLowerCase();
-          const isRecent = recentWords.some(w => w.toLowerCase() === candidateLower);
-          const startsWithProblematic = problematicLetter && 
-                                        candidateLower.charAt(0) === problematicLetter.toLowerCase();
-          
-          if (!isRecent && !startsWithProblematic) {
-            console.log(`📚 Selected from accepted.json: ${candidateWord} (index ${candidateIndex})`);
-            return candidateWord;
-          }
-          
-          candidateIndex = (candidateIndex + 1) % validWords.length;
-          attempts++;
-        }
-        
-        const fallbackWord = validWords[baseIndex].toUpperCase();
-        console.warn(`⚠️ Using fallback from accepted.json: ${fallbackWord}`);
-        return fallbackWord;
+        // Use shared selection logic
+        const selectedWord = getDeterministicWordForDate(date, gameNumber, validWords);
+        console.log(`📚 Selected from accepted.json: ${selectedWord}`);
+        return selectedWord;
       }
     }
   } catch (error) {
