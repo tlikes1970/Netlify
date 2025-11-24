@@ -224,6 +224,10 @@ export class FirebaseSyncManager {
         await loadGameStatsFromFirebase(uid);
       }
 
+      // Load settings from Firebase for cross-device sync
+      const { settingsManager } = await import('./settings');
+      await settingsManager.loadSettingsFromFirebase(uid);
+
       console.log('✅ Firebase data loaded and merged');
       return true;
 
