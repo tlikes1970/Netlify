@@ -72,7 +72,7 @@ export function useReturningShows(): ReturningShow[] {
     });
 
     // Remove the temporary fields before returning
-    return sorted.map(({ validatedDate, airStatus, ...rest }) => rest);
+    return sorted.map(({ validatedDate: _validatedDate, airStatus: _airStatus, ...rest }) => rest);
   }, [all]);
 
   return returning;
