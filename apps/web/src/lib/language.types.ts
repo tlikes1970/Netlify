@@ -1,4 +1,4 @@
-export type Language = 'en' | 'es';
+export type Language = "en" | "es";
 
 export interface LanguageStrings {
   // Navigation
@@ -9,7 +9,7 @@ export interface LanguageStrings {
   alreadyWatched: string;
   holidays: string;
   discovery: string;
-  
+
   // Actions
   wantToWatchAction: string;
   currentlyWatchingAction: string;
@@ -20,7 +20,7 @@ export interface LanguageStrings {
   reviewNotesAction: string;
   addTagAction: string;
   holidayAddAction: string;
-  
+
   // Settings
   settings: string;
   general: string;
@@ -45,7 +45,7 @@ export interface LanguageStrings {
   data: string;
   pro: string;
   about: string;
-  
+
   // General Settings
   displayName: string;
   myStatistics: string;
@@ -66,7 +66,7 @@ export interface LanguageStrings {
   resetSettingsToDefaults: string;
   confirmResetSettings: string;
   resetSettingsSuccess: string;
-  
+
   // Layout Settings
   themePreference: string;
   dark: string;
@@ -83,7 +83,7 @@ export interface LanguageStrings {
   episodeTrackingCondensedProAllowed: string;
   proFeatures: string;
   themePacksComingSoon: string;
-  
+
   // My Lists
   myLists: string;
   enterListName: string;
@@ -109,7 +109,7 @@ export interface LanguageStrings {
   cancel: string;
   darkThemeDescription: string;
   lightThemeDescription: string;
-  
+
   // Additional My Lists
   enterNewName: string;
   rename: string;
@@ -132,7 +132,7 @@ export interface LanguageStrings {
   forYouSectionDescription: string;
   forYouAddAnotherRow: string;
   forYouTipText: string;
-  
+
   // Notifications
   notificationTypes: string;
   upcomingEpisodeAlerts: string;
@@ -141,7 +141,7 @@ export interface LanguageStrings {
   alertConfiguration: string;
   advancedNotificationByLeadTime: string;
   pickTheList: string;
-  
+
   // Data Management
   standardDataManagement: string;
   shareList: string;
@@ -154,7 +154,7 @@ export interface LanguageStrings {
   resetAllData: string;
   restoreSystemToDefaults: string;
   advancedSharingOptions: string;
-  
+
   // Pro Features
   proManagement: string;
   unlockProFeatures: string;
@@ -169,7 +169,7 @@ export interface LanguageStrings {
   bloopersBehindTheScenes: string;
   activatesButtonOnShowCards: string;
   additionalFeaturesTBD: string;
-  
+
   // About
   informationSections: string;
   aboutUniqueForYou: string;
@@ -179,7 +179,7 @@ export interface LanguageStrings {
   feedbackQuotesForMarquee: string;
   clipsForHomePagePlayer: string;
   venting: string;
-  
+
   // Authentication
   signIn: string;
   signOut: string;
@@ -205,25 +205,25 @@ export interface LanguageStrings {
   areYouSure: string;
   comingSoon: string;
   notImplemented: string;
-  
+
   // Home Rails
   yourShows: string;
   upNext: string;
   inTheatersNearYou: string;
-  
+
   // Placeholders
   noShowsInCurrentlyWatching: string;
   addSomeFromSearchOrDiscovery: string;
   noUpcomingEpisodes: string;
   addTvShowsToWatchingList: string;
   noPoster: string;
-  
+
   // Statistics
   currentlyWatchingCount: string;
   wantToWatchCount: string;
   watchedCount: string;
   totalCount: string;
-  
+
   // Feedback Panel
   tellUsWhatToImprove: string;
   typeYourFeedback: string;
@@ -232,43 +232,43 @@ export interface LanguageStrings {
   betterRecommendations: string;
   episodeUpNextWithDates: string;
   shareListsWithFriends: string;
-  
+
   // Theater Info
   yourLocalTheater: string;
-  
+
   // Header
   logIn: string;
   logOut: string;
   guest: string;
-  
+
   // Search Results
   noSynopsisAvailable: string;
   opensInTmdb: string;
   searchFailed: string;
-  
+
   // Personality Messages
   procrastinatingProductively: string;
   curatingYourIndecision: string;
   becauseTimeIsAnIllusion: string;
   cinemaNowWithCommitmentIssues: string;
   yourBacklogCalledItsGrowing: string;
-  
+
   // Confirmation Messages
   areYouSureChangeDisplayName: string;
   thisWillUpdateYourProfile: string;
   areYouSureResetSettings: string;
   usernameUpdateFailed: string;
-  
+
   // Language Labels
   language: string;
   english: string;
   spanish: string;
-  
+
   // Home Page Sections
   community: string;
   forYou: string;
   feedback: string;
-  
+
   // Games
   flickword: string;
   flickword_tagline: string;
@@ -284,7 +284,7 @@ export interface LanguageStrings {
   win_percent: string;
   played: string;
   accuracy: string;
-  
+
   // Theater
   detectingLocation: string;
   locationUnavailable: string;
@@ -297,36 +297,36 @@ export interface LanguageStrings {
   hideTimes: string;
   showTimes: string;
   todaysShowtimes: string;
-  
+
   // Personality
   hasExquisiteTaste: string;
   definitelyNotProcrastinating: string;
   breaksForPopcornOnly: string;
   curatesChaosLikeAPro: string;
-  
+
   // Community Player
   community_player_placeholder: string;
-  
+
   // Data Management
   dataManagementComingSoon: string;
-  
+
   // Rail Titles
   drama: string;
   comedy: string;
   horror: string;
   nowPlaying: string;
-  
+
   // Search
   searchPlaceholder: string;
   allGenres: string;
   action: string;
   search: string;
   clear: string;
-  
+
   // Marquee Controls
   showMarquee: string;
   hideMarquee: string;
-  
+
   // Marquee Messages
   marqueeMessage1: string;
   marqueeMessage2: string;

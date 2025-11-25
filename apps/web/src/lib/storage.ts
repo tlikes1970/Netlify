@@ -40,6 +40,7 @@ export interface LibraryEntry extends MediaItem {
   list: ListName;
   addedAt: number; // epoch ms
   ratingUpdatedAt?: number; // epoch ms - timestamp when userRating was last updated (for conflict resolution)
+  isFavorite?: boolean;
 }
 
 // Migration function to convert old data format
@@ -271,6 +272,7 @@ export const Library = {
       "userRating",
       "userNotes",
       "tags",
+      "isFavorite",
     ];
 
     // Preserve user data from oldEntry

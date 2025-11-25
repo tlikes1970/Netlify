@@ -59,11 +59,12 @@ describe('verifyAuthEnvironment', () => {
     vi.unstubAllEnvs();
   });
 
-  it('should return ok=false when authDomain is missing', () => {
+  it('should return ok=false when authDomain is missing', async () => {
     // Temporarily remove authDomain from config (would need to mock the module)
     // For now, test with invalid config scenario
     mockLocation('https://example.com');
-    
+    const { verifyAuthEnvironment } = await import('../firebaseBootstrap');
+
     const result = verifyAuthEnvironment();
     
     // This should still pass basic checks if config has defaults

@@ -8,7 +8,7 @@
 
 import type { MediaType } from '../components/cards/card.types';
 
-export type RatingState = 'null' | 'zero' | 'unchanged' | 'changed';
+export type RatingState = 'null' | 'unchanged' | 'changed';
 
 export interface RatingUpdate {
   id: string | number;
@@ -33,7 +33,9 @@ export function normalizeRating(rating: number | null | undefined): number | nul
 }
 
 /**
- * Determine rating state: null, zero, unchanged, or changed
+ * Determine rating state: null, unchanged, or changed
+ * Note: 'zero' state was removed because normalizeRating clamps to 1-5,
+ * making newNorm === 0 unreachable.
  */
 export function getRatingState(
   oldRating: number | null | undefined,
@@ -43,7 +45,6 @@ export function getRatingState(
   const newNorm = normalizeRating(newRating);
   
   if (newNorm === null) return 'null';
-  if (newNorm === 0) return 'zero';
   if (oldNorm === newNorm) return 'unchanged';
   return 'changed';
 }

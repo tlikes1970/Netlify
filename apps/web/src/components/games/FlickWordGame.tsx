@@ -1007,7 +1007,7 @@ export default function FlickWordGame({
     }
     
     lines.push('');
-    lines.push('Play FlickWord at flicklet.app');
+    lines.push('Play FlickWord at flicklet.netlify.app');
     
     return lines.join('\n');
   }, [game.guesses, game.lastResults, isPro, currentGame]);
@@ -1036,7 +1036,7 @@ export default function FlickWordGame({
     });
     
     lines.push('');
-    lines.push('Play FlickWord at flicklet.app');
+    lines.push('Play FlickWord at flicklet.netlify.app');
     
     return lines.join('\n');
   }, []);
@@ -1051,8 +1051,9 @@ export default function FlickWordGame({
       : generateShareText();
     
     // Build share URL with deep-link params
+    // Always use flicklet.netlify.app for consistency
     const today = getDailySeedDate();
-    const origin = typeof window !== "undefined" ? window.location.origin : "https://flicklet.netlify.app";
+    const origin = "https://flicklet.netlify.app";
     
     let shareUrl: string;
     if (shareAll && isPro) {
@@ -1068,6 +1069,12 @@ export default function FlickWordGame({
     const gameNumber = isPro ? currentGame : 1;
     trackFlickWordShare(shareAll ? null : gameNumber, shareAll ? 'all' : 'single');
     
+    // Detect if native share is available (for toast message)
+    const canNativeShare =
+      typeof navigator !== "undefined" &&
+      "share" in navigator &&
+      /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
     // Use unified share helper
     await shareWithFallback({
       title: 'FlickWord',
@@ -1076,9 +1083,17 @@ export default function FlickWordGame({
       onSuccess: () => {
         const toast = getToastCallback();
         if (toast) {
-          toast('Share link copied to clipboard!', 'success');
+          // Different message for native share vs clipboard
+          if (canNativeShare) {
+            toast('Share completed!', 'success');
+          } else {
+            toast('Share link copied to clipboard!', 'success');
+          }
         }
-        setShowShareModal(false);
+        // Small delay before closing modal to ensure toast is visible
+        setTimeout(() => {
+          setShowShareModal(false);
+        }, 500);
       },
       onError: (error) => {
         console.error('Share failed:', error);
@@ -1503,7 +1518,7 @@ export default function FlickWordGame({
           return (
             <div className="fw-games-limit">
               <p>
-                ✅ You&apos;ve completed all {maxGames} {maxGames === 1 ? "game" : "games"} today! Come back tomorrow for the next game!
+                ✅ You&apos;ve completed {maxGames === 1 ? "your game" : `all ${maxGames} games`} today! Come back tomorrow for the next {maxGames === 1 ? "game" : "games"}!
               </p>
               {!isPro && (
                 <p className="fw-pro-upsell">

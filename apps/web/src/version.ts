@@ -1,5 +1,32 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.177: Removed useless "Only favorites" toggle from Discovery
+// - Removed favoritesOnly state and toggle button from DiscoveryPage
+// - Removed DiscoveryFavoritesFilter.test.tsx (toggle no longer exists)
+// - Removed favoritesOnly/showAllFavorites translations (en + es)
+// - The toggle was useless: no UI exists to mark items as favorites, so filter always returned empty
+// - Simplified filter logic to just hide library items
+// - Rollback: Revert this commit to restore the favorites toggle
+// ⚠️ VERSION 0.1.176: Implemented true backfill for Discovery recommendations
+// - Fetch 2 pages from each TMDB source (trending, popular movies, popular TV) for ~120 candidates
+// - Filter out library items BEFORE slicing to limit, ensuring full backfill
+// - Include library state in cache key so cache invalidates when library changes
+// - Now if you add 12 items to library, Discovery backfills with 12 new recommendations
+// - Rollback: Revert this commit to restore single-page fetching without backfill
+// ⚠️ VERSION 0.1.175: Fixed Discovery tab not refreshing or responding to actions
+// - Fixed guard logic in useSmartDiscovery that prevented initial fetch with empty library
+// - Added hasFetchedRef to track whether we've fetched for current library state
+// - Guard now correctly allows first fetch and re-fetches when library changes
+// - Previous bug: genrePreferences check was always false with empty library, causing repeated skips
+// - Rollback: Revert this commit to restore previous guard behavior
+// ⚠️ VERSION 0.1.174: Added genre scoring tests for Discovery
+// - Created discoveryScoring.genres.test.ts with 9 tests covering genre preference scoring
+// - Tests verify: genre match bonus, empty favoriteGenres behavior, multiple genre accumulation
+// - Tests verify: missing genre_ids handling, invalid genre ID filtering
+// - Tests verify: analyzeGenrePreferences frequency scoring, rating boost, empty input, API error handling
+// - Added documentation comments in smartDiscovery.ts clarifying genre preference flow
+// - Genre scoring was already wired (useSmartDiscovery merges genrePreferences into favoriteGenres)
+// - Rollback: Revert this commit to remove genre scoring tests
 // ⚠️ VERSION 0.1.173: Improved drag-and-drop visuals - smoother desktop animations, better mobile floating effect
 // - Desktop: Removed redundant inline transforms from useDragAndDrop, simplified to single CSS animation
 // - Desktop: Reduced rotation from 2deg to 1deg for smoother feel
@@ -262,4 +289,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.173";
+export const APP_VERSION = "0.1.177";

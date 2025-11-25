@@ -48,119 +48,149 @@ export default function TriviaGame({
   // Using imported constant instead
   const sampleQuestions = SAMPLE_TRIVIA_QUESTIONS;
 
-  // Get today's questions based on UTC date (deterministic rotation)
-  // Regular: 10 questions per day (game 1 only)
-  // Pro: 30 questions per day (games 1-3, 10 questions each)
-  // ALL users get the same questions in the same order (Regular gets first 10, Pro gets all 30)
-  // Questions rotate on a 365-day cycle with no-repeat window (last 14 days)
-  // Uses UTC date so all users globally share the same daily content
-  // 
-  // Question rotation improvements:
-  // - No repeats within last 14 days
-  // - Deterministic selection (same date = same questions for everyone)
-  // - Config: Trivia question rotation - no-repeat window: 14 days
-  const getTodaysQuestions = (
-    isPro: boolean = false,
-    gameNumber: number = 1
-  ) => {
-    const today = getDailySeedDate(); // UTC-based date for consistent daily content
-    
+  /**
+   * Core question selection logic - shared by getTodaysQuestions() and getRecentTriviaQuestionIds()
+   * This ensures both functions use the exact same selection algorithm.
+   * 
+   * @param date Date string (YYYY-MM-DD)
+   * @param gameNumber Game number (1-3 for Pro, 1 for Regular)
+   * @param isPro Whether user is Pro
+   * @param allQuestions All available questions
+   * @param providedRecentIds Optional set of recent question IDs to avoid (prevents infinite recursion)
+   * @returns Array of selected questions for that date/game
+   */
+  const getQuestionsForDate = (
+    date: string,
+    gameNumber: number,
+    isPro: boolean,
+    allQuestions: TriviaQuestion[],
+    providedRecentIds: Set<string> | null = null
+  ): TriviaQuestion[] => {
     // Calculate days since epoch (Jan 1, 2000) for 365-day cycle
     const epochDate = new Date('2000-01-01');
-    const currentDate = new Date(today + 'T00:00:00Z');
+    const currentDate = new Date(date + 'T00:00:00Z');
     const daysSinceEpoch = Math.floor((currentDate.getTime() - epochDate.getTime()) / (1000 * 60 * 60 * 24));
-    const cycleDay = daysSinceEpoch % 365; // 365-day cycle for more variety
+    const cycleDay = daysSinceEpoch % 365;
 
-    // Regular: 10 questions per day (1 game)
-    // Pro: 30 questions per day (3 games of 10 questions each)
     const questionsPerGame = 10;
-    const totalQuestionsPerDay = 30; // Pro users get 30, Regular gets first 10
+    const totalQuestionsPerDay = 30;
 
-    // Get recently used question IDs (last 14 days) to avoid repeats
-    const recentQuestionIds = getRecentTriviaQuestionIds(14, isPro, sampleQuestions);
-    console.log(`📅 Recent question IDs (last 14 days):`, Array.from(recentQuestionIds).slice(0, 10), `... (${recentQuestionIds.size} total)`);
+    // Use provided recent IDs if available, otherwise calculate them
+    // (This prevents infinite recursion when getRecentTriviaQuestionIds calls this)
+    const recentQuestionIds = providedRecentIds !== null
+      ? providedRecentIds
+      : getRecentTriviaQuestionIds(14, isPro, allQuestions, date);
 
-    const todaysQuestions: TriviaQuestion[] = [];
+    const selectedQuestions: TriviaQuestion[] = [];
     const usedQuestionIds = new Set<string>(); // Track used questions to prevent duplicates within this game
-    // Calculate starting index for this game
-    // Regular: gameNumber = 1, startIndex = 0 (questions 0-9)
-    // Pro: gameNumber 1-3, startIndex = (gameNumber - 1) * 10 (questions 0-9, 10-19, 20-29)
     const startIndex = isPro ? (gameNumber - 1) * 10 : 0;
 
     for (let i = 0; i < questionsPerGame; i++) {
       const globalIndex = startIndex + i;
-      // Calculate base index deterministically: cycleDay * 30 (questions per day) + globalIndex
-      // This ensures all users get the same 30 questions per day
-      const baseIndex = (cycleDay * totalQuestionsPerDay + globalIndex) % sampleQuestions.length;
+      const baseIndex = (cycleDay * totalQuestionsPerDay + globalIndex) % allQuestions.length;
       
       // Find next available question that:
       // 1. Hasn't been used in this game
       // 2. Wasn't used in the last 14 days (no-repeat window)
       let questionIndex = baseIndex;
       let attempts = 0;
-      const maxAttempts = sampleQuestions.length * 2; // Allow more attempts since we're filtering by recent questions
+      const maxAttempts = allQuestions.length * 2;
       
       while (
-        (usedQuestionIds.has(sampleQuestions[questionIndex].id) || 
-         recentQuestionIds.has(sampleQuestions[questionIndex].id)) && 
+        (usedQuestionIds.has(allQuestions[questionIndex].id) || 
+         recentQuestionIds.has(allQuestions[questionIndex].id)) && 
         attempts < maxAttempts
       ) {
-        // Try next question in sequence, wrapping around
-        questionIndex = (questionIndex + 1) % sampleQuestions.length;
+        questionIndex = (questionIndex + 1) % allQuestions.length;
         attempts++;
       }
       
-      // If we've exhausted all questions, fall back to base index (should be rare)
+      // Fallback: if we've exhausted all questions, use base index
       if (attempts >= maxAttempts) {
         console.warn(`⚠️ Could not find question avoiding recent window after ${attempts} attempts. Using question at base index ${baseIndex}`);
         questionIndex = baseIndex;
       }
       
-      const selectedQuestion = sampleQuestions[questionIndex];
-      todaysQuestions.push(selectedQuestion);
+      const selectedQuestion = allQuestions[questionIndex];
+      selectedQuestions.push(selectedQuestion);
       usedQuestionIds.add(selectedQuestion.id);
     }
 
+    return selectedQuestions;
+  };
+
+  // Get today's questions based on UTC date (deterministic rotation)
+  // Regular: 10 questions per day (game 1 only)
+  // Pro: 30 questions per day (games 1-3, 10 questions each)
+  // ALL users get the same questions in the same order (Regular gets first 10, Pro gets all 30)
+  // Questions rotate on a 365-day cycle with no-repeat window (last 14 days)
+  // Uses UTC date so all users globally share the same daily content
+  const getTodaysQuestions = (
+    isPro: boolean = false,
+    gameNumber: number = 1
+  ) => {
+    const today = getDailySeedDate();
+    const questions = getQuestionsForDate(today, gameNumber, isPro, sampleQuestions);
+    
     const totalForUser = isPro ? 30 : 10;
+    const startIndex = isPro ? (gameNumber - 1) * 10 : 0;
     console.log(
-      `🎯 Game ${gameNumber} questions (${isPro ? "Pro" : "Regular"} user, cycle day ${cycleDay}, questions ${startIndex + 1}-${startIndex + questionsPerGame} of ${totalForUser}):`,
-      todaysQuestions.map((q) => q.id)
+      `🎯 Game ${gameNumber} questions (${isPro ? "Pro" : "Regular"} user, questions ${startIndex + 1}-${startIndex + 10} of ${totalForUser}):`,
+      questions.map((q) => q.id)
     );
-    return todaysQuestions;
+    return questions;
   };
 
   // Get question IDs used in the last N days for a specific user type
-  // Used to prevent repeats within a recent window
-  // Config: Trivia question rotation - no-repeat window: 14 days
+  // FIXED: Now uses the same selection logic as getTodaysQuestions() to ensure
+  // the recent questions list matches what was actually selected (accounting for
+  // repeat prevention logic).
+  // Processes days in forward chronological order (oldest to newest) so each
+  // day's selection accounts for questions selected on previous days.
   const getRecentTriviaQuestionIds = (
     days: number,
     isPro: boolean,
-    allQuestions: TriviaQuestion[]
+    allQuestions: TriviaQuestion[],
+    currentDate?: string
   ): Set<string> => {
     const recentIds = new Set<string>();
-    const today = new Date(getDailySeedDate() + 'T00:00:00Z');
-    const totalQuestionsPerDay = 30;
+    const today = currentDate || getDailySeedDate();
+    const todayDate = new Date(today + 'T00:00:00Z');
     
-    for (let i = 1; i <= days; i++) {
-      const pastDate = new Date(today);
+    // Process days in forward chronological order (oldest first)
+    // This ensures when we select questions for day N, we already know
+    // what questions were selected on days N-1, N-2, etc.
+    const dayQuestions: Array<{ date: string; questionIds: Set<string> }> = [];
+    
+    for (let i = days; i >= 1; i--) {
+      const pastDate = new Date(todayDate);
       pastDate.setUTCDate(pastDate.getUTCDate() - i);
+      const pastDateStr = getDailySeedDate(pastDate);
       
-      // Derive questions for that date using the same deterministic logic
-      const epochDate = new Date('2000-01-01');
-      const daysSinceEpoch = Math.floor((pastDate.getTime() - epochDate.getTime()) / (1000 * 60 * 60 * 24));
-      const cycleDay = daysSinceEpoch % 365;
+      // Get all games for that date
+      // Pro users: 3 games (30 questions), Regular: 1 game (10 questions)
+      const maxGames = isPro ? 3 : 1;
+      const dayQuestionIds = new Set<string>();
       
-      // Get all questions that would have been used that day
-      // Pro users: 30 questions (3 games), Regular: 10 questions (1 game)
-      const maxQuestions = isPro ? 30 : 10;
-      
-      for (let q = 0; q < maxQuestions; q++) {
-        const baseIndex = (cycleDay * totalQuestionsPerDay + q) % allQuestions.length;
-        const question = allQuestions[baseIndex];
-        if (question) {
-          recentIds.add(question.id);
-        }
+      for (let gameNum = 1; gameNum <= maxGames; gameNum++) {
+        // Build recent IDs from all previous days (chronologically before this date)
+        const previousDaysIds = new Set<string>();
+        dayQuestions.forEach(prevDay => {
+          prevDay.questionIds.forEach(id => previousDaysIds.add(id));
+        });
+        
+        // Use the same selection logic, with questions from previous days as recent IDs
+        const gameQuestions = getQuestionsForDate(pastDateStr, gameNum, isPro, allQuestions, previousDaysIds);
+        
+        // Add all questions from this game to this day's set
+        gameQuestions.forEach(q => dayQuestionIds.add(q.id));
       }
+      
+      // Store this day's questions
+      dayQuestions.push({ date: pastDateStr, questionIds: dayQuestionIds });
+      
+      // Add to overall recent IDs set
+      dayQuestionIds.forEach(id => recentIds.add(id));
     }
     
     return recentIds;
@@ -700,7 +730,7 @@ export default function TriviaGame({
     const gameLabel = isPro ? ` Game ${currentGame}` : '';
     const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
     
-    return `🧠 Trivia ${today}${gameLabel}\n\nScore: ${score}/${questions.length} (${percentage}%)\n\nPlay Trivia at flicklet.app`;
+    return `🧠 Trivia ${today}${gameLabel}\n\nScore: ${score}/${questions.length} (${percentage}%)\n\nPlay Trivia at flicklet.netlify.app`;
   }, [score, questions.length, isPro, currentGame]);
 
   // Primary share handler for Trivia
@@ -708,8 +738,15 @@ export default function TriviaGame({
   const handleShare = useCallback(async () => {
     const shareText = generateShareText();
     const today = getDailySeedDate();
-    const origin = typeof window !== "undefined" ? window.location.origin : "https://flicklet.netlify.app";
+    // Always use flicklet.netlify.app for consistency
+    const origin = "https://flicklet.netlify.app";
     const shareUrl = `${origin}/?game=trivia&date=${today}&gameNumber=${currentGame}&score=${score}&mode=sharedResult`;
+    
+    // Detect if native share is available (for toast message)
+    const canNativeShare =
+      typeof navigator !== "undefined" &&
+      "share" in navigator &&
+      /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
     // Use unified share helper
     await shareWithFallback({
@@ -719,7 +756,12 @@ export default function TriviaGame({
       onSuccess: () => {
         const toast = getToastCallback();
         if (toast) {
-          toast('Share link copied to clipboard!', 'success');
+          // Different message for native share vs clipboard
+          if (canNativeShare) {
+            toast('Share completed!', 'success');
+          } else {
+            toast('Share link copied to clipboard!', 'success');
+          }
         }
       },
       onError: (error) => {

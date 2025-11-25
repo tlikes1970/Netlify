@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SearchSuggestions from '../SearchSuggestions';
+import { fetchEnhancedAutocomplete } from '../../search/enhancedAutocomplete';
 
-// Mock the enhanced autocomplete
-vi.mock('../../search/enhancedAutocomplete', () => ({
-  fetchEnhancedAutocomplete: vi.fn().mockResolvedValue([
+function getDefaultSuggestions() {
+  return [
     {
       id: '12345',
       title: 'Slow Horses',
@@ -15,8 +15,15 @@ vi.mock('../../search/enhancedAutocomplete', () => ({
       synopsis: 'A spy thriller',
       voteAverage: 8.0,
     },
-  ]),
+  ];
+}
+
+// Mock the enhanced autocomplete
+vi.mock('../../search/enhancedAutocomplete', () => ({
+  fetchEnhancedAutocomplete: vi.fn().mockResolvedValue(getDefaultSuggestions()),
 }));
+
+const mockedFetchEnhancedAutocomplete = vi.mocked(fetchEnhancedAutocomplete);
 
 describe('SearchSuggestions - Click Behavior', () => {
   const mockOnSuggestionClick = vi.fn();
@@ -24,7 +31,8 @@ describe('SearchSuggestions - Click Behavior', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Clear search history
+    mockedFetchEnhancedAutocomplete.mockReset();
+    mockedFetchEnhancedAutocomplete.mockResolvedValue(getDefaultSuggestions());
     localStorage.clear();
   });
 
@@ -44,33 +52,31 @@ describe('SearchSuggestions - Click Behavior', () => {
     await new Promise(resolve => setTimeout(resolve, 400));
 
     // Find the TMDB suggestion
-    const suggestionButton = screen.getByText('Slow Horses');
+    const suggestionButton = screen.getByRole('button', {
+      name: /Slow Horses/i,
+    });
     expect(suggestionButton).toBeInTheDocument();
 
     // Click the suggestion
     await user.click(suggestionButton);
 
-    // Verify that the search query includes the year
-    expect(mockOnSuggestionClick).toHaveBeenCalledWith('Slow Horses 2022');
+    expect(mockOnSuggestionClick).toHaveBeenCalledWith('Slow Horses', '12345', 'tv');
   });
 
   it('should use title only when TMDB suggestion has no year', async () => {
     const user = userEvent.setup();
     
-    // Mock autocomplete to return item without year
-    vi.mock('../../search/enhancedAutocomplete', () => ({
-      fetchEnhancedAutocomplete: vi.fn().mockResolvedValue([
-        {
-          id: '67890',
-          title: 'Test Show',
-          mediaType: 'tv',
-          year: undefined,
-          posterUrl: 'https://example.com/poster.jpg',
-          synopsis: 'A test show',
-          voteAverage: 7.5,
-        },
-      ]),
-    }));
+    mockedFetchEnhancedAutocomplete.mockResolvedValueOnce([
+      {
+        id: '67890',
+        title: 'Test Show',
+        mediaType: 'tv',
+        year: undefined,
+        posterUrl: 'https://example.com/poster.jpg',
+        synopsis: 'A test show',
+        voteAverage: 7.5,
+      },
+    ]);
 
     render(
       <SearchSuggestions
@@ -83,11 +89,11 @@ describe('SearchSuggestions - Click Behavior', () => {
 
     await new Promise(resolve => setTimeout(resolve, 400));
 
-    const suggestionButton = screen.getByText('Test Show');
+    const suggestionButton = screen.getByRole('button', { name: /Test Show/i });
     await user.click(suggestionButton);
 
     // Should use title only when no year
-    expect(mockOnSuggestionClick).toHaveBeenCalledWith('Test Show');
+    expect(mockOnSuggestionClick).toHaveBeenCalledWith('Test Show', '67890', 'tv');
   });
 
   it('should handle search history clicks normally (no year)', async () => {
@@ -108,11 +114,15 @@ describe('SearchSuggestions - Click Behavior', () => {
 
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    const historyButton = screen.getByText('batman');
+    const historySection = screen.getByText('Recent Searches').closest('.mb-3');
+    expect(historySection).not.toBeNull();
+    const historyButton = within(historySection!).getByRole('button', {
+      name: /batman/i,
+    });
     await user.click(historyButton);
 
     // History items should be passed as-is
-    expect(mockOnSuggestionClick).toHaveBeenCalledWith('batman');
+    expect(mockOnSuggestionClick).toHaveBeenCalledWith('batman', undefined, undefined);
   });
 });
 
