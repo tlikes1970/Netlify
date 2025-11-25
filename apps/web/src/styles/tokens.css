@@ -33,3 +33,10 @@
 .poster-2x3 {
   aspect-ratio: 2 / 3;
 }
+
+@media (min-width: 769px) {
+  :root {
+    /* Desktop poster/card width for CardV2 rails */
+    --poster-w-desktop: 225px;
+  }
+}

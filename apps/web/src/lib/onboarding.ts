@@ -56,31 +56,29 @@ export const setOnboardingCompleted = (): void => {
 /**
  * Check if onboarding should be shown
  * Returns false (don't show) if:
- * - User is authenticated AND onboarding was completed (returning user)
  * - Onboarding was completed on this device
+ * - User is authenticated but no flag exists (treat as existing user)
  * 
  * Returns true (show) if:
- * - User is not authenticated AND onboarding not completed (new user)
- * - User is authenticated but onboarding not completed (newly signed-in user)
+ * - User is not authenticated AND onboarding not completed (new anonymous user)
  */
 export const shouldShowOnboarding = (isAuthenticated: boolean): boolean => {
   const completed = getOnboardingCompleted();
   
-  // If user is authenticated and onboarding was completed, they're a returning user
-  // Don't show onboarding again
-  if (isAuthenticated && completed) {
-    console.log("[Onboarding] User is authenticated and onboarding completed - don't show");
-    return false;
-  }
-  
-  // If onboarding was completed on this device, don't show again
+  // Always skip if flag is set
   if (completed) {
     console.log("[Onboarding] Onboarding completed on this device - don't show");
     return false;
   }
   
-  // Otherwise, show onboarding
-  console.log("[Onboarding] Should show onboarding - not completed yet");
+  // If authenticated but no flag, treat as existing user and skip
+  if (isAuthenticated && !completed) {
+    console.log("[Onboarding] User is authenticated but no flag - treating as existing user, don't show");
+    return false;
+  }
+  
+  // Only show for anonymous users who haven't completed
+  console.log("[Onboarding] Should show onboarding - anonymous user, not completed yet");
   return true;
 };
 

@@ -78,7 +78,7 @@ export default function CardV2({ item, context, actions, compact, showRating = t
 
   // Card content (shared between mobile and desktop)
   const cardContent = (
-      <article className="curated-card v2 group select-none" data-testid="cardv2" aria-label={title} style={{ width: 'var(--poster-w, 160px)' }}>
+      <article className="curated-card v2 group select-none" data-testid="cardv2" aria-label={title} style={{ width: 'var(--poster-w-desktop, var(--poster-w, 160px))' }}>
       <div 
         className="relative border shadow-sm overflow-hidden"
         style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', borderRadius: 'var(--radius, 12px)' }}

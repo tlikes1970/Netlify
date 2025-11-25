@@ -7,6 +7,7 @@ import { getVisibleSections, type SettingsSectionId } from "./settingsConfig";
 import { renderSettingsSection } from "./settingsSections";
 import { isMobileNow } from "../lib/isMobile";
 import { useUsername } from "../hooks/useUsername";
+import { useAuth } from "../hooks/useAuth";
 import { useLibrary } from "../lib/storage";
 import { useCustomLists } from "../lib/customLists";
 import { Library } from "../lib/storage";
@@ -36,6 +37,7 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
   const translations = useTranslations();
   const { isAdmin } = useAdminRole();
   const isMobile = isMobileNow();
+  const { user } = useAuth();
   
   // Map old tab navigation events to new sections
   useEffect(() => {
@@ -363,12 +365,20 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
               borderBottom: "1px solid",
             }}
           >
-            <h2
-              className="text-lg font-semibold"
-              style={{ color: "var(--text)" }}
-            >
-              {translations.settings}
-            </h2>
+            <div>
+              <h2
+                className="text-lg font-semibold"
+                style={{ color: "var(--text)" }}
+              >
+                {translations.settings}
+              </h2>
+              <p
+                className="text-sm mt-0.5"
+                style={{ color: "var(--muted)" }}
+              >
+                {user?.email ? `Signed in as ${user.email}` : "Signed in"}
+              </p>
+            </div>
             <button
               onClick={onClose}
               className="transition-colors"
@@ -541,17 +551,6 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
 // The following old components are kept for reference but are no longer used:
 // - GeneralTab (replaced by AccountSection)
 // - NotificationsTab (replaced by NotificationsSection)
-// - LayoutTab (replaced by DisplaySection)
-// - DataTab (replaced by DataSection)
-// - SocialTab (removed - placeholder content)
-// - CommunityTab (removed - placeholder content)
-// - ProTab (replaced by ProSection)
-// - AboutTab (replaced by AboutSection)
-
-// OLD TAB COMPONENTS REMOVED - Now using shared sections from settingsSections.tsx
-// The following old components have been removed:
-// - GeneralTab (replaced by AccountSection)
-// - NotificationsTab (replaced by NotificationsSection)  
 // - LayoutTab (replaced by DisplaySection)
 // - DataTab (replaced by DataSection)
 // - SocialTab (removed - placeholder content)

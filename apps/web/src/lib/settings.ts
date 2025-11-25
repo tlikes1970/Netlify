@@ -13,6 +13,7 @@
 
 import React from 'react';
 import { authManager } from './auth';
+import type { UserSettings } from './auth.types';
 
 // Settings data model based on design document
 export type PersonalityLevel = 1 | 2 | 3; // Regular, Semi-sarcastic, Severely sarcastic
@@ -100,6 +101,17 @@ const DEFAULT_SETTINGS: Settings = {
   },
 };
 
+type FirebaseUserSettings = UserSettings & Partial<{
+  displayName: string;
+  personalityLevel: PersonalityLevel;
+  notifications: Settings['notifications'];
+  layout: Settings['layout'];
+  pro: Settings['pro'];
+  community: Settings['community'];
+  fullSettings: Settings;
+  theme: Theme;
+}>;
+
 // Storage key
 const KEY = 'flicklet.settings.v2';
 
@@ -107,7 +119,7 @@ const KEY = 'flicklet.settings.v2';
 class SettingsManager {
   private settings: Settings;
   private subscribers: Set<() => void> = new Set();
-  private syncTimeout: NodeJS.Timeout | null = null;
+  private syncTimeout: ReturnType<typeof setTimeout> | null = null;
   private isSyncing = false;
 
   constructor() {
@@ -169,7 +181,7 @@ class SettingsManager {
         // Convert Settings to format compatible with Firebase UserSettings
         // We'll store the full settings object
         // Note: updateUserSettings accepts Partial<UserSettings> but Firebase will accept additional fields
-        const firebaseSettings = {
+        const firebaseSettings: FirebaseUserSettings = {
           // Map Settings to Firebase format
           displayName: this.settings.displayName,
           personalityLevel: this.settings.personalityLevel,
@@ -180,7 +192,7 @@ class SettingsManager {
           community: this.settings.community,
           // Store full settings as JSON for easy retrieval
           fullSettings: this.settings,
-        } as any; // Type assertion needed since we're storing more than UserSettings interface
+        };
 
         await authManager.updateUserSettings(currentUser.uid, firebaseSettings);
         console.log('✅ Settings synced to Firebase');
@@ -200,7 +212,7 @@ class SettingsManager {
    */
   async loadSettingsFromFirebase(uid: string): Promise<boolean> {
     try {
-      const firebaseSettings = await authManager.getUserSettings(uid);
+      const firebaseSettings = (await authManager.getUserSettings(uid)) as FirebaseUserSettings | null;
       
       if (!firebaseSettings) {
         // No settings in Firebase, keep local settings
@@ -212,7 +224,7 @@ class SettingsManager {
       
       if (firebaseSettings.fullSettings) {
         // New format: full settings object stored
-        firebaseFullSettings = firebaseSettings.fullSettings as Settings;
+        firebaseFullSettings = firebaseSettings.fullSettings;
       } else {
         // Legacy format: individual fields, convert to Settings format
         // This handles backward compatibility with existing Firebase data

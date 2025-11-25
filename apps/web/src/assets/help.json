@@ -61,7 +61,7 @@
         },
         {
           "type": "note",
-          "text": "Once installed, Flicklet works offline and can send push notifications!"
+          "text": "Once installed, Flicklet opens faster and is easier to find on your device. Some features may work with limited offline support, but new data and notifications still require an internet connection."
         }
       ]
     },
